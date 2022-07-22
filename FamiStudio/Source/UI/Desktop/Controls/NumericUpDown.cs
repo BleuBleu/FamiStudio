@@ -209,7 +209,7 @@ namespace FamiStudio
             base.OnRender(g);
 
             var c = parentDialog.CommandList;
-            var brush = enabled ? ThemeResources.LightGreyBrush1 : ThemeResources.MediumGreyBrush1;
+            var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
             var rects = new []
             {
@@ -219,14 +219,14 @@ namespace FamiStudio
 
             for (int i = 0; i < 2; i++)
             {
-                var fillBrush = enabled && captureButton == i ? ThemeResources.MediumGreyBrush1 :
-                                enabled && hoverButton   == i ? ThemeResources.DarkGreyBrush6 :
-                                                                ThemeResources.DarkGreyBrush5;
+                var fillBrush = enabled && captureButton == i ? Theme.MediumGreyColor1 :
+                                enabled && hoverButton   == i ? Theme.DarkGreyColor6 :
+                                                                Theme.DarkGreyColor5;
 
-                c.FillAndDrawRectangle(rects[i], fillBrush, brush);
+                c.FillAndDrawRectangle(rects[i], fillBrush, color);
 
                 c.PushTranslation(0, captureButton == i ? 1 : 0);
-                c.DrawBitmapAtlasCentered(bmp[i], rects[i], 1, 1, brush.Color0);
+                c.DrawBitmapAtlasCentered(bmp[i], rects[i], 1, 1, color);
                 c.PopTransform();
             }
         }

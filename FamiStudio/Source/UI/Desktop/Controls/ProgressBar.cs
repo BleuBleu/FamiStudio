@@ -41,9 +41,9 @@ namespace FamiStudio
 
             var c = parentDialog.CommandList;
 
-            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyBrush1, ThemeResources.LightGreyBrush1);
+            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, Theme.DarkGreyColor1, Theme.LightGreyColor1);
             if (visibleProgress > 0.0f)
-                c.FillAndDrawRectangle(0, 0, (visibleProgress * width) - 1, height - 1, ThemeResources.MediumGreyBrush1, ThemeResources.LightGreyBrush1);
+                c.FillAndDrawRectangle(0, 0, (visibleProgress * width) - 1, height - 1, Theme.MediumGreyColor1, Theme.LightGreyColor1);
         }
     }
 }

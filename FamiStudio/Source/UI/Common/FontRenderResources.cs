@@ -4,39 +4,8 @@ using System.Collections.Generic;
 
 namespace FamiStudio
 {
-    public class ThemeRenderResources : IDisposable
+    public class FontRenderResources : IDisposable
     {
-        private Brush whiteBrush;
-        private Brush blackBrush;
-        private Brush lightGreyBrush1;
-        private Brush lightGreyBrush2;
-        private Brush mediumGreyBrush1;
-        private Brush darkGreyBrush1;
-        private Brush darkGreyBrush2;
-        private Brush darkGreyBrush3;
-        private Brush darkGreyBrush4;
-        private Brush darkGreyBrush5;
-        private Brush darkGreyBrush6;
-        private Brush lightRedBrush;
-        private Brush darkRedBrush;
-
-        public Brush WhiteBrush       => whiteBrush;
-        public Brush BlackBrush       => blackBrush;
-        public Brush LightGreyBrush1  => lightGreyBrush1; 
-        public Brush LightGreyBrush2  => lightGreyBrush2; 
-        public Brush MediumGreyBrush1 => mediumGreyBrush1;
-        public Brush DarkGreyBrush1   => darkGreyBrush1;  
-        public Brush DarkGreyBrush2   => darkGreyBrush2;  
-        public Brush DarkGreyBrush3   => darkGreyBrush3;  
-        public Brush DarkGreyBrush4   => darkGreyBrush4;  
-        public Brush DarkGreyBrush5   => darkGreyBrush5;  
-        public Brush DarkGreyBrush6   => darkGreyBrush6;  
-        public Brush LightRedBrush    => lightRedBrush;   
-        public Brush DarkRedBrush     => darkRedBrush;
-
-        private Dictionary<Color, Brush> customColorBrushes = new Dictionary<Color, Brush>();
-        public  Dictionary<Color, Brush> CustomColorBrushes => customColorBrushes;
-
         protected enum RenderFontStyle
         {
             VerySmall,
@@ -87,30 +56,8 @@ namespace FamiStudio
         public Font FontVeryLargeBold => fonts[8];
         public Font FontHuge          => fonts[9];
 
-        public ThemeRenderResources(Graphics g)
+        public FontRenderResources(Graphics g)
         {
-            whiteBrush       = g.CreateSolidBrush(Theme.WhiteColor);
-            blackBrush       = g.CreateSolidBrush(Theme.BlackColor);
-            lightGreyBrush1  = g.CreateSolidBrush(Theme.LightGreyColor1);
-            lightGreyBrush2  = g.CreateSolidBrush(Theme.LightGreyColor2);
-            mediumGreyBrush1 = g.CreateSolidBrush(Theme.MediumGreyColor1);
-            darkGreyBrush1   = g.CreateSolidBrush(Theme.DarkGreyColor1);
-            darkGreyBrush2   = g.CreateSolidBrush(Theme.DarkGreyColor2);
-            darkGreyBrush3   = g.CreateSolidBrush(Theme.DarkGreyColor3);
-            darkGreyBrush4   = g.CreateSolidBrush(Theme.DarkGreyColor4);
-            darkGreyBrush5   = g.CreateSolidBrush(Theme.DarkGreyColor5);
-            darkGreyBrush6   = g.CreateSolidBrush(Theme.DarkGreyColor6);
-            lightRedBrush    = g.CreateSolidBrush(Theme.LightRedColor);
-            darkRedBrush     = g.CreateSolidBrush(Theme.DarkRedColor);
-
-            for (int j = 0; j < Theme.CustomColors.GetLength(1); j++)
-            {
-                for (int i = 0; i < Theme.CustomColors.GetLength(0); i++)
-                {
-                    customColorBrushes[Theme.CustomColors[i, j]] = g.CreateSolidBrush(Theme.CustomColors[i, j]);
-                }
-            }
-
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
                 fonts[i] = g.CreateFontFromResource(
@@ -122,26 +69,8 @@ namespace FamiStudio
 
         public void Dispose()
         {
-            Utils.DisposeAndNullify(ref whiteBrush);
-            Utils.DisposeAndNullify(ref blackBrush);
-            Utils.DisposeAndNullify(ref lightGreyBrush1);
-            Utils.DisposeAndNullify(ref lightGreyBrush2);
-            Utils.DisposeAndNullify(ref mediumGreyBrush1);
-            Utils.DisposeAndNullify(ref darkGreyBrush1);
-            Utils.DisposeAndNullify(ref darkGreyBrush2);
-            Utils.DisposeAndNullify(ref darkGreyBrush3);
-            Utils.DisposeAndNullify(ref darkGreyBrush4);
-            Utils.DisposeAndNullify(ref darkGreyBrush5);
-            Utils.DisposeAndNullify(ref darkGreyBrush6);
-            Utils.DisposeAndNullify(ref lightRedBrush);
-            Utils.DisposeAndNullify(ref darkRedBrush);
-
-            foreach (var kv in customColorBrushes)
-                kv.Value.Dispose();
             foreach (var font in fonts)
                 font.Dispose();
-
-            customColorBrushes.Clear();
         }
 
         public Font GetBestMatchingFontByWidth(string text, int desiredWidth, bool bold)

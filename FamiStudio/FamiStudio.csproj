@@ -140,7 +140,7 @@
     <Compile Include="Source\Project\Note.cs" />
     <Compile Include="Source\Project\Pattern.cs" />
     <Compile Include="Source\Project\Project.cs" />
-    <Compile Include="Source\Project\ProjectBuffer.cs" />    
+    <Compile Include="Source\Project\ProjectBuffer.cs" />
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
@@ -164,7 +164,7 @@
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Common\Theme.cs" />
-    <Compile Include="Source\UI\Common\ThemeRenderResources.cs" />
+    <Compile Include="Source\UI\Common\FontRenderResources.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
     <Compile Include="Source\UI\Desktop\ContextMenu.cs" />
@@ -183,7 +183,7 @@
     <Compile Include="Source\UI\Desktop\Controls\Slider.cs" />
     <Compile Include="Source\UI\Desktop\Controls\TextBox.cs" />
     <Compile Include="Source\UI\Desktop\CommandLineInterface.cs" />
-    <Compile Include="Source\UI\Desktop\Cursors.cs" />    
+    <Compile Include="Source\UI\Desktop\Cursors.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioWindow.cs" />
     <Compile Include="Source\UI\Desktop\FileDialog.cs" />
@@ -212,7 +212,7 @@
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
-    <Compile Include="Source\Video\VideoEncoderFFmpeg.cs" />    
+    <Compile Include="Source\Video\VideoEncoderFFmpeg.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
@@ -266,7 +266,7 @@
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_6ch_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_7ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_7ch_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_8ch_epsm_ntsc.bin" />    
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_8ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_8ch_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_n163_1ch_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_n163_2ch_ntsc.bin" />
@@ -751,35 +751,35 @@
     <EmbeddedResource Include="Resources\Yes@2x.tga" />
     <EmbeddedResource Include="Rom\fds.fds" />
     <EmbeddedResource Include="Rom\fds_famitracker.fds" />
-    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_epsm_ntsc_famitracker.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc_famitracker.nes" />
     <EmbeddedResource Include="Rom\rom_pal.nes" />
     <EmbeddedResource Include="Rom\rom_pal_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_mmc5_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_mmc5_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_mmc5_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_1ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_1ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_1ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_2ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_2ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_2ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_3ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_3ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_3ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_4ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_4ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_4ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_5ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_5ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_5ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_6ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_6ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_6ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_7ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_7ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_7ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_8ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_8ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_8ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_s5b_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_s5b_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_s5b_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_vrc6_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_vrc6_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_vrc6_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_vrc7_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_vrc7_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_vrc7_ntsc_famitracker.nes" />
   </ItemGroup>
   <ItemGroup>

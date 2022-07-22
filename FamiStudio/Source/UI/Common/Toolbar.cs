@@ -273,8 +273,7 @@ namespace FamiStudio
         private int timecodeOscSizeX;
         private int timecodeOscSizeY;
 
-        private Brush toolbarBrush;
-        private Brush warningBrush;
+        private Color warningColor = Color.FromArgb(205, 77, 64);
         private BitmapAtlasRef[] bmpButtons;
         private Button[] buttons = new Button[(int)ButtonType.Count];
 
@@ -305,14 +304,15 @@ namespace FamiStudio
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
-            if (Platform.IsMobile)
-                toolbarBrush = g.CreateSolidBrush(Theme.DarkGreyColor4);
-            else
-                toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyColor5, Theme.DarkGreyColor4);
+            //if (Platform.IsMobile)
+            //    toolbarBrush = g.CreateSolidBrush(Theme.DarkGreyColor4);
+            //else
+            //    toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyColor5, Theme.DarkGreyColor4);
 
-            warningBrush = g.CreateSolidBrush(Color.FromArgb(205, 77, 64));
+            //warningBrush = g.CreateSolidBrush(Color.FromArgb(205, 77, 64));
+
             bmpButtons = g.GetBitmapAtlasRefs(ButtonImageNames);
-            timeCodeFont = ThemeResources.FontHuge;
+            timeCodeFont = FontResources.FontHuge;
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
             buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = Platform.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
@@ -438,9 +438,6 @@ namespace FamiStudio
 
         protected override void OnRenderTerminated()
         {
-            Utils.DisposeAndNullify(ref toolbarBrush);
-            Utils.DisposeAndNullify(ref warningBrush);
-
             specialCharacters.Clear();
         }
 
@@ -551,7 +548,7 @@ namespace FamiStudio
                 oscilloscopePosX = buttonIconPosX + oscCol * buttonSize;
                 oscilloscopePosY = buttonIconPosX + oscRow * buttonSize;
 
-                timeCodeFont = ThemeResources.GetBestMatchingFontByWidth("00:00:000", timecodeOscSizeX, false);
+                timeCodeFont = FontResources.GetBestMatchingFontByWidth("00:00:000", timecodeOscSizeX, false);
             }
         }
 
@@ -978,10 +975,10 @@ namespace FamiStudio
             var colonSizeX = c.Graphics.MeasureString(":", timeCodeFont);
 
             var timeCodeSizeY = Height - timecodePosY * 2;
-            var textColor = App.IsRecording ? ThemeResources.DarkRedBrush : ThemeResources.LightGreyBrush2;
+            var textColor = App.IsRecording ? Theme.DarkRedColor : Theme.LightGreyColor2;
 
             c.PushTranslation(x, y);
-            c.FillAndDrawRectangle(0, 0, sx, sy, ThemeResources.BlackBrush, ThemeResources.LightGreyBrush2);
+            c.FillAndDrawRectangle(0, 0, sx, sy, Theme.BlackColor, Theme.LightGreyColor2);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -1032,8 +1029,8 @@ namespace FamiStudio
         {
             var scaling = WindowScaling;
             var message = tooltip;
-            var messageBrush = redTooltip ? warningBrush : ThemeResources.LightGreyBrush2;
-            var messageFont = ThemeResources.FontMedium;
+            var messageColor = redTooltip ? warningColor : Theme.LightGreyColor2;
+            var messageFont = FontResources.FontMedium;
 
             if (!string.IsNullOrEmpty(notification))
             {
@@ -1046,8 +1043,8 @@ namespace FamiStudio
                 else
                 {
                     message = (((((long)span.TotalMilliseconds) / 250) & 1) != 0) ? notification : "";
-                    messageBrush = notificationWarning ? warningBrush : ThemeResources.LightGreyBrush2;
-                    messageFont = notificationWarning ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
+                    messageColor = notificationWarning ? warningColor : Theme.LightGreyColor2;
+                    messageFont = notificationWarning ? FontResources.FontMediumBold : FontResources.FontMedium;
                 }
             }
 
@@ -1076,37 +1073,19 @@ namespace FamiStudio
                             }
                             else
                             {
-                                // Solution used here is an easy workaround for macOS Spotlight being attached to Cmd+Space by default.
-                                //
-                                // We use `Keys2.Control` flag detection to determine whether Ctrl was pressed or not. On macOS that
-                                // flag is present for both Ctrl *and* Cmd keys, which means Ctrl+Space and Cmd+Space are equivalent. 
-                                // In other words user can use Ctrl+Space instead of Cmd+Space to avoid Spotlight shortcut clash.
-                                //
-                                // Then why do we introduce "{ForceCtrl}" monikers in tooltips?
-                                //
-                                // The problem is we render "{Ctrl}" moniker as "Cmd" button on macOS. It would be more accurate to
-                                // render it as "Ctrl/Cmd" button, but we don't have UI space to spare for such longer button being
-                                // used in multiple places in tooltips. We could also render "{Ctrl}" moniker as "⌃ or ⌘" which is
-                                // short, but introduces a risk of users not being aware what those symbols stand for.
-                                //
-                                // In such case we decided to distinguish those cases where we want to give user a hint to use Ctrl
-                                // instead of Cmd (even if Cmd would still work, if not for a Spotlight shortcut clash). And this is
-                                // what `{ForceCtrl}` stands for – it "forces" tooltip rendering to render `{Ctrl}` on macOS as "Ctrl"
-                                // instead of "Cmd". 
-                                //
                                 if (Platform.IsMacOS && str == "Ctrl") str = "Cmd";
                                 if (str == "ForceCtrl") str = "Ctrl";
                                 
                                 posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
-                                c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush);
-                                c.DrawText(str, messageFont, posX, posY, messageBrush, TextFlags.Center, specialCharacter.Width);
+                                c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageColor);
+                                c.DrawText(str, messageFont, posX, posY, messageColor, TextFlags.Center, specialCharacter.Width);
                                 posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                             }
                         }
                         else
                         {
                             posX -= c.Graphics.MeasureString(splits[i], messageFont);
-                            c.DrawText(str, messageFont, posX, posY, messageBrush);
+                            c.DrawText(str, messageFont, posX, posY, messageColor);
                         }
                     }
 
@@ -1122,7 +1101,7 @@ namespace FamiStudio
                 c.Transform.GetOrigin(out var ox, out var oy);
                 var fullscreenRect = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);
                 fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, c.Graphics.GetSolidBrush(Color.Black, 1.0f, expandRatio * 0.6f));
+                c.FillRectangle(fullscreenRect, Color.FromArgb(expandRatio * 0.6f, Color.Black));
             }
         }
 
@@ -1130,7 +1109,7 @@ namespace FamiStudio
         {
             if (Platform.IsDesktop)
             {
-                c.FillRectangle(0, 0, Width, Height, toolbarBrush);
+                c.FillRectangleGradient(0, 0, Width, Height, Theme.DarkGreyColor5, Theme.DarkGreyColor4, true, Height);
             }
             else
             {
@@ -1138,14 +1117,13 @@ namespace FamiStudio
 
                 if (IsLandscape)
                 {
-                    c.FillRectangle(0, 0, renderSize, Height, toolbarBrush);
-                    c.DrawLine(renderSize - 1, 0, renderSize - 1, Height, ThemeResources.BlackBrush);
+                    c.FillRectangle(0, 0, renderSize, Height, Theme.DarkGreyColor4);
+                    c.DrawLine(renderSize - 1, 0, renderSize - 1, Height, Theme.BlackColor);
                 }
                 else
                 {
-                    var brush = c.Graphics.GetVerticalGradientBrush(Theme.DarkGreyColor5, Theme.DarkGreyColor4, LayoutSize);
-                    c.FillRectangle(0, 0, Width, RenderSize, toolbarBrush);
-                    c.DrawLine(0, renderSize - 1, Width, renderSize - 1, ThemeResources.BlackBrush);
+                    c.FillRectangle(0, 0, Width, RenderSize, Theme.DarkGreyColor4);
+                    c.DrawLine(0, renderSize - 1, Width, renderSize - 1, Theme.BlackColor);
                 }
             }
         }
@@ -1171,9 +1149,9 @@ namespace FamiStudio
             else
             {
                 if (IsLandscape)
-                    c.DrawLine(Width - 1, 0, Width - 1, Height, ThemeResources.BlackBrush);
+                    c.DrawLine(Width - 1, 0, Width - 1, Height, Theme.BlackColor);
                 else
-                    c.DrawLine(0, Height - 1, Width, Height - 1, ThemeResources.BlackBrush);
+                    c.DrawLine(0, Height - 1, Width, Height - 1, Theme.BlackColor);
             }
         }
 
@@ -1187,7 +1165,7 @@ namespace FamiStudio
             if (!oscilloscopeVisible)
                 return;
 
-            c.FillRectangle(x, y, x + sx, y + sy, ThemeResources.BlackBrush);
+            c.FillRectangle(x, y, x + sx, y + sy, Theme.BlackColor);
 
             var oscilloscopeGeometry = App.GetOscilloscopeGeometry(out lastOscilloscopeHadNonZeroSample);
 
@@ -1197,13 +1175,13 @@ namespace FamiStudio
                 float scaleY = sy / -2; // D3D is upside down compared to how we display waves typically.
 
                 c.PushTransform(x, y + sy / 2, scaleX, scaleY);
-                c.DrawGeometry(oscilloscopeGeometry, ThemeResources.LightGreyBrush2, 1, true);
+                c.DrawGeometry(oscilloscopeGeometry, Theme.LightGreyColor2, 1, true);
                 c.PopTransform();
             }
             else
             {
                 c.PushTranslation(x, y + sy / 2);
-                c.DrawLine(0, 0, sx, 0, ThemeResources.LightGreyBrush2);
+                c.DrawLine(0, 0, sx, 0, Theme.LightGreyColor2);
                 c.PopTransform();
             }
 
@@ -1212,10 +1190,10 @@ namespace FamiStudio
                 Utils.SplitVersionNumber(Platform.ApplicationVersion, out var betaNumber);
 
                 if (betaNumber > 0)
-                    c.DrawText($"BETA {betaNumber}", ThemeResources.FontSmall, x + 4, y + 4, ThemeResources.LightRedBrush);
+                    c.DrawText($"BETA {betaNumber}", FontResources.FontSmall, x + 4, y + 4, Theme.LightRedColor);
             }
 
-            c.DrawRectangle(x, y, x + sx, y + sy, ThemeResources.LightGreyBrush2);
+            c.DrawRectangle(x, y, x + sx, y + sy, Theme.LightGreyColor2);
         }
 
         protected override void OnMouseLeave(EventArgs e)

@@ -85,7 +85,7 @@ namespace FamiStudio
             }
             else
             {
-                c.FillRectangle(0, 0, width, height, ThemeResources.BlackBrush);
+                c.FillRectangle(0, 0, width, height, Theme.BlackColor);
             }
         }
     }

@@ -22,7 +22,7 @@ namespace FamiStudio
         public delegate bool EnabledDelegate();
         public delegate void SetValueDelegate(int value);
         public delegate string GetValueStringDelegate();
-        public delegate void CustomDrawDelegate(CommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2);
+        public delegate void CustomDrawDelegate(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2);
 
         public EnabledDelegate IsEnabled;
         public GetValueDelegate GetValue;
@@ -275,7 +275,7 @@ namespace FamiStudio
             return paramInfos.Count == 0 ? null : paramInfos.ToArray();
         }
 
-        public static void CustomDrawAdsrGraph(CommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawAdsrGraph(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
         {
             var g = c.Graphics;
             var instrument = userData1 as Instrument;
@@ -385,17 +385,16 @@ namespace FamiStudio
             var releaseGeo = new float[4, 2] { { releaseStartX, graphHeight }, { releaseEndX, graphHeight }, { releaseEndX, releaseEndY }, { releaseStartX, releaseStartY } }; 
             var line       = new float[5, 2] { { 0, graphHeight }, { decayStartX, decayStartY }, { sustainStartX, sustainStartY }, { releaseStartX, releaseStartY }, { releaseEndX, releaseEndY } };
 
-            var fillBrush  = c.Graphics.GetSolidBrush(Color.Black, 1, 0.3f);
-
-            c.FillAndDrawRectangle(0, graphPaddingTop, graphWidth, graphHeight, fillBrush, res.BlackBrush);
-            c.FillGeometry(attackGeo,  fillBrush);
-            c.FillGeometry(decayGeo,   fillBrush);
-            c.FillGeometry(sustainGeo, fillBrush);
-            c.FillGeometry(releaseGeo, fillBrush);
-            c.DrawLine(line, res.BlackBrush, 1, true);
+            var fillColor = Color.FromArgb(75, Color.Black);
+            c.FillAndDrawRectangle(0, graphPaddingTop, graphWidth, graphHeight, fillColor, Theme.BlackColor);
+            c.FillGeometry(attackGeo,  fillColor);
+            c.FillGeometry(decayGeo,   fillColor);
+            c.FillGeometry(sustainGeo, fillColor);
+            c.FillGeometry(releaseGeo, fillColor);
+            c.DrawLine(line, Theme.BlackColor, 1, true);
         }
 
-        public static void CustomDrawEpsmAlgorithm(CommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawEpsmAlgorithm(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
         {
             var instrument = userData1 as Instrument;
             var algo = instrument.EpsmPatchRegs[0] & 0x07;
@@ -405,7 +404,7 @@ namespace FamiStudio
             var posX = (rect.Left + rect.Right)  / 2 - bmpSize.Width  / 2;
             var posY = (rect.Top  + rect.Bottom) / 2 - bmpSize.Height / 2;
 
-            c.FillAndDrawRectangle(rect, c.Graphics.GetSolidBrush(Color.Black, 1, 0.5f), res.BlackBrush);
+            c.FillAndDrawRectangle(rect, Color.FromArgb(128, Color.Black), Theme.BlackColor);
             c.DrawBitmapAtlas(bmp, posX, posY);
         }
     }

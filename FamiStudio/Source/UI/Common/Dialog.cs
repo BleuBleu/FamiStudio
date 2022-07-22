@@ -98,7 +98,7 @@ namespace FamiStudio
             foreach (var ctrl in initControls)
             {
                 ctrl.RenderTerminated();
-                ctrl.SetThemeRenderResource(null);
+                ctrl.SetFontRenderResource(null);
             }
 
             parentWindow.PopDialog(this);
@@ -115,7 +115,7 @@ namespace FamiStudio
             Debug.Assert(ctrl.ParentDialog == this);
 
             ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            ctrl.SetThemeRenderResource(ThemeResources);
+            ctrl.SetFontRenderResource(FontResources);
             ctrl.RenderInitialized(ParentWindow.Graphics);
 
             Debug.Assert(!initControls.Contains(ctrl));
@@ -299,12 +299,12 @@ namespace FamiStudio
             commandListForeground = g.CreateCommandList();
 
             // Fill + Border
-            commandList.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyBrush4, ThemeResources.BlackBrush);
+            commandList.FillAndDrawRectangle(0, 0, width - 1, height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
 
             if (titleBarSizeY > 0)
             {
-                commandList.FillAndDrawRectangle(0, 0, width, titleBarSizeY, ThemeResources.DarkGreyBrush1, ThemeResources.BlackBrush);
-                commandList.DrawText(title, ThemeResources.FontMediumBold, titleBarMargin, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft, 0, titleBarSizeY);
+                commandList.FillAndDrawRectangle(0, 0, width, titleBarSizeY, Theme.DarkGreyColor1, Theme.BlackColor);
+                commandList.DrawText(title, FontResources.FontMediumBold, titleBarMargin, 0, Theme.LightGreyColor1, TextFlags.MiddleLeft, 0, titleBarSizeY);
             }
 
             // Render child controls
@@ -334,10 +334,10 @@ namespace FamiStudio
                 {
                     var splits = SplitLongTooltip(ctrl.ToolTip);
                     var sizeX = 0;
-                    var sizeY = ThemeResources.FontMedium.LineHeight * splits.Count + tooltipTopMargin;
+                    var sizeY = FontResources.FontMedium.LineHeight * splits.Count + tooltipTopMargin;
 
                     for (int i = 0; i < splits.Count; i++)
-                        sizeX = Math.Max(sizeX, ThemeResources.FontMedium.MeasureString(splits[i], false));
+                        sizeX = Math.Max(sizeX, FontResources.FontMedium.MeasureString(splits[i], false));
 
                     var totalSizeX = sizeX + tooltipSideMargin * 2;
                     var rightAlign = formPt.X + totalSizeX > ParentWindow.Width;
@@ -346,9 +346,9 @@ namespace FamiStudio
                     g.Transform.PushTranslation(pt.X - (rightAlign ? totalSizeX : 0), pt.Y + tooltipOffsetY);
 
                     for (int i = 0; i < splits.Count; i++)
-                        c.DrawText(splits[i], ThemeResources.FontMedium, tooltipSideMargin, i * ThemeResources.FontMedium.LineHeight + tooltipTopMargin, ThemeResources.LightGreyBrush1);
+                        c.DrawText(splits[i], FontResources.FontMedium, tooltipSideMargin, i * FontResources.FontMedium.LineHeight + tooltipTopMargin, Theme.LightGreyColor1);
 
-                    c.FillAndDrawRectangle(0, 0, totalSizeX, sizeY, ThemeResources.DarkGreyBrush1, ThemeResources.LightGreyBrush1);
+                    c.FillAndDrawRectangle(0, 0, totalSizeX, sizeY, Theme.DarkGreyColor1, Theme.LightGreyColor1);
                     g.Transform.PopTransform();
                     g.DrawCommandList(c);
                 }

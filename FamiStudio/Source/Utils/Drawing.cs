@@ -5,9 +5,12 @@ using System.Diagnostics;
 // and is done in preparation for an eventual migration to more modern .NET versions.
 namespace FamiStudio
 {
+    // Unlike the System.Drawing.Color, the internal encoding is AABBGGRR as opposed
+    // to AARRGGBB. This is done in order to match our OpenGL color packing and avoid
+    // a bunch of conversions.
     public struct Color
     {
-        private int color; // 0xAARRGGBB
+        private int color; // 0xAABBGGRR
 
         public static readonly Color Empty = default(Color);
                                         
@@ -24,7 +27,7 @@ namespace FamiStudio
             set => color = (color & (int)~0xff000000) | (value << 24);
         }
 
-        public byte R
+        public byte B
         {
             get => (byte)((color >> 16) & 0xff);
             set => color = (color & ~0xff0000) | (value << 16);
@@ -36,16 +39,21 @@ namespace FamiStudio
             set => color = (color & ~0xff00) | (value << 8);
         }
 
-        public byte B
+        public byte R
         {
             get => (byte)((color >> 0) & 0xff);
             set => color = (color & ~0xff) | value;
         }
 
+        public Color(int packed)
+        {
+            color = packed;
+        }
+
         public Color(int r, int g, int b, int a = 255)
         {
             Debug.Assert(r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255 && a >= 0 && a <= 255);
-            color = (a << 24) | (r << 16) | (g << 8) | b;
+            color = (a << 24) | (b << 16) | (g << 8) | r;
         }
 
         public static Color FromArgb(int a, int r, int g, int b)
@@ -60,23 +68,36 @@ namespace FamiStudio
 
         public static Color FromArgb(int a, Color c)
         {
-            return new Color(c.R, c.G, c.B, a);
+            return new Color((a << 24) | (c.ToAbgr() & 0xffffff));
+        }
+
+        public static Color FromArgb(float a, Color c)
+        {
+            return new Color(((int)(a * 255) << 24) | (c.ToAbgr() & 0xffffff));
         }
 
         public static Color FromArgb(int argb)
         {
-            return new Color() { color = argb };
+            return new Color(
+                (argb >> 16) & 0xff, 
+                (argb >>  8) & 0xff, 
+                (argb >>  0) & 0xff,
+                (argb >> 24) & 0xff);
         }
 
         public int ToArgb()
         {
-            return color;
+            return (A << 24) | (R << 16) | (G << 8) | B;
         }
 
         public int ToAbgr()
         {
-            Debug.Assert(false);
-            return 0;
+            return color;
+        }
+
+        public Color Scaled(float scale)
+        {
+            return new Color((int)(R * scale), (int)(G * scale), (int)(B * scale), A);
         }
 
         public static bool operator ==(Color left, Color right)

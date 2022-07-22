@@ -56,7 +56,7 @@ namespace FamiStudio
             {
                 ContextMenuOption option = menuOptions[i];
 
-                sizeX = Math.Max(sizeX, (int)g.MeasureString(option.Text, ThemeResources.FontMedium));
+                sizeX = Math.Max(sizeX, (int)g.MeasureString(option.Text, FontResources.FontMedium));
                 sizeY += itemSizeY;
 
                 if (!string.IsNullOrEmpty(option.Image))
@@ -159,7 +159,7 @@ namespace FamiStudio
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
             var c = g.CreateCommandList();
-            c.DrawRectangle(0, 0, Width - 1, Height - 1, ThemeResources.LightGreyBrush1);
+            c.DrawRectangle(0, 0, Width - 1, Height - 1, Theme.LightGreyColor1);
 
             var prevWantedSeparator = false;
 
@@ -172,11 +172,11 @@ namespace FamiStudio
                 var hover = i == hoveredItemIndex;
 
                 if (hover)
-                    c.FillRectangle(0, 0, Width, itemSizeY, ThemeResources.MediumGreyBrush1);
+                    c.FillRectangle(0, 0, Width, itemSizeY, Theme.MediumGreyColor1);
 
                 if (i > 0 && (option.Separator == ContextMenuSeparator.Before || prevWantedSeparator))
                 {
-                    c.DrawLine(0, 0, Width, 0, ThemeResources.LightGreyBrush1);
+                    c.DrawLine(0, 0, Width, 0, Theme.LightGreyColor1);
                     prevWantedSeparator = false;
                 }
 
@@ -198,7 +198,7 @@ namespace FamiStudio
                     c.DrawBitmapAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
                 }
 
-                c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyBrush2 : ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft, Width, itemSizeY);
+                c.DrawText(option.Text, FontResources.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
 
                 prevWantedSeparator = option.Separator == ContextMenuSeparator.After;

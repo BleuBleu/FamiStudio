@@ -60,13 +60,13 @@ namespace FamiStudio
             var c = parentDialog.CommandList;
             var bmpSize = bmpCheckOn.ElementSize;
             var baseY = (height - bmpSize.Height) / 2;
-            var brush = enabled ? ThemeResources.LightGreyBrush1 : ThemeResources.MediumGreyBrush1;
+            var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
-            c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, hover && enabled ? ThemeResources.DarkGreyBrush3 : ThemeResources.DarkGreyBrush1, brush);
-            c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, brush.Color0);
+            c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, hover && enabled ? Theme.DarkGreyColor3 : Theme.DarkGreyColor1, color);
+            c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, color);
 
             if (!string.IsNullOrEmpty(text))
-                c.DrawText(text, ThemeResources.FontMedium, bmpSize.Width + margin, 0, brush, TextFlags.MiddleLeft, 0, height);
+                c.DrawText(text, FontResources.FontMedium, bmpSize.Width + margin, 0, color, TextFlags.MiddleLeft, 0, height);
         }
     }
 }

@@ -32,10 +32,6 @@ namespace FamiStudio
         protected Bitmap dashedBitmap;
         protected Dictionary<int, BitmapAtlas> atlases = new Dictionary<int, BitmapAtlas>();
 
-        protected Dictionary<GradientCacheKey, Brush> verticalGradientCache = new Dictionary<GradientCacheKey, Brush>();
-        protected Dictionary<GradientCacheKey, Brush> horizontalGradientCache = new Dictionary<GradientCacheKey, Brush>();
-        protected Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
-
         public float FontScaling => fontScaling;
         public float WindowScaling => windowScaling;
         public int DashTextureSize => dashedBitmap.Size.Width;
@@ -257,91 +253,6 @@ namespace FamiStudio
             return new Bitmap(this, CreateEmptyTexture(width, height, alpha, filter), width, height, true, filter);
         }
 
-        public Brush CreateSolidBrush(Color color)
-        {
-            return new Brush(color);
-        }
-
-        public Brush CreateHorizontalGradientBrush(float x0, float x1, Color color0, Color color1)
-        {
-            Debug.Assert(x0 == 0.0f);
-            return new Brush(color0, color1, x1 - x0, 0.0f);
-        }
-
-        public Brush CreateVerticalGradientBrush(float y0, float y1, Color color0, Color color1)
-        {
-            Debug.Assert(y0 == 0.0f);
-            return new Brush(color0, color1, 0.0f, y1 - y0);
-        }
-
-        public Brush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
-        {
-            if (dimming != 1.0f || alphaDimming != 1.0f)
-            {
-                color = Color.FromArgb(
-                    (int)(color.A * alphaDimming),
-                    (int)(color.R * dimming),
-                    (int)(color.G * dimming),
-                    (int)(color.B * dimming));
-            }
-
-            if (solidGradientCache.TryGetValue(color, out var brush))
-                return brush;
-
-            brush = new Brush(color);
-            solidGradientCache[color] = brush;
-
-            return brush;
-        }
-
-        public Brush GetVerticalGradientBrush(Color color0, int sizeY, float dimming)
-        {
-            Color color1 = Color.FromArgb(
-                (int)(color0.A),
-                (int)(color0.R * dimming),
-                (int)(color0.G * dimming),
-                (int)(color0.B * dimming));
-
-            return GetVerticalGradientBrush(color0, color1, sizeY);
-        }
-
-        public Brush GetVerticalGradientBrush(Color color0, Color color1, int sizeY)
-        {
-            var key = new GradientCacheKey() { color0 = color0, color1 = color1, size = sizeY };
-
-            if (verticalGradientCache.TryGetValue(key, out var brush))
-                return brush;
-
-            brush = CreateVerticalGradientBrush(0, sizeY, color0, color1);
-            verticalGradientCache[key] = brush;
-
-            return brush;
-        }
-
-        public Brush GetHorizontalGradientBrush(Color color0, int sizeY, float dimming)
-        {
-            Color color1 = Color.FromArgb(
-                (int)(color0.A),
-                (int)(color0.R * dimming),
-                (int)(color0.G * dimming),
-                (int)(color0.B * dimming));
-
-            return GetHorizontalGradientBrush(color0, color1, sizeY);
-        }
-
-        public Brush GetHorizontalGradientBrush(Color color0, Color color1, int sizeY)
-        {
-            var key = new GradientCacheKey() { color0 = color0, color1 = color1, size = sizeY };
-
-            if (horizontalGradientCache.TryGetValue(key, out var brush))
-                return brush;
-
-            brush = CreateHorizontalGradientBrush(0, sizeY, color0, color1);
-            horizontalGradientCache[key] = brush;
-
-            return brush;
-        }
-
         protected T ReadFontParam<T>(string[] values, string key)
         {
             for (int i = 1; i < values.Length; i += 2)
@@ -438,18 +349,9 @@ namespace FamiStudio
 
         public virtual void Dispose()
         {
-            foreach (var b in verticalGradientCache.Values)
-                b.Dispose();
-            foreach (var b in horizontalGradientCache.Values)
-                b.Dispose();
-            foreach (var b in solidGradientCache.Values)
-                b.Dispose();
             foreach (var a in atlases.Values)
                 a.Dispose();
 
-            verticalGradientCache.Clear();
-            horizontalGradientCache.Clear();
-            solidGradientCache.Clear();
             atlases.Clear();
         }
 
@@ -744,38 +646,6 @@ namespace FamiStudio
         }
     }
 
-    public class Brush : IDisposable
-    {
-        public float GradientSizeX = 0.0f;
-        public float GradientSizeY = 0.0f;
-        public Color Color0;
-        public Color Color1;
-        public int PackedColor0;
-        public int PackedColor1;
-
-        public Brush(Color color)
-        {
-            Color0 = color;
-            PackedColor0 = ColorUtils.PackColor(color);
-        }
-
-        public Brush(Color color0, Color color1, float sizeX, float sizeY)
-        {
-            Color0 = color0;
-            Color1 = color1;
-            PackedColor0 = ColorUtils.PackColor(color0);
-            PackedColor1 = ColorUtils.PackColor(color1);
-            GradientSizeX = sizeX;
-            GradientSizeY = sizeY;
-        }
-
-        public bool IsGradient => GradientSizeX != 0 || GradientSizeY != 0;
-
-        public void Dispose()
-        {
-        }
-    }
-
     public class Bitmap : IDisposable
     {
         protected int id;
@@ -862,19 +732,6 @@ namespace FamiStudio
         public void GetElementUVs(out float u0, out float v0, out float u1, out float v1)
         {
             atlas.GetElementUVs(index, out u0, out v0, out u1, out v1);
-        }
-    }
-
-    public static class ColorUtils
-    {
-        public static int PackColor(Color c)
-        {
-            return (c.A << 24) | (c.B << 16) | (c.G << 8) | c.R;
-        }
-
-        public static int PackColor(int r, int g, int b, int a)
-        {
-            return (a << 24) | (b << 16) | (g << 8) | r;
         }
     }
 
@@ -1018,7 +875,7 @@ namespace FamiStudio
             public RectangleF clipRect;
             public TextFlags flags;
             public string text;
-            public Brush brush;
+            public Color color;
         };
 
         private class BitmapInstance
@@ -1217,11 +1074,11 @@ namespace FamiStudio
             return currentLineBatch;
         }
 
-        private void DrawLineInternal(float x0, float y0, float x1, float y1, Brush brush, int width, bool smooth, bool dash)
+        private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool smooth, bool dash)
         {
             if (width > 1.0f && drawThickLineAsPolygon)
             {
-                DrawThickLineAsPolygonInternal(x0, y0, x1, y1, brush, width);
+                DrawThickLineAsPolygonInternal(x0, y0, x1, y1, color, width);
                 return;
             }
 
@@ -1257,11 +1114,11 @@ namespace FamiStudio
                 batch.texArray[batch.texIdx++] = 0.5f;
             }
 
-            batch.colArray[batch.colIdx++] = brush.PackedColor0;
-            batch.colArray[batch.colIdx++] = brush.PackedColor0;
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
         }
 
-        private void DrawThickLineAsPolygonInternal(float x0, float y0, float x1, float y1, Brush brush, float width)
+        private void DrawThickLineAsPolygonInternal(float x0, float y0, float x1, float y1, Color color, float width)
         {
             if (thickLineBatch == null)
             {
@@ -1300,23 +1157,23 @@ namespace FamiStudio
             batch.vtxArray[batch.vtxIdx++] = x0 - dy;
             batch.vtxArray[batch.vtxIdx++] = y0 - dx;
 
-            batch.colArray[batch.colIdx++] = brush.PackedColor0;
-            batch.colArray[batch.colIdx++] = brush.PackedColor0;
-            batch.colArray[batch.colIdx++] = brush.PackedColor0;
-            batch.colArray[batch.colIdx++] = brush.PackedColor0;
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
         }
 
-        public void DrawLine(float x0, float y0, float x1, float y1, Brush brush, int width = 1, bool smooth = false, bool dash = false)
+        public void DrawLine(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool dash = false)
         {
             width += lineWidthBias;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            DrawLineInternal(x0, y0, x1, y1, brush, width, smooth, dash);
+            DrawLineInternal(x0, y0, x1, y1, color, width, smooth, dash);
         }
 
-        public void DrawLine(IList<float> points, Brush brush, int width = 1, bool smooth = false)
+        public void DrawLine(IList<float> points, Color color, int width = 1, bool smooth = false)
         {
             if (points.Count == 0)
                 return;
@@ -1334,14 +1191,14 @@ namespace FamiStudio
                 var y1 = points[i + 1];
                 
                 xform.TransformPoint(ref x1, ref y1);
-                DrawLineInternal(x0, y0, x1, y1, brush, width, smooth, false);
+                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
 
                 x0 = x1;
                 y0 = y1;
             }
         }
 
-        public void DrawLine(float[,] points, Brush brush, int width = 1, bool smooth = false)
+        public void DrawLine(float[,] points, Color color, int width = 1, bool smooth = false)
         {
             width += lineWidthBias;
 
@@ -1356,14 +1213,14 @@ namespace FamiStudio
                 var y1 = points[i, 1];
 
                 xform.TransformPoint(ref x1, ref y1);
-                DrawLineInternal(x0, y0, x1, y1, brush, width, smooth, false);
+                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
 
                 x0 = x1;
                 y0 = y1;
             }
         }
 
-        public void DrawGeometry(float[,] points, Brush brush, int width = 1, bool smooth = false)
+        public void DrawGeometry(float[,] points, Color color, int width = 1, bool smooth = false)
         {
             width += lineWidthBias;
 
@@ -1378,24 +1235,24 @@ namespace FamiStudio
                 var y1 = points[i, 1];
 
                 xform.TransformPoint(ref x1, ref y1);
-                DrawLineInternal(x0, y0, x1, y1, brush, width, smooth, false);
+                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
 
                 x0 = x1;
                 y0 = y1;
             }
         }
 
-        public void DrawRectangle(Rectangle rect, Brush brush, int width = 1, bool smooth = false)
+        public void DrawRectangle(Rectangle rect, Color color, int width = 1, bool smooth = false)
         {
-            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width, smooth);
+            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color, width, smooth);
         }
 
-        public void DrawRectangle(RectangleF rect, Brush brush, int width = 1, bool smooth = false)
+        public void DrawRectangle(RectangleF rect, Color color, int width = 1, bool smooth = false)
         {
-            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width, smooth);
+            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color, width, smooth);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, Brush brush, int width = 1, bool smooth = false)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false)
         {
             width += lineWidthBias;
 
@@ -1412,13 +1269,13 @@ namespace FamiStudio
                 extraPixel = 0;
             }
 
-            DrawLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, brush, width, smooth, false);
-            DrawLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, brush, width, smooth, false);
-            DrawLineInternal(x0 - halfWidth, y1, x1 + extraPixel + halfWidth, y1, brush, width, smooth, false);
-            DrawLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, brush, width, smooth, false);
+            DrawLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, color, width, smooth, false);
+            DrawLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, color, width, smooth, false);
+            DrawLineInternal(x0 - halfWidth, y1, x1 + extraPixel + halfWidth, y1, color, width, smooth, false);
+            DrawLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, color, width, smooth, false);
         }
 
-        public void DrawGeometry(Geometry geo, Brush brush, int width, bool smooth = false, bool miter = false)
+        public void DrawGeometry(Geometry geo, Color color, int width, bool smooth = false, bool miter = false)
         {
             width += lineWidthBias;
 
@@ -1442,30 +1299,66 @@ namespace FamiStudio
 
                 xform.TransformPoint(ref x1, ref y1);
 
-                DrawLineInternal(x0, y0, x1, y1, brush, width, smooth, false);
+                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
 
                 x0 = x1;
                 y0 = y1;
             }
         }
 
-        public void FillAndDrawGeometry(Geometry geo, Brush fillBrush, Brush lineBrush, int lineWidth = 1, bool smooth = false, bool miter = false)
+        public void FillAndDrawGeometry(Geometry geo, Color fillColor, Color lineColor, int lineWidth = 1, bool smooth = false, bool miter = false)
         {
-            FillGeometry(geo, fillBrush, smooth);
-            DrawGeometry(geo, lineBrush, lineWidth, smooth, miter);
+            FillGeometry(geo, fillColor, smooth);
+            DrawGeometry(geo, lineColor, lineWidth, smooth, miter);
         }
 
-        public void FillRectangle(float x0, float y0, float x1, float y1, Brush brush)
+        public void FillRectangle(float x0, float y0, float x1, float y1, Color color)
         {
             var batch = GetMeshBatch(false);
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            bool fullHorizontalGradient = brush.IsGradient && Math.Abs(brush.GradientSizeX) >= Math.Abs(x1 - x0);
-            bool fullVerticalGradient   = brush.IsGradient && Math.Abs(brush.GradientSizeY) >= Math.Abs(y1 - y0);
+            var i0 = (short)(batch.vtxIdx / 2 + 0);
+            var i1 = (short)(batch.vtxIdx / 2 + 1);
+            var i2 = (short)(batch.vtxIdx / 2 + 2);
+            var i3 = (short)(batch.vtxIdx / 2 + 3);
 
-            if (!brush.IsGradient || fullHorizontalGradient || fullVerticalGradient)
+            batch.idxArray[batch.idxIdx++] = i0;
+            batch.idxArray[batch.idxIdx++] = i1;
+            batch.idxArray[batch.idxIdx++] = i2;
+            batch.idxArray[batch.idxIdx++] = i0;
+            batch.idxArray[batch.idxIdx++] = i2;
+            batch.idxArray[batch.idxIdx++] = i3;
+
+            batch.vtxArray[batch.vtxIdx++] = x0;
+            batch.vtxArray[batch.vtxIdx++] = y0;
+            batch.vtxArray[batch.vtxIdx++] = x1;
+            batch.vtxArray[batch.vtxIdx++] = y0;
+            batch.vtxArray[batch.vtxIdx++] = x1;
+            batch.vtxArray[batch.vtxIdx++] = y1;
+            batch.vtxArray[batch.vtxIdx++] = x0;
+            batch.vtxArray[batch.vtxIdx++] = y1;
+
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+            Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
+        }
+
+        public void FillRectangleGradient(float x0, float y0, float x1, float y1, Color color0, Color color1, bool vertical, float gradientSize)
+        {
+            var batch = GetMeshBatch(false);
+
+            xform.TransformPoint(ref x0, ref y0);
+            xform.TransformPoint(ref x1, ref y1);
+                
+            bool fullHorizontalGradient = !vertical && Math.Abs(gradientSize) >= Math.Abs(x1 - x0);
+            bool fullVerticalGradient   =  vertical && Math.Abs(gradientSize) >= Math.Abs(y1 - y0);
+
+            if (fullHorizontalGradient || fullVerticalGradient)
             {
                 var i0 = (short)(batch.vtxIdx / 2 + 0);
                 var i1 = (short)(batch.vtxIdx / 2 + 1);
@@ -1490,29 +1383,20 @@ namespace FamiStudio
 
                 if (fullHorizontalGradient)
                 {
-                    batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor1;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor1;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                }
-                else if (fullVerticalGradient)
-                {
-                    batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor1;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor1;
+                    batch.colArray[batch.colIdx++] = color0.ToAbgr();
+                    batch.colArray[batch.colIdx++] = color1.ToAbgr();
+                    batch.colArray[batch.colIdx++] = color1.ToAbgr();
+                    batch.colArray[batch.colIdx++] = color0.ToAbgr();
                 }
                 else
                 {
-                    batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor0;
+                    batch.colArray[batch.colIdx++] = color0.ToAbgr();
+                    batch.colArray[batch.colIdx++] = color0.ToAbgr();
+                    batch.colArray[batch.colIdx++] = color1.ToAbgr();
+                    batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 }
             }
-            else if (
-                brush.GradientSizeY == 0.0f ||
-                brush.GradientSizeX == 0.0f) // More complex gradients.
+            else
             {
                 var i0 = (short)(batch.vtxIdx / 2 + 0);
                 var i1 = (short)(batch.vtxIdx / 2 + 1);
@@ -1536,9 +1420,9 @@ namespace FamiStudio
                 batch.idxArray[batch.idxIdx++] = i6;
                 batch.idxArray[batch.idxIdx++] = i7;
 
-                if (brush.GradientSizeY == 0.0f)
+                if (!vertical)
                 {
-                    float xm = x0 + brush.GradientSizeX;
+                    float xm = x0 + gradientSize;
 
                     batch.vtxArray[batch.vtxIdx++] = x0;
                     batch.vtxArray[batch.vtxIdx++] = y0;
@@ -1559,7 +1443,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    float ym = y0 + brush.GradientSizeY;
+                    float ym = y0 + gradientSize;
 
                     batch.vtxArray[batch.vtxIdx++] = x0;
                     batch.vtxArray[batch.vtxIdx++] = y0;
@@ -1579,83 +1463,74 @@ namespace FamiStudio
                     batch.vtxArray[batch.vtxIdx++] = ym;
                 }
 
-                batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                batch.colArray[batch.colIdx++] = brush.PackedColor1;
-                batch.colArray[batch.colIdx++] = brush.PackedColor1;
-                batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                batch.colArray[batch.colIdx++] = brush.PackedColor1;
-                batch.colArray[batch.colIdx++] = brush.PackedColor1;
-                batch.colArray[batch.colIdx++] = brush.PackedColor1;
-                batch.colArray[batch.colIdx++] = brush.PackedColor1;
+                batch.colArray[batch.colIdx++] = color0.ToAbgr();
+                batch.colArray[batch.colIdx++] = color1.ToAbgr();
+                batch.colArray[batch.colIdx++] = color1.ToAbgr();
+                batch.colArray[batch.colIdx++] = color0.ToAbgr();
+                batch.colArray[batch.colIdx++] = color1.ToAbgr();
+                batch.colArray[batch.colIdx++] = color1.ToAbgr();
+                batch.colArray[batch.colIdx++] = color1.ToAbgr();
+                batch.colArray[batch.colIdx++] = color1.ToAbgr();
             }
 
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
-        public void FillRectangle(Rectangle rect, Brush brush)
+        public void FillRectangle(Rectangle rect, Color color)
         {
-            FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
+            FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color);
         }
 
-        public void FillRectangle(RectangleF rect, Brush brush)
+        public void FillRectangleGradient(Rectangle rect, Color color0, Color color1, bool vertical, int gradientSize)
         {
-            FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
+            FillRectangleGradient(rect.Left, rect.Top, rect.Right, rect.Bottom, color0, color1, vertical, gradientSize);
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, Brush fillBrush, Brush lineBrush, int width = 1, bool smooth = false)
+        public void FillRectangle(RectangleF rect, Color color)
         {
-            FillRectangle(x0, y0, x1, y1, fillBrush);
-            DrawRectangle(x0, y0, x1, y1, lineBrush, width, smooth);
+            FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color);
         }
 
-        public void FillAndDrawRectangle(Rectangle rect, Brush fillBrush, Brush lineBrush, int width = 1, bool smooth = false)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, Color fillColor, Color lineColor, int width = 1, bool smooth = false)
         {
-            FillRectangle(rect, fillBrush);
-            DrawRectangle(rect, lineBrush, width, smooth);
+            FillRectangle(x0, y0, x1, y1, fillColor);
+            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth);
         }
 
-        public void FillGeometry(Geometry geo, Brush brush, bool smooth = false)
+        public void FillAndDrawRectangleGradient(float x0, float y0, float x1, float y1, Color fillColor0, Color fillColor1, Color lineColor, bool vertical, int gradientSize, int width = 1, bool smooth = false)
+        {
+            FillRectangleGradient(x0, y0, x1, y1, fillColor0, fillColor1, vertical, gradientSize);
+            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth);
+        }
+
+        public void FillAndDrawRectangle(Rectangle rect, Color fillColor, Color lineColor, int width = 1, bool smooth = false)
+        {
+            FillRectangle(rect, fillColor);
+            DrawRectangle(rect, lineColor, width, smooth);
+        }
+
+        public void FillAndDrawRectangleGradient(Rectangle rect, Color fillColor0, Color fillColor1, Color lineColor, bool vertical, int gradientSize, int width = 1, bool smooth = false)
+        {
+            FillRectangleGradient(rect, fillColor0, fillColor1, vertical, gradientSize);
+            DrawRectangle(rect, lineColor, width, smooth);
+        }
+
+        public void FillGeometry(Geometry geo, Color color, bool smooth = false)
         {
             var batch = GetMeshBatch(smooth);
             var i0 = (short)(batch.vtxIdx / 2);
 
-            if (!brush.IsGradient)
+            // All our geometries are closed, so no need for the last vert.
+            for (int i = 0; i < geo.Points.Length - 2; i += 2)
             {
-                // All our geometries are closed, so no need for the last vert.
-                for (int i = 0; i < geo.Points.Length - 2; i += 2)
-                {
-                    float x = geo.Points[i + 0];
-                    float y = geo.Points[i + 1];
+                float x = geo.Points[i + 0];
+                float y = geo.Points[i + 1];
 
-                    xform.TransformPoint(ref x, ref y);
+                xform.TransformPoint(ref x, ref y);
 
-                    batch.vtxArray[batch.vtxIdx++] = x;
-                    batch.vtxArray[batch.vtxIdx++] = y;
-                    batch.colArray[batch.colIdx++] = brush.PackedColor0;
-                }
-            }
-            else
-            {
-                Debug.Assert(brush.GradientSizeX == 0.0f);
-
-                // All our geometries are closed, so no need for the last vert.
-                for (int i = 0; i < geo.Points.Length; i += 2)
-                {
-                    float x = geo.Points[i + 0];
-                    float y = geo.Points[i + 1];
-
-                    float lerp = y / brush.GradientSizeY;
-                    byte r = (byte)(brush.Color0.R * (1.0f - lerp) + (brush.Color1.R * lerp));
-                    byte g = (byte)(brush.Color0.G * (1.0f - lerp) + (brush.Color1.G * lerp));
-                    byte b = (byte)(brush.Color0.B * (1.0f - lerp) + (brush.Color1.B * lerp));
-                    byte a = (byte)(brush.Color0.A * (1.0f - lerp) + (brush.Color1.A * lerp));
-
-                    xform.TransformPoint(ref x, ref y);
-
-                    batch.vtxArray[batch.vtxIdx++] = x;
-                    batch.vtxArray[batch.vtxIdx++] = y;
-                    batch.colArray[batch.colIdx++] = ColorUtils.PackColor(r, g, b, a);
-                }
+                batch.vtxArray[batch.vtxIdx++] = x;
+                batch.vtxArray[batch.vtxIdx++] = y;
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
             }
 
             // Simple fan
@@ -1670,7 +1545,42 @@ namespace FamiStudio
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
-        public void FillGeometry(float[,] points, Brush brush, bool smooth = false)
+        // Assumed to be a vertical gradient.
+        public void FillGeometryGradient(Geometry geo, Color color0, Color color1, int gradientSize, bool smooth = false)
+        {
+            var batch = GetMeshBatch(smooth);
+            var i0 = (short)(batch.vtxIdx / 2);
+
+            // All our geometries are closed, so no need for the last vert.
+            for (int i = 0; i < geo.Points.Length; i += 2)
+            {
+                float x = geo.Points[i + 0];
+                float y = geo.Points[i + 1];
+
+                float lerp = y / gradientSize;
+                byte r = (byte)(color0.R * (1.0f - lerp) + (color1.R * lerp));
+                byte g = (byte)(color0.G * (1.0f - lerp) + (color1.G * lerp));
+                byte b = (byte)(color0.B * (1.0f - lerp) + (color1.B * lerp));
+                byte a = (byte)(color0.A * (1.0f - lerp) + (color1.A * lerp));
+
+                xform.TransformPoint(ref x, ref y);
+
+                batch.vtxArray[batch.vtxIdx++] = x;
+                batch.vtxArray[batch.vtxIdx++] = y;
+                batch.colArray[batch.colIdx++] = new Color(r, g, b, a).ToAbgr();
+            }
+
+            // Simple fan
+            var numVertices = geo.Points.Length / 2 - 1;
+            for (int i = 0; i < numVertices - 2; i++)
+            {
+                batch.idxArray[batch.idxIdx++] = i0;
+                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
+                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
+            }
+        }
+
+        public void FillGeometry(float[,] points, Color color, bool smooth = false)
         {
             var batch = GetMeshBatch(smooth);
             var i0 = (short)(batch.vtxIdx / 2);
@@ -1684,7 +1594,7 @@ namespace FamiStudio
 
                 batch.vtxArray[batch.vtxIdx++] = x;
                 batch.vtxArray[batch.vtxIdx++] = y;
-                batch.colArray[batch.colIdx++] = brush.PackedColor0;
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
             }
 
             // Simple fan.
@@ -1697,7 +1607,7 @@ namespace FamiStudio
             }
         }
 
-        public void DrawText(string text, Font font, float x, float y, Brush brush, TextFlags flags = TextFlags.None, float width = 0, float height = 0, float clipMinX = 0, float clipMaxX = 0)
+        public void DrawText(string text, Font font, float x, float y, Color color, TextFlags flags = TextFlags.None, float width = 0, float height = 0, float clipMinX = 0, float clipMaxX = 0)
         {
             if (string.IsNullOrEmpty(text))
                 return;
@@ -1721,7 +1631,7 @@ namespace FamiStudio
             inst.layoutRect = new RectangleF(x, y, width, height);
             inst.flags = flags;
             inst.text = text;
-            inst.brush = brush;
+            inst.color = color;
 
             if (clipMaxX > clipMinX)
             {
@@ -1971,7 +1881,7 @@ namespace FamiStudio
                         }
                     }
 
-                    var packedColor = inst.brush.PackedColor0;
+                    var packedColor = inst.color.ToAbgr();
                     var numVertices = inst.text.Length * 4;
 
                     int x = (int)(inst.layoutRect.X + alignmentOffsetX);
@@ -2221,7 +2131,7 @@ namespace FamiStudio
                         texArray[texIdx++] = inst.v1;
                     }
 
-                    var packedOpacity = ColorUtils.PackColor(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)); 
+                    var packedOpacity = new Color(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)).ToAbgr();
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;

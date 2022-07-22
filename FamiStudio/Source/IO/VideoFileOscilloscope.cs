@@ -125,16 +125,14 @@ namespace FamiStudio
             var smallChannelText = channelResY < 128;
             var bmpSuffix = smallChannelText ? "" : "@2x";
             var font = lineThickness > 1 ?
-                (smallChannelText ? themeResources.FontMediumBold : themeResources.FontVeryLargeBold) : 
-                (smallChannelText ? themeResources.FontMedium     : themeResources.FontVeryLarge);
+                (smallChannelText ? fontResources.FontMediumBold : fontResources.FontVeryLargeBold) : 
+                (smallChannelText ? fontResources.FontMedium     : fontResources.FontVeryLarge);
             var textOffsetY = smallChannelText ? 1 : 4;
             var channelLineWidth = resY >= 720 ? 5 : 3;
+            var gradientSizeY = channelResY / 2;
 
             foreach (var s in channelStates)
                 s.bmpIcon = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[s.channel.Type] + bmpSuffix);
-
-            var gradientSizeY = channelResY / 2;
-            var gradientBrush = videoGraphics.CreateVerticalGradientBrush(0, gradientSizeY, Color.Black, Color.FromArgb(0, Color.Black));
 
             // Generate the metadata for the video so we know what's happening at every frame
             var metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
@@ -184,7 +182,7 @@ namespace FamiStudio
                     for (int i = 0; i < numRows; i++)
                     {
                         cmd.PushTranslation(0, i * channelResY);
-                        cmd.FillRectangle(0, 0, videoResX, channelResY, gradientBrush);
+                        cmd.FillRectangleGradient(0, 0, videoResX, channelResY, Color.Black, Color.Transparent, true, gradientSizeY);
                         cmd.PopTransform();
                     }
 
@@ -201,26 +199,23 @@ namespace FamiStudio
                         var channelPosY0 = (channelY + 0) * channelResY;
                         var channelPosY1 = (channelY + 1) * channelResY;
 
-                        // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
-                        GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0, channelPosY1, channelPosX1, channelPosY0, oscilloscope);
-
-                        var brush = videoGraphics.GetSolidBrush(frame.channelColors[i]);
-
-                        cmd.DrawGeometry(oscilloscope, brush, lineThickness, true);
-
                         var channelIconPosX = channelPosX0 + s.bmpIcon.Size.Width  / 2;
                         var channelIconPosY = channelPosY0 + s.bmpIcon.Size.Height / 2;
 
-                        cmd.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width - 1, channelIconPosY + s.bmpIcon.Size.Height - 1, themeResources.DarkGreyBrush2, themeResources.LightGreyBrush1);
+                        // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
+                        GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0, channelPosY1, channelPosX1, channelPosY0, oscilloscope);
+
+                        cmd.DrawGeometry(oscilloscope, frame.channelColors[i], lineThickness, true);
+                        cmd.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width - 1, channelIconPosY + s.bmpIcon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
                         cmd.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
-                        cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, themeResources.LightGreyBrush1); 
+                        cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, Theme.LightGreyColor1); 
                     }
 
                     // Grid lines
                     for (int i = 1; i < numRows; i++)
-                        cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, themeResources.BlackBrush, channelLineWidth); 
+                        cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth); 
                     for (int i = 1; i < numColumns; i++)
-                        cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, themeResources.BlackBrush, channelLineWidth);
+                        cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
 
                     // Watermark.
                     cmd.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
@@ -251,9 +246,8 @@ namespace FamiStudio
                 foreach (var c in channelStates)
                     c.bmpIcon.Dispose();
 
-                themeResources.Dispose();
+                fontResources.Dispose();
                 bmpWatermark.Dispose();
-                gradientBrush.Dispose();
                 videoGraphics.Dispose();
             }
 

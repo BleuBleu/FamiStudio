@@ -112,13 +112,13 @@ namespace FamiStudio
             var c = parentDialog.CommandList;
             var thumbRect = GetThumbRectangle();
 
-            c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, ThemeResources.DarkGreyBrush1, ScaleForWindow(3));
+            c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, Theme.DarkGreyColor1, ScaleForWindow(3));
             c.DrawBitmapAtlas(bmpThumb, thumbRect.Left, thumbRect.Top, 1, 1, hover || dragging ? Theme.LightGreyColor2 : enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
 
             if (label)
             {
                 var str = string.Format(CultureInfo.InvariantCulture, format, val);
-                c.DrawText(str, ThemeResources.FontMedium, width - labelSize, 0, enabled ? ThemeResources.LightGreyBrush1 : ThemeResources.MediumGreyBrush1, TextFlags.MiddleRight, labelSize, height);
+                c.DrawText(str, FontResources.FontMedium, width - labelSize, 0, enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1, TextFlags.MiddleRight, labelSize, height);
             }
         }
     }

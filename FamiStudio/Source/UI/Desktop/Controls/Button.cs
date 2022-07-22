@@ -58,7 +58,7 @@ namespace FamiStudio
         {
             // Only bothered to support this one use case.
             Debug.Assert(!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(imageName));
-            width = margin * 3 + bmp.ElementSize.Width + ThemeResources.FontMedium.MeasureString(text, false);
+            width = margin * 3 + bmp.ElementSize.Width + FontResources.FontMedium.MeasureString(text, false);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -105,20 +105,20 @@ namespace FamiStudio
         {
             var c = parentDialog.CommandList;
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
-            var brush = enabled ? ThemeResources.LightGreyBrush1 : ThemeResources.MediumGreyBrush1;
+            var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
             if (enabled && (border || press || hover))
             {
-                var fillBrush = press ? ThemeResources.MediumGreyBrush1 :
-                                hover ? ThemeResources.DarkGreyBrush6 :
-                                        ThemeResources.DarkGreyBrush5;
+                var fillBrush = press ? Theme.MediumGreyColor1 :
+                                hover ? Theme.DarkGreyColor6 :
+                                        Theme.DarkGreyColor5;
 
                 c.FillRectangle(ClientRectangle, fillBrush);
             }
 
             if (border)
             {
-                c.DrawRectangle(ClientRectangle, ThemeResources.BlackBrush);
+                c.DrawRectangle(ClientRectangle, Theme.BlackColor);
             }
 
             var hasText = !string.IsNullOrEmpty(text);
@@ -127,16 +127,16 @@ namespace FamiStudio
 
             if (!hasText && bmp != null)
             {
-                c.DrawBitmapAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, 1, brush.Color0);
+                c.DrawBitmapAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, 1, color);
             }
             else if (hasText && bmp == null)
             {
-                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, 0, 0, brush, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
+                c.DrawText(text, bold ? FontResources.FontMediumBold : FontResources.FontMedium, 0, 0, color, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
             }
             else if (hasText && bmp != null)
             {
-                c.DrawBitmapAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, 1, brush.Color0);
-                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, bmpSize.Width + margin * 2, 0, brush, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
+                c.DrawBitmapAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, 1, color);
+                c.DrawText(text, bold ? FontResources.FontMediumBold : FontResources.FontMedium, bmpSize.Width + margin * 2, 0, color, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 
             c.PopTransform();

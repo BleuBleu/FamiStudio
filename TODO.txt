@@ -22,6 +22,8 @@ P0:
 - Support for multiple waveforms for N163
 - Support for audio expansions for ROM export 
 - Wave resampling for N163/FDS waveforms
+- Basic NSFe support (track names and durations)
+- 
 
 Testing:
 ========

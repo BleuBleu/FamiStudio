@@ -44,20 +44,15 @@ namespace FamiStudio
         protected Color backColor     = Theme.DarkGreyColor1;
         protected Color selColor      = Theme.MediumGreyColor1;
 
-        protected Brush foreBrush;
-        protected Brush disabledBrush;
-        protected Brush backBrush;
-        protected Brush selBrush;
-        
         protected int topMargin    = DpiScaling.ScaleForWindow(3);
         protected int outerMargin  = DpiScaling.ScaleForWindow(0);
         protected int innerMargin  = DpiScaling.ScaleForWindow(4);
         protected int scrollAmount = DpiScaling.ScaleForWindow(20);
 
-        public Color ForeColor      { get => foreColor;     set { foreColor     = value; foreBrush     = null; MarkDirty(); } }
-        public Color DisabledColor  { get => disabledColor; set { disabledColor = value; disabledBrush = null; MarkDirty(); } }
-        public Color BackColor      { get => backColor;     set { backColor     = value; backBrush     = null; MarkDirty(); } }
-        public Color SelectionColor { get => selColor;      set { selColor      = value; selBrush      = null; MarkDirty(); } }
+        public Color ForeColor      { get => foreColor;     set { foreColor     = value; MarkDirty(); } }
+        public Color DisabledColor  { get => disabledColor; set { disabledColor = value; MarkDirty(); } }
+        public Color BackColor      { get => backColor;     set { backColor     = value; MarkDirty(); } }
+        public Color SelectionColor { get => selColor;      set { selColor      = value; MarkDirty(); } }
 
         public TextBox(Dialog dlg, string txt, int maxLen = 0) : base(dlg)
         {
@@ -119,7 +114,7 @@ namespace FamiStudio
 
         protected void UpdateScrollParams()
         {
-            maxScrollX = Math.Max(0, ThemeResources.FontMedium.MeasureString(text, false) - (textAreaWidth - innerMargin * 2));
+            maxScrollX = Math.Max(0, FontResources.FontMedium.MeasureString(text, false) - (textAreaWidth - innerMargin * 2));
             scrollX = Utils.Clamp(scrollX, 0, maxScrollX);
         }
 
@@ -411,14 +406,14 @@ namespace FamiStudio
 
         protected int PixelToChar(int x, bool margin = true)
         {
-            return ThemeResources.FontMedium.GetNumCharactersForSize(text, x - (margin ? innerMargin : 0) + scrollX, true);
+            return FontResources.FontMedium.GetNumCharactersForSize(text, x - (margin ? innerMargin : 0) + scrollX, true);
         }
 
         protected int CharToPixel(int c, bool margin = true)
         {
             var px = (margin ? innerMargin : 0) - scrollX;
             if (c > 0)
-                px += ThemeResources.FontMedium.MeasureString(text.Substring(0, c), false);
+                px += FontResources.FontMedium.MeasureString(text.Substring(0, c), false);
             return px;
         }
 
@@ -522,13 +517,8 @@ namespace FamiStudio
         {
             var c = parentDialog.CommandList;
 
-            if (foreBrush     == null) foreBrush     = g.CreateSolidBrush(foreColor);
-            if (disabledBrush == null) disabledBrush = g.CreateSolidBrush(disabledColor);
-            if (backBrush     == null) backBrush     = g.CreateSolidBrush(backColor);
-            if (selBrush      == null) selBrush      = g.CreateSolidBrush(selColor);
-
             c.PushTranslation(outerMargin, 0);
-            c.FillAndDrawRectangle(0, 0, textAreaWidth - 1, height - 1, backBrush, enabled ? foreBrush : disabledBrush);
+            c.FillAndDrawRectangle(0, 0, textAreaWidth - 1, height - 1, backColor, enabled ? foreColor : disabledColor);
             
             if (selectionLength > 0 && HasDialogFocus && enabled)
             {
@@ -536,15 +526,15 @@ namespace FamiStudio
                 var sx1 = selectionLength > 0 ? Utils.Clamp(CharToPixel(selectionStart + selectionLength), innerMargin, textAreaWidth - innerMargin) : sx0;
 
                 if (sx0 != sx1)
-                    c.FillRectangle(sx0, topMargin, sx1, height - topMargin, selBrush);
+                    c.FillRectangle(sx0, topMargin, sx1, height - topMargin, selColor);
             }
 
-            c.DrawText(text, ThemeResources.FontMedium, innerMargin - scrollX, 0, enabled ? foreBrush : disabledBrush, TextFlags.MiddleLeft | TextFlags.Clip, 0, height, innerMargin, textAreaWidth - innerMargin);
+            c.DrawText(text, FontResources.FontMedium, innerMargin - scrollX, 0, enabled ? foreColor : disabledColor, TextFlags.MiddleLeft | TextFlags.Clip, 0, height, innerMargin, textAreaWidth - innerMargin);
 
             if (caretBlink && HasDialogFocus && enabled)
             {
                 var cx = CharToPixel(caretIndex);
-                c.DrawLine(cx, topMargin, cx, height - topMargin, foreBrush);
+                c.DrawLine(cx, topMargin, cx, height - topMargin, foreColor);
             }
             c.PopTransform();
         }

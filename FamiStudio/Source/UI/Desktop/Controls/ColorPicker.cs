@@ -75,18 +75,16 @@ namespace FamiStudio
             {
                 for (var j = 0; j < Theme.CustomColors.GetLength(1); j++)
                 {
-                    var brush = ThemeResources.CustomColorBrushes[Theme.CustomColors[i, j]];
-
                     var x0 = (int)((i + 0) * width  / (float)numColorsX);
                     var y0 = (int)((j + 0) * height / (float)numColorsY);
                     var x1 = (int)((i + 1) * width  / (float)numColorsX);
                     var y1 = (int)((j + 1) * height / (float)numColorsY);
 
-                    c.FillRectangle(x0, y0, x1, y1, brush);
+                    c.FillRectangle(x0, y0, x1, y1, Theme.CustomColors[i, j]);
                 }
             }
 
-            c.DrawRectangle(0, 0, width - 1, height - 1, ThemeResources.BlackBrush);
+            c.DrawRectangle(0, 0, width - 1, height - 1, Theme.BlackColor);
         }
     }
 }

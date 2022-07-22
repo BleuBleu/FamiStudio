@@ -24,7 +24,7 @@ namespace FamiStudio
         public void AutosizeWidth()
         {
             Debug.Assert(!multiline);
-            width = ThemeResources.FontMedium.MeasureString(text, false);
+            width = FontResources.FontMedium.MeasureString(text, false);
         }
 
         public void AdjustHeightForMultiline()
@@ -38,7 +38,7 @@ namespace FamiStudio
 
                 while (true)
                 {
-                    var n = ThemeResources.FontMedium.GetNumCharactersForSize(input, actualWidth);
+                    var n = FontResources.FontMedium.GetNumCharactersForSize(input, actualWidth);
                     var done = n == input.Length;
                     
                     if (!done)
@@ -67,7 +67,7 @@ namespace FamiStudio
 
                 text = output;
 
-                Resize(width, ThemeResources.FontMedium.LineHeight * numLines);
+                Resize(width, FontResources.FontMedium.LineHeight * numLines);
             }
         }
 
@@ -79,7 +79,7 @@ namespace FamiStudio
 
         public int MeasureWidth()
         {
-            return ThemeResources.FontMedium.MeasureString(text, false);
+            return FontResources.FontMedium.MeasureString(text, false);
         }
 
         protected override void OnAddedToDialog()
@@ -90,7 +90,7 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             var c = parentDialog.CommandList;
-            var brush = enabled ? ThemeResources.LightGreyBrush1 : ThemeResources.MediumGreyBrush1;
+            var brush = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
             if (multiline)
             {
@@ -98,12 +98,12 @@ namespace FamiStudio
 
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    c.DrawText(lines[i], ThemeResources.FontMedium, labelOffsetX, i * ThemeResources.FontMedium.LineHeight, brush, TextFlags.TopLeft, 0, height);
+                    c.DrawText(lines[i], FontResources.FontMedium, labelOffsetX, i * FontResources.FontMedium.LineHeight, brush, TextFlags.TopLeft, 0, height);
                 }
             }
             else
             {
-                c.DrawText(text, ThemeResources.FontMedium, labelOffsetX, 0, brush, TextFlags.MiddleLeft, 0, height);
+                c.DrawText(text, FontResources.FontMedium, labelOffsetX, 0, brush, TextFlags.MiddleLeft, 0, height);
             }
         }
     }

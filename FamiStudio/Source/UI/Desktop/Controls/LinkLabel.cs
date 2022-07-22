@@ -31,7 +31,7 @@ namespace FamiStudio
 
         private int MeasureString()
         {
-            return ThemeResources.FontMedium.MeasureString(text, false);
+            return FontResources.FontMedium.MeasureString(text, false);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -46,9 +46,9 @@ namespace FamiStudio
 
             var c = parentDialog.CommandList;
             var sx = MeasureString();
-            var brush = hover ? ThemeResources.LightGreyBrush2 : ThemeResources.LightGreyBrush1;
+            var brush = hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1;
 
-            c.DrawText(text, ThemeResources.FontMedium, 0, 0, brush, TextFlags.MiddleLeft, 0, height);
+            c.DrawText(text, FontResources.FontMedium, 0, 0, brush, TextFlags.MiddleLeft, 0, height);
             c.DrawLine(0, height  - lineOffset, sx, height - lineOffset, brush);
         }
     }

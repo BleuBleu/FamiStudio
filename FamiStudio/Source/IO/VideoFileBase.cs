@@ -28,7 +28,7 @@ namespace FamiStudio
         protected OffscreenGraphics videoGraphics;
         protected VideoEncoder videoEncoder;
         protected VideoChannelState[] channelStates;
-        protected ThemeRenderResources themeResources;
+        protected FontRenderResources fontResources;
 
         // Mostly from : https://github.com/kometbomb/oscilloscoper/blob/master/src/Oscilloscope.cpp
         protected void GenerateOscilloscope(short[] wav, int position, int windowSize, int maxLookback, float scaleY, float minX, float minY, float maxX, float maxY, float[,] oscilloscope)
@@ -51,7 +51,6 @@ namespace FamiStudio
                 orig = wav[position];
             }
 
-
             // Then look for a zero crossing.
             if (orig > 0)
             {
@@ -63,7 +62,6 @@ namespace FamiStudio
                     lookback++;
                 }
             }
-
 
             int lastIdx = -1;
             int oscLen = oscilloscope.GetLength(0);
@@ -187,7 +185,7 @@ namespace FamiStudio
                 return false;
             }
 
-            themeResources = new ThemeRenderResources(videoGraphics);
+            fontResources = new FontRenderResources(videoGraphics);
 
             return true;
         }

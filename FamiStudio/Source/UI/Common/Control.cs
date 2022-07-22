@@ -5,7 +5,7 @@ namespace FamiStudio
 {
     public class Control
     {
-        private ThemeRenderResources themeRes;
+        private FontRenderResources fontRes;
         private IntPtr cursor = Cursors.Default;
         protected FamiStudioWindow parentWindow;
         protected Dialog parentDialog;
@@ -113,7 +113,7 @@ namespace FamiStudio
         public int Height => height;
         public bool Capture { set { if (value) parentWindow.CaptureMouse(this); else parentWindow.ReleaseMouse(); } }
         public bool NeedsRedraw => dirty;
-        public bool IsRenderInitialized => themeRes != null;
+        public bool IsRenderInitialized => fontRes != null;
         public bool HasDialogFocus => parentDialog != null && parentDialog.FocusedControl == this;
         public void GrabDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = this; }
         public void ClearDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = null; }
@@ -122,11 +122,11 @@ namespace FamiStudio
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
         public float WindowScaling => windowScaling;
         public float FontScaling => fontScaling;
-        public ThemeRenderResources ThemeResources => themeRes;
+        public FontRenderResources FontResources => fontRes;
         public void MarkDirty() { dirty = true; if (parentDialog != null) parentDialog.MarkDirty(); }
         public void ClearDirtyFlag() { dirty = false; }
         public void SetDpiScales(float main, float font) { windowScaling = main; fontScaling = font; }
-        public void SetThemeRenderResource(ThemeRenderResources res) { themeRes = res; }
+        public void SetFontRenderResource(FontRenderResources res) { fontRes = res; }
 
         public Point CursorPosition => parentWindow.GetCursorPosition();
         public ModifierKeys ModifierKeys => parentWindow.GetModifierKeys();

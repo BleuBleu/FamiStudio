@@ -11,7 +11,7 @@ namespace FamiStudio
         private Graphics gfx;
         private Control[] controls = new Control[4];
         private List<Dialog> dialogs = new List<Dialog>();
-        private ThemeRenderResources res;
+        private FontRenderResources fontRes;
         private float dialogDimming = 0.0f;
         private DateTime lastRender = DateTime.Now;
         private bool contextMenuVisible;
@@ -204,7 +204,7 @@ namespace FamiStudio
                 {
                     gfx.BeginDrawControl(fullWindowRect, height);
                     var c = gfx.CreateCommandList();
-                    c.FillRectangle(fullWindowRect, gfx.GetSolidBrush(Color.Black, 1, Utils.Lerp(0.0f, 0.4f, dialogDimming)));
+                    c.FillRectangle(fullWindowRect, Color.FromArgb(Utils.Lerp(0.0f, 0.4f, dialogDimming), Color.Black));
                     gfx.DrawCommandList(c);
                 }
 
@@ -234,7 +234,7 @@ namespace FamiStudio
         public void InitDialog(Dialog dialog)
         {
             dialog.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            dialog.SetThemeRenderResource(res);
+            dialog.SetFontRenderResource(fontRes);
             dialog.RenderInitialized(gfx);
         }
 
@@ -253,17 +253,17 @@ namespace FamiStudio
         public void InitializeGL()
         {
             gfx = new Graphics(DpiScaling.Window, DpiScaling.Font);
-            res = new ThemeRenderResources(gfx);
+            fontRes = new FontRenderResources(gfx);
 
             foreach (var ctrl in controls)
             {
                 ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-                ctrl.SetThemeRenderResource(res);
+                ctrl.SetFontRenderResource(fontRes);
                 ctrl.RenderInitialized(gfx);
             }
 
             contextMenu.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            contextMenu.SetThemeRenderResource(res);
+            contextMenu.SetFontRenderResource(fontRes);
             contextMenu.RenderInitialized(gfx);
         }
 
@@ -272,10 +272,10 @@ namespace FamiStudio
             foreach (var ctrl in controls)
             {
                 ctrl.RenderTerminated();
-                ctrl.SetThemeRenderResource(null);
+                ctrl.SetFontRenderResource(null);
             }
 
-            res.Dispose();
+            fontRes.Dispose();
         }
     }
 }

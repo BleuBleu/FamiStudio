@@ -279,7 +279,7 @@ namespace FamiStudio
 
             for (int j = 0; j < noteSizeY; j++)
                 for (int x = t0; x < t1; x++)
-                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = ColorUtils.PackColor(color);
+                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = color.ToAbgr();
         }
 
         private int ComputePatternSizeX(int patternLen, int framesPerNote)
