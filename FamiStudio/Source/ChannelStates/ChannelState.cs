@@ -365,7 +365,8 @@ namespace FamiStudio
             {
                 for (int j = 0; j < EnvelopeType.Count; j++)
                 {
-                    if (envelopes[j] == null || envelopes[j].Length == 0)
+                    // MATTT : Review this. Need to fix the envelope position on empty envelopes (bug from github).
+                    if (envelopes[j] == null || envelopes[j].IsEmpty(j))
                     {
                         if (j != EnvelopeType.DutyCycle)
                             envelopeValues[j] = Envelope.GetEnvelopeDefaultValue(j);
