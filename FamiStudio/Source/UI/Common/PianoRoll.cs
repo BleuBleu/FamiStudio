@@ -117,9 +117,6 @@ namespace FamiStudio
             VideoRecording
         };
 
-        //Color whiteKeyBrush = g.CreateHorizontalGradientBrush(0, pianoSizeX, Theme.LightGreyColor1, Theme.LightGreyColor2);
-        //Color blackKeyBrush = g.CreateHorizontalGradientBrush(0, blackKeySizeX, Theme.DarkGreyColor4, Theme.DarkGreyColor5);
-
         Color whiteKeyPressedColor         = Color.FromArgb( 70, Theme.BlackColor);
         Color blackKeyPressedColor         = Color.FromArgb( 90, Theme.WhiteColor);
         Color whiteKeyHoverColor           = Color.FromArgb( 40, Theme.BlackColor);
@@ -633,13 +630,13 @@ namespace FamiStudio
         public void ApplySettings()
         {
             snapResolution = Settings.SnapResolution;
-            SnapEnabled = Settings.SnapEnabled;
+            snap = Settings.SnapEnabled;
         }
 
         public void SaveSettings()
         {
             Settings.SnapResolution = snapResolution;
-            Settings.SnapEnabled = SnapEnabled;
+            Settings.SnapEnabled = snap;
         }
 
         public void SaveChannelScroll()
@@ -888,27 +885,6 @@ namespace FamiStudio
         protected override void OnRenderInitialized(Graphics g)
         {
             UpdateRenderCoords();
-
-            //whiteKeyBrush = g.CreateHorizontalGradientBrush(0, pianoSizeX, Theme.LightGreyColor1, Theme.LightGreyColor2);
-            //blackKeyBrush = g.CreateHorizontalGradientBrush(0, blackKeySizeX, Theme.DarkGreyColor4, Theme.DarkGreyColor5);
-            //whiteKeyPressedBrush = g.CreateSolidBrush(Color.FromArgb(70, Color.Black));
-            //blackKeyPressedBrush = g.CreateSolidBrush(Color.FromArgb(90, Color.White));
-            //whiteKeyHoverBrush = g.CreateSolidBrush(Color.FromArgb(40, Color.Black));
-            //blackKeyHoverBrush = g.CreateSolidBrush(Color.FromArgb(60, Color.White));
-            //frameLineBrush = g.CreateSolidBrush(Color.FromArgb(128, Theme.DarkGreyColor2));
-            //debugBrush = g.CreateSolidBrush(Theme.GreenColor);
-            //seekBarBrush = g.CreateSolidBrush(Theme.YellowColor);
-            //seekBarRecBrush = g.CreateSolidBrush(Theme.DarkRedColor);
-            //selectionBgVisibleBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyColor1));
-            //selectionBgInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, Theme.LightGreyColor1));
-            //selectionNoteBrush = g.CreateSolidBrush(Theme.LightGreyColor1);
-            //highlightNoteBrush = g.CreateSolidBrush(Theme.WhiteColor);
-            //attackBrush = g.CreateSolidBrush(Color.FromArgb(128, Theme.BlackColor));
-            //attackBrushForceDisplay = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
-            //iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, Theme.DarkGreyColor2));
-            //invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
-            //volumeSlideBarFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyColor1));
-            //loopSectionBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
 
             fontSmallCharSizeX = FontResources != null ? FontResources.FontSmall.MeasureString("0", false) : 1;
             bmpLoopSmallFill = g.GetBitmapAtlasRef("LoopSmallFill");
@@ -2341,7 +2317,7 @@ namespace FamiStudio
                 color = instrument.Color;
             }
 
-            return alphaDim != 1.0f ? Color.FromArgb((int)(color.A * alphaDim), color) : color;
+            return Color.FromArgb(alphaDim, color);
         }
 
         private bool ShouldDrawLines(Song song, int patternIdx, int numNotes)
@@ -2646,7 +2622,7 @@ namespace FamiStudio
                         var highlighted = i == highlightDPCMSample;
 
                         r.cf.PushTranslation(0, y);
-                        r.cf.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, Color.FromArgb(200, mapping.Sample.Color), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, highlighted ? 2 : 1);
+                        r.cf.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, highlighted ? 2 : 1);
 
                         string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                         if (mapping.Loop) text += ", Looping";
@@ -2676,7 +2652,7 @@ namespace FamiStudio
                     {
                         var y = virtualSizeY - noteValue * noteSizeY - scrollY;
                         r.cf.PushTranslation(0, y);
-                        r.cf.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, dragSample.Color, Color.FromArgb(200, dragSample.Color), Theme.WhiteColor, true, noteSizeY, 2, true);
+                        r.cf.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, dragSample.Color, dragSample.Color.Scaled(0.8f), Theme.WhiteColor, true, noteSizeY, 2, true);
                         r.cf.PopTransform();
                     }
                 }
@@ -3004,7 +2980,7 @@ namespace FamiStudio
             int noteTextPosX = attackIconPosX + 1;
 
             if (!outline)
-                r.cf.FillRectangleGradient(0, activeChannelInt, sx, sy, color, Color.FromArgb(200, color), true, sy);
+                r.cf.FillRectangleGradient(0, activeChannelInt, sx, sy, color, color.Scaled(0.8f), true, sy);
             
             if (activeChannel)
                 r.cf.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 2 : 1, selected || outline);
@@ -3048,7 +3024,7 @@ namespace FamiStudio
 
             r.cf.PushTransform(x, y, noteSizeX, 1);
             if (!outline)
-                r.cf.FillGeometryGradient(geo[activeChannel ? 0 : 1], color, Color.FromArgb(200, color), noteSizeY);
+                r.cf.FillGeometryGradient(geo[activeChannel ? 0 : 1], color, color.Scaled(0.8f), noteSizeY);
             if (activeChannel)
                 r.cf.DrawGeometry(geo[0], outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), outline || selected ? 2 : 1, true);
             r.cf.PopTransform();
