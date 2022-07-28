@@ -83,7 +83,7 @@ namespace FamiStudio
         {
             dialog = new MultiPropertyDialog(win, "Export Songs", 600, 200);
             dialog.SetVerb("Export");
-            dialog.DestroyControlsOnClose = false;
+            //dialog.DestroyControlsOnClose = false;
             app = win.FamiStudio;
             project = app.Project;
 
@@ -1037,10 +1037,10 @@ namespace FamiStudio
             return lastProjectCrc == ComputeProjectCrc(project);
         }
         
-        public void DestroyControls()
-        {
-            dialog.DestroyControls();
-        }
+        //public void DestroyControls()
+        //{
+        //    dialog.DestroyControls();
+        //}
 
         public void Export(bool repeatLast)
         {

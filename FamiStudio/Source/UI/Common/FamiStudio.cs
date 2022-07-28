@@ -845,7 +845,7 @@ namespace FamiStudio
             if (exportDialog != null)
             {
                 exportDialog.Exporting -= ExportDialog_Exporting;
-                exportDialog.DestroyControls();
+                //exportDialog.DestroyControls();
                 exportDialog = null;
             }
         }
@@ -1115,18 +1115,10 @@ namespace FamiStudio
 
         public void Export()
         {
-            if (exportDialog != null && !exportDialog.IsProjectStillCompatible(project))
-            {
-                DisplayNotification("Project has changed too much, resetting export settings to default.");
-                FreeExportDialog();
-            }
+            FreeExportDialog();
 
-            if (exportDialog == null)
-            {
-                exportDialog = new ExportDialog(window);
-                exportDialog.Exporting += ExportDialog_Exporting;
-            }
-
+            exportDialog = new ExportDialog(window);
+            exportDialog.Exporting += ExportDialog_Exporting;
             exportDialog.ShowDialogAsync();
         }
 
