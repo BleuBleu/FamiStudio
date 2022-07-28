@@ -29,6 +29,7 @@ namespace FamiStudio
         protected bool forceInstrumentReload = false;
         protected ushort[] noteTable = null;
         protected bool palPlayback = false;
+        protected bool skipEmptyEnvelopes = true;
         protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
         protected int slidePitch = 0;
@@ -48,6 +49,7 @@ namespace FamiStudio
             apuIdx = apu;
             channelType = type;
             palPlayback = pal;
+            skipEmptyEnvelopes = apuIdx != NesApu.APU_INSTRUMENT; // HACK : Pass a flag for this.
             maximumPeriod = NesApu.GetPitchLimitForChannelType(channelType);
             noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
             note.Value = Note.NoteStop;
@@ -365,8 +367,9 @@ namespace FamiStudio
             {
                 for (int j = 0; j < EnvelopeType.Count; j++)
                 {
-                    // MATTT : Review this. Need to fix the envelope position on empty envelopes (bug from github).
-                    if (envelopes[j] == null || envelopes[j].IsEmpty(j))
+                    if (envelopes[j] == null ||
+                        ( skipEmptyEnvelopes && envelopes[j].IsEmpty(j)) ||
+                        (!skipEmptyEnvelopes && envelopes[j].Length == 0))
                     {
                         if (j != EnvelopeType.DutyCycle)
                             envelopeValues[j] = Envelope.GetEnvelopeDefaultValue(j);
