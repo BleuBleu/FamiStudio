@@ -8,18 +8,6 @@ namespace FamiStudio
 {
     public abstract class GraphicsBase : IDisposable
     {
-        protected struct GradientCacheKey
-        {
-            public Color color0;
-            public Color color1;
-            public int size;
-
-            public override int GetHashCode()
-            {
-                return Utils.HashCombine(Utils.HashCombine(color0.ToArgb(), color1.ToArgb()), size);
-            }
-        }
-
         protected float windowScaling = 1.0f;
         protected float fontScaling = 1.0f;
         protected bool builtAtlases;
