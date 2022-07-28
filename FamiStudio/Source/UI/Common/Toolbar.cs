@@ -234,10 +234,6 @@ namespace FamiStudio
             public float OffsetY;
         };
 
-        DateTime notificationTime;
-        string notification = "";
-        bool notificationWarning;
-
         int lastButtonX = 500;
         bool redTooltip = false;
         new string tooltip = "";
@@ -576,23 +572,9 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayNotification(string msg, bool warning, bool beep)
-        {
-            notificationTime = DateTime.Now;
-            notification = (warning ? "{Warning} " : "") + msg;
-            notificationWarning = warning;
-            if (beep)
-                Platform.Beep();
-        }
-
         public override void Tick(float delta)
         {
-            if (Platform.IsDesktop)
-            {
-                if (!string.IsNullOrEmpty(notification))
-                    MarkDirty();
-            }
-            else
+            if (Platform.IsMobile)
             {
                 var prevRatio = expandRatio;
 
@@ -1031,22 +1013,6 @@ namespace FamiStudio
             var message = tooltip;
             var messageColor = redTooltip ? warningColor : Theme.LightGreyColor2;
             var messageFont = FontResources.FontMedium;
-
-            if (!string.IsNullOrEmpty(notification))
-            {
-                var span = DateTime.Now - notificationTime;
-
-                if (span.TotalMilliseconds >= 2000)
-                {
-                    notification = "";
-                }
-                else
-                {
-                    message = (((((long)span.TotalMilliseconds) / 250) & 1) != 0) ? notification : "";
-                    messageColor = notificationWarning ? warningColor : Theme.LightGreyColor2;
-                    messageFont = notificationWarning ? FontResources.FontMediumBold : FontResources.FontMedium;
-                }
-            }
 
             // Tooltip
             if (!string.IsNullOrEmpty(message))

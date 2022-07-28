@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
     public class FamiStudioControls
     {
+        private const float ToastFadeTime = 0.25f;
+
         private int width;
         private int height;
         private Graphics gfx;
@@ -35,6 +38,10 @@ namespace FamiStudio
         public bool IsContextMenuActive => contextMenuVisible;
         public bool IsDialogActive => dialogs.Count > 0;
         public Dialog TopDialog => dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
+
+        float  toastDuration;
+        float  toastTimer;
+        string toast;
 
         public Control[] Controls => controls;
 
@@ -159,12 +166,52 @@ namespace FamiStudio
                 dialogDimming = newDialogDimming;
                 MarkDirty();
             }
+
+            if (toastTimer > 0.0f)
+            {
+                toastTimer = Math.Max(0.0f, toastTimer - delta);
+                if (toastTimer == 0.0f)
+                {
+                    toast = null;
+                    toastDuration = 0.0f;
+                }
+                MarkDirty();
+            }
         }
 
         public void MarkDirty()
         {
             foreach (var ctrl in controls)
                 ctrl.MarkDirty();
+        }
+
+        private void RenderToast()
+        {
+            var lines = toast.Split(new[] { '\n' });
+            var font  = fontRes.FontMedium;
+
+            var pad   = DpiScaling.ScaleForWindow(8);
+            var sizeX = lines.Max(l => font.MeasureString(l, false)) + pad * 2;
+            var sizeY = font.LineHeight * lines.Length + pad * 2;
+            var posX  = (width - sizeX) / 2;
+            var posY  = (height - sizeY - DpiScaling.ScaleForWindow(32));
+
+            var rect = new Rectangle(posX, posY, sizeX, sizeY);
+
+            var alphaIn  = Utils.Clamp((toastDuration - toastTimer) / ToastFadeTime, 0.0f, 1.0f);
+            var alphaOut = Utils.Clamp(toastTimer / ToastFadeTime, 0.0f, 1.0f);
+            var alpha    = (int)(Math.Min(alphaIn, alphaOut) * 255);
+
+            Debug.WriteLine($"{toastTimer} = {alpha}");
+
+            gfx.BeginDrawControl(rect, height);
+            var c = gfx.CreateCommandList();
+            c.FillAndDrawRectangle(0, 0, sizeX - 1, sizeY - 1, Color.FromArgb(alpha, Theme.DarkGreyColor1), Color.FromArgb(alpha, Theme.BlackColor));
+            
+            for (int i = 0; i < lines.Length; i++)
+                c.DrawText(lines[i], font, 0, pad + i * font.LineHeight, Color.FromArgb(alpha, Theme.LightGreyColor1), TextFlags.MiddleCenter, sizeX, font.LineHeight);
+            
+            gfx.DrawCommandList(c);
         }
 
         public bool AnyControlNeedsRedraw()
@@ -223,6 +270,11 @@ namespace FamiStudio
                     contextMenu.Render(gfx);
                 }
 
+                if (toastTimer > 0.0f)
+                {
+                    RenderToast();
+                }
+
                 gfx.EndDrawFrame();
 
                 return true;
@@ -248,6 +300,13 @@ namespace FamiStudio
             Debug.Assert(TopDialog == dialog);
             dialogs.RemoveAt(dialogs.Count - 1);
             dialog.RenderTerminated();
+        }
+
+        public void ShowToast(string text)
+        {
+            toast = text;
+            toastDuration = 3.0f;
+            toastTimer = 3.0f;
         }
 
         public void InitializeGL()

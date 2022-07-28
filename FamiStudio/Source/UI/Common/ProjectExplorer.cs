@@ -4358,7 +4358,7 @@ namespace FamiStudio
 
                     if (Platform.IsMobile && expansionRemoved)
                     {
-                        Platform.ShowToast("All channels and instruments related to the removed expansion(s) were deleted.");
+                        Platform.ShowToast(parentWindow, "All channels and instruments related to the removed expansion(s) were deleted.");
                     }
 
                     App.UndoRedoManager.EndTransaction();

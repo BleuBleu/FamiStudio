@@ -6378,7 +6378,7 @@ namespace FamiStudio
             if (IsPointInNoteArea(x, y) && EditEnvelope.Length > 0)
             {
                 Platform.VibrateClick();
-                Platform.ShowToast("Keep holding and move your finger to draw");
+                Platform.ShowToast(parentWindow, "Keep holding and move your finger to draw");
                 StartDrawEnvelope(x, y);
                 return true;
             }

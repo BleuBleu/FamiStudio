@@ -223,7 +223,9 @@ namespace FamiStudio
 
             var deltaTime = (float)Math.Min(0.25f, (float)(tickTime - lastTickTime));
 
-            if (!IsAsyncDialogInProgress)
+            if (IsAsyncDialogInProgress)
+                famistudio.TickDuringDialog(deltaTime);
+            else
                 famistudio.Tick(deltaTime);
 
             controls.Tick(deltaTime);
@@ -804,6 +806,11 @@ namespace FamiStudio
         public void PopDialog(Dialog dialog)
         {
             controls.PopDialog(dialog);
+        }
+
+        public void ShowToast(string text)
+        {
+            controls.ShowToast(text);
         }
 
         public bool IsKeyDown(Keys k)

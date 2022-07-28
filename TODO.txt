@@ -11,12 +11,9 @@ P0:
 	=> Remove 1-frame snap glitch.
 	=> Snap effect values (at least give the option to!)
 
-- Refactor "AppNeedsRealTimeUpdate", useless now.
-- Change notification?
 - Option for osc window size?
 
-/ Make the xport dialog save options between exports (unless project has changed)
-	=> Fix Android.
+/ Make sure export dialog keeps value on Android.
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
 

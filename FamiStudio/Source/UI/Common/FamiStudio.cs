@@ -694,12 +694,12 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayNotification(string msg, bool warning = true, bool beep = true)
+        public void DisplayNotification(string msg, bool beep = true)
         {
-            if (Platform.IsMobile)
-                Platform.ShowToast(msg);
-            else
-                ToolBar.DisplayNotification(msg, warning, beep);
+            Platform.ShowToast(window, msg);
+
+            if (beep)
+                Platform.Beep();
         }
 
         private void UndoRedoManager_PreUndoRedo(TransactionScope scope, TransactionFlags flags)
@@ -1102,15 +1102,11 @@ namespace FamiStudio
                     undoRedoManager.Clear();
 
                 undoRedoManager.NotifySaved();
-                DisplayNotification("Project Saved!", false, false);
+                DisplayNotification("Project Saved!", false);
             }
             else
             {
-                // TODO : See if we want to unify this under a single, cross-platform call.
-                if (Platform.IsDesktop)
-                    Platform.MessageBox(window, "An error happened while saving.", "Error", MessageBoxButtons.OK);
-                else
-                    Platform.ShowToast("Error Saving Project!");
+                Platform.ShowToast(window, "Error Saving Project!");
             }
 
             MarkEverythingDirty();
@@ -1477,7 +1473,7 @@ namespace FamiStudio
                 else if (channel.IsExpansionChannel)
                     message += $"{newLine}Expansion channels require using the correct instrument type.";
             }
-            DisplayNotification(message, true, beep);
+            DisplayNotification(message, beep);
         }
 
         public void PlayInstrumentNote(int n, bool showWarning, bool allowRecording, bool custom = false, Instrument customInstrument = null, Arpeggio customArpeggio = null, float stopDelay = 0.0f)
@@ -2252,6 +2248,13 @@ namespace FamiStudio
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
             CheckStopInstrumentNote(deltaTime);
+        }
+
+        public void TickDuringDialog(float deltaTime)
+        {
+            // Still tick the toolbar when a dialog is active since
+            // we may dislay notifications on there.
+            ToolBar.Tick(deltaTime);
         }
 
         private void TickControls(float deltaTime)
