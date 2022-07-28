@@ -39,6 +39,9 @@ public:
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	void get_register_values(struct s5b_register_values* regs);
 
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
+
 	// (addr & addr_mask) == latch_addr
 	void write_latch( int );
 	
@@ -63,6 +66,7 @@ private:
 	struct {
 		Blip_Buffer* output;
 		int last_amp;
+		int trigger;
 	} oscs [osc_count];
 	blip_time_t last_time;
 	

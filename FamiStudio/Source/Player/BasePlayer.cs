@@ -343,6 +343,8 @@ namespace FamiStudio
 
         public bool PlaySongFrame()
         {
+            BeginFrame();
+
             if (!PlaySongFrameInternal(false))
                 return false;
 
@@ -540,7 +542,12 @@ namespace FamiStudio
 
             return states;
         }
-        
+
+        protected virtual void BeginFrame()
+        {
+            NesApu.ResetTriggers(apuIndex);
+        }
+
         protected virtual unsafe short[] EndFrame()
         {
             NesApu.EndFrame(apuIndex);
@@ -618,6 +625,14 @@ namespace FamiStudio
             {
                 registerValues.CopyTo(values);
             }
+        }
+
+        protected int GetOscilloscopeTrigger(int channelType)
+        {
+            var expType = ChannelType.GetExpansionTypeForChannelType(channelType);
+            var chanIdx = ChannelType.GetExpansionChannelIndexForChannelType(channelType);
+
+            return NesApu.GetChannelTrigger(apuIndex, expType, chanIdx);
         }
     };
 }

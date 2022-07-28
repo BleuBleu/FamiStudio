@@ -84,6 +84,9 @@ public:
 	void stop_seeking(blip_time_t& clock);
 	void write_shadow_register(int addr, int data);
 
+	void reset_triggers(bool force_none = false);
+	int  get_channel_trigger(int idx) const;
+
 private:
 
 	// noncopyable
@@ -113,6 +116,7 @@ private:
 	uint16_t opn2_mask;
 	Blip_Synth<blip_med_quality, 15420> synth;
 	Blip_Synth<blip_med_quality, 15420> synth_right;
+	int triggers[15];
 
 	short shadow_internal_regs[shadow_internal_regs_count];
 	short shadow_internal_regs2[shadow_internal_regs_count];

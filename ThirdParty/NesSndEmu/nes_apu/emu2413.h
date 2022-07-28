@@ -56,6 +56,9 @@ typedef struct __OPLL_SLOT {
 
   uint32_t update_requests; /* flags to debounce update */
 
+  uint32_t pg_phase_trigger; /* FamiStudio : Seperate phase we maintain for oscilloscope triggers */
+  uint8_t  trigger;          /* FamiStudio : tells is this slot has looped around the carrier frequency. */
+
 #if OPLL_DEBUG
   uint8_t last_eg_state;
 #endif

@@ -39,6 +39,9 @@ public:
 	void get_register_values(struct n163_register_values* regs);
 	int get_wave_pos(int chan);
 
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
+
 	// to do: implement save/restore
 	void save_snapshot( namco_snapshot_t* out );
 	void load_snapshot( namco_snapshot_t const& );
@@ -58,6 +61,7 @@ private:
 	struct Namco_Osc {
 		long delay;
 		short sample;
+		int trigger;
 		Blip_Buffer* output;
 	};
 	

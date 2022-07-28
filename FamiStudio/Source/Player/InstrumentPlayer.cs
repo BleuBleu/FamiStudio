@@ -19,8 +19,8 @@ namespace FamiStudio
         int playingNote = Note.NoteInvalid;
         int[] envelopeFrames = new int[EnvelopeType.Count];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
-        bool IsRunning => playerThread != null;
 
+        bool IsRunning => playerThread != null;
         public int PlayingNote => playingNote;
 
         public InstrumentPlayer(bool pal, int sampleRate, bool stereo) : base(NesApu.APU_INSTRUMENT, pal, sampleRate, stereo, Settings.NumBufferedAudioFrames)
@@ -43,24 +43,20 @@ namespace FamiStudio
             }
         }
 
-        public void StopAllNotes()
+        public void StopAllNotes(bool wait = false)
         {
             if (IsRunning)
             {
+                if (wait)
+                    while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
+
                 noteQueue.Enqueue(new PlayerNote() { channel = -1 });
+
+                if (wait)
+                    while (!noteQueue.IsEmpty) Thread.Sleep(1);
             }
         }
 
-        public void StopAllNotesAndWait()
-        {
-            if (IsRunning)
-            {
-                while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
-                noteQueue.Enqueue(new PlayerNote() { channel = -1 });
-                while (!noteQueue.IsEmpty) Thread.Sleep(1);
-            }
-        }
-        
         public void Start(Project project, bool pal)
         {
             expansionMask = project.ExpansionAudioMask;
@@ -79,7 +75,7 @@ namespace FamiStudio
             if (IsRunning)
             {
                 if (stopNotes)
-                    StopAllNotesAndWait();
+                    StopAllNotes(true);
 
                 stopEvent.Set();
                 playerThread.Join();
@@ -91,6 +87,17 @@ namespace FamiStudio
         public int GetEnvelopeFrame(int idx)
         {
             return envelopeFrames[idx]; // TODO: Account for output delay.
+        }
+
+        protected override FrameAudioData GetFrameAudioData()
+        {
+            var data = base.GetFrameAudioData();
+
+            // Read back trigger for oscilloscope.
+            if (activeChannel >= 0)
+                data.triggerSample = GetOscilloscopeTrigger(channelStates[activeChannel].InnerChannelType);
+
+            return data;
         }
 
         unsafe void PlayerThread(object o)
@@ -118,6 +125,8 @@ namespace FamiStudio
                     {
                         break;
                     }
+
+                    BeginFrame();
 
                     if (!noteQueue.IsEmpty)
                     {

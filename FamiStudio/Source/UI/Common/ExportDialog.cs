@@ -66,7 +66,7 @@ namespace FamiStudio
 
         private Project project;
         private MultiPropertyDialog dialog;
-        private uint lastExportCrc;
+        private uint lastProjectCrc;
         private string lastExportFilename;
         private FamiStudio app;
 
@@ -83,6 +83,7 @@ namespace FamiStudio
         {
             dialog = new MultiPropertyDialog(win, "Export Songs", 600, 200);
             dialog.SetVerb("Export");
+            dialog.DestroyControlsOnClose = false;
             app = win.FamiStudio;
             project = app.Project;
 
@@ -214,7 +215,7 @@ namespace FamiStudio
                     page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
                     page.AddDropDownList("Format :", AudioFormatType.Names, AudioFormatType.Names[0]); // 1
                     page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
-                    page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
+                    page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "192"); // 3
                     page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
                     page.AddNumericUpDown("Loop count:", 1, 1, 10); // 5
                     page.AddNumericUpDown("Duration (sec):", 120, 1, 1000); // 6
@@ -1003,14 +1004,19 @@ namespace FamiStudio
             return crc;
         }
 
-        public bool HasAnyPreviousExport => lastExportCrc != 0;
+        public bool HasAnyPreviousExport => lastProjectCrc != 0 && !string.IsNullOrEmpty(lastExportFilename);
 
-        public bool CanRepeatLastExport(Project project)
+        public bool IsProjectStillCompatible(Project project)
         {
             if (project != this.project)
                 return false;
 
-            return lastExportCrc == ComputeProjectCrc(project);
+            return lastProjectCrc == ComputeProjectCrc(project);
+        }
+        
+        public void DestroyControls()
+        {
+            dialog.DestroyControls();
         }
 
         public void Export(bool repeatLast)
@@ -1054,8 +1060,9 @@ namespace FamiStudio
                 if (r == DialogResult.OK)
                 {
                     Export(false);
-                    lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;
                 }
+
+                lastProjectCrc = ComputeProjectCrc(project);
             });
         }
     }

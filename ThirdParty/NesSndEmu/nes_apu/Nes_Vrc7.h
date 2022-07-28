@@ -21,6 +21,8 @@ public:
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	void get_register_values(struct vrc7_register_values* regs);
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
 
 	enum { shadow_regs_count = 1 };
 	enum { shadow_internal_regs_count = 54 };
@@ -44,6 +46,7 @@ private:
 	BOOST::uint8_t silence_age;
 	BOOST::uint8_t regs_age[54];
 	int reg;
+	int triggers[6];
 	struct __OPLL* opll;
 	Blip_Buffer* output_buffer;
 	cpu_time_t last_time;

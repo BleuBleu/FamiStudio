@@ -151,12 +151,13 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	//run_until(time);
 }
 
-
-
 long Nes_EPSM::run_until(cpu_time_t time)
 {
 	if (!output_buffer)
+	{
+		reset_triggers(true);
 		return 0;
+	}
 
 	cpu_time_t t = last_time;
 
@@ -167,8 +168,19 @@ long Nes_EPSM::run_until(cpu_time_t time)
 			epsm_write write = queue.pop();
 			OPN2_Write(&opn2, write.addr, write.data);
 		}
-		int sample = (int)(PSG_calc(psg)/1.8);
+
+		int sample = (int)(PSG_calc(psg) * 10 / 8);
 		int sample_right;
+
+		if (psg->trigger_mask != 0)
+		{
+			for (int i = 0; i < 3; i++)
+			{
+				if (psg->trigger_mask & (1 << i))
+					triggers[i] = output_buffer->resampled_duration(t) >> BLIP_BUFFER_ACCURACY;
+			}
+		}
+
 		sample = clamp(sample, -7710, 7710);
 		sample_right = clamp(sample, -7710, 7710);
 		int t2 = 0;
@@ -177,9 +189,9 @@ long Nes_EPSM::run_until(cpu_time_t time)
 		{
 			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
 			sample += (int)(samples[0] * 12);
-			sample += (int)(samples[2]*1.1);
-			sample_right += (int)(samples[1]) * 12;
-			sample_right += (int)(samples[3] * 1.1);
+			sample += (int)(samples[2] * 11 / 10);
+			sample_right += (int)(samples[1] * 12);
+			sample_right += (int)(samples[3] * 11 / 10);
 			t2++;
 		}
 		int delta = sample - last_amp;
@@ -278,3 +290,16 @@ void Nes_EPSM::get_register_values(struct epsm_register_values* r)
 	}
 }
 
+void Nes_EPSM::reset_triggers(bool force_none)
+{
+	// PERKKATODO : Here you must figure out which channel are able to provide
+	// a steady trigger. Square and FM im confident we can, i know nothing about
+	// the rhythm channels.
+	for (int i = 0; i < array_count(triggers); i++)
+		triggers[i] = force_none ? trigger_none : (i >= 3 ? trigger_none : trigger_hold);
+}
+
+int Nes_EPSM::get_channel_trigger(int idx) const
+{
+	return triggers[idx];
+}

@@ -47,6 +47,10 @@ namespace FamiStudio
         public extern static int GetN163WavePos(int apuIdx, int n163ChanIndex);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetFdsWavePos")]
         public extern static int GetFdsWavePos(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuResetTriggers")]
+        public extern static void ResetTriggers(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetChannelTrigger")]
+        public extern static int GetChannelTrigger(int apuIdx, int exp, int idx);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
@@ -218,6 +222,10 @@ namespace FamiStudio
         public const int TND_MODE_SINGLE           = 0;
         public const int TND_MODE_SEPARATE         = 1;
         public const int TND_MODE_SEPARATE_TN_ONLY = 2;
+
+        // Mirrored from Nes_Apu.h.
+        public const int TRIGGER_NONE = -2; // Unable to provide trigger, must use fallback.
+        public const int TRIGGER_HOLD = -1; // A valid trigger should be coming, hold previous valid one until.
 
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;

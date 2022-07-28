@@ -845,6 +845,7 @@ namespace FamiStudio
             if (exportDialog != null)
             {
                 exportDialog.Exporting -= ExportDialog_Exporting;
+                exportDialog.DestroyControls();
                 exportDialog = null;
             }
         }
@@ -1118,10 +1119,18 @@ namespace FamiStudio
 
         public void Export()
         {
-            FreeExportDialog();
+            if (exportDialog != null && !exportDialog.IsProjectStillCompatible(project))
+            {
+                DisplayNotification("Project has changed too much, resetting export settings to default.");
+                FreeExportDialog();
+            }
 
-            exportDialog = new ExportDialog(window);
-            exportDialog.Exporting += ExportDialog_Exporting;
+            if (exportDialog == null)
+            {
+                exportDialog = new ExportDialog(window);
+                exportDialog.Exporting += ExportDialog_Exporting;
+            }
+
             exportDialog.ShowDialogAsync();
         }
 
@@ -1131,7 +1140,7 @@ namespace FamiStudio
             {
                 DisplayNotification("No last export to repeat");
             }
-            else if (!exportDialog.CanRepeatLastExport(project))
+            else if (!exportDialog.IsProjectStillCompatible(project))
             {
                 DisplayNotification("Project has changed too much to repeat last export.");
                 FreeExportDialog();
@@ -1144,9 +1153,9 @@ namespace FamiStudio
 
         private void ExportDialog_Exporting()
         {
-            StopEverything();
+            StopEverything(true);
 
-            // Make sure we arent in real-time mode, on Linux/MacOS, this mean we will 
+            // Make sure we arent in real-time mode, this mean we will 
             // be constantly rendering frames as we export.
             if (AppNeedsRealTimeUpdate())
             {
@@ -1529,16 +1538,16 @@ namespace FamiStudio
             }
         }
 
-        public void StopInstrument()
+        public void StopInstrument(bool wait = false)
         {
             if (instrumentPlayer != null)
-                instrumentPlayer.StopAllNotes();
+                instrumentPlayer.StopAllNotes(wait);
         }
 
-        public void StopEverything()
+        public void StopEverything(bool wait = false)
         {
             StopSong();
-            StopInstrument();
+            StopInstrument(wait);
         }
 
         private void InitializeSongPlayer()
@@ -1582,7 +1591,7 @@ namespace FamiStudio
         {
             Debug.Assert(oscilloscope == null);
 
-            oscilloscope = new Oscilloscope((int)DpiScaling.Window, project.OutputsStereoAudio);
+            oscilloscope = new Oscilloscope(project.OutputsStereoAudio);
             oscilloscope.Start();
 
             if (instrumentPlayer != null)

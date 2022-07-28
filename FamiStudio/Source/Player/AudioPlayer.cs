@@ -10,19 +10,20 @@ namespace FamiStudio
         protected const float MetronomeFirstBeatPitch  = 1.375f;
         protected const float MetronomeFirstBeatVolume = 1.5f;
 
-        public struct SamplePair
+        public class FrameAudioData
         {
             public short[] samples;
+            public int   triggerSample = NesApu.TRIGGER_NONE;
             public int   metronomePosition;
-            public float metronomePitch;
-            public float metronomeVolume;
+            public float metronomePitch  = 1.0f;
+            public float metronomeVolume = 1.0f;
         };
 
         protected IAudioStream audioStream;
         protected Thread playerThread;
         protected Semaphore bufferSemaphore;
         protected ManualResetEvent stopEvent = new ManualResetEvent(false);
-        protected ConcurrentQueue<SamplePair> sampleQueue = new ConcurrentQueue<SamplePair>();
+        protected ConcurrentQueue<FrameAudioData> sampleQueue = new ConcurrentQueue<FrameAudioData>();
         protected short[] metronomeSound;
         protected int metronomePlayPosition = -1;
         protected int metronomeBeat = -1;
@@ -77,19 +78,19 @@ namespace FamiStudio
 
         protected short[] AudioBufferFillCallback()
         {
-            SamplePair pair;
-            if (sampleQueue.TryDequeue(out pair))
+            FrameAudioData data;
+            if (sampleQueue.TryDequeue(out data))
             {
                 if (oscilloscope != null)
-                    oscilloscope.AddSamples(pair.samples);
+                    oscilloscope.AddSamples(data.samples, data.triggerSample);
 
                 // Tell player thread it needs to generate one more frame.
                 bufferSemaphore.Release(); 
 
                 // Mix in metronome if needed.
-                if (pair.metronomePosition >= 0)
-                    pair.samples = MixSamples(pair.samples, metronomeSound, pair.metronomePosition, pair.metronomePitch, pair.metronomeVolume);
-                return pair.samples;
+                if (data.metronomePosition >= 0)
+                    data.samples = MixSamples(data.samples, metronomeSound, data.metronomePosition, data.metronomePitch, data.metronomeVolume);
+                return data.samples;
             }
             else
             {
@@ -123,29 +124,40 @@ namespace FamiStudio
             metronomeSound = sound;
         }
 
-        protected override unsafe short[] EndFrame()
-        {
+        protected virtual FrameAudioData GetFrameAudioData()
+        {  
             // Update metronome if there is a beat.
             var metronome = metronomeSound;
 
             if (beat && beatIndex >= 0 && metronome != null)
                 metronomePlayPosition = 0;
 
-            SamplePair pair = new SamplePair();
+            FrameAudioData data = new FrameAudioData();
 
-            pair.samples = base.EndFrame();
-            pair.metronomePosition = metronomePlayPosition;
-            pair.metronomePitch  = beatIndex == 0 ? MetronomeFirstBeatPitch  : 1.0f;
-            pair.metronomeVolume = beatIndex == 0 ? MetronomeFirstBeatVolume : 1.0f;
+            data.samples = base.EndFrame();
+            data.metronomePosition = metronomePlayPosition;
+
+            if (beatIndex == 0)
+            {
+                data.metronomePitch  = 1.0f;
+                data.metronomeVolume = 1.0f;
+            }
 
             if (metronomePlayPosition >= 0)
             {
-                metronomePlayPosition += (int)(pair.samples.Length * pair.metronomePitch);
+                metronomePlayPosition += (int)(data.samples.Length * data.metronomePitch);
                 if (metronome == null || metronomePlayPosition >= metronome.Length)
                     metronomePlayPosition = -1;
             }
 
-            sampleQueue.Enqueue(pair);
+            return data;
+        }
+
+        protected override unsafe short[] EndFrame()
+        {
+            var data = GetFrameAudioData();
+
+            sampleQueue.Enqueue(data);
 
             // Wait until we have queued the maximum number of buffered frames to start
             // the audio thread, otherwise, we risk starving on the first frame.

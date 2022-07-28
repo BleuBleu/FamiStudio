@@ -1,14 +1,22 @@
 4.0.0
 =====
 
+- After duplicating a pattern in seq, no refresh until a key is pressed.
+- Move "Delete Note" to top everywhere.
+
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
 	=> Remove 1-frame snap glitch.
 	=> Snap effect values (at least give the option to!)
-- Improve oscilloscope stability (use channel frequency)
 
+- Refactor "AppNeedsRealTimeUpdate", useless now.
+- Change notification?
+- Option for osc window size?
+
+/ Make the xport dialog save options between exports (unless project has changed)
+	=> Fix Android.
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
 
@@ -23,6 +31,7 @@ P0:
 - Support for audio expansions for ROM export 
 - Wave resampling for N163/FDS waveforms
 - Basic NSFe support (track names and durations)
+- Improved oscilloscope stability
 - 
 
 Testing:
@@ -37,6 +46,7 @@ Testing:
 
 Packaging:
 ==========
+- Reset snap (again!) in INI loading.
 - Fix Multi + MultiEPSM unit tests.
 - UNIT-TEST : Add multi-wave to N163/FDS unit tests.
 - UNIT-TEST : Add FDS mod to unit tests (effect + delay)

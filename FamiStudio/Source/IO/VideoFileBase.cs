@@ -1,97 +1,96 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
 #if FAMISTUDIO_ANDROID
-using VideoEncoder   = FamiStudio.VideoEncoderAndroid;
+using VideoEncoder = FamiStudio.VideoEncoderAndroid;
 #else
-using VideoEncoder   = FamiStudio.VideoEncoderFFmpeg;
+using VideoEncoder = FamiStudio.VideoEncoderFFmpeg;
 #endif
 
 namespace FamiStudio
 {
     class VideoFileBase
     {
-        protected const int SampleRate = 44100;
-        protected const float OscilloscopeWindowSize = 0.075f; // in sec.
-        protected const int ChannelIconTextSpacing = 8;
+        protected const int   SampleRate = 44100;
+        protected const int   ChannelIconTextSpacing = 8;
+        protected const float OscilloscopeWindowSize = 0.065f; // in sec.
 
         protected int videoResX = 1920;
         protected int videoResY = 1080;
 
+        protected bool   halfFrameRate;
         protected string tempAudioFile;
-        protected int maxAbsSample = 0;
+
+        protected int   oscFrameWindowSize;
+        protected int   oscRenderWindowSize;
+        protected float oscScale;
 
         protected Project project;
         protected Song song;
         protected OffscreenGraphics videoGraphics;
         protected VideoEncoder videoEncoder;
         protected VideoChannelState[] channelStates;
+        protected VideoFrameMetadata[] metadata;
         protected FontRenderResources fontResources;
+        protected Bitmap watermark;
 
-        // Mostly from : https://github.com/kometbomb/oscilloscoper/blob/master/src/Oscilloscope.cpp
-        protected void GenerateOscilloscope(short[] wav, int position, int windowSize, int maxLookback, float scaleY, float minX, float minY, float maxX, float maxY, float[,] oscilloscope)
+        // TODO : This is is very similar to Oscilloscope.cs, unify eventually...
+        protected float[,] UpdateOscilloscope(VideoChannelState state, int frameIndex)
         {
-            // Find a point where the waveform crosses the axis, looks nicer.
-            int lookback = 0;
-            int orig = wav[position];
+            var meta = metadata[frameIndex];
+            var newTrigger = meta.channelTriggers[state.songChannelIndex];
 
-            // If sample is negative, go back until positive.
-            if (orig < 0)
+            // TRIGGER_NONE (-2) means the emulation isnt able to provide a trigger, 
+            // we must fallback on analysing the waveform to detect one.
+            if (newTrigger == NesApu.TRIGGER_NONE)
             {
-                while (lookback < maxLookback)
-                {
-                    if (position == 0 || wav[--position] > 0)
-                        break;
+                newTrigger = state.triggerFunction.Detect(meta.wavOffset, oscFrameWindowSize);
 
-                    lookback++;
-                }
+                // Ugly fallback.
+                if (newTrigger < 0)
+                    newTrigger = meta.wavOffset;
 
-                orig = wav[position];
+                state.holdFrameCount = 0;
+            }
+            else if (newTrigger >= 0)
+            {
+                newTrigger = meta.wavOffset + newTrigger;
+                state.holdFrameCount = 0;
+            }
+            else
+            {
+                // We can also get TRIGGER_HOLD (-1) here, which mean we do nothing and 
+                // hope for a new trigger "soon". This will happen on very low freqency
+                // notes where the period is longer than 1 frame.
+                state.holdFrameCount++;
             }
 
-            // Then look for a zero crossing.
-            if (orig > 0)
+            // If we hit this, it means that the emulation code told us a trigger
+            // was eventually coming, but is evidently not. The longuest periods
+            // we have at the moment are less than 4 frames long (C0 of VRC7)
+            Debug.Assert(state.holdFrameCount < 5);
+ 
+            var vertices = new float[oscRenderWindowSize, 2];
+            var startIdx = newTrigger >= 0 ? newTrigger : state.lastTrigger;
+
+            for (int i = 0, j = startIdx - oscRenderWindowSize / 2; i < oscRenderWindowSize; i++, j++)
             {
-                while (lookback < maxLookback)
-                {
-                    if (position == wav.Length - 1 || wav[++position] < 0)
-                        break;
+                var samp = j < 0 || j >= state.wav.Length ? 0 : state.wav[j];
 
-                    lookback++;
-                }
+                vertices[i, 0] = i / (float)(oscRenderWindowSize - 1);
+                vertices[i, 1] = Utils.Clamp(samp / 32768.0f * oscScale, -1.0f, 1.0f);
             }
+        
+            if (newTrigger >= 0)
+                state.lastTrigger = newTrigger;
 
-            int lastIdx = -1;
-            int oscLen = oscilloscope.GetLength(0);
-
-            for (int i = 0; i < oscLen; ++i)
-            {
-                var idx = Utils.Clamp(position - windowSize / 2 + i * windowSize / oscLen, 0, wav.Length - 1);
-                var avg = (float)wav[idx];
-                var cnt = 1;
-
-                if (lastIdx >= 0)
-                {
-                    for (int j = lastIdx + 1; j < idx; j++, cnt++)
-                        avg += wav[j];
-                    avg /= cnt;
-                }
-
-                var sample = Utils.Clamp((int)(avg * scaleY), short.MinValue, short.MaxValue);
-
-                var x = Utils.Lerp(minX, maxX, i / (float)(oscLen - 1));
-                var y = Utils.Lerp(minY, maxY, (sample - short.MinValue) / (float)(ushort.MaxValue));
-
-                oscilloscope[i, 0] = x;
-                oscilloscope[i, 1] = y;
-
-                lastIdx = idx;
-            }
+            return vertices;
         }
 
-        protected bool Initialize(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
+        protected bool InitializeEncoder(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfRate, long channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
@@ -104,6 +103,7 @@ namespace FamiStudio
 
             videoResX = resX;
             videoResY = resY;
+            halfFrameRate = halfRate;
 
             project = originalProject.DeepClone();
             song = project.GetSong(songId);
@@ -151,11 +151,13 @@ namespace FamiStudio
             Log.LogMessage(LogSeverity.Info, "Building channel oscilloscopes...");
 
             var counter = new ThreadSafeCounter();
+            var maxAbsSample = 0;
 
             Utils.NonBlockingParallelFor(channelStates.Length, NesApu.NUM_WAV_EXPORT_APU, counter, (stateIndex, threadIndex) =>
             {
                 var state = channelStates[stateIndex];
                 state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << state.songChannelIndex, threadIndex).GetSongSamples(song, song.Project.PalMode, -1, false, true);
+                state.triggerFunction = new PeakSpeedTrigger(state.wav, false);
 
                 if (Log.ShouldAbortOperation)
                     return false;
@@ -163,7 +165,8 @@ namespace FamiStudio
                 if (song.Project.OutputsStereoAudio)
                     state.wav = WaveUtils.MixDown(state.wav);
 
-                maxAbsSample = WaveUtils.GetMaxAbsValue(state.wav);
+                Utils.InterlockedMax(ref maxAbsSample, WaveUtils.GetMaxAbsValue(state.wav));
+
                 return true;
             });
 
@@ -186,8 +189,97 @@ namespace FamiStudio
             }
 
             fontResources = new FontRenderResources(videoGraphics);
+            watermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
+
+            // Generate metadata
+            metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
+
+            oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
+            oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
+            oscRenderWindowSize = (int)Math.Round(SampleRate * OscilloscopeWindowSize);
 
             return true;
+        }
+
+        protected bool LaunchEncoderLoop(Action<int> body, Action cleanup = null)
+        {
+            var videoImage = new byte[videoResY * videoResX * 4];
+            var success = true;
+            var lastTime = DateTime.Now;
+
+#if !DEBUG
+            try
+#endif
+            {
+                // Generate each of the video frames.
+                for (int f = 0; f < metadata.Length; f++)
+                {
+                    if (Log.ShouldAbortOperation)
+                    {
+                        success = false;
+                        break;
+                    }
+
+                    if ((f % 100) == 0)
+                        Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}{GetTimeLeftString(ref lastTime, f, metadata.Length, 100)}");
+
+                    Log.ReportProgress(f / (float)(metadata.Length - 1));
+
+                    if (halfFrameRate && (f & 1) != 0)
+                        continue;
+
+                    var frame = metadata[f];
+
+                    videoGraphics.BeginDrawFrame();
+                    videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
+
+                    body(f);
+
+                    // Watermark.
+                    var cmd = videoGraphics.CreateCommandList();
+                    cmd.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
+                    videoGraphics.DrawCommandList(cmd);
+
+                    videoGraphics.EndDrawControl();
+                    videoGraphics.EndDrawFrame();
+
+                    // Readback
+                    videoGraphics.GetBitmap(videoImage);
+
+                    // Send to encoder.
+                    videoEncoder.AddFrame(videoImage);
+                }
+
+                videoEncoder.EndEncoding(!success);
+            }
+#if !DEBUG
+            catch (Exception e)
+            {
+                Log.LogMessage(LogSeverity.Error, "Error exporting video.");
+                Log.LogMessage(LogSeverity.Error, e.Message);
+            }
+            finally
+#endif
+            {
+                fontResources.Dispose();
+                watermark.Dispose();
+                videoGraphics.Dispose();
+                foreach (var c in channelStates)
+                    c.icon?.Dispose();
+                File.Delete(tempAudioFile);
+
+                cleanup?.Invoke();
+            }
+
+            return success;
+        }
+
+        protected void LoadChannelIcons(bool large)
+        {
+            var suffix = large ? "@2x" : "";
+
+            foreach (var s in channelStates)
+                s.icon = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[s.channel.Type] + suffix);
         }
 
         protected void ExtendSongForLooping(Song song, int loopCount)
@@ -255,10 +347,13 @@ namespace FamiStudio
         public int songChannelIndex;
         public string channelText;
         public Channel channel;
-        public Bitmap bmpIcon;
+        public Bitmap icon;
+        public Bitmap bitmap; // Offscreen bitmap for piano roll
         public OffscreenGraphics graphics;
-        public Bitmap bitmap;
         public short[] wav;
+        public int lastTrigger;
+        public int holdFrameCount;
+        public OscilloscopeTrigger triggerFunction;
     };
 
     class VideoFrameMetadata
@@ -266,10 +361,13 @@ namespace FamiStudio
         public int playPattern;
         public float playNote;
         public int wavOffset;
+
+        // MATTT : Create a class for this + rename metadata to something better.
         public Note[] channelNotes;
         public int[] channelVolumes;
-        public float[] scroll;
-        public Color[] channelColors;
+        public int[] channelTriggers;
+        public float[] channelScolls; // Used by piano roll.
+        public Color[] channelColors; // Used by oscilloscope.
     };
 
     class VideoMetadataPlayer : BasePlayer
@@ -288,16 +386,18 @@ namespace FamiStudio
         {
             var meta = new VideoFrameMetadata();
 
-            meta.playPattern = playLocation.PatternIndex;
-            meta.playNote = playLocation.NoteIndex;
-            meta.wavOffset = prevNumSamples;
-            meta.channelNotes = new Note[song.Channels.Length];
-            meta.channelVolumes = new int[song.Channels.Length];
+            meta.playPattern     = playLocation.PatternIndex;
+            meta.playNote        = playLocation.NoteIndex;
+            meta.wavOffset       = prevNumSamples;
+            meta.channelNotes    = new Note[song.Channels.Length];
+            meta.channelVolumes  = new int[song.Channels.Length];
+            meta.channelTriggers = new int[song.Channels.Length];
 
             for (int i = 0; i < channelStates.Length; i++)
             {
-                meta.channelNotes[i] = channelStates[i].CurrentNote;
-                meta.channelVolumes[i] = channelStates[i].CurrentVolume;
+                meta.channelNotes[i]    = channelStates[i].CurrentNote;
+                meta.channelVolumes[i]  = channelStates[i].CurrentVolume;
+                meta.channelTriggers[i] = GetOscilloscopeTrigger(channelStates[i].InnerChannelType);
             }
 
             metadata.Add(meta);

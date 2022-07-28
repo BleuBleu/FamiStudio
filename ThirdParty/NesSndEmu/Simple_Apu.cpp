@@ -119,6 +119,36 @@ void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 	}
 }
 
+void Simple_Apu::reset_triggers()
+{
+	apu.reset_triggers();
+
+	if (expansions & expansion_mask_vrc6) vrc6.reset_triggers();
+	if (expansions & expansion_mask_vrc7) vrc7.reset_triggers();
+	if (expansions & expansion_mask_fds) fds.reset_triggers();
+	if (expansions & expansion_mask_mmc5) mmc5.reset_triggers();
+	if (expansions & expansion_mask_namco) namco.reset_triggers();
+	if (expansions & expansion_mask_sunsoft) sunsoft.reset_triggers();
+	if (expansions & expansion_mask_epsm) epsm.reset_triggers();
+}
+
+int Simple_Apu::get_channel_trigger(int exp, int idx)
+{
+	switch (exp)
+	{
+	case expansion_none: return apu.get_channel_trigger(idx); break;
+	case expansion_vrc6: return vrc6.get_channel_trigger(idx); break;
+	case expansion_vrc7: return vrc7.get_channel_trigger(idx); break;
+	case expansion_fds: return fds.get_channel_trigger(idx); break;
+	case expansion_mmc5: return mmc5.get_channel_trigger(idx); break;
+	case expansion_namco: return namco.get_channel_trigger(idx); break;
+	case expansion_sunsoft: return sunsoft.get_channel_trigger(idx); break;
+	case expansion_epsm: return epsm.get_channel_trigger(idx); break;
+	}
+
+	return trigger_none;
+}
+
 void Simple_Apu::treble_eq(int exp, double treble, int sample_rate)
 {
 	blip_eq_t eq(treble, 0, sample_rate);

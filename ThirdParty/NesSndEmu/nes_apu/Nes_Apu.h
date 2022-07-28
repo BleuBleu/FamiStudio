@@ -9,6 +9,9 @@
 typedef long     cpu_time_t; // CPU clock cycle count
 typedef unsigned cpu_addr_t; // 16-bit memory address
 
+enum { trigger_none = -2 }; // Unable to provide trigger, must use fallback.
+enum { trigger_hold = -1 }; // A valid trigger should be coming, hold previous valid one until.
+
 #include "Nes_Oscs.h"
 
 struct apu_snapshot_t;
@@ -105,6 +108,9 @@ public:
 	void write_shadow_register(int addr, int data);
 
 	void enable_nonlinear( double volume );
+
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
 
 private:
 	// noncopyable

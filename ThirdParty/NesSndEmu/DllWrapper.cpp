@@ -116,3 +116,13 @@ extern "C" int __stdcall NesApuGetFdsWavePos(int apuIdx)
 {
 	return apu[apuIdx].get_fds_wave_pos();
 }
+
+extern "C" void __stdcall NesApuResetTriggers(int apuIdx)
+{
+	return apu[apuIdx].reset_triggers();
+}
+
+extern "C" int __stdcall NesApuGetChannelTrigger(int apuIdx, int exp, int idx)
+{
+	return apu[apuIdx].get_channel_trigger(exp, idx);
+}

@@ -28,6 +28,7 @@ void Nes_Vrc7::reset()
 	silence = false;
 	silence_age = 0;
 	memset(&regs_age[0], 0, array_count(regs_age));
+	reset_triggers();
 	reset_opll();
 }
 
@@ -132,6 +133,17 @@ void Nes_Vrc7::run_until(cpu_time_t end_time)
 			last_amp = sample;
 		}
 
+		// Here we need to look inside the slots to decide on the final trigger value.
+		for (int i = 0; i < 6; i++)
+		{
+			OPLL_SLOT& slot = opll->slot[i * 2 + 1];
+
+			if (slot.fnum == 0 && triggers[i] < 0)
+				triggers[i] = trigger_none; 
+			else if (opll->slot[i * 2 + 1].trigger)
+				triggers[i] = output_buffer->resampled_duration(time >> 8) >> BLIP_BUFFER_ACCURACY;
+		}
+
 		time += increment;
 	}
 
@@ -193,4 +205,15 @@ void Nes_Vrc7::get_register_values(struct vrc7_register_values* regs)
 	regs->ages[0] = silence_age;
 
 	silence_age = increment_saturate(silence_age);
+}
+
+void Nes_Vrc7::reset_triggers()
+{
+	for (int i = 0; i < 6; i++)
+		triggers[i] = trigger_hold;
+}
+
+int Nes_Vrc7::get_channel_trigger(int idx) const
+{
+	return triggers[idx];
 }

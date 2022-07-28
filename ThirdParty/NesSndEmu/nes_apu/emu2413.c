@@ -558,6 +558,7 @@ static void reset_slot(OPLL_SLOT *slot, int number) {
   slot->pg_keep = 0;
   slot->wave_table = wave_table_map[0];
   slot->pg_phase = 0;
+  slot->pg_phase_trigger = 0;
   slot->output[0] = 0;
   slot->output[1] = 0;
   slot->eg_state = RELEASE;
@@ -572,6 +573,7 @@ static void reset_slot(OPLL_SLOT *slot, int number) {
   slot->pg_out = 0;
   slot->eg_out = EG_MUTE;
   slot->patch = &null_patch;
+  slot->trigger = 0;
 }
 
 static INLINE void slotOn(OPLL *opll, int i) {
@@ -803,7 +805,12 @@ static INLINE void calc_phase(OPLL_SLOT *slot, int32_t pm_phase, uint8_t reset) 
   const int8_t pm = slot->patch->PM ? pm_table[(slot->fnum >> 6) & 7][pm_phase >> (PM_DP_BITS - PM_PG_BITS)] : 0;
   if (reset) {
     slot->pg_phase = 0;
+    slot->pg_phase_trigger = 0;
+    slot->trigger = 1;
   }
+
+  slot->pg_phase_trigger += ((slot->fnum & 0x1ff) * 4) << slot->blk >> 2;
+  slot->pg_phase_trigger &= (DP_WIDTH - 1);
   slot->pg_phase += (((slot->fnum & 0x1ff) * 2 + pm) * ml_table[slot->patch->ML]) << slot->blk >> 2;
   slot->pg_phase &= (DP_WIDTH - 1);
   slot->pg_out = slot->pg_phase >> DP_BASE_BITS;
@@ -861,6 +868,8 @@ static INLINE void start_envelope(OPLL_SLOT *slot) {
   }
   if (!slot->pg_keep) {
     slot->pg_phase = 0;
+    slot->pg_phase_trigger = 0;
+    slot->trigger = 1;
   }
   request_update(slot, UPDATE_EG);
 }
@@ -889,6 +898,8 @@ static INLINE void calc_envelope(OPLL_SLOT *slot, OPLL_SLOT *buddy, uint16_t eg_
       start_envelope(slot);
       if (buddy && !buddy->pg_keep) {
         buddy->pg_phase = 0;
+        buddy->pg_phase_trigger = 0;
+        buddy->trigger = 1;
       }
     }
     break;
@@ -925,6 +936,9 @@ static void update_slots(OPLL *opll) {
   for (i = 0; i < 18; i++) {
     OPLL_SLOT *slot = &opll->slot[i];
     OPLL_SLOT *buddy = NULL;
+
+    uint32_t prev_pg_phase_trigger = slot->pg_phase_trigger >> DP_BASE_BITS;
+
     if (slot->type == 0) {
       buddy = &opll->slot[i + 1];
     }
@@ -936,6 +950,9 @@ static void update_slots(OPLL *opll) {
     }
     calc_envelope(slot, buddy, opll->eg_counter, opll->test_flag & 1);
     calc_phase(slot, opll->pm_phase, opll->test_flag & 4);
+
+    if (slot->type == 1 && prev_pg_phase_trigger > (slot->pg_phase_trigger >> DP_BASE_BITS))
+        slot->trigger = 1;
   }
 }
 
@@ -1491,6 +1508,9 @@ void OPLL_resetPatch(OPLL *opll, int32_t type) {
 }
 
 int16_t OPLL_calc(OPLL *opll) {
+  int i;
+  for (i = 0; i < 18; i++)
+    opll->slot[i].trigger = 0;
   while (opll->out_step > opll->out_time) {
     opll->out_time += opll->inp_step;
     update_output(opll);

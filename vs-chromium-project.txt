@@ -1,5 +1,6 @@
 [SearchableFiles.include]
 *.cs
+*.c
 *.cpp
 *.h
 *.xml

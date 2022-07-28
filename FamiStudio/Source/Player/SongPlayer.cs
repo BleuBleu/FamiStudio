@@ -54,6 +54,15 @@ namespace FamiStudio
             get { return playerThread != null; }
         }
 
+#if false // Enable to debug oscilloscope triggers for a specific channel of a song.
+        protected override FrameAudioData GetFrameAudioData()
+        {
+            var data = base.GetFrameAudioData();
+            data.triggerSample = NesApu.GetChannelTrigger(apuIndex, ExpansionType.Vrc7, 0);
+            return data;
+        }
+#endif
+
         unsafe void PlayerThread(object o)
         {
             var startInfo = (SongPlayerStartInfo)o;

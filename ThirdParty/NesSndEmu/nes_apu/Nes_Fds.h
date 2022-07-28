@@ -20,6 +20,8 @@ public:
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	void get_register_values(struct fds_register_values* regs);
+	void reset_triggers();
+	int get_channel_trigger(int idx) const;
 	int get_wave_pos();
 
 	enum { shadow_regs_count = 11 };
@@ -51,6 +53,7 @@ private:
 		int last_amp;
 		int phase;
 		int volume_env;
+		int trigger;
 
 		int wav_period() const 
 		{

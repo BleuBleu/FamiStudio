@@ -18,6 +18,7 @@ namespace FamiStudio
         private DialogResult result = DialogResult.None;
         private float tooltipTimer;
         private string title;
+        private bool destroyControlsOnClose = true;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForWindow(2);
         private int tooltipSideMargin = DpiScaling.ScaleForWindow(4);
@@ -32,6 +33,7 @@ namespace FamiStudio
         public CommandList CommandList => commandList;
         public CommandList CommandListForeground => commandListForeground;
         public DialogResult DialogResult => result;
+        public bool DestroyControlsOnClose { get => destroyControlsOnClose; set => destroyControlsOnClose = value; }
 
         public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
@@ -65,6 +67,7 @@ namespace FamiStudio
 
         private void ShowDialogInternal()
         {
+            result = DialogResult.None;
             visible = true;
             OnShowDialog();
             parentWindow.PushDialog(this);
@@ -95,15 +98,21 @@ namespace FamiStudio
         {
             FocusedControl = null;
 
+            if (destroyControlsOnClose)
+                DestroyControls();
+
+            parentWindow.PopDialog(this);
+            result = res;
+            visible = false;
+        }
+
+        public void DestroyControls()
+        {
             foreach (var ctrl in initControls)
             {
                 ctrl.RenderTerminated();
                 ctrl.SetFontRenderResource(null);
             }
-
-            parentWindow.PopDialog(this);
-            result = res;
-            visible = false;
         }
 
         protected virtual void OnShowDialog()

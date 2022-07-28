@@ -370,6 +370,18 @@ namespace FamiStudio
             return version.Substring(0, dotIdx);
         }
 
+        public static int InterlockedMax(ref int location, int value)
+        {
+            int initialValue, newValue;
+            do
+            {
+                initialValue = location;
+                newValue = Math.Max(initialValue, value);
+            }
+            while (Interlocked.CompareExchange(ref location, newValue, initialValue) != initialValue);
+            return initialValue;
+        }
+
         public static void NonBlockingParallelFor(int numItems, int maxThreads, ThreadSafeCounter counter, Func<int, int, bool> action)
         {
             var queue = new ConcurrentQueue<int>();

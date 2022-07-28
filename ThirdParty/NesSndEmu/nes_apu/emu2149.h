@@ -62,6 +62,9 @@ extern "C"
     /* I/O Ctrl */
     uint32_t adr;
 
+    /* FamiStudio : tells us which channels have had a rising edge this step. */
+    uint8_t trigger_mask; 
+
     /* output of channels */
     int16_t ch_out[3];
 

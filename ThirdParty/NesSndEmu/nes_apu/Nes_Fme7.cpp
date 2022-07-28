@@ -26,6 +26,8 @@ void Nes_Fme7::reset()
 	
 	fme7_apu_state_t* state = this;
 	memset( state, 0, sizeof *state );
+
+	reset_triggers();
 }
 
 unsigned char const Nes_Fme7::amp_table [16] =
@@ -50,8 +52,11 @@ void Nes_Fme7::run_until( blip_time_t end_time )
 		
 		Blip_Buffer* const osc_output = oscs [index].output;
 		if ( !osc_output )
+		{
+			oscs[index].trigger = trigger_none;
 			continue;
-		
+		}
+
 		// check for unsupported mode
 		#ifndef NDEBUG
 			if ( (mode & 011) <= 001 && vol_mode & 0x1F )
@@ -95,6 +100,8 @@ void Nes_Fme7::run_until( blip_time_t end_time )
 				do
 				{
 					delta = -delta;
+					if (delta > 0)
+						oscs[index].trigger = osc_output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
 					synth.offset_inline( time, delta, osc_output );
 					time += period;
 				}
@@ -109,6 +116,7 @@ void Nes_Fme7::run_until( blip_time_t end_time )
 				int count = (end_time - time + period - 1) / period;
 				phases [index] ^= count & 1;
 				time += (blip_time_t) count * period;
+				oscs[index].trigger = trigger_none;
 			}
 		}
 		
@@ -162,3 +170,15 @@ void Nes_Fme7::get_register_values(struct s5b_register_values* r)
 	}
 }
 
+
+void Nes_Fme7::reset_triggers()
+{
+	oscs[0].trigger = trigger_hold;
+	oscs[1].trigger = trigger_hold;
+	oscs[2].trigger = trigger_hold;
+}
+
+int Nes_Fme7::get_channel_trigger(int idx) const
+{
+	return oscs[idx].trigger;
+}

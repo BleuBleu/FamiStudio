@@ -26,7 +26,9 @@ public:
 	void end_frame( cpu_time_t );
 	void save_snapshot( vrc6_snapshot_t* ) const;
 	void load_snapshot( vrc6_snapshot_t const& );
-	
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
+
 	// Oscillator 0 write-only registers are at $9000-$9002
 	// Oscillator 1 write-only registers are at $A000-$A002
 	// Oscillator 2 write-only registers are at $B000-$B002
@@ -56,6 +58,7 @@ private:
 		int last_amp;
 		int phase;
 		int amp; // only used by saw
+		int trigger;
 		
 		int period() const
 		{

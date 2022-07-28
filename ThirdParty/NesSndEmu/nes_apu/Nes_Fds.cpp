@@ -32,6 +32,7 @@ void Nes_Fds::reset()
 	osc.phase = 0;
 	osc.volume_env = 0x20;
 	osc.regs[10] = 0xff;
+	osc.trigger = trigger_hold;
 }
 
 void Nes_Fds::volume(double v)
@@ -121,7 +122,10 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 	require(end_time >= last_time);
 
 	if (!osc.output)
+	{
+		osc.trigger = trigger_none;
 		return;
+	}
 
 	// Code here is kind of a mix of Disch/NotSoFatso + NSFPlay.
 	bool mod_on = osc.mod_period() && !(osc.regs[7] & 0x80);
@@ -187,9 +191,18 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 				mod = temp;
 			}
 
+			int prev_phase = osc.phase;
 			int f = osc.wav_period() + mod;
 			osc.phase = osc.phase + (sub_step * f);
 			osc.phase = osc.phase & 0x3fffff;
+
+			// Wrapping around the wave is our trigger.
+			if (osc.phase < prev_phase)
+				osc.trigger = osc.output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+		}
+		else
+		{
+			osc.trigger = trigger_none;
 		}
 		
 		int volume = min(osc.volume_env, 0x20);
@@ -268,3 +281,14 @@ void Nes_Fds::get_register_values(struct fds_register_values* regs)
 	memcpy(&regs->wave[0], &osc.wave[0], wave_count);
 	memcpy(&regs->modt[0], &osc.modt[0], modt_count);
 }
+
+void Nes_Fds::reset_triggers()
+{
+	osc.trigger = trigger_hold;
+}
+
+int Nes_Fds::get_channel_trigger(int idx) const
+{
+	return osc.trigger;
+}
+

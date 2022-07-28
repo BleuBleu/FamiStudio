@@ -452,11 +452,6 @@ namespace FamiStudio
             bmpDuplicate = g.GetBitmapAtlasRef("Duplicate");
             bmpDuplicateMove = g.GetBitmapAtlasRef("DuplicateMove");
 
-            //whiteKeyBrush = g.CreateHorizontalGradientBrush(0, channelNameSizeX, Theme.LightGreyColor1, Theme.LightGreyColor2);
-            //patternHeaderBrush = g.CreateVerticalGradientBrush(0, patternHeaderSizeY, Theme.LightGreyColor1, Theme.LightGreyColor2);
-            //selectedPatternVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyColor1));
-            //selectedPatternInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, Theme.LightGreyColor1));
-
             if (Platform.IsMobile)
             {
                 bitmapScale = g.WindowScaling * 0.5f;

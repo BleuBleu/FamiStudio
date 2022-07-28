@@ -94,6 +94,9 @@ public:
 
 	void enable_channel(int, int, bool);
 	
+	void reset_triggers();
+	int get_channel_trigger(int exp, int idx);
+
 	void treble_eq(int exp, double treble, int sample_rate);
 	void set_expansion_volume(int expansion, double evolume);
 

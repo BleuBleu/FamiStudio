@@ -207,6 +207,7 @@
     <Compile Include="Source\Utils\Gif.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
+    <Compile Include="Source\Utils\OscilloscopeTriggers.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\SimpleBitmap.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
