@@ -202,8 +202,6 @@ namespace FamiStudio
             var alphaOut = Utils.Clamp(toastTimer / ToastFadeTime, 0.0f, 1.0f);
             var alpha    = (int)(Math.Min(alphaIn, alphaOut) * 255);
 
-            Debug.WriteLine($"{toastTimer} = {alpha}");
-
             gfx.BeginDrawControl(rect, height);
             var c = gfx.CreateCommandList();
             c.FillAndDrawRectangle(0, 0, sizeX - 1, sizeY - 1, Color.FromArgb(alpha, Theme.DarkGreyColor1), Color.FromArgb(alpha, Theme.BlackColor));

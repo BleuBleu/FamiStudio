@@ -16,7 +16,6 @@ namespace FamiStudio
     {
         protected const int   SampleRate = 44100;
         protected const int   ChannelIconTextSpacing = 8;
-        protected const float OscilloscopeWindowSize = 0.065f; // in sec.
 
         protected int videoResX = 1920;
         protected int videoResY = 1080;
@@ -90,7 +89,7 @@ namespace FamiStudio
             return vertices;
         }
 
-        protected bool InitializeEncoder(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfRate, long channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
+        protected bool InitializeEncoder(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfRate, int window, long channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
@@ -196,7 +195,7 @@ namespace FamiStudio
 
             oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
-            oscRenderWindowSize = (int)Math.Round(SampleRate * OscilloscopeWindowSize);
+            oscRenderWindowSize = (int)(oscFrameWindowSize * window);
 
             return true;
         }

@@ -239,15 +239,16 @@ namespace FamiStudio
                 case ExportFormat.VideoPianoRoll:
                     if (AddCommonVideoProperties(page, songNames)) // 0-5
                     {
-                        page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 6
-                        page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 7
+                        page.AddNumericUpDown("Oscilloscope Window :", 2, 1, 4); // 6
+                        page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
+                        page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 8
                         if (Platform.IsDesktop)
-                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 10); // 8
+                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 10); // 9
                         else
-                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 8
-                        page.SetPropertyVisible(7, Platform.IsDesktop); // Stereo on mobile.
-                        page.SetPropertyEnabled(7, !project.OutputsStereoAudio); // Force stereo for EPSM.
-                        page.SetColumnEnabled(8, 2, project.OutputsStereoAudio);
+                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 9
+                        page.SetPropertyVisible(8, Platform.IsDesktop); // Stereo on mobile.
+                        page.SetPropertyEnabled(8, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                        page.SetColumnEnabled(9, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
@@ -256,15 +257,16 @@ namespace FamiStudio
                     {
                         page.AddNumericUpDown("Oscilloscope Columns :", 1, 1, 5); // 6
                         page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 4); // 7
-                        page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 8
-                        page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 9
+                        page.AddNumericUpDown("Oscilloscope Window :", 2, 1, 4); // 8
+                        page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 9
+                        page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 10
                         if (Platform.IsDesktop)
-                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 10
+                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 11
                         else
-                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
-                        page.SetPropertyVisible(9, Platform.IsDesktop); // Stereo on mobile.
-                        page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
-                        page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
+                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 11
+                        page.SetPropertyVisible(10, Platform.IsDesktop); // Stereo on mobile.
+                        page.SetPropertyEnabled(10, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                        page.SetColumnEnabled(11, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
@@ -548,8 +550,8 @@ namespace FamiStudio
             {
                 if (filename != null)
                 {
-                    var stereoPropIdx = pianoRoll ? 7 : 9;
-                    var channelsPropIdx = pianoRoll ? 8 : 10;
+                    var stereoPropIdx = pianoRoll ? 8 : 10;
+                    var channelsPropIdx = pianoRoll ? 9 : 11;
 
                     var songName = props.GetPropertyValue<string>(0);
                     var resolutionIdx = props.GetSelectedIndex(1);
@@ -591,17 +593,19 @@ namespace FamiStudio
 
                     if (pianoRoll)
                     {
-                        var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(6) - 3);
+                        var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(7) - 3);
+                        var oscWindow = props.GetPropertyValue<int>(6);
 
-                        return new VideoFilePianoRoll().Save(project, song.Id, loopCount, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                        return new VideoFilePianoRoll().Save(project, song.Id, loopCount, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
                     }
                     else
                     {
                         var oscNumColumns    = props.GetPropertyValue<int>(6);
                         var oscLineThickness = props.GetPropertyValue<int>(7);
-                        var oscColorMode     = props.GetSelectedIndex(8);
+                        var oscWindow        = props.GetPropertyValue<int>(8);
+                        var oscColorMode     = props.GetSelectedIndex(9);
 
-                        return new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
+                        return new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
                     }
                 }
                 else
