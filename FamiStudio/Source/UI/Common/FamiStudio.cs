@@ -93,7 +93,7 @@ namespace FamiStudio
         public QuickAccessBar   QuickAccessBar  => window.QuickAccessBar;
         public MobilePiano      MobilePiano     => window.MobilePiano;
         public Control          ActiveControl   => window.ActiveControl;
-        public FamiStudioWindow Window      => window;
+        public FamiStudioWindow Window          => window;
         public BasePlayer       ActivePlayer    => IsPlaying ? (BasePlayer)songPlayer : (BasePlayer)instrumentPlayer;
 
         public bool IsSequencerActive          => ActiveControl == Sequencer;

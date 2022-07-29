@@ -965,6 +965,7 @@ namespace FamiStudio
         }
 
         public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null;
+        public bool IsActiveControl => App != null && App.ActiveControl == this;
 
         public delegate void EmptyDelegate();
         public delegate void BoolDelegate(bool val);
@@ -1838,6 +1839,9 @@ namespace FamiStudio
 
         private void UpdateToolTip(int x, int y)
         {
+            if (!IsActiveControl)
+                return;
+
             var redTooltip = false;
             var tooltip = "";
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);

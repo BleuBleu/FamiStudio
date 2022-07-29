@@ -2644,6 +2644,9 @@ namespace FamiStudio
 
         private void UpdateToolTip(MouseEventArgs e)
         {
+            if (!IsActiveControl)
+                return;
+
             if (e == null)
             {
                 var pt = PointToClient(CursorPosition);

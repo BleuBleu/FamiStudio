@@ -7582,6 +7582,9 @@ namespace FamiStudio
 
         private void UpdateToolTip(MouseEventArgs e)
         {
+            if (!IsActiveControl)
+                return;
+
             var tooltip = "";
             var newNoteTooltip = "";
 
@@ -7606,7 +7609,7 @@ namespace FamiStudio
             }
             else if (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Toggle snapping {Shift}{S}{MouseWheel} Change snap precision\n{MouseRight} More Options...";
+                tooltip = "{MouseLeft} Toggle snapping {Shift}{S} - {MouseWheel} Change snap precision\n{MouseRight} More Options...";
             }
             else if (IsPointOnMaximizeButton(e.X, e.Y))
             {
