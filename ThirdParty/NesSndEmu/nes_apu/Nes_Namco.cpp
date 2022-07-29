@@ -109,7 +109,7 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 
 			// Wrapping around the wave is our trigger.
 			if (phase < prev_phase)
-				osc.trigger = osc.output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+				update_trigger(osc.output, time, osc.trigger);
 
 			int addr = ((phase >> 16) + osc_reg[6]) & 0xff;
 			int sample = reg[addr >> 1];

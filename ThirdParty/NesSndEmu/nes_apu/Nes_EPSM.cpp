@@ -177,7 +177,7 @@ long Nes_EPSM::run_until(cpu_time_t time)
 			for (int i = 0; i < 3; i++)
 			{
 				if (psg->trigger_mask & (1 << i))
-					triggers[i] = output_buffer->resampled_duration(t) >> BLIP_BUFFER_ACCURACY;
+					update_trigger(output_buffer, t, triggers[i]);
 			}
 		}
 

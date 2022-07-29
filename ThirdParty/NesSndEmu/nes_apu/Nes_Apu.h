@@ -6,11 +6,10 @@
 #ifndef NES_APU_H
 #define NES_APU_H
 
+#include "nes_apu/Blip_Buffer.h"
+
 typedef long     cpu_time_t; // CPU clock cycle count
 typedef unsigned cpu_addr_t; // 16-bit memory address
-
-enum { trigger_none = -2 }; // Unable to provide trigger, must use fallback.
-enum { trigger_hold = -1 }; // A valid trigger should be coming, hold previous valid one until.
 
 #include "Nes_Oscs.h"
 
@@ -171,6 +170,35 @@ inline void Nes_Apu::irq_notifier( void (*func)( void* user_data ), void* user_d
 inline int Nes_Apu::count_dmc_reads( cpu_time_t time, cpu_time_t* last_read ) const
 {
 	return dmc.count_reads( time, last_read );
+}
+
+enum { trigger_none = -2 }; // Unable to provide trigger, must use fallback.
+enum { trigger_hold = -1 }; // A valid trigger should be coming, hold previous valid one until.
+
+inline void update_trigger(const Blip_Buffer* output, cpu_time_t time, int& out_trigger)
+{
+	int new_trigger = output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+
+	if (out_trigger < 0)
+	{
+		out_trigger = new_trigger;
+	}
+	else
+	{
+		// HACK: We should find the FPS somewhere instead of looking at the clock.
+		int fps = output->clock_rate() == 1662607 ? 50 : 60;
+		int mid = output->sample_rate() / fps / 2;
+
+		// Keep the trigger that is closest to the center of the frame. This
+		// make the oscilloscope more pleasing to look at.
+		int old_dist = abs(mid - out_trigger);
+		int new_dist = abs(mid - new_trigger);
+
+		if (new_dist < old_dist)
+		{
+			out_trigger = new_trigger;
+		}
+	}
 }
 
 #endif

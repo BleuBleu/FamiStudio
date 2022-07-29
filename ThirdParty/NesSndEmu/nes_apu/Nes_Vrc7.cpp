@@ -141,7 +141,7 @@ void Nes_Vrc7::run_until(cpu_time_t end_time)
 			if (slot.fnum == 0 && triggers[i] < 0)
 				triggers[i] = trigger_none; 
 			else if (opll->slot[i * 2 + 1].trigger)
-				triggers[i] = output_buffer->resampled_duration(time >> 8) >> BLIP_BUFFER_ACCURACY;
+				update_trigger(output_buffer, time >> 8, triggers[i]);
 		}
 
 		time += increment;

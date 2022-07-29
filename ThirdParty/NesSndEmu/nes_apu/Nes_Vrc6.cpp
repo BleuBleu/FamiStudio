@@ -42,7 +42,7 @@ void Nes_Vrc6::reset()
 		osc.last_amp = 0;
 		osc.phase = 1;
 		osc.amp = 0;
-		osc.trigger = -1;
+		osc.trigger = trigger_hold;
 	}
 }
 
@@ -188,7 +188,7 @@ void Nes_Vrc6::run_square( Vrc6_Osc& osc, cpu_time_t end_time )
 				{
 					phase = 0;
 					osc.last_amp = volume;
-					osc.trigger = output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+					update_trigger(output, time, osc.trigger);
 					square_synth.offset( time, volume, output );
 				}
 				if ( phase == duty )
@@ -246,7 +246,7 @@ void Nes_Vrc6::run_saw( cpu_time_t end_time )
 				{
 					phase = 7;
 					amp = 0;
-					osc.trigger = output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+					update_trigger(output, time, osc.trigger);
 				}
 				
 				int delta = (amp >> 3) - last_amp;

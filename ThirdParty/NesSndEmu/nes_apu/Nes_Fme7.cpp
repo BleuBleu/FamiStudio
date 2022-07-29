@@ -101,7 +101,7 @@ void Nes_Fme7::run_until( blip_time_t end_time )
 				{
 					delta = -delta;
 					if (delta > 0)
-						oscs[index].trigger = osc_output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+						update_trigger(osc_output, time, oscs[index].trigger);
 					synth.offset_inline( time, delta, osc_output );
 					time += period;
 				}

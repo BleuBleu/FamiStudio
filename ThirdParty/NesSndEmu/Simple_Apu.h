@@ -15,7 +15,6 @@
 #include "nes_apu/Nes_Sunsoft.h"
 #include "nes_apu/Nes_EPSM.h"
 #include "nes_apu/Nes_Fme7.h"
-#include "nes_apu/Blip_Buffer.h"
 
 class Simple_Apu {
 public:

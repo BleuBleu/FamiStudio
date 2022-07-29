@@ -154,7 +154,7 @@ void Nes_Square::run( cpu_time_t time, cpu_time_t end_time )
 					delta = -delta;
 					synth->offset_inline( time, delta, output );
 					if (delta > 0)
-						trigger = output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+						update_trigger(output, time, trigger);
 				}
 				time += timer_period;
 			}
@@ -246,7 +246,7 @@ void Nes_Triangle::run( cpu_time_t time, cpu_time_t end_time )
 				phase = phase_range;
 				volume = -volume;
 				if (volume > 0)
-					trigger = output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+					update_trigger(output, time, trigger);
 			}
 			else {
 				synth.offset_inline( time, volume, output );

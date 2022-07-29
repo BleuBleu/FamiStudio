@@ -198,7 +198,7 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 
 			// Wrapping around the wave is our trigger.
 			if (osc.phase < prev_phase)
-				osc.trigger = osc.output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+				update_trigger(osc.output, time, osc.trigger);
 		}
 		else
 		{

@@ -1,8 +1,5 @@
 #include "Simple_Apu.h"
 
-#include <stdlib.h>
-#include <memory.h>
-
 #if defined(LINUX) || defined(__clang__)
 #define __stdcall
 #define __cdecl
