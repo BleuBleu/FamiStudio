@@ -6245,12 +6245,19 @@ namespace FamiStudio
                 var selection = IsHighlightedNoteSelected();
                 var menu = new List<ContextMenuOption>();
 
+                if (IsNoteSelected(mouseLocation))
+                {
+                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Notes", () => { DeleteSelectedNotes(); }));
+                }
+
                 if (note != null)
                 {
+                    menu.Insert(0, new ContextMenuOption("MenuDelete", "Delete Note", () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
+
                     if (note.IsMusical)
                     {
                         if (channel.SupportsNoAttackNotes)
-                            menu.Add(new ContextMenuOption("MenuToggleAttack", $"Toggle {(selection ? "Selection" : "")} Note Attack", () => { ToggleNoteAttack(noteLocation, note); }));
+                            menu.Add(new ContextMenuOption("MenuToggleAttack", $"Toggle {(selection ? "Selection" : "")} Note Attack", () => { ToggleNoteAttack(noteLocation, note); }, ContextMenuSeparator.Before));
                         if (channel.SupportsSlideNotes)
                             menu.Add(new ContextMenuOption("MenuToggleSlide", $"Toggle {(selection ? "Selection" : "")} Slide Note", () => { ToggleSlideNote(noteLocation, note); }));
                         if (channel.SupportsReleaseNotes)
@@ -6261,20 +6268,14 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
                     }
 
-                    menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
-                    menu.Add(new ContextMenuOption("MenuDelete", "Delete Note", () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
+                    menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }, ContextMenuSeparator.Before));
                 }
                 else
                 {
                     note = channel.FindMusicalNoteAtLocation(ref noteLocation, -1);
 
                     if (note != null)
-                        menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
-                }
-
-                if (IsNoteSelected(mouseLocation))
-                {
-                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Notes", () => { DeleteSelectedNotes(); }));
+                        menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }, ContextMenuSeparator.Before));
                 }
 
                 if (IsSelectionValid())
@@ -6339,9 +6340,14 @@ namespace FamiStudio
                     menu.Add(new ContextMenuOption("MenuCopy", "Copy Effect Values as Text", () => { CopyEffectValues(true); }, ContextMenuSeparator.After));
                 }
 
-                if (hasValue || IsNoteSelected(location))
+                if (hasValue)
                 {
-                    menu.Add(new ContextMenuOption("MenuDelete", "Clear Effect Value", () => { ClearEffectValue(location, note, IsNoteSelected(location)); }));
+                    menu.Add(new ContextMenuOption("MenuDelete", "Clear Effect Value", () => { ClearEffectValue(location, note, false); }));
+                }
+
+                if (IsNoteSelected(location))
+                {
+                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Clear Selection Effect Values", () => { ClearEffectValue(location, note, true); }));
                 }
 
                 if (hasValue && selectedEffectIdx == Note.EffectVolume && channel.SupportsEffect(Note.EffectVolumeSlide))
@@ -6356,7 +6362,7 @@ namespace FamiStudio
 
                 if (IsSelectionValid())
                 {
-                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }));
+                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
                 }
 
                 if (menu.Count > 0)
@@ -6447,21 +6453,16 @@ namespace FamiStudio
 
                 if (editMode == EditionMode.Envelope && x < lastPixel)
                 {
-                    if (Platform.IsDesktop && IsSelectionValid())
-                    {
-                        menu.Add(new ContextMenuOption("MenuCopy", "Copy Selected Values as Text", () => { CopyAsText(); }, ContextMenuSeparator.Before));
-                    }
-
                     if (env.CanLoop || (rep != null && rep.CanLoop))
                     {
-                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }, ContextMenuSeparator.Before));
+                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }));
                         if (env.Loop >= 0)
                             menu.Add(new ContextMenuOption("MenuClearLoopPoint", "Clear Loop Point", () => { ClearEnvelopeLoopRelease(false); }));
                     }
                     if (env.CanRelease || (rep != null && rep.CanRelease))
                     {
                         if (absIdx > 0)
-                            menu.Add(new ContextMenuOption("MenuRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }, ContextMenuSeparator.Before));
+                            menu.Add(new ContextMenuOption("MenuRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
                         if (env.Release >= 0)
                             menu.Add(new ContextMenuOption("MenuClearRelease", "Clear Release Point", () => { ClearEnvelopeLoopRelease(true); }));
                     }
@@ -6469,10 +6470,15 @@ namespace FamiStudio
 
                 if (IsSelectionValid())
                 {
-                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
-
                     if (GetEnvelopeValueForCoord(x, y, out int idx, out _) && idx < EditEnvelope.Length)
-                        menu.Add(new ContextMenuOption("MenuClearEnvelope", "Flatten Selection", () => { FlattenEnvelopeValues(idx); }));
+                        menu.Insert(0, new ContextMenuOption("MenuClearEnvelope", "Flatten Selection", () => { FlattenEnvelopeValues(idx); }, ContextMenuSeparator.After));
+
+                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
+                }
+
+                if (Platform.IsDesktop && IsSelectionValid())
+                {
+                    menu.Add(new ContextMenuOption("MenuCopy", "Copy Selected Values as Text", () => { CopyAsText(); }, ContextMenuSeparator.Before));
                 }
 
                 if (menu.Count > 0)
@@ -6518,10 +6524,10 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption("MenuClearEnvelope", "Reset Volume Envelope", () => { ResetVolumeEnvelope(); }));
             }
 
-            if (IsSelectionValid())
+            if (IsPointInNoteArea(x, y) && IsSelectionValid())
             {
-                menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, menu.Count > 0 ? ContextMenuSeparator.Before : ContextMenuSeparator.None));
-                menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Samples", () => { DeleteSelectedWaveSection(); }));
+                menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Samples", () => { DeleteSelectedWaveSection(); }, ContextMenuSeparator.Before));
+                menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
             }
 
             if (menu.Count > 0)

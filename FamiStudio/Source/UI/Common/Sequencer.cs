@@ -1741,11 +1741,6 @@ namespace FamiStudio
                     menu.Add(new ContextMenuOption("MenuPiano", "Go To Piano Roll", () => { GotoPianoRoll(location); }));
                 }
 
-                if (IsSelectionValid())
-                {
-                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedPatern(); }));
-                }
-
                 if (Platform.IsMobile && IsSelectionValid() && !IsPatternSelected(location))
                 {
                     menu.Add(new ContextMenuOption("MenuExpandSelection", "Expand Selection", () => { EnsureSelectionInclude(location); }));
@@ -1754,21 +1749,27 @@ namespace FamiStudio
                     menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate Selection Here", () => { CopySelectionToCursor(true); }));
                 }
 
+                if (IsSelectionValid())
+                {
+                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedPatern(); }, ContextMenuSeparator.Before));
+                }
+
                 if (pattern != null)
                 {
                     if (IsPatternSelected(location) && SelectionContainsMultiplePatterns())
                     {
-                        menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Patterns", () => { DeleteSelection(true); }));
-                        menu.Add(new ContextMenuOption("MenuProperties", "Selected Patterns Properties...", () => { EditPatternProperties(new Point(x, y), pattern, true); }));
+                        menu.Insert(0, new ContextMenuOption("MenuDeleteSelection", "Delete Selected Patterns", () => { DeleteSelection(true); }));
+                        menu.Add(new ContextMenuOption("MenuProperties", "Selected Patterns Properties...", () => { EditPatternProperties(new Point(x, y), pattern, true); }, ContextMenuSeparator.Before));
                     }
                     else
                     {
                         if (Platform.IsDesktop)
                             SetSelection(location, location);
 
-                        menu.Add(new ContextMenuOption("MenuDelete", "Delete Pattern", () => { DeletePattern(location); }));
-                        menu.Add(new ContextMenuOption("MenuProperties", "Pattern Properties...", () => { EditPatternProperties(new Point(x, y), pattern, false); }));
+                        menu.Add(new ContextMenuOption("MenuProperties", "Pattern Properties...", () => { EditPatternProperties(new Point(x, y), pattern, false); }, ContextMenuSeparator.Before));
                     }
+
+                    menu.Insert(0, new ContextMenuOption("MenuDelete", "Delete Pattern", () => { DeletePattern(location); }));
                 }
 
                 if (menu.Count > 0)

@@ -3713,10 +3713,10 @@ namespace FamiStudio
         private bool HandleContextMenuSongButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
-            menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateSong(button.song); }));
             if (App.Project.Songs.Count > 1)
-                menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }));
-            menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(new Point(x, y), button.song); }));
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }, ContextMenuSeparator.After));
+            menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateSong(button.song); }));
+            menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(new Point(x, y), button.song); }, ContextMenuSeparator.Before));
             App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
         }
@@ -3809,17 +3809,18 @@ namespace FamiStudio
             var menu = new List<ContextMenuOption>();
             var inst = button.instrument;
             
-            if (subButtonType < SubButtonType.EnvelopeMax)
-            {
-                menu.Add(new ContextMenuOption("MenuClearEnvelope", "Clear Envelope", () => { ClearInstrumentEnvelope(inst, (int)subButtonType); }));
-            }
-
             if (inst != null)
             {
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(inst); }, ContextMenuSeparator.After));
+
+                if (subButtonType < SubButtonType.EnvelopeMax)
+                {
+                    menu.Add(new ContextMenuOption("MenuClearEnvelope", "Clear Envelope", () => { ClearInstrumentEnvelope(inst, (int)subButtonType); }, ContextMenuSeparator.After));
+                }
+
                 if (subButtonType == SubButtonType.Max)
                 {
-                    if (inst.IsN163 || 
-                        inst.IsFds)
+                    if (inst.IsN163 || inst.IsFds)
                     {
                         menu.Add(new ContextMenuOption("MenuWave", "Resample Wav File...", () => { LoadN163FdsResampleWavFile(inst); }, ContextMenuSeparator.Before)); 
 
@@ -3834,8 +3835,7 @@ namespace FamiStudio
                     menu.Add(new ContextMenuOption("MenuReplace", "Replace With...", () => { AskReplaceInstrument(inst); }));
                 }
 
-                menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(inst); }, ContextMenuSeparator.Before));
-                menu.Add(new ContextMenuOption("MenuProperties", "Instrument Properties...", () => { EditInstrumentProperties(new Point(x, y), inst); }));
+                menu.Add(new ContextMenuOption("MenuProperties", "Instrument Properties...", () => { EditInstrumentProperties(new Point(x, y), inst); }, ContextMenuSeparator.Before));
             }
 
             if (menu.Count > 0)
@@ -3921,10 +3921,10 @@ namespace FamiStudio
             var menu = new List<ContextMenuOption>();
             if (button.arpeggio != null)
             {
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }, ContextMenuSeparator.After));
                 menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateArpeggio(button.arpeggio); }));
                 menu.Add(new ContextMenuOption("MenuReplace", "Replace With...", () => { AskReplaceArpeggio(button.arpeggio); }));
-                menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }, ContextMenuSeparator.Before));
-                menu.Add(new ContextMenuOption("MenuProperties", "Arpeggio Properties...", () => { EditArpeggioProperties(new Point(x, y), button.arpeggio); }));
+                menu.Add(new ContextMenuOption("MenuProperties", "Arpeggio Properties...", () => { EditArpeggioProperties(new Point(x, y), button.arpeggio); }, ContextMenuSeparator.Before));
             }
             if (menu.Count > 0)
                 App.ShowContextMenu(left + x, top + y, menu.ToArray());
@@ -3945,6 +3945,8 @@ namespace FamiStudio
 
             var menu = new List<ContextMenuOption>();
 
+            menu.Add(new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); }, ContextMenuSeparator.After));
+
             if (Platform.IsDesktop)
             {
                 menu.Add(new ContextMenuOption("MenuSave", "Export Processed DMC Data...", () => { ExportDPCMSampleProcessedData(button.sample); }));
@@ -3953,11 +3955,10 @@ namespace FamiStudio
 
             if (button.sample.SourceDataIsWav)
             {
-                menu.Add(new ContextMenuOption("MenuTrash", "Discard Source WAV Data", "Permanently applies processing options, delete source WAV\n data and keeps the resulting DMC data. Reduces FMS file size.", () => { DeleteDpcmSourceWavData(button.sample); }, Platform.IsDesktop ? ContextMenuSeparator.Before : ContextMenuSeparator.None));
+                menu.Add(new ContextMenuOption("MenuTrash", "Discard Source WAV Data", "Permanently applies processing options, delete source WAV\n data and keeps the resulting DMC data. Reduces FMS file size.", () => { DeleteDpcmSourceWavData(button.sample); }));
             }
 
-            menu.Add(new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); }, Platform.IsDesktop ? ContextMenuSeparator.Before : ContextMenuSeparator.None));
-            menu.Add(new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(new Point(x, y), button.sample); }));
+            menu.Add(new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(new Point(x, y), button.sample); }, ContextMenuSeparator.Before));
 
             App.ShowContextMenu(left + x, top + y, menu.ToArray());
 
