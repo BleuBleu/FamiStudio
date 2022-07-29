@@ -2408,7 +2408,7 @@ namespace FamiStudio
                 var highlightLastNoteValue = Note.NoteInvalid;
                 var highlightLastInstrument = (Instrument)null;
 
-                if (editMode != EditionMode.VideoRecording)
+                if (editMode != EditionMode.VideoRecording && !ParentWindow.IsAsyncDialogInProgress)
                 {
                     if (Platform.IsMobile)
                     {

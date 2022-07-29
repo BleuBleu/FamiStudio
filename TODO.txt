@@ -4,7 +4,6 @@
 - MacOS bug : "middle clicking to pan is pretty obvious. It follows the mouse, but as soon as you release the middle mouse button, it goes back to where it was." SEE VIDEO!!!!!!!
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song.
-- You can highlight piano roll stuff when exporting...
 
 P0:
 - Improve snapping.
