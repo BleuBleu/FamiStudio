@@ -102,13 +102,13 @@ namespace FamiStudio
             {
                 if (maxNote == minNote)
                 {
-                    minNote = (byte)(minNote - 5);
-                    maxNote = (byte)(maxNote + 5);
+                    minNote = (byte)Math.Max(minNote - 5, Note.MusicalNoteMin);
+                    maxNote = (byte)Math.Min(maxNote + 5, Note.MusicalNoteMax);
                 }
                 else
                 {
-                    minNote = (byte)(minNote - 2);
-                    maxNote = (byte)(maxNote + 2);
+                    minNote = (byte)Math.Max(minNote - 2, Note.MusicalNoteMin);
+                    maxNote = (byte)Math.Min(maxNote + 2, Note.MusicalNoteMax);
                 }
 
                 var musicalNotes = new List<Tuple<int, Note>>();
