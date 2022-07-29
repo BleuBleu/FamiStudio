@@ -1422,7 +1422,7 @@ namespace FamiStudio
             {
                 Note.GetOctaveAndNote(playHighlightNote, out var octave, out var octaveNote);
                 if (!IsBlackKey(octaveNote))
-                    r.cp.FillRectangle(GetKeyRectangle(octave, octaveNote), whiteKeyPressedColor);
+                    r.cp.FillRectangle(GetKeyRectangle(octave, octaveNote), editMode == EditionMode.VideoRecording ? videoKeyColor : whiteKeyPressedColor);
             }
             else if (Note.IsMusicalNote(hoverPianoNote))
             {
@@ -1461,12 +1461,12 @@ namespace FamiStudio
                     r.cp.DrawText("C" + i, FontResources.FontSmall, r.g.WindowScaling, octaveBaseY - noteSizeY + 1, Theme.BlackColor, TextFlags.Middle, pianoSizeX - r.g.WindowScaling * 2, noteSizeY - 1);
             }
 
-            // Highlight play/hover note (white keys)
+            // Highlight play/hover note (black keys)
             if (Note.IsMusicalNote(playHighlightNote))
             {
                 Note.GetOctaveAndNote(playHighlightNote, out var octave, out var octaveNote);
                 if (IsBlackKey(octaveNote))
-                    r.cp.FillRectangle(GetKeyRectangle(octave, octaveNote), blackKeyPressedColor);
+                    r.cp.FillRectangle(GetKeyRectangle(octave, octaveNote), editMode == EditionMode.VideoRecording ? videoKeyColor : blackKeyPressedColor);
             }
             else if (Note.IsMusicalNote(hoverPianoNote))
             {
@@ -3373,11 +3373,6 @@ namespace FamiStudio
             playHighlightNote = highlightKey;
             videoKeyColor = highlightColor;
 
-            //Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
-            //Utils.DisposeAndNullify(ref blackKeyPressedBrush);
-            //whiteKeyPressedBrush = g.CreateSolidBrush(highlightColor);
-            //blackKeyPressedBrush = g.CreateSolidBrush(highlightColor);
-
             OnRender(g);
         }
 
@@ -3900,7 +3895,7 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
             dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
             dlg.Properties.AddCheckBox("Override DMC Initial Value :", mapping.OverrideDmcInitialValue); // 2
-            dlg.Properties.AddNumericUpDown("DMC Initial Value (÷2) :", mapping.DmcInitialValueDiv2, 0, 63); // 3
+            dlg.Properties.AddNumericUpDown("DMC Initial Value (ï¿½2) :", mapping.DmcInitialValueDiv2, 0, 63); // 3
             dlg.Properties.Build();
             dlg.Properties.SetPropertyEnabled(3, mapping.OverrideDmcInitialValue);
             dlg.Properties.PropertyChanged += DPCMSampleMapping_PropertyChanged;
