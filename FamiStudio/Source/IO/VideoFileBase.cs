@@ -111,7 +111,7 @@ namespace FamiStudio
 
             // Save audio to temporary file.
             tempAudioFile = Path.Combine(Utils.GetTemporaryDiretory(), "temp.wav");
-            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, 0, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
 
             if (Log.ShouldAbortOperation)
                 return false;

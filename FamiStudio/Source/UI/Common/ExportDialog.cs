@@ -182,6 +182,20 @@ namespace FamiStudio
 
             return data;
         }
+        
+        const string SingleSongTooltip    = "Select the song to export.";
+        const string WavFormatTooltip     = "Audio format to export to. WAV files are uncompressed and sound better, but are much larger.";
+        const string SampleRateTooltip    = "The sample rate of the audio to export. Leave to 44100 to get the exact same sound as inside the app.";
+        const string AudioBitRateTooltip  = "Audio bitrate for compressed formats (MP3/OGG/AAC). Lower bitrates results in smaller files, at the cost of audio quality.";
+        const string LoopModeTooltip      = "Loop the song a certain number of times, or export a specific duration (in seconds).";
+        const string LoopCountTooltip     = "Number of times to loop the song.";
+        const string DurationTooltip      = "Duration to export, in seconds.";
+        const string DelayTooltip         = "Optional audio delay effect that will include an echo of the audio at the specified delay.\n\nHighly recommanded to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side.\n\nA value of 15 ms. is a good place to start, set to 0 to turn off.";
+        const string SeperateFilesTooltip = "If enabled, each channel will be exported to a seperate file. Useful for offline mixing.";
+        const string SeperateIntroTooltip = "If enabled, the intro (the part before the loop point), will be exported to a seperate file. Useful if making games.";
+        const string StereoTooltip        = "If enabled, will export stereo audio and enable custom panning for each channel in the grid below.";
+        const string ChannelGridTooltip   = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.";
+        const string ChannelListTooltip   = "Select the channels to export.";
 
         private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
         {
@@ -212,27 +226,29 @@ namespace FamiStudio
             switch (format)
             {
                 case ExportFormat.WavMp3:
-                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
-                    page.AddDropDownList("Format :", AudioFormatType.Names, AudioFormatType.Names[0]); // 1
-                    page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
-                    page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "192"); // 3
-                    page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
-                    page.AddNumericUpDown("Loop count:", 1, 1, 10); // 5
-                    page.AddNumericUpDown("Duration (sec):", 120, 1, 1000); // 6
-                    page.AddCheckBox("Separate channel files", false); // 7
-                    page.AddCheckBox("Separate intro file", false); // 8
-                    page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 9
+                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
+                    page.AddDropDownList("Format :", AudioFormatType.Names, AudioFormatType.Names[0], WavFormatTooltip); // 1
+                    page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100", SampleRateTooltip); // 2
+                    page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "192", AudioBitRateTooltip); // 3
+                    page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times", LoopModeTooltip); // 4
+                    page.AddNumericUpDown("Loop count:", 1, 1, 10, LoopCountTooltip); // 5
+                    page.AddNumericUpDown("Duration (sec):", 120, 1, 1000, DurationTooltip); // 6
+                    page.AddNumericUpDown("Delay (ms) :", 0, 0, 500, DelayTooltip); // 7
+                    page.AddCheckBox("Separate channel files", false, SeperateFilesTooltip); // 8
+                    page.AddCheckBox("Separate intro file", false, SeperateIntroTooltip); // 9
+                    page.AddCheckBox("Stereo", project.OutputsStereoAudio, StereoTooltip); // 10
                     if (Platform.IsDesktop)
-                        page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 10
+                        page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 7, ChannelGridTooltip); // 11
                     else
-                        page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
-                    page.SetPropertyEnabled(3, false);
-                    page.SetPropertyEnabled(6, false);
-                    page.SetPropertyVisible(7, Platform.IsDesktop); // No separate files on mobile.
-                    page.SetPropertyVisible(8, Platform.IsDesktop); // No separate files on mobile.
-                    page.SetPropertyVisible(9, Platform.IsDesktop); // No stereo on mobile.
-                    page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
-                    page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
+                        page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels(), ChannelListTooltip); // 11
+                    page.SetPropertyEnabled( 3, false);
+                    page.SetPropertyEnabled( 6, false);
+                    page.SetPropertyVisible( 7, Platform.IsDesktop); // No delay on mobile, sound bad without stereo.
+                    page.SetPropertyVisible( 8, Platform.IsDesktop); // No separate files on mobile.
+                    page.SetPropertyVisible( 9, Platform.IsDesktop); // No separate into on mobile.
+                    page.SetPropertyVisible(10, Platform.IsDesktop); // No stereo on mobile.
+                    page.SetPropertyEnabled(10, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                    page.SetColumnEnabled(11, 2, project.OutputsStereoAudio);
                     page.PropertyChanged += WavMp3_PropertyChanged;
                     page.PropertyClicked += WavMp3_PropertyClicked;
                     break;
@@ -389,25 +405,30 @@ namespace FamiStudio
                 props.SetPropertyEnabled(5, (string)value != "Duration");
                 props.SetPropertyEnabled(6, (string)value == "Duration");
             }
-            else if (propIdx == 7)
+            else if (propIdx == 8)
             {
                 var separateChannels = (bool)value;
 
-                props.SetPropertyEnabled(9, !separateChannels && !project.OutputsStereoAudio);
-                if (separateChannels)
-                    props.SetPropertyValue(9, project.OutputsStereoAudio);
+                props.SetPropertyEnabled(7, !separateChannels);
+                props.SetPropertyEnabled(10, !separateChannels && !project.OutputsStereoAudio);
 
-                props.SetColumnEnabled(10, 2, props.GetPropertyValue<bool>(9) && !separateChannels);
+                if (separateChannels)
+                {
+                    props.SetPropertyValue(7, 0);
+                    props.SetPropertyValue(10, project.OutputsStereoAudio);
+                }
+
+                props.SetColumnEnabled(11, 2, props.GetPropertyValue<bool>(10) && !separateChannels);
             }
-            else if (propIdx == 9)
+            else if (propIdx == 10)
             {
-                props.SetColumnEnabled(10, 2, (bool)value);
+                props.SetColumnEnabled(11, 2, (bool)value);
             }
         }
 
         private void WavMp3_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (propIdx == 9 && click == ClickType.Right && colIdx == 2)
+            if (propIdx == 10 && click == ClickType.Right && colIdx == 2)
             {
                 props.UpdateGrid(propIdx, rowIdx, colIdx, 50);
             }
@@ -445,9 +466,10 @@ namespace FamiStudio
                     var bitrate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
                     var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
                     var duration = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
-                    var separateFiles = props.GetPropertyValue<bool>(7);
-                    var separateIntro = props.GetPropertyValue<bool>(8);
-                    var stereo = props.GetPropertyValue<bool>(9) && (!separateFiles || project.OutputsStereoAudio);
+                    var delay = props.GetPropertyValue<int>(7);
+                    var separateFiles = props.GetPropertyValue<bool>(8);
+                    var separateIntro = props.GetPropertyValue<bool>(9);
+                    var stereo = props.GetPropertyValue<bool>(10) && (!separateFiles || project.OutputsStereoAudio);
                     var song = project.GetSong(songName);
 
                     var channelCount = project.GetActiveChannelCount();
@@ -460,15 +482,15 @@ namespace FamiStudio
 
                         for (int i = 0; i < channelCount; i++)
                         {
-                            if (props.GetPropertyValue<bool>(10, i, 0))
+                            if (props.GetPropertyValue<bool>(11, i, 0))
                                 channelMask |= (1L << i);
 
-                            pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
+                            pan[i] = props.GetPropertyValue<int>(11, i, 2) / 100.0f;
                         }
                     }
                     else
                     {
-                        var selectedChannels = props.GetPropertyValue<bool[]>(10);
+                        var selectedChannels = props.GetPropertyValue<bool[]>(11);
                         for (int i = 0; i < channelCount; i++)
                         {
                             if (selectedChannels[i])
@@ -476,7 +498,7 @@ namespace FamiStudio
                         }
                     }
 
-                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, Platform.IsMobile || project.UsesEPSMExpansion,
+                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, delay, Platform.IsMobile || project.UsesEPSMExpansion,
                          (samples, samplesChannels, fn) =>
                          {
                              switch (format)

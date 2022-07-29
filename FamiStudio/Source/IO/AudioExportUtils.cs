@@ -10,11 +10,12 @@ namespace FamiStudio
 {
     static class AudioExportUtils
     {
-        public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, long channelMask, bool separateFiles, bool separateIntro, bool stereo, float[] pan, bool log, Action<short[], int, string> function)
+        public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, long channelMask, bool separateFiles, bool separateIntro, bool stereo, float[] pan, int delay, bool log, Action<short[], int, string> function)
         {
             var project = song.Project;
             var introDuration = separateIntro ? GetIntroDuration(song, sampleRate, log) : 0;
             var outputsStereo = song.Project.OutputsStereoAudio;
+            var delayInSamples = (int)(sampleRate * (delay / 1000.0f));
 
             // We will enforce stereo export if the chip outputs stereo.
             Debug.Assert(!outputsStereo || stereo);
@@ -47,6 +48,8 @@ namespace FamiStudio
             if (separateFiles)
             {
                 Log.LogMessageConditional(log, LogSeverity.Info, $"Rendering audio for individual channels...");
+
+                Debug.Assert(delay == 0);
 
                 var numChannels = outputsStereo ? 2 : 1;
                 var channelSamples = GetIndividualChannelSamples(song, outputsStereo, channelMask, sampleRate, loopCount, project.PalMode, duration, log);
@@ -86,9 +89,9 @@ namespace FamiStudio
                 if (stereo)
                 {
                     // Optimization : If the project already outputs stereo and
-                    // we don't have any panning to do, we can simply take the
-                    // raw result of the emulation.
-                    if (centerPan && outputsStereo)
+                    // we don't have any panning/delay to do, we can simply take 
+                    // the raw result of the emulation.
+                    if (delay == 0 && centerPan && outputsStereo)
                     {
                         var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelMask, 0, NesApu.TND_MODE_SEPARATE);
                         samples = player.GetSongSamples(song, project.PalMode, duration, log);
@@ -96,7 +99,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        Log.LogMessageConditional(log, LogSeverity.Info, $"Exporting channels individually due to custom panning, this will take longer...");
+                        Log.LogMessageConditional(log, LogSeverity.Info, $"Exporting channels individually due to custom panning or delay, this will take longer...");
 
                         var channelSamples = GetIndividualChannelSamples(song, outputsStereo, channelMask, sampleRate, loopCount, project.PalMode, duration, log);
                         if (channelSamples == null)
@@ -115,35 +118,46 @@ namespace FamiStudio
                         // Mix and interleave samples.
                         samples = outputsStereo ? new short[numGeneratedSamples] : new short[numGeneratedSamples * 2];
 
-                        for (int i = 0; i < numGeneratedSamples; i++)
-                        {
-                            float l = 0;
-                            float r = 0;
+                        var stepIn  = outputsStereo ? 2 : 1;
+                        var stepOut = outputsStereo ? 1 : 2;
 
-                            for (int j = 0; j < channelSamples.Length; j++)
+                        for (var i = 0; i < numGeneratedSamples; i += stepIn)
+                        {
+                            var l = 0.0f;
+                            var r = 0.0f;
+
+                            var i0 = i;
+                            var i1 = i + (outputsStereo ? 1 : 0);
+
+                            for (var j = 0; j < channelSamples.Length; j++)
                             {
                                 if (channelSamples[j] != null)
                                 {
-                                    float sl = 1.0f - Utils.Clamp( 2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
-                                    float sr = 1.0f - Utils.Clamp(-2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
+                                    var p = pan[j];
 
-                                    l += channelSamples[j][i] * sl;
-                                    r += channelSamples[j][i] * sr;
+                                    var sl = 1.0f - Utils.Clamp( 2.0f * (p - 0.5f), 0.0f, 1.0f);
+                                    var sr = 1.0f - Utils.Clamp(-2.0f * (p - 0.5f), 0.0f, 1.0f);
+
+                                    l += channelSamples[j][i0] * sl;
+                                    r += channelSamples[j][i1] * sr;
+
+                                    if (delayInSamples > 0)
+                                    {
+                                        var di0 = i0 - delayInSamples;
+                                        var di1 = i1 - delayInSamples;
+
+                                        // Apply opposite panning for delay.
+                                        if (di0 >= 0)
+                                        {
+                                            l += channelSamples[j][di0] * sr;
+                                            r += channelSamples[j][di1] * sl;
+                                        }
+                                    }
                                 }
                             }
 
-                            if (outputsStereo)
-                            {
-                                if (i % 2 == 0)
-                                    samples[i] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
-                                else
-                                    samples[i] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
-                            }
-                            else
-                            {
-                                samples[i * 2 + 0] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
-                                samples[i * 2 + 1] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
-                            }
+                            samples[i * stepOut + 0] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
+                            samples[i * stepOut + 1] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
                         }
 
                         numChannels = 2;
@@ -166,6 +180,14 @@ namespace FamiStudio
                             if (i % 2 == 0)
                                 samples[i] = (short)((stereoSamples[i * 2] + stereoSamples[i * 2 + 1]) / 2);
                         }
+                    }
+
+                    var samplesCopy = samples.Clone() as short[];
+
+                    if (delay > 0)
+                    {
+                        for (int i = delayInSamples; i < samples.Length; i++)
+                            samples[i] = (short)Utils.Clamp(samples[i] + samplesCopy[i - delayInSamples], short.MinValue, short.MaxValue);
                     }
                 }
 

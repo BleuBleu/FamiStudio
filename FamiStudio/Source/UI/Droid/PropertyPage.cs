@@ -885,6 +885,9 @@ namespace FamiStudio
                 case PropertyType.Label:
                     (prop.controls[0] as TextView).Text = (string)value;
                     break;
+                case PropertyType.NumericUpDown:
+                    (prop.controls[0] as HorizontalNumberPicker).Value = (int)value;
+                    break;
             }
         }
 

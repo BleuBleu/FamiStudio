@@ -527,13 +527,14 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7)
+        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
         {
             var grid = new Grid(dialog, columnDescs, numRows, true);
 
             if (data != null)
                 grid.UpdateData(data);
 
+            grid.ToolTip = tooltip;
             grid.ValueChanged += Grid_ValueChanged;
             grid.ButtonPressed += Grid_ButtonPressed;
             grid.CellDoubleClicked += Grid_CellDoubleClicked;
@@ -578,13 +579,13 @@ namespace FamiStudio
             grid.SetRowColor(rowIdx, color);
         }
 
-        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7)
+        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Grid,
-                    control = CreateGrid(columnDescs, data, numRows)
+                    control = CreateGrid(columnDescs, data, numRows, tooltip)
                 });
         }
 
@@ -750,6 +751,9 @@ namespace FamiStudio
                     break;
                 case PropertyType.Slider:
                     (prop.control as Slider).Value = (double)value;
+                    break;
+                case PropertyType.NumericUpDown:
+                    (prop.control as NumericUpDown).Value = (int)value;
                     break;
             }
         }

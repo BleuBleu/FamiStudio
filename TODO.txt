@@ -1,17 +1,34 @@
 4.0.0
 =====
 
-- MacOS bug : "middle clicking to pan is pretty obvious. It follows the mouse, but as soon as you release the middle mouse button, it goes back to where it was."
+- MacOS bug : "middle clicking to pan is pretty obvious. It follows the mouse, but as soon as you release the middle mouse button, it goes back to where it was." SEE VIDEO!!!!!!!
+- Double-click / shift-click to delete songs/instruments?
+- Add MM10 song.
 
 P0:
-- Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
+- Improve snapping.
+
+  => Can we make snapping absolute instead of relative?
+  	- Only the note being resize would snap "absolutely", all the other ones just grow proportionally
+  	- Seems easy enough. 
+  	- Right now, captureMouseAbsoluteIdx is snapped and this is how the entire system works.
+	=> How to remove the 1-frame glitch?
+		- The current note being resized (focused) will not allow resize if if creates 0-size notes.
+
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
-	=> Remove 1-frame snap glitch.
-	=> Snap effect values (at least give the option to!)
+	=> Context menu option to quantize note starts / end.
+	=> Option to snap effect values 
+	=> Option to auto adjust based on last resize.
+
+- Multiple release note move.
 
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
+
+P1:
+/ Delay effect.
+/ Tooltips in export dialog.
 
 4.0.0 Change Log
 ================
@@ -25,7 +42,7 @@ P0:
 - Wave resampling for N163/FDS waveforms
 - Basic NSFe support (track names and durations)
 - Improved oscilloscope stability
-- 
+- Audio delay effect when exporting.
 
 Testing:
 ========
@@ -39,6 +56,7 @@ Testing:
 
 Packaging:
 ==========
+- Ask how2 for demo songs.
 - Reset snap (again!) in INI loading.
 - Fix Multi + MultiEPSM unit tests.
 - UNIT-TEST : Add multi-wave to N163/FDS unit tests.
