@@ -73,6 +73,8 @@ public:
 	unsigned char ages_a1[184];
 
 	enum { psg_clock = 4000000 };
+	enum { epsm_clock = 8000000 };
+	enum { epsm_internal_multiplier = 6 }; //no clue why it behaves like this
 	enum { reg_select = 0x401c };
 	enum { reg_write = 0x401d };
 	enum { reg_select2 = 0x401e };
@@ -90,8 +92,6 @@ private:
 	Nes_EPSM(const Nes_EPSM&);
 	Nes_EPSM& operator = (const Nes_EPSM&);
 	
-	epsm_write_queue queue;
-
 	void reset_psg();
 	void reset_opn2();
 
@@ -108,6 +108,8 @@ private:
 	Blip_Buffer* output_buffer;
 	Blip_Buffer* output_buffer_right;
 	cpu_time_t last_time;
+	int delay;
+	double epsm_time;
 	int last_amp;
 	int last_amp_right;
 	uint16_t opn2_mask;
