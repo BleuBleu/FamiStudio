@@ -1,12 +1,10 @@
 4.0.0
 =====
 
-- MacOS bug : "middle clicking to pan is pretty obvious. It follows the mouse, but as soon as you release the middle mouse button, it goes back to where it was." SEE VIDEO!!!!!!!
 - Double-click / shift-click to delete songs/instruments?
-- Add MM10 song.
-- Sheepman VRC7, FM6 channel is unstable.
-- Osc freezes + crash on macos
+- Add MM10 song to demo.
 - N163 position/size crash? Also when changing #of n163 channel, need to clamp.
+- Clear envelope only flattens it? Janky.
 
 P0:
 - Improve snapping.
@@ -30,7 +28,7 @@ P0:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
 
 P1:
-/ Delay effect.
+/ Delay effect. => Add to video.
 / Tooltips in export dialog.
 
 4.0.0 Change Log

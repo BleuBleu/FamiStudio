@@ -805,15 +805,35 @@ static INLINE void calc_phase(OPLL_SLOT *slot, int32_t pm_phase, uint8_t reset) 
   const int8_t pm = slot->patch->PM ? pm_table[(slot->fnum >> 6) & 7][pm_phase >> (PM_DP_BITS - PM_PG_BITS)] : 0;
   if (reset) {
     slot->pg_phase = 0;
-    slot->pg_phase_trigger = 0;
     slot->trigger = 1;
   }
 
-  slot->pg_phase_trigger += ((slot->fnum & 0x1ff) * 4) << slot->blk >> 2;
-  slot->pg_phase_trigger &= (DP_WIDTH - 1);
   slot->pg_phase += (((slot->fnum & 0x1ff) * 2 + pm) * ml_table[slot->patch->ML]) << slot->blk >> 2;
   slot->pg_phase &= (DP_WIDTH - 1);
   slot->pg_out = slot->pg_phase >> DP_BASE_BITS;
+}
+
+static INLINE void calc_trigger_phase(OPLL_SLOT* slot, OPLL_SLOT* buddy, uint8_t reset) {
+    if (slot->type == 1)
+    {
+        if (reset) {
+            slot->pg_phase_trigger = 0;
+        }
+
+        // The frequency we use for trigger is the greatest common divisor
+        // of the carrier and modulator frequency.
+        int car_ml = ml_table[slot->patch->ML];
+        int mod_ml = ml_table[buddy->patch->ML];
+
+        while (mod_ml != 0) {
+            int r = car_ml % mod_ml;
+            car_ml = mod_ml;
+            mod_ml = r;
+        }
+
+        slot->pg_phase_trigger += ((slot->fnum & 0x1ff) * 2 * car_ml) << slot->blk >> 2;
+        slot->pg_phase_trigger &= (DP_WIDTH - 1);
+    }
 }
 
 static INLINE uint8_t lookup_attack_step(OPLL_SLOT *slot, uint32_t counter) {
@@ -937,7 +957,7 @@ static void update_slots(OPLL *opll) {
     OPLL_SLOT *slot = &opll->slot[i];
     OPLL_SLOT *buddy = NULL;
 
-    uint32_t prev_pg_phase_trigger = slot->pg_phase_trigger >> DP_BASE_BITS;
+    uint32_t prev_pg_phase_trigger = slot->pg_phase_trigger;
 
     if (slot->type == 0) {
       buddy = &opll->slot[i + 1];
@@ -950,8 +970,9 @@ static void update_slots(OPLL *opll) {
     }
     calc_envelope(slot, buddy, opll->eg_counter, opll->test_flag & 1);
     calc_phase(slot, opll->pm_phase, opll->test_flag & 4);
+    calc_trigger_phase(slot, buddy, opll->test_flag & 4);
 
-    if (slot->type == 1 && prev_pg_phase_trigger > (slot->pg_phase_trigger >> DP_BASE_BITS))
+    if (slot->type == 1 && (prev_pg_phase_trigger >> DP_BASE_BITS) > (slot->pg_phase_trigger >> DP_BASE_BITS))
         slot->trigger = 1;
   }
 }
