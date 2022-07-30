@@ -32,12 +32,13 @@ namespace FamiStudio
         private int octaveSizeX;
         private int virtualSizeX;
 
-        Brush whiteKeyBrush;
-        Brush blackKeyBrush;
-        Brush whiteKeyPressedBrush;
-        Brush blackKeyPressedBrush;
-        BitmapAtlasRef bmpMobilePianoDrag;
-        BitmapAtlasRef bmpMobilePianoRest;
+        private readonly Color LightGreyColor1Dark = Theme.Darken(Theme.LightGreyColor1);
+        private readonly Color LightGreyColor2Dark = Theme.Darken(Theme.LightGreyColor2);
+        private readonly Color DarkGreyColor4Light = Theme.Lighten(Theme.DarkGreyColor4);
+        private readonly Color DarkGreyColor5Light = Theme.Lighten(Theme.DarkGreyColor5);
+
+        private BitmapAtlasRef bmpMobilePianoDrag;
+        private BitmapAtlasRef bmpMobilePianoRest;
 
         private int scrollX = -1;
         private int playAbsNote = -1;
@@ -63,10 +64,6 @@ namespace FamiStudio
 
             bmpMobilePianoDrag   = g.GetBitmapAtlasRef("MobilePianoDrag");
             bmpMobilePianoRest   = g.GetBitmapAtlasRef("MobilePianoRest");
-            whiteKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.LightGreyColor1, Theme.LightGreyColor2);
-            blackKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.DarkGreyColor4,  Theme.DarkGreyColor5);
-            whiteKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Darken(Theme.LightGreyColor1), Theme.Darken(Theme.LightGreyColor2));
-            blackKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Lighten(Theme.DarkGreyColor4), Theme.Lighten(Theme.DarkGreyColor5));
         }
         
         private void UpdateRenderCoords()
@@ -86,10 +83,6 @@ namespace FamiStudio
 
         protected override void OnRenderTerminated()
         {
-            Utils.DisposeAndNullify(ref whiteKeyBrush);
-            Utils.DisposeAndNullify(ref blackKeyBrush);
-            Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
-            Utils.DisposeAndNullify(ref blackKeyPressedBrush);
         }
 
         protected override void OnResize(EventArgs e)
@@ -152,7 +145,7 @@ namespace FamiStudio
             return new Rectangle(r0.Right, 0, r1.Left - r0.Right, Height / 2);
         }
 
-        private bool GetDPCMKeyColor(int note, ref Color color)
+        private bool GetDPCMKeyColor(int note, out Color color)
         {
             if (App.SelectedChannel.Type == ChannelType.Dpcm)
             {
@@ -163,7 +156,7 @@ namespace FamiStudio
                     return true;
                 }
             }
-
+            color = Color.Empty;
             return false;
         }
 
@@ -173,7 +166,7 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 var c = g.CreateCommandList();
-                c.FillRectangle(lastX - 30, lastY - 30, lastX + 30, lastY + 30, ThemeResources.WhiteBrush);
+                c.FillRectangle(lastX - 30, lastY - 30, lastX + 30, lastY + 30, Theme.WhiteColor);
                 g.DrawCommandList(c);
             }
 #endif
@@ -188,23 +181,21 @@ namespace FamiStudio
             var cp = g.CreateCommandList();
            
             // Background (white keys)
-            cb.FillRectangle(0, 0, Width, Height, whiteKeyBrush);
+            cb.FillRectangleGradient(0, 0, Width, Height, Theme.LightGreyColor1, Theme.LightGreyColor2, true, layoutSize);
 
             // Highlighted note.
             var playOctave = Note.IsMusicalNote(highlightAbsNote) ? (highlightAbsNote - 1) / 12 : -1;
             var playNote   = Note.IsMusicalNote(highlightAbsNote) ? (highlightAbsNote - 1) % 12 : -1;
             if (playNote >= 0 && !IsBlackKey(playNote))
-                cp.FillRectangle(GetKeyRectangle(playOctave, playNote), whiteKeyPressedBrush);
-
-            var color = Color.Empty;
+                cp.FillRectangleGradient(GetKeyRectangle(playOctave, playNote), LightGreyColor1Dark, LightGreyColor2Dark, true, layoutSize);
 
             // Early pass for DPCM white keys
             for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
             {
                 for (int j = 0; j < 12; j++)
                 {
-                    if (!IsBlackKey(j) && GetDPCMKeyColor(i * 12 + j + 1, ref color))
-                        cp.FillRectangle(GetKeyRectangle(i, j), g.GetVerticalGradientBrush(Theme.Darken(color, 20), color, Height));
+                    if (!IsBlackKey(j) && GetDPCMKeyColor(i * 12 + j + 1, out var color))
+                        cp.FillRectangleGradient(GetKeyRectangle(i, j), Theme.Darken(color, 20), color, true, Height);
                 }
             }
 
@@ -215,10 +206,21 @@ namespace FamiStudio
                 {
                     if (IsBlackKey(j))
                     {
-                        var brush = playOctave == i && playNote == j ? blackKeyPressedBrush : blackKeyBrush;
-                        if (GetDPCMKeyColor(i * 12 + j + 1, ref color))
-                            brush = g.GetVerticalGradientBrush(Theme.Darken(color, 40), Theme.Darken(color, 20), Height / 2);
-                        cp.FillRectangle(GetKeyRectangle(i, j), brush);
+                        var color0 = Theme.DarkGreyColor4;
+                        var color1 = Theme.DarkGreyColor5;
+                        
+                        if (GetDPCMKeyColor(i * 12 + j + 1, out var color))
+                        { 
+                            color0 = Theme.Darken(color, 40);
+                            color1 = Theme.Darken(color, 20);
+                        }
+                        else if (playOctave == i && playNote == j)
+                        {
+                            color0 = DarkGreyColor4Light;
+                            color1 = DarkGreyColor5Light;
+                        }
+
+                        cp.FillRectangleGradient(GetKeyRectangle(i, j), color0, color1, true, Height / 2);
                     }
                 }
             }
@@ -233,20 +235,20 @@ namespace FamiStudio
                         var groupStart = j == 0 || j == 5;
                         var x = GetKeyRectangle(i, j).X;
                         var y = groupStart ? 0 : Height / 2;
-                        var brush = groupStart ? ThemeResources.BlackBrush : ThemeResources.DarkGreyBrush5;
-                        cp.DrawLine(x, y, x, Height, brush);
+                        var color = groupStart ? Theme.BlackColor: Theme.DarkGreyColor5;
+                        cp.DrawLine(x, y, x, Height, color);
                     }
                 }
             }
 
             // Top line
-            cp.DrawLine(0, 0, Width, 0, ThemeResources.BlackBrush);
+            cp.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
             // Octave labels
             for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
             {
                 var r = GetKeyRectangle(i, 0);
-                cp.DrawText("C" + i, ThemeResources.FontSmall, r.X, r.Y, ThemeResources.BlackBrush, TextFlags.BottomCenter, r.Width, r.Height - ThemeResources.FontSmall.Size);
+                cp.DrawText("C" + i, FontResources.FontSmall, r.X, r.Y, Theme.BlackColor, TextFlags.BottomCenter, r.Width, r.Height - FontResources.FontSmall.Size);
             }
 
             // Drag images
@@ -266,11 +268,6 @@ namespace FamiStudio
                     }
                 }
             }
-
-            //if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping) && ThemeResources.FontSmall.Size < noteSizeY)
-            //    r.cp.DrawText("C" + i, ThemeResources.FontSmall, r.g.WindowScaling, octaveBaseX - noteSizeY + 1, ThemeResources.BlackBrush, TextFlags.Middle, whiteKeySizeX - r.g.WindowScaling * 2, noteSizeY - 1);
-            //if ((i == playOctave && j == playNote) || (draggingNote && (i == dragOctave && j == dragNote)))
-            //    r.cp.FillRectangle(GetKeyRectangle(i, j), blackKeyPressedBrush);
 
             g.DrawCommandList(cb);
             g.DrawCommandList(cp, new Rectangle(0, 0, Width, Height));

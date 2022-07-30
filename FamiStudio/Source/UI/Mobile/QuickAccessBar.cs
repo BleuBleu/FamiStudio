@@ -97,7 +97,7 @@ namespace FamiStudio
         BitmapAtlasRef[] bmpExpansions;
 
         Font buttonFont;
-        Brush scrollBarBrush;
+        Color scrollBarColor = Color.FromArgb(64, Color.Black);
         Button[] buttons = new Button[(int)ButtonType.Count];
 
         // These are only use for popup menu.
@@ -161,8 +161,6 @@ namespace FamiStudio
             bmpEnvelopes = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
             bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
 
-            scrollBarBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
-
             buttons[(int)ButtonType.Sequencer]  = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
             buttons[(int)ButtonType.PianoRoll]  = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
             buttons[(int)ButtonType.Project]    = new Button { GetRenderInfo = GetProjectExplorerInfo, Click = OnProjectExplorer, IsNavButton = true };
@@ -178,7 +176,7 @@ namespace FamiStudio
             var screenSize = Platform.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
-            buttonFont      = scale > 1.2f ? ThemeResources.FontSmall : ThemeResources.FontVerySmall;
+            buttonFont      = scale > 1.2f ? FontResources.FontSmall : FontResources.FontVerySmall;
             buttonSize      = ScaleCustom(DefaultButtonSize, scale);
             buttonSizeNav   = ScaleCustom(DefaultNavButtonSize, scale);
             buttonIconPos1  = ScaleCustom(DefaultIconPos1, scale);
@@ -188,11 +186,6 @@ namespace FamiStudio
             listIconPos     = ScaleCustom(DefaultListIconPos, scale);
             scrollBarSizeX  = ScaleCustom(DefaultScrollBarSizeX, scale);
             iconScaleFloat  = ScaleCustomFloat(DefaultIconSize / (float)bmpSnapOn.ElementSize.Width, scale);
-        }
-
-        protected override void OnRenderTerminated()
-        {
-            Utils.DisposeAndNullify(ref scrollBarBrush);
         }
 
         protected override void OnResize(EventArgs e)
@@ -359,7 +352,7 @@ namespace FamiStudio
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
-                var size = textPosTop + ThemeResources.FontMediumBold.MeasureString(item.Text, false) * 5 / 4;
+                var size = textPosTop + FontResources.FontMediumBold.MeasureString(item.Text, false) * 5 / 4;
 
                 if (item.ExtraImage != null)
                     size += ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
@@ -958,7 +951,7 @@ namespace FamiStudio
             {
                 var fullscreenRect = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);
                 fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, g.GetSolidBrush(Color.Black, 1.0f, popupRatio * 0.6f));
+                c.FillRectangle(fullscreenRect, Color.FromArgb(popupRatio * 0.6f, Color.Black));
             }
 
             // Clear BG.
@@ -972,16 +965,9 @@ namespace FamiStudio
             }
 
             var bgRect = new Rectangle(0, 0, Width, Height);
-
-            var navBgBrush = IsLandscape ?
-                g.GetHorizontalGradientBrush(Theme.DarkGreyColor1, buttonSize, 0.8f) :
-                g.GetVerticalGradientBrush(Theme.DarkGreyColor1, buttonSize, 0.8f);
-            var bgBrush = IsLandscape ?
-                g.GetHorizontalGradientBrush(Theme.DarkGreyColor4, buttonSize, 0.8f) :
-                g.GetVerticalGradientBrush(Theme.DarkGreyColor4, buttonSize, 0.8f);
-
-            c.FillRectangle(bgRect, bgBrush);
-            c.FillRectangle(navBgRect, navBgBrush);
+            
+            c.FillRectangleGradient(bgRect,    Theme.DarkGreyColor4, Theme.DarkGreyColor4.Scaled(0.8f), !IsLandscape, buttonSize);
+            c.FillRectangleGradient(navBgRect, Theme.DarkGreyColor1, Theme.DarkGreyColor1.Scaled(0.8f), !IsLandscape, buttonSize);
 
             // Buttons
             for (int i = 0; i < (int)ButtonType.Count; i++)
@@ -994,15 +980,15 @@ namespace FamiStudio
                     c.DrawBitmapAtlas(bmp, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
 
                     if (!string.IsNullOrEmpty(text))
-                        c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.LightGreyBrush1, TextFlags.Center | TextFlags.Ellipsis, buttonSize, 0);
+                        c.DrawText(text, buttonFont, btn.TextX, btn.TextY, Theme.LightGreyColor1, TextFlags.Center | TextFlags.Ellipsis, buttonSize, 0);
                 }
             }
 
             // Dividing line.
             if (IsLandscape)
-                c.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
+                c.DrawLine(0, 0, 0, Height, Theme.BlackColor);
             else
-                c.DrawLine(0, 0, Width, 0, ThemeResources.BlackBrush);
+                c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
             g.DrawCommandList(c);
 
@@ -1017,10 +1003,9 @@ namespace FamiStudio
                 for (int i = 0; i < listItems.Length; i++)
                 {
                     var item = listItems[i];
-                    var brush = g.GetVerticalGradientBrush(item.Color, listItemSize, 0.8f);
                     var opacity = item.GetImageOpacity != null ? item.GetImageOpacity(item) : 1.0f;
 
-                    c.FillAndDrawRectangle(item.Rect, brush, ThemeResources.BlackBrush);
+                    c.FillAndDrawRectangleGradient(item.Rect, item.Color, item.Color.Scaled(0.8f), Theme.BlackColor, true, listItemSize);
                     c.DrawBitmapAtlas(item.Image, item.IconX, item.IconY, opacity, iconScaleFloat, Color.Black);
 
                     if (item.ExtraImage != null)
@@ -1029,7 +1014,7 @@ namespace FamiStudio
                         c.DrawBitmapAtlas(item.ExtraImage, item.ExtraIconX, item.ExtraIconY, extraOpacity, iconScaleFloat, Color.Black);
                     }
 
-                    c.DrawText(item.Text, i == popupSelectedIdx ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, item.TextX, item.TextY, ThemeResources.BlackBrush, TextFlags.Middle, 0, listItemSize);
+                    c.DrawText(item.Text, i == popupSelectedIdx ? FontResources.FontMediumBold : FontResources.FontMedium, item.TextX, item.TextY, Theme.BlackColor, TextFlags.Middle, 0, listItemSize);
                 }
 
                 c.PopTransform();
@@ -1039,7 +1024,7 @@ namespace FamiStudio
                 if ((Math.Abs(flingVelY) > 0.0f || captureOperation == CaptureOperation.MobilePan) && !scrollBarRect.IsEmpty)
                 {
                     c.PushTranslation(rect.Left, rect.Top);
-                    c.FillRectangle(GetScrollBarRect(), scrollBarBrush);
+                    c.FillRectangle(GetScrollBarRect(), scrollBarColor);
                     c.PopTransform();
                 }
 

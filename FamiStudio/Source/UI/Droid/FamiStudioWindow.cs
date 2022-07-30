@@ -562,6 +562,8 @@ namespace FamiStudio
             linearLayout.Orientation = Orientation.Vertical;
             linearLayout.SetBackgroundColor(bgColor);
 
+            var prevWantedSeparator = false;
+
             var imagePad  = DroidUtils.DpToPixels(2);
             var imageSize = DroidUtils.DpToPixels(32);
 
@@ -569,12 +571,13 @@ namespace FamiStudio
             {
                 var opt = options[i];
 
-                if (opt.Separator)
+                if (i > 0 && (opt.Separator == ContextMenuSeparator.Before || prevWantedSeparator))
                 {
                     var lineView = new View(this);
                     lineView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
                     lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1));
                     linearLayout.AddView(lineView);
+                    prevWantedSeparator = false;
                 }
 
                 var imageName = opt.Image;
@@ -608,6 +611,8 @@ namespace FamiStudio
                 textView.SetCompoundDrawables(bmp, null, null, null);
 
                 linearLayout.AddView(textView);
+
+                prevWantedSeparator = opt.Separator == ContextMenuSeparator.After;
             }
 
             DisplayMetrics metrics = new DisplayMetrics();

@@ -135,7 +135,7 @@ namespace FamiStudio
                             props.UpdateRadioButtonList(0, userProjects.ToArray(), userProjects.Count - 1);
                             props.SetPropertyEnabled(1, true);
                             props.SetPropertyEnabled(2, false);
-                            Platform.ShowToast("Project Deleted!");
+                            Platform.ShowToast(famistudio.Window, "Project Deleted!");
                         }
                     });
                 }

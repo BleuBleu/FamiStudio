@@ -747,7 +747,7 @@ namespace FamiStudio
         {
         }
 
-        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int rows = 10)
+        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null)
         {
             properties.Add(new Property());
         }

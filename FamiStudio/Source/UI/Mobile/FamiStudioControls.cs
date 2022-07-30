@@ -11,7 +11,7 @@ namespace FamiStudio
         private int height;
 
         private Graphics  gfx;
-        private ThemeRenderResources res;
+        private FontRenderResources fontRes;
 
         private Control[] controls = new Control[6];
         private Control   transitionControl;
@@ -237,7 +237,7 @@ namespace FamiStudio
             if (ShowRenderingTimes)
             {
                 var cmd = gfx.CreateCommandList();
-                cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontVeryLargeBold, 10, 10, gfx.GetSolidBrush(Color.SpringGreen));
+                cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", fontRes.FontVeryLargeBold, 10, 10, Color.SpringGreen);
                 gfx.DrawCommandList(cmd);
             }
 
@@ -257,9 +257,9 @@ namespace FamiStudio
 
                 var cmd = gfx.CreateCommandList();
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
-                var brush = gfx.GetSolidBrush(Color.FromArgb(alpha, Theme.DarkGreyColor4));
+                var color = Color.FromArgb(alpha, Theme.DarkGreyColor4);
 
-                cmd.FillRectangle(activeControl.WindowLeft, activeControl.WindowTop, activeControl.WindowRight, activeControl.WindowBottom, brush);
+                cmd.FillRectangle(activeControl.WindowLeft, activeControl.WindowTop, activeControl.WindowRight, activeControl.WindowBottom, color);
 
                 gfx.DrawCommandList(cmd);
                 gfx.EndDrawControl();
@@ -317,12 +317,12 @@ namespace FamiStudio
             Debug.Assert(gfx == null);
 
             gfx = new Graphics(DpiScaling.Window, DpiScaling.Font);
-            res = new ThemeRenderResources(gfx);
+            fontRes = new FontRenderResources(gfx);
             
             foreach (var ctrl in controls)
             {
                 ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-                ctrl.SetThemeRenderResource(res);
+                ctrl.SetFontRenderResource(fontRes);
                 ctrl.RenderInitialized(gfx);
             }
         }
