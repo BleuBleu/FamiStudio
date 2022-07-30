@@ -319,6 +319,19 @@ namespace FamiStudio
             return mods;
         }
 
+        private void ConditionalUpdateLastCursorPosition()
+        {
+            // On MacOS, the app isnt notified of mouse movement when the window
+            // isnt in focus. Which mean we cant rely on the last position, we have
+            // to fetch it every time.
+            if (Platform.IsMacOS)
+            {
+                var pt = GetClientCursorPosInternal();
+                lastCursorX = pt.X;
+                lastCursorY = pt.Y;
+            }
+        }
+
         private void ErrorCallback(int error, string description)
         {
             Debug.WriteLine($"*** GLFW Error code {error}, {description}.");
@@ -368,6 +381,8 @@ namespace FamiStudio
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
         {
             Debug.WriteLine($"BUTTON! Button={button}, Action={action}, Mods={mods}");
+
+            ConditionalUpdateLastCursorPosition();
 
             if (action == GLFW_PRESS)
             {
@@ -521,6 +536,8 @@ namespace FamiStudio
         private void ScrollCallback(IntPtr window, double xoffset, double yoffset)
         {
             Debug.WriteLine($"SCROLL! X={xoffset}, Y={yoffset}");
+
+            ConditionalUpdateLastCursorPosition();
 
             var ctrl = controls.GetControlAtCoord(lastCursorX, lastCursorY, out int cx, out int cy);
             if (ctrl != null)
