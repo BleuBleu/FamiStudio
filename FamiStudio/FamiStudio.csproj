@@ -70,7 +70,6 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>

@@ -164,7 +164,7 @@ namespace FamiStudio
 
                             for (int i = 0; i < lastSampleCount; i++, j = (j + 1) % sampleBuffer.Length)
                             {
-                                var samp = sampleBuffer[j];
+                                var samp = (int)sampleBuffer[j];
 
                                 vertices[i, 0] = i / (float)(lastSampleCount - 1);
                                 vertices[i, 1] = Utils.Clamp(samp / 32768.0f * SampleScale, -1.0f, 1.0f);
