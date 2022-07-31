@@ -3,6 +3,8 @@
 
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song to demo.
+- Missing highlight when adding effect with snap.
+- Seek bar not visible in fx panel for repeats
 
 P0:
 - Android:
