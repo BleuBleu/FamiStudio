@@ -116,12 +116,17 @@ namespace FamiStudio
         private readonly string ExpansionTooltip                = "Select the audio expansion for which you want to adjust the audio.";
         private readonly string ExpansionVolumeTooltip          = "Volume adjustment for the selected expansion, in db.";
         private readonly string ExpansionTrebleTooltip          = "Treble adjustment for the selected expansion, in db.";
+        private readonly string ExpansionResetTooltip           = "Resets this expansion to the default settings.";
 
         // MIDI
         private readonly string MidiDeviceTooltip               = "The MIDI device that will be used to input notes.";
 
         // Mobile
         private readonly string AllowVibrationTooltip           = "When enabled, the phone will vibrate on long pressed, piano keys, etc.";
+
+        // FFmpeg;
+        private readonly string FFmpegPathTooltip               = "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below.";
+
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
@@ -253,7 +258,7 @@ namespace FamiStudio
                     page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 1
                     page.AddSlider("Expansion Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 2
                     page.AddSlider("Expansion Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 3
-                    page.AddButton(Platform.IsDesktop ? null : "Reset", "Reset expansion to default", "Resets this expansion to the default settings."); // 4
+                    page.AddButton(Platform.IsDesktop ? null : "Reset", "Reset expansion to default", ExpansionResetTooltip); // 4
                     page.AddLabel(Platform.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 5
                     page.PropertyChanged += MixerPage_PropertyChanged;
                     page.PropertyClicked += MixerPage_PropertyClicked;
@@ -282,7 +287,7 @@ namespace FamiStudio
                 }
                 case ConfigSection.FFmpeg:
                     page.AddLabel(null, "Video export requires FFmpeg. If you already have it, set the path to the ffmpeg executable by clicking the button below, otherwise follow the download link.", true); // 0
-                    page.AddButton(null, Settings.FFmpegExecutablePath, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 1
+                    page.AddButton(null, Settings.FFmpegExecutablePath, FFmpegPathTooltip); // 1
                     page.AddLinkLabel(null, "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
                     page.PropertyClicked += FFmpegPage_PropertyClicked;
                     break;

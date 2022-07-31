@@ -182,30 +182,61 @@ namespace FamiStudio
 
             return data;
         }
-        
-        // WAV/MP3 tooltips.
-        const string SingleSongTooltip    = "Select the song to export.";
-        const string WavFormatTooltip     = "Audio format to export to. WAV files are uncompressed and sound better, but are much larger.";
-        const string SampleRateTooltip    = "The sample rate of the audio to export. Leave to 44100 to get the exact same sound as inside the app.";
-        const string AudioBitRateTooltip  = "Audio bit rate for compressed formats (MP3/OGG/AAC). Lower bit rates results in smaller files, at the cost of audio quality.";
-        const string LoopModeTooltip      = "Loop the song a certain number of times, or export a specific duration (in seconds).";
-        const string LoopCountTooltip     = "Number of times to loop the song.";
-        const string DurationTooltip      = "Duration to export, in seconds.";
-        const string DelayTooltip         = "Optional audio delay effect that will include an echo of the audio at the specified delay.\n\nHighly recommanded to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side.\n\nA value of 15 ms. is a good place to start, set to 0 to turn off.";
-        const string SeperateFilesTooltip = "If enabled, each channel will be exported to a seperate file. Useful for offline mixing.";
-        const string SeperateIntroTooltip = "If enabled, the intro (the part before the loop point), will be exported to a seperate file. Useful if making games.";
-        const string StereoTooltip        = "If enabled, will export stereo audio and enable custom panning for each channel in the grid below.";
-        const string ChannelGridTooltip   = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.";
-        const string ChannelListTooltip   = "Select the channels to export.";
 
-        // Video tooltips.
-        const string VideoResTooltip      = "Resolution of the exported video. Higher resolution tend to take longer to render.";
-        const string FpsTooltip           = "Frame rate of the video to export. The first frame rate is for PAL, while the second is for NTSC.";
-        const string VideoBitRateTooltip  = "Video bit rate. Lower bit rates results in smaller files, at the cost of video quality.";
-        const string OscWindowTooltip     = "Number of frames to display in the oscilloscope.";
-        const string OscColumnsTooltip    = "Number of columns in the grid of oscilloscopes.";
-        const string OscThicknessTooltip  = "Thickness of the oscilloscope lines.";
-        const string PianoRollZoomTootip  = "Higher zoom values scrolls faster and shows less far ahead.";
+        // General tooltips.
+        const string SingleSongTooltip     = "Select the song to export.";
+        const string SongListTooltip       = "Select the songs to export.";
+        const string MachineTooltip        = "The target hardware. PAL is not available when using any audio expansion.";
+                                           
+        // WAV/MP3 tooltips.               
+        const string WavFormatTooltip      = "Audio format to export to. WAV files are uncompressed and sound better, but are much larger.";
+        const string SampleRateTooltip     = "The sample rate of the audio to export. Leave to 44100 to get the exact same sound as inside the app.";
+        const string AudioBitRateTooltip   = "Audio bit rate for compressed formats (MP3/OGG/AAC). Lower bit rates results in smaller files, at the cost of audio quality.";
+        const string LoopModeTooltip       = "Loop the song a certain number of times, or export a specific duration (in seconds).";
+        const string LoopCountTooltip      = "Number of times to loop the song.";
+        const string DurationTooltip       = "Duration to export, in seconds.";
+        const string DelayTooltip          = "Optional audio delay effect that will include an echo of the audio at the specified delay.\n\nHighly recommanded to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side.\n\nA value of 15 ms. is a good place to start, set to 0 to turn off.";
+        const string SeperateFilesTooltip  = "If enabled, each channel will be exported to a seperate file. Useful for offline mixing.";
+        const string SeperateIntroTooltip  = "If enabled, the intro (the part before the loop point), will be exported to a seperate file. Useful if making games.";
+        const string StereoTooltip         = "If enabled, will export stereo audio and enable custom panning for each channel in the grid below.";
+        const string ChannelGridTooltip    = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.";
+        const string ChannelListTooltip    = "Select the channels to export.";
+                                           
+        // Video tooltips.                 
+        const string VideoResTooltip       = "Resolution of the exported video. Higher resolution tend to take longer to render.";
+        const string FpsTooltip            = "Frame rate of the video to export. The first frame rate is for PAL, while the second is for NTSC.";
+        const string VideoBitRateTooltip   = "Video bit rate. Lower bit rates results in smaller files, at the cost of video quality.";
+        const string OscWindowTooltip      = "Number of frames to display in the oscilloscope.";
+        const string OscColumnsTooltip     = "Number of columns in the grid of oscilloscopes.";
+        const string OscThicknessTooltip   = "Thickness of the oscilloscope lines.";
+        const string PianoRollZoomTootip   = "Higher zoom values scrolls faster and shows less far ahead.";
+                                           
+        // NSF tooltips                    
+        const string NsfFormatTooltip      = "The type of format to use. NSF is the more widely supported. NSFe adds supports for per-track name and duration.";
+                                           
+        // ROM/FDS tooltips.               
+        const string RomFdsFormatTooltip   = "ROMs are better suited for the original NES or Famicom. FDS disks can be played on the Famicom Disk System.";
+
+        // MIDI tooltips
+        const string MidiVelocityTooltip   = "If enabled, values in the volume track will be used a note velocities.";
+        const string MidiPitchTooltip      = "If enabled, slide notes will be exported as pitch wheel MIDI events.";
+        const string MidiPitchRangeTooltip = "The range of the pitch wheel. Larger range can support larger slide notes, but has less precision.";
+        const string MidiInstrumentTooltip = "How to assign MIDI instrument from the FamiStudio project. In 'Instrument' mode, You can map each FamiStudio instrument to a General MIDI instrument. In 'Channel' mode, you simply assign one MIDI instrument for each channel";
+        const string MidiInstGridTooltip   = "The MIDI instruments assignment.";
+
+        // FamiStudio text tooltips
+        const string DeleteUnusedTooltip   = "If enabled, will delete any unused data (instrument, arpeggio, DPCM sample, etc.) before the export.";
+
+        // Famitone2/Famistudio sound engine tooltips
+        const string FT2AssemblyTooltip    = "The assembler that will be used to assemble/link the code. The 3 main ones are supported.";
+        const string FT2SepFilesTooltip    = "If enabled, each song will be exported to a separate file.";
+        const string FT2SepFilesFmtTooltip = "When using separate files, the format to name each file.";
+        const string FT2DmcFmtTooltip      = "The format of the name of the DMC file. A DMC file will only be generated if the project uses DPCM samples.";
+        const string FT2SongListTooltip    = "If enabled, will generate a .inc file containing information about each songs.";
+        const string FT2SfxSongListTooltip = "If enabled, will generate a .inc file containing information about each sound effect.";
+
+        // Share tooltips.
+        const string ShareTooltip          = "Copy the FamiStudio project to your device's storage, or share it to another application.";
 
         private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
         {
@@ -301,9 +332,9 @@ namespace FamiStudio
                     page.AddTextBox("Name :", project.Name, 31); // 0
                     page.AddTextBox("Artist :", project.Author, 31); // 1
                     page.AddTextBox("Copyright :", project.Copyright, 31); // 2
-                    page.AddDropDownList("Format :", new[] { "NSF", "NSFe" }, "NSF"); // 3
-                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 4
-                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null, null, 12); // 5
+                    page.AddDropDownList("Format :", new[] { "NSF", "NSFe" }, "NSF", NsfFormatTooltip); // 3
+                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 4
+                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null, SongListTooltip, 12); // 5
 #if DEBUG
                     page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 6
 #endif
@@ -312,11 +343,11 @@ namespace FamiStudio
                 case ExportFormat.Rom:
                     if (!project.UsesMultipleExpansionAudios)
                     {
-                        page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM"); // 0
+                        page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM", RomFdsFormatTooltip); // 0
                         page.AddTextBox("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
                         page.AddTextBox("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
-                        page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
-                        page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null, null, 12); // 4
+                        page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC", MachineTooltip); // 3
+                        page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null, SongListTooltip, 12); // 4
                         page.SetPropertyEnabled(0, project.UsesFdsExpansion);
                         page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     }
@@ -327,22 +358,22 @@ namespace FamiStudio
                     }
                     break;
                 case ExportFormat.Midi:
-                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
-                    page.AddCheckBox("Export volume as velocity :", true); // 1
-                    page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
-                    page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24); // 3
-                    page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
-                    page.AddGrid(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14); // 5
+                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
+                    page.AddCheckBox("Export volume as velocity :", true, MidiVelocityTooltip); // 1
+                    page.AddCheckBox("Export slide notes as pitch wheel :", true, MidiPitchTooltip); // 2
+                    page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24, MidiPitchRangeTooltip); // 3
+                    page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0], MidiInstrumentTooltip); // 4
+                    page.AddGrid(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14, MidiInstGridTooltip); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:
-                    page.AddCheckBoxList(null, songNames, null, null, 12); // 0
-                    page.AddCheckBox("Delete unused data :", false); // 1
+                    page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 0
+                    page.AddCheckBox("Delete unused data :", false, DeleteUnusedTooltip); // 1
                     break;
                 case ExportFormat.FamiTracker:
                     if (!project.UsesMultipleExpansionAudios)
                     {
-                        page.AddCheckBoxList(null, songNames, null, null, 12); // 0
+                        page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 0
                         canExportToFamiTracker = true;
                     }
                     else
@@ -365,12 +396,12 @@ namespace FamiStudio
                     }
                     else
                     {
-                        page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
-                        page.AddCheckBox("Separate Files :", false); // 1
-                        page.AddTextBox("Song Name Pattern :", "{project}_{song}"); // 2
-                        page.AddTextBox("DMC Name Pattern :", "{project}"); // 3
-                        page.AddCheckBox("Generate song list include :", false); // 4
-                        page.AddCheckBoxList(null, songNames, null, null, 12); // 5
+                        page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
+                        page.AddCheckBox("Separate Files :", false, FT2SepFilesTooltip); // 1
+                        page.AddTextBox("Song Name Pattern :", "{project}_{song}", 0, FT2SepFilesFmtTooltip); // 2
+                        page.AddTextBox("DMC Name Pattern :", "{project}", 0, FT2DmcFmtTooltip); // 3
+                        page.AddCheckBox("Generate song list include :", false, FT2SongListTooltip); // 4
+                        page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 5
                         page.SetPropertyEnabled(2, false);
                         page.SetPropertyEnabled(3, false);
                         page.PropertyChanged += SoundEngine_PropertyChanged;
@@ -378,17 +409,17 @@ namespace FamiStudio
                     break;
                 case ExportFormat.FamiTone2Sfx:
                 case ExportFormat.FamiStudioSfx:
-                    page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
-                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 1
-                    page.AddCheckBox("Generate SFX list include :", false); // 2
-                    page.AddCheckBoxList(null, songNames, null, null, 12); // 3
+                    page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
+                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 1
+                    page.AddCheckBox("Generate SFX list include :", false, FT2SfxSongListTooltip); // 2
+                    page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 3
                     break;
                 case ExportFormat.CommandLog:
-                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
+                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name, SongListTooltip); // 0
                     page.AddDropDownList("Filetype :", new[] { "Command Log", "VGM"}, "VGM"); // 1
                     break;
                 case ExportFormat.Share:
-                    page.AddRadioButtonList("Sharing mode", new[] { "Copy to Storage", "Share" }, 0, "Copy the FamiStudio project to your phone's storage, or share it to another application.");
+                    page.AddRadioButtonList("Sharing mode", new[] { "Copy to Storage", "Share" }, 0, ShareTooltip);
                     break;
             }
 

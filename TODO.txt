@@ -14,7 +14,6 @@ P0:
 	- Test all the snapping stuff.
 
 P1:
-/ Tooltips in export dialog.
 - Multiple release note move.
 
 4.0.0 Change Log

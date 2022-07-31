@@ -10,14 +10,14 @@ namespace FamiStudio
         private const int   DefaultPositionFromBottom = 32;
         private const float DefaultFadeTime = 0.25f;
 
-        int pad;
-        int posFromBottom;
+        private int pad;
+        private int posFromBottom;
 
-        string[] lines;
-        float duration;
-        float timer;
-        int alpha;
-        Action action;
+        private string[] lines;
+        private float duration;
+        private float timer;
+        private int alpha;
+        private Action action;
 
         public bool IsVisible => alpha > 0;
         public bool IsClickable => alpha > 0 && action != null;
