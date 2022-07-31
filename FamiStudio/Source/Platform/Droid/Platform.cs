@@ -28,6 +28,7 @@ namespace FamiStudio
         private static byte[] internalClipboardData;
 
         private const int ToastShortDuration = 2000;
+        private const int ToastLongDuration  = 3500;
 
         public static bool Initialize(bool commandLine)
         {
@@ -212,15 +213,18 @@ namespace FamiStudio
             }
         }
 
-        public static void ShowToast(FamiStudioWindow win, string message)
+        public static void ShowToast(FamiStudioWindow win, string message, bool longDuration = false, Action click = null)
         {
             MainThread.InvokeOnMainThreadAsync(() =>
             {
+                message  = message.Replace('\n', ' ').Trim();
+
+                var duration = longDuration ? ToastLongDuration : ToastShortDuration;
                 var now = DateTime.Now;
 
                 if (lastToast != null)
                 {
-                    if (lastToastText != message || (now - lastToastTime).TotalMilliseconds > ToastShortDuration)
+                    if (lastToastText != message || (now - lastToastTime).TotalMilliseconds > duration)
                     {
                         lastToast.Cancel();
                         lastToast = null;
@@ -231,7 +235,7 @@ namespace FamiStudio
                     }
                 }
 
-                lastToast = Toast.MakeText(Application.Context, message, ToastLength.Short);
+                lastToast = Toast.MakeText(Application.Context, message, duration == ToastLongDuration ? ToastLength.Long : ToastLength.Short);
                 lastToast.Show();
                 lastToastText = message;
                 lastToastTime = now;

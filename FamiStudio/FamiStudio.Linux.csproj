@@ -183,6 +183,7 @@
     <Compile Include="Source\UI\Desktop\Program.cs" />
     <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
+    <Compile Include="Source\UI\Desktop\Toast.cs" />    
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
     <Compile Include="Source\UI\Linux\Cursors.cs" />
     <Compile Include="Source\UI\Linux\FamiStudioWindow.cs" />
@@ -552,6 +553,8 @@
     <EmbeddedResource Include="Resources\MenuSelectPattern@2x.tga" />
     <EmbeddedResource Include="Resources\MenuSolo.tga" />
     <EmbeddedResource Include="Resources\MenuSolo@2x.tga" />
+    <EmbeddedResource Include="Resources\MenuSnap.tga" />
+    <EmbeddedResource Include="Resources\MenuSnap@2x.tga" />
     <EmbeddedResource Include="Resources\MenuStar.tga" />
     <EmbeddedResource Include="Resources\MenuStar@2x.tga" />
     <EmbeddedResource Include="Resources\MenuStopNote.tga" />

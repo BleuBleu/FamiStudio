@@ -789,6 +789,14 @@ namespace FamiStudio
                 }
             }
 
+            if (oldNumN163Channels != expansionNumN163Channels)
+            {
+                foreach (var inst in instruments)
+                {
+                    inst.NotifyN163RAMSizeChanged();
+                }
+            }
+
             if (UsesAnyExpansionAudio)
                 pal = false;
         }

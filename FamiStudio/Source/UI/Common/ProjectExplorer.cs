@@ -1550,7 +1550,7 @@ namespace FamiStudio
                             var paramMinValue = button.param.GetMinValue();
                             var paramMaxValue = button.param.GetMaxValue();
                             var actualSliderSizeX = sliderSizeX - paramButtonSizeX * 2;
-                            var valSizeX = (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * actualSliderSizeX);
+                            var valSizeX = paramMaxValue == paramMinValue ? 0 : (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * actualSliderSizeX);
                             var opacityL = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
                             var opacityR = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
 
@@ -2287,7 +2287,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -2977,7 +2977,7 @@ namespace FamiStudio
         private void ClearInstrumentEnvelope(Instrument inst, int envelopeType)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
-            inst.Envelopes[envelopeType].ClearToDefault(envelopeType);
+            inst.Envelopes[envelopeType].ResetToDefault(envelopeType);
             inst.NotifyEnvelopeChanged(envelopeType, true);
             App.UndoRedoManager.EndTransaction();
             MarkDirty();
@@ -3099,7 +3099,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
 
             if (middle)
             {
@@ -4327,13 +4327,10 @@ namespace FamiStudio
                                 numExpansionsSelected++;
                         }
 
-                        if (!expansionRemoved || Platform.IsMobile || expansionRemoved && Platform.MessageBox(ParentWindow, $"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        {
-                            App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
-                            project.SetExpansionAudioMask(expansionMask, numChannels);
-                            ProjectModified?.Invoke();
-                            Reset();
-                        }
+                        App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
+                        project.SetExpansionAudioMask(expansionMask, numChannels);
+                        ProjectModified?.Invoke();
+                        Reset();
                     }
 
                     if (changedTempoMode)
@@ -4361,10 +4358,15 @@ namespace FamiStudio
                         App.PalPlayback = palAuthoring;
                     }
 
-                    if (Platform.IsMobile && expansionRemoved)
-                    {
-                        Platform.ShowToast(parentWindow, "All channels and instruments related to the removed expansion(s) were deleted.");
-                    }
+                    var toast = (string)null;
+
+                    if (expansionRemoved)
+                        toast += "All channels and instruments related to the removed expansion(s) were deleted.\n";
+                    if (changedNumChannels)
+                        toast += "Changing the number of N163 channels may have changed the wave position of N163 instruments.";
+
+                    if (!string.IsNullOrEmpty(toast))
+                        Platform.ShowToast(parentWindow, toast, true);
 
                     App.UndoRedoManager.EndTransaction();
                     RefreshButtons();

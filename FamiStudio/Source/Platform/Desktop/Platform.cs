@@ -234,9 +234,9 @@ namespace FamiStudio
         {
         }
 
-        public static void ShowToast(FamiStudioWindow win, string text)
+        public static void ShowToast(FamiStudioWindow win, string text, bool longDuration = false, Action click = null)
         {
-            win.ShowToast(text);
+            win.ShowToast(text, longDuration, click);
         }
 
         public static double TimeSeconds()

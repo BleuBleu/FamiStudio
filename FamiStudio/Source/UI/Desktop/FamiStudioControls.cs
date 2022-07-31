@@ -7,8 +7,6 @@ namespace FamiStudio
 {
     public class FamiStudioControls
     {
-        private const float ToastFadeTime = 0.25f;
-
         private int width;
         private int height;
         private Graphics gfx;
@@ -16,7 +14,6 @@ namespace FamiStudio
         private List<Dialog> dialogs = new List<Dialog>();
         private FontRenderResources fontRes;
         private float dialogDimming = 0.0f;
-        private DateTime lastRender = DateTime.Now;
         private bool contextMenuVisible;
 
         private Toolbar toolbar;
@@ -26,6 +23,7 @@ namespace FamiStudio
         private QuickAccessBar quickAccessBar;
         private MobilePiano mobilePiano;
         private ContextMenu contextMenu;
+        private Toast toast;
 
         public Toolbar ToolBar => toolbar;
         public Sequencer Sequencer => sequencer;
@@ -34,14 +32,11 @@ namespace FamiStudio
         public QuickAccessBar QuickAccessBar => quickAccessBar;
         public MobilePiano MobilePiano => mobilePiano;
         public ContextMenu ContextMenu => contextMenu;
+        public Toast Toast => toast;
         public Graphics Graphics => gfx;
         public bool IsContextMenuActive => contextMenuVisible;
         public bool IsDialogActive => dialogs.Count > 0;
         public Dialog TopDialog => dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
-
-        float  toastDuration;
-        float  toastTimer;
-        string toast;
 
         public Control[] Controls => controls;
 
@@ -54,6 +49,7 @@ namespace FamiStudio
             quickAccessBar = new QuickAccessBar(parent);
             mobilePiano = new MobilePiano(parent);
             contextMenu = new ContextMenu(parent);
+            toast = new Toast(parent);
 
             controls[0] = toolbar;
             controls[1] = sequencer;
@@ -77,23 +73,38 @@ namespace FamiStudio
 
             foreach (var dlg in dialogs)
                 dlg.CenterToWindow();
+
+            toast.Reposition();
+        }
+
+        private bool PointInControlTest(Control ctrl, int formX, int formY, out int ctrlX, out int ctrlY)
+        {
+            ctrlX = formX - ctrl.WindowLeft;
+            ctrlY = formY - ctrl.WindowTop;
+
+            if (ctrlX >= 0 &&
+                ctrlY >= 0 &&
+                ctrlX < ctrl.Width &&
+                ctrlY < ctrl.Height)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
-            // Don't send any events if the context menu is visible.
-            if (contextMenuVisible)
+            // Toast
+            if (toast.IsClickable && PointInControlTest(toast, formX, formY, out ctrlX, out ctrlY))
             {
-                ctrlX = formX - contextMenu.WindowLeft;
-                ctrlY = formY - contextMenu.WindowTop;
+                return toast;
+            }
 
-                if (ctrlX >= 0 &&
-                    ctrlY >= 0 &&
-                    ctrlX < contextMenu.Width &&
-                    ctrlY < contextMenu.Height)
-                {
-                    return contextMenu;
-                }
+            // Don't send any events if the context menu is visible.
+            if (contextMenuVisible && PointInControlTest(contextMenu, formX, formY, out ctrlX, out ctrlY))
+            {
+                return contextMenu;
             }
 
             // If there is an active dialog, it also eats all of the input.
@@ -105,13 +116,7 @@ namespace FamiStudio
             // Finally, send to one of the main controls.
             foreach (var ctrl in controls)
             {
-                ctrlX = formX - ctrl.WindowLeft;
-                ctrlY = formY - ctrl.WindowTop;
-
-                if (ctrlX >= 0 &&
-                    ctrlY >= 0 &&
-                    ctrlX <  ctrl.Width &&
-                    ctrlY <  ctrl.Height)
+                if (PointInControlTest(ctrl, formX, formY, out ctrlX, out ctrlY))
                 {
                     return ctrl;
                 }
@@ -167,49 +172,13 @@ namespace FamiStudio
                 MarkDirty();
             }
 
-            if (toastTimer > 0.0f)
-            {
-                toastTimer = Math.Max(0.0f, toastTimer - delta);
-                if (toastTimer == 0.0f)
-                {
-                    toast = null;
-                    toastDuration = 0.0f;
-                }
-                MarkDirty();
-            }
+            toast.Tick(delta);
         }
 
         public void MarkDirty()
         {
             foreach (var ctrl in controls)
                 ctrl.MarkDirty();
-        }
-
-        private void RenderToast()
-        {
-            var lines = toast.Split(new[] { '\n' });
-            var font  = fontRes.FontMedium;
-
-            var pad   = DpiScaling.ScaleForWindow(8);
-            var sizeX = lines.Max(l => font.MeasureString(l, false)) + pad * 2;
-            var sizeY = font.LineHeight * lines.Length + pad * 2;
-            var posX  = (width - sizeX) / 2;
-            var posY  = (height - sizeY - DpiScaling.ScaleForWindow(32));
-
-            var rect = new Rectangle(posX, posY, sizeX, sizeY);
-
-            var alphaIn  = Utils.Clamp((toastDuration - toastTimer) / ToastFadeTime, 0.0f, 1.0f);
-            var alphaOut = Utils.Clamp(toastTimer / ToastFadeTime, 0.0f, 1.0f);
-            var alpha    = (int)(Math.Min(alphaIn, alphaOut) * 255);
-
-            gfx.BeginDrawControl(rect, height);
-            var c = gfx.CreateCommandList();
-            c.FillAndDrawRectangle(0, 0, sizeX - 1, sizeY - 1, Color.FromArgb(alpha, Theme.DarkGreyColor1), Color.FromArgb(alpha, Theme.BlackColor));
-            
-            for (int i = 0; i < lines.Length; i++)
-                c.DrawText(lines[i], font, 0, pad + i * font.LineHeight, Color.FromArgb(alpha, Theme.LightGreyColor1), TextFlags.MiddleCenter, sizeX, font.LineHeight);
-            
-            gfx.DrawCommandList(c);
         }
 
         public bool AnyControlNeedsRedraw()
@@ -221,15 +190,13 @@ namespace FamiStudio
                 anyNeedsRedraw |= dlg.NeedsRedraw;
             if (contextMenuVisible)
                 anyNeedsRedraw |= contextMenu.NeedsRedraw;
+            if (toast.IsVisible)
+                anyNeedsRedraw |= toast.NeedsRedraw;
             return anyNeedsRedraw;
         }
 
         public unsafe bool Redraw()
         {
-            var now = DateTime.Now;
-            var deltaTime = (float)(now - lastRender).TotalSeconds;
-            lastRender = now;
-
             if (AnyControlNeedsRedraw())
             {
                 Debug.Assert(controls[0].App.Project != null);
@@ -268,9 +235,10 @@ namespace FamiStudio
                     contextMenu.Render(gfx);
                 }
 
-                if (toastTimer > 0.0f)
+                if (toast.IsVisible)
                 {
-                    RenderToast();
+                    gfx.BeginDrawControl(toast.WindowRectangle, height);
+                    toast.Render(gfx);
                 }
 
                 gfx.EndDrawFrame();
@@ -300,11 +268,9 @@ namespace FamiStudio
             dialog.RenderTerminated();
         }
 
-        public void ShowToast(string text)
+        public void ShowToast(string text, bool longDuration = false, Action click = null)
         {
-            toast = text;
-            toastDuration = 3.0f;
-            toastTimer = 3.0f;
+            toast.Initialize(text, longDuration, click);
         }
 
         public void InitializeGL()
@@ -322,6 +288,10 @@ namespace FamiStudio
             contextMenu.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
             contextMenu.SetFontRenderResource(fontRes);
             contextMenu.RenderInitialized(gfx);
+
+            toast.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
+            toast.SetFontRenderResource(fontRes);
+            toast.RenderInitialized(gfx);
         }
 
         public void ShutdownGL()

@@ -545,6 +545,7 @@
     <EmbeddedResource Include="Resources\MobileMenuSelectAll.tga" />
     <EmbeddedResource Include="Resources\MobileMenuSelectNote.tga" />
     <EmbeddedResource Include="Resources\MobileMenuSelectPattern.tga" /> 
+    <EmbeddedResource Include="Resources\MobileMenuSnap.tga" />
     <EmbeddedResource Include="Resources\MobileMenuSolo.tga" />
     <EmbeddedResource Include="Resources\MobileMenuStar.tga" />
     <EmbeddedResource Include="Resources\MobileMenuStopNote.tga" />

@@ -3,33 +3,15 @@
 
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song to demo.
-- N163 position/size crash? Also when changing #of n163 channel, need to clamp.
-- Clear envelope only flattens it? Janky.
+- Missing highlight when adding effect with snap.
+- Seek bar not visible in fx panel for repeats
 
 P0:
-- Improve snapping.
-
-  => Can we make snapping absolute instead of relative?
-  	- Only the note being resize would snap "absolutely", all the other ones just grow proportionally
-  	- Seems easy enough. 
-  	- Right now, captureMouseAbsoluteIdx is snapped and this is how the entire system works.
-	=> How to remove the 1-frame glitch?
-		- The current note being resized (focused) will not allow resize if if creates 0-size notes.
-
-	=> Way to temporarely disable snapping (FL studio does it with ALT).
-	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
-	=> Context menu option to quantize note starts / end.
-	=> Option to snap effect values 
-	=> Option to auto adjust based on last resize.
-
-- Multiple release note move.
-
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
-
-P1:
-/ Delay effect. => Add to video.
-/ Tooltips in export dialog.
+	- Option to snap effect values.
+	- Test all the snapping stuff.
+	- How to make the N163/FDS resampling usable? Maybe we dont care?
 
 4.0.0 Change Log
 ================
@@ -39,14 +21,23 @@ P1:
 - More control over sequencer height & ability to hide unused channels
 - Support to multiple audio expansions with EPSM
 - Support for multiple waveforms for N163
-- Support for audio expansions for ROM export 
+- Support for single audio expansions for ROM export 
 - Wave resampling for N163/FDS waveforms
-- Basic NSFe support (track names and durations)
-- Improved oscilloscope stability
-- Audio delay effect when exporting.
+	- Import WAV files and adjust period + offset
+- Basic NSFe support (only track names and durations for now)
+- Improved oscilloscope stability:
+	- Use of emulation-generated triggers when rendering oscilloscope in exported video or in toolbar when previewing instruments.
+	- Improved trigger detection for toolbar oscilloscope when playing a song.
+- Audio delay effect when exporting
+- Snapping improvements, most notably:
+	- ALT+1, ALT+2, ALT+3 and ALT+4 quickly changes between common snapping values
+	- Hold ALT anytime when resizing or moving notes to temporarely disable snapping
+	- Context menu to set snapping to a specific note duration
+	- Option to snap effect values
 
 Testing:
 ========
+- Test note creation, snapping with cut/note delays, stop notes, etc.
 - Do a pass on tooltips for ParamProviders.
 - TEST : Test -/+ fast scroll on mobile.
 - TEST : Test no attack in playback + NSF.
@@ -138,13 +129,13 @@ Discord
 
 Backlog: 
 =========
+- Left resize to preserve release position?
 - Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 - Display number of selected channels in grid for video export?
 - Dark mode for open/save dialogs on MacOS? + title bar?
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
 - Reorder channels for video export.
-- More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
 - Overclocking (2x, 3x, 4x would be a good start).
 - Save snapping + qwerty settings + some export settings.
 - Hardware sweep (how to not conflict with smooth vibrato?)

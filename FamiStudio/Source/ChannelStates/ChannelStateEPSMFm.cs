@@ -112,10 +112,6 @@ namespace FamiStudio
             {
                 WriteEPSMRegister(0x28, 0x00 + channelKey, 0);
                 WriteEPSMRegister(0xb4 + channelIdxHigh, 0x00, a1); //volume 0
-                //WriteRegister(NesApu.EPSM_ADDR0, 0x28);
-                //WriteRegister(NesApu.EPSM_DATA0, 0x00 + channelKey);
-                //WriteRegister(channelAddr, 0xb4 + channelIdxHigh);
-                //WriteRegister(channelData, 0x00); //volume 0
                 opStop[channelIdx] = 1;
                 opRelease[channelIdx] = 0;
             }
@@ -124,27 +120,23 @@ namespace FamiStudio
                 opRelease[channelIdx] = 1;
                 opStop[channelIdx] = 0;
                 WriteEPSMRegister(0x28, 0x00 + channelKey, 0);
-                //WriteRegister(NesApu.EPSM_ADDR0, 0x28);
-                //WriteRegister(NesApu.EPSM_DATA0, 0x00 + channelKey);
             }
             else if (note.IsMusical)
             {
                 opRelease[channelIdx] = 0;
                 opStop[channelIdx] = 0;
+
                 var period = GetPeriod();
                 var octave = GetOctave(ref period);
-                //var periodHi = (byte)(period >> 8);
-                //var periodLo = (byte)(period & 0xff);
-
                 var periodLo = (byte)(period << 2) & 0xff;
                 var periodHi = (byte)(((octave & 0x7) << 3) | ((period >> 6) & 7));
                 var volume = GetVolume();
 
                 int steps = 16;
                 int adjustment = 5;
+
                 //Logarithmic volume adjustment
                 var step = (Math.Log(127+adjustment) - Math.Log(adjustment)) / (steps - 1);
-
 
                 volume = (int)((Math.Exp(Math.Log(adjustment) + (15 - volume) * step)) - adjustment);
                 int[] channelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
@@ -186,19 +178,12 @@ namespace FamiStudio
                 {
                     WriteEPSMRegister(0x28, 0x00 + channelKey, 0);
                     WriteEPSMRegister(0x28, 0xF0 + channelKey, 0);
-                    //WriteRegister(NesApu.EPSM_ADDR0, 0x28);
-                    //WriteRegister(NesApu.EPSM_DATA0, 0x00 + channelKey);
-                    //WriteRegister(NesApu.EPSM_ADDR0, 0x28);
-                    //WriteRegister(NesApu.EPSM_DATA0, 0xF0 + channelKey);
                     WriteEPSMRegister(opRegisters[1] + channelIdxHigh, opStereo[channelIdx], a1);
                 }
-                    lastPeriod[channelIdx] = (periodLo + periodHi);
+
+                lastPeriod[channelIdx] = (periodLo + periodHi);
                 WriteEPSMRegister(0xA4 + channelIdxHigh, periodHi, a1);
                 WriteEPSMRegister(0xA0 + channelIdxHigh, periodLo, a1);
-                //WriteRegister(channelAddr, 0xA4 + channelIdxHigh);
-                //WriteRegister(channelData, periodHi);
-                //WriteRegister(channelAddr, 0xA0 + channelIdxHigh);
-                //WriteRegister(channelData, periodLo);
             }
 
             base.UpdateAPU();

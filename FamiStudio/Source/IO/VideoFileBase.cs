@@ -89,7 +89,7 @@ namespace FamiStudio
             return vertices;
         }
 
-        protected bool InitializeEncoder(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfRate, int window, long channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
+        protected bool InitializeEncoder(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfRate, int window, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
@@ -111,7 +111,7 @@ namespace FamiStudio
 
             // Save audio to temporary file.
             tempAudioFile = Path.Combine(Utils.GetTemporaryDiretory(), "temp.wav");
-            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, 0, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, audioDelay, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
 
             if (Log.ShouldAbortOperation)
                 return false;
