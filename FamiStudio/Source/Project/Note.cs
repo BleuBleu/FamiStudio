@@ -227,7 +227,7 @@ namespace FamiStudio
             {
                 if (IsMusical)
                 {
-                    release = (ushort)Math.Min(value, (int)ushort.MaxValue);
+                    release = (ushort)Utils.Clamp(value, 0, (int)ushort.MaxValue);
                     ClearReleaseIfPastDuration();
                 }
             }

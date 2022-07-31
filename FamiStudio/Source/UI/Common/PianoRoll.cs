@@ -183,6 +183,7 @@ namespace FamiStudio
             ResizeNoteEnd,
             ResizeSelectionNoteEnd,
             MoveNoteRelease,
+            MoveSelectionNoteRelease,
             ChangeEnvelopeValue,
             MobileZoom,
             MobileZoomVertical,
@@ -221,6 +222,7 @@ namespace FamiStudio
             Platform.IsDesktop ? 1 : 0,               // ResizeNoteEnd (MATTT : Test Mobile!)
             Platform.IsDesktop ? 1 : 0,               // ResizeSelectionNoteEnd (MATTT : Test Mobile!)
             0,                                        // MoveNoteRelease
+            0,                                        // MoveSelectionNoteRelease
             0,                                        // ChangeEnvelopeValue
             0,                                        // MobileZoom
             0,                                        // MobileZoomVertical
@@ -259,6 +261,7 @@ namespace FamiStudio
             true,  // ResizeNoteEnd
             true,  // ResizeSelectionNoteEnd
             false, // MoveNoteRelease
+            false, // MoveSelectionNoteRelease
             false, // ChangeEnvelopeValue
             false, // MobileZoom
             false, // MobileZoomVertical
@@ -4129,7 +4132,8 @@ namespace FamiStudio
                         UpdateNoteResizeEnd(x, y, false);
                         break;
                     case CaptureOperation.MoveNoteRelease:
-                        UpdateMoveNoteRelease(x, y);
+                    case CaptureOperation.MoveSelectionNoteRelease:
+                        UpdateMoveNoteRelease(x, y, false);
                         break;
                     case CaptureOperation.DragNote:
                     case CaptureOperation.DragSelection:
@@ -4269,6 +4273,10 @@ namespace FamiStudio
                     case CaptureOperation.ResizeSelectionNoteEnd:
                         UpdateNoteResizeEnd(x, y, true);
                         break;
+                    case CaptureOperation.MoveNoteRelease:
+                    case CaptureOperation.MoveSelectionNoteRelease:
+                        UpdateMoveNoteRelease(x, y, true);
+                        break;
                     case CaptureOperation.DragNote:
                     case CaptureOperation.DragSelection:
                     case CaptureOperation.ResizeNoteStart:
@@ -4295,7 +4303,6 @@ namespace FamiStudio
                     case CaptureOperation.ChangeEffectValue:
                     case CaptureOperation.ChangeSelectionEffectValue:
                     case CaptureOperation.ChangeEnvelopeRepeatValue:
-                    case CaptureOperation.MoveNoteRelease:
                     case CaptureOperation.ChangeEnvelopeValue:
                         App.UndoRedoManager.EndTransaction();
                         break;
@@ -4626,7 +4633,8 @@ namespace FamiStudio
                 var x = GetPixelForNote(locationAbsIndex + note.Release) - gizmoSize / 2;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY + gizmoSize * 3 / 4;
 
-                if (captureOperation == CaptureOperation.MoveNoteRelease)
+                if (captureOperation == CaptureOperation.MoveNoteRelease ||
+                    captureOperation == CaptureOperation.MoveSelectionNoteRelease)
                 {
                     x = mouseLastX - pianoSizeX - gizmoSize / 2;
                 }
@@ -5441,9 +5449,11 @@ namespace FamiStudio
                             {
                                 StartNoteResizeEnd(e.X, e.Y, captureOp, noteLocation);
                             }
-                            else if (captureOp == CaptureOperation.MoveNoteRelease)
+                            else if (
+                                captureOp == CaptureOperation.MoveNoteRelease ||
+                                captureOp == CaptureOperation.MoveSelectionNoteRelease)
                             {
-                                StartMoveNoteRelease(e.X, e.Y, noteLocation);
+                                StartMoveNoteRelease(e.X, e.Y, captureOp, noteLocation);
                             }
                         }
                         else
@@ -5760,7 +5770,7 @@ namespace FamiStudio
                                     StartNoteResizeEnd(x, y, IsNoteSelected(absNoteLocation) ? CaptureOperation.ResizeSelectionNoteEnd : CaptureOperation.ResizeNoteEnd, gizmoNoteLocation);
                                     break;
                                 case GizmoAction.MoveRelease:
-                                    StartMoveNoteRelease(x, y, gizmoNoteLocation);
+                                    StartMoveNoteRelease(x, y, IsNoteSelected(absNoteLocation) ? CaptureOperation.MoveSelectionNoteRelease : CaptureOperation.MoveNoteRelease, gizmoNoteLocation);
                                     break;
                                 case GizmoAction.MoveSlide:
                                     StartDragSlideNoteGizmo(x, y, gizmoNoteLocation, gizmoNote);
@@ -8303,22 +8313,65 @@ namespace FamiStudio
             }
         }
 
-        private void StartMoveNoteRelease(int x, int y, NoteLocation location)
+        private void StartMoveNoteRelease(int x, int y, CaptureOperation op, NoteLocation location)
         {
+            var minPatternIdx = Song.PatternIndexFromAbsoluteNoteIndex(selectionMin);
+            var maxPatternIdx = Song.PatternIndexFromAbsoluteNoteIndex(selectionMax);
             var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-            StartCaptureOperation(x, y, CaptureOperation.MoveNoteRelease, false, location.ToAbsoluteNoteIndex(Song));
+
+            if (minPatternIdx != maxPatternIdx)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+            }
+            else
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+            }
+
+            StartCaptureOperation(x, y, op, false, location.ToAbsoluteNoteIndex(Song));
         }
 
-        private void UpdateMoveNoteRelease(int x, int y)
+        private void UpdateMoveNoteRelease(int x, int y, bool final)
         {
             GetLocationForCoord(x, y, out var location, out var noteValue, false);
 
+            var selection = captureOperation == CaptureOperation.MoveSelectionNoteRelease;
+
+            if (selection)
+            {
+                App.UndoRedoManager.RestoreTransaction(false);
+            }
+
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
-            var note = pattern.Notes[captureNoteLocation.NoteIndex];
-            note.Release = (ushort)Utils.Clamp(Song.CountNotesBetween(captureNoteLocation, location), 1, note.Duration - 1);
+
+            // Move the release for the highlighted note.
+            var highlightedNote = pattern.Notes[captureNoteLocation.NoteIndex];
+            var newRelease = Song.CountNotesBetween(captureNoteLocation, location);
+            var delta = newRelease - highlightedNote.Release;
+            highlightedNote.Release = (ushort)Utils.Clamp(newRelease, 1, highlightedNote.Duration - 1);
             channel.InvalidateCumulativePatternCache(pattern);
+
+            // Then apply same delta to every other selected note.
+            if (selection)
+            { 
+                var min = selection ? selectionMin : captureNoteAbsoluteIdx;
+                var max = selection ? selectionMax : captureNoteAbsoluteIdx;
+
+                TransformNotes(min, max, false, final, false, (note, idx) =>
+                {
+                    if (note != null && note != highlightedNote && note.IsMusical && note.HasRelease)
+                        note.Release = Utils.Clamp(note.Release + delta, 1, note.Duration - 1);
+
+                    return note;
+                });
+            }
+
+            if (final)
+            {
+                App.UndoRedoManager.EndTransaction();
+            }
+
             MarkDirty();
         }
 
@@ -8383,7 +8436,7 @@ namespace FamiStudio
                         return IsNoteSelected(noteLocation) ? CaptureOperation.ResizeSelectionNoteStart : CaptureOperation.ResizeNoteStart;
 
                     if (note.HasRelease && Song.CountNotesBetween(noteLocation, mouseLocation) == note.Release)
-                        return CaptureOperation.MoveNoteRelease;
+                        return IsNoteSelected(noteLocation) ? CaptureOperation.MoveSelectionNoteRelease : CaptureOperation.MoveNoteRelease;
                 }
 
                 return IsNoteSelected(noteLocation) ? CaptureOperation.DragSelection : CaptureOperation.DragNote;
@@ -8458,6 +8511,7 @@ namespace FamiStudio
                             case CaptureOperation.ResizeNoteEnd:
                             case CaptureOperation.ResizeSelectionNoteEnd:
                             case CaptureOperation.MoveNoteRelease:
+                            case CaptureOperation.MoveSelectionNoteRelease:
                                 Cursor = Cursors.SizeWE;
                                 break;
                             case CaptureOperation.DragNote:
