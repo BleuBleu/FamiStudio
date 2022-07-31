@@ -1408,11 +1408,7 @@ namespace FamiStudio
             if (newReleaseAvailable)
             {
                 newReleaseAvailable = false;
-
-                if (Platform.MessageBox(window, $"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                {
-                    Platform.OpenUrl("http://www.famistudio.org");
-                }
+                Platform.ShowToast(window, $"A new version ({newReleaseString}) is available. Click here to download it!", 5.0f, () => Platform.OpenUrl("http://www.famistudio.org"));
             }
         }
 

@@ -187,6 +187,7 @@
     <Compile Include="Source\UI\Desktop\Program.cs" />
     <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
+    <Compile Include="Source\UI\Desktop\Toast.cs" />    
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
     <Compile Include="Source\UI\MacOS\Cursors.cs" />
     <Compile Include="Source\UI\MacOS\FamiStudioWindow.cs" />

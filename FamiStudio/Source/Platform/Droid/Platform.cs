@@ -212,7 +212,7 @@ namespace FamiStudio
             }
         }
 
-        public static void ShowToast(FamiStudioWindow win, string message)
+        public static void ShowToast(FamiStudioWindow win, string message, float duration = 0.0f, Action click = null)
         {
             MainThread.InvokeOnMainThreadAsync(() =>
             {
