@@ -89,6 +89,7 @@ namespace FamiStudio
 
         // Input
         private readonly string TrackpadControlsTooltip         = "When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that pinch-to-zoom is not supported on Linux, you will have to hold CTRL or ALT and scroll up/down to zoom.";
+        private readonly string AltLeftForMiddleTooltip         = "When enabled, ALT + left-click will be interpreted as a middle mouse click. Useful if your mouse does not have a middle button.";
 
         // UI
         private readonly string ScalingTooltip                  = "Overall scaling of the main FamiStudio window. Leave it to 'System' if you want FamiStudio to automatically detect it based on the system configuration.";
@@ -227,6 +228,7 @@ namespace FamiStudio
                     page.AddCheckBox("Reverse trackpad scroll Y:", Settings.ReverseTrackPadY); // 2
                     page.AddSlider("Trackpad scroll sensitivity:", Settings.TrackPadMoveSensitity, 1.0, 20.0, 1.0f, 1, "{0:0.0}"); // 3
                     page.AddSlider("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1.0, 20.0, 1.0, 1, "{0:0.0}"); // 4
+                    page.AddCheckBox("ALT+Left emulates Middle:", Settings.AltLeftForMiddle, AltLeftForMiddleTooltip); // 5
                     page.SetPropertyEnabled(1, Settings.TrackPadControls);
                     page.SetPropertyEnabled(2, Settings.TrackPadControls);
                     page.SetPropertyEnabled(3, Settings.TrackPadControls);
@@ -530,6 +532,7 @@ namespace FamiStudio
                     Settings.ReverseTrackPadY = pageInput.GetPropertyValue<bool>(2);
                     Settings.TrackPadMoveSensitity = (float)pageInput.GetPropertyValue<double>(3);
                     Settings.TrackPadZoomSensitity = (float)pageInput.GetPropertyValue<double>(4);
+                    Settings.AltLeftForMiddle = pageInput.GetPropertyValue<bool>(5);
 
                     // Mixer.
                     Settings.GlobalVolume = (float)pageMixer.GetPropertyValue<double>(0);

@@ -41,7 +41,6 @@ namespace FamiStudio
         // General section.
         public static int Version = SettingsVersion;
         public static bool CheckUpdates = true;
-        public static bool TrackPadControls = false;
         public static bool ShowTutorial = true;
         public static bool ClearUndoRedoOnSave = true;
         public static bool OpenLastProjectOnStart = Platform.IsDesktop;
@@ -51,10 +50,6 @@ namespace FamiStudio
         // User Interface section
         public static int DpiScaling = 0;
         public static int TimeFormat = 1;
-        public static bool ReverseTrackPadX = false;
-        public static bool ReverseTrackPadY = false;
-        public static float TrackPadMoveSensitity = 10.0f;
-        public static float TrackPadZoomSensitity = 10.0f;
         public static int FollowMode = 0;
         public static int FollowSync = 0;
         public static int  ScrollBars = ScrollBarsNone;
@@ -63,6 +58,14 @@ namespace FamiStudio
         public static bool ShowImplicitStopNotes = true;
         public static bool ShowRegisterViewer = Platform.IsDesktop;
         public static bool UseOSDialogs = !Platform.IsLinux;
+
+        // Input section
+        public static bool TrackPadControls = false;
+        public static bool ReverseTrackPadX = false;
+        public static bool ReverseTrackPadY = false;
+        public static float TrackPadMoveSensitity = 10.0f;
+        public static float TrackPadZoomSensitity = 10.0f;
+        public static bool AltLeftForMiddle = false;
 
         public struct QwertyKeyAssignment
         {
@@ -201,6 +204,7 @@ namespace FamiStudio
         // Piano roll stuff
         public static int SnapResolution = SnapResolutionType.OneBeat;
         public static bool SnapEnabled = true;
+        public static bool SnapEffects = false;
 
         public static void Initialize()
         {
@@ -252,6 +256,7 @@ namespace FamiStudio
                 ReverseTrackPadY = ini.GetBool("Input", "ReverseTrackPadY", false);
                 TrackPadMoveSensitity = ini.GetFloat("Input", "TrackPadMoveSensitity", 10.0f);
                 TrackPadZoomSensitity = ini.GetFloat("Input", "TrackPadZoomSensitity", 10.0f);
+                AltLeftForMiddle = ini.GetBool("Input", "AltLeftForMiddle", false);
             }
 
             // Audio
@@ -371,6 +376,7 @@ namespace FamiStudio
             // Piano roll section
             SnapResolution = Utils.Clamp(ini.GetInt("PianoRoll", "SnapResolution", SnapResolutionType.OneBeat), SnapResolutionType.Min, SnapResolutionType.Max);
             SnapEnabled = ini.GetBool("PianoRoll", "SnapEnabled", true);
+            SnapEffects = ini.GetBool("PianoRoll", "SnapEffects", false);
 
             // At 3.2.0, we added a new Discord screen to the tutorial.
             // At 3.2.3, we added a new snapping tutorial screen.
@@ -422,6 +428,7 @@ namespace FamiStudio
             ini.SetFloat("Input", "TrackPadZoomSensitity", TrackPadZoomSensitity);
             ini.SetBool("Input", "ReverseTrackPadX", ReverseTrackPadX);
             ini.SetBool("Input", "ReverseTrackPadY", ReverseTrackPadY);
+            ini.SetBool("Input", "AltLeftForMiddle", AltLeftForMiddle);
 
             // Audio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);
@@ -483,6 +490,7 @@ namespace FamiStudio
             // Piano roll section
             ini.SetInt("PianoRoll", "SnapResolution", SnapResolution);
             ini.SetBool("PianoRoll", "SnapEnabled", SnapEnabled);
+            ini.SetBool("PianoRoll", "SnapEffects", SnapEffects);
 
             Directory.CreateDirectory(GetConfigFilePath());
 

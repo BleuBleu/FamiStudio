@@ -5,22 +5,19 @@
 - Add MM10 song to demo.
 - N163 position/size crash? Also when changing #of n163 channel, need to clamp.
 - Clear envelope only flattens it? Janky.
-- DPCM samples look weird in DPCM instruments. Is fade ok? Upside down?
+x DPCM samples look weird in DPCM instruments. Is fade ok? Upside down?
 x Github NSF issue.
 
 P0:
 - Improve snapping.
-  => Can we make snapping absolute instead of relative?
-  	- Only the note being resize would snap "absolutely", all the other ones just grow proportionally
-  	- Seems easy enough. 
-  	- Right now, captureMouseAbsoluteIdx is snapped and this is how the entire system works.
-	=> How to remove the 1-frame glitch?
-		- The current note being resized (focused) will not allow resize if if creates 0-size notes.
-	=> Way to temporarely disable snapping (FL studio does it with ALT).
-	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
-	=> Context menu option to quantize note starts / end.
-	=> Option to snap effect values 
-	=> Option to auto adjust based on last resize.
+  x Make snapping absolute instead of relative.
+	x How to remove the 1-frame glitch?
+	x Way to temporarely disable snapping (FL studio does it with ALT).
+	x Context menu option to set the snapping to the length of a note ("snapping eyedropper")
+	x KB shortcuts for common snap values (1/8, 1/4, 1/2, 1)
+	x Avoid note creation on left side when clicking on right side of an unsnapped note.
+		- Test in mobile too.
+  x Option to snap effect values 
 
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
@@ -44,9 +41,11 @@ P1:
 - Basic NSFe support (track names and durations)
 - Improved oscilloscope stability
 - Audio delay effect when exporting.
+- Snapping improvements.
 
 Testing:
 ========
+- Test note creation, snapping with cut/note delays, stop notes, etc.
 - Do a pass on tooltips for ParamProviders.
 - TEST : Test -/+ fast scroll on mobile.
 - TEST : Test no attack in playback + NSF.

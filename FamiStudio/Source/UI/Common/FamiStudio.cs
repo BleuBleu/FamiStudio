@@ -1824,17 +1824,6 @@ namespace FamiStudio
             {
                 ToggleQwertyPiano();
             }
-            else if (e.Key == Keys.D1)
-            {
-                if (ctrl)
-                {
-                    PianoRoll.ToggleEffectPanel();
-                }
-                else 
-                {
-                    PianoRoll.ToggleMaximize();
-                }
-            }
             else if (Platform.IsMacOS && ctrl && e.Key == Keys.Q)
             {
                 if (TryClosing())

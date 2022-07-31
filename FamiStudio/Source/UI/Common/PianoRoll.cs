@@ -18,6 +18,8 @@ namespace FamiStudio
         const float DefaultZoomWaveTime     = 0.25f;
         const float ScrollSpeedFactor       = Platform.IsMobile ? 2.0f : 1.0f;
 
+        const int CaptureThreshold = Platform.IsDesktop ? 5 : 50;
+
         const int NumOctaves = 8;
         const int NumNotes   = NumOctaves * 12;
 
@@ -121,12 +123,10 @@ namespace FamiStudio
         Color blackKeyPressedColor         = Color.FromArgb( 90, Theme.WhiteColor);
         Color whiteKeyHoverColor           = Color.FromArgb( 40, Theme.BlackColor);
         Color blackKeyHoverColor           = Color.FromArgb( 60, Theme.WhiteColor);
-        Color frameLineColor               = Color.FromArgb(128, Theme.DarkGreyColor2);
         Color selectionBgVisibleColor      = Color.FromArgb( 64, Theme.LightGreyColor1);
         Color selectionBgInvisibleColor    = Color.FromArgb( 16, Theme.LightGreyColor1);
         Color attackColor                  = Color.FromArgb(128, Theme.BlackColor);
         Color attackBrushForceDisplayColor = Color.FromArgb( 64, Theme.BlackColor);
-        Color iconTransparentColor         = Color.FromArgb( 92, Theme.DarkGreyColor2);
         Color invalidDpcmMappingColor      = Color.FromArgb( 64, Theme.BlackColor);
         Color volumeSlideBarFillColor      = Color.FromArgb( 64, Theme.LightGreyColor1);
         Color loopSectionColor             = Color.FromArgb( 64, Theme.BlackColor);
@@ -189,42 +189,42 @@ namespace FamiStudio
             MobilePan
         }
 
-        static readonly bool[] captureNeedsThreshold = new[]
+        static readonly int[] captureThresholds = new[]
         {
-            false, // None
-            false, // PlayPiano
-            false, // ResizeEnvelope
-            false, // DragLoop
-            false, // DragRelease
-            false, // ChangeEffectValue
-            false, // ChangeSelectionEffectValue
-            false, // ChangeEnvelopeRepeatValue
-            false, // DrawEnvelope
-            Platform.IsMobile, // Select
-            Platform.IsMobile, // SelectWave
-            false, // CreateNote
-            true,  // CreateSlideNote
-            true,  // DragSlideNoteTarget
-            true,  // DragSlideNoteTargetGizmo
-            false, // DragVolumeSlideTarget
-            false, // DragVolumeSlideTargetGizmo
-            true,  // DragNote
-            false, // DragSelection
-            false, // AltZoom
-            true,  // DragSample
-            false, // DragSeekBar
-            false, // DragWaveVolumeEnvelope
-            false, // ScrollBarX
-            false, // ScrollBarY
-            false, // ResizeNoteStart 
-            false, // ResizeSelectionNoteStart
-            false, // ResizeNoteEnd
-            false, // ResizeSelectionNoteEnd
-            false, // MoveNoteRelease
-            false, // ChangeEnvelopeValue
-            false, // MobileZoom
-            false, // MobileZoomVertical
-            false, // MobilePan
+            0,                                        // None
+            0,                                        // PlayPiano
+            0,                                        // ResizeEnvelope
+            0,                                        // DragLoop
+            0,                                        // DragRelease
+            0,                                        // ChangeEffectValue
+            0,                                        // ChangeSelectionEffectValue
+            0,                                        // ChangeEnvelopeRepeatValue
+            0,                                        // DrawEnvelope
+            Platform.IsMobile ? CaptureThreshold : 0, // Select
+            Platform.IsMobile ? CaptureThreshold : 0, // SelectWave
+            0,                                        // CreateNote
+            CaptureThreshold,                         // CreateSlideNote
+            CaptureThreshold,                         // DragSlideNoteTarget
+            CaptureThreshold,                         // DragSlideNoteTargetGizmo
+            0,                                        // DragVolumeSlideTarget
+            0,                                        // DragVolumeSlideTargetGizmo
+            CaptureThreshold,                         // DragNote
+            CaptureThreshold,                         // DragSelection
+            0,                                        // AltZoom
+            CaptureThreshold,                         // DragSample
+            0,                                        // DragSeekBar
+            0,                                        // DragWaveVolumeEnvelope
+            0,                                        // ScrollBarX
+            0,                                        // ScrollBarY
+            Platform.IsDesktop ? 1 : 0,               // ResizeNoteStart  (MATTT : Test Mobile!)
+            Platform.IsDesktop ? 1 : 0,               // ResizeSelectionNoteStart (MATTT : Test Mobile!)
+            Platform.IsDesktop ? 1 : 0,               // ResizeNoteEnd (MATTT : Test Mobile!)
+            Platform.IsDesktop ? 1 : 0,               // ResizeSelectionNoteEnd (MATTT : Test Mobile!)
+            0,                                        // MoveNoteRelease
+            0,                                        // ChangeEnvelopeValue
+            0,                                        // MobileZoom
+            0,                                        // MobileZoomVertical
+            0,                                        // MobilePan
         };
 
         static readonly bool[] captureWantsRealTimeUpdate = new[]
@@ -297,6 +297,7 @@ namespace FamiStudio
         bool maximized = false;
         bool showEffectsPanel = false;
         bool snap = true;
+        bool snapEffects = true;
         bool pianoVisible = true;
         bool canFling = false;
         sbyte captureEnvelopeValue = 0;
@@ -312,6 +313,7 @@ namespace FamiStudio
         bool highlightRepeatEnvelope = false;
         int highlightNoteAbsIndex = -1;
         int highlightDPCMSample = -1;
+        NoteLocation captureMouseLocation;
         NoteLocation captureNoteLocation;
         DateTime lastNoteCreateTime = DateTime.Now;
 
@@ -377,6 +379,8 @@ namespace FamiStudio
 
         public bool SnapAllowed { get => editMode == EditionMode.Channel; }
         public bool SnapEnabled { get => SnapAllowed && snap; set { if (SnapAllowed) snap = value; MarkDirty(); } }
+        public bool SnapEffectEnabled { get => SnapEnabled && snapEffects; set { if (SnapAllowed) snapEffects = value; MarkDirty(); } }
+
         public bool EffectPanelExpanded { get => showEffectsPanel; set => SetShowEffectPanel(value); }
         public int  SnapResolution
         {
@@ -631,12 +635,14 @@ namespace FamiStudio
         {
             snapResolution = Settings.SnapResolution;
             snap = Settings.SnapEnabled;
+            snapEffects = Settings.SnapEnabled;
         }
 
         public void SaveSettings()
         {
             Settings.SnapResolution = snapResolution;
             Settings.SnapEnabled = snap;
+            Settings.SnapEffects = snapEffects;
         }
 
         public void SaveChannelScroll()
@@ -2622,7 +2628,7 @@ namespace FamiStudio
                         var highlighted = i == highlightDPCMSample;
 
                         r.cf.PushTranslation(0, y);
-                        r.cf.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, highlighted ? 2 : 1);
+                        r.cf.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, noteSizeY, highlighted ? 2 : 1);
 
                         string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                         if (mapping.Loop) text += ", Looping";
@@ -3598,17 +3604,22 @@ namespace FamiStudio
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
+            var location = captureNoteLocation;
 
-            if (pattern == null)
-                pattern = channel.CreatePatternAndInstance(captureNoteLocation.PatternIndex);
+            if (pattern == null || !pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out var note))
+            {
+                if (SnapEffectEnabled)
+                    location = SnapNote(location);
+
+                if (pattern == null)
+                    pattern = channel.CreatePatternAndInstance(location.PatternIndex);
+
+                note = pattern.GetOrCreateNoteAt(location.NoteIndex);
+                note.SetEffectValue(selectedEffectIdx, Note.GetEffectDefaultValue(Song, selectedEffectIdx));
+            }
 
             var minValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
             var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
-
-            var note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
-
-            if (!note.HasValidEffectValue(selectedEffectIdx))
-                note.SetEffectValue(selectedEffectIdx, Note.GetEffectDefaultValue(Song, selectedEffectIdx));
 
             var delta = 0;
 
@@ -3895,7 +3906,7 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
             dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
             dlg.Properties.AddCheckBox("Override DMC Initial Value :", mapping.OverrideDmcInitialValue); // 2
-            dlg.Properties.AddNumericUpDown("DMC Initial Value (ï¿½2) :", mapping.DmcInitialValueDiv2, 0, 63); // 3
+            dlg.Properties.AddNumericUpDown("DMC Initial Value (÷2) :", mapping.DmcInitialValueDiv2, 0, 63); // 3
             dlg.Properties.Build();
             dlg.Properties.SetPropertyEnabled(3, mapping.OverrideDmcInitialValue);
             dlg.Properties.PropertyChanged += DPCMSampleMapping_PropertyChanged;
@@ -3947,15 +3958,7 @@ namespace FamiStudio
         {
             if (e.Left && selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
             {
-                var channel = Song.Channels[editChannel];
-                var pattern = channel.PatternInstances[location.PatternIndex];
-
-                if (pattern != null && pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out var note))
-                {
-                    AbortCaptureOperation();
-                    ClearEffectValue(location, note);
-                }
-
+                ClearEffectValue(location);
                 return true;
             }
 
@@ -4016,7 +4019,7 @@ namespace FamiStudio
 
             CaptureMouse(x, y);
             captureOperation = op;
-            captureThresholdMet = !captureNeedsThreshold[(int)op];
+            captureThresholdMet = captureThresholds[(int)op] == 0;
             captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
             captureWaveTime = editMode == EditionMode.DPCM ? GetWaveTimeForPixel(x - pianoSizeX) : 0.0f;
             captureNoteValue = NumNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, NumNotes);
@@ -4029,9 +4032,7 @@ namespace FamiStudio
                 GetEnvelopeValueForCoord(x, y, out _, out captureEnvelopeValue);
 
             captureMouseAbsoluteIdx = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
-            if (allowSnap)
-                captureMouseAbsoluteIdx = SnapNote(captureMouseAbsoluteIdx);
-
+            captureMouseLocation = Song.AbsoluteNoteIndexToNoteLocation(captureMouseAbsoluteIdx);
             captureNoteAbsoluteIdx = noteIdx >= 0 ? noteIdx : captureMouseAbsoluteIdx;
             captureNoteLocation = Song.AbsoluteNoteIndexToNoteLocation(captureNoteAbsoluteIdx);
 
@@ -4065,12 +4066,12 @@ namespace FamiStudio
 
         private void UpdateCaptureOperation(int x, int y, float scale = 1.0f, bool realTime = false)
         {  
-            const int CaptureThreshold = Platform.IsDesktop ? 5 : 50;
-
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
-                if (Math.Abs(x - captureMouseX) >= CaptureThreshold ||
-                    Math.Abs(y - captureMouseY) >= CaptureThreshold)
+                var threshold = captureThresholds[(int)captureOperation];
+
+                if (Math.Abs(x - captureMouseX) >= threshold ||
+                    Math.Abs(y - captureMouseY) >= threshold)
                 {
                     captureThresholdMet = true;
                 }
@@ -4772,6 +4773,28 @@ namespace FamiStudio
             {
                 SelectAll();
             }
+            else if (e.Key == Keys.D1 && !e.Alt)
+            {
+                if (e.Control)
+                {
+                    ToggleEffectPanel();
+                }
+                else
+                {
+                    ToggleMaximize();
+                }
+            }
+            else if (e.Key >= Keys.D1 && e.Key <= Keys.D9 && e.Alt)
+            {
+                for (int i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
+                {
+                    if (SnapResolutionType.KeyboardShortcuts[i] == e.Key)
+                    {
+                        SetAndMarkDirty(ref snapResolution, i);
+                        break;
+                    }
+                }
+            }
             else if (e.Key == Keys.S && e.Shift)
             {
                 if (SnapAllowed)
@@ -5008,7 +5031,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
 
             if (middle && e.Y > headerSizeY && e.X > pianoSizeX)
             {
@@ -5253,13 +5276,7 @@ namespace FamiStudio
                     }
                     else if (ModifierKeys.Shift)
                     {
-                        var channel = Song.Channels[editChannel];
-                        var pattern = channel.PatternInstances[location.PatternIndex];
-
-                        if (pattern != null && pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out var note))
-                        {
-                            ClearEffectValue(location, note);
-                        }
+                        ClearEffectValue(location);
                     }
                     else
                     {
@@ -5666,6 +5683,7 @@ namespace FamiStudio
 
             App.PlayInstrumentNote(noteValue, false, false, false, null, null, 0.5f);
 
+            // MATTT : Test that on mobile!
             var abs = location.ToAbsoluteNoteIndex(Song);
             var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
             note.Value = noteValue;
@@ -6112,7 +6130,9 @@ namespace FamiStudio
                 }
                 else
                 {
-                    absIdx = SnapNote(absIdx);
+                    if (SnapEffectEnabled)
+                        absIdx = SnapNote(absIdx);
+
                     location = NoteLocation.FromAbsoluteNoteIndex(Song, absIdx);
                     SetSingleEffectValue(x, y, location);
                     highlightNoteAbsIndex = absIdx;
@@ -6220,6 +6240,7 @@ namespace FamiStudio
             var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
             note.IsStop = true;
+            note.Duration = 1;
             MarkPatternDirty(pattern);
             App.UndoRedoManager.EndTransaction();
         }
@@ -6261,6 +6282,10 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuEyedropper", $"Make Instrument Current", () => { Eyedrop(note); }));
                         if (channel.SupportsStopNotes)
                             menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
+
+                        var factor = GetBestSnapFactorForNote(noteLocation, note);
+                        if (factor >= 0)
+                            menu.Add(new ContextMenuOption("MenuSnap", $"Set Snap To {SnapResolutionType.Names[factor]}  {(SnapResolutionType.Factors[factor] > 1.0 ? "Beats" : "Beat")}", () => { snapResolution = factor; snap = true; MarkDirty(); }));
                     }
 
                     menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }, ContextMenuSeparator.Before));
@@ -6337,12 +6362,12 @@ namespace FamiStudio
 
                 if (hasValue)
                 {
-                    menu.Add(new ContextMenuOption("MenuDelete", "Clear Effect Value", () => { ClearEffectValue(location, note, false); }));
+                    menu.Add(new ContextMenuOption("MenuDelete", "Clear Effect Value", () => { ClearEffectValue(location, false); }));
                 }
 
                 if (IsNoteSelected(location))
                 {
-                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Clear Selection Effect Values", () => { ClearEffectValue(location, note, true); }));
+                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Clear Selection Effect Values", () => { ClearEffectValue(location, true); }));
                 }
 
                 if (hasValue && selectedEffectIdx == Note.EffectVolume && channel.SupportsEffect(Note.EffectVolumeSlide))
@@ -6878,7 +6903,7 @@ namespace FamiStudio
 
         private bool HasHighlightedNote()
         {
-            return Platform.IsMobile && highlightNoteAbsIndex >= 0;
+            return highlightNoteAbsIndex >= 0;
         }
 
         private bool IsHighlightedNoteSelected()
@@ -7137,33 +7162,36 @@ namespace FamiStudio
             }
         }
 
-        private void ClearEffectValue(NoteLocation location, Note note, bool allowSelection = false)
+        private void ClearEffectValue(NoteLocation location, bool allowSelection = false)
         {
             var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
 
-            if (allowSelection && SelectionCoversMultiplePatterns())
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
-            else
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-
-            if (allowSelection)
+            if (pattern != null && pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out var note))
             {
-                TransformNotes(selectionMin, selectionMax, false, true, false, (n, idx) =>
+                if (allowSelection && SelectionCoversMultiplePatterns())
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                else
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+
+                if (allowSelection)
                 {
-                    if (n != null)
-                        n.ClearEffectValue(selectedEffectIdx);
-                    return n;
-                });
+                    TransformNotes(selectionMin, selectionMax, false, true, false, (n, idx) =>
+                    {
+                        if (n != null)
+                            n.ClearEffectValue(selectedEffectIdx);
+                        return n;
+                    });
 
-                MarkSelectedPatternsDirty();
-            }
-            else
-            {
-                note.ClearEffectValue(selectedEffectIdx);
-                MarkPatternDirty(location.PatternIndex);
-            }
+                    MarkSelectedPatternsDirty();
+                }
+                else
+                {
+                    note.ClearEffectValue(selectedEffectIdx);
+                    MarkPatternDirty(location.PatternIndex);
+                }
 
-            App.UndoRedoManager.EndTransaction();
+                App.UndoRedoManager.EndTransaction();
+            }
         }
 
         private void ToggleNoteAttack(NoteLocation location, Note note)
@@ -7803,7 +7831,9 @@ namespace FamiStudio
 
         private int SnapNote(int absoluteNoteIndex, bool roundUp = false, bool forceSnap = false)
         {
-            if (SnapEnabled || forceSnap)
+            var snapTemporaryDisabled = ModifierKeys.Alt && !Settings.AltLeftForMiddle;
+
+            if (SnapEnabled && !snapTemporaryDisabled || forceSnap)
             {
                 var location = NoteLocation.FromAbsoluteNoteIndex(Song, absoluteNoteIndex);
                 
@@ -7853,6 +7883,44 @@ namespace FamiStudio
             }
         }
 
+        private NoteLocation SnapNote(NoteLocation location, bool roundUp = false, bool forceSnap = false)
+        {
+            return NoteLocation.FromAbsoluteNoteIndex(Song, SnapNote(location.ToAbsoluteNoteIndex(Song), roundUp, forceSnap));
+        }
+
+        private int GetBestSnapFactorForNote(NoteLocation location, Note note)
+        {
+            if (note.IsMusical)
+            {
+                var beatLength = Song.GetPatternBeatLength(location.PatternIndex);
+                var noteDuration = note.Duration;
+                var factor = noteDuration / (float)beatLength;
+
+                for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
+                {
+                    var testFactor = (float)SnapResolutionType.Factors[i];
+
+                    if (testFactor >= factor || Utils.IsNearlyEqual(testFactor, factor))
+                        return i;
+                }
+
+                return SnapResolutionType.Max;
+            }
+
+            return -1;
+        }
+
+        private void SetSnappingFromNoteDuration(NoteLocation location, Note note)
+        {
+            var bestSnap = GetBestSnapFactorForNote(location, note);
+            
+            if (bestSnap >= SnapResolutionType.Min &&
+                bestSnap <= SnapResolutionType.Max)
+            {
+                SetAndMarkDirty(ref snapResolution, bestSnap);
+            }
+        }
+
         private void StartNoteCreation(MouseEventArgs e, NoteLocation location, byte noteValue)
         { 
             var channel = Song.Channels[editChannel];
@@ -7872,7 +7940,7 @@ namespace FamiStudio
         private void UpdateNoteCreation(int x, int y, bool first, bool last)
         {
             ScrollIfNearEdge(x, y);
-            GetLocationForCoord(x, y, out var location, out var noteValue, true);
+            GetLocationForCoord(x, y, out var location, out _);
 
             if (!first)
             {
@@ -7881,15 +7949,15 @@ namespace FamiStudio
                 App.UndoRedoManager.AbortTransaction();
             }
 
-            var minLocation = NoteLocation.Min(location, captureNoteLocation);
-            var maxLocation = NoteLocation.Max(location, captureNoteLocation);
+            var minLocation = SnapNote(NoteLocation.Min(location, captureNoteLocation), false);
+            var maxLocation = SnapNote(NoteLocation.Max(location, captureNoteLocation), true);
+
+            var channel = Song.Channels[editChannel];
+            var pattern = channel.PatternInstances[minLocation.PatternIndex];
             var minAbsoluteNoteIndex = minLocation.ToAbsoluteNoteIndex(Song);
             var maxAbsoluteNoteIndex = maxLocation.ToAbsoluteNoteIndex(Song);
 
             highlightNoteAbsIndex = minAbsoluteNoteIndex;
-
-            var channel = Song.Channels[editChannel];
-            var pattern = channel.PatternInstances[minLocation.PatternIndex];
 
             if (pattern == null)
             {
@@ -7906,7 +7974,7 @@ namespace FamiStudio
             note.Value = (byte)captureNoteValue;
             note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
             note.Arpeggio = Song.Channels[editChannel].SupportsArpeggios ? App.SelectedArpeggio : null;
-            note.Duration = (ushort)Math.Max(1, SnapNote(maxAbsoluteNoteIndex, true, false) - minAbsoluteNoteIndex);
+            note.Duration = Math.Max(1, maxAbsoluteNoteIndex) - minAbsoluteNoteIndex;
 
             if (last)
             {
@@ -7971,10 +8039,35 @@ namespace FamiStudio
             App.UndoRedoManager.RestoreTransaction(false);
 
             ScrollIfNearEdge(x, y, true, true);
-            GetLocationForCoord(x, y, out var location, out var noteValue, true);
+            GetLocationForCoord(x, y, out var location, out var noteValue);
 
             var resizeStart = captureOperation == CaptureOperation.ResizeNoteStart || captureOperation == CaptureOperation.ResizeSelectionNoteStart;
-            var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
+            var resizeNote = channel.GetNoteAt(captureNoteLocation);
+            var deltaNoteIdx = 0;
+
+            if (!resizeStart)
+            {
+                // Apply raw delta to note position, then snap that to the grid.
+                var dragDelta = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
+                deltaNoteIdx = SnapNote(captureNoteAbsoluteIdx + dragDelta) - captureNoteAbsoluteIdx;
+            }
+            else 
+            {
+                // The snapped position of the mouse is the new note start.
+                var snappedLocation = NoteLocation.Min(SnapNote(captureNoteLocation.Advance(Song, resizeNote.Duration - 1)), SnapNote(location));
+                deltaNoteIdx = snappedLocation.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
+            }
+
+            // Dont allow snapping to move stuff in the opposite side of the mouse 
+            // movement. Feels janky.
+            var deltaPosX = x - captureMouseX;
+            
+            if (deltaPosX > 0 && deltaNoteIdx < 0 ||
+                deltaPosX < 0 && deltaNoteIdx > 0)
+            {
+                deltaNoteIdx = 0;
+            }
+
             var deltaDuration = resizeStart ? -deltaNoteIdx : 0;
             var deltaNoteValue = resizeStart ? 0 : noteValue - captureNoteValue;
             var newDragFrameMin = dragFrameMin + deltaNoteIdx;
@@ -7984,7 +8077,7 @@ namespace FamiStudio
             {
                 App.UndoRedoManager.AbortTransaction();
             }
-            else
+            else //if (!resizeStart || resizeNote.Duration + deltaDuration > 0) // MATTT : This is  test
             {
                 highlightNoteAbsIndex = captureNoteLocation.Advance(Song, deltaNoteIdx).ToAbsoluteNoteIndex(Song);
 
@@ -8182,9 +8275,13 @@ namespace FamiStudio
             });
 
             ScrollIfNearEdge(x, y);
-            GetLocationForCoord(x, y, out var location, out var noteValue, true);
+            GetLocationForCoord(x, y, out var location, out var noteValue);
 
-            var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
+            // We are resizing the highlighted note, but apply the delta to all other notes.
+            var resizeNote = channel.GetNoteAt(captureNoteLocation);
+            var resizeNoteEnd = captureNoteAbsoluteIdx + resizeNote.Duration;
+            var snappedLocation = NoteLocation.Max(SnapNote(location, true), SnapNote(captureNoteLocation, true));
+            var deltaNoteIdx = snappedLocation.ToAbsoluteNoteIndex(Song) - resizeNoteEnd;
 
             TransformNotes(min, max, false, final, false, (note, idx) =>
             {
@@ -8201,7 +8298,9 @@ namespace FamiStudio
             });
 
             if (final)
+            {
                 App.UndoRedoManager.EndTransaction();
+            }
         }
 
         private void StartMoveNoteRelease(int x, int y, NoteLocation location)
@@ -8380,7 +8479,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -8477,14 +8576,23 @@ namespace FamiStudio
         {
             if (e.Right && (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y)))
             { 
-                var options = new ContextMenuOption[SnapResolutionType.Max - SnapResolutionType.Min + 2];
+                var options = new ContextMenuOption[SnapResolutionType.Max - SnapResolutionType.Min + 3];
 
                 options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping the specified number of\nbeats in the piano roll", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
+                options[1] = new ContextMenuOption("Snap Effect Values", "When snapping is enabled, also snap effect values", () => { snapEffects = !snapEffects; }, () => snapEffects ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked);
 
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
                 {
                     var j = i; // Important, copy for lamdba.
-                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]} {(SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat")}", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0 ? ContextMenuSeparator.Before : ContextMenuSeparator.None);
+                    var name = SnapResolutionType.Names[i];
+                    var beats = SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat";
+                    var text = $"Snap To {name} {beats}";
+                    var tooltip = $"Sets the snap resolution to {name} {beats}";
+
+                    if (SnapResolutionType.KeyboardShortcuts[i] != Keys.Unknown)
+                        tooltip += $" {{Alt}}{SnapResolutionType.KeyboardShortcuts[i] - Keys.D1}";
+
+                    options[i + 2] = new ContextMenuOption(text, tooltip, () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0 ? ContextMenuSeparator.Before : ContextMenuSeparator.None);
                 }
 
                 App.ShowContextMenu(left + e.X, top + e.Y, options);
@@ -8918,5 +9026,22 @@ namespace FamiStudio
             "3",
             "4"
         };
+
+        public static readonly Keys[] KeyboardShortcuts = new Keys[]
+        {
+            Keys.Unknown,
+            Keys.Unknown,
+            Keys.D4,
+            Keys.Unknown,
+            Keys.D3,
+            Keys.Unknown,
+            Keys.D2,
+            Keys.D1,
+            Keys.Unknown,
+            Keys.Unknown,
+            Keys.Unknown
+        };
+
+
     }
 }
