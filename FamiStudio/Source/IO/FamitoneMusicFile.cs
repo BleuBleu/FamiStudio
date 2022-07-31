@@ -618,7 +618,7 @@ namespace FamiStudio
             {
                 foreach (var instrument in project.Instruments)
                 {
-                    if (instrument.IsN163 || instrument.IsFds)
+                    if (instrument.IsN163)
                     {
                         lines.Add($"{ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves:");
 
