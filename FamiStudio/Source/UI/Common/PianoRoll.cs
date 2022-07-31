@@ -8077,7 +8077,7 @@ namespace FamiStudio
             {
                 App.UndoRedoManager.AbortTransaction();
             }
-            else //if (!resizeStart || resizeNote.Duration + deltaDuration > 0) // MATTT : This is  test
+            else
             {
                 highlightNoteAbsIndex = captureNoteLocation.Advance(Song, deltaNoteIdx).ToAbsoluteNoteIndex(Song);
 
