@@ -11,6 +11,7 @@ x Github NSF issue.
 P0:
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
+	- Option to snap effect values.
 	- Test all the snapping stuff.
 
 4.0.0 Change Log
