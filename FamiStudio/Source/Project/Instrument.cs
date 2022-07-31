@@ -244,7 +244,7 @@ namespace FamiStudio
             set
             {
                 Debug.Assert((value & 0x03) == 0);
-                n163WavSize = (byte)Utils.Clamp(value       & 0xfc, 4, N163MaxWaveSize);
+                n163WavSize = (byte)Utils.Clamp(value      & 0xfc, 4, N163MaxWaveSize);
                 n163WavPos  = (byte)Utils.Clamp(n163WavPos & 0xfc, 0, N163MaxWavePos);
                 ClampN163WaveCount();
                 UpdateN163WaveEnvelope();
@@ -257,9 +257,10 @@ namespace FamiStudio
             set
             {
                 Debug.Assert((value & 0x03) == 0);
-                n163WavPos  = (byte)Utils.Clamp(value        & 0xfc, 0, N163MaxWavePos);
+                n163WavPos  = (byte)Utils.Clamp(value       & 0xfc, 0, N163MaxWavePos);
                 n163WavSize = (byte)Utils.Clamp(n163WavSize & 0xfc, 4, N163MaxWaveSize);
                 ClampN163WaveCount();
+                UpdateN163WaveEnvelope();
             }
         }
 
@@ -273,7 +274,7 @@ namespace FamiStudio
             }
         }
 
-        public int N163MaxWaveSize  => project.N163WaveRAMSize * 2;
+        public int N163MaxWaveSize  => project.N163WaveRAMSize * 2 - n163WavPos;
         public int N163MaxWavePos   => project.N163WaveRAMSize * 2 - 4;
         public int N163MaxWaveCount => Math.Min(64, N163WaveformEnvelope.Values.Length / n163WavSize); 
 
@@ -456,6 +457,12 @@ namespace FamiStudio
                         fdsModPreset = WavePresetType.Custom;
                     break;
             }
+        }
+
+        public void NotifyN163RAMSizeChanged()
+        {
+            if (IsN163)
+                N163WavePos = N163WavePos;
         }
 
         private void ClampN163WaveCount()

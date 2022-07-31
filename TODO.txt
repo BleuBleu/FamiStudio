@@ -3,16 +3,13 @@
 
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song to demo.
-- N163 position/size crash? Also when changing #of n163 channel, need to clamp.
-- Clear envelope only flattens it? Janky.
-x DPCM samples look weird in DPCM instruments. Is fade ok? Upside down?
-x Github NSF issue.
 
 P0:
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
 	- Option to snap effect values.
 	- Test all the snapping stuff.
+	- How to make the N163/FDS resampling usable? Maybe we dont care?
 
 4.0.0 Change Log
 ================
@@ -22,10 +19,13 @@ P0:
 - More control over sequencer height & ability to hide unused channels
 - Support to multiple audio expansions with EPSM
 - Support for multiple waveforms for N163
-- Support for audio expansions for ROM export 
+- Support for single audio expansions for ROM export 
 - Wave resampling for N163/FDS waveforms
-- Basic NSFe support (track names and durations)
-- Improved oscilloscope stability
+	- Import WAV files and adjust period + offset
+- Basic NSFe support (only track names and durations for now)
+- Improved oscilloscope stability:
+	- Use of emulation-generated triggers when rendering oscilloscope in exported video or in toolbar when previewing instruments.
+	- Improved trigger detection for toolbar oscilloscope when playing a song.
 - Audio delay effect when exporting
 - Snapping improvements, most notably:
 	- ALT+1, ALT+2, ALT+3 and ALT+4 quickly changes between common snapping values

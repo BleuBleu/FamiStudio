@@ -89,7 +89,7 @@ namespace FamiStudio
 
         // Input
         private readonly string TrackpadControlsTooltip         = "When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that pinch-to-zoom is not supported on Linux, you will have to hold CTRL or ALT and scroll up/down to zoom.";
-        private readonly string AltLeftForMiddleTooltip         = "When enabled, ALT + left-click will be interpreted as a middle mouse click. Useful if your mouse does not have a middle button.";
+        private readonly string AltLeftForMiddleTooltip         = "When enabled, Alt + left-click will be interpreted as a middle mouse click. Useful if your mouse does not have a middle button.\n\nNote that this will disable some functionalities that requires Alt, such as the ability to temporarely disable snapping.";
 
         // UI
         private readonly string ScalingTooltip                  = "Overall scaling of the main FamiStudio window. Leave it to 'System' if you want FamiStudio to automatically detect it based on the system configuration.";

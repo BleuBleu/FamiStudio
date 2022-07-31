@@ -1408,7 +1408,7 @@ namespace FamiStudio
             if (newReleaseAvailable)
             {
                 newReleaseAvailable = false;
-                Platform.ShowToast(window, $"A new version ({newReleaseString}) is available. Click here to download it!", 5.0f, () => Platform.OpenUrl("http://www.famistudio.org"));
+                Platform.ShowToast(window, $"A new version ({newReleaseString}) is available. Click here to download it!", true, () => Platform.OpenUrl("http://www.famistudio.org"));
             }
         }
 
@@ -1455,11 +1455,10 @@ namespace FamiStudio
             var message = "Selected instrument is incompatible with channel!";
             if (channel != null)
             {
-                var newLine = Platform.IsDesktop ? "\n" : " ";
                 if (channel.Type == ChannelType.Dpcm)
-                    message += $"{newLine}Only the 'DPCM Instrument' can be used on the DPCM channel.";
+                    message += $"\nOnly the 'DPCM Instrument' can be used on the DPCM channel.";
                 else if (channel.IsExpansionChannel)
-                    message += $"{newLine}Expansion channels require using the correct instrument type.";
+                    message += $"\nExpansion channels require using the correct instrument type.";
             }
             DisplayNotification(message, beep);
         }

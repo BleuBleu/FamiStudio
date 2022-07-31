@@ -26,10 +26,10 @@ namespace FamiStudio
         {
         }
 
-        public void Initialize(string text, float dur, Action click = null)
+        public void Initialize(string text, bool longDuration, Action click = null)
         {
-            lines = text.Split(new[] { '\n' });
-            duration = dur > 0.0f ? dur : 3.0f;
+            lines = text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            duration = longDuration ? 6.0f : 3.0f;
             timer = duration;
             action = click;
             alpha = 0;

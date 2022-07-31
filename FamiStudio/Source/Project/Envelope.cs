@@ -32,7 +32,6 @@ namespace FamiStudio
         public Envelope(int type)
         {
             maxLength = GetEnvelopeMaxLength(type);
-
             values = new sbyte[maxLength];
             canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
             canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
@@ -41,12 +40,7 @@ namespace FamiStudio
 
             if (canResize)
             {
-                if (chunkLength > 1)
-                    length = chunkLength;
-                else
-                    length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume ? 1 : 8;
-
-                ClearToDefault(type);
+                ResetToDefault(type);
             }
             else
             {
@@ -94,9 +88,14 @@ namespace FamiStudio
             }
         }
 
-        public void ClearToDefault(int type)
+        public void ResetToDefault(int type)
         {
             var def = GetEnvelopeDefaultValue(type);
+
+            if (chunkLength > 1)
+                length = chunkLength;
+            else
+                length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume ? 1 : 8;
 
             for (int i = 0; i < values.Length; i++)
                 values[i] = def;

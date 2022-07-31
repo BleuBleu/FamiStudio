@@ -825,9 +825,9 @@ namespace FamiStudio
             controls.PopDialog(dialog);
         }
 
-        public void ShowToast(string text, float duration = 0.0f, Action click = null)
+        public void ShowToast(string text, bool longDuration = false, Action click = null)
         {
-            controls.ShowToast(text, duration, click);
+            controls.ShowToast(text, longDuration, click);
         }
 
         public bool IsKeyDown(Keys k)

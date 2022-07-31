@@ -268,9 +268,9 @@ namespace FamiStudio
             dialog.RenderTerminated();
         }
 
-        public void ShowToast(string text, float duration = 0.0f, Action click = null)
+        public void ShowToast(string text, bool longDuration = false, Action click = null)
         {
-            toast.Initialize(text, duration, click);
+            toast.Initialize(text, longDuration, click);
         }
 
         public void InitializeGL()
