@@ -14,10 +14,8 @@ P0:
 	- Test all the snapping stuff.
 
 P1:
-/ Delay effect. => Add to video.
 / Tooltips in export dialog.
 - Multiple release note move.
-- Left resize to preserve release position?
 
 4.0.0 Change Log
 ================
@@ -132,13 +130,13 @@ Discord
 
 Backlog: 
 =========
+- Left resize to preserve release position?
 - Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 - Display number of selected channels in grid for video export?
 - Dark mode for open/save dialogs on MacOS? + title bar?
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
 - Reorder channels for video export.
-- More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
 - Overclocking (2x, 3x, 4x would be a good start).
 - Save snapping + qwerty settings + some export settings.
 - Hardware sweep (how to not conflict with smooth vibrato?)
