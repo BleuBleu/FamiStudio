@@ -23,6 +23,7 @@ P0:
 	=> Option to auto adjust based on last resize.
 
 - Multiple release note move.
+- Left resize to preserve release position?
 
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
