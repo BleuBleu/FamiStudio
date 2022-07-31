@@ -36,12 +36,12 @@ namespace FamiStudio
             if (a1 == 0)
             {
                 WriteRegister(NesApu.EPSM_ADDR0, reg, 16);
-                WriteRegister(NesApu.EPSM_DATA0, data, 16);
+                WriteRegister(NesApu.EPSM_DATA0, data, 32);
             }
             else
             {
                 WriteRegister(NesApu.EPSM_ADDR1, reg, 16);
-                WriteRegister(NesApu.EPSM_DATA1, data, 16);
+                WriteRegister(NesApu.EPSM_DATA1, data, 32);
             }
         }
 
@@ -110,10 +110,12 @@ namespace FamiStudio
 
             if (note.IsStop && opStop[channelIdx] == 0)
             {
-                WriteRegister(NesApu.EPSM_ADDR0, 0x28);
-                WriteRegister(NesApu.EPSM_DATA0, 0x00 + channelKey);
-                WriteRegister(channelAddr, 0xb4 + channelIdxHigh);
-                WriteRegister(channelData, 0x00); //volume 0
+                WriteEPSMRegister(0x28, 0x00 + channelKey, 0);
+                WriteEPSMRegister(0xb4 + channelIdxHigh, 0x00, a1); //volume 0
+                //WriteRegister(NesApu.EPSM_ADDR0, 0x28);
+                //WriteRegister(NesApu.EPSM_DATA0, 0x00 + channelKey);
+                //WriteRegister(channelAddr, 0xb4 + channelIdxHigh);
+                //WriteRegister(channelData, 0x00); //volume 0
                 opStop[channelIdx] = 1;
                 opRelease[channelIdx] = 0;
             }
@@ -121,8 +123,9 @@ namespace FamiStudio
             {
                 opRelease[channelIdx] = 1;
                 opStop[channelIdx] = 0;
-                WriteRegister(NesApu.EPSM_ADDR0, 0x28);
-                WriteRegister(NesApu.EPSM_DATA0, 0x00 + channelKey);
+                WriteEPSMRegister(0x28, 0x00 + channelKey, 0);
+                //WriteRegister(NesApu.EPSM_ADDR0, 0x28);
+                //WriteRegister(NesApu.EPSM_DATA0, 0x00 + channelKey);
             }
             else if (note.IsMusical)
             {
@@ -181,17 +184,21 @@ namespace FamiStudio
 
                 if (noteTriggered)
                 {
-                    WriteRegister(NesApu.EPSM_ADDR0, 0x28);
-                    WriteRegister(NesApu.EPSM_DATA0, 0x00 + channelKey);
-                    WriteRegister(NesApu.EPSM_ADDR0, 0x28);
-                    WriteRegister(NesApu.EPSM_DATA0, 0xF0 + channelKey);
+                    WriteEPSMRegister(0x28, 0x00 + channelKey, 0);
+                    WriteEPSMRegister(0x28, 0xF0 + channelKey, 0);
+                    //WriteRegister(NesApu.EPSM_ADDR0, 0x28);
+                    //WriteRegister(NesApu.EPSM_DATA0, 0x00 + channelKey);
+                    //WriteRegister(NesApu.EPSM_ADDR0, 0x28);
+                    //WriteRegister(NesApu.EPSM_DATA0, 0xF0 + channelKey);
                     WriteEPSMRegister(opRegisters[1] + channelIdxHigh, opStereo[channelIdx], a1);
                 }
                     lastPeriod[channelIdx] = (periodLo + periodHi);
-                    WriteRegister(channelAddr, 0xA4 + channelIdxHigh);
-                    WriteRegister(channelData, periodHi);
-                    WriteRegister(channelAddr, 0xA0 + channelIdxHigh);
-                    WriteRegister(channelData, periodLo);
+                WriteEPSMRegister(0xA4 + channelIdxHigh, periodHi, a1);
+                WriteEPSMRegister(0xA0 + channelIdxHigh, periodLo, a1);
+                //WriteRegister(channelAddr, 0xA4 + channelIdxHigh);
+                //WriteRegister(channelData, periodHi);
+                //WriteRegister(channelAddr, 0xA0 + channelIdxHigh);
+                //WriteRegister(channelData, periodLo);
             }
 
             base.UpdateAPU();
