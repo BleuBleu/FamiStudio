@@ -2134,9 +2134,37 @@ famistudio_update_vrc7_channel_sound:
 
 @nocut:
 
+    ; Read/multiply volume
+    ldx famistudio_vrc7_env_table,y
+    .if FAMISTUDIO_USE_VOLUME_TRACK
+        lda famistudio_chn_volume_track+FAMISTUDIO_VRC7_CH0_IDX, y
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif
+        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+    .else
+        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+    .endif
+    tax
+
+    ; Write volume
+    lda famistudio_vrc7_vol_table,y
+    sta FAMISTUDIO_VRC7_REG_SEL
+    jsr famistudio_vrc7_wait_reg_select
+    .if FAMISTUDIO_USE_VOLUME_TRACK
+        lda famistudio_volume_table,x
+        tax
+    .endif
+    lda famistudio_vrc7_invert_vol_table,x
+    ora famistudio_chn_vrc7_patch,y
+    sta FAMISTUDIO_VRC7_REG_WRITE
+    jsr famistudio_vrc7_wait_reg_write
+
     ; Read note, apply arpeggio 
-    clc
     ldx famistudio_vrc7_env_table,y    
+    lda famistudio_chn_note+FAMISTUDIO_VRC7_CH0_IDX,y
+    clc
     adc famistudio_env_value+FAMISTUDIO_ENV_NOTE_OFF,x
     tax
 
@@ -2197,37 +2225,8 @@ famistudio_update_vrc7_channel_sound:
     sta FAMISTUDIO_VRC7_REG_WRITE
     jsr famistudio_vrc7_wait_reg_write
 
-    ; Read/multiply volume
-    ldx famistudio_vrc7_env_table,y
-    .if FAMISTUDIO_USE_VOLUME_TRACK
-        lda famistudio_chn_volume_track+FAMISTUDIO_VRC7_CH0_IDX, y
-        .if FAMISTUDIO_USE_VOLUME_SLIDES
-            ; During a slide, the lower 4 bits are fraction.
-            and #$f0
-        .endif
-        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
-    .else
-        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
-    .endif
-    tax
-
     lda #0
     sta famistudio_chn_vrc7_trigger,y
-
-@update_volume:
-
-    ; Write volume
-    lda famistudio_vrc7_vol_table,y
-    sta FAMISTUDIO_VRC7_REG_SEL
-    jsr famistudio_vrc7_wait_reg_select
-    .if FAMISTUDIO_USE_VOLUME_TRACK
-        lda famistudio_volume_table,x
-        tax
-    .endif
-    lda famistudio_vrc7_invert_vol_table,x
-    ora famistudio_chn_vrc7_patch,y
-    sta FAMISTUDIO_VRC7_REG_WRITE
-    jsr famistudio_vrc7_wait_reg_write
 
     rts
 

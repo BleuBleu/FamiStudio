@@ -99,6 +99,9 @@ namespace FamiStudio
 
             for (int i = 0; i < values.Length; i++)
                 values[i] = def;
+
+            loop = -1;
+            release = -1;
         }
 
         public int Loop
