@@ -3,11 +3,12 @@
 
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song to demo.
+- Missing highlight when adding effect with snap.
+- Seek bar not visible in fx panel for repeats
 - BUGS
 	- I pasted a 2a03 pattern over to n163, it's not even the effects, just the notes
 	- If you have a note at the end of a song, it tends to get cut off early (then no repro?)
 	- Bug when clearing volume envelope (the repeat envelope isnt synced)
-	- ROM reset doesnt clear RAM or something? (vic lab)
 
 P0:
 - Android:
