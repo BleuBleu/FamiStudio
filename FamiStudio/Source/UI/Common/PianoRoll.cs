@@ -7615,9 +7615,6 @@ namespace FamiStudio
 
         private void UpdateToolTip(MouseEventArgs e)
         {
-            if (!IsActiveControl)
-                return;
-
             var tooltip = "";
             var newNoteTooltip = "";
 
@@ -7809,7 +7806,8 @@ namespace FamiStudio
                 }
             }
 
-            App.SetToolTip(tooltip);
+            if (IsActiveControl)
+                App.SetToolTip(tooltip);
 
             if (noteTooltip != newNoteTooltip)
                 noteTooltip = newNoteTooltip;
