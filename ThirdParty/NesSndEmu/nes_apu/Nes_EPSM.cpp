@@ -155,7 +155,9 @@ long Nes_EPSM::run_until(cpu_time_t time)
 {
 	if (!output_buffer)
 		return 0;
+
 	require(time >= last_time);
+
 	cpu_time_t t = last_time;
 	t += delay;
 	delay = 0;
@@ -165,13 +167,12 @@ long Nes_EPSM::run_until(cpu_time_t time)
 		int sample = (int)(PSG_calc(psg) * 10 / 8);
 		int sample_right;
 
-		if (psg->trigger_mask != 0)
+		for (int i = 0; i < 3; i++)
 		{
-			for (int i = 0; i < 3; i++)
-			{
-				if (psg->trigger_mask & (1 << i))
-					update_trigger(output_buffer, t, triggers[i]);
-			}
+			if (psg->trigger_mask & (1 << i))
+				update_trigger(output_buffer, t, triggers[i]);
+			else if (psg->freq[i] <= 1)
+				triggers[i] = trigger_none;
 		}
 
 		sample = clamp(sample, -7710, 7710);
@@ -180,6 +181,15 @@ long Nes_EPSM::run_until(cpu_time_t time)
 		while (epsm_time < 16 << 10)
 		{
 			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
+
+			for (int i = 0; i < 6; i++)
+			{
+				if (opn2.triggers[i] == 1)
+					update_trigger(output_buffer, t, triggers[i + 3]);
+				else if (opn2.triggers[i] == 2)
+					triggers[i + 3] = trigger_none;
+			}
+
 			sample += (int)(samples[0] * 12);
 			sample += (int)(samples[2] * 11 / 10);
 			sample_right += (int)(samples[1] * 12);
@@ -288,11 +298,8 @@ void Nes_EPSM::get_register_values(struct epsm_register_values* r)
 
 void Nes_EPSM::reset_triggers(bool force_none)
 {
-	// PERKKATODO : Here you must figure out which channel are able to provide
-	// a steady trigger. Square and FM im confident we can, i know nothing about
-	// the rhythm channels.
 	for (int i = 0; i < array_count(triggers); i++)
-		triggers[i] = force_none ? trigger_none : (i >= 3 ? trigger_none : trigger_hold);
+		triggers[i] = force_none ? trigger_none : (i >= 9 ? trigger_none : trigger_hold);
 }
 
 int Nes_EPSM::get_channel_trigger(int idx) const

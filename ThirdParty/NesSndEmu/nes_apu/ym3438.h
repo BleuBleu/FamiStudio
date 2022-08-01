@@ -210,6 +210,14 @@ typedef struct __ym3438_t
     Bit8u pms[6];
     Bit8u status;
     Bit32u status_time;
+
+    /* FamiStudio : Phases + increment used for oscilloscope triggers. */
+    Bit32u trigger_basefreq[6];
+    Bit32u trigger_phase[6];
+
+	/* FamiStudio : Which channels had triggers during the update. */
+	Bit8u  triggers[6]; // 0 = no trigger, 1 = trigger, 2 = channel is off
+
 } ym3438_t;
 
 void OPN2_Reset(ym3438_t *chip);

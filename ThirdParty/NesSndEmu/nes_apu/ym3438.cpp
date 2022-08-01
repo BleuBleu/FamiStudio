@@ -658,6 +658,8 @@ void OPN2_PhaseCalcIncrement(ym3438_t *chip)
     basefreq &= 0x1ffff;
     chip->pg_inc[slot] = (basefreq * chip->multi[slot]) >> 1;
     chip->pg_inc[slot] &= 0xfffff;
+    if (slot < 6)
+        chip->trigger_basefreq[slot] = basefreq;
 }
 
 void OPN2_PhaseGenerate(ym3438_t *chip)
@@ -677,6 +679,47 @@ void OPN2_PhaseGenerate(ym3438_t *chip)
     }
     chip->pg_phase[slot] += chip->pg_inc[slot];
     chip->pg_phase[slot] &= 0xfffff;
+}
+
+Bit8u gcd(Bit8u a, Bit8u b)
+{
+	while (b != 0) 
+    {
+        Bit8u r = a % b;
+		a = b;
+		b = r;
+	}
+
+    return a;
+}
+
+void OPN2_UpdateTriggers(ym3438_t* chip)
+{
+    if (chip->cycles < 6)
+    {
+        Bit32u chan = chip->channel;
+
+        // The period of the generated waveform is the greatest common denominator of all four operators. 
+        Bit8u gcd_multi = gcd(gcd(gcd(chip->multi[chan + 0], chip->multi[chan + 6]), chip->multi[chan + 12]), chip->multi[chan + 18]);
+
+        // We maintain a separate increment and phase, we don't include everything that affects the phase. 
+        // We simply care about the base frequency and the common multiplier.
+	    Bit32u prev_trigger_phase = chip->trigger_phase[chan] & 0xfffff;
+
+		if (chip->pg_reset[chan])
+			chip->trigger_phase[chan] = 0;
+
+        Bit32u phase_inc = (chip->trigger_basefreq[chan] * gcd_multi) >> 1;
+
+        chip->trigger_phase[chan] += phase_inc;
+        chip->trigger_phase[chan] &= 0xfffff;
+
+        // When the phase loops around, this is our trigger!
+	    if (chip->trigger_phase[chan] < prev_trigger_phase)
+		    chip->triggers[chan] = 1;
+        else if (phase_inc == 0)
+			chip->triggers[chan] = 2;
+    }
 }
 
 void OPN2_EnvelopeSSGEG(ym3438_t *chip)
@@ -1532,6 +1575,8 @@ void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
         chip->eg_cycle_stop = 0;
     }
 
+	for (Bit8u i = 0; i < 6; i++)
+		chip->triggers[i] = 0;
 
         OPN2_DoIO(chip);
     if (misc) {
@@ -1553,6 +1598,7 @@ void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
     if (fm) {
         OPN2_PhaseGenerate(chip);
         OPN2_PhaseCalcIncrement(chip);
+        OPN2_UpdateTriggers(chip);
 
         OPN2_EnvelopeADSR(chip);
         OPN2_EnvelopeGenerate(chip);
