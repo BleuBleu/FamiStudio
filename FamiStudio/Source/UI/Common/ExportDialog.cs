@@ -659,7 +659,7 @@ namespace FamiStudio
 
                     if (pianoRoll)
                     {
-                        var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(7) - 3);
+                        var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(8) - 3);
 
                         return new VideoFilePianoRoll().Save(project, song.Id, loopCount, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
                     }
