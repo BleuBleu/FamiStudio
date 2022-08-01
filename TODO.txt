@@ -1,29 +1,12 @@
 4.0.0
 =====
 
-EPSM freqs:
- 0: Period = 340, Multipliers =  1/ 1/ 1/ 1, GCD = 1
- 1: Period = 340, Multipliers =  8/ 4/ 8/ 1, GCD = 1
- 2: Period = 170, Multipliers =  2/ 2/ 4/ 2, GCD = 2
- 3: Period =  85, Multipliers =  4/ 4/ 4/ 4, GCD = 4
- 4: Period = 340, Multipliers =  4/ 1/ 1/ 1, GCD = 1
- 5: Period = 340, Multipliers = 19/ 1/ 1/ 1, GCD = 1
- 6: Period = 170, Multipliers = 14/ 4/14/ 4, GCD = 2
- 7: Period = 170, Multipliers =  4/ 2/ 2/ 8, GCD = 2
- 8: Period = 170, Multipliers =  4/ 2/ 4/ 4, GCD = 2
- 9: Period = 170, Multipliers =  2/ 2/ 4/ 4, GCD = 2
-10: Period = 170, Multipliers =  2/ 4/ 4/ 4, GCD = 2
-11: Period = 340, Multipliers =  6/ 8/ 1/ 2, GCD = 1
-12: Period = 170, Multipliers =  4/ 2/ 4/ 4, GCD = 2
-13: Period = 170, Multipliers = 10/10/12/10, GCD = 2
-14: Period = 170, Multipliers =  2/ 2/ 4/ 4, GCD = 2
-15: Period = 170, Multipliers =  8/ 8/ 6/ 6, GCD = 2
-
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song to demo.
 - Reset volume at loop point (if volume was not equal at end)
 - Missing highlight when adding effect with snap.
 - Seek bar not visible in fx panel for repeats
+- Trackpad controls dont work in sequencer scrolling?
 - BUGS
 	- If you have a note at the end of a song, it tends to get cut off early (then no repro?)
 
