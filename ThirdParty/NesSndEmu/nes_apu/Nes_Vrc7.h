@@ -29,6 +29,7 @@ public:
 	void start_seeking();
 	void stop_seeking(blip_time_t& clock);
 	void write_shadow_register(int addr, int data);
+	void write_internal_register(blip_time_t& clock, int reg, int data);
 
 	enum { vrc7_clock  = 3579545 };
 	enum { reg_silence = 0xe000  };

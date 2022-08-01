@@ -3,11 +3,12 @@
 
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song to demo.
+- Reset volume at loop point (if volume was not equal at end)
 - Missing highlight when adding effect with snap.
 - Seek bar not visible in fx panel for repeats
+- No frame/note display in PR when not focused. Annoying.
 - BUGS
 	- If you have a note at the end of a song, it tends to get cut off early (then no repro?)
-	- VRC7 rom reset glitch?
 
 P0:
 - Android:

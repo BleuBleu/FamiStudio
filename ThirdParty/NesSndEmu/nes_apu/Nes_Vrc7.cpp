@@ -166,19 +166,37 @@ void Nes_Vrc7::start_seeking()
 	memset(shadow_internal_regs, -1, sizeof(shadow_internal_regs));
 }
 
+void Nes_Vrc7::write_internal_register(blip_time_t& clock, int reg, int data)
+{
+	write_register(clock += 4, reg_select, reg);
+	write_register(clock += 4, reg_write,  data);
+}
+
 void Nes_Vrc7::stop_seeking(blip_time_t& clock)
 {
 	if (shadow_regs[0] >= 0)
+	{
 		write_register(clock += 4, reg_silence, shadow_regs[0]);
+	}
 
-	for (int i = 0; i < array_count(shadow_internal_regs); i++)
+	// Write custom patch.
+	for (int i = 0; i < 8; i++)
 	{
 		if (shadow_internal_regs[i] >= 0)
-		{
-			write_register(clock += 4, reg_select, i);
-			write_register(clock += 4, reg_write,  shadow_internal_regs[i]);
-		}
+			write_internal_register(clock, i, shadow_internal_regs[i]);
 	}
+
+	// Write volumes/lo/hi frequencies. 
+	for (int i = 0; i < 6; i++)
+	{
+		if (shadow_internal_regs[0x30 + i] >= 0)
+			write_internal_register(clock, 0x30 + i, shadow_internal_regs[0x30 + i]);
+		if (shadow_internal_regs[0x10 + i] >= 0)
+			write_internal_register(clock, 0x10 + i, shadow_internal_regs[0x10 + i]);
+		if (shadow_internal_regs[0x20 + i] >= 0)
+			write_internal_register(clock, 0x20 + i, shadow_internal_regs[0x20 + i]);
+	}
+
 }
 
 void Nes_Vrc7::write_shadow_register(int addr, int data)
