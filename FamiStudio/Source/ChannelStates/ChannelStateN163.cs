@@ -62,13 +62,19 @@ namespace FamiStudio
         private void ConditionalLoadWave()
         {
             var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
-
+            
             if (newWaveIndex != waveIndex)
             {
-                var wav = envelopes[EnvelopeType.N163Waveform].GetN163Waveform(newWaveIndex);
+                var waveEnv = envelopes[EnvelopeType.N163Waveform];
 
-                for (int i = 0; i < wav.Length; i++)
-                    WriteN163Register(wavePos + i, wav[i], 18); // Approximately mimic our assembly loop 18.
+                // Can be null if the instrument was null.
+                if (waveEnv != null)
+                { 
+                    var wav = waveEnv.GetN163Waveform(newWaveIndex);
+
+                    for (int i = 0; i < wav.Length; i++)
+                        WriteN163Register(wavePos + i, wav[i], 18); // 18 cycles approximately mimic our assembly loop.
+                }
 
                 waveIndex = newWaveIndex;
             }
