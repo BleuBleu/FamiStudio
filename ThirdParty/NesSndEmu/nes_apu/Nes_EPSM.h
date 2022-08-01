@@ -7,47 +7,6 @@
 #include "Nes_Apu.h"
 #include "ym3438.h"
 
-struct epsm_write
-{
-	int            addr;
-	BOOST::uint8_t data;
-};
-
-class epsm_write_queue
-{
-private:
-	enum { queue_size = 1024 };
-	int queue_tail;
-	int queue_head;
-	epsm_write queue[queue_size];
-
-public:
-	epsm_write_queue() : queue_tail(0), queue_head(0)
-	{
-	}
-
-	inline bool empty()
-	{
-		return queue_tail == queue_head;
-	}
-
-	inline void push(int addr, BOOST::uint8_t data)
-	{
-		queue[queue_head].addr = addr;
-		queue[queue_head].data = data;
-		queue_head = (queue_head + 1) % queue_size;
-		assert(queue_head != queue_tail);
-	}
-
-	inline epsm_write pop()
-	{
-		assert(queue_head != queue_tail);
-		int last_tail = queue_tail;
-		queue_tail = (queue_tail + 1) % queue_size;
-		return queue[last_tail];
-	}
-};
-
 class Nes_EPSM {
 public:
 	Nes_EPSM();
