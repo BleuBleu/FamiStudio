@@ -10,7 +10,7 @@ Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer(NULL), output_buffer_right(NULL)
 {
 	output(NULL,NULL);
 	volume(1.0);
-	reset();
+	reset(false);
 }
 
 Nes_EPSM::~Nes_EPSM()
@@ -21,8 +21,9 @@ Nes_EPSM::~Nes_EPSM()
 		// destruct or handle opn2 somehow
 }
 
-void Nes_EPSM::reset()
+void Nes_EPSM::reset(bool pal = false)
 {
+	pal_mode = pal;
 	reset_psg();
 	reset_opn2();
 	last_time = 0;
@@ -42,7 +43,7 @@ void Nes_EPSM::reset_psg()
 	if (psg)
 		PSG_delete(psg);
 
-	psg = PSG_new(psg_clock, (uint32_t)(psg_clock / 16 / (psg_clock/1789773.0)));
+	psg = PSG_new(psg_clock, (uint32_t)((pal_mode ? pal_clock : ntsc_clock) / 16));
 	PSG_reset(psg);
 }
 
@@ -176,14 +177,14 @@ long Nes_EPSM::run_until(cpu_time_t time)
 		sample = clamp(sample, -7710, 7710);
 		sample_right = clamp(sample, -7710, 7710);
 		int16_t samples[4];
-		while (epsm_time < 16)
+		while (epsm_time < 16 << 10)
 		{
 			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
 			sample += (int)(samples[0] * 12);
 			sample += (int)(samples[2] * 11 / 10);
 			sample_right += (int)(samples[1] * 12);
 			sample_right += (int)(samples[3] * 11 / 10);
-			epsm_time += (1789773.0 / (epsm_clock/epsm_internal_multiplier));
+			epsm_time += (((pal_mode ? pal_clock : ntsc_clock) << 10) / (epsm_clock/epsm_internal_multiplier));
 		}
 		int delta = sample - last_amp;
 		int delta_right = sample_right - last_amp_right;
@@ -197,7 +198,7 @@ long Nes_EPSM::run_until(cpu_time_t time)
 			synth_right.offset(t, delta_right, output_buffer_right);
 			last_amp_right = sample_right;
 		}
-		epsm_time -= 16;
+		epsm_time -= 16 << 10;
 		t += 16;
 	}
 

@@ -54,7 +54,7 @@ public:
 	~Nes_EPSM();
 
 	// See Nes_Apu.h for reference
-	void reset();
+	void reset(bool pal);
 	void volume(double);
 	void output(Blip_Buffer*, Blip_Buffer*);
 	void treble_eq(blip_eq_t const& eq);
@@ -74,6 +74,8 @@ public:
 
 	enum { psg_clock = 4000000 };
 	enum { epsm_clock = 8000000 };
+	enum { ntsc_clock = 1789773 };
+	enum { pal_clock = 1662607 };
 	enum { epsm_internal_multiplier = 6 }; //no clue why it behaves like this
 	enum { reg_select = 0x401c };
 	enum { reg_write = 0x401d };
@@ -111,8 +113,9 @@ private:
 	Blip_Buffer* output_buffer;
 	Blip_Buffer* output_buffer_right;
 	cpu_time_t last_time;
+	bool pal_mode;
 	int delay;
-	double epsm_time;
+	int epsm_time;
 	int last_amp;
 	int last_amp_right;
 	uint16_t opn2_mask;

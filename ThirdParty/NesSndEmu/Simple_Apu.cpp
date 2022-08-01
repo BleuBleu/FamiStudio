@@ -345,7 +345,7 @@ void Simple_Apu::reset()
 	mmc5.reset();
 	namco.reset();
 	sunsoft.reset();
-	epsm.reset();
+	epsm.reset(pal_mode);
 }
 
 void Simple_Apu::set_audio_expansions(long exp)
