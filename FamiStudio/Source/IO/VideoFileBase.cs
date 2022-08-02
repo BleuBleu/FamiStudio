@@ -68,10 +68,10 @@ namespace FamiStudio
             }
 
             // If we hit this, it means that the emulation code told us a trigger
-            // was eventually coming, but is evidently not. The longuest periods
-            // we have at the moment are less than 4 frames long (C0 of VRC7)
-            Debug.Assert(state.holdFrameCount < 5);
- 
+            // was eventually coming, but is evidently not. The longest periods we
+            // have at the moment are very low EPSM notes with periods about 8 frames.
+            Debug.Assert(state.holdFrameCount < 10);
+
             var vertices = new float[oscRenderWindowSize, 2];
             var startIdx = newTrigger >= 0 ? newTrigger : state.lastTrigger;
 

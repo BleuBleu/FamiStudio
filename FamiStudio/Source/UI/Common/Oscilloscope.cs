@@ -31,7 +31,7 @@ namespace FamiStudio
         private Dictionary<int, short[]> mixDownBuffers = new Dictionary<int, short[]>();
 
         private int bufferPos = 0;
-        private short[] sampleBuffer = new short[8192];
+        private short[] sampleBuffer = new short[16384];
 
         public Oscilloscope(bool stereo)
         {
@@ -150,9 +150,9 @@ namespace FamiStudio
                         }
 
                         // If we hit this, it means that the emulation code told us a trigger
-                        // was eventually coming, but is evidently not. The longuest periods
-                        // we have at the moment are less than 4 frames long (C0 of VRC7)
-                        Debug.Assert(holdFrameCount < 5);
+                        // was eventually coming, but is evidently not. The longest periods we
+                        // have at the moment are very low EPSM notes with periods about 8 frames.
+                        Debug.Assert(holdFrameCount < 10);
 
                         if (lastTrigger >= 0)
                         {
