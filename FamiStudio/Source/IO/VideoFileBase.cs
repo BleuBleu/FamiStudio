@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 #if FAMISTUDIO_ANDROID
@@ -23,9 +24,8 @@ namespace FamiStudio
         protected bool   halfFrameRate;
         protected string tempAudioFile;
 
-        protected int   oscFrameWindowSize;
-        protected int   oscRenderWindowSize;
-        protected float oscScale;
+        protected int oscFrameWindowSize;
+        protected int oscRenderWindowSize;
 
         protected Project project;
         protected Song song;
@@ -80,7 +80,7 @@ namespace FamiStudio
                 var samp = j < 0 || j >= state.wav.Length ? 0 : state.wav[j];
 
                 vertices[i, 0] = i / (float)(oscRenderWindowSize - 1);
-                vertices[i, 1] = Utils.Clamp(samp / 32768.0f * oscScale, -1.0f, 1.0f);
+                vertices[i, 1] = Utils.Clamp(samp / 32768.0f * state.oscScale, -1.0f, 1.0f);
             }
         
             if (newTrigger >= 0)
@@ -150,7 +150,7 @@ namespace FamiStudio
             Log.LogMessage(LogSeverity.Info, "Building channel oscilloscopes...");
 
             var counter = new ThreadSafeCounter();
-            var maxAbsSample = 0;
+            var maxAbsSamples = new int[channelStates.Length];
 
             Utils.NonBlockingParallelFor(channelStates.Length, NesApu.NUM_WAV_EXPORT_APU, counter, (stateIndex, threadIndex) =>
             {
@@ -164,7 +164,7 @@ namespace FamiStudio
                 if (song.Project.OutputsStereoAudio)
                     state.wav = WaveUtils.MixDown(state.wav);
 
-                Utils.InterlockedMax(ref maxAbsSample, WaveUtils.GetMaxAbsValue(state.wav));
+                maxAbsSamples[stateIndex] = WaveUtils.GetMaxAbsValue(state.wav);
 
                 return true;
             });
@@ -177,6 +177,12 @@ namespace FamiStudio
                 if (Log.ShouldAbortOperation)
                     return false;
             }
+
+            var globalMaxAbsSample = maxAbsSamples.Max();
+
+            // Apply a square root to keep other channels proportional, but still decent size.
+            for (int i = 0; i < channelStates.Length; i++)
+                channelStates[i].oscScale = maxAbsSamples[i] == 0 ? 1.0f : (float)Math.Sqrt(globalMaxAbsSample / (float)maxAbsSamples[i]) * (32768.0f / globalMaxAbsSample);
 
             // Create graphics resources.
             videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, true);
@@ -193,7 +199,6 @@ namespace FamiStudio
             // Generate metadata
             metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
 
-            oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
             oscRenderWindowSize = (int)(oscFrameWindowSize * window);
 
@@ -350,6 +355,7 @@ namespace FamiStudio
         public Bitmap bitmap; // Offscreen bitmap for piano roll
         public OffscreenGraphics graphics;
         public short[] wav;
+        public float oscScale;
         public int lastTrigger;
         public int holdFrameCount;
         public OscilloscopeTrigger triggerFunction;
