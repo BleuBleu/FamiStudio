@@ -35,13 +35,13 @@ namespace FamiStudio
         {
             if (a1 == 0)
             {
-                WriteRegister(NesApu.EPSM_ADDR0, reg, 16);
-                WriteRegister(NesApu.EPSM_DATA0, data, 32);
+                WriteRegister(NesApu.EPSM_ADDR0, reg,  34);
+                WriteRegister(NesApu.EPSM_DATA0, data, 34);
             }
             else
             {
-                WriteRegister(NesApu.EPSM_ADDR1, reg, 16);
-                WriteRegister(NesApu.EPSM_DATA1, data, 32);
+                WriteRegister(NesApu.EPSM_ADDR1, reg,  34);
+                WriteRegister(NesApu.EPSM_DATA1, data, 34);
             }
         }
 

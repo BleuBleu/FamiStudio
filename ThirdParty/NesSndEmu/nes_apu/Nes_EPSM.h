@@ -69,18 +69,21 @@ private:
 	struct __PSG* psg;
 	ym3438_t opn2;
 
-	Blip_Buffer* output_buffer;
+	Blip_Buffer* output_buffer_left;
 	Blip_Buffer* output_buffer_right;
 	cpu_time_t last_time;
 	bool pal_mode;
-	int delay;
-	int epsm_time;
-	int last_amp;
-	int last_amp_right;
+	int psg_delay;
+	int opn2_delay;
+	int last_psg_amp;
+	int last_opn2_amp_left;
+	int last_opn2_amp_right;
 	uint16_t opn2_mask;
-	Blip_Synth<blip_med_quality, 15420> synth;
+	Blip_Synth<blip_med_quality, 15420> synth_left;
 	Blip_Synth<blip_med_quality, 15420> synth_right;
 	int triggers[15];
+
+	const int epsm_time_precision = 14;
 
 	short shadow_internal_regs[shadow_internal_regs_count];
 	short shadow_internal_regs2[shadow_internal_regs_count];

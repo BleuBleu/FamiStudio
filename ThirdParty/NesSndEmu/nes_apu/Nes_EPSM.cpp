@@ -6,7 +6,7 @@
 #include "ym3438.h"
 #include BLARGG_SOURCE_BEGIN
 
-Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer(NULL), output_buffer_right(NULL)
+Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer_left(NULL), output_buffer_right(NULL)
 {
 	output(NULL,NULL);
 	volume(1.0);
@@ -27,16 +27,18 @@ void Nes_EPSM::reset(bool pal = false)
 	reset_psg();
 	reset_opn2();
 	last_time = 0;
-	last_amp = 0;
+	last_psg_amp = 0;
+	last_opn2_amp_left = 0;
+	last_opn2_amp_right = 0;
+	psg_delay = 0;
+	opn2_delay = 0;
 }
 
 void Nes_EPSM::volume(double v)
 {
-	synth.volume(v);
+	synth_left.volume(v);
 	synth_right.volume(v);
 }
-
-
 
 void Nes_EPSM::reset_psg()
 {
@@ -55,16 +57,16 @@ void Nes_EPSM::reset_opn2()
 
 void Nes_EPSM::output(Blip_Buffer* buf, Blip_Buffer* buf_right)
 {
-	output_buffer = buf;
+	output_buffer_left = buf;
 	output_buffer_right = buf_right;
 
-	if (output_buffer && (!psg || output_buffer->sample_rate() != psg->rate))
+	if (output_buffer_left && (!psg || output_buffer_left->sample_rate() != psg->rate))
 		reset_psg();
 }
 
 void Nes_EPSM::treble_eq(blip_eq_t const& eq)
 {
-	synth.treble_eq(eq);
+	synth_left.treble_eq(eq);
 	synth_right.treble_eq(eq);
 }
 
@@ -130,13 +132,8 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			break;
 	}
 
-
 	a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
 	a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
-	/*if (!mask)
-	{
-		queue.push(a0 | (a1 << 1), data);
-	}*/
 	switch (addr) {
 	case 0x401d:
 		regs_a0[current_register] = data;
@@ -151,78 +148,102 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	run_until(time);
 }
 
-long Nes_EPSM::run_until(cpu_time_t time)
+long Nes_EPSM::run_until(cpu_time_t end_time)
 {
-	if (!output_buffer)
+	if (!output_buffer_left)
 		return 0;
 
-	require(time >= last_time);
+	end_time <<= epsm_time_precision;
 
-	cpu_time_t t = last_time;
-	t += delay;
-	delay = 0;
+	require(end_time >= last_time);
 
-	while (t < time)
+	cpu_time_t psg_increment = 16 << epsm_time_precision;
+	cpu_time_t psg_time = last_time + psg_delay;
+
+	while (psg_time < end_time)
 	{
 		int sample = (int)PSG_calc(psg) * 10 / 18;
-		int sample_right;
+		int delta = sample - last_psg_amp;
+
+		if (delta)
+		{
+			synth_left.offset(psg_time >> epsm_time_precision, delta, output_buffer_left);
+			synth_right.offset(psg_time >> epsm_time_precision, delta, output_buffer_right);
+			
+			last_psg_amp = sample;
+		}
 
 		for (int i = 0; i < 3; i++)
 		{
 			if (psg->trigger_mask & (1 << i))
-				update_trigger(output_buffer, t, triggers[i]);
+				update_trigger(output_buffer_left, psg_time >> epsm_time_precision, triggers[i]);
 			else if (psg->freq[i] <= 1)
 				triggers[i] = trigger_none;
 		}
 
-		sample = clamp(sample, -7710, 7710);
-		sample_right = clamp(sample, -7710, 7710);
-		int16_t samples[4];
-		while (epsm_time < 16 << 10)
+		psg_time += psg_increment;
+	}
+
+	cpu_time_t opn2_increment = ((int64_t)(output_buffer_left->clock_rate() * 6 * 24) << epsm_time_precision) / epsm_clock;
+	cpu_time_t opn2_time = last_time + opn2_delay;
+
+	while (opn2_time < end_time)
+	{
+		int sample_left = 0;
+		int sample_right = 0;
+
+		for (int i = 0; i < 24; i++)
 		{
+			int16_t samples[4];
 			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
 
+			sample_left  += (int)(samples[0] * 6);
+			sample_left  += (int)(samples[2] * 11 / 20);
+			sample_right += (int)(samples[1] * 6);
+			sample_right += (int)(samples[3] * 11 / 20);
+
+			// TODO : We could move that out of the 24 loop now.
 			for (int i = 0; i < 6; i++)
 			{
 				if (opn2.triggers[i] == 1)
-					update_trigger(output_buffer, t, triggers[i + 3]);
+					update_trigger(output_buffer_left, opn2_time >> epsm_time_precision, triggers[i + 3]);
 				else if (opn2.triggers[i] == 2)
 					triggers[i + 3] = trigger_none;
 			}
+		}
 
-			sample += (int)(samples[0] * 12);
-			sample += (int)(samples[2] * 11 / 10);
-			sample_right += (int)(samples[1] * 12);
-			sample_right += (int)(samples[3] * 11 / 10);
-			epsm_time += (((pal_mode ? pal_clock : ntsc_clock) << 10) / (epsm_clock/epsm_internal_multiplier));
-		}
-		int delta = sample - last_amp;
-		int delta_right = sample_right - last_amp_right;
-		if (delta)
+		int delta_left  = sample_left  - last_opn2_amp_left;
+		int delta_right = sample_right - last_opn2_amp_right;
+
+		if (delta_left)
 		{
-			synth.offset(t, delta, output_buffer);
-			last_amp = sample;
+			synth_left.offset(opn2_time >> epsm_time_precision, delta_left, output_buffer_left);
+			last_opn2_amp_left = sample_left;
 		}
+
 		if (delta_right)
 		{
-			synth_right.offset(t, delta_right, output_buffer_right);
-			last_amp_right = sample_right;
+			synth_right.offset(opn2_time >> epsm_time_precision, delta_right, output_buffer_right);
+			last_opn2_amp_right = sample_right;
 		}
-		epsm_time -= 16 << 10;
-		t += 16;
+
+		opn2_time += opn2_increment;
 	}
 
-	delay = t - time;
-	last_time = time;
-	return t;
+	opn2_delay = opn2_time - end_time;
+	psg_delay  = psg_time  - end_time;
+
+	last_time = end_time;
+
+	return max(opn2_time, psg_time);
 }
 
 void Nes_EPSM::end_frame(cpu_time_t time)
 {
-	if (time> last_time)
+	if ((time << epsm_time_precision) > last_time)
 		run_until(time);
 
-	last_time -= time;
+	last_time -= (time << epsm_time_precision);
 	assert(last_time >= 0);
 }
 
@@ -239,12 +260,12 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 		if (shadow_internal_regs[i] >= 0)
 		{
 			if(i >= 0xC0){
-				write_register(clock += 16, reg_select, 0x28);
-				write_register(clock += 32, reg_write, shadow_internal_regs[i]);
+				write_register(clock += 34, reg_select, 0x28);
+				write_register(clock += 34, reg_write, shadow_internal_regs[i]);
             }
 			else{
-				write_register(clock += 16, reg_select, i);
-				write_register(clock += 32, reg_write, shadow_internal_regs[i]);
+				write_register(clock += 34, reg_select, i);
+				write_register(clock += 34, reg_write, shadow_internal_regs[i]);
 			}
 		}
 	}
@@ -252,8 +273,8 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 	{
 		if (shadow_internal_regs2[i] >= 0)
 		{
-			write_register(clock += 16, reg_select2, i);
-			write_register(clock += 32, reg_write2, shadow_internal_regs2[i]);
+			write_register(clock += 34, reg_select2, i);
+			write_register(clock += 34, reg_write2, shadow_internal_regs2[i]);
 		}
 	}
 }
