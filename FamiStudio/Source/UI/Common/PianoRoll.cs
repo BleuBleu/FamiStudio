@@ -7901,7 +7901,7 @@ namespace FamiStudio
             if (note.IsMusical)
             {
                 var beatLength = Song.GetPatternBeatLength(location.PatternIndex);
-                var noteDuration = note.Duration;
+                var noteDuration = GetVisualNoteDuration(location, note);
                 var factor = noteDuration / (float)beatLength;
 
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
