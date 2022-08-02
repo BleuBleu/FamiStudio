@@ -36,8 +36,8 @@ void Nes_EPSM::reset(bool pal = false)
 
 void Nes_EPSM::volume(double v)
 {
-	synth_left.volume(v);
-	synth_right.volume(v);
+	synth_left.volume(v * 10.59857f);
+	synth_right.volume(v * 10.59857f);
 }
 
 void Nes_EPSM::reset_psg()

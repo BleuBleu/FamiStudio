@@ -79,8 +79,8 @@ private:
 	int last_opn2_amp_left;
 	int last_opn2_amp_right;
 	uint16_t opn2_mask;
-	Blip_Synth<blip_med_quality, 15420> synth_left;
-	Blip_Synth<blip_med_quality, 15420> synth_right;
+	Blip_Synth<blip_med_quality, 163430> synth_left;
+	Blip_Synth<blip_med_quality, 163430> synth_right;
 	int triggers[15];
 
 	const int epsm_time_precision = 14;
