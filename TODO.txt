@@ -3,10 +3,8 @@
 
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song to demo.
-- Reset volume at loop point (if volume was not equal at end)
 - Missing highlight when adding effect with snap.
 - Seek bar not visible in fx panel for repeats
-- Trackpad controls dont work in sequencer scrolling?
 - BUGS
 	- If you have a note at the end of a song, it tends to get cut off early (then no repro?)
 

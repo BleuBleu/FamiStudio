@@ -206,7 +206,7 @@ namespace FamiStudio
             scrollBarThickness = ScaleForWindow(scrollBarSize);
             minScrollBarLength = ScaleForWindow(DefaultMinScrollBarLength);
             noteSizeX          = ScaleForWindowFloat(zoom * patternZoom);
-            virtualSizeY = Song != null ? this.channelSizeY * rowToChannel.Length : 0;
+            virtualSizeY       = Song != null ? this.channelSizeY * rowToChannel.Length : 0;
             scrollMargin       = (width - channelNameSizeX) / 8;
 
             // Shave a couple pixels when the size is getting too small.
@@ -3043,7 +3043,9 @@ namespace FamiStudio
         {
             if (Settings.TrackPadControls && !ModifierKeys.Control && !ModifierKeys.Alt)
             {
-                if (ModifierKeys.Shift)
+                if (CanScrollVertically() && !ModifierKeys.Shift)
+                    scrollY -= Utils.SignedCeil(e.ScrollY);
+                else
                     scrollX -= Utils.SignedCeil(e.ScrollY);
 
                 ClampScroll();
