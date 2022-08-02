@@ -25,14 +25,11 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
-            if (note.IsMusical)
+            if (note.IsMusical && noteTriggered)
             {
-                if (noteTriggered)
-                {
-                    var volume = GetVolume();
-                    WriteEPSMRegister(NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx, stereoFlags | (volume << 1));
-                    WriteEPSMRegister(NesApu.EPSM_REG_RYTHM, 1 << channelIdx);
-                }
+                var volume = GetVolume();
+                WriteEPSMRegister(NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx, stereoFlags | (volume << 1));
+                WriteEPSMRegister(NesApu.EPSM_REG_RYTHM, 1 << channelIdx);
             }
 
             base.UpdateAPU();

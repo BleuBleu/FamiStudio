@@ -41,6 +41,7 @@ public:
 	enum { reg_select2 = 0x401e };
 	enum { reg_write2 = 0x401f };
 	enum { reg_range = 0x1 };
+	enum { reg_cycle_skip = 34 };
 
 	enum { shadow_internal_regs_count = 220 };
 	void start_seeking();

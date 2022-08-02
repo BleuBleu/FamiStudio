@@ -82,30 +82,32 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 				PSG_setMask(psg, psg->mask | (1 << idx));
 		}
 	}
+
 	if (idx < 9 && idx > 2)
 	{
-		if (enabled){
+		if (enabled)
 			mask_fm = mask_fm | (1 << (idx-3));
-		}
-		else{
+		else
 			mask_fm = mask_fm & ~(1 << (idx-3));
-		}
 	}
+
 	if (idx > 8)
 	{
-		//std::cout << "enabled: " << enabled << " index" << (idx - 9) << std::endl;
 		if (enabled)
 			maskRythm = maskRythm | (1 << (idx-9));
 		else
 			maskRythm = maskRythm & ~(1 << (idx-9));
 	}
+
 	if (idx > 2)
 	{
-		if (enabled){
+		if (enabled)
+		{
 			opn2_mask = opn2_mask & ~(1 << (idx-3));
 			OPN2_MuteChannel(&opn2, opn2_mask);
 		}
-		else{
+		else
+		{
 			opn2_mask = opn2_mask | (1 << (idx-3));
 			OPN2_MuteChannel(&opn2, opn2_mask);
 		}
@@ -122,13 +124,15 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	}
 	else if (addr >= reg_write && addr < (reg_write + reg_range)) 
 	{
-			if((addr == 0x401d) && (reg < 0x10))
-			{
-				PSG_writeReg(psg, reg, data);
-				psg_reg = true;
-			}
+		if ((addr == 0x401d) && (reg < 0x10))
+		{
+			PSG_writeReg(psg, reg, data);
+			psg_reg = true;
+		}
 	}
-	switch(addr) {
+
+	switch(addr) 
+	{
 		case 0x401c:
 		case 0x401e:
 			current_register = data;
@@ -140,18 +144,22 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 
 	a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
 	a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
-	switch (addr) {
-	case 0x401d:
-		regs_a0[current_register] = data;
-		ages_a0[current_register] = 0;
-		break;
-	case 0x401f:
-		regs_a1[current_register] = data;
-		ages_a1[current_register] = 0;
-		break;
+
+	switch (addr) 
+	{
+		case 0x401d:
+			regs_a0[current_register] = data;
+			ages_a0[current_register] = 0;
+			break;
+		case 0x401f:
+			regs_a1[current_register] = data;
+			ages_a1[current_register] = 0;
+			break;
 	}
 
-	if (!psg_reg) OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
+	if (!psg_reg) 
+		OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
+
 	run_until(time);
 }
 
@@ -266,46 +274,48 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 	{
 		if (shadow_internal_regs[i] >= 0)
 		{
-			if(i >= 0xC0){
-				write_register(clock += 34, reg_select, 0x28);
-				write_register(clock += 34, reg_write, shadow_internal_regs[i]);
+			if (i >= 0xC0)
+			{
+				write_register(clock += reg_cycle_skip, reg_select, 0x28);
+				write_register(clock += reg_cycle_skip, reg_write, shadow_internal_regs[i]);
             }
-			else{
-				write_register(clock += 34, reg_select, i);
-				write_register(clock += 34, reg_write, shadow_internal_regs[i]);
+			else
+			{
+				write_register(clock += reg_cycle_skip, reg_select, i);
+				write_register(clock += reg_cycle_skip, reg_write, shadow_internal_regs[i]);
 			}
 		}
 	}
+
 	for (int i = 0; i < array_count(shadow_internal_regs2); i++)
 	{
 		if (shadow_internal_regs2[i] >= 0)
 		{
-			write_register(clock += 34, reg_select2, i);
-			write_register(clock += 34, reg_write2, shadow_internal_regs2[i]);
+			write_register(clock += reg_cycle_skip, reg_select2, i);
+			write_register(clock += reg_cycle_skip, reg_write2, shadow_internal_regs2[i]);
 		}
 	}
 }
 
 void Nes_EPSM::write_shadow_register(int addr, int data)
 {
-	if (addr >= reg_select && addr < (reg_select + reg_range)) {
+	if (addr >= reg_select && addr < (reg_select + reg_range))
+	{
 		reg = data;
 	}
-	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
-		
-		if(reg == 0x28){
+	else if (addr >= reg_write && addr < (reg_write + reg_range))
+	{
+		if(reg == 0x28)
 			shadow_internal_regs[0xC0+(0xF & data)] = data;
-        }
-		else{
+		else
 			shadow_internal_regs[reg] = data;
-        }
 	}
-	if (addr >= reg_select2 && addr < (reg_select2 + reg_range)) {
-
+	if (addr >= reg_select2 && addr < (reg_select2 + reg_range)) 
+	{
 		reg = data;
 	}
-	else if (addr >= reg_write2 && addr < (reg_write2 + reg_range)) {
-
+	else if (addr >= reg_write2 && addr < (reg_write2 + reg_range)) 
+	{
 		shadow_internal_regs2[reg] = data;
 	}
 }
