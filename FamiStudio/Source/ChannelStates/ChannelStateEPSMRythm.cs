@@ -27,10 +27,10 @@ namespace FamiStudio
                 if (noteTriggered)
                 {
                     var volume = GetVolume();
-                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx);
-                    WriteRegister(NesApu.EPSM_DATA0, opStereo[channelIdx] | volume << 1);
-                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM);
-                    WriteRegister(NesApu.EPSM_DATA0, (1 << channelIdx));
+                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx, 34);
+                    WriteRegister(NesApu.EPSM_DATA0, opStereo[channelIdx] | volume << 1, 34);
+                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM, 34);
+                    WriteRegister(NesApu.EPSM_DATA0, (1 << channelIdx), 34);
                 }
             }
 
