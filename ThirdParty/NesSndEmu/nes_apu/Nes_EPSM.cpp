@@ -164,7 +164,7 @@ long Nes_EPSM::run_until(cpu_time_t time)
 
 	while (t < time)
 	{
-		int sample = (int)(PSG_calc(psg) * 10 / 8);
+		int sample = (int)PSG_calc(psg) * 10 / 18;
 		int sample_right;
 
 		for (int i = 0; i < 3; i++)
