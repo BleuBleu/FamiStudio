@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class ChannelStateEPSMRythm : ChannelState
+    public class ChannelStateEPSMRythm : ChannelStateEPSMBase
     {
         int channelIdx = 0;
         int stereoFlags = 0;
@@ -30,10 +30,8 @@ namespace FamiStudio
                 if (noteTriggered)
                 {
                     var volume = GetVolume();
-                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx, 34);
-                    WriteRegister(NesApu.EPSM_DATA0, stereoFlags | volume << 1, 34);
-                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM, 34);
-                    WriteRegister(NesApu.EPSM_DATA0, (1 << channelIdx), 34);
+                    WriteEPSMRegister(NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx, stereoFlags | (volume << 1));
+                    WriteEPSMRegister(NesApu.EPSM_REG_RYTHM, 1 << channelIdx);
                 }
             }
 

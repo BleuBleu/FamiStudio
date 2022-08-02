@@ -255,6 +255,9 @@ namespace FamiStudio
         // DMC channel increments/decrements by steps of 2 anyways.
         public const int DACDefaultValueDiv2 = DACDefaultValue / 2;
 
+        // Number of cycles to skip at each EPSM register writes.
+        public const int EpsmCycleSkip = 34;
+
         public static readonly ushort[]   NoteTableNTSC    = new ushort[97];
         public static readonly ushort[]   NoteTablePAL     = new ushort[97];
         public static readonly ushort[]   NoteTableVrc6Saw = new ushort[97];
@@ -805,14 +808,14 @@ namespace FamiStudio
                                 WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
                                 break;
                             case APU_EXPANSION_EPSM:
-                                WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE);
-                                WriteRegister(apuIdx, EPSM_DATA0, 0x38); // No noise, just 3 tones for now.
-                                WriteRegister(apuIdx, EPSM_ADDR0, 0x29);
-                                WriteRegister(apuIdx, EPSM_DATA0, 0x80);
-                                WriteRegister(apuIdx, EPSM_ADDR0, 0x27);
-                                WriteRegister(apuIdx, EPSM_DATA0, 0x00);
-                                WriteRegister(apuIdx, EPSM_ADDR0, 0x11);
-                                WriteRegister(apuIdx, EPSM_DATA0, 0x37);
+                                WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x38); SkipCycles(apuIdx, EpsmCycleSkip); // No noise, just 3 tones for now.
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x29); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x80); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x27); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x00); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x11); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x37); SkipCycles(apuIdx, EpsmCycleSkip);
                                 break;
                         }
                     }

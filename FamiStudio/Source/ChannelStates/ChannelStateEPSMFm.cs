@@ -4,7 +4,28 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class ChannelStateEPSMFm : ChannelState
+    public class ChannelStateEPSMBase : ChannelState
+    {
+        public ChannelStateEPSMBase(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
+        {
+        }
+
+        protected void WriteEPSMRegister(int reg, int data, bool a1 = false)
+        {
+            if (!a1)
+            {
+                WriteRegister(NesApu.EPSM_ADDR0, reg,  NesApu.EpsmCycleSkip);
+                WriteRegister(NesApu.EPSM_DATA0, data, NesApu.EpsmCycleSkip);
+            }
+            else
+            {
+                WriteRegister(NesApu.EPSM_ADDR1, reg,  NesApu.EpsmCycleSkip);
+                WriteRegister(NesApu.EPSM_DATA1, data, NesApu.EpsmCycleSkip);
+            }
+        }
+    }
+
+    public class ChannelStateEPSMFm : ChannelStateEPSMBase
     {
         protected int  channelIdx = 0;
         protected int  channelIdxHigh = 0;
@@ -31,31 +52,17 @@ namespace FamiStudio
             customRelease = true;
         }
 
-        private void WriteEPSMRegister(int reg, int data, int a1)
-        {
-            if (a1 == 0)
-            {
-                WriteRegister(NesApu.EPSM_ADDR0, reg,  34);
-                WriteRegister(NesApu.EPSM_DATA0, data, 34);
-            }
-            else
-            {
-                WriteRegister(NesApu.EPSM_ADDR1, reg,  34);
-                WriteRegister(NesApu.EPSM_DATA1, data, 34);
-            }
-        }
-
         protected override void LoadInstrument(Instrument instrument)
         {
             if (instrument != null)
             { 
                 Debug.Assert(instrument.IsEpsm);
                 
-                int a1 = 0;
+                bool a1 = false;
                 if (channelIdx >= 3)
                 {
                     channelIdxHigh = channelIdx - 3;
-                    a1 = 1;
+                    a1 = true;
                 }
                 else
                 {
@@ -71,7 +78,7 @@ namespace FamiStudio
 
                     WriteEPSMRegister(Registers[0] + channelIdxHigh, instrument.EpsmPatchRegs[0], a1);
                     WriteEPSMRegister(Registers[1] + channelIdxHigh, instrument.EpsmPatchRegs[1], a1);
-                    WriteEPSMRegister(Registers[9], instrument.EpsmPatchRegs[30], 0); //LFO - This accounts for all channels
+                    WriteEPSMRegister(Registers[9], instrument.EpsmPatchRegs[30]); //LFO - This accounts for all channels
                     
                     for (byte y = 0; y < 4; y++)
                     {
@@ -100,7 +107,7 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
-            int a1 = 0;
+            bool a1 = false;
 
             if (channelIdx >= 3)
             {
@@ -108,7 +115,7 @@ namespace FamiStudio
                 channelAddr = NesApu.EPSM_ADDR1;
                 channelData = NesApu.EPSM_DATA1;
                 channelKey = 0x4 | (channelIdx - 3);
-                a1 = 1;
+                a1 = true;
             }
             else
             { 
@@ -118,7 +125,7 @@ namespace FamiStudio
 
             if (note.IsStop && !stop)
             {
-                WriteEPSMRegister(0x28, 0x00 + channelKey, 0);
+                WriteEPSMRegister(0x28, 0x00 + channelKey);
                 WriteEPSMRegister(0xb4 + channelIdxHigh, 0x00, a1); //volume 0
                 stop = true;
                 release = false;
@@ -127,7 +134,7 @@ namespace FamiStudio
             {
                 release = true;
                 stop = false;
-                WriteEPSMRegister(0x28, 0x00 + channelKey, 0);
+                WriteEPSMRegister(0x28, 0x00 + channelKey);
             }
             else if (note.IsMusical)
             {
@@ -185,8 +192,8 @@ namespace FamiStudio
 
                 if (noteTriggered)
                 {
-                    WriteEPSMRegister(0x28, 0x00 + channelKey, 0);
-                    WriteEPSMRegister(0x28, 0xF0 + channelKey, 0);
+                    WriteEPSMRegister(0x28, 0x00 + channelKey);
+                    WriteEPSMRegister(0x28, 0xF0 + channelKey);
                     WriteEPSMRegister(Registers[1] + channelIdxHigh, stereoFlags, a1);
                 }
 
