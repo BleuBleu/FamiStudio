@@ -113,15 +113,21 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 }
 
 void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
-{	if (addr >= reg_select && addr < (reg_select + reg_range)) {
+{
+	bool psg_reg = false;
+
+	if (addr >= reg_select && addr < (reg_select + reg_range)) 
+	{
 		reg = data;
 	}
-	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
-			if((addr == 0x401d) && (reg < 0x10)){
+	else if (addr >= reg_write && addr < (reg_write + reg_range)) 
+	{
+			if((addr == 0x401d) && (reg < 0x10))
+			{
 				PSG_writeReg(psg, reg, data);
+				psg_reg = true;
 			}
 	}
-	int mask = 0;
 	switch(addr) {
 		case 0x401c:
 		case 0x401e:
@@ -144,7 +150,8 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 		ages_a1[current_register] = 0;
 		break;
 	}
-	if (!mask) OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
+
+	if (!psg_reg) OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
 	run_until(time);
 }
 
@@ -195,7 +202,7 @@ long Nes_EPSM::run_until(cpu_time_t end_time)
 		for (int i = 0; i < 24; i++)
 		{
 			int16_t samples[4];
-			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
+			OPN2_Clock(&opn2, samples, 1 /*mask_fm*/, 1 /*maskRythm*/, false);
 
 			sample_left  += (int)(samples[0] * 6);
 			sample_left  += (int)(samples[2] * 11 / 20);
