@@ -94,9 +94,9 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 	if (idx > 8)
 	{
 		if (enabled)
-			maskRythm = maskRythm | (1 << (idx-9));
+			mask_rhythm = mask_rhythm | (1 << (idx-9));
 		else
-			maskRythm = maskRythm & ~(1 << (idx-9));
+			mask_rhythm = mask_rhythm & ~(1 << (idx-9));
 	}
 
 	if (idx > 2)
@@ -142,8 +142,8 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			break;
 	}
 
-	a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
-	a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
+	int a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
+	int a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
 
 	switch (addr) 
 	{
@@ -210,7 +210,7 @@ long Nes_EPSM::run_until(cpu_time_t end_time)
 		for (int i = 0; i < 24; i++)
 		{
 			int16_t samples[4];
-			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
+			OPN2_Clock(&opn2, samples, mask_fm, mask_rhythm, false);
 
 			sample_left  += (int)(samples[0] * 6);
 			sample_left  += (int)(samples[2] * 11 / 20);

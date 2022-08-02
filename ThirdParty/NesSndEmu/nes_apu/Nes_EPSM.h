@@ -61,11 +61,9 @@ private:
 	void reset_opn2();
 
 	int reg;
-	BOOST::uint8_t a0;
-	BOOST::uint8_t a1;
 	BOOST::uint8_t current_register;
 	BOOST::uint8_t mask_fm;
-	BOOST::uint8_t maskRythm;
+	BOOST::uint8_t mask_rhythm;
 	double vol;
 	struct __PSG* psg;
 	ym3438_t opn2;
