@@ -15,6 +15,7 @@ namespace FamiStudio
         
         private readonly int[] Order     = { 0, 2, 1, 3 };
         private readonly int[] Registers = { 0xb0, 0xb4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x22 };
+        private readonly int[] ChannelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
 
         private int   stereoFlags = 0;
         private bool  release = false;
@@ -46,38 +47,46 @@ namespace FamiStudio
 
         protected override void LoadInstrument(Instrument instrument)
         {
-            Debug.Assert(instrument.IsEpsm);
-            int a1 = 0;
-            if (channelIdx >= 3)
-            {
-                channelIdxHigh = channelIdx - 3;
-                a1 = 1;
-            }
-            else
-            {
-                channelIdxHigh = channelIdx;
-            }
-            stereoFlags = instrument.EpsmPatchRegs[1];
-            if (instrument.IsEpsm)
-            {
-                newInstrument = true;
-                algorithm = instrument.EpsmPatchRegs[0];
-                WriteEPSMRegister(Registers[0] + channelIdxHigh, instrument.EpsmPatchRegs[0], a1);
-                WriteEPSMRegister(Registers[1] + channelIdxHigh, instrument.EpsmPatchRegs[1], a1);
-                WriteEPSMRegister(Registers[9], instrument.EpsmPatchRegs[30], 0); //LFO - This accounts for all channels
-                for (byte y = 0; y < 4; y++)
+            if (instrument != null)
+            { 
+                Debug.Assert(instrument.IsEpsm);
+                
+                int a1 = 0;
+                if (channelIdx >= 3)
                 {
-                    opVolume[Order[y]] = instrument.EpsmPatchRegs[3 + (y * 7)];
-                    WriteEPSMRegister(Registers[2] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[2 + (y * 7)], a1);
-                    WriteEPSMRegister(Registers[4] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[4 + (y * 7)], a1);
-                    WriteEPSMRegister(Registers[5] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[5 + (y * 7)], a1);
-                    WriteEPSMRegister(Registers[6] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[6 + (y * 7)], a1);
-                    WriteEPSMRegister(Registers[7] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[7 + (y * 7)], a1);
-                    WriteEPSMRegister(Registers[8] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[8 + (y * 7)], a1);
+                    channelIdxHigh = channelIdx - 3;
+                    a1 = 1;
+                }
+                else
+                {
+                    channelIdxHigh = channelIdx;
                 }
 
+                stereoFlags = instrument.EpsmPatchRegs[1];
+
+                if (instrument.IsEpsm)
+                {
+                    newInstrument = true;
+                    algorithm = instrument.EpsmPatchRegs[0];
+
+                    WriteEPSMRegister(Registers[0] + channelIdxHigh, instrument.EpsmPatchRegs[0], a1);
+                    WriteEPSMRegister(Registers[1] + channelIdxHigh, instrument.EpsmPatchRegs[1], a1);
+                    WriteEPSMRegister(Registers[9], instrument.EpsmPatchRegs[30], 0); //LFO - This accounts for all channels
+                    
+                    for (byte y = 0; y < 4; y++)
+                    {
+                        opVolume[Order[y]] = instrument.EpsmPatchRegs[3 + (y * 7)];
+                        WriteEPSMRegister(Registers[2] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[2 + (y * 7)], a1);
+                        WriteEPSMRegister(Registers[4] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[4 + (y * 7)], a1);
+                        WriteEPSMRegister(Registers[5] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[5 + (y * 7)], a1);
+                        WriteEPSMRegister(Registers[6] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[6 + (y * 7)], a1);
+                        WriteEPSMRegister(Registers[7] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[7 + (y * 7)], a1);
+                        WriteEPSMRegister(Registers[8] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[8 + (y * 7)], a1);
+                    }
+                }
             }
         }
+
         private int GetOctave(ref int period)
         {
             var octave = 0;
@@ -91,8 +100,8 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
-
             int a1 = 0;
+
             if (channelIdx >= 3)
             {
                 channelIdxHigh = channelIdx - 3;
@@ -101,11 +110,11 @@ namespace FamiStudio
                 channelKey = 0x4 | (channelIdx - 3);
                 a1 = 1;
             }
-            else { 
+            else
+            { 
                 channelIdxHigh = channelIdx;
                 channelKey = channelIdx;
             }
-
 
             if (note.IsStop && !stop)
             {
@@ -138,15 +147,16 @@ namespace FamiStudio
                 var step = (Math.Log(127+adjustment) - Math.Log(adjustment)) / (steps - 1);
 
                 volume = (int)((Math.Exp(Math.Log(adjustment) + (15 - volume) * step)) - adjustment);
-                int[] channelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
+
                 if (newInstrument || lastVolume != volume)
                 {
                     lastVolume = volume;
                     newInstrument = false;
-                    switch (channelAlgorithmMask[algorithm & 0x7])
+
+                    switch (ChannelAlgorithmMask[algorithm & 0x7])
                     {
                         case 0xF:
-                            WriteEPSMRegister(0x40 + channelIdxHigh, Utils.Clamp(opVolume[0] + volume,0,127), a1);
+                            WriteEPSMRegister(0x40 + channelIdxHigh, Utils.Clamp(opVolume[0] + volume, 0, 127), a1);
                             WriteEPSMRegister(0x44 + channelIdxHigh, Utils.Clamp(opVolume[1] + volume, 0, 127), a1);
                             WriteEPSMRegister(0x48 + channelIdxHigh, Utils.Clamp(opVolume[2] + volume, 0, 127), a1);
                             WriteEPSMRegister(0x4c + channelIdxHigh, Utils.Clamp(opVolume[3] + volume, 0, 127), a1);
