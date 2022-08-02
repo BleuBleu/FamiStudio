@@ -202,7 +202,7 @@ long Nes_EPSM::run_until(cpu_time_t end_time)
 		for (int i = 0; i < 24; i++)
 		{
 			int16_t samples[4];
-			OPN2_Clock(&opn2, samples, 1 /*mask_fm*/, 1 /*maskRythm*/, false);
+			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
 
 			sample_left  += (int)(samples[0] * 6);
 			sample_left  += (int)(samples[2] * 11 / 20);
