@@ -4,8 +4,8 @@ namespace FamiStudio
 {
     public class ChannelStateEPSMSquare : ChannelState
     {
-        int channelIdx = 0;
-        int[] opStop = { 0, 0, 0 };
+        int  channelIdx = 0;
+        bool stop = false; // TODO : Why do we have this?
 
         public ChannelStateEPSMSquare(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
@@ -14,15 +14,14 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
-            if (note.IsStop && opStop[channelIdx] == 0)
+            if (note.IsStop && !stop)
             {
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_VOL_A + channelIdx);
                 WriteRegister(NesApu.EPSM_DATA0, 0);
-                opStop[channelIdx] = 1;
+                stop = true;
             }
             else if (note.IsMusical)
             {
-                opStop[channelIdx] = 0;
                 var period = GetPeriod();
                 var volume = GetVolume();
 
@@ -35,6 +34,8 @@ namespace FamiStudio
                 WriteRegister(NesApu.EPSM_DATA0, periodHi);
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_VOL_A + channelIdx);
                 WriteRegister(NesApu.EPSM_DATA0, volume);
+
+                stop = false;
             }
 
             base.UpdateAPU();
