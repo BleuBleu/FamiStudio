@@ -204,8 +204,14 @@ long Nes_EPSM::run_until(cpu_time_t end_time)
 
 	while (opn2_time < end_time)
 	{
-		int sample_left = 0;
+		int sample_left  = 0;
 		int sample_right = 0;
+
+		// The chip does a full update in 24-steps. It outputs the value of 
+		// certain channels at each of those 24 steps. So for maximum audio 
+		// quality, we always run a full 24-cycles updates (which takes ~32.2159 
+		// NES cycles in NTSC) so we get even output from all the channels.
+		require(opn2.cycles == 0);
 
 		for (int i = 0; i < 24; i++)
 		{
@@ -216,15 +222,6 @@ long Nes_EPSM::run_until(cpu_time_t end_time)
 			sample_left  += (int)(samples[2] * 11 / 20);
 			sample_right += (int)(samples[1] * 6);
 			sample_right += (int)(samples[3] * 11 / 20);
-
-			// TODO : We could move that out of the 24 loop now.
-			for (int i = 0; i < 6; i++)
-			{
-				if (opn2.triggers[i] == 1)
-					update_trigger(output_buffer_left, opn2_time >> epsm_time_precision, triggers[i + 3]);
-				else if (opn2.triggers[i] == 2)
-					triggers[i + 3] = trigger_none;
-			}
 		}
 
 		int delta_left  = sample_left  - last_opn2_amp_left;
@@ -240,6 +237,14 @@ long Nes_EPSM::run_until(cpu_time_t end_time)
 		{
 			synth_right.offset(opn2_time >> epsm_time_precision, delta_right, output_buffer_right);
 			last_opn2_amp_right = sample_right;
+		}
+
+		for (int i = 0; i < 6; i++)
+		{
+			if (opn2.triggers[i] == 1)
+				update_trigger(output_buffer_left, opn2_time >> epsm_time_precision, triggers[i + 3]);
+			else if (opn2.triggers[i] == 2)
+				triggers[i + 3] = trigger_none;
 		}
 
 		opn2_time += opn2_increment;

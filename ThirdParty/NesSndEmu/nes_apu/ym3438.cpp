@@ -1575,15 +1575,22 @@ void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
         chip->eg_cycle_stop = 0;
     }
 
-	for (Bit8u i = 0; i < 6; i++)
-		chip->triggers[i] = 0;
+    if (chip->cycles == 0)
+    {
+	    for (Bit8u i = 0; i < 6; i++)
+		    chip->triggers[i] = 0;
+    }
 
-        OPN2_DoIO(chip);
-    if (misc) {
+    OPN2_DoIO(chip);
+
+    if (misc) 
+    {
         OPN2_DoTimerA(chip);
         OPN2_DoTimerB(chip);
     }
-    if (fm){
+
+    if (fm)
+    {
         OPN2_KeyOn(chip);
 
         OPN2_ChOutput(chip);
@@ -1592,10 +1599,14 @@ void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
         OPN2_FMPrepare(chip);
         OPN2_FMGenerate(chip);
     }
-    if (rythm) {
+
+    if (rythm) 
+    {
         OPNmod_RhythmGenerate(chip);
     }
-    if (fm) {
+
+    if (fm)
+    {
         OPN2_PhaseGenerate(chip);
         OPN2_PhaseCalcIncrement(chip);
         OPN2_UpdateTriggers(chip);
@@ -1605,6 +1616,7 @@ void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
         OPN2_EnvelopeSSGEG(chip);
         OPN2_EnvelopePrepare(chip);
     }
+
     /* Prepare fnum & block */
     if (chip->mode_ch3)
     {
