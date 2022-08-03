@@ -38,13 +38,13 @@ namespace FamiStudio
         private readonly int[] Registers = { 0xb0, 0xb4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x22 };
         private readonly int[] ChannelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
 
-        private int   stereoFlags = 0;
-        private bool  release = false;
-        private bool  stop = false;
-        private int   lastVolume = 0;
-        private bool  newInstrument = false;
-        private int   algorithm = 0;
-        private int[] opVolume = { 0, 0, 0, 0 };
+        private int    stereoFlags = 0;
+        private bool   release = false;
+        private bool   stop = false;
+        private int    lastVolume = 0;
+        private byte[] patchRegs = null; // Only set when a new instrument is loaded.
+        private int    algorithm = 0;
+        private int[]  opVolume = { 0, 0, 0, 0 };
 
         public ChannelStateEPSMFm(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
@@ -58,39 +58,10 @@ namespace FamiStudio
             { 
                 Debug.Assert(instrument.IsEpsm);
                 
-                bool a1 = false;
-                if (channelIdx >= 3)
-                {
-                    channelIdxHigh = channelIdx - 3;
-                    a1 = true;
-                }
-                else
-                {
-                    channelIdxHigh = channelIdx;
-                }
-
-                stereoFlags = instrument.EpsmPatchRegs[1];
-
-                if (instrument.IsEpsm)
-                {
-                    newInstrument = true;
-                    algorithm = instrument.EpsmPatchRegs[0];
-
-                    WriteEPSMRegister(Registers[0] + channelIdxHigh, instrument.EpsmPatchRegs[0], a1);
-                    WriteEPSMRegister(Registers[1] + channelIdxHigh, instrument.EpsmPatchRegs[1], a1);
-                    WriteEPSMRegister(Registers[9], instrument.EpsmPatchRegs[30]); //LFO - This accounts for all channels
-                    
-                    for (byte y = 0; y < 4; y++)
-                    {
-                        opVolume[Order[y]] = instrument.EpsmPatchRegs[3 + (y * 7)];
-                        WriteEPSMRegister(Registers[2] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[2 + (y * 7)], a1);
-                        WriteEPSMRegister(Registers[4] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[4 + (y * 7)], a1);
-                        WriteEPSMRegister(Registers[5] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[5 + (y * 7)], a1);
-                        WriteEPSMRegister(Registers[6] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[6 + (y * 7)], a1);
-                        WriteEPSMRegister(Registers[7] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[7 + (y * 7)], a1);
-                        WriteEPSMRegister(Registers[8] + channelIdxHigh + Order[y] * 4, instrument.EpsmPatchRegs[8 + (y * 7)], a1);
-                    }
-                }
+                channelIdxHigh = channelIdx >= 3 ? channelIdx - 3 : channelIdx;
+                stereoFlags    = instrument.EpsmPatchRegs[1];
+                algorithm      = instrument.EpsmPatchRegs[0];
+                patchRegs      = instrument.EpsmPatchRegs;
             }
         }
 
@@ -155,10 +126,33 @@ namespace FamiStudio
 
                 volume = (int)((Math.Exp(Math.Log(adjustment) + (15 - volume) * step)) - adjustment);
 
-                if (newInstrument || lastVolume != volume)
+                if (patchRegs != null || lastVolume != volume)
                 {
-                    lastVolume = volume;
-                    newInstrument = false;
+                    // We delay loading of instrument here instead of in LoadInstrument().
+                    // The number of writes we need to do and the number of cycles between each
+                    // means we end up with "chirps" when many channels change instruments at 
+                    // the same time, since all channels first change their instrument THEN
+                    // the all update the volume/note. This is probably something we need to 
+                    // revisit here, and in the sound engine itself.
+                    if (patchRegs != null)
+                    {
+                        WriteEPSMRegister(Registers[0] + channelIdxHigh, patchRegs[0], a1);
+                        WriteEPSMRegister(Registers[1] + channelIdxHigh, patchRegs[1], a1);
+                        WriteEPSMRegister(Registers[9], patchRegs[30]); //LFO - This accounts for all channels
+
+                        for (byte y = 0; y < 4; y++)
+                        {
+                            opVolume[Order[y]] = patchRegs[3 + (y * 7)];
+                            WriteEPSMRegister(Registers[2] + channelIdxHigh + Order[y] * 4, patchRegs[2 + (y * 7)], a1);
+                            WriteEPSMRegister(Registers[4] + channelIdxHigh + Order[y] * 4, patchRegs[4 + (y * 7)], a1);
+                            WriteEPSMRegister(Registers[5] + channelIdxHigh + Order[y] * 4, patchRegs[5 + (y * 7)], a1);
+                            WriteEPSMRegister(Registers[6] + channelIdxHigh + Order[y] * 4, patchRegs[6 + (y * 7)], a1);
+                            WriteEPSMRegister(Registers[7] + channelIdxHigh + Order[y] * 4, patchRegs[7 + (y * 7)], a1);
+                            WriteEPSMRegister(Registers[8] + channelIdxHigh + Order[y] * 4, patchRegs[8 + (y * 7)], a1);
+                        }
+
+                        patchRegs = null;
+                    }
 
                     switch (ChannelAlgorithmMask[algorithm & 0x7])
                     {
@@ -186,9 +180,13 @@ namespace FamiStudio
                             WriteEPSMRegister(0x48 + channelIdxHigh, opVolume[2], a1);
                             WriteEPSMRegister(0x4c + channelIdxHigh, Utils.Clamp(opVolume[3] + volume, 0, 127), a1);
                             break;
-
                     }
+
+                    lastVolume = volume;
                 }
+
+                WriteEPSMRegister(0xA4 + channelIdxHigh, periodHi, a1);
+                WriteEPSMRegister(0xA0 + channelIdxHigh, periodLo, a1);
 
                 if (noteTriggered)
                 {
@@ -196,9 +194,6 @@ namespace FamiStudio
                     WriteEPSMRegister(0x28, 0xF0 + channelKey);
                     WriteEPSMRegister(Registers[1] + channelIdxHigh, stereoFlags, a1);
                 }
-
-                WriteEPSMRegister(0xA4 + channelIdxHigh, periodHi, a1);
-                WriteEPSMRegister(0xA0 + channelIdxHigh, periodLo, a1);
             }
 
             base.UpdateAPU();
