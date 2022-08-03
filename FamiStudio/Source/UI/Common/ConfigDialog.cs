@@ -101,7 +101,7 @@ namespace FamiStudio
         private readonly string IdealSequencerHeightTooltip     = "The size of the sequencer, in % of the height of the window. This size maybe not be achievable if there are too many channels.";
         private readonly string AllowSequencerScrollTooltip     = "When enabled and the ideal sequencer height cannot be achieved, the sequencer will allow vertical scrolling.";
         private readonly string ShowRegisterViewerTooltip       = "When enabled, the 'Register' tab will be visible in the Project Explorer.";
-        private readonly string UseOSDialogsTooltip             = "When enabled, FamiStudio will try to use the built-in operating system dialog to open/save files and display error messages. Not available on Linux.";
+        private readonly string UseOSDialogsTooltip             = "When enabled, FamiStudio will try to use the built-in operating system dialog to open/save files and display error messages.";
 
         // Sound
         private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
