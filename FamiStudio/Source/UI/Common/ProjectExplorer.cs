@@ -1839,9 +1839,6 @@ namespace FamiStudio
 
         private void UpdateToolTip(int x, int y)
         {
-            if (!IsActiveControl)
-                return;
-
             var redTooltip = false;
             var tooltip = "";
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
@@ -4203,7 +4200,6 @@ namespace FamiStudio
         {
             UpdateCursor();
             UpdateCaptureOperation(x, y);
-            UpdateToolTip(x, y);
 
             mouseLastX = x;
             mouseLastY = y;

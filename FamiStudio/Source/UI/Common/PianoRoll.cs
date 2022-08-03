@@ -1826,6 +1826,14 @@ namespace FamiStudio
 
                         r.ch.PopTransform();
                     }
+
+                    // TODO : Create a function for this, this is a mess.
+                    var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope);
+                    if (seekFrame >= 0)
+                    {
+                        var seekX = GetPixelForNote(seekFrame);
+                        r.ch.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
+                    }
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
@@ -7806,8 +7814,7 @@ namespace FamiStudio
                 }
             }
 
-            if (IsActiveControl)
-                App.SetToolTip(tooltip);
+            App.SetToolTip(tooltip);
 
             if (noteTooltip != newNoteTooltip)
                 noteTooltip = newNoteTooltip;

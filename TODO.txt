@@ -4,9 +4,7 @@
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song to demo.
 - Missing highlight when adding effect with snap.
-- Seek bar not visible in fx panel for repeats
-- BUGS
-	- If you have a note at the end of a song, it tends to get cut off early (then no repro?)
+- When moving selection, tendency to always snap left.
 
 P0:
 - Android:
@@ -114,6 +112,13 @@ Key Store
 - Pass : Usual x2
 - 30 Years
 - Only full name entered.
+
+Desktop tutorial GIFs
+=====================
+- 20 fps
+- Add mouse highlights
+- Add 1px border
+- Not global palette (buggy, creates grayscale images sometimes)
 
 Trailer/scroll 
 ============== 

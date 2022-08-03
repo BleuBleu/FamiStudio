@@ -2485,8 +2485,9 @@ namespace FamiStudio
                 UpdateCursor();
                 MarkDirty();
             }
-
-            UpdateToolTip(null);
+            
+            if (IsActiveControl)
+                UpdateToolTip(null);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
@@ -2497,7 +2498,8 @@ namespace FamiStudio
                 MarkDirty();
             }
 
-            UpdateToolTip(null);
+            if (IsActiveControl)
+                UpdateToolTip(null);
         }
 
         private void UpdateSeekDrag(int mouseX, int mouseY, bool final)
@@ -2644,9 +2646,6 @@ namespace FamiStudio
 
         private void UpdateToolTip(MouseEventArgs e)
         {
-            if (!IsActiveControl)
-                return;
-
             if (e == null)
             {
                 var pt = PointToClient(CursorPosition);
@@ -2818,11 +2817,11 @@ namespace FamiStudio
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
-            UpdateHover(e);
 
             if (middle)
                 DoScroll(e.X - mouseLastX, e.Y - mouseLastY);
 
+            UpdateHover(e);
             UpdateToolTip(e);
             SetMouseLastPos(e.X, e.Y);
             ShowExpansionIcons = false;
