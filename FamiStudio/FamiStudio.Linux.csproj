@@ -722,6 +722,8 @@
     <EmbeddedResource Include="Resources\Tutorial6.gif" />
     <EmbeddedResource Include="Resources\Tutorial7.gif" />
     <EmbeddedResource Include="Resources\Tutorial8.gif" />
+    <EmbeddedResource Include="Resources\Tutorial9.gif" />
+    <EmbeddedResource Include="Resources\Tutorial10.gif" />
     <EmbeddedResource Include="Resources\Undo.tga" />
     <EmbeddedResource Include="Resources\Undo@2x.tga" />
     <EmbeddedResource Include="Resources\UpDownMinus.tga" />
