@@ -1692,7 +1692,7 @@ namespace FamiStudio
 
                     if (Platform.IsMobile || highlightNoteAbsIndex >= 0 && captureOperation == CaptureOperation.ChangeEffectValue)
                     {
-                        highlightLocation = NoteLocation.FromAbsoluteNoteIndex(song, highlightNoteAbsIndex);
+                        highlightLocation = NoteLocation.FromAbsoluteNoteIndex(song, SnapEffectEnabled ? SnapNote(highlightNoteAbsIndex) : highlightNoteAbsIndex);
                     }
                     else if (Platform.IsDesktop && captureOperation == CaptureOperation.None)
                     {
