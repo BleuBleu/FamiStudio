@@ -18,8 +18,6 @@ namespace FamiStudio
         const float DefaultZoomWaveTime     = 0.25f;
         const float ScrollSpeedFactor       = Platform.IsMobile ? 2.0f : 1.0f;
 
-        const int CaptureThreshold = Platform.IsDesktop ? 5 : 50;
-
         const int NumOctaves = 8;
         const int NumNotes   = NumOctaves * 12;
 
@@ -190,43 +188,46 @@ namespace FamiStudio
             MobilePan
         }
 
+        const int ThesholdNormal = Platform.IsDesktop ? 5 : 50;
+        const int ThesholdSmall  = Platform.IsDesktop ? 2 : 20;
+
         static readonly int[] captureThresholds = new[]
         {
-            0,                                        // None
-            0,                                        // PlayPiano
-            0,                                        // ResizeEnvelope
-            0,                                        // DragLoop
-            0,                                        // DragRelease
-            0,                                        // ChangeEffectValue
-            0,                                        // ChangeSelectionEffectValue
-            0,                                        // ChangeEnvelopeRepeatValue
-            0,                                        // DrawEnvelope
-            Platform.IsMobile ? CaptureThreshold : 0, // Select
-            Platform.IsMobile ? CaptureThreshold : 0, // SelectWave
-            0,                                        // CreateNote
-            CaptureThreshold,                         // CreateSlideNote
-            CaptureThreshold,                         // DragSlideNoteTarget
-            CaptureThreshold,                         // DragSlideNoteTargetGizmo
-            0,                                        // DragVolumeSlideTarget
-            0,                                        // DragVolumeSlideTargetGizmo
-            CaptureThreshold,                         // DragNote
-            CaptureThreshold,                         // DragSelection
-            0,                                        // AltZoom
-            CaptureThreshold,                         // DragSample
-            0,                                        // DragSeekBar
-            0,                                        // DragWaveVolumeEnvelope
-            0,                                        // ScrollBarX
-            0,                                        // ScrollBarY
-            Platform.IsDesktop ? 1 : 0,               // ResizeNoteStart  (MATTT : Test Mobile!)
-            Platform.IsDesktop ? 1 : 0,               // ResizeSelectionNoteStart (MATTT : Test Mobile!)
-            Platform.IsDesktop ? 1 : 0,               // ResizeNoteEnd (MATTT : Test Mobile!)
-            Platform.IsDesktop ? 1 : 0,               // ResizeSelectionNoteEnd (MATTT : Test Mobile!)
-            0,                                        // MoveNoteRelease
-            0,                                        // MoveSelectionNoteRelease
-            0,                                        // ChangeEnvelopeValue
-            0,                                        // MobileZoom
-            0,                                        // MobileZoomVertical
-            0,                                        // MobilePan
+            0,                                      // None
+            0,                                      // PlayPiano
+            0,                                      // ResizeEnvelope
+            0,                                      // DragLoop
+            0,                                      // DragRelease
+            0,                                      // ChangeEffectValue
+            0,                                      // ChangeSelectionEffectValue
+            0,                                      // ChangeEnvelopeRepeatValue
+            0,                                      // DrawEnvelope
+            Platform.IsMobile ? ThesholdNormal : 0, // Select
+            Platform.IsMobile ? ThesholdNormal : 0, // SelectWave
+            0,                                      // CreateNote
+            ThesholdNormal,                         // CreateSlideNote
+            ThesholdNormal,                         // DragSlideNoteTarget
+            ThesholdNormal,                         // DragSlideNoteTargetGizmo
+            0,                                      // DragVolumeSlideTarget
+            0,                                      // DragVolumeSlideTargetGizmo
+            ThesholdSmall,                          // DragNote (MATTT : Test Mobile!)
+            ThesholdSmall,                          // DragSelection (MATTT : Test Mobile!)
+            0,                                      // AltZoom
+            ThesholdNormal,                         // DragSample
+            0,                                      // DragSeekBar
+            0,                                      // DragWaveVolumeEnvelope
+            0,                                      // ScrollBarX
+            0,                                      // ScrollBarY
+            Platform.IsDesktop ? ThesholdSmall : 0, // ResizeNoteStart  (MATTT : Test Mobile!)
+            Platform.IsDesktop ? ThesholdSmall : 0, // ResizeSelectionNoteStart (MATTT : Test Mobile!)
+            Platform.IsDesktop ? ThesholdSmall : 0, // ResizeNoteEnd (MATTT : Test Mobile!)
+            Platform.IsDesktop ? ThesholdSmall : 0, // ResizeSelectionNoteEnd (MATTT : Test Mobile!)
+            0,                                      // MoveNoteRelease
+            0,                                      // MoveSelectionNoteRelease
+            0,                                      // ChangeEnvelopeValue
+            0,                                      // MobileZoom
+            0,                                      // MobileZoomVertical
+            0,                                      // MobilePan
         };
 
         static readonly bool[] captureWantsRealTimeUpdate = new[]
@@ -8056,6 +8057,8 @@ namespace FamiStudio
             ScrollIfNearEdge(x, y, true, true);
             GetLocationForCoord(x, y, out var location, out var noteValue);
 
+            var deltaPosX = x - captureMouseX;
+
             var resizeStart = captureOperation == CaptureOperation.ResizeNoteStart || captureOperation == CaptureOperation.ResizeSelectionNoteStart;
             var resizeNote = channel.GetNoteAt(captureNoteLocation);
             var deltaNoteIdx = 0;
@@ -8063,8 +8066,17 @@ namespace FamiStudio
             if (!resizeStart)
             {
                 // Apply raw delta to note position, then snap that to the grid.
-                var dragDelta = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
-                deltaNoteIdx = SnapNote(captureNoteAbsoluteIdx + dragDelta) - captureNoteAbsoluteIdx;
+                var newCaptureNoteAbsNoteIndex = captureNoteAbsoluteIdx + location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
+
+                // Compute snapping by rounding up/down, and use the one that is closest to the original position.
+                // This fixes the issue where notes are always attracted "left" since we always round down.
+                var deltaNoteIdxSnapRoundDown = SnapNote(newCaptureNoteAbsNoteIndex, false) - captureNoteAbsoluteIdx;
+                var deltaNoteIdxSnapRoundUp   = SnapNote(newCaptureNoteAbsNoteIndex, true)  - captureNoteAbsoluteIdx;
+
+                if (deltaPosX < 0)
+                    deltaNoteIdx = Math.Max(deltaNoteIdxSnapRoundDown, deltaNoteIdxSnapRoundUp);
+                else
+                    deltaNoteIdx = Math.Min(deltaNoteIdxSnapRoundDown, deltaNoteIdxSnapRoundUp);
             }
             else 
             {
@@ -8073,12 +8085,8 @@ namespace FamiStudio
                 deltaNoteIdx = snappedLocation.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
             }
 
-            // Dont allow snapping to move stuff in the opposite side of the mouse 
-            // movement. Feels janky.
-            var deltaPosX = x - captureMouseX;
-            
-            if (deltaPosX > 0 && deltaNoteIdx < 0 ||
-                deltaPosX < 0 && deltaNoteIdx > 0)
+            // Don't allow snapping to move stuff in the opposite side of the mouse movement. Feels janky.
+            if (Math.Sign(deltaPosX) != Math.Sign(deltaNoteIdx))
             {
                 deltaNoteIdx = 0;
             }

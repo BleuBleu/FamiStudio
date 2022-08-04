@@ -4,7 +4,6 @@
 - Double-click / shift-click to delete songs/instruments?
 - Add MM10 song to demo.
 - Missing highlight when adding effect with snap.
-- When moving selection, tendency to always snap left.
 
 P0:
 - Android:
