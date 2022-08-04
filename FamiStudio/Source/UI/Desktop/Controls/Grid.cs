@@ -387,10 +387,7 @@ namespace FamiStudio
             }
             else
             {
-                PixelToCell(e.X, e.Y, out var row, out var col);
-                SetAndMarkDirty(ref hoverRow, row);
-                SetAndMarkDirty(ref hoverCol, col);
-                SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, row, col));
+                UpdateHover(e);
             }
         }
 
@@ -412,6 +409,14 @@ namespace FamiStudio
             SetAndMarkDirty(ref hoverButton, false);
         }
 
+        private void UpdateHover(MouseEventArgs e)
+        {
+            PixelToCell(e.X, e.Y, out var row, out var col);
+            SetAndMarkDirty(ref hoverRow, row);
+            SetAndMarkDirty(ref hoverCol, col);
+            SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, row, col));
+        }
+
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             var sign = e.ScrollY < 0 ? 1 : -1;
@@ -426,6 +431,8 @@ namespace FamiStudio
                     dropDownActive.Visible = false;
                     GrabDialogFocus();
                 }
+
+                UpdateHover(e);
             }
         }
 
@@ -500,7 +507,7 @@ namespace FamiStudio
             if (data != null)
             {
                 // Hovered cell
-                if (hoverCol >= 0 && (hoverRow - scroll) >= 0 && hoverRow < data.GetLength(0))
+                if (hoverCol >= 0 && (hoverRow - scroll) >= 0 && (hoverRow - scroll) < numItemRows && hoverRow < data.GetLength(0))
                 {
                     var hoverColor = Color.FromArgb(50, Color.White);
 
