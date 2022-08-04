@@ -5,6 +5,7 @@
 - Add MM10 song to demo.
 - Missing highlight when adding effect with snap.
 - When moving selection, tendency to always snap left.
+- Highlight in file open dialog (or other grid?) visible outside of bounds.
 
 P0:
 - Android:
