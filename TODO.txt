@@ -2,14 +2,13 @@
 =====
 
 - Double-click / shift-click to delete songs/instruments?
-- Add MM10 song to demo.
+- -/+ slider buttons should go faster at some point.
 
 P0:
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
 	- Option to snap effect values.
 	- Test all the snapping stuff.
-	- How to make the N163/FDS resampling usable? Maybe we dont care?
 
 4.0.0 Change Log
 ================
@@ -46,6 +45,7 @@ Testing:
 
 Packaging:
 ==========
+- Add MM10 song to demo.
 - Ask how2 for demo songs.
 - Reset snap (again!) in INI loading.
 - Fix Multi + MultiEPSM unit tests.
