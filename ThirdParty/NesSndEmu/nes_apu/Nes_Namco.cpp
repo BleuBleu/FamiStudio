@@ -100,7 +100,7 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 		// This is not very accurate. We always do the entire 15-cycle channel update.
 		// We should only update until end_time. This will fail to emulate mid-update
 		// register changes, but in practice should be OK.
-		if (osc.output && volume && freq && wave_size)
+		if (osc.output && freq && wave_size)
 		{
 			// read wave sample
 			long phase = (osc_reg[5] << 16) | (osc_reg[3] << 8) | osc_reg[1];

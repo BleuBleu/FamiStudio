@@ -12,7 +12,7 @@ P0:
 
 4.0.0 Change Log
 ================
-- Revamped desktop version, based on GLFW using custom drawn widgets. 
+- Revamped desktop version, based on GLFW using custom drawn widgets, consistent on Win/MacOS/Linux.
 - Redesigned desktop controls : context menu, gizmos, etc. 
 - Animated GIFs for intro tutorial on desktop
 - More control over sequencer height & ability to hide unused channels
