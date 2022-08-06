@@ -189,15 +189,15 @@ namespace FamiStudio
             var scrollBarSize  = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
             var patternZoom    = Song != null ? 128.0f / (float)Utils.NextPowerOfTwo(Song.PatternLength) : 1.0f;
 
-            ComputeDesiredSizeY(out var channelSizeY, out allowVerticalScrolling);
+            ComputeDesiredSizeY(out var unscaledChannelSizeY, out allowVerticalScrolling);
 
-            channelNameSizeX     = ScaleForWindow(DefaultChannelNameSizeX);
+            channelNameSizeX   = ScaleForWindow(DefaultChannelNameSizeX);
             headerSizeY        = ScaleForWindow(DefaultHeaderSizeY);
-            this.channelSizeY         = ScaleForWindow(channelSizeY);
+            channelSizeY       = ScaleForWindow(unscaledChannelSizeY);
             barTextPosY        = ScaleForWindow(DefaultBarTextPosY);
-            channelIconPosX      = ScaleForWindow(DefaultChannelIconPosX);
-            channelIconPosY      = ScaleForWindow(DefaultChannelIconPosY);
-            channelNamePosX      = ScaleForWindow(DefaultChannelNamePosX);
+            channelIconPosX    = ScaleForWindow(DefaultChannelIconPosX);
+            channelIconPosY    = ScaleForWindow(DefaultChannelIconPosY);
+            channelNamePosX    = ScaleForWindow(DefaultChannelNamePosX);
             ghostNoteOffsetX   = ScaleForWindow(DefaultGhostNoteOffsetX);
             ghostNoteOffsetY   = ScaleForWindow(DefaultGhostNoteOffsetY);
             patternNamePosX    = ScaleForWindow(DefaultPatternNamePosX);
@@ -206,11 +206,11 @@ namespace FamiStudio
             scrollBarThickness = ScaleForWindow(scrollBarSize);
             minScrollBarLength = ScaleForWindow(DefaultMinScrollBarLength);
             noteSizeX          = ScaleForWindowFloat(zoom * patternZoom);
-            virtualSizeY       = Song != null ? this.channelSizeY * rowToChannel.Length : 0;
+            virtualSizeY       = Song != null ? channelSizeY * rowToChannel.Length : 0;
             scrollMargin       = (width - channelNameSizeX) / 8;
 
             // Shave a couple pixels when the size is getting too small.
-            if (channelSizeY < 24)
+            if (unscaledChannelSizeY < 24)
                 patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY - 2);
             else
                 patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY);

@@ -188,46 +188,48 @@ namespace FamiStudio
             MobilePan
         }
 
-        const int ThesholdNormal = Platform.IsDesktop ? 5 : 50;
-        const int ThesholdSmall  = Platform.IsDesktop ? 2 : 20;
+        const int ThesholdNormal           = Platform.IsDesktop ? 5 : 50;
+        const int ThesholdNormalMobileOnly = Platform.IsDesktop ? 0 : ThesholdNormal;
+        const int ThesholdSmall            = Platform.IsDesktop ? 2 : 20;
+        const int ThesholdSmallMobileOnly  = Platform.IsDesktop ? 0 : ThesholdSmall;
 
         static readonly int[] captureThresholds = new[]
         {
-            0,                                      // None
-            0,                                      // PlayPiano
-            0,                                      // ResizeEnvelope
-            0,                                      // DragLoop
-            0,                                      // DragRelease
-            0,                                      // ChangeEffectValue
-            0,                                      // ChangeSelectionEffectValue
-            0,                                      // ChangeEnvelopeRepeatValue
-            0,                                      // DrawEnvelope
-            Platform.IsMobile ? ThesholdNormal : 0, // Select
-            Platform.IsMobile ? ThesholdNormal : 0, // SelectWave
-            0,                                      // CreateNote
-            ThesholdNormal,                         // CreateSlideNote
-            ThesholdNormal,                         // DragSlideNoteTarget
-            ThesholdNormal,                         // DragSlideNoteTargetGizmo
-            0,                                      // DragVolumeSlideTarget
-            0,                                      // DragVolumeSlideTargetGizmo
-            ThesholdSmall,                          // DragNote (MATTT : Test Mobile!)
-            ThesholdSmall,                          // DragSelection (MATTT : Test Mobile!)
-            0,                                      // AltZoom
-            ThesholdNormal,                         // DragSample
-            0,                                      // DragSeekBar
-            0,                                      // DragWaveVolumeEnvelope
-            0,                                      // ScrollBarX
-            0,                                      // ScrollBarY
-            Platform.IsDesktop ? ThesholdSmall : 0, // ResizeNoteStart  (MATTT : Test Mobile!)
-            Platform.IsDesktop ? ThesholdSmall : 0, // ResizeSelectionNoteStart (MATTT : Test Mobile!)
-            Platform.IsDesktop ? ThesholdSmall : 0, // ResizeNoteEnd (MATTT : Test Mobile!)
-            Platform.IsDesktop ? ThesholdSmall : 0, // ResizeSelectionNoteEnd (MATTT : Test Mobile!)
-            0,                                      // MoveNoteRelease
-            0,                                      // MoveSelectionNoteRelease
-            0,                                      // ChangeEnvelopeValue
-            0,                                      // MobileZoom
-            0,                                      // MobileZoomVertical
-            0,                                      // MobilePan
+            0,                        // None
+            0,                        // PlayPiano
+            0,                        // ResizeEnvelope
+            0,                        // DragLoop
+            0,                        // DragRelease
+            0,                        // ChangeEffectValue
+            0,                        // ChangeSelectionEffectValue
+            0,                        // ChangeEnvelopeRepeatValue
+            0,                        // DrawEnvelope
+            ThesholdNormalMobileOnly, // Select
+            ThesholdNormalMobileOnly, // SelectWave
+            0,                        // CreateNote
+            ThesholdNormal,           // CreateSlideNote
+            ThesholdNormal,           // DragSlideNoteTarget
+            ThesholdNormal,           // DragSlideNoteTargetGizmo
+            0,                        // DragVolumeSlideTarget
+            0,                        // DragVolumeSlideTargetGizmo
+            ThesholdSmall,            // DragNote (MATTT : Test Mobile!)
+            ThesholdSmall,            // DragSelection (MATTT : Test Mobile!)
+            0,                        // AltZoom
+            ThesholdNormal,           // DragSample
+            0,                        // DragSeekBar
+            0,                        // DragWaveVolumeEnvelope
+            0,                        // ScrollBarX
+            0,                        // ScrollBarY
+            ThesholdSmall,            // ResizeNoteStart  (MATTT : Test Mobile!)
+            ThesholdSmall,            // ResizeSelectionNoteStart (MATTT : Test Mobile!)
+            ThesholdSmall,            // ResizeNoteEnd (MATTT : Test Mobile!)
+            ThesholdSmall,            // ResizeSelectionNoteEnd (MATTT : Test Mobile!)
+            ThesholdSmallMobileOnly,  // MoveNoteRelease
+            ThesholdSmallMobileOnly,  // MoveSelectionNoteRelease
+            0,                        // ChangeEnvelopeValue
+            0,                        // MobileZoom
+            0,                        // MobileZoomVertical
+            0,                        // MobilePan
         };
 
         static readonly bool[] captureWantsRealTimeUpdate = new[]
@@ -280,6 +282,7 @@ namespace FamiStudio
         int captureScrollY = 0;
         int captureSelectionMin = -1;
         int captureSelectionMax = -1;
+        int captureOffsetX = 0;
         int captureOffsetY = 0;
         int playLastNote = -1;
         int playHighlightNote = Note.NoteInvalid;
@@ -379,6 +382,7 @@ namespace FamiStudio
             public BitmapAtlasRef Image;
             public GizmoAction Action;
             public string GizmoText;
+            public int OffsetX;
         };
 
         public bool SnapAllowed { get => editMode == EditionMode.Channel; }
@@ -3761,7 +3765,7 @@ namespace FamiStudio
             var pattern = channel.PatternInstances[location.PatternIndex];
             var offsetY = GetEffectCoordY(Note.EffectVolumeSlide, note.VolumeSlideTarget) - y;
 
-            StartCaptureOperation(x, y, CaptureOperation.DragVolumeSlideTargetGizmo, false, location.ToAbsoluteNoteIndex(Song), offsetY);
+            StartCaptureOperation(x, y, CaptureOperation.DragVolumeSlideTargetGizmo, false, location.ToAbsoluteNoteIndex(Song), 0, offsetY);
             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
         }
 
@@ -4022,7 +4026,7 @@ namespace FamiStudio
             Capture = true;
         }
 
-        private void StartCaptureOperation(int x, int y, CaptureOperation op, bool allowSnap = false, int noteIdx = -1, int offsetY = 0)
+        private void StartCaptureOperation(int x, int y, CaptureOperation op, bool allowSnap = false, int noteIdx = -1, int offsetX = 0, int offsetY = 0)
         {
 #if DEBUG
             Debug.Assert(captureOperation == CaptureOperation.None);
@@ -4039,6 +4043,7 @@ namespace FamiStudio
             captureNoteValue = NumNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, NumNotes);
             captureSelectionMin = selectionMin;
             captureSelectionMax = selectionMax;
+            captureOffsetX = offsetX;
             captureOffsetY = offsetY;
             canFling = false;
 
@@ -4093,6 +4098,7 @@ namespace FamiStudio
 
             if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
             {
+                x += captureOffsetX;
                 y += captureOffsetY;
 
                 switch (captureOperation)
@@ -4253,6 +4259,7 @@ namespace FamiStudio
         {
             if (captureOperation != CaptureOperation.None)
             {
+                x += captureOffsetX;
                 y += captureOffsetY;
 
                 switch (captureOperation)
@@ -4624,17 +4631,12 @@ namespace FamiStudio
                 var x = GetPixelForNote(locationAbsIndex + visualDuration) + gizmoSize / 4;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY - gizmoSize / 4;
 
-                if (captureOperation == CaptureOperation.ResizeNoteEnd ||
-                    captureOperation == CaptureOperation.ResizeSelectionNoteEnd)
-                {
-                    x = mouseLastX - pianoSizeX - gizmoSize / 2;
-                }
-
                 Gizmo resizeGizmo = new Gizmo();
                 resizeGizmo.Image = bmpGizmoResizeLeftRight;
                 resizeGizmo.FillImage = bmpGizmoResizeFill;
                 resizeGizmo.Action = GizmoAction.ResizeNote;
                 resizeGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
+                resizeGizmo.OffsetX = -gizmoSize * 3 / 4;
                 list.Add(resizeGizmo);
             }
 
@@ -4643,12 +4645,6 @@ namespace FamiStudio
             {
                 var x = GetPixelForNote(locationAbsIndex + note.Release) - gizmoSize / 2;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY + gizmoSize * 3 / 4;
-
-                if (captureOperation == CaptureOperation.MoveNoteRelease ||
-                    captureOperation == CaptureOperation.MoveSelectionNoteRelease)
-                {
-                    x = mouseLastX - pianoSizeX - gizmoSize / 2;
-                }
 
                 Gizmo releaseGizmo = new Gizmo();
                 releaseGizmo.Image = bmpGizmoResizeLeftRight;
@@ -4666,16 +4662,9 @@ namespace FamiStudio
                 var y = 0;
 
                 if (Platform.IsMobile)
-                {
-                    if (Platform.IsMobile && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo)
-                        y = mouseLastY - headerAndEffectSizeY - gizmoSize / 4 - (side > 0 ? side * noteSizeY : 0);
-                    else
-                        y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - gizmoSize / 4; 
-                }
+                    y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - gizmoSize / 4; 
                 else
-                {
                     y = virtualSizeY - note.SlideNoteTarget * noteSizeY - scrollY - (gizmoSize - noteSizeY) / 2;
-                }
 
                 Gizmo slideGizmo = new Gizmo();
                 slideGizmo.Image = bmpGizmoResizeUpDown;
@@ -5777,7 +5766,7 @@ namespace FamiStudio
                             switch (g.Action)
                             {
                                 case GizmoAction.ResizeNote:
-                                    StartNoteResizeEnd(x, y, IsNoteSelected(absNoteLocation) ? CaptureOperation.ResizeSelectionNoteEnd : CaptureOperation.ResizeNoteEnd, gizmoNoteLocation);
+                                    StartNoteResizeEnd(x, y, IsNoteSelected(absNoteLocation) ? CaptureOperation.ResizeSelectionNoteEnd : CaptureOperation.ResizeNoteEnd, gizmoNoteLocation, g.OffsetX);
                                     break;
                                 case GizmoAction.MoveRelease:
                                     StartMoveNoteRelease(x, y, IsNoteSelected(absNoteLocation) ? CaptureOperation.MoveSelectionNoteRelease : CaptureOperation.MoveNoteRelease, gizmoNoteLocation);
@@ -6758,8 +6747,16 @@ namespace FamiStudio
 
         protected override void OnTouchLongPress(int x, int y)
         {
-            if (captureOperation == CaptureOperation.ChangeEnvelopeValue ||
-                captureOperation == CaptureOperation.PlayPiano)
+            if (captureOperation == CaptureOperation.ChangeEnvelopeValue        ||
+                captureOperation == CaptureOperation.PlayPiano                  ||
+                captureOperation == CaptureOperation.ResizeNoteStart            ||
+                captureOperation == CaptureOperation.ResizeSelectionNoteStart   ||
+                captureOperation == CaptureOperation.ResizeNoteEnd              ||
+                captureOperation == CaptureOperation.ResizeSelectionNoteEnd     ||
+                captureOperation == CaptureOperation.DragSlideNoteTargetGizmo   ||
+                captureOperation == CaptureOperation.DragVolumeSlideTargetGizmo ||
+                captureOperation == CaptureOperation.MoveNoteRelease            ||
+                captureOperation == CaptureOperation.MoveSelectionNoteRelease) 
             {
                 return;
             }
@@ -7178,7 +7175,7 @@ namespace FamiStudio
                 // -0.5 since out note values have +1 in them (-1 + 0.5 = -0.5)
                 var offsetY = headerAndEffectSizeY + virtualSizeY - (int)((note.SlideNoteTarget - 0.5f) * noteSizeY) - scrollY - y;
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                StartCaptureOperation(x, y, CaptureOperation.DragSlideNoteTargetGizmo, false, location.ToAbsoluteNoteIndex(Song), offsetY);
+                StartCaptureOperation(x, y, CaptureOperation.DragSlideNoteTargetGizmo, false, location.ToAbsoluteNoteIndex(Song), 0, offsetY);
             }
         }
 
@@ -8258,7 +8255,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void StartNoteResizeEnd(int x, int y, CaptureOperation captureOp, NoteLocation location)
+        private void StartNoteResizeEnd(int x, int y, CaptureOperation captureOp, NoteLocation location, int offsetX = 0)
         {
             var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
             var dragSelection = captureOp == CaptureOperation.ResizeSelectionNoteEnd;
@@ -8271,7 +8268,7 @@ namespace FamiStudio
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
 
-            StartCaptureOperation(x, y, captureOp, true, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(x, y, captureOp, true, location.ToAbsoluteNoteIndex(Song), offsetX);
         }
 
         private void UpdateNoteResizeEnd(int x, int y, bool final)

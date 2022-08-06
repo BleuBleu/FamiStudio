@@ -8,7 +8,7 @@ P0:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
 	- Option to snap effect values.
 	- Test all the snapping stuff.
-
+	
 4.0.0 Change Log
 ================
 - Revamped desktop version, based on GLFW using custom drawn widgets, consistent on Win/MacOS/Linux.
