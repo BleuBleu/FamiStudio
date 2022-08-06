@@ -3772,34 +3772,45 @@ namespace FamiStudio
 
         private void LoadN163FdsResampleWavFile(Instrument inst)
         {
-            // MATTT : Mobile
-            var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "Wav Files (*.wav)|*.wav", ref Settings.LastSampleFolder);
-
-            if (filename != null)
+            Action<string> LoadWavFileAction = (filename) =>
             {
-                var wav = WaveFile.Load(filename, out _);
-                if (wav != null)
+                if (filename != null)
                 {
-                    App.BeginLogTask();
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
-
-                    if (wav.Length > Instrument.MaxResampleWavSamples)
+                    var wav = WaveFile.Load(filename, out _);
+                    if (wav != null)
                     {
-                        Array.Resize(ref wav, Instrument.MaxResampleWavSamples);
-                        Log.LogMessage(LogSeverity.Warning, $"Wave file duration exceeds the {Instrument.MaxResampleWavSamples} samples limit. Truncating.");
+                        App.BeginLogTask();
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
+
+                        if (wav.Length > Instrument.MaxResampleWavSamples)
+                        {
+                            Array.Resize(ref wav, Instrument.MaxResampleWavSamples);
+                            Log.LogMessage(LogSeverity.Warning, $"Wave file duration exceeds the {Instrument.MaxResampleWavSamples} samples limit. Truncating.");
+                        }
+
+                        if (inst.IsN163)
+                            inst.SetN163ResampleWaveData(wav);
+                        else
+                            inst.SetFdsResampleWaveData(wav);
+
+                        App.UndoRedoManager.EndTransaction();
+                        App.EndLogTask();
+
+                        MarkDirty();
                     }
-
-                    if (inst.IsN163)
-                        inst.SetN163ResampleWaveData(wav);
-                    else
-                        inst.SetFdsResampleWaveData(wav);
-
-                    App.UndoRedoManager.EndTransaction();
-                    App.EndLogTask();
-
-                    MarkDirty();
                 }
+            };
+
+            if (Platform.IsMobile)
+            {
+                Platform.StartMobileLoadFileOperationAsync("*/*", (f) => LoadWavFileAction(f));
             }
+            else
+            {
+                var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "Wav Files (*.wav)|*.wav", ref Settings.LastSampleFolder);
+                LoadWavFileAction(filename);
+            }
+
         }
 
         private void ClearN163FdsResampleWavData(Instrument inst)
@@ -3857,7 +3868,7 @@ namespace FamiStudio
         
         private bool HandleContextMenuInstrumentHeaderButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
-            if (App.Project.NeedsExpansionInstruments && subButtonType == SubButtonType.Add)
+            if (App.Project.NeedsExpansionInstruments && subButtonType == SubButtonType.Add && Platform.IsDesktop)
             {
                 var activeExpansions = App.Project.GetActiveExpansions();
 

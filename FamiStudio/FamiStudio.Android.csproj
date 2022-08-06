@@ -539,6 +539,7 @@
     <EmbeddedResource Include="Resources\MobileMenuProperties.tga" />
     <EmbeddedResource Include="Resources\MobileMenuRadio.tga" />
     <EmbeddedResource Include="Resources\MobileMenuRelease.tga" />
+    <EmbeddedResource Include="Resources\MobileMenuReplace.tga" />
     <EmbeddedResource Include="Resources\MobileMenuReplaceSelection.tga" />
     <EmbeddedResource Include="Resources\MobileMenuReset.tga" />
     <EmbeddedResource Include="Resources\MobileMenuSave.tga" />
@@ -549,6 +550,7 @@
     <EmbeddedResource Include="Resources\MobileMenuSolo.tga" />
     <EmbeddedResource Include="Resources\MobileMenuStar.tga" />
     <EmbeddedResource Include="Resources\MobileMenuStopNote.tga" />
+    <EmbeddedResource Include="Resources\MobileMenuTrash.tga" />
     <EmbeddedResource Include="Resources\MobileMenuToggleAttack.tga" />
     <EmbeddedResource Include="Resources\MobileMenuToggleRelease.tga" />
     <EmbeddedResource Include="Resources\MobileMenuToggleSlide.tga" />

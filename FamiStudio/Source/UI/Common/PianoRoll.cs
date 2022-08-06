@@ -212,18 +212,18 @@ namespace FamiStudio
             ThesholdNormal,           // DragSlideNoteTargetGizmo
             0,                        // DragVolumeSlideTarget
             0,                        // DragVolumeSlideTargetGizmo
-            ThesholdSmall,            // DragNote (MATTT : Test Mobile!)
-            ThesholdSmall,            // DragSelection (MATTT : Test Mobile!)
+            ThesholdSmall,            // DragNote
+            ThesholdSmall,            // DragSelection
             0,                        // AltZoom
             ThesholdNormal,           // DragSample
             0,                        // DragSeekBar
             0,                        // DragWaveVolumeEnvelope
             0,                        // ScrollBarX
             0,                        // ScrollBarY
-            ThesholdSmall,            // ResizeNoteStart  (MATTT : Test Mobile!)
-            ThesholdSmall,            // ResizeSelectionNoteStart (MATTT : Test Mobile!)
-            ThesholdSmall,            // ResizeNoteEnd (MATTT : Test Mobile!)
-            ThesholdSmall,            // ResizeSelectionNoteEnd (MATTT : Test Mobile!)
+            ThesholdSmall,            // ResizeNoteStart
+            ThesholdSmall,            // ResizeSelectionNoteStart
+            ThesholdSmall,            // ResizeNoteEnd
+            ThesholdSmall,            // ResizeSelectionNoteEnd
             ThesholdSmallMobileOnly,  // MoveNoteRelease
             ThesholdSmallMobileOnly,  // MoveSelectionNoteRelease
             0,                        // ChangeEnvelopeValue
@@ -4631,6 +4631,12 @@ namespace FamiStudio
                 var x = GetPixelForNote(locationAbsIndex + visualDuration) + gizmoSize / 4;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY - gizmoSize / 4;
 
+                if ((captureOperation == CaptureOperation.ResizeNoteEnd ||
+                     captureOperation == CaptureOperation.ResizeSelectionNoteEnd) && captureThresholdMet)
+                {
+                    x = mouseLastX - pianoSizeX - gizmoSize / 2;
+                }
+
                 Gizmo resizeGizmo = new Gizmo();
                 resizeGizmo.Image = bmpGizmoResizeLeftRight;
                 resizeGizmo.FillImage = bmpGizmoResizeFill;
@@ -4645,6 +4651,12 @@ namespace FamiStudio
             {
                 var x = GetPixelForNote(locationAbsIndex + note.Release) - gizmoSize / 2;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY + gizmoSize * 3 / 4;
+
+                if ((captureOperation == CaptureOperation.MoveNoteRelease ||
+                     captureOperation == CaptureOperation.MoveSelectionNoteRelease) && captureThresholdMet)
+                {
+                    x = mouseLastX - pianoSizeX - gizmoSize / 2;
+                }
 
                 Gizmo releaseGizmo = new Gizmo();
                 releaseGizmo.Image = bmpGizmoResizeLeftRight;
@@ -4662,9 +4674,16 @@ namespace FamiStudio
                 var y = 0;
 
                 if (Platform.IsMobile)
-                    y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - gizmoSize / 4; 
+                {
+                    if (Platform.IsMobile && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo && captureThresholdMet)
+                        y = mouseLastY - headerAndEffectSizeY - gizmoSize / 2;
+                    else
+                        y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - gizmoSize / 4; 
+                }
                 else
+                {
                     y = virtualSizeY - note.SlideNoteTarget * noteSizeY - scrollY - (gizmoSize - noteSizeY) / 2;
+                }
 
                 Gizmo slideGizmo = new Gizmo();
                 slideGizmo.Image = bmpGizmoResizeUpDown;
@@ -8301,7 +8320,7 @@ namespace FamiStudio
             // We are resizing the highlighted note, but apply the delta to all other notes.
             var resizeNote = channel.GetNoteAt(captureNoteLocation);
             var resizeNoteEnd = captureNoteAbsoluteIdx + resizeNote.Duration;
-            var snappedLocation = NoteLocation.Max(SnapNote(location, true), SnapNote(captureNoteLocation, true));
+            var snappedLocation = NoteLocation.Max(SnapNote(location, Platform.IsDesktop), SnapNote(captureNoteLocation, true));
             var deltaNoteIdx = snappedLocation.ToAbsoluteNoteIndex(Song) - resizeNoteEnd;
 
             TransformNotes(min, max, false, final, false, (note, idx) =>
