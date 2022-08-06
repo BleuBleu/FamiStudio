@@ -107,7 +107,7 @@ namespace FamiStudio
                     Value += captureButton == 0 ? -1 : 1;
                 }
                 // Then increment every 50ms (in steps of 10 after a while).
-                else if (lastDuration >= 0.25f && ((int)((lastDuration - 0.5f) * 20) != (int)((captureDuration - 0.5f) * 20)))
+                else if (lastDuration > 0.5f && ((int)((lastDuration - 0.5f) * 20) != (int)((captureDuration - 0.5f) * 20)))
                 {
                     Value += (captureButton == 0 ? -1 : 1) * (lastDuration >= 1.5f && (Value % 10) == 0 ? 10 : 1);
                 }

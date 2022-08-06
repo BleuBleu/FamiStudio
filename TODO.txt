@@ -2,7 +2,6 @@
 =====
 
 - Double-click / shift-click to delete songs/instruments?
-- -/+ slider buttons should go faster at some point.
 
 P0:
 - Android:

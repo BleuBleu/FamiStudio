@@ -2046,7 +2046,11 @@ namespace FamiStudio
             {
                 var button = buttons[captureButtonIdx];
                 var val = button.param.GetValue();
-                val = button.param.SnapAndClampValue(val + button.param.SnapValue * captureButtonSign);
+                var incLarge = button.param.SnapValue * 10;
+                var incSmall = button.param.SnapValue;
+                var inc = captureDuration > 1.5f && (val % incLarge) == 0 ? incSmall : incLarge;
+
+                val = button.param.SnapAndClampValue(val + inc * captureButtonSign);                
                 button.param.SetValue(val);
                 MarkDirty();
             }
