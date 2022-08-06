@@ -2327,7 +2327,7 @@ namespace FamiStudio
                         case ButtonType.ParamSlider:
                             if (IsPointInParamListOrSliderButton(e.X, e.Y, true)) sub = 1;
                             else if (IsPointInParamListOrSliderButton(e.X, e.Y, false)) sub = 2;
-                            // MATTT : Slider here
+                            // TODO : Highlight slider here.
                             break;
                         default:
                             sub = (int)subButtonType;
@@ -3251,7 +3251,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownParamSliderButton(MouseEventArgs e, Button button, int buttonIdx)
         {
-            if (ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx))
+            if (ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, true))
             {
                 return true;
             }
@@ -3288,7 +3288,7 @@ namespace FamiStudio
             }
         }
 
-        private bool ClickParamListOrSliderButton(int x, int y, Button button, int buttonIdx)
+        private bool ClickParamListOrSliderButton(int x, int y, Button button, int buttonIdx, bool capture)
         {
             var buttonX = x;
             var leftButton  = IsPointInParamListOrSliderButton(x, y, true);
@@ -3299,10 +3299,16 @@ namespace FamiStudio
             {
                 App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
 
-                StartCaptureOperation(x, y, CaptureOperation.SliderButtons, buttonIdx);
+                if (capture)
+                    StartCaptureOperation(x, y, CaptureOperation.SliderButtons, buttonIdx);
+                
                 captureButtonSign = rightButton ? 1 : -1;
                 UpdateSliderButtons(true, false);
                 MarkDirty();
+
+                if (!capture)
+                    App.UndoRedoManager.EndTransaction();
+
                 return true;
             }
 
@@ -3330,10 +3336,10 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownParamListButton(MouseEventArgs e, Button button, int buttonIdx)
+        private bool HandleMouseDownParamListButton(MouseEventArgs e, Button button, int buttonIdx, bool capture)
         {
             if (e.Left)
-                ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx);
+                ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, capture);
 
             return true;
         }
@@ -3469,7 +3475,7 @@ namespace FamiStudio
                     case ButtonType.ParamCheckbox:
                         return HandleMouseDownParamCheckboxButton(e, button);
                     case ButtonType.ParamList:
-                        return HandleMouseDownParamListButton(e, button, buttonIdx);
+                        return HandleMouseDownParamListButton(e, button, buttonIdx, true);
                     case ButtonType.ParamTabs:
                         return HandleMouseDownParamTabs(e, button);
                     case ButtonType.ArpeggioHeader:
@@ -3636,7 +3642,7 @@ namespace FamiStudio
 
         private bool HandleTouchClickParamListButton(int x, int y, Button button, int buttonIdx)
         {
-            ClickParamListOrSliderButton(x, y, button, buttonIdx);
+            ClickParamListOrSliderButton(x, y, button, buttonIdx, false);
             return true;
         }
 
@@ -4040,7 +4046,7 @@ namespace FamiStudio
 
                 if (button.type == ButtonType.ParamSlider)
                 {
-                    if (ClickParamListOrSliderButton(x, y, button, buttonIdx))
+                    if (ClickParamListOrSliderButton(x, y, button, buttonIdx, true))
                         return true;
 
                     return StartMoveSlider(x, y, buttons[buttonIdx], buttonIdx);
@@ -4156,7 +4162,7 @@ namespace FamiStudio
 
         private bool HandleTouchDoubleClickParamListButton(int x, int y, Button button, int buttonIdx)
         {
-            return ClickParamListOrSliderButton(x, y, button, buttonIdx);
+            return ClickParamListOrSliderButton(x, y, button, buttonIdx, false);
         }
 
         private bool HandleTouchDoubleClickButtons(int x, int y)
@@ -4190,6 +4196,11 @@ namespace FamiStudio
 
         protected override void OnTouchLongPress(int x, int y)
         {
+            if (captureOperation == CaptureOperation.SliderButtons)
+            {
+                return;
+            }
+
             AbortCaptureOperation();
 
             if (HandleTouchLongPressButtons(x, y)) goto Handled;
@@ -4594,7 +4605,7 @@ namespace FamiStudio
 
         private bool HandleMouseDoubleClickParamListButton(MouseEventArgs e, Button button, int buttonIdx)
         {
-            return ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx);
+            return ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, true);
         }
 
         private bool HandleMouseDoubleClickButtons(MouseEventArgs e)

@@ -573,10 +573,11 @@ namespace FamiStudio
 
                 if (i > 0 && (opt.Separator == ContextMenuSeparator.Before || prevWantedSeparator))
                 {
-                    var lineView = new View(this);
-                    lineView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-                    lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1));
-                    linearLayout.AddView(lineView);
+                    // Disabling seperators on mobile. Looks bad.
+                    //var lineView = new View(this);
+                    //lineView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
+                    //lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1));
+                    //linearLayout.AddView(lineView);
                     prevWantedSeparator = false;
                 }
 

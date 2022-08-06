@@ -1014,7 +1014,7 @@ namespace FamiStudio
                             songData.Add($"{lo}({vibratoEnvelopeNames[note.RawVibrato]})");
                             songData.Add($"{hi}({vibratoEnvelopeNames[note.RawVibrato]})");
 
-                            // MATTT : Why do we do that right after?
+                            // TODO : Why do we do that right after? Cant remember.
                             if (note.RawVibrato == 0)
                                 songData.Add($"${OpcodeClearPitchEnvOverride:x2}+");
 
@@ -1042,7 +1042,7 @@ namespace FamiStudio
                                     }
                                 }
 
-                                // MATTT : Shouldnt we only do that when turning off the arp?
+                                // TODO : Shouldnt we only do that when turning off the arp? Dont remember why its like that.
                                 if (note.Arpeggio == null)
                                     songData.Add($"${OpcodeClearArpEnvOverride:x2}+");
 

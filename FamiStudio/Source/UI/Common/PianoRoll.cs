@@ -5704,7 +5704,6 @@ namespace FamiStudio
 
             App.PlayInstrumentNote(noteValue, false, false, false, null, null, 0.5f);
 
-            // MATTT : Test that on mobile!
             var abs = location.ToAbsoluteNoteIndex(Song);
             var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
             note.Value = noteValue;
