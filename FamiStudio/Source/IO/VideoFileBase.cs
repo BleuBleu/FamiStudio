@@ -401,9 +401,10 @@ namespace FamiStudio
 
             for (int i = 0; i < channelStates.Length; i++)
             {
-                meta.channelData[i].note     = channelStates[i].CurrentNote;
-                meta.channelData[i].volume   = channelStates[i].CurrentVolume;
-                meta.channelData[i] .trigger = GetOscilloscopeTrigger(channelStates[i].InnerChannelType);
+                meta.channelData[i] = new VideoFrameMetadata.ChannelMetadata();
+                meta.channelData[i].note    = channelStates[i].CurrentNote;
+                meta.channelData[i].volume  = channelStates[i].CurrentVolume;
+                meta.channelData[i].trigger = GetOscilloscopeTrigger(channelStates[i].InnerChannelType);
             }
 
             metadata.Add(meta);
