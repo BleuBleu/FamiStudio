@@ -240,7 +240,7 @@ namespace FamiStudio
             false, // ChangeEffectValue
             false, // ChangeSelectionEffectValue
             false, // ChangeEnvelopeRepeatValue
-            false, // DrawEnvelope
+            true,  // DrawEnvelope
             true,  // Select
             true,  // SelectWave
             true,  // CreateNote
@@ -2792,7 +2792,7 @@ namespace FamiStudio
                     if (!highlighted)
                         r.cf.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 2 : 1, selected);
                     else
-                        highlightRect = new Rectangle((int)x0, (int)(y - envelopeValueSizeY), (int)(x1 - x0), (int)envelopeValueSizeY); // MATTT : Was RectangleF ??? Did it round?
+                        highlightRect = new RectangleF(x0,y - envelopeValueSizeY, x1 - x0, envelopeValueSizeY);
 
                     var label = env.Values[i].ToString("+#;-#;0");
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
@@ -2830,7 +2830,7 @@ namespace FamiStudio
                     if (!highlighted)
                         r.cf.DrawRectangle(x0, y0, x1, y1, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 2 : 1, selected);
                     else
-                        highlightRect = new Rectangle((int)x0, (int)y0, (int)(x1 - x0), (int)(y1 - y0)); // MATTT : Was RectangleF???
+                        highlightRect = new RectangleF(x0, y0, x1 - x0, y1 - y0);
 
                     var label = val.ToString();
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
@@ -3806,6 +3806,8 @@ namespace FamiStudio
 
         void DrawEnvelope(int x, int y, bool first = false, bool final = false)
         {
+            ScrollIfNearEdge(x, y);
+
             if (GetEnvelopeValueForCoord(x, y, out int idx1, out sbyte val1))
             {
                 int idx0;
@@ -6947,7 +6949,7 @@ namespace FamiStudio
             {
                 int posMinX = 0;
                 int posMaxX = Platform.IsDesktop ? Width + pianoSizeX : (IsLandscape ? Width + headerSizeY : Width);
-                int marginMinX = pianoSizeX;
+                int marginMinX = Platform.IsDesktop ? pianoSizeX : headerSizeY; 
                 int marginMaxX = Platform.IsDesktop ? pianoSizeX : headerSizeY;
 
                 scrollX += Utils.ComputeScrollAmount(x, posMinX, marginMinX, App.AverageTickRate * ScrollSpeedFactor, true);

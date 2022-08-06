@@ -7,18 +7,16 @@ namespace FamiStudio
     {
         private void BuildChannelColors(Song song, VideoChannelState[] channels, VideoFrameMetadata[] meta, int colorMode)
         {
-            Color[,] colors = new Color[meta.Length, meta[0].channelNotes.Length];
+            Color[,] colors = new Color[meta.Length, meta[0].channelData.Length];
 
             // Get the note colors.
             for (int i = 0; i < meta.Length; i++)
             {
                 var m = meta[i];
 
-                m.channelColors = new Color[m.channelNotes.Length];
-
                 for (int j = 0; j < channels.Length; j++)
                 {
-                    var note = m.channelNotes[channels[j].songChannelIndex];
+                    var note = m.channelData[channels[j].songChannelIndex].note;
 
                     if (note != null && note.IsMusical)
                     {
@@ -85,7 +83,7 @@ namespace FamiStudio
             {
                 var m = meta[i];
 
-                for (int j = 0; j < m.channelColors.Length; j++)
+                for (int j = 0; j < m.channelData.Length; j++)
                 {
                     int avgR = 0;
                     int avgG = 0;
@@ -100,7 +98,7 @@ namespace FamiStudio
                         count++;
                     }
 
-                    m.channelColors[j] = Color.FromArgb(avgR / count, avgG / count, avgB / count);
+                    m.channelData[j].color = Color.FromArgb(avgR / count, avgG / count, avgB / count);
                 }
             }
         }
@@ -163,7 +161,7 @@ namespace FamiStudio
                     var oscilloscope = UpdateOscilloscope(s, f);
 
                     cmd.PushTransform(channelPosX0, channelPosY0 + channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
-                    cmd.DrawGeometry(oscilloscope, frame.channelColors[i], lineThickness, true);
+                    cmd.DrawGeometry(oscilloscope, frame.channelData[i].color, lineThickness, true);
                     cmd.PopTransform();
 
                     // Icons + text

@@ -253,8 +253,6 @@ namespace FamiStudio
 
         public byte[] GetN163Waveform(int waveIndex)
         {
-            Debug.Assert(waveIndex >= 0 && waveIndex < 64); // MATTT : Whats the actual max here?
-
             var len = chunkLength;
             var offset = waveIndex * chunkLength;
             var packed = new byte[len / 2];
@@ -267,8 +265,6 @@ namespace FamiStudio
 
         public byte[] GetChunk(int chunkIndex)
         {
-            Debug.Assert(chunkIndex >= 0 && chunkIndex < 64); // MATTT : Whats the actual max here?
-
             var len = chunkLength;
             var offset = chunkIndex * chunkLength;
             var wav = new byte[len];

@@ -239,7 +239,7 @@ namespace FamiStudio
                             instrument.N163WaveCount  = byte.Parse(param[8]);
 
                             // Store for later, we use a different representation and will need to convert.
-                            n163WaveEnvs[instrument] = int.Parse(param[5]); // MATTT : Make sure this works well when there is no wave sequence.
+                            n163WaveEnvs[instrument] = int.Parse(param[5]); 
                         }
 
                         var usedEnvelopes = new bool[commonEnvelopes.Length];

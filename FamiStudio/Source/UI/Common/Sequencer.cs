@@ -279,14 +279,10 @@ namespace FamiStudio
             {
                 var oddWindowScaling = Utils.Frac(WindowScaling) != 0.0f;
                 var minChannelSize = oddWindowScaling ? 22 : 21;
+                var sizeMask = oddWindowScaling ? 0xfffe : 0xffff; // Keep size even at 150%.
                 var idealSequencerHeight = parentWindow.Height * Settings.IdealSequencerSize / 100;
                 
-                channelSizeY = channelCount > 0 ? Math.Max(idealSequencerHeight / channelCount, minChannelSize) : minChannelSize;
-
-                //// If we are using 150% scaling (windows/linux only), we need to make sure to pick an even value.
-                //// MATTT : Test this. We may go over the ideal size here...
-                //if (oddWindowScaling)
-                //    channelSizeY = (channelSizeY + 1) & (~1);
+                channelSizeY = channelCount > 0 ? Math.Max((idealSequencerHeight / channelCount) & sizeMask, minChannelSize) : minChannelSize;
 
                 var actualSequencerHeight = channelSizeY * visibleChannelCount;
 

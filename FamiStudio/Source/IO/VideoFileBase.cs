@@ -40,7 +40,7 @@ namespace FamiStudio
         protected float[,] UpdateOscilloscope(VideoChannelState state, int frameIndex)
         {
             var meta = metadata[frameIndex];
-            var newTrigger = meta.channelTriggers[state.songChannelIndex];
+            var newTrigger = meta.channelData[state.songChannelIndex].trigger;
 
             // TRIGGER_NONE (-2) means the emulation isnt able to provide a trigger, 
             // we must fallback on analysing the waveform to detect one.
@@ -363,16 +363,19 @@ namespace FamiStudio
 
     class VideoFrameMetadata
     {
-        public int playPattern;
-        public float playNote;
-        public int wavOffset;
+        public class ChannelMetadata
+        {
+            public Note  note;
+            public int   volume;
+            public int   trigger;
+            public float scroll; // Only used by piano roll (TODO : Move somewhere else).
+            public Color color;  // Only used by oscilloscope (TODO : Move somewhere else)
+        };
 
-        // MATTT : Create a class for this + rename metadata to something better.
-        public Note[] channelNotes;
-        public int[] channelVolumes;
-        public int[] channelTriggers;
-        public float[] channelScolls; // Used by piano roll.
-        public Color[] channelColors; // Used by oscilloscope.
+        public int   playPattern;
+        public float playNote;
+        public int   wavOffset;
+        public ChannelMetadata[] channelData;
     };
 
     class VideoMetadataPlayer : BasePlayer
@@ -394,15 +397,13 @@ namespace FamiStudio
             meta.playPattern     = playLocation.PatternIndex;
             meta.playNote        = playLocation.NoteIndex;
             meta.wavOffset       = prevNumSamples;
-            meta.channelNotes    = new Note[song.Channels.Length];
-            meta.channelVolumes  = new int[song.Channels.Length];
-            meta.channelTriggers = new int[song.Channels.Length];
+            meta.channelData     = new VideoFrameMetadata.ChannelMetadata[song.Channels.Length];
 
             for (int i = 0; i < channelStates.Length; i++)
             {
-                meta.channelNotes[i]    = channelStates[i].CurrentNote;
-                meta.channelVolumes[i]  = channelStates[i].CurrentVolume;
-                meta.channelTriggers[i] = GetOscilloscopeTrigger(channelStates[i].InnerChannelType);
+                meta.channelData[i].note     = channelStates[i].CurrentNote;
+                meta.channelData[i].volume   = channelStates[i].CurrentVolume;
+                meta.channelData[i] .trigger = GetOscilloscopeTrigger(channelStates[i].InnerChannelType);
             }
 
             metadata.Add(meta);

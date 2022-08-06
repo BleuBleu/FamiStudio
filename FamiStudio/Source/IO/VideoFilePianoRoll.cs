@@ -15,7 +15,7 @@ namespace FamiStudio
         private void ComputeChannelsScroll(VideoFrameMetadata[] frames, long channelMask, int numVisibleNotes)
         {
             var numFrames = frames.Length;
-            var numChannels = frames[0].channelNotes.Length;
+            var numChannels = frames[0].channelData.Length;
 
             for (int c = 0; c < numChannels; c++)
             {
@@ -32,10 +32,7 @@ namespace FamiStudio
                 for (int f = 0; f < numFrames; f++)
                 {
                     var frame = frames[f];
-                    var note  = frame.channelNotes[c];
-
-                    if (frame.channelScolls == null)
-                        frame.channelScolls = new float[numChannels];
+                    var note  = frame.channelData[c].note;
 
                     if (note.IsMusical)
                     {
@@ -168,7 +165,7 @@ namespace FamiStudio
 
                     for (int f = segment0.startFrame; f < segment0.endFrame - (segment1 == null ? 0 : SegmentTransitionNumFrames); f++)
                     {
-                        frames[f].channelScolls[c] = segment0.scroll;
+                        frames[f].channelData[c].scroll = segment0.scroll;
                     }
 
                     if (segment1 != null)
@@ -177,7 +174,7 @@ namespace FamiStudio
                         for (int f = segment0.endFrame - SegmentTransitionNumFrames, a = 0; f < segment0.endFrame; f++, a++)
                         {
                             var lerp = a / (float)SegmentTransitionNumFrames;
-                            frames[f].channelScolls[c] = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmootherStep(lerp));
+                            frames[f].channelData[c].scroll = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmootherStep(lerp));
                         }
                     }
                 }
@@ -305,8 +302,8 @@ namespace FamiStudio
                 // Render the piano rolls for each channels.
                 foreach (var s in channelStates)
                 {
-                    var volume = frame.channelVolumes[s.songChannelIndex];
-                    var note = frame.channelNotes[s.songChannelIndex];
+                    var volume = frame.channelData[s.songChannelIndex].volume;
+                    var note   = frame.channelData[s.songChannelIndex].note;
 
                     var color = Color.Transparent;
 
@@ -327,7 +324,7 @@ namespace FamiStudio
                     s.graphics.BeginDrawFrame();
                     s.graphics.BeginDrawControl(new Rectangle(0, 0, channelResX, channelResY), channelResY);
 
-                    pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.channelScolls[s.songChannelIndex], note.Value, color);
+                    pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.channelData[s.songChannelIndex].scroll, note.Value, color);
 
                     s.graphics.EndDrawControl();
                     s.graphics.EndDrawFrame();

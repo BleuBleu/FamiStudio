@@ -135,7 +135,6 @@ namespace FamiStudio
                     break;
 
                 case ExpansionType.N163:
-                    // MATTT : Retest this, made changes with the max values.
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Position", 0, 0, 0, null, false, 4)

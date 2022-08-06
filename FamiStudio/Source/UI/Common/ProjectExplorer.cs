@@ -1558,8 +1558,8 @@ namespace FamiStudio
                             c.DrawBitmapAtlas(bmpButtonMinus, 0, 0, opacityL, bitmapScale, Color.Black);
                             c.PushTranslation(paramButtonSizeX, 0);
                             c.FillRectangle(1, 1, valSizeX, sliderSizeY, sliderFillColor);
-                            c.DrawRectangle(0, 0, actualSliderSizeX, sliderSizeY, enabled ? Theme.BlackColor : this.disabledColor, 1);
-                            c.DrawText(paramStr, FontResources.FontMedium, 0, -sliderPosY, Theme.BlackColor, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
+                            c.DrawRectangle(0, 0, actualSliderSizeX, sliderSizeY, enabled ? Theme.BlackColor : disabledColor, 1);
+                            c.DrawText(paramStr, FontResources.FontMedium, 0, -sliderPosY, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
                             c.PopTransform();
                             c.DrawBitmapAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, opacityR, bitmapScale, Color.Black);
                             c.PopTransform();
@@ -2048,7 +2048,7 @@ namespace FamiStudio
                 var val = button.param.GetValue();
                 var incLarge = button.param.SnapValue * 10;
                 var incSmall = button.param.SnapValue;
-                var inc = captureDuration > 1.5f && (val % incLarge) == 0 ? incSmall : incLarge;
+                var inc = captureDuration > 1.5f && (val % incLarge) == 0 ? incLarge : incSmall;
 
                 val = button.param.SnapAndClampValue(val + inc * captureButtonSign);                
                 button.param.SetValue(val);

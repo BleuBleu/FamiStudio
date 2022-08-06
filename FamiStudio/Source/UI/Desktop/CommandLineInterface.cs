@@ -172,6 +172,7 @@ namespace FamiStudio
             Console.WriteLine($"");
             Console.WriteLine($"NSF export specific options");
             Console.WriteLine($"  -nsf-export-mode:<mode> : Target machine: ntsc or pal (default:project mode).");
+            Console.WriteLine($"  -nsf-nsfe : Use NSFe format (default:off).");
             Console.WriteLine($"");
             Console.WriteLine($"ROM export specific options");
             Console.WriteLine($"  -rom-export-mode:<mode> : Target machine: ntsc, pal or dual (default:project mode).");
@@ -355,6 +356,7 @@ namespace FamiStudio
                 return;
 
             var machineString = ParseOption("nsf-export-mode", project.PalMode ? "pal" : "ntsc");
+            var nsfe = HasOption($"nsf-nsfe");
             var machine = project.PalMode ? MachineType.PAL : MachineType.NTSC;
 
             switch (machineString.ToLower())
@@ -379,7 +381,7 @@ namespace FamiStudio
                     project.Author,
                     project.Copyright,
                     machine,
-                    false); // MATTT
+                    nsfe);
             }
         }
 

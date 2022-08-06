@@ -260,7 +260,7 @@ namespace FamiStudio
 
     public struct RectangleF
     {
-        public static readonly Rectangle Empty;
+        public static readonly RectangleF Empty;
 
         private float x;
         private float y;
@@ -276,6 +276,7 @@ namespace FamiStudio
         public float Top => y;
         public float Right => x + width;
         public float Bottom => y + height;
+        public bool IsEmpty => height == 0 && width == 0 && x == 0 && y == 0;
 
         public RectangleF(float x, float y, float width, float height)
         {

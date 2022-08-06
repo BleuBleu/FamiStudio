@@ -1084,10 +1084,9 @@ namespace FamiStudio
         {
             if (waveIndexEnv == null)
             {
-                // When there is no wave index envelope, just truncate to 1 waveform and set the maximum repeat we allow.
-                Envelope.GetMinMaxValueForType(inst, EnvelopeType.WaveformRepeat, out _, out var maxRepeat);
+                // When there is no wave index envelope, just truncate to 1 waveform.
                 inst.N163WaveCount = 1;
-                inst.Envelopes[EnvelopeType.WaveformRepeat].Values[0] = (sbyte)maxRepeat;
+                inst.Envelopes[EnvelopeType.WaveformRepeat].Values[0] = (sbyte)1;
             }
             else
             {

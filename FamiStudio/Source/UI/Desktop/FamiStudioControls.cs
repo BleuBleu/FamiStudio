@@ -113,6 +113,16 @@ namespace FamiStudio
                 return TopDialog.GetControlAt(formX, formY, out ctrlX, out ctrlY);
             }
 
+            // HACK : Dont allow any interaction with the main controls if there is no current song
+            // since all the code assume this is non-null. This happens when event processing runs
+            // during file loading (ex: when calling Thread.Join).
+            if (controls[0].App.SelectedSong == null)
+            {
+                ctrlX = 0;
+                ctrlY = 0;
+                return null;
+            }
+
             // Finally, send to one of the main controls.
             foreach (var ctrl in controls)
             {
