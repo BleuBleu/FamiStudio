@@ -378,6 +378,13 @@ namespace FamiStudio
             SnapEnabled = ini.GetBool("PianoRoll", "SnapEnabled", true);
             SnapEffects = ini.GetBool("PianoRoll", "SnapEffects", false);
 
+            // At 4.0.0, we fixed an issue where the snapping was not saved properly. Reset.
+            if (Version < 7)
+            {
+                SnapResolution = SnapResolutionType.OneBeat;
+                SnapEnabled = true;
+            }
+
             // At 3.2.0, we added a new Discord screen to the tutorial.
             // At 3.2.3, we added a new snapping tutorial screen.
             // At 4.0.0, we changed the controls and need to re-show tutorials.

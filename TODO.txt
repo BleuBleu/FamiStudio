@@ -44,7 +44,6 @@ Packaging:
 ==========
 - Add MM10 song to demo.
 - Ask how2 for demo songs.
-- Reset snap (again!) in INI loading.
 - Fix Multi + MultiEPSM unit tests.
 - UNIT-TEST : Add multi-wave to N163/FDS unit tests.
 - UNIT-TEST : Add FDS mod to unit tests (effect + delay)
