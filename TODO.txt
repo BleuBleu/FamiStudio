@@ -3,6 +3,8 @@
 
 - Double-click / shift-click to delete songs/instruments?
 
+- Check first null instrument.
+
 P0:
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
