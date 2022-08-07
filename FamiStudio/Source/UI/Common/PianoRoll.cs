@@ -4786,6 +4786,39 @@ namespace FamiStudio
             return list;
         }
 
+        private List<Gizmo> GetEnvelopeEffectsGizmos()
+        {
+            if (Platform.IsDesktop)
+                return null;
+
+            var env = EditEnvelope;
+
+            //if (!HasHighlightedNote() || highlightNoteAbsIndex >= env.Length)
+            //    return null;
+
+            //Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
+            //var midValue = (max + min) / 2;
+            //var value = env.Values[highlightNoteAbsIndex];
+
+            //var x = GetPixelForNote(highlightNoteAbsIndex + 1) + gizmoSize / 4;
+            //var y = 0;
+
+            //if (editEnvelope == EnvelopeType.Arpeggio)
+            //    y = (int)(virtualSizeY - envelopeValueSizeY * (value - min)) - scrollY - gizmoSize * 3 / 4;
+            //else
+            //    y = (int)(virtualSizeY - envelopeValueSizeY * (value - min + (value < 0 ? 0 : 1))) + (value >= midValue ? gizmoSize / 4 : -gizmoSize * 5 / 4) - scrollY;
+
+            //Gizmo slideGizmo = new Gizmo();
+            //slideGizmo.Image = bmpGizmoResizeUpDown;
+            //slideGizmo.FillImage = bmpGizmoResizeFill;
+            //slideGizmo.Action = GizmoAction.ChangeEnvValue;
+            //slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
+
+            var list = new List<Gizmo>();
+            //list.Add(slideGizmo);
+            return list;
+        }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             UpdateCursor();
@@ -5565,7 +5598,6 @@ namespace FamiStudio
             if (editMode == EditionMode.Envelope || 
                 editMode == EditionMode.Arpeggio)
             {
-                //if (HandleMouseDownEnvelopeEffectGizmos(e)) goto Handled; // MATTT : Need to have gizmo handling here.
                 if (HandleMouseDownEnvelopeEffectPanel(e)) goto Handled;
                 if (HandleMouseDownEnvelopeSelection(e)) goto Handled;
                 if (HandleMouseDownEnvelopeResize(e)) goto Handled;
@@ -5933,6 +5965,13 @@ namespace FamiStudio
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
 
             UpdateChangeEnvelopeValue(x, y);
+        }
+
+        private bool HandleTouchDownEnvelopeEffectsGizmos(int x, int y)
+        {
+            // GetEnvelopeEffectsGizmos();
+            // MATTT
+            return false;
         }
 
         private bool HandleTouchDownEnvelopeGizmos(int x, int y)
@@ -6639,6 +6678,7 @@ namespace FamiStudio
             {
                 if (HandleTouchDownEnvelopeSelection(x, y)) goto Handled;
                 if (HandleTouchDownEnvelopeResize(x, y)) goto Handled;
+                if (HandleTouchDownEnvelopeEffectsGizmos(x, y)) goto Handled;
                 if (HandleTouchDownEnvelopeGizmos(x, y)) goto Handled;
             }
 

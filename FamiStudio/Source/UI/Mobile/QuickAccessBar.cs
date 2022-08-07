@@ -923,7 +923,7 @@ namespace FamiStudio
 
         private void OnInstrumentItemClick(int idx)
         {
-            var instrument = listItems[idx].Data as Instrument
+            var instrument = listItems[idx].Data as Instrument;
             App.SelectedInstrument = instrument;
         }
 
