@@ -87,6 +87,9 @@ namespace FamiStudio
         BitmapAtlasRef   bmpProjectExplorer;
         BitmapAtlasRef   bmpSnapOn;
         BitmapAtlasRef   bmpSnapOff;
+        BitmapAtlasRef   bmpCheckOff;
+        BitmapAtlasRef   bmpCheckOn;
+        BitmapAtlasRef   bmpRadio;
         BitmapAtlasRef   bmpArpeggio;
         BitmapAtlasRef   bmpGhostSmall;
         BitmapAtlasRef   bmpPlay;
@@ -152,6 +155,9 @@ namespace FamiStudio
             bmpProjectExplorer = g.GetBitmapAtlasRef("ProjectExplorer");
             bmpSnapOn = g.GetBitmapAtlasRef("MobileSnapOn");
             bmpSnapOff = g.GetBitmapAtlasRef("MobileSnapOff");
+            bmpCheckOff = g.GetBitmapAtlasRef("MobileCheckOff");
+            bmpCheckOn = g.GetBitmapAtlasRef("MobileCheckOn");
+            bmpRadio = g.GetBitmapAtlasRef("MobileRadio");
             bmpArpeggio = g.GetBitmapAtlasRef("MobileArpeggio");
             bmpGhostSmall = g.GetBitmapAtlasRef("GhostSmall");
             bmpPlay = g.GetBitmapAtlasRef("Play");
@@ -337,7 +343,7 @@ namespace FamiStudio
             }
         }
 
-        private void StartExpandingList(int idx, ListItem[] items)
+        private void StartExpandingList(int idx, ListItem[] items, int scrollItemIdx = -1)
         {
             var landscape = IsLandscape;
 
@@ -421,7 +427,10 @@ namespace FamiStudio
             flingVelY = 0.0f;
 
             // Try to center selected item.
-            scrollY = (int)((popupSelectedIdx + 0.5f) * listItemSize - popupRect.Height * 0.5f);
+            if (scrollItemIdx < 0)
+                scrollItemIdx = popupSelectedIdx;
+
+            scrollY = (int)((scrollItemIdx + 0.5f) * listItemSize - popupRect.Height * 0.5f);
             ClampScroll();
         }
 
@@ -433,17 +442,6 @@ namespace FamiStudio
                 popupClosing = popupRatio > 0.0f ? true : false;
                 flingVelY = 0.0f;
             }
-        }
-
-        private void AbortList()
-        {
-            popupButtonIdx = -1;
-            popupButtonNextIdx = -1;
-            popupRatio = 0.0f;
-            popupOpening = false;
-            popupClosing = false;
-            listItems = null;
-            flingVelY = 0.0f;
         }
 
         private void OnSequencer()
@@ -487,26 +485,33 @@ namespace FamiStudio
             if (CheckNeedsClosing((int)ButtonType.Snap))
                 return;
 
-            var items = new ListItem[SnapResolutionType.Max + 2];
+            var items = new ListItem[SnapResolutionType.Max + 3];
 
-            for (int i = 0; i < items.Length - 1; i++)
+            for (int i = 0; i < items.Length - 2; i++)
             {
                 var item = new ListItem();
                 item.Color = Theme.LightGreyColor1;
-                item.Image = bmpSnapOn;
+                item.Image = App.SnapResolution == i ? bmpRadio : null;
                 item.Text = $"Snap to {SnapResolutionType.Names[i]} Beat{(SnapResolutionType.Factors[i] > 1.0 ? "s" : "")}";
                 items[i] = item;
             }
 
-            var turnOffItem = new ListItem();
-            turnOffItem.Color = Theme.LightGreyColor1;
-            turnOffItem.Image = bmpSnapOff;
-            turnOffItem.Text = $"Snap Off";
-            items[items.Length - 1] = turnOffItem;
+            var snapEnableItem = new ListItem();
+            snapEnableItem.Color = Theme.LightGreyColor1;
+            snapEnableItem.Image = App.SnapEnabled ? bmpCheckOn : bmpCheckOff;
+            snapEnableItem.Text = $"Snap Enabled";
+            items[items.Length - 2] = snapEnableItem;
 
-            popupSelectedIdx = App.SnapEnabled ? App.SnapResolution : items.Length - 1;
+            var snapEffectsItem = new ListItem();
+            snapEffectsItem.Color = Theme.LightGreyColor1;
+            snapEffectsItem.Image = App.SnapEffectEnabled ? bmpCheckOn : bmpCheckOff;
+            snapEffectsItem.Text = $"Snap Effect Values";
+            items[items.Length - 1] = snapEffectsItem;
 
-            StartExpandingList((int)ButtonType.Snap, items);
+            popupSelectedIdx = App.SnapResolution;
+
+            var scrollItemIdx = App.SnapEnabled ? popupSelectedIdx : items.Length - 1;
+            StartExpandingList((int)ButtonType.Snap, items, scrollItemIdx);
         }
 
         private void OnEffect()
@@ -771,7 +776,7 @@ namespace FamiStudio
         private BitmapAtlasRef GetSnapRenderInfo(out string text, out Color tint)
         {
             var snapEnabled = App.SnapEnabled;
-            text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] : "Off";
+            text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] + (App.SnapEffectEnabled ? " (FX)" : "") : "Off";
             tint = App.IsRecording ? Theme.DarkRedColor : Theme.LightGreyColor1;
             return snapEnabled ? bmpSnapOn : bmpSnapOff;
         }
@@ -839,9 +844,13 @@ namespace FamiStudio
                 App.SnapResolution = idx;
                 App.SnapEnabled = true;
             }
-            else
+            else if (idx == SnapResolutionType.Max + 1)
             {
-                App.SnapEnabled = false;
+                App.SnapEnabled = !App.SnapEnabled;
+            }
+            else if (idx == SnapResolutionType.Max + 2)
+            {
+                App.SnapEffectEnabled = !App.SnapEffectEnabled;
             }
         }
 
@@ -1006,7 +1015,11 @@ namespace FamiStudio
                     var opacity = item.GetImageOpacity != null ? item.GetImageOpacity(item) : 1.0f;
 
                     c.FillAndDrawRectangleGradient(item.Rect, item.Color, item.Color.Scaled(0.8f), Theme.BlackColor, true, listItemSize);
-                    c.DrawBitmapAtlas(item.Image, item.IconX, item.IconY, opacity, iconScaleFloat, Color.Black);
+                    
+                    if (item.Image != null)
+                    { 
+                        c.DrawBitmapAtlas(item.Image, item.IconX, item.IconY, opacity, iconScaleFloat, Color.Black);
+                    }
 
                     if (item.ExtraImage != null)
                     {

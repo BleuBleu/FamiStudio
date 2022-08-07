@@ -385,9 +385,9 @@ namespace FamiStudio
             public int OffsetX;
         };
 
-        public bool SnapAllowed { get => editMode == EditionMode.Channel; }
-        public bool SnapEnabled { get => SnapAllowed && snap; set { if (SnapAllowed) snap = value; MarkDirty(); } }
-        public bool SnapEffectEnabled { get => SnapEnabled && snapEffects; set { if (SnapAllowed) snapEffects = value; MarkDirty(); } }
+        public bool SnapAllowed       { get => editMode == EditionMode.Channel; }
+        public bool SnapEnabled       { get => SnapAllowed && snap; set { if (SnapAllowed) snap = value; MarkDirty(); } }
+        public bool SnapEffectEnabled { get => SnapAllowed && snapEffects; set { if (SnapAllowed) snapEffects = value; MarkDirty(); } }
 
         public bool EffectPanelExpanded { get => showEffectsPanel; set => SetShowEffectPanel(value); }
         public int  SnapResolution
@@ -1696,7 +1696,7 @@ namespace FamiStudio
 
                     if (Platform.IsMobile || highlightNoteAbsIndex >= 0 && captureOperation == CaptureOperation.ChangeEffectValue)
                     {
-                        highlightLocation = NoteLocation.FromAbsoluteNoteIndex(song, SnapEffectEnabled ? SnapNote(highlightNoteAbsIndex) : highlightNoteAbsIndex);
+                        highlightLocation = NoteLocation.FromAbsoluteNoteIndex(song, SnapEnabled && SnapEffectEnabled ? SnapNote(highlightNoteAbsIndex) : highlightNoteAbsIndex);
                     }
                     else if (Platform.IsDesktop && captureOperation == CaptureOperation.None)
                     {
@@ -3624,7 +3624,7 @@ namespace FamiStudio
 
             if (pattern == null || !pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out var note))
             {
-                if (SnapEffectEnabled)
+                if (SnapEnabled && SnapEffectEnabled)
                     location = SnapNote(location);
 
                 if (pattern == null)
@@ -6158,7 +6158,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (SnapEffectEnabled)
+                    if (SnapEnabled && SnapEffectEnabled)
                         absIdx = SnapNote(absIdx);
 
                     location = NoteLocation.FromAbsoluteNoteIndex(Song, absIdx);

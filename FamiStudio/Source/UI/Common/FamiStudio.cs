@@ -76,6 +76,7 @@ namespace FamiStudio
         public int   EditEnvelopeType { get => PianoRoll.EditEnvelopeType; }
 
         public bool SnapEnabled                 { get => PianoRoll.SnapEnabled;         set => PianoRoll.SnapEnabled         = value; }
+        public bool SnapEffectEnabled           { get => PianoRoll.SnapEffectEnabled;   set => PianoRoll.SnapEffectEnabled   = value; }
         public int  SnapResolution              { get => PianoRoll.SnapResolution;      set => PianoRoll.SnapResolution      = value; }
         public int  SelectedEffect              { get => PianoRoll.SelectedEffect;      set => PianoRoll.SelectedEffect      = value; }
         public bool EffectPanelExpanded         { get => PianoRoll.EffectPanelExpanded; set => PianoRoll.EffectPanelExpanded = value; }

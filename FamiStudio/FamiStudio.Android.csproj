@@ -508,6 +508,8 @@
     <EmbeddedResource Include="Resources\Metronome@2x.tga" />
     <EmbeddedResource Include="Resources\MinusSmall@2x.tga" />
     <EmbeddedResource Include="Resources\MobileArpeggio.tga" />
+    <EmbeddedResource Include="Resources\MobileCheckOff.tga" />
+    <EmbeddedResource Include="Resources\MobileCheckOn.tga" />
     <EmbeddedResource Include="Resources\MobileEffectCutDelay.tga" />
     <EmbeddedResource Include="Resources\MobileEffectDutyCycle.tga" />
     <EmbeddedResource Include="Resources\MobileEffectMod.tga" />
@@ -557,6 +559,7 @@
     <EmbeddedResource Include="Resources\MobileMenuWave.tga" />
     <EmbeddedResource Include="Resources\MobilePianoDrag.tga" />
     <EmbeddedResource Include="Resources\MobilePianoRest.tga" />
+    <EmbeddedResource Include="Resources\MobileRadio.tga" />
     <EmbeddedResource Include="Resources\MobileSnapOff.tga" />
     <EmbeddedResource Include="Resources\MobileSnapOn.tga" />
     <EmbeddedResource Include="Resources\MobileTutorial1.gif" />
