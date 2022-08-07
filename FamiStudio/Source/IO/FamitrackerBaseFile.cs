@@ -547,6 +547,34 @@ namespace FamiStudio
             return bestIdx;
         }
 
+        private void AssignNullInstruments(Song s)
+        {
+            foreach (var c in s.Channels)
+            {
+                if (c.IsDpcmChannel)
+                    continue;
+
+                var lastInstrument = (Instrument)null;
+
+                for (var it = c.GetSparseNoteIterator(s.StartLocation, s.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                {
+                    var note = it.Note;
+
+                    Debug.Assert(note.IsMusical);
+
+                    if (note.Instrument == null)
+                    {
+                        note.Instrument = lastInstrument;
+                        Log.LogMessage(LogSeverity.Warning, $"Missing instrument will use previous instrument '{lastInstrument.Name}'. {GetPatternString(it.Pattern, it.Location.NoteIndex)}");
+                    }
+                    else
+                    {
+                        lastInstrument = note.Instrument;
+                    }
+                }
+            }
+        }
+
         private void CreateArpeggios(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
             var processedPatterns = new HashSet<Pattern>();
@@ -663,9 +691,9 @@ namespace FamiStudio
                             if (fx.param != 0)
                             {
                                 // When the effect it turned on, we need to add a note.
-                                if ((fx.fx == Effect_PortaUp ||
+                                if ((fx.fx == Effect_PortaUp   ||
                                      fx.fx == Effect_PortaDown ||
-                                     fx.fx == Effect_SlideUp ||
+                                     fx.fx == Effect_SlideUp   ||
                                      fx.fx == Effect_SlideDown) &&
                                     lastNoteValue >= Note.MusicalNoteMin &&
                                     lastNoteValue <= Note.MusicalNoteMax && (note == null || !note.IsValid))
@@ -726,10 +754,14 @@ namespace FamiStudio
                                 // Ignore notes with no attack since we created them to handle a previous slide.
                                 if (note.HasAttack && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax)
                                 {
-                                    slideSpeed = portamentoSpeed;
+                                    slideSpeed  = portamentoSpeed;
                                     slideTarget = note.Value;
                                     slideSource = lastNoteValue;
-                                    note.Value = lastNoteValue;
+                                    note.Value  = lastNoteValue;
+
+                                    // In FamiTracker, 3xx on a VRC7 channel doesnt trigger the attacks.
+                                    if (c.IsVrc7Channel)
+                                        note.HasAttack = false;
                                 }
                             }
 
@@ -1214,6 +1246,7 @@ namespace FamiStudio
                 s.DeleteNotesPastMaxInstanceLength();
                 s.UpdatePatternStartNotes();
 
+                AssignNullInstruments(s);
                 CreateArpeggios(s, patternFxData);
                 CreateVolumeSlides(s, patternFxData);
                 CreateSlideNotes(s, patternFxData);

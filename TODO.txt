@@ -133,6 +133,7 @@ Discord
 
 Backlog: 
 =========
+- Way to convert instrument between expansions.
 - Left resize to preserve release position?
 - Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 - Display number of selected channels in grid for video export?
