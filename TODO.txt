@@ -33,11 +33,8 @@ Testing:
 ========
 - Test note creation, snapping with cut/note delays, stop notes, etc.
 - Do a pass on tooltips for ParamProviders.
-- TEST : Test -/+ fast scroll on mobile.
 - TEST : Test no attack in playback + NSF.
 - TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
-- Restest sequencer hide channel a bunch, test vertical scroll bars, test mobile too. Make sure not broken.
-- Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
 - Restest multiple songs per file (changed multiplication thing)
 
 Packaging:
