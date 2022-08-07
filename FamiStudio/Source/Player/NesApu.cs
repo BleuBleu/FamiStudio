@@ -302,7 +302,7 @@ namespace FamiStudio
         {
             double clockNtsc = FreqNtsc / 16.0;
             double clockPal  = FreqPal  / 16.0;
-            double clockEPSM = FreqEPSM / 32.0;
+            double clockEPSM = FreqEPSM / 32.0 * 1.004; //minor adjustment for more accurate square channel frequencies
 
             for (int i = 1; i < NoteTableNTSC.Length; ++i)
             {
