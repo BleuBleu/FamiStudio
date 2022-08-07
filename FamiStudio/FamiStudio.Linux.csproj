@@ -377,6 +377,8 @@
     <EmbeddedResource Include="Resources\EffectNoteDelay@2x.tga" />
     <EmbeddedResource Include="Resources\EffectPitch.tga" />
     <EmbeddedResource Include="Resources\EffectPitch@2x.tga" />
+    <EmbeddedResource Include="Resources\EffectRepeat.tga" />
+    <EmbeddedResource Include="Resources\EffectRepeat@2x.tga" />
     <EmbeddedResource Include="Resources\EffectSpeed.tga" />
     <EmbeddedResource Include="Resources\EffectSpeed@2x.tga" />
     <EmbeddedResource Include="Resources\EffectVibrato.tga" />

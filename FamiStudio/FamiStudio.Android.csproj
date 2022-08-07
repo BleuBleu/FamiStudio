@@ -448,6 +448,7 @@
     <EmbeddedResource Include="Resources\EffectMod@2x.tga" />
     <EmbeddedResource Include="Resources\EffectNoteDelay@2x.tga" />
     <EmbeddedResource Include="Resources\EffectPitch@2x.tga" />
+    <EmbeddedResource Include="Resources\EffectRepeat@2x.tga" />
     <EmbeddedResource Include="Resources\EffectSpeed@2x.tga" />
     <EmbeddedResource Include="Resources\EffectVibrato@2x.tga" />
     <EmbeddedResource Include="Resources\EffectVolume@2x.tga" />
@@ -516,6 +517,7 @@
     <EmbeddedResource Include="Resources\MobileEffectNone.tga" />
     <EmbeddedResource Include="Resources\MobileEffectNoteDelay.tga" />
     <EmbeddedResource Include="Resources\MobileEffectPitch.tga" />
+    <EmbeddedResource Include="Resources\MobileEffectRepeat.tga" />
     <EmbeddedResource Include="Resources\MobileEffectSpeed.tga" />
     <EmbeddedResource Include="Resources\MobileEffectVibrato.tga" />
     <EmbeddedResource Include="Resources\MobileEffectVolume.tga" />

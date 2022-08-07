@@ -80,6 +80,7 @@ namespace FamiStudio
             Effect,
             DPCMEffect,
             DPCMPlay,
+            WaveformEffect,
             Count
         }
 
@@ -95,6 +96,7 @@ namespace FamiStudio
         BitmapAtlasRef   bmpGhostSmall;
         BitmapAtlasRef   bmpPlay;
         BitmapAtlasRef   bmpEffectNone;
+        BitmapAtlasRef   bmpEffectRepeat;
         BitmapAtlasRef[] bmpEffects;
         BitmapAtlasRef[] bmpEnvelopes;
         BitmapAtlasRef[] bmpChannels;
@@ -163,22 +165,24 @@ namespace FamiStudio
             bmpGhostSmall = g.GetBitmapAtlasRef("GhostSmall");
             bmpPlay = g.GetBitmapAtlasRef("Play");
             bmpEffectNone = g.GetBitmapAtlasRef("MobileEffectNone");
+            bmpEffectRepeat = g.GetBitmapAtlasRef("MobileEffectRepeat");
             bmpEffects = g.GetBitmapAtlasRefs(Note.EffectIcons, "Mobile");
             bmpExpansions = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpEnvelopes = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
             bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
 
-            buttons[(int)ButtonType.Sequencer]  = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
-            buttons[(int)ButtonType.PianoRoll]  = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
-            buttons[(int)ButtonType.Project]    = new Button { GetRenderInfo = GetProjectExplorerInfo, Click = OnProjectExplorer, IsNavButton = true };
-            buttons[(int)ButtonType.Channel]    = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel, ListItemClick = OnChannelItemClick, ListItemLongPress = OnChannelItemLongPress };
-            buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument, LongPress = OnInstrumentLongPress, ListItemClick = OnInstrumentItemClick, ListItemLongPress = OnInstrumentItemLongPress };
-            buttons[(int)ButtonType.Envelope]   = new Button { GetRenderInfo = GetEnvelopeRenderingInfo, Click = OnEnvelope, ListItemClick = OnEnvelopeItemClick };
-            buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, LongPress = OnArpeggioLongPress, ListItemClick = OnArpeggioItemClick, ListItemLongPress = OnArpeggioItemLongPress };
-            buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap, ListItemClick = OnSnapItemClick };
-            buttons[(int)ButtonType.Effect]     = new Button { GetRenderInfo = GetEffectRenderInfo, Click = OnEffect, ListItemClick = OnEffectItemClick };
-            buttons[(int)ButtonType.DPCMEffect] = new Button { GetRenderInfo = GetDPCMEffectRenderInfo, Click = OnDPCMEffect, ListItemClick = OnDPCMEffectItemClick };
-            buttons[(int)ButtonType.DPCMPlay]   = new Button { GetRenderInfo = GetDPCMPlayRenderInfo, Click = OnDPCMPlay, LongPress = OnDPCMPlayLongPress };
+            buttons[(int)ButtonType.Sequencer]      = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
+            buttons[(int)ButtonType.PianoRoll]      = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
+            buttons[(int)ButtonType.Project]        = new Button { GetRenderInfo = GetProjectExplorerInfo, Click = OnProjectExplorer, IsNavButton = true };
+            buttons[(int)ButtonType.Channel]        = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel, ListItemClick = OnChannelItemClick, ListItemLongPress = OnChannelItemLongPress };
+            buttons[(int)ButtonType.Instrument]     = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument, LongPress = OnInstrumentLongPress, ListItemClick = OnInstrumentItemClick, ListItemLongPress = OnInstrumentItemLongPress };
+            buttons[(int)ButtonType.Envelope]       = new Button { GetRenderInfo = GetEnvelopeRenderingInfo, Click = OnEnvelope, ListItemClick = OnEnvelopeItemClick };
+            buttons[(int)ButtonType.Arpeggio]       = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, LongPress = OnArpeggioLongPress, ListItemClick = OnArpeggioItemClick, ListItemLongPress = OnArpeggioItemLongPress };
+            buttons[(int)ButtonType.Snap]           = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap, ListItemClick = OnSnapItemClick };
+            buttons[(int)ButtonType.Effect]         = new Button { GetRenderInfo = GetEffectRenderInfo, Click = OnEffect, ListItemClick = OnEffectItemClick };
+            buttons[(int)ButtonType.DPCMEffect]     = new Button { GetRenderInfo = GetDPCMEffectRenderInfo, Click = OnDPCMEffect, ListItemClick = OnDPCMEffectItemClick };
+            buttons[(int)ButtonType.DPCMPlay]       = new Button { GetRenderInfo = GetDPCMPlayRenderInfo, Click = OnDPCMPlay, LongPress = OnDPCMPlayLongPress };
+            buttons[(int)ButtonType.WaveformEffect] = new Button { GetRenderInfo = GetWaveformEffectRenderInfo, Click = OnWaveformEffect, ListItemClick = OnWaveformEffectItemClick };
 
             var screenSize = Platform.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
@@ -237,17 +241,18 @@ namespace FamiStudio
 
             var needsLayout = false;
 
-            needsLayout |= SetButtonVisible(ButtonType.Sequencer,  true);
-            needsLayout |= SetButtonVisible(ButtonType.PianoRoll,  true);
-            needsLayout |= SetButtonVisible(ButtonType.Project,    true);
-            needsLayout |= SetButtonVisible(ButtonType.Channel,    true);
-            needsLayout |= SetButtonVisible(ButtonType.Instrument, true);
-            needsLayout |= SetButtonVisible(ButtonType.Arpeggio,   true);
-            needsLayout |= SetButtonVisible(ButtonType.Snap,       App.IsPianoRollActive && App.IsEditingChannel);
-            needsLayout |= SetButtonVisible(ButtonType.Effect,     App.IsPianoRollActive && App.IsEditingChannel);
-            needsLayout |= SetButtonVisible(ButtonType.DPCMPlay,   App.IsPianoRollActive && App.IsEditingDPCMSample);
-            needsLayout |= SetButtonVisible(ButtonType.DPCMEffect, App.IsPianoRollActive && App.IsEditingDPCMSample);
-            needsLayout |= SetButtonVisible(ButtonType.Envelope,   App.IsPianoRollActive && App.IsEditingInstrument);
+            needsLayout |= SetButtonVisible(ButtonType.Sequencer,      true);
+            needsLayout |= SetButtonVisible(ButtonType.PianoRoll,      true);
+            needsLayout |= SetButtonVisible(ButtonType.Project,        true);
+            needsLayout |= SetButtonVisible(ButtonType.Channel,        true);
+            needsLayout |= SetButtonVisible(ButtonType.Instrument,     true);
+            needsLayout |= SetButtonVisible(ButtonType.Arpeggio,       true);
+            needsLayout |= SetButtonVisible(ButtonType.Snap,           App.IsPianoRollActive && App.IsEditingChannel);
+            needsLayout |= SetButtonVisible(ButtonType.Effect,         App.IsPianoRollActive && App.IsEditingChannel);
+            needsLayout |= SetButtonVisible(ButtonType.DPCMPlay,       App.IsPianoRollActive && App.IsEditingDPCMSample);
+            needsLayout |= SetButtonVisible(ButtonType.DPCMEffect,     App.IsPianoRollActive && App.IsEditingDPCMSample);
+            needsLayout |= SetButtonVisible(ButtonType.Envelope,       App.IsPianoRollActive && App.IsEditingInstrument);
+            needsLayout |= SetButtonVisible(ButtonType.WaveformEffect, App.IsPianoRollActive && App.IsEditingInstrument && Instrument.EnvelopeHasRepeat(App.EditEnvelopeType));
 
             if (needsLayout)
                 UpdateButtonLayout();
@@ -598,6 +603,28 @@ namespace FamiStudio
             App.PreviewDPCMSample(App.EditSample, true);
         }
 
+        private void OnWaveformEffect()
+        {
+            if (CheckNeedsClosing((int)ButtonType.WaveformEffect))
+                return;
+
+            popupSelectedIdx = App.EffectPanelExpanded ? 1 : 0;
+
+            var items = new ListItem[2];
+
+            items[0] = new ListItem();
+            items[0].Color = Theme.LightGreyColor1;
+            items[0].Image = bmpEffectNone;
+            items[0].Text = "None";
+
+            items[1] = new ListItem();
+            items[1].Color = Theme.LightGreyColor1;
+            items[1].Image = bmpEffectRepeat;
+            items[1].Text = "Repeat Envelope";
+
+            StartExpandingList((int)ButtonType.WaveformEffect, items);
+        }
+
         private void OnChannel()
         {
             if (CheckNeedsClosing((int)ButtonType.Channel))
@@ -808,6 +835,13 @@ namespace FamiStudio
             return bmpPlay;
         }
 
+        private BitmapAtlasRef GetWaveformEffectRenderInfo(out string text, out Color tint)
+        {
+            text = App.EffectPanelExpanded ? "Repeat" : "None";
+            tint = Theme.LightGreyColor1;
+            return App.EffectPanelExpanded ? bmpEffectRepeat : bmpEffectNone;
+        }
+
         private BitmapAtlasRef GetChannelRenderInfo(out string text, out Color tint)
         {
             text = App.SelectedChannel.NameWithExpansion;
@@ -877,6 +911,11 @@ namespace FamiStudio
             App.EffectPanelExpanded = idx == 1;
         }
 
+        private void OnWaveformEffectItemClick(int idx)
+        {
+            App.EffectPanelExpanded = idx == 1;
+        }
+
         private void OnChannelItemClick(int idx)
         {
             App.SelectedChannelIndex = idx;
@@ -884,7 +923,7 @@ namespace FamiStudio
 
         private void OnInstrumentItemClick(int idx)
         {
-            var instrument = listItems[idx].Data as Instrument;
+            var instrument = listItems[idx].Data as Instrument
             App.SelectedInstrument = instrument;
         }
 

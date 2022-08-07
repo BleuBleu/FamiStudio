@@ -161,7 +161,7 @@ namespace FamiStudio
             return envelopes[envelopeType].IsEmpty(envelopeType);
         }
 
-        public bool EnvelopeHasRepeat(int envelopeType)
+        public static bool EnvelopeHasRepeat(int envelopeType)
         {
             return envelopeType == EnvelopeType.N163Waveform;
         }

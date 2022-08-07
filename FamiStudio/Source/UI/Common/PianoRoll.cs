@@ -141,6 +141,7 @@ namespace FamiStudio
         BitmapAtlasRef bmpGizmoResizeUpDown;
         BitmapAtlasRef bmpGizmoResizeFill;
         BitmapAtlasRef bmpEffectFrame;
+        BitmapAtlasRef bmpEffectRepeat;
         BitmapAtlasRef[] bmpEffects;
         Geometry[] stopNoteGeometry        = new Geometry[2]; // [1] is used to draw arps.
         Geometry[] stopReleaseNoteGeometry = new Geometry[2]; // [1] is used to draw arps.
@@ -842,7 +843,7 @@ namespace FamiStudio
         {
             get
             {
-                if (editMode == EditionMode.Envelope && editInstrument != null && editInstrument.EnvelopeHasRepeat(editEnvelope))
+                if (editMode == EditionMode.Envelope && editInstrument != null && Instrument.EnvelopeHasRepeat(editEnvelope))
                     return editInstrument.Envelopes[EnvelopeType.WaveformRepeat];
                 return null;
             }
@@ -913,6 +914,7 @@ namespace FamiStudio
             bmpGizmoResizeUpDown = g.GetBitmapAtlasRef("GizmoResizeUpDown");
             bmpGizmoResizeFill = g.GetBitmapAtlasRef("GizmoResizeFill");
             bmpEffectFrame = g.GetBitmapAtlasRef("EffectFrame");
+            bmpEffectRepeat = g.GetBitmapAtlasRef("EffectRepeat");
             bmpEffects = g.GetBitmapAtlasRefs(Note.EffectIcons);
 
             if (Platform.IsMobile)
@@ -1377,7 +1379,7 @@ namespace FamiStudio
                     r.cc.PushTranslation(0, headerSizeY);
                     r.cc.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
 
-                    var bmp  = bmpEffects[editMode == EditionMode.DPCM ? Note.EffectVolume : Note.EffectDeltaCounter];
+                    var bmp  = editMode == EditionMode.DPCM ? bmpEffects[Note.EffectVolume] : bmpEffectRepeat;
                     var text = editMode == EditionMode.DPCM ? Note.EffectNames[Note.EffectVolume] : EnvelopeType.Names[EnvelopeType.WaveformRepeat];
 
                     r.cc.DrawBitmapAtlas(bmp, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
