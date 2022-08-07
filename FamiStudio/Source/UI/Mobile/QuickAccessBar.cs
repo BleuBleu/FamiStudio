@@ -57,6 +57,7 @@ namespace FamiStudio
             public Func<ListItem, float> GetImageOpacity;
             public Func<ListItem, float> GetExtraImageOpacity;
             public string Text;
+            public Color  TextColor = Theme.BlackColor;
             public object Data;
         }
 
@@ -486,6 +487,7 @@ namespace FamiStudio
                 return;
 
             var items = new ListItem[SnapResolutionType.Max + 3];
+            var disabledColor = Color.FromArgb(64, Theme.BlackColor);
 
             for (int i = 0; i < items.Length - 2; i++)
             {
@@ -493,25 +495,27 @@ namespace FamiStudio
                 item.Color = Theme.LightGreyColor1;
                 item.Image = App.SnapResolution == i ? bmpRadio : null;
                 item.Text = $"Snap to {SnapResolutionType.Names[i]} Beat{(SnapResolutionType.Factors[i] > 1.0 ? "s" : "")}";
+                item.TextColor = App.SnapEnabled ? Theme.BlackColor : disabledColor;
+                item.GetImageOpacity = (l) => { return l.TextColor.A / 255.0f; };
                 items[i] = item;
             }
-
-            var snapEnableItem = new ListItem();
-            snapEnableItem.Color = Theme.LightGreyColor1;
-            snapEnableItem.Image = App.SnapEnabled ? bmpCheckOn : bmpCheckOff;
-            snapEnableItem.Text = $"Snap Enabled";
-            items[items.Length - 2] = snapEnableItem;
 
             var snapEffectsItem = new ListItem();
             snapEffectsItem.Color = Theme.LightGreyColor1;
             snapEffectsItem.Image = App.SnapEffectEnabled ? bmpCheckOn : bmpCheckOff;
             snapEffectsItem.Text = $"Snap Effect Values";
-            items[items.Length - 1] = snapEffectsItem;
+            snapEffectsItem.TextColor = App.SnapEnabled ? Theme.BlackColor : disabledColor;
+            snapEffectsItem.GetImageOpacity = (l) => { return l.TextColor.A / 255.0f; }; 
+            items[items.Length - 2] = snapEffectsItem;
+
+            var snapEnableItem = new ListItem();
+            snapEnableItem.Color = Theme.LightGreyColor1;
+            snapEnableItem.Image = App.SnapEnabled ? bmpCheckOn : bmpCheckOff;
+            snapEnableItem.Text = $"Snap Enabled";
+            items[items.Length - 1] = snapEnableItem;
 
             popupSelectedIdx = App.SnapResolution;
-
-            var scrollItemIdx = App.SnapEnabled ? popupSelectedIdx : items.Length - 1;
-            StartExpandingList((int)ButtonType.Snap, items, scrollItemIdx);
+            StartExpandingList((int)ButtonType.Snap, items, items.Length - 1);
         }
 
         private void OnEffect()
@@ -846,11 +850,11 @@ namespace FamiStudio
             }
             else if (idx == SnapResolutionType.Max + 1)
             {
-                App.SnapEnabled = !App.SnapEnabled;
+                App.SnapEffectEnabled = !App.SnapEffectEnabled;
             }
             else if (idx == SnapResolutionType.Max + 2)
             {
-                App.SnapEffectEnabled = !App.SnapEffectEnabled;
+                App.SnapEnabled = !App.SnapEnabled;
             }
         }
 
@@ -1027,7 +1031,7 @@ namespace FamiStudio
                         c.DrawBitmapAtlas(item.ExtraImage, item.ExtraIconX, item.ExtraIconY, extraOpacity, iconScaleFloat, Color.Black);
                     }
 
-                    c.DrawText(item.Text, i == popupSelectedIdx ? FontResources.FontMediumBold : FontResources.FontMedium, item.TextX, item.TextY, Theme.BlackColor, TextFlags.Middle, 0, listItemSize);
+                    c.DrawText(item.Text, i == popupSelectedIdx ? FontResources.FontMediumBold : FontResources.FontMedium, item.TextX, item.TextY, item.TextColor, TextFlags.Middle, 0, listItemSize);
                 }
 
                 c.PopTransform();
