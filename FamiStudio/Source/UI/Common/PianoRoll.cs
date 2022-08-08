@@ -372,6 +372,7 @@ namespace FamiStudio
             MoveRelease,
             MoveSlide,
             ChangeEnvValue,
+            ChangeEnvEffectValue,
             ChangeEffectValue,
             MoveVolumeSlideValue,
         };
@@ -1726,11 +1727,13 @@ namespace FamiStudio
 
                             var highlighted = location == highlightLocation;
                             var selected = IsNoteSelected(location);
+                            
+                            r.ch.FillRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, singleFrameSlides.Contains(location) ? volumeSlideBarFillColor : Theme.LightGreyColor1);
 
-                            r.ch.FillAndDrawRectangle(
-                                0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY,
-                                singleFrameSlides.Contains(location) ? volumeSlideBarFillColor : Theme.LightGreyColor1,
-                                highlighted ? Theme.WhiteColor : Theme.BlackColor, highlighted || selected ? 3 : 1, highlighted || selected);
+                            if (highlighted || selected)
+                                r.cz.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 2, true);
+                            else
+                                r.ch.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, Theme.BlackColor);
 
                             var text = effectValue.ToString();
                             if (text.Length * fontSmallCharSizeX + 2 < noteSizeX)
@@ -1797,7 +1800,7 @@ namespace FamiStudio
                     Debug.Assert(env.ChunkCount == rep.Length);
 
                     var ratio = env.Length / rep.Length;
-
+                    
                     Envelope.GetMinMaxValueForType(editInstrument, EnvelopeType.WaveformRepeat, out var minRepeat, out var maxRepeat);
 
                     for (var i = 0; i < rep.Length; i++)
@@ -1814,10 +1817,12 @@ namespace FamiStudio
                         var selected = IsEnvelopeRepeatValueSelected(i);
                         var highlighted = i == highlightIndex;
 
-                        r.ch.FillAndDrawRectangle(
-                            0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY,
-                            Theme.LightGreyColor1,
-                            highlighted ? Theme.WhiteColor : Theme.BlackColor, highlighted || selected ? 3 : 1, highlighted || selected);
+                        r.ch.FillRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, editInstrument.Color);
+
+                        if (highlighted || selected)
+                            r.cz.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 2, true);
+                        else
+                            r.ch.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, Theme.BlackColor);
 
                         var text = val.ToString();
                         if (text.Length * fontSmallCharSizeX + 2 < sizeX)
@@ -1832,6 +1837,17 @@ namespace FamiStudio
                             r.ch.DrawLine(0, 0, 0, effectPanelSizeY, Theme.BlackColor, 3);
 
                         r.ch.PopTransform();
+                    }
+
+                    var gizmos = GetEnvelopeEffectsGizmos();
+                    if (gizmos != null)
+                    {
+                        foreach (var g in gizmos)
+                        {
+                            if (g.FillImage != null)
+                                r.cz.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, EditInstrument.Color);
+                            r.cz.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Color.White);
+                        }
                     }
 
                     // TODO : Create a function for this, this is a mess.
@@ -3696,6 +3712,8 @@ namespace FamiStudio
 
         void UpdateChangeEnvelopeRepeatValue(int x, int y)
         {
+            App.UndoRedoManager.RestoreTransaction(false);
+
             var env = EditEnvelope;
             var rep = EditRepeatEnvelope;
             var idx = Utils.Clamp(captureMouseAbsoluteIdx, 0, env.Length);
@@ -3716,15 +3734,12 @@ namespace FamiStudio
             }
             else // On mobile we drag using gizmos
             {
-                Debug.Assert(false);
+                var origRatio = (captureMouseY - headerSizeY) / (float)effectPanelSizeY;
+                var origValue = (int)Math.Round(Utils.Lerp(maxRepeat, minRepeat, origRatio));
+                var newRatio = (y - headerSizeY) / (float)effectPanelSizeY;
+                var newValue = (int)Math.Round(Utils.Lerp(maxRepeat, minRepeat, newRatio));
 
-                // MATTT Mobile gizmos!
-                //var origRatio = (captureMouseY - headerSizeY) / (float)effectPanelSizeY;
-                //var origValue = (int)Math.Round(Utils.Lerp(maxValue, minValue, origRatio));
-                //var newRatio = (y - headerSizeY) / (float)effectPanelSizeY;
-                //var newValue = (int)Math.Round(Utils.Lerp(maxValue, minValue, newRatio));
-
-                //delta = newValue - origValue;
+                delta = newValue - origValue;
             }
 
             rep.Values[idx] = (sbyte)Utils.Clamp(rep.Values[idx] + delta, minRepeat, maxRepeat);
@@ -4760,7 +4775,7 @@ namespace FamiStudio
 
             var env = EditEnvelope;
 
-            if (!HasHighlightedNote() || highlightNoteAbsIndex >= env.Length)
+            if (highlightNoteAbsIndex < 0 || highlightNoteAbsIndex >= env.Length || highlightRepeatEnvelope)
                 return null;
 
             Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
@@ -4792,30 +4807,26 @@ namespace FamiStudio
                 return null;
 
             var env = EditEnvelope;
+            var rep = EditRepeatEnvelope;
 
-            //if (!HasHighlightedNote() || highlightNoteAbsIndex >= env.Length)
-            //    return null;
+            if (highlightNoteAbsIndex < 0 || highlightNoteAbsIndex >= env.Length || !highlightRepeatEnvelope || rep == null)
+                return null;
 
-            //Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
-            //var midValue = (max + min) / 2;
-            //var value = env.Values[highlightNoteAbsIndex];
+            Envelope.GetMinMaxValueForType(editInstrument, EnvelopeType.WaveformRepeat, out int min, out int max);
+            var val = rep.Values[highlightNoteAbsIndex];
+            var mid = (min + max) / 2;
 
-            //var x = GetPixelForNote(highlightNoteAbsIndex + 1) + gizmoSize / 4;
-            //var y = 0;
+            var x = GetPixelForNote(highlightNoteAbsIndex * env.ChunkLength + env.ChunkLength / 2) - gizmoSize / 2;
+            var y = effectPanelSizeY - (int)Math.Floor((val - min) / (float)(max - min) * effectPanelSizeY) + (val >= mid ? gizmoSize / 4 : -gizmoSize * 5 / 4);
 
-            //if (editEnvelope == EnvelopeType.Arpeggio)
-            //    y = (int)(virtualSizeY - envelopeValueSizeY * (value - min)) - scrollY - gizmoSize * 3 / 4;
-            //else
-            //    y = (int)(virtualSizeY - envelopeValueSizeY * (value - min + (value < 0 ? 0 : 1))) + (value >= midValue ? gizmoSize / 4 : -gizmoSize * 5 / 4) - scrollY;
-
-            //Gizmo slideGizmo = new Gizmo();
-            //slideGizmo.Image = bmpGizmoResizeUpDown;
-            //slideGizmo.FillImage = bmpGizmoResizeFill;
-            //slideGizmo.Action = GizmoAction.ChangeEnvValue;
-            //slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
+            Gizmo repeatGizmo = new Gizmo();
+            repeatGizmo.Image = bmpGizmoResizeUpDown;
+            repeatGizmo.FillImage = bmpGizmoResizeFill;
+            repeatGizmo.Action = GizmoAction.ChangeEnvEffectValue;
+            repeatGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
 
             var list = new List<Gizmo>();
-            //list.Add(slideGizmo);
+            list.Add(repeatGizmo);
             return list;
         }
 
@@ -5762,7 +5773,7 @@ namespace FamiStudio
 
         private bool HandleTouchDownPan(int x, int y)
         {
-            if (IsPointInNoteArea(x, y))
+            if (IsPointInNoteArea(x, y) || IsPointInEffectPanel(x, y))
             {
                 StartCaptureOperation(x, y, CaptureOperation.MobilePan);
                 return true;
@@ -5853,7 +5864,7 @@ namespace FamiStudio
 
         private bool HandleEffectsGizmos(int x, int y)
         {
-            if (IsPointInNoteArea(x, y))
+            if (IsPointInNoteArea(x, y) || IsPointInEffectPanel(x, y))
             {
                 var gizmos = GetEffectGizmos(out var gizmoNote, out var gizmoNoteLocation);
                 if (gizmos != null)
@@ -5969,14 +5980,34 @@ namespace FamiStudio
 
         private bool HandleTouchDownEnvelopeEffectsGizmos(int x, int y)
         {
-            // GetEnvelopeEffectsGizmos();
-            // MATTT
+            if (HasHighlightedNote() && highlightRepeatEnvelope && IsPointInEffectPanel(x, y))
+            {
+                var gizmos = GetEnvelopeEffectsGizmos();
+                if (gizmos != null)
+                {
+                    foreach (var g in gizmos)
+                    {
+                        if (g.Rect.Contains(x - pianoSizeX, y - headerSizeY))
+                        {
+                            switch (g.Action)
+                            {
+                                case GizmoAction.ChangeEnvEffectValue:
+                                    StartChangeEnvelopeRepeatValue(x, y);
+                                    break;
+                            }
+
+                            return true;
+                        }
+                    }
+                }
+            }
+
             return false;
         }
 
         private bool HandleTouchDownEnvelopeGizmos(int x, int y)
         {
-            if (HasHighlightedNote() && IsPointInNoteArea(x, y))
+            if (HasHighlightedNote() && !highlightRepeatEnvelope && IsPointInNoteArea(x, y))
             {
                 var gizmos = GetEnvelopeGizmos();
                 if (gizmos != null)
@@ -6049,6 +6080,21 @@ namespace FamiStudio
             {
                 var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1);
                 highlightNoteAbsIndex = absIdx == highlightNoteAbsIndex ? -1 : absIdx;
+                highlightRepeatEnvelope = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchClickEnvelopeEffectPanel(int x, int y)
+        {
+            if (HasRepeatEnvelope() && IsPointInEffectPanel(x, y))
+            {
+                var env = EditEnvelope;
+                var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, env.Length - 1) / env.ChunkLength;
+                highlightNoteAbsIndex   = absIdx == highlightNoteAbsIndex && highlightRepeatEnvelope ? -1 : absIdx;
+                highlightRepeatEnvelope = true;
                 return true;
             }
 
@@ -6766,6 +6812,7 @@ namespace FamiStudio
                 editMode == EditionMode.Arpeggio)
             {
                 if (HandleTouchClickEnvelope(x, y)) goto Handled;
+                if (HandleTouchClickEnvelopeEffectPanel(x, y)) goto Handled;
             }
 
             if (editMode == EditionMode.Channel ||
@@ -6975,6 +7022,7 @@ namespace FamiStudio
 
         private void ClearHighlightedNote()
         {
+            highlightRepeatEnvelope = false;
             highlightNoteAbsIndex = -1;
             highlightDPCMSample = -1;
         }
@@ -7626,7 +7674,7 @@ namespace FamiStudio
 
         private bool IsPointInNoteArea(int x, int y)
         {
-            return y > headerSizeY && x > pianoSizeX;
+            return y > headerAndEffectSizeY && x > pianoSizeX;
         }
 
         private bool IsPointInTopLeftCorner(int x, int y)
@@ -9099,6 +9147,7 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
+                buffer.Serialize(ref highlightRepeatEnvelope);
                 buffer.Serialize(ref highlightNoteAbsIndex);
                 buffer.Serialize(ref highlightDPCMSample);
             }

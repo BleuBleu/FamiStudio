@@ -3,10 +3,6 @@
 
 - Double-click / shift-click to delete songs/instruments?
 
-P0:
-- Android:
-	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
-	
 4.0.0 Change Logs
 ================
 - Revamped desktop version, based on GLFW using custom drawn widgets, consistent on Win/MacOS/Linux.
