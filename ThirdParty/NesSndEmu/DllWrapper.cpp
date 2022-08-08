@@ -1,8 +1,5 @@
 #include "Simple_Apu.h"
 
-#include <stdlib.h>
-#include <memory.h>
-
 #if defined(LINUX) || defined(__clang__)
 #define __stdcall
 #define __cdecl
@@ -105,4 +102,24 @@ extern "C" void __stdcall NesApuSkipCycles(int apuIdx, int cycles)
 extern "C" void __stdcall NesApuGetRegisterValues(int apuIdx, int exp, void* regs)
 {
 	apu[apuIdx].get_register_values(exp, regs);
+}
+
+extern "C" int __stdcall NesApuGetN163WavePos(int apuIdx, int n163ChanIndex)
+{
+	return apu[apuIdx].get_namco_wave_pos(n163ChanIndex);
+}
+
+extern "C" int __stdcall NesApuGetFdsWavePos(int apuIdx)
+{
+	return apu[apuIdx].get_fds_wave_pos();
+}
+
+extern "C" void __stdcall NesApuResetTriggers(int apuIdx)
+{
+	return apu[apuIdx].reset_triggers();
+}
+
+extern "C" int __stdcall NesApuGetChannelTrigger(int apuIdx, int exp, int idx)
+{
+	return apu[apuIdx].get_channel_trigger(exp, idx);
 }

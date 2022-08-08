@@ -176,6 +176,7 @@ const blargg_err_t blargg_success = 0;
 	#endif
 #endif
 
+#define abs(a) (((a) < 0 ? -(a) : (a)))
 #define min(a, b) (((a) < (b) ? (a) : (b)))
 #define max(a, b) (((a) > (b) ? (a) : (b)))
 #define clamp(x, a, b) ((x) < (a) ? (a) : ((x) > (b) ? (b) : (x)))

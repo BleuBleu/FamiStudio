@@ -32,7 +32,7 @@ namespace FamiStudio
 
             var lines = new List<string>();
 
-            var versionString = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
+            var versionString = Utils.SplitVersionNumber(Platform.ApplicationVersion, out _);
             var projectLine = $"Project";
             if (!noVersion)
                 projectLine += $"{GenerateAttribute("Version", versionString)}";
@@ -101,12 +101,20 @@ namespace FamiStudio
             // Instruments
             foreach (var instrument in project.Instruments)
             {
+                if (instrument.IsN163 && instrument.N163WavePreset == WavePresetType.Resample && instrument.N163ResampleWaveData != null ||
+                    instrument.IsFds  && instrument.FdsWavePreset  == WavePresetType.Resample && instrument.FdsResampleWaveData  != null)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instrument.Name} is resampled from WAV data. Discarding WAV data.");
+                    instrument.DeleteFdsResampleWavData();
+                    instrument.DeleteN163ResampleWavData();
+                }
+
                 var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}";
                 if (instrument.IsExpansionInstrument)
                 {
                    instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[instrument.Expansion]);
 
-                    if (instrument.IsFdsInstrument)
+                    if (instrument.IsFds)
                     {
                         instrumentLine += GenerateAttribute("FdsWavePreset", WavePresetType.Names[instrument.FdsWavePreset]);
                         instrumentLine += GenerateAttribute("FdsModPreset",  WavePresetType.Names[instrument.FdsModPreset]);
@@ -115,17 +123,18 @@ namespace FamiStudio
                         if (instrument.FdsModDepth     != 0) instrumentLine += GenerateAttribute("FdsModDepth", instrument.FdsModDepth);
                         if (instrument.FdsModDelay     != 0) instrumentLine += GenerateAttribute("FdsModDelay", instrument.FdsModDelay);
                     }
-                    else if (instrument.IsN163Instrument)
+                    else if (instrument.IsN163)
                     {
                         instrumentLine += GenerateAttribute("N163WavePreset", WavePresetType.Names[instrument.N163WavePreset]);
                         instrumentLine += GenerateAttribute("N163WaveSize", instrument.N163WaveSize);
                         instrumentLine += GenerateAttribute("N163WavePos", instrument.N163WavePos);
+                        instrumentLine += GenerateAttribute("N163WaveCount", instrument.N163WaveCount);
                     }
-                    else if (instrument.IsVrc6Instrument)
+                    else if (instrument.IsVrc6)
                     {
                         instrumentLine += GenerateAttribute("Vrc6SawMasterVolume", Vrc6SawMasterVolumeType.Names[instrument.Vrc6SawMasterVolume]);
                     }
-                    else if (instrument.IsVrc7Instrument)
+                    else if (instrument.IsVrc7)
                     {
                         instrumentLine += GenerateAttribute("Vrc7Patch", instrument.Vrc7Patch);
 
@@ -135,7 +144,7 @@ namespace FamiStudio
                                 instrumentLine += GenerateAttribute($"Vrc7Reg{i}", instrument.Vrc7PatchRegs[i]);
                         }
                     }
-                    else if (instrument.IsEpsmInstrument)
+                    else if (instrument.IsEpsm)
                     {
                         instrumentLine += GenerateAttribute("EpsmPatch", instrument.EpsmPatch);
 
@@ -362,7 +371,7 @@ namespace FamiStudio
                     {
                         case "Project":
                         {
-                            var currentVersion = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
+                            var currentVersion = Utils.SplitVersionNumber(Platform.ApplicationVersion, out _);
 
                             project = new Project();
                             if (!parameters.TryGetValue("Version", out var version))
@@ -427,7 +436,7 @@ namespace FamiStudio
                                 instrumentExp = ExpansionType.GetValueForShortName(instrumentExpStr);
                             instrument = project.CreateInstrument(instrumentExp, parameters["Name"]);
 
-                            if (instrument.IsFdsInstrument)
+                            if (instrument.IsFds)
                             {
                                 if (parameters.TryGetValue("FdsWavePreset",   out var wavPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForName(wavPresetStr);
                                 if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForName(modPresetStr);
@@ -436,17 +445,18 @@ namespace FamiStudio
                                 if (parameters.TryGetValue("FdsModDepth",     out var fdsModDepthStr))  instrument.FdsModDepth     = byte.Parse(fdsModDepthStr);
                                 if (parameters.TryGetValue("FdsModDelay",     out var fdsModDelayStr))  instrument.FdsModDelay     = byte.Parse(fdsModDelayStr);
                             }
-                            else if (instrument.IsN163Instrument)
+                            else if (instrument.IsN163)
                             {
                                  if (parameters.TryGetValue("N163WavePreset", out var wavPresetStr))    instrument.N163WavePreset = (byte)WavePresetType.GetValueForName(wavPresetStr);
                                  if (parameters.TryGetValue("N163WaveSize",   out var n163WavSizeStr))  instrument.N163WaveSize   = byte.Parse(n163WavSizeStr);
                                  if (parameters.TryGetValue("N163WavePos",    out var n163WavPosStr))   instrument.N163WavePos    = byte.Parse(n163WavPosStr);
+                                 if (parameters.TryGetValue("N163WaveCount",  out var wavCountStr))     instrument.N163WaveCount  = byte.Parse(wavCountStr);
                             }
-                            else if (instrument.IsVrc6Instrument)
+                            else if (instrument.IsVrc6)
                             {
                                  if (parameters.TryGetValue("Vrc6SawMasterVolume", out var vrc6SawVolumeStr)) instrument.Vrc6SawMasterVolume = (byte)Vrc6SawMasterVolumeType.GetValueForName(vrc6SawVolumeStr);
                             }
-                            else if (instrument.IsVrc7Instrument)
+                            else if (instrument.IsVrc7)
                             {
                                 if (parameters.TryGetValue("Vrc7Patch", out var vrc7PatchStr)) instrument.Vrc7Patch = byte.Parse(vrc7PatchStr);
 
@@ -459,7 +469,7 @@ namespace FamiStudio
                                     }
                                 }
                             }
-                            else if (instrument.IsEpsmInstrument)
+                            else if (instrument.IsEpsm)
                             {
                                 if (parameters.TryGetValue("EpsmPatch", out var epsmPatchStr)) instrument.EpsmPatch = byte.Parse(epsmPatchStr);
 
@@ -638,8 +648,15 @@ namespace FamiStudio
                     }
                 }
 
-                project.DisableEpsmMultipleExpansions();
+                // Post-load
+                foreach (var inst in project.Instruments)
+                {
+                    inst.PerformPostLoadActions();
+                }
+
                 project.SortEverything(false);
+                project.ValidateIntegrity();
+
                 ResetCulture();
 
                 return project;

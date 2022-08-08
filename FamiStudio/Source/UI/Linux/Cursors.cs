@@ -1,38 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
-    class Cursors
+    public static partial class Cursors
     {
-        public static Gdk.Cursor Default    = null;
-        public static Gdk.Cursor SizeWE     = null;
-        public static Gdk.Cursor SizeNS     = null;
-        public static Gdk.Cursor DragCursor = null;
-        public static Gdk.Cursor CopyCursor = null;
-        public static Gdk.Cursor Eyedrop    = null;
-        public static Gdk.Cursor Move      = null;
+        private const int XC_fleur = 52;
 
-        private static Gdk.Cursor CreateCursorFromResource(string name, int x, int y)
+        [DllImport("libX11")]
+        private extern static uint XCreateFontCursor(IntPtr display, uint shape);
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        private struct GLFWCursorX11
         {
-            var pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
-            return new Gdk.Cursor(Gdk.Display.Default, pixbuf, x, y);
+            public IntPtr Dummy;
+            public uint   XCursor; // XID = always 32-bit
+        };
+
+        private static unsafe IntPtr CreateGLFWCursorLinux(uint cursor)
+        {
+            // TODO : Free that memory when quitting.
+            var pc = (GLFWCursorX11*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(GLFWCursorX11))).ToPointer();
+            pc->Dummy = IntPtr.Zero;
+            pc->XCursor = cursor;
+            return (IntPtr)pc;
         }
 
-        public static void Initialize()
+        private static uint LoadLinuxCursor(uint shape)
         {
-            Default = Gdk.Cursor.NewFromName(Gdk.Display.Default, "default");
-            DragCursor = Gdk.Cursor.NewFromName(Gdk.Display.Default, "grab");
-            CopyCursor = Gdk.Cursor.NewFromName(Gdk.Display.Default, "copy");
-            Move = Gdk.Cursor.NewFromName(Gdk.Display.Default, "move");
-            SizeWE = new Gdk.Cursor(Gdk.CursorType.SbHDoubleArrow);
-            SizeNS = new Gdk.Cursor(Gdk.CursorType.SbVDoubleArrow);
-            Eyedrop = CreateCursorFromResource("EyedropCursor", 7, 24);
+            return XCreateFontCursor(glfwGetX11Display(), shape);
+        }
+
+        public static void Initialize(float scaling)
+        {
+            InitializeDesktop(scaling);
+
+            var fleur = CreateGLFWCursorLinux(LoadLinuxCursor(XC_fleur));
+
+            DragCursor = fleur;
+            CopyCursor = fleur;
+            Move = fleur;
         }
     }
 }

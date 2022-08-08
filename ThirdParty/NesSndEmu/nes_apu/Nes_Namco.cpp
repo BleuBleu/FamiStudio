@@ -48,6 +48,8 @@ void Nes_Namco::reset()
 		osc.delay = 0;
 		osc.sample = 0;
 	}
+
+	reset_triggers();
 }
 
 void Nes_Namco::output( Blip_Buffer* buf )
@@ -98,11 +100,16 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 		// This is not very accurate. We always do the entire 15-cycle channel update.
 		// We should only update until end_time. This will fail to emulate mid-update
 		// register changes, but in practice should be OK.
-		if (osc.output && volume && freq && wave_size)
+		if (osc.output && freq && wave_size)
 		{
 			// read wave sample
 			long phase = (osc_reg[5] << 16) | (osc_reg[3] << 8) | osc_reg[1];
+			long prev_phase = phase;
 			phase = (phase + freq) % (wave_size << 16);
+
+			// Wrapping around the wave is our trigger.
+			if (phase < prev_phase)
+				update_trigger(osc.output, time, osc.trigger);
 
 			int addr = ((phase >> 16) + osc_reg[6]) & 0xff;
 			int sample = reg[addr >> 1];
@@ -122,6 +129,7 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 		else
 		{
 			osc.sample = 0;
+			osc.trigger = trigger_none;
 		}
 
 		float sum = 0.0f;
@@ -144,7 +152,7 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 	}
 
 	delay = time - end_time;
-	last_time = time;
+	last_time = end_time;
 }
 
 void Nes_Namco::start_seeking()
@@ -181,4 +189,16 @@ void Nes_Namco::get_register_values(struct n163_register_values* regs)
 		age[i] = increment_saturate(age[i]);
 }
 
+void Nes_Namco::reset_triggers()
+{
+	for (int i = 0; i < osc_count; i++)
+	{
+		oscs[i].trigger = trigger_hold;
+	}
+}
 
+int Nes_Namco::get_channel_trigger(int idx) const
+{
+	int active_oscs = ((reg[0x7f] >> 4) & 7) + 1;
+	return oscs[osc_count - idx - 1].trigger;
+}

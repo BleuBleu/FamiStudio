@@ -39,6 +39,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_1EEEE695612A423291368684551360AA"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2AAD30D158BD4EFF9A5A4A89AD731B5F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -148,12 +154,6 @@
         "Entry"
         {
         "MsmKey" = "8:_DE3E8B106B034CAAB62B9E55201E4619"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E06C1478A59946E3AB46830133F79763"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -317,6 +317,26 @@
             {
             "SourcePath" = "8:Demo Songs\\Dedrecil.fms"
             "TargetName" = "8:Dedrecil.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1EEEE695612A423291368684551360AA"
+            {
+            "SourcePath" = "8:Demo Songs\\Sonic 1.fms"
+            "TargetName" = "8:Sonic 1.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -735,26 +755,6 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E06C1478A59946E3AB46830133F79763"
-            {
-            "SourcePath" = "8:Demo Songs\\Green Hill.fms"
-            "TargetName" = "8:Green Hill.fms"
-            "Tag" = "8:"
-            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EFD705BE398D4A4594B4EA0ABA4691E2"
             {
             "SourcePath" = "8:Demo Songs\\Gradius 2.fms"
@@ -876,15 +876,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
-        "ProductCode" = "8:{91030F69-D40A-43ED-B522-9AE3DFFF9FB3}"
-        "PackageCode" = "8:{6EA8C065-2303-4FCB-AACA-2B7585080E26}"
+        "ProductCode" = "8:{8C49EDB4-C8DA-4569-AC70-E3E92F0930E3}"
+        "PackageCode" = "8:{30F1717D-81C0-4A66-991E-58804EF6D2FB}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:3.3.1"
+        "ProductVersion" = "8:4.0.0"
         "Manufacturer" = "8:BleuBleu"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

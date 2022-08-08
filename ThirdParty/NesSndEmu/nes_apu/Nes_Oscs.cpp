@@ -103,6 +103,7 @@ void Nes_Square::run( cpu_time_t time, cpu_time_t end_time )
 	if ( !output )
 	{
 		delay = maintain_phase( time + delay, end_time, timer_period ) - end_time;
+		trigger = trigger_none;
 		return;
 	}
 	
@@ -120,6 +121,7 @@ void Nes_Square::run( cpu_time_t time, cpu_time_t end_time )
 		
 		time += delay;
 		time = maintain_phase( time, end_time, timer_period );
+		trigger = trigger_none;
 	}
 	else
 	{
@@ -151,6 +153,8 @@ void Nes_Square::run( cpu_time_t time, cpu_time_t end_time )
 				if ( phase == 0 || phase == duty ) {
 					delta = -delta;
 					synth->offset_inline( time, delta, output );
+					if (delta > 0)
+						update_trigger(output, time, trigger);
 				}
 				time += timer_period;
 			}
@@ -209,6 +213,7 @@ void Nes_Triangle::run( cpu_time_t time, cpu_time_t end_time )
 		delay = 0;
 		if ( length_counter && linear_counter && timer_period >= 3 )
 			delay = maintain_phase( time, end_time, timer_period ) - end_time;
+		trigger = trigger_none;
 		return;
 	}
 	
@@ -223,6 +228,7 @@ void Nes_Triangle::run( cpu_time_t time, cpu_time_t end_time )
 	if ( length_counter == 0 || linear_counter == 0 || timer_period < 3 )
 	{
 		time = end_time;
+		trigger = trigger_none;
 	}
 	else if ( time < end_time )
 	{
@@ -239,6 +245,8 @@ void Nes_Triangle::run( cpu_time_t time, cpu_time_t end_time )
 			if ( --phase == 0 ) {
 				phase = phase_range;
 				volume = -volume;
+				if (volume > 0)
+					update_trigger(output, time, trigger);
 			}
 			else {
 				synth.offset_inline( time, volume, output );
@@ -487,7 +495,7 @@ void Nes_Noise::run( cpu_time_t time, cpu_time_t end_time )
 {
 	if ( !output )
 		return;
-	
+
 	const int volume = this->volume();
 	int amp = (noise & 1) ? 0 : volume;
 	int delta = update_amp( amp );

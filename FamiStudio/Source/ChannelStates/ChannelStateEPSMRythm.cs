@@ -3,10 +3,10 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class ChannelStateEPSMRythm : ChannelState
+    public class ChannelStateEPSMRythm : ChannelStateEPSMBase
     {
         int channelIdx = 0;
-        int[] opStereo = { 0, 0, 0, 0, 0, 0 };
+        int stereoFlags = 0;
 
         public ChannelStateEPSMRythm(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
@@ -16,22 +16,20 @@ namespace FamiStudio
         }
         protected override void LoadInstrument(Instrument instrument)
         {
-            Debug.Assert(instrument.IsEpsmInstrument);
-            opStereo[channelIdx] = instrument.EpsmPatchRegs[1] & 0xC0;
+            Debug.Assert(instrument.IsEpsm);
+            if (instrument != null)
+            { 
+                stereoFlags = instrument.EpsmPatchRegs[1] & 0xC0;
+            }
         }
 
         public override void UpdateAPU()
         {
-            if (note.IsMusical)
+            if (note.IsMusical && noteTriggered)
             {
-                if (noteTriggered)
-                {
-                    var volume = GetVolume();
-                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx);
-                    WriteRegister(NesApu.EPSM_DATA0, opStereo[channelIdx] | volume << 1);
-                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM);
-                    WriteRegister(NesApu.EPSM_DATA0, (1 << channelIdx));
-                }
+                var volume = GetVolume();
+                WriteEPSMRegister(NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx, stereoFlags | (volume << 1));
+                WriteEPSMRegister(NesApu.EPSM_REG_RYTHM, 1 << channelIdx);
             }
 
             base.UpdateAPU();

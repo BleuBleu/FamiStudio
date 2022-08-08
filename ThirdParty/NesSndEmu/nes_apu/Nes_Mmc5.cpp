@@ -46,6 +46,7 @@ void Nes_Mmc5::reset()
 	square2.regs[3] = 0x00;
 
 	write_register(0, 0x5015, 0x00);
+	reset_triggers();
 }
 
 void Nes_Mmc5::volume(double v)
@@ -198,3 +199,15 @@ void Nes_Mmc5::get_register_values(struct mmc5_register_values* regs)
 	regs->regs[8] = osc_enables;
 	regs->regs[8] = 0xff; // TODO : Keep track of that one too.
 }
+
+void Nes_Mmc5::reset_triggers()
+{
+	square1.trigger = trigger_hold;
+	square2.trigger = trigger_hold;
+}
+
+int Nes_Mmc5::get_channel_trigger(int idx) const
+{
+	return oscs[idx]->trigger;
+}
+

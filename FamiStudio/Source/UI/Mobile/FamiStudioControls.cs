@@ -10,14 +10,14 @@ namespace FamiStudio
         private int width;
         private int height;
 
-        private GLGraphics  gfx;
-        private ThemeRenderResources res;
+        private Graphics  gfx;
+        private FontRenderResources fontRes;
 
-        private GLControl[] controls = new GLControl[6];
-        private GLControl   transitionControl;
-        private GLControl   activeControl;
-        private float       transitionTimer;
-        private bool        mobilePianoVisible = false;
+        private Control[] controls = new Control[6];
+        private Control   transitionControl;
+        private Control   activeControl;
+        private float     transitionTimer;
+        private bool      mobilePianoVisible = false;
 
         private Toolbar         toolbar;
         private Sequencer       sequencer;
@@ -32,9 +32,10 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => projectExplorer;
         public QuickAccessBar  QuickAccessBar  => quickAccessBar;
         public MobilePiano     MobilePiano     => mobilePiano;
-        public GLControl       ActiveControl   => activeControl;
+        public Control         ActiveControl   => activeControl;
+        public Graphics        Graphics        => gfx; 
 
-        public GLControl[] Controls => controls;
+        public Control[] Controls => controls;
         public bool IsLandscape => width > height;
         
         public bool MobilePianoVisible
@@ -47,14 +48,14 @@ namespace FamiStudio
             }
         }
 
-        public FamiStudioControls(FamiStudioForm parent)
+        public FamiStudioControls(FamiStudioWindow parent)
         {
-            toolbar         = new Toolbar();
-            sequencer       = new Sequencer();
-            pianoRoll       = new PianoRoll();
-            projectExplorer = new ProjectExplorer();
-            quickAccessBar  = new QuickAccessBar();
-            mobilePiano     = new MobilePiano();
+            toolbar         = new Toolbar(parent);
+            sequencer       = new Sequencer(parent);
+            pianoRoll       = new PianoRoll(parent);
+            projectExplorer = new ProjectExplorer(parent);
+            quickAccessBar  = new QuickAccessBar(parent);
+            mobilePiano     = new MobilePiano(parent);
 
             controls[0] = sequencer;
             controls[1] = pianoRoll;
@@ -64,12 +65,9 @@ namespace FamiStudio
             controls[5] = mobilePiano;
 
             activeControl = sequencer;
-
-            foreach (var ctrl in controls)
-                ctrl.ParentForm = parent;
         }
 
-       public void SetActiveControl(GLControl ctrl, bool animate = true)
+       public void SetActiveControl(Control ctrl, bool animate = true)
         {
             if (activeControl != ctrl)
             {
@@ -137,10 +135,10 @@ namespace FamiStudio
             }
         }
 
-        private bool IsPointInControl(GLControl ctrl, int x, int y, out int ctrlX, out int ctrlY)
+        private bool IsPointInControl(Control ctrl, int x, int y, out int ctrlX, out int ctrlY)
         {
-            ctrlX = x - ctrl.Left;
-            ctrlY = y - ctrl.Top;
+            ctrlX = x - ctrl.WindowLeft;
+            ctrlY = y - ctrl.WindowTop;
 
             if (ctrlX >= 0 &&
                 ctrlY >= 0 &&
@@ -161,7 +159,7 @@ namespace FamiStudio
             }
         }
 
-        public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
+        public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
             if (!CanAcceptInput)
             {
@@ -218,19 +216,19 @@ namespace FamiStudio
             return anyNeedsRedraw;
         }
 
-        private void RenderControl(GLControl ctrl)
+        private void RenderControl(Control ctrl)
         {
             var fullscreenViewport = ctrl.WantsFullScreenViewport;
 
             if (fullscreenViewport)
-                gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
+                gfx.BeginDrawControl(new Rectangle(0, 0, width, height), height);
             else
-                gfx.BeginDrawControl(new System.Drawing.Rectangle(ctrl.Left, ctrl.Top, ctrl.Width, ctrl.Height), height);
+                gfx.BeginDrawControl(new Rectangle(ctrl.WindowLeft, ctrl.WindowTop, ctrl.Width, ctrl.Height), height);
 
             gfx.SetLineBias(2);
 
             if (fullscreenViewport)
-                gfx.Transform.PushTranslation(ctrl.Left, ctrl.Top);
+                gfx.Transform.PushTranslation(ctrl.WindowLeft, ctrl.WindowTop);
 
             var t0 = DateTime.Now;
             ctrl.Render(gfx);
@@ -239,7 +237,7 @@ namespace FamiStudio
             if (ShowRenderingTimes)
             {
                 var cmd = gfx.CreateCommandList();
-                cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontVeryLargeBold, 10, 10, gfx.GetSolidBrush(System.Drawing.Color.SpringGreen));
+                cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", fontRes.FontVeryLargeBold, 10, 10, Color.SpringGreen);
                 gfx.DrawCommandList(cmd);
             }
 
@@ -255,13 +253,13 @@ namespace FamiStudio
         {
             if (transitionTimer > 0.0f)
             {
-                gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
+                gfx.BeginDrawControl(new Rectangle(0, 0, width, height), height);
 
                 var cmd = gfx.CreateCommandList();
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
-                var brush = gfx.GetSolidBrush(System.Drawing.Color.FromArgb(alpha, Theme.DarkGreyFillColor1));
+                var color = Color.FromArgb(alpha, Theme.DarkGreyColor4);
 
-                cmd.FillRectangle(activeControl.Left, activeControl.Top, activeControl.Right, activeControl.Bottom, brush);
+                cmd.FillRectangle(activeControl.WindowLeft, activeControl.WindowTop, activeControl.WindowRight, activeControl.WindowBottom, color);
 
                 gfx.DrawCommandList(cmd);
                 gfx.EndDrawControl();
@@ -318,13 +316,13 @@ namespace FamiStudio
         {
             Debug.Assert(gfx == null);
 
-            gfx = new GLGraphics(DpiScaling.MainWindow, DpiScaling.Font);
-            res = new ThemeRenderResources(gfx);
+            gfx = new Graphics(DpiScaling.Window, DpiScaling.Font);
+            fontRes = new FontRenderResources(gfx);
             
             foreach (var ctrl in controls)
             {
-                ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
-                ctrl.SetThemeRenderResource(res);
+                ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
+                ctrl.SetFontRenderResource(fontRes);
                 ctrl.RenderInitialized(gfx);
             }
         }

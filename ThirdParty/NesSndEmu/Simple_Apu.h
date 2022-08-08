@@ -15,7 +15,6 @@
 #include "nes_apu/Nes_Sunsoft.h"
 #include "nes_apu/Nes_EPSM.h"
 #include "nes_apu/Nes_Fme7.h"
-#include "nes_apu/Blip_Buffer.h"
 
 class Simple_Apu {
 public:
@@ -73,6 +72,9 @@ public:
 	void write_register( cpu_addr_t, int data );
 	void get_register_values(int exp, void* regs);
 
+	int get_namco_wave_pos(int n163ChanIndex);
+	int get_fds_wave_pos();
+
 	// Read from status register at 0x4015
 	int read_status();
 	
@@ -91,6 +93,9 @@ public:
 
 	void enable_channel(int, int, bool);
 	
+	void reset_triggers();
+	int get_channel_trigger(int exp, int idx);
+
 	void treble_eq(int exp, double treble, int sample_rate);
 	void set_expansion_volume(int expansion, double evolume);
 

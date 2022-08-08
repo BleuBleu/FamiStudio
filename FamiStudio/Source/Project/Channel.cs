@@ -26,17 +26,19 @@ namespace FamiStudio
         public int ExpansionChannelIndex => ChannelType.GetExpansionChannelIndexForChannelType(type);
         public int Index => ChannelTypeToIndex(type, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels);
 
-        public bool IsRegularChannel   => Expansion == ExpansionType.None;
-        public bool IsFdsChannel       => Expansion == ExpansionType.Fds;
-        public bool IsN163Channel      => Expansion == ExpansionType.N163;
-        public bool IsVrc6Channel      => Expansion == ExpansionType.Vrc6;
-        public bool IsVrc7Channel      => Expansion == ExpansionType.Vrc7;
-        public bool IsMmc5Channel      => Expansion == ExpansionType.Mmc5;
-        public bool IsS5BChannel       => Expansion == ExpansionType.S5B;
-        public bool IsNoiseChannel     => type == ChannelType.Noise;
-        public bool IsEPSMChannel      => Expansion == ExpansionType.EPSM;
-        public bool IsEPSMFmChannel    => type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6;
-        public bool IsEPSMRythmChannel => type >= ChannelType.EPSMrythm1 && type <= ChannelType.EPSMrythm6;
+        public bool IsRegularChannel    => Expansion == ExpansionType.None;
+        public bool IsFdsChannel        => Expansion == ExpansionType.Fds;
+        public bool IsN163Channel       => Expansion == ExpansionType.N163;
+        public bool IsVrc6Channel       => Expansion == ExpansionType.Vrc6;
+        public bool IsVrc7Channel       => Expansion == ExpansionType.Vrc7;
+        public bool IsMmc5Channel       => Expansion == ExpansionType.Mmc5;
+        public bool IsS5BChannel        => Expansion == ExpansionType.S5B;
+        public bool IsNoiseChannel      => type == ChannelType.Noise;
+        public bool IsDpcmChannel       => type == ChannelType.Dpcm;
+        public bool IsEPSMChannel       => type >= ChannelType.EPSMSquare1 && type <= ChannelType.EPSMrythm6;
+        public bool IsEPSMSquareChannel => type >= ChannelType.EPSMSquare1 && type <= ChannelType.EPSMSquare3;
+        public bool IsEPSMFmChannel     => type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6;
+        public bool IsEPSMRythmChannel  => type >= ChannelType.EPSMrythm1 && type <= ChannelType.EPSMrythm6;
 
         public Channel(Song song, int type, int songLength)
         {
@@ -632,17 +634,38 @@ namespace FamiStudio
             return Note.GetEffectDefaultValue(song, effect);
         }
 
-        public int GetEffectValueAt(NoteLocation location, int effect)
+        public int GetLastEffectValue(NoteLocation location, int effect)
         {
-            var val = GetCachedLastValidEffectValue(location.PatternIndex - 1, effect, out _);
+            var lastLocation = GetLastEffectLocation(location, effect);
 
+            if (lastLocation.IsValid)
+            {
+                return GetNoteAt(lastLocation).GetEffectValue(effect);
+            }
+            else
+            {
+                return Note.GetEffectDefaultValue(song, effect);
+            }
+        }
+
+        public NoteLocation GetLastEffectLocation(NoteLocation location, int effect)
+        {
+            var effectLocation = NoteLocation.Invalid;
+
+            // First look in the current pattern.
             for (var it = GetSparseNoteIterator(new NoteLocation(location.PatternIndex, 0), location, Note.GetFilterForEffect(effect)); !it.Done; it.Next())
             {
-                if (it.Note != null && it.Note.HasVolume)
-                    return it.Note.Volume;
+                if (it.Note != null && it.Note.HasValidEffectValue(effect))
+                    effectLocation = it.Location;
             }
 
-            return val;
+            // Go back to previous is we didnt find anything.
+            if (!effectLocation.IsValid)
+            {
+                GetCachedLastValidEffectValue(location.PatternIndex - 1, effect, out effectLocation);
+            }
+
+            return effectLocation;
         }
 
         public NoteLocation GetCachedLastMusicalNoteWithAttackLocation(int patternIdx)
@@ -968,6 +991,20 @@ namespace FamiStudio
                 pattern.DeleteEmptyNotes();
         }
 
+        public bool HasAnyPatternInstances
+        {
+            get
+            {
+                for (int i = 0; i < song.Length; i++)
+                {
+                    if (patternInstances[i] != null)
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
         public void SetNoteDurationToMaximumLength()
         {
             var maxNoteLengths = new Dictionary<Note, int>();
@@ -1275,7 +1312,6 @@ namespace FamiStudio
 
             var releasesToCreate = new HashSet<NoteLocation>();
             var stopsToCreate = new HashSet<NoteLocation>();
-            var patternsToDuplicate = new HashSet<int>();
 
             var loc0 = new NoteLocation(0, 0);
             var loc1 = new NoteLocation(Song.Length, 0);
@@ -1284,7 +1320,7 @@ namespace FamiStudio
             {
                 var note = it.Note;
 
-                Debug.Assert(note.IsMusical || note.IsStop);
+                Debug.Assert(note.IsMusical || note.IsStop || note.HasCutDelay);
 
                 if (it.Note.IsMusical)
                 {

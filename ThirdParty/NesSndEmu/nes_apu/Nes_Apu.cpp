@@ -83,6 +83,20 @@ void Nes_Apu::enable_nonlinear( double v )
 	buffer_cleared();
 }
 
+void Nes_Apu::reset_triggers()
+{
+	square1.trigger = trigger_hold;
+	square2.trigger = trigger_hold;
+	triangle.trigger = trigger_hold;
+	noise.trigger = trigger_none; // Not implemented yet, would be nice to support mode 1 (93/31 sequence)
+	dmc.trigger = trigger_none; // Looping samples would be nice to support.
+}
+
+int Nes_Apu::get_channel_trigger(int idx) const
+{
+	return oscs[idx]->trigger;
+}
+
 void Nes_Apu::volume( double v )
 {
 	dmc.nonlinear = false;
@@ -130,6 +144,8 @@ void Nes_Apu::reset( bool pal_mode, int initial_dmc_dac )
 	dmc.dac = initial_dmc_dac;
 	if ( !dmc.nonlinear )
 		dmc.last_amp = initial_dmc_dac; // prevent output transition
+
+	reset_triggers();
 }
 
 void Nes_Apu::irq_changed()

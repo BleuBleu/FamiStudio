@@ -1,8 +1,55 @@
+4.0.0
+=====
+
+- Double-click / shift-click to delete songs/instruments?
+
+4.0.0 Change Logs
+================
+- Revamped desktop version, based on GLFW using custom drawn widgets, consistent on Win/MacOS/Linux.
+- Redesigned desktop controls : context menu, gizmos, etc. 
+- Animated GIFs for intro tutorial on desktop
+- More control over sequencer height & ability to hide unused channels
+- Support to multiple audio expansions with EPSM
+- Support for multiple waveforms for N163
+- Support for single audio expansions for ROM export 
+- Wave resampling for N163/FDS waveforms
+	- Import WAV files and adjust period + offset
+- Basic NSFe support (only track names and durations for now)
+- Improved oscilloscope stability:
+	- Use of emulation-generated triggers when rendering oscilloscope in exported video or in toolbar when previewing instruments.
+	- Improved trigger detection for toolbar oscilloscope when playing a song.
+- Audio delay effect when exporting
+- Snapping improvements, most notably:
+	- ALT+1, ALT+2, ALT+3 and ALT+4 quickly changes between common snapping values
+	- Hold ALT anytime when resizing or moving notes to temporarely disable snapping
+	- Context menu to set snapping to a specific note duration
+	- Option to snap effect values
+
+Testing:
+========
+- Test note creation, snapping with cut/note delays, stop notes, etc.
+- Do a pass on tooltips for ParamProviders.
+- TEST : Test no attack in playback + NSF.
+- TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
+- Restest multiple songs per file (changed multiplication thing)
+
+Packaging:
+==========
+- Add MM10 song to demo.
+- Ask how2 for demo songs.
+- Fix Multi + MultiEPSM unit tests.
+- UNIT-TEST : Add multi-wave to N163/FDS unit tests.
+- UNIT-TEST : Add FDS mod to unit tests (effect + delay)
+- Doc
+	- Add common time signature examples
+
+Batch convert PNG -> TGA
+==========================
+"c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png
+
 Linux notes 
 =========== 
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 
-- GTK# : sudo apt-get install gtk-sharp2  
-	- This seem to be enough (sudo apt-get install libgtk2.0-cil) 
 - How to recompile with old linux: 
 	- Ubuntu 16.04.6 
 	- Install cmake-gui 
@@ -27,9 +74,6 @@ Linux notes
 MacOS notes
 ===========
 - MacOS Sierra, fully patched is 10.12.6, with AppKit version 1504.83.101
-- Must compile the MacLauncher with this to link to the AppKit version that
-  matches GTK+2. This will make MacOS load these older versions afterwards,
-  even on more recent OS'es.
 - Must compile vorbis on old version too (like Sierra). 
 - If problem installing MacOS VM, see @DOUG fix at
   https://www.geekrar.com/how-to-fix-the-cpu-has-been-disabled-by-the-guest-os/
@@ -44,6 +88,10 @@ MacOS notes
 - If NAT network doesnt work (problem is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
 
+Convert PNG to TGA
+==================
+magick mogrify -path C:\Dump\PngToTga\Tga\ -format tga -compress RLE *.png
+
 Android Notes
 =============
 Key Store
@@ -51,6 +99,13 @@ Key Store
 - Pass : Usual x2
 - 30 Years
 - Only full name entered.
+
+Desktop tutorial GIFs
+=====================
+- 20 fps
+- Add mouse highlights
+- Add 1px border
+- Not global palette (buggy, creates grayscale images sometimes)
 
 Trailer/scroll 
 ============== 
@@ -66,24 +121,37 @@ Discord
 ======= 
 - Invite link: https://discord.gg/88UPmxh 
 
-Cartoon Tutorial
-================
-- Stamp
-- Hue: -180
-- Chroma: -20
-
 Backlog: 
 =========
-- Write delta counter (Zxx).
-- ROM export with expansion?
-- More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
+- Way to convert instrument between expansions.
+- Left resize to preserve release position?
+- Full S5B support? Not very intersting... Noise + envelopes. Meuh.
+- Display number of selected channels in grid for video export?
+- Dark mode for open/save dialogs on MacOS? + title bar?
+- BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
+- BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
+- Reorder channels for video export.
 - Overclocking (2x, 3x, 4x would be a good start).
-- NSF import read DMC initial value.
 - Save snapping + qwerty settings + some export settings.
-- Left/right pan with +/- (cubase style)?
-- TailWindz : CTRL + Scroll should do "something"
 - Hardware sweep (how to not conflict with smooth vibrato?)
 - Scales
-- Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
+- Alphabetical ordering should be a bit smarter about numbers.
+- Sound output selection?
+- Give better names to auto saves
+- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
+- Volume/effect scaling, easy one we have context menus.
+- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
+- Paste special, option to rename patterns.
+- ffmpeg path on Linux should work on path (Puna on CC discord).
+- Uncompressed envelopes
+- CLI only EXE (Linux only).
+- C0 is hidden by scroll bars
+- C0 is hidden in piano roll video
+- Piano roll scale on desktop?
+- Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
+- Dont reset camera in piano roll when deleting instrument (probably to handle case where you were editing the instrument)
+- Improve no-attack.
+	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
+	- Draw attack as red if user makes a mistake.

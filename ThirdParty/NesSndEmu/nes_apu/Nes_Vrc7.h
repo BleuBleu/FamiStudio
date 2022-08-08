@@ -17,15 +17,19 @@ public:
 	void output(Blip_Buffer*);
 	void treble_eq(blip_eq_t const& eq);
 	void enable_channel(int idx, bool enabled);
+	void run_until(cpu_time_t);
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	void get_register_values(struct vrc7_register_values* regs);
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
 
 	enum { shadow_regs_count = 1 };
 	enum { shadow_internal_regs_count = 54 };
 	void start_seeking();
 	void stop_seeking(blip_time_t& clock);
 	void write_shadow_register(int addr, int data);
+	void write_internal_register(blip_time_t& clock, int reg, int data);
 
 	enum { vrc7_clock  = 3579545 };
 	enum { reg_silence = 0xe000  };
@@ -43,9 +47,11 @@ private:
 	BOOST::uint8_t silence_age;
 	BOOST::uint8_t regs_age[54];
 	int reg;
+	int triggers[6];
 	struct __OPLL* opll;
 	Blip_Buffer* output_buffer;
 	cpu_time_t last_time;
+	int delay;
 	int last_amp;
 	Blip_Synth<blip_med_quality, 7200> synth;
 

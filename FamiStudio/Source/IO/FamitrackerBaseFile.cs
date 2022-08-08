@@ -164,7 +164,7 @@ namespace FamiStudio
         };
 
         // FamiTracker -> FamiStudio
-        protected static int[] EnvelopeTypeLookup =
+        protected static int[] FamiTrackerToFamiStudioEnvelopeLookup =
         {
             EnvelopeType.Volume,   // SEQ_VOLUME
             EnvelopeType.Arpeggio, // SEQ_ARPEGGIO
@@ -174,7 +174,7 @@ namespace FamiStudio
         };
 
         // FamiStudio -> FamiTracker
-        protected static int[] ReverseEnvelopeTypeLookup =
+        protected static int[] FamiStudioToFamiTrackerEnvelopeLookup =
         {
              0, // Volume
              1, // Arpeggio
@@ -188,11 +188,32 @@ namespace FamiStudio
             public byte param;
         }
 
+        protected const int MaxSequences = 128;
+        protected const int SequenceCount = 5;
+
         protected Project project;
         protected Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
         protected Dictionary<Pattern, int> patternLengths = new Dictionary<Pattern, int>();
         protected Dictionary<Song, int> songDurations = new Dictionary<Song, int>();
+        protected Dictionary<Instrument, int> n163WaveEnvs = new Dictionary<Instrument, int>();
+        protected Envelope[,] envelopes = new Envelope[MaxSequences, SequenceCount];
+        protected Envelope[,] envelopesExp = new Envelope[MaxSequences, SequenceCount];
         protected int barLength = -1;
+
+        protected Envelope GetFamiTrackerEnvelope(int exp, int famitrackerType, int idx)
+        {
+            if (idx < 0)
+                return null;
+
+            var list = exp == ExpansionType.None ? envelopes : envelopesExp;
+            return list[idx, famitrackerType];
+        }
+
+        protected void SetFamiTrackerEnvelope(int exp, int famitrackerType, int idx, Envelope env)
+        {
+            var list = exp == ExpansionType.None ? envelopes : envelopesExp;
+            list[idx, famitrackerType] = env;
+        }
 
         protected int ConvertExpansionAudio(int exp)
         {
@@ -526,6 +547,41 @@ namespace FamiStudio
             return bestIdx;
         }
 
+        private void AssignNullInstruments(Song s)
+        {
+            foreach (var c in s.Channels)
+            {
+                if (c.IsDpcmChannel)
+                    continue;
+
+                var lastInstrument = (Instrument)null;
+
+                for (var it = c.GetSparseNoteIterator(s.StartLocation, s.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                {
+                    var note = it.Note;
+
+                    Debug.Assert(note.IsMusical);
+
+                    if (note.Instrument == null)
+                    {
+                        if (lastInstrument != null)
+                        { 
+                            note.Instrument = lastInstrument;
+                            Log.LogMessage(LogSeverity.Warning, $"No instrument assigned, will use previous instrument '{lastInstrument.Name}'. {GetPatternString(it.Pattern, it.Location.NoteIndex)}");
+                        }
+                        else
+                        {
+                            Log.LogMessage(LogSeverity.Warning, $"No instrument assigned, note may not be audible. {GetPatternString(it.Pattern, it.Location.NoteIndex)}");
+                        }
+                    }
+                    else
+                    {
+                        lastInstrument = note.Instrument;
+                    }
+                }
+            }
+        }
+
         private void CreateArpeggios(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
             var processedPatterns = new HashSet<Pattern>();
@@ -642,9 +698,9 @@ namespace FamiStudio
                             if (fx.param != 0)
                             {
                                 // When the effect it turned on, we need to add a note.
-                                if ((fx.fx == Effect_PortaUp ||
+                                if ((fx.fx == Effect_PortaUp   ||
                                      fx.fx == Effect_PortaDown ||
-                                     fx.fx == Effect_SlideUp ||
+                                     fx.fx == Effect_SlideUp   ||
                                      fx.fx == Effect_SlideDown) &&
                                     lastNoteValue >= Note.MusicalNoteMin &&
                                     lastNoteValue <= Note.MusicalNoteMax && (note == null || !note.IsValid))
@@ -705,10 +761,14 @@ namespace FamiStudio
                                 // Ignore notes with no attack since we created them to handle a previous slide.
                                 if (note.HasAttack && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax)
                                 {
-                                    slideSpeed = portamentoSpeed;
+                                    slideSpeed  = portamentoSpeed;
                                     slideTarget = note.Value;
                                     slideSource = lastNoteValue;
-                                    note.Value = lastNoteValue;
+                                    note.Value  = lastNoteValue;
+
+                                    // In FamiTracker, 3xx on a VRC7 channel doesnt trigger the attacks.
+                                    if (c.IsVrc7Channel)
+                                        note.HasAttack = false;
                                 }
                             }
 
@@ -1059,6 +1119,74 @@ namespace FamiStudio
             }
         }
 
+        public static void ConvertN163WaveIndexToRepeatEnvelope(Instrument inst, Envelope waveIndexEnv)
+        {
+            if (waveIndexEnv == null)
+            {
+                // When there is no wave index envelope, just truncate to 1 waveform.
+                inst.N163WaveCount = 1;
+                inst.Envelopes[EnvelopeType.WaveformRepeat].Values[0] = (sbyte)1;
+            }
+            else
+            {
+                // Looks for contiguous sequences in the wave index sequence.
+                var repeats = new List<int>();
+                var indices = new List<int>();
+                var prevIdx = 0;
+                var prevVal = waveIndexEnv.Values[0];
+                var loopIdx = -1;
+                var relIdx  = -1;
+
+                for (int i = 1; i < waveIndexEnv.Length; i++)
+                {
+                    // Must break for loop and releases too.
+                    if (waveIndexEnv.Values[i] != prevVal || i == waveIndexEnv.Loop || i == waveIndexEnv.Release)
+                    {
+                        repeats.Add(i - prevIdx);
+                        indices.Add(prevVal);
+                        prevVal = waveIndexEnv.Values[i];
+                        prevIdx = i;
+
+                        if (i == waveIndexEnv.Loop)
+                            loopIdx = indices.Count;
+                        if (i == waveIndexEnv.Release)
+                            relIdx = indices.Count;
+                    }
+                }
+
+                repeats.Add(waveIndexEnv.Length - prevIdx);
+                indices.Add(waveIndexEnv.Values[waveIndexEnv.Length - 1]);
+
+                // Build the equivalent waveform + repeat envelope.
+                var wavEnv = inst.Envelopes[EnvelopeType.N163Waveform];
+                var repEnv = inst.Envelopes[EnvelopeType.WaveformRepeat];
+                var originalWaveforms = wavEnv.Values.Clone() as sbyte[];
+
+                inst.N163WaveCount = (byte)repeats.Count;
+
+                if (inst.N163WaveCount < repeats.Count)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"The total size of the N163 or FDS waveforms is larger than the maximum supported, truncating.");
+                }
+
+                for (int i = 0; i < inst.N163WaveCount; i++)
+                {
+                    repEnv.Values[i] = (sbyte)repeats[i];
+                    var idx = indices[i];
+                    for (int j = 0; j < inst.N163WaveSize; j++)
+                        wavEnv.Values[i * inst.N163WaveSize + j] = originalWaveforms[idx * inst.N163WaveSize + j];
+                }
+
+                var waveEnv = inst.Envelopes[EnvelopeType.N163Waveform];
+
+                repEnv.Loop    = loopIdx;
+                repEnv.Release = relIdx;
+
+                waveEnv.Loop    = repEnv.Loop    >= 0 ? repEnv.Loop    * inst.N163WaveSize : -1;
+                waveEnv.Release = repEnv.Release >= 0 ? repEnv.Release * inst.N163WaveSize : -1;
+            }
+        }
+
         protected bool FinishImport()
         {
             foreach (var s in project.Samples)
@@ -1076,6 +1204,16 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Warning, $"Envelope '{EnvelopeType.Names[i]}' of instrument '{inst.Name}' have values outside of the supported range, clamping.");
                         env.ClampToValidRange(inst, i);
                     }
+                }
+
+                if (inst.IsN163)
+                {
+                    if (!n163WaveEnvs.TryGetValue(inst, out var waveIndexEnvIdx))
+                        waveIndexEnvIdx = -1;
+
+                    var waveIndexEnv = GetFamiTrackerEnvelope(ExpansionType.N163, 4 /* SEQ_DUTYCYCLE */, waveIndexEnvIdx);
+
+                    ConvertN163WaveIndexToRepeatEnvelope(inst, waveIndexEnv);
                 }
             }
 
@@ -1115,6 +1253,7 @@ namespace FamiStudio
                 s.DeleteNotesPastMaxInstanceLength();
                 s.UpdatePatternStartNotes();
 
+                AssignNullInstruments(s);
                 CreateArpeggios(s, patternFxData);
                 CreateVolumeSlides(s, patternFxData);
                 CreateSlideNotes(s, patternFxData);

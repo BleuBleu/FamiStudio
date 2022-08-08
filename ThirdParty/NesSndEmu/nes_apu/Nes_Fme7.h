@@ -26,6 +26,7 @@ public:
 	void output( Blip_Buffer* );
 	enum { osc_count = 3 };
 	void osc_output( int index, Blip_Buffer* );
+	void run_until(blip_time_t);
 	void end_frame( blip_time_t );
 	void save_state( fme7_apu_state_t* ) const;
 	void load_state( fme7_apu_state_t const& );
@@ -37,6 +38,9 @@ public:
 	
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	void get_register_values(struct s5b_register_values* regs);
+
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
 
 	// (addr & addr_mask) == latch_addr
 	void write_latch( int );
@@ -62,13 +66,12 @@ private:
 	struct {
 		Blip_Buffer* output;
 		int last_amp;
+		int trigger;
 	} oscs [osc_count];
 	blip_time_t last_time;
 	
 	enum { amp_range = 192 }; // can be any value; this gives best error/quality tradeoff
 	Blip_Synth<blip_good_quality,1> synth;
-	
-	void run_until( blip_time_t );
 
 	short shadow_internal_regs[shadow_internal_regs_count];
 };

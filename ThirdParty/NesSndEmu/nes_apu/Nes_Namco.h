@@ -22,6 +22,7 @@ public:
 	enum { osc_count = 8 };
 	void osc_output( int index, Blip_Buffer* );
 	void reset();
+	void run_until(cpu_time_t);
 	void end_frame( cpu_time_t );
 	
 	// Read/write data register is at 0x4800 to 0x4fff.
@@ -36,6 +37,10 @@ public:
 
 	void write_register( cpu_time_t, int addr, int data );
 	void get_register_values(struct n163_register_values* regs);
+	int get_wave_pos(int chan);
+
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
 
 	// to do: implement save/restore
 	void save_snapshot( namco_snapshot_t* out );
@@ -56,6 +61,7 @@ private:
 	struct Namco_Osc {
 		long delay;
 		short sample;
+		int trigger;
 		Blip_Buffer* output;
 	};
 	
@@ -76,7 +82,6 @@ private:
 	short shadow_internal_regs[shadow_internal_regs_count];
 
 	BOOST::uint8_t& access();
-	void run_until( cpu_time_t );
 };
 
 // Must match the definition in NesApu.cs.
@@ -115,6 +120,11 @@ inline void Nes_Namco::write_register(cpu_time_t time, int addr, int data)
 		write_addr(data);
 	else if (addr >= data_reg_addr && addr < (data_reg_addr + reg_range))
 		write_data(time, data);
+}
+
+inline int Nes_Namco::get_wave_pos(int chan)
+{
+	return reg[0x80 - (chan + 1) * 8 + 0x5];
 }
 
 #endif

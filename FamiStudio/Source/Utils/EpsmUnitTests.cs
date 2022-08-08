@@ -40,7 +40,7 @@ namespace FamiStudio
             }
         }
 
-        public static void DumpEpsmRegs(string nsfFilename, string outputFilename)
+        public static void DumpEpsmRegs(string nsfFilename, string outputFilename, int numFrames)
         {
             var nsf = NotSoFatso.NsfOpen(nsfFilename);
 
@@ -64,9 +64,7 @@ namespace FamiStudio
 
             var lines = new List<string>();
 
-            const int NumFrames = 12320; // Matches duration of TestEPSM.fms.
-
-            for (int i = 0; i < NumFrames; i++)
+            for (int i = 0; i < numFrames; i++)
             {
                 NotSoFatso.NsfRunFrame(nsf);
 

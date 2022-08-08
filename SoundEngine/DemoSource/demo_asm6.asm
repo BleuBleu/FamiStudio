@@ -1,3 +1,8 @@
+
+FAMISTUDIO_VERSION_MAJOR  = 4
+FAMISTUDIO_VERSION_MINOR  = 0
+FAMISTUDIO_VERSION_HOTFIX = 0
+
     ; HEADER
     INES_MAPPER = 0 ; 0 = NROM
     INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
@@ -16,8 +21,6 @@
     nmi_lock:           .dsb 1 ; prevents NMI re-entry
     nmi_count:          .dsb 1 ; is incremented every NMI
     nmi_ready:          .dsb 1 ; set to 1 to push a PPU frame update, 2 to turn rendering off next NMI
-    nmt_row_update_len: .dsb 1 ; number of bytes in nmt_row_update buffer
-    nmt_col_update_len: .dsb 1 ; number of bytes in nmt_col_update buffer
     scroll_x:           .dsb 1 ; x scroll position
     scroll_y:           .dsb 1 ; y scroll position
     scroll_nmt:         .dsb 1 ; nametable select (0-3 = $2000,$2400,$2800,$2C00)
@@ -26,6 +29,10 @@
     gamepad_pressed:    .dsb 1
     song_index:         .dsb 1
     pause_flag:         .dsb 1
+    nmt_update_mode:    .dsb 1   ; update "mode", 0 = nothing to do, 1 = column mode, 2 = row mode + palettes
+    nmt_update_data:    .dsb 128 ; nametable update entry buffer for PPU update
+    nmt_update_len:     .dsb 1 ; number of bytes in nmt_update_data buffer
+    palette:            .dsb 32  ; palette buffer for PPU update
 
     ; General purpose temporary vars.
     r0: .dsb 1
@@ -40,9 +47,6 @@
 
     ; RAM
     .enum $0300
-    nmt_col_update: .dsb 128 ; nametable update entry buffer for PPU update (column mode)
-    nmt_row_update: .dsb 128 ; nametable update entry buffer for PPU update (column mode)
-    palette:        .dsb 32  ; palette buffer for PPU update
     .ende
 
     ; OAM
@@ -65,11 +69,12 @@ FAMISTUDIO_USE_SLIDE_NOTES    = 1
 FAMISTUDIO_USE_VIBRATO        = 1
 FAMISTUDIO_USE_ARPEGGIO       = 1
 FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
+FAMISTUDIO_USE_RELEASE_NOTES  = 1
 FAMISTUDIO_DPCM_OFF           = $e000
 
 ; ASM6-specific config.
-FAMISTUDIO_ASM6_ZP_ENUM   = $0014
-FAMISTUDIO_ASM6_BSS_ENUM  = $0420
+FAMISTUDIO_ASM6_ZP_ENUM   = $00b4
+FAMISTUDIO_ASM6_BSS_ENUM  = $0300
 FAMISTUDIO_ASM6_CODE_BASE = $8000
 
     .include "..\famistudio_asm6.asm"
@@ -84,15 +89,15 @@ default_palette:
 
 ; Silver Surfer - BGM 2
 song_title_silver_surfer:
-    .db $ff, $ff, $ff, $12, $22, $25, $2f, $1e, $2b, $ff, $12, $2e, $2b, $1f, $1e, $2b, $ff, $4c, $ff, $01, $06, $0c, $ff, $36, $ff, $ff, $ff, $ff
+    .db $ff, $ff, $ff, $12, $22, $25, $2f, $1e, $2b, $ff, $12, $2e, $2b, $1f, $1e, $2b, $ff, $4f, $ff, $01, $06, $0c, $ff, $36, $ff, $ff, $ff, $ff
 
 ; Journey To Silius - Menu
 song_title_jts:
-    .db $ff, $ff, $09, $28, $2e, $2b, $27, $1e, $32, $ff, $13, $28, $ff, $12, $22, $25, $22, $2e, $2c, $ff, $4c, $ff, $0c, $1e, $27, $2e, $ff, $ff
+    .db $ff, $ff, $09, $28, $2e, $2b, $27, $1e, $32, $ff, $13, $28, $ff, $12, $22, $25, $22, $2e, $2c, $ff, $4f, $ff, $0c, $1e, $27, $2e, $ff, $ff
 
 ; Shatterhand - Final Area
 song_title_shatterhand:
-    .db $ff, $ff, $12, $21, $1a, $2d, $2d, $1e, $2b, $21, $1a, $27, $1d, $ff, $4c, $ff, $05, $22, $27, $1a, $25, $ff, $00, $2b, $1e, $1a, $ff, $ff
+    .db $ff, $ff, $12, $21, $1a, $2d, $2d, $1e, $2b, $21, $1a, $27, $1d, $ff, $4f, $ff, $05, $22, $27, $1a, $25, $ff, $00, $2b, $1e, $1a, $ff, $ff
 
 NUM_SONGS = 3
 
@@ -178,78 +183,123 @@ nmi:
     ; sprite OAM DMA
     ldx #0
     stx $2003
-    lda #>(oam)
+    lda #>oam
     sta $4014
 
-    ; nametable update (column)
-    @col_update:
+; nametable update
+@nmt_update:
+    lda nmt_update_mode 
+    bne @do_update
+    jmp @update_done
+    @do_update:
         ldx #0
-        cpx nmt_col_update_len
-        beq @row_update
-        lda #%10001100
-        sta $2000 ; set vertical nametable increment
-        @nmt_col_update_loop:
-            lda nmt_col_update, x
+        cpx nmt_update_len
+        beq @palettes
+        asl
+        asl
+        ora #%10000000
+        sta $2000
+        ldx #0
+        @nmt_update_loop:
+            lda nmt_update_data, x
             inx
             sta $2006
-            lda nmt_col_update, x
+            lda nmt_update_data, x
             inx
             sta $2006
-            ldy nmt_col_update, x
+            ldy nmt_update_data, x
             inx
             @col_loop:
-                lda nmt_col_update, x
+                lda nmt_update_data, x
                 inx
                 sta $2007
                 dey
                 bne @col_loop
-            cpx nmt_col_update_len
-            bcc @nmt_col_update_loop
-        lda #0
-        sta nmt_col_update_len
+            cpx nmt_update_len
+            bcc @nmt_update_loop
 
-    ; nametable update (row)
-    @row_update:
-        lda #%10001000
-        sta $2000 ; set horizontal nametable increment
-        ldx #0
-        cpx nmt_row_update_len
-        bcs @palettes
-        @nmt_row_update_loop:
-            lda nmt_row_update, x
-            inx
-            sta $2006
-            lda nmt_row_update, x
-            inx
-            sta $2006
-            ldy nmt_row_update, x
-            inx
-            @row_loop:
-                lda nmt_row_update, x
-                inx
-                sta $2007
-                dey
-                bne @row_loop
-            cpx nmt_row_update_len
-            bcc @nmt_row_update_loop
-        lda #0
-        sta nmt_row_update_len
-
-    ; palettes
-    @palettes:
-        lda #%10001000
-        sta $2000 ; set horizontal nametable increment  
+; palettes
+@palettes:
+    lda nmt_update_mode
+    cmp #2
+    beq @palettes_need_update
+    jmp @update_done
+    @palettes_need_update:
         lda $2002
         lda #$3F
         sta $2006
         ldx #0
-        stx $2006 ; set 0PPU address to $3F00
-        @pal_loop:
-            lda palette, X
-            sta $2007
-            inx
-            cpx #32
-            bne @pal_loop
+        stx $2006 ; set PPU address to $3F00
+        lda palette+0
+        sta $2007
+        lda palette+1
+        sta $2007
+        lda palette+2
+        sta $2007
+        lda palette+3
+        sta $2007
+        lda palette+4
+        sta $2007
+        lda palette+5
+        sta $2007
+        lda palette+6
+        sta $2007
+        lda palette+7
+        sta $2007
+        lda palette+8
+        sta $2007
+        lda palette+9
+        sta $2007
+        lda palette+10
+        sta $2007
+        lda palette+11
+        sta $2007
+        lda palette+12
+        sta $2007
+        lda palette+13
+        sta $2007
+        lda palette+14
+        sta $2007
+        lda palette+15
+        sta $2007
+        lda palette+16
+        sta $2007
+        lda palette+17
+        sta $2007
+        lda palette+18
+        sta $2007
+        lda palette+19
+        sta $2007
+        lda palette+20
+        sta $2007
+        lda palette+21
+        sta $2007
+        lda palette+22
+        sta $2007
+        lda palette+23
+        sta $2007
+        lda palette+24
+        sta $2007
+        lda palette+25
+        sta $2007
+        lda palette+26
+        sta $2007
+        lda palette+27
+        sta $2007
+        lda palette+28
+        sta $2007
+        lda palette+29
+        sta $2007
+        lda palette+30
+        sta $2007
+        lda palette+31
+        sta $2007
+
+@update_done:
+    ; Clear update mode.
+    lda #0 
+    sta nmt_update_mode
+    sta nmt_update_len
 
 @scroll:
     lda scroll_nmt
@@ -360,6 +410,9 @@ gamepad_poll_dpcm_safe:
 
     rts
 
+version_text: ; 
+    .byte $34 + FAMISTUDIO_VERSION_MAJOR, $3e, $34 + FAMISTUDIO_VERSION_MINOR, $3e, $34 + FAMISTUDIO_VERSION_HOTFIX
+
 play_song:
 
     @text_ptr = p0
@@ -415,76 +468,82 @@ play_song:
 
     rts
 
-equalizer_lookup:
-    .byte $f0, $f0, $f0, $f0 ; 0
-    .byte $f0, $f0, $f0, $b8 ; 1
-    .byte $f0, $f0, $f0, $c8 ; 2
-    .byte $f0, $f0, $b8, $c8 ; 3
-    .byte $f0, $f0, $c8, $c8 ; 4
-    .byte $f0, $b8, $c8, $c8 ; 5
-    .byte $f0, $c8, $c8, $c8 ; 6
-    .byte $b8, $c8, $c8, $c8 ; 7
-    .byte $c8, $c8, $c8, $c8 ; 8
-equalizer_color_lookup:
-    .byte $01, $02, $00, $02, $01
+equalizer_ppu_addr_lo_lookup:
+    .byte $47 ; Square 1
+    .byte $4b ; Square 2
+    .byte $4f ; Triangle
+    .byte $53 ; Noise
+    .byte $57 ; DPCM
 
-; a = channel to update
+equalizer_ppu_addr_hi_lookup:
+    .byte $22 ; Square 1
+    .byte $22 ; Square 2
+    .byte $22 ; Triangle
+    .byte $22 ; Noise
+    .byte $22 ; DPCM
+
+; Which 4 BG tiles to draw for each "volume" [0-7]
+equalizer_volume_lookup:
+    .byte $e3, $e3, $e3, $e3 ; 0
+    .byte $e3, $e3, $e3, $e0 ; 1
+    .byte $e3, $e3, $e3, $f0 ; 2
+    .byte $e3, $e3, $e0, $f0 ; 3
+    .byte $e3, $e3, $f0, $f0 ; 4
+    .byte $e3, $e0, $f0, $f0 ; 5
+    .byte $e3, $f0, $f0, $f0 ; 6
+    .byte $e0, $f0, $f0, $f0 ; 7
+    .byte $f0, $f0, $f0, $f0 ; 8
+
+; To add some color variety.
+equalizer_color_lookup:
+    .byte $00, $01, $02
+    .byte $00, $01
+
+; x = channel to update
 update_equalizer:
     
-@pos_x = r0
-@color_offset = r1
+    channel_idx = r0
+    color_offset = r1
 
-    tay
-    lda equalizer_color_lookup, y
-    sta @color_offset
-    tya
+    stx channel_idx
+    lda equalizer_color_lookup, x
+    sta color_offset
 
-    ; compute x position.
-    asl a
-    asl a
-    sta @pos_x
+    ; Write 2 addresses
+    ldy nmt_update_len
+    lda equalizer_ppu_addr_hi_lookup, x
+    sta nmt_update_data,y
+    lda equalizer_ppu_addr_lo_lookup, x
+    sta nmt_update_data+1,y
 
-    ; compute lookup index.
-    lda famistudio_chn_note_counter, y
-    asl a
-    asl a
-    tay
-
-    ; compute 2 addresses
-    ldx nmt_col_update_len
-    lda #$22
-    sta nmt_col_update,x
-    sta nmt_col_update+7,x
-    lda #$47
-    clc
-    adc @pos_x
-    sta nmt_col_update+1,x
-    adc #1
-    sta nmt_col_update+8,x
+    ; Always update 4 tiles
     lda #4
-    sta nmt_col_update+2,x
-    sta nmt_col_update+9,x
+    sta nmt_update_data+2,y
 
-    lda equalizer_lookup, y
-    adc @color_offset
-    sta nmt_col_update+3,x
-    sta nmt_col_update+10,x
-    lda equalizer_lookup+1, y
-    adc @color_offset
-    sta nmt_col_update+4,x
-    sta nmt_col_update+11,x
-    lda equalizer_lookup+2, y
-    adc @color_offset
-    sta nmt_col_update+5,x
-    sta nmt_col_update+12,x
-    lda equalizer_lookup+3, y
-    adc @color_offset
-    sta nmt_col_update+6,x
-    sta nmt_col_update+13,x
+    ; Compute lookup index based on "volume".
+    lda famistudio_chn_note_counter, x
+    asl
+    asl
+    tax
+
+    clc
+    lda equalizer_volume_lookup, x
+    adc color_offset
+    sta nmt_update_data+3,y
+    lda equalizer_volume_lookup+1, x
+    adc color_offset
+    sta nmt_update_data+4,y
+    lda equalizer_volume_lookup+2, x
+    adc color_offset
+    sta nmt_update_data+5,y
+    lda equalizer_volume_lookup+3, x
+    adc color_offset
+    sta nmt_update_data+6,y
     
-    lda #14
-    adc nmt_col_update_len
-    sta nmt_col_update_len 
+    lda #7
+    adc nmt_update_len
+    sta nmt_update_len 
+    ldx channel_idx
 
     rts
 
@@ -492,19 +551,23 @@ main:
 
     ldx #0
     @palette_loop:
-        lda default_palette, X
-        sta palette, X
+        lda default_palette, x
+        sta palette, x
+        sta palette+16, x
         inx
-        cpx #32
+        cpx #16
         bcc @palette_loop
-    
+
+    ; Force palette update.
+    lda #2
+    sta nmt_update_mode
+
     jsr setup_background
+    jsr ppu_update
 
     lda #0 ; song zero.
     sta song_index
     jsr play_song
-
-    jsr ppu_update
 
     ; Load SFX
     ldx #<sounds
@@ -597,16 +660,22 @@ main:
 
     jsr famistudio_update ; TODO: Call in NMI.
     
-    lda #0
+    lda nmt_update_mode
+    bne @draw_done ; Dont allow update if we already have an update pending.
+
+    ldx #0
     jsr update_equalizer
+    ldx #1
+    jsr update_equalizer
+    ldx #2
+    jsr update_equalizer
+    ldx #3
+    jsr update_equalizer
+    ldx #4
+    jsr update_equalizer
+
     lda #1
-    jsr update_equalizer
-    lda #2
-    jsr update_equalizer
-    lda #3
-    jsr update_equalizer
-    lda #4
-    jsr update_equalizer
+    sta nmt_update_mode
 
 @draw_done:
 
@@ -666,18 +735,18 @@ rle_read_byte:
 ; p0  = pointer to text data.
 draw_text:
 
-    @temp_x   = r2
-    @temp     = r3
+    @temp_x = r2
+    @temp   = r3
     @text_ptr = p0
     
     stx @temp_x
-    ldx nmt_row_update_len
+    ldx nmt_update_len
     tya
     lsr
     lsr
     lsr
     ora #$20 ; high bits of Y + $20
-    sta nmt_row_update,x
+    sta nmt_update_data,x
     inx
     tya
     asl
@@ -688,22 +757,24 @@ draw_text:
     sta @temp
     lda @temp_x
     ora @temp
-    sta nmt_row_update,x
+    sta nmt_update_data,x
     inx
     lda #28 ; all our strings have 28 characters.
-    sta nmt_row_update,x
+    sta nmt_update_data,x
     inx
 
     ldy #0
     @text_loop:
         lda (@text_ptr),y
-        sta nmt_row_update,x
+        sta nmt_update_data,x
         inx
         iny
         cpy #28
         bne @text_loop
 
-    stx nmt_row_update_len
+    stx nmt_update_len
+    lda #2
+    sta nmt_update_mode
     rts
 
 setup_background:
@@ -725,7 +796,7 @@ setup_background:
     sta oam+3
     lda #15
     sta oam+0
-    lda #$81
+    lda #$51
     sta oam+1
     lda #1
     sta oam+2
@@ -734,7 +805,7 @@ setup_background:
     sta oam+7
     lda #23
     sta oam+4
-    lda #$90
+    lda #$60
     sta oam+5
     lda #1
     sta oam+6
@@ -743,10 +814,25 @@ setup_background:
     sta oam+11
     lda #23
     sta oam+8
-    lda #$92
+    lda #$62
     sta oam+9
     lda #1
     sta oam+10
+
+    ; Draw version
+    lda $2002
+    lda #$23
+    sta $2006
+    lda #$79
+    sta $2006
+
+    ldy #0
+    @version_loop:
+        lda version_text,y
+        sta $2007
+        iny
+        cpy #5
+        bne @version_loop
 
     rts
 

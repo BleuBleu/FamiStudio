@@ -1,11 +1,10 @@
-﻿using System.Windows.Forms;
-using Xamarin.Essentials;
+﻿using Xamarin.Essentials;
 
 namespace FamiStudio
 {
     class LogDialog : ILogOutput
     {
-        public LogDialog(FamiStudioForm parentForm)
+        public LogDialog(FamiStudioWindow parentForm)
         {
         }
 
@@ -34,16 +33,16 @@ namespace FamiStudio
         bool abort = false;
         bool hasMessages = false;
         private PropertyDialog dialog;
-        private FamiStudioForm parentForm;
+        private FamiStudioWindow parentForm;
 
-        public unsafe LogProgressDialog(FamiStudioForm parentForm, string title, string text)
+        public unsafe LogProgressDialog(FamiStudioWindow parentForm, string title, string text)
         {
             this.parentForm = parentForm;
 
             MainThread.InvokeOnMainThreadAsync(() =>
             {
                 // HACK : We only use this for video export on mobile.
-                dialog = new PropertyDialog(title, 100, false);
+                dialog = new PropertyDialog(parentForm, title, 100, false);
                 dialog.Properties.AddProgressBar("Export progress", 0.0f, text); // 0
                 dialog.Properties.AddLabel("Current Step", ""); // 1
                 dialog.Properties.Build();
@@ -65,7 +64,7 @@ namespace FamiStudio
                 if (!shown)
                 {
                     shown = true;
-                    dialog.ShowDialogAsync(parentForm, (r) => { abort = r != DialogResult.None; });
+                    dialog.ShowDialogAsync((r) => { abort = r != DialogResult.None; });
                 }
 
                 dialog.Properties.SetPropertyValue(0, progress);

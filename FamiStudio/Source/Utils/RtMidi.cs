@@ -9,11 +9,7 @@ namespace FamiStudio
 {
     public static class Midi
     {
-#if FAMISTUDIO_MACOS
-        const string RtMidiLibName = "librtmidi.dylib";
-#else
-        const string RtMidiLibName = "librtmidi.so";
-#endif
+        const string RtMidiLibName = "librtmidi" + Platform.DllExtension;
 
         internal const int STATUS_NOTE_ON  = 0x90;
         internal const int STATUS_NOTE_OFF = 0x80;

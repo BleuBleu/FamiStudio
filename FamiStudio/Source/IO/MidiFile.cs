@@ -571,13 +571,20 @@ namespace FamiStudio
             {
                 var prg = bytes[idx++];
 
-                Debug.WriteLine($"Program change to {MidiInstrumentNames[prg]} ({prg}) on channel {channel} at time {tick}");
+                if (prg <= 127)
+                { 
+                    Debug.WriteLine($"Program change to {MidiInstrumentNames[prg]} ({prg}) on channel {channel} at time {tick}");
 
-                var prgChange = new ProgramChangeEvent();
-                prgChange.tick = tick;
-                prgChange.channel = channel;
-                prgChange.prg = prg;
-                programChangeEvents.Add(prgChange);
+                    var prgChange = new ProgramChangeEvent();
+                    prgChange.tick = tick;
+                    prgChange.channel = channel;
+                    prgChange.prg = prg;
+                    programChangeEvents.Add(prgChange);
+                }
+                else
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Out-of-range program change ({prg}) on channel {channel} at time {tick}. Ignoring.");
+                }
             }
 
             // System exclusive

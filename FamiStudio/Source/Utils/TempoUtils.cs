@@ -318,28 +318,28 @@ namespace FamiStudio
             }
 
 #if FALSE
-            var numSkipFrames = palSource ? adaptedNumFrames - grooveNumFrames : grooveNumFrames - adaptedNumFrames;
-            var bestScore  = int.MaxValue;
-            var bestOffset = -1;
+        var numSkipFrames = palSource ? adaptedNumFrames - grooveNumFrames : grooveNumFrames - adaptedNumFrames;
+        var bestScore  = int.MaxValue;
+        var bestOffset = -1;
 
-            for (int i = 0; i < srcFactor; i++)
+        for (int i = 0; i < srcFactor; i++)
+        {
+            var score = 0;
+
+            frameIndex = i;
+            for (int j = 0; j < numSkipFrames; j++)
             {
-                var score = 0;
-
-                frameIndex = i;
-                for (int j = 0; j < numSkipFrames; j++)
-                {
-                    if (importantFrames[frameIndex])
-                        score++;
-                    frameIndex += srcFactor;
-                }
-
-                if (score < bestScore)
-                {
-                    bestScore  = score;
-                    bestOffset = i;
-                }
+                if (importantFrames[frameIndex])
+                    score++;
+                frameIndex += srcFactor;
             }
+
+            if (score < bestScore)
+            {
+                bestScore  = score;
+                bestOffset = i;
+            }
+        }
 #else
             // Start by distributing the skip (or double) frames evenly.
             var numSkipFrames = palSource ? adaptedNumFrames - grooveNumFrames : grooveNumFrames - adaptedNumFrames;

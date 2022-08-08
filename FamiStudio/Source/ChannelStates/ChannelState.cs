@@ -29,6 +29,7 @@ namespace FamiStudio
         protected bool forceInstrumentReload = false;
         protected ushort[] noteTable = null;
         protected bool palPlayback = false;
+        protected bool skipEmptyEnvelopes = true;
         protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
         protected int slidePitch = 0;
@@ -48,6 +49,7 @@ namespace FamiStudio
             apuIdx = apu;
             channelType = type;
             palPlayback = pal;
+            skipEmptyEnvelopes = apuIdx != NesApu.APU_INSTRUMENT; // HACK : Pass a flag for this.
             maximumPeriod = NesApu.GetPitchLimitForChannelType(channelType);
             noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
             note.Value = Note.NoteStop;
@@ -194,7 +196,11 @@ namespace FamiStudio
                     for (int j = 0; j < EnvelopeType.Count; j++)
                     {
                         if (envelopes[j] != null && envelopes[j].Release >= 0)
+                        {
                             envelopeIdx[j] = envelopes[j].Release;
+                            if (j == EnvelopeType.WaveformRepeat)
+                                envelopeValues[j] = envelopes[EnvelopeType.WaveformRepeat].Values[envelopeIdx[j]] + 1;
+                        }
                     }
                 }
 
@@ -249,6 +255,11 @@ namespace FamiStudio
 
                     envelopeValues[EnvelopeType.DutyCycle] = dutyCycle;
                     envelopeValues[EnvelopeType.Pitch] = 0; // In case we use relative envelopes.
+
+                    // See comment un UpdateEnvelope about why we handle these differently.
+                    if (envelopes[EnvelopeType.WaveformRepeat] != null)
+                        envelopeValues[EnvelopeType.WaveformRepeat] = envelopes[EnvelopeType.WaveformRepeat].Values[0] + 1;
+
                     noteTriggered = true;
                 }
 
@@ -356,12 +367,12 @@ namespace FamiStudio
             {
                 for (int j = 0; j < EnvelopeType.Count; j++)
                 {
-                    if (envelopes[j] == null || envelopes[j].IsEmpty(j))
+                    if (envelopes[j] == null ||
+                        ( skipEmptyEnvelopes && envelopes[j].IsEmpty(j)) ||
+                        (!skipEmptyEnvelopes && envelopes[j].Length == 0))
                     {
-                        if (j == EnvelopeType.Volume)
-                            envelopeValues[j] = 15;
-                        else if (j != EnvelopeType.DutyCycle)
-                            envelopeValues[j] = 0;
+                        if (j != EnvelopeType.DutyCycle)
+                            envelopeValues[j] = Envelope.GetEnvelopeDefaultValue(j);
                         continue;
                     }
 
@@ -375,24 +386,51 @@ namespace FamiStudio
                         continue;
                     }
 
-                    if (env.Relative)
+                    var reloadValue = false;
+                    var canJumpToLoop = true;
+
+                    // We handle the repeat envelopes a bit different since they are not
+                    // stored in their final form. Here the envelope stores the number of
+                    // frame to repeat this waveform. In the NSF driver it will simply
+                    // contain the wave index and be handled like any other envelopes.
+                    if (j == EnvelopeType.WaveformRepeat)
                     {
-                        Debug.Assert(j == EnvelopeType.Pitch);
-                        envelopeValues[j] += envelopes[j].Values[idx];
+                        Debug.Assert(envelopeValues[j] > 0);
+
+                        if (--envelopeValues[j] == 0)
+                        {
+                            idx++;
+                            reloadValue = true;
+                        }
+                        else
+                        {
+                            canJumpToLoop = false;
+                        }
                     }
                     else
                     {
-                        envelopeValues[j] = envelopes[j].Values[idx];
+                        if (env.Relative)
+                        {
+                            Debug.Assert(j == EnvelopeType.Pitch);
+                            envelopeValues[j] += envelopes[j].Values[idx];
+                        }
+                        else
+                        {
+                            envelopeValues[j] = envelopes[j].Values[idx];
+                        }
+
+                        idx++;
                     }
 
-                    idx++;
-
-                    if (env.Release >= 0 && idx == env.Release)
+                    if (env.Release >= 0 && idx == env.Release && canJumpToLoop)
                         envelopeIdx[j] = env.Loop;
                     else if (idx >= env.Length)
                         envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : (env.Relative ? -1 : env.Length - 1);
                     else
                         envelopeIdx[j] = idx;
+
+                    if (reloadValue)
+                        envelopeValues[j] = envelopes[j].Values[envelopeIdx[j]];
                 }
             }
         }
@@ -431,10 +469,15 @@ namespace FamiStudio
             }
         }
 
-        protected void WriteRegister(int reg, int data)
+        protected void WriteRegister(int reg, int data, int skipCycles = 4)
         {
             NesApu.WriteRegister(apuIdx, reg, data);
             player.NotifyRegisterWrite(apuIdx, reg, data);
+            
+            // Internally, NesSndEmu skips 4 cycles. Here we have the option to add more.
+            skipCycles -= 4;
+            if (skipCycles > 0)
+                NesApu.SkipCycles(apuIdx, skipCycles);
         }
 
         protected bool IsSeeking
@@ -442,7 +485,7 @@ namespace FamiStudio
             get { return NesApu.IsSeeking(apuIdx) != 0; }
         }
         
-        public int GetEnvelopeFrame(int envIdx)
+        public virtual int GetEnvelopeFrame(int envIdx)
         {
             return envelopeIdx[envIdx];
         }

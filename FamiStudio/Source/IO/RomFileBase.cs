@@ -16,8 +16,9 @@ namespace FamiStudio
         protected unsafe struct RomProjectInfo
         {
             public byte maxSong;
+            public byte dpcmBank;
             public byte fdsFileCount; // Number of files on FDS
-            public fixed byte reserved[6];
+            public fixed byte reserved[5];
             public fixed byte name[28];
             public fixed byte author[28];
         }
@@ -26,10 +27,10 @@ namespace FamiStudio
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         protected unsafe struct RomSongEntry
         {
-            public byte bank;
-            public ushort address;
-            public byte flags;
             public fixed byte name[28];
+            public byte bank;
+            public byte flags;
+            public ushort address;
         }
 
         protected static readonly Dictionary<char, byte> specialCharMap = new Dictionary<char, byte>
@@ -41,6 +42,9 @@ namespace FamiStudio
             { '(', 66 },
             { ')', 67 },
             { '/', 71 },
+            { '-', 72 },
+            { '[', 73 },
+            { ']', 74 },
             { ' ', 255 },
         };
 

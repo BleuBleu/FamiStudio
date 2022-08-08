@@ -12,19 +12,11 @@ Encoding FT2 stock:
 New encoding:
 	
 	$00            Stop note
-	$01-$60        Notes (like doug)
-	$61            Auto slide note (followed by step size + num steps (255 = manual slide) + target note)
-	$62            Disable attack (can only happen when no instrument changes)
-	$63            Override pitch envelope (for vibrato)
-	$64            Clear pitch override flag.
-	$65            fine pitch.
-	$66            FDS mod speed
-	$67            FDS mod depth
-	$68-$6f        Free.
+	$01-$39        Most common notes (C1...C1+63)
+	$40-69         Various opcodes
 	$70-$7f        Volume (like doug).
 	$80 | (n << 1) Instrument change, max 64
-	$81 | (n << 1) Series of n empty notes (max 59 = $f7, 60 = $f9, 61 = $fb, 62 = $fd)
-	$f9            Release note (3b)
+	$81 | (n << 1) Series of n empty notes, max 63
 	$fb            Speed change (3d)
 	$fd            Jump (3e)
 	$ff, n, ref    Plays n notes starting at ref

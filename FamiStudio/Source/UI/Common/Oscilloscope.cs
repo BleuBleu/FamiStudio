@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,31 +10,39 @@ namespace FamiStudio
     public class Oscilloscope : IOscilloscope
     {
         private const float SampleScale = 1.9f; 
-        private const int   NumSamples  = 1024;
+
+        private class SamplesAndTrigger
+        {
+            public short[] samples;
+            public int trigger;
+        };
 
         private Task task;
         private ManualResetEvent stopEvent    = new ManualResetEvent(false);
         private AutoResetEvent   samplesEvent = new AutoResetEvent(false);
-        private ConcurrentQueue<short[]> sampleQueue;
-        private int lastBufferPos = 0;
-        private int numVertices = 128;
+        private ConcurrentQueue<SamplesAndTrigger> sampleQueue;
+        private OscilloscopeTrigger triggerFunction;
+        private int lastTrigger = -1;
+        private int lastSampleCount = 0;
+        private int holdFrameCount = 0;
         private bool stereo;
         private volatile float[,] geometry;
         private volatile bool hasNonZeroData = false;
+        private Dictionary<int, short[]> mixDownBuffers = new Dictionary<int, short[]>();
 
         private int bufferPos = 0;
-        private short[] sampleBuffer = new short[NumSamples * 2];
+        private short[] sampleBuffer = new short[16384];
 
-        public Oscilloscope(int scaling, bool stereo)
+        public Oscilloscope(bool stereo)
         {
-            this.numVertices *= Math.Min(2, scaling);
             this.stereo = stereo;
+            this.triggerFunction = new PeakSpeedTrigger(sampleBuffer, true);
         }
 
         public void Start()
         {
             task = Task.Factory.StartNew(OscilloscopeThread, TaskCreationOptions.LongRunning);
-            sampleQueue = new ConcurrentQueue<short[]>();
+            sampleQueue = new ConcurrentQueue<SamplesAndTrigger>();
         }
 
         public void Stop()
@@ -50,11 +56,11 @@ namespace FamiStudio
             }
         }
 
-        public void AddSamples(short[] samples)
+        public void AddSamples(short[] samples, int trigger = -1)
         {
             if (task != null)
             {
-                sampleQueue.Enqueue(samples);
+                sampleQueue.Enqueue(new SamplesAndTrigger() { samples = samples, trigger = trigger });
                 samplesEvent.Set();
             }
         }
@@ -80,16 +86,24 @@ namespace FamiStudio
 
                 do
                 {
-                    if (sampleQueue.TryDequeue(out var samples))
+                    if (sampleQueue.TryDequeue(out var pair))
                     {
+                        var samples = pair.samples;
+
                         // Mixdown stereo immediately.
                         if (stereo)
                         {
-                            // TODO : Use a static buffer for mixing down instead of allocating.
-                            samples = WaveUtils.MixDown(samples);
+                            if (!mixDownBuffers.TryGetValue(samples.Length, out var mixDownBuffer))
+                            {
+                                mixDownBuffer = new short[samples.Length / 2];
+                                mixDownBuffers.Add(samples.Length, mixDownBuffer);
+                            }
+
+                            WaveUtils.MixDown(samples, mixDownBuffer);
+                            samples = mixDownBuffer;
                         }
 
-                        Debug.Assert(samples.Length <= NumSamples);
+                        var startBufferPos = bufferPos;
 
                         // Append to circular buffer.
                         if (bufferPos + samples.Length < sampleBuffer.Length)
@@ -108,73 +122,63 @@ namespace FamiStudio
                             bufferPos = batchSize2;
                         }
 
-                        var numSamplesSinceLastRender = (bufferPos + sampleBuffer.Length - lastBufferPos) % sampleBuffer.Length;
-                        var updateGeometry = numSamplesSinceLastRender >= NumSamples;
+                        var newTrigger = pair.trigger;
 
-                        if (updateGeometry)
+                        // TRIGGER_NONE (-2) means the emulation isnt able to provide a trigger, 
+                        // we must fallback on analysing the waveform to detect one.
+                        if (newTrigger == NesApu.TRIGGER_NONE)
                         {
-                            int lookback = 0;
-                            int maxLookback = numSamplesSinceLastRender / 2;
-                            int centerIdx = (lastBufferPos + numSamplesSinceLastRender / 2) % sampleBuffer.Length;
-                            int orig = sampleBuffer[centerIdx];
+                            newTrigger = triggerFunction.Detect(startBufferPos, samples.Length);
 
-                            // If sample is negative, go back until positive.
-                            if (orig < 0)
-                            {
-                                while (lookback < maxLookback)
-                                {
-                                    if (--centerIdx < 0)
-                                        centerIdx += sampleBuffer.Length;
+                            // Ugly fallback.
+                            if (newTrigger < 0)
+                                newTrigger = startBufferPos;
 
-                                    if (sampleBuffer[centerIdx] > 0)
-                                        break;
+                            holdFrameCount = 0;
+                        }
+                        else if (newTrigger >= 0)
+                        {
+                            newTrigger = (startBufferPos + newTrigger) % sampleBuffer.Length;
+                            holdFrameCount = 0;
+                        }
+                        else
+                        {
+                            // We can also get TRIGGER_HOLD (-1) here, which mean we do nothing and 
+                            // hope for a new trigger "soon". This will happen on very low freqency
+                            // notes where the period is longer than 1 frame.
+                            holdFrameCount++;
+                        }
 
-                                    lookback++;
-                                }
+                        // If we hit this, it means that the emulation code told us a trigger
+                        // was eventually coming, but is evidently not. The longest periods we
+                        // have at the moment are very low EPSM notes with periods about 8 frames.
+                        Debug.Assert(holdFrameCount < 10);
 
-                                orig = sampleBuffer[centerIdx];
-                            }
-
-                            // Then look for a zero crossing.
-                            if (orig > 0)
-                            {
-                                while (lookback < maxLookback)
-                                {
-                                    if (--centerIdx < 0)
-                                        centerIdx += sampleBuffer.Length;
-
-                                    if (sampleBuffer[centerIdx] < 0)
-                                        break;
-
-                                    lookback++;
-                                }
-                            }
-
+                        if (lastTrigger >= 0)
+                        {
                             var newHasNonZeroData = false;
+                            var vertices = new float[lastSampleCount, 2];
 
-                            // Build geometry, 8:1 sample to vertex ratio (4:1 if 2x scaling).
-                            var vertices = new float[numVertices, 2];
-                            var samplesPerVertex = NumSamples / numVertices; // Assumed to be perfectly divisible.
-
-                            int j = centerIdx - NumSamples / 2;
+                            var j = lastTrigger - lastSampleCount / 2; 
                             if (j < 0) j += sampleBuffer.Length;
-                            for (int i = 0; i < numVertices; i++)
+
+                            for (int i = 0; i < lastSampleCount; i++, j = (j + 1) % sampleBuffer.Length)
                             {
-                                int avg = 0;
-                                for (int k = 0; k < samplesPerVertex; k++, j = (j + 1) % sampleBuffer.Length)
-                                    avg += sampleBuffer[j];
+                                var samp = (int)sampleBuffer[j];
 
-                                avg /= samplesPerVertex;
+                                vertices[i, 0] = i / (float)(lastSampleCount - 1);
+                                vertices[i, 1] = Utils.Clamp(samp / 32768.0f * SampleScale, -1.0f, 1.0f);
 
-                                vertices[i, 0] = i / (float)(numVertices - 1);
-                                vertices[i, 1] = Utils.Clamp(avg / 32768.0f * SampleScale, -1.0f, 1.0f);
-                                newHasNonZeroData |= Math.Abs(avg) > 1024.0f;
+                                newHasNonZeroData |= Math.Abs(samp) > 1024;
                             }
 
-                            lastBufferPos = bufferPos;
+                            // Not exactly atomic... But OK.
                             geometry = vertices;
                             hasNonZeroData = newHasNonZeroData;
                         }
+
+                        lastTrigger = newTrigger;
+                        lastSampleCount = samples.Length;
                     }
                     else
                     {

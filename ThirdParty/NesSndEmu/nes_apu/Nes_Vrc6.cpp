@@ -42,6 +42,7 @@ void Nes_Vrc6::reset()
 		osc.last_amp = 0;
 		osc.phase = 1;
 		osc.amp = 0;
+		osc.trigger = trigger_hold;
 	}
 }
 
@@ -134,14 +135,29 @@ void Nes_Vrc6::load_snapshot( vrc6_snapshot_t const& in )
 		oscs [2].phase = 1;
 }
 
+void Nes_Vrc6::reset_triggers()
+{
+	oscs[0].trigger = trigger_hold;
+	oscs[1].trigger = trigger_hold;
+	oscs[2].trigger = trigger_hold;
+}
+
+int Nes_Vrc6::get_channel_trigger(int idx) const
+{
+	return oscs[idx].trigger;
+}
+
 #include BLARGG_ENABLE_OPTIMIZER
 
 void Nes_Vrc6::run_square( Vrc6_Osc& osc, cpu_time_t end_time )
 {
 	Blip_Buffer* output = osc.output;
 	if ( !output )
+	{
+		osc.trigger = trigger_none;
 		return;
-	
+	}
+
 	int volume = osc.regs [0] & 15;
 	if ( !(osc.regs [2] & 0x80) )
 		volume = 0;
@@ -172,6 +188,7 @@ void Nes_Vrc6::run_square( Vrc6_Osc& osc, cpu_time_t end_time )
 				{
 					phase = 0;
 					osc.last_amp = volume;
+					update_trigger(output, time, osc.trigger);
 					square_synth.offset( time, volume, output );
 				}
 				if ( phase == duty )
@@ -187,6 +204,10 @@ void Nes_Vrc6::run_square( Vrc6_Osc& osc, cpu_time_t end_time )
 		}
 		osc.delay = time - end_time;
 	}
+	else
+	{
+		osc.trigger = trigger_none;
+	}
 }
 
 void Nes_Vrc6::run_saw( cpu_time_t end_time )
@@ -194,8 +215,11 @@ void Nes_Vrc6::run_saw( cpu_time_t end_time )
 	Vrc6_Osc& osc = oscs [2];
 	Blip_Buffer* output = osc.output;
 	if ( !output )
+	{
+		osc.trigger = trigger_none;
 		return;
-	
+	}
+
 	int amp = osc.amp;
 	int amp_step = osc.regs [0] & 0x3F;
 	cpu_time_t time = last_time;
@@ -206,6 +230,7 @@ void Nes_Vrc6::run_saw( cpu_time_t end_time )
 		int delta = (amp >> 3) - last_amp;
 		last_amp = amp >> 3;
 		saw_synth.offset( time, delta, output );
+		osc.trigger = trigger_none;
 	}
 	else
 	{
@@ -221,6 +246,7 @@ void Nes_Vrc6::run_saw( cpu_time_t end_time )
 				{
 					phase = 7;
 					amp = 0;
+					update_trigger(output, time, osc.trigger);
 				}
 				
 				int delta = (amp >> 3) - last_amp;

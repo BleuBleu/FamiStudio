@@ -7,15 +7,7 @@ namespace FamiStudio
 {
     public static class NesApu
     {
-#if FAMISTUDIO_WINDOWS
-        private const string NesSndEmuDll = "NesSndEmu.dll";
-#elif FAMISTUDIO_MACOS
-        private const string NesSndEmuDll = "NesSndEmu.dylib";
-#elif FAMISTUDIO_ANDROID
-        private const string NesSndEmuDll = "libNesSndEmu.so";
-#else
-        private const string NesSndEmuDll = "NesSndEmu.so";
-#endif
+        private const string NesSndEmuDll = Platform.DllPrefix + "NesSndEmu" + Platform.DllExtension;
 
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuInit")]
         public extern static int Init(int apuIdx, int sampleRate, int pal, int seperateTnd, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
@@ -51,6 +43,14 @@ namespace FamiStudio
         public extern static int SetExpansionVolume(int apuIdx, int expansion, double volume);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetRegisterValues")]
         public extern unsafe static void GetRegisterValues(int apuIdx, int exp, void* regs);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetN163WavePos")]
+        public extern static int GetN163WavePos(int apuIdx, int n163ChanIndex);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetFdsWavePos")]
+        public extern static int GetFdsWavePos(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuResetTriggers")]
+        public extern static void ResetTriggers(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetChannelTrigger")]
+        public extern static int GetChannelTrigger(int apuIdx, int exp, int idx);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
@@ -197,31 +197,35 @@ namespace FamiStudio
         public const int EPSM_ADDR1         = 0x401e;
         public const int EPSM_DATA1         = 0x401f;
 
-        public const int EPSM_REG_LO_A = 0x00;
-        public const int EPSM_REG_HI_A = 0x01;
-        public const int EPSM_REG_LO_B = 0x02;
-        public const int EPSM_REG_HI_B = 0x03;
-        public const int EPSM_REG_LO_C = 0x04;
-        public const int EPSM_REG_HI_C = 0x05;
-        public const int EPSM_REG_NOISE = 0x06;
-        public const int EPSM_REG_TONE = 0x07;
-        public const int EPSM_REG_VOL_A = 0x08;
-        public const int EPSM_REG_VOL_B = 0x09;
-        public const int EPSM_REG_VOL_C = 0x0a;
-        public const int EPSM_REG_ENV_LO = 0x0b;
-        public const int EPSM_REG_ENV_HI = 0x0c;
-        public const int EPSM_REG_SHAPE = 0x0d;
-        public const int EPSM_REG_IO_A = 0x0e;
-        public const int EPSM_REG_IO_B = 0x0f;
-        public const int EPSM_REG_RYTHM = 0x10;
+        public const int EPSM_REG_LO_A        = 0x00;
+        public const int EPSM_REG_HI_A        = 0x01;
+        public const int EPSM_REG_LO_B        = 0x02;
+        public const int EPSM_REG_HI_B        = 0x03;
+        public const int EPSM_REG_LO_C        = 0x04;
+        public const int EPSM_REG_HI_C        = 0x05;
+        public const int EPSM_REG_NOISE       = 0x06;
+        public const int EPSM_REG_TONE        = 0x07;
+        public const int EPSM_REG_VOL_A       = 0x08;
+        public const int EPSM_REG_VOL_B       = 0x09;
+        public const int EPSM_REG_VOL_C       = 0x0a;
+        public const int EPSM_REG_ENV_LO      = 0x0b;
+        public const int EPSM_REG_ENV_HI      = 0x0c;
+        public const int EPSM_REG_SHAPE       = 0x0d;
+        public const int EPSM_REG_IO_A        = 0x0e;
+        public const int EPSM_REG_IO_B        = 0x0f;
+        public const int EPSM_REG_RYTHM       = 0x10;
         public const int EPSM_REG_RYTHM_LEVEL = 0x18;
-        public const int EPSM_REG_FM_LO_A = 0xA0;
-        public const int EPSM_REG_FM_HI_A = 0xA4;
+        public const int EPSM_REG_FM_LO_A     = 0xA0;
+        public const int EPSM_REG_FM_HI_A     = 0xA4;
 
         // See comment in Simple_Apu.h.
         public const int TND_MODE_SINGLE           = 0;
         public const int TND_MODE_SEPARATE         = 1;
         public const int TND_MODE_SEPARATE_TN_ONLY = 2;
+
+        // Mirrored from Nes_Apu.h.
+        public const int TRIGGER_NONE = -2; // Unable to provide trigger, must use fallback.
+        public const int TRIGGER_HOLD = -1; // A valid trigger should be coming, hold previous valid one until.
 
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;
@@ -250,6 +254,9 @@ namespace FamiStudio
         // All of our DPCM processing uses 1/2 values (0-63) since the
         // DMC channel increments/decrements by steps of 2 anyways.
         public const int DACDefaultValueDiv2 = DACDefaultValue / 2;
+
+        // Number of cycles to skip at each EPSM register writes.
+        public const int EpsmCycleSkip = 34;
 
         public static readonly ushort[]   NoteTableNTSC    = new ushort[97];
         public static readonly ushort[]   NoteTablePAL     = new ushort[97];
@@ -295,7 +302,7 @@ namespace FamiStudio
         {
             double clockNtsc = FreqNtsc / 16.0;
             double clockPal  = FreqPal  / 16.0;
-            double clockEPSM = FreqEPSM / 32.0;
+            double clockEPSM = FreqEPSM / 32.0 * 1.004; //minor adjustment for more accurate square channel frequencies
 
             for (int i = 1; i < NoteTableNTSC.Length; ++i)
             {
@@ -432,7 +439,7 @@ namespace FamiStudio
             public EpsmRegisterValues Epsm;
 
             // Extra information for the register viewer.
-            public System.Drawing.Color[] InstrumentColors = new System.Drawing.Color[ChannelType.Count];
+            public Color[] InstrumentColors = new Color[ChannelType.Count];
             public N163InstrumentRange[]  N163InstrumentRanges = new N163InstrumentRange[8];
 
             private bool pal = false;
@@ -801,14 +808,14 @@ namespace FamiStudio
                                 WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
                                 break;
                             case APU_EXPANSION_EPSM:
-                                WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE);
-                                WriteRegister(apuIdx, EPSM_DATA0, 0x38); // No noise, just 3 tones for now.
-                                WriteRegister(apuIdx, EPSM_ADDR0, 0x29);
-                                WriteRegister(apuIdx, EPSM_DATA0, 0x80);
-                                WriteRegister(apuIdx, EPSM_ADDR0, 0x27);
-                                WriteRegister(apuIdx, EPSM_DATA0, 0x00);
-                                WriteRegister(apuIdx, EPSM_ADDR0, 0x11);
-                                WriteRegister(apuIdx, EPSM_DATA0, 0x37);
+                                WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x38); SkipCycles(apuIdx, EpsmCycleSkip); // No noise, just 3 tones for now.
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x29); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x80); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x27); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x00); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x11); SkipCycles(apuIdx, EpsmCycleSkip);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x37); SkipCycles(apuIdx, EpsmCycleSkip);
                                 break;
                         }
                     }

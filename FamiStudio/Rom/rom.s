@@ -1,11 +1,16 @@
 ; Simple FamiStudio ROM to play music on actual hardware.
 ; Based off Brad's (rainwarrior.ca) CA65 template, both the regular and FDS version.
 
+FAMISTUDIO_VERSION_MAJOR  = 4
+FAMISTUDIO_VERSION_MINOR  = 0
+FAMISTUDIO_VERSION_HOTFIX = 0
+
 ; Enable all features.
 FAMISTUDIO_CFG_EXTERNAL          = 1
 FAMISTUDIO_CFG_SMOOTH_VIBRATO    = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT      = 1
 FAMISTUDIO_CFG_EQUALIZER         = 1
+
 FAMISTUDIO_USE_VOLUME_TRACK      = 1
 FAMISTUDIO_USE_VOLUME_SLIDES     = 1
 FAMISTUDIO_USE_PITCH_TRACK       = 1
@@ -15,6 +20,7 @@ FAMISTUDIO_USE_VIBRATO           = 1
 FAMISTUDIO_USE_ARPEGGIO          = 1
 FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
 FAMISTUDIO_USE_DELTA_COUNTER     = 1
+FAMISTUDIO_USE_RELEASE_NOTES     = 1
 
 .ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
     FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1
@@ -30,8 +36,6 @@ FAMISTUDIO_USE_DELTA_COUNTER     = 1
 nmi_lock:           .res 1 ; prevents NMI re-entry
 nmi_count:          .res 1 ; is incremented every NMI
 nmi_ready:          .res 1 ; set to 1 to push a PPU frame update, 2 to turn rendering off next NMI
-nmt_row_update_len: .res 1 ; number of bytes in nmt_row_update buffer
-nmt_col_update_len: .res 1 ; number of bytes in nmt_row_update buffer
 scroll_x:           .res 1 ; x scroll position
 scroll_y:           .res 1 ; y scroll position
 scroll_nmt:         .res 1 ; nametable select (0-3 = $2000,$2400,$2800,$2C00)
@@ -39,6 +43,10 @@ gamepad:            .res 1
 gamepad_previous:   .res 1
 gamepad_pressed:    .res 1
 song_index:         .res 1
+nmt_update_mode:    .res 1   ; update "mode", 0 = nothing to do, 1 = column mode, 2 = row mode + palettes
+nmt_update_data:    .res 128 ; nametable update entry buffer for PPU update
+nmt_update_len:     .res 1 ; number of bytes in nmt_update_data buffer
+palette:            .res 32  ; palette buffer for PPU update
 
 ; General purpose temporary vars.
 r0: .res 1
@@ -50,21 +58,30 @@ r5: .res 1
 
 ; General purpose pointers.
 p0: .res 2
+p1: .res 2
 
 .segment "RAM"
-; TODO: These 2 arent actually used at the same time... unify.
-nmt_col_update: .res 128 ; nametable update entry buffer for PPU update (column mode)
-nmt_row_update: .res 128 ; nametable update entry buffer for PPU update (row mode)
-palette:        .res 32  ; palette buffer for PPU update
 
 .segment "OAM"
 oam: .res 256        ; sprite OAM data to be uploaded by DMA
 
 .segment "HEADER"
 
-INES_MAPPER = 4 ; 4 = MMC3 mapper.
+.if FAMISTUDIO_EXP_VRC6
+INES_MAPPER = 24 ; VRC6 mapper.
+.elseif FAMISTUDIO_EXP_VRC7
+INES_MAPPER = 85 ; VRC7 mapper.
+.elseif FAMISTUDIO_EXP_S5B
+INES_MAPPER = 69 ; FME7 mapper.
+.elseif FAMISTUDIO_EXP_N163
+INES_MAPPER = 19 ; N163 mapper.
+.elseif FAMISTUDIO_EXP_MMC5
+INES_MAPPER = 5  ; MMC5 mapper.
+.else
+INES_MAPPER = 4  ; MMC3 mapper.
+.endif
+
 INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
-INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 
 .if FAMISTUDIO_EXP_FDS
     .byte 'F','D','S',$1a
@@ -73,15 +90,20 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
     .byte 'N', 'E', 'S', $1A ; ID
     .byte $02 ; 16k PRG bank count
     .byte $01 ; 8k CHR bank count
-    .byte INES_MIRROR | (INES_SRAM << 1) | ((INES_MAPPER & $f) << 4)
+    .byte INES_MIRROR | ((INES_MAPPER & $f) << 4)
+.if FAMISTUDIO_EXP_EPSM    
+    .byte (INES_MAPPER & %11110000) | (%00001011) ; ines v2 + extended console type.
+    .byte $0, $0, $0, $0, $0, $4, $0, $0 ; padding
+.else
     .byte (INES_MAPPER & %11110000)
     .byte $0, $0, $0, $0, $0, $0, $0, $0 ; padding
+.endif    
 .endif
 
 .if FAMISTUDIO_EXP_FDS
 
 ; FDS File headers
-FILE_COUNT = 6 + 1
+FILE_COUNT = 6
 
 .segment "SIDE1A"
 ; block 1
@@ -181,27 +203,6 @@ FILE_COUNT = 6 + 1
 ; block 4
 .byte $04
 
-;; This block is the last to load, and enables NMI by "loading" the NMI enable value
-;; directly into the PPU control register at $2000.
-;; While the disk loader continues searching for one more boot file,
-;; eventually an NMI fires, allowing us to take control of the CPU before the
-;; license screen is displayed.
-;.segment "BYPASS_HDR"
-;; block 3
-;.import __BYPASS_SIZE__
-;.import __BYPASS_RUN__
-;.byte $03
-;.byte 5,5
-;.byte "BYPASS.."
-;.word $2000
-;.word __BYPASS_SIZE__
-;.byte 0 ; PRG (CPU:$2000)
-;; block 4
-;.byte $04
-
-;.segment "BYPASS"
-;.byte $90 ; enable NMI byte sent to $2000
-
 ; Alternative to the license screen bypass, just put the required copyright message at PPU:$2800.
 .segment "BYPASS_HDR"
 ; block 3
@@ -215,14 +216,27 @@ FILE_COUNT = 6 + 1
 .byte 2 ; nametable (PPU:$2800)
 ; block 4
 .byte $04
+
 .segment "BYPASS"
 .incbin "check.bin"
 
 .endif
 
 .segment "SONG"
-.if !FAMISTUDIO_EXP_FDS
-.incbin "song.bin" ; Test song, Bloody Tears.
+.if FAMISTUDIO_EXP_VRC6
+.incbin "song_vrc6.bin" ; VRC6 debug song, Another Winter
+.elseif FAMISTUDIO_EXP_VRC7
+.incbin "song_vrc7.bin" ; VRC7 debug song, Lagrange Point
+.elseif FAMISTUDIO_EXP_MMC5
+.incbin "song_mmc5.bin" ; MMC5 debug song, Temple Raiders
+.elseif FAMISTUDIO_EXP_N163
+.incbin "song_n163_4ch.bin" ; N163 debug song, Megami Tensei II (4 channels)
+.elseif FAMISTUDIO_EXP_S5B
+.incbin "song_s5b.bin" ; S5B debug song, Disco Decent
+.elseif FAMISTUDIO_EXP_EPSM
+.incbin "song_epsm.bin" ; EPSM debug song, Sonic 1 title theme
+.elseif !FAMISTUDIO_EXP_FDS
+.incbin "song.bin" ; Debug song, Bloody Tears.
 .endif
 
 .segment "DPCM"
@@ -232,12 +246,9 @@ FILE_COUNT = 6 + 1
 ; Will be overwritten by FamiStudio.
 ; General info about the project (author, etc.), 64-bytes.
 max_song:        .byte $00
-.if FAMISTUDIO_EXP_FDS
+dpcm_bank:       .byte $00 ; Index of the bank to load at $c000
 fds_file_count:  .byte $06 ; Number of actual file on the disk.
-.else
-mmc_unused:      .byte $00
-.endif
-padding:         .res 6    ; reserved
+padding:         .res 5    ; reserved
 project_name:    .res 28   ; Project name
 project_author:  .res 28   ; Project author
 
@@ -246,21 +257,21 @@ MAX_SONGS = 12
 
 ; Will be overwritten by FamiStudio.
 ; Each entry in the song table is 32-bytes:
+;  - 28 bytes: song name.
 ;  - 1 byte: start page of the song
 ;  - 2 byte: start address of the song.
 ;  - 1 byte: song flags (uses DPCM or not)
-;  - 28 bytes: song name.
 song_table:
+song_name:       .res  28
 .if FAMISTUDIO_EXP_FDS
 song_fds_file:   .byte $00
 .else
 song_page_start: .byte $00
 .endif
-song_addr_start: .word $8222 ; Test song has $222 bytes of DPCM, song is right after.
-song_flags:      .byte $01   ; Test song uses DPCM
-song_name:       .res  28
+song_flags:      .byte $00
+song_addr_start: .word $8000
 
-; the remaining 7 songs.
+; the remaining songs.
 .res 32 * (MAX_SONGS - 1)
 
 .segment "CHR0"
@@ -292,6 +303,18 @@ screen_data_rle:
 
 .if FAMISTUDIO_EXP_FDS
 .incbin "fds.rle"
+.elseif FAMISTUDIO_EXP_MMC5
+.incbin "rom_mmc5.rle"
+.elseif FAMISTUDIO_EXP_S5B
+.incbin "rom_s5b.rle"
+.elseif FAMISTUDIO_EXP_N163
+.incbin "rom_n163.rle"
+.elseif FAMISTUDIO_EXP_VRC6
+.incbin "rom_vrc6.rle"
+.elseif FAMISTUDIO_EXP_VRC7
+.incbin "rom_vrc7.rle"
+.elseif FAMISTUDIO_EXP_EPSM
+.incbin "rom_epsm.rle"
 .else
 .incbin "rom.rle"
 .endif
@@ -299,61 +322,218 @@ screen_data_rle:
 default_palette:
 .incbin "rom.pal"
 
-;.if FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_VRC6
 
-;; this routine is entered by interrupting the last boot file load
-;; by forcing an NMI not expected by the BIOS, allowing the license
-;; screen to be skipped entirely.
-;;
-;; The last file writes $90 to $2000, enabling NMI during the file load.
-;; The "extra" file in the FILE_COUNT causes the disk to keep seeking
-;; past the last file, giving enough delay for an NMI to fire and interrupt
-;; the process.
-;bypass:
-;   ; disable NMI
-;   lda #0
-;   sta $2000
-;   ; replace NMI 3 "bypass" vector at $DFFA
-;   lda #<nmi
-;   sta $dffa
-;   lda #>nmi
-;   sta $dffb
-;   ; tell the FDS reset routine that the BIOS initialized correctly
-;   lda #$35
-;   sta $0102
-;   lda #$ac
-;   sta $0103
-;   ; reset the FDS to begin our program properly
-;   jmp ($fffc)
+    VRC6_PRG_SELECT_8000 = $8000
+    VRC6_PRG_SELECT_C000 = $C000
 
-;.endif
+    VRC6_CHR_SELECT_0000 = $D000
+    VRC6_CHR_SELECT_0400 = $D001
+    VRC6_CHR_SELECT_0800 = $D002
+    VRC6_CHR_SELECT_0C00 = $D003
+    VRC6_CHR_SELECT_1000 = $E000
+    VRC6_CHR_SELECT_1400 = $E001
+    VRC6_CHR_SELECT_1800 = $E002
+    VRC6_CHR_SELECT_1C00 = $E003
 
-.if !FAMISTUDIO_EXP_FDS
-; inital values for the mmc3_banks to load at startup.
-init_mmc3_banks:
-    .byte 0 ; CHR at 0 (2KB)
-    .byte 2 ; CHR at 800 (2KB)
-    .byte 4 ; CHR at 1000 (1KB)
-    .byte 5 ; CHR at 1400 (1KB)
-    .byte 6 ; CHR at 1800 (1KB)
-    .byte 7 ; CHR at 1C00 (1KB)
-    .byte 0 ; SONG data at 8000
-    .byte 1 ; SONG data at A000
+    VRC6_BANK_MODE       = $B003
+
+.elseif FAMISTUDIO_EXP_VRC7
+        
+    VRC7_PRG_SELECT_8000 = $8000
+    VRC7_PRG_SELECT_A000 = $8008
+    VRC7_PRG_SELECT_C000 = $9000
+
+    VRC7_CHR_SELECT_0000 = $A000
+    VRC7_CHR_SELECT_0400 = $A008
+    VRC7_CHR_SELECT_0800 = $B000
+    VRC7_CHR_SELECT_0C00 = $B008
+    VRC7_CHR_SELECT_1000 = $C000
+    VRC7_CHR_SELECT_1400 = $C008
+    VRC7_CHR_SELECT_1800 = $D000
+    VRC7_CHR_SELECT_1C00 = $D008
+
+.elseif FAMISTUDIO_EXP_MMC5
+
+    MMC5_PRG_MODE = $5100
+    MMC5_CHR_MODE = $5101
+
+    MMC5_PRG_SELECT_8000 = $5114
+    MMC5_PRG_SELECT_A000 = $5115
+    MMC5_PRG_SELECT_C000 = $5116
+    MMC5_PRG_SELECT_E000 = $5117
+
+    MMC5_CHR_SELECT_0000 = $5120
+    MMC5_CHR_SELECT_0400 = $5121
+    MMC5_CHR_SELECT_0800 = $5122
+    MMC5_CHR_SELECT_0C00 = $5123
+    MMC5_CHR_SELECT_1000 = $5124
+    MMC5_CHR_SELECT_1400 = $5125
+    MMC5_CHR_SELECT_1800 = $5126
+    MMC5_CHR_SELECT_1C00 = $5127
+
+    MMC5_ROM_FLAGS = $80
+
+.elseif FAMISTUDIO_EXP_N163
+
+    N163_CHR_SELECT_0000 = $8000
+    N163_CHR_SELECT_0400 = $8800
+    N163_CHR_SELECT_0800 = $9000
+    N163_CHR_SELECT_0C00 = $9800
+    N163_CHR_SELECT_1000 = $A000
+    N163_CHR_SELECT_1400 = $A800
+    N163_CHR_SELECT_1800 = $B000
+    N163_CHR_SELECT_1C00 = $B800
+    
+    N163_PRG_SELECT_8000 = $E000
+    N163_PRG_SELECT_A000 = $E800
+    N163_PRG_SELECT_C000 = $F000
+
+.elseif FAMISTUDIO_EXP_S5B
+
+    FME7_COMMAND = $8000
+    FME7_PARAM   = $a000
+
+.elseif !FAMISTUDIO_EXP_FDS
+
+    MMC3_BANK_SELECT     = $8000
+    MMC3_BANK_DATA       = $8001
+
+    ; inital values for the mmc3_banks to load at startup.
+    init_mmc3_banks:
+        .byte 0 ; CHR at 0 (2KB)
+        .byte 2 ; CHR at 800 (2KB)
+        .byte 4 ; CHR at 1000 (1KB)
+        .byte 5 ; CHR at 1400 (1KB)
+        .byte 6 ; CHR at 1800 (1KB)
+        .byte 7 ; CHR at 1C00 (1KB)
+        .byte 0 ; SONG data at 8000
+        .byte 1 ; SONG data at A000
+
 .endif
 
 .proc reset
 
     .if ::FAMISTUDIO_EXP_FDS
+
         ; set FDS to use vertical mirroring
         lda $fa
         and #%11110111
         sta $4025
+
+    .elseif ::FAMISTUDIO_EXP_VRC6
+
+        lda #0
+        sta VRC6_BANK_MODE
+        lda #0
+        sta VRC6_CHR_SELECT_0000
+        lda #1
+        sta VRC6_CHR_SELECT_0400
+        lda #2
+        sta VRC6_CHR_SELECT_0800
+        lda #3
+        sta VRC6_CHR_SELECT_0C00
+        lda #4
+        sta VRC6_CHR_SELECT_1000
+        lda #5
+        sta VRC6_CHR_SELECT_1400
+        lda #6
+        sta VRC6_CHR_SELECT_1800
+        lda #7
+        sta VRC6_CHR_SELECT_1C00
+
+    .elseif ::FAMISTUDIO_EXP_VRC7
+
+        lda #0
+        sta VRC7_CHR_SELECT_0000
+        lda #1
+        sta VRC7_CHR_SELECT_0400
+        lda #2
+        sta VRC7_CHR_SELECT_0800
+        lda #3
+        sta VRC7_CHR_SELECT_0C00
+        lda #4
+        sta VRC7_CHR_SELECT_1000
+        lda #5
+        sta VRC7_CHR_SELECT_1400
+        lda #6
+        sta VRC7_CHR_SELECT_1800
+        lda #7
+        sta VRC7_CHR_SELECT_1C00
+
+    .elseif ::FAMISTUDIO_EXP_S5B
+
+        ; Setup FME7 CHR banks.
+        ldx #0
+        bank_loop:  
+            stx FME7_COMMAND
+            stx FME7_PARAM
+            inx
+            cpx #8
+            bne bank_loop
+
+    .elseif ::FAMISTUDIO_EXP_N163
+
+        lda #0
+        sta N163_CHR_SELECT_0000
+        lda #1
+        sta N163_CHR_SELECT_0400
+        lda #2
+        sta N163_CHR_SELECT_0800
+        lda #3
+        sta N163_CHR_SELECT_0C00
+        lda #4
+        sta N163_CHR_SELECT_1000
+        lda #5
+        sta N163_CHR_SELECT_1400
+        lda #6
+        sta N163_CHR_SELECT_1800
+        lda #7
+        sta N163_CHR_SELECT_1C00
+
+    .elseif ::FAMISTUDIO_EXP_MMC5
+
+        lda #3
+        sta MMC5_PRG_MODE
+        lda #3
+        sta MMC5_CHR_MODE
+
+        ; TODO : This could be a loop.
+        lda #0
+        sta MMC5_CHR_SELECT_0000
+        lda #1
+        sta MMC5_CHR_SELECT_0400
+        lda #2
+        sta MMC5_CHR_SELECT_0800
+        lda #3
+        sta MMC5_CHR_SELECT_0C00
+        lda #4
+        sta MMC5_CHR_SELECT_1000
+        lda #5
+        sta MMC5_CHR_SELECT_1400
+        lda #6
+        sta MMC5_CHR_SELECT_1800
+        lda #7
+        sta MMC5_CHR_SELECT_1C00
+
     .else
+
         ; MMC3 setup.
         lda #00 ; vertical mirroring
         sta $a000
         lda #$00 ; disable wram, not needed for such a simple demo.
         sta $a001
+
+        ; Setup initial MMC3 banks.
+        ldx #0
+        bank_loop:  
+            lda init_mmc3_banks, x
+            stx MMC3_BANK_SELECT
+            sta MMC3_BANK_DATA
+            inx
+            cpx #8
+            bne bank_loop
+
     .endif
 
     sei       ; mask interrupts
@@ -412,6 +592,7 @@ init_mmc3_banks:
 
     ; wipe unused portion of FDS RAM (between SONG and VECTORS)
     .if ::FAMISTUDIO_EXP_FDS
+
         .import __SONG_RUN__
         WIPE_ADDR = __SONG_RUN__
         WIPE_SIZE = __VECTORS_RUN__ - __SONG_RUN__
@@ -441,16 +622,7 @@ init_mmc3_banks:
         lda fds_file_count
         jsr fds_bios_set_file_count
         .word disk_id
-    .else
-        ; Setup initial MMC3 banks.
-        ldx #0
-        bank_loop:  
-            lda init_mmc3_banks, x
-            stx $8000
-            sta $8001       
-            inx
-            cpx #8
-            bne bank_loop
+
     .endif
 
     ; wait for second vblank
@@ -500,146 +672,120 @@ oam_dma:
     lda #>oam
     sta $4014
 
-; nametable update (column)
-col_update:
-    ldx #0
-    cpx nmt_col_update_len
-    beq row_update
-    lda #%10001100
-    sta $2000 ; set vertical nametable increment
-    ldx #0
-    cpx nmt_col_update_len
-    bcs palettes
-    nmt_col_update_loop:
-        lda nmt_col_update, x
-        inx
-        sta $2006
-        lda nmt_col_update, x
-        inx
-        sta $2006
-        ldy nmt_col_update, x
-        inx
-        col_loop:
-            lda nmt_col_update, x
+; nametable update
+nmt_update:
+    lda nmt_update_mode 
+    bne do_update
+    jmp update_done
+    do_update:
+        ldx #0
+        cpx nmt_update_len
+        beq palettes
+        asl
+        asl
+        ora #%10000000
+        sta $2000
+        ldx #0
+        nmt_update_loop:
+            lda nmt_update_data, x
             inx
-            sta $2007
-            dey
-            bne col_loop
-        cpx nmt_col_update_len
-        bcc nmt_col_update_loop
-    lda #0
-    sta nmt_col_update_len
-
-; nametable update (row)
-row_update:
-    lda #%10001000
-    sta $2000 ; set horizontal nametable increment
-    ldx #0
-    cpx nmt_row_update_len
-    bcs palettes
-    nmt_row_update_loop:
-        lda nmt_row_update, x
-        inx
-        sta $2006
-        lda nmt_row_update, x
-        inx
-        sta $2006
-        ldy nmt_row_update, x
-        inx
-        row_loop:
-            lda nmt_row_update, x
+            sta $2006
+            lda nmt_update_data, x
             inx
-            sta $2007
-            dey
-            bne row_loop
-        cpx nmt_row_update_len
-        bcc nmt_row_update_loop
-    lda #0
-    sta nmt_row_update_len
+            sta $2006
+            ldy nmt_update_data, x
+            inx
+            col_loop:
+                lda nmt_update_data, x
+                inx
+                sta $2007
+                dey
+                bne col_loop
+            cpx nmt_update_len
+            bcc nmt_update_loop
 
 ; palettes
 palettes:
-    lda $2002
-    lda #$3F
-    sta $2006
-    ldx #0
-    stx $2006 ; set PPU address to $3F00
-
-.if ::FAMISTUDIO_EXP_FDS        
-
-    ; Need to squeeze a few more cycles of the NMI when in FDS mode.
-    lda palette+0
-    sta $2007
-    lda palette+1
-    sta $2007
-    lda palette+2
-    sta $2007
-    lda palette+3
-    sta $2007
-    lda palette+4
-    sta $2007
-    lda palette+5
-    sta $2007
-    lda palette+6
-    sta $2007
-    lda palette+7
-    sta $2007
-    lda palette+8
-    sta $2007
-    lda palette+9
-    sta $2007
-    lda palette+10
-    sta $2007
-    lda palette+11
-    sta $2007
-    lda palette+12
-    sta $2007
-    lda palette+13
-    sta $2007
-    lda palette+14
-    sta $2007
-    lda palette+15
-    sta $2007
-    lda palette+16
-    sta $2007
-    lda palette+17
-    sta $2007
-    lda palette+18
-    sta $2007
-    lda palette+19
-    sta $2007
-    lda palette+20
-    sta $2007
-    lda palette+21
-    sta $2007
-    lda palette+22
-    sta $2007
-    lda palette+23
-    sta $2007
-    lda palette+24
-    sta $2007
-    lda palette+25
-    sta $2007
-    lda palette+26
-    sta $2007
-    lda palette+27
-    sta $2007
-    lda palette+28
-    sta $2007
-    lda palette+29
-    sta $2007
-    lda palette+30
-    sta $2007
-    lda palette+31
-    sta $2007
-.else
-    pal_loop:
-        lda palette, x
+    lda nmt_update_mode
+    cmp #2
+    beq palettes_need_update
+    jmp update_done
+    palettes_need_update:
+        lda $2002
+        lda #$3F
+        sta $2006
+        ldx #0
+        stx $2006 ; set PPU address to $3F00
+        lda palette+0
         sta $2007
-        inx
-        cpx #32
-        bne pal_loop
-.endif
+        lda palette+1
+        sta $2007
+        lda palette+2
+        sta $2007
+        lda palette+3
+        sta $2007
+        lda palette+4
+        sta $2007
+        lda palette+5
+        sta $2007
+        lda palette+6
+        sta $2007
+        lda palette+7
+        sta $2007
+        lda palette+8
+        sta $2007
+        lda palette+9
+        sta $2007
+        lda palette+10
+        sta $2007
+        lda palette+11
+        sta $2007
+        lda palette+12
+        sta $2007
+        lda palette+13
+        sta $2007
+        lda palette+14
+        sta $2007
+        lda palette+15
+        sta $2007
+        lda palette+16
+        sta $2007
+        lda palette+17
+        sta $2007
+        lda palette+18
+        sta $2007
+        lda palette+19
+        sta $2007
+        lda palette+20
+        sta $2007
+        lda palette+21
+        sta $2007
+        lda palette+22
+        sta $2007
+        lda palette+23
+        sta $2007
+        lda palette+24
+        sta $2007
+        lda palette+25
+        sta $2007
+        lda palette+26
+        sta $2007
+        lda palette+27
+        sta $2007
+        lda palette+28
+        sta $2007
+        lda palette+29
+        sta $2007
+        lda palette+30
+        sta $2007
+        lda palette+31
+        sta $2007
+
+update_done:
+    ; Clear update mode.
+    lda #0 
+    sta nmt_update_mode
+    sta nmt_update_len
 
 scroll:
     lda scroll_nmt
@@ -800,12 +946,19 @@ loading_text: ; Loading....
 
 .endif
 
+version_text: ; 
+    .byte $34 + FAMISTUDIO_VERSION_MAJOR, $3e, $34 + FAMISTUDIO_VERSION_MINOR, $3e, $34 + FAMISTUDIO_VERSION_HOTFIX
+
+.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_S5B || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_EPSM
+    TEXT_OFFSET_Y = 0
+.else
+    TEXT_OFFSET_Y = 1
+.endif
 
 .proc play_song
 
+    song_ptr = p1
     text_ptr = p0
-    song_idx_mul_32 = r4
-    temp_x = r5
 
     ; each song table entry is 32-bytes.
     asl
@@ -813,12 +966,23 @@ loading_text: ; Loading....
     asl
     asl
     asl
-    sta song_idx_mul_32
-    tax
+    tay
+    sta song_ptr+0
+    lda #0
+    adc #0
+    sta song_ptr+1
+
+    lda #<song_table
+    adc song_ptr+0
+    sta song_ptr+0
+    sta text_ptr+0
+    lda #>song_table
+    adc song_ptr+1
+    sta song_ptr+1
+    sta text_ptr+1
 
 .if ::FAMISTUDIO_EXP_FDS
     
-    stx temp_x
     jsr famistudio_music_stop
     jsr famistudio_update
     jsr update_all_equalizers
@@ -831,23 +995,18 @@ loading_text: ; Loading....
     sta text_ptr+1
 
     ldx #2
-    ldy #11
+    ldy #(10+TEXT_OFFSET_Y)
     jsr draw_text
     jsr ppu_update
 
     ; Load song + DPCM if used.
-    ldx temp_x
-    lda song_fds_file, x
+    ldy #28
+    lda (song_ptr), y
     sta load_list+0
 
-    ; We use the "song_flags" field to store the DPCM file index (0 = no DPCM)
-    lda song_flags, x
-    beq no_dpcm
-    sta load_list+1
-    jmp load_file
-
-no_dpcm:
-    lda #$ff
+    ; We use the "song_flags" field to store the DPCM file index (-1 = no DPCM)
+    iny
+    lda (song_ptr), y
     sta load_list+1
 
 load_file:
@@ -862,22 +1021,100 @@ load_success:
     ldy #>__SONG_RUN__
     ldx #<__SONG_RUN__
 
+    lda song_ptr+0
+    sta text_ptr+0
+    lda song_ptr+1
+    sta text_ptr+1    
+
 .else
 
     ; Map 2 consecutive 8KB pages from the song start page.
-    lda #6
-    ldy song_page_start, x
-    sta $8000
-    sty $8001       
-    lda #7
-    iny
-    sta $8000
-    sty $8001       
+    .if ::FAMISTUDIO_EXP_VRC7
+
+        ldy #28
+        lda (song_ptr), y
+        tax
+        stx VRC7_PRG_SELECT_8000
+        inx
+        stx VRC7_PRG_SELECT_A000
+        ldx dpcm_bank
+        stx VRC7_PRG_SELECT_C000
+
+    .elseif ::FAMISTUDIO_EXP_S5B
+
+        ; Commands $9, $A, $B control PRG bank at $8000, $a000 and $c000 respectively.
+        ldx #9
+        stx FME7_COMMAND
+        ldy #28
+        lda (song_ptr), y
+        sta FME7_PARAM
+        inx
+        clc
+        adc #1
+        stx FME7_COMMAND
+        sta FME7_PARAM
+        inx        
+        stx FME7_COMMAND
+        lda dpcm_bank
+        sta FME7_PARAM     
+
+    .elseif ::FAMISTUDIO_EXP_N163
+
+        ldy #28
+        lda (song_ptr), y
+        sta N163_PRG_SELECT_8000
+        clc
+        adc #1
+        sta N163_PRG_SELECT_A000
+        lda dpcm_bank
+        sta N163_PRG_SELECT_C000
+
+    .elseif ::FAMISTUDIO_EXP_MMC5
+
+        ldy #28
+        lda (song_ptr), y
+        ora #MMC5_ROM_FLAGS
+        sta MMC5_PRG_SELECT_8000
+        clc
+        adc #1
+        sta MMC5_PRG_SELECT_A000
+        lda dpcm_bank
+        ora #MMC5_ROM_FLAGS
+        sta MMC5_PRG_SELECT_C000
+
+    .elseif ::FAMISTUDIO_EXP_VRC6
+
+        ; VRC6 uses 16KB pages, so just one page to map.
+        ldy #28
+        lda (song_ptr), y
+        sta VRC6_PRG_SELECT_8000
+        lda dpcm_bank
+        asl ; We count in 16KB page, but are mapping a 8KB page, x2.
+        sta VRC6_PRG_SELECT_C000
+
+    .else
+
+        ; No need to worry about DPCM page here, MMC3 has second-to-last page fixed.
+        ldx #6
+        ldy #28
+        lda (song_ptr), y
+        tay
+        stx MMC3_BANK_SELECT
+        sty MMC3_BANK_DATA
+        ldx #7
+        iny
+        stx MMC3_BANK_SELECT
+        sty MMC3_BANK_DATA       
+
+    .endif
 
     ; Load song pointer
-    ldy song_addr_start+1, x ; hi-byte
-    lda song_addr_start+0, x ; lo-byte
+    ldy #30
+    lda (song_ptr), y    
     tax
+    iny
+    lda (song_ptr), y    
+    tay
 
 .endif
 
@@ -892,16 +1129,8 @@ load_success:
     jsr famistudio_music_play
 
     ;update title.
-    lda #<song_name
-    clc
-    adc song_idx_mul_32
-    sta text_ptr+0
-    lda #>song_name
-    adc #0
-    sta text_ptr+1
-
     ldx #2
-    ldy #11
+    ldy #(10+TEXT_OFFSET_Y)
     jsr draw_text
     jsr ppu_update
 
@@ -910,80 +1139,179 @@ done:
 
 .endproc 
 
-equalizer_lookup:
-    .byte $f0, $f0, $f0, $f0 ; 0
-    .byte $f0, $f0, $f0, $b8 ; 1
-    .byte $f0, $f0, $f0, $c8 ; 2
-    .byte $f0, $f0, $b8, $c8 ; 3
-    .byte $f0, $f0, $c8, $c8 ; 4
-    .byte $f0, $b8, $c8, $c8 ; 5
-    .byte $f0, $c8, $c8, $c8 ; 6
-    .byte $b8, $c8, $c8, $c8 ; 7
-    .byte $c8, $c8, $c8, $c8 ; 8
-equalizer_color_lookup:
-    .byte $01, $02, $00, $02, $02, $02
+.if FAMISTUDIO_EXP_VRC6
+    NUM_EQUALIZERS = 8
+.elseif FAMISTUDIO_EXP_VRC7
+    NUM_EQUALIZERS = 11
+.elseif FAMISTUDIO_EXP_MMC5
+    NUM_EQUALIZERS = 7
+.elseif FAMISTUDIO_EXP_S5B
+    NUM_EQUALIZERS = 8
+.elseif FAMISTUDIO_EXP_EPSM
+    NUM_EQUALIZERS = 14 ; We dont display the rhythm channels
+.elseif FAMISTUDIO_EXP_N163
+    NUM_EQUALIZERS = 5 + FAMISTUDIO_EXP_N163_CHN_CNT
+.elseif FAMISTUDIO_EXP_FDS
+    NUM_EQUALIZERS = 6
+.else
+    NUM_EQUALIZERS = 5
+.endif
 
-; a = channel to update
+; Position and number of equalizers (well VU meter i guess) for each expansion
+equalizer_ppu_addr_lo_lookup:
+.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_S5B || FAMISTUDIO_EXP_EPSM 
+    .byte $87 ; Square 1
+    .byte $8b ; Square 2
+    .byte $8f ; Triangle
+    .byte $93 ; Noise
+    .byte $97 ; DPCM
+.endif
+.if FAMISTUDIO_EXP_VRC6
+    .byte $8b ; VRC6 Square 1
+    .byte $8f ; VRC6 Square 2
+    .byte $93 ; VRC6 Saw
+.elseif FAMISTUDIO_EXP_VRC7
+    .byte $85 ; FM1
+    .byte $89 ; FM2
+    .byte $8d ; FM3
+    .byte $91 ; FM4
+    .byte $95 ; FM5
+    .byte $99 ; FM6
+.elseif FAMISTUDIO_EXP_N163
+    .byte $85 ; Wavetable 1
+    .byte $88 ; Wavetable 2
+    .byte $8b ; Wavetable 3
+    .byte $8e ; Wavetable 4
+    .byte $91 ; Wavetable 5
+    .byte $94 ; Wavetable 6
+    .byte $97 ; Wavetable 7
+    .byte $9a ; Wavetable 8
+.elseif FAMISTUDIO_EXP_S5B    
+    .byte $8b ; S5B Square 1
+    .byte $8f ; S5B Square 2
+    .byte $93 ; S5B Square 3
+.elseif FAMISTUDIO_EXP_EPSM
+    .byte $83 ; EPSM Square 1
+    .byte $86 ; EPSM Square 2
+    .byte $89 ; EPSM Square 3
+    .byte $8c ; EPSM FM1
+    .byte $8f ; EPSM FM2
+    .byte $92 ; EPSM FM3
+    .byte $95 ; EPSM FM4
+    .byte $98 ; EPSM FM5
+    .byte $9b ; EPSM FM6
+.elseif FAMISTUDIO_EXP_FDS
+    .byte $45 ; Square 1
+    .byte $49 ; Square 2
+    .byte $4d ; Triangle
+    .byte $51 ; Noise
+    .byte $55 ; DPCM
+    .byte $59 ; FDS
+.elseif FAMISTUDIO_EXP_MMC5
+    .byte $44 ; Square 1
+    .byte $47 ; Square 2
+    .byte $4b ; Triangle
+    .byte $4f ; Noise
+    .byte $53 ; DPCM
+    .byte $57 ; MMC5 Square 1
+    .byte $5b ; MMC5 Square 2
+.else
+    .byte $47 ; Square 1
+    .byte $4b ; Square 2
+    .byte $4f ; Triangle
+    .byte $53 ; Noise
+    .byte $57 ; DPCM
+.endif    
+
+equalizer_ppu_addr_hi_lookup:
+.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_S5B || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_EPSM
+    .byte $21 ; Square 1
+    .byte $21 ; Square 2
+    .byte $21 ; Triangle
+    .byte $21 ; Noise
+    .byte $21 ; DPCM
+.else
+    .byte $22 ; Square 1
+    .byte $22 ; Square 2
+    .byte $22 ; Triangle
+    .byte $22 ; Noise
+    .byte $22 ; DPCM
+.endif
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+
+; Which 4 BG tiles to draw for each "volume" [0-7]
+equalizer_volume_lookup:
+    .byte $e3, $e3, $e3, $e3 ; 0
+    .byte $e3, $e3, $e3, $e0 ; 1
+    .byte $e3, $e3, $e3, $f0 ; 2
+    .byte $e3, $e3, $e0, $f0 ; 3
+    .byte $e3, $e3, $f0, $f0 ; 4
+    .byte $e3, $e0, $f0, $f0 ; 5
+    .byte $e3, $f0, $f0, $f0 ; 6
+    .byte $e0, $f0, $f0, $f0 ; 7
+    .byte $f0, $f0, $f0, $f0 ; 8
+
+; To add some color variety.
+equalizer_color_lookup:
+    .byte $00, $01, $02
+    .byte $00, $01, $01
+    .byte $02, $00, $01
+    .byte $02, $00, $01
+    .byte $01, $02, $00
+
+; x = channel to update
 .proc update_equalizer
     
-    pos_x = r0
+    channel_idx = r0
     color_offset = r1
 
-    tay
-    lda equalizer_color_lookup, y
+    stx channel_idx
+    lda equalizer_color_lookup, x
     sta color_offset
-    tya
 
-    ; compute x position.
-    asl
-    asl
-    sta pos_x
+    ; Write 2 addresses
+    ldy nmt_update_len
+    lda equalizer_ppu_addr_hi_lookup, x
+    sta nmt_update_data,y
+    lda equalizer_ppu_addr_lo_lookup, x
+    sta nmt_update_data+1,y
 
-    ; compute lookup index.
-    lda famistudio_chn_note_counter, y
-    asl
-    asl
-    tay
-
-    ; compute 2 addresses
-    ldx nmt_col_update_len
-    lda #$22
-    sta nmt_col_update,x
-    sta nmt_col_update+7,x
-.if ::FAMISTUDIO_EXP_FDS    
-    lda #$45
-.else
-    lda #$47
-.endif
-    clc
-    adc pos_x
-    sta nmt_col_update+1,x
-    adc #1
-    sta nmt_col_update+8,x
+    ; Always update 4 tiles
     lda #4
-    sta nmt_col_update+2,x
-    sta nmt_col_update+9,x
+    sta nmt_update_data+2,y
 
-    lda equalizer_lookup, y
+    ; Compute lookup index based on "volume".
+    lda famistudio_chn_note_counter, x
+    asl
+    asl
+    tax
+
+    clc
+    lda equalizer_volume_lookup, x
     adc color_offset
-    sta nmt_col_update+3,x
-    sta nmt_col_update+10,x
-    lda equalizer_lookup+1, y
+    sta nmt_update_data+3,y
+    lda equalizer_volume_lookup+1, x
     adc color_offset
-    sta nmt_col_update+4,x
-    sta nmt_col_update+11,x
-    lda equalizer_lookup+2, y
+    sta nmt_update_data+4,y
+    lda equalizer_volume_lookup+2, x
     adc color_offset
-    sta nmt_col_update+5,x
-    sta nmt_col_update+12,x
-    lda equalizer_lookup+3, y
+    sta nmt_update_data+5,y
+    lda equalizer_volume_lookup+3, x
     adc color_offset
-    sta nmt_col_update+6,x
-    sta nmt_col_update+13,x
+    sta nmt_update_data+6,y
     
-    lda #14
-    adc nmt_col_update_len
-    sta nmt_col_update_len 
+    lda #7
+    adc nmt_update_len
+    sta nmt_update_len 
+    ldx channel_idx
 
     rts
 
@@ -991,21 +1319,20 @@ equalizer_color_lookup:
 
 .proc update_all_equalizers
 
-    lda #0
-    jsr update_equalizer
-    lda #1
-    jsr update_equalizer
-    lda #2
-    jsr update_equalizer
-    lda #3
-    jsr update_equalizer
-    lda #4
-    jsr update_equalizer
-.if ::FAMISTUDIO_EXP_FDS
-    lda #5
-    jsr update_equalizer
-.endif
+    lda nmt_update_mode
+    bne equalizers_done ; Dont allow update if we already have an update pending.
 
+    ldx #0
+    update_equalizer_loop:
+        jsr update_equalizer
+        inx
+        cpx #NUM_EQUALIZERS
+        bne update_equalizer_loop
+
+    lda #1
+    sta nmt_update_mode
+
+    equalizers_done:
     rts
 
 .endproc
@@ -1022,7 +1349,11 @@ equalizer_color_lookup:
         inx
         cpx #16
         bcc palette_loop
-    
+
+    ; Force palette update.
+    lda #2
+    sta nmt_update_mode
+
     jsr setup_background
     jsr ppu_update
 
@@ -1139,13 +1470,13 @@ done:
     temp   = r3
     
     stx temp_x
-    ldx nmt_row_update_len
+    ldx nmt_update_len
     tya
     lsr
     lsr
     lsr
     ora #$20 ; high bits of Y + $20
-    sta nmt_row_update,x
+    sta nmt_update_data,x
     inx
     tya
     asl
@@ -1156,23 +1487,25 @@ done:
     sta temp
     lda temp_x
     ora temp
-    sta nmt_row_update,x
+    sta nmt_update_data,x
     inx
     lda #28 ; all our strings have 28 characters.
-    sta nmt_row_update,x
+    sta nmt_update_data,x
     inx
 
     ldy #0
     text_loop:
         lda (p0),y
-        sta nmt_row_update,x
+        sta nmt_update_data,x
         inx
         iny
         cpy #28
         bne text_loop
 
 
-    stx nmt_row_update_len
+    stx nmt_update_len
+    lda #2
+    sta nmt_update_mode
     rts
 
 .endproc
@@ -1196,7 +1529,7 @@ done:
     sta oam+3
     lda #15
     sta oam+0
-    lda #$81
+    lda #$51
     sta oam+1
     lda #1
     sta oam+2
@@ -1205,7 +1538,7 @@ done:
     sta oam+7
     lda #23
     sta oam+4
-    lda #$90
+    lda #$60
     sta oam+5
     lda #1
     sta oam+6
@@ -1214,14 +1547,14 @@ done:
     sta oam+11
     lda #23
     sta oam+8
-    lda #$92
+    lda #$62
     sta oam+9
     lda #1
     sta oam+10
 
     ; Draw title
     ldx #2
-    ldy #7
+    ldy #(6+TEXT_OFFSET_Y)
     jsr ppu_address_tile
 
     ldy #0
@@ -1234,7 +1567,7 @@ done:
 
     ; Draw author
     ldx #2
-    ldy #9
+    ldy #(8+TEXT_OFFSET_Y)
     jsr ppu_address_tile
 
     ldy #0
@@ -1244,6 +1577,19 @@ done:
         iny
         cpy #28
         bne author_loop
+
+    ; Draw version
+    ldx #25
+    ldy #27
+    jsr ppu_address_tile
+
+    ldy #0
+    version_loop:
+        lda version_text,y
+        sta $2007
+        iny
+        cpy #5
+        bne version_loop
 
     rts
 

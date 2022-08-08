@@ -44,11 +44,8 @@ The Linux version should work on most x64 ditros. But given the very non-stardar
 Please install the following dependencies before trying ot run the Linux version.
 
 1. Install [Mono](https://www.mono-project.com/download/stable/#download-lin)
-2. Install gtk-sharp2, this is usually by typing this, but this might vary depending on your distro :
 
-        sudo apt-get install gtk-sharp2
-
-Then to run provided amd64 (basically any x64 processor), simply run:
+2. Then simply run:
 
     mono FamiStudio.exe
 

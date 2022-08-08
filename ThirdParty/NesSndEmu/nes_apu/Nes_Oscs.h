@@ -20,7 +20,8 @@ struct Nes_Osc
 	int length_counter;// length counter (0 if unused by oscillator)
 	int delay;      // delay until next (potential) transition
 	int last_amp;   // last amplitude oscillator was outputting
-	
+	int trigger;
+
 	void clock_length( int halt_mask );
 	int period() const {
 		return (regs [3] & 7) * 0x100 + (regs [2] & 0xff);

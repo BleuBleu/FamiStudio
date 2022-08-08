@@ -20,7 +20,8 @@ namespace FamiStudio
         // Version 11 = FamiStudio 3.1.0 (Volume slides, DPCM fine pitch)
         // Version 12 = FamiStudio 3.2.0 (Multiple expansions, overclocking)
         // Version 13 = FamiStudio 3.3.0 (EPSM, Delta counter)
-        public static int Version = 13;
+        // Version 14 = FamiStudio 4.0.0 (Unicode text).
+        public static int Version = 14;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
 
@@ -54,9 +55,11 @@ namespace FamiStudio
         public bool UsesFamiStudioTempo  => tempoMode == TempoType.FamiStudio;
         public bool UsesFamiTrackerTempo => tempoMode == TempoType.FamiTracker;
 
-        public int  ExpansionAudioMask       => expansionMask;
-        public int  ExpansionNumN163Channels => expansionNumN163Channels;
-                    
+        public int ExpansionAudioMask       => expansionMask;
+        public int ExpansionNumN163Channels => expansionNumN163Channels;
+        
+        public int N163WaveRAMSize => 128 - 8 * expansionNumN163Channels;
+
         public bool UsesAnyExpansionAudio       => (expansionMask != ExpansionType.NoneMask);
         public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
         public bool UsesMultipleExpansionAudios => (Utils.NumberOfSetBits(expansionMask) > 1);
@@ -401,9 +404,9 @@ namespace FamiStudio
             }
 
             newSong.SerializeState(loadSerializer);
-#if DEBUG
+            newSong.Name = GenerateUniqueSongName(newSong.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
+            SortSongs();
             ValidateIntegrity();
-#endif
             return newSong;
         }
 
@@ -422,7 +425,7 @@ namespace FamiStudio
             else if (instruments.Find(inst => inst.Name == name) != null)
                 return null;
 
-            var instrument = new Instrument(GenerateUniqueId(), expansion, name);
+            var instrument = new Instrument(this, GenerateUniqueId(), expansion, name);
             instruments.Add(instrument);
             SortInstruments();
             return instrument;
@@ -439,6 +442,20 @@ namespace FamiStudio
             arpeggios.Add(arpeggio);
             SortArpeggios();
             return arpeggio;
+        }
+
+        public Arpeggio DuplicateArpeggio(Arpeggio arpeggio)
+        {
+            var saveSerializer = new ProjectSaveBuffer(this);
+            arpeggio.SerializeState(saveSerializer);
+            var newArpeggio = CreateArpeggio();
+            var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
+            loadSerializer.RemapId(arpeggio.Id, newArpeggio.Id);
+            newArpeggio.SerializeState(loadSerializer);
+            newArpeggio.Name = GenerateUniqueArpeggioName(newArpeggio.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
+            SortArpeggios();
+            ValidateIntegrity();
+            return newArpeggio;
         }
 
         public void InvalidateCumulativePatternCache()
@@ -465,7 +482,11 @@ namespace FamiStudio
                             if (note.Instrument == instrumentOld)
                             {
                                 if (instrumentNew == null)
+                                {
+                                    note.HasRelease = false;
                                     note.Value = Note.NoteInvalid;
+                                    note.Duration = 0;
+                                }
 
                                 note.Instrument = instrumentNew;
                             }
@@ -477,28 +498,26 @@ namespace FamiStudio
             InvalidateCumulativePatternCache();
         }
 
-        public void CopyInstrument(Instrument instrumentDst, Instrument instrumentSrc)
-        {
-            Debug.Assert(instrumentDst != null && instrumentSrc != null && instrumentDst.Expansion == instrumentSrc.Expansion);
-
-            var saveSerializer = new ProjectSaveBuffer(this);
-            instrumentSrc.SerializeState(saveSerializer);
-            var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
-            loadSerializer.RemapId(instrumentSrc.Id, instrumentDst.Id);
-            var oldName = instrumentDst.Name;
-            instrumentDst.SerializeState(loadSerializer);
-            instrumentDst.Name = oldName;
-
-            InvalidateCumulativePatternCache();
-            ValidateIntegrity();
-        }
-
         public void DeleteInstrument(Instrument instrument)
         {
             instruments.Remove(instrument);
             ReplaceInstrument(instrument, null);
         }
-        
+
+        public Instrument DuplicateInstrument(Instrument instrument)
+        {
+            var saveSerializer = new ProjectSaveBuffer(this);
+            instrument.SerializeState(saveSerializer);
+            var newInstrument = CreateInstrument(instrument.Expansion);
+            var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
+            loadSerializer.RemapId(instrument.Id, newInstrument.Id);
+            newInstrument.SerializeState(loadSerializer);
+            newInstrument.Name = GenerateUniqueInstrumentName(newInstrument.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
+            SortInstruments();
+            ValidateIntegrity();
+            return newInstrument;
+        }
+
         public void DeleteAllInstruments()
         {
             foreach (var inst in instruments)
@@ -598,31 +617,31 @@ namespace FamiStudio
             arpeggios.Clear();
         }
 
-        public string GenerateUniqueSongName()
+        public string GenerateUniqueSongName(string baseName = "Song")
         {
             for (int i = 1; ; i++)
             {
-                var name = "Song " + i;
+                var name = $"{baseName} {i}";
                 if (songs.Find(song => song.Name == name) == null)
                     return name;
             }
         }
 
-        public string GenerateUniqueInstrumentName()
+        public string GenerateUniqueInstrumentName(string baseName = "Instrument")
         {
             for (int i = 1; ; i++)
             {
-                var name = "Instrument " + i;
+                var name = $"{baseName} {i}";
                 if (instruments.Find(inst => inst.Name == name) == null)
                     return name;
             }
         }
 
-        public string GenerateUniqueArpeggioName()
+        public string GenerateUniqueArpeggioName(string baseName = "Arpeggio")
         {
             for (int i = 1; ; i++)
             {
-                var name = "Arpeggio " + i;
+                var name = $"{baseName} {i}";
                 if (arpeggios.Find(arp => arp.Name == name) == null)
                     return name;
             }
@@ -767,6 +786,14 @@ namespace FamiStudio
                     var inst = instruments[i];
                     if (!UsesExpansionAudio(inst.Expansion))
                         DeleteInstrument(inst);
+                }
+            }
+
+            if (oldNumN163Channels != expansionNumN163Channels)
+            {
+                foreach (var inst in instruments)
+                {
+                    inst.NotifyN163RAMSizeChanged();
                 }
             }
 
@@ -1353,6 +1380,9 @@ namespace FamiStudio
             }
 
             tempoMode = TempoType.FamiTracker;
+
+            foreach (var song in songs)
+                song.ClearCustomPatternSettingsForFamitrackerTempo();
         }
 
         public void ConvertToCompoundNotes()
@@ -1436,6 +1466,15 @@ namespace FamiStudio
             foreach (var sample in samples)
             {
                 sample.PermanentlyApplyAllProcessing();
+            }
+        }
+
+        public void DeleteAllN163FdsResampleWavData()
+        {
+            foreach (var inst in instruments)
+            {
+                inst.DeleteFdsResampleWavData();
+                inst.DeleteN163ResampleWavData();
             }
         }
 
@@ -1643,12 +1682,6 @@ namespace FamiStudio
                 arp.SerializeState(buffer);
         }
 
-        public void DisableEpsmMultipleExpansions()
-        {
-            // Cant have EPSM with other expansions.
-            if (UsesMultipleExpansionAudios && UsesEPSMExpansion)
-                SetExpansionAudioMask(ExpansionAudioMask & (~ExpansionType.EPSMMask), ExpansionNumN163Channels);
-        }
 
         public void SerializeState(ProjectBuffer buffer, bool includeSamples = true)
         {
@@ -1727,7 +1760,6 @@ namespace FamiStudio
                 // At version 10 (FamiStudio 3.0.0) we allow users to re-order songs.
                 SortEverything(buffer.Version < 10);
 
-                DisableEpsmMultipleExpansions();
             }
         }
 

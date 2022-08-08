@@ -37,6 +37,22 @@ namespace FamiStudio
             "DAC"
         };
 
+        public static readonly string[] EffectIcons = new string[]
+        {
+            "EffectVolume",
+            "EffectVibrato",
+            "EffectVibrato",
+            "EffectPitch",
+            "EffectSpeed",
+            "EffectMod",
+            "EffectMod",
+            "EffectDutyCycle",
+            "EffectNoteDelay",
+            "EffectCutDelay",
+            "EffectVolume",
+            "EffectDutyCycle",
+        };
+
         public const int VolumeMax       = 0x0f;
         public const int VibratoSpeedMax = 0x0c;
         public const int VibratoDepthMax = 0x0f;
@@ -211,7 +227,7 @@ namespace FamiStudio
             {
                 if (IsMusical)
                 {
-                    release = (ushort)Math.Min(value, (int)ushort.MaxValue);
+                    release = (ushort)Utils.Clamp(value, 0, (int)ushort.MaxValue);
                     ClearReleaseIfPastDuration();
                 }
             }
@@ -518,6 +534,12 @@ namespace FamiStudio
         public static bool IsMusicalNote(int note)
         {
             return note >= MusicalNoteMin && note <= MusicalNoteMax;
+        }
+
+        public static void GetOctaveAndNote(int note, out int octave, out int octaveNote)
+        {
+            octave     = (note - 1) / 12;
+            octaveNote = (note - 1) - octave * 12;
         }
 
         public Note Clone()

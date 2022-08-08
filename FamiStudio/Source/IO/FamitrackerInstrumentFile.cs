@@ -29,7 +29,7 @@ namespace FamiStudio
         const int SEQ_COUNT = 5;
         const int MAX_DSAMPLES = 64;
 
-        private void ReadEnvelope(byte[] bytes, ref int offset, Instrument instrument, int envType)
+        private void ReadEnvelope(byte[] bytes, ref int offset, Instrument instrument, Envelope env, int envType)
         {
             var itemCount    = BitConverter.ToInt32(bytes, offset); offset += 4;
             var loopPoint    = BitConverter.ToInt32(bytes, offset); offset += 4;
@@ -46,8 +46,6 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported, ignoring.");
                 return;
             }
-
-            Envelope env = instrument.Envelopes[envType];
 
             if (env == null)
                 return;
@@ -130,20 +128,19 @@ namespace FamiStudio
                 // Skip mod speed/depth/delay.
                 offset += sizeof(int) * 3;
 
-                ReadEnvelope(bytes, ref offset, instrument, EnvelopeType.Volume);
-                ReadEnvelope(bytes, ref offset, instrument, EnvelopeType.Arpeggio);
-                ReadEnvelope(bytes, ref offset, instrument, EnvelopeType.Pitch);
+                ReadEnvelope(bytes, ref offset, instrument, instrument.Envelopes[EnvelopeType.Volume],   EnvelopeType.Volume);
+                ReadEnvelope(bytes, ref offset, instrument, instrument.Envelopes[EnvelopeType.Arpeggio], EnvelopeType.Arpeggio);
+                ReadEnvelope(bytes, ref offset, instrument, instrument.Envelopes[EnvelopeType.Pitch],    EnvelopeType.Pitch);
             }
-            else if (instType == ExpansionType.None ||
-                     instType == ExpansionType.N163)
+            else if (instType == ExpansionType.None)
             {
-                var seqCount = bytes[offset++];
-
                 // Envelopes
+                var seqCount = bytes[offset++];
                 for (int i = 0; i < seqCount; i++)
                 {
+                    var envType = EnvelopeTypeLookup[i];
                     if (bytes[offset++] == 1)
-                        ReadEnvelope(bytes, ref offset, instrument, EnvelopeTypeLookup[i]);
+                        ReadEnvelope(bytes, ref offset, instrument, instrument.Envelopes[envType], envType);
                 }
             }
             else if (instType == ExpansionType.Vrc7)
@@ -156,9 +153,26 @@ namespace FamiStudio
                         instrument.Vrc7PatchRegs[i] = bytes[offset++];
                 }
             }
-
-            if (instType == ExpansionType.N163)
+            else if (instType == ExpansionType.N163)
             {
+                var waveIndexEnvelope = (Envelope)null;
+
+                // Envelopes
+                var seqCount = bytes[offset++];
+                for (int i = 0; i < seqCount; i++)
+                {
+                    if (bytes[offset++] == 1)
+                    {
+                        var envType = EnvelopeTypeLookup[i];
+                        var env = instrument.Envelopes[envType];
+
+                        if (i == 4 /* SEQ_DUTYCYCLE */)
+                            env = waveIndexEnvelope = new Envelope(EnvelopeType.WaveformRepeat);
+
+                        ReadEnvelope(bytes, ref offset, instrument, env, envType);
+                    }
+                }
+
                 int waveSize  = BitConverter.ToInt32(bytes, offset); offset += 4;
                 int wavePos   = BitConverter.ToInt32(bytes, offset); offset += 4;
                 int waveCount = BitConverter.ToInt32(bytes, offset); offset += 4;
@@ -166,17 +180,25 @@ namespace FamiStudio
                 instrument.N163WavePreset = WavePresetType.Custom;
                 instrument.N163WaveSize   = (byte)waveSize;
                 instrument.N163WavePos    = (byte)wavePos;
+                instrument.N163WaveCount  = (byte)waveCount;
 
                 var wavEnv = instrument.Envelopes[EnvelopeType.N163Waveform];
 
-                // Only read the first wave for now.
-                for (int j = 0; j < waveSize; j++)
-                    wavEnv.Values[j] = (sbyte)bytes[offset++];
-
-                if (waveCount > 1)
+                for (int i = 0; i < waveCount; i++)
                 {
-                    Log.LogMessage(LogSeverity.Warning, $"Multiple N163 waveforms detected, only loading the first one.");
+                    if (i < instrument.N163WaveCount)
+                    {
+                        for (int j = 0; j < waveSize; j++)
+                            wavEnv.Values[i * instrument.N163WaveSize + j] = (sbyte)bytes[offset++];
+                    }
+                    else
+                    {
+                        // TODO : Give warning here.
+                        offset += waveSize;
+                    }
                 }
+
+                FamitrackerFileBase.ConvertN163WaveIndexToRepeatEnvelope(instrument, waveIndexEnvelope);
             }
 
             // Samples

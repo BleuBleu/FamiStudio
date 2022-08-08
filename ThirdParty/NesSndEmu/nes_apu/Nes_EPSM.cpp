@@ -6,11 +6,11 @@
 #include "ym3438.h"
 #include BLARGG_SOURCE_BEGIN
 
-Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer(NULL), output_buffer_right(NULL)
+Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer_left(NULL), output_buffer_right(NULL)
 {
 	output(NULL,NULL);
 	volume(1.0);
-	reset();
+	reset(false);
 }
 
 Nes_EPSM::~Nes_EPSM()
@@ -21,28 +21,31 @@ Nes_EPSM::~Nes_EPSM()
 		// destruct or handle opn2 somehow
 }
 
-void Nes_EPSM::reset()
+void Nes_EPSM::reset(bool pal = false)
 {
+	pal_mode = pal;
 	reset_psg();
 	reset_opn2();
 	last_time = 0;
-	last_amp = 0;
+	last_psg_amp = 0;
+	last_opn2_amp_left = 0;
+	last_opn2_amp_right = 0;
+	psg_delay = 0;
+	opn2_delay = 0;
 }
 
 void Nes_EPSM::volume(double v)
 {
-	synth.volume(v);
-	synth_right.volume(v);
+	synth_left.volume(v * 10.59857f);
+	synth_right.volume(v * 10.59857f);
 }
-
-
 
 void Nes_EPSM::reset_psg()
 {
 	if (psg)
 		PSG_delete(psg);
 
-	psg = PSG_new(psg_clock, (uint32_t)(psg_clock / 16.0 / (4000000.0/1789773.0)));
+	psg = PSG_new(psg_clock, (uint32_t)((pal_mode ? pal_clock : ntsc_clock) / 16));
 	PSG_reset(psg);
 }
 
@@ -54,16 +57,16 @@ void Nes_EPSM::reset_opn2()
 
 void Nes_EPSM::output(Blip_Buffer* buf, Blip_Buffer* buf_right)
 {
-	output_buffer = buf;
+	output_buffer_left = buf;
 	output_buffer_right = buf_right;
 
-	if (output_buffer && (!psg || output_buffer->sample_rate() != psg->rate))
+	if (output_buffer_left && (!psg || output_buffer_left->sample_rate() != psg->rate))
 		reset_psg();
 }
 
 void Nes_EPSM::treble_eq(blip_eq_t const& eq)
 {
-	synth.treble_eq(eq);
+	synth_left.treble_eq(eq);
 	synth_right.treble_eq(eq);
 }
 
@@ -79,64 +82,71 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 				PSG_setMask(psg, psg->mask | (1 << idx));
 		}
 	}
+
 	if (idx < 9 && idx > 2)
 	{
 		if (enabled)
-		mask_fm = mask_fm | (1 << (idx-3));
+			mask_fm = mask_fm | (1 << (idx-3));
 		else
-		mask_fm = mask_fm & ~(1 << (idx-3));
+			mask_fm = mask_fm & ~(1 << (idx-3));
 	}
+
 	if (idx > 8)
 	{
-		//std::cout << "enabled: " << enabled << " index" << (idx - 9) << std::endl;
 		if (enabled)
-			maskRythm = maskRythm | (1 << (idx-9));
+			mask_rhythm = mask_rhythm | (1 << (idx-9));
 		else
-			maskRythm = maskRythm & ~(1 << (idx-9));
+			mask_rhythm = mask_rhythm & ~(1 << (idx-9));
+	}
+
+	if (idx > 2)
+	{
+		if (enabled)
+		{
+			opn2_mask = opn2_mask & ~(1 << (idx-3));
+			OPN2_MuteChannel(&opn2, opn2_mask);
+		}
+		else
+		{
+			opn2_mask = opn2_mask | (1 << (idx-3));
+			OPN2_MuteChannel(&opn2, opn2_mask);
+		}
 	}
 }
 
 void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
-{	if (addr >= reg_select && addr < (reg_select + reg_range)) {
+{
+	bool psg_reg = false;
+
+	if (addr >= reg_select && addr < (reg_select + reg_range)) 
+	{
 		reg = data;
 	}
-	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
-			if((addr == 0x401d) && (reg < 0x10)){
-			}
+	else if (addr >= reg_write && addr < (reg_write + reg_range)) 
+	{
+		if ((addr == 0x401d) && (reg < 0x10))
+		{
+			PSG_writeReg(psg, reg, data);
+			psg_reg = true;
+		}
 	}
-	int mask = 0;
-	switch(addr) {
+
+	switch(addr) 
+	{
 		case 0x401c:
 		case 0x401e:
 			current_register = data;
 			break;
 		case 0x401d:
 		case 0x401f:
-			if (current_register == 0x10) {
-				data = data & maskRythm;
-			}
-				//currentRegister = data;
-			else if (current_register == 0x28) {
-				if(!(mask_fm & 0x1) && ((data & 0x7)) == 0){ mask = 1; }
-				else if (!(mask_fm & 0x2) && ((data & 0x7)) == 1) { mask = 1; }
-				else if (!(mask_fm & 0x4) && ((data & 0x7)) == 2) { mask = 1; }
-				else if (!(mask_fm & 0x8) && ((data & 0x7)) == 4) { mask = 1; }
-				else if (!(mask_fm & 0x10) && ((data & 0x7)) == 5) { mask = 1; }
-				else if (!(mask_fm & 0x20) && ((data & 0x7)) == 6) { mask = 1; }
-				//std::cout << "fm" << std::endl;
-			}
 			break;
 	}
 
+	int a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
+	int a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
 
-	a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
-	a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
-	if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
-	if (!mask) 
-	{	
-		queue.push(a0 | (a1 << 1), data);
-	
-		switch (addr) {
+	switch (addr) 
+	{
 		case 0x401d:
 			regs_a0[current_register] = data;
 			ages_a0[current_register] = 0;
@@ -145,66 +155,115 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			regs_a1[current_register] = data;
 			ages_a1[current_register] = 0;
 			break;
-		}
 	}
-	//if (!mask) OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
-	//run_until(time);
+
+	if (!psg_reg) 
+		OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
+
+	run_until(time);
 }
 
-
-
-long Nes_EPSM::run_until(cpu_time_t time)
+long Nes_EPSM::run_until(cpu_time_t end_time)
 {
-	if (!output_buffer)
+	if (!output_buffer_left)
 		return 0;
 
-	cpu_time_t t = last_time;
+	end_time <<= epsm_time_precision;
 
-	while (t < time)
+	require(end_time >= last_time);
+
+	cpu_time_t psg_increment = 16 << epsm_time_precision;
+	cpu_time_t psg_time = last_time + psg_delay;
+
+	while (psg_time < end_time)
 	{
-		if (!queue.empty() && !(t % 1))
-		{
-			epsm_write write = queue.pop();
-			OPN2_Write(&opn2, write.addr, write.data);
-		}
-		int sample = (int)(PSG_calc(psg)/1.8);
-		int sample_right;
-		sample = clamp(sample, -7710, 7710);
-		sample_right = clamp(sample, -7710, 7710);
-		int t2 = 0;
-		int16_t samples[4];
-		while (t2 < 12)
-		{
-			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
-			sample += (int)(samples[0] * 12);
-			sample += (int)(samples[2]*1.1);
-			sample_right += (int)(samples[1]) * 12;
-			sample_right += (int)(samples[3] * 1.1);
-			t2++;
-		}
-		int delta = sample - last_amp;
-		int delta_right = sample_right - last_amp_right;
+		int sample = (int)PSG_calc(psg) * 10 / 18;
+		int delta = sample - last_psg_amp;
+
 		if (delta)
 		{
-			synth.offset(t, delta, output_buffer);
-			last_amp = sample;
+			synth_left.offset(psg_time >> epsm_time_precision, delta, output_buffer_left);
+			synth_right.offset(psg_time >> epsm_time_precision, delta, output_buffer_right);
+			
+			last_psg_amp = sample;
 		}
-		if (delta_right)
+
+		for (int i = 0; i < 3; i++)
 		{
-			synth_right.offset(t, delta_right, output_buffer_right);
-			last_amp_right = sample_right;
+			if (psg->trigger_mask & (1 << i))
+				update_trigger(output_buffer_left, psg_time >> epsm_time_precision, triggers[i]);
+			else if (psg->freq[i] <= 1)
+				triggers[i] = trigger_none;
 		}
-		t += 16;
+
+		psg_time += psg_increment;
 	}
 
-	last_time = time;
-	return t;
+	cpu_time_t opn2_increment = ((int64_t)(output_buffer_left->clock_rate() * 6 * 24) << epsm_time_precision) / epsm_clock;
+	cpu_time_t opn2_time = last_time + opn2_delay;
+
+	while (opn2_time < end_time)
+	{
+		int sample_left  = 0;
+		int sample_right = 0;
+
+		// The chip does a full update in 24-steps. It outputs the value of 
+		// certain channels at each of those 24 steps. So for maximum audio 
+		// quality, we always run a full 24-cycles updates (which takes ~32.2159 
+		// NES cycles in NTSC) so we get even output from all the channels.
+		require(opn2.cycles == 0);
+
+		for (int i = 0; i < 24; i++)
+		{
+			int16_t samples[4];
+			OPN2_Clock(&opn2, samples, mask_fm, mask_rhythm, false);
+
+			sample_left  += (int)(samples[0] * 6);
+			sample_left  += (int)(samples[2] * 11 / 20);
+			sample_right += (int)(samples[1] * 6);
+			sample_right += (int)(samples[3] * 11 / 20);
+		}
+
+		int delta_left  = sample_left  - last_opn2_amp_left;
+		int delta_right = sample_right - last_opn2_amp_right;
+
+		if (delta_left)
+		{
+			synth_left.offset(opn2_time >> epsm_time_precision, delta_left, output_buffer_left);
+			last_opn2_amp_left = sample_left;
+		}
+
+		if (delta_right)
+		{
+			synth_right.offset(opn2_time >> epsm_time_precision, delta_right, output_buffer_right);
+			last_opn2_amp_right = sample_right;
+		}
+
+		for (int i = 0; i < 6; i++)
+		{
+			if (opn2.triggers[i] == 1)
+				update_trigger(output_buffer_left, opn2_time >> epsm_time_precision, triggers[i + 3]);
+			else if (opn2.triggers[i] == 2)
+				triggers[i + 3] = trigger_none;
+		}
+
+		opn2_time += opn2_increment;
+	}
+
+	opn2_delay = opn2_time - end_time;
+	psg_delay  = psg_time  - end_time;
+
+	last_time = end_time;
+
+	return max(opn2_time, psg_time);
 }
 
 void Nes_EPSM::end_frame(cpu_time_t time)
 {
-	if (time > last_time)
-	last_time = run_until(time) - time;
+	if ((time << epsm_time_precision) > last_time)
+		run_until(time);
+
+	last_time -= (time << epsm_time_precision);
 	assert(last_time >= 0);
 }
 
@@ -220,46 +279,48 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 	{
 		if (shadow_internal_regs[i] >= 0)
 		{
-			if(i >= 0xC0){
-				write_register(clock += 4, reg_select, 0x28);
-				write_register(clock += 4, reg_write, shadow_internal_regs[i]);
+			if (i >= 0xC0)
+			{
+				write_register(clock += reg_cycle_skip, reg_select, 0x28);
+				write_register(clock += reg_cycle_skip, reg_write, shadow_internal_regs[i]);
             }
-			else{
-				write_register(clock += 4, reg_select, i);
-				write_register(clock += 4, reg_write, shadow_internal_regs[i]);
+			else
+			{
+				write_register(clock += reg_cycle_skip, reg_select, i);
+				write_register(clock += reg_cycle_skip, reg_write, shadow_internal_regs[i]);
 			}
 		}
 	}
+
 	for (int i = 0; i < array_count(shadow_internal_regs2); i++)
 	{
 		if (shadow_internal_regs2[i] >= 0)
 		{
-			write_register(clock += 4, reg_select2, i);
-			write_register(clock += 4, reg_write2, shadow_internal_regs2[i]);
+			write_register(clock += reg_cycle_skip, reg_select2, i);
+			write_register(clock += reg_cycle_skip, reg_write2, shadow_internal_regs2[i]);
 		}
 	}
 }
 
 void Nes_EPSM::write_shadow_register(int addr, int data)
 {
-	if (addr >= reg_select && addr < (reg_select + reg_range)) {
+	if (addr >= reg_select && addr < (reg_select + reg_range))
+	{
 		reg = data;
 	}
-	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
-		
-		if(reg == 0x28){
+	else if (addr >= reg_write && addr < (reg_write + reg_range))
+	{
+		if(reg == 0x28)
 			shadow_internal_regs[0xC0+(0xF & data)] = data;
-        }
-		else{
+		else
 			shadow_internal_regs[reg] = data;
-        }
 	}
-	if (addr >= reg_select2 && addr < (reg_select2 + reg_range)) {
-
+	if (addr >= reg_select2 && addr < (reg_select2 + reg_range)) 
+	{
 		reg = data;
 	}
-	else if (addr >= reg_write2 && addr < (reg_write2 + reg_range)) {
-
+	else if (addr >= reg_write2 && addr < (reg_write2 + reg_range)) 
+	{
 		shadow_internal_regs2[reg] = data;
 	}
 }
@@ -278,3 +339,13 @@ void Nes_EPSM::get_register_values(struct epsm_register_values* r)
 	}
 }
 
+void Nes_EPSM::reset_triggers(bool force_none)
+{
+	for (int i = 0; i < array_count(triggers); i++)
+		triggers[i] = force_none ? trigger_none : (i >= 9 ? trigger_none : trigger_hold);
+}
+
+int Nes_EPSM::get_channel_trigger(int idx) const
+{
+	return triggers[idx];
+}

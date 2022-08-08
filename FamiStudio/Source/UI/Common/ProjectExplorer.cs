@@ -1,23 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Drawing;
-using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Color = System.Drawing.Color;
-
-using RenderBrush       = FamiStudio.GLBrush;
-using RenderBitmap      = FamiStudio.GLBitmap;
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderFont        = FamiStudio.GLFont;
-using RenderControl     = FamiStudio.GLControl;
-using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderTheme       = FamiStudio.ThemeRenderResources;
-using RenderCommandList = FamiStudio.GLCommandList;
 
 namespace FamiStudio
 {
-    public class ProjectExplorer : RenderControl
+    public class ProjectExplorer : Control
     {
         const int DefaultExpandButtonSizeX    = 8;
         const int DefaultExpandButtonPosX     = 3;
@@ -26,22 +14,22 @@ namespace FamiStudio
         const int DefaultButtonIconPosY       = 3;
         const int DefaultButtonTextPosX       = 21;
         const int DefaultButtonTextNoIconPosX = 4;
-        const int DefaultSubButtonSpacingX    = PlatformUtils.IsMobile ? 17 : 18;
+        const int DefaultSubButtonSpacingX    = Platform.IsMobile ? 17 : 18;
         const int DefaultSubButtonPosY        = 3;
         const int DefaultScrollBarThickness1  = 10;
         const int DefaultScrollBarThickness2  = 16;
         const int DefaultButtonSizeY          = 21;
         const int DefaultRegisterSizeY        = 14;
-        const int DefaultSliderPosX           = PlatformUtils.IsMobile ? 88 : 108;
+        const int DefaultSliderPosX           = Platform.IsMobile ? 88 : 108;
         const int DefaultSliderPosY           = 3;
-        const int DefaultSliderSizeX          = PlatformUtils.IsMobile ? 84 : 104;
+        const int DefaultSliderSizeX          = Platform.IsMobile ? 84 : 104;
         const int DefaultSliderSizeY          = 15;
         const int DefaultCheckBoxPosX         = 20;
         const int DefaultCheckBoxPosY         = 3;
         const int DefaultDraggedLineSizeY     = 5;
         const int DefaultParamRightPadX       = 4;
-        const int DefaultRegisterLabelSizeX   = 60;
-        const float ScrollSpeedFactor         = PlatformUtils.IsMobile ? 2.0f : 1.0f;
+        const int DefaultRegisterLabelSizeX   = 58;
+        const float ScrollSpeedFactor         = Platform.IsMobile ? 2.0f : 1.0f;
 
         int expandButtonSizeX;
         int buttonIconPosX;
@@ -57,6 +45,7 @@ namespace FamiStudio
         int sliderPosY;
         int sliderSizeX;
         int sliderSizeY;
+        int paramButtonSizeX;
         int checkBoxPosX;
         int checkBoxPosY;
         int paramRightPadX;
@@ -83,7 +72,7 @@ namespace FamiStudio
         };
 
         delegate object GetRegisterValueDelegate();
-        delegate void   DrawRegisterDelegate(RenderCommandList c, ThemeRenderResources res, Rectangle rect);
+        delegate void   DrawRegisterDelegate(CommandList c, FontRenderResources res, Rectangle rect);
 
         public static readonly string[] NoteNamesPadded =
 {
@@ -100,11 +89,6 @@ namespace FamiStudio
             "A#",
             "B-"
         };
-
-        //private static double N163PeriodToFreq(int cpuFreq, int period, int waveLen)
-        //{
-        //    return cpuFreq / 983040.0 * period / waveLen / 4;
-        //}
 
         private static double NoteFromFreq(double f)
         {
@@ -323,7 +307,7 @@ namespace FamiStudio
                 };
             }
 
-            void DrawInternal(RenderCommandList c, ThemeRenderResources res, Rectangle rect, byte[] vals, int maxVal, bool signed)
+            void DrawInternal(CommandList c, FontRenderResources res, Rectangle rect, byte[] vals, int maxVal, bool signed)
             {
                 var sx = rect.Width  / 64;
                 var sy = rect.Height / (float)maxVal;
@@ -335,26 +319,24 @@ namespace FamiStudio
                     var color = i.Registers.InstrumentColors[ChannelType.FdsWave];
 
                     if (color.A == 0)
-                        color = Theme.LightGreyFillColor2;
-
-                    var brush = c.Graphics.GetSolidBrush(color);
+                        color = Theme.LightGreyColor2;
 
                     if (signed)
-                        c.FillRectangle(x * sx, h - y, (x + 1) * sx, h / 2, brush);
+                        c.FillRectangle(x * sx, h - y, (x + 1) * sx, h / 2, color);
                     else
-                        c.FillRectangle(x * sx, h - y, (x + 1) * sx, h, brush);
+                        c.FillRectangle(x * sx, h - y, (x + 1) * sx, h, color);
                 }
 
-                c.FillRectangle(64 * sx, 0, 64 * sx, rect.Height, res.DarkGreyLineBrush3);
-                c.DrawLine(64 * sx, 0, 64 * sx, rect.Height, res.BlackBrush);
+                c.FillRectangle(64 * sx, 0, 64 * sx, rect.Height, Theme.DarkGreyColor3);
+                c.DrawLine(64 * sx, 0, 64 * sx, rect.Height, Theme.BlackColor);
             }
 
-            void DrawWaveTable(RenderCommandList c, ThemeRenderResources res, Rectangle rect)
+            void DrawWaveTable(CommandList c, FontRenderResources res, Rectangle rect)
             {
                 DrawInternal(c, res, rect, i.GetWaveTable(), 63, true);
             }
 
-            void DrawModTable(RenderCommandList c, ThemeRenderResources res, Rectangle rect)
+            void DrawModTable(CommandList c, FontRenderResources res, Rectangle rect)
             {
                 DrawInternal(c, res, rect, i.GetModTable(), 7, false);
             }
@@ -428,12 +410,12 @@ namespace FamiStudio
                 }
             }
 
-            void DrawRamMap(RenderCommandList c, ThemeRenderResources res, Rectangle rect)
+            void DrawRamMap(CommandList c, FontRenderResources res, Rectangle rect)
             {
                 var ramSize   = 128 - i.NumActiveChannels * 8;
                 var numValues = ramSize * 2;
 
-                var sx = rect.Width  / numValues;
+                var sx = Math.Max(1, rect.Width  / numValues);
                 var sy = rect.Height / 15.0f;
                 var h  = rect.Height;
 
@@ -458,15 +440,14 @@ namespace FamiStudio
                         }
                     }
 
-                    var color = channelIndex >= 0 ? i.Registers.InstrumentColors[ChannelType.N163Wave1 + channelIndex] : Theme.LightGreyFillColor2;
-                    var brush = c.Graphics.GetSolidBrush(color);
+                    var color = channelIndex >= 0 ? i.Registers.InstrumentColors[ChannelType.N163Wave1 + channelIndex] : Theme.LightGreyColor2;
 
-                    c.FillRectangle((x * 2 + 0) * sx, h - lo, (x * 2 + 1) * sx, h, brush);
-                    c.FillRectangle((x * 2 + 1) * sx, h - hi, (x * 2 + 2) * sx, h, brush);
+                    c.FillRectangle((x * 2 + 0) * sx, h - lo, (x * 2 + 1) * sx, h, color);
+                    c.FillRectangle((x * 2 + 1) * sx, h - hi, (x * 2 + 2) * sx, h, color);
                 }
 
-                c.FillRectangle(numValues * sx, 0, 256 * sx, rect.Height, res.DarkGreyLineBrush3);
-                c.DrawLine(256 * sx, 0, 256 * sx, rect.Height, res.BlackBrush);
+                c.FillRectangle(numValues * sx, 0, 256 * sx, rect.Height, Theme.DarkGreyColor3);
+                c.DrawLine(256 * sx, 0, 256 * sx, rect.Height, Theme.BlackColor);
             }
         }
 
@@ -618,7 +599,7 @@ namespace FamiStudio
             EnvelopeMax           = EnvelopeType.Count,
 
             // Other buttons
-            Add,
+            Add = EnvelopeType.Count,
             DPCM,
             Load,
             Save,
@@ -651,6 +632,7 @@ namespace FamiStudio
             DragSample,
             DragSong,
             MoveSlider,
+            SliderButtons,
             ScrollBar,
             MobilePan
         };
@@ -663,6 +645,7 @@ namespace FamiStudio
             false, // DragSample,
             true,  // DragSong,
             false, // MoveSlider,
+            false, // SliderButtons
             false, // ScrollBar
             false  // MobilePan
         };
@@ -675,6 +658,7 @@ namespace FamiStudio
             false, // DragSample,
             true,  // DragSong,
             false, // MoveSlider,
+            true,  // SliderButtons
             false, // ScrollBar
             false  // MobilePan
         };
@@ -690,8 +674,10 @@ namespace FamiStudio
         int captureScrollY = -1;
         int envelopeDragIdx = -1;
         int highlightedButtonIdx = -1;
+        int captureButtonSign = 0;
         float flingVelY = 0.0f;
         float bitmapScale = 1.0f;
+        float captureDuration = 0.0f;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
         bool canFling = false;
@@ -711,87 +697,43 @@ namespace FamiStudio
         NesApu.NesRegisterValues registerValues;
         ExpansionRegisterViewer[] registerViewers = new ExpansionRegisterViewer[ExpansionType.Count];
 
-        RenderBrush sliderFillBrush;
-        RenderBrush   disabledBrush;
-        RenderBrush[] registerBrushes = new RenderBrush[11];
-        RenderBitmapAtlas bmpMiscAtlas;
-        RenderBitmapAtlas bmpExpansionsAtlas;
-        RenderBitmapAtlas bmpEnvelopesAtlas;
-        RenderBitmapAtlas bmpAtlasChannels;
+        // Hover
+        int hoverButtonIndex = -1;
+        int hoverSubButtonTypeOrParamIndex = -1;
 
-        enum MiscImageIndices
-        {
-            Expand,
-            Expanded,
-            Overflow,
-            CheckBoxYes,
-            CheckBoxNo,
-            ButtonLeft,
-            ButtonRight,
-            Song,
-            Add,
-            Play,
-            DPCM,
-            Load,
-            WaveEdit,
-            Reload,
-            Save,
-            Properties,
-            Count
-        };
-
-        readonly string[] MiscImageNames = new string[]
-        {
-            "InstrumentExpand",
-            "InstrumentExpanded",
-            "Warning",
-            "CheckBoxYes",
-            "CheckBoxNo",
-            "ButtonLeft",
-            "ButtonRight",
-            "Music",
-            "Add",
-            "PlaySource",
-            "ChannelDPCM",
-            "InstrumentOpen",
-            "WaveEdit",
-            "Reload",
-            "SaveSmall",
-            "Properties"
-        };
-
-        enum EnvelopesImageIndices
-        {
-            Volume,
-            Arpeggio,
-            Pitch,
-            Duty,
-            FdsWave,
-            Mod,
-            N163Wave,
-            Count
-        };
-
-        readonly string[] EnvelopesImageNames = new string[]
-        {
-            "EnvelopeVolume",
-            "EnvelopeArpeggio",
-            "EnvelopePitch",
-            "EnvelopeDuty",
-            "EnvelopeWave",
-            "EnvelopeMod",
-            "EnvelopeWave",
-        };
+        Color sliderFillColor = Color.FromArgb(64, Color.Black);
+        Color disabledColor   = Color.FromArgb(64, Color.Black);
+        Color[] registerColors = new Color[11];
+        BitmapAtlasRef bmpExpand;
+        BitmapAtlasRef bmpExpanded;
+        BitmapAtlasRef bmpOverflow;
+        BitmapAtlasRef bmpCheckBoxYes;
+        BitmapAtlasRef bmpCheckBoxNo;
+        BitmapAtlasRef bmpButtonLeft;
+        BitmapAtlasRef bmpButtonRight;
+        BitmapAtlasRef bmpButtonMinus;
+        BitmapAtlasRef bmpButtonPlus;
+        BitmapAtlasRef bmpSong;
+        BitmapAtlasRef bmpAdd;
+        BitmapAtlasRef bmpPlay;
+        BitmapAtlasRef bmpDPCM;
+        BitmapAtlasRef bmpLoad;
+        BitmapAtlasRef bmpWaveEdit;
+        BitmapAtlasRef bmpReload;
+        BitmapAtlasRef bmpSave;
+        BitmapAtlasRef bmpProperties;
+        BitmapAtlasRef[] bmpExpansions;
+        BitmapAtlasRef[] bmpEnvelopes;
+        BitmapAtlasRef[] bmpChannels;
 
         class Button
         {
             public string text;
-            public Color color = Theme.DarkGreyFillColor2;
+            public Color color = Theme.DarkGreyColor5;
             public Color imageTint = Color.Black;
-            public RenderBrush textBrush;
-            public RenderBrush textDisabledBrush;
-            public RenderBitmapAtlas atlas;
-            public int atlasIdx;
+            public Color textColor;
+            public Color textDisabledColor;
+            public BitmapAtlasRef bmp;
             public int height;
             public bool gradient = true;
             public string[] tabNames;
@@ -811,8 +753,8 @@ namespace FamiStudio
             public Button(ProjectExplorer pe)
             {
                 projectExplorer = pe;
-                textBrush = pe.ThemeResources.LightGreyFillBrush2;
-                textDisabledBrush = pe.disabledBrush;
+                textColor = Theme.LightGreyColor2;
+                textDisabledColor = pe.disabledColor;
                 height = pe.buttonSizeY;
             }
 
@@ -844,11 +786,11 @@ namespace FamiStudio
                         else
                         {
                             var expandButton = projectExplorer.ShowExpandButtons() && InstrumentParamProvider.HasParams(instrument);
-                            var numSubButtons = instrument.NumActiveEnvelopes + (expandButton ? 1 : 0) + 1;
+                            var numSubButtons = instrument.NumVisibleEnvelopes + (expandButton ? 1 : 0) + 1;
                             var buttons = new SubButtonType[numSubButtons];
                             buttons[0] = SubButtonType.Properties;
 
-                            for (int i = 0, j = 1; i < EnvelopeType.Count; i++)
+                            for (int i = 0, j = 1; i < EnvelopeDisplayOrder.Length; i++)
                             {
                                 int idx = EnvelopeDisplayOrder[i];
                                 if (instrument.Envelopes[idx] != null)
@@ -870,15 +812,15 @@ namespace FamiStudio
                             return new[] { SubButtonType.Properties, SubButtonType.ArpeggioEnvelope };
                         break;
                     case ButtonType.Dpcm:
-                        if (PlatformUtils.IsMobile)
+                        if (Platform.IsMobile)
                         {
                             return new[] { SubButtonType.Properties, SubButtonType.EditWave, SubButtonType.Play, SubButtonType.Expand };
                         }
                         else
                         {
                             if (string.IsNullOrEmpty(sample.SourceFilename))
-                                active &= ~(1 << 3);
-                            return new[] { SubButtonType.Properties, SubButtonType.EditWave, SubButtonType.Save, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
+                                active &= ~(1 << 2);
+                            return new[] { SubButtonType.Properties, SubButtonType.EditWave, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
                         }
                 }
 
@@ -938,7 +880,7 @@ namespace FamiStudio
                 }
             }
 
-            public RenderFont Font
+            public Font Font
             {
                 get
                 {
@@ -946,7 +888,7 @@ namespace FamiStudio
                         (type == ButtonType.Instrument && instrument == projectExplorer.App.SelectedInstrument) ||
                         (type == ButtonType.Arpeggio   && arpeggio   == projectExplorer.App.SelectedArpeggio))
                     {
-                        return projectExplorer.ThemeResources.FontMediumBold;
+                        return projectExplorer.FontResources.FontMediumBold;
                     }
                     else if (
                         type == ButtonType.ProjectSettings         ||
@@ -957,16 +899,16 @@ namespace FamiStudio
                         type == ButtonType.RegisterExpansionHeader ||
                         type == ButtonType.RegisterChannelHeader)
                     {
-                        return projectExplorer.ThemeResources.FontMediumBold;
+                        return projectExplorer.FontResources.FontMediumBold;
                     }
                     else
                     {
-                        return projectExplorer.ThemeResources.FontMedium;
+                        return projectExplorer.FontResources.FontMedium;
                     }
                 }
             }
 
-            public RenderTextFlags TextAlignment
+            public TextFlags TextAlignment
             {
                 get
                 {
@@ -976,67 +918,54 @@ namespace FamiStudio
                         type == ButtonType.DpcmHeader ||
                         type == ButtonType.ArpeggioHeader)
                     {
-                        return RenderTextFlags.Center;
+                        return TextFlags.Center;
                     }
                     else
                     {
-                        return RenderTextFlags.Left;
+                        return TextFlags.Left;
                     }
                 }
             }
 
-            public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader || type == ButtonType.ProjectSettings ? Theme.LightGreyFillColor1 : Color.Black;
+            public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader || type == ButtonType.ProjectSettings ? Theme.LightGreyColor1 : Color.Black;
 
             public bool TextEllipsis => type == ButtonType.ProjectSettings;
             
-            public RenderBitmapAtlas GetIcon(SubButtonType sub, out int atlasIdx)
+            public BitmapAtlasRef GetIcon(SubButtonType sub)
             {
                 switch (sub)
                 {
                     case SubButtonType.Add: 
-                        atlasIdx = (int)MiscImageIndices.Add;  
-                        return projectExplorer.bmpMiscAtlas;
-                    case SubButtonType.Play: 
-                        atlasIdx = (int)MiscImageIndices.Play; 
-                        return projectExplorer.bmpMiscAtlas;
-                    case SubButtonType.Save:
-                        atlasIdx = (int)MiscImageIndices.Save; 
-                        return projectExplorer.bmpMiscAtlas;
+                        return projectExplorer.bmpAdd;
+                    case SubButtonType.Play:
+                        return projectExplorer.bmpPlay;
                     case SubButtonType.DPCM: 
-                        atlasIdx = (int)MiscImageIndices.DPCM; 
-                        return projectExplorer.bmpMiscAtlas;
+                        return projectExplorer.bmpDPCM;
                     case SubButtonType.EditWave:
-                        atlasIdx = (int)MiscImageIndices.WaveEdit; 
-                        return projectExplorer.bmpMiscAtlas;
+                        return projectExplorer.bmpWaveEdit;
                     case SubButtonType.Reload: 
-                        atlasIdx = (int)MiscImageIndices.Reload;
-                        return projectExplorer.bmpMiscAtlas;
+                        return projectExplorer.bmpReload;
                     case SubButtonType.Load: 
-                        atlasIdx = (int)MiscImageIndices.Load;
-                        return projectExplorer.bmpMiscAtlas;
+                        return projectExplorer.bmpLoad;
                     case SubButtonType.Overflow: 
-                        atlasIdx = (int)MiscImageIndices.Overflow;
-                        return projectExplorer.bmpMiscAtlas;
+                        return projectExplorer.bmpOverflow;
                     case SubButtonType.Properties:
-                        atlasIdx = (int)MiscImageIndices.Properties;
-                        return projectExplorer.bmpMiscAtlas;
+                        return projectExplorer.bmpProperties;
                     case SubButtonType.Expand:
                     {
                         if (instrument != null)
-                            atlasIdx = projectExplorer.expandedInstrument == instrument ? (int)MiscImageIndices.Expanded : (int)MiscImageIndices.Expand;
+                            return projectExplorer.expandedInstrument == instrument ? projectExplorer.bmpExpanded : projectExplorer.bmpExpand;
                         else
-                            atlasIdx = projectExplorer.expandedSample == sample ? (int)MiscImageIndices.Expanded : (int)MiscImageIndices.Expand;
-
-                        return projectExplorer.bmpMiscAtlas;
+                            return projectExplorer.expandedSample == sample ? projectExplorer.bmpExpanded : projectExplorer.bmpExpand;
                     }
                 }
 
-                atlasIdx = (int)sub;
-                return projectExplorer.bmpEnvelopesAtlas;
+                return projectExplorer.bmpEnvelopes[(int)sub];
             }
         }
 
         public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null;
+        public bool IsActiveControl => App != null && App.ActiveControl == this;
 
         public delegate void EmptyDelegate();
         public delegate void BoolDelegate(bool val);
@@ -1064,7 +993,7 @@ namespace FamiStudio
         public event DPCMSamplePointDelegate DPCMSampleMapped;
         public event EmptyDelegate ProjectModified;
 
-        public ProjectExplorer()
+        public ProjectExplorer(FamiStudioWindow win) : base(win)
         {
             UpdateRenderCoords();
 
@@ -1081,25 +1010,26 @@ namespace FamiStudio
 
         private void UpdateRenderCoords(bool updateVirtualSizeY = true)
         {
-            expandButtonSizeX    = ScaleForMainWindow(DefaultExpandButtonSizeX);
-            buttonIconPosX       = ScaleForMainWindow(DefaultButtonIconPosX);      
-            buttonIconPosY       = ScaleForMainWindow(DefaultButtonIconPosY);      
-            buttonTextPosX       = ScaleForMainWindow(DefaultButtonTextPosX);      
-            buttonTextNoIconPosX = ScaleForMainWindow(DefaultButtonTextNoIconPosX);
-            expandButtonPosX     = ScaleForMainWindow(DefaultExpandButtonPosX);
-            expandButtonPosY     = ScaleForMainWindow(DefaultExpandButtonPosY);
-            subButtonSpacingX    = ScaleForMainWindow(DefaultSubButtonSpacingX);   
-            subButtonPosY        = ScaleForMainWindow(DefaultSubButtonPosY);       
-            buttonSizeY          = ScaleForMainWindow(DefaultButtonSizeY);
-            sliderPosX           = ScaleForMainWindow(DefaultSliderPosX);
-            sliderPosY           = ScaleForMainWindow(DefaultSliderPosY);
-            sliderSizeX          = ScaleForMainWindow(DefaultSliderSizeX);
-            sliderSizeY          = ScaleForMainWindow(DefaultSliderSizeY);
-            checkBoxPosX         = ScaleForMainWindow(DefaultCheckBoxPosX);
-            checkBoxPosY         = ScaleForMainWindow(DefaultCheckBoxPosY);
-            paramRightPadX       = ScaleForMainWindow(DefaultParamRightPadX);
-            draggedLineSizeY     = ScaleForMainWindow(DefaultDraggedLineSizeY);
-            registerLabelSizeX   = ScaleForMainWindow(DefaultRegisterLabelSizeX);
+            expandButtonSizeX    = ScaleForWindow(DefaultExpandButtonSizeX);
+            buttonIconPosX       = ScaleForWindow(DefaultButtonIconPosX);      
+            buttonIconPosY       = ScaleForWindow(DefaultButtonIconPosY);      
+            buttonTextPosX       = ScaleForWindow(DefaultButtonTextPosX);      
+            buttonTextNoIconPosX = ScaleForWindow(DefaultButtonTextNoIconPosX);
+            expandButtonPosX     = ScaleForWindow(DefaultExpandButtonPosX);
+            expandButtonPosY     = ScaleForWindow(DefaultExpandButtonPosY);
+            subButtonSpacingX    = ScaleForWindow(DefaultSubButtonSpacingX);   
+            subButtonPosY        = ScaleForWindow(DefaultSubButtonPosY);       
+            buttonSizeY          = ScaleForWindow(DefaultButtonSizeY);
+            sliderPosX           = ScaleForWindow(DefaultSliderPosX);
+            sliderPosY           = ScaleForWindow(DefaultSliderPosY);
+            sliderSizeX          = ScaleForWindow(DefaultSliderSizeX);
+            sliderSizeY          = ScaleForWindow(DefaultSliderSizeY);
+            checkBoxPosX         = ScaleForWindow(DefaultCheckBoxPosX);
+            checkBoxPosY         = ScaleForWindow(DefaultCheckBoxPosY);
+            paramRightPadX       = ScaleForWindow(DefaultParamRightPadX);
+            draggedLineSizeY     = ScaleForWindow(DefaultDraggedLineSizeY);
+            registerLabelSizeX   = ScaleForWindow(DefaultRegisterLabelSizeX);
+            paramButtonSizeX     = bmpButtonPlus != null ? ScaleCustom(bmpButtonPlus.ElementSize.Width, bitmapScale) : 16;
             topTabSizeY          = Settings.ShowRegisterViewer ? buttonSizeY : 0;
             scrollAreaSizeY      = Height - topTabSizeY;
             contentSizeX         = Width;
@@ -1120,7 +1050,7 @@ namespace FamiStudio
                 needsScrollBar = virtualSizeY > scrollAreaSizeY;
 
                 if (needsScrollBar)
-                    scrollBarThickness = ScaleForMainWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
+                    scrollBarThickness = ScaleForWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
                 else
                     scrollBarThickness = 0;
 
@@ -1153,7 +1083,7 @@ namespace FamiStudio
                 widgetType = ButtonType.ParamCustomDraw;
             else if (param.IsList)
                 widgetType = ButtonType.ParamList;
-            else if (param.MaxValue == 1)
+            else if (param.GetMaxValue() == 1)
                 widgetType = ButtonType.ParamCheckbox;
 
             return widgetType;
@@ -1163,7 +1093,7 @@ namespace FamiStudio
         {
             var h = 0;
             for (int i = 0; i < regs.Length; i++)
-                h += ScaleForMainWindow(regs[i].Height);
+                h += ScaleForWindow(regs[i].Height);
             return h;
         }
 
@@ -1184,94 +1114,94 @@ namespace FamiStudio
 
             if (selectedTab == TabType.Project)
             {
-	            var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
+                var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
 
-	            buttons.Add(new Button(this) { type = ButtonType.ProjectSettings, text = projectText });
-	            buttons.Add(new Button(this) { type = ButtonType.SongHeader, text = "Songs" });
+                buttons.Add(new Button(this) { type = ButtonType.ProjectSettings, text = projectText });
+                buttons.Add(new Button(this) { type = ButtonType.SongHeader, text = "Songs" });
 
-	            foreach (var song in project.Songs)
-	                buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.Song, textBrush = ThemeResources.BlackBrush });
+                foreach (var song in project.Songs)
+                    buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, bmp = bmpSong, textColor = Theme.BlackColor });
 
-	            buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments" });
-	            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = ExpansionType.None });
+                buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments" });
+                buttons.Add(new Button(this) { type = ButtonType.Instrument, color = Theme.LightGreyColor1, textColor = Theme.BlackColor, bmp = bmpExpansions[ExpansionType.None] });
 
-	            foreach (var instrument in project.Instruments)
-	            {
-	                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = instrument.Expansion });
+                foreach (var instrument in project.Instruments)
+                {
+                    buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textColor = Theme.BlackColor, bmp = bmpExpansions[instrument.Expansion] });
 
-	                if (instrument != null && instrument == expandedInstrument)
-	                {
-	                    var instrumentParams = InstrumentParamProvider.GetParams(instrument);
+                    if (instrument != null && instrument == expandedInstrument)
+                    {
+                        var instrumentParams = InstrumentParamProvider.GetParams(instrument);
 
-	                    if (instrumentParams != null)
-	                    {
-	                        List<string> tabNames = null;
+                        if (instrumentParams != null)
+                        {
+                            List<string> tabNames = null;
 
-	                        foreach (var param in instrumentParams)
-	                        {
-	                            if (param.HasTab)
-	                            {
-	                                if (tabNames == null)
-	                                    tabNames = new List<string>();
+                            foreach (var param in instrumentParams)
+                            {
+                                if (param.HasTab)
+                                {
+                                    if (tabNames == null)
+                                        tabNames = new List<string>();
 
-	                                if (!tabNames.Contains(param.TabName))
-	                                    tabNames.Add(param.TabName);
-	                            }
-	                        }
+                                    if (!tabNames.Contains(param.TabName))
+                                        tabNames.Add(param.TabName);
+                                }
+                            }
 
-	                        var tabCreated = false;
+                            var tabCreated = false;
 
-	                        foreach (var param in instrumentParams)
-	                        {
-	                            if (!tabCreated && param.HasTab)
-	                            {
-	                                buttons.Add(new Button(this) { type = ButtonType.ParamTabs, param = param, color = instrument.Color, tabNames = tabNames.ToArray() });
-	                                tabCreated = true;
-	                            }
+                            foreach (var param in instrumentParams)
+                            {
+                                if (!tabCreated && param.HasTab)
+                                {
+                                    buttons.Add(new Button(this) { type = ButtonType.ParamTabs, param = param, color = instrument.Color, tabNames = tabNames.ToArray() });
+                                    tabCreated = true;
+                                }
 
-	                            if (param.HasTab)
-	                            {
-	                                if (string.IsNullOrEmpty(selectedInstrumentTab) || selectedInstrumentTab == param.TabName)
-	                                {
-	                                    selectedInstrumentTab = param.TabName;
-	                                }
+                                if (param.HasTab)
+                                {
+                                    if (string.IsNullOrEmpty(selectedInstrumentTab) || selectedInstrumentTab == param.TabName)
+                                    {
+                                        selectedInstrumentTab = param.TabName;
+                                    }
 
-	                                if (param.TabName != selectedInstrumentTab)
-	                                {
-	                                    continue;
-	                                }
-	                            }
+                                    if (param.TabName != selectedInstrumentTab)
+                                    {
+                                        continue;
+                                    }
+                                }
 
-	                            var sizeY = param.CustomHeight > 0 ? param.CustomHeight * buttonSizeY : buttonSizeY;
-	                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = ThemeResources.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, height = sizeY });
-	                        }
-	                    }
-	                }
-	            }
+                                var sizeY = param.CustomHeight > 0 ? param.CustomHeight * buttonSizeY : buttonSizeY;
+                                buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textColor = Theme.BlackColor, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, height = sizeY });
+                            }
+                        }
+                    }
+                }
 
-	            buttons.Add(new Button(this) { type = ButtonType.DpcmHeader });
-	            foreach (var sample in project.Samples)
-	            {
-	                buttons.Add(new Button(this) { type = ButtonType.Dpcm, sample = sample, color = sample.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.DPCM });
+                buttons.Add(new Button(this) { type = ButtonType.DpcmHeader });
+                foreach (var sample in project.Samples)
+                {
+                    buttons.Add(new Button(this) { type = ButtonType.Dpcm, sample = sample, color = sample.Color, textColor = Theme.BlackColor, bmp = bmpDPCM });
 
-	                if (sample == expandedSample)
-	                {
-	                    var sampleParams = DPCMSampleParamProvider.GetParams(sample);
+                    if (sample == expandedSample)
+                    {
+                        var sampleParams = DPCMSampleParamProvider.GetParams(sample);
 
-	                    foreach (var param in sampleParams)
-	                    {
-	                        buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, sample = sample, color = sample.Color, text = param.Name, textBrush = ThemeResources.BlackBrush, paramScope = TransactionScope.DPCMSample, paramObjectId = sample.Id });
-	                    }
-	                }
-	            }
+                        foreach (var param in sampleParams)
+                        {
+                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, sample = sample, color = sample.Color, text = param.Name, textColor = Theme.BlackColor, paramScope = TransactionScope.DPCMSample, paramObjectId = sample.Id });
+                        }
+                    }
+                }
 
-	            buttons.Add(new Button(this) { type = ButtonType.ArpeggioHeader, text = "Arpeggios" });
-	            buttons.Add(new Button(this) { type = ButtonType.Arpeggio, text = "None", color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush });
+                buttons.Add(new Button(this) { type = ButtonType.ArpeggioHeader, text = "Arpeggios" });
+                buttons.Add(new Button(this) { type = ButtonType.Arpeggio, text = "None", color = Theme.LightGreyColor1, textColor = Theme.BlackColor });
 
-	            foreach (var arpeggio in project.Arpeggios)
-	            {
-	                buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio, text = arpeggio.Name, color = arpeggio.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpEnvelopesAtlas, atlasIdx = EnvelopeType.Arpeggio });
-	            }
+                foreach (var arpeggio in project.Arpeggios)
+                {
+                    buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio, text = arpeggio.Name, color = arpeggio.Color, textColor = Theme.BlackColor, bmp = bmpEnvelopes[EnvelopeType.Arpeggio] });
+                }
             }
             else
             {
@@ -1283,7 +1213,7 @@ namespace FamiStudio
                     if (expRegs != null)
                     {
                         var expName = e == ExpansionType.None ? "2A03" : ExpansionType.Names[e];
-                        buttons.Add(new Button(this) { type = ButtonType.RegisterExpansionHeader, text = $"{expName} Registers", atlas = bmpExpansionsAtlas, atlasIdx = e, imageTint = Theme.LightGreyFillColor2 });
+                        buttons.Add(new Button(this) { type = ButtonType.RegisterExpansionHeader, text = $"{expName} Registers", bmp = bmpExpansions[e], imageTint = Theme.LightGreyColor2 });
                         buttons.Add(new Button(this) { type = ButtonType.ExpansionRegistersFirst + e, height = GetHeightForRegisterRows(expRegs.ExpansionRows), regs = expRegs.ExpansionRows, gradient = false });
 
                         var channels = Channel.GetChannelsForExpansionMask(ExpansionType.GetMaskFromValue(e), project.ExpansionNumN163Channels);
@@ -1296,14 +1226,14 @@ namespace FamiStudio
 
                             if (chanRegs != null && chanRegs.Length > 0)
                             {
-                                buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = ChannelType.Names[c], atlas = bmpAtlasChannels, atlasIdx = c, imageTint = Theme.LightGreyFillColor2 });
+                                buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = ChannelType.Names[c], bmp = bmpChannels[c], imageTint = Theme.LightGreyColor2 });
                                 buttons.Add(new Button(this) { type = ButtonType.ChannelStateFirst + c, height = GetHeightForRegisterRows(chanRegs), regs = chanRegs, gradient = false });
                             }
                         }
                     }
                 }
             }
-			
+            
             flingVelY = 0.0f;
             highlightedButtonIdx = -1;
 
@@ -1314,56 +1244,45 @@ namespace FamiStudio
                 MarkDirty();
         }
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
-            Debug.Assert(MiscImageNames.Length      == (int)MiscImageIndices.Count);
-            Debug.Assert(EnvelopesImageNames.Length == (int)EnvelopesImageIndices.Count);
+            bmpExpansions  = g.GetBitmapAtlasRefs(ExpansionType.Icons);
+            bmpEnvelopes   = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
+            bmpChannels    = g.GetBitmapAtlasRefs(ChannelType.Icons);
+            bmpExpand      = g.GetBitmapAtlasRef("InstrumentExpand");
+            bmpExpanded    = g.GetBitmapAtlasRef("InstrumentExpanded");
+            bmpOverflow    = g.GetBitmapAtlasRef("Warning");
+            bmpCheckBoxYes = g.GetBitmapAtlasRef("CheckBoxYes");
+            bmpCheckBoxNo  = g.GetBitmapAtlasRef("CheckBoxNo");
+            bmpButtonLeft  = g.GetBitmapAtlasRef("ButtonLeft");
+            bmpButtonRight = g.GetBitmapAtlasRef("ButtonRight");
+            bmpButtonMinus = g.GetBitmapAtlasRef("ButtonMinus");
+            bmpButtonPlus  = g.GetBitmapAtlasRef("ButtonPlus");
+            bmpSong        = g.GetBitmapAtlasRef("Music");
+            bmpAdd         = g.GetBitmapAtlasRef("Add");
+            bmpPlay        = g.GetBitmapAtlasRef("PlaySource");
+            bmpDPCM        = g.GetBitmapAtlasRef("ChannelDPCM");
+            bmpLoad        = g.GetBitmapAtlasRef("InstrumentOpen");
+            bmpWaveEdit    = g.GetBitmapAtlasRef("WaveEdit");
+            bmpReload      = g.GetBitmapAtlasRef("Reload");
+            bmpSave        = g.GetBitmapAtlasRef("SaveSmall");
+            bmpProperties  = g.GetBitmapAtlasRef("Properties");
 
-            sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
-            disabledBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
-            bmpMiscAtlas = g.CreateBitmapAtlasFromResources(MiscImageNames);
-            bmpExpansionsAtlas = g.CreateBitmapAtlasFromResources(ExpansionType.Icons);
-            bmpEnvelopesAtlas = g.CreateBitmapAtlasFromResources(EnvelopesImageNames);
-            bmpAtlasChannels = g.CreateBitmapAtlasFromResources(ChannelType.Icons);
-
-            var color0 = Theme.LightGreyFillColor2; // Grey
+            var color0 = Theme.LightGreyColor2; // Grey
             var color1 = Theme.CustomColors[14, 5]; // Orange
             var color2 = Theme.CustomColors[0,  5]; // Red
 
-            for (int i = 0; i < registerBrushes.Length; i++)
+            for (int i = 0; i < registerColors.Length; i++)
             {
-                var alpha = i / (float)(registerBrushes.Length - 1);
+                var alpha = i / (float)(registerColors.Length - 1);
                 var color = Color.FromArgb(
                     (int)Utils.Lerp(color2.R, color0.R, alpha),
                     (int)Utils.Lerp(color2.G, color0.G, alpha),
                     (int)Utils.Lerp(color2.B, color0.B, alpha));
-                registerBrushes[i] = g.CreateSolidBrush(color);
-
-
-                /*
-                if (alpha < 0.5f)
-                {
-                    alpha *= 2.0f;
-                    var color = Color.FromArgb(
-                        (int)Utils.Lerp(color2.R, color1.R, alpha),
-                        (int)Utils.Lerp(color2.G, color1.G, alpha),
-                        (int)Utils.Lerp(color2.B, color1.B, alpha));
-                    registerBrushes[i] = g.CreateSolidBrush(color);
-
-                }
-                else
-                {
-                    alpha = (alpha - 0.5f) * 2.0f;
-                    var color = Color.FromArgb(
-                        (int)Utils.Lerp(color1.R, color0.R, alpha),
-                        (int)Utils.Lerp(color1.G, color0.G, alpha),
-                        (int)Utils.Lerp(color1.B, color0.B, alpha));
-                    registerBrushes[i] = g.CreateSolidBrush(color);
-                }
-                */
+                registerColors[i] = color;
             }
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
                 bitmapScale = g.WindowScaling * 0.25f;
 
             RefreshButtons();
@@ -1371,15 +1290,10 @@ namespace FamiStudio
 
         protected override void OnRenderTerminated()
         {
-            Utils.DisposeAndNullify(ref sliderFillBrush);
-            Utils.DisposeAndNullify(ref disabledBrush);
-            Utils.DisposeAndNullify(ref bmpMiscAtlas);
-            Utils.DisposeAndNullify(ref bmpExpansionsAtlas);
-            Utils.DisposeAndNullify(ref bmpEnvelopesAtlas);
-            Utils.DisposeAndNullify(ref bmpAtlasChannels);
-
-            for (int i = 0; i < registerBrushes.Length; i++)
-                Utils.DisposeAndNullify(ref registerBrushes[i]);
+            //Utils.DisposeAndNullify(ref bmpMiscAtlas);
+            //Utils.DisposeAndNullify(ref bmpExpansionsAtlas);
+            //Utils.DisposeAndNullify(ref bmpEnvelopesAtlas);
+            //Utils.DisposeAndNullify(ref bmpAtlasChannels);
         }
 
         protected bool ShowExpandButtons()
@@ -1396,19 +1310,19 @@ namespace FamiStudio
             return false;
         }
 
-        private void RenderDebug(RenderGraphics g)
+        private void RenderDebug(Graphics g)
         {
 #if DEBUG
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 var c = g.CreateCommandList();
-                c.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, ThemeResources.WhiteBrush);
+                c.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
                 g.DrawCommandList(c);
             }
 #endif
         }
 
-        private void RenderTabs(RenderCommandList c)
+        private void RenderTabs(CommandList c)
         {
             var numTabs = (int)TabType.Count;
             var tabSizeX = Width / numTabs;
@@ -1416,55 +1330,55 @@ namespace FamiStudio
             for (int i = 0; i < numTabs; i++)
             {
                 var activeTab = i == (int)selectedTab;
-                var tabColor  = activeTab ? Theme.DarkGreyFillColor1 : Theme.Darken(Theme.DarkGreyFillColor1);
-                var textBrush = activeTab ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1;
-                var textFont  = activeTab ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
+                var tabColor  = activeTab ? Theme.DarkGreyColor4 : Theme.Darken(Theme.DarkGreyColor4);
+                var textBrush = activeTab ? Theme.LightGreyColor2 : Theme.LightGreyColor1;
+                var textFont  = activeTab ? FontResources.FontMediumBold : FontResources.FontMedium;
                 var x0 = (i + 0) * tabSizeX;
                 var x1 = (i + 1) * tabSizeX;
-                c.FillAndDrawRectangle(x0, 0, x1, buttonSizeY, c.Graphics.GetVerticalGradientBrush(tabColor, buttonSizeY, 0.8f), ThemeResources.BlackBrush, 1);
-                c.DrawText(TabNames[i], textFont, x0, 0, textBrush, RenderTextFlags.MiddleCenter, tabSizeX, buttonSizeY);
+                c.FillAndDrawRectangleGradient(x0, 0, x1, buttonSizeY, tabColor, Color.FromArgb(200, tabColor), Theme.BlackColor, true, buttonSizeY, 1);
+                c.DrawText(TabNames[i], textFont, x0, 0, textBrush, TextFlags.MiddleCenter, tabSizeX, buttonSizeY);
             }
         }
 
-        private void RenderRegisterRows(NesApu.NesRegisterValues regValues, RenderCommandList c, Button button, int exp = -1)
+        private void RenderRegisterRows(NesApu.NesRegisterValues regValues, CommandList c, Button button, int exp = -1)
         {
             int y = 0;
 
             for (int i = 0; i < button.regs.Length; i++)
             {
                 var reg = button.regs[i];
-                var regSizeY = ScaleForMainWindow(reg.Height);
+                var regSizeY = ScaleForWindow(reg.Height);
 
                 c.PushTranslation(0, y);
 
                 if (i != 0)
-                    c.DrawLine(0, -1, contentSizeX, -1, ThemeResources.BlackBrush);
+                    c.DrawLine(0, -1, contentSizeX, -1, Theme.BlackColor);
 
                 if (reg.CustomDraw != null)
                 {
                     var label = reg.Label;
-                    c.DrawText(label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, regSizeY);
+                    c.DrawText(label, FontResources.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
 
                     c.PushTranslation(registerLabelSizeX + 1, 0);
-                    reg.CustomDraw(c, ThemeResources, new Rectangle(0, 0, contentSizeX - registerLabelSizeX - 1, regSizeY));
+                    reg.CustomDraw(c, FontResources, new Rectangle(0, 0, contentSizeX - registerLabelSizeX - 1, regSizeY));
                     c.PopTransform();
                 }
                 else if (reg.GetValue != null)
                 {
                     var label = reg.Label;
                     var value = reg.GetValue().ToString();
-                    var flags = reg.Monospace ? RenderTextFlags.Middle | RenderTextFlags.Monospace : RenderTextFlags.Middle;
+                    var flags = reg.Monospace ? TextFlags.Middle | TextFlags.Monospace : TextFlags.Middle;
 
-                    c.DrawText(label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, regSizeY);
-                    c.DrawText(value, ThemeResources.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, ThemeResources.LightGreyFillBrush2, flags, 0, regSizeY);
+                    c.DrawText(label, FontResources.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
+                    c.DrawText(value, FontResources.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, Theme.LightGreyColor2, flags, 0, regSizeY);
                 }
                 else
                 {
                     Debug.Assert(exp >= 0);
 
-                    c.DrawText(reg.Label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, regSizeY);
+                    c.DrawText(reg.Label, FontResources.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
 
-                    var flags = RenderTextFlags.Monospace | RenderTextFlags.Middle;
+                    var flags = TextFlags.Monospace | TextFlags.Middle;
                     var x = buttonTextNoIconPosX + registerLabelSizeX;
 
                     for (var r = reg.AddStart; r <= reg.AddEnd; r++)
@@ -1473,10 +1387,10 @@ namespace FamiStudio
                         {
                             var val = regValues.GetRegisterValue(exp, r, out var age, s);
                             var str = $"${val:X2} ";
-                            var brush = registerBrushes[Math.Min(age, registerBrushes.Length - 1)];
+                            var color = registerColors[Math.Min(age, registerColors.Length - 1)];
 
-                            c.DrawText(str, ThemeResources.FontSmall, x, 0, brush, flags, 0, regSizeY);
-                            x += (int)c.Graphics.MeasureString(str, ThemeResources.FontSmall, true);
+                            c.DrawText(str, FontResources.FontSmall, x, 0, color, flags, 0, regSizeY);
+                            x += (int)c.Graphics.MeasureString(str, FontResources.FontSmall, true);
                         }
                     }
                 }
@@ -1485,13 +1399,13 @@ namespace FamiStudio
                 y += regSizeY;
             }
 
-            c.DrawLine(registerLabelSizeX, 0, registerLabelSizeX, button.height, ThemeResources.BlackBrush);
+            c.DrawLine(registerLabelSizeX, 0, registerLabelSizeX, button.height, Theme.BlackColor);
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
-            RenderCommandList ct = null;
-            RenderCommandList c = null;
+            CommandList ct = null;
+            CommandList c = null;
 
             if (Settings.ShowRegisterViewer)
             {
@@ -1510,23 +1424,25 @@ namespace FamiStudio
                 App.ActivePlayer.GetRegisterValues(registerValues);
             }
 
-            c.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
+            c.DrawLine(0, 0, 0, Height, Theme.BlackColor);
 
             var showExpandButton = ShowExpandButtons();
             var firstParam = true;
             var y = -scrollY;
-            var iconSize = ScaleCustom(bmpEnvelopesAtlas.GetElementSize(0).Width, bitmapScale);
+            var iconSize = ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
 
             var minInstIdx = 1000000;
             var maxInstIdx = 0;
             var minArpIdx  = 1000000;
             var maxArpIdx  = 0;
 
+            var disabledOpacity = 0.25f;
+            var disabledColor = Color.FromArgb(64, Color.Black);
+
             for (int i = 0; i < buttons.Count; i++)
             {
                 var button = buttons[i];
-                var atlas = button.atlas;
-                var atlasIdx = button.atlasIdx;
+                var hovered = i == hoverButtonIndex;
                 var highlighted = i == highlightedButtonIdx;
 
                 if (y + button.height >= 0)
@@ -1558,7 +1474,10 @@ namespace FamiStudio
 
                     if (drawBackground)
                     {
-                        c.FillAndDrawRectangle(0, 0, contentSizeX, groupSizeY, button.gradient ? g.GetVerticalGradientBrush(button.color, groupSizeY, 0.8f) : g.GetSolidBrush(button.color), ThemeResources.BlackBrush, 1);
+                        if (button.gradient)
+                            c.FillAndDrawRectangleGradient(0, 0, contentSizeX, groupSizeY, button.color, Color.FromArgb(200, button.color),Theme.BlackColor, true, groupSizeY, 1);
+                        else
+                            c.FillAndDrawRectangle(0, 0, contentSizeX, groupSizeY, button.color, Theme.BlackColor, 1);
                     }
 
                     if (button.type == ButtonType.Instrument)
@@ -1588,12 +1507,12 @@ namespace FamiStudio
                     }
 
                     var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
-                    var ellipsisFlag = button.TextEllipsis ? RenderTextFlags.Ellipsis : RenderTextFlags.None;
+                    var ellipsisFlag = button.TextEllipsis ? TextFlags.Ellipsis : TextFlags.None;
                     var player = App.ActivePlayer;
 
                     if (button.type == ButtonType.ParamCustomDraw)
                     {
-                        button.param.CustomDraw(c, ThemeResources, new Rectangle(0, 0, contentSizeX - leftPadding - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
+                        button.param.CustomDraw(c, FontResources, new Rectangle(0, 0, contentSizeX - leftPadding - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
                     }
                     else if (button.type >= ButtonType.ExpansionRegistersFirst && button.type < ButtonType.ChannelStateFirst)
                     {
@@ -1607,14 +1526,14 @@ namespace FamiStudio
                     {
                         if (button.Text != null)
                         {
-                            c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag | RenderTextFlags.Middle, contentSizeX - buttonTextPosX, buttonSizeY);
+                            c.DrawText(button.Text, button.Font, button.bmp == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textColor : this.disabledColor, button.TextAlignment | ellipsisFlag | TextFlags.Middle, contentSizeX - buttonTextPosX, buttonSizeY);
                         }
 
-                        if (atlas != null)
+                        if (button.bmp != null)
                         {
-                            c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, button.imageTint);
+                            c.DrawBitmapAtlas(button.bmp, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, button.imageTint);
                             if (highlighted)
-                                c.DrawRectangle(buttonIconPosX, buttonIconPosY, buttonIconPosX + iconSize - 4, buttonIconPosY + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
+                                c.DrawRectangle(buttonIconPosX, buttonIconPosY, buttonIconPosX + iconSize - 4, buttonIconPosY + iconSize - 4, Theme.WhiteColor, 2, true);
                         }
                     }
 
@@ -1628,28 +1547,43 @@ namespace FamiStudio
 
                         if (button.type == ButtonType.ParamSlider)
                         {
-                            var valSizeX = (int)Math.Round((paramVal - button.param.MinValue) / (float)(button.param.MaxValue - button.param.MinValue) * sliderSizeX);
+                            var paramMinValue = button.param.GetMinValue();
+                            var paramMaxValue = button.param.GetMaxValue();
+                            var actualSliderSizeX = sliderSizeX - paramButtonSizeX * 2;
+                            var valSizeX = paramMaxValue == paramMinValue ? 0 : (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * actualSliderSizeX);
+                            var opacityL = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
+                            var opacityR = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
 
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
-                            c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
-                            c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1);
-                            c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
+                            c.DrawBitmapAtlas(bmpButtonMinus, 0, 0, opacityL, bitmapScale, Color.Black);
+                            c.PushTranslation(paramButtonSizeX, 0);
+                            c.FillRectangle(1, 1, valSizeX, sliderSizeY, sliderFillColor);
+                            c.DrawRectangle(0, 0, actualSliderSizeX, sliderSizeY, enabled ? Theme.BlackColor : disabledColor, 1);
+                            c.DrawText(paramStr, FontResources.FontMedium, 0, -sliderPosY, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
+                            c.PopTransform();
+                            c.DrawBitmapAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, opacityR, bitmapScale, Color.Black);
                             c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamCheckbox)
                         {
-                            c.DrawBitmapAtlas(bmpMiscAtlas, paramVal == 0 ? (int)MiscImageIndices.CheckBoxNo : (int)MiscImageIndices.CheckBoxYes, contentSizeX - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f, bitmapScale, Color.Black);
+                            var opacity = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
+
+                            c.PushTranslation(contentSizeX - checkBoxPosX, checkBoxPosY);
+                            c.DrawRectangle(0, 0, bmpCheckBoxYes.ElementSize.Width * bitmapScale - 1, bmpCheckBoxYes.ElementSize.Height * bitmapScale - 1, Color.FromArgb(opacity, Color.Black));
+                            c.DrawBitmapAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, 0, 0, opacity, bitmapScale, Color.Black);
+                            c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamList)
                         {
                             var paramPrev = button.param.SnapAndClampValue(paramVal - 1);
                             var paramNext = button.param.SnapAndClampValue(paramVal + 1);
-                            var buttonWidth = ScaleCustom(bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width, bitmapScale);
+                            var opacityL = enabled && paramVal != paramPrev ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
+                            var opacityR = enabled && paramVal != paramNext ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
 
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
-                            c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
-                            c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
-                            c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, button.height);
+                            c.DrawBitmapAtlas(bmpButtonLeft, 0, 0, opacityL, bitmapScale, Color.Black);
+                            c.DrawBitmapAtlas(bmpButtonRight, sliderSizeX - paramButtonSizeX, 0, opacityR, bitmapScale, Color.Black);
+                            c.DrawText(paramStr, FontResources.FontMedium, 0, -sliderPosY, Theme.BlackColor, TextFlags.MiddleCenter, sliderSizeX, button.height);
                             c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamTabs)
@@ -1658,15 +1592,16 @@ namespace FamiStudio
 
                             for (var j = 0; j < button.tabNames.Length; j++)
                             {
-                                var tabName      = button.tabNames[j];
-                                var tabSelect    = tabName == selectedInstrumentTab;
-                                var tabFont      = tabSelect ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
-                                var tabLineBrush = tabSelect ? ThemeResources.BlackBrush : g.GetSolidBrush(Color.Black, 1.0f, 0.5f);
-                                var tabLine      = tabSelect ? 3 : 1;
+                                var tabName         = button.tabNames[j];
+                                var tabHoverOpacity = hovered && hoverSubButtonTypeOrParamIndex == j ? 0.6f : 1.0f;
+                                var tabSelect       = tabName == selectedInstrumentTab;
+                                var tabLineBrush    = Color.FromArgb((tabSelect ? 1.0f : 0.5f) * tabHoverOpacity, Color.Black);
+                                var tabFont         = tabSelect ? FontResources.FontMediumBold : FontResources.FontMedium;
+                                var tabLine         = tabSelect ? 3 : 1;
 
                                 c.PushTranslation(leftPadding + tabWidth * j, 0);
-                                c.DrawText(tabName, tabFont, 0, 0, tabLineBrush, RenderTextFlags.MiddleCenter, tabWidth, button.height);
-                                c.DrawLine(0, button.height - tabLine / 2, tabWidth, button.height - tabLine / 2, tabLineBrush, ScaleLineForMainWindow(tabLine));
+                                c.DrawText(tabName, tabFont, 0, 0, tabLineBrush, TextFlags.MiddleCenter, tabWidth, button.height);
+                                c.DrawLine(0, button.height - tabLine / 2, tabWidth, button.height - tabLine / 2, tabLineBrush, ScaleLineForWindow(tabLine));
                                 c.PopTransform();
 
                             }
@@ -1681,18 +1616,20 @@ namespace FamiStudio
                         {
                             for (int j = 0, x = contentSizeX - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
                             {
-                                atlas = button.GetIcon(subButtons[j], out atlasIdx);
+                                var sub = subButtons[j];
+                                var bmp = button.GetIcon(sub);
+                                var hoverOpacity = hovered && (int)sub == hoverSubButtonTypeOrParamIndex ? 0.6f : 1.0f;
 
-                                if (subButtons[j] == SubButtonType.Expand)
+                                if (sub == SubButtonType.Expand)
                                 {
-                                    c.DrawBitmapAtlas(atlas, atlasIdx, expandButtonPosX, expandButtonPosY, 1.0f, bitmapScale, tint);
+                                    c.DrawBitmapAtlas(bmp, expandButtonPosX, expandButtonPosY, hoverOpacity, bitmapScale, tint);
                                 }
                                 else
                                 {
-                                    c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, (activeMask & (1 << j)) != 0 ? 1.0f : 0.2f, bitmapScale, tint);
+                                    c.DrawBitmapAtlas(bmp, x, subButtonPosY, ((activeMask & (1 << j)) != 0 ? 1.0f : 0.2f) * hoverOpacity, bitmapScale, tint);
 
-                                    if (highlighted && subButtons[j] < SubButtonType.EnvelopeMax)
-                                        c.DrawRectangle(x, subButtonPosY, x + iconSize - 4, subButtonPosY + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
+                                    if (highlighted && sub < SubButtonType.EnvelopeMax)
+                                        c.DrawRectangle(x, subButtonPosY, x + iconSize - 4, subButtonPosY + iconSize - 4, Theme.WhiteColor, 2, true);
                                 }
                             }
                         }
@@ -1713,7 +1650,7 @@ namespace FamiStudio
             {
                 if (captureOperation == CaptureOperation.DragSong)
                 {
-                    var pt = PlatformUtils.IsDesktop ? PointToClient(Cursor.Position) : new Point(mouseLastX, mouseLastY);
+                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
                     var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
 
                     if (buttonIdx >= 0)
@@ -1724,54 +1661,41 @@ namespace FamiStudio
                             button.type == ButtonType.SongHeader)
                         {
                             var lineY = (buttonIdx + 1) * buttonSizeY - scrollY;
-                            c.DrawLine(0, lineY, contentSizeX, lineY, c.Graphics.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
+                            c.DrawLine(0, lineY, contentSizeX, lineY, draggedSong.Color, draggedLineSizeY);
                         }
                     }
                 }
-                else if (captureOperation == CaptureOperation.DragInstrument || (captureOperation == CaptureOperation.DragArpeggio && draggedArpeggio != null))
+                else if ((captureOperation == CaptureOperation.DragInstrument && envelopeDragIdx >= 0) || (captureOperation == CaptureOperation.DragArpeggio && draggedArpeggio != null))
                 {
-                    var pt = PlatformUtils.IsDesktop ? PointToClient(Cursor.Position) : new Point(mouseLastX, mouseLastY);
+                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
                     if (ClientRectangle.Contains(pt))
                     {
-                        if (envelopeDragIdx >= 0 || PlatformUtils.IsMobile)
-                        {
-                            var button = buttons[captureButtonIdx];
-                            var bx = pt.X - captureButtonRelX;
-                            var by = pt.Y - captureButtonRelY - topTabSizeY;
+                        var button = buttons[captureButtonIdx];
+                        var bx = pt.X - captureButtonRelX;
+                        var by = pt.Y - captureButtonRelY - topTabSizeY;
 
-                            if (envelopeDragIdx >= 0)
-                                c.DrawBitmapAtlas(bmpEnvelopesAtlas, envelopeDragIdx, bx, by, 0.5f, bitmapScale, Color.Black);
-                            else
-                                c.DrawBitmapAtlas(button.atlas, button.atlasIdx, bx, by, 0.5f, bitmapScale, Color.Black);
-
-                            if (PlatformUtils.IsMobile)
-                                c.DrawRectangle(bx, by, bx + iconSize - 4, by + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
-                        }
+                        if (envelopeDragIdx >= 0)
+                            c.DrawBitmapAtlas(bmpEnvelopes[envelopeDragIdx], bx, by, 0.5f, bitmapScale, Color.Black);
                         else
-                        {
-                            var minY = (captureOperation == CaptureOperation.DragInstrument ? minInstIdx : minArpIdx) * buttonSizeY - scrollY + topTabSizeY;
-                            var maxY = (captureOperation == CaptureOperation.DragInstrument ? maxInstIdx : maxArpIdx) * buttonSizeY - scrollY + topTabSizeY;
-                            var color = (captureOperation == CaptureOperation.DragInstrument ? draggedInstrument.Color : draggedArpeggio.Color);
-                            var dragY = Utils.Clamp(pt.Y - captureButtonRelY, minY, maxY) - topTabSizeY;
+                            c.DrawBitmapAtlas(button.bmp, bx, by, 0.5f, bitmapScale, Color.Black);
 
-                            c.FillRectangle(0, dragY, contentSizeX, dragY + buttonSizeY, c.Graphics.GetSolidBrush(color, 1, 0.5f));
-                        }
+                        if (Platform.IsMobile)
+                            c.DrawRectangle(bx, by, bx + iconSize - 4, by + iconSize - 4, Theme.WhiteColor, 2, true);
                     }
                 }
             }
-
             if (needsScrollBar)
             {
                 int scrollBarSizeY = (int)Math.Round(scrollAreaSizeY * (scrollAreaSizeY / (float)virtualSizeY));
                 int scrollBarPosY = (int)Math.Round(scrollAreaSizeY * (scrollY / (float)virtualSizeY));
 
-                c.FillAndDrawRectangle(contentSizeX, 0, Width - 1, Height, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
-                c.FillAndDrawRectangle(contentSizeX, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
+                c.FillAndDrawRectangle(contentSizeX, 0, Width - 1, Height, Theme.DarkGreyColor4, Theme.BlackColor);
+                c.FillAndDrawRectangle(contentSizeX, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, Theme.MediumGreyColor1, Theme.BlackColor);
             }
 
-            c.DrawLine(0, 0, Width, 0, ThemeResources.BlackBrush);
+            c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
-            g.Clear(Theme.DarkGreyFillColor1);
+            g.Clear(Theme.DarkGreyColor4);
 
             if (Settings.ShowRegisterViewer)
             {
@@ -1825,15 +1749,15 @@ namespace FamiStudio
         {
             if (captureOperation == CaptureOperation.DragInstrument && captureThresholdMet)
             {
-                Cursor.Current = envelopeDragIdx == -1 ? Cursors.DragCursor : Cursors.CopyCursor;
+                Cursor = envelopeDragIdx == -1 ? Cursors.DragCursor : Cursors.CopyCursor;
             }
             else if ((captureOperation == CaptureOperation.DragArpeggio || captureOperation == CaptureOperation.DragSample) && captureThresholdMet)
             {
-                Cursor.Current = Cursors.DragCursor;
+                Cursor = Cursors.DragCursor;
             }
             else
             {
-                Cursor.Current = Cursors.Default;
+                Cursor = Cursors.Default;
             }
         }
 
@@ -1889,8 +1813,8 @@ namespace FamiStudio
                         int dx = x - sx;
                         int dy = y - sy;
 
-                        if (dx >= 0 && dx < 16 * DpiScaling.MainWindow &&
-                            dy >= 0 && dy < 16 * DpiScaling.MainWindow)
+                        if (dx >= 0 && dx < 16 * DpiScaling.Window &&
+                            dy >= 0 && dy < 16 * DpiScaling.Window)
                         {
                             buttonRelX = dx;
                             buttonRelY = dy;
@@ -1944,7 +1868,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{MouseLeft} Song/Tempo properties - {MouseRight} Delete song\n{MouseLeft} {Drag} Re-order song";
+                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{Drag} Re-order song\n{MouseRight} More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.InstrumentHeader)
@@ -1952,6 +1876,8 @@ namespace FamiStudio
                     if (subButtonType == SubButtonType.Add)
                     {
                         tooltip = "{MouseLeft} Add new instrument";
+                        if (App.Project.NeedsExpansionInstruments)
+                            tooltip += " - {MouseRight} More Options....";
                     }
                     else if (subButtonType == SubButtonType.Load)
                     {
@@ -1973,14 +1899,14 @@ namespace FamiStudio
                     }
                     else
                     {
-                        tooltip = "{MouseLeft}{MouseLeft} Project properties";
+                        tooltip = "{MouseRight} More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.ParamCheckbox)
                 {
-                    if (x >= contentSizeX - checkBoxPosX)
+                    if (IsPointInCheckbox(x, y))
                     {
-                        tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
+                        tooltip = "{MouseLeft} Toggle value\n{MouseRight} More Options...";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -1991,7 +1917,7 @@ namespace FamiStudio
                 {
                     if (x >= contentSizeX - sliderPosX)
                     {
-                        tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
+                        tooltip = "{MouseLeft}{Drag} Change value - {Ctrl}{MouseLeft}{Drag} Change value (fine)\n{MouseRight} More Options...";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -2002,7 +1928,7 @@ namespace FamiStudio
                 {
                     if (x >= contentSizeX - sliderPosX)
                     {
-                        tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
+                        tooltip = "{MouseLeft} Change value\n{MouseRight} More Options...";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -2016,7 +1942,7 @@ namespace FamiStudio
                         if (buttons[buttonIdx].instrument == null)
                             tooltip = "{MouseLeft} Select instrument";
                         else
-                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{MouseLeft} Instrument properties\n{MouseRight} Delete instrument - {MouseLeft} {Drag} Replace instrument";
+                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{Drag} Copy/Replace instrument\n{MouseRight} More Options...";
                     }
                     else
                     {
@@ -2026,7 +1952,7 @@ namespace FamiStudio
                         }
                         else if (subButtonType < SubButtonType.EnvelopeMax)
                         {
-                            tooltip = $"{{MouseLeft}} Edit {EnvelopeType.Names[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{MouseLeft}} {{Drag}} Copy envelope";
+                            tooltip = $"{{MouseLeft}} Edit {EnvelopeType.Names[(int)subButtonType].ToLower()} envelope - {{MouseLeft}}{{Drag}} Copy envelope - {{MouseRight}} More Options...";
                         }
                         else if (subButtonType == SubButtonType.Overflow)
                         {
@@ -2053,13 +1979,9 @@ namespace FamiStudio
                     {
                         tooltip = "{MouseLeft} Reload source data (if available)\nOnly possible when data was loaded from a DMC/WAV file";
                     }
-                    else if (subButtonType == SubButtonType.Save)
-                    {
-                        tooltip = "{MouseLeft} Export processed DMC file\n{MouseRight} Export source data (DMC or WAV)";
-                    }
                     else if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseLeft}{MouseLeft} Edit properties\n{MouseRight} Delete sample";
+                        tooltip = "{MouseRight} More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
@@ -2077,7 +1999,7 @@ namespace FamiStudio
                 {
                     if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{MouseLeft} Arpeggio properties\n{MouseRight} Delete arpeggio - {MouseLeft} {Drag} Replace arpeggio";
+                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{Drag} Replace arpeggio\n{MouseRight} More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
@@ -2087,7 +2009,7 @@ namespace FamiStudio
             }
             else if (needsScrollBar && x > contentSizeX)
             {
-                tooltip = "{MouseLeft} {Drag} Scroll";
+                tooltip = "{MouseLeft}{Drag} Scroll";
             }
 
             App.SetToolTip(tooltip, redTooltip);
@@ -2095,8 +2017,8 @@ namespace FamiStudio
 
         private void ScrollIfNearEdge(int x, int y)
         {
-            int minY = PlatformUtils.IsMobile && IsLandscape ? 0      : -buttonSizeY;
-            int maxY = PlatformUtils.IsMobile && IsLandscape ? Height : Height + buttonSizeY;
+            int minY = Platform.IsMobile && IsLandscape ? 0      : -buttonSizeY;
+            int maxY = Platform.IsMobile && IsLandscape ? Height : Height + buttonSizeY;
 
             scrollY += Utils.ComputeScrollAmount(y, minY, buttonSizeY, App.AverageTickRate * ScrollSpeedFactor, true);
             scrollY += Utils.ComputeScrollAmount(y, maxY, buttonSizeY, App.AverageTickRate * ScrollSpeedFactor, false);
@@ -2112,6 +2034,28 @@ namespace FamiStudio
                 MarkDirty();
             }
             else
+            {
+                App.UndoRedoManager.EndTransaction();
+            }
+        }
+
+        private void UpdateSliderButtons(bool first, bool final)
+        {
+            // Transition to auto increment after 250ms.
+            if (first || captureDuration >= 0.25f)
+            {
+                var button = buttons[captureButtonIdx];
+                var val = button.param.GetValue();
+                var incLarge = button.param.SnapValue * 10;
+                var incSmall = button.param.SnapValue;
+                var inc = captureDuration > 1.5f && (val % incLarge) == 0 ? incLarge : incSmall;
+
+                val = button.param.SnapAndClampValue(val + inc * captureButtonSign);                
+                button.param.SetValue(val);
+                MarkDirty();
+            }
+
+            if (final)
             {
                 App.UndoRedoManager.EndTransaction();
             }
@@ -2141,7 +2085,7 @@ namespace FamiStudio
                         DPCMSampleMapped?.Invoke(draggedSample, PointToScreen(new Point(x, y)));
                     }
                 }
-                else if (PlatformUtils.IsDesktop)
+                else if (Platform.IsDesktop)
                 {
                     DPCMSampleDraggedOutside?.Invoke(draggedSample, PointToScreen(new Point(x, y)));
                 }
@@ -2191,69 +2135,39 @@ namespace FamiStudio
                     var instrumentSrc = draggedInstrument;
                     var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
 
-                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null)
+                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null && envelopeDragIdx != -1)
                     {
                         if (instrumentSrc.Expansion == instrumentDst.Expansion)
                         {
-                            if (envelopeDragIdx == -1)
+                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
                             {
-                                const string label = "Which action do you wish to perform?";
-
-                                var messageDlg = new PropertyDialog("Copy or Replace?", 400, true, true);
-                                messageDlg.Properties.AddLabel(null, label, true); // 0
-                                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, $"Replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'.", true); // 1
-                                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, $"Copy all properties and envelopes of instrument '{instrumentSrc.Name}' on to instrument '{instrumentDst.Name}'.", false); // 2
-                                messageDlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
-                                messageDlg.Properties.Build();
-                                messageDlg.ShowDialogAsync(null, (r) =>
+                                if (r == DialogResult.Yes)
                                 {
-                                    if (r == DialogResult.OK)
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
+                                    instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
+                                    instrumentDst.Envelopes[envelopeDragIdx].ClampToValidRange(instrumentDst, envelopeDragIdx);
+
+                                    // HACK : Copy some envelope related stuff. Need to cleanup the envelope code.
+                                    switch (envelopeDragIdx)
                                     {
-                                        var replace = messageDlg.Properties.GetPropertyValue<bool>(1);
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-
-                                        if (replace)
-                                            App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
-                                        else
-                                            App.Project.CopyInstrument(instrumentDst, instrumentSrc);
-
-                                        App.UndoRedoManager.EndTransaction();
-                                        RefreshButtons();
-                                        InstrumentReplaced?.Invoke(instrumentDst);
+                                        case EnvelopeType.FdsWaveform:
+                                            instrumentDst.FdsWavePreset = instrumentSrc.FdsWavePreset;
+                                            break;
+                                        case EnvelopeType.FdsModulation:
+                                            instrumentDst.FdsModPreset = instrumentSrc.FdsModPreset;
+                                            break;
+                                        case EnvelopeType.N163Waveform:
+                                            instrumentDst.N163WavePreset = instrumentSrc.N163WavePreset;
+                                            instrumentDst.N163WaveSize = instrumentSrc.N163WaveSize;
+                                            break;
                                     }
-                                });
-                            }
-                            else
-                            {
-                                PlatformUtils.MessageBoxAsync($"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
-                                {
-                                    if (r == DialogResult.Yes)
-                                    {
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
-                                        instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
-                                        instrumentDst.Envelopes[envelopeDragIdx].ClampToValidRange(instrumentDst, envelopeDragIdx);
 
-                                        // HACK : Copy some envelope related stuff. Need to cleanup the envelope code.
-                                        switch (envelopeDragIdx)
-                                        {
-                                            case EnvelopeType.FdsWaveform:
-                                                instrumentDst.FdsWavePreset = instrumentSrc.FdsWavePreset;
-                                                break;
-                                            case EnvelopeType.FdsModulation:
-                                                instrumentDst.FdsModPreset = instrumentSrc.FdsModPreset;
-                                                break;
-                                            case EnvelopeType.N163Waveform:
-                                                instrumentDst.N163WavePreset = instrumentSrc.N163WavePreset;
-                                                instrumentDst.N163WaveSize = instrumentSrc.N163WaveSize;
-                                                break;
-                                        }
+                                    App.UndoRedoManager.EndTransaction();
 
-                                        App.UndoRedoManager.EndTransaction();
-                                        if (PlatformUtils.IsDesktop)
-                                            App.StartEditInstrument(instrumentDst, envelopeDragIdx);
-                                    }
-                                });
-                            }
+                                    if (Platform.IsDesktop)
+                                        App.StartEditInstrument(instrumentDst, envelopeDragIdx);
+                                }
+                            });
                         }
                         else
                         {
@@ -2261,7 +2175,7 @@ namespace FamiStudio
                         }
                     }
                 }
-                else if (PlatformUtils.IsDesktop)
+                else if (Platform.IsDesktop)
                 {
                     InstrumentDroppedOutside(draggedInstrument, PointToScreen(new Point(x, y)));
                 }
@@ -2284,39 +2198,24 @@ namespace FamiStudio
                     var arpeggioSrc = draggedArpeggio;
                     var arpeggioDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Arpeggio ? buttons[buttonIdx].arpeggio : null;
 
-                    if (arpeggioSrc != arpeggioDst && arpeggioSrc != null && arpeggioDst != null)
+                    if (arpeggioSrc != arpeggioDst && arpeggioSrc != null && arpeggioDst != null && envelopeDragIdx != -1)
                     {
-                        if (envelopeDragIdx == -1)
+                        Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the arpeggio values from '{arpeggioSrc.Name}' to '{arpeggioDst.Name}'?", "Copy Arpeggio", MessageBoxButtons.YesNo, (r) =>
                         {
-                            PlatformUtils.MessageBoxAsync($"Are you sure you want to replace all notes using arpeggio '{arpeggioDst.Name}' with '{arpeggioSrc.Name}'?", "Replace arpeggio?", MessageBoxButtons.YesNo, (r) =>
+                            if (r == DialogResult.Yes)
                             {
-                                if (r == DialogResult.Yes)
-                                {
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                                    App.Project.ReplaceArpeggio(arpeggioDst, arpeggioSrc);
-                                    App.UndoRedoManager.EndTransaction();
-                                }
-                            });
-                        }
-                        else
-                        {
-                            PlatformUtils.MessageBoxAsync($"Are you sure you want to copy the arpeggio values from '{arpeggioSrc.Name}' to '{arpeggioDst.Name}'?", "Copy Arpeggio", MessageBoxButtons.YesNo, (r) =>
-                            {
-                                if (r == DialogResult.Yes)
-                                {
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, arpeggioDst.Id);
-                                    arpeggioDst.Envelope.Length = arpeggioSrc.Envelope.Length;
-                                    arpeggioDst.Envelope.Loop = arpeggioSrc.Envelope.Loop;
-                                    Array.Copy(arpeggioSrc.Envelope.Values, arpeggioDst.Envelope.Values, arpeggioDst.Envelope.Values.Length);
-                                    App.UndoRedoManager.EndTransaction();
-                                    if (PlatformUtils.IsDesktop)
-                                        App.StartEditArpeggio(arpeggioDst);
-                                }
-                            });
-                        }
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, arpeggioDst.Id);
+                                arpeggioDst.Envelope.Length = arpeggioSrc.Envelope.Length;
+                                arpeggioDst.Envelope.Loop = arpeggioSrc.Envelope.Loop;
+                                Array.Copy(arpeggioSrc.Envelope.Values, arpeggioDst.Envelope.Values, arpeggioDst.Envelope.Values.Length);
+                                App.UndoRedoManager.EndTransaction();
+                                if (Platform.IsDesktop)
+                                    App.StartEditArpeggio(arpeggioDst);
+                            }
+                        });
                     }
                 }
-                else if (PlatformUtils.IsDesktop)
+                else if (Platform.IsDesktop)
                 {
                     ArpeggioDroppedOutside?.Invoke(draggedArpeggio, PointToScreen(new Point(x, y)));
                 }
@@ -2328,9 +2227,9 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateCaptureOperation(int x, int y, bool realTime = false)
+        private void UpdateCaptureOperation(int x, int y, bool realTime = false, float delta = 0.0f)
         {
-            const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
+            const int CaptureThreshold = Platform.IsDesktop ? 5 : 50;
 
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
@@ -2341,12 +2240,20 @@ namespace FamiStudio
                 }
             }
 
+            if (captureOperation != CaptureOperation.None && realTime)
+            {
+                captureDuration += delta;
+            }
+
             if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
             {
                 switch (captureOperation)
                 {
                     case CaptureOperation.MoveSlider:
                         UpdateSlider(x, y, false);
+                        break;
+                    case CaptureOperation.SliderButtons:
+                        UpdateSliderButtons(false, false);
                         break;
                     case CaptureOperation.ScrollBar:
                         UpdateScrollBar(x, y);
@@ -2381,17 +2288,14 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            base.OnMouseMove(e);
-
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
+            UpdateHover(e);
 
             if (middle)
-            {
                 DoScroll(e.Y - mouseLastY);
-            }
 
             UpdateToolTip(e.X, e.Y);
             ConditionalShowExpansionIcons(e.X, e.Y);
@@ -2400,19 +2304,82 @@ namespace FamiStudio
             mouseLastY = e.Y;
         }
 
+        private void UpdateHover(MouseEventArgs e)
+        {
+            if (Platform.IsDesktop)
+            {
+                var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
+                var sub = -1;
+
+                if (buttonIdx >= 0)
+                {
+                    var button = buttons[buttonIdx];
+
+                    switch (button.type)
+                    {
+                        case ButtonType.ParamTabs:
+                            sub = GetTabIndex(e.X, e.Y, button);
+                            break;
+                        case ButtonType.ParamCheckbox:
+                            if (IsPointInCheckbox(e.X, e.Y)) sub = 1;
+                            break;
+                        case ButtonType.ParamList:
+                        case ButtonType.ParamSlider:
+                            if (IsPointInParamListOrSliderButton(e.X, e.Y, true)) sub = 1;
+                            else if (IsPointInParamListOrSliderButton(e.X, e.Y, false)) sub = 2;
+                            // TODO : Highlight slider here.
+                            break;
+                        default:
+                            sub = (int)subButtonType;
+                            break;
+                    }
+                }
+
+                SetAndMarkDirty(ref hoverButtonIndex, buttonIdx);
+                SetAndMarkDirty(ref hoverSubButtonTypeOrParamIndex, sub);
+            }
+        }
+
+        private void ClearHover()
+        {
+            if (Platform.IsDesktop)
+            {
+                SetAndMarkDirty(ref hoverButtonIndex, -1);
+                SetAndMarkDirty(ref hoverSubButtonTypeOrParamIndex, -1);
+            }
+        }
+
         protected override void OnMouseLeave(EventArgs e)
         {
-            base.OnMouseLeave(e);
             App.SequencerShowExpansionIcons = false;
+            ClearHover();
+        }
+
+        protected bool HandleMouseUpButtons(MouseEventArgs e)
+        {
+            return e.Right && HandleContextMenuButtons(e.X, e.Y);
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            base.OnMouseUp(e);
+            bool middle = e.Middle;
+            bool doMouseUp = false;
 
-            EndCaptureOperation(e.X, e.Y);
+            if (!middle)
+            {
+                doMouseUp = captureOperation == CaptureOperation.None;
+                EndCaptureOperation(e.X, e.Y);
+            }
+
             UpdateCursor();
-            MarkDirty();
+
+            if (doMouseUp)
+            {
+                if (HandleMouseUpButtons(e)) goto Handled;
+                return;
+            Handled:
+                MarkDirty();
+            }
         }
 
         private void StartCaptureOperation(int x, int y, CaptureOperation op, int buttonIdx = -1, int buttonRelX = 0, int buttonRelY = 0)
@@ -2431,6 +2398,7 @@ namespace FamiStudio
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
             captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
+            captureDuration = 0.0f;
         }
 
         private void EndCaptureOperation(int x, int y)
@@ -2450,6 +2418,9 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.MoveSlider:
                         UpdateSlider(x, y, true);
+                        break;
+                    case CaptureOperation.SliderButtons:
+                        UpdateSliderButtons(false, true);
                         break;
                     case CaptureOperation.DragSong:
                         UpdateDragSong(x, y, true);
@@ -2489,7 +2460,7 @@ namespace FamiStudio
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            DoScroll(e.Delta > 0 ? buttonSizeY * 3 : -buttonSizeY * 3);
+            DoScroll(e.ScrollY > 0 ? buttonSizeY * 3 : -buttonSizeY * 3);
         }
 
         protected override void OnResize(EventArgs e)
@@ -2503,7 +2474,7 @@ namespace FamiStudio
             var buttonIdx = buttons.IndexOf(button);
             Debug.Assert(buttonIdx >= 0);
 
-            var shift = ModifierKeys.HasFlag(Keys.Shift);
+            var ctrl = ModifierKeys.Control;
             var buttonTopY = 0;
 
             foreach (var b in buttons)
@@ -2517,8 +2488,11 @@ namespace FamiStudio
             var buttonX = x;
             var buttonY = y + scrollY - buttonTopY - topTabSizeY;
 
-            bool insideSlider = (buttonX > (contentSizeX - sliderPosX) &&
-                                 buttonX < (contentSizeX - sliderPosX + sliderSizeX) &&
+            var sliderMinX = contentSizeX - sliderPosX + paramButtonSizeX;
+            var sliderMaxX = sliderMinX + (sliderSizeX - paramButtonSizeX * 2);
+
+            bool insideSlider = (buttonX > (sliderMinX) &&
+                                 buttonX < (sliderMaxX) &&
                                  buttonY > (sliderPosY) &&
                                  buttonY < (sliderPosY + sliderSizeY));
 
@@ -2527,18 +2501,18 @@ namespace FamiStudio
 
             var paramVal = button.param.GetValue();
 
-            if (shift)
+            if (ctrl)
             {
                 var delta = (x - captureMouseX) / 4;
                 if (delta != 0)
                 {
-                    paramVal = Utils.Clamp(paramVal + delta * button.param.SnapValue, button.param.MinValue, button.param.MaxValue);
+                    paramVal = Utils.Clamp(paramVal + delta * button.param.SnapValue, button.param.GetMinValue(), button.param.GetMaxValue());
                     captureMouseX = x;
                 }
             }
             else
             {
-                paramVal = (int)Math.Round(Utils.Lerp(button.param.MinValue, button.param.MaxValue, Utils.Clamp((buttonX - (contentSizeX - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
+                paramVal = (int)Math.Round(Utils.Lerp(button.param.GetMinValue(), button.param.GetMaxValue(), Utils.Clamp((buttonX - sliderMinX) / (float)(sliderMaxX - sliderMinX), 0.0f, 1.0f)));
                 captureMouseX = x;
             }
 
@@ -2566,7 +2540,7 @@ namespace FamiStudio
                         foreach (var song in otherProject.Songs)
                             songNames.Add(song.Name);
 
-                        var dlg = new PropertyDialog("Import Songs", 300);
+                        var dlg = new PropertyDialog(ParentWindow, "Import Songs", 300);
                         dlg.Properties.AddLabel(null, "Select songs to import:"); // 0
                         dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
                         dlg.Properties.AddButton(null, "Select All"); // 2
@@ -2574,7 +2548,7 @@ namespace FamiStudio
                         dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
                         dlg.Properties.Build();
 
-                        dlg.ShowDialogAsync(ParentForm, (r) =>
+                        dlg.ShowDialogAsync((r) =>
                         {
                             if (r == DialogResult.OK)
                             {
@@ -2599,9 +2573,9 @@ namespace FamiStudio
                                 App.UndoRedoManager.AbortOrEndTransaction(success);
                                 RefreshButtons();
 
-                                if (!success && PlatformUtils.IsMobile && Log.GetLastMessage(LogSeverity.Error) != null)
+                                if (!success && Platform.IsMobile && Log.GetLastMessage(LogSeverity.Error) != null)
                                 {
-                                    PlatformUtils.DelayedMessageBoxAsync(Log.GetLastMessage(LogSeverity.Error), "Error");
+                                    Platform.DelayedMessageBoxAsync(Log.GetLastMessage(LogSeverity.Error), "Error");
                                 }
                             }
                         });
@@ -2610,14 +2584,14 @@ namespace FamiStudio
                 }
             };
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 MobileProjectDialog dlg = new MobileProjectDialog(App, "Import Songs", false, false);
                 dlg.ShowDialogAsync((f) => ImportSongsAction(f));
             }
             else
             {
-                var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Song Files (*.fms;*.txt;*.ftm)|*.fms;*.txt;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+                var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "All Song Files (*.fms;*.txt;*.ftm)|*.fms;*.txt;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
                 ImportSongsAction(filename);
             }
         }
@@ -2683,7 +2657,7 @@ namespace FamiStudio
                                 instrumentNames.Add(instrument.NameWithExpansion);
                             }
 
-                            var dlg = new PropertyDialog("Import Instruments", 300);
+                            var dlg = new PropertyDialog(ParentWindow, "Import Instruments", 300);
                             dlg.Properties.AddLabel(null, "Select instruments to import:"); // 0
                             dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null); // 1
                             dlg.Properties.AddButton(null, "Select All"); // 2
@@ -2691,7 +2665,7 @@ namespace FamiStudio
                             dlg.Properties.Build();
                             dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                            dlg.ShowDialogAsync(ParentForm, (r) =>
+                            dlg.ShowDialogAsync((r) =>
                             {
                                 if (r == DialogResult.OK)
                                 {
@@ -2724,14 +2698,14 @@ namespace FamiStudio
                 }
             };
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 MobileProjectDialog dlg = new MobileProjectDialog(App, "Import Instruments", false, false);
                 dlg.ShowDialogAsync((f) => ImportInstrumentsAction(f));
             }
             else
             {
-                var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti)|*.fti;*.fms;*.txt;*.ftm;*.bti|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+                var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti)|*.fti;*.fms;*.txt;*.ftm;*.bti|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
                 ImportInstrumentsAction(filename);
             }
         }
@@ -2764,7 +2738,7 @@ namespace FamiStudio
                     {
                         var ext = Path.GetExtension(fn).ToLower();
 
-                        if (ext == ".fms" && PlatformUtils.IsDesktop)
+                        if (ext == ".fms" && Platform.IsDesktop)
                             numFamiStudioFiles++;
                         else if (ext == ".dmc" || ext == ".wav")
                             numSamplesFiles++;
@@ -2772,7 +2746,7 @@ namespace FamiStudio
 
                     if (numFamiStudioFiles > 1 || (numFamiStudioFiles == 1 && numSamplesFiles != 0))
                     {
-                        PlatformUtils.MessageBoxAsync("You can only select one FamiStudio project to import samples from.", "Error", MessageBoxButtons.OK);
+                        Platform.MessageBoxAsync(ParentWindow, "You can only select one FamiStudio project to import samples from.", "Error", MessageBoxButtons.OK);
                         return;
                     }
                     else if (numFamiStudioFiles == 1)
@@ -2783,7 +2757,7 @@ namespace FamiStudio
                         {
                             if (samplesProject.Samples.Count == 0)
                             {
-                                PlatformUtils.MessageBox("The selected project does not contain any samples.", "Error", MessageBoxButtons.OK);
+                                Platform.MessageBox(ParentWindow, "The selected project does not contain any samples.", "Error", MessageBoxButtons.OK);
                                 return;
                             }
 
@@ -2792,15 +2766,15 @@ namespace FamiStudio
                             foreach (var sample in samplesProject.Samples)
                                 samplesNames.Add(sample.Name);
 
-                            var dlg = new PropertyDialog("Import DPCM Samples", 300);
+                            var dlg = new PropertyDialog(ParentWindow, "Import DPCM Samples", 300);
                             dlg.Properties.AddLabel(null, "Select samples to import:"); // 0
-                            dlg.Properties.AddCheckBoxList("Import DPCM Samples", samplesNames.ToArray(), null); // 1
+                            dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null); // 1
                             dlg.Properties.AddButton(null, "Select All"); // 2
                             dlg.Properties.AddButton(null, "Select None"); // 3
                             dlg.Properties.Build();
                             dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                            dlg.ShowDialogAsync(ParentForm, (r) =>
+                            dlg.ShowDialogAsync((r) =>
                             {
                                 if (r == DialogResult.OK)
                                 {
@@ -2880,13 +2854,13 @@ namespace FamiStudio
                 }
             };
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
-                PlatformUtils.StartMobileLoadFileOperationAsync("*/*", (f) => LoadDPCMSampleAction(new[] { f }));
+                Platform.StartMobileLoadFileOperationAsync("*/*", (f) => LoadDPCMSampleAction(new[] { f }));
             }
             else
             {
-                var filenames = PlatformUtils.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc;*.fms)|*.wav;*.dmc;*.fms|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc|FamiStudio Files (*.fms)|*.fms", ref Settings.LastSampleFolder, true);
+                var filenames = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "All Sample Files (*.wav;*.dmc;*.fms)|*.wav;*.dmc;*.fms|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc|FamiStudio Files (*.fms)|*.fms", ref Settings.LastSampleFolder, true);
                 LoadDPCMSampleAction(filenames);
             }
         }
@@ -2901,7 +2875,7 @@ namespace FamiStudio
 
         private void AskDeleteSong(Song song)
         {
-            PlatformUtils.MessageBoxAsync($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo, (r) =>
+            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo, (r) =>
             {
                 if (r == DialogResult.Yes)
                 {
@@ -2933,11 +2907,11 @@ namespace FamiStudio
                 var activeExpansions = App.Project.GetActiveExpansions();
                 var expNames = new List<string>();
 
-                var dlg = new PropertyDialog("Add Instrument", PointToScreen(new Point(x, y)), 260, true);
+                var dlg = new PropertyDialog(ParentWindow, "Add Instrument", new Point(left + x, top + y), 260, true);
                 dlg.Properties.AddLabel(null, "Select audio expansion:"); // 0
 
                 expNames.Add(ExpansionType.Names[ExpansionType.None]);
-                dlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? "Select audio expansion" : null, expNames[0], true);
+                dlg.Properties.AddRadioButton(Platform.IsMobile ? "Select audio expansion" : null, expNames[0], true);
 
                 for (int i = 1; i < activeExpansions.Length; i++)
                 {
@@ -2949,10 +2923,10 @@ namespace FamiStudio
                     }
                 }
 
-                dlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
+                dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 dlg.Properties.Build();
 
-                dlg.ShowDialogAsync(ParentForm, (r) =>
+                dlg.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)
                     {
@@ -2985,7 +2959,7 @@ namespace FamiStudio
 
         private void AskDeleteInstrument(Instrument inst)
         {
-            PlatformUtils.MessageBoxAsync($"Are you sure you want to delete '{inst.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo, (r) =>
+            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to delete '{inst.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo, (r) =>
             {
                 if (r == DialogResult.Yes)
                 {
@@ -3004,7 +2978,8 @@ namespace FamiStudio
         private void ClearInstrumentEnvelope(Instrument inst, int envelopeType)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
-            inst.Envelopes[envelopeType].ClearToDefault(envelopeType);
+            inst.Envelopes[envelopeType].ResetToDefault(envelopeType);
+            inst.NotifyEnvelopeChanged(envelopeType, true);
             App.UndoRedoManager.EndTransaction();
             MarkDirty();
         }
@@ -3019,7 +2994,7 @@ namespace FamiStudio
 
         private void AskDeleteArpeggio(Arpeggio arpeggio)
         {
-            PlatformUtils.MessageBoxAsync($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo, (r) =>
+            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo, (r) =>
             {
                 if (r == DialogResult.Yes)
                 {
@@ -3079,7 +3054,7 @@ namespace FamiStudio
 
         private void ExportDPCMSampleProcessedData(DPCMSample sample)
         {
-            var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+            var filename = Platform.ShowSaveFileDialog(ParentWindow, "Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
             if (filename != null)
                 File.WriteAllBytes(filename, sample.ProcessedData);
         }
@@ -3088,13 +3063,13 @@ namespace FamiStudio
         {
             if (sample.SourceDataIsWav)
             {
-                var filename = PlatformUtils.ShowSaveFileDialog("Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
+                var filename = Platform.ShowSaveFileDialog(ParentWindow, "Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
                 if (filename != null)
                     WaveFile.Save(sample.SourceWavData.Samples, filename, sample.SourceWavData.SampleRate, 1);
             }
             else
             {
-                var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+                var filename = Platform.ShowSaveFileDialog(ParentWindow, "Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
                 if (filename != null)
                     File.WriteAllBytes(filename, sample.SourceDmcData.Data);
             }
@@ -3110,7 +3085,7 @@ namespace FamiStudio
 
         private void AskDeleteDPCMSample(DPCMSample sample)
         {
-            PlatformUtils.MessageBoxAsync($"Are you sure you want to delete DPCM Sample '{sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo, (r) =>
+            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to delete DPCM Sample '{sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo, (r) =>
             {
                 if (r == DialogResult.Yes)
                 {
@@ -3125,7 +3100,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs e)
         {
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
 
             if (middle)
             {
@@ -3138,7 +3113,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownScrollbar(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && needsScrollBar && e.X > contentSizeX && GetScrollBarParams(out var scrollBarPosY, out var scrollBarSizeY))
+            if (e.Left && needsScrollBar && e.X > contentSizeX && GetScrollBarParams(out var scrollBarPosY, out var scrollBarSizeY))
             {
                 if (e.Y < scrollBarPosY)
                 {
@@ -3165,7 +3140,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownSongProjectSettings(MouseEventArgs e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Properties)
                     EditProjectProperties(new Point(e.X, e.Y));
@@ -3176,7 +3151,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownSongHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Add)
                     AddSong();
@@ -3189,22 +3164,15 @@ namespace FamiStudio
 
         private bool HandleMouseDownSongButton(MouseEventArgs e, Button button, int buttonIdx, SubButtonType subButtonType)
         {
-            var left  = e.Button.HasFlag(MouseButtons.Left);
-            var right = e.Button.HasFlag(MouseButtons.Right);
-
-            if (left && subButtonType == SubButtonType.Properties)
+            if (e.Left && subButtonType == SubButtonType.Properties)
             {
                 EditSongProperties(new Point(e.X, e.Y), button.song);
             }
-            else if (left && subButtonType == SubButtonType.Max)
+            else if (e.Left && subButtonType == SubButtonType.Max)
             {
                 App.SelectedSong = button.song;
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSong, buttonIdx);
                 draggedSong = button.song;
-            }
-            else if (right && App.Project.Songs.Count > 1)
-            {
-                AskDeleteSong(button.song);
             }
 
             return true;
@@ -3212,7 +3180,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownInstrumentHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Add)
                     AskAddInstrument(e.X, e.Y);
@@ -3225,7 +3193,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownInstrumentButton(MouseEventArgs e, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Expand)
                 {
@@ -3258,13 +3226,6 @@ namespace FamiStudio
                     envelopeDragIdx = (int)subButtonType;
                 }
             }
-            else if (e.Button.HasFlag(MouseButtons.Right) && button.instrument != null)
-            {
-                if (subButtonType < SubButtonType.EnvelopeMax)
-                    ClearInstrumentEnvelope(button.instrument, (int)subButtonType);
-                else if (subButtonType == SubButtonType.Max)
-                    AskDeleteInstrument(button.instrument);
-            }
 
             return true;
         }
@@ -3274,7 +3235,7 @@ namespace FamiStudio
             App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
             captureMouseX = x; // Hack, UpdateSliderValue relies on this.
 
-            if (UpdateSliderValue(button, x, y, true))
+            if (button.param.IsEnabled() && UpdateSliderValue(button, x, y, true))
             {
                 sliderDragButton = button;
                 StartCaptureOperation(x, y, CaptureOperation.MoveSlider, buttonIdx);
@@ -3290,119 +3251,102 @@ namespace FamiStudio
 
         private bool HandleMouseDownParamSliderButton(MouseEventArgs e, Button button, int buttonIdx)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
-
-            if (left || right)
+            if (ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, true))
             {
-                if (left)
-                {
-                    StartMoveSlider(e.X, e.Y, button, buttonIdx);
-                }
-                else
-                {
-                    App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-                    button.param.SetValue(button.param.DefaultValue);
-                    App.UndoRedoManager.EndTransaction();
-                    MarkDirty();
-                }
+                return true;
             }
 
-            return true;
+            if (e.Left)
+            {
+                return StartMoveSlider(e.X, e.Y, button, buttonIdx);
+            }
+
+            return false;
         }
 
-        private void ClickParamCheckbox(int x, int y, Button button, bool reset)
+        private bool IsPointInCheckbox(int x, int y)
         {
-            if (x >= contentSizeX - checkBoxPosX)
+            return x >= contentSizeX - checkBoxPosX;
+        }
+
+        private bool IsPointInParamListOrSliderButton(int x, int y, bool left)
+        {
+            if (left)
+                return x > (contentSizeX - sliderPosX) && x < (contentSizeX - sliderPosX + paramButtonSizeX);
+            else
+                return x > (contentSizeX - sliderPosX + sliderSizeX - paramButtonSizeX) && x < (contentSizeX - sliderPosX + sliderSizeX);
+        }
+
+        private void ClickParamCheckbox(int x, int y, Button button)
+        {
+            if (IsPointInCheckbox(x, y))
             {
                 App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-
-                if (!reset)
-                {
-                    var val = button.param.GetValue();
-                    button.param.SetValue(val == 0 ? 1 : 0);
-                }
-                else
-                {
-                    button.param.SetValue(button.param.DefaultValue);
-                }
-
+                button.param.SetValue(button.param.GetValue() == 0 ? 1 : 0);
                 App.UndoRedoManager.EndTransaction();
                 MarkDirty();
             }
         }
 
-        private void ClickParamListButton(int x, int y, Button button, bool reset)
+        private bool ClickParamListOrSliderButton(int x, int y, Button button, int buttonIdx, bool capture)
         {
-            var buttonWidth = ScaleCustom(bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width, bitmapScale);
             var buttonX = x;
-            var leftButton  = buttonX > (contentSizeX - sliderPosX) && buttonX < (contentSizeX - sliderPosX + buttonWidth);
-            var rightButton = buttonX > (contentSizeX - sliderPosX + sliderSizeX - buttonWidth) && buttonX < (contentSizeX - sliderPosX + sliderSizeX);
+            var leftButton  = IsPointInParamListOrSliderButton(x, y, true);
+            var rightButton = IsPointInParamListOrSliderButton(x, y, false);
             var delta = leftButton ? -1 : (rightButton ? 1 : 0);
 
-            if (!reset && (leftButton || rightButton))
+            if ((leftButton || rightButton) && button.param.IsEnabled())
             {
                 App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
 
-                var val = button.param.GetValue();
-
-                if (rightButton)
-                    val = button.param.SnapAndClampValue(button.param.GetValue() + 1);
-                else
-                    val = button.param.SnapAndClampValue(button.param.GetValue() - 1);
-
-                button.param.SetValue(val);
-
-                App.UndoRedoManager.EndTransaction();
+                if (capture)
+                    StartCaptureOperation(x, y, CaptureOperation.SliderButtons, buttonIdx);
+                
+                captureButtonSign = rightButton ? 1 : -1;
+                UpdateSliderButtons(true, false);
                 MarkDirty();
+
+                if (!capture)
+                    App.UndoRedoManager.EndTransaction();
+
+                return true;
             }
-            else if (reset && buttonX > (contentSizeX - sliderPosX))
-            {
-                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-                button.param.SetValue(button.param.DefaultValue);
-                App.UndoRedoManager.EndTransaction();
-                MarkDirty();
-            }
+
+            return false;
+        }
+
+        private int GetTabIndex(int x, int y, Button button)
+        {
+            var tabWidth = Utils.DivideAndRoundUp(contentSizeX - expandButtonSizeX - paramRightPadX, button.tabNames.Length);
+            return Utils.Clamp((x - expandButtonSizeX) / tabWidth, 0, button.tabNames.Length - 1);
         }
 
         private void ClickParamTabsButton(int x, int y, Button button)
         {
-            var tabWidth = Utils.DivideAndRoundUp(contentSizeX - expandButtonSizeX - paramRightPadX, button.tabNames.Length);
-            var tabIndex = Utils.Clamp((x - expandButtonSizeX) / tabWidth, 0, button.tabNames.Length - 1);
-
+            var tabIndex = GetTabIndex(x, y, button);
             selectedInstrumentTab = button.tabNames[tabIndex];
-
             RefreshButtons();
         }
 
         private bool HandleMouseDownParamCheckboxButton(MouseEventArgs e, Button button)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
-
-            if (left || right)
-                ClickParamCheckbox(e.X, e.Y, button, right);
+            if (e.Left)
+                ClickParamCheckbox(e.X, e.Y, button);
 
             return true;
         }
 
-        private bool HandleMouseDownParamListButton(MouseEventArgs e, Button button)
+        private bool HandleMouseDownParamListButton(MouseEventArgs e, Button button, int buttonIdx, bool capture)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
-
-            if (left || right)
-                ClickParamListButton(e.X, e.Y, button, right);
+            if (e.Left)
+                ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, capture);
 
             return true;
         }
 
         private bool HandleMouseDownParamTabs(MouseEventArgs e, Button button)
         {
-            bool left = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
-
-            if (left)
+            if (e.Left)
                 ClickParamTabsButton(e.X, e.Y, button);
 
             return true;
@@ -3410,18 +3354,15 @@ namespace FamiStudio
 
         private bool HandleMouseDownArpeggioHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
-            {
-                if (subButtonType == SubButtonType.Add)
-                    AddArpeggio();
-            }
+            if (e.Left && subButtonType == SubButtonType.Add)
+                AddArpeggio();
 
             return true;
         }
 
         private bool HandleMouseDownArpeggioButton(MouseEventArgs e, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Properties)
                 {
@@ -3441,17 +3382,13 @@ namespace FamiStudio
                     App.StartEditArpeggio(button.arpeggio);
                 }
             }
-            else if (e.Button.HasFlag(MouseButtons.Right) && button.arpeggio != null) 
-            {
-                AskDeleteArpeggio(button.arpeggio);
-            }
 
             return true;
         }
 
         private bool HandleMouseDownDpcmHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && subButtonType == SubButtonType.Load)
+            if (e.Left && subButtonType == SubButtonType.Load)
             {
                 LoadDPCMSample();
             }
@@ -3461,7 +3398,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownDpcmButton(MouseEventArgs e, Button button, SubButtonType subButtonType, int buttonIdx)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.EditWave)
                 {
@@ -3470,10 +3407,6 @@ namespace FamiStudio
                 else if (subButtonType == SubButtonType.Reload)
                 {
                     ReloadDPCMSampleSourceData(button.sample);
-                }
-                else if (subButtonType == SubButtonType.Save)
-                {
-                    ExportDPCMSampleProcessedData(button.sample);
                 }
                 else if (subButtonType == SubButtonType.Play)
                 {
@@ -3494,19 +3427,11 @@ namespace FamiStudio
                     MarkDirty();
                 }
             }
-            else if (e.Button.HasFlag(MouseButtons.Right))
+            else if (e.Right)
             {
                 if (subButtonType == SubButtonType.Play)
                 {
                     App.PreviewDPCMSample(button.sample, true);
-                }
-                else if (subButtonType == SubButtonType.Save)
-                {
-                    ExportDPCMSampleSourceData(button.sample);
-                }
-                else if (subButtonType == SubButtonType.Max)
-                {
-                    AskDeleteDPCMSample(button.sample);
                 }
             }
 
@@ -3550,7 +3475,7 @@ namespace FamiStudio
                     case ButtonType.ParamCheckbox:
                         return HandleMouseDownParamCheckboxButton(e, button);
                     case ButtonType.ParamList:
-                        return HandleMouseDownParamListButton(e, button);
+                        return HandleMouseDownParamListButton(e, button, buttonIdx, true);
                     case ButtonType.ParamTabs:
                         return HandleMouseDownParamTabs(e, button);
                     case ButtonType.ArpeggioHeader:
@@ -3571,8 +3496,6 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            base.OnMouseDown(e);
-
             if (captureOperation != CaptureOperation.None)
                 return;
 
@@ -3589,7 +3512,7 @@ namespace FamiStudio
         private bool HandleTouchClickProjectSettingsButton(int x, int y, SubButtonType subButtonType)
         {
             if (subButtonType == SubButtonType.Properties)
-                EditProjectProperties(Point.Empty);
+                EditProjectProperties(new Point(x, y));
 
             return true;
         }
@@ -3618,7 +3541,7 @@ namespace FamiStudio
         {
             if (subButtonType == SubButtonType.Properties)
             {
-                EditSongProperties(Point.Empty, button.song);
+                EditSongProperties(new Point(x, y), button.song);
             }
             else
             {
@@ -3635,7 +3558,7 @@ namespace FamiStudio
             if (subButtonType == SubButtonType.Properties)
             {
                 if (button.instrument != null)
-                    EditInstrumentProperties(Point.Empty, button.instrument);
+                    EditInstrumentProperties(new Point(x, y), button.instrument);
             }
             else
             {
@@ -3670,7 +3593,7 @@ namespace FamiStudio
         {
             if (subButtonType == SubButtonType.Properties)
             {
-                EditArpeggioProperties(Point.Empty, button.arpeggio);
+                EditArpeggioProperties(new Point(x, y), button.arpeggio);
             }
             else
             {
@@ -3701,7 +3624,7 @@ namespace FamiStudio
             }
             else if (subButtonType == SubButtonType.Properties)
             {
-                EditDPCMSampleProperties(Point.Empty, button.sample);
+                EditDPCMSampleProperties(new Point(x, y), button.sample);
             }
             else if (subButtonType == SubButtonType.Expand)
             {
@@ -3713,13 +3636,13 @@ namespace FamiStudio
 
         private bool HandleTouchClickParamCheckboxButton(int x, int y, Button button)
         {
-            ClickParamCheckbox(x, y, button, false);
+            ClickParamCheckbox(x, y, button);
             return true;
         }
 
-        private bool HandleTouchClickParamListButton(int x, int y, Button button)
+        private bool HandleTouchClickParamListButton(int x, int y, Button button, int buttonIdx)
         {
-            ClickParamListButton(x, y, button, false);
+            ClickParamListOrSliderButton(x, y, button, buttonIdx, false);
             return true;
         }
 
@@ -3752,7 +3675,7 @@ namespace FamiStudio
                     case ButtonType.ParamCheckbox:
                         return HandleTouchClickParamCheckboxButton(x, y, button);
                     case ButtonType.ParamList:
-                        return HandleTouchClickParamListButton(x, y, button);
+                        return HandleTouchClickParamListButton(x, y, button, buttonIdx);
                     case ButtonType.ParamTabs:
                         return HandleTouchClickParamTabsButton(x, y, button);
                     case ButtonType.ArpeggioHeader:
@@ -3772,63 +3695,294 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchLongPressProjectSettings(int x, int y)
+        private bool HandleContextMenuProjectSettings(int x, int y)
         {    
-            App.ShowContextMenu(new[]
+            App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuProperties", "Project Properties...", () => { EditProjectProperties(Point.Empty); })
+                new ContextMenuOption("MenuProperties", "Project Properties...", () => { EditProjectProperties(new Point(x, y)); })
             });
 
             return true;
         }
 
-        private bool HandleTouchLongPressSongButton(int x, int y, Button button)
+        private void DuplicateSong(Song s)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+            s.Project.DuplicateSong(s);
+            RefreshButtons();
+            App.UndoRedoManager.EndTransaction();
+        }
+
+        private void DuplicateInstrument(Instrument inst)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+            App.Project.DuplicateInstrument(inst);
+            RefreshButtons();
+            App.UndoRedoManager.EndTransaction();
+        }
+
+        private bool HandleContextMenuSongButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
-            menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(Point.Empty, button.song); }));
             if (App.Project.Songs.Count > 1)
-                menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }));
-            App.ShowContextMenu(menu.ToArray());
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }, ContextMenuSeparator.After));
+            menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateSong(button.song); }));
+            menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(new Point(x, y), button.song); }, ContextMenuSeparator.Before));
+            App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
         }
 
-        private bool HandleTouchLongPressInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
+        private void AskReplaceInstrument(Instrument inst)
+        {
+            var instrumentNames  = new List<string>();
+            var instrumentColors = new List<Color>();
+
+            foreach (var i in App.Project.Instruments)
+            {
+                if (i.Expansion == inst.Expansion && i != inst)
+                {
+                    instrumentNames.Add(i.Name);
+                    instrumentColors.Add(i.Color);
+                } 
+            }
+
+            if (instrumentNames.Count > 0)
+            {                               
+                var dlg = new PropertyDialog(ParentWindow, "Replace Instrument", 250, true, true);
+                dlg.Properties.AddLabel(null, $"Select the instrument to replace with. All notes using '{inst.Name}' will be replaced by the selected one.", true); // 0
+                dlg.Properties.AddRadioButtonList(null, instrumentNames.ToArray(), 0, null, 12); // 1
+                dlg.Properties.Build();
+
+                for (int i = 0; i < instrumentColors.Count; i++)
+                    dlg.Properties.SetRowColor(1, i, instrumentColors[i]);
+
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                        App.Project.ReplaceInstrument(inst, App.Project.GetInstrument(instrumentNames[dlg.Properties.GetSelectedIndex(1)]));
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
+                        InstrumentReplaced?.Invoke(inst);
+                    }
+                });
+            }
+        }
+
+        private void LoadN163FdsResampleWavFile(Instrument inst)
+        {
+            Action<string> LoadWavFileAction = (filename) =>
+            {
+                if (filename != null)
+                {
+                    var wav = WaveFile.Load(filename, out _);
+                    if (wav != null)
+                    {
+                        App.BeginLogTask();
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
+
+                        if (wav.Length > Instrument.MaxResampleWavSamples)
+                        {
+                            Array.Resize(ref wav, Instrument.MaxResampleWavSamples);
+                            Log.LogMessage(LogSeverity.Warning, $"Wave file duration exceeds the {Instrument.MaxResampleWavSamples} samples limit. Truncating.");
+                        }
+
+                        if (inst.IsN163)
+                            inst.SetN163ResampleWaveData(wav);
+                        else
+                            inst.SetFdsResampleWaveData(wav);
+
+                        App.UndoRedoManager.EndTransaction();
+                        App.EndLogTask();
+
+                        MarkDirty();
+                    }
+                }
+            };
+
+            if (Platform.IsMobile)
+            {
+                Platform.StartMobileLoadFileOperationAsync("*/*", (f) => LoadWavFileAction(f));
+            }
+            else
+            {
+                var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "Wav Files (*.wav)|*.wav", ref Settings.LastSampleFolder);
+                LoadWavFileAction(filename);
+            }
+
+        }
+
+        private void ClearN163FdsResampleWavData(Instrument inst)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
+
+            if (inst.IsN163)
+                inst.DeleteN163ResampleWavData();
+            else
+                inst.DeleteFdsResampleWavData();
+
+            App.UndoRedoManager.EndTransaction();
+            MarkDirty();
+        }
+
+        private bool HandleContextMenuInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
             var menu = new List<ContextMenuOption>();
-            if (button.instrument != null)
+            var inst = button.instrument;
+            
+            if (inst != null)
             {
-                menu.Add(new ContextMenuOption("MenuProperties", "Instrument Properties...", () => { EditInstrumentProperties(Point.Empty, button.instrument); })); 
-                menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(button.instrument); }));
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(inst); }, ContextMenuSeparator.After));
+
+                if (subButtonType < SubButtonType.EnvelopeMax)
+                {
+                    menu.Add(new ContextMenuOption("MenuClearEnvelope", "Clear Envelope", () => { ClearInstrumentEnvelope(inst, (int)subButtonType); }, ContextMenuSeparator.After));
+                }
+
+                if (subButtonType == SubButtonType.Max)
+                {
+                    if (inst.IsN163 || inst.IsFds)
+                    {
+                        menu.Add(new ContextMenuOption("MenuWave", "Resample Wav File...", () => { LoadN163FdsResampleWavFile(inst); }, ContextMenuSeparator.Before)); 
+
+                        if (inst.IsN163 && inst.N163ResampleWaveData != null ||
+                            inst.IsFds  && inst.FdsResampleWaveData  != null)
+                        {
+                            menu.Add(new ContextMenuOption("MenuTrash", "Discard Resample Wav Data", () => { ClearN163FdsResampleWavData(inst); }));
+                        }
+                    }
+
+                    menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateInstrument(inst); }, ContextMenuSeparator.Before));
+                    menu.Add(new ContextMenuOption("MenuReplace", "Replace With...", () => { AskReplaceInstrument(inst); }));
+                }
+
+                menu.Add(new ContextMenuOption("MenuProperties", "Instrument Properties...", () => { EditInstrumentProperties(new Point(x, y), inst); }, ContextMenuSeparator.Before));
             }
-            if (subButtonType < SubButtonType.EnvelopeMax)
-            {
-                menu.Add(new ContextMenuOption("MenuClearEnvelope", "Clear Envelope", () => { ClearInstrumentEnvelope(button.instrument, (int)subButtonType); }));
-            }
+
             if (menu.Count > 0)
-                App.ShowContextMenu(menu.ToArray());
+                App.ShowContextMenu(left + x, top + y, menu.ToArray());
+
             return true;
         }
+        
+        private bool HandleContextMenuInstrumentHeaderButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
+        {
+            if (App.Project.NeedsExpansionInstruments && subButtonType == SubButtonType.Add && Platform.IsDesktop)
+            {
+                var activeExpansions = App.Project.GetActiveExpansions();
 
-        private bool HandleTouchLongPressArpeggioButton(int x, int y, Button button)
+                List<ContextMenuOption> options = new List<ContextMenuOption>();
+                options.Add(new ContextMenuOption(ExpansionType.Icons[0], $"Add New Regular Instrument", () => { AddInstrument(ExpansionType.None); }));
+
+                for (int i = 1; i < activeExpansions.Length; i++)
+                {
+                    if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
+                    {
+                        var j = i; // Important, copy for lambda.
+                        var expName = ExpansionType.Names[activeExpansions[i]];
+                        options.Add(new ContextMenuOption(ExpansionType.Icons[activeExpansions[i]], $"Add New {expName} Instrument", () => { AddInstrument(activeExpansions[j]); }));
+                    }
+                }
+
+                App.ShowContextMenu(left + x, top + y, options.ToArray());
+                return true;
+            }
+
+            return false;
+        }
+
+        private void DuplicateArpeggio(Arpeggio arp)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+            App.Project.DuplicateArpeggio(arp);
+            RefreshButtons();
+            App.UndoRedoManager.EndTransaction();
+        }
+
+        private void AskReplaceArpeggio(Arpeggio arp)
+        {
+            var arpeggioNames  = new List<string>();
+            var arpeggioColors = new List<Color>();
+
+            foreach (var a in App.Project.Arpeggios)
+            {
+                if (a != arp)
+                {
+                    arpeggioNames.Add(a.Name);
+                    arpeggioColors.Add(a.Color);
+                }
+            }
+
+            if (arpeggioNames.Count > 0)
+            {
+                var dlg = new PropertyDialog(ParentWindow, "Replace Arpeggio", 250, true, true);
+                dlg.Properties.AddLabel(null, $"Select the arpeggio to replace with. All notes using '{arp.Name}' will be replaced by the selected one.", true); // 0
+                dlg.Properties.AddRadioButtonList(null, arpeggioNames.ToArray(), 0, null, 12); // 1
+                dlg.Properties.Build();
+
+                for (int i = 0; i < arpeggioColors.Count; i++)
+                    dlg.Properties.SetRowColor(1, i, arpeggioColors[i]);
+
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                        App.Project.ReplaceArpeggio(arp, App.Project.GetArpeggio(arpeggioNames[dlg.Properties.GetSelectedIndex(1)]));
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
+                        InstrumentReplaced?.Invoke(null);
+                    }
+                });
+            }
+        }
+
+        private bool HandleContextMenuArpeggioButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
             if (button.arpeggio != null)
             {
-                menu.Add(new ContextMenuOption("MenuProperties", "Arpeggio Properties...", () => { EditArpeggioProperties(Point.Empty, button.arpeggio); }));
-                menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }));
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }, ContextMenuSeparator.After));
+                menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateArpeggio(button.arpeggio); }));
+                menu.Add(new ContextMenuOption("MenuReplace", "Replace With...", () => { AskReplaceArpeggio(button.arpeggio); }));
+                menu.Add(new ContextMenuOption("MenuProperties", "Arpeggio Properties...", () => { EditArpeggioProperties(new Point(x, y), button.arpeggio); }, ContextMenuSeparator.Before));
             }
             if (menu.Count > 0)
-                App.ShowContextMenu(menu.ToArray());
+                App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
         }
 
-        private bool HandleTouchLongPressDpcmButton(int x, int y, Button button)
+        private void DeleteDpcmSourceWavData(DPCMSample sample)
         {
-            App.ShowContextMenu(new[]
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+            sample.PermanentlyApplyAllProcessing();
+            App.UndoRedoManager.EndTransaction();
+        }
+
+        private bool HandleContextMenuDpcmButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
+        {
+            if (subButtonType != SubButtonType.Max)
+                return true;
+
+            var menu = new List<ContextMenuOption>();
+
+            menu.Add(new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); }, ContextMenuSeparator.After));
+
+            if (Platform.IsDesktop)
             {
-                new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(Point.Empty, button.sample); }),
-                new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); })
-            });
+                menu.Add(new ContextMenuOption("MenuSave", "Export Processed DMC Data...", () => { ExportDPCMSampleProcessedData(button.sample); }));
+                menu.Add(new ContextMenuOption("MenuSave", "Export Source Data...", () => { ExportDPCMSampleSourceData(button.sample); }));
+            }
+
+            if (button.sample.SourceDataIsWav)
+            {
+                menu.Add(new ContextMenuOption("MenuTrash", "Discard Source WAV Data", "Permanently applies processing options, delete source WAV\n data and keeps the resulting DMC data. Reduces FMS file size.", () => { DeleteDpcmSourceWavData(button.sample); }));
+            }
+
+            menu.Add(new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(new Point(x, y), button.sample); }, ContextMenuSeparator.Before));
+
+            App.ShowContextMenu(left + x, top + y, menu.ToArray());
 
             return true;
         }
@@ -3841,17 +3995,20 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleTouchLongPressParamButton(int x, int y, Button button)
+        private bool HandleContextMenuParamButton(int x, int y, Button button)
         {
-            App.ShowContextMenu(new[]
+            if (button.param.IsEnabled())
             {
-                new ContextMenuOption("MenuReset", "Reset Default Value", () => { ResetParamButtonDefaultValue(button); })
-            });
+                App.ShowContextMenu(left + x, top + y, new[]
+                {
+                    new ContextMenuOption("MenuReset", "Reset Default Value", () => { ResetParamButtonDefaultValue(button); })
+                });
+            }
 
             return true;
         }
 
-        private bool HandleTouchLongPressButtons(int x, int y)
+        private bool HandleContextMenuButtons(int x, int y)
         {
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
 
@@ -3862,19 +4019,21 @@ namespace FamiStudio
                 switch (button.type)
                 {
                     case ButtonType.ProjectSettings:
-                        return HandleTouchLongPressProjectSettings(x, y);
+                        return HandleContextMenuProjectSettings(x, y);
                     case ButtonType.Song:
-                        return HandleTouchLongPressSongButton(x, y, button);
+                        return HandleContextMenuSongButton(x, y, button);
                     case ButtonType.Instrument:
-                        return HandleTouchLongPressInstrumentButton(x, y, button, subButtonType, buttonIdx);
+                        return HandleContextMenuInstrumentButton(x, y, button, subButtonType, buttonIdx);
+                    case ButtonType.InstrumentHeader:
+                        return HandleContextMenuInstrumentHeaderButton(x, y, button, subButtonType, buttonIdx);
                     case ButtonType.ParamSlider:
                     case ButtonType.ParamCheckbox:
                     case ButtonType.ParamList:
-                        return HandleTouchLongPressParamButton(x, y, button);
+                        return HandleContextMenuParamButton(x, y, button);
                     case ButtonType.Arpeggio:
-                        return HandleTouchLongPressArpeggioButton(x, y, button);
+                        return HandleContextMenuArpeggioButton(x, y, button);
                     case ButtonType.Dpcm:
-                        return HandleTouchLongPressDpcmButton(x, y, button);
+                        return HandleContextMenuDpcmButton(x, y, button, subButtonType, buttonIdx);
                 }
 
                 return true;
@@ -3883,22 +4042,34 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchLongPressButtons(int x, int y)
+        {
+            return HandleContextMenuButtons(x, y);
+        }
+
         private bool HandleTouchDownParamSliderButton(int x, int y)
         {
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
 
-            if (buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.ParamSlider)
+            if (buttonIdx >= 0)
             {
-                if (StartMoveSlider(x, y, buttons[buttonIdx], buttonIdx))
-                    return true;
+                var button = buttons[buttonIdx];
+
+                if (button.type == ButtonType.ParamSlider)
+                {
+                    if (ClickParamListOrSliderButton(x, y, button, buttonIdx, true))
+                        return true;
+
+                    return StartMoveSlider(x, y, buttons[buttonIdx], buttonIdx);
+                }
             }
 
             return false;
         }
 
-        private bool IsPositionInButtonIcon(Button button, int buttonRelX, int buttonRelY)
+        private bool IsPointInButtonIcon(Button button, int buttonRelX, int buttonRelY)
         {
-            var iconSize = ScaleCustom(bmpEnvelopesAtlas.GetElementSize(0).Width, bitmapScale);
+            var iconSize = ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
             var iconRelX = buttonRelX - (buttonIconPosX + (ShowExpandButtons() ? expandButtonPosX + expandButtonSizeX : 0));
             var iconRelY = buttonRelY - buttonIconPosY;
 
@@ -3917,10 +4088,12 @@ namespace FamiStudio
 
             if (buttonIdx >= 0)
             {
+                // MATTT : Retest this on mobile. We should not be able to drag instruments anymore since we
+                // have explicit duplciate/replace.
                 var button = buttons[buttonIdx];
                 if (button.instrument != null && buttonIdx == highlightedButtonIdx && subButtonType != SubButtonType.Expand)
                 {
-                    if (subButtonType == SubButtonType.Max && !IsPositionInButtonIcon(button, buttonRelX, buttonRelY))
+                    if (subButtonType == SubButtonType.Max && !IsPointInButtonIcon(button, buttonRelX, buttonRelY))
                         return false;
 
                     envelopeDragIdx = subButtonType < SubButtonType.EnvelopeMax ? (int)subButtonType : -1;
@@ -3940,7 +4113,7 @@ namespace FamiStudio
             if (buttonIdx >= 0)
             {
                 var button = buttons[buttonIdx];
-                if (button.song != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPositionInButtonIcon(button, buttonRelX, buttonRelY))
+                if (button.song != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonRelX, buttonRelY))
                 {
                     App.SelectedSong = button.song;
                     StartCaptureOperation(x, y, CaptureOperation.DragSong, buttonIdx);
@@ -3998,8 +4171,47 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        private bool HandleTouchDoubleClickParamListButton(int x, int y, Button button, int buttonIdx)
+        {
+            return ClickParamListOrSliderButton(x, y, button, buttonIdx, false);
+        }
+
+        private bool HandleTouchDoubleClickButtons(int x, int y)
+        {
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
+
+            if (buttonIdx >= 0)
+            {
+                var button = buttons[buttonIdx];
+
+                switch (button.type)
+                {
+                    case ButtonType.ParamList:
+                    case ButtonType.ParamSlider:
+                        return HandleTouchDoubleClickParamListButton(x, y, button, buttonIdx);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        protected override void OnTouchDoubleClick(int x, int y)
+        {
+            if (HandleTouchDoubleClickButtons(x, y)) goto Handled;
+            return;
+            Handled:
+            MarkDirty();
+        }
+
         protected override void OnTouchLongPress(int x, int y)
         {
+            if (captureOperation == CaptureOperation.SliderButtons)
+            {
+                return;
+            }
+
             AbortCaptureOperation();
 
             if (HandleTouchLongPressButtons(x, y)) goto Handled;
@@ -4014,7 +4226,6 @@ namespace FamiStudio
         {
             UpdateCursor();
             UpdateCaptureOperation(x, y);
-            UpdateToolTip(x, y);
 
             mouseLastX = x;
             mouseLastY = y;
@@ -4046,10 +4257,10 @@ namespace FamiStudio
             }
         }
 
-        public void Tick(float delta)
+        public override void Tick(float delta)
         {
             TickFling(delta);
-            UpdateCaptureOperation(mouseLastX, mouseLastY, true);
+            UpdateCaptureOperation(mouseLastX, mouseLastY, true, delta);
         }
         
         // Project properties.
@@ -4074,7 +4285,7 @@ namespace FamiStudio
                 expBools[i - ExpansionType.Start] = project.UsesExpansionAudio(i);
             }
 
-            var dlg = new PropertyDialog("Project Properties", PointToScreen(pt), 360, true);
+            var dlg = new PropertyDialog(ParentWindow, "Project Properties", new Point(left + pt.X, top + pt.Y), 360, true);
             dlg.Properties.ShowWarnings = true;
             dlg.Properties.AddTextBox("Title :", project.Name, 31); // 0
             dlg.Properties.AddTextBox("Author :", project.Author, 31); // 1
@@ -4082,14 +4293,14 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], TempoModeTooltip); // 3
             dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], AuthoringMachineTooltip); // 4
             dlg.Properties.AddNumericUpDown("N163 Channels :", project.ExpansionNumN163Channels, 1, 8, ExpansionNumChannelsTooltip); // 5 (Namco)
-            dlg.Properties.AddCheckBoxList("Expansion Audio :", expNames, expBools, ExpansionAudioTooltip, 150); // 6
+            dlg.Properties.AddCheckBoxList("Expansion Audio :", expNames, expBools, ExpansionAudioTooltip); // 6
             dlg.Properties.SetPropertyEnabled(4, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
             dlg.Properties.SetPropertyEnabled(5, project.UsesExpansionAudio(ExpansionType.N163));
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             UpdateProjectPropertiesWarnings(dlg.Properties);
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -4138,34 +4349,24 @@ namespace FamiStudio
                                 numExpansionsSelected++;
                         }
 
-                        if (numExpansionsSelected > 1 && ((expansionMask & ExpansionType.EPSMMask) != 0))
-                        {
-                            if (PlatformUtils.IsDesktop)
-                                PlatformUtils.MessageBox($"EPSM is not supported with other expansions enabled", "Incompatible expansions", MessageBoxButtons.OK);
-                            else
-                                PlatformUtils.ShowToast($"EPSM is not supported with other expansions enabled, expansion change was ignored.");
-                        }
-                        else if (!expansionRemoved || PlatformUtils.IsMobile || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        {
-                            App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
-                            project.SetExpansionAudioMask(expansionMask, numChannels);
-                            ProjectModified?.Invoke();
-                            Reset();
-                        }
+                        App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
+                        project.SetExpansionAudioMask(expansionMask, numChannels);
+                        ProjectModified?.Invoke();
+                        Reset();
                     }
 
                     if (changedTempoMode)
                     {
                         if (tempoMode == TempoType.FamiStudio)
                         {
-                            if (!project.AreSongsEmpty && PlatformUtils.IsDesktop)
-                                PlatformUtils.MessageBox($"Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.", "Change tempo mode", MessageBoxButtons.OK);
+                            if (!project.AreSongsEmpty && Platform.IsDesktop)
+                                Platform.MessageBox(ParentWindow, $"Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.", "Change tempo mode", MessageBoxButtons.OK);
                             project.ConvertToFamiStudioTempo();
                         }
                         else if (tempoMode == TempoType.FamiTracker)
                         {
-                            if (!project.AreSongsEmpty && PlatformUtils.IsDesktop)
-                                PlatformUtils.MessageBox($"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
+                            if (!project.AreSongsEmpty && Platform.IsDesktop)
+                                Platform.MessageBox(ParentWindow, $"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
                             project.ConvertToFamiTrackerTempo(project.AreSongsEmpty);
                         }
 
@@ -4179,10 +4380,15 @@ namespace FamiStudio
                         App.PalPlayback = palAuthoring;
                     }
 
-                    if (PlatformUtils.IsMobile && expansionRemoved)
-                    {
-                        PlatformUtils.ShowToast("All channels and instruments related to the removed expansion(s) were deleted.");
-                    }
+                    var toast = (string)null;
+
+                    if (expansionRemoved)
+                        toast += "All channels and instruments related to the removed expansion(s) were deleted.\n";
+                    if (changedNumChannels)
+                        toast += "Changing the number of N163 channels may have changed the wave position of N163 instruments.";
+
+                    if (!string.IsNullOrEmpty(toast))
+                        Platform.ShowToast(parentWindow, toast, true);
 
                     App.UndoRedoManager.EndTransaction();
                     RefreshButtons();
@@ -4201,10 +4407,8 @@ namespace FamiStudio
                     numExpansionsSelected++;
             }
 
-            if (selectedExpansions[ExpansionType.EPSM - 1] && numExpansionsSelected > 1)
-                props.SetPropertyWarning(6, CommentType.Error, "EPSM is unsupported with other expansions enabled.");
-            else if (numExpansionsSelected > 1)
-                props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to FamiTracker.");
+            if (numExpansionsSelected > 1)
+                props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to FamiTracker or as an NES ROM.");
             else
                 props.SetPropertyWarning(6, CommentType.Good, "");
         }
@@ -4245,7 +4449,7 @@ namespace FamiStudio
 
         private void EditSongProperties(Point pt, Song song)
         {
-            var dlg = new PropertyDialog("Song Properties", PointToScreen(pt), 320, true); 
+            var dlg = new PropertyDialog(ParentWindow, "Song Properties", new Point(left + pt.X, top + pt.Y), 320, true); 
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 
@@ -4255,7 +4459,7 @@ namespace FamiStudio
             tempoProperties.AddProperties();
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -4266,10 +4470,10 @@ namespace FamiStudio
 
                     if (App.Project.RenameSong(song, newName))
                     {
-                        song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                        song.Color = dlg.Properties.GetPropertyValue<Color>(1);
                         song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
 
-                        tempoProperties.ApplyAsync(false, () =>
+                        tempoProperties.ApplyAsync(ParentWindow, false, () =>
                         {
                             SongModified?.Invoke(song);
                             App.UndoRedoManager.EndTransaction();
@@ -4279,7 +4483,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        PlatformUtils.Beep();
+                        Platform.Beep();
                         MarkDirty();
                     }
                 }
@@ -4288,12 +4492,12 @@ namespace FamiStudio
 
         private void EditInstrumentProperties(Point pt, Instrument instrument)
         {
-            var dlg = new PropertyDialog("Instrument Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog(ParentWindow, "Instrument Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -4311,7 +4515,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        PlatformUtils.Beep();
+                        Platform.Beep();
                     }
                 }
             });
@@ -4319,12 +4523,12 @@ namespace FamiStudio
 
         private void EditArpeggioProperties(Point pt, Arpeggio arpeggio)
         {
-            var dlg = new PropertyDialog("Arpeggio Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog(ParentWindow, "Arpeggio Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(arpeggio.Name, arpeggio.Color); // 0
             dlg.Properties.AddColorPicker(arpeggio.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -4334,7 +4538,7 @@ namespace FamiStudio
 
                     if (App.Project.RenameArpeggio(arpeggio, newName))
                     {
-                        arpeggio.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                        arpeggio.Color = dlg.Properties.GetPropertyValue<Color>(1);
                         ArpeggioColorChanged?.Invoke(arpeggio);
                         RefreshButtons();
                         App.UndoRedoManager.EndTransaction();
@@ -4342,7 +4546,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        PlatformUtils.Beep();
+                        Platform.Beep();
                     }
                 }
             });
@@ -4350,12 +4554,12 @@ namespace FamiStudio
 
         private void EditDPCMSampleProperties(Point pt, DPCMSample sample)
         {
-            var dlg = new PropertyDialog("DPCM Sample Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog(ParentWindow, "DPCM Sample Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(sample.Name, sample.Color); // 0
             dlg.Properties.AddColorPicker(sample.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 
@@ -4363,7 +4567,7 @@ namespace FamiStudio
 
                 if (App.Project.RenameSample(sample, newName))
                 {
-                    sample.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                    sample.Color = dlg.Properties.GetPropertyValue<Color>(1);
                     DPCMSampleColorChanged?.Invoke(sample);
                     RefreshButtons();
                     App.UndoRedoManager.EndTransaction();
@@ -4371,54 +4575,92 @@ namespace FamiStudio
                 else
                 {
                     App.UndoRedoManager.AbortTransaction();
-                    PlatformUtils.Beep();
+                    Platform.Beep();
                 }
             });
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        private bool HandleMouseDoubleClickSong(MouseEventArgs e, Button button)
         {
-            base.OnMouseDoubleClick(e);
+            if (App.Project.Songs.Count > 1)
+            {
+                AskDeleteSong(button.song);
+                return true;
+            }
 
+            return false;
+        }
+
+        private bool HandleMouseDoubleClickInstrument(MouseEventArgs e, Button button)
+        {
+            if (button.instrument != null)
+            {
+                AskDeleteInstrument(button.instrument);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleMouseDoubleClickArpeggio(MouseEventArgs e, Button button)
+        {
+            AskDeleteArpeggio(button.arpeggio);
+            return true;
+        }
+
+        private bool HandleMouseDoubleClickDPCMSample(MouseEventArgs e, Button button)
+        {
+            AskDeleteDPCMSample(button.sample);
+            return true;
+        }
+
+        private bool HandleMouseDoubleClickParamListButton(MouseEventArgs e, Button button, int buttonIdx)
+        {
+            return ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, true);
+        }
+
+        private bool HandleMouseDoubleClickButtons(MouseEventArgs e)
+        {
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
-            if (buttonIdx >= 0)
+            if (e.Left && buttonIdx >= 0 && subButtonType == SubButtonType.Max)
             {
                 if (captureOperation != CaptureOperation.None)
                     AbortCaptureOperation();
 
                 var button = buttons[buttonIdx];
-                var pt = new Point(e.X, e.Y);   
 
-                if (button.type == ButtonType.ProjectSettings)
+                switch (button.type)
                 {
-                    EditProjectProperties(pt);
+                    // MATTT : Figure out the delete thing.
+                    //case ButtonType.Song:
+                    //    return HandleMouseDoubleClickSong(e, button);
+                    //case ButtonType.Instrument:
+                    //    return HandleMouseDoubleClickInstrument(e, button);
+                    //case ButtonType.Arpeggio:
+                    //    return HandleMouseDoubleClickArpeggio(e, button);
+                    //case ButtonType.Dpcm:
+                    //    return HandleMouseDoubleClickDPCMSample(e, button);
+
+                    case ButtonType.ParamSlider:
+                    case ButtonType.ParamList:
+                        // Treat double-clicks as click. These are generated when click
+                        // very fast on a button : click -> double click -> click -> double click -> ...
+                        return HandleMouseDoubleClickParamListButton(e, button, buttonIdx);
                 }
-                else if (button.type == ButtonType.Song)
-                {
-                    EditSongProperties(pt, button.song);
-                }
-                else if (button.type == ButtonType.Instrument && button.instrument != null && subButtonType == SubButtonType.Max)
-                {
-                    EditInstrumentProperties(pt, button.instrument);
-                }
-                else if (button.type == ButtonType.Arpeggio && button.arpeggio != null && subButtonType == SubButtonType.Max)
-                {
-                    EditArpeggioProperties(pt, button.arpeggio);
-                }
-                else if (button.type == ButtonType.Dpcm && subButtonType == SubButtonType.Max)
-                {
-                    EditDPCMSampleProperties(pt, button.sample);
-                }
-#if !FAMISTUDIO_WINDOWS
-                else
-                {
-                    // When pressing multiple times on mac, it creates click -> dbl click -> click -> dbl click sequences which
-                    // makes the project explorer feel very sluggish. Interpret dbl click as clicks helps a lot.
-                    OnMouseDown(e);
-                }
-#endif
+
+                return true;
             }
+
+            return false;
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            if (HandleMouseDoubleClickButtons(e)) goto Handled;
+            return;
+        Handled:
+            MarkDirty();
         }
 
         public void ValidateIntegrity()

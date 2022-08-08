@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -18,7 +15,7 @@ namespace FamiStudio
 
         private static byte[] GetClipboardDataInternal(uint magic, int maxSize = int.MaxValue)
         {
-            var buffer = PlatformUtils.GetClipboardData(maxSize);
+            var buffer = Platform.GetClipboardData(maxSize);
 
             if (buffer == null || BitConverter.ToUInt32(buffer, 0) != magic)
                 return null;
@@ -32,7 +29,7 @@ namespace FamiStudio
 
         public static sbyte[] GetStringEnvelopeData()
         {
-            var str = PlatformUtils.GetClipboardString();
+            var str = Platform.GetClipboardString();
 
             if (!string.IsNullOrEmpty(str))
             {
@@ -404,7 +401,7 @@ namespace FamiStudio
         {
             if (notes == null)
             {
-                PlatformUtils.SetClipboardData(null);
+                Platform.SetClipboardData(null);
                 return;
             }
 
@@ -458,7 +455,7 @@ namespace FamiStudio
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardNotes));
             clipboardData.AddRange(buffer);
 
-            PlatformUtils.SetClipboardData(clipboardData.ToArray());
+            Platform.SetClipboardData(clipboardData.ToArray());
         }
 
         public static bool ContainsMissingSamples(Project project, bool notes)
@@ -518,8 +515,8 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 clipboardData.Add((byte)values[i]);
 
-            PlatformUtils.ClearClipboardString();
-            PlatformUtils.SetClipboardData(clipboardData.ToArray());
+            Platform.ClearClipboardString();
+            Platform.SetClipboardData(clipboardData.ToArray());
         }
 
         public static sbyte[] LoadEnvelopeValues()
@@ -546,7 +543,7 @@ namespace FamiStudio
         {
             if (patterns == null)
             {
-                PlatformUtils.SetClipboardData(null);
+                Platform.SetClipboardData(null);
                 return;
             }
 
@@ -592,7 +589,7 @@ namespace FamiStudio
 
             if (uniquePatterns.Count == 0)
             {
-                PlatformUtils.SetClipboardData(null);
+                Platform.SetClipboardData(null);
                 return;
             }
 
@@ -640,7 +637,7 @@ namespace FamiStudio
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardPatterns));
             clipboardData.AddRange(buffer);
 
-            PlatformUtils.SetClipboardData(clipboardData.ToArray());
+            Platform.SetClipboardData(clipboardData.ToArray());
         }
 
         public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments, bool createMissingArpeggios, bool createMissingSamples, out Song.PatternCustomSetting[] customSettings)
@@ -707,7 +704,7 @@ namespace FamiStudio
 
         public static void Reset()
         {
-            PlatformUtils.SetClipboardData(null);
+            Platform.SetClipboardData(null);
         }
     }
 }

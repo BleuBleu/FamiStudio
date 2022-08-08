@@ -5,19 +5,31 @@
 FamiStudio uses some external libraries for sound emulation, import and export to various formats. Many thanks to the developers working on these.
 
 ### Nes_Snd_Emu
-Created by [Blargg](http://www.slack.net/~ant/). It also includes improvements they made later on in Game_Music_Emu. Was also modified by me to add a few more expansions.
+Great little NES sound emulation library created by [Blargg](http://www.slack.net/~ant/). It also includes improvements they made later on in Game_Music_Emu. Was also modified by me to add a few more expansions.
 
 ### NotSoFatso
-Created by [Disch](http://www.vgmpf.com/Wiki/index.php/Not_So,_Fatso!). Was stripped down to only keep the audio emulation core and is used for the NSF import.
+Originally a Winamp plugin to play NSF created by [Disch](http://www.vgmpf.com/Wiki/index.php/Not_So,_Fatso!), it was stripped down to only keep the audio emulation core and is used for the NSF import.
 
-### emu2149 and emu2413
-Created by by [Mitsutaka Okazaki](https://github.com/okaxaki). emu2149 is currently unused by the code.
+### emu2149
+Small library that emulates the YM2149 chip (aka PSG), created by by [Mitsutaka Okazaki](https://github.com/okaxaki). It is used for the EPSM emulation.
+
+### emu2413
+Very similar to emu2149 and also created by [Mitsutaka Okazaki](https://github.com/okaxaki), but used for the VRC7 emulation. 
+
+### Nuked-OPN2
+[OPN2](https://github.com/nukeykt/Nuked-OPN2) is a high-accuracy YM3438 emulator. FamiStudio uses a slightly modified version of this library from [BambooTracker](https://github.com/BambooTracker/BambooTracker/tree/master/BambooTracker/chip/nuked) for EPSM emulation.
 
 ### ShineMp3
 Created by Gabriel Bouvigne, Pete Everett, Patrick Roberts and others. Used for the MP3 export.
 
 ### Vorbis 
 Created by the [Xiph.Org Foundation](https://xiph.org/). Used for the OGG/Vorbis export.
+
+### GifDec
+[GifDec](https://github.com/lecram/gifdec) is a tiny little C library to read animated GIF files. It does one thing and does it very well. It is used to display the tutorials on all platforms.
+
+### GLFW
+[GLFW](https://www.glfw.org/) is a very simple windowing & input management system for OpenGL. Used by all 3 platforms on Desktop for the main FamiStudio window.
 
 ## Demo Songs
 
@@ -26,7 +38,7 @@ A few demo songs are also provided with FamiStudio. Unless mentionned, the demo 
 * Another Winter - Anamanagughi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Dedrecil - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
-* Layla : The Iris Missions - Iris (by Supper, my approximate recreation)
+* Layla : The Iris Missions - Iris (by Supper)
 * Tower of Heaven - Indignant Divinity (Flashygoodness, cover by <a href='https://www.youtube.com/watch?v=0qV4dSBOH5s'>Danooct1</a>. Thanks!!!)
 * Green Hill Zone Theme - Sonic (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Mega Man 2 - Stage Select & Dr. Wily's Castle

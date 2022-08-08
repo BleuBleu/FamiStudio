@@ -1,0 +1,10 @@
+LIBRARY   GIFDEC
+EXPORTS
+	GifOpen          @1
+	GifGetWidth      @2
+	GifGetHeight     @3
+	GifAdvanceFrame  @4
+	GifRenderFrame   @5
+	GifGetFrameDelay @6
+	GifRewind        @7
+	GifClose         @8

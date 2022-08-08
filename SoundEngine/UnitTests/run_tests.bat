@@ -109,6 +109,11 @@ if "%rnd%"=="1" (
 
 set /a rnd=%random% %%2
 if "%rnd%"=="1" (
+	echo FAMISTUDIO_USE_RELEASE_NOTES=1 >> test_defs.inc
+)
+
+set /a rnd=%random% %%2
+if "%rnd%"=="1" (
 	echo FAMISTUDIO_USE_SLIDE_NOTES=1 >> test_defs.inc
 	set /a rnd=%random% %%2
 	if "%rnd%"=="1" (

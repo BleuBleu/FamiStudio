@@ -1,27 +1,26 @@
 ﻿using System;
-using System.Drawing;
 
 namespace FamiStudio
 {
     public class Theme
     {
-        public static Color DarkGreyLineColor1    = Color.FromArgb( 25,  28,  31);
-        public static Color DarkGreyLineColor2    = Color.FromArgb( 33,  37,  41);
-        public static Color DarkGreyLineColor3    = Color.FromArgb( 38,  42,  46);
-        public static Color DarkGreyFillColor1    = Color.FromArgb( 42,  48,  51);
-        public static Color DarkGreyFillColor2    = Color.FromArgb( 49,  55,  61);
-        public static Color MediumGreyFillColor1  = Color.FromArgb( 86,  91, 105);
-        public static Color LightGreyFillColor1   = Color.FromArgb(178, 185, 198);
-        public static Color LightGreyFillColor2   = Color.FromArgb(198, 205, 218);
-        public static Color SeekBarColor          = Color.FromArgb(225, 170,   0);
-        public static Color LightRedFillColor     = Color.FromArgb(225, 150, 150);
-        public static Color DarkRedFillColor      = Color.FromArgb(210,  16,  48);
+        public static Color DarkGreyColor1    = Color.FromArgb( 25,  28,  31);
+        public static Color DarkGreyColor2    = Color.FromArgb( 33,  37,  41);
+        public static Color DarkGreyColor3    = Color.FromArgb( 38,  42,  46);
+        public static Color DarkGreyColor4    = Color.FromArgb( 42,  48,  51);
+        public static Color DarkGreyColor5    = Color.FromArgb( 49,  55,  61);
+        public static Color DarkGreyColor6    = Color.FromArgb( 56,  62,  71);
+        public static Color MediumGreyColor1  = Color.FromArgb( 86,  91, 105);
+        public static Color LightGreyColor1   = Color.FromArgb(178, 185, 198);
+        public static Color LightGreyColor2   = Color.FromArgb(198, 205, 218);
+        public static Color YellowColor       = Color.FromArgb(225, 170,   0);
+        public static Color LightRedColor     = Color.FromArgb(225, 150, 150);
+        public static Color DarkRedColor      = Color.FromArgb(210,  16,  48);
 
         public static Color BlackColor = Color.FromArgb(  0,   0,   0);
         public static Color GreenColor = Color.FromArgb(  0,   0, 255);
         public static Color WhiteColor = Color.FromArgb(255, 255, 255);
 
-        private static bool colorInitialized = false;
         private static int  nextColorIdx = 39;
 
         //
@@ -174,9 +173,6 @@ namespace FamiStudio
 
         public static void Initialize()
         {
-            if (colorInitialized)
-                return;
-
             for (int j = 0; j < CustomColors.GetLength(1); j++)
             {
                 for (int i = 0; i < CustomColors.GetLength(0); i++)
@@ -190,8 +186,6 @@ namespace FamiStudio
                        Math.Min(255, color.B + 60));
                 }
             }
-
-            colorInitialized = true;
         }
 
         public static float ColorDistance(Color c0, Color c1)
@@ -227,7 +221,7 @@ namespace FamiStudio
             color = closestColor;
         }
 
-        public static System.Drawing.Color RandomCustomColor()
+        public static Color RandomCustomColor()
         {
             var si = CustomColors.GetLength(0);
             var sj = CustomColors.GetLength(1);

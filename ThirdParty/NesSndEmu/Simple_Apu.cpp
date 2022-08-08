@@ -119,6 +119,36 @@ void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 	}
 }
 
+void Simple_Apu::reset_triggers()
+{
+	apu.reset_triggers();
+
+	if (expansions & expansion_mask_vrc6) vrc6.reset_triggers();
+	if (expansions & expansion_mask_vrc7) vrc7.reset_triggers();
+	if (expansions & expansion_mask_fds) fds.reset_triggers();
+	if (expansions & expansion_mask_mmc5) mmc5.reset_triggers();
+	if (expansions & expansion_mask_namco) namco.reset_triggers();
+	if (expansions & expansion_mask_sunsoft) sunsoft.reset_triggers();
+	if (expansions & expansion_mask_epsm) epsm.reset_triggers();
+}
+
+int Simple_Apu::get_channel_trigger(int exp, int idx)
+{
+	switch (exp)
+	{
+	case expansion_none: return apu.get_channel_trigger(idx); break;
+	case expansion_vrc6: return vrc6.get_channel_trigger(idx); break;
+	case expansion_vrc7: return vrc7.get_channel_trigger(idx); break;
+	case expansion_fds: return fds.get_channel_trigger(idx); break;
+	case expansion_mmc5: return mmc5.get_channel_trigger(idx); break;
+	case expansion_namco: return namco.get_channel_trigger(idx); break;
+	case expansion_sunsoft: return sunsoft.get_channel_trigger(idx); break;
+	case expansion_epsm: return epsm.get_channel_trigger(idx); break;
+	}
+
+	return trigger_none;
+}
+
 void Simple_Apu::treble_eq(int exp, double treble, int sample_rate)
 {
 	blip_eq_t eq(treble, 0, sample_rate);
@@ -203,7 +233,8 @@ void Simple_Apu::get_register_values(int exp, void* regs)
 		case expansion_namco: namco.get_register_values((n163_register_values*)regs); break;
 		case expansion_sunsoft: sunsoft.get_register_values((s5b_register_values*)regs); break;
 		case expansion_epsm: epsm.get_register_values((epsm_register_values*)regs); break;
-	}}
+	}
+}
 
 void Simple_Apu::start_seeking()
 {
@@ -245,7 +276,27 @@ void Simple_Apu::skip_cycles(long cycles)
 	{
 		time += cycles;
 		apu.run_until(time);
+
+		if (expansions & expansion_mask_vrc6) vrc6.run_until(time);
+		if (expansions & expansion_mask_vrc7) vrc7.run_until(time);
+		if (expansions & expansion_mask_fds) fds.run_until(time);
+		if (expansions & expansion_mask_mmc5) mmc5.run_until(time);
+		if (expansions & expansion_mask_namco) namco.run_until(time);
+		if (expansions & expansion_mask_sunsoft) sunsoft.run_until(time);
+		if (expansions & expansion_mask_epsm) epsm.run_until(time); //Disabled until Perkka takes a look.
 	}
+}
+
+int Simple_Apu::get_namco_wave_pos(int n163ChanIndex)
+{
+	assert((expansions & expansion_mask_namco) != 0 && !seeking);
+	return namco.get_wave_pos(n163ChanIndex);
+}
+
+int Simple_Apu::get_fds_wave_pos()
+{
+	assert((expansions & expansion_mask_fds) != 0 && !seeking);
+	return fds.get_wave_pos();
 }
 
 void Simple_Apu::end_frame()
@@ -294,7 +345,7 @@ void Simple_Apu::reset()
 	mmc5.reset();
 	namco.reset();
 	sunsoft.reset();
-	epsm.reset();
+	epsm.reset(pal_mode);
 }
 
 void Simple_Apu::set_audio_expansions(long exp)

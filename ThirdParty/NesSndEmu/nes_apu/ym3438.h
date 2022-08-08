@@ -1,20 +1,21 @@
 /*
- * Copyright (C) 2017-2018 Alexey Khokholov (Nuke.YKT)
+ * Copyright (C) 2017-2021 Alexey Khokholov (Nuke.YKT)
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * This file is part of Nuked OPN2.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  *  Nuked OPN2(Yamaha YM3438) emulator.
  *  Thanks:
@@ -135,6 +136,7 @@ typedef struct __ym3438_t
     Bit8u ch_lock_l;
     Bit8u ch_lock_r;
     Bit16s ch_read;
+    Bit16u mask;
 	 /*OPNA: Rhythm channel*/
 	 Bit8u rhythm_tl;
 	 Bit8u rhythm_key[6];
@@ -209,6 +211,14 @@ typedef struct __ym3438_t
     Bit8u pms[6];
     Bit8u status;
     Bit32u status_time;
+
+    /* FamiStudio : Phases + increment used for oscilloscope triggers. */
+    Bit32u trigger_basefreq[6];
+    Bit32u trigger_phase[6];
+
+	/* FamiStudio : Which channels had triggers during the update. */
+	Bit8u  triggers[6]; // 0 = no trigger, 1 = trigger, 2 = channel is off
+
 } ym3438_t;
 
 void OPN2_Reset(ym3438_t *chip);
@@ -216,6 +226,7 @@ void OPN2_SetChipType(Bit32u type);
 void OPN2_Clock(ym3438_t *chip, Bit16s *buffer, bool fm = 1, bool rythm = 1, bool misc = 1);
 void OPN2_Write(ym3438_t *chip, Bit32u port, Bit8u data);
 void OPN2_SetTestPin(ym3438_t *chip, Bit32u value);
+void OPN2_MuteChannel(ym3438_t *chip, Bit16u mask);
 ym3438_t *OPN_New();
 Bit32u OPN2_ReadTestPin(ym3438_t *chip);
 Bit32u OPN2_ReadIRQPin(ym3438_t *chip);

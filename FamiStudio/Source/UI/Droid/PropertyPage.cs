@@ -19,7 +19,6 @@ using Google.Android.Material.Button;
 using Java.Util;
 
 using Debug       = System.Diagnostics.Debug;
-using Color       = System.Drawing.Color;
 using Orientation = Android.Widget.Orientation;
 using AndroidX.Core.Graphics;
 
@@ -70,7 +69,7 @@ namespace FamiStudio
             editText.InputType = InputTypes.ClassText;
             editText.Text = txt;
             editText.SetTextColor(Application.Context.GetColorStateList(Resource.Color.light_grey));
-            editText.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
+            editText.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
             editText.SetMaxLines(1);
             editText.SetOnEditorActionListener(this);
             editText.AfterTextChanged += EditText_AfterTextChanged;
@@ -81,25 +80,9 @@ namespace FamiStudio
             return editText;
         }
 
-        private void ForceEditTextASCII(EditText text)
-        {
-            var oldText = text.Text;
-            var newText = Utils.ForceASCII(oldText);
-
-            if (oldText != newText)
-            {
-                var sel1 = text.SelectionStart;
-                var sel2 = text.SelectionEnd;
-                text.Text = newText;
-                text.SetSelection(sel1, sel2);
-            }
-        }
-
         private void EditText_AfterTextChanged(object sender, AfterTextChangedEventArgs e)
         {
             var editText = sender as EditText;
-
-            ForceEditTextASCII(editText);
 
             var idx = GetPropertyIndexForView(editText);
             if (idx >= 0)
@@ -155,7 +138,7 @@ namespace FamiStudio
             var spinner = new Spinner(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
             var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, values);
             spinner.Adapter = adapter;
-            spinner.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
+            spinner.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
             spinner.SetSelection(adapter.GetPosition(value));
             spinner.ItemSelected += Spinner_ItemSelected;
             return spinner;
@@ -194,7 +177,7 @@ namespace FamiStudio
                 (prop.controls[i] as CheckBox).Checked = selected[i];
         }
 
-        public int AddColoredTextBox(string value, System.Drawing.Color color)
+        public int AddColoredTextBox(string value, Color color)
         {
             return AddTextBox("Name", value);
         }
@@ -240,7 +223,7 @@ namespace FamiStudio
         {
             var spacer = new View(context);
             spacer.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-            spacer.SetBackgroundColor(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1)); 
+            spacer.SetBackgroundColor(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1)); 
             return spacer;
         }
 
@@ -450,7 +433,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddRadioButton(string label, string text, bool check)
+        public int AddRadioButton(string label, string text, bool check, bool multiline = false)
         {
             var first = properties.Count == 0 || properties[properties.Count - 1].type != PropertyType.Radio;
             var prop = new Property();
@@ -637,7 +620,7 @@ namespace FamiStudio
                 PropertyChanged?.Invoke(this, idx, controlIdx, 0, e.IsChecked);
         }
 
-        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int height = 200)
+        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7)
         {
             var prop = new Property();
             prop.type = PropertyType.CheckBoxList;
@@ -660,7 +643,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null)
+        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7)
         {
             var prop = new Property();
             prop.type = PropertyType.RadioList;
@@ -760,16 +743,20 @@ namespace FamiStudio
         {
         }
 
-        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, int height = 300)
+        public void SetRowColor(int propIdx, int rowIdx, Color color)
+        {
+        }
+
+        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null)
         {
             properties.Add(new Property());
         }
 
-        public void UpdateMultiColumnList(int idx, object[,] data, string[] columnNames = null)
+        public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
         {
         }
 
-        public void UpdateMultiColumnList(int idx, int rowIdx, int colIdx, object value)
+        public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)
         {
         }
 
@@ -813,8 +800,7 @@ namespace FamiStudio
             {
                 case PropertyType.TextBox:
                 case PropertyType.ColoredTextBox:
-                case PropertyType.MultilineTextBox:
-                    ForceEditTextASCII(prop.controls[0] as EditText);
+                case PropertyType.LogTextBox:
                     return (prop.controls[0] as EditText).Text;
                 case PropertyType.NumericUpDown:
                     return (prop.controls[0] as HorizontalNumberPicker).Value;
@@ -887,7 +873,7 @@ namespace FamiStudio
                 case PropertyType.Button:
                     (prop.controls[0] as MaterialButton).Text = (string)value;
                     break;
-                case PropertyType.MultilineTextBox:
+                case PropertyType.LogTextBox:
                     (prop.controls[0] as EditText).Text = (string)value;
                     break;
                 case PropertyType.ProgressBar:
@@ -898,6 +884,9 @@ namespace FamiStudio
                     break;
                 case PropertyType.Label:
                     (prop.controls[0] as TextView).Text = (string)value;
+                    break;
+                case PropertyType.NumericUpDown:
+                    (prop.controls[0] as HorizontalNumberPicker).Value = (int)value;
                     break;
             }
         }
@@ -935,7 +924,7 @@ namespace FamiStudio
             pageLayout = new LinearLayout(container.Context);
             pageLayout.LayoutParameters = coordLayoutParameters;
             pageLayout.Orientation = Orientation.Vertical;
-            pageLayout.SetBackgroundColor(DroidUtils.ToAndroidColor(Theme.DarkGreyFillColor1));
+            pageLayout.SetBackgroundColor(DroidUtils.ToAndroidColor(Theme.DarkGreyColor4));
 
             var first = true;
 
@@ -997,7 +986,7 @@ namespace FamiStudio
             {
                 var style = position == spinner.SelectedItemPosition ? Resource.Style.SpinnerItemSelected : Resource.Style.SpinnerItem;
                 TextViewCompat.SetTextAppearance(tv, style);
-                tv.SetBackgroundResource(Resource.Color.LightGreyFillColor1);
+                tv.SetBackgroundResource(Resource.Color.LightGreyColor1);
             }
 
             return baseView;
@@ -1031,13 +1020,13 @@ namespace FamiStudio
             buttonLess = new MaterialButton(context);
             buttonLess.Text = "-";
             buttonLess.SetTextColor(Android.Graphics.Color.Black);
-            buttonLess.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1));
+            buttonLess.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1));
             buttonLess.LayoutParameters = lp;
 
             buttonMore = new MaterialButton(context);
             buttonMore.Text = "+";
             buttonMore.SetTextColor(Android.Graphics.Color.Black);
-            buttonMore.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1));
+            buttonMore.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1));
             buttonMore.LayoutParameters = lp;
 
             textView = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));

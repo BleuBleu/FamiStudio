@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.Collections.Generic;
 
 namespace FamiStudio
@@ -30,7 +29,7 @@ namespace FamiStudio
 
         class CacheTexture
         {
-            public GLBitmap bmp;
+            public Bitmap bmp;
             public CacheRow[] rows;
         }
 
@@ -47,11 +46,11 @@ namespace FamiStudio
         private int clampedPatternCacheSizeY;
         private int desiredPatternCacheSizeY;
         private float scaleFactorV;
-        private GLGraphics graphics;
+        private Graphics graphics;
         private List<CacheTexture> cacheTextures = new List<CacheTexture>();
         private Dictionary<int, List<PatternCacheData>> patternCache = new Dictionary<int, List<PatternCacheData>>();
 
-        public PatternBitmapCache(GLGraphics g)
+        public PatternBitmapCache(Graphics g)
         {
             graphics = g;
         }
@@ -75,7 +74,7 @@ namespace FamiStudio
             v1 = v0 + rect.Height * InvPatternCacheTextureSize * scaleFactorV;
         }
 
-        public GLBitmap GetOrAddPattern(Pattern pattern, int patternLen, int framesPerNote, out float u0, out float v0, out float u1, out float v1)
+        public Bitmap GetOrAddPattern(Pattern pattern, int patternLen, int framesPerNote, out float u0, out float v0, out float u1, out float v1)
         {
             // Look in cache first.
             if (patternCache.TryGetValue(pattern.Id, out var list))
@@ -103,13 +102,13 @@ namespace FamiStudio
             {
                 if (maxNote == minNote)
                 {
-                    minNote = (byte)(minNote - 5);
-                    maxNote = (byte)(maxNote + 5);
+                    minNote = (byte)Math.Max(minNote - 5, Note.MusicalNoteMin);
+                    maxNote = (byte)Math.Min(maxNote + 5, Note.MusicalNoteMax);
                 }
                 else
                 {
-                    minNote = (byte)(minNote - 2);
-                    maxNote = (byte)(maxNote + 2);
+                    minNote = (byte)Math.Max(minNote - 2, Note.MusicalNoteMin);
+                    maxNote = (byte)Math.Min(maxNote + 2, Note.MusicalNoteMax);
                 }
 
                 var musicalNotes = new List<Tuple<int, Note>>();
@@ -266,7 +265,7 @@ namespace FamiStudio
             var y = Math.Min((int)Math.Round((note.Value - minNote) / (float)(maxNote - minNote) * scaleY * patternSizeY), patternSizeY - noteSizeY);
             var instrument = note.Instrument;
 
-            var color = Theme.LightGreyFillColor1;
+            var color = Theme.LightGreyColor1;
             if (dpcm)
             {
                 var mapping = project.GetDPCMMapping(note.Value);
@@ -280,7 +279,7 @@ namespace FamiStudio
 
             for (int j = 0; j < noteSizeY; j++)
                 for (int x = t0; x < t1; x++)
-                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = GLColorUtils.PackColorForTexture(color);
+                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = color.ToAbgr();
         }
 
         private int ComputePatternSizeX(int patternLen, int framesPerNote)
@@ -302,7 +301,7 @@ namespace FamiStudio
 
             // Create new texture.
             var texture = new CacheTexture();
-            texture.bmp  = graphics.CreateEmptyBitmap(PatternCacheTextureSize, PatternCacheTextureSize);
+            texture.bmp  = graphics.CreateEmptyBitmap(PatternCacheTextureSize, PatternCacheTextureSize, true, false);
             InitCacheRows(texture);
             textureIdx = cacheTextures.Count;
             cacheTextures.Add(texture);

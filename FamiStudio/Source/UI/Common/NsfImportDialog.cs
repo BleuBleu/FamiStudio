@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -10,14 +8,14 @@ namespace FamiStudio
         private string[] songNames;
         private string filename;
 
-        public NsfImportDialog(string file)
+        public NsfImportDialog(FamiStudioWindow win, string file)
         {
             filename = file;
             songNames = NsfFile.GetSongNames(filename);
 
             if (songNames != null && songNames.Length > 0)
             {
-                dialog = new PropertyDialog("NSF Import", 350);
+                dialog = new PropertyDialog(win, "NSF Import", 350);
                 dialog.Properties.AddDropDownList("Song:", songNames, songNames[0]); // 0
                 dialog.Properties.AddNumericUpDown("Duration (s):", 120, 1, 600);    // 1
                 dialog.Properties.AddNumericUpDown("Pattern Length:", 256, 4, 256);  // 2
@@ -29,14 +27,14 @@ namespace FamiStudio
             }
         }
 
-        public Project ShowDialog(FamiStudioForm parent)
+        public Project ShowDialog(FamiStudioWindow parent)
         {
             var project = (Project)null;
 
             if (dialog != null)
             {
                 // This is only ran in desktop and this isnt really async, so its ok.
-                dialog.ShowDialogAsync(parent, (r) =>
+                dialog.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)
                     { 

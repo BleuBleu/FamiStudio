@@ -10,13 +10,7 @@ namespace FamiStudio
 {
     public static class NotSoFatso
     {
-#if FAMISTUDIO_WINDOWS
-        private const string NotSoFatsoDll = "NotSoFatso.dll";
-#elif FAMISTUDIO_MACOS
-        private const string NotSoFatsoDll = "NotSoFatso.dylib";
-#else
-        private const string NotSoFatsoDll = "NotSoFatso.so";
-#endif
+        private const string NotSoFatsoDll = Platform.DllPrefix + "NotSoFatso" + Platform.DllExtension;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void WriteRegisterDelegate(int addr, int data);

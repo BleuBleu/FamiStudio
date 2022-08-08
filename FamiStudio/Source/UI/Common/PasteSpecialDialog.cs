@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -9,9 +8,9 @@ namespace FamiStudio
         private PropertyDialog dialog;
         private List<int> checkToEffect = new List<int>();
 
-        public unsafe PasteSpecialDialog(Channel channel, bool mix = false, bool notes = true, int effectsMask = Note.EffectAllMask)
+        public unsafe PasteSpecialDialog(FamiStudioWindow win, Channel channel, bool mix = false, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            dialog = new PropertyDialog("Paste Special", 260);
+            dialog = new PropertyDialog(win, "Paste Special", 260);
             dialog.Properties.AddLabelCheckBox("Mix With Existing Notes", mix, 0, "When enabled, will preserve the existing note/effects and only paste if there was nothing already there."); // 0
             dialog.Properties.AddLabelCheckBox("Paste Notes", notes, 0, "When enabled, will paste the musical notes."); // 1
             dialog.Properties.AddLabel(null, "Effects to paste:"); // 2
@@ -29,11 +28,11 @@ namespace FamiStudio
                 }
             }
 
-            dialog.Properties.AddCheckBoxList(PlatformUtils.IsMobile ? "Effects to paste" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to paste."); // 3
-            dialog.Properties.AddButton(PlatformUtils.IsMobile ? "Select All Effects" : null, "Select All"); // 4
-            dialog.Properties.AddButton(PlatformUtils.IsMobile ? "De-select All Effects" : null, "Select None"); // 5
+            dialog.Properties.AddCheckBoxList(Platform.IsMobile ? "Effects to paste" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to paste."); // 3
+            dialog.Properties.AddButton(Platform.IsMobile ? "Select All Effects" : null, "Select All"); // 4
+            dialog.Properties.AddButton(Platform.IsMobile ? "De-select All Effects" : null, "Select None"); // 5
             dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32, "Number of times to repeat the paste"); // 6
-            dialog.Properties.SetPropertyVisible(2, PlatformUtils.IsDesktop);
+            dialog.Properties.SetPropertyVisible(2, Platform.IsDesktop);
             dialog.Properties.Build();
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;
         }
@@ -49,9 +48,9 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(Action<DialogResult> callback)
         {
-             dialog.ShowDialogAsync(parent, callback);
+             dialog.ShowDialogAsync(callback);
         }
 
         public bool PasteMix        => dialog.Properties.GetPropertyValue<bool>(0);

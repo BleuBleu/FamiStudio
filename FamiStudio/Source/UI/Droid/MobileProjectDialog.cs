@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -28,11 +27,11 @@ namespace FamiStudio
             famistudio = fami;
             saveMode = save;
 
-            dialog = new PropertyDialog(title, 100);
+            dialog = new PropertyDialog(famistudio.Window, title, 100);
             dialog.SetVerb(save ? "Save" : "Open");
 
             // User files.
-            var userProjectsDir = PlatformUtils.UserProjectsDirectory;
+            var userProjectsDir = Platform.UserProjectsDirectory;
             Directory.CreateDirectory(userProjectsDir);
 
             userProjects.AddRange(Directory.GetFiles(userProjectsDir, "*.fms"));
@@ -127,7 +126,7 @@ namespace FamiStudio
                 var idx = dialog.Properties.GetSelectedIndex(0);
                 if (idx >= 0 && idx < userProjects.Count - 1)
                 {
-                    PlatformUtils.MessageBoxAsync("Delete project?", "Delete", MessageBoxButtons.YesNo, (r) =>
+                    Platform.MessageBoxAsync(famistudio.Window, "Delete project?", "Delete", MessageBoxButtons.YesNo, (r) =>
                     {
                         if (r == DialogResult.Yes)
                         {
@@ -136,7 +135,7 @@ namespace FamiStudio
                             props.UpdateRadioButtonList(0, userProjects.ToArray(), userProjects.Count - 1);
                             props.SetPropertyEnabled(1, true);
                             props.SetPropertyEnabled(2, false);
-                            PlatformUtils.ShowToast("Project Deleted!");
+                            Platform.ShowToast(famistudio.Window, "Project Deleted!");
                         }
                     });
                 }
@@ -152,12 +151,12 @@ namespace FamiStudio
 
         private string GetUserProjectFilename(string name)
         {
-            return Path.Combine(PlatformUtils.UserProjectsDirectory, $"{name}.fms");
+            return Path.Combine(Platform.UserProjectsDirectory, $"{name}.fms");
         }
 
         public void ShowDialogAsync(Action<string> callback)
         {
-            dialog.ShowDialogAsync(famistudio.MainForm, (r) =>
+            dialog.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -174,7 +173,7 @@ namespace FamiStudio
 
                         if (!string.IsNullOrEmpty(filename))
                         {
-                            filename = Path.Combine(PlatformUtils.UserProjectsDirectory, $"{filename}.fms");
+                            filename = Path.Combine(Platform.UserProjectsDirectory, $"{filename}.fms");
                             callback(filename);
                         }
                     }

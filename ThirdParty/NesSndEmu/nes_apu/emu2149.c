@@ -259,6 +259,8 @@ update_output (PSG * psg)
       {
         psg->edge[i] = !psg->edge[i];
         psg->count[i] -= psg->freq[i];
+        if (psg->edge[i])
+            psg->trigger_mask |= (1 << i);
       }
       else
       {
@@ -291,6 +293,8 @@ mix_output(PSG *psg) {
 int16_t
 PSG_calc (PSG * psg)
 {
+  psg->trigger_mask = 0;
+
   if (!psg->quality) {
     update_output(psg);
     return mix_output(psg);

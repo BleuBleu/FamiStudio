@@ -34,11 +34,12 @@ namespace FamiStudio
         CheckBox,
         DropDownList,
         CheckBoxList,
-        MultiColumnList,
+        Grid,
         ColorPicker,
         Label,
+        LinkLabel,
         Button,
-        MultilineTextBox,
+        LogTextBox,
         ProgressBar,
         Radio,
         RadioList
@@ -54,10 +55,12 @@ namespace FamiStudio
     public enum ColumnType
     {
         CheckBox,
+        Radio,
         Label,
         Button,
         DropDown,
-        Slider
+        Slider,
+        Image
     };
 
     public enum ClickType
@@ -72,6 +75,7 @@ namespace FamiStudio
     {
         public string Name;
         public bool Enabled = true;
+        public bool Ellipsis;
         public float Width = 0.0f;
         public ColumnType Type = ColumnType.Label;
         public string[] DropDownValues;
@@ -83,8 +87,8 @@ namespace FamiStudio
 
             Name = name;
             Type = type;
-            StringFormat = type == ColumnType.CheckBox ? "" : format;
-            Width = type == ColumnType.CheckBox ? 0.0f : width;
+            StringFormat = type == ColumnType.CheckBox || type == ColumnType.Image ? "" : format;
+            Width = type == ColumnType.CheckBox || type == ColumnType.Image ? 0.0f : width;
         }
 
         public ColumnDesc(string name, float width, string[] values)
@@ -95,17 +99,17 @@ namespace FamiStudio
             Width = width;
         }
 
-        public Type GetPropertyType()
-        {
-            switch (this.Type)
-            {
-                case ColumnType.Slider:
-                    return typeof(int);
-                case ColumnType.CheckBox: 
-                    return typeof(bool);
-                default: 
-                    return typeof(string);
-            }
-        }
+        //public Type GetPropertyType()
+        //{
+        //    switch (this.Type)
+        //    {
+        //        case ColumnType.Slider:
+        //            return typeof(int);
+        //        case ColumnType.CheckBox: 
+        //            return typeof(bool);
+        //        default: 
+        //            return typeof(string);
+        //    }
+        //}
     };
 }

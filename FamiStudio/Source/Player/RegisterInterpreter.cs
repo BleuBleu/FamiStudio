@@ -1,12 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
 namespace FamiStudio
 {
     public class ApuRegisterInterpreter
@@ -288,7 +279,7 @@ namespace FamiStudio
 
         protected double NesPeriodToFreq(int period, int length)
         {
-            return regs.CpuFrequency / (period + 1.0) / length;
+            return 1.0044 * 4000000 / (period + 1.0) / length; //adjusted by 1,0044 to get closer to real value
         }
 
         public int GetPeriod(int i)
@@ -377,8 +368,8 @@ namespace FamiStudio
 
         private static double EpsmPeriodToFrequency(int period, int octave)
         {
-            //adjusted by 1.002 to have the value closer to the notes intended
-            return period * 1.002 / 144 / 1048576.0 * 8000000 * (1 << octave);
+            //adjusted by 1.0004 to have the value closer to closer to real value
+            return period * 1.0004 / 144 / 1048576.0 * 8000000 * (1 << octave);
         }
 
     }

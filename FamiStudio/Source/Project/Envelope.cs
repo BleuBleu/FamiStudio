@@ -9,8 +9,13 @@ namespace FamiStudio
         int length;
         int loop = -1;
         int release = -1;
-        int maxLength = 256;
         bool relative = false;
+
+        // These are replicated from instrument.
+        int maxLength = 256;
+        int chunkLength = 1;
+
+        // These are static, depend on type.
         bool canResize;
         bool canLoop;
         bool canRelease;
@@ -26,21 +31,16 @@ namespace FamiStudio
 
         public Envelope(int type)
         {
-            if (type == EnvelopeType.FdsWaveform)
-                maxLength = 64;
-            else if (type == EnvelopeType.FdsModulation)
-                maxLength = 32;
-            else 
-                maxLength = 256;
-
+            maxLength = GetEnvelopeMaxLength(type);
             values = new sbyte[maxLength];
-            canResize = type != EnvelopeType.FdsWaveform && type != EnvelopeType.FdsModulation && type != EnvelopeType.N163Waveform;
-            canRelease = type == EnvelopeType.Volume;
-            canLoop = type <= EnvelopeType.DutyCycle;
+            canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
+            canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
+            chunkLength = type == EnvelopeType.FdsWaveform ? 64 : (type == EnvelopeType.N163Waveform ? 16 : 1);
 
             if (canResize)
             {
-                ClearToDefault(type);
+                ResetToDefault(type);
             }
             else
             {
@@ -54,7 +54,7 @@ namespace FamiStudio
             set
             {
                 if (canResize)
-                    length = Utils.Clamp(value, 0, maxLength);
+                    length = Utils.Clamp(value, 0, maxLength); 
                 if (loop >= length)
                     loop = -1;
                 if (release >= length)
@@ -62,18 +62,43 @@ namespace FamiStudio
             }
         }
 
-        public void ClearToDefault(int type)
+        public int ChunkLength
         {
-            // Give envelope a default size, more intuitive.
-            if (canResize)
+            get { return chunkLength; }
+            set
+            {
+                var prevChunkLength = chunkLength;
+                var prevLoop = loop;
+                var prevRelease = release;
+
+                chunkLength = value;
+
+                if (prevLoop >= 0)
+                    loop = prevLoop / prevChunkLength * chunkLength;
+                if (prevRelease >= 0)
+                    release = prevRelease / prevChunkLength * chunkLength;
+            }
+        }
+
+        public int ChunkCount
+        { 
+            get
+            {
+                return length / chunkLength;
+            }
+        }
+
+        public void ResetToDefault(int type)
+        {
+            var def = GetEnvelopeDefaultValue(type);
+
+            if (chunkLength > 1)
+                length = chunkLength;
+            else
                 length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume ? 1 : 8;
 
-            Array.Clear(values, 0, values.Length);
-
-            if (type == EnvelopeType.Volume)
-            {
-                values[0] = Note.VolumeMax;
-            }
+            for (int i = 0; i < values.Length; i++)
+                values[i] = def;
 
             loop = -1;
             release = -1;
@@ -87,9 +112,9 @@ namespace FamiStudio
                 if (value >= 0 && canLoop)
                 {
                     if (release >= 0)
-                        loop = Utils.Clamp(value, 0, release - 1);
+                        loop = Utils.Clamp(value, 0, release - chunkLength);
                     else
-                        loop = Math.Min(value, maxLength);
+                        loop = Math.Min(value, length);
 
                     if (loop >= length)
                         loop = -1;
@@ -110,7 +135,7 @@ namespace FamiStudio
                 if (value >= 0 && canRelease)
                 {
                     if (loop >= 0)
-                        release = Utils.Clamp(value, loop + 1, maxLength);
+                        release = Utils.Clamp(value, loop + chunkLength, length);
 
                     if (release >= length)
                         release = -1;
@@ -122,11 +147,25 @@ namespace FamiStudio
             }
         }
 
+        public void SetChunkMaxLengthUnsafe(int c, int m)
+        {
+            chunkLength = c;
+            maxLength = m;
+        }
+
+        public void SetLoopReleaseUnsafe(int l, int r)
+        {
+            loop = l;
+            release = r;
+        }
+
         public int MaxLength
         {
             get { return maxLength; }
             set
             {
+                Debug.Assert(value <= values.Length);
+
                 maxLength = value;
                 if (!canResize)
                     length = maxLength;
@@ -212,14 +251,55 @@ namespace FamiStudio
             return mod;
         }
 
-        public byte[] BuildN163Waveform()
+        public byte[] GetN163Waveform(int waveIndex)
         {
-            var packed = new byte[length / 2];
+            var len = chunkLength;
+            var offset = waveIndex * chunkLength;
+            var packed = new byte[len / 2];
 
-            for (int i = 0; i < length; i += 2)
-                packed[i / 2] = (byte)((byte)(values[i + 1] << 4) | (byte)(values[i + 0]));
+            for (int i = 0; i < len; i += 2)
+                packed[i / 2] = (byte)((byte)(values[offset + i + 1] << 4) | (byte)(values[offset + i + 0]));
 
             return packed;
+        }
+
+        public byte[] GetChunk(int chunkIndex)
+        {
+            var len = chunkLength;
+            var offset = chunkIndex * chunkLength;
+            var wav = new byte[len];
+
+            for (int i = 0; i < len; i++)
+                wav[i] = (byte)values[offset + i];
+
+            return wav;
+        }
+
+        public Envelope CreateWaveIndexEnvelope()
+        {
+            var sum = 0;
+            for (int i = 0; i < length; i++)
+                sum += values[i];
+
+            // Create a dummy envelope.
+            var env = new Envelope(EnvelopeType.Count);
+            Array.Resize(ref env.values, sum);
+            env.length = sum;
+            env.maxLength = sum;
+
+            var idx = 0;
+
+            for (int i = 0; i < length; i++)
+            {
+                if (i == loop)
+                    env.loop = idx;
+                if (i == release)
+                    env.release = idx;
+                for (int j = 0; j < values[i]; j++)
+                    env.values[idx++] = (sbyte)i;
+            }
+
+            return env;
         }
 
         public bool Relative
@@ -285,6 +365,7 @@ namespace FamiStudio
             env.release = release;
             env.relative = relative;
             env.maxLength = maxLength;
+            env.chunkLength = chunkLength;
             env.canResize = canResize;
             env.values = values.Clone() as sbyte[];
             return env;
@@ -323,36 +404,64 @@ namespace FamiStudio
         {
             GetMinMaxValueForType(null, type, out var min, out var max);
 
-            switch (preset)
+            Debug.Assert(length % chunkLength == 0);
+
+            var chunkCount = length / chunkLength;
+
+            for (int j = 0; j < chunkCount; j++)
             {
-                case WavePresetType.Sine:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, (float)Math.Sin(i * 2.0f * Math.PI / length) * -0.5f + 0.5f));
-                    break;
-                case WavePresetType.Triangle:
-                    for (int i = 0; i < length / 2; i++)
-                    {
-                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(length / 2 - 1)));
-                        values[length - i - 1] = values[i];
-                    }
-                    break;
-                case WavePresetType.Sawtooth:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(length - 1)));
-                    break;
-                case WavePresetType.Square50:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)(i >= length / 2 ? max : min);
-                    break;
-                case WavePresetType.Square25:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)(i >= length / 4 ? max : min);
-                    break;
-                case WavePresetType.Flat:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)((min + max) / 2);
-                    break;
+                var chunkOffset = j * chunkLength;
+
+                switch (preset)
+                {
+                    case WavePresetType.Sine:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, (float)Math.Sin(i * 2.0f * Math.PI / chunkLength) * -0.5f + 0.5f));
+                        break;
+                    case WavePresetType.Triangle:
+                        for (int i = 0; i < chunkLength / 2; i++)
+                        {
+                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(chunkLength / 2 - 1)));
+                            values[chunkOffset + chunkLength - i - 1] = values[i];
+                        }
+                        break;
+                    case WavePresetType.Sawtooth:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(chunkLength - 1)));
+                        break;
+                    case WavePresetType.Square50:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= chunkLength / 2 ? max : min);
+                        break;
+                    case WavePresetType.Square25:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= chunkLength / 4 ? max : min);
+                        break;
+                    case WavePresetType.Flat:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)((min + max) / 2);
+                        break;
+                }
             }
+        }
+
+        public bool ValidatePreset(int type, int preset)
+        {
+            var oldValues = values.Clone() as sbyte[];
+            SetFromPreset(type, preset);
+            var matches = true;
+
+            for (int i = 0; i < length; i++)
+            {
+                if (oldValues[i] != values[i])
+                {
+                    matches = false;
+                    break;
+                }
+            }
+
+            values = oldValues;
+            return matches;
         }
 
         public uint CRC
@@ -364,6 +473,8 @@ namespace FamiStudio
                 crc = CRC32.Compute(BitConverter.GetBytes(loop), crc);
                 crc = CRC32.Compute(BitConverter.GetBytes(release), crc);
                 crc = CRC32.Compute(BitConverter.GetBytes(relative), crc);
+                crc = CRC32.Compute(BitConverter.GetBytes(maxLength), crc);
+                crc = CRC32.Compute(BitConverter.GetBytes(chunkLength), crc);
                 crc = CRC32.Compute(values, crc);
                 return crc;
             }
@@ -372,6 +483,36 @@ namespace FamiStudio
         public static sbyte GetEnvelopeZeroValue(int type)
         {
             return type == EnvelopeType.Volume ? (sbyte)15: (sbyte)0;
+        }
+
+        public static int GetEnvelopeMaxLength(int type)
+        {
+            switch (type)
+            {
+                case EnvelopeType.FdsWaveform:
+                    return 64;
+                case EnvelopeType.N163Waveform:
+                    return 1024; // Actually includes multiple waveforms.
+                case EnvelopeType.FdsModulation:
+                    return 32;
+                case EnvelopeType.WaveformRepeat:
+                    return 64;
+                default:
+                    return 256;
+            }
+        }
+
+        public static sbyte GetEnvelopeDefaultValue(int type)
+        {
+            switch (type)
+            {
+                case EnvelopeType.Volume:
+                    return Note.VolumeMax;
+                case EnvelopeType.WaveformRepeat:
+                    return 1;
+                default:
+                    return 0;
+            }
         }
 
         public bool IsEmpty(int type)
@@ -427,12 +568,17 @@ namespace FamiStudio
             else if (type == EnvelopeType.DutyCycle)
             {
                 min = 0;
-                max = instrument.IsVrc6Instrument ? 7 : 3;
+                max = instrument.IsVrc6 ? 7 : 3;
             }
             else if (type == EnvelopeType.FdsWaveform)
             {
                 min = 0;
                 max = 63;
+            }
+            else if (type == EnvelopeType.WaveformRepeat)
+            {
+                min = 1;
+                max = 15; // Arbitrary.
             }
             else
             {
@@ -462,13 +608,15 @@ namespace FamiStudio
                 values[i] = (sbyte)Utils.Clamp(values[i], min, max);
         }
 
-        private void FixBadEnvelopeLength()
+        private void FixBadEnvelopeLength(int type)
         {
-            if (values.Length != maxLength)
-                Array.Resize(ref values, maxLength);
+            var maxTypeLength = GetEnvelopeMaxLength(type);
+
+            if (values.Length != maxTypeLength)
+                Array.Resize(ref values, maxTypeLength);
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void SerializeState(ProjectBuffer buffer, int type)
         {
             buffer.Serialize(ref length);
             buffer.Serialize(ref loop);
@@ -479,21 +627,22 @@ namespace FamiStudio
             buffer.Serialize(ref values);
 
             if (buffer.IsReading && !buffer.IsForUndoRedo)
-                FixBadEnvelopeLength();
+                FixBadEnvelopeLength(type);
         }
     }
 
     public static class EnvelopeType
     {
-        public const int Volume        = 0;
-        public const int Arpeggio      = 1;
-        public const int Pitch         = 2;
-        public const int DutyCycle     = 3;
-        public const int RegularCount  = 4;
-        public const int FdsWaveform   = 4;
-        public const int FdsModulation = 5;
-        public const int N163Waveform  = 6;
-        public const int Count         = 7;
+        public const int Volume         = 0;
+        public const int Arpeggio       = 1;
+        public const int Pitch          = 2;
+        public const int DutyCycle      = 3;
+        public const int RegularCount   = 4;
+        public const int FdsWaveform    = 4;
+        public const int FdsModulation  = 5;
+        public const int N163Waveform   = 6;
+        public const int WaveformRepeat = 7;
+        public const int Count          = 8;
 
         public static readonly string[] Names =
         {
@@ -503,7 +652,8 @@ namespace FamiStudio
             "Duty Cycle",
             "FDS Waveform",
             "FDS Modulation Table",
-            "N163 Waveform"
+            "N163 Waveform",
+            "Repeat",
         };
 
         public static readonly string[] ShortNames =
@@ -514,7 +664,20 @@ namespace FamiStudio
             "DutyCycle",
             "FDSWave",
             "FDSMod",
-            "N163Wave"
+            "N163Wave",
+            "Repeat"
+        };
+
+        public static readonly string[] Icons = new string[]
+        {
+            "EnvelopeVolume",
+            "EnvelopeArpeggio",
+            "EnvelopePitch",
+            "EnvelopeDuty",
+            "EnvelopeWave",
+            "EnvelopeMod",
+            "EnvelopeWave",
+            "EnvelopeWave", // Never actually displayed
         };
 
         public static int GetValueForName(string str)
@@ -530,14 +693,16 @@ namespace FamiStudio
 
     public static class WavePresetType
     {
-        public const int Sine     = 0;
-        public const int Triangle = 1;
-        public const int Sawtooth = 2;
-        public const int Square50 = 3;
-        public const int Square25 = 4;
-        public const int Flat     = 5;
-        public const int Custom   = 6;
-        public const int Count    = 7;
+        public const int Sine       = 0;
+        public const int Triangle   = 1;
+        public const int Sawtooth   = 2;
+        public const int Square50   = 3;
+        public const int Square25   = 4;
+        public const int Flat       = 5;
+        public const int Custom     = 6;
+        public const int CountNoWav = 8;
+        public const int Resample    = 7;
+        public const int Count      = 8;
 
         public static readonly string[] Names =
         {
@@ -547,7 +712,8 @@ namespace FamiStudio
             "Square 50%",
             "Square 25%",
             "Flat",
-            "Custom"
+            "Custom",
+            "Resample"
         };
 
         public static int GetValueForName(string str)

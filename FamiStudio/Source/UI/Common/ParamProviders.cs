@@ -1,14 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderCommandList = FamiStudio.GLCommandList;
 
 namespace FamiStudio
 {
@@ -16,8 +7,8 @@ namespace FamiStudio
     {
         public string Name;
         public string ToolTip;
-        public int MinValue;
-        public int MaxValue;
+        private int MinValue;
+        private int MaxValue;
         public int DefaultValue;
         public int SnapValue;
         public int CustomHeight;
@@ -26,17 +17,20 @@ namespace FamiStudio
         public object CustomUserData1;
         public object CustomUserData2;
 
+        public delegate void GetMinMaxValueDelegate(out int min, out int max);
         public delegate int GetValueDelegate();
         public delegate bool EnabledDelegate();
         public delegate void SetValueDelegate(int value);
         public delegate string GetValueStringDelegate();
-        public delegate void CustomDrawDelegate(RenderCommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2);
+        public delegate void CustomDrawDelegate(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2);
 
         public EnabledDelegate IsEnabled;
         public GetValueDelegate GetValue;
         public SetValueDelegate SetValue;
         public GetValueStringDelegate GetValueString;
         public CustomDrawDelegate CustomDraw;
+        public GetValueDelegate GetMinValue;
+        public GetValueDelegate GetMaxValue;
 
         public bool HasTab => !string.IsNullOrEmpty(TabName);
 
@@ -47,7 +41,7 @@ namespace FamiStudio
                 value = (value / SnapValue) * SnapValue;
             }
 
-            return Utils.Clamp(value, MinValue, MaxValue);
+            return Utils.Clamp(value, GetMinValue(), GetMaxValue());
         }
 
         protected ParamInfo(string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false, int snap = 1)
@@ -60,6 +54,9 @@ namespace FamiStudio
             IsList = list;
             SnapValue = snap;
             GetValueString = () => GetValue().ToString();
+            GetMinValue = () => MinValue;
+            GetMaxValue = () => MaxValue;
+            IsEnabled = () => true;
         }
     };
 
@@ -77,11 +74,11 @@ namespace FamiStudio
         {
             return
                 instrument.IsEnvelopeActive(EnvelopeType.Pitch) ||
-                instrument.IsFdsInstrument  ||
-                instrument.IsN163Instrument ||
-                instrument.IsVrc6Instrument ||
-                instrument.IsEpsmInstrument ||
-                instrument.IsVrc7Instrument;
+                instrument.IsFds  ||
+                instrument.IsN163 ||
+                instrument.IsVrc6 ||
+                instrument.IsEpsm ||
+                instrument.IsVrc7;
         }
 
         static public ParamInfo[] GetParams(Instrument instrument)
@@ -120,24 +117,38 @@ namespace FamiStudio
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Master Volume", 0, 3, 0, null, true)
                         { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
-                        { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; instrument.UpdateFdsWaveEnvelope(); } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.Count - 1, WavePresetType.Flat, null, true )
-                        { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; instrument.UpdateFdsModulationEnvelope(); } });
+                        { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.CountNoWav - 1, WavePresetType.Flat, null, true )
+                        { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Speed", 0, 4095, 0)
                         { GetValue = () => { return instrument.FdsModSpeed; }, SetValue = (v) => { instrument.FdsModSpeed = (ushort)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Depth", 0, 63, 0)
                         { GetValue = () => { return instrument.FdsModDepth; }, SetValue = (v) => { instrument.FdsModDepth = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Delay", 0, 255, 0)
                         { GetValue = () => { return instrument.FdsModDelay; }, SetValue = (v) => { instrument.FdsModDelay = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Period", 2, 1024, 128)
+                        { GetValue = () => { return instrument.FdsResampleWavePeriod; }, SetValue = (v) => { instrument.FdsResampleWavePeriod = v; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Offset", 0, 0, 0)
+                        { GetValue = () => { return instrument.FdsResampleWaveOffset; }, SetValue = (v) => { instrument.FdsResampleWaveOffset = v; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; }, GetMaxValue = () => { return instrument.FdsResampleWaveData != null ? instrument.FdsResampleWaveData.Length - 1 : 100; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Normalize", 0, 1, 1)
+                        { GetValue = () => { return instrument.FdsResampleWavNormalize ? 1 : 0; }, SetValue = (v) => { instrument.FdsResampleWavNormalize = v != 0; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; } });
                     break;
 
                 case ExpansionType.N163:
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Size", 4, 248, 16, null, false, 4)
-                        { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;} });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Position", 0, 244, 0, null, false, 4)
-                        { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;} });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Position", 0, 0, 0, null, false, 4)
+                        { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWavePos; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Size", 4, 4, 16, null, false, 4)
+                        { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveSize; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Count", 1, 1, 1) 
+                        { GetValue = () => { return instrument.N163WaveCount; }, SetValue = (v) => { instrument.N163WaveCount = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveCount; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Period", 1, 1024, 128) 
+                        { GetValue = () => { return instrument.N163ResampleWavePeriod; }, SetValue = (v) => { instrument.N163ResampleWavePeriod = v;}, IsEnabled = () => { return instrument.N163ResampleWaveData != null && instrument.N163WavePreset == WavePresetType.Resample; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Offset", 0, 0, 0) 
+                        { GetValue = () => { return instrument.N163ResampleWaveOffset; }, SetValue = (v) => { instrument.N163ResampleWaveOffset = v;}, IsEnabled = () => { return instrument.N163ResampleWaveData != null && instrument.N163WavePreset == WavePresetType.Resample; }, GetMaxValue = () => { return instrument.N163ResampleWaveData != null ? instrument.N163ResampleWaveData.Length - 1 : 100; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Normalize", 0, 1, 1) 
+                        { GetValue = () => { return instrument.N163ResampleWavNormalize ? 1 : 0; }, SetValue = (v) => { instrument.N163ResampleWavNormalize = v != 0;}, IsEnabled = () => { return instrument.N163ResampleWaveData != null && instrument.N163WavePreset == WavePresetType.Resample; } });
                     break;
 
                 case ExpansionType.Vrc6:
@@ -263,19 +274,7 @@ namespace FamiStudio
             return paramInfos.Count == 0 ? null : paramInfos.ToArray();
         }
 
-        readonly static string[] AlgorithmImageNames = new string[]
-        {
-            "Algorithm0",
-            "Algorithm1",
-            "Algorithm2",
-            "Algorithm3",
-            "Algorithm4",
-            "Algorithm5",
-            "Algorithm6",
-            "Algorithm7",
-        };
-
-        public static void CustomDrawAdsrGraph(RenderCommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawAdsrGraph(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
         {
             var g = c.Graphics;
             var instrument = userData1 as Instrument;
@@ -296,7 +295,7 @@ namespace FamiStudio
             var releaseEndX   = 0;
             var releaseEndY   = 0;
 
-            if (instrument.IsVrc7Instrument)
+            if (instrument.IsVrc7)
             {
                 var opAttackRate   = (instrument.Vrc7PatchRegs[op + 4] & 0xf0) >> 4; // "Carrier Attack"
                 var opDecayRate    = (instrument.Vrc7PatchRegs[op + 4] & 0x0f) >> 0; // "Carrier Decay"
@@ -334,7 +333,7 @@ namespace FamiStudio
                     releaseEndX = (graphWidth);
                 }
             }
-            else if (instrument.IsEpsmInstrument)
+            else if (instrument.IsEpsm)
             {
                 int opAttackRate   = (instrument.EpsmPatchRegs[7*op + 4] & 0x1f); //31
                 int opDecayRate    = (instrument.EpsmPatchRegs[7*op + 5] & 0x1f); //31
@@ -385,28 +384,27 @@ namespace FamiStudio
             var releaseGeo = new float[4, 2] { { releaseStartX, graphHeight }, { releaseEndX, graphHeight }, { releaseEndX, releaseEndY }, { releaseStartX, releaseStartY } }; 
             var line       = new float[5, 2] { { 0, graphHeight }, { decayStartX, decayStartY }, { sustainStartX, sustainStartY }, { releaseStartX, releaseStartY }, { releaseEndX, releaseEndY } };
 
-            var fillBrush  = c.Graphics.GetSolidBrush(Color.Black, 1, 0.3f);
-
-            c.FillAndDrawRectangle(0, graphPaddingTop, graphWidth, graphHeight, fillBrush, res.BlackBrush);
-            c.FillGeometry(attackGeo,  fillBrush);
-            c.FillGeometry(decayGeo,   fillBrush);
-            c.FillGeometry(sustainGeo, fillBrush);
-            c.FillGeometry(releaseGeo, fillBrush);
-            c.DrawLine(line, res.BlackBrush, 1, true);
+            var fillColor = Color.FromArgb(75, Color.Black);
+            c.FillAndDrawRectangle(0, graphPaddingTop, graphWidth, graphHeight, fillColor, Theme.BlackColor);
+            c.FillGeometry(attackGeo,  fillColor);
+            c.FillGeometry(decayGeo,   fillColor);
+            c.FillGeometry(sustainGeo, fillColor);
+            c.FillGeometry(releaseGeo, fillColor);
+            c.DrawLine(line, Theme.BlackColor, 1, true);
         }
 
-        public static void CustomDrawEpsmAlgorithm(RenderCommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawEpsmAlgorithm(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
         {
             var instrument = userData1 as Instrument;
-            var atlas = c.Graphics.GetBitmapAtlas(AlgorithmImageNames);
             var algo = instrument.EpsmPatchRegs[0] & 0x07;
-            var bmpSize = atlas.GetElementSize(algo);
+            var bmp = c.Graphics.GetBitmapAtlasRef($"Algorithm{algo}");
+            var bmpSize = bmp.ElementSize;
 
             var posX = (rect.Left + rect.Right)  / 2 - bmpSize.Width  / 2;
             var posY = (rect.Top  + rect.Bottom) / 2 - bmpSize.Height / 2;
 
-            c.FillAndDrawRectangle(rect, c.Graphics.GetSolidBrush(Color.Black, 1, 0.5f), res.BlackBrush);
-            c.DrawBitmapAtlas(atlas, algo, posX, posY);
+            c.FillAndDrawRectangle(rect, Color.FromArgb(128, Color.Black), Theme.BlackColor);
+            c.DrawBitmapAtlas(bmp, posX, posY);
         }
     }
 

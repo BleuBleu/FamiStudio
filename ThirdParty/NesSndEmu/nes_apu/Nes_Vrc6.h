@@ -22,10 +22,13 @@ public:
 	void output( Blip_Buffer* );
 	enum { osc_count = 3 };
 	void osc_output( int index, Blip_Buffer* );
+	void run_until(cpu_time_t);
 	void end_frame( cpu_time_t );
 	void save_snapshot( vrc6_snapshot_t* ) const;
 	void load_snapshot( vrc6_snapshot_t const& );
-	
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
+
 	// Oscillator 0 write-only registers are at $9000-$9002
 	// Oscillator 1 write-only registers are at $A000-$A002
 	// Oscillator 2 write-only registers are at $B000-$B002
@@ -55,6 +58,7 @@ private:
 		int last_amp;
 		int phase;
 		int amp; // only used by saw
+		int trigger;
 		
 		int period() const
 		{
@@ -70,7 +74,6 @@ private:
 	
 	short shadow_regs[shadow_regs_count];
 
-	void run_until( cpu_time_t );
 	void run_square( Vrc6_Osc& osc, cpu_time_t );
 	void run_saw( cpu_time_t );
 };

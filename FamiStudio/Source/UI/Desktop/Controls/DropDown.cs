@@ -1,0 +1,269 @@
+using System;
+
+namespace FamiStudio
+{
+    public class DropDown : Control
+    {
+        private const int MaxItemsInList = 10;
+
+        public delegate void SelectedIndexChangedDelegate(Control sender, int index);
+        public delegate void ListClosingDelegate(Control sender);
+
+        public event SelectedIndexChangedDelegate SelectedIndexChanged;
+        public event ListClosingDelegate ListClosing;
+
+        private BitmapAtlasRef bmpArrow;
+        private string[] items;
+        private int selectedIndex = 0;
+        private bool hover;
+        private bool listOpened;
+        private bool transparent;
+        private int listHover = -1;
+        private int listScroll = 0;
+        private int numItemsInList = 0;
+        private int largeStepSize = 1;
+        private bool draggingScrollbars;
+        private int captureScrollBarPos;
+        private int captureMouseY;
+        private int maxListScroll = 0;
+
+        private int margin         = DpiScaling.ScaleForWindow(4);
+        private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
+        private int rowHeight      = DpiScaling.ScaleForWindow(24);
+
+        public DropDown(Dialog dlg, string[] list, int index, bool trans = false) : base(dlg)
+        {
+            items = list;
+            selectedIndex = index;
+            height = rowHeight;
+            transparent = trans;
+            UpdateScrollParams();
+        }
+
+        public string Text => selectedIndex >= 0 && selectedIndex < items.Length ? items[selectedIndex] : null;
+
+        public int SelectedIndex
+        {
+            get { return selectedIndex; }
+            set 
+            {
+                if (value != selectedIndex)
+                {
+                    selectedIndex = value; 
+                    SelectedIndexChanged?.Invoke(this, value); 
+                    MarkDirty();
+                }
+            }
+        }
+
+        public void SetRowHeight(int h)
+        {
+            rowHeight = h;
+        }
+
+        public void SetItems(string[] newItems)
+        {
+            items = newItems;
+            if (selectedIndex >= items.Length)
+                selectedIndex = 0;
+            MarkDirty();
+            UpdateScrollParams();
+        }
+
+        protected override void OnRenderInitialized(Graphics g)
+        {
+            bmpArrow = g.GetBitmapAtlasRef("DropDownArrow");
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            MarkDirty();
+
+            if (enabled && e.Left)
+            {
+                if (listOpened && e.Y > rowHeight)
+                {
+                    if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
+                    {
+                        var y = e.Y - rowHeight;
+
+                        if (y < scrollBarPos)
+                        {
+                            listScroll = Math.Max(0, listScroll - largeStepSize);
+                        }
+                        else if (y > (scrollBarPos + scrollBarSize))
+                        {
+                            listScroll = Math.Min(maxListScroll, listScroll + largeStepSize);
+                        }
+                        else
+                        {
+                            Capture = true;
+                            draggingScrollbars = true;
+                            captureScrollBarPos = scrollBarPos;
+                            captureMouseY = e.Y;
+                        }
+
+                        return;
+                    }
+
+                    SelectedIndex = listScroll + (e.Y - rowHeight) / rowHeight;
+                }
+
+                SetListOpened(!listOpened);
+            }
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (draggingScrollbars)
+            {
+                draggingScrollbars = false;
+                Capture = false;
+                MarkDirty();
+            }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.Key == Keys.Escape)
+            {
+                SetListOpened(false);
+                ClearDialogFocus();
+                e.Handled = true;
+            }
+        }
+
+        public void SetListOpened(bool open)
+        {
+            if (open != listOpened)
+            {
+                if (listOpened)
+                    ListClosing?.Invoke(this);
+                listOpened = open;
+            }
+
+            height = rowHeight + (listOpened ? Math.Min(items.Length, MaxItemsInList) * rowHeight : 0);
+            listScroll = Math.Min(selectedIndex, maxListScroll);
+        }
+
+        private void UpdateScrollParams()
+        {
+            largeStepSize = Math.Min(4, items.Length / 20); 
+            maxListScroll = Math.Max(0, items.Length - MaxItemsInList);
+            numItemsInList = Math.Min(items.Length, MaxItemsInList);
+        }
+
+        private void UpdateListHover(MouseEventArgs e)
+        {
+            if (listOpened && e.X < width - scrollBarWidth)
+                SetAndMarkDirty(ref listHover, listScroll + (e.Y - rowHeight) / rowHeight);
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            if (draggingScrollbars)
+            {
+                GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
+                var newScrollBarPos = captureScrollBarPos + (e.Y - captureMouseY);
+                var ratio = newScrollBarPos / (float)(numItemsInList * rowHeight - scrollBarSize);
+                var newListScroll = Utils.Clamp((int)Math.Round(ratio * maxListScroll), 0, maxListScroll);
+                SetAndMarkDirty(ref listScroll, newListScroll);
+            }
+            else
+            {
+                SetAndMarkDirty(ref hover, e.Y < rowHeight && !listOpened);
+                UpdateListHover(e);
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            SetAndMarkDirty(ref hover, false);
+            SetAndMarkDirty(ref listHover, -1);
+        }
+
+        protected override void OnLostDialogFocus()
+        {
+            SetListOpened(false);
+        }
+
+        private bool GetScrollBarParams(out int pos, out int size)
+        {
+            if (items.Length > MaxItemsInList)
+            {
+                var scrollAreaSize = numItemsInList * rowHeight;
+                var minScrollBarSizeY = scrollAreaSize / 4;
+                var scrollY = listScroll * rowHeight;
+                var maxScrollY = maxListScroll * rowHeight;
+
+                size = Math.Max(minScrollBarSizeY, (int)Math.Round(scrollAreaSize * Math.Min(1.0f, scrollAreaSize / (float)(maxScrollY + scrollAreaSize))));
+                pos  = (int)Math.Round((scrollAreaSize - size) * (scrollY / (float)maxScrollY));
+
+                return true;
+            }
+
+            pos  = 0;
+            size = 0;
+            return false;
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            var sign = e.ScrollY < 0 ? 1 : -1;
+
+            if (!enabled || sign == 0)
+                return;
+
+            if (listOpened)
+            {
+                SetAndMarkDirty(ref listScroll, Utils.Clamp(listScroll + sign * largeStepSize, 0, maxListScroll));
+                UpdateListHover(e);
+            }
+            else
+            {
+                SelectedIndex = Utils.Clamp(selectedIndex + sign, 0, items.Length - 1);
+            }
+        }
+
+        protected override void OnRender(Graphics g)
+        {
+            var bmpSize = bmpArrow.ElementSize;
+            var cb = parentDialog.CommandList;
+            var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
+
+            if (!transparent)
+                cb.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover && enabled ? Theme.DarkGreyColor3 : Theme.DarkGreyColor1, color);
+            
+            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyColor2 : color);
+
+            if (selectedIndex >= 0)
+                cb.DrawText(items[selectedIndex], FontResources.FontMedium, margin, 0, color, TextFlags.MiddleLeft, 0, rowHeight);
+
+            if (listOpened)
+            {
+                var cf = parentDialog.CommandListForeground;
+                var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
+                var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
+
+                cf.PushTranslation(0, rowHeight);
+                cf.FillAndDrawRectangle(0, 0, width - 1, numItemsInList * rowHeight - 1, Theme.DarkGreyColor1, Theme.LightGreyColor1);
+
+                for (int i = 0; i < numItemsInList; i++)
+                {
+                    var absItemIndex = i + listScroll;
+                    if (absItemIndex == selectedIndex || absItemIndex == listHover)
+                        cf.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, absItemIndex == selectedIndex ? Theme.DarkGreyColor4 : Theme.DarkGreyColor3);
+                    cf.DrawText(items[absItemIndex], FontResources.FontMedium, margin, i * rowHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
+                }
+
+                if (hasScrollBar)
+                {
+                    cf.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, MaxItemsInList * rowHeight - 1, Theme.DarkGreyColor4, Theme.LightGreyColor1);
+                    cf.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize - 1, Theme.MediumGreyColor1, Theme.LightGreyColor1);
+                }
+
+                cf.PopTransform();
+            }
+        }
+    }
+}

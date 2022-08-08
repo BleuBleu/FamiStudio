@@ -1,20 +1,21 @@
 /*
- * Copyright (C) 2017-2018 Alexey Khokholov (Nuke.YKT)
+ * Copyright (C) 2017-2021 Alexey Khokholov (Nuke.YKT)
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * This file is part of Nuked OPN2.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
  *  Nuked OPN2(Yamaha YM3438) emulator.
  *  Thanks:
@@ -658,6 +659,8 @@ void OPN2_PhaseCalcIncrement(ym3438_t *chip)
     basefreq &= 0x1ffff;
     chip->pg_inc[slot] = (basefreq * chip->multi[slot]) >> 1;
     chip->pg_inc[slot] &= 0xfffff;
+    if (slot < 6)
+        chip->trigger_basefreq[slot] = basefreq;
 }
 
 void OPN2_PhaseGenerate(ym3438_t *chip)
@@ -677,6 +680,47 @@ void OPN2_PhaseGenerate(ym3438_t *chip)
     }
     chip->pg_phase[slot] += chip->pg_inc[slot];
     chip->pg_phase[slot] &= 0xfffff;
+}
+
+Bit8u gcd(Bit8u a, Bit8u b)
+{
+	while (b != 0) 
+    {
+        Bit8u r = a % b;
+		a = b;
+		b = r;
+	}
+
+    return a;
+}
+
+void OPN2_UpdateTriggers(ym3438_t* chip)
+{
+    if (chip->cycles < 6)
+    {
+        Bit32u chan = chip->channel;
+
+        // The period of the generated waveform is the greatest common denominator of all four operators. 
+        Bit8u gcd_multi = gcd(gcd(gcd(chip->multi[chan + 0], chip->multi[chan + 6]), chip->multi[chan + 12]), chip->multi[chan + 18]);
+
+        // We maintain a separate increment and phase, we don't include everything that affects the phase. 
+        // We simply care about the base frequency and the common multiplier.
+	    Bit32u prev_trigger_phase = chip->trigger_phase[chan] & 0xfffff;
+
+		if (chip->pg_reset[chan])
+			chip->trigger_phase[chan] = 0;
+
+        Bit32u phase_inc = (chip->trigger_basefreq[chan] * gcd_multi) >> 1;
+
+        chip->trigger_phase[chan] += phase_inc;
+        chip->trigger_phase[chan] &= 0xfffff;
+
+        // When the phase loops around, this is our trigger!
+	    if (chip->trigger_phase[chan] < prev_trigger_phase)
+		    chip->triggers[chan] = 1;
+        else if (phase_inc == 0)
+			chip->triggers[chan] = 2;
+    }
 }
 
 void OPN2_EnvelopeSSGEG(ym3438_t *chip)
@@ -1077,7 +1121,11 @@ void OPN2_ChGenerate(ym3438_t *chip)
 
     if (op == 0 || test_dac)
     {
-        chip->ch_out[channel] = chip->ch_acc[channel];
+    Bit16u mask = chip->mask;
+        if(!(mask & (1 << channel)))
+            chip->ch_out[channel] = chip->ch_acc[channel];
+        else
+            chip->ch_out[channel] = 0;
     }
     chip->ch_acc[channel] = sum;
 }
@@ -1281,8 +1329,15 @@ void OPNmod_RhythmGenerate(ym3438_t* chip)
 			out = ((chip->rhythm_adpcm_acc[channel] * chip->rhythm_vol_mul[channel]) >> chip->rhythm_vol_shift[channel]) & ~3; /* multiply, shift and mask out 2 LSB bits */
 
 		end:
-			chip->rhythml[channel] = panl ? (out >> 1) : 0;
-			chip->rhythmr[channel] = panr ? (out >> 1) : 0;
+            Bit16u mask = chip->mask;
+            if(!((mask >> 6) & (1 << (channel)))){
+			    chip->rhythml[channel] = panl ? (out >> 1) : 0;
+			    chip->rhythmr[channel] = panr ? (out >> 1) : 0;
+            }
+            else{
+			    chip->rhythml[channel] = 0;
+			    chip->rhythmr[channel] = 0;
+            }
 		}
 	}
 }
@@ -1521,13 +1576,22 @@ void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
         chip->eg_cycle_stop = 0;
     }
 
+    if (chip->cycles == 0)
+    {
+	    for (Bit8u i = 0; i < 6; i++)
+		    chip->triggers[i] = 0;
+    }
 
-        OPN2_DoIO(chip);
-    if (misc) {
+    OPN2_DoIO(chip);
+
+    if (misc) 
+    {
         OPN2_DoTimerA(chip);
         OPN2_DoTimerB(chip);
     }
-    if (fm){
+
+    if (fm)
+    {
         OPN2_KeyOn(chip);
 
         OPN2_ChOutput(chip);
@@ -1536,18 +1600,24 @@ void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
         OPN2_FMPrepare(chip);
         OPN2_FMGenerate(chip);
     }
-    if (rythm) {
+
+    if (rythm) 
+    {
         OPNmod_RhythmGenerate(chip);
     }
-    if (fm) {
+
+    if (fm)
+    {
         OPN2_PhaseGenerate(chip);
         OPN2_PhaseCalcIncrement(chip);
+        OPN2_UpdateTriggers(chip);
 
         OPN2_EnvelopeADSR(chip);
         OPN2_EnvelopeGenerate(chip);
         OPN2_EnvelopeSSGEG(chip);
         OPN2_EnvelopePrepare(chip);
     }
+
     /* Prepare fnum & block */
     if (chip->mode_ch3)
     {
@@ -1598,6 +1668,15 @@ void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
     if (chip->status_time)
         chip->status_time--;
 }
+
+void OPN2_MuteChannel(ym3438_t *chip, Bit16u mask)
+{
+  if(chip)
+  {
+    chip->mask = mask;
+  }
+}
+
 
 void OPN2_Write(ym3438_t *chip, Bit32u port, Bit8u data)
 {

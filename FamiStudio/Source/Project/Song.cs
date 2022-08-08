@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 
 namespace FamiStudio
 {
@@ -898,14 +897,32 @@ namespace FamiStudio
                     {
                         GetPatternCustomSettings(p).patternLength = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(localPatternLength, localGroove, localGroovePadMode);
                         GetPatternCustomSettings(p).beatLength    = Utils.Sum(localGroove);
+                        GetPatternCustomSettings(p).groove        = new[] { 1 };
                     }
                 }
 
                 patternLength = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(patternLength, groove, groovePaddingMode);
                 beatLength    = Utils.Sum(groove);
+                groove        = new [] { 1 };
 
                 UpdatePatternStartNotes();
                 InvalidateCumulativePatternCache();
+            }
+        }
+
+        public void ClearCustomPatternSettingsForFamitrackerTempo()
+        {
+            Debug.Assert(UsesFamiTrackerTempo);
+
+            for (int p = 0; p < songLength; p++)
+            {
+                if (PatternHasCustomSettings(p))
+                {
+                    var settings = GetPatternCustomSettings(p);
+                    settings.noteLength = 0;
+                    settings.groovePaddingMode = GroovePaddingType.Middle;
+                    settings.groove = null;
+                }
             }
         }
 

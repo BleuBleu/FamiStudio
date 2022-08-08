@@ -32,6 +32,11 @@ namespace FamiStudio
             return val;
         }
 
+        public static float Saturate(float val)
+        {
+            return Clamp(val, 0.0f, 1.0f);
+        }
+
         public static float Lerp(float v0, float v1, float alpha)
         {
             return v0 * (1.0f - alpha) + v1 * alpha;
@@ -40,6 +45,13 @@ namespace FamiStudio
         public static double Lerp(double v0, double v1, double alpha)
         {
             return v0 * (1.0 - alpha) + v1 * alpha;
+        }
+
+        public static float BiLerp(float v00, float v01, float v10, float v11, float alpha0, float alpha1)
+        {
+            var l0 = Lerp(v00, v01, alpha0);
+            var l1 = Lerp(v10, v11, alpha0);
+            return Lerp(l0, l1, alpha1);
         }
 
         public static bool IsNearlyEqual(float a, float b, float delta = 1e-5f)
@@ -104,27 +116,27 @@ namespace FamiStudio
                     break;
             }
 
-            return int.Parse(s.Substring(0, idx));
+            return idx == 0 ? 0 : int.Parse(s.Substring(0, idx));
         }
 
         public static int RoundDownAndClamp(int x, int factor, int min)
         {
-            return Math.Max((x & ~(factor- 1)), min);
+            return Math.Max(RoundDown(x, factor), min);
         }
 
         public static int RoundUpAndClamp(int x, int factor, int max)
         {
-            return Math.Min((x + factor - 1) & ~(factor - 1), max);
+            return Math.Min(RoundUp(x, factor), max);
         }
 
         public static int RoundDown(int x, int factor)
         {
-            return (x & ~(factor - 1));
+            return (x / factor) * factor;
         }
 
         public static int RoundUp(int x, int factor)
         {
-            return (x + factor - 1) & ~(factor - 1);
+            return ((x + factor - 1) / factor) * factor;
         }
 
         public static int DivideAndRoundUp(int x, int y)
@@ -173,6 +185,13 @@ namespace FamiStudio
             i = i - ((i >> 1) & 0x55555555);
             i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
             return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+        }
+
+        public static int NumberOfSetBits(long i)
+        {
+            i = i - ((i >> 1) & 0x5555555555555555L);
+            i = (i & 0x3333333333333333L) + ((i >> 2) & 0x3333333333333333L);
+            return (int)(unchecked(((i + (i >> 4)) & 0xF0F0F0F0F0F0F0FL) * 0x101010101010101L) >> 56);
         }
 
         static readonly byte[] BitLookups = new byte[]
@@ -337,11 +356,6 @@ namespace FamiStudio
             return 0;
         }
 
-        public static string ForceASCII(string str)
-        {
-            return System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(str));
-        }
-
         public static int ComputeScrollAmount(int pos, int maxPos, int marginSize, float factor, bool minSide)
         {
             var diff = minSide ? pos - maxPos : maxPos - pos;
@@ -354,6 +368,18 @@ namespace FamiStudio
             var dotIdx = version.LastIndexOf('.');
             betaNumber = int.Parse(version.Substring(dotIdx + 1), CultureInfo.InvariantCulture);
             return version.Substring(0, dotIdx);
+        }
+
+        public static int InterlockedMax(ref int location, int value)
+        {
+            int initialValue, newValue;
+            do
+            {
+                initialValue = location;
+                newValue = Math.Max(initialValue, value);
+            }
+            while (Interlocked.CompareExchange(ref location, newValue, initialValue) != initialValue);
+            return initialValue;
         }
 
         public static void NonBlockingParallelFor(int numItems, int maxThreads, ThreadSafeCounter counter, Func<int, int, bool> action)

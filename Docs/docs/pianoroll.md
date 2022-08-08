@@ -157,7 +157,7 @@ In this example, the first note will have an attack, while the second one will n
 
 ![](images/NoAttack.png#center)
 
-Since envelopes are not resetted, this means that if a note was released, it will remain released if the subsequent notes have no attack.
+Since envelopes are not reset, this means that if a note was released, it will remain released if the subsequent notes have no attack.
 
 ![](images/NoAttackReleased.png#center)
 

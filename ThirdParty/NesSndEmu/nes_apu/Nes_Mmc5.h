@@ -18,8 +18,11 @@ public:
 	void output(Blip_Buffer*);
 	void osc_output(int index, Blip_Buffer*);
 	void end_frame(cpu_time_t);
+	void run_until(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	void get_register_values(struct mmc5_register_values* regs);
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
 
 	enum { start_addr = 0x5000 };
 	enum { end_addr   = 0x5015 };
@@ -52,8 +55,6 @@ private:
 	int osc_enables;
 
 	short shadow_regs[shadow_regs_count];
-
-	void run_until(cpu_time_t);
 };
 
 // Must match the definition in NesApu.cs.

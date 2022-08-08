@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Drawing;
 using System.Diagnostics;
 using System.Collections.Generic;
 
@@ -13,22 +12,32 @@ namespace FamiStudio
         private int expansion = ExpansionType.None;
         private Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         private Color color;
+        private Project project;
 
         // FDS
-        private byte fdsMasterVolume = FdsMasterVolumeType.Volume100;
-        private byte fdsWavPreset = WavePresetType.Sine;
-        private byte fdsModPreset = WavePresetType.Flat;
-        private ushort fdsModSpeed;
-        private byte fdsModDepth;
-        private byte fdsModDelay;
+        private byte    fdsMasterVolume = FdsMasterVolumeType.Volume100;
+        private byte    fdsWavPreset = WavePresetType.Sine;
+        private byte    fdsModPreset = WavePresetType.Flat;
+        private ushort  fdsModSpeed;
+        private byte    fdsModDepth;
+        private byte    fdsModDelay;
+        private int     fdsResampleWavPeriod = 128;
+        private int     fdsResampleWavOffset = 0;
+        private bool    fdsResampleWavNormalize = true;
+        private short[] fdsResampleWavData;
 
         // N163
-        private byte n163WavePreset = WavePresetType.Sine;
-        private byte n163WaveSize = 16;
-        private byte n163WavePos = 0;
+        private byte    n163WavPreset = WavePresetType.Sine;
+        private byte    n163WavSize = 16;
+        private byte    n163WavPos = 0;
+        private byte    n163WavCount = 1;
+        private int     n163ResampleWavPeriod = 128;
+        private int     n163ResampleWavOffset = 0;
+        private bool    n163ResampleWavNormalize = true;
+        private short[] n163ResampleWavData;
 
         // VRC6
-        private byte vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Half; 
+        private byte vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Half;
 
         // VRC7
         private byte vrc7Patch = Vrc7InstrumentPatch.Bell;
@@ -38,6 +47,7 @@ namespace FamiStudio
         private byte epsmPatch = EpsmInstrumentPatch.Default;
         private byte[] epsmPatchRegs = new byte[31];
 
+        // For N163/FDS wav presets.
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.ShortNames[expansion]})");
@@ -45,29 +55,44 @@ namespace FamiStudio
         public int Expansion => expansion;
         public bool IsExpansionInstrument => expansion != ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
-        public int NumActiveEnvelopes => envelopes.Count(e => e != null);
-        public bool HasReleaseEnvelope => envelopes[EnvelopeType.Volume] != null && envelopes[EnvelopeType.Volume].Release >= 0;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
         public byte[] EpsmPatchRegs => epsmPatchRegs;
+        public bool CanRelease =>
+            VolumeEnvelope         != null && VolumeEnvelope.Release         >= 0 ||
+            WaveformRepeatEnvelope != null && WaveformRepeatEnvelope.Release >= 0 ||
+            expansion == ExpansionType.Vrc7 || 
+            expansion == ExpansionType.EPSM;
 
-        public bool IsRegularInstrument => expansion == ExpansionType.None;
-        public bool IsFdsInstrument     => expansion == ExpansionType.Fds;
-        public bool IsVrc6Instrument    => expansion == ExpansionType.Vrc6;
-        public bool IsVrc7Instrument    => expansion == ExpansionType.Vrc7;
-        public bool IsN163Instrument    => expansion == ExpansionType.N163;
-        public bool IsS5BInstrument     => expansion == ExpansionType.S5B;
-        public bool IsEpsmInstrument    => expansion == ExpansionType.EPSM;
+        public bool IsRegular => expansion == ExpansionType.None;
+        public bool IsFds     => expansion == ExpansionType.Fds;
+        public bool IsVrc6    => expansion == ExpansionType.Vrc6;
+        public bool IsVrc7    => expansion == ExpansionType.Vrc7;
+        public bool IsN163    => expansion == ExpansionType.N163;
+        public bool IsS5B     => expansion == ExpansionType.S5B;
+        public bool IsEpsm    => expansion == ExpansionType.EPSM;
+
+        public Envelope VolumeEnvelope         => envelopes[EnvelopeType.Volume];
+        public Envelope PitchEnvelope          => envelopes[EnvelopeType.Pitch];
+        public Envelope ArpeggioEnvelope       => envelopes[EnvelopeType.Arpeggio];
+        public Envelope N163WaveformEnvelope   => envelopes[EnvelopeType.N163Waveform];
+        public Envelope FdsWaveformEnvelope    => envelopes[EnvelopeType.FdsWaveform];
+        public Envelope FdsModulationEnvelope  => envelopes[EnvelopeType.FdsModulation];
+        public Envelope WaveformRepeatEnvelope => envelopes[EnvelopeType.WaveformRepeat];
+
+        public const int MaxResampleWavSamples = 12000;
 
         public Instrument()
         {
         }
 
-        public Instrument(int id, int expansion, string name)
+        public Instrument(Project project, int id, int expansion, string name)
         {
+            this.project = project;
             this.id = id;
             this.expansion = expansion;
             this.name = name;
             this.color = Theme.RandomCustomColor();
+
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
                 if (IsEnvelopeActive(i))
@@ -118,13 +143,41 @@ namespace FamiStudio
             {
                 return expansion == ExpansionType.N163;
             }
+            else if (envelopeType == EnvelopeType.WaveformRepeat)
+            {
+                return expansion == ExpansionType.N163;
+            }
 
             return false;
+        }
+
+        public bool IsEnvelopeVisible(int envelopeType)
+        {
+            return envelopeType != EnvelopeType.WaveformRepeat;
         }
 
         public bool IsEnvelopeEmpty(int envelopeType)
         {
             return envelopes[envelopeType].IsEmpty(envelopeType);
+        }
+
+        public static bool EnvelopeHasRepeat(int envelopeType)
+        {
+            return envelopeType == EnvelopeType.N163Waveform;
+        }
+
+        public int NumVisibleEnvelopes
+        {
+            get 
+            {
+                var count = 0;
+                for (int i = 0; i < EnvelopeType.Count; i++)
+                {
+                    if (envelopes[i] != null && IsEnvelopeVisible(i))
+                        count++;
+                }
+                return count;
+            }
         }
 
         public byte FdsWavePreset
@@ -147,39 +200,104 @@ namespace FamiStudio
             }
         }
 
+        public int FdsMaxWaveCount
+        {
+            get
+            {
+                return Math.Min(64, FdsWaveformEnvelope.Values.Length / 64);
+            }
+        }
+
+        public int FdsResampleWavePeriod
+        {
+            get { return fdsResampleWavPeriod; }
+            set { fdsResampleWavPeriod = Math.Max(1, value); ResampleWaveform(); }
+        }
+
+        public int FdsResampleWaveOffset
+        {
+            get { return fdsResampleWavOffset; }
+            set { fdsResampleWavOffset = value; ResampleWaveform(); }
+        }
+
+        public bool FdsResampleWavNormalize
+        {
+            get { return fdsResampleWavNormalize; }
+            set { fdsResampleWavNormalize = value; ResampleWaveform(); }
+        }
+
+        public short[] FdsResampleWaveData => fdsResampleWavData;
+
         public byte N163WavePreset
         {
-            get { return n163WavePreset; }
+            get { return n163WavPreset; }
             set
             {
-                n163WavePreset = value;
+                n163WavPreset = value;
                 UpdateN163WaveEnvelope();
             }
         }
 
         public byte N163WaveSize
         {
-            get { return n163WaveSize; }
+            get { return n163WavSize; }
             set
             {
                 Debug.Assert((value & 0x03) == 0);
-                n163WaveSize = (byte)Utils.Clamp(value       & 0xfc, 4, 248);
-                n163WavePos  = (byte)Utils.Clamp(n163WavePos & 0xfc, 0, 248 - n163WaveSize);
+                n163WavSize = (byte)Utils.Clamp(value      & 0xfc, 4, N163MaxWaveSize);
+                n163WavPos  = (byte)Utils.Clamp(n163WavPos & 0xfc, 0, N163MaxWavePos);
+                ClampN163WaveCount();
                 UpdateN163WaveEnvelope();
             }
         }
 
         public byte N163WavePos
         {
-            get { return n163WavePos; }
+            get { return n163WavPos; }
             set
             {
                 Debug.Assert((value & 0x03) == 0);
-                n163WavePos  = (byte)Utils.Clamp(value        & 0xfc, 0, 248);
-                n163WaveSize = (byte)Utils.Clamp(n163WaveSize & 0xfc, 4, 248 - n163WavePos);
+                n163WavPos  = (byte)Utils.Clamp(value       & 0xfc, 0, N163MaxWavePos);
+                n163WavSize = (byte)Utils.Clamp(n163WavSize & 0xfc, 4, N163MaxWaveSize);
+                ClampN163WaveCount();
+                UpdateN163WaveEnvelope();
             }
         }
-        
+
+        public byte N163WaveCount
+        {
+            get { return n163WavCount; }
+            set
+            {
+                n163WavCount = (byte)Utils.Clamp(value, 1, N163MaxWaveCount);
+                UpdateN163WaveEnvelope();
+            }
+        }
+
+        public int N163MaxWaveSize  => project.N163WaveRAMSize * 2 - n163WavPos;
+        public int N163MaxWavePos   => project.N163WaveRAMSize * 2 - 4;
+        public int N163MaxWaveCount => Math.Min(64, N163WaveformEnvelope.Values.Length / n163WavSize); 
+
+        public int N163ResampleWavePeriod
+        {
+            get { return n163ResampleWavPeriod; }
+            set { n163ResampleWavPeriod = Math.Max(1, value); ResampleWaveform(); }
+        }
+
+        public int N163ResampleWaveOffset
+        {
+            get { return n163ResampleWavOffset; }
+            set { n163ResampleWavOffset = value; ResampleWaveform();  }
+        }
+
+        public bool N163ResampleWavNormalize
+        {
+            get { return n163ResampleWavNormalize; }
+            set { n163ResampleWavNormalize = value; ResampleWaveform(); }
+        }
+
+        public short[] N163ResampleWaveData => n163ResampleWavData;
+
         public byte Vrc6SawMasterVolume
         {
             get { return vrc6SawMasterVolume; }
@@ -213,20 +331,143 @@ namespace FamiStudio
         public byte   FdsModDelay     { get => fdsModDelay;     set => fdsModDelay = value; } 
         public byte   FdsMasterVolume { get => fdsMasterVolume; set => fdsMasterVolume = value; }
 
-        public void UpdateFdsWaveEnvelope()
-        {
-            envelopes[EnvelopeType.FdsWaveform].SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
-        }
-
         public void UpdateFdsModulationEnvelope()
         {
-            envelopes[EnvelopeType.FdsModulation].SetFromPreset(EnvelopeType.FdsModulation, fdsModPreset);
+            FdsModulationEnvelope.SetFromPreset(EnvelopeType.FdsModulation, fdsModPreset);
+        }
+
+        public void UpdateFdsWaveEnvelope()
+        {
+            if (fdsWavPreset == WavePresetType.Resample)
+                ResampleWaveform();
+            else
+                FdsWaveformEnvelope.SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
+        }
+
+        public void SetFdsResampleWaveData(short[] wav)
+        {
+            Debug.Assert(wav.Length <= MaxResampleWavSamples);
+            fdsResampleWavData = wav;
+            fdsWavPreset = WavePresetType.Resample;
+            UpdateFdsWaveEnvelope();
+        }
+
+        public void DeleteFdsResampleWavData()
+        {
+            fdsResampleWavData = null;
+            if (fdsWavPreset == WavePresetType.Resample)
+                fdsWavPreset = WavePresetType.Custom;
         }
 
         public void UpdateN163WaveEnvelope()
         {
-            envelopes[EnvelopeType.N163Waveform].MaxLength = n163WaveSize;
-            envelopes[EnvelopeType.N163Waveform].SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
+            var wavEnv = N163WaveformEnvelope;
+            var repEnv = WaveformRepeatEnvelope;
+
+            wavEnv.MaxLength = N163MaxWaveCount * n163WavSize;
+            wavEnv.ChunkLength = n163WavSize;
+            wavEnv.Length = n163WavSize * n163WavCount;
+            repEnv.Length = n163WavCount;
+            repEnv.SetLoopReleaseUnsafe(wavEnv.Loop >= 0 ? wavEnv.Loop / n163WavSize : -1, wavEnv.Release >= 0 ? wavEnv.Release / n163WavSize : -1);
+
+            if (n163WavPreset == WavePresetType.Resample)
+                ResampleWaveform();
+            else
+                wavEnv.SetFromPreset(EnvelopeType.N163Waveform, n163WavPreset);
+        }
+
+        public void SetN163ResampleWaveData(short[] wav)
+        {
+            Debug.Assert(wav.Length <= MaxResampleWavSamples);
+            n163ResampleWavData = wav;
+            n163WavPreset = WavePresetType.Resample;
+            UpdateN163WaveEnvelope();
+        }
+
+        public void DeleteN163ResampleWavData()
+        {
+            n163ResampleWavData = null;
+            if (n163WavPreset == WavePresetType.Resample)
+                n163WavPreset = WavePresetType.Custom;
+        }
+
+        private void ResampleWaveform()
+        {
+            Debug.Assert(IsN163 || IsFds);
+
+            var wavData = IsN163 ? n163ResampleWavData : fdsResampleWavData;
+
+            if (wavData != null)
+            {
+                var isN163 = IsN163;
+
+                var waveCount     = isN163 ? n163WavCount : 1;
+                var waveSize      = isN163 ? n163WavSize  : 64;
+                var waveNormalize = isN163 ? n163ResampleWavNormalize : fdsResampleWavNormalize;
+                var wavePeriod    = isN163 ? n163ResampleWavPeriod    : fdsResampleWavPeriod;
+                var waveOffset    = isN163 ? n163ResampleWavOffset    : fdsResampleWavOffset;
+
+                var wavFiltered = wavData.Clone() as short[];
+                if (waveNormalize)
+                    WaveUtils.Normalize(wavFiltered);
+
+                var cutoff = waveSize / (float)wavePeriod;
+                WaveUtils.LowPassFilter(ref wavFiltered, cutoff, cutoff * 0.8f, 64);
+
+                var resampling = new short[waveCount * waveSize];
+                WaveUtils.Resample(wavFiltered, waveOffset, waveOffset + waveCount * wavePeriod, resampling);
+
+                var envType = IsN163 ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
+                Envelope.GetMinMaxValueForType(this, envType, out var minValue, out var maxValue);
+
+                var env = envelopes[envType];
+                for (int i = 0; i < resampling.Length; i++)
+                    env.Values[i] = (sbyte)Utils.Lerp(minValue, maxValue, (resampling[i] + 32768.0f) / 65535.0f);
+            }
+        }
+
+        public void PerformPostLoadActions()
+        {
+            switch (expansion)
+            {
+                case ExpansionType.N163:
+                    N163WaveformEnvelope.SetChunkMaxLengthUnsafe(n163WavSize, N163MaxWaveCount * n163WavSize);
+                    UpdateN163WaveEnvelope(); // Safety
+                    break;
+            }
+        }
+
+        public void NotifyEnvelopeChanged(int envType, bool invalidatePreset)
+        {
+            switch (envType)
+            {
+                case EnvelopeType.N163Waveform:
+                    n163WavCount = (byte)(N163WaveformEnvelope.Length / N163WaveformEnvelope.ChunkLength);
+                    if (invalidatePreset)
+                        n163WavPreset = WavePresetType.Custom;
+                    UpdateN163WaveEnvelope();
+                    break;
+                case EnvelopeType.FdsWaveform:
+                    if (invalidatePreset)
+                        fdsWavPreset = WavePresetType.Custom;
+                    UpdateFdsWaveEnvelope();
+                    break;
+                case EnvelopeType.FdsModulation:
+                    if (invalidatePreset)
+                        fdsModPreset = WavePresetType.Custom;
+                    break;
+            }
+        }
+
+        public void NotifyN163RAMSizeChanged()
+        {
+            if (IsN163)
+                N163WavePos = N163WavePos;
+        }
+
+        private void ClampN163WaveCount()
+        {
+            n163WavCount = (byte)Utils.Clamp(n163WavCount, 1, N163MaxWaveCount);
         }
 
         public static string GetVrc7PatchName(int preset)
@@ -237,6 +478,65 @@ namespace FamiStudio
         public static string GetEpsmPatchName(int preset)
         {
             return EpsmInstrumentPatch.Infos[preset].name;
+        }
+
+        // Convert from our "repeat" based representation to the "index" based
+        // representation used by our NSF driver and FamiTracker. Will optimize
+        // duplicated sub-waveforms.
+        public void BuildWaveformsAndWaveIndexEnvelope(out byte[][] waves, out Envelope indexEnvelope, bool encode)
+        {
+            Debug.Assert(IsFds || IsN163);
+
+            var sourceWaveCount = IsN163 ? N163WaveCount : 1;
+            var waveSize        = IsN163 ? N163WaveSize  : 64;
+
+            var env = IsN163 ? N163WaveformEnvelope : FdsWaveformEnvelope;
+            var rep = WaveformRepeatEnvelope;
+
+            // Compute CRCs, this will eliminate duplicates.
+            var waveCrcs = new Dictionary<uint, int>();
+            var waveIndexOldToNew = new int[sourceWaveCount];
+            var waveCount = 0;
+
+            for (int i = 0; i < sourceWaveCount; i++)
+            {
+                var crc = CRC32.Compute(env.Values, i * waveSize, waveSize);
+
+                if (waveCrcs.TryGetValue(crc, out var existingIndex))
+                {
+                    waveIndexOldToNew[i] = existingIndex;
+                }
+                else
+                {
+                    waveCrcs[crc] = waveCount;
+                    waveIndexOldToNew[i] = waveCount;
+                    waveCount++;
+                }
+            }
+
+            var waveIndexNewToOld = new int[waveCount];
+            for (int i = sourceWaveCount - 1; i >= 0; i--)
+                waveIndexNewToOld[waveIndexOldToNew[i]] = i;
+
+            // Create the wave index envelope.
+            indexEnvelope = rep.CreateWaveIndexEnvelope();
+           
+            // Remap the indices in the wave index envelope.
+            for (int i = 0; i < indexEnvelope.Values.Length; i++)
+                indexEnvelope.Values[i] = (sbyte)waveIndexOldToNew[indexEnvelope.Values[i]];
+
+            // Create the individual waveforms.
+            waves = new byte[waveCount][];
+
+            for (int i = 0; i < waveCount; i++)
+            {
+                var oldIndex = waveIndexNewToOld[i];
+
+                if (IsN163 && encode)
+                    waves[i] = env.GetN163Waveform(oldIndex);
+                else
+                    waves[i] = env.GetChunk(oldIndex);
+            }
         }
 
         public uint ComputeCRC(uint crc = 0)
@@ -260,13 +560,40 @@ namespace FamiStudio
 
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
-                bool envelopeExists = envelopes[i] != null;
-                bool envelopeShouldExists = IsEnvelopeActive(i);
+                var env = envelopes[i];
+                var envelopeExists = env != null;
+                var envelopeShouldExists = IsEnvelopeActive(i);
+
                 Debug.Assert(envelopeExists == envelopeShouldExists);
 
                 if (envelopeExists)
-                    Debug.Assert(envelopes[i].ValuesInValidRange(this, i));
+                {
+                    Debug.Assert(env.Length % env.ChunkLength == 0);
+                    Debug.Assert(env.ValuesInValidRange(this, i));
+
+                    if (i == EnvelopeType.N163Waveform)
+                    {
+                        var rep = WaveformRepeatEnvelope;
+
+                        Debug.Assert(env.ChunkLength == n163WavSize);
+                        Debug.Assert(env.Length == n163WavSize * n163WavCount);
+                        Debug.Assert(env.Length / env.ChunkLength == rep.Length);
+                        Debug.Assert(env.Loop < 0 && rep.Loop < 0 || rep.Loop == env.Loop / n163WavSize);
+                        Debug.Assert(env.Release < 0 && rep.Release < 0 || rep.Release == env.Release / n163WavSize);
+                    }
+
+                    if (i == EnvelopeType.FdsWaveform)
+                    {
+                        Debug.Assert(env.Length == 64);
+                        Debug.Assert(env.MaxLength == 64);
+                    }
+                }
             }
+
+            if (IsN163 && n163WavPreset != WavePresetType.Custom)
+                Debug.Assert(N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset));
+            if (IsFds && fdsWavPreset != WavePresetType.Custom)
+                Debug.Assert(FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset));
 #endif
         }
 
@@ -282,6 +609,9 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
+            if (buffer.IsReading)
+                project = buffer.Project;
+
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
             buffer.Serialize(ref color);
@@ -308,58 +638,40 @@ namespace FamiStudio
                             buffer.Serialize(ref fdsModSpeed);
                             buffer.Serialize(ref fdsModDepth); 
                             buffer.Serialize(ref fdsModDelay);
+                            // At version 14 (FamiStudio 4.0.0), we added wav resampling for FDS.
+                            if (buffer.Version >= 14)
+                            {
+                                buffer.Serialize(ref fdsResampleWavPeriod);
+                                buffer.Serialize(ref fdsResampleWavOffset);
+                                buffer.Serialize(ref fdsResampleWavNormalize);
+                                buffer.Serialize(ref fdsResampleWavData);
+                            }
                             break;
                         case ExpansionType.N163:
-                            buffer.Serialize(ref n163WavePreset);
-                            buffer.Serialize(ref n163WaveSize);
-                            buffer.Serialize(ref n163WavePos);
+                            buffer.Serialize(ref n163WavPreset);
+                            buffer.Serialize(ref n163WavSize);
+                            buffer.Serialize(ref n163WavPos);
+                            // At version 14 (FamiStudio 4.0.0), we added multi-waveforms for N163 and wav resampling.
+                            if (buffer.Version >= 14)
+                            {
+                                buffer.Serialize(ref n163WavCount);
+                                buffer.Serialize(ref n163ResampleWavPeriod);
+                                buffer.Serialize(ref n163ResampleWavOffset);
+                                buffer.Serialize(ref n163ResampleWavNormalize);
+                                buffer.Serialize(ref n163ResampleWavData);
+                            }
                             break;
 
                         case ExpansionType.Vrc7:
                             buffer.Serialize(ref vrc7Patch);
-                            buffer.Serialize(ref vrc7PatchRegs[0]);
-                            buffer.Serialize(ref vrc7PatchRegs[1]);
-                            buffer.Serialize(ref vrc7PatchRegs[2]);
-                            buffer.Serialize(ref vrc7PatchRegs[3]);
-                            buffer.Serialize(ref vrc7PatchRegs[4]);
-                            buffer.Serialize(ref vrc7PatchRegs[5]);
-                            buffer.Serialize(ref vrc7PatchRegs[6]);
-                            buffer.Serialize(ref vrc7PatchRegs[7]);
+                            for (int i = 0; i < vrc7PatchRegs.Length; i++)
+                                buffer.Serialize(ref vrc7PatchRegs[i]);
                             break;
 
                         case ExpansionType.EPSM:
                             buffer.Serialize(ref epsmPatch);
-                            buffer.Serialize(ref epsmPatchRegs[0]);
-                            buffer.Serialize(ref epsmPatchRegs[1]);
-                            buffer.Serialize(ref epsmPatchRegs[2]);
-                            buffer.Serialize(ref epsmPatchRegs[3]);
-                            buffer.Serialize(ref epsmPatchRegs[4]);
-                            buffer.Serialize(ref epsmPatchRegs[5]);
-                            buffer.Serialize(ref epsmPatchRegs[6]);
-                            buffer.Serialize(ref epsmPatchRegs[7]);
-                            buffer.Serialize(ref epsmPatchRegs[8]);
-                            buffer.Serialize(ref epsmPatchRegs[9]);
-                            buffer.Serialize(ref epsmPatchRegs[10]);
-                            buffer.Serialize(ref epsmPatchRegs[11]);
-                            buffer.Serialize(ref epsmPatchRegs[12]);
-                            buffer.Serialize(ref epsmPatchRegs[13]);
-                            buffer.Serialize(ref epsmPatchRegs[14]);
-                            buffer.Serialize(ref epsmPatchRegs[15]);
-                            buffer.Serialize(ref epsmPatchRegs[16]);
-                            buffer.Serialize(ref epsmPatchRegs[17]);
-                            buffer.Serialize(ref epsmPatchRegs[18]);
-                            buffer.Serialize(ref epsmPatchRegs[19]);
-                            buffer.Serialize(ref epsmPatchRegs[20]);
-                            buffer.Serialize(ref epsmPatchRegs[21]);
-                            buffer.Serialize(ref epsmPatchRegs[22]);
-                            buffer.Serialize(ref epsmPatchRegs[23]);
-                            buffer.Serialize(ref epsmPatchRegs[24]);
-                            buffer.Serialize(ref epsmPatchRegs[25]);
-                            buffer.Serialize(ref epsmPatchRegs[26]);
-                            buffer.Serialize(ref epsmPatchRegs[27]);
-                            buffer.Serialize(ref epsmPatchRegs[28]);
-                            buffer.Serialize(ref epsmPatchRegs[29]);
-                            buffer.Serialize(ref epsmPatchRegs[30]);
+                            for (int i = 0; i < epsmPatchRegs.Length; i++)
+                                buffer.Serialize(ref epsmPatchRegs[i]);
                             break;
                         case ExpansionType.Vrc6:
                             // At version 10 (FamiStudio 3.0.0) we added a master volume to the VRC6 saw.
@@ -389,7 +701,7 @@ namespace FamiStudio
                 {
                     if (buffer.IsReading)
                         envelopes[i] = new Envelope(i);
-                    envelopes[i].SerializeState(buffer);
+                    envelopes[i].SerializeState(buffer, i);
                 }
                 else
                 {
@@ -407,14 +719,38 @@ namespace FamiStudio
                 }
             }
 
-            // At FamiStudio 3.2.0, we realized that we had some FDS envelopes (likely imported from NSF)
+            // At version 12, FamiStudio 3.2.0, we realized that we had some FDS envelopes (likely imported from NSF)
             // with bad values. Also, some pitches as well.
             if (buffer.Version < 12)
             {
-                if (IsFdsInstrument)
-                    envelopes[EnvelopeType.FdsWaveform].ClampToValidRange(this, EnvelopeType.FdsWaveform);
-                if (IsVrc6Instrument)
-                    envelopes[EnvelopeType.Pitch].ClampToValidRange(this, EnvelopeType.Pitch);
+                if (IsFds)
+                    FdsWaveformEnvelope.ClampToValidRange(this, EnvelopeType.FdsWaveform);
+                if (IsVrc6)
+                    PitchEnvelope.ClampToValidRange(this, EnvelopeType.Pitch);
+            }
+
+            // At version 14 (FamiStudio 4.0.0), we added multi-waveforms for N163
+            if (buffer.Version < 14 && IsN163)
+            {
+                envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
+                envelopes[EnvelopeType.WaveformRepeat].Length = 1;
+            }
+
+            // At version 14 (FamiStudio 4.0.0), I found some old files where the
+            // preset does not match with the actual waves. Likely stuff i made
+            // with an old development version. Need to check if the preset matches
+            // the waveform here :(
+            if (buffer.Version < 14 && (IsN163 || IsFds))
+            {
+                if (IsN163 && n163WavPreset != WavePresetType.Custom && !N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset))
+                    n163WavPreset = WavePresetType.Custom;
+                if (IsFds && fdsWavPreset != WavePresetType.Custom && !FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
+                    fdsWavPreset = WavePresetType.Custom;
+            }
+
+            if (buffer.IsReading)
+            {
+                PerformPostLoadActions();
             }
         }
     }
