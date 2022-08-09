@@ -7,7 +7,7 @@ Doc:
 ====
 - N163/FDS resampling in exp audio section.
 - New options in export dialog (audio delay, etc.)
-- 
+- Mention osc stability.
 
 Testing:
 ========
