@@ -27,12 +27,10 @@ Besides effects, there are also other limitations:
 
 * If multiple instruments assign DPCM samples to the same key of the DPCM instrument, only the first one will be assigned. Other samples will be loaded, but unassigned to any keys.
 * All DPCM samples will be loaded (and potentially assigned to a key of the DPCM instrument) but any sample over the 16KB FamiStudio limit will not play correctly or at all.
-* Namco 163 instrument can only have a single waveform. Any other waveform than zero will be ignored.
 * VRC7 1xx/2xx/3xx/Qxx/Rxx effects will likely not sound like FamiTracker and will need manual corrections.
 * Instruments using both pitch and arpeggio envelopes at the same time will likely not sound the same as in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker resets the pitch at each arpeggio notes, while FamiStudio does not. 
 * VRC6 saw channel is not influenced by duty cycle in FamiStudio. FamiStudio has a "saw master volume" on VRC6 instruments. Import/export process does not try account for this. Manual corrections may be needed.
 * Vibrato effect might sound a bit different, please see table above for exact mappings.
-* The noise channel in FamiStudio is not affected by pitch envelope or any pitch effects (1xx, 2xx, 3xx, Qxx and Rxx).
 
 When importing from FamiTracker, all possible slide effects (1xx, 2xx, 3xx, Qxx and Rxx) will be converted to slide notes. Sometimes attack will be disabled as well to mimic the same behavior. This in an inherently imperfect process since they approaches are so different. For this reason, importing/exporting slide notes with FamiTracker should be considered a **lossy** process.
 
@@ -91,7 +89,7 @@ NSF file are essentially programs designed to run on actual hardware. They will 
 
 That being said, NSF can still be extremely useful to reverse engineer how songs were made. In fact, this is how most of the Demo Songs that come with FamiStudio were made. 
 
-In the example below, we can imagine that the notes on the right were all using the same instrument with a decreasing volume envelope, and a 2-1 release. The note of the left were clearly using a vibrato effect or a pitch envelope. 
+In the example below, we can imagine that the notes on the left were all using the same instrument with a decreasing volume envelope. The note of the right clearly was using a vibrato effect or a pitch envelope. 
 
 ![](images/NsfMess.png#center)
 

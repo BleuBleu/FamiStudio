@@ -567,7 +567,8 @@ namespace FamiStudio
                         if (lastInstrument != null)
                         { 
                             note.Instrument = lastInstrument;
-                            Log.LogMessage(LogSeverity.Warning, $"No instrument assigned, will use previous instrument '{lastInstrument.Name}'. {GetPatternString(it.Pattern, it.Location.NoteIndex)}");
+                            // Not worth displaying, not an error.
+                            // Log.LogMessage(LogSeverity.Warning, $"No instrument assigned, will use previous instrument '{lastInstrument.Name}'. {GetPatternString(it.Pattern, it.Location.NoteIndex)}");
                         }
                         else
                         {
