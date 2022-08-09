@@ -13,16 +13,22 @@ Songs are made of Patterns, which are on one of the five Channels supported by t
 
 Most of the operations are performed with the mouse. In general:
 
-* The **left mouse button** adds stuff, double-clicking something edits properties (songs, patterns, instruments, DPCM)
-* The **right mouse button** removes stuff. Right clicking in the header of the Sequencer or Piano Roll selects.
-* The **middle mouse button** pans when you press it and zooms and you use the mouse wheel.
+* The **left mouse button** adds and removes stuff. 
+    * **Single-clicking** add notes/patterns.
+    * **Double-clicking** deletes notes/patterns. Alternatively **Shift+click** can be used.
+* The **right mouse button** opens context menus and selects things.
+    * **Right-clicking** quickly will open a context menu.
+    * **Right-clicking + holding and dragging** will select a range of notes or patterns in the piano roll or sequencer.
+* The **middle mouse button** is used for navigation:
+    * **Middle-clicking + holding and dragging** will pan the viewport.
+    * **Rotating the mouse wheel** will zoom the viewport in/out.
 
 Alternatively, if your mouse does not have a middle mouse button or mouse wheel:
 
-* All actions requiring pressing the middle mouse buttons can be done with Alt+Left click.
-* All actions requiring the mouse wheel can be performed with Alt+Right click, then dragging up/down.
+* All actions requiring pressing the middle mouse buttons can be done with Alt+Left click if the "Alt+Left emulates Middle" option is enabled in the settings.
+* All actions requiring rotating the mouse wheel can be performed with Alt+Right click, then dragging up/down.
 
-If you are working on a trackpad, please check out how to enable [Trackpad controls](config.md#user-interface-configuration) in the configuration dialog.
+If you are working on a trackpad, please check out how to enable [Trackpad controls](config.md#user-interface-configuration) in the configuration dialog. (MATTT this link points to wrong section).
 
 # Basic Mobile Controls
 
@@ -60,32 +66,32 @@ The main toolbar contains your usual stuff: file operation, undo/redo, timecode,
 
 ![](images/Toolbar.png#center)
 
-Here is the meaning of each toolbar icon and some additional actions that can be performed.
+Here is the meaning of each toolbar icon and some additional actions that can be performed. Unless specified, additionnal actions are performed by right-clicking on desktop, or long pressing on mobile.
 
-Icon | Click Action | Additional Actions
+Icon | Click Action | Additional Actions (Right click on desktop, long press on mobile)
 --- | --- | ---
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/File.png) | New project | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Open.png) | Open FamiStudio project or other file format | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Save.png) | Save project | On Desktop, right click to "Save As...".<br/>On Mobile, use long press.
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Export.png) | Export to various formats Project | On Desktop, right click to repeat the last export
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Copy.png) | Copy selection | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Cut.png) | Cut selection | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Paste.png) | Paste | On Desktop, right-click to "Special Paste" (paste with advanced options). <br/>On Mobile, use long press.
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Delete.png) | Delete selection (mobile only) | On mobile, long press to "Special Delete" (delete with advanced options)
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Undo.png) | Undo | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Redo.png) | Redo | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Transform.png) | Transform/cleanup project/songs | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Config.png) | Application settings | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Play.png) | Play song | On desktop, rotate mouse wheel to change playback speed. <br/>On mobile, long press to change playback speed.
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Rec.png) | Toggle recording mode | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Rewind.png) | Rewing to beginning | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Loop.png) | Change looping mode | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/QwertyPiano.png) | Toggle QWERTY input (desktop only) | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Piano.png) | Toggle pop-up piano (mobile only) | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Metronome.png) | Toggle metronome click | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/NTSC.png) | Toggle playback machine | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/Follow.png) | Toggle follow mode | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/master/FamiStudio/Resources/More.png) | Reveal hidden toolbar buttons (mobile only) | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/File.png) | New project | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Open.png) | Open FamiStudio project or other file format | On desktop, opens a list of recently opened files
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Save.png) | Save project | Open a context menu to "Save As...".
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Export.png) | Export to various formats Project | Open a context menu that allows repeating the last export, if any/
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Copy.png) | Copy selection | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Cut.png) | Cut selection | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Paste.png) | Paste | Opens a context menu to "Special Paste" (paste with advanced options).
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Delete.png) | Delete selection (mobile only) | On mobile, long press to "Special Delete" (delete with advanced options)
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Undo.png) | Undo | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Redo.png) | Redo | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Transform.png) | Transform/cleanup project/songs | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Config.png) | Application settings | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Play.png) | Play song | Opens a context menu to play from different locations or change the playback speed.
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Rec.png) | Toggle recording mode | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Rewind.png) | Rewing to beginning | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Loop.png) | Change looping mode | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/QwertyPiano.png) | Toggle QWERTY input (desktop only) | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Piano.png) | Toggle pop-up piano (mobile only) | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Metronome.png) | Toggle metronome click | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/NTSC.png) | Toggle playback machine | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Follow.png) | Toggle follow mode | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/More.png) | Reveal hidden toolbar buttons (mobile only) | 
 
 ## Tooltip
 
@@ -95,19 +101,24 @@ Keyboard shortcuts or special actions are always displayed as tooltips in the up
 
 ## Playing/pausing the song
 
-Besides the toolbar, space bar is used to play/pause the song. Ctrl-space plays in pattern loop mode, Shift-space plays in song loop mode.
+The toolbar is used to play/pause the song. Alternatively, the keyboard can also be used:
+
+* **Space** is used to play/pause the song.
+* **Shift+Space** plays from the beginning of the song.
+* **Ctrl+Space** plays from the beginning of the current pattern.
+* **Ctrl+Shift+Space** plays from the loop point of the song.
 
 ## Changing the playback speed
 
-Rotating the mouse-wheel over the play button will allow you to change the playback speed to 1/2 or 1/4 speed. This is useful to hear very small/short notes.
+Right-clicking on the play button will open a context menu allowing you to change the playback speed to 1/2 or 1/4 speed. This is useful to hear very small/short notes.
 
-![](images/PlaybackSpeed.gif#center)
+![](images/PlaybackSpeed.png#center)
 
 ## Changing the looping mode
 
 There are 2 looping modes:
 
-* **Song / None**: Loops the entire song if a loop point is step, stops at the end if there are no loop point.
+* **Song** or **None**: Loops the entire song if a loop point is step, stops at the end if there are no loop point.
 * **Pattern** or **Selection**: Loops over the current pattern if there is no selection in the sequencer. If there is a selection, will loop over that selection. The icon in the toolbar will change to reflection this.
 
 ![](images/LoopingMode.png#center)
@@ -118,7 +129,7 @@ The metronome can be enabled by clicking the icon on the toolbar. The metronome 
 
 ## Saving the project
 
-Clicking on the icon save the project, right-clicking is a "save as..." and will prompt you for a new filename.
+Clicking on the icon save the project, right-clicking will open a context menu allowing you to "Save As..." and prompt you for a new filename.
 
 ## Exporting to various formats
 
@@ -148,6 +159,10 @@ For more details on what you can do with the Project Explorer, please check out 
 The sequencer is where you organize the high-level structure of the song: which patterns play and when they play. The thumbnails of the patterns in the sequencer are by no mean accurate. Please visit the [Editing Patterns](sequencer.md) section for more details.
 
 ![](images/Sequencer.png#center)
+
+You can hide the channels that do not contain any pattern by pressing the little nosy character icon in the top left corner. This is known as "shy mode" and is borrowed from Adobe After Effects.
+
+![](images/ShyMode.gif#center)
 
 # Piano Roll
 
@@ -184,11 +199,12 @@ Here is a list of useful keyboard shortcuts:
 * **Ctrl+Shift+Space**: Plays from loop point of the song (if any).
 * **Home**: Seeks back to beginning of the song.
 * **Ctrl+Home**: Seeks to beginning of the current pattern.
-* **Esc**: Stops any lindering sound, stops recording mode, clears the selection.
+* **Esc**: Stops any lingering sound, stops recording mode, clears the selection.
 * **Ctrl+Z**: Undo
 * **Ctrl+Y**: Redo
 * **Ctrl+N**: New project
 * **Ctrl+S**: Save
+* **Ctrl+Shift+S**: Save As...
 * **Ctrl+E**: Export
 * **Ctrl+Shift+E**: Repeat last export
 * **Ctrl+O**: Open
@@ -200,6 +216,7 @@ Here is a list of useful keyboard shortcuts:
 * **1**: Toggle maximize the piano roll.
 * **Ctrl+1**: Toggle the effect panel.
 * **Shift+S**: Toggle snapping in the piano roll.
+* **Alt+1**, **Alt+2**, **Alt+3**, **Alt+4** : Changes snap precision to 1, 1/2, 1/4 and 1/8 of a beat respectively.
 
 Some keyboard shortcuts specific to the sequencer:
 
@@ -207,7 +224,7 @@ Some keyboard shortcuts specific to the sequencer:
 
 Some keyboard shortcuts specific to the piano roll:
 
-* **Shift+Click**: Adds a release note.
+* **R+Click**: Adds a release note.
 * **S+Click** (and drag): Creates or edit a slide note.
 * **A+Click**: Toggles the attack of a note.
 * **I+Click**: Instrument picker

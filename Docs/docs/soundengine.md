@@ -38,6 +38,7 @@ Features that can be toggled on/off depending on the needs of your projects:
 * Sound effect support (with configurable number of streams)
 * Blaarg Smooth Vibrato technique to eliminate "pops" on square channels
 * FamiTracker/FamiStudio tempo mode.
+* Release notes support
 * Volume track support.
 * Volume slides
 * Fine pitch track support.
@@ -47,6 +48,7 @@ Features that can be toggled on/off depending on the needs of your projects:
 * Arpeggios (not to be confused with arpeggio instrument envelopes which are always enabled).
 * Duty cycle effect track
 * Delayed notes/cuts (only when FamiTracker tempo is enabled)
+* Delta counter effect track
 
 ## RAM/CODE usage
 
@@ -233,6 +235,10 @@ Every feature supported in FamiStudio is supported by this sound engine. If you 
     ; Must be enabled if the songs uses delayed notes or delayed cuts. This is obviously only available when using
     ; FamiTracker tempo mode as FamiStudio tempo mode does not need this.
     FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1
+
+    ; Must be enabled if the songs uses release notes. 
+    ; More information at: https://famistudio.org/doc/pianoroll/#release-point
+    FAMISTUDIO_USE_RELEASE_NOTES = 1
     
     ; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track
     ; level independently from instruments.
@@ -267,6 +273,11 @@ Every feature supported in FamiStudio is supported by this sound engine. If you 
     
     ; Must be enabled if any song uses the "Duty Cycle" effect (equivalent of FamiTracker Vxx, also called "Timbre").  
     FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
+
+    ; Must be enabled if any song uses the DPCM delta counter. Only makes sense if DPCM samples
+    ; are enabled (FAMISTUDIO_CFG_DPCM_SUPPORT).
+    ; More information at: (TODO)
+    ; FAMISTUDIO_USE_DELTA_COUNTER     = 1
 
 ## Exporting Music/SFX to the engine
 

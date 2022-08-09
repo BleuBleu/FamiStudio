@@ -12,13 +12,7 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Check for updates**: At startup FamiStudio checks for new version online. This can be disabled.
 
-* **Trackpad controls**: Enabling trackpad controls will switch to a control scheme that is better suited for trackpad users:
-
-    * Vertical mouse wheel up/down will scroll up/down instead of zooming in/out. This is the equivalent of swiping your fingers up/down on the trackpad.
-    * Horizontal mouse wheel will scroll left/right. This is equivalent of swiping your fingers left/right on the trackpad.
-    * Pinch to zoom (or alternatively CTRL + MouseWheel) will zoom in/out. If pinch-to-zoom does not work on Windows, please check your trackpad drivers, this is not an issue with FamiStudio.
-
-    Note that these are poorly supported on Linux due to the fact that the app uses GTK 2 and gestures are generally poorly supported in Linux.
+* **Show Tutorial at Startup**: If enabled, the onboarding tutorial will be showed when FamiStudio is launched.
 
 * **Clear Undo/Redo on save**: Wipes the undo/redo stack every time the project is saved. This help keep the memory usage lower, but limits your ability to undo indefinately.
 
@@ -51,15 +45,28 @@ The configuration dialog dialog is accessed from the toolbar.
     * **Thin**: Small scroll bars.
     * **Thick**: Large scroll bars.<br><br>
 
-* **Show Piano Roll View Range**: Displays a yellow rectangle in the sequencer representing the view range of the piano roll.
+* **Ideal Sequencer Height** : The ideal height of the Sequencer, in percentage of the height of the FamiStudio window. Note that patterns have a minimum size, so this *ideal* size may not be achievable when there are many channels.
 
-* **Show Note Labels**: Displays note labels (e.q. "C#3") in the piano roll.
+* **Allow Sequencer Vertical Scrolling** : If enabled and the ideal height above cannot be achieve (usually because there are too many channels), will allow vertically scrolling in the sequencer instead of going above the ideal size.
 
 * **Show FamiTracker Stop Notes**: When using FamiTracker tempo mode, display implicity stop notes (whenever a note ends without being interrupted by another note) as little triangles. This makes it easier to set note delays for those.
 
-* **Show Oscilloscope**: Display an oscilloscope in the toolbar.
+* **Show Piano Roll View Range**: Displays a yellow rectangle in the sequencer representing the view range of the piano roll.
 
-* **Force Compact Sequencer**: Always keep the size of the channels in the sequencer to their minimum height. This is useful on monitor with very low resolution. 
+## Input Configuration
+
+![](images/ConfigInput.png#center)
+
+* **Trackpad controls**: Enabling trackpad controls will switch to a control scheme that is better suited for trackpad users:
+
+    * You will be able to swipe up/down/left/right on the trackpad to pan around.
+    * Pinch to zoom (or alternatively **Ctrl+Swipe**) will zoom in/out. This gesture is not supported on Linux.<br><br>
+
+* **Reverse trackpad scroll X/Y**: Can be used to flip the direction of the trackpad scrolling.
+
+* **Trackpad scroll sensitivity**: Can be used to increase/decrease the sensitivity of the trackpad controls.
+
+* **Alt+Left emulates Middle**: For use with mouses that do not have a middle mouse button. Will allow using **Alt+Left** as a substitute.
 
 ## Sound Configuration
 
@@ -71,7 +78,11 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Prevent popping on square channels**: The NES/Famicom had a bug where the phase of square channels will reset around some notes (A-3, A-2, D-2, A-1, F-1, D-1, and B-0 on NTSC, or A#3, A#2, D#2, A#1, F#1, D#1, and C-0 on PAL), resulting in audible clicks or pops. This option will work around that bug using the Smooth Vibrato technique by Blargg, resulting in smooth pitch changes. Note that this option will not carry over to FamiTracker if you export.
 
+* **Clamp periods and notes** : Notes that go below the lowest possible note or above the highest possible note will typically wrap around when listening the song on real hardware. This is due to the fact that currently the SoundEngine does not clamp notes or period to the valid range. The mulation inside FamiStudio does it by default. If you want a more hardware accurate behavior, you can disable this option.
+
 * **Mute piano roll interactions during playback** : When enabled, dragging/adding notes in the piano roll will not preview the notes when the song is playing. Some users find this distracting.
+
+* **Metronome volume** : Volume of the metronome.
 
 ## Mixer
 
@@ -110,7 +121,6 @@ This section allows remapping the keyboard keys for keyboard-piano input. This a
 This section is only available on the Mobile version of FamiStudio.
 
 * **Allow vibration**: Toggle for all vibration effect in the app.
-* **Double-tap to delete**: Experimental option to delete pattern/notes with a double-tap.
 
 # Configuration File
 

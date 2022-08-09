@@ -30,4 +30,6 @@ Here are the operations that can be performed on the project:
 
 * **Permanently apply all DPCM sample processing** : Remove all the source data of any DPCM sample and replaces it with its processed DMC data. This will also reset all the processing parameters. Only do this when you know you are completely done adjusting your samples, to reduce the file size (it you were using WAV files as source). This will not affect the sound of the song, but will severely limit your ability to go back and adjust things like volume, etc. in a lossless way.
 
+* **Discard resampled wav data for NSF/N163** : Discards any source data for FDS/N163 instrument that are resampled from a wav file. You can do this to reduce the size of your project when you are done adjusting the resampling parameters.
+
 * **Delete unused arpeggios** : Arpeggios that are not used by a single note will be deleted.

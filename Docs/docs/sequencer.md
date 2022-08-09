@@ -12,17 +12,17 @@ Clicking in the timeline (header) of the sequencer will move the play position. 
 
 ## Changing the active channel
 
-Clicking on a channel will make it the active one. Alternatively, you can press the keyboard key **1...5** (more if using expansion) to quickly change the active channel.
+Clicking on a channel will make it the active one. Alternatively, you can press the keyboard key **F1...F5** (more if using expansion) to quickly change the active channel.
 
 ## Muting & soloing channels
 
-Left-clicking on the icon of a channel (Square, triangle, noise, DPCM) will toggle mute. Right-clicking will toggle solo. 
+**Clicking** on the icon of a channel (Square, triangle, noise, DPCM) will toggle mute. **Double-clicking** will toggle solo. Alternatively, you can **right-click** on the channel name to get a context menu that will offer you these options.
 
 On mobile, this is done by long pressing on a channel name, either here in the sequencer, or in the Quick Access Bar.
 
 ## Force display channel
 
-Clicking the tiny square icon next to the channel name will force display it in the piano roll.  Alternatively, you can press the keyboard key **Ctrl + F1...F5** (more if using expansion).
+Clicking the tiny eye icon next to the channel name will force display it in the piano roll.  Alternatively, you can press the keyboard key **Ctrl + F1...F5** (more if using expansion). You can force display all channels at once by **double-clicking** on the eye icon.
 
 ![](images/ForceDisplayButton.png#center)
 
@@ -30,31 +30,27 @@ Channels that are force displayed and are not the current channel will appear di
 
 ![](images/ForceDisplayPianoRoll.png#center)
 
-This can also achieved with the keyboard by pressing Ctrl + F1...F5 (the number of the channel).
-
 On mobile, this is done by long pressing on a channel name, either here in the sequencer, or in the Quick Access Bar.
 
 ## Adding & removing patterns
 
-You can add a new pattern by left-clicking on an empty space. Right-clicking deletes.
+You can add a new pattern by **left-clicking** on an empty space. **Double-clicking** on a pattern deletes it.
 
 ## Editing patterns
 
-Clicking a pattern selects it and opens the piano roll for the current channel at the location of the pattern. Double-clicking a pattern allows renaming and changing its color (pattern names need to be unique per channel).
+Clicking a pattern selects it and opens the piano roll for the current channel at the location of the pattern. 
+
+**Right-clicking** a pattern (or long pressing on mobile) will reveal a context menu with various options. Selecting "Pattern Properties..." allows renaming and changing its color (pattern names need to be unique per channel).
 
 ![](images/EditPattern.png#center)
 
-On mobile, this is achieved by long pressing on a pattern and selecting "Pattern Properties...".
-
 ## Selecting patterns
 
-You can select multiple patterns by right-cliking and dragging in the header bar of the Sequencer or in an empty space in the sequencer. To un-select everything, simply press Esc. When multiple patterns are selected, only the color can be edited.
+You can select entire columns of patterns by **right-cliking and dragging** from the header bar. You can do a rectangle selection **right-cliking and dragging** from any pattern location in the sequencer.
 
-![](images/SelectPatternsColumn.gif#center)
+To un-select everything, simply press Esc. When multiple patterns are selected, only the color can be edited in the pattern properties.
 
-You can select multiple patterns in a rectangular grid by holding SHIFT and right clicking to create a selection.
-
-![](images/SelectPatternsRect.gif#center)
+![](images/SelectPatterns.gif#center)
 
 On mobile, you can select full columns of patterns by swiping from the header. You can do rectangular selection by first selecting a single pattern, then long pressing somewhere else and selecting "Expand Selection".
 
@@ -62,15 +58,15 @@ On mobile, you can select full columns of patterns by swiping from the header. Y
 
 ## Moving & copying patterns
 
-When one or multiple patterns are selected, dragging them will move them in the timeline. While dragging, holding CTRL will create another instance of the pattern(s). An instance is a copy that is linked to the original pattern, it will have the same name and color. Modifying one instance will modify all of them. This will be shown by a "link" icon when dragging.
+When one or multiple patterns are selected, dragging them will move them in the timeline. While dragging, holding **Ctrl** will create another instance of the pattern(s). An instance is a copy that is linked to the original pattern, it will have the same name and color. Modifying one instance will modify all of them. This will be shown by a "link" icon when dragging.
 
 ![](images/InstancePattern.png#center)
 
-Holding CTRL+SHIFT while dragging will create a completely independant copy of the selected patterns. This will be showned by a "copy" icon when dragging. They will be renamed in the process.
+Holding **Ctrl+Shift** while dragging will create a completely independant copy of the selected patterns. This will be showned by a "copy" icon when dragging. They will be renamed in the process.
 
 ![](images/CopyPattern.png#center)
 
-Dragging a pattern to a different channel will create a copy, but delete the original. This is because internally, patterns cannot be shared accross different channels. The pattern may be renamed in the processs. Holding CTRL+SHIFT will preserve the original (create a copy). 
+Dragging a pattern to a different channel will create a copy, but delete the original. This is because internally, patterns cannot be shared accross different channels. The pattern may be renamed in the processs. Holding **Ctrl+Shift** will preserve the original (create a copy). 
 
 ![](images/MovePatternDifferentChannel.png#center)
 
@@ -110,21 +106,17 @@ The **Loop point** is where the song will repeat once it reaches the end and is 
 
 ![](images/LoopPoint.png#center)
 
-You can move the loop point around by holding the **L** key and clicking at a location in the Sequencer. The loop point is optional and can be toggle by re-setting it to the current location.
-
-On mobile, you can set the loop point by long pressing the header of the sequencer, and selecting "Set Loop Point".
+You can move the loop point around or remove it entirely by **right-clicking** (or long pressing on mobile) in the header and selecting the appropriate option from the context menu. Alternatively, you can hold the **L** key and clicking at a location in the Sequencer. 
 
 ## Custom pattern settings
 
-Double clicking on the header of sequencer will allow you to set some customs settings for one or multiple columns of patterns. This will allow you to change the number of notes and tempo parameters.
-
-![](images/CustomPatternSettings.png#center)
+**Right-clicking** on the header of sequencer and selecting "Custom Pattern Settings..." will allow you to set some customs settings for one or multiple columns of patterns. This will allow you to change the number of notes and tempo parameters.
 
 This dialog will look quite different depending on the tempo mode you are using. To learn more about tempo modes, please check out the [Project properties section](song.md). 
 
 FamiStudio Tempo | FamiTracker tempo
 ---  | ---
-![](images/CustomPatternSettingsNoPAL.png#center) | ![](images/CustomPatternSettingsFamiTracker.png#center) 
+![](images/CustomPatternSettingsFamiStudio.png#center) | ![](images/CustomPatternSettingsFamiTracker.png#center) 
 
 Enabling **Custom Pattern** will allow you to change the values. Once a pattern has any kind of custom setting, it will no longer take its values from the Song's properties and will be display with a **asterisk (\*)** next to its index in the Sequencer.
 

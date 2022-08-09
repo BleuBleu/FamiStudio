@@ -76,7 +76,7 @@ namespace FamiStudio
                     page.AddCheckBox("Unassign unused DPCM instrument keys:", true, UnassignUnusedSamplesTooltip);                    // 2
                     page.AddCheckBox("Delete unassigned samples:", true, DeleteUnassignedSamplesTooltip);                             // 3
                     page.AddCheckBox("Permanently apply all DPCM samples processing:", false, PermanentlyApplyProcessingTooltip);     // 4
-                    page.AddCheckBox("Discard resample wav data for NSF/N163:", false, DiscardN163FdsResampleWavTooltip);             // 5
+                    page.AddCheckBox("Discard resampled wav data for NSF/N163:", false, DiscardN163FdsResampleWavTooltip);             // 5
                     page.AddCheckBox("Delete unused arpeggios:", true, DeleteUnusedArpeggiosTooltip);                                 // 6
                     break;
             }

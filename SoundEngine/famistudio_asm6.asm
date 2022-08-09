@@ -156,13 +156,13 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; More information at: https://famistudio.org/doc/song/#tempo-modes
 ; FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
 
-; Must be enabled if the songs uses release notes. 
-; More information at: https://famistudio.org/doc/pianoroll/#release-point
-FAMISTUDIO_USE_RELEASE_NOTES = 1
-
 ; Must be enabled if the songs uses delayed notes or delayed cuts. This is obviously only available when using
 ; FamiTracker tempo mode as FamiStudio tempo mode does not need this.
 ; FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1
+
+; Must be enabled if the songs uses release notes. 
+; More information at: https://famistudio.org/doc/pianoroll/#release-point
+FAMISTUDIO_USE_RELEASE_NOTES = 1
 
 ; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track level
 ; independently from instruments.

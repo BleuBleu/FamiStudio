@@ -10,7 +10,7 @@ You can also use it to preview instrument by clicking on the keyboard. The curre
 
 Horizontal lines in the piano rolls are align with the notes of the piano. The vertical lines represents multiple levels of subdivisions:
 
-* Thin dashes gray lines seperate individual NTSC frames, 1/60th of a sec. (FamiStudio tempo mode only)
+* Thin dashes gray lines seperate individual frames (1/60th of a sec in NTSC, 1/50th in PAL) (FamiStudio tempo mode only)
 * Thin gray lines seperate notes
 * Thin black lines seperate beats
 * Thick black lines seperate patterns
@@ -18,6 +18,8 @@ Horizontal lines in the piano rolls are align with the notes of the piano. The v
 In FamiTracker tempo mode, you do not have access to the individual frames, so the dashes lines will not be visible.
 
 ![](images/PianoRollFrames.png#center)
+
+For more information about tempo, please refer to [this section](song.md#editing-song-properties).
 
 ## Seeking
 
@@ -49,9 +51,9 @@ Possible actions are:
 
 * Move one or multiple note(s)
 * Resize one or multiple note(s)
-* Move the release point of a note
+* Move the release point of one or multiple note(s)
 
-On mobile, notes must be first given a **white highlight** before being edited. Only they have that, you can move them or resize them. 
+On mobile, notes must be first given a **white highlight** by tapping once before being edited. Only they have that, you can move them or resize them. 
 
 ![](images/MobileEditNote.gif#center)
 
@@ -67,17 +69,17 @@ As you can see, in the following example, even through i am trying to resize the
 
 ## Selecting notes
 
-There are three main wars of selecting notes, selected notes will appear with a thick silver border. 
+There are three main ways of selecting notes, selected notes will appear with a thick silver border. 
 
-* You can select notes by right-clicking and dragging in the header of the piano roll or anywhere in the background of the piano roll (where there is no note). 
-* You can select an entire pattern by double right clicking in the header of a pattern.
-* You can select the duration of a note by double right clicking in the above or below a note.
+* You can select notes by **right-clicking** and dragging in the header of the piano roll or anywhere in the background of the piano roll (where there is no note). 
+* You can select the duration of a note using the context menu that appears if you right-click above or below a note.
+* You can select an entire pattern or an entire song using the context menu that appears when you **right-click** on the header. 
 
-The following images shows all 3 techniques.
+The following images shows all 3 techniques. 
 
 ![](images/SelectNotes.gif#center)
 
-Once notes are selected, then can be moved or resized all at once. They can also be moved or transposed using the keyboard array keys (up, down, left and right). Holding CTRL while doing so will make the notes move by larger increments.
+Once notes are selected, then can be moved or resized all at once. They can also be moved or transposed using the keyboard array keys (up, down, left and right). Holding **Ctrl** while doing so will make the notes move by larger increments. 
 
 On mobile, there is just only way to select notes and it is done by swiping in the header of the piano roll. A long press in the background will allow you to clear the selection.
 
@@ -85,9 +87,11 @@ On mobile, there is just only way to select notes and it is done by swiping in t
 
 ## Release point
 
-Using Shift+click on an existing will add a release point on a note. Release points are shown as making the note thinner and triggers the envelope to jump to the release point. Release envelopes are useful to nicely fade out a note when its release, while preserving other effects like vibrato. There is no point to adding a release point to an instrument that does not have a release envelope.
+Release points triggers the envelope to jump to the release point and are represented by  making the note thinner. Release envelopes are useful to nicely fade out a note when its release, while preserving other effects like vibrato. There is no point to adding a release point to an instrument that does not have a release envelope.
 
-Once a note has a release point, it can be moved by dragging. To remove a release point, you can right-click on it, or shift-click again.
+To set a release point on a note on desktop, simply right-click on a note a choose the "Toggle Release" option. Alternatively, you can hold **R** and click on a note to toggle a release.
+
+Once a note has a release point, it can be moved by dragging. 
 
 ![](images/ReleaseNote.gif#center)
 
@@ -97,7 +101,9 @@ On mobile, the release point is toggled by long pressing on a note and selecting
 
 ## Stop notes
 
-Using T+click will add a stop note. A stop note simple stops the sound and are displayed as little triangles. Although they are displayed next to the note preceding them, they actually have no pitch or instrument, they simply stop the sound. 
+Stop notes simply stop the sound and are displayed as little triangles. Although they are displayed next to the note preceding them, they actually have no pitch or instrument, they simply stop the sound. 
+
+To create a stop note on Desktop, **right-click** on a note and select "Make Stop Note". Alternatively, you can use **T+click** to create a stop note.
 
 *As of FamiStudio 3.0.0 stop notes are no longer needed since they have been replaced by note durations. There are cases where stop notes will still remain when notes are detected to have inconsistent durations, but those should be relatively rare.*
 
@@ -105,11 +111,11 @@ Using T+click will add a stop note. A stop note simple stops the sound and are d
 
 ## Instrument Picker
 
-Holding **I** and clicking on a note will make the instrument of that note the current instrument. This is often known as the eye dropper or pipette tool in drawing software.
+You can make the instrument used by a note the selected instrument by selected "Make Instrument Current" from the note context menu. This is often known as the eye dropper or pipette tool in drawing software.
 
-![](images/InstrumentPicker.png#center)
+Alternatively, on desktop, you can hold **I** and click on a note.
 
-On mobile, this is achieved by long pressing on a note and selecting "Make Instrument Current".
+![](images/InstrumentPicker.gif#center)
 
 ## Recording mode
 
@@ -137,9 +143,13 @@ On mobile, recording mode will automatically pop-up the piano and each note play
 
 ## Snapping
 
-Snapping can be toggle by clicking the little magnet in the top-left corner of the piano roll. **SHIFT+S** can also be used to quickly toggle snapping on/off. The precision of the snapping can be changed by left/right clicking the number of using the mousewheel over the number or magnet icon. 
+Snapping help you keep notes aligned to the grid. 
 
-![](images/Snap.png#center)
+It can be toggled by clicking the little magnet in the top-left corner of the piano roll. **Shift+S** can also be used to quickly toggle snapping on/off. 
+
+The precision of the snapping can be changed by right-clicking on the magnet and selecting a different precision. Alternatively, you can rotate the mouse wheel over the magnet.
+
+![](images/Snap.gif#center)
 
 The snapping precision is expressed in *Beats* (which are numbered as x.1, x.2, x.3, etc. in the header). So with the default settings, a snapping precision of 1 will mean a quarter note.
 
@@ -151,7 +161,11 @@ On mobile, the snapping precision is set from the Quick Access Bar, on the right
 
 ## Note attack
 
-By default, notes will have an "attack" which mean they will restart their envelopes (volume, pitch, etc.) from the beginning. This is represented by the little dark rectangle on the left of each note. This can be toggled for a particular note by holding the A key and clicking on a note. Note that if a note does not use the same instrument as the previous one, the attack will still play, even if disabled. Also please note that this will generally not carry over to FamiTracker, besides specific use cases around slide notes.
+By default, notes will have an "attack" which mean they will restart their envelopes (volume, pitch, etc.) from the beginning. This is represented by the little dark rectangle on the left of each note. 
+
+The attack can be toggled for a particular note by selecting the "Toggle Attack" option from the note context menu. Alternatively, you can hold **A** and click on a note to toggle its attack. Similarely, on mobile, toggling the note attack is done by long pressing on a note and selecting "Toggle Attack".
+
+Note that if a note does not use the same instrument as the previous one, the attack will still play, even if disabled. Also please note that this will generally not carry over to FamiTracker, besides specific use cases around slide notes.
 
 In this example, the first note will have an attack, while the second one will not.
 
@@ -161,17 +175,15 @@ Since envelopes are not reset, this means that if a note was released, it will r
 
 ![](images/NoAttackReleased.png#center)
 
-On mobile, toggling the note attack is done by long pressing on a note and selecting "Toggle Attack".
-
 ## Slide notes
 
-Slide notes are notes that start at a given pitch (the pitch of the note) and slowly change to hit a target pitch which is represented by where the triangle ends. In this example, the attack of the second note has been disabled.
+Slide notes are notes that start at a given pitch (the pitch of the note) and slowly change to hit a target pitch which is represented by where the triangle ends. In this example, the attack of the second note is also disabled.
 
-![](images/SlideNote.png#center)
+![](images/SlideNote.gif#center)
 
 Slide notes garantees that the target pitch will be reached by the end of the note (end of the triangle) but this might happen a bit earlier than the visual repesentation suggests. Especially in the higher pitches. This is due to the fact that the pitch calculations are all integer-based (with 1-bit of fraction) and it is often impossible to get the exact required slope to reach the pitch at the exact time. 
 
-On mobile, you can toggle the slide  by long pressing on a note and selecting "Toggle Slide Note".
+To create a slide note, simply select "Toggle Slide Note" from the note context menu and adjust the target note. On desktop, you can also simply hold **S**, click on a note and drag up/down to create a slide note. 
 
 ## Arpeggios
 
@@ -195,7 +207,7 @@ On mobile, you can replace an instrument or arpeggio by first making a selection
 
 ## Copying & pasting notes
 
-Much like the sequencer, selcted notes can be copy (or cut) by pressing CTRL+C (or CTRL+X). You can then move the selection somewhere else and paste the notes with CTRL+V.
+Much like the sequencer, selcted notes can be copy (or cut) by pressing **Ctrl+C** (or **Ctrl+X**). You can then move the selection somewhere else and paste the notes with **Ctrl+V**.
 
 ### Copying & pasting notes between projects 
 
@@ -207,7 +219,7 @@ This can be used as a way of transfering instruments from one project to another
 
 ## Special paste
 
-"Special paste" is a more advanced form of pasting. It is used to to do things like pasting notes without their associated effets or volume track (or vice-versa), or to just paste specific effects. You can use a "special paste" by pressing CTRL+SHIFT+V. This will open a popup dialog.
+"Special paste" is a more advanced form of pasting. It is used to to do things like pasting notes without their associated effets or volume track (or vice-versa), or to just paste specific effects. You can use a "special paste" by pressing **Ctrl+Shift+V**. This will open a popup dialog.
 
 ![](images/PasteSpecial.png#center)
 
@@ -225,11 +237,11 @@ On mobile, the same functionality is accessible by long pressing on the "Paste" 
 
 ## Special delete
 
-Much like Special paste, "Special delete" is a more advanced form of deletion. You can bring up the special delete dialong by selecting a rango of notes and pressing CTRL+SHIFT+DELETE. 
+Much like Special paste, "Special delete" is a more advanced form of deletion. You can bring up the special delete dialong by selecting a rango of notes and pressing **Ctrl+Shift+Delete**. 
 
 ![](images/DeleteSpecial.png#center)
 
-* **Delete Notes** : If checked, will delete all the selected notes.
+* **Delete Notes** : If checked, will delete all the selected notes. 
 
 * **Delete Effects** : You can choose here the list of effects to delete. All unchecked effects will be preserved. The start of the next paste will be where the last one ended.
 
@@ -264,7 +276,11 @@ For effects that have huge values (such as FDS Depth), you can hold Shift to fin
 
 The volume tracks dictates how loud the current channel should play. This volume is combined with volume envelope by multiplication (50% volume track x 50% envelope volume = 25% total volume). It is much more efficient to use volume envelopes wherever possible and only use volume tracks to control the global volume of the song.
 
-The volume track is allowed to have slides to smoothly raise or lower the volume. They are created exactly like regular slide notes, by holding "S", clicking and dragging up or down. These slides use fixed point arithmetic and have limited precision. They will go up/down by 1 volume unit every 16 frames at most. Very slow/long slides may end earlier than their visual representation.
+The volume track is allowed to have slides to smoothly raise or lower the volume. 
+
+Volume slides are created exactly like regular slide notes, by either using the context menu that appears by **right-clicking** on an effect value or by holding "S", clicking on effect values and dragging up or down. 
+
+These slides use fixed point arithmetic and have limited precision. They will go up/down by 1 volume unit every 16 frames at most. Very slow/long slides may end earlier than their visual representation.
 
 ![](images/VolumeSlide.gif#center)
 

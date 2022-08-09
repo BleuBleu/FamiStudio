@@ -2,6 +2,35 @@
 
 Version history / release notes for each release.
 
+## Version 4.0.0
+
+Changes:
+
+* Revamped desktop version : 
+	* Redesigned controls, more similar to mobile version : Context menus, Gizmos, etc.
+	* Animated GIFs for intro tutorial
+    * Based on GLFW using custom drawn widgets, consistent across Win/MacOS/Linux
+    * Getting rid of all dependencies to OpenTK, WinForms, GTK# and System.Drawing in preparation to eventual migration to modern .NET.
+* More control over sequencer height and ability to hide unused channels on desktop
+* Support to multiple audio expansions with EPSM
+* Support for multiple waveforms for N163
+* Support for single audio expansions for ROM export 
+* Wave resampling for N163/FDS waveforms, import WAV files and adjust period & offset.
+* Basic NSFe support, only track names and durations for now.
+* Improved oscilloscope stability:
+	* Use of emulation-generated triggers when rendering oscilloscope in exported video or in toolbar when previewing instruments.
+	* Improved trigger detection for toolbar oscilloscope when playing a song (using "peak speed trigger" algorithm).
+* Audio delay effect when exporting video or audio.
+* Snapping improvements, most notably:
+	* ALT+1, ALT+2, ALT+3 and ALT+4 quickly changes between common snapping values
+	* Hold **Alt** anytime when resizing or moving notes to temporarely disable snapping
+	* Context menu to set snapping to a specific note duration
+	* Option to snap effect values
+
+Breaking/Behavior changes:
+
+* The sound engine now has a dedicated define for release note. If you use release notes you now must set `FAMISTUDIO_USE_RELEASE_NOTES`. 
+
 ## Version 3.3.1 (Hotfix)
 
 Fixes/Changes:

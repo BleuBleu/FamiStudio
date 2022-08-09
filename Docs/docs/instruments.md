@@ -4,7 +4,7 @@ The project explorer displays the list of songs and instruments in the current p
 
 ![](images/ProjectExplorer.png#center)
 
-Most instrument (except DPCM samples) has 4 buttons :
+Most standard instruments have 4 buttons :
 
 * The duty cycle envelope
 * The volume envelope
@@ -13,11 +13,11 @@ Most instrument (except DPCM samples) has 4 buttons :
 
 An envelope is simply a parameter that can change over the duration of a note as it plays. It can be used to create vibrato, tremolo, change the attack and release of a note, for example. If an instrument currently has no envelope for a particular type, it will appear dimmed.
 
-For details on Expansion audio instruments please visit the [Expansion Audio section](expansion.md).
+Expansion instruments may have different envelope types. For details on Expansion audio instruments please visit the [Expansion Audio section](expansion.md).
 
 ## Editing instrument properties
 
-Clicking on the little gear icon next to an instrument (or double-clicking on an instrument) will show its properties. Like most things in FamiStudio, you can rename the instrument and change its color.
+Clicking on the little gear icon next to an instrument (or **right-clicking** and selecting "Instrument Properties...") will show its properties. Like most things in FamiStudio, you can rename the instrument and change its color. 
 
 ![](images/EditInstrument.png#center)
 

@@ -1705,9 +1705,6 @@ namespace FamiStudio
 
         public void KeyDown(KeyEventArgs e)
         {
-            bool ctrl  = e.Control;
-            bool shift = e.Shift;
-
             // Prevent loosing focus on Alt.
             if (e.Key == Keys.Menu)
                 e.Handled = true;
@@ -1718,13 +1715,13 @@ namespace FamiStudio
                 StopRecording();
             }
 
-            if (e.Key == Keys.Q && shift)
+            if (e.Key == Keys.Q && e.Shift)
             {
                 ToggleQwertyPiano();
                 return;
             }
 
-            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e.Scancode, true, e.IsRepeat))
+            if ((recordingMode || qwertyPiano) && !e.Control && !e.Shift && !e.Alt && HandleRecordingKey(e.Scancode, true, e.IsRepeat))
             {
                 return;
             }
@@ -1751,7 +1748,7 @@ namespace FamiStudio
             {
                 ToggleRecording();
             }
-            else if (shift && e.Key == Keys.F)
+            else if (e.Shift && e.Key == Keys.F)
             {
                 followMode = !followMode;
                 ToolBar.MarkDirty();
@@ -1764,11 +1761,11 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (ctrl && shift)
+                    if (e.Control && e.Shift)
                         PlaySongFromLoopPoint();
-                    else if (shift)
+                    else if (e.Shift)
                         PlaySongFromBeginning();
-                    else if (ctrl)
+                    else if (e.Control)
                         PlaySongFromStartOfPattern();
                     else
                         PlaySong();
@@ -1776,7 +1773,7 @@ namespace FamiStudio
             }
             else if (e.Key == Keys.Home)
             {
-                if (ctrl)
+                if (e.Control)
                 {
                     SeekCurrentPattern();
                 }
@@ -1787,44 +1784,44 @@ namespace FamiStudio
             }
             if (!recordingMode && e.Key >= Keys.F1 && e.Key <= Keys.F24)
             {
-                if (ctrl)
+                if (e.Control)
                     ForceDisplayChannelMask ^= (1L << (e.Key - Keys.F1));
                 else
                     SelectedChannelIndex = (e.Key - Keys.F1);
                 Sequencer.MarkDirty();
             }
-            else if ((ctrl && e.Key == Keys.Y) || (ctrl && shift && e.Key == Keys.Z))
+            else if ((e.Control && e.Key == Keys.Y) || (e.Control && e.Shift && e.Key == Keys.Z))
             {
                 undoRedoManager.Redo();
             }
-            else if (ctrl && e.Key == Keys.Z)
+            else if (e.Control && e.Key == Keys.Z)
             {
                 undoRedoManager.Undo();
             }
-            else if (ctrl && e.Key == Keys.N)
+            else if (e.Control && e.Key == Keys.N)
             {
                 NewProject();
             }
-            else if (ctrl && e.Key == Keys.S)
+            else if (e.Control && e.Key == Keys.S)
             {
-                SaveProjectAsync(shift);
+                SaveProjectAsync(e.Shift);
             }
-            else if (ctrl && e.Key == Keys.E)
+            else if (e.Control && e.Key == Keys.E)
             {
-                if (shift)
+                if (e.Shift)
                     RepeatLastExport();
                 else
                     Export();
             }
-            else if (ctrl && e.Key == Keys.O)
+            else if (e.Control && e.Key == Keys.O)
             {
                 OpenProject();
             }
-            else if (shift && e.Key == Keys.K)
+            else if (e.Shift && e.Key == Keys.K)
             {
                 ToggleQwertyPiano();
             }
-            else if (Platform.IsMacOS && ctrl && e.Key == Keys.Q)
+            else if (Platform.IsMacOS && e.Control && e.Key == Keys.Q)
             {
                 if (TryClosing())
                     window.Quit();

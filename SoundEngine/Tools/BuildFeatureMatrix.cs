@@ -99,6 +99,7 @@ namespace PrintCodeSize
             {
                 "",
                 //"FAMISTUDIO_USE_FAMITRACKER_TEMPO=1",
+                "FAMISTUDIO_USE_RELEASE_NOTES=1",
                 "FAMISTUDIO_USE_SLIDE_NOTES=1",
                 "FAMISTUDIO_USE_NOISE_SLIDE_NOTES=1",
                 "FAMISTUDIO_USE_VOLUME_TRACK=1",
@@ -106,12 +107,14 @@ namespace PrintCodeSize
                 "FAMISTUDIO_USE_PITCH_TRACK=1",
                 "FAMISTUDIO_USE_VIBRATO=1",
                 "FAMISTUDIO_USE_ARPEGGIO=1",
-                "FAMISTUDIO_USE_DUTYCYCLE_EFFECT=1"
+                "FAMISTUDIO_USE_DUTYCYCLE_EFFECT=1",
+                "FAMISTUDIO_USE_DELTA_COUNTER=1"
             };
 
             var featureDesc = new[]
             {
                 "Basic",
+                "Release Notes",
                 "Slide Notes",
                 "Slide Notes (Noise)",
                 "Volume Track",
@@ -119,7 +122,8 @@ namespace PrintCodeSize
                 "Fine Pitch Track",
                 "Vibrato Effect",
                 "Arpeggio Chords",
-                "Duty Cycle Track"
+                "Duty Cycle Track",
+                "Delta Counter"
             };
 
             var codeMatrix = new int[expansionDefines.GetLength(0), featureDefines.Length];

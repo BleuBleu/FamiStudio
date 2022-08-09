@@ -3,27 +3,11 @@
 
 - Double-click / shift-click to delete songs/instruments?
 
-4.0.0 Change Logs
-================
-- Revamped desktop version, based on GLFW using custom drawn widgets, consistent on Win/MacOS/Linux.
-- Redesigned desktop controls : context menu, gizmos, etc. 
-- Animated GIFs for intro tutorial on desktop
-- More control over sequencer height & ability to hide unused channels
-- Support to multiple audio expansions with EPSM
-- Support for multiple waveforms for N163
-- Support for single audio expansions for ROM export 
-- Wave resampling for N163/FDS waveforms
-	- Import WAV files and adjust period + offset
-- Basic NSFe support (only track names and durations for now)
-- Improved oscilloscope stability:
-	- Use of emulation-generated triggers when rendering oscilloscope in exported video or in toolbar when previewing instruments.
-	- Improved trigger detection for toolbar oscilloscope when playing a song.
-- Audio delay effect when exporting
-- Snapping improvements, most notably:
-	- ALT+1, ALT+2, ALT+3 and ALT+4 quickly changes between common snapping values
-	- Hold ALT anytime when resizing or moving notes to temporarely disable snapping
-	- Context menu to set snapping to a specific note duration
-	- Option to snap effect values
+Doc:
+====
+- N163/FDS resampling in exp audio section.
+- New options in export dialog (audio delay, etc.)
+- 
 
 Testing:
 ========
