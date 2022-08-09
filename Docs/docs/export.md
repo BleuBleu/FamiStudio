@@ -67,7 +67,21 @@ The maximum song size is approximately 28KB minus the size of the DPCM samples u
 
 Song(s) can be exported to a NES ROM file or a Famicom Disk System disk to play if back on an emulator or on actual hardware. 
 
-For ROM export uses the MMC3 mapper which is supported by most emulators and the [Everdrive N8](https://krikzz.com/store/home/31-everdrive-n8-nes.html). You can then copy the ROM to an SD card and listen to it on actual hardware. Note that expansion audio is not supported with this mapper.
+![](images/ExportRom.png#center)
+
+The exported ROMs can run on actual hardware using devices such as the [Everdrive N8](https://krikzz.com/store/home/31-everdrive-n8-nes.html).
+
+Here are the mappers used for each audio expansions:
+
+* **None** : MMC3 - iNES Mapper 004 
+* **VRC6** : VRC6a - iNES Mapper 024
+* **VRC7** : VRC7 - iNES Mapper 085 
+* **MMC5** : MMC5 - iNES Mapper 005
+* **N163** : N163 - iNES Mapper 019
+* **S5B** : FME-7 - iNES Mapper 069
+* **EPSM** : MMC3 - iNES Mapper 004 
+
+Note that projects using multiple audio expansions cannot be exported to ROM/FDS.
 
 ![](images/Rom.png#center)
 
