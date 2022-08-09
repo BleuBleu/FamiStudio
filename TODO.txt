@@ -1,8 +1,6 @@
 4.0.0
 =====
 
-ASSERT WHEN ZERO DRAG!
-
 - Double-click / shift-click to delete songs/instruments?
 
 4.0.0 Change Logs

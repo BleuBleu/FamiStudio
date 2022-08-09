@@ -355,6 +355,8 @@ namespace FamiStudio
         public void DeleteFdsResampleWavData()
         {
             fdsResampleWavData = null;
+            fdsResampleWavOffset = 0;
+            fdsResampleWavPeriod = 128;
             if (fdsWavPreset == WavePresetType.Resample)
                 fdsWavPreset = WavePresetType.Custom;
         }
@@ -387,6 +389,8 @@ namespace FamiStudio
         public void DeleteN163ResampleWavData()
         {
             n163ResampleWavData = null;
+            n163ResampleWavOffset = 0;
+            n163ResampleWavPeriod = 128;
             if (n163WavPreset == WavePresetType.Resample)
                 n163WavPreset = WavePresetType.Custom;
         }
