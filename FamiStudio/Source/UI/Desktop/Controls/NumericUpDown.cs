@@ -76,7 +76,7 @@ namespace FamiStudio
         private Rectangle GetButtonRect(int idx)
         {
             return idx == 0 ? new Rectangle(0, 0, width / 4, height - 1) :
-                              new Rectangle(width * 3 / 4, 0, width / 4, height - 1);
+                              new Rectangle(width - width / 4 - 1, 0, width / 4, height - 1);
         }
 
         private int IsPointInButton(int x, int y)
