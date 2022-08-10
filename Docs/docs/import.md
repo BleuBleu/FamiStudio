@@ -22,6 +22,7 @@ Note that only a small subset of features is supported. Only the following effec
 * Ixx/Jxx (FDS Modulation speed) : Fully supported, but combined in one 16-bit value.
 * Sxx (Delayed cut) : Fully supported. 
 * Vxx (Timbre) : Supported, but only affects the duty cycle of 2A03 and VRC6 square channels. Does not affect Saw or anything else.
+* Zxx (Delta counter) : Fully supported.
 
 Besides effects, there are also other limitations:
 
