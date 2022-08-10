@@ -3,6 +3,11 @@
 
 - Double-click / shift-click to delete songs/instruments?
 
+4.1.0
+=====
+- Dual APU (VT02) support?
+- 
+
 Doc:
 ====
 - N163/FDS resampling in exp audio section.
