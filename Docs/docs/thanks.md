@@ -29,7 +29,7 @@ Created by the [Xiph.Org Foundation](https://xiph.org/). Used for the OGG/Vorbis
 [GifDec](https://github.com/lecram/gifdec) is a tiny little C library to read animated GIF files. It does one thing and does it very well. It is used to display the tutorials on all platforms.
 
 ### GLFW
-[GLFW](https://www.glfw.org/) is a very simple windowing & input management system for OpenGL. Used by all 3 platforms on Desktop for the main FamiStudio window.
+[GLFW](https://www.glfw.org/) is a very simple windowing & input management system for OpenGL. It is used by all 3 platforms on Desktop for the main FamiStudio window. The C# bindings are provided by [GLFWDotNet](https://github.com/smack0007/GLFWDotNet).
 
 ## Demo Songs
 
