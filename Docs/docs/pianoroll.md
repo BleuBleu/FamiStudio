@@ -4,11 +4,11 @@ The Piano Roll is where you editing the actual notes of the song, the instrument
 
 ![](images/PianoRoll.png#center)
 
-You can also use it to preview instrument by clicking on the keyboard. The currently selected instrument (in the project explorer) will play on the currently selected channel (in the sequencer).
+You can also use it to preview instrument by clicking on the piano. The currently selected instrument (in **bold** in the project explorer) will play on the currently selected channel (in **bold** in the sequencer).
 
 ## Subdivision
 
-Horizontal lines in the piano rolls are align with the notes of the piano. The vertical lines represents multiple levels of subdivisions:
+Horizontal lines in the piano rolls are aligned with the notes of the piano. The vertical lines represent multiple levels of subdivision:
 
 * Thin dashes gray lines seperate individual frames (1/60th of a sec in NTSC, 1/50th in PAL) (FamiStudio tempo mode only)
 * Thin gray lines seperate notes
@@ -29,17 +29,13 @@ Clicking in the timeline (header) of the piano roll will move the play position.
 
 Clicking a pattern in the sequencer will scroll the piano roll to its location. 
 
-Left-clicking in the piano roll will add a note of the currently selected instrument and dragging while still holding the left button will allow you to set the duration. A pattern may be automatically created if you click on an area where there was no pattern. 
-
+On desktop, **Left-clicking** in the piano roll will add a note of the currently selected instrument and dragging while still holding the left button will allow you to set the duration. A pattern may be automatically created if you click on an area where there was no pattern. **Double-clicking** deletes a note. Alternatively **Shift+click** also deletes.
+ 
 ![](images/CreateNote.gif#center)
 
-Right-clicking deletes a note.
-
-On mobile, notes are created by a quick tap.
+Similarly, on mobile, notes are created by a quick tap and deleted by **double-tapping**.
 
 ![](images/MobileCreateNote.gif#center)
-
-They are deleted by long pressing and selecting "Delete Note", or by making a selection and deleting it.
 
 ## Moving & resizing notes
 
@@ -71,8 +67,8 @@ As you can see, in the following example, even through i am trying to resize the
 
 There are three main ways of selecting notes, selected notes will appear with a thick silver border. 
 
-* You can select notes by **right-clicking** and dragging in the header of the piano roll or anywhere in the background of the piano roll (where there is no note). 
-* You can select the duration of a note using the context menu that appears if you right-click above or below a note.
+* You can select notes by **right-clicking and dragging** in the header of the piano roll or anywhere in the background of the piano roll (where there is no note). 
+* You can select the duration of a note using the context menu that appears if you **right-click** above or below a note.
 * You can select an entire pattern or an entire song using the context menu that appears when you **right-click** on the header. 
 
 The following images shows all 3 techniques. 
@@ -81,15 +77,15 @@ The following images shows all 3 techniques.
 
 Once notes are selected, then can be moved or resized all at once. They can also be moved or transposed using the keyboard array keys (up, down, left and right). Holding **Ctrl** while doing so will make the notes move by larger increments. 
 
-On mobile, there is just only way to select notes and it is done by swiping in the header of the piano roll. A long press in the background will allow you to clear the selection.
+On mobile, there is just only way to select notes and it is done by swiping in the header of the piano roll. A **long press** in the background will allow you to clear the selection.
 
 ![](images/MobileSelectNotes.gif#center)
 
 ## Release point
 
-Release points triggers the envelope to jump to the release point and are represented by  making the note thinner. Release envelopes are useful to nicely fade out a note when its release, while preserving other effects like vibrato. There is no point to adding a release point to an instrument that does not have a release envelope.
+Release points triggers the envelope to jump to the release point and are represented by making the note thinner. Release envelopes are useful to nicely fade out a note when its release, while preserving other effects like vibrato. There is no point to adding a release point to an instrument that does not have a release envelope.
 
-To set a release point on a note on desktop, simply right-click on a note a choose the "Toggle Release" option. Alternatively, you can hold **R** and click on a note to toggle a release.
+To set a release point on a note on desktop, simply **right-click** on a note a choose the "Toggle Release" option. Alternatively, you can hold **R** and click on a note to toggle a release.
 
 Once a note has a release point, it can be moved by dragging. 
 
@@ -105,7 +101,7 @@ Stop notes simply stop the sound and are displayed as little triangles. Although
 
 To create a stop note on Desktop, **right-click** on a note and select "Make Stop Note". Alternatively, you can use **T+click** to create a stop note.
 
-*As of FamiStudio 3.0.0 stop notes are no longer needed since they have been replaced by note durations. There are cases where stop notes will still remain when notes are detected to have inconsistent durations, but those should be relatively rare.*
+> As of FamiStudio 3.0.0 stop notes are no longer needed since they have been replaced by note durations. There are cases where stop notes will still remain when notes are detected to have inconsistent durations, but those should be relatively rare. One use case where they can be useful is to interrup a long note from a previous pattern. 
 
 ![](images/StopNote.png#center)
 
@@ -151,11 +147,18 @@ The precision of the snapping can be changed by right-clicking on the magnet and
 
 ![](images/Snap.gif#center)
 
-The snapping precision is expressed in *Beats* (which are numbered as x.1, x.2, x.3, etc. in the header). So with the default settings, a snapping precision of 1 will mean a quarter note.
+The snapping precision is expressed in *Beats* (which are numbered as x.1, x.2, x.3, etc. in the header). So with the default settings, a snapping precision of 1 will mean a quarter note. Adding, selecting and dragging of notes are currently the only actions affected by snapping. More might be added in future based on user feedback.
 
-Adding, selecting and dragging of notes are currently the only actions affected by snapping. More might be added in future based on user feedback.
+There is also an option to snap effect values. When enabled, newly created effect values in the effect panel will be snapped to the desired precision.
 
-On mobile, the snapping precision is set from the Quick Access Bar, on the right size. 
+The following keyboard shortcuts can be used to switch between common snapping values:
+
+* **Alt+1** : Set snapping to 1 beat.
+* **Alt+2** : Set snapping to 1/2 beat.
+* **Alt+3** : Set snapping to 1/4 beat.
+* **Alt+4** : Set snapping to 1/8 beat.
+
+On mobile, the snapping precision is set from the Quick Access Bar, on the right size but works similarly. 
 
 ![](images/MobileSnap.png#center)
 
@@ -278,7 +281,7 @@ The volume tracks dictates how loud the current channel should play. This volume
 
 The volume track is allowed to have slides to smoothly raise or lower the volume. 
 
-Volume slides are created exactly like regular slide notes, by either using the context menu that appears by **right-clicking** on an effect value or by holding "S", clicking on effect values and dragging up or down. 
+Volume slides are created exactly like regular slide notes, by either using the context menu that appears by **right-clicking** on an effect value or by holding **S**, clicking on effect values and dragging up or down. 
 
 These slides use fixed point arithmetic and have limited precision. They will go up/down by 1 volume unit every 16 frames at most. Very slow/long slides may end earlier than their visual representation.
 

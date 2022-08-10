@@ -1,6 +1,6 @@
 # Editing Patterns
 
-The Sequencer is where you decide which pattern plays when. A pattern is a small portion of a song (usually of fixed length) that is likely to be repeated. 
+The Sequencer is where you decide which pattern plays when. A pattern is a small portion of a song, usually of fixed length, that is likely to be repeated. 
 
 Patterns are laid out on one of the five channels that NES support (more if you have expansion audio enabled).
 
@@ -76,7 +76,7 @@ On mobile, patterns can be moved in a similar way but they first must be tapped 
 
 ## Copy & pasting patterns
 
-When one or multiple patterns are selected, press CTRL+C (or CTRL+X for cut). Move the selection somewhere else and paste with CTRL+V. Copy and pasting always create instances of patterns.
+When one or multiple patterns are selected, press **Ctrl+C** (or **Ctrl+X** for cut). Move the selection somewhere else and paste with **Ctrl+V**. Copy and pasting always create instances of patterns.
 
 ### Copying & pasting patterns between projects
 
@@ -88,7 +88,7 @@ Inside patterns, for notes and instrument, the [same rule](pianoroll.md#copy-pas
 
 ## Paste Special
 
-Pressing CTRL+SHIFT+V will open the **Paste Special** dialog which gives more options than a regular paste.
+Pressing **Ctrl+Shift+V** will open the **Paste Special** dialog which gives more options than a regular paste.
 
 ![](images/PasteSpecialSequencer.png#center)
 
@@ -106,7 +106,7 @@ The **Loop point** is where the song will repeat once it reaches the end and is 
 
 ![](images/LoopPoint.png#center)
 
-You can move the loop point around or remove it entirely by **right-clicking** (or long pressing on mobile) in the header and selecting the appropriate option from the context menu. Alternatively, you can hold the **L** key and clicking at a location in the Sequencer. 
+You can move the loop point around or remove it entirely by **right-clicking** (or **long pressing** on mobile) in the header and selecting the appropriate option from the context menu. Alternatively, you can hold the **L** key and clicking at a location in the Sequencer. 
 
 ## Custom pattern settings
 

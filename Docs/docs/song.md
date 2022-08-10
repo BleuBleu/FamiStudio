@@ -6,7 +6,7 @@ The project explorer displays the name of the project, the list of songs and ins
 
 ## Editing project properties
 
-Clicking on the little gear icon or double clicking on the project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information is used when exporting to NSF, for example.
+Clicking on the little gear icon or selecting the "Project Properties..." option from the context menu of the project (first button in the project explorer) will allow you to change its name, author and copyright information. This information is used when exporting to NSF, for example.
 
 ![](images/EditProject.png#center)
 
@@ -66,7 +66,7 @@ To add new songs, simply click on the little "+" icon on the song header.
 
 ## Reordering songs
 
-You can drag & drop songs to reorder them in the list. Songs are the only things that are not always sorted alphabetically in the project explorer.
+You can drag & drop songs to reorder them in the list. Songs are the only things that are not always sorted alphabetically in the project explorer at the moment.
 
 ## Importing/Merging songs
 
@@ -76,7 +76,7 @@ Songs from another project must use the same audio expansion and tempo mode. Als
 
 ## Editing song properties
 
-Clicking the gear icon next to a song (or double-clicking on the song) will allow you to change its name, color and other attributes. Names must be unique.
+Clicking the gear icon next to a song or using the "Song/Tempo Properties..." will allow you to change its name, color and other attributes. Names must be unique.
 
 This dialog will look different depending on the **Tempo Mode** of the current project.
 

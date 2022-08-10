@@ -40,8 +40,6 @@ On mobile, there are 3 main gestures used:
 
 # Main Window
 
-The UI was designed to be a simple as possible, there are almost no context menus.
-
 The main window has 4 main components:
 
 * The Toolbar (on top)
@@ -53,10 +51,10 @@ The main window has 4 main components:
 
 At any given moment there is always:
 
-* A selected channel, in bold in the sequencer
-* A selected song, in bold in the project explorer song list
-* A selected instrument, in bold in the project explorer instrument list.
-* A selected arpeggio, in bold in the project explorer arpeggio list.
+* A selected channel, in **bold** in the sequencer
+* A selected song, in **bold** in the project explorer song list
+* A selected instrument, in **bold** in the project explorer instrument list.
+* A selected arpeggio, in **bold** in the project explorer arpeggio list.
 
 The sequencer and piano roll will display the information for the currently selected song. When pressing the keys on the piano roll, it will play notes for the currently selected instrument, and output it on the currently selected channel. The same applies if you have a MIDI keyboard connected.
 
@@ -68,7 +66,7 @@ The main toolbar contains your usual stuff: file operation, undo/redo, timecode,
 
 Here is the meaning of each toolbar icon and some additional actions that can be performed. Unless specified, additionnal actions are performed by right-clicking on desktop, or long pressing on mobile.
 
-Icon | Click Action | Additional Actions (Right click on desktop, long press on mobile)
+Icon | Click Action | Additional Actions<br/>(Right click on desktop, long-press on mobile)
 --- | --- | ---
 ![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/File.png) | New project | 
 ![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Open.png) | Open FamiStudio project or other file format | On desktop, opens a list of recently opened files
@@ -116,7 +114,7 @@ Right-clicking on the play button will open a context menu allowing you to chang
 
 ## Changing the looping mode
 
-There are 2 looping modes:
+There are 4 looping modes, but only 2 are usable at any given time:
 
 * **Song** or **None**: Loops the entire song if a loop point is step, stops at the end if there are no loop point.
 * **Pattern** or **Selection**: Loops over the current pattern if there is no selection in the sequencer. If there is a selection, will loop over that selection. The icon in the toolbar will change to reflection this.

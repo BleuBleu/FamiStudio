@@ -29,19 +29,21 @@ Parameter(s) that is available on most instruments:
 
 * **Pitch Envelope** : Defines how FamiStudio will interpret the values in the pitch envelope.
     * **Absolute** : By default, FamiStudio's pitch envelope are absolute. Meaning that the envelope values are the pitch you are going to hear, this is especially useful for vibrato where you can draw a simple sine wave.
-    * **Relative** : It is sometimes useful to have relative pitch envelope to create pitches that rapidly ascend or decend (useful for bassdrum sounds). This is how FamiTracker handles pitch envelopes.
+    * **Relative** : It is sometimes useful to have relative pitch envelope to create pitches that rapidly ascend or descend (useful for bass drum sounds). This is how FamiTracker handles pitch envelopes.
      
 ## Adding instruments
 
-You can add an instrument by pressing the "+" sign, and you can delete one by right-clicking on it. Deleting an instrument will delete all notes used by that instrument.
+You can add an instrument by pressing the "+" sign, and you can delete one by selecting "Delete Instrument" from the context menu. Deleting an instrument will delete all notes used by that instrument.
 
 ## Replacing an instrument by another
 
-Clicking on an instrument name and dragging it over another instrument will allow you to replace all notes of the first instrument by the second. This is useful prior to deleting an instrument.
+To replace an instrument by another throughout the entire project, you can select the "Replace Instrument..." option from the context menu of the instrument. This will bring up a list allowing you to select the new instrument. This works similarly on mobile, except the list is less colored.
+
+![](images/ReplaceInstrument2.png#center)
 
 ## Importing instruments
 
-You can import intruments in your project from any supported input format, as well as FamiTracker instrument files (FTI files, official FamiTracker 0.4.6 only) by clicking the little folder icon. 
+You can import instruments in your project from any supported input format, as well as FamiTracker instrument files (FTI files, official FamiTracker 0.4.6 only) by clicking the little folder icon. 
 
 When importing instruments from another project or a FamiTracker file, you will be prompted with a list of instruments to import. Simply check the instrument to bring over.
 
@@ -53,33 +55,39 @@ Note that instruments that are using incompatible expansion audio will not be ab
 
 ## Editing instrument envelopes
 
-Clicking on an envelope icon in the project explorer will open the envelope of that instrument in the piano roll. The length of the envelope can be changed by left-clicking (and potentially dragging) in the timeline of the piano roll. Setting the length of an envelope to zero will disable it.
+Clicking on an envelope icon in the project explorer will open the envelope of that instrument in the piano roll. The length of the envelope can be changed by **clicking and dragging** the little arrow icon in the top right corner. Setting the length of an envelope to zero will essentially disable it.
 
 ![](images/EditEnvelope.png#center)
 
-The loop point of an envelope can be set by right-clicking in the timeline. Volume tracks are also allowed to have release envelopes. Release envelopes are played when a release note is encountered and terminates the loop by jumping to the release point. This is useful for fading out notes smoothly. The release point is set by right-dragging from the rightmost side of the envelope.
+The loop point of an envelope can be set by **left-clicking** in bottom part of the header or by using the context menu. 
+
+Volume tracks (and N163 wave envelopes) are also allowed to have release points. Releases are played when a release note is encountered and terminates the loop by jumping to the release point. This is useful for fading out notes smoothly. 
+
+The release point is set by **right-clicking** in the bottom part of the header, or by using the context menu.
 
 ![](images/EditEnvelopeRelease.png#center)
 
-On mobile, you can editing envelope values individually by tapping them. But a much more natural way of drawing envelope is by first long pressing, waiting for the prompt, and then drawing the shape of the envelope. 
+On mobile, you can editing envelope values individually by tapping them. But a much more natural way of drawing envelope is by first **long pressing,** waiting for the prompt, and then drawing the shape of the envelope. 
 
 ![](images/MobileDrawEnvelope.gif#center)
 
 ## Copying envelope values
 
-Right-clicking on the numbers on the header of the envelope editor allows for range selection of envelope values. These can then be copy and pasted elsewhere.
+**Right-clicking and dragging** in the envelope editor allows for range selection of envelope values. These can then be copy and pasted elsewhere.
 
 ![](images/CopyEnvelopeValues.png#center)
 
 It is also possible to paste envelope values coming from raw text. Any series of number that is space, tab, comma, semicolon or newline separated can be pasted in the envelope editor. 
 
+You can also copy envelope values as text if you want to use them in another app. To do so, use the "Copy Selected Values as Text" option from the context menu when there is a valid selection.
+
 ## Copying envelopes
 
-Clicking on an envelope button and dragging it on another instrument will copy that envelope from the first to the second. Note that unlike FamiTracker, envelopes are not explicitly shared between instruments. Identical envelopes will be combined when exporting to FamiTone2, but it is your responsibility to optimize the content and ensure that you limit the number of unique envelopes.
+Clicking on an envelope button and dragging it on another instrument will copy that envelope from the first to the second. Note that unlike FamiTracker, envelopes are not explicitly shared between instruments. Identical envelopes will be combined when exporting to various formats, but it is your responsibility to optimize the content and ensure that you limit the number of unique envelopes.
 
-## Deleting envelopes
+## Clearing or Deleting envelopes
 
-Right-clicking on the icon of an envelope deletes it.
+Envelopes cannot be deleted per-se, they can be cleared to they have essentially no effect. To clear and envelope, simply select the "Clear Envelope" option from the instrument context menu.
 
 # DPCM Instrument
 
@@ -99,8 +107,4 @@ You can also assign a name and a color to each arpeggio by clicking the little g
 
 ## Replacing arpeggios by another
 
-Much like instrument, you can replace every usage of an arpeggio by another by simply dragging an arpeggio on to another. FamiStudio will prompt you to confirm the replacement.
-
-## Copying arpeggios
-
-You can also copy the sequence of note from one arpeggio to another by dragging the little note icon (the one on the right side) on to another arpeggio. 
+Much like instrument, you can replace every usage of an arpeggio by another by using the "Replace Arpeggio..." option from the context menu.

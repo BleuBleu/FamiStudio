@@ -52,3 +52,8 @@ th {
 .col-md-3 {
     max-width:30%;
 }
+blockquote {              
+  background-color: rgb(25,28,31);
+  font-style: italic;     
+  padding: 12px 12px 1px 12px;
+}      
