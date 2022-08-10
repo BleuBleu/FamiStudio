@@ -20,7 +20,7 @@ Here are the operations that can be performed on songs:
 
 Here are the operations that can be performed on the project:
 
-* **Merge identical instruments** : Instruments that have the same settings and envelopes will be combined into ones and every notes using the intruments to be deleted will use the new one. 
+* **Merge identical instruments** : Instruments that have the same settings and envelopes will be combined into one and every notes using the instruments to be deleted will use the new one. 
 
 * **Delete unused instruments** : Instruments without a single note played will be deleted.
 

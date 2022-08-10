@@ -12,9 +12,9 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Check for updates**: At startup FamiStudio checks for new version online. This can be disabled.
 
-* **Show Tutorial at Startup**: If enabled, the onboarding tutorial will be showed when FamiStudio is launched.
+* **Show Tutorial at Startup**: If enabled, the on-boarding tutorial will be showed when FamiStudio is launched.
 
-* **Clear Undo/Redo on save**: Wipes the undo/redo stack every time the project is saved. This help keep the memory usage lower, but limits your ability to undo indefinately.
+* **Clear Undo/Redo on save**: Wipes the undo/redo stack every time the project is saved. This help keep the memory usage lower, but limits your ability to undo indefinitely.
 
 * **Open last project on start**: Remember which project you last open and re-opens it next time you launch FamiStudio.
 
@@ -24,7 +24,7 @@ The configuration dialog dialog is accessed from the toolbar.
 
 ![](images/ConfigUI.png#center)
 
-* **Scaling**: By default, FamiStudio will use the scaling of your primary monitor on Windows (100%, 150% and 200% are support) and on macOS it will choose between 100% or 200% depending on if you have a retina display or not. This behavior can be overriden by a scaling of your choosing. This requires restarting the app:
+* **Scaling**: By default, FamiStudio will use the scaling of your primary monitor on Windows (100%, 150% and 200% are support) and on macOS it will choose between 100% or 200% depending on if you have a retina display or not. This behavior can be overridden by a scaling of your choosing. This requires restarting the app:
 
 * **Time Format**: Allow changing the format of the timer in the main toolbar of the application. 
 
@@ -49,7 +49,7 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Allow Sequencer Vertical Scrolling** : If enabled and the ideal height above cannot be achieve (usually because there are too many channels), will allow vertically scrolling in the sequencer instead of going above the ideal size.
 
-* **Show FamiTracker Stop Notes**: When using FamiTracker tempo mode, display implicity stop notes (whenever a note ends without being interrupted by another note) as little triangles. This makes it easier to set note delays for those.
+* **Show FamiTracker Stop Notes**: When using FamiTracker tempo mode, display implicit stop notes (whenever a note ends without being interrupted by another note) as little triangles. This makes it easier to set note delays for those.
 
 * **Show Piano Roll View Range**: Displays a yellow rectangle in the sequencer representing the view range of the piano roll.
 
@@ -76,9 +76,9 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Stop instrument after**: When instruments have release notes, there is no way for FamiStudio to know when to stop the notes. This allows stopping any sound after a specified number of seconds. This only applies to MIDI or when previewing instruments on the piano roll and has no impact on the actual song.
 
-* **Prevent popping on square channels**: The NES/Famicom had a bug where the phase of square channels will reset around some notes (A-3, A-2, D-2, A-1, F-1, D-1, and B-0 on NTSC, or A#3, A#2, D#2, A#1, F#1, D#1, and C-0 on PAL), resulting in audible clicks or pops. This option will work around that bug using the Smooth Vibrato technique by Blargg, resulting in smooth pitch changes. Note that this option will not carry over to FamiTracker if you export.
+* **Prevent popping on square channels**: The NES/Famicom had a bug where the phase of square channels will reset around some notes (A-3, A-2, D-2, A-1, F-1, D-1, and B-0 on NTSC, or A#3, A#2, D#2, A#1, F#1, D#1, and C-0 on PAL), resulting in audible clicks or pops. This option will work around that bug using the Smooth Vibrato technique by Blaarg, resulting in smooth pitch changes. Note that this option will not carry over to FamiTracker if you export.
 
-* **Clamp periods and notes** : Notes that go below the lowest possible note or above the highest possible note will typically wrap around when listening the song on real hardware. This is due to the fact that currently the SoundEngine does not clamp notes or period to the valid range. The mulation inside FamiStudio does it by default. If you want a more hardware accurate behavior, you can disable this option.
+* **Clamp periods and notes** : Notes that go below the lowest possible note or above the highest possible note will typically wrap around when listening the song on real hardware. This is due to the fact that currently the SoundEngine does not clamp notes or period to the valid range. The emulation inside FamiStudio does it by default. If you want a more hardware accurate behavior, you can disable this option.
 
 * **Mute piano roll interactions during playback** : When enabled, dragging/adding notes in the piano roll will not preview the notes when the song is playing. Some users find this distracting.
 

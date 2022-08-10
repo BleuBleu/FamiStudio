@@ -8,7 +8,7 @@ List of expansions supported:
 
 * **Konami VRC6**: Adds 2 square channels and a Sawtooth channel. The square channels are better quality than the stock square as they give more control over the duty cycle and don't suffer for the phase reset bug.
 
-* **Konami VRC7**: Adds 6 FM synthesis channels. It was based off the Yamaha YM2413 OPLL. Qualitatively, it sounds like an old SoundBlaster card from the 90s. It has 15 preset patches and a user-defined one. Since only 1 user-defined patch can be defined, one has to be careful not to use multiple custom patches at the same time from different channels.
+* **Konami VRC7**: Adds 6 FM synthesis channels. It was based off the Yamaha YM2413 OPLL. Qualitatively, it sounds like an old SoundBlaster card from the 90's. It has 15 preset patches and a user-defined one. Since only 1 user-defined patch can be defined, one has to be careful not to use multiple custom patches at the same time from different channels.
 
 * **Famicom Disk System**: Adds an extra channel that uses a wavetable and a modulation unit to create a wide range of sound.
 
@@ -28,7 +28,7 @@ The audio expansion(s) used is set in the project properties, which you can acce
 
 Enabling any kind of expansion audio will automatically disable PAL support since no audio expansion were ever available in PAL territories. 
 
-Note that while using multiple audio expansion(s) is supported in FamiStudio, no NES game has ever shipped with multiple expansions. This probably would not have been possible for multiple reasons (cost, competing compagnies, hardware conflicts, etc.). So be aware that you are bending the rules of reality when using multiple expanions.
+Note that while using multiple audio expansion(s) is supported in FamiStudio, no NES game has ever shipped with multiple expansions. This probably would not have been possible for multiple reasons (cost, competing companies, hardware conflicts, etc.). So be aware that you are bending the rules of reality when using multiple expansions.
 
 ## Expansion instruments
 
@@ -58,10 +58,10 @@ VRC7 instruments are by far the ones with the most parameters of the old expansi
 
 ![](images/VRC7.png#center)
 
-Roughly speaking, the chip generates a carier frequency, which is then modified by a modulator. To configure this properly, you should be familiar with the [Attack-Decay-Sustain-Release (ADSR)](https://en.wikipedia.org/wiki/Envelope_(music)#ADSR) way of generating sound.
+Roughly speaking, the chip generates a carrier frequency, which is then modified by a modulator. To configure this properly, you should be familiar with the [Attack-Decay-Sustain-Release (ADSR)](https://en.wikipedia.org/wiki/Envelope_(music)#ADSR) way of generating sound.
 
 * **Patch** : Allows you to select one of the built-in patch. Changing any parameter value will revert back to the "Custom" patch as it is the only one that can be configured.
-* **Carier** / **Modulator** :
+* **Carrier** / **Modulator** :
     * **Tremolo** : Toggle use of tremolo. The rate of the tremolo is fixed and cannot be changed.
     * **Vibrato** : Toggle use of vibrato. The rate of the vibrato is fixed and cannot be changed.
     * **Sustained** : Toggle use of sustain in the envelope.
@@ -85,7 +85,7 @@ The FDS instruments have 2 extra envelopes and a few extra parameter.
 The extra envelopes are:
 
 * **Waveform** : The waveform of the instrument. It has a fixed length of 64 and can be fully customised. You can also choose from one of the presets.
-* **Modulation Table** : The modulation table is used to modulate the waveform. It has a fixed length of 32 and can be fully customised. You can also choose from one of the presets. It has no effect if the modulation speed or depth is zero. Note that the way the modulation table is edited is very different from FamiTracker. All the internal complexity is hidden.
+* **Modulation Table** : The modulation table is used to modulate the waveform. It has a fixed length of 32 and can be fully customized. You can also choose from one of the presets. It has no effect if the modulation speed or depth is zero. Note that the way the modulation table is edited is very different from FamiTracker. All the internal complexity is hidden.
 
 The parameters are:
 

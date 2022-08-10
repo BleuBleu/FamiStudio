@@ -1,4 +1,4 @@
-# Exporting Songs
+6# Exporting Songs
 
 The export dialog is access through the main toolbar or with CTRL+E on the keyboard. To quickly repeat a previous export (same format and output file), you can right click on the export icon in the toolbar or press CTRL+SHIFT+E.
 
@@ -13,11 +13,11 @@ The song can be exported in one of two modes:
 
 Other options:
 
-* **Separate channel files** : Will output each channel in a seperate audio file.
-* **Seperate intro file** : Will output the part before the loop point (intro) in a seperate file. 
+* **Separate channel files** : Will output each channel in a separate audio file.
+* **Separate intro file** : Will output the part before the loop point (intro) in a separate file. 
 * **Stereo** : Will output a stereo file and will allow setting the panning % in the channel list.
 
-Note that the quality of the MP3 encoding may not going to be as good as full fledge mp3 encoder such as LAME, but should be good enough for sending quick previews to people.
+Note that the quality of the MP3 encoding may not going to be as good as full fledged MP3 encoder such as LAME, but should be good enough for sending quick previews to people.
 
 ![](images/ExportWav.png#center)
 
@@ -49,7 +49,7 @@ Options specific to piano roll video:
 
 Options specific to oscilloscope video:
 
-* **Oscilloscope Colums** : Number of columns to split the channels into.
+* **Oscilloscope Columns** : Number of columns to split the channels into.
 * **Oscilloscope Thickness** : Thickness of the oscilloscope line, in pixels.
 * **Oscilloscope Color** : Can color the oscilloscope using the colors of the instruments or samples. Otherwise will use a neutral light grey. 
 
@@ -147,7 +147,7 @@ FamiTracker speed | FamiTracker period | FamiStudio speed | FamiStudio period
 
 ## FamiStudio Text
 
-FamiStudio text format is a textual representation of the of the binary FamiStudio format. It is designed to favor interopability with other softwares, tools and sound engines. Unlike .FMS files, this format is not forward or backward compatible. FamiStudio can only read FamiStudio text files generated with the same major and minor version (ex: 3.0.x).
+FamiStudio text format is a textual representation of the of the binary FamiStudio format. It is designed to favor interoperability with other apps, tools and sound engines. Unlike .FMS files, this format is not forward or backward compatible. FamiStudio can only read FamiStudio text files generated with the same major and minor version (ex: 3.0.x).
 
 ![](images/ExportFamiStudioText.png#center)
 
@@ -291,7 +291,7 @@ PatternInstance | Time | Yes | Index of the column of patterns where to place th
 
 ## FamiStudio / FamiTone2 Music
 
-Exporting music to the [FamiStudio Sound Engine](soundengine.md) or [FamiTone2](https://shiru.untergrund.net/code.shtml) work very similarely. It will generate assembly code that can be included in your homebrew project and played using the FamiTone2 sound engine. 
+Exporting music to the [FamiStudio Sound Engine](soundengine.md) or [FamiTone2](https://shiru.untergrund.net/code.shtml) work very similarly. It will generate assembly code that can be included in your homebrew project and played using the FamiTone2 sound engine. 
 
 ![](images/ExportFamiTone2.png#center)
 

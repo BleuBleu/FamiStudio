@@ -16,7 +16,7 @@ The engine, as well as a demo project, is available for all 3 major assemblers:
 
 ## Features
 
-The engine has a basic set of features, as well as a few extra toggeable features that you may wish to disable to same CPU/RAM. If you disable a feature, you need to make sure that you definetaly are not using it in any of your songs. Using a feature in a song without enabling it in the song engine may lead to crashes (BRK) or undefined behaviors.
+The engine has a basic set of features, as well as a few extra toggeable features that you may wish to disable to same CPU/RAM. If you disable a feature, you need to make sure that you definitely are not using it in any of your songs. Using a feature in a song without enabling it in the song engine may lead to crashes (BRK) or undefined behaviors.
 
 The basic feature set that is always available in engine is:
 
@@ -93,7 +93,7 @@ The sound engine is contained in a single file which can be simply included in o
 * NESASM: `famistudio_nesasm.asm`
 * ASM6: `famistudio_asm6.asm`
 
-Another approach would be to compile the engine as a seperate obj file and link it. This might require you to import the famistudio_xxx calls in other parts of your project.
+Another approach would be to compile the engine as a separate obj file and link it. This might require you to import the famistudio_xxx calls in other parts of your project.
 
 All the instructions to use it in your project are included as comments at the top of these files.
 

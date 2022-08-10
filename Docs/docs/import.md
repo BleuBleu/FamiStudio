@@ -98,7 +98,7 @@ Only features that are supported by FamiStudio will be imported. Things like har
 
 # Error Log
 
-When importing/exporting from/to specific format, an error log may appear providing a list of warnings/errors that occured during the process. Please pay attention to these as they may explain why your song sound differently than intended.
+When importing/exporting from/to specific format, an error log may appear providing a list of warnings/errors that occurred during the process. Please pay attention to these as they may explain why your song sound differently than intended.
 
 ![](images/ErrorLog.png#center)
 

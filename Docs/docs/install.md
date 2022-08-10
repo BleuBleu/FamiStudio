@@ -25,7 +25,7 @@ To bypass the warning, simply click "More Info" and then "Run Anyway".
 
 On MacOS, you will need to install [Mono](https://www.mono-project.com/download/stable/#download-mac).
 
-GateKeeper can be quite agressive when first running the application. At first it will look like you simply cannot run it and it will give you the option to throw FamiStudio in the recycling bin.
+GateKeeper can be quite aggressive when first running the application. At first it will look like you simply cannot run it and it will give you the option to throw FamiStudio in the recycling bin.
 
 ![](images/GateKeeper1.png#center)
 
@@ -39,9 +39,9 @@ Click "Open Anyway" and then you will have the option to launch it.
 
 ## Linux
 
-The Linux version should work on most x64 ditros. But given the very non-stardard nature of the OS, your mileage may vary.
+The Linux version should work on most x64 ditros. But given the very non-standard nature of the OS, your mileage may vary.
 
-Please install the following dependencies before trying ot run the Linux version.
+Please install the following dependencies before trying to run the Linux version.
 
 1. Install [Mono](https://www.mono-project.com/download/stable/#download-lin)
 

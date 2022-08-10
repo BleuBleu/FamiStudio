@@ -46,9 +46,9 @@ Clicking a pattern selects it and opens the piano roll for the current channel a
 
 ## Selecting patterns
 
-You can select entire columns of patterns by **right-cliking and dragging** from the header bar. You can do a rectangle selection **right-cliking and dragging** from any pattern location in the sequencer.
+You can select entire columns of patterns by **right-clicking and dragging** from the header bar. You can do a rectangle selection **right-clicking and dragging** from any pattern location in the sequencer.
 
-To un-select everything, simply press Esc. When multiple patterns are selected, only the color can be edited in the pattern properties.
+To un-select everything, simply press **Esc**. When multiple patterns are selected, only the color can be edited in the pattern properties.
 
 ![](images/SelectPatterns.gif#center)
 
@@ -62,11 +62,11 @@ When one or multiple patterns are selected, dragging them will move them in the 
 
 ![](images/InstancePattern.png#center)
 
-Holding **Ctrl+Shift** while dragging will create a completely independant copy of the selected patterns. This will be showned by a "copy" icon when dragging. They will be renamed in the process.
+Holding **Ctrl+Shift** while dragging will create a completely independent copy of the selected patterns. This will be shown by a "copy" icon when dragging. They will be renamed in the process.
 
 ![](images/CopyPattern.png#center)
 
-Dragging a pattern to a different channel will create a copy, but delete the original. This is because internally, patterns cannot be shared accross different channels. The pattern may be renamed in the processs. Holding **Ctrl+Shift** will preserve the original (create a copy). 
+Dragging a pattern to a different channel will create a copy, but delete the original. This is because internally, patterns cannot be shared across different channels. The pattern may be renamed in the process. Holding **Ctrl+Shift** will preserve the original (create a copy). 
 
 ![](images/MovePatternDifferentChannel.png#center)
 
@@ -93,7 +93,7 @@ Pressing **Ctrl+Shift+V** will open the **Paste Special** dialog which gives mor
 ![](images/PasteSpecialSequencer.png#center)
 
 * **Insert** : Will insert the copied patterns and move all the existing ones to the right.
-* **Extend song** : Will extend the song duration to accomodate the newly inserted patterns (Only available when Insert is enabled).
+* **Extend song** : Will extend the song duration to accommodate the newly inserted patterns (Only available when Insert is enabled).
 * **Repeat** : Allows pasting the copied patterns multiple times in a row.
 
 On mobile, the same functionality is accessible by long pressing the "Paste" button while in the Sequencer.

@@ -1,6 +1,6 @@
 # Editing DPCM Samples
 
-DPCM (Delta Pulse Coded Modulation)samples are very low quality 1-bit digital samples that the NES/Famicom supported. They are of very low quality but have been used quite successfully for drums and basses. 
+DPCM (Delta Pulse Code Modulation) samples are 1-bit digital samples that the NES/Famicom supports. They are of very low quality but have been used quite successfully for drums and basses. 
 
 To use a DPCM sample, it first needs to be loaded, then it needs to be assigned to a key of the piano, in the DPCM instrument.
 
@@ -24,9 +24,9 @@ If you do not wish to use the built-in DPCM sample editor of FamiStudio there ar
 
 ## Loading DPCM Samples
 
-Samples are loaded by clicking the little folder icon next to the "DPCM Samples" section in the project explorer. FamiStudio can import samples from WAV files or from a DMC files. Note that importing DMC files and doing extensive processing is not recommended as these samples are very low-quality fo begin with and any extra processing will degrade it further.
+Samples are loaded by clicking the little folder icon next to the "DPCM Samples" section in the project explorer. FamiStudio can import samples from WAV files or from a DMC files. Note that importing DMC files and doing extensive processing is not recommended as these samples are very low-quality to begin with and any extra processing will degrade it further.
 
-It is also possible to import samples from another FamiStudio project. Note that doing this will not import the sample assignments to keys of the piano (DPCM Instrument). To import those as well, you mayb want to import the DPCM instrument in the Instrument section of the Project Explorer.
+It is also possible to import samples from another FamiStudio project. Note that doing this will not import the sample assignments to keys of the piano (DPCM Instrument). To import those as well, you maybe want to import the DPCM instrument in the Instrument section of the Project Explorer.
 
 Once loaded, you can rename a sample or change its color by clicking the gear icon (or double-clicking on it)button. You can also play the sample by clicking the little play button next to it:
 
@@ -49,11 +49,11 @@ Once a sample is loaded, it can be expanded by clicking the little arrow to reve
 
 	* **Unpadded** : The sample will be unpadded.
 
-	* **Pad to 16** : The sample will be padded with silence until a multiple of 16 bytes is reached. This is what most games did and will cause an extra byte of garbage to be played every time the sample is played, but this is usucally not audible. 
+	* **Pad to 16** : The sample will be padded with silence until a multiple of 16 bytes is reached. This is what most games did and will cause an extra byte of garbage to be played every time the sample is played, but this is usually not audible. 
 
 	* **Pad to 16 + 1** : The sample will be padded with silence until a multiple of 16 bytes (plus one) is reached. This is technically the best way to process samples and it will ensure that no extra garbage sample is played but will waste 15 bytes.
 
-	* **Round to 16** : The sample will be resampled in a way that the end of sample aligned to 16 bytes. This may affect the pitch slightly. This will cause an extra byte of garbage to be played every time the sample is played, but this is usucally not audible. 
+	* **Round to 16** : The sample will be resampled in a way that the end of sample aligned to 16 bytes. This may affect the pitch slightly. This will cause an extra byte of garbage to be played every time the sample is played, but this is usually not audible. 
 
 	* **Round to 16 + 1** : The sample will be resampled in a way that the end of sample aligned to 16 bytes (plus one). This may affect the pitch slightly. This is a good mode to create looping samples.
 
@@ -84,7 +84,7 @@ The color of in the header will also show the length of the processed sample, wh
 
 ### Selecting and deleting samples
 
-Zooming in will reveal the indivual samples of both waveforms. It is possible to select samples of the source data to trim them (by pressing the Delete key). Note that deleting samples manually is the only destructive operation that you can perform on the source data.
+Zooming in will reveal the individual samples of both waveforms. It is possible to select samples of the source data to trim them (by pressing the Delete key). Note that deleting samples manually is the only destructive operation that you can perform on the source data.
 
 ![](images/EditWaveformSelectSamples.png#center)
 
@@ -94,7 +94,7 @@ Much like when editing notes, the effect panel can be expanded by clicking the l
 
 ![](images/EditWaveformVolumeEnvelope.png#center)
 
-The center line represents 100% volume which the bottom and top represente 0% and 200% respectively. You can drag the envelope points by left clicking and dragging them. Note that the first and last vertex will always be at the beginning and end of the sample. Right-clicking on a vertex will reset its volume to 100%. 
+The center line represents 100% volume which the bottom and top represent 0% and 200% respectively. You can drag the envelope points by left clicking and dragging them. Note that the first and last vertex will always be at the beginning and end of the sample. Right-clicking on a vertex will reset its volume to 100%. 
 
 This is especially powerful when combined with the "Trim Zero Volume" option. For example, in the example above, the sample is made a lot shorter (and smaller) without deleting anything from the source data by reducing the volume to zero and letting FamiStudio trim the part with zero volume. 
 

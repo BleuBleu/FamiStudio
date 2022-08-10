@@ -25,21 +25,21 @@ The tempo mode will affect how the tempo of you songs is calculated, how much co
 ### FamiStudio Tempo Mode
 
 FamiStudio tempo modes gives full control over every frame (1/60th of a second on NTSC, 1/50th on PAL). It is the default mode. In this mode you will see the individual frames in the piano roll and will have more precise control on where each note starts/end. 
-For example, a C-D-E-F scale where each note is stopped for 1 frame between each note will look like this using FamiStudio tempo. The dashed lines seperate individual frames, so you can leave and empty frame 1 frame before the new note starts. Very intuituve and visual.
+For example, a C-D-E-F scale where each note is stopped for 1 frame between each note will look like this using FamiStudio tempo. The dashed lines separate individual frames, so you can leave and empty frame 1 frame before the new note starts. Very intuitive and visual.
 
 ![](images/TempoExampleFamiStudio.png#center) 
 
 FamiStudio tempo mode let's you simply choose a BPM value for the song (or an individual pattern) and will automatically choose the appropriate number of frames to make each notes. Some BPMs will require the use of a *groove* which is an uneven sequence of frames. 
 
-For example, at 142 BPM (in NTSC), FamiStudio will know to use a 7-6-6 groove, which mean that the first note will be 7 frames long, then followed by two notes of 6 frames, and the whole thing will repeat until there is a tempo change in the song. But in order to keep the piano roll nice and even, FamiStudio will only only display the minimum values of the groove, 6 in our example. This mean that out of 19 frames in the groove, you only have control over 18. In other words, every 3rd note, FamiStudio will inject an empty frame for which you dont have any control. Effects, instrument envelopes & arpeggios will still advance on these empty frames, but otherwise no new note will be processed. You can tell FamiStudio *where* to inject this empty frame, by changing the **Groove Padding Mode** (Beginning, Middle or End).
+For example, at 142 BPM (in NTSC), FamiStudio will know to use a 7-6-6 groove, which mean that the first note will be 7 frames long, then followed by two notes of 6 frames, and the whole thing will repeat until there is a tempo change in the song. But in order to keep the piano roll nice and even, FamiStudio will only only display the minimum values of the groove, 6 in our example. This mean that out of 19 frames in the groove, you only have control over 18. In other words, every 3rd note, FamiStudio will inject an empty frame for which you do not have any control. Effects, instrument envelopes & arpeggios will still advance on these empty frames, but otherwise no new note will be processed. You can tell FamiStudio *where* to inject this empty frame, by changing the **Groove Padding Mode** (Beginning, Middle or End).
 
-On of the limitation of FamiStudio tempo mode is that it will limit your ability to suddently changes tempo in the middle of a pattern. When using FamiStudio tempo, you can only change the BPM at the start of a new pattern.
+On of the limitation of FamiStudio tempo mode is that it will limit your ability to suddenly changes tempo in the middle of a pattern. When using FamiStudio tempo, you can only change the BPM at the start of a new pattern.
 
 ### FamiTracker Tempo Mode
 
 FamiTracker tempo has a limited visual granularity and relies on effects (delayed notes/cuts) to get frame-level precision. It uses the speed/tempo paradigm. Please check out the [FamiTracker documentation](http://famitracker.com/wiki/index.php?title=Fxx) for a detailed explanation on how the playback speed is affected. If you import a FamiTracker Text or FTM file, the project will be in this tempo mode. 
 
-Same example, but using FamiTracker tempo. Here we dont have the individual frames so we need to use a "delayed cut" effect to achieve the same result. The delayed cut tells the sound engine to insert a stop note after 9 frames have elapsed, achieving the exact same result. That being said, one might argue that it is not very visual and feels like using a Tracker. Moreover, this would not always work correctly on PAL.
+Same example, but using FamiTracker tempo. Here we do not have the individual frames so we need to use a "delayed cut" effect to achieve the same result. The delayed cut tells the sound engine to insert a stop note after 9 frames have elapsed, achieving the exact same result. That being said, one might argue that it is not very visual and feels like using a Tracker. Moreover, this would not always work correctly on PAL.
 
 ![](images/TempoExampleFamiTracker.png#center) 
 
@@ -114,16 +114,16 @@ Here is a zoomed-in version of the first beat.
 ![](images/TempoABCZoom.png#center)
 Observations:
 
-* Frames are seperated by dashes grey line (they will disapear if you zoom out enough).
-* Notes are seperated by thin grey lines.
-* Beats are seperated by thin black lines.
-* Patterns are seperated by thick black lines.
+* Frames are separated by dashes grey line (they will disappear if you zoom out enough).
+* Notes are separated by thin grey lines.
+* Beats are separated by thin black lines.
+* Patterns are separated by thick black lines.
 
-Here we chosen to have 1 bar = 1 pattern, we could have chosen to fit the whole song in a single pattern, this is totally arbitrary. You should try to use a pattern size is a good tradeoff between reusability (being able to copy patterns and re-use them) and size (having many small patterns is annoying).
+Here we chosen to have 1 bar = 1 pattern, we could have chosen to fit the whole song in a single pattern, this is totally arbitrary. You should try to use a pattern size is a good trade off between re-usability (being able to copy patterns and re-use them) and size (having many small patterns is annoying).
 
 Also we have chosen to assemble 4 notes into a beat, and 4 beats in a pattern (16 notes), which is how we get something that looks like a 4/4 time signature. This also means our smallest granularity for our melody is 1/16th of a note. That being said, you can move notes at the frame-level, so you actually have a lot more control than this.
 
-When using FamiStudio tempo mode, as you change the BPM, the number of frames (1/60th of a second) in a note may change. At a BPM of 112.5, FamiStudio calculates that we need 8 frames per note. When using FamiTracker tempo, this is the equalivalent of the **Speed** parameter.
+When using FamiStudio tempo mode, as you change the BPM, the number of frames (1/60th of a second) in a note may change. At a BPM of 112.5, FamiStudio calculates that we need 8 frames per note. When using FamiTracker tempo, this is the equivalent of the **Speed** parameter.
 
 ## FamiStudio Tempo & PAL conversion
 
@@ -135,11 +135,11 @@ For example, in the image below, we have a NTSC at 150 BPM, so we have frames (1
 
 ![](images/NtscPalFrames6.png#center)
 
-To faitfully play back our NTSC song on PAL systems, FamiStudio will sometimes run 2 NTSC frames in a single PAL frame so it can keep up with NTSC. 
+To faithfully play back our NTSC song on PAL systems, FamiStudio will sometimes run 2 NTSC frames in a single PAL frame so it can keep up with NTSC. 
 
 ![](images/PalSkipFrames6.png#center)
 
-This makes the playback speed almost the same, but unfortunately, this is not always this simple. Let's look at an exemple with a BPM of 112.5, which is 8 frames per note. Again, if we were to try to naively play this back on PAL, it would play back 20% slower than NTSC.
+This makes the playback speed almost the same, but unfortunately, this is not always this simple. Let's look at an example with a BPM of 112.5, which is 8 frames per note. Again, if we were to try to naively play this back on PAL, it would play back 20% slower than NTSC.
 
 ![](images/NtscPalFrames8.png#center)
 

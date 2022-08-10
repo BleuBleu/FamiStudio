@@ -176,13 +176,13 @@ The piano roll can be maximized to full screen by pressing the little maximize b
 
 # Quick Access Bar (Mobile Only)
 
-The "Quick Access Bar" is specific to the mobile version, is the bar on the right hand side of the screen (of the bottom when in portrait mode). Its content will change depending on the context but will typically give you a series of convenient shortcuts (such as changing the active channel, instrument, etc.) so you dont have to go back and forth between the other views.
+The "Quick Access Bar" is specific to the mobile version, is the bar on the right hand side of the screen (of the bottom when in portrait mode). Its content will change depending on the context but will typically give you a series of convenient shortcuts (such as changing the active channel, instrument, etc.) so you do not have to go back and forth between the other views.
 
 ![](images/MobileQuickAccessBar.png#center)
 
 # Pop-Up Piano (Mobile Only)
 
-Another little view that is unique to the mobile version is the pop-up piano that lets you preview the sound of instrument. This is also used in recording mode, which whill be covered later in the documentation.
+Another little view that is unique to the mobile version is the pop-up piano that lets you preview the sound of instrument. This is also used in recording mode, which will be covered later in the documentation.
 
 ![](images/MobilePopupPiano.png#center)
 
@@ -229,7 +229,7 @@ Some keyboard shortcuts specific to the piano roll:
 * **T+Click**: Adds an orphan stop note.
 * **Shift+S**: Toggles snapping.
 
-When QWERTY keyboard input is active, some of the keys will be overriden to support piano input. This is default layout for an en-US keyboard. The [Configuration Dialog](config.md) allows re-mapping the keys for other types of keyboards.
+When QWERTY keyboard input is active, some of the keys will be overridden to support piano input. This is default layout for an en-US keyboard. The [Configuration Dialog](config.md) allows re-mapping the keys for other types of keyboards.
 
 ![](images/QWERTY.png#center)
 

@@ -88,14 +88,14 @@ Fixes/Changes:
 
 * Added option to disable vibration (new "Mobile" section of Settings)
 * Added support for importing 8-bit and 24-bit WAV files for DPCM samples.
-* Added support for importing NSF2, if they dont use any of the advanced features.
+* Added support for importing NSF2, if they do not use any of the advanced features.
 * Fixed FamiTracker text export not asking for a filename.
 * Fixed DPCM samples not playing if placing the seek bar exactly on their attack.
 * Fixed NSF export tempo issue when using grooves in specific situations.
 * Creating new effect values will respect snapping on mobile.
 * Drawing note attacks for force display channel to help readability.
 * Fixed an issue with release note that are beyond the visual duration of the note.
-* Correct emulation of Tri-Noise-DMC volumes when using stereo export (+hidden INI option to also do it for seperate channels)
+* Correct emulation of Tri-Noise-DMC volumes when using stereo export (+hidden INI option to also do it for separate channels)
 * Experimental "double-tap to delete patterns/note" option (off by default)
 * Minor UI tweaks (hit boxes of buttons, zoom levels, scroll bar issues, etc.).
 
@@ -168,7 +168,7 @@ Fixes:
 
 * Fixed crash when pasting past the end of an envelope
 * Fixed FamiTracker (FTM/TXT) import when a jump or skip effect is exactly at row 255
-* Fixed FamiStudio currupting the keyboard state on some european keyboards
+* Fixed FamiStudio corrupting the keyboard state on some European keyboards
 * Fixed oscilloscope vertical orientation in toolbar + video export
 * Fixed crash when using 150% scaling on Linux
 * Fixed crash when parsing FamiStudio text file using VRC6 expansion.
@@ -284,7 +284,7 @@ Fixes:
 * Fixed scaling issues on Retina display.
 * Fixed lingering noise when dragging/adding notes in VRC7.
 * Fixed multiple FamiTracker import (Text + Binary) issues/crashes.
-* Fixed potential desync in NSF/sound engine when using delayed notes.
+* Fixed potential de-sync in NSF/sound engine when using delayed notes.
 * Fixed various issues with expansion instruments UI (sliders/checkboxes for VRC7/FDS/N163).
 * Fixed import of older FamiStudio text files (pre 2.3.0).
 * Fixed NSF/sound engine crash when exporting empty arpeggios.
@@ -310,7 +310,7 @@ Changes:
 * Option to display note labels in piano roll
 * FamiTracker tempo improvements (delayed notes, cuts, fixes).
 * Added support for Cxx (Halt) FamiTracker effect.
-* Option to export each channel to a seperate WAV/MP3 file. 
+* Option to export each channel to a separate WAV/MP3 file. 
 * Small DPCM improvements (Drag & drop, bit reverse option)
 * Small tempo improvements
 * Sound engine code size reduction
@@ -450,7 +450,7 @@ New features:
 * VRC6 audio expansion support
 * Slide notes
 * Vibrato effect
-* Workaround "pops" on square channels (Blargg's smooth vibrato technique)
+* Workaround "pops" on square channels (Blaarg's smooth vibrato technique)
 * NSF improvements
 * Ability to remove attack on notes
 * Relative pitch envelopes

@@ -22,7 +22,7 @@ Examples:
     FamiStudio music.fms famitracker-txt-export music.txt -export-songs:0,1,2
     FamiStudio music.fms famitone2-export music.s -famitone2-format:ca65
 
-To see the full lis tof commands and their options, please run the help command.
+To see the full list of commands and their options, please run the help command.
 
 
 

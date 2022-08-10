@@ -10,10 +10,10 @@ You can also use it to preview instrument by clicking on the piano. The currentl
 
 Horizontal lines in the piano rolls are aligned with the notes of the piano. The vertical lines represent multiple levels of subdivision:
 
-* Thin dashes gray lines seperate individual frames (1/60th of a sec in NTSC, 1/50th in PAL) (FamiStudio tempo mode only)
-* Thin gray lines seperate notes
-* Thin black lines seperate beats
-* Thick black lines seperate patterns
+* Thin dashes gray lines separate individual frames (1/60th of a sec in NTSC, 1/50th in PAL) (FamiStudio tempo mode only)
+* Thin gray lines separate notes
+* Thin black lines separate beats
+* Thick black lines separate patterns
 
 In FamiTracker tempo mode, you do not have access to the individual frames, so the dashes lines will not be visible.
 
@@ -101,7 +101,7 @@ Stop notes simply stop the sound and are displayed as little triangles. Although
 
 To create a stop note on Desktop, **right-click** on a note and select "Make Stop Note". Alternatively, you can use **T+click** to create a stop note.
 
-> As of FamiStudio 3.0.0 stop notes are no longer needed since they have been replaced by note durations. There are cases where stop notes will still remain when notes are detected to have inconsistent durations, but those should be relatively rare. One use case where they can be useful is to interrup a long note from a previous pattern. 
+> As of FamiStudio 3.0.0 stop notes are no longer needed since they have been replaced by note durations. There are cases where stop notes will still remain when notes are detected to have inconsistent durations, but those should be relatively rare. One use case where they can be useful is to interrupt a long note from a previous pattern. 
 
 ![](images/StopNote.png#center)
 
@@ -166,7 +166,7 @@ On mobile, the snapping precision is set from the Quick Access Bar, on the right
 
 By default, notes will have an "attack" which mean they will restart their envelopes (volume, pitch, etc.) from the beginning. This is represented by the little dark rectangle on the left of each note. 
 
-The attack can be toggled for a particular note by selecting the "Toggle Attack" option from the note context menu. Alternatively, you can hold **A** and click on a note to toggle its attack. Similarely, on mobile, toggling the note attack is done by long pressing on a note and selecting "Toggle Attack".
+The attack can be toggled for a particular note by selecting the "Toggle Attack" option from the note context menu. Alternatively, you can hold **A** and click on a note to toggle its attack. Similarly, on mobile, toggling the note attack is done by long pressing on a note and selecting "Toggle Attack".
 
 Note that if a note does not use the same instrument as the previous one, the attack will still play, even if disabled. Also please note that this will generally not carry over to FamiTracker, besides specific use cases around slide notes.
 
@@ -184,7 +184,7 @@ Slide notes are notes that start at a given pitch (the pitch of the note) and sl
 
 ![](images/SlideNote.gif#center)
 
-Slide notes garantees that the target pitch will be reached by the end of the note (end of the triangle) but this might happen a bit earlier than the visual repesentation suggests. Especially in the higher pitches. This is due to the fact that the pitch calculations are all integer-based (with 1-bit of fraction) and it is often impossible to get the exact required slope to reach the pitch at the exact time. 
+Slide notes guarantees that the target pitch will be reached by the end of the note (end of the triangle) but this might happen a bit earlier than the visual representation suggests. Especially in the higher pitches. This is due to the fact that the pitch calculations are all integer-based (with 1-bit of fraction) and it is often impossible to get the exact required slope to reach the pitch at the exact time. 
 
 To create a slide note, simply select "Toggle Slide Note" from the note context menu and adjust the target note. On desktop, you can also simply hold **S**, click on a note and drag up/down to create a slide note. 
 
@@ -210,7 +210,7 @@ On mobile, you can replace an instrument or arpeggio by first making a selection
 
 ## Copying & pasting notes
 
-Much like the sequencer, selcted notes can be copy (or cut) by pressing **Ctrl+C** (or **Ctrl+X**). You can then move the selection somewhere else and paste the notes with **Ctrl+V**.
+Much like the sequencer, selected notes can be copy (or cut) by pressing **Ctrl+C** (or **Ctrl+X**). You can then move the selection somewhere else and paste the notes with **Ctrl+V**.
 
 ### Copying & pasting notes between projects 
 
@@ -218,11 +218,11 @@ It is possible to copy notes from one project to another. When doing so, FamiStu
 
 For example, if you copy a note from project 1 using an instrument called "Piano", FamiStudio will look for an instrument named "Piano" in the second. If it finds one, it will assume it is the same (even though it might not be). If no "Piano" instrument is found, it will offer you to create it for you.
 
-This can be used as a way of transfering instruments from one project to another. Place a few notes using all the instruments you can to transfer. Copy them and paste them in the second project.
+This can be used as a way of transferring instruments from one project to another. Place a few notes using all the instruments you can to transfer. Copy them and paste them in the second project.
 
 ## Special paste
 
-"Special paste" is a more advanced form of pasting. It is used to to do things like pasting notes without their associated effets or volume track (or vice-versa), or to just paste specific effects. You can use a "special paste" by pressing **Ctrl+Shift+V**. This will open a popup dialog.
+"Special paste" is a more advanced form of pasting. It is used to to do things like pasting notes without their associated effects or volume track (or vice-versa), or to just paste specific effects. You can use a "special paste" by pressing **Ctrl+Shift+V**. This will open a popup dialog.
 
 ![](images/PasteSpecial.png#center)
 
@@ -232,7 +232,7 @@ This can be used as a way of transfering instruments from one project to another
 
 * **Paste Effects** : You can choose the list of effect that you with to paste. Unchecked effect will not be pasted.
 
-* **Repeat** : You can repeat the same paste operation multiple times to quickly repeat a sequence of note/effect values mutiple times. The start of the next paste will be where the last one ended.
+* **Repeat** : You can repeat the same paste operation multiple times to quickly repeat a sequence of note/effect values multiple times. The start of the next paste will be where the last one ended.
 
 On mobile, the same functionality is accessible by long pressing on the "Paste" icon of the toolbar. The dialog will look different by contains the same functionality.
 
@@ -240,7 +240,7 @@ On mobile, the same functionality is accessible by long pressing on the "Paste" 
 
 ## Special delete
 
-Much like Special paste, "Special delete" is a more advanced form of deletion. You can bring up the special delete dialong by selecting a rango of notes and pressing **Ctrl+Shift+Delete**. 
+Much like Special paste, "Special delete" is a more advanced form of deletion. You can bring up the special delete dialog by selecting a range of notes and pressing **Ctrl+Shift+Delete**. 
 
 ![](images/DeleteSpecial.png#center)
 
@@ -259,10 +259,10 @@ The effect panel can be opened by clicking the little triangle at the top-left o
 Here is the list of effects currently supported, note that not every effect is available on every channel:
 
 * **Volume**: The overall volume of the channel.
-* **Vib Speed**: Vibrato speed, used in conjuction with vibrato depth to create a vibrato effect.
-* **Vib Depth**: Vibrato depth, used in conjuction with vibrato speed to create a vibrato effect.
+* **Vib Speed**: Vibrato speed, used in conjunction with vibrato depth to create a vibrato effect.
+* **Vib Depth**: Vibrato depth, used in conjunction with vibrato speed to create a vibrato effect.
 * **Pitch**: Allow tweaking the fine-pitch of a channel.
-* **Duty Cycle** : Allow changing the duty cycle of an instrument without using a duty cycle envelope (only instruments with no duty cycle envelopes will use the specifed value).
+* **Duty Cycle** : Allow changing the duty cycle of an instrument without using a duty cycle envelope (only instruments with no duty cycle envelopes will use the specified value).
 * **FDS Speed**: Famicom Disk System audio modulation speed (FDS audio expansion only).
 * **FDS Depth**: Famicom Disk System audio modulation depth (FDS audio expansion only).
 * **Speed**: Changes the speed of the song (FamiTracker tempo mode only)
@@ -293,9 +293,9 @@ On mobile, a volume slide is created by long pressing on a volume value and sele
 
 ### Vibrato depth & speed
 
-Vibrato depth and speed are used to add vibrato to a portion of the song without having to bother creating a new instrument. Please note that vibrato will temporarely override any pitch envelope on the current instrument. When vibrato is disabled (by setting depth or speed, or both to zero), the instrument will essentially have no pitch envelope until a new note is played.
+Vibrato depth and speed are used to add vibrato to a portion of the song without having to bother creating a new instrument. Please note that vibrato will temporarily override any pitch envelope on the current instrument. When vibrato is disabled (by setting depth or speed, or both to zero), the instrument will essentially have no pitch envelope until a new note is played.
 
-The depth values for the vibrato are indentical to FamiTracker but the speeds are slightly different. The way FamiTracker implements vibrato, while clever, is flawed as it undersamples the vibrato curve at high speed, leading to aliasing which ends up with a low-frequency tone that has a "ringing" sound to it. Please see the [Export](export.md) page for a table that maps between FamiStudio and FamiTracker.
+The depth values for the vibrato are identical to FamiTracker but the speeds are slightly different. The way FamiTracker implements vibrato, while clever, is flawed as it undersamples the vibrato curve at high speed, leading to aliasing which ends up with a low-frequency tone that has a "ringing" sound to it. Please see the [Export](export.md) page for a table that maps between FamiStudio and FamiTracker.
 
 ### Pitch 
 
