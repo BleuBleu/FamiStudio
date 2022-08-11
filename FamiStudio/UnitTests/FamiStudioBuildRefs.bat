@@ -9,3 +9,4 @@
 ..\bin\Release\FamiStudio.exe TestMulti.fms unit-test TestMulti_FamiStudioRef.txt
 ..\bin\Release\FamiStudio.exe TestFamiTrackerTempo.fms unit-test TestFamiTrackerTempo_FamiStudioRef.txt
 
+del /q *_FamiStudioTest.txt
