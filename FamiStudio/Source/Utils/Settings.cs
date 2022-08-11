@@ -55,7 +55,7 @@ namespace FamiStudio
         public static int  ScrollBars = ScrollBarsNone;
         public static int  IdealSequencerSize = 25;
         public static bool AllowSequencerVerticalScroll = false;
-        public static bool ShowImplicitStopNotes = true;
+        public static bool ShowImplicitStopNotes = false;
         public static bool ShowRegisterViewer = Platform.IsDesktop;
         public static bool UseOSDialogs = !Platform.IsLinux;
 
@@ -243,7 +243,7 @@ namespace FamiStudio
             ScrollBars = Version < 3 ? (ini.GetBool("UI", "ShowScrollBars", false) ? ScrollBarsThin : ScrollBarsNone) : ini.GetInt("UI", "ScrollBars", ScrollBarsNone);
             IdealSequencerSize = ini.GetInt("UI", "IdealSequencerSize", 25);
             AllowSequencerVerticalScroll = ini.GetBool("UI", "AllowSequencerVerticalScroll", false);
-            ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", Platform.IsDesktop);
+            ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", false);
             ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", Platform.IsDesktop);
             UseOSDialogs = ini.GetBool("UI", "UseOSDialogs", !Platform.IsLinux);
 
@@ -383,6 +383,7 @@ namespace FamiStudio
             {
                 SnapResolution = SnapResolutionType.OneBeat;
                 SnapEnabled = true;
+                ShowImplicitStopNotes = false;
             }
 
             // At 3.2.0, we added a new Discord screen to the tutorial.

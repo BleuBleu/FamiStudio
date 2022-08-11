@@ -1,10 +1,6 @@
 4.0.0
 =====
 
-Finalling
-=========
-- Test note creation, snapping with cut/note delays, stop notes, etc.
-
 Things to figure out in Beta
 ============================
 - Double-click / shift-click to delete songs/instruments?
