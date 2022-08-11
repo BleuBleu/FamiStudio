@@ -3,22 +3,15 @@
 
 Finalling
 =========
-- Fix highlight of instrument, not allowed to drag anymore!
+- BUG : Fix highlight of instrument, not allowed to drag anymore!
 - Test note creation, snapping with cut/note delays, stop notes, etc.
-- Do a pass on tooltips for ParamProviders.
 - TEST : Test no attack in playback + NSF.
-- TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
 - Restest multiple songs per file (changed multiplication thing)
 
 Packaging:
 ==========
 - Add MM10 song to demo.
-- Ask how2 for demo songs.
 - Fix Multi + MultiEPSM unit tests.
-- UNIT-TEST : Add multi-wave to N163/FDS unit tests.
-- UNIT-TEST : Add FDS mod to unit tests (effect + delay)
-- Doc
-	- Add common time signature examples
 
 Things to figure out in Beta
 ============================
@@ -109,6 +102,7 @@ Discord
 
 Backlog: 
 =========
+- Do a pass on tooltips for ParamProviders.
 - Way to convert instrument between expansions.
 - Left resize to preserve release position?
 - Full S5B support? Not very intersting... Noise + envelopes. Meuh.
@@ -118,7 +112,6 @@ Backlog:
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
 - Reorder channels for video export.
 - Overclocking (2x, 3x, 4x would be a good start).
-- Save snapping + qwerty settings + some export settings.
 - Hardware sweep (how to not conflict with smooth vibrato?)
 - Scales
 - Raw FDS modulation table envelope. 
