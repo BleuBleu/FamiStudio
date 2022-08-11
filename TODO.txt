@@ -8,11 +8,6 @@ Finalling
 - TEST : Test no attack in playback + NSF.
 - Restest multiple songs per file (changed multiplication thing)
 
-Packaging:
-==========
-- Add MM10 song to demo.
-- Fix Multi + MultiEPSM unit tests.
-
 Things to figure out in Beta
 ============================
 - Double-click / shift-click to delete songs/instruments?

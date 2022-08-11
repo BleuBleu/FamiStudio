@@ -63,6 +63,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_3F73E48116E5467FBD67E64CB5C8B7A0"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_402429E7C200416D88636CFBBCBA8BAA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -153,6 +159,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_C74D99B3AB3E43E4AD3D455189AE4537"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_DE3E8B106B034CAAB62B9E55201E4619"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -161,12 +173,6 @@
         {
         "MsmKey" = "8:_EFD705BE398D4A4594B4EA0ABA4691E2"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -185,6 +191,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -397,6 +409,26 @@
             {
             "SourcePath" = "8:Demo Songs\\Shovel Knight.fms"
             "TargetName" = "8:Shovel Knight.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3F73E48116E5467FBD67E64CB5C8B7A0"
+            {
+            "SourcePath" = "8:Demo Songs\\Mega Man 10.fms"
+            "TargetName" = "8:Mega Man 10.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -719,6 +751,26 @@
             {
             "SourcePath" = "8:Demo Songs\\Megami Tensei II.fms"
             "TargetName" = "8:Megami Tensei II.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C74D99B3AB3E43E4AD3D455189AE4537"
+            {
+            "SourcePath" = "8:Demo Songs\\Sonic 3.fms"
+            "TargetName" = "8:Sonic 3.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
