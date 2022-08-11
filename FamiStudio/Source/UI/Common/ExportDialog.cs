@@ -195,9 +195,9 @@ namespace FamiStudio
         const string LoopModeTooltip       = "Loop the song a certain number of times, or export a specific duration (in seconds).";
         const string LoopCountTooltip      = "Number of times to loop the song.";
         const string DurationTooltip       = "Duration to export, in seconds.";
-        const string DelayTooltip          = "Optional audio delay effect that will include an echo of the audio at the specified delay.\n\nHighly recommanded to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side.\n\nA value of 15 ms. is a good place to start, set to 0 to turn off.";
-        const string SeperateFilesTooltip  = "If enabled, each channel will be exported to a seperate file. Useful for offline mixing.";
-        const string SeperateIntroTooltip  = "If enabled, the intro (the part before the loop point), will be exported to a seperate file. Useful if making games.";
+        const string DelayTooltip          = "Optional audio delay effect that will include an echo of the audio at the specified delay.\n\nHighly recommended to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side.\n\nA value of 15 ms. is a good place to start, set to 0 to turn off.";
+        const string SeperateFilesTooltip  = "If enabled, each channel will be exported to a separate file. Useful for offline mixing.";
+        const string SeperateIntroTooltip  = "If enabled, the intro (the part before the loop point), will be exported to a separate file. Useful if making games.";
         const string StereoTooltip         = "If enabled, will export stereo audio and enable custom panning for each channel in the grid below.";
         const string ChannelGridTooltip    = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.";
         const string ChannelListTooltip    = "Select the channels to export.";

@@ -14,23 +14,22 @@ namespace FamiStudio
         private int minPatternIdx = -1;
         private int maxPatternIdx = -1;
 
-        int firstPropIdx             = -1;
-        int famitrackerTempoPropIdx  = -1;
-        int famitrackerSpeedPropIdx  = -1;
-        int notesPerBeatPropIdx      = -1;
-        int notesPerPatternPropIdx   = -1;
-        int bpmLabelPropIdx          = -1;
-        int famistudioBpmPropIdx     = -1;
-        int framesPerNotePropIdx     = -1;
-        int groovePropIdx            = -1;
-        int groovePadPropIdx         = -1;
+        private int firstPropIdx             = -1;
+        private int famitrackerTempoPropIdx  = -1;
+        private int famitrackerSpeedPropIdx  = -1;
+        private int notesPerBeatPropIdx      = -1;
+        private int notesPerPatternPropIdx   = -1;
+        private int bpmLabelPropIdx          = -1;
+        private int famistudioBpmPropIdx     = -1;
+        private int framesPerNotePropIdx     = -1;
+        private int groovePropIdx            = -1;
+        private int groovePadPropIdx         = -1;
 
-        int originalNoteLength;
-        int originalNotesPerBeat;
+        private int originalNoteLength;
 
-        TempoInfo[] tempoList;
-        string[]    tempoStrings;
-        string[]    grooveStrings;
+        private TempoInfo[] tempoList;
+        private string[]    tempoStrings;
+        private string[]    grooveStrings;
 
         public readonly static string TempoTooltip           = "This is not the BPM! It is the rate at which the internal tempo counter in incremented. Values other than 150 may yield uneven notes. Please see FamiTracker documentation.";
         public readonly static string SpeedTooltip           = "If tempo is 150, number of NTSC frames (1/60th of a second) between each notes. Larger values lead to slower tempo. Please see FamiTracker documentation.";
@@ -103,8 +102,7 @@ namespace FamiStudio
                 groovePropIdx    = props.AddDropDownList("Groove : ", grooveStrings, grooveStrings[grooveIndex], GrooveTooltip); // 4
                 groovePadPropIdx = props.AddDropDownList("Groove Padding : ", GroovePaddingType.Names, GroovePaddingType.Names[song.GroovePaddingMode], GroovePaddingTooltip); // 5
 
-                originalNoteLength      = noteLength;
-                originalNotesPerBeat    = notesPerBeat;
+                originalNoteLength = noteLength;
 
                 UpdateWarnings();
             }
