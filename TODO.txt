@@ -3,10 +3,7 @@
 
 Finalling
 =========
-- BUG : Fix highlight of instrument, not allowed to drag anymore!
 - Test note creation, snapping with cut/note delays, stop notes, etc.
-- TEST : Test no attack in playback + NSF.
-- Restest multiple songs per file (changed multiplication thing)
 
 Things to figure out in Beta
 ============================
