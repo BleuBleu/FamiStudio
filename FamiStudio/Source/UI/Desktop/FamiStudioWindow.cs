@@ -599,7 +599,7 @@ namespace FamiStudio
                     famistudio.KeyUp(e);
 
                 // FamiStudio can decide to quit.
-                if (!quit)
+                if (!quit && controls.CanInteractWithControls())
                 {
                     foreach (var ctrl in controls.Controls)
                         SendKeyUpOrDown(ctrl, e, down);
@@ -621,7 +621,7 @@ namespace FamiStudio
             {
                 controls.TopDialog.Char(e);
             }
-            else
+            else if (controls.CanInteractWithControls())
             {
                 foreach (var ctrl in controls.Controls)
                     ctrl.Char(e);
