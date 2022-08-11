@@ -11,8 +11,6 @@
 Doc:
 ====
 - New options in export dialog (audio delay, etc.)
-- Mention osc stability.
-- Talk about time signatures.
 - MATTT
 
 Testing:
