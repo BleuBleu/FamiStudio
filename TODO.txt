@@ -1,20 +1,14 @@
 4.0.0
 =====
 
-- Double-click / shift-click to delete songs/instruments?
-
-4.1.0
-=====
-- Dual APU (VT02) support?
-- 
-
 Doc:
 ====
 - New options in export dialog (audio delay, etc.)
 - MATTT
 
-Testing:
-========
+Finalling
+=========
+- Fix highlight of instrument, not allowed to drag anymore!
 - Test note creation, snapping with cut/note delays, stop notes, etc.
 - Do a pass on tooltips for ParamProviders.
 - TEST : Test no attack in playback + NSF.
@@ -30,6 +24,15 @@ Packaging:
 - UNIT-TEST : Add FDS mod to unit tests (effect + delay)
 - Doc
 	- Add common time signature examples
+
+Things to figure out in Beta
+============================
+- Double-click / shift-click to delete songs/instruments?
+
+4.1.0
+=====
+- Dual APU (VT02) support?
+- Fix "SeparateChannelsExportTndMode"
 
 Batch convert PNG -> TGA
 ==========================

@@ -28,7 +28,7 @@ Alternatively, if your mouse does not have a middle mouse button or mouse wheel:
 * All actions requiring pressing the middle mouse buttons can be done with Alt+Left click if the "Alt+Left emulates Middle" option is enabled in the settings.
 * All actions requiring rotating the mouse wheel can be performed with Alt+Right click, then dragging up/down.
 
-If you are working on a trackpad, please check out how to enable [Trackpad controls](config.md#user-interface-configuration) in the configuration dialog. (MATTT this link points to wrong section).
+If you are working on a trackpad, please check out how to enable [Trackpad controls](config.md#input-configuration) in the configuration dialog.
 
 # Basic Mobile Controls
 
