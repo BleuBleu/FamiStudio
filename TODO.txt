@@ -1,11 +1,6 @@
 4.0.0
 =====
 
-Doc:
-====
-- New options in export dialog (audio delay, etc.)
-- MATTT
-
 Finalling
 =========
 - Fix highlight of instrument, not allowed to drag anymore!
