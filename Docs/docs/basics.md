@@ -68,28 +68,28 @@ Here is the meaning of each toolbar icon and some additional actions that can be
 
 Icon | Click Action | Additional Actions<br/>(Right click on desktop, long-press on mobile)
 --- | --- | ---
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/File.png) | New project | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Open.png) | Open FamiStudio project or other file format | On desktop, opens a list of recently opened files
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Save.png) | Save project | Open a context menu to "Save As...".
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Export.png) | Export to various formats Project | Open a context menu that allows repeating the last export, if any/
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Copy.png) | Copy selection | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Cut.png) | Cut selection | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Paste.png) | Paste | Opens a context menu to "Special Paste" (paste with advanced options).
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Delete.png) | Delete selection (mobile only) | On mobile, long press to "Special Delete" (delete with advanced options)
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Undo.png) | Undo | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Redo.png) | Redo | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Transform.png) | Transform/cleanup project/songs | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Config.png) | Application settings | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Play.png) | Play song | Opens a context menu to play from different locations or change the playback speed.
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Rec.png) | Toggle recording mode | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Rewind.png) | Rewing to beginning | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Loop.png) | Change looping mode | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/QwertyPiano.png) | Toggle QWERTY input (desktop only) | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Piano.png) | Toggle pop-up piano (mobile only) | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Metronome.png) | Toggle metronome click | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/NTSC.png) | Toggle playback machine | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Follow.png) | Toggle follow mode | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/More.png) | Reveal hidden toolbar buttons (mobile only) | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/File.png#grey) | New project | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Open.png#grey) | Open FamiStudio project or other file format | On desktop, opens a list of recently opened files
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Save.png#grey) | Save project | Open a context menu to "Save As...".
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Export.png#grey) | Export to various formats Project | Open a context menu that allows repeating the last export, if any/
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Copy.png#grey) | Copy selection | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Cut.png#grey) | Cut selection | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Paste.png#grey) | Paste | Opens a context menu to "Special Paste" (paste with advanced options).
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Delete.png#grey) | Delete selection (mobile only) | On mobile, long press to "Special Delete" (delete with advanced options)
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Undo.png#grey) | Undo | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Redo.png#grey) | Redo | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Transform.png#grey) | Transform/cleanup project/songs | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Config.png#grey) | Application settings | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Play.png#grey) | Play song | Opens a context menu to play from different locations or change the playback speed.
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Rec.png#grey) | Toggle recording mode | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Rewind.png#grey) | Rewing to beginning | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Loop.png#grey) | Change looping mode | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/QwertyPiano.png#grey) | Toggle QWERTY input (desktop only) | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Piano.png#grey) | Toggle pop-up piano (mobile only) | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Metronome.png#grey) | Toggle metronome click | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/NTSC.png#grey) | Toggle playback machine | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Follow.png#grey) | Toggle follow mode | 
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/More.png#grey) | Reveal hidden toolbar buttons (mobile only) | 
 
 ## Tooltip
 

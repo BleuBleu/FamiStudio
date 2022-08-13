@@ -5,6 +5,14 @@ Things to figure out in Beta
 ============================
 - Double-click / shift-click to delete songs/instruments?
 
+Trailer 4.0.0, top #5
+=====================
+1) Desktop
+2) N163
+3) FDS/N163 resampler
+4) ROM audio expansions
+5) Oscilloscope stablity
+
 4.1.0
 =====
 - Dual APU (VT02) support?
