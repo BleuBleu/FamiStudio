@@ -41,6 +41,9 @@ img[src*="#center"] {
     display: block;
     margin: 0 auto;
 }
+img[src*="#grey"] {
+    filter: brightness(70%)
+}
 th {
     text-align: center;
 }
