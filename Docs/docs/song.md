@@ -97,7 +97,9 @@ Properties unique FamiTracker tempo mode:
 
 Properties unique FamiStudio tempo mode:
 
-* **Frames Per Notes**: How many frames (1/60th) in a typical notes. Values between 5 and 16 are recommended as they create the least error on PAL system.
+* **Groove**: For some BPM values, you will have multiple choices of "grooves". A groove is a sequence of number of frames that will be applied to get close to the desired BPM. This is again a consequence of the fact that the NES runs at 60 FPS (50 FPS on PAL), limiting our ability to achieve exact BPMs.
+
+* **Groove Padding**: FamiStudio will sometimes inject frames where the song does not advance to maintain the correct BPM. You can set a preference as to the location of those "do nothing" frames. Putting them in the middle of notes is preferable since it is less likely to lead to audible unevenness in the tempo.
 
 ## Tempo
 
@@ -124,6 +126,23 @@ Here we chosen to have 1 bar = 1 pattern, we could have chosen to fit the whole 
 Also we have chosen to assemble 4 notes into a beat, and 4 beats in a pattern (16 notes), which is how we get something that looks like a 4/4 time signature. This also means our smallest granularity for our melody is 1/16th of a note. That being said, you can move notes at the frame-level, so you actually have a lot more control than this.
 
 When using FamiStudio tempo mode, as you change the BPM, the number of frames (1/60th of a second) in a note may change. At a BPM of 112.5, FamiStudio calculates that we need 8 frames per note. When using FamiTracker tempo, this is the equivalent of the **Speed** parameter.
+
+## Example of time signatures
+
+There is no real concept of time signature in FamiStudio. But given the subdivisions discussed in the previous section, we can group notes in a way that feels like a time signature. 
+
+Here are a few examples of settings to achieve various time signatures, assuming you want 1 bar per pattern. Also, this table assumes that you left "Notes per Beat" to 4, which is the default.
+
+Time Signature | Notes per Pattern | Additional Setting
+--- | --- | ---
+2/4 | 8 | 
+3/4 | 12 | 
+4/4 | 16 | 
+5/4 | 20 | 
+6/8 | 24 | Then double the BPM
+2/2 | 8 | Then halve the BPM
+
+You can obviously double or triple the "Notes per Pattern" to have 2 or 3 bars in a pattern, for example. You are free to decide what a pattern represents, it does not have to be 1 bar.
 
 ## FamiStudio Tempo & PAL conversion
 

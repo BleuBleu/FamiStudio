@@ -1532,7 +1532,7 @@ namespace FamiStudio
                         if (button.bmp != null)
                         {
                             c.DrawBitmapAtlas(button.bmp, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, button.imageTint);
-                            if (highlighted)
+                            if (highlighted && button.type == ButtonType.Song)
                                 c.DrawRectangle(buttonIconPosX, buttonIconPosY, buttonIconPosX + iconSize - 4, buttonIconPosY + iconSize - 4, Theme.WhiteColor, 2, true);
                         }
                     }
@@ -3563,7 +3563,7 @@ namespace FamiStudio
             else
             {
                 App.SelectedInstrument = button.instrument;
-                highlightedButtonIdx = highlightedButtonIdx == buttonIdx && subButtonType == SubButtonType.Max || button.instrument == null || subButtonType != SubButtonType.Max ? -1 : buttonIdx;
+                highlightedButtonIdx = highlightedButtonIdx == buttonIdx || button.instrument == null ? -1 : buttonIdx;
 
                 if (subButtonType == SubButtonType.Expand)
                 {
@@ -4088,15 +4088,10 @@ namespace FamiStudio
 
             if (buttonIdx >= 0)
             {
-                // MATTT : Retest this on mobile. We should not be able to drag instruments anymore since we
-                // have explicit duplciate/replace.
                 var button = buttons[buttonIdx];
-                if (button.instrument != null && buttonIdx == highlightedButtonIdx && subButtonType != SubButtonType.Expand)
+                if (button.instrument != null && buttonIdx == highlightedButtonIdx && subButtonType < SubButtonType.EnvelopeMax)
                 {
-                    if (subButtonType == SubButtonType.Max && !IsPointInButtonIcon(button, buttonRelX, buttonRelY))
-                        return false;
-
-                    envelopeDragIdx = subButtonType < SubButtonType.EnvelopeMax ? (int)subButtonType : -1;
+                    envelopeDragIdx = (int)subButtonType;
                     draggedInstrument = button.instrument;
                     StartCaptureOperation(x, y, CaptureOperation.DragInstrument, buttonIdx, buttonRelX, buttonRelY);
                     return true;

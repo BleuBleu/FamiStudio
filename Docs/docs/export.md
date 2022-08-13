@@ -8,11 +8,12 @@ Only a single song can be exported at a time. You can choose the sample rate (an
 
 The song can be exported in one of two modes:
 
-* Play N Times: Will play the song a specified number of times.
-* Duration : Will loop though the song for the specified number of seconds.
+* **Play N Times**: Will play the song a specified number of times.
+* **Duration** : Will loop though the song for the specified number of seconds.
 
 Other options:
 
+* **Delay (ms)** : Optional audio delay effect that will include an echo of the audio at the specified delay. Highly recommanded to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side. 
 * **Separate channel files** : Will output each channel in a separate audio file.
 * **Separate intro file** : Will output the part before the loop point (intro) in a separate file. 
 * **Stereo** : Will output a stereo file and will allow setting the panning % in the channel list.
@@ -39,6 +40,7 @@ Example of the oscilloscope format:
 
 Besides the audio/video quality settings, there are a few options to control the look and feel of the video:
 
+* **Audio Delay (ms)** : Optional audio delay effect that will include an echo of the audio at the specified delay. Highly recommanded to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side. 
 * **Loop count** : Number of times to repeat the looping part of the song.
 * **Stereo** : Same as WAV/MP3/OGG.
 * **Channels** : It is recommended to not export channels that do not have any notes, this will leave more space to the other channels.
@@ -59,7 +61,10 @@ Every feature supported by FamiStudio can be used in an NSF.
 
 ![](images/ExportNsf.png#center)
 
-Song that do not use any audio expansion can export as PAL and Dual mode, where as only NTSC is available for expansion audio.
+Options:
+
+* **Format** : You can choose between NSF/NSFe. NSF is more widely support, NSFe adds support for per-track names and durations.
+* **Mode** : Song that do not use any audio expansion can export as PAL and Dual mode, where as only NTSC is available for expansion audio.
 
 The maximum song size is approximately 28KB minus the size of the DPCM samples used. Note that this size are not printed anywhere and are not related to the size of the \*.fms file. Best to simply try and see if it works.
 

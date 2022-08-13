@@ -18,7 +18,7 @@ List of expansions supported:
 
 * **Sunsoft S5B**: Add 3 extra square channels. These channels are fixed at a duty cycle or 50%. It was based off the Yamaha YM2149F. While this expansion was extremely powerful, it was only ever used in one game (Gimmick!) and this game did not make use of any advanced features of the chip. For this reason, FamiStudio (and most emulator) only support a small subset of features.
 
-* **EPSM**: EPSM is not an audio expansion that ever used, or even existed in the lifetime of the NES, but rather the pet project of [Perkka](https://github.com/Perkka2/EPSM) who designed a small circuit board that can be plugged in the expansion port of the NES and controlled by it to produce sound. The expansion is based off the Yamaha YMF288 chip and adds 3 extra square channels, 6 FM synthesis channels and 6 rhythm channels. The square are fixed at a duty cycle or 50%. Those are essentially the same as Sunsoft S5B. The FM channels are 4-OP Channels that can be configured independently. The rhythm channels are 6 pre-defined drum samples.
+* **EPSM**: EPSM is not an audio expansion that ever used, or even existed in the lifetime of the NES, but rather the pet project of [Perkka](https://github.com/Perkka2/EPSM) who designed a small circuit board that can be plugged in the expansion port of the NES and controlled by it to produce sound. The expansion is based off the Yamaha YMF288 chip and adds 3 extra square channels, 6 FM synthesis channels and 6 rhythm channels. The square are fixed at a duty cycle or 50%. Those are essentially the same as Sunsoft S5B. The FM channels are 4-OP channels that can be configured independently. The rhythm channels are 6 pre-defined drum samples.
 
 ## Enabling expansion audio
 
@@ -78,6 +78,8 @@ Roughly speaking, the chip generates a carrier frequency, which is then modified
 
 ### Famicom Disk System
 
+FDS instrument features a single user-drawn waveform, of fixed length (64). The waveform can also be resampled from a WAV file, see the [resampling section](#resampling-wav-files-for-n163-and-fds) for more details.
+
 The FDS instruments have 2 extra envelopes and a few extra parameter.
 
 ![](images/FDS.png#center)
@@ -95,12 +97,21 @@ The parameters are:
 * **Mod Speed** : The speed of the modulation.
 * **Mod Depth** : The depth of the modulation.
 * **Mod Delay** : A delay, in frames (1/60th of a second) before enabling modulation.
+* **Resample Period**, **Offset** and **Normalize** : See the [resampling section](#resampling-wav-files-for-n163-and-fds)
 
 When changing the values of the sliders with huge values (such as the Mod Speed), you can hold Shift while dragging to fine tune the exact value.
 
 ### Namco 163
 
-The N163 instruments have an extra envelope and a few extra parameter. Note that FamiStudio's current implementation of N163 only supports a single waveform per instrument, unlike FamiTracker which has many.
+N163 instrument can have custom user-drawn waveforms. The size of the waveform is configurable, but limited by the amount of N163 RAM available, which decreases as more N163 channels are added. Waveforms can also be resampled from a WAV file, see the [resampling section](#resampling-wav-files-for-n163-and-fds) for more details.
+
+FamiStudio also supports cycling through multiple waveform in time. All the waveforms are presented visually as a single massive waveform, and each individual waveform can be repeated for a number of frames by setting the value of the "Repeat" effect in the effect panel. Moreover, both Loop and Release points can be configured. The current maximum number of wave data is currently 1024 bytes per instrument. So a wave size of 32 will be limited to 32 individual waves, where as a wave size of 16 will be able to have twice that amount.
+
+In the example below, 4 waveforms are setup and the number of repeats for each increases over time.
+
+![](images/N163Repeat.png#center)
+
+Here are the parameters available.
 
 ![](images/N163.png#center)
 
@@ -113,6 +124,8 @@ The parameters are:
 * **Wave Preset** : A few preset that you can use to set the waveform envelope.
 * **Wave Size** : The N163 chip had only 128 of RAM to store all the waveforms used at any given time. For example, if you use waveforms of size 32, you can only use 4 unique instrument at any given time. Using more will result in channels using wrong instruments.
 * **Wave Position** : The position, in the 128 bytes of memory, of the waveform. You must manually make sure that different waveforms don't overlap.
+* **Wave Count** : The position, in the 128 bytes of memory, of the waveform. You must manually make sure that different waveforms don't overlap.
+* **Resample Period**, **Offset** and **Normalize** : See the [resampling section](#resampling-wav-files-for-n163-and-fds)
 
 ### EPSM
 
@@ -144,3 +157,17 @@ Roughly speaking, the chip generates a carrier frequency, which is then modified
     * **Release Rate** : The release rate is Key off speed of the following attenuation.
     * **SSG Envelope EN** : Enable SSG Envelope.
     * **SSG Envelope** : Selection of SSG Envelope type.
+
+## Resampling WAV files for N163 and FDS
+
+Both expansions using wavetables (N163 and FDS) can import and resample short WAV files. To import a WAV file, simply **right-click** on the instrument and select the "Resample Wav File..." option. Only very short files can be loaded and they will be truncated if they are too long. 
+
+Once a WAV file is loaded, the instrument will be set to the "Resample" profile which means its waveform is generated from the loaded WAV file. You can then adjust the "Offset" and "Period" to align the waveform to the boundaries of the wavetable, as you see fit. 
+
+Optionally, the "Normalize" option will adjust the volume to use the full range by detecting the min/max volume in the input WAV file.
+
+Any manual modification to the waveform will switch the instrument to the "Custom" profile and disable resampling entirely.
+
+Pro-tip : You can hold **Ctrl** while using the sliders in the project explorer more more accurate scrolling.
+
+![](images/Resample.gif#center)

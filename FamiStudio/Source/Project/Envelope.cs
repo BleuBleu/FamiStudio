@@ -36,7 +36,7 @@ namespace FamiStudio
             canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
             canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
             canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
-            chunkLength = type == EnvelopeType.FdsWaveform ? 64 : (type == EnvelopeType.N163Waveform ? 16 : 1);
+            chunkLength = type == EnvelopeType.N163Waveform ? 16 : 1;
 
             if (canResize)
             {
@@ -406,39 +406,40 @@ namespace FamiStudio
 
             Debug.Assert(length % chunkLength == 0);
 
-            var chunkCount = length / chunkLength;
+            var localChunkLength = chunkLength == 1 ? length : chunkLength;
+            var localChunkCount  = length / localChunkLength;
 
-            for (int j = 0; j < chunkCount; j++)
+            for (int j = 0; j < localChunkCount; j++)
             {
-                var chunkOffset = j * chunkLength;
+                var chunkOffset = j * localChunkLength;
 
                 switch (preset)
                 {
                     case WavePresetType.Sine:
-                        for (int i = 0; i < chunkLength; i++)
-                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, (float)Math.Sin(i * 2.0f * Math.PI / chunkLength) * -0.5f + 0.5f));
+                        for (int i = 0; i < localChunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, (float)Math.Sin(i * 2.0f * Math.PI / localChunkLength) * -0.5f + 0.5f));
                         break;
                     case WavePresetType.Triangle:
-                        for (int i = 0; i < chunkLength / 2; i++)
+                        for (int i = 0; i < localChunkLength / 2; i++)
                         {
-                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(chunkLength / 2 - 1)));
-                            values[chunkOffset + chunkLength - i - 1] = values[i];
+                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(localChunkLength / 2 - 1)));
+                            values[chunkOffset + localChunkLength - i - 1] = values[i];
                         }
                         break;
                     case WavePresetType.Sawtooth:
-                        for (int i = 0; i < chunkLength; i++)
-                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(chunkLength - 1)));
+                        for (int i = 0; i < localChunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(localChunkLength - 1)));
                         break;
                     case WavePresetType.Square50:
-                        for (int i = 0; i < chunkLength; i++)
-                            values[chunkOffset + i] = (sbyte)(i >= chunkLength / 2 ? max : min);
+                        for (int i = 0; i < localChunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= localChunkLength / 2 ? max : min);
                         break;
                     case WavePresetType.Square25:
-                        for (int i = 0; i < chunkLength; i++)
-                            values[chunkOffset + i] = (sbyte)(i >= chunkLength / 4 ? max : min);
+                        for (int i = 0; i < localChunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= localChunkLength / 4 ? max : min);
                         break;
                     case WavePresetType.Flat:
-                        for (int i = 0; i < chunkLength; i++)
+                        for (int i = 0; i < localChunkLength; i++)
                             values[chunkOffset + i] = (sbyte)((min + max) / 2);
                         break;
                 }
@@ -693,16 +694,16 @@ namespace FamiStudio
 
     public static class WavePresetType
     {
-        public const int Sine       = 0;
-        public const int Triangle   = 1;
-        public const int Sawtooth   = 2;
-        public const int Square50   = 3;
-        public const int Square25   = 4;
-        public const int Flat       = 5;
-        public const int Custom     = 6;
-        public const int CountNoWav = 8;
-        public const int Resample    = 7;
-        public const int Count      = 8;
+        public const int Sine            = 0;
+        public const int Triangle        = 1;
+        public const int Sawtooth        = 2;
+        public const int Square50        = 3;
+        public const int Square25        = 4;
+        public const int Flat            = 5;
+        public const int Custom          = 6;
+        public const int CountNoResample = 7;
+        public const int Resample        = 7;
+        public const int Count           = 8;
 
         public static readonly string[] Names =
         {

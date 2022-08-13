@@ -93,6 +93,14 @@ namespace FamiStudio
             return false;
         }
 
+        public bool CanInteractWithControls()
+        {   
+            // HACK : Dont allow any interaction with the main controls if there is no current song
+            // since all the code assume this is non-null. This happens when event processing runs
+            // during file loading (ex: when calling Thread.Join).
+            return controls[0].App.SelectedSong != null;
+        }
+
         public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
             // Toast
@@ -116,7 +124,7 @@ namespace FamiStudio
             // HACK : Dont allow any interaction with the main controls if there is no current song
             // since all the code assume this is non-null. This happens when event processing runs
             // during file loading (ex: when calling Thread.Join).
-            if (controls[0].App.SelectedSong == null)
+            if (!CanInteractWithControls())
             {
                 ctrlX = 0;
                 ctrlY = 0;
