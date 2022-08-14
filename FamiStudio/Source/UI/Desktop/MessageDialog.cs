@@ -132,7 +132,7 @@ namespace FamiStudio
                 {
                     Close(results[results.Length - 1]);
                 }
-                else if (e.Key == Keys.Y && results[0] == DialogResult.Yes)
+                else if ((e.Key == Keys.Enter || e.Key == Keys.Y || e.Key == Keys.KeypadEnter) && results[0] == DialogResult.Yes)
                 {
                     Close(results[0]);
                 }

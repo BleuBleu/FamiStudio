@@ -519,7 +519,7 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            if ((e.Key == Keys.Enter || e.Key == Keys.KeypadEnter) && mode == Mode.Save && textFile.HasDialogFocus)
+            if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
             {
                 ValidateAndClose();
             }
