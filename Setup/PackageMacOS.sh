@@ -12,7 +12,6 @@ msbuild ../FamiStudio/FamiStudio.Mac.csproj /t:Rebuild /p:Configuration=Release 
 
 # Copy binaries to package.
 cp ../FamiStudio/bin/Release/*.exe ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Release/*.dll ./FamiStudio.app/Contents/MacOS/
 cp ../FamiStudio/bin/Release/*.dylib ./FamiStudio.app/Contents/MacOS/
 cp ../FamiStudio/bin/Release/FamiStudio.pdb ./FamiStudio.app/Contents/MacOS/
 

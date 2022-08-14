@@ -59,8 +59,10 @@ namespace GLFWDotNet
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "so" : "dylib";
-                string assemblyPath = $"libglfw.{extension}";
-                
+                string assemblyPath = Path.Combine(
+                    assemblyDirectory, 
+                    $"libglfw.{extension}");
+
                 IntPtr assembly = Unix.LoadLibrary(assemblyPath);
 
                 if (assembly == IntPtr.Zero)
