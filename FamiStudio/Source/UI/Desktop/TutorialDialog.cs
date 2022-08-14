@@ -10,7 +10,7 @@ namespace FamiStudio
         public static readonly string[] TutorialMessages = new[]
         {
             @"(1/11) Welcome to FamiStudio! Let's take a few seconds to review some of the basic controls to make sure you use the app to its fullest.",
-            @"(2/11) CONTROLS HAVE CHANGED!!! If you have used FamiStudio in the past or watching and old tutorial, please pay extra attention since the basic mouse controls have changed.",
+            @"(2/11) CONTROLS HAVE CHANGED!!! If you have used FamiStudio in the past, please pay extra attention since the basic mouse controls have changed.",
             @"(3/11) To PAN around the piano roll or the sequencer, simply PRESS and HOLD the MIDDLE MOUSE BUTTON and DRAG around to smoothly move the viewport. Yes, that wheel on your mouse is also a button! Optionally, you can enable SCROLL BARS in the settings.",
             @"(4/11) To ZOOM in and out in the piano roll or the sequencer, simply rotate the MOUSE WHEEL.",
             @"(5/11) If you are on a TRACKPAD or a LAPTOP, simply enable TRACKPAD CONTROLS in the settings. This will allow you to SWIPE to PAN and PINCH-TO-ZOOM (this gesture is not supported on on Linux).",

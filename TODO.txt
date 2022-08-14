@@ -1,6 +1,13 @@
 4.0.0
 =====
 
+Beta link : https://1drv.ms/u/s!AgsNX7y1G9kwjf4UEnf52S3EWQXxdg?e=5ZeQdh
+
+Beta bugs
+=========
+- Custom dialogs on linux dont seem to accept the keyboard.
+- 
+
 Things to figure out in Beta
 ============================
 - Double-click / shift-click to delete songs/instruments?
