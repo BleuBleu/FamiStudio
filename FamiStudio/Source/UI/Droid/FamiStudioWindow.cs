@@ -571,13 +571,12 @@ namespace FamiStudio
             {
                 var opt = options[i];
 
-                if (i > 0 && (opt.Separator == ContextMenuSeparator.Before || prevWantedSeparator))
+                if (i > 0 && (opt.Separator.HasFlag(ContextMenuSeparator.MobileBefore) || prevWantedSeparator))
                 {
-                    // Disabling seperators on mobile. Looks bad.
-                    //var lineView = new View(this);
-                    //lineView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-                    //lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1));
-                    //linearLayout.AddView(lineView);
+                    var lineView = new View(this);
+                    lineView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
+                    lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1));
+                    linearLayout.AddView(lineView);
                     prevWantedSeparator = false;
                 }
 
@@ -613,7 +612,7 @@ namespace FamiStudio
 
                 linearLayout.AddView(textView);
 
-                prevWantedSeparator = opt.Separator == ContextMenuSeparator.After;
+                prevWantedSeparator = opt.Separator.HasFlag(ContextMenuSeparator.MobileAfter);
             }
 
             DisplayMetrics metrics = new DisplayMetrics();

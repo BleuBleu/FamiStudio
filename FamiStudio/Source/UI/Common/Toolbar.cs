@@ -765,7 +765,7 @@ namespace FamiStudio
                 new ContextMenuOption("MenuPlay", "Play From Beginning of Song", "Plays from the start of the song {Shift}{Space}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
                 new ContextMenuOption("MenuPlay", "Play From Beginning of Current Pattern", "Plays from the start of the current pattern {ForceCtrl}{Space}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
                 new ContextMenuOption("MenuPlay", "Play From Loop Point", "Plays from the loop point {Ctrl}{Shift}{Space}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
-                new ContextMenuOption("Regular Speed",  "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.Before ),
+                new ContextMenuOption("Regular Speed",  "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore ),
                 new ContextMenuOption("Half Speed",     "Sets the play rate to 50%",  () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
                 new ContextMenuOption("Quarter Speed",  "Sets the play rate to 25%",  () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
             });

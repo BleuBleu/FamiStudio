@@ -174,7 +174,7 @@ namespace FamiStudio
                 if (hover)
                     c.FillRectangle(0, 0, Width, itemSizeY, Theme.MediumGreyColor1);
 
-                if (i > 0 && (option.Separator == ContextMenuSeparator.Before || prevWantedSeparator))
+                if (i > 0 && (option.Separator.HasFlag(ContextMenuSeparator.Before) || prevWantedSeparator))
                 {
                     c.DrawLine(0, 0, Width, 0, Theme.LightGreyColor1);
                     prevWantedSeparator = false;
@@ -201,7 +201,7 @@ namespace FamiStudio
                 c.DrawText(option.Text, FontResources.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
 
-                prevWantedSeparator = option.Separator == ContextMenuSeparator.After;
+                prevWantedSeparator = option.Separator.HasFlag(ContextMenuSeparator.After);
             }
 
             g.Clear(Theme.DarkGreyColor4);

@@ -2384,11 +2384,19 @@ namespace FamiStudio
         Radio
     }
 
+    [Flags]
     public enum ContextMenuSeparator
     {
         None,
-        Before,
-        After
+        Before = 1,
+        After  = 2,
+
+        // Last minute hack, we typically don't have separators for context menus on mobile,
+        // but if we want them, we can use these special values.
+        MobileFlag = 0x80,
+
+        MobileBefore = MobileFlag | Before,
+        MobileAfter  = MobileFlag | After
     }
 
     // Move these to a common class

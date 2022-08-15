@@ -6,7 +6,6 @@ Beta link : https://1drv.ms/u/s!AgsNX7y1G9kwjf4UEnf52S3EWQXxdg?e=5ZeQdh
 Beta bugs
 =========
 - Snap tutorial on mobile
-- menu divider on play on mobile
 
 Things to figure out in Beta
 ============================
@@ -23,6 +22,7 @@ Trailer 4.0.0, top #5
 4.1.0
 =====
 - Dual APU (VT02) support?
+- Stereo export and NSF import on Android?
 - Fix "SeparateChannelsExportTndMode"
 
 Batch convert PNG -> TGA
