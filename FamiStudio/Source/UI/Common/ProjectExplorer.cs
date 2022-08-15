@@ -3303,6 +3303,7 @@ namespace FamiStudio
                     StartCaptureOperation(x, y, CaptureOperation.SliderButtons, buttonIdx);
                 
                 captureButtonSign = rightButton ? 1 : -1;
+                captureButtonIdx = buttonIdx;
                 UpdateSliderButtons(true, false);
                 MarkDirty();
 
@@ -4067,6 +4068,21 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchDownParamListButton(int x, int y)
+        {
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
+
+            if (buttonIdx >= 0)
+            {
+                var button = buttons[buttonIdx];
+
+                if (button.type == ButtonType.ParamList && ClickParamListOrSliderButton(x, y, button, buttonIdx, true))
+                    return true;
+            }
+
+            return false;
+        }
+
         private bool IsPointInButtonIcon(Button button, int buttonRelX, int buttonRelY)
         {
             var iconSize = ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
@@ -4131,6 +4147,7 @@ namespace FamiStudio
             flingVelY = 0;
 
             if (HandleTouchDownParamSliderButton(x, y)) goto Handled;
+            if (HandleTouchDownParamListButton(x, y)) goto Handled;
             if (HandleTouchDownDragInstrument(x, y)) goto Handled;
             if (HandleTouchDownDragSong(x, y)) goto Handled;
             if (HandleTouchDownPan(x, y)) goto Handled;
