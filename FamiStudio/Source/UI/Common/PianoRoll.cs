@@ -8752,7 +8752,7 @@ namespace FamiStudio
             { 
                 var options = new ContextMenuOption[SnapResolutionType.Max - SnapResolutionType.Min + 3];
 
-                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping the specified number of\nbeats in the piano roll", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
+                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping for notes in the piano roll {Shift}{S}", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
                 options[1] = new ContextMenuOption("Snap Effect Values", "When snapping is enabled, also snap effect values", () => { snapEffects = !snapEffects; }, () => snapEffects ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked);
 
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
@@ -8764,7 +8764,7 @@ namespace FamiStudio
                     var tooltip = $"Sets the snap resolution to {name} {beats}";
 
                     if (SnapResolutionType.KeyboardShortcuts[i] != Keys.Unknown)
-                        tooltip += $" {{Alt}}{SnapResolutionType.KeyboardShortcuts[i] - Keys.D1}";
+                        tooltip += $" {{Alt}}{SnapResolutionType.KeyboardShortcuts[i] - Keys.D0}";
 
                     options[i + 2] = new ContextMenuOption(text, tooltip, () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0 ? ContextMenuSeparator.Before : ContextMenuSeparator.None);
                 }
