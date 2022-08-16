@@ -1755,14 +1755,14 @@ namespace FamiStudio
                     if (IsPatternSelected(location) && SelectionContainsMultiplePatterns())
                     {
                         menu.Insert(0, new ContextMenuOption("MenuDeleteSelection", "Delete Selected Patterns", () => { DeleteSelection(true); }));
-                        menu.Add(new ContextMenuOption("MenuProperties", "Selected Patterns Properties...", () => { EditPatternProperties(new Point(x, y), pattern, true); }, ContextMenuSeparator.Before));
+                        menu.Add(new ContextMenuOption("MenuProperties", "Selected Patterns Properties...", () => { EditPatternProperties(new Point(x, y), pattern, location, true); }, ContextMenuSeparator.Before));
                     }
                     else
                     {
                         if (Platform.IsDesktop)
                             SetSelection(location, location);
 
-                        menu.Add(new ContextMenuOption("MenuProperties", "Pattern Properties...", () => { EditPatternProperties(new Point(x, y), pattern, false); }, ContextMenuSeparator.Before));
+                        menu.Add(new ContextMenuOption("MenuProperties", "Pattern Properties...", () => { EditPatternProperties(new Point(x, y), pattern, location, false); }, ContextMenuSeparator.Before));
                     }
 
                     menu.Insert(0, new ContextMenuOption("MenuDelete", "Delete Pattern", () => { DeletePattern(location); }));
@@ -2908,13 +2908,14 @@ namespace FamiStudio
             }
         }
 
-        private void EditPatternProperties(Point pt, Pattern pattern, bool selection = true)
+        private void EditPatternProperties(Point pt, Pattern pattern, PatternLocation location, bool selection = true)
         {
-            bool multiplePatternSelected = selection && ((selectionMax.ChannelIndex != selectionMin.ChannelIndex) || (selectionMin.PatternIndex != selectionMax.PatternIndex));
+            bool multipleChannelsSelected = selection && IsSelectionValid() && (selectionMax.ChannelIndex != selectionMin.ChannelIndex);
+            bool multiplePatternsSelected = selection && IsSelectionValid() && ((selectionMax.ChannelIndex != selectionMin.ChannelIndex) || (selectionMin.PatternIndex != selectionMax.PatternIndex));
 
             var dlg = new PropertyDialog(ParentWindow, "Pattern Properties", new Point(left + pt.X, top + pt.Y), 240);
-            dlg.Properties.AddColoredTextBox(multiplePatternSelected ? "" : pattern.Name, pattern.Color);
-            dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
+            dlg.Properties.AddColoredTextBox(multiplePatternsSelected ? "" : pattern.Name, pattern.Color);
+            dlg.Properties.SetPropertyEnabled(0, !multiplePatternsSelected);
             dlg.Properties.AddColorPicker(pattern.Color);
             dlg.Properties.Build();
 
@@ -2922,15 +2923,15 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    if (selectionMax.ChannelIndex == selectionMin.ChannelIndex)
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, selectionMin.ChannelIndex);
+                    if (!multipleChannelsSelected)
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, location.ChannelIndex);
                     else
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
                     var newName  = dlg.Properties.GetPropertyValue<string>(0);
                     var newColor = dlg.Properties.GetPropertyValue<Color>(1);
 
-                    if (multiplePatternSelected)
+                    if (multiplePatternsSelected)
                     {
                         for (int i = selectionMin.ChannelIndex; i <= selectionMax.ChannelIndex; i++)
                         {
