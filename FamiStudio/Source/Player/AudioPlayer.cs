@@ -139,8 +139,8 @@ namespace FamiStudio
 
             if (beatIndex == 0)
             {
-                data.metronomePitch  = 1.0f;
-                data.metronomeVolume = 1.0f;
+                data.metronomePitch  = MetronomeFirstBeatPitch;
+                data.metronomeVolume = MetronomeFirstBeatVolume;
             }
 
             if (metronomePlayPosition >= 0)
