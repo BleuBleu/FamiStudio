@@ -732,7 +732,7 @@ namespace FamiStudio
         private void CenterEnvelopeScroll(Envelope envelope, int envelopeType, Instrument instrument = null)
         {
             var baseNoteSizeX = ScaleForWindow(DefaultNoteSizeX);
-            var envelopeLength = Math.Max(Platform.IsMobile ? 8 : 4, envelope.Length);
+            var envelopeLength = Math.Max(4, envelope.Length);
 
             zoom = minZoom;
             while (zoom < maxZoom && envelopeLength * baseNoteSizeX * (zoom * 2.0f) < (Width - pianoSizeX))
