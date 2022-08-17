@@ -344,6 +344,7 @@ namespace FamiStudio
                 idMap.Add(id, this);
 
             Debug.Assert(project.GetSample(id) == this);
+            Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
 #endif
         }
 

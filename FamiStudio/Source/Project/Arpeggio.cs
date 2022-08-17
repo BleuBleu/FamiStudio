@@ -48,6 +48,7 @@ namespace FamiStudio
                 idMap.Add(id, this);
 
             Debug.Assert(project.GetArpeggio(id) == this);
+            Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
 #endif
         }
 

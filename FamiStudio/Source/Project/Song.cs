@@ -578,6 +578,7 @@ namespace FamiStudio
         {
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
+            Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
 
             project.ValidateId(id);
 

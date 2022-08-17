@@ -560,6 +560,7 @@ namespace FamiStudio
             else
                 idMap.Add(id, this);
 
+            Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
             Debug.Assert(project.GetInstrument(id) == this);
 
             for (int i = 0; i < EnvelopeType.Count; i++)
