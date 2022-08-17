@@ -2928,7 +2928,7 @@ namespace FamiStudio
                     else
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
-                    var newName  = dlg.Properties.GetPropertyValue<string>(0);
+                    var newName  = dlg.Properties.GetPropertyValue<string>(0).Trim();
                     var newColor = dlg.Properties.GetPropertyValue<Color>(1);
 
                     if (multiplePatternsSelected)
@@ -2952,7 +2952,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        Platform.Beep(); 
+                        App.DisplayNotification("Error renaming pattern!", true);
                     }
 
                     MarkDirty();
