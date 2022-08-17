@@ -459,12 +459,16 @@ namespace FamiStudio
                                 if (famitoneNote >= Note.MusicalNoteMin && famitoneNote <= Note.MusicalNoteMax)
                                 {
                                     var note = pattern.GetOrCreateNoteAt(n);
-                                    instruments.TryGetValue(Convert.ToInt32(noteData[1], 16), out var foundInstrument);
                                     note.Value = (byte)famitoneNote;
-                                    if (j == 5)
-                                        note.Instrument = null;
-                                    else if (channel.SupportsInstrument(foundInstrument))
-                                        note.Instrument = foundInstrument;
+
+                                    if (noteData[1] != "..")
+                                    {
+                                        instruments.TryGetValue(Convert.ToInt32(noteData[1], 16), out var foundInstrument);
+                                        if (j == 5)
+                                            note.Instrument = null;
+                                        else if (channel.SupportsInstrument(foundInstrument))
+                                            note.Instrument = foundInstrument;
+                                    }
                                 }
                                 else
                                 {
