@@ -4478,7 +4478,7 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
                     App.SeekSong(0);
 
-                    var newName = dlg.Properties.GetPropertyValue<string>(0);
+                    var newName = dlg.Properties.GetPropertyValue<string>(0).Trim();
 
                     if (App.Project.RenameSong(song, newName))
                     {
@@ -4495,7 +4495,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        Platform.Beep();
+                        App.DisplayNotification("Error renaming song!", true);
                         MarkDirty();
                     }
                 }
@@ -4513,7 +4513,7 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    var newName = dlg.Properties.GetPropertyValue<string>(0);
+                    var newName = dlg.Properties.GetPropertyValue<string>(0).Trim();
 
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
 
@@ -4527,7 +4527,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        Platform.Beep();
+                        App.DisplayNotification("Error renaming instrument!", true);
                     }
                 }
             });
@@ -4544,7 +4544,7 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    var newName = dlg.Properties.GetPropertyValue<string>(0);
+                    var newName = dlg.Properties.GetPropertyValue<string>(0).Trim();
 
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
 
@@ -4558,7 +4558,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        Platform.Beep();
+                        App.DisplayNotification("Error renaming arpeggio!", true);
                     }
                 }
             });
@@ -4573,7 +4573,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync((r) =>
             {
-                var newName = dlg.Properties.GetPropertyValue<string>(0);
+                var newName = dlg.Properties.GetPropertyValue<string>(0).Trim();
 
                 App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
 
@@ -4587,7 +4587,7 @@ namespace FamiStudio
                 else
                 {
                     App.UndoRedoManager.AbortTransaction();
-                    Platform.Beep();
+                    App.DisplayNotification("Error renaming sample!", true);
                 }
             });
         }

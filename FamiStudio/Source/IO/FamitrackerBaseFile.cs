@@ -234,46 +234,22 @@ namespace FamiStudio
 
         protected Instrument CreateUniquelyNamedInstrument(int expansion, string baseName)
         {
-            string name = baseName;
-            var j = 2;
-
-            while (!project.IsInstrumentNameUnique(name))
-                name = baseName + "-" + j++;
-
-            return project.CreateInstrument(expansion, name);
+            return project.CreateInstrument(expansion, project.GenerateUniqueInstrumentName(baseName));
         }
 
         protected void RenameInstrumentEnsureUnique(Instrument instrument, string baseName)
         {
-            string name = baseName;
-            var j = 2;
-
-            while (!project.IsInstrumentNameUnique(name))
-                name = baseName + "-" + j++;
-
-            project.RenameInstrument(instrument, name);
+            project.RenameInstrument(instrument, project.GenerateUniqueInstrumentName(baseName));
         }
 
         protected DPCMSample CreateUniquelyNamedSampleFromDmcData(string baseName, byte[] data)
         {
-            string name = baseName;
-            var j = 2;
-
-            while (!project.IsDPCMSampleNameUnique(name))
-                name = baseName + "-" + j++;
-
-            return project.CreateDPCMSampleFromDmcData(name, data);
+            return project.CreateDPCMSampleFromDmcData(project.GenerateUniqueDPCMSampleName(baseName), data);
         }
 
         protected Song CreateUniquelyNamedSong(string baseName)
         {
-            string name = baseName;
-            var j = 2;
-
-            while (!project.IsSongNameUnique(name))
-                name = baseName + "-" + j++;
-
-            return project.CreateSong(name);
+            return project.CreateSong(project.GenerateUniqueSongName(baseName));
         }
 
         protected Arpeggio GetOrCreateArpeggio(int param)
@@ -1262,6 +1238,7 @@ namespace FamiStudio
                 s.DeleteEmptyPatterns();
                 s.RemoveUnsupportedFeatures(); // Extra security.
             }
+
 
             project.ConvertToCompoundNotes();
             project.InvalidateCumulativePatternCache();

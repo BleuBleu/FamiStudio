@@ -619,6 +619,9 @@ namespace FamiStudio
 
         public string GenerateUniqueSongName(string baseName = "Song")
         {
+            if (string.IsNullOrEmpty(baseName))
+                baseName = "Song";
+
             for (int i = 1; ; i++)
             {
                 var name = $"{baseName} {i}";
@@ -629,6 +632,9 @@ namespace FamiStudio
 
         public string GenerateUniqueInstrumentName(string baseName = "Instrument")
         {
+            if (string.IsNullOrEmpty(baseName))
+                baseName = "Instrument";
+
             for (int i = 1; ; i++)
             {
                 var name = $"{baseName} {i}";
@@ -639,6 +645,9 @@ namespace FamiStudio
 
         public string GenerateUniqueArpeggioName(string baseName = "Arpeggio")
         {
+            if (string.IsNullOrEmpty(baseName))
+                baseName = "Arpeggio";
+
             for (int i = 1; ; i++)
             {
                 var name = $"{baseName} {i}";
@@ -649,6 +658,9 @@ namespace FamiStudio
 
         public string GenerateUniqueDPCMSampleName(string baseName)
         {
+            if (string.IsNullOrEmpty(baseName))
+                baseName = "Sample";
+
             if (samples.Find(s => s.Name == baseName) == null)
                 return baseName;
 
@@ -665,6 +677,8 @@ namespace FamiStudio
             if (instrument.Name == name)
                 return true;
             if (name == DPCMInstrumentName)
+                return false;
+            if (string.IsNullOrEmpty(name))
                 return false;
 
             if (instruments.Find(inst => inst.Name == name) == null)
@@ -694,6 +708,8 @@ namespace FamiStudio
         {
             if (arpeggio.Name == name)
                 return true;
+            if (string.IsNullOrEmpty(name))
+                return false;
 
             if (arpeggios.Find(arp => arp.Name == name) == null)
             {
@@ -717,6 +733,8 @@ namespace FamiStudio
         {
             if (sample.Name == name)
                 return true;
+            if (string.IsNullOrEmpty(name))
+                return false;
 
             if (samples.Find(s => s.Name == name) == null)
             {
@@ -737,6 +755,8 @@ namespace FamiStudio
         {
             if (song.Name == name)
                 return true;
+            if (string.IsNullOrEmpty(name))
+                return false;
 
             if (songs.Find(s => s.Name == name) == null)
             {
