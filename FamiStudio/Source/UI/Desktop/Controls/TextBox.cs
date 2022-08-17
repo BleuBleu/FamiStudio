@@ -208,15 +208,26 @@ namespace FamiStudio
             if (!enabled)
                 return;
 
-            if (e.Key == Keys.Left || e.Key == Keys.Right)
+            if (e.Key == Keys.Left || e.Key == Keys.Right || e.Key == Keys.Home || e.Key == Keys.End)
             {
                 var sign = e.Key == Keys.Left ? -1 : 1;
                 var prevCaretIndex = caretIndex;
 
-                caretIndex = Utils.Clamp(caretIndex + sign, 0, text.Length);
+                if (e.Key == Keys.Left || e.Key == Keys.Right)
+                { 
+                    caretIndex = Utils.Clamp(caretIndex + sign, 0, text.Length);
 
-                if (e.Control || e.Alt)
-                    caretIndex = FindWordStart(caretIndex, sign);
+                    if (e.Control || e.Alt)
+                        caretIndex = FindWordStart(caretIndex, sign);
+                }
+                else if (e.Key == Keys.Home)
+                { 
+                    caretIndex = 0;
+                }
+                else
+                { 
+                    caretIndex = text.Length;
+                }
 
                 if (e.Shift)
                 {
