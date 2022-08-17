@@ -6,11 +6,17 @@ Beta link : https://1drv.ms/u/s!AgsNX7y1G9kwjf4UEnf52S3EWQXxdg?e=5ZeQdh
 Beta bugs
 =========
 - Snap tutorial on mobile
+- Steo feedback for linux dialogs.
 - defaut duty zoom is weird on mobile 
 
 Things to figure out in Beta
 ============================
 - Double-click / shift-click to delete songs/instruments?
+
+Tutorial 4.0.0
+==============
+- I should mention that we are doing the Tetris song before the UI section.
+- 
 
 Trailer 4.0.0, top #5
 =====================
@@ -24,6 +30,7 @@ Trailer 4.0.0, top #5
 =====
 - Dual APU (VT02) support?
 - Stereo export and NSF import on Android?
+- CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
 - Fix "SeparateChannelsExportTndMode"
 
 Batch convert PNG -> TGA
@@ -106,6 +113,7 @@ Discord
 
 Backlog: 
 =========
+- Idea from perkka "When an instrument is selected. Have the channels thats not supported by it slightly faded out, or the channel names that support it in bold or something"
 - Do a pass on tooltips for ParamProviders.
 - Way to convert instrument between expansions.
 - Left resize to preserve release position?

@@ -583,13 +583,13 @@ namespace FamiStudio
             PopMatrix            = Marshal.GetDelegateForFunctionPointer<PopMatrixDelegate>(glfwGetProcAddress("glPopMatrix"));
             Translate            = Marshal.GetDelegateForFunctionPointer<TranslateDelegate>(glfwGetProcAddress("glTranslatef"));
             LineWidth            = Marshal.GetDelegateForFunctionPointer<LineWidthDelegate>(glfwGetProcAddress("glLineWidth"));
+            DrawBuffer           = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(glfwGetProcAddress("glDrawBuffer"));
+            ReadPixels           = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(glfwGetProcAddress("glReadPixels"));
+            GetFloatRaw          = Marshal.GetDelegateForFunctionPointer<GetFloatDelegate>(glfwGetProcAddress("glGetFloatv"));
             GenFramebuffers      = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(GetExtProcAddress("glGenFramebuffers"));
             BindFramebuffer      = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(GetExtProcAddress("glBindFramebuffer"));
-            DrawBuffer           = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(GetExtProcAddress("glDrawBuffer"));
             FramebufferTexture2D = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(GetExtProcAddress("glFramebufferTexture2D"));
-            ReadPixels           = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(GetExtProcAddress("glReadPixels"));
             DeleteFramebuffers   = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(GetExtProcAddress("glDeleteFramebuffers"));
-            GetFloatRaw          = Marshal.GetDelegateForFunctionPointer<GetFloatDelegate>(GetExtProcAddress("glGetFloatv"));
 
             initialized = true;
         }
