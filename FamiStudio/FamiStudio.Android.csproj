@@ -575,6 +575,7 @@
     <EmbeddedResource Include="Resources\MobileTutorial9.gif" />
     <EmbeddedResource Include="Resources\MobileTutorial10.gif" />
     <EmbeddedResource Include="Resources\MobileTutorial11.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial12.gif" />
     <EmbeddedResource Include="Resources\More@2x.tga" />
     <EmbeddedResource Include="Resources\MouseLeft@2x.tga" />
     <EmbeddedResource Include="Resources\MouseRight@2x.tga" />

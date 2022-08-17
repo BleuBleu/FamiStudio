@@ -39,17 +39,18 @@ namespace FamiStudio
     {
         public static readonly string[] TutorialMessages = new[]
         {
-            "(1/11) Welcome to FamiStudio! Let's take a few seconds to review some of the basic controls to make sure you use the app to its fullest!",
-            "(2/11) A QUICK TAP will usually ADD stuff, like patterns or notes.",
-            "(3/11) A QUICK TAP will also toggle the HIGHLIGHT around certain objects. Object with a WHITE HIGHLIGHT can be moved and/or interacted with in a special way.",
-            "(4/11) A SWIPE will usually PAN around. A SWIPE in the header will select stuff.",
-            "(5/11) A SWIPE starting from the HIGHLIGHTED object may allow you to move it, or change some of its properties.",
-            "(6/11) You can PINCH TO ZOOM in the Piano Roll and the Sequencer.",
-            "(7/11) A LONG PRESS on some objects will reveal a CONTEXT MENU containing more advanced editing options. Try it everywhere and see what happens!",
-            "(8/11) You can access the 3 main views (Sequencer, Piano Roll and Project Explorer) from the QUICK ACCESS BAR located on the right (or bottom in portrait mode).",
-            "(9/11) For the complete DOCUMENTATION and a VIDEO TUTORIAL, please click on the big QUESTION MARK!",
-            "(10/11) Using BLUETOOTH adds a lot of AUDIO LATENCY (delay in the audio). There is unfortunately nothing FamiStudio can do about this. Wired headphones or speakers will have much lower LATENCY.",
-            "(11/11) Join us on DISCORD to meet other FamiStudio users and share your songs with them! Link in the documentation."
+            "(1/12) Welcome to FamiStudio! Let's take a few seconds to review some of the basic controls to make sure you use the app to its fullest!",
+            "(2/12) A QUICK TAP will usually ADD stuff, like patterns or notes.",
+            "(3/12) A QUICK TAP will also toggle the HIGHLIGHT around certain objects. Object with a WHITE HIGHLIGHT can be moved and/or interacted with in a special way.",
+            "(4/12) A SWIPE will usually PAN around. A SWIPE in the header will select stuff.",
+            "(5/12) A SWIPE starting from the HIGHLIGHTED object may allow you to move it, or change some of its properties.",
+            "(6/12) You can PINCH TO ZOOM in the Piano Roll and the Sequencer.",
+            "(7/12) A LONG PRESS on some objects will reveal a CONTEXT MENU containing more advanced editing options. Try it everywhere and see what happens!",
+            "(8/12) You can access the 3 main views (Sequencer, Piano Roll and Project Explorer) from the QUICK ACCESS BAR located on the right (or bottom in portrait mode).",
+            "(9/12) SNAPPING is enabled by default and is expressed in BEATS. This forces the the notes to align to specific grid lines. You can change the snapping precision or disable it entirely by TAPPING the MAGNET ICON.",
+            "(10/12) For the complete DOCUMENTATION and a VIDEO TUTORIAL, please click on the big QUESTION MARK!",
+            "(11/12) Using BLUETOOTH adds a lot of AUDIO LATENCY (delay in the audio). There is unfortunately nothing FamiStudio can do about this. Wired headphones or speakers will have much lower LATENCY.",
+            "(12/12) Join us on DISCORD to meet other FamiStudio users and share your songs with them! Link in the documentation."
         };
 
         private const int NextMenuItemId = 1010;

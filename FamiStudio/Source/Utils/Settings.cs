@@ -388,8 +388,8 @@ namespace FamiStudio
 
             // At 3.2.0, we added a new Discord screen to the tutorial.
             // At 3.2.3, we added a new snapping tutorial screen.
-            // At 4.0.0, we changed the controls and need to re-show tutorials.
-            if (Version < 4 || (Version < 7 && Platform.IsDesktop))
+            // At 4.0.0, we changed the controls and need to re-show tutorials and added a new snapping tutorial on mobile.
+            if (Version < 7)
                 ShowTutorial = true;
 
             // Re-force time format to the MM:SS:mmm
