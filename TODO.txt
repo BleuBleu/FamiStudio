@@ -13,11 +13,6 @@ Things to figure out in Beta
 ============================
 - Double-click / shift-click to delete songs/instruments?
 
-Tutorial 4.0.0
-==============
-- I should mention that we are doing the Tetris song before the UI section.
-- 
-
 Trailer 4.0.0, top #5
 =====================
 1) Desktop
