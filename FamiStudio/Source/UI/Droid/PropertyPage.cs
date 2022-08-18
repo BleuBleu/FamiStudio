@@ -1119,13 +1119,9 @@ namespace FamiStudio
 
         private void UpdateValue(bool invokeEvent = true)
         {
-            var newValue = Utils.Clamp(value, minimum, maximum);
-            if (value != newValue)
-            {
-                value = newValue;
-                if (invokeEvent)
-                    ValueChanged?.Invoke(this, value);
-            }
+            value = Utils.Clamp(value, minimum, maximum);
+            if (invokeEvent)
+                ValueChanged?.Invoke(this, value);
             textView.Text = value.ToString();
         }
 
