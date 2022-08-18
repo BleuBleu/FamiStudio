@@ -206,7 +206,7 @@ namespace FamiStudio
             scrollBarThickness = ScaleForWindow(scrollBarSize);
             minScrollBarLength = ScaleForWindow(DefaultMinScrollBarLength);
             noteSizeX          = ScaleForWindowFloat(zoom * patternZoom);
-            virtualSizeY       = Song != null ? channelSizeY * rowToChannel.Length : 0;
+            virtualSizeY       = rowToChannel != null ? channelSizeY * rowToChannel.Length : 0;
             scrollMargin       = (width - channelNameSizeX) / 8;
 
             // Shave a couple pixels when the size is getting too small.
