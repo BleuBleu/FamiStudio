@@ -359,7 +359,7 @@ namespace FamiStudio
                 bmpSpecialCharacters = g.GetBitmapAtlasRefs(SpecialCharImageNames);
 
                 buttons[(int)ButtonType.New].ToolTip       = "{MouseLeft} New Project {Ctrl}{N}";
-                buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl}{O}\n{MouseRight} More Options...";
+                buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl}{O}\n{MouseRight} Recent Files...";
                 buttons[(int)ButtonType.Save].ToolTip      = "{MouseLeft} Save Project {Ctrl}{S}\n{MouseRight} More Options...";
                 buttons[(int)ButtonType.Export].ToolTip    = "{MouseLeft} Export to various formats {Ctrl}{E}\n{MouseRight} More Options...";
                 buttons[(int)ButtonType.Copy].ToolTip      = "{MouseLeft} Copy selection {Ctrl}{C}";
@@ -648,7 +648,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuExport", "Repeast Last Export", "Repeats the previous export {Ctrl}{Shift}{E}", () => { App.RepeatLastExport(); }),
+                new ContextMenuOption("MenuExport", "Repeat Last Export", "Repeats the previous export {Ctrl}{Shift}{E}", () => { App.RepeatLastExport(); }),
             });
         }
 

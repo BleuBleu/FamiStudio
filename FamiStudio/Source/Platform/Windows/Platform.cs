@@ -23,10 +23,10 @@ namespace FamiStudio
 
         public static bool Initialize(bool commandLine)
         {
-            if (!InitializeDesktop(commandLine))
+            if (!DetectRequiredDependencies())
                 return false;
 
-            if (!DetectRequiredDependencies())
+            if (!InitializeDesktop(commandLine))
                 return false;
 
             InitializeMultiMediaNotifications();
