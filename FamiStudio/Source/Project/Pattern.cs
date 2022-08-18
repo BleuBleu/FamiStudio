@@ -356,6 +356,7 @@ namespace FamiStudio
         public void ValidateIntegrity(Channel channel, Dictionary<int, object> idMap)
         {
             Debug.Assert(this.song == channel.Song);
+            Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
 
             song.Project.ValidateId(id);
 

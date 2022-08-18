@@ -296,6 +296,8 @@ namespace FamiStudio
         {
             if (pattern.Name == name)
                 return true;
+            if (string.IsNullOrEmpty(name))
+                return false;
 
             if (patterns.Find(p => p.Name == name) == null)
             {
