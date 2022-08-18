@@ -526,6 +526,7 @@
     <EmbeddedResource Include="Resources\MobileMenuClearLoopPoint.tga" />
     <EmbeddedResource Include="Resources\MobileMenuClearRelease.tga" />
     <EmbeddedResource Include="Resources\MobileMenuClearSelection.tga" />
+    <EmbeddedResource Include="Resources\MobileMenuCopy.tga" />
     <EmbeddedResource Include="Resources\MobileMenuCustomPatternSettings.tga" />
     <EmbeddedResource Include="Resources\MobileMenuDelete.tga" />
     <EmbeddedResource Include="Resources\MobileMenuDeleteSelection.tga" />

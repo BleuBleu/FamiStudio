@@ -6472,7 +6472,11 @@ namespace FamiStudio
                 if (IsSelectionValid())
                 {
                     menu.Add(new ContextMenuOption("MenuCopy", "Copy Effect Values as Envelope Values", () => { CopyEffectValues(false); }));
-                    menu.Add(new ContextMenuOption("MenuCopy", "Copy Effect Values as Text", () => { CopyEffectValues(true); }, ContextMenuSeparator.After));
+
+                    if (Platform.IsDesktop)
+                    { 
+                        menu.Add(new ContextMenuOption("MenuCopy", "Copy Effect Values as Text", () => { CopyEffectValues(true); }, ContextMenuSeparator.After));
+                    }
                 }
 
                 if (hasValue)

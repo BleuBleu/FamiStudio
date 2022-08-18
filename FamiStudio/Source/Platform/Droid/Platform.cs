@@ -273,12 +273,10 @@ namespace FamiStudio
 
         public static void SetClipboardString(string s)
         {
-            Debug.Assert(false);
         }
 
         public static void ClearClipboardString()
         {
-            Debug.Assert(false);
         }
 
         public const bool IsMobile  = true;
