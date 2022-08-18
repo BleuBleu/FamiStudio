@@ -334,7 +334,7 @@ namespace FamiStudio
             while (true)
             {
                 var decodeTime = AdvanceFrame();
-                var delay = Gif.GetFrameDelay(gif) - decodeTime;
+                var delay = System.Math.Max(0, Gif.GetFrameDelay(gif) - decodeTime);
 
                 Debug.WriteLine($"Decode time {decodeTime}");
 

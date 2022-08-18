@@ -360,8 +360,8 @@ namespace FamiStudio
             // Simple smoothstep interpolation (which is equivalent to cosine interpolation).
             for (int i = 0; i < volumeEnvelope.Count - 1; i++)
             {
-                var s0 = volumeEnvelope[i + 0].sample;
-                var s1 = volumeEnvelope[i + 1].sample;
+                var s0 = Utils.Clamp(volumeEnvelope[i + 0].sample, 0, wave.Length - 1);
+                var s1 = Utils.Clamp(volumeEnvelope[i + 1].sample, 0, wave.Length - 1);
                 var v0 = volumeEnvelope[i + 0].volume;
                 var v1 = volumeEnvelope[i + 1].volume;
 
