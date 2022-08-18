@@ -803,6 +803,7 @@ namespace FamiStudio
         {
             contextMenuPoint = PointToScreen(new Point(x, y));
             controls.ShowContextMenu(x, y, options);
+            RefreshCursor(controls.ContextMenu);
         }
 
         public void HideContextMenu()
