@@ -23,6 +23,8 @@ namespace FamiStudio
 
         public static bool Initialize(bool commandLine)
         {
+            MacUtils.Initialize();
+
             if (!InitializeDesktop(commandLine))
                 return false;
             return true;

@@ -10,6 +10,8 @@ namespace FamiStudio
         private static float windowScaling = 1;
         private static float fontScaling   = 1;
 
+        public static bool IsInitialized => initialized;
+
         public static float Window { get { Debug.Assert(initialized); return windowScaling; } }
         public static float Font   { get { Debug.Assert(initialized); return fontScaling; } }
 

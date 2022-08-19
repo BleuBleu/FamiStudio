@@ -226,9 +226,8 @@ namespace FamiStudio
         public static IntPtr NSWindow => nsWindow;
         public static float  DoubleClickInterval => doubleClickInterval;
 
-        public static void Initialize(IntPtr nsWin)
+        public static void Initialize()
         {
-            nsWindow = nsWin;
             appKitLib = LoadLibrary("/System/Library/Frameworks/AppKit.framework/AppKit");
             foundationLib = LoadLibrary("/System/Library/Frameworks/Foundation.framework/Foundation");
 
@@ -244,8 +243,6 @@ namespace FamiStudio
             clsNSMenu = GetClass("NSMenu");
             clsNSMenuItem = GetClass("NSMenuItem");
 
-            doubleClickInterval = (float)SendFloat(clsNSEvent, selDoubleClickInterval);
-            famiStudioPasteboard = SendIntPtr(clsNSPasteboard, selPasteboardWithName, ToNSString("FamiStudio"));
             nsApplication = SendIntPtr(clsNSApplication, selSharedApplication);
 
             CarbonEventTypeSpec eventType;
@@ -253,6 +250,14 @@ namespace FamiStudio
             eventType.EventKind = EventOpenDocuments;
 
             InstallEventHandler(GetApplicationEventTarget(), HandleOpenDocuments, 1, new CarbonEventTypeSpec[] { eventType }, IntPtr.Zero, out _);
+
+            doubleClickInterval = (float)SendFloat(clsNSEvent, selDoubleClickInterval);
+            famiStudioPasteboard = SendIntPtr(clsNSPasteboard, selPasteboardWithName, ToNSString("FamiStudio"));
+        }
+
+        public static void InitializeWindow(IntPtr nsWin)
+        {
+            nsWindow = nsWin;
 
             CreateMenu();
         }
@@ -751,7 +756,6 @@ namespace FamiStudio
         {
             try
             {
-
                 var docs = GetFileListFromEventRef(eventRef);
 
                 if (docs != null)
