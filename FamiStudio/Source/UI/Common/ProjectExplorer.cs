@@ -684,6 +684,7 @@ namespace FamiStudio
         TabType selectedTab = TabType.Project;
         Button sliderDragButton = null;
         CaptureOperation captureOperation = CaptureOperation.None;
+        CaptureOperation lastCaptureOperation = CaptureOperation.None;
         Instrument draggedInstrument = null;
         Instrument expandedInstrument = null;
         string selectedInstrumentTab = null;
@@ -2278,6 +2279,8 @@ namespace FamiStudio
                         break;
                 }
             }
+
+            lastCaptureOperation = CaptureOperation.None;
         }
 
         protected void ConditionalShowExpansionIcons(int x, int y)
@@ -2396,6 +2399,7 @@ namespace FamiStudio
             Capture = true;
             canFling = false;
             captureOperation = op;
+            lastCaptureOperation = CaptureOperation.None;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
             captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
             captureDuration = 0.0f;
@@ -2436,6 +2440,7 @@ namespace FamiStudio
             draggedSample = null;
             draggedSong = null;
             sliderDragButton = null;
+            lastCaptureOperation = captureOperation;
             captureOperation = CaptureOperation.None;
             Capture = false;
             MarkDirty();
@@ -3641,9 +3646,14 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleTouchClickParamListButton(int x, int y, Button button, int buttonIdx)
+        private bool HandleTouchClickParamListOrSliderButton(int x, int y, Button button, int buttonIdx)
         {
-            ClickParamListOrSliderButton(x, y, button, buttonIdx, false);
+            // If we just ended a slider button capture op, it means we litterally just 
+            // moved our finger up from the button this frame, so we must not increment 
+            // again.
+            if (lastCaptureOperation != CaptureOperation.SliderButtons)
+                ClickParamListOrSliderButton(x, y, button, buttonIdx, false);
+
             return true;
         }
 
@@ -3676,7 +3686,8 @@ namespace FamiStudio
                     case ButtonType.ParamCheckbox:
                         return HandleTouchClickParamCheckboxButton(x, y, button);
                     case ButtonType.ParamList:
-                        return HandleTouchClickParamListButton(x, y, button, buttonIdx);
+                    case ButtonType.ParamSlider:
+                        return HandleTouchClickParamListOrSliderButton(x, y, button, buttonIdx);
                     case ButtonType.ParamTabs:
                         return HandleTouchClickParamTabsButton(x, y, button);
                     case ButtonType.ArpeggioHeader:
@@ -4269,6 +4280,8 @@ namespace FamiStudio
             }
         }
 
+        int frameNumber = 0;
+
         public override void Tick(float delta)
         {
             TickFling(delta);
@@ -4689,6 +4702,7 @@ namespace FamiStudio
             if (buffer.IsReading)
             {
                 captureOperation = CaptureOperation.None;
+                lastCaptureOperation = CaptureOperation.None;
                 Capture = false;
                 flingVelY = 0.0f;
 
