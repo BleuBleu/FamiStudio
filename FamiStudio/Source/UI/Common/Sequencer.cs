@@ -575,9 +575,10 @@ namespace FamiStudio
                 if (channelVisible[i])
                 {
                     // Icon
+                    var isHoverRow = hoverRow == channelToRow[i];
                     var channel = Song.Channels[i];
                     var bitmapIndex = showExpIcons ? channel.Expansion : channel.Type;
-                    var iconHoverOpacity = hoverRow == channelToRow[i] && (hoverIconMask & 1) != 0 ? 0.75f : 1.0f;
+                    var iconHoverOpacity = isHoverRow && (hoverIconMask & 1) != 0 ? 0.75f : 1.0f;
                     cc.DrawBitmapAtlas(atlas[bitmapIndex], channelIconPosX, y + channelIconPosY, ((App.ChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * iconHoverOpacity, channelBitmapScale, Theme.LightGreyColor1);
 
                     // Name
@@ -586,11 +587,11 @@ namespace FamiStudio
                     cc.DrawText(Song.Channels[i].Name, font, channelNamePosX, y + channelIconPosY, Theme.LightGreyColor2, TextFlags.MiddleLeft, 0, iconHeight);
 
                     // Force display icon.
-                    var ghostHoverOpacity = hoverRow == channelToRow[i] && (hoverIconMask & 2) != 0 ? 0.75f : 1.0f;
+                    var ghostHoverOpacity = isHoverRow && (hoverIconMask & 2) != 0 ? 0.75f : 1.0f;
                     cc.DrawBitmapAtlas(bmpForceDisplay, channelNameSizeX - ghostNoteOffsetX, y + channelSizeY - ghostNoteOffsetY - 1, ((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * ghostHoverOpacity, bitmapScale, Theme.LightGreyColor1);
 
                     // Hover
-                    if (i == hoverRow)
+                    if (isHoverRow)
                         cc.FillRectangle(0, y, channelNameSizeX, y + channelSizeY, Theme.MediumGreyColor1);
 
                     y += channelSizeY;
