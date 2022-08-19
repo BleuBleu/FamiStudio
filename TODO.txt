@@ -6,8 +6,6 @@ Beta link : https://1drv.ms/u/s!AgsNX7y1G9kwjf4UEnf52S3EWQXxdg?e=5ZeQdh
 Beta bugs
 =========
 - Steo feedback for linux dialogs.
-- Beetroot cursor thing
-- beetroot paul stuff
 
 Things to figure out in Beta
 ============================
