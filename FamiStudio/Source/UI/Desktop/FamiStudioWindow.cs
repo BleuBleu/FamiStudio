@@ -360,7 +360,7 @@ namespace FamiStudio
 
         public static void GLFWToWindow(double dx, double dy, out int x, out int y)
         {
-            if (Platform.IsMacOS)
+            if (Platform.IsMacOS && DpiScaling.IsInitialized)
             {
                 x = (int)Math.Round(dx * DpiScaling.Window);
                 y = (int)Math.Round(dy * DpiScaling.Window);

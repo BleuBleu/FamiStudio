@@ -13,7 +13,7 @@ namespace FamiStudio
 
         private void PlatformWindowInitialize()
         {
-            MacUtils.Initialize(glfwGetCocoaWindow(window));
+            MacUtils.InitializeWindow(glfwGetCocoaWindow(window));
             MacUtils.FileOpen += MacUtils_FileOpen;
 
             nsLoopMode = MacUtils.GetStringConstant(MacUtils.FoundationLibrary, "NSDefaultRunLoopMode");
