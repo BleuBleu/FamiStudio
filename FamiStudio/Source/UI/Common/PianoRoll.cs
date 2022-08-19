@@ -7962,6 +7962,17 @@ namespace FamiStudio
 
             if (SnapEnabled && !snapTemporaryDisabled || forceSnap)
             {
+                var negativeOffset = 0;
+                var firstPatternLen = Song.GetPatternLength(0);
+
+                // If we get a negative note, we will assume that the non-existant "negative"
+                // patterns are infinite copies of the first pattern.
+                while (absoluteNoteIndex < 0)
+                {
+                    absoluteNoteIndex += firstPatternLen;
+                    negativeOffset    += firstPatternLen;
+                }
+
                 var location = NoteLocation.FromAbsoluteNoteIndex(Song, absoluteNoteIndex);
                 
                 if (location.PatternIndex >= Song.Length)
@@ -7998,6 +8009,8 @@ namespace FamiStudio
                         }
                     }
                 }
+
+                snappedNoteIndex -= negativeOffset;
 
                 if (!roundUp)
                     snappedNoteIndex = Math.Min(Song.GetPatternLength(location.PatternIndex) - 1, snappedNoteIndex);
@@ -8193,7 +8206,7 @@ namespace FamiStudio
             {
                 // The snapped position of the mouse is the new note start.
                 var snappedLocation = NoteLocation.Min(SnapNote(captureNoteLocation.Advance(Song, resizeNote.Duration - 1)), SnapNote(location));
-                deltaNoteIdx = snappedLocation.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
+                deltaNoteIdx = snappedLocation.ToAbsoluteNoteIndex(Song) - captureNoteAbsoluteIdx;
             }
 
             // Don't allow snapping to move stuff in the opposite side of the mouse movement. Feels janky.

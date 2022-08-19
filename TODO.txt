@@ -108,6 +108,7 @@ Discord
 
 Backlog: 
 =========
+- Improve expansion tooltips.
 - Idea from perkka "When an instrument is selected. Have the channels thats not supported by it slightly faded out, or the channel names that support it in bold or something"
 - Do a pass on tooltips for ParamProviders.
 - Way to convert instrument between expansions.
