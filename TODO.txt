@@ -5,19 +5,13 @@ Beta link : https://1drv.ms/u/s!AgsNX7y1G9kwjf4UEnf52S3EWQXxdg?e=5ZeQdh
 
 Beta bugs
 =========
-- 
+- Merge PWM stuff
 
 Things to figure out in Beta
 ============================
 - Double-click / shift-click to delete songs/instruments?
 
-Trailer 4.0.0, top #5
-=====================
-1) Desktop
-2) N163
-3) FDS/N163 resampler
-4) ROM audio expansions
-5) Oscilloscope stablity
+======================
 
 4.1.0
 =====
