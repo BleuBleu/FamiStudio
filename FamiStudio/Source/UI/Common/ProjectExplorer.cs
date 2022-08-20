@@ -3256,13 +3256,11 @@ namespace FamiStudio
 
         private bool HandleMouseDownParamSliderButton(MouseEventArgs e, Button button, int buttonIdx)
         {
-            if (ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, true))
-            {
-                return true;
-            }
-
             if (e.Left)
             {
+                if (ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, true))
+                    return true;
+
                 return StartMoveSlider(e.X, e.Y, button, buttonIdx);
             }
 
@@ -4641,7 +4639,7 @@ namespace FamiStudio
 
         private bool HandleMouseDoubleClickParamListButton(MouseEventArgs e, Button button, int buttonIdx)
         {
-            return ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, true);
+            return e.Left && ClickParamListOrSliderButton(e.X, e.Y, button, buttonIdx, true);
         }
 
         private bool HandleMouseDoubleClickButtons(MouseEventArgs e)

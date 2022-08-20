@@ -5,7 +5,7 @@ Beta link : https://1drv.ms/u/s!AgsNX7y1G9kwjf4UEnf52S3EWQXxdg?e=5ZeQdh
 
 Beta bugs
 =========
-- Steo feedback for linux dialogs.
+- 
 
 Things to figure out in Beta
 ============================
@@ -106,6 +106,8 @@ Discord
 
 Backlog: 
 =========
+- Improve linux file dialog (Steo feedback)
+- Hold SHIFT+click for multiple delete.
 - Improve expansion tooltips.
 - Idea from perkka "When an instrument is selected. Have the channels thats not supported by it slightly faded out, or the channel names that support it in bold or something"
 - Do a pass on tooltips for ParamProviders.
