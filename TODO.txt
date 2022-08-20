@@ -6,6 +6,7 @@ Beta link : https://1drv.ms/u/s!AgsNX7y1G9kwjf4UEnf52S3EWQXxdg?e=5ZeQdh
 Beta bugs
 =========
 - Merge PWM stuff
+- Mmc5 ROM offset
 
 Things to figure out in Beta
 ============================
