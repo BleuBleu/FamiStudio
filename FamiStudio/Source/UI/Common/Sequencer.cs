@@ -1123,7 +1123,7 @@ namespace FamiStudio
         {
             return new Rectangle(
                 channelIconPosX,
-                channelIconPosY + headerSizeY + rowIdx * channelSizeY, 
+                channelIconPosY + headerSizeY + rowIdx * channelSizeY - scrollY, 
                 ScaleForWindow(16),
                 ScaleForWindow(16));
         }
@@ -1132,7 +1132,7 @@ namespace FamiStudio
         {
             return new Rectangle(
                 channelNameSizeX - ghostNoteOffsetX, 
-                headerSizeY + (rowIdx + 1) * channelSizeY - ghostNoteOffsetY - 1,
+                headerSizeY + (rowIdx + 1) * channelSizeY - ghostNoteOffsetY - scrollY - 1,
                 ScaleForWindow(12),
                 ScaleForWindow(12));
         }
