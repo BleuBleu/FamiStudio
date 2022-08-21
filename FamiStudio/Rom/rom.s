@@ -1208,7 +1208,7 @@ equalizer_ppu_addr_lo_lookup:
     .byte $55 ; DPCM
     .byte $59 ; FDS
 .elseif FAMISTUDIO_EXP_MMC5
-    .byte $44 ; Square 1
+    .byte $43 ; Square 1
     .byte $47 ; Square 2
     .byte $4b ; Triangle
     .byte $4f ; Noise
