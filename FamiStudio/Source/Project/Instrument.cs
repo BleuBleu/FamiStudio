@@ -741,16 +741,16 @@ namespace FamiStudio
                 envelopes[EnvelopeType.WaveformRepeat].Length = 1;
             }
 
-            // At version 14 (FamiStudio 4.0.0), I found some old files where the
-            // preset does not match with the actual waves. Likely stuff i made
-            // with an old development version. Need to check if the preset matches
-            // the waveform here :(
-            if (buffer.Version < 14 && (IsN163 || IsFds))
-            {
+            // Revert back presets to "customs" if they no longer match what the code generates.
+            // This is in case we change the code that generates the preset.
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
+            { 
                 if (IsN163 && n163WavPreset != WavePresetType.Custom && !N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset))
                     n163WavPreset = WavePresetType.Custom;
                 if (IsFds && fdsWavPreset != WavePresetType.Custom && !FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
                     fdsWavPreset = WavePresetType.Custom;
+                if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsModPreset))
+                    fdsModPreset = WavePresetType.Custom;
             }
 
             if (buffer.IsReading)

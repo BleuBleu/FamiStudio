@@ -23,7 +23,7 @@ Changes:
 * Audio delay effect when exporting video or audio.
 * Snapping improvements, most notably:
 	* **Alt+1**, **Alt+2**, **Alt+3** and **Alt+4** quickly changes between common snapping values
-	* Hold **Alt** anytime when resizing or moving notes to temporarely disable snapping
+	* Hold **Alt** anytime when resizing or moving notes to temporarily disable snapping
 	* Context menu to set snapping to a specific note duration
 	* Option to snap effect values
 

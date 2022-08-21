@@ -442,6 +442,10 @@ namespace FamiStudio
                         for (int i = 0; i < localChunkLength; i++)
                             values[chunkOffset + i] = (sbyte)((min + max) / 2);
                         break;
+                    case WavePresetType.PWM:
+                        for (int i = 0; i < localChunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= (localChunkLength / 2) + Math.Abs(localChunkLength / 2 - (1 + ((j + 1) * (localChunkLength - 2) / localChunkCount))) ? max : min);
+                        break;
                 }
             }
         }
@@ -703,7 +707,9 @@ namespace FamiStudio
         public const int Custom          = 6;
         public const int CountNoResample = 7;
         public const int Resample        = 7;
-        public const int Count           = 8;
+        public const int PWM             = 8;  
+        public const int Count           = 9;
+       
 
         public static readonly string[] Names =
         {
@@ -714,7 +720,8 @@ namespace FamiStudio
             "Square 25%",
             "Flat",
             "Custom",
-            "Resample"
+            "Resample",
+            "PWM"
         };
 
         public static int GetValueForName(string str)
