@@ -689,8 +689,8 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AC7A3584508348F6B972404F4F9A3F2F"
             {
-            "SourcePath" = "8:Demo Songs\\Tetris.fms"
-            "TargetName" = "8:Tetris.fms"
+            "SourcePath" = "8:Demo Songs\\Tetris (Tutorial Song).fms"
+            "TargetName" = "8:Tetris (Tutorial Song).fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"

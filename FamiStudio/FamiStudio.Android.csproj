@@ -741,7 +741,7 @@
     <EmbeddedResource Include="..\Setup\Demo Songs\Silver Surfer.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Sonic 1.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Sonic 3.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Tetris.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Tetris (Tutorial Song).fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Tower of Heaven.fms" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />

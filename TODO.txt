@@ -3,11 +3,11 @@
 
 Beta bugs
 =========
-- New demo songs?
+- Resize issue macos.
 
-Things to figure out in Beta
-============================
-- Double-click / shift-click to delete songs/instruments?
+4.0.1
+=====
+- Fix Quit menu MacOS
 
 4.1.0
 =====
