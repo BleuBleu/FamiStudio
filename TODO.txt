@@ -1,25 +1,11 @@
 4.0.0
 =====
 
-Release
-=======
-- Package builds
-- Publish github
-- Website/Doc
-- Flatpak
-- Itch.io
-- Play Store (write android changelog)
-
-- Youtube trailer
-- Youtube Deprecate old tutorials
-- Twitter
-- Reddit
-- Discords
-
 4.0.1
 =====
 - Fix Quit menu MacOS
 - Resize issue macos.
+- Does the doc mention hold Alt to disable snapping?
 
 4.1.0
 =====
