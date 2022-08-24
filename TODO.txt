@@ -1,13 +1,25 @@
 4.0.0
 =====
 
-Beta bugs
-=========
-- Resize issue macos.
+Release
+=======
+- Package builds
+- Publish github
+- Website/Doc
+- Flatpak
+- Itch.io
+- Play Store (write android changelog)
+
+- Youtube trailer
+- Youtube Deprecate old tutorials
+- Twitter
+- Reddit
+- Discords
 
 4.0.1
 =====
 - Fix Quit menu MacOS
+- Resize issue macos.
 
 4.1.0
 =====
