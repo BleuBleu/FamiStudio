@@ -4278,8 +4278,6 @@ namespace FamiStudio
             }
         }
 
-        int frameNumber = 0;
-
         public override void Tick(float delta)
         {
             TickFling(delta);

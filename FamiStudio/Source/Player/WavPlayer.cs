@@ -22,7 +22,7 @@ namespace FamiStudio
             int maxSample = int.MaxValue;
 
             if (duration > 0)
-                maxSample = duration * sampleRate;
+                maxSample = duration * sampleRate * (stereo ? 2 : 1);
 
             var loopPoint = Math.Max(0, song.LoopPoint);
             var totalNumPatterns = loopPoint + (song.Length - loopPoint) * maxLoopCount;
