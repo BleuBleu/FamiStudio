@@ -149,6 +149,8 @@ The precision of the snapping can be changed by right-clicking on the magnet and
 
 The snapping precision is expressed in *Beats* (which are numbered as x.1, x.2, x.3, etc. in the header). So with the default settings, a snapping precision of 1 will mean a quarter note. Adding, selecting and dragging of notes are currently the only actions affected by snapping. More might be added in future based on user feedback.
 
+At any time, when snapping is ON, you can hold **Alt** to temporarely disable it. 
+
 There is also an option to snap effect values. When enabled, newly created effect values in the effect panel will be snapped to the desired precision.
 
 The following keyboard shortcuts can be used to switch between common snapping values:
