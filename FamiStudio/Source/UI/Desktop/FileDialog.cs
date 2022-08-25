@@ -440,7 +440,7 @@ namespace FamiStudio
 
                 foreach (var d in drives)
                 {
-                    if (d.IsReady && d.TotalSize > 0)
+                    if (d.IsReady)
                         files.Add(new FileEntry("FileDisk", d.Name, null, EntryType.Drive));
                 }
             }

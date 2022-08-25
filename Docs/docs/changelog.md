@@ -2,6 +2,13 @@
 
 Version history / release notes for each release.
 
+## Version 4.0.1 (Linux & Android Hotfix)
+
+Fixes:
+
+* Fixed file dialog on Linux.
+* Fixed some piano touches being ignored on Android.
+
 ## Version 4.0.0
 
 Changes:
