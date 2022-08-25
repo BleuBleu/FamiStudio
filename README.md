@@ -1,3 +1,10 @@
+(This README.md will be returned back to normal right before merging with the main repo)
+# Basically this is a fork that will implement several features:
+- Converting volumes & duty cycles between 2a03 and expansions
+- Fixing a C0 bug
+- Adding a Demo Songs shortcut
+This fork is not meant for redistribution.
+
 # Welcome to the FamiStudio GitHub page
 This is the GitHub page of FamiStudio, which is intended for people wanting to view/download the source code or report bug fixes.
 
