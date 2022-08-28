@@ -3,8 +3,6 @@
 
 4.0.1
 =====
-- P0 : Pop-up piano issue from Mk2. "samsung tablet and phone, the on screen keyboard only plays notes when you drag instead of tap, is that normal?"
-- P0 : Flatpak file open issue
 - P0 : Cocalc.com VM crash?
 - P1 : Fix Quit menu MacOS
 - P1 : Resize issue macos.
