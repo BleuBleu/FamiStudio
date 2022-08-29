@@ -382,6 +382,16 @@ namespace FamiStudio
             return initialValue;
         }
 
+        public static unsafe string PtrToStringUTF8(IntPtr ptr)
+        {
+            // The string is UTF8.
+            var p = (byte*)ptr.ToPointer();
+            var n = 0;
+            for (; p[n] != 0; n++) ;
+
+            return System.Text.Encoding.UTF8.GetString(p, n);
+        }
+
         public static void NonBlockingParallelFor(int numItems, int maxThreads, ThreadSafeCounter counter, Func<int, int, bool> action)
         {
             var queue = new ConcurrentQueue<int>();

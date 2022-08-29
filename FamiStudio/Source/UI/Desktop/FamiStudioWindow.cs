@@ -637,13 +637,15 @@ namespace FamiStudio
         {
             if (count > 0)
             {
-                string filename;
+                IntPtr ptr;
 
                 // There has to be a more generic way to do this? 
                 if (IntPtr.Size == 4)
-                    filename = Marshal.PtrToStringAnsi(new IntPtr(*(int*)paths.ToPointer()));
+                    ptr = new IntPtr(*(int*)paths.ToPointer());
                 else
-                    filename = Marshal.PtrToStringAnsi(new IntPtr(*(long*)paths.ToPointer()));
+                    ptr = new IntPtr(*(long*)paths.ToPointer());
+
+                var filename = Utils.PtrToStringUTF8(ptr);
 
                 if (!string.IsNullOrEmpty(filename))
                     famistudio.OpenProject(filename);
