@@ -147,6 +147,8 @@ namespace FamiStudio
             glfwWindowHint(GLFW_MAXIMIZED, 1);
             glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
             glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, 1);
+            glfwWindowHint(GLFW_DEPTH_BITS, 0);
+            glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
             var window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
             if (window == IntPtr.Zero)
