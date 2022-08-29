@@ -469,6 +469,10 @@ namespace FamiStudio
         {
             foreach (var ext in extensions)
             {
+                // HACK : Files with no extensions fails the regex check below and i cant
+                // be bothered to debug it.
+                if (ext == "*.*")
+                    return true;
                 if (Regex.IsMatch(s, WildCardToRegular(ext)))
                     return true;
             }
