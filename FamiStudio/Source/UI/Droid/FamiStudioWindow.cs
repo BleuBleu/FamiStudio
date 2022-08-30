@@ -168,6 +168,7 @@ namespace FamiStudio
 
             Choreographer.Instance.PostFrameCallback(this);
             
+            UpdateForceLandscape();
             StartCleanCacheFolder();
         }
 
@@ -344,6 +345,17 @@ namespace FamiStudio
             Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
         }
 
+        private void UpdateForceLandscape()
+        {
+            var settingsWantLandscape = Settings.ForceLandscape;
+            var appIsInLandscape = RequestedOrientation == ScreenOrientation.Landscape;
+
+            if (settingsWantLandscape != appIsInLandscape)
+            {
+                RequestedOrientation = settingsWantLandscape ? ScreenOrientation.Landscape : ScreenOrientation.Unspecified;
+            }
+        }
+
         public void DoFrame(long frameTimeNanos)
         {
             if (lastFrameTime < 0)
@@ -352,6 +364,8 @@ namespace FamiStudio
             if (glThreadIsRunning && !IsAsyncDialogInProgress)
             {
                 var deltaTime = (float)Math.Min(0.25f, (float)((frameTimeNanos - lastFrameTime) / 1000000000.0));
+
+                UpdateForceLandscape();
 
                 lock (renderLock)
                 {

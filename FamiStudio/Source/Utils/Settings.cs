@@ -200,6 +200,7 @@ namespace FamiStudio
 
         // Mobile section
         public static bool AllowVibration = true;
+        public static bool ForceLandscape = false;
 
         // Piano roll stuff
         public static int SnapResolution = SnapResolutionType.OneBeat;
@@ -372,6 +373,7 @@ namespace FamiStudio
             
             // Mobile section
             AllowVibration = ini.GetBool("Mobile", "AllowVibration", true);
+            ForceLandscape = ini.GetBool("Mobile", "ForceLandscape", false);
 
             // Piano roll section
             SnapResolution = Utils.Clamp(ini.GetInt("PianoRoll", "SnapResolution", SnapResolutionType.OneBeat), SnapResolutionType.Min, SnapResolutionType.Max);
@@ -494,6 +496,7 @@ namespace FamiStudio
 
             // Mobile
             ini.SetBool("Mobile", "AllowVibration", AllowVibration);
+            ini.SetBool("Mobile", "ForceLandscape", ForceLandscape);
 
             // Piano roll section
             ini.SetInt("PianoRoll", "SnapResolution", SnapResolution);

@@ -123,6 +123,7 @@ namespace FamiStudio
 
         // Mobile
         private readonly string AllowVibrationTooltip           = "When enabled, the phone will vibrate on long pressed, piano keys, etc.";
+        private readonly string ForceLandscapeTooltip           = "When enabled, The app orientation will be forced to landscape.";
 
         // FFmpeg;
         private readonly string FFmpegPathTooltip               = "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below.";
@@ -304,6 +305,7 @@ namespace FamiStudio
                 case ConfigSection.Mobile:
                 { 
                     page.AddCheckBox("Allow vibration:", Settings.AllowVibration, AllowVibrationTooltip); // 0
+                    page.AddCheckBox("Force Landscape:", Settings.ForceLandscape, ForceLandscapeTooltip); // 1
                     break;
                 }
             }
@@ -555,6 +557,7 @@ namespace FamiStudio
 
                     // Mobile
                     Settings.AllowVibration = pageMobile.GetPropertyValue<bool>(0);
+                    Settings.ForceLandscape = pageMobile.GetPropertyValue<bool>(1);
 
                     Settings.Save();
                 }

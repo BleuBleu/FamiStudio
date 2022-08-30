@@ -9,10 +9,9 @@ x P0 : Drag files with weird characters
 x P1 : How2 sonic song EPSM osc is weird.
 	=> Recompile on all platforms.
 - P1 : Shy mode on mobile.
-- P1 : Option to lock orientation on mobile.
+x P1 : Option to lock orientation on mobile.
 - P2 : Cocalc.com VM crash?
 - P2 : Fix Quit menu MacOS
-- P2 : Resize issue macos.
 
 4.1.0
 =====
