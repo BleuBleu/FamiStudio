@@ -674,10 +674,11 @@ namespace FamiStudio
 
         private void ContextMenuDialog_Click(object sender, EventArgs e)
         {
-            var tag = (sender as TextView).Tag as ContextMenuTag;
+            // HACK : We have a weird NULL crash here. No clue how to repro this.
+            var tag = (sender as TextView)?.Tag as ContextMenuTag;
 
-            tag.opt.Callback();
-            contextMenuDialog.Dismiss();
+            tag?.opt?.Callback();
+            contextMenuDialog?.Dismiss();
             MarkDirty();
 
             Platform.VibrateTick();

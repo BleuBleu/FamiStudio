@@ -3,7 +3,6 @@
 
 4.0.1
 =====
-- Look at Play Console crashes next week.
 x P0 : File dialog + no extension + buggy.
 x P0 : Drag files with weird characters
 x P1 : How2 sonic song EPSM osc is weird.
