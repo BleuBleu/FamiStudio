@@ -717,9 +717,16 @@ void OPN2_UpdateTriggers(ym3438_t* chip)
 
         // When the phase loops around, this is our trigger!
 	    if (chip->trigger_phase[chan] < prev_trigger_phase)
+        {
 		    chip->triggers[chan] = 1;
-        else if (phase_inc == 0)
+        }
+        // If we hit a really low frequency, well fall back to old-school trigger detection
+        // otherwise the wave may only repeat every 20 frames or something, making the 
+        // oscilloscope freeze in place. Looks bad.
+        else if (phase_inc < 128) 
+        {
 			chip->triggers[chan] = 2;
+        }
     }
 }
 

@@ -6,7 +6,8 @@
 - Look at Play Console crashes next week.
 x P0 : File dialog + no extension + buggy.
 x P0 : Drag files with weird characters
-- P1 : How2 sonic song EPSM osc is weird.
+x P1 : How2 sonic song EPSM osc is weird.
+	=> Recompile on all platforms.
 - P1 : Shy mode on mobile.
 - P1 : Option to lock orientation on mobile.
 - P2 : Cocalc.com VM crash?
