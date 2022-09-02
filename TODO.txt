@@ -11,6 +11,7 @@ x P1 : How2 sonic song EPSM osc is weird.
 x P1 : Option to lock orientation on mobile.
 - P2 : Cocalc.com VM crash?
 - P2 : Fix Quit menu MacOS
+- P1 : Fast click toolbar issue
 
 4.1.0
 =====
