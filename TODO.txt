@@ -12,6 +12,7 @@ x P1 : Option to lock orientation on mobile.
 - P2 : Cocalc.com VM crash?
 - P2 : Fix Quit menu MacOS
 - P1 : Fast click toolbar issue
+- P1 : pmw123, remove from fds
 
 4.1.0
 =====
