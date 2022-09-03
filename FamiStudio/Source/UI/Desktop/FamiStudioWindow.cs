@@ -147,6 +147,8 @@ namespace FamiStudio
             glfwWindowHint(GLFW_MAXIMIZED, 1);
             glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
             glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, 1);
+            glfwWindowHint(GLFW_DEPTH_BITS, 0);
+            glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
             var window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
             if (window == IntPtr.Zero)
@@ -637,13 +639,15 @@ namespace FamiStudio
         {
             if (count > 0)
             {
-                string filename;
+                IntPtr ptr;
 
                 // There has to be a more generic way to do this? 
                 if (IntPtr.Size == 4)
-                    filename = Marshal.PtrToStringAnsi(new IntPtr(*(int*)paths.ToPointer()));
+                    ptr = new IntPtr(*(int*)paths.ToPointer());
                 else
-                    filename = Marshal.PtrToStringAnsi(new IntPtr(*(long*)paths.ToPointer()));
+                    ptr = new IntPtr(*(long*)paths.ToPointer());
+
+                var filename = Utils.PtrToStringUTF8(ptr);
 
                 if (!string.IsNullOrEmpty(filename))
                     famistudio.OpenProject(filename);

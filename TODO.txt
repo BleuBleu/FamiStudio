@@ -3,12 +3,20 @@
 
 4.0.1
 =====
-- P0 : Cocalc.com VM crash?
-- P1 : Fix Quit menu MacOS
-- P1 : Resize issue macos.
+x P0 : File dialog + no extension + buggy.
+x P0 : Drag files with weird characters
+x P1 : How2 sonic song EPSM osc is weird.
+	=> Recompile on all platforms.
+- P1 : Shy mode on mobile.
+x P1 : Option to lock orientation on mobile.
+- P2 : Cocalc.com VM crash?
+- P2 : Fix Quit menu MacOS
+- P1 : Fast click toolbar issue
+- P1 : pmw123, remove from fds
 
 4.1.0
 =====
+- Option to set snapping auto depending on last resize.
 - Dual APU (VT02) support?
 - Stereo export and NSF import on Android?
 - CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
@@ -130,3 +138,4 @@ Backlog:
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
+- Wayland support on Linux (GLFW supports it). Standard file dialogs.
