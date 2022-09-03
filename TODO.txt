@@ -9,6 +9,7 @@ x P1 : How2 sonic song EPSM osc is weird.
 	=> Recompile on all platforms.
 - P1 : Shy mode on mobile.
 x P1 : Option to lock orientation on mobile.
+- P0 : new openal+ smarter detection
 - P2 : Cocalc.com VM crash?
 - P2 : Fix Quit menu MacOS
 - P1 : Fast click toolbar issue
