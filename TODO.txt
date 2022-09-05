@@ -106,6 +106,7 @@ Discord
 
 Backlog: 
 =========
+- Add effect to select N163 wave. How does it react in FT.
 - Different aspect ratios for video export?
 - Improve linux file dialog (Steo feedback)
 - Hold SHIFT+click for multiple delete.
