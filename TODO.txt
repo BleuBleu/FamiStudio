@@ -8,11 +8,15 @@ x P0 : Drag files with weird characters
 x P1 : How2 sonic song EPSM osc is weird.
 	=> Recompile on all platforms.
 - P1 : Shy mode on mobile.
+- P1 : non-16 bit wav file resample bug. (error message is wrong, he was trying to load 32-bit float)
+- P1 : Holding alt prevent selection.
 x P1 : Option to lock orientation on mobile.
-- P2 : Cocalc.com VM crash?
+- P0 : new openal+ smarter detection
 - P2 : Fix Quit menu MacOS
 - P1 : Fast click toolbar issue
-- P1 : pmw123, remove from fds
+- P1 : VRC7 hit hat is. Mangrove.fms
+- P1 : pmw123, remove from fds (Or wait on that one if we are going to add parameters)
+- P1 : VRC7 envelope release thing from how?
 
 4.1.0
 =====
@@ -102,6 +106,8 @@ Discord
 
 Backlog: 
 =========
+- Add effect to select N163 wave. How does it react in FT.
+- Different aspect ratios for video export?
 - Improve linux file dialog (Steo feedback)
 - Hold SHIFT+click for multiple delete.
 - Improve expansion tooltips.
