@@ -17,6 +17,8 @@ x P1 : Option to lock orientation on mobile.
 - P1 : VRC7 hit hat is. Mangrove.fms
 - P1 : pmw123, remove from fds (Or wait on that one if we are going to add parameters)
 - P1 : VRC7 envelope release thing from how?
+- P1 : FTM file FDS from Retronika on nesdev discord.
+- P0 : Crash when exporting while export is going on (long song export to MP3.)
 
 4.1.0
 =====
@@ -107,6 +109,7 @@ Discord
 Backlog: 
 =========
 - Add effect to select N163 wave. How does it react in FT.
+- Full range volume for expansions?
 - Different aspect ratios for video export?
 - Improve linux file dialog (Steo feedback)
 - Hold SHIFT+click for multiple delete.
