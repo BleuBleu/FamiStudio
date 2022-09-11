@@ -149,35 +149,34 @@ namespace FamiStudio
 
                             subChunkOffset += subChunkSize + 8;
                         }
-
                         if (fmtOffset >= 0 && dataOffset >= 0)
                         {
                             var fmt = new FormatSubChunk();
                             Marshal.Copy(bytes, fmtOffset, new IntPtr(&fmt), FormatSubChunkSize);
-
-                            if (fmt.audioFormat == 1 && fmt.numChannels <= 2 && (fmt.bitsPerSample == 8 || fmt.bitsPerSample == 16 || fmt.bitsPerSample == 24))
-                            {
+                            if (fmt.audioFormat == 1 && fmt.numChannels <= 2 && fmt.bitsPerSample % 8 == 0)
+                            { //Uncompressed PCM
                                 short[] wavData = null;
-
-                                if (fmt.bitsPerSample == 8)
+                                switch (fmt.bitsPerSample)
                                 {
-                                    wavData = new short[dataSize / 1];
-                                    for (int i = 0; i < dataSize; i++)
-                                        wavData[i] = (short)((bytes[dataOffset + i] << 8) + short.MinValue);
+                                    case 8:
+                                        wavData = new short[dataSize / 1];
+                                        for (int i = 0; i < dataSize; i++)
+                                            wavData[i] = (short)((bytes[dataOffset + i] << 8) + short.MinValue + bytes[dataOffset + i]);
+                                        break;
+                                    case 16:
+                                        wavData = new short[dataSize / 2];
+                                        fixed (short* p = &wavData[0])
+                                            Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
+                                        break;
+                                    default:
+                                        if (fmt.bitsPerSample % 8 != 0)
+                                            break;
+                                        short divisor = (short)(fmt.bitsPerSample / 8);
+                                        wavData = new short[dataSize / divisor];
+                                        for (int i = 0; i < dataSize; i += divisor)
+                                            wavData[i / divisor] = (short)((bytes[dataOffset + i + (divisor - 1)] << 8) | bytes[dataOffset + i + (divisor-2)]);
+                                        break;
                                 }
-                                else if (fmt.bitsPerSample == 24)
-                                {
-                                    wavData = new short[dataSize / 3];
-                                    for (int i = 0; i < dataSize; i += 3)
-                                        wavData[i / 3] = (short)((bytes[dataOffset + i + 2] << 8) | bytes[dataOffset + i + 1]);
-                                }
-                                else
-                                {
-                                    wavData = new short[dataSize / 2];
-                                    fixed (short* p = &wavData[0])
-                                        Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
-                                }
-
                                 if (fmt.numChannels == 2)
                                 {
                                     var stereoData = wavData;
@@ -194,7 +193,7 @@ namespace FamiStudio
                             }
                             else
                             {
-                                Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 16-bit, uncompressed, mono and stereo wave files are supported.");
+                                Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 8/16/24/32/40...-bit PCM mono and stereo wave files are supported.");
                                 return null;
                             }
                         }
