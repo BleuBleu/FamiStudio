@@ -7,18 +7,22 @@ x P0 : File dialog + no extension + buggy.
 x P0 : Drag files with weird characters
 x P1 : How2 sonic song EPSM osc is weird.
 	=> Recompile on all platforms.
-- P1 : Shy mode on mobile.
-- P1 : non-16 bit wav file resample bug. (error message is wrong, he was trying to load 32-bit float)
+x P2 : 1frames
+- P1 : Shy mode on mobile?
 - P1 : Holding alt prevent selection.
 x P1 : Option to lock orientation on mobile.
-- P0 : new openal+ smarter detection
-- P2 : Fix Quit menu MacOS
 - P1 : Fast click toolbar issue
-- P1 : VRC7 hit hat is. Mangrove.fms
-- P1 : pmw123, remove from fds (Or wait on that one if we are going to add parameters)
-- P1 : VRC7 envelope release thing from how?
-- P1 : FTM file FDS from Retronika on nesdev discord.
+- P1 : VRC7 hit hat is weird Mangrove.fms
+- P1 : VRC7 envelope release thing from how2?
 - P0 : Crash when exporting while export is going on (long song export to MP3.)
+- P0 : Crash when holding CTRL + change effect value!
+- P0 : SNow song "-" in instrument name NSF export
+
+- P2 : non-16 bit wav file resample bug. (error message is wrong, he was trying to load 32-bit float)
+- P2 : new openal+ smarter detection
+- P2 : Fix Quit menu MacOS
+- P2 : pmw123, remove from fds (Or wait on that one if we are going to add parameters)
+
 
 4.1.0
 =====
@@ -108,6 +112,7 @@ Discord
 
 Backlog: 
 =========
+- Weird shift when using an external display with different scaling (ex: 100% vs 150%)
 - Add effect to select N163 wave. How does it react in FT.
 - Full range volume for expansions?
 - Different aspect ratios for video export?
