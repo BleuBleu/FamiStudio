@@ -7800,7 +7800,7 @@ namespace FamiStudio
                 if (IsSelectionValid())
                 {
                     tooltip += "\n{Del} Delete selected samples.";
-                    newNoteTooltip = $"{(selectionMax - selectionMin + 1)} samples selected";
+                    newNoteTooltip = $"{(selectionMax - selectionMin + 1)} sample" + ((selectionMax - selectionMin) == 0 ? "" : "s") + " selected";
                 }
             }
             else if (IsPointInNoteArea(e.X, e.Y))
@@ -7884,7 +7884,7 @@ namespace FamiStudio
                         if (newNoteTooltip.Length > 0)
                             newNoteTooltip += " ";
 
-                        newNoteTooltip += $"{(selectionMax - selectionMin + 1)}{(Song.Project.UsesFamiTrackerTempo ? "notes" : "frames")} selected";
+                        newNoteTooltip += $"{(selectionMax - selectionMin + 1)}{(Song.Project.UsesFamiTrackerTempo ? " note" : " frame")}" + ((selectionMax - selectionMin) == 0 ? "" : "s") + " selected";
                     }
                 }
                 else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
@@ -7896,7 +7896,7 @@ namespace FamiStudio
                         newNoteTooltip = $"{idx:D3} : {value}";
 
                         if (IsSelectionValid())
-                            newNoteTooltip += $" ({selectionMax - selectionMin + 1} frames selected)";
+                            newNoteTooltip += $" ({selectionMax - selectionMin + 1} frame" + ((selectionMax - selectionMin) == 0 ? "" : "s") + " selected)";
                     }
                 }
                 else if (editMode == EditionMode.DPCMMapping)
