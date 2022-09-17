@@ -2,6 +2,16 @@
 
 Version history / release notes for each release.
 
+## Version 4.0.2 (Hotfix)
+
+Fixes:
+
+* Added option for trigger algorithm in oscilloscope export
+* Fixed crash when saving with CTRL+S while editing something
+* Fixed crash when exporting NSF/ROM with instrument containing dashes in their names
+* Added option for Alt+Right-click zoom gesture (Input section of the settings), off by default
+* Fixed typos
+
 ## Version 4.0.1 (Linux & Android Hotfix)
 
 Fixes:
