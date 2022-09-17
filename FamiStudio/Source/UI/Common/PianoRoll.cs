@@ -5255,7 +5255,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownAltZoom(MouseEventArgs e)
         {
-            if (e.Right && ModifierKeys.Alt)
+            if (e.Right && ModifierKeys.Alt && Settings.AltZoomAllowed)
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.AltZoom);
                 return true;

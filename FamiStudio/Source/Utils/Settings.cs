@@ -66,6 +66,7 @@ namespace FamiStudio
         public static float TrackPadMoveSensitity = 10.0f;
         public static float TrackPadZoomSensitity = 10.0f;
         public static bool AltLeftForMiddle = false;
+        public static bool AltZoomAllowed = false;
 
         public struct QwertyKeyAssignment
         {
@@ -258,6 +259,7 @@ namespace FamiStudio
                 TrackPadMoveSensitity = ini.GetFloat("Input", "TrackPadMoveSensitity", 10.0f);
                 TrackPadZoomSensitity = ini.GetFloat("Input", "TrackPadZoomSensitity", 10.0f);
                 AltLeftForMiddle = ini.GetBool("Input", "AltLeftForMiddle", false);
+                AltZoomAllowed = ini.GetBool("Input", "AltZoomAllowed", false);
             }
 
             // Audio
@@ -439,6 +441,7 @@ namespace FamiStudio
             ini.SetBool("Input", "ReverseTrackPadX", ReverseTrackPadX);
             ini.SetBool("Input", "ReverseTrackPadY", ReverseTrackPadY);
             ini.SetBool("Input", "AltLeftForMiddle", AltLeftForMiddle);
+            ini.SetBool("Input", "AltZoomAllowed", AltZoomAllowed);
 
             // Audio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);

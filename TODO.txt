@@ -8,16 +8,16 @@ x P0 : Drag files with weird characters
 x P1 : How2 sonic song EPSM osc is weird.
 	=> Recompile on all platforms.
 x P2 : 1frames
-- P1 : Shy mode on mobile?
-- P1 : Holding alt prevent selection.
+x P1 : Holding alt prevent selection. 
 x P1 : Option to lock orientation on mobile.
-- P1 : Fast click toolbar issue
+x P1 : Fast click toolbar issue
 - P1 : VRC7 hit hat is weird Mangrove.fms
 - P1 : VRC7 envelope release thing from how2?
 - P0 : Crash when exporting while export is going on (long song export to MP3.)
 - P0 : Crash when holding CTRL + change effect value!
 - P0 : SNow song "-" in instrument name NSF export
 
+- P1 : Shy mode on mobile?
 - P2 : non-16 bit wav file resample bug. (error message is wrong, he was trying to load 32-bit float)
 - P2 : new openal+ smarter detection
 - P2 : Fix Quit menu MacOS
