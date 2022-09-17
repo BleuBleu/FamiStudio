@@ -1,22 +1,6 @@
 4.0.0
 =====
 
-4.0.2
-=====
-x P0 : File dialog + no extension + buggy.
-x P0 : Drag files with weird characters
-x P1 : How2 sonic song EPSM osc is weird.
-	=> Recompile on all platforms.
-x P2 : 1frames
-x P1 : Holding alt prevent selection. 
-x P1 : Option to lock orientation on mobile.
-x P1 : Fast click toolbar issue
-x P0 : Crash when holding CTRL + change effect value! 
-x P0 : SNow song "-" in instrument name NSF export
-	=> Re-run unit test!
-- P1 : VRC7 hit hat is weird Mangrove.fms
-	=> Test mobile + recompile NesSndEmu.
-
 4.1.0
 =====
 - Option to set snapping auto depending on last resize.

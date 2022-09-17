@@ -6,7 +6,9 @@ Version history / release notes for each release.
 
 Fixes:
 
-* Added option for trigger algorithm in oscilloscope export
+* Added option for trigger algorithm in oscilloscope export (desktop only)
+* Fixed files without extensions not displaying correctly in the file dialog on Linux
+* Fixed drag & drop of files containing unicode characters
 * Fixed crash when saving with CTRL+S while editing something
 * Fixed crash when exporting NSF/ROM with instrument containing dashes in their names
 * Added option for Alt+Right-click zoom gesture (Input section of the settings), off by default
