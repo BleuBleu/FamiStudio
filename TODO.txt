@@ -13,9 +13,9 @@ x P1 : Option to lock orientation on mobile.
 x P1 : Fast click toolbar issue
 - P1 : VRC7 hit hat is weird Mangrove.fms
 - P1 : VRC7 envelope release thing from how2?
-- P0 : Crash when exporting while export is going on (long song export to MP3.)
-- P0 : Crash when holding CTRL + change effect value!
-- P0 : SNow song "-" in instrument name NSF export
+- P0 : Crash when holding CTRL + change effect value! => CANT REPRO ASKING ALEX.
+x P0 : SNow song "-" in instrument name NSF export
+	=> Re-run unit test!
 
 - P1 : Shy mode on mobile?
 - P2 : non-16 bit wav file resample bug. (error message is wrong, he was trying to load 32-bit float)
