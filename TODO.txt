@@ -12,7 +12,6 @@ x P1 : Holding alt prevent selection.
 x P1 : Option to lock orientation on mobile.
 x P1 : Fast click toolbar issue
 - P1 : VRC7 hit hat is weird Mangrove.fms
-- P1 : VRC7 envelope release thing from how2?
 - P0 : Crash when holding CTRL + change effect value! => CANT REPRO ASKING ALEX.
 x P0 : SNow song "-" in instrument name NSF export
 	=> Re-run unit test!
@@ -20,7 +19,6 @@ x P0 : SNow song "-" in instrument name NSF export
 - P1 : Shy mode on mobile?
 - P2 : non-16 bit wav file resample bug. (error message is wrong, he was trying to load 32-bit float)
 - P2 : new openal+ smarter detection
-- P2 : Fix Quit menu MacOS
 - P2 : pmw123, remove from fds (Or wait on that one if we are going to add parameters)
 
 
@@ -112,6 +110,8 @@ Discord
 
 Backlog: 
 =========
+- BUG : Quit menu doesnt nothing on MacOS
+- BUG : VRC7 doesnt respect release point on volume envelope (its a "custom release" so it ignores it... Ugh) EPSM probably too.
 - Weird shift when using an external display with different scaling (ex: 100% vs 150%)
 - Add effect to select N163 wave. How does it react in FT.
 - Full range volume for expansions?
