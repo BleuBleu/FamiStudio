@@ -42,6 +42,9 @@ namespace FamiStudio
             var meta = metadata[frameIndex];
             var newTrigger = meta.channelData[state.songChannelIndex].trigger;
 
+            if (!state.useEmuTriggers)
+                newTrigger = NesApu.TRIGGER_NONE;
+
             // TRIGGER_NONE (-2) means the emulation isnt able to provide a trigger, 
             // we must fallback on analysing the waveform to detect one.
             if (newTrigger == NesApu.TRIGGER_NONE)
@@ -89,7 +92,7 @@ namespace FamiStudio
             return vertices;
         }
 
-        protected bool InitializeEncoder(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfRate, int window, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
+        protected bool InitializeEncoder(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfRate, int window, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, bool stereo, float[] pan, bool[] emuTriggers)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
@@ -141,6 +144,7 @@ namespace FamiStudio
                 state.songChannelIndex = i;
                 state.channel = song.Channels[i];
                 state.channelText = state.channel.NameWithExpansion;
+                state.useEmuTriggers = emuTriggers == null || emuTriggers[i];
 
                 channelStates[channelIndex] = state;
                 channelIndex++;
@@ -358,6 +362,7 @@ namespace FamiStudio
         public float oscScale;
         public int lastTrigger;
         public int holdFrameCount;
+        public bool useEmuTriggers;
         public OscilloscopeTrigger triggerFunction;
     };
 
