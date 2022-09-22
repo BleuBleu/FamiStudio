@@ -2,7 +2,7 @@
 =====
 - Crash instrument dn-famitracker.
 - Crash FDS -> ROM
-- Crash NSF jetson
+x Crash NSF jetson
 
 4.1.0
 =====
