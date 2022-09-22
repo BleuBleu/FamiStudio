@@ -1,7 +1,7 @@
 4.0.2
 =====
-- Crash instrument dn-famitracker.
-- Crash FDS -> ROM
+x Crash instrument dn-famitracker.
+x Crash FDS -> ROM
 x Crash NSF jetson
 
 4.1.0

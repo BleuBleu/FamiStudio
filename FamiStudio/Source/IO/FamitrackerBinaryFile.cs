@@ -486,7 +486,12 @@ namespace FamiStudio
                 var env = new Envelope(envType);
 
                 if (env.CanResize)
+                { 
                     env.Length = seqCount;
+
+                    if (env.Length < seqCount)
+                        Log.LogMessage(LogSeverity.Warning, $"{EnvelopeType.Names[envType]} envelope {indices[i]} is longer ({seqCount}) than what FamiStudio supports ({env.Length}). Truncating.");
+                }
                
                 if (releasePoint >= 0 && !env.CanRelease)
                     releasePoint = -1;
@@ -507,7 +512,11 @@ namespace FamiStudio
                 envelopesExp[index, type] = env;
 
                 for (int j = 0; j < seqCount; ++j)
-                    env.Values[j] = (sbyte)bytes[idx++];
+                { 
+                    var val = (sbyte)bytes[idx++];
+                    if (j < env.Length)
+                        env.Values[j] = val;
+                }
 
                 if (type == 1 /*SEQ_ARPEGGIO*/ && setting != 0)
                     Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {indices[i]} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");

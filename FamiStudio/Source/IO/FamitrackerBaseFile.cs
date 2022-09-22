@@ -1143,13 +1143,18 @@ namespace FamiStudio
 
                 if (inst.N163WaveCount < repeats.Count)
                 {
-                    Log.LogMessage(LogSeverity.Warning, $"The total size of the N163 or FDS waveforms is larger than the maximum supported, truncating.");
+                    Log.LogMessage(LogSeverity.Warning, $"The total size of the N163 waveforms is larger than the maximum supported, truncating.");
                 }
 
                 for (int i = 0; i < inst.N163WaveCount; i++)
                 {
                     repEnv.Values[i] = (sbyte)repeats[i];
-                    var idx = indices[i];
+
+                    var idx = Utils.Clamp(indices[i], 0, inst.N163WaveCount - 1);
+
+                    if (idx != indices[i])
+                        Log.LogMessage(LogSeverity.Warning, $"N163 wave sequence contained invalid wave indices, clamping.");
+
                     for (int j = 0; j < inst.N163WaveSize; j++)
                         wavEnv.Values[i * inst.N163WaveSize + j] = originalWaveforms[idx * inst.N163WaveSize + j];
                 }

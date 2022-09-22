@@ -70,7 +70,11 @@ namespace FamiStudio
                 env.Length  = itemCount;
                 env.Loop    = loopPoint;
                 env.Release = releasePoint;
-                Array.Copy(seq, 0, env.Values, 0, itemCount);
+
+                if (env.Length < itemCount)
+                    Log.LogMessage(LogSeverity.Warning, $"{EnvelopeType.Names[envType]} envelope is longer ({itemCount}) than what FamiStudio supports ({env.Length}). Truncating.");
+
+                Array.Copy(seq, 0, env.Values, 0, env.Length);
             }
         }
 
@@ -176,6 +180,19 @@ namespace FamiStudio
                 int waveSize  = BitConverter.ToInt32(bytes, offset); offset += 4;
                 int wavePos   = BitConverter.ToInt32(bytes, offset); offset += 4;
                 int waveCount = BitConverter.ToInt32(bytes, offset); offset += 4;
+
+                // These checks are done in famitracker too..
+                if (waveSize <= 0 || waveSize > 32)
+                {
+                    Log.LogMessage(LogSeverity.Error, "Invalid N163 wave size. Make sure the instrument came from the original Famitracker 0.4.6.");
+                    return null;
+                }
+
+                if (waveCount <= 0 || waveCount > 16)
+                {
+                    Log.LogMessage(LogSeverity.Error, "Invalid N163 wave count. Make sure the instrument came from the original Famitracker 0.4.6.");
+                    return null;
+                }
 
                 instrument.N163WavePreset = WavePresetType.Custom;
                 instrument.N163WaveSize   = (byte)waveSize;
