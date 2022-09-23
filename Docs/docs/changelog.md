@@ -11,6 +11,10 @@ Fixes:
 * Fixed drag & drop of files containing unicode characters
 * Fixed crash when saving with CTRL+S while editing something
 * Fixed crash when exporting NSF/ROM with instrument containing dashes in their names
+* Fixed crash when attempting to export a FDS project as a NES ROM
+* Fixed crash when importing NSF containing non-ASCII characters on Linux/MacOS
+* Fixed crash when importing famitracker some module/instrument with N163 instruments
+* Added safeguards for import of Famitracker N163 instruments that were generated in forks
 * Added option for Alt+Right-click zoom gesture (Input section of the settings), off by default
 * Fixed typos
 
