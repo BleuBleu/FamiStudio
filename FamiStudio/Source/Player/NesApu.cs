@@ -242,6 +242,7 @@ namespace FamiStudio
         public const int FreqEPSM = 8000000;
 
         public const double FreqC0 = 32.7032; 
+        public const double FreqAm1 = 27.3097;
 
         // Volume set in Nes_Apu::volume for the DMC channel. This is simply to 
         // make sure our preview of DPCM sample somewhat matches the volume of 
