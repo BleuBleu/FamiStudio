@@ -2,6 +2,12 @@
 
 Version history / release notes for each release.
 
+## Version 4.0.3 (Hotfix)
+
+Fixes:
+
+* Fixed drop-down lists requiring double-clicks.
+
 ## Version 4.0.2 (Hotfix)
 
 Fixes:

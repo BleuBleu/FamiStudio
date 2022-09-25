@@ -18,6 +18,7 @@ namespace FamiStudio
         private bool hover;
         private bool listOpened;
         private bool listJustOpened;
+        private bool isGridChild; // Emergency hack for 4.0.3
         private bool transparent;
         private int listHover = -1;
         private int listScroll = 0;
@@ -57,6 +58,12 @@ namespace FamiStudio
             }
         }
 
+        public bool IsGridChild
+        {
+            get { return isGridChild; }
+            set { isGridChild = value; }
+        }
+
         public void SetRowHeight(int h)
         {
             rowHeight = h;
@@ -78,7 +85,7 @@ namespace FamiStudio
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            if (listJustOpened)
+            if (listJustOpened && isGridChild)
             {
                 listJustOpened = false;
                 return;

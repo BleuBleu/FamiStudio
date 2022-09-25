@@ -1,9 +1,3 @@
-4.0.2
-=====
-x Crash instrument dn-famitracker.
-x Crash FDS -> ROM
-x Crash NSF jetson
-
 4.1.0
 =====
 - Option to set snapping auto depending on last resize.
