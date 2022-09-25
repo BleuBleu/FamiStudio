@@ -2,6 +2,12 @@
 
 Version history / release notes for each release.
 
+## Version 4.0.4 (Hotfix)
+
+Fixes:
+
+* Fixed video export when there are more than 32 channels in a project.
+
 ## Version 4.0.3 (Hotfix)
 
 Fixes:
