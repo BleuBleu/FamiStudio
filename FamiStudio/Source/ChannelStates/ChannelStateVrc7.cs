@@ -35,12 +35,12 @@ namespace FamiStudio
                         // to reload their instruments.
                         player.NotifyInstrumentLoaded(
                             instrument,
-                            (1 << ChannelType.Vrc7Fm1) |
-                            (1 << ChannelType.Vrc7Fm2) |
-                            (1 << ChannelType.Vrc7Fm3) |
-                            (1 << ChannelType.Vrc7Fm4) |
-                            (1 << ChannelType.Vrc7Fm5) |
-                            (1 << ChannelType.Vrc7Fm6));
+                            (1L << ChannelType.Vrc7Fm1) |
+                            (1L << ChannelType.Vrc7Fm2) |
+                            (1L << ChannelType.Vrc7Fm3) |
+                            (1L << ChannelType.Vrc7Fm4) |
+                            (1L << ChannelType.Vrc7Fm5) |
+                            (1L << ChannelType.Vrc7Fm6));
 
                         for (byte i = 0; i < 8; i++)
                             WriteVrc7Register(i, instrument.Vrc7PatchRegs[i]);
