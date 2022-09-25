@@ -1,3 +1,6 @@
+Bug note overlap
+https://discord.com/channels/747649221879922840/747649222354010173/1023685891589419028
+
 4.1.0
 =====
 - Option to set snapping auto depending on last resize.
