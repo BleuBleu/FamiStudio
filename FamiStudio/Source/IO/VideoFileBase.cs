@@ -159,7 +159,7 @@ namespace FamiStudio
             Utils.NonBlockingParallelFor(channelStates.Length, NesApu.NUM_WAV_EXPORT_APU, counter, (stateIndex, threadIndex) =>
             {
                 var state = channelStates[stateIndex];
-                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << state.songChannelIndex, threadIndex).GetSongSamples(song, song.Project.PalMode, -1, false, true);
+                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1L << state.songChannelIndex, threadIndex).GetSongSamples(song, song.Project.PalMode, -1, false, true);
                 state.triggerFunction = new PeakSpeedTrigger(state.wav, false);
 
                 if (Log.ShouldAbortOperation)
