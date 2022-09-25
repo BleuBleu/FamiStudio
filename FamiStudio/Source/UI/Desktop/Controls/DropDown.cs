@@ -17,6 +17,8 @@ namespace FamiStudio
         private int selectedIndex = 0;
         private bool hover;
         private bool listOpened;
+        private bool listJustOpened;
+        private bool isGridChild; // Emergency hack for 4.0.3
         private bool transparent;
         private int listHover = -1;
         private int listScroll = 0;
@@ -56,6 +58,12 @@ namespace FamiStudio
             }
         }
 
+        public bool IsGridChild
+        {
+            get { return isGridChild; }
+            set { isGridChild = value; }
+        }
+
         public void SetRowHeight(int h)
         {
             rowHeight = h;
@@ -75,11 +83,21 @@ namespace FamiStudio
             bmpArrow = g.GetBitmapAtlasRef("DropDownArrow");
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
-            MarkDirty();
+            if (listJustOpened && isGridChild)
+            {
+                listJustOpened = false;
+                return;
+            }
 
-            if (enabled && e.Left)
+            if (draggingScrollbars)
+            {
+                draggingScrollbars = false;
+                Capture = false;
+                MarkDirty();
+            }
+            else if (enabled && e.Left)
             {
                 if (listOpened && e.Y > rowHeight)
                 {
@@ -113,16 +131,6 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            if (draggingScrollbars)
-            {
-                draggingScrollbars = false;
-                Capture = false;
-                MarkDirty();
-            }
-        }
-
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.Key == Keys.Escape)
@@ -140,6 +148,7 @@ namespace FamiStudio
                 if (listOpened)
                     ListClosing?.Invoke(this);
                 listOpened = open;
+                listJustOpened = open;
             }
 
             height = rowHeight + (listOpened ? Math.Min(items.Length, MaxItemsInList) * rowHeight : 0);

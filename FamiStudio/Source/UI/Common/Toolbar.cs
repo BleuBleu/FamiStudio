@@ -1228,6 +1228,11 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            OnMouseDown(e);
+        }
+
         protected override void OnMouseUp(MouseEventArgs e)
         {
             bool right = e.Right;

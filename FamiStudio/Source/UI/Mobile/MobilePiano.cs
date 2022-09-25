@@ -445,11 +445,18 @@ namespace FamiStudio
             lastY = y;
 
             if (IsPointInPanRectangle(x, y))
+            { 
                 StartCaptureOperation(x, y, CaptureOperation.MobilePan);
+            }
             else if (IsPointInRestRectangle(x, y))
+            { 
                 App.AdvanceRecording();
+            }
             else
+            { 
                 StartCaptureOperation(x, y, CaptureOperation.PlayPiano);
+                PlayPiano(x, y);
+            }
         }
 
         protected override void OnTouchFling(int x, int y, float velX, float velY)

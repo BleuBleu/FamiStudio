@@ -103,9 +103,9 @@ namespace FamiStudio
             }
         }
 
-        public bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, int lineThickness, int window, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
+        public bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, int lineThickness, int window, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, bool stereo, float[] pan, bool[] emuTriggers)
         {
-            if (!InitializeEncoder(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, window, channelMask, audioDelay, audioBitRate, videoBitRate, stereo, pan))
+            if (!InitializeEncoder(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, window, channelMask, audioDelay, audioBitRate, videoBitRate, stereo, pan, emuTriggers))
                 return false;
 
             numColumns = Math.Min(numColumns, channelStates.Length);

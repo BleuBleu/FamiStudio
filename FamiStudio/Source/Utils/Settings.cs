@@ -66,6 +66,7 @@ namespace FamiStudio
         public static float TrackPadMoveSensitity = 10.0f;
         public static float TrackPadZoomSensitity = 10.0f;
         public static bool AltLeftForMiddle = false;
+        public static bool AltZoomAllowed = false;
 
         public struct QwertyKeyAssignment
         {
@@ -200,6 +201,7 @@ namespace FamiStudio
 
         // Mobile section
         public static bool AllowVibration = true;
+        public static bool ForceLandscape = false;
 
         // Piano roll stuff
         public static int SnapResolution = SnapResolutionType.OneBeat;
@@ -257,6 +259,7 @@ namespace FamiStudio
                 TrackPadMoveSensitity = ini.GetFloat("Input", "TrackPadMoveSensitity", 10.0f);
                 TrackPadZoomSensitity = ini.GetFloat("Input", "TrackPadZoomSensitity", 10.0f);
                 AltLeftForMiddle = ini.GetBool("Input", "AltLeftForMiddle", false);
+                AltZoomAllowed = ini.GetBool("Input", "AltZoomAllowed", false);
             }
 
             // Audio
@@ -372,6 +375,7 @@ namespace FamiStudio
             
             // Mobile section
             AllowVibration = ini.GetBool("Mobile", "AllowVibration", true);
+            ForceLandscape = ini.GetBool("Mobile", "ForceLandscape", false);
 
             // Piano roll section
             SnapResolution = Utils.Clamp(ini.GetInt("PianoRoll", "SnapResolution", SnapResolutionType.OneBeat), SnapResolutionType.Min, SnapResolutionType.Max);
@@ -437,6 +441,7 @@ namespace FamiStudio
             ini.SetBool("Input", "ReverseTrackPadX", ReverseTrackPadX);
             ini.SetBool("Input", "ReverseTrackPadY", ReverseTrackPadY);
             ini.SetBool("Input", "AltLeftForMiddle", AltLeftForMiddle);
+            ini.SetBool("Input", "AltZoomAllowed", AltZoomAllowed);
 
             // Audio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);
@@ -494,6 +499,7 @@ namespace FamiStudio
 
             // Mobile
             ini.SetBool("Mobile", "AllowVibration", AllowVibration);
+            ini.SetBool("Mobile", "ForceLandscape", ForceLandscape);
 
             // Piano roll section
             ini.SetInt("PianoRoll", "SnapResolution", SnapResolution);

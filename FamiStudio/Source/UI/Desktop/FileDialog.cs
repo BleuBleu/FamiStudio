@@ -432,9 +432,27 @@ namespace FamiStudio
             if (Directory.Exists(documentsDir))
                 files.Add(new FileEntry("FileDocuments", "Documents", documentsDir, EntryType.Directory));
 
-            var drives = Environment.GetLogicalDrives();
-            foreach (var d in drives)
-                files.Add(new FileEntry("FileDisk", d, null, EntryType.Drive));
+            if (Platform.IsLinux)
+            {
+                // On Linux, this seem to work better.
+                // Environment.GetLogicalDrives() returns things that are not drives.
+                var drives = DriveInfo.GetDrives();
+
+                foreach (var d in drives)
+                {
+                    if (d.IsReady)
+                        files.Add(new FileEntry("FileDisk", d.Name, null, EntryType.Drive));
+                }
+            }
+            else
+            {
+                // On Windows, this is way faster, networked drives not take 10 secs to load.
+                var drives = Environment.GetLogicalDrives();
+                foreach (var d in drives)
+                { 
+                    files.Add(new FileEntry("FileDisk", d, null, EntryType.Drive));
+                }
+            }
 
             path = null;
             gridFiles.UpdateData(GetGridData(files));
@@ -451,6 +469,10 @@ namespace FamiStudio
         {
             foreach (var ext in extensions)
             {
+                // HACK : Files with no extensions fails the regex check below and i cant
+                // be bothered to debug it.
+                if (ext == "*.*")
+                    return true;
                 if (Regex.IsMatch(s, WildCardToRegular(ext)))
                     return true;
             }

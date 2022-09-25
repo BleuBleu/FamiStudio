@@ -250,9 +250,9 @@ namespace FamiStudio
             }
         }
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, int window, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, float pianoRollZoom, bool stereo, float[] pan)
+        public unsafe bool Save(Project originalProject, int songId, int loopCount, int window, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, float pianoRollZoom, bool stereo, float[] pan, bool[] emuTriggers)
         {
-            if (!InitializeEncoder(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, window, channelMask, audioDelay, audioBitRate, videoBitRate, stereo, pan))
+            if (!InitializeEncoder(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, window, channelMask, audioDelay, audioBitRate, videoBitRate, stereo, pan, emuTriggers))
                 return false;
 
             var channelResXFloat = videoResX / (float)channelStates.Length;
