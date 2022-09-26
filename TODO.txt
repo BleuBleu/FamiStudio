@@ -1,8 +1,8 @@
 4.0.5:
 =====
-- Bug note overlap : https://discord.com/channels/747649221879922840/747649222354010173/1023685891589419028
+x Bug note overlap : https://discord.com/channels/747649221879922840/747649222354010173/1023685891589419028
 / Test buffer size x 2 fix.
-- Github NSF size issue.
+x Github NSF size issue.
 
 4.1.0
 =====

@@ -1918,12 +1918,18 @@ namespace FamiStudio
 
                 if (pattern != null)
                 {
+                    var patternLen = channel.Song.GetPatternLength(start.PatternIndex);
                     var idx = pattern.BinarySearchList(pattern.Notes.Keys, start.NoteIndex, true);
 
                     if (idx >= 0)
                     {
                         for (; idx < pattern.Notes.Values.Count; idx++)
                         {
+                            if (pattern.Notes.Keys[idx] >= patternLen)
+                            {
+                                break;
+                            }
+
                             if (pattern.Notes.Values[idx].MatchesFilter(filter))
                             {
                                 start.NoteIndex = pattern.Notes.Keys[idx];
@@ -1991,6 +1997,11 @@ namespace FamiStudio
 
                     do
                     {
+                        if (pat.Notes.Keys[nextIdx] >= patternLen)
+                        {
+                            break;
+                        }
+
                         // Only considering musical notes for now.
                         if (pat.Notes.Values[nextIdx].MatchesFilter(filter))
                         {
@@ -1999,7 +2010,7 @@ namespace FamiStudio
                             return;
                         }
                     }
-                    while (++nextIdx < pat.Notes.Values.Count && pat.Notes.Keys[nextIdx] < patternLen);
+                    while (++nextIdx < pat.Notes.Values.Count);
                 }
             }
 
