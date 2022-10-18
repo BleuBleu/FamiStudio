@@ -1,6 +1,7 @@
 4.0.5:
 =====
 x Bug note overlap : https://discord.com/channels/747649221879922840/747649222354010173/1023685891589419028
+- Bug notes end early at end of song (See how2 PM `Song_End_Issue.fms`)
 / Test buffer size x 2 fix.
 x Github NSF size issue.
 
