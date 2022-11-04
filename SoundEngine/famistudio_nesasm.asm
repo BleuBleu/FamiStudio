@@ -2365,7 +2365,7 @@ famistudio_update_epsm_fm_channel_sound:
 .vol_offset = famistudio_r0
 
     lda #0
-    sta famistudio_chn_inst_changed,y
+    sta famistudio_chn_inst_changed+3,y
 
     ; If the writes are done to channels 0-2, use FAMISTUDIO_EPSM_REG_SEL0 if 3-5 use FAMISTUDIO_EPSM_REG_SEL1
     ; This reg_offset stores the difference so we can later load it into x and do sta FAMISTUDIO_EPSM_REG_SEL0, x
