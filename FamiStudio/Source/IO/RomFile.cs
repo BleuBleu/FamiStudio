@@ -56,6 +56,12 @@ namespace FamiStudio
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
 
+                if (project.UsesFdsExpansion)
+                {
+                    Log.LogMessage(LogSeverity.Warning, "Famicom Disk System projects should be exported as FDS disks. Only the 5 regular channels will be included in the ROM.");
+                    project.SetExpansionAudioMask(0);
+                }
+
                 var headerBytes = new byte[RomHeaderLength];
                 var codeBytes   = new byte[RomCodeAndTocSize + RomTileSize];
 

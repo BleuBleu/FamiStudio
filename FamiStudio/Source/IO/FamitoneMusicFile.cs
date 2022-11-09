@@ -671,6 +671,10 @@ namespace FamiStudio
                                         vibratoEnvelopeNames[note.RawVibrato] = name;
                                         size += processed.Length;
                                     }
+                                    else
+                                    {
+                                        vibratoEnvelopeNames[note.RawVibrato] = $"{ll}env{uniqueEnvelopes.IndexOfKey(crc)}";
+                                    }
                                 }
                             }
                         }
@@ -1893,7 +1897,7 @@ namespace FamiStudio
             foreach (var pair in labelsToPatch)
             {
                 int val;
-                if (pair.Item1.Contains("-"))
+                if (pair.Item1.Contains("@samples-"))
                 {
                     var splits = pair.Item1.Split('-');
                     val = labels[splits[0]];

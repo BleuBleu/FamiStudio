@@ -34,7 +34,7 @@ namespace FamiStudio
 
         protected AudioPlayer(int apuIndex, bool pal, int sampleRate, bool stereo, int numBuffers) : base(apuIndex, stereo, sampleRate)
         {
-            int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short)*2;
+            int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short) * (stereo ? 2 : 1);
             numBufferedFrames = numBuffers;
             bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
             audioStream = Platform.CreateAudioStream(sampleRate, stereo, bufferSize, numBufferedFrames, AudioBufferFillCallback);

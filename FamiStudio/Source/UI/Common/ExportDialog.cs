@@ -153,7 +153,7 @@ namespace FamiStudio
             return channelActives;
         }
 
-        private object[,] GetDefaultChannelsGridData()
+        private object[,] GetDefaultChannelsGridData(bool video)
         {
             // Find all channels used by the project.
             var anyChannelActive = false;
@@ -172,12 +172,14 @@ namespace FamiStudio
             }
 
             var channelTypes = project.GetActiveChannelList();
-            var data = new object[channelTypes.Length, 3];
+            var data = new object[channelTypes.Length, video ? 4 : 3];
             for (int i = 0; i < channelTypes.Length; i++)
             {
                 data[i, 0] = !anyChannelActive || channelActives[i];
                 data[i, 1] = ChannelType.GetNameWithExpansion(channelTypes[i]);
                 data[i, 2] = 50;
+                if (video)
+                    data[i, 3] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? "Emulation" : "Peak Speed";
             }
 
             return data;
@@ -200,6 +202,7 @@ namespace FamiStudio
         const string SeperateIntroTooltip  = "If enabled, the intro (the part before the loop point), will be exported to a separate file. Useful if making games.";
         const string StereoTooltip         = "If enabled, will export stereo audio and enable custom panning for each channel in the grid below.";
         const string ChannelGridTooltip    = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.";
+        const string ChannelGridTooltipVid = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.\n\nTrigger is the type or algorithm used to align the oscilloscope. Emulation means it will try to use the frequency of the currently playing note. This may not work so well for very low frequency instruments or instruments that rapidly changes their frequencies. Peak Speed will simply look at the shape of the waveform and make an educated guess.";
         const string ChannelListTooltip    = "Select the channels to export.";
                                            
         // Video tooltips.                 
@@ -282,7 +285,7 @@ namespace FamiStudio
                     page.AddCheckBox("Separate intro file", false, SeperateIntroTooltip); // 9
                     page.AddCheckBox("Stereo", project.OutputsStereoAudio, StereoTooltip); // 10
                     if (Platform.IsDesktop)
-                        page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 7, ChannelGridTooltip); // 11
+                        page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(false), 7, ChannelGridTooltip); // 11
                     else
                         page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels(), ChannelListTooltip); // 11
                     page.SetPropertyEnabled( 3, false);
@@ -302,7 +305,7 @@ namespace FamiStudio
                         page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTootip); // 8
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio, StereoTooltip); // 9
                         if (Platform.IsDesktop)
-                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 10, ChannelGridTooltip); // 10
+                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc("Trigger", 0.1f, new [] { "Emulation", "Peak Speed" } ) }, GetDefaultChannelsGridData(true), 10, ChannelGridTooltipVid); // 10
                         else
                             page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels(), ChannelListTooltip); // 10
                         page.SetPropertyVisible(9, Platform.IsDesktop); // Stereo on mobile.
@@ -319,7 +322,7 @@ namespace FamiStudio
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 10
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 11
                         if (Platform.IsDesktop)
-                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 7, ChannelGridTooltip); // 12
+                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc("Trigger", 0.1f, new[] { "Emulation", "Peak Speed" } ) }, GetDefaultChannelsGridData(true), 7, ChannelGridTooltipVid); // 12
                         else
                             page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels(), ChannelListTooltip); // 12
                         page.SetPropertyVisible(11, Platform.IsDesktop); // Stereo on mobile.
@@ -632,10 +635,12 @@ namespace FamiStudio
                     var channelCount = project.GetActiveChannelCount();
                     var channelMask = 0L;
                     var pan = (float[])null;
+                    var triggers = (bool[])null;
 
                     if (Platform.IsDesktop)
                     {
                         pan = new float[channelCount];
+                        triggers = new bool[channelCount];
 
                         for (int i = 0; i < channelCount; i++)
                         {
@@ -643,6 +648,7 @@ namespace FamiStudio
                                 channelMask |= (1L << i);
 
                             pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
+                            triggers[i] = props.GetPropertyValue<string>(channelsPropIdx, i, 3) == "Emulation";
                         }
                     }
                     else
@@ -661,7 +667,7 @@ namespace FamiStudio
                     {
                         var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(8) - 3);
 
-                        return new VideoFilePianoRoll().Save(project, song.Id, loopCount, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                        return new VideoFilePianoRoll().Save(project, song.Id, loopCount, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan, triggers);
                     }
                     else
                     {
@@ -669,7 +675,7 @@ namespace FamiStudio
                         var oscLineThickness = props.GetPropertyValue<int>(9);
                         var oscColorMode     = props.GetSelectedIndex(10);
 
-                        return new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, stereo, pan);
+                        return new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, stereo, pan, triggers);
                     }
                 }
                 else

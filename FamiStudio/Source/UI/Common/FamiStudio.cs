@@ -1802,7 +1802,7 @@ namespace FamiStudio
             {
                 NewProject();
             }
-            else if (e.Control && e.Key == Keys.S)
+            else if (e.Control && e.Key == Keys.S && !UndoRedoManager.HasTransactionInProgress)
             {
                 SaveProjectAsync(e.Shift);
             }

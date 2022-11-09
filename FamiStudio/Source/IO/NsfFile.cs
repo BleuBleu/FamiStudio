@@ -961,7 +961,7 @@ namespace FamiStudio
 
             for (int i = 0; i < trackCount; i++)
             {
-                var name = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetTrackName(nsf, i));
+                var name = Utils.PtrToStringAnsi(NotSoFatso.NsfGetTrackName(nsf, i));
                 if (string.IsNullOrEmpty(name))
                 {
                     trackNames[i] = $"Song {i+1}";
@@ -1041,9 +1041,9 @@ namespace FamiStudio
 
             project = new Project();
 
-            project.Name      = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetTitle(nsf));
-            project.Author    = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetArtist(nsf));
-            project.Copyright = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetCopyright(nsf));
+            project.Name      = Utils.PtrToStringAnsi(NotSoFatso.NsfGetTitle(nsf));
+            project.Author    = Utils.PtrToStringAnsi(NotSoFatso.NsfGetArtist(nsf));
+            project.Copyright = Utils.PtrToStringAnsi(NotSoFatso.NsfGetCopyright(nsf));
             project.PalMode   = palSource;
 
             // Our expansion mask is the same as NSF.
@@ -1066,7 +1066,7 @@ namespace FamiStudio
             var numN163Channels = (expansionMask & ExpansionType.N163Mask) != 0 ? GetNumNamcoChannels(filename, songIndex, numFrames) : 1;
             project.SetExpansionAudioMask(expansionMask, numN163Channels);
 
-            var songName = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetTrackName(nsf, songIndex));
+            var songName = Utils.PtrToStringAnsi(NotSoFatso.NsfGetTrackName(nsf, songIndex));
 
             song = project.CreateSong(string.IsNullOrEmpty(songName) ? $"Song {songIndex + 1}" : songName);
             channelStates = new ChannelState[song.Channels.Length];

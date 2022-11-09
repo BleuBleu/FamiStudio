@@ -86,6 +86,8 @@ namespace FamiStudio
                 dropDownActive.SetRowHeight(rowHeight);
                 dropDownInactive.Visible = false;
                 dropDownActive.Visible = false;
+                dropDownInactive.IsGridChild = true;
+                dropDownActive.IsGridChild = true;
                 dropDownActive.ListClosing += DropDownActive_ListClosing;
                 dropDownActive.SelectedIndexChanged += DropDownActive_SelectedIndexChanged;
             }

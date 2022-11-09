@@ -1,22 +1,11 @@
-4.0.0
+4.0.5:
 =====
-
-4.0.1
-=====
-x P0 : File dialog + no extension + buggy.
-x P0 : Drag files with weird characters
-x P1 : How2 sonic song EPSM osc is weird.
-	=> Recompile on all platforms.
-- P1 : Shy mode on mobile.
-- P1 : non-16 bit wav file resample bug. (error message is wrong, he was trying to load 32-bit float)
-- P1 : Holding alt prevent selection.
-x P1 : Option to lock orientation on mobile.
-- P0 : new openal+ smarter detection
-- P2 : Fix Quit menu MacOS
-- P1 : Fast click toolbar issue
-- P1 : VRC7 hit hat is. Mangrove.fms
-- P1 : pmw123, remove from fds (Or wait on that one if we are going to add parameters)
-- P1 : VRC7 envelope release thing from how?
+x Bug note overlap : https://discord.com/channels/747649221879922840/747649222354010173/1023685891589419028
+- Bug notes end early at end of song (See how2 PM `Song_End_Issue.fms`)
+/ Test buffer size x 2 fix.
+x Github NSF size issue.
+- Pattern naming template (Pattern 000 => 000) to get rid of prefix.
+- How2 PWM stuff
 
 4.1.0
 =====
@@ -24,7 +13,7 @@ x P1 : Option to lock orientation on mobile.
 - Dual APU (VT02) support?
 - Stereo export and NSF import on Android?
 - CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
-- Fix "SeparateChannelsExportTndMode"
+- Proportionnal volume adjust
 
 Batch convert PNG -> TGA
 ==========================
@@ -106,7 +95,17 @@ Discord
 
 Backlog: 
 =========
+- Fix "SeparateChannelsExportTndMode"
+- Can we pahse reset N163? Steo mentionned that in very low note, he notices that the waveform starts from the middle.
+- S5B is 1 octave off. Periods are 12 bits, so technically can do lower, but we still bottom at A0???
+- Shy mode on mobile?
+- Max song length is still 256, bump that to 1024 at least.
+- Linux : new openal+ smarter detection. Need a way to try the OS one + my one if it fails.
+- BUG : Quit menu doesnt nothing on MacOS
+- BUG : VRC7 doesnt respect release point on volume envelope (its a "custom release" so it ignores it... Ugh) EPSM probably too.
+- Weird shift when using an external display with different scaling (ex: 100% vs 150%)
 - Add effect to select N163 wave. How does it react in FT.
+- Full range volume for expansions?
 - Different aspect ratios for video export?
 - Improve linux file dialog (Steo feedback)
 - Hold SHIFT+click for multiple delete.

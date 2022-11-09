@@ -382,6 +382,15 @@ namespace FamiStudio
             return initialValue;
         }
 
+        public static unsafe string PtrToStringAnsi(IntPtr ptr)
+        {
+            var p = (byte*)ptr.ToPointer();
+            var n = 0;
+            for (; p[n] != 0; n++) ;
+
+            return System.Text.Encoding.ASCII.GetString(p, n);
+        }
+
         public static unsafe string PtrToStringUTF8(IntPtr ptr)
         {
             // The string is UTF8.

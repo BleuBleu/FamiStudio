@@ -2,6 +2,34 @@
 
 Version history / release notes for each release.
 
+## Version 4.0.4 (Hotfix)
+
+Fixes:
+
+* Fixed video export when there are more than 32 channels in a project.
+
+## Version 4.0.3 (Hotfix)
+
+Fixes:
+
+* Fixed drop-down lists requiring double-clicks.
+
+## Version 4.0.2 (Hotfix)
+
+Fixes:
+
+* Added option for trigger algorithm in oscilloscope export (desktop only)
+* Fixed files without extensions not displaying correctly in the file dialog on Linux
+* Fixed drag & drop of files containing unicode characters
+* Fixed crash when saving with CTRL+S while editing something
+* Fixed crash when exporting NSF/ROM with instrument containing dashes in their names
+* Fixed crash when attempting to export a FDS project as a NES ROM
+* Fixed crash when importing NSF containing non-ASCII characters on Linux/MacOS
+* Fixed crash when importing some Famitracker modules/instruments with N163 instruments
+* Added safeguards for import of Famitracker N163 instruments that were generated in forks
+* Added option for Alt+Right-click zoom gesture (Input section of the settings), off by default
+* Fixed typos
+
 ## Version 4.0.1 (Linux & Android Hotfix)
 
 Fixes:
