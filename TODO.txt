@@ -5,6 +5,7 @@ x Bug note overlap : https://discord.com/channels/747649221879922840/74764922235
 / Test buffer size x 2 fix.
 x Github NSF size issue.
 - Pattern naming template (Pattern 000 => 000) to get rid of prefix.
+- How2 PWM stuff
 
 4.1.0
 =====
