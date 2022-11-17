@@ -45,6 +45,8 @@ namespace FamiStudio
         public static bool ClearUndoRedoOnSave = true;
         public static bool OpenLastProjectOnStart = Platform.IsDesktop;
         public static bool AutoSaveCopy = true;
+        public static string PatternNamePrefix = "Pattern ";
+        public static int PatternNameNumDigits = 1;
         public static string LastProjectFile;
 
         // User Interface section
@@ -230,11 +232,13 @@ namespace FamiStudio
             Version = ini.GetInt("General", "Version", 0);
 
             // General
-            CheckUpdates = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
-            ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
+            CheckUpdates = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates", true ); // At version 2 (FamiStudio 3.0.0, changed section)
+            ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial", true ); // At version 2 (FamiStudio 3.0.0, changed section)
             ClearUndoRedoOnSave = ini.GetBool("General", "ClearUndoRedoOnSave", true);
             OpenLastProjectOnStart = ini.GetBool("General", "OpenLastProjectOnStart", true);
             AutoSaveCopy = ini.GetBool("General", "AutoSaveCopy", true);
+            PatternNamePrefix = ini.GetString("General", "PatternNamePrefix", "Pattern ");
+            PatternNameNumDigits = ini.GetInt("General", "PatternNameNumDigits", 1);
             LastProjectFile = OpenLastProjectOnStart ? ini.GetString("General", "LastProjectFile", "") : "";
 
             // UI
@@ -420,6 +424,8 @@ namespace FamiStudio
             ini.SetBool("General", "ClearUndoRedoOnSave", ClearUndoRedoOnSave);
             ini.SetBool("General", "OpenLastProjectOnStart", OpenLastProjectOnStart);
             ini.SetString("General", "LastProjectFile", OpenLastProjectOnStart ? LastProjectFile : "");
+            ini.SetString("General", "PatternNamePrefix", PatternNamePrefix);
+            ini.SetInt("General", "PatternNameNumDigits", PatternNameNumDigits);
             ini.SetBool("General", "AutoSaveCopy", AutoSaveCopy);
 
             // UI

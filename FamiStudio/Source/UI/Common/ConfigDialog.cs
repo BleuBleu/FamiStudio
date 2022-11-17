@@ -85,6 +85,8 @@ namespace FamiStudio
         private readonly string ClearUndoRedoTooltip            = "When enabled, the undo/redo stack will be cleared every time you save. Disabling this can help keep the memory usage down.";
         private readonly string OpenLastTooltip                 = "When enabled, FamiStudio will open the last project you were working on when you last closed the app.";
         private readonly string AutosaveTooltip                 = "When enabled, a copy of your project will be save approximately every 2 minutes. This can prevent loosing data when a crash occurs.";
+        private readonly string PatternNamePrefixTooltip        = "Prefix to add to automatically generated pattern names.";
+        private readonly string PatternNameNumDigitsTooltip     = "Minimum number of digits to have in automatically generated pattern names.";
         private readonly string AutosaveFolderTooltip           = "Click to open the auto save folder.";
 
         // Input
@@ -192,7 +194,9 @@ namespace FamiStudio
                     page.AddCheckBox("Clear Undo/Redo on save:", Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 2
                     page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 3
                     page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 4
-                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 5
+                    page.AddTextBox("Pattern name prefix:", Settings.PatternNamePrefix, 64, PatternNamePrefixTooltip); // 5
+                    page.AddNumericUpDown("Pattern name digits:", Settings.PatternNameNumDigits, 1, 4, PatternNameNumDigitsTooltip); // 6
+                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 7
                     page.PropertyClicked += GeneralPage_PropertyClicked;
                     page.SetPropertyVisible(0, Platform.IsDesktop);
                     page.SetPropertyVisible(2, Platform.IsDesktop);
@@ -512,6 +516,8 @@ namespace FamiStudio
                     Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(2);
                     Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(3);
                     Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(4);
+                    Settings.PatternNamePrefix = pageGeneral.GetPropertyValue<string>(5);
+                    Settings.PatternNameNumDigits = pageGeneral.GetPropertyValue<int>(6);
 
                     // UI
                     var scalingString = pageUI.GetPropertyValue<string>(0);

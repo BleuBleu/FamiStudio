@@ -671,6 +671,10 @@ namespace FamiStudio
                                         vibratoEnvelopeNames[note.RawVibrato] = name;
                                         size += processed.Length;
                                     }
+                                    else
+                                    {
+                                        vibratoEnvelopeNames[note.RawVibrato] = $"{ll}env{uniqueEnvelopes.IndexOfKey(crc)}";
+                                    }
                                 }
                             }
                         }
