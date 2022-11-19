@@ -121,23 +121,20 @@ namespace FamiStudio
 
                     var note = kv.Value;
                     if (note.IsMusical)
-                        musicalNotes.Add(new Tuple<int, Note>(time, note));
+                    {
+                        var quantizedTime = Math.Min(patternCacheSizeX - 1, (int)(time * scaleX));
+                        if (musicalNotes.Count == 0 || musicalNotes[musicalNotes.Count - 1].Item1 != quantizedTime)
+                            musicalNotes.Add(new Tuple<int, Note>(quantizedTime, note));
+                    }
                 }
-
-                var lastScaledTime2 = 0;
 
                 for (int i = 0; i < musicalNotes.Count; i++)
                 {
                     var note  = musicalNotes[i].Item2;
                     var time1 = musicalNotes[i].Item1;
-                    var time2 = Math.Min(time1 + note.Duration, i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : ushort.MaxValue);
+                    var time2 = (int)Math.Min(time1 + Math.Ceiling(note.Duration * scaleX), i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : patternCacheSizeX);
 
-                    var scaledTime1 = Math.Max((int)(time1 * scaleX), lastScaledTime2);
-                    var scaledTime2 = Math.Min((int)Math.Ceiling(time2 * scaleX), patternCacheSizeX);
-
-                    DrawPatternBitmapNote(project, scaledTime1, scaledTime2, note, patternCacheSizeX, clampedPatternCacheSizeY, noteSizeY, minNote, maxNote, scaleY, pattern.ChannelType == ChannelType.Dpcm, data);
-
-                    lastScaledTime2 = scaledTime2;
+                    DrawPatternBitmapNote(project, time1, time2, note, patternCacheSizeX, clampedPatternCacheSizeY, noteSizeY, minNote, maxNote, scaleY, pattern.ChannelType == ChannelType.Dpcm, data);
                 }
             }
 

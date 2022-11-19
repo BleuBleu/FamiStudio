@@ -11,11 +11,12 @@ x Discord: Key scaling labels
 x Discord: N163 sliders out of range. Import 2ch in instrument in 8ch project.
 x Discord: Crash of not saving N163 on mobile? (Luxury) => CANT REPRO
 x Discord: MIDI import not out of range.
+x Discord: Visual bug, thumbnails not aligned?
+- Discord: LuxuryKid bizarre snapping behavior on mobile.
 - Discord: 8bit city pop doesnt export correctly to NSF.
 - Discord: Arp confusion alex
 - Discord: Alex pattern export 0, 1, 0
 - Discord: Alex Famitracker arp 000
-- Discord: Visual bug, thumbnails not aligned?
 - Recompile openal32 on Linux.
 - How2 PWM stuff
 
