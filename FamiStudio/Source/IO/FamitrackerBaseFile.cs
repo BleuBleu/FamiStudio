@@ -604,8 +604,13 @@ namespace FamiStudio
                                     it.Resync();
                                 }
 
-                                note.Arpeggio = GetOrCreateArpeggio(fx.param);
+                                lastNoteArpeggio = GetOrCreateArpeggio(fx.param);
                             }
+                        }
+
+                        if (note != null)
+                        {
+                            note.Arpeggio = lastNoteArpeggio;
                         }
 
                         if (note != null && note.IsValid)
