@@ -3634,8 +3634,6 @@ famistudio_set_instrument:
     lda famistudio_channel_to_pitch_env, x
     bmi @no_pitch
     tax
-    lda #1
-    sta famistudio_pitch_env_ptr,x     ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
     lda #0
     sta famistudio_pitch_env_repeat,x
     sta famistudio_pitch_env_value_lo,x
@@ -3647,6 +3645,8 @@ famistudio_set_instrument:
     lda (intrument_ptr),y
     sta famistudio_pitch_env_addr_hi,x
     @no_pitch:
+    lda #1
+    sta famistudio_pitch_env_ptr,x     ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
     ldx chan_idx
     rts
 
