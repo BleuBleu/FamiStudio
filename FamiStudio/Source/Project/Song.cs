@@ -576,6 +576,7 @@ namespace FamiStudio
 #if DEBUG
         public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
+            Debug.Assert(project == this.project);
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
             Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
