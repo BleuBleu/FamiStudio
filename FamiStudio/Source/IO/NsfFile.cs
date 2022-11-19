@@ -313,7 +313,7 @@ namespace FamiStudio
                         infoChunk->palNtscFlags = (byte)machine;
                         infoChunk->extensionFlags = GetNsfExtensionFlags(project.ExpansionAudioMask);
                         infoChunk->numSongs = (byte)project.Songs.Count;
-                        infoChunk->startSong = 1;
+                        infoChunk->startSong = 0;
                         p += sizeof(NsfeInfoChunk);
                         
                         // BANK chunk
