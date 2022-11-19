@@ -569,8 +569,9 @@ namespace FamiStudio
                     continue;
 
                 var lastNoteInstrument = (Instrument)null;
-                var lastNoteArpeggio = (Arpeggio)null;
                 var lastNoteValue = (byte)Note.NoteInvalid;
+
+                var currentArpeggio = (Arpeggio)null;
 
                 for (int p = 0; p < s.Length; p++)
                 {
@@ -604,20 +605,19 @@ namespace FamiStudio
                                     it.Resync();
                                 }
 
-                                lastNoteArpeggio = GetOrCreateArpeggio(fx.param);
+                                currentArpeggio = GetOrCreateArpeggio(fx.param);
                             }
                         }
 
                         if (note != null)
                         {
-                            note.Arpeggio = lastNoteArpeggio;
+                            note.Arpeggio = currentArpeggio;
                         }
 
                         if (note != null && note.IsValid)
                         {
                             lastNoteValue      = note.Value;
                             lastNoteInstrument = note.Instrument;
-                            lastNoteArpeggio   = note.Arpeggio;
                         }
                     }
                 }
