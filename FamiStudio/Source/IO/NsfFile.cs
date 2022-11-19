@@ -271,6 +271,14 @@ namespace FamiStudio
                         // TODO. We should start writing at [songDataIdx] until we run out of dpcmPadding.
                     }
 
+                    var maxSongAddr = project.UsesSamples ? dpcmBaseAddr : 0x10000;
+
+                    if (addr + songBytes.Length > maxSongAddr)
+                    {
+                        Log.LogMessage(LogSeverity.Error, $"Song '{song.Name}' is too large ({songBytes.Length} bytes). Try reducing its size and/or the DPCM sample memory.");
+                        return false;
+                    }
+
                     var idx = songTableIdx + NsfGlobalVarsSize + i * NsfSongTableEntrySize;
                     nsfBytes[idx + 0] = (byte)(page);
                     nsfBytes[idx + 1] = (byte)((addr >> 0) & 0xff);
