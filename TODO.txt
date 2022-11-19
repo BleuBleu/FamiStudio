@@ -1,6 +1,6 @@
 4.0.5:
 =====
-- MisterX song doesnt sound the same. After the "kiss me" part.
+x MisterX song doesnt sound the same. After the "kiss me" part.
 x How2: Write which expansions are used when importing songs.
 x Bug note overlap : https://discord.com/channels/747649221879922840/747649222354010173/1023685891589419028
 x Bug notes end early at end of song (See how2 PM `Song_End_Issue.fms`)
@@ -9,10 +9,10 @@ x Github NSF size issue.
 x Pattern naming template (Pattern 000 => 000) to get rid of prefix.
 x Discord: Key scaling labels
 x Discord: N163 sliders out of range. Import 2ch in instrument in 8ch project.
+x Discord: Crash of not saving N163 on mobile? (Luxury) => CANT REPRO
+x Discord: MIDI import not out of range.
 - Discord: 8bit city pop doesnt export correctly to NSF.
 - Discord: Arp confusion alex
-- Discord: Crash of not saving N163 on mobile? (Luxury)
-- Discord: MIDI import not out of range.
 - Discord: Alex pattern export 0, 1, 0
 - Discord: Alex Famitracker arp 000
 - Discord: Visual bug, thumbnails not aligned?
