@@ -19,6 +19,7 @@ x Recompile openal32 on Linux.
 x Discord: LuxuryKid bizarre snapping behavior on mobile. => Can repro!
 / Discord: Alex arp cursor confusion => NEED MORE INFO.
 / Github issue : MIDI export is transposed? => CANT REPRO
+- Merge all PRs.
 - How2 PWM stuff
 
 4.1.0
