@@ -1022,12 +1022,14 @@ namespace FamiStudio
 
                         if (note.HasVibrato)
                         {
+                            var vib = (byte)(note.VibratoSpeed == 0 || note.VibratoDepth == 0 ? 0 : note.RawVibrato);
+
                             // TODO: If note has attack, no point in setting the default vibrato envelope, instrument will do it anyway.
                             songData.Add($"${OpcodeOverridePitchEnv:x2}+");
-                            songData.Add($"{lo}({vibratoEnvelopeNames[note.RawVibrato]})");
-                            songData.Add($"{hi}({vibratoEnvelopeNames[note.RawVibrato]})");
+                            songData.Add($"{lo}({vibratoEnvelopeNames[vib]})");
+                            songData.Add($"{hi}({vibratoEnvelopeNames[vib]})");
 
-                            if (note.RawVibrato == 0)
+                            if (vib == 0)
                                 songData.Add($"${OpcodeClearPitchEnvOverride:x2}+");
 
                             usesVibrato = true;
