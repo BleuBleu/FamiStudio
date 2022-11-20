@@ -3760,13 +3760,12 @@ famistudio_set_instrument:
     ldx @chan_idx
 .if FAMISTUDIO_USE_VIBRATO 
     lda famistudio_chn_env_override,x ; Instrument pitch is overriden by vibrato, dont touch!
-    bmi @no_pitch    
+    bmi @reset_pitch_env    
 .endif    
     lda famistudio_channel_to_pitch_env, x
     bmi @no_pitch
     tax
     lda #0
-    sta famistudio_pitch_env_repeat,x
     sta famistudio_pitch_env_value_lo,x
     sta famistudio_pitch_env_value_hi,x
     iny
@@ -3775,9 +3774,12 @@ famistudio_set_instrument:
     iny
     lda (@intrument_ptr),y
     sta famistudio_pitch_env_addr_hi,x
-    @no_pitch:
+    @reset_pitch_env:
+    lda #0
+    sta famistudio_pitch_env_repeat,x
     lda #1
     sta famistudio_pitch_env_ptr,x     ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
+    @no_pitch:
     ldx @chan_idx
     rts
 
