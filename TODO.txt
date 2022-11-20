@@ -16,9 +16,9 @@ x Discord: 8bit city pop doesnt export correctly to NSF.
 x Discord: Alex Famitracker arp 000
 x Discord: Alex pattern export 0, 1, 0
 x Recompile openal32 on Linux.
+x Discord: LuxuryKid bizarre snapping behavior on mobile. => Can repro!
 / Discord: Alex arp cursor confusion => NEED MORE INFO.
 / Github issue : MIDI export is transposed? => CANT REPRO
-- Discord: LuxuryKid bizarre snapping behavior on mobile. => Can repro!
 - How2 PWM stuff
 
 4.1.0

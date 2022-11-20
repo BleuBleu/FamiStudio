@@ -8401,6 +8401,14 @@ namespace FamiStudio
         {
             var channel = Song.Channels[editChannel];
 
+            // HACK : When tapping quickly on a resize gizmo, ignore the 
+            // change since we are likely trying to draw a note after.
+            if (Platform.IsMobile && !captureThresholdMet)
+            {
+                App.UndoRedoManager.AbortTransaction();
+                return;
+            }
+
             App.UndoRedoManager.RestoreTransaction(false);
 
             var selection = captureOperation == CaptureOperation.ResizeSelectionNoteEnd;
