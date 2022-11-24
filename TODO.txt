@@ -17,8 +17,10 @@ x Discord: Alex Famitracker arp 000
 x Discord: Alex pattern export 0, 1, 0
 x Recompile openal32 on Linux.
 x Discord: LuxuryKid bizarre snapping behavior on mobile. => Can repro!
+x Discord : Video export crash Imagino.
 / Discord: Alex arp cursor confusion => NEED MORE INFO.
-/ Github issue : MIDI export is transposed? => CANT REPRO
+- MisterX : Squares issue around 38sec, EPSM squares.
+- Discord : Can delete wave envelope??? (Luxyry kid)
 - Merge all PRs.
 - How2 PWM stuff
 

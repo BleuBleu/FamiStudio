@@ -208,7 +208,10 @@ namespace FamiStudio
                     function(samples, numChannels, filename);
                 }
             }
+
+            System.GC.Collect();
         }
+
         private static short[][] GetIndividualChannelSamples(Song song, bool outputsStereo, long channelMask, int sampleRate, int loopCount, bool pal, int duration, bool log)
         {
             // Get all the samples for all channels.
@@ -226,6 +229,8 @@ namespace FamiStudio
                     if (Log.ShouldAbortOperation)
                         return false;
                 }
+                
+                System.GC.Collect();
 
                 return true;
             });
