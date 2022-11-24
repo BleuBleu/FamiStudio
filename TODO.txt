@@ -21,7 +21,7 @@ x Discord : Video export crash Imagino.
 x Discord : Can delete wave envelope??? (Luxyry kid)
 / Discord: Alex arp cursor confusion => NEED MORE INFO.
 - MisterX : Squares issue around 38sec, EPSM squares.
-- Merge all PRs.
+- Alex PR : Freq still weird in low octaves?
 - How2 PWM stuff
 
 4.1.0
