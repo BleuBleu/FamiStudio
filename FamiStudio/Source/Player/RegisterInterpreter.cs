@@ -35,7 +35,7 @@ namespace FamiStudio
         }
 
         public int    TrianglePeriod    => (regs.GetMergedRegisterValue(ExpansionType.None, NesApu.APU_TRI_LO, NesApu.APU_TRI_HI, 0xf));
-        public double TriangleFrequency => NesPeriodToFreq(TrianglePeriod, 16);
+        public double TriangleFrequency => NesPeriodToFreq(TrianglePeriod, 32);
         public int    NoisePeriod       => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_LO) & 0xf);
         public int    NoiseVolume       => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_VOL) & 0xf);
         public int    NoiseMode         => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_LO) >> 7) & 0x1;
@@ -96,7 +96,7 @@ namespace FamiStudio
 
         private static double Vrc7PeriodToFrequency(int period, int octave)
         {
-            return 49715.0 * period / (1 << (18 - octave));
+            return 49715.0 * period / (1 << (19 - octave));
         }
 
         public int GetPeriod(int i)
@@ -140,7 +140,7 @@ namespace FamiStudio
 
         private double FdsPeriodToFrequency(int period)
         {
-            return regs.CpuFrequency * (period / 1048576.0);
+            return regs.CpuFrequency * (period / 4194304.0);
         }
 
         public bool   WaveEnabled => (regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_HI) & 0x80) == 0;
@@ -259,7 +259,7 @@ namespace FamiStudio
 
         public double GetFrequency(int i)
         {
-            return NesPeriodToFreq(GetPeriod(i), 16);
+            return NesPeriodToFreq(GetPeriod(i), 32);
         }
 
         public int GetVolume(int i)
@@ -305,7 +305,7 @@ namespace FamiStudio
         public double GetFrequency(int i)
         {
             if (i < 3)
-                return NesPeriodToFreq(GetPeriod(i), 16);
+                return NesPeriodToFreq(GetPeriod(i), 32);
             else
                 return EpsmPeriodToFrequency(GetPeriod(i), GetOctave(i));
         }
@@ -369,7 +369,7 @@ namespace FamiStudio
         private static double EpsmPeriodToFrequency(int period, int octave)
         {
             //adjusted by 1.0004 to have the value closer to closer to real value
-            return period * 1.0004 / 144 / 1048576.0 * 8000000 * (1 << octave);
+            return period * 1.0004 / 144 / 2097152.0 * 8000000 * (1 << octave);
         }
 
     }

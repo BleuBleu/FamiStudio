@@ -4,6 +4,7 @@
 *.cpp
 *.h
 *.xml
+*.plist
 
 [SearchableFiles.ignore]
 obj/

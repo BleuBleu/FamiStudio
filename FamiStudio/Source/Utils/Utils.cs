@@ -341,6 +341,21 @@ namespace FamiStudio
             return Math.Abs(f1 - f2) < tolerance;
         }
 
+        public static int CompareArrays(byte[] a1, byte[] a2)
+        {
+            if (a1.Length != a2.Length)
+                return int.MaxValue;
+
+            for (int i = 0; i < a1.Length; i++)
+            {
+                var comp = a1[i].CompareTo(a2[i]);
+                if (comp != 0)
+                    return comp;
+            }
+
+            return 0;
+        }
+
         public static int CompareArrays(int[] a1, int[] a2)
         {
             if (a1.Length != a2.Length)

@@ -913,20 +913,10 @@ namespace FamiStudio
 
         private static string GetMIDINoteFriendlyName(int value)
         {
-            if (value < 12)
-            {
-                int octave = -1;
-                int note   = value;
+            int octave = value / 12;
+            int note   = value % 12;
 
-                return Note.NoteNames[note] + octave.ToString();
-            }
-            else
-            {
-                int octave = (value - 1) / 12;
-                int note   = (value - 1) % 12;
-
-                return Note.NoteNames[note] + octave.ToString();
-            }
+            return Note.NoteNames[note] + octave.ToString();
         }
 
         private bool FilterNoteEvent(NoteEvent evt, MidiSource source)
@@ -957,7 +947,8 @@ namespace FamiStudio
             }
             else
             {
-                Log.LogMessage(LogSeverity.Warning, $"Note {GetMIDINoteFriendlyName(evt.note)} on MIDI channel {evt.channel}, MIDI tick {evt.tick} is outside of range supported by FamiStudio (C0 to B7). Ignoring.");
+                // HACK : We subtracted 11 earlier to conver to "FamiStudio note", add it back.
+                Log.LogMessage(LogSeverity.Warning, $"Note {GetMIDINoteFriendlyName(evt.note + 11)} on MIDI channel {evt.channel}, MIDI tick {evt.tick} is outside of range supported by FamiStudio (C0 to B7). Ignoring.");
             }
 
             return false;

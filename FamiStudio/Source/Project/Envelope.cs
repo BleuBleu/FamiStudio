@@ -35,7 +35,7 @@ namespace FamiStudio
             values = new sbyte[maxLength];
             canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
             canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
-            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform;
             chunkLength = type == EnvelopeType.N163Waveform ? 16 : 1;
 
             if (canResize)
@@ -94,7 +94,7 @@ namespace FamiStudio
 
             if (chunkLength > 1)
                 length = chunkLength;
-            else
+            else if (canResize)
                 length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume ? 1 : 8;
 
             for (int i = 0; i < values.Length; i++)
@@ -515,6 +515,8 @@ namespace FamiStudio
                     return Note.VolumeMax;
                 case EnvelopeType.WaveformRepeat:
                     return 1;
+                case EnvelopeType.FdsWaveform:
+                    return 32;
                 default:
                     return 0;
             }

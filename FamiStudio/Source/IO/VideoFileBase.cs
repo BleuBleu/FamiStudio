@@ -170,6 +170,8 @@ namespace FamiStudio
 
                 maxAbsSamples[stateIndex] = WaveUtils.GetMaxAbsValue(state.wav);
 
+                System.GC.Collect();
+
                 return true;
             });
 
@@ -201,6 +203,7 @@ namespace FamiStudio
             watermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 
             // Generate metadata
+            Log.LogMessage(LogSeverity.Info, "Generating video metadata...");
             metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
 
             oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
@@ -278,6 +281,8 @@ namespace FamiStudio
 
                 cleanup?.Invoke();
             }
+
+            System.GC.Collect();
 
             return success;
         }
@@ -431,6 +436,7 @@ namespace FamiStudio
                 while (PlaySongFrame() && numSamples < maxSample)
                 {
                     WriteMetadata(metadata);
+                    Log.ReportProgress(0.0f);
                 }
             }
 
