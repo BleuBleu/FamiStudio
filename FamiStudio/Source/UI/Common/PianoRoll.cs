@@ -7749,9 +7749,9 @@ namespace FamiStudio
                 else
                     tooltip = "{MouseRight}{Drag} Select";
             }
-            else if (IsPointInHeaderBottomPart(e.X, e.Y) && (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio))
+            else if (IsPointInHeaderBottomPart(e.X, e.Y) && ((editMode == EditionMode.Envelope && EditEnvelope.CanLoop) || editMode == EditionMode.Arpeggio))
             {
-                tooltip = "{MouseLeft} Set loop point\n{MouseRight} Set release point (volume only, must have loop point)";
+                tooltip = "{MouseLeft} Set loop point" + ((editMode != EditionMode.Arpeggio && EditEnvelope.CanRelease) ? "\n{MouseRight} Set release point (must have loop point)" : "");
             }
             else if (IsPointInPiano(e.X, e.Y))
             {
@@ -7896,9 +7896,29 @@ namespace FamiStudio
                         newNoteTooltip = $"{idx:D3} : {value}";
 
                         if (IsSelectionValid())
-                            newNoteTooltip += $" ({selectionMax - selectionMin + 1} frame" + ((selectionMax - selectionMin) == 0 ? "" : "s") + " selected)";
+                        {
+                            newNoteTooltip += $" ({selectionMax - selectionMin + 1} ";
+                            switch (editEnvelope)
+                            {
+                                case EnvelopeType.FdsWaveform:
+                                    newNoteTooltip += "sample" + ((selectionMax - selectionMin) == 0 ? "" : "s");
+                                    break;
+                                case EnvelopeType.N163Waveform:
+                                    newNoteTooltip += "sample" + ((selectionMax - selectionMin) == 0 ? "" : "s");
+                                    break;
+                                case EnvelopeType.FdsModulation:
+                                    newNoteTooltip += "entr" + ((selectionMax - selectionMin) == 0 ? "y" : "ies");
+                                    break;
+                                default:
+                                    newNoteTooltip += "frame" + ((selectionMax - selectionMin) == 0 ? "" : "s");
+                                    break;
+
+                            }
+                            newNoteTooltip += " selected)";
+                        }
                     }
                 }
+
                 else if (editMode == EditionMode.DPCMMapping)
                 {
                     if (GetNoteValueForCoord(e.X, e.Y, out byte noteValue))
@@ -7984,11 +8004,11 @@ namespace FamiStudio
                 var snappedNoteIndex = location.NoteIndex;
                 if (snapFactor >= 1.0)
                 {
-	                var numNotes = beatLength * (int)snapFactor;
+                    var numNotes = beatLength * (int)snapFactor;
                     if (numNotes == 1) 
                         return absoluteNoteIndex;
                     snappedNoteIndex = (location.NoteIndex / numNotes + (roundUp ? 1 : 0)) * numNotes;
-          		}
+                  }
                 else
                 {
                     // Subtract the base note so that snapping inside a note is always deterministic. 

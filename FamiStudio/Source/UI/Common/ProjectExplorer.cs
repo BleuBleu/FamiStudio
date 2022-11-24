@@ -97,15 +97,15 @@ namespace FamiStudio
 
         private static string GetNoteString(int value)
         {
-            int octave = (value - 1) / 12;
-            int note = (value - 1) % 12;
+            int octave = (value + 11) / 12 - 1;
+            int note = (value + 11) % 12;
 
             return $"{NoteNamesPadded[note]}{octave}";
         }
 
         private static string GetPitchString(int period, double frequency)
         {
-            if (period == 0 || frequency < NesApu.FreqC0)
+            if (period == 0 || frequency < NesApu.FreqAm1)
             {
                 return $"---+{Math.Abs(0):00} ({0,7:0.00}Hz)";
             }
