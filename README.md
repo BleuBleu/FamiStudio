@@ -8,6 +8,9 @@ For any questions, you can reach me at [famistudio@outlook.com](mailto:famistudi
 ## Compiled versions
 All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section. If you are on Windows, simply download and run the .MSI installer and a shortcut to FamiStudio will be placed in your Start menu.
 
+#### PipeWire crashes
+On Linux, PipeWire might have issues. In order to fix that, the only known solution is to go into the dllmap(`FamiStudio.exe.config`) and remove the target property for libopenal. Make sure you have OpenAL installed on your system!
+
 ## Compiling
 FamiStudio is composed of a few projects:
 - The main FamiStudio application is written in C#. 
