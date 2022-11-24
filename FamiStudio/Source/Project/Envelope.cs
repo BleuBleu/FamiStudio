@@ -94,7 +94,7 @@ namespace FamiStudio
 
             if (chunkLength > 1)
                 length = chunkLength;
-            else
+            else if (canResize)
                 length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume ? 1 : 8;
 
             for (int i = 0; i < values.Length; i++)
@@ -515,6 +515,8 @@ namespace FamiStudio
                     return Note.VolumeMax;
                 case EnvelopeType.WaveformRepeat:
                     return 1;
+                case EnvelopeType.FdsWaveform:
+                    return 32;
                 default:
                     return 0;
             }
