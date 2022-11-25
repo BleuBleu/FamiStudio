@@ -22,6 +22,7 @@ x Discord : Can delete wave envelope??? (Luxyry kid)
 / Discord: Alex arp cursor confusion => NEED MORE INFO.
 - MisterX : Squares issue around 38sec, EPSM squares.
 - Alex PR : Freq still weird in low octaves?
+- REcompile ROM, NSF, etc.
 - How2 PWM stuff
 
 4.1.0

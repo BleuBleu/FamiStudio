@@ -16,7 +16,7 @@ namespace FamiStudio
 
         public int GetSquarePeriod(int i)
         {
-            return regs.GetMergedRegisterValue(ExpansionType.None, NesApu.APU_PL1_LO + i * 4, NesApu.APU_PL1_HI + i * 4, 0xf);
+            return regs.GetMergedRegisterValue(ExpansionType.None, NesApu.APU_PL1_LO + i * 4, NesApu.APU_PL1_HI + i * 4, 0x7);
         }
 
         public double GetSquareFrequency(int i)
@@ -34,8 +34,8 @@ namespace FamiStudio
             return (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_PL1_VOL + i * 4) >> 6) & 0x3;
         }
 
-        public int    TrianglePeriod    => (regs.GetMergedRegisterValue(ExpansionType.None, NesApu.APU_TRI_LO, NesApu.APU_TRI_HI, 0xf));
-        public double TriangleFrequency => NesPeriodToFreq(TrianglePeriod, 32);
+        public int    TrianglePeriod    => (regs.GetMergedRegisterValue(ExpansionType.None, NesApu.APU_TRI_LO, NesApu.APU_TRI_HI, 0x7));
+        public double TriangleFrequency => NesPeriodToFreq(TrianglePeriod, 16);
         public int    NoisePeriod       => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_LO) & 0xf);
         public int    NoiseVolume       => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_VOL) & 0xf);
         public int    NoiseMode         => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_LO) >> 7) & 0x1;
@@ -181,7 +181,7 @@ namespace FamiStudio
 
         public int GetSquarePeriod(int i)
         {
-            return regs.GetMergedRegisterValue(ExpansionType.Mmc5, NesApu.MMC5_PL1_LO + i * 4, NesApu.MMC5_PL1_HI + i * 4, 0xf);
+            return regs.GetMergedRegisterValue(ExpansionType.Mmc5, NesApu.MMC5_PL1_LO + i * 4, NesApu.MMC5_PL1_HI + i * 4, 0x7);
         }
 
         public double GetSquareFrequency(int i)
