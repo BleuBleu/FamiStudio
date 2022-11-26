@@ -384,6 +384,18 @@ namespace FamiStudio
                 Debug.Assert((note.IsMusical && note.Duration > 0) || (note.IsStop && note.Duration == 1) || (!note.IsMusicalOrStop && note.Duration == 0));
                 Debug.Assert(!note.IsValid || note.IsRelease || note.Value <= Note.MusicalNoteMax);
 
+                for (int i = 0; i < Note.EffectCount; i++)
+                {
+                    if (note != null && note.HasValidEffectValue(i))
+                    {
+                        Debug.Assert(channel.SupportsEffect(i));
+                        var val = note.GetEffectValue(i);
+                        var min = Note.GetEffectMinValue(song, channel, i);
+                        var max = Note.GetEffectMaxValue(song, channel, i);
+                        Debug.Assert(val >= min && val <= max);
+                    }
+                }
+
                 var inst = note.Instrument;
                 Debug.Assert(inst == null || song.Project.InstrumentExists(inst));
                 Debug.Assert(inst == null || song.Project.GetInstrument(inst.Id) == inst);
