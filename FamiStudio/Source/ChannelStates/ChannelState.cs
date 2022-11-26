@@ -132,6 +132,8 @@ namespace FamiStudio
                     // Don't stop notes that go beyond the end of the song.
                     if (stopLocation.IsInSong(song))
                         durationCounter = newNote.Duration;
+                    else
+                        durationCounter = 0;
                 }
 
                 if (newNote.HasVolumeSlide)

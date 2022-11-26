@@ -45,7 +45,7 @@ namespace FamiStudio
 
         public unsafe LogProgressDialog(FamiStudioWindow win, string title = null, string text = null)
         {
-            dialog = new PropertyDialog(win, "Log", 800, false);
+            dialog = new PropertyDialog(win, "Log", 820, false);
             dialog.Properties.AddLogTextBox(null); // 0
             dialog.Properties.AddProgressBar(null); // 1
             dialog.Properties.Build();

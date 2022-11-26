@@ -2365,7 +2365,7 @@ famistudio_update_epsm_fm_channel_sound:
 .vol_offset = famistudio_r0
 
     lda #0
-    sta famistudio_chn_inst_changed,y
+    sta famistudio_chn_inst_changed+3,y
 
     ; If the writes are done to channels 0-2, use FAMISTUDIO_EPSM_REG_SEL0 if 3-5 use FAMISTUDIO_EPSM_REG_SEL1
     ; This reg_offset stores the difference so we can later load it into x and do sta FAMISTUDIO_EPSM_REG_SEL0, x
@@ -2662,6 +2662,8 @@ famistudio_update_epsm_rhythm_channel_sound:
     lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
     sta famistudio_chn_epsm_rhythm_key,y
     sta FAMISTUDIO_EPSM_ADDR
+	nop ;Some delay needed before writing the rythm key
+	nop
     lda famistudio_epsm_rhythm_key_table,y
     sta FAMISTUDIO_EPSM_DATA
 
@@ -3676,15 +3678,12 @@ famistudio_set_instrument:
     ldx <.chan_idx
     .if FAMISTUDIO_USE_VIBRATO 
     lda famistudio_chn_env_override,x ; Instrument pitch is overriden by vibrato, dont touch!
-    bmi .no_pitch    
+    bmi .reset_pitch_env    
     .endif    
     lda famistudio_channel_to_pitch_env, x
     bmi .no_pitch
     tax
-    lda #1
-    sta famistudio_pitch_env_ptr,x     ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
     lda #0
-    sta famistudio_pitch_env_repeat,x
     sta famistudio_pitch_env_value_lo,x
     sta famistudio_pitch_env_value_hi,x
     iny
@@ -3693,6 +3692,11 @@ famistudio_set_instrument:
     iny
     lda [.intrument_ptr],y
     sta famistudio_pitch_env_addr_hi,x
+    .reset_pitch_env:
+    lda #0
+    sta famistudio_pitch_env_repeat,x
+    lda #1
+    sta famistudio_pitch_env_ptr,x     ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
     .no_pitch:
     ldx <.chan_idx
     rts

@@ -1137,7 +1137,7 @@ namespace FamiStudio
             {
                 if (!ExpansionType.IsMaskIncludedInTheOther(expansionMask, otherProject.expansionMask))
                 {
-                    Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses audio expansion(s) that are not enabled in the current project.");
+                    Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses audio expansions ({ExpansionType.GetStringForMask(otherProject.expansionMask, true)}) that are not enabled in the current project.");
                     return false;
                 }
 
@@ -1215,6 +1215,7 @@ namespace FamiStudio
                             otherProject.ReplaceInstrument(otherInstrument, existingInstrument);
                             otherProject.instruments.Insert(otherProject.instruments.IndexOf(otherInstrument), existingInstrument); // To pass validation.
                             otherProject.DeleteInstrument(otherInstrument);
+                            otherInstrument.SetProject(this);
                         }
                         else
                         {
@@ -1231,20 +1232,24 @@ namespace FamiStudio
                                 }
                             }
 
+                            otherInstrument.SetProject(this);
                             instruments.Add(otherInstrument);
                         }
                     }
                     else if (otherInstrument.Expansion == ExpansionType.None || (expansionMask & ExpansionType.GetMaskFromValue(otherInstrument.Expansion)) != 0)
-                    { 
+                    {
+                        otherInstrument.SetProject(this);
                         instruments.Add(otherInstrument);
                     }
                     else
                     {
                         Log.LogMessage(LogSeverity.Warning, $"Instrument '{otherInstrument.Name}' uses an inactive audio expansion, ignoring.");
                     }
+
+                    otherInstrument.PerformPostLoadActions();
                 }
 
-                otherProject.ValidateIntegrity();
+                // otherProject.ValidateIntegrity(); Cant do this, we changed the project of some of the instruments.
                 ValidateIntegrity();
             }
 
@@ -1903,6 +1908,20 @@ namespace FamiStudio
         public static int GetValueForShortName(string str)
         {
             return Array.IndexOf(ShortNames, str);
+        }
+
+        public static string GetStringForMask(int mask, bool shortNames = false)
+        {
+            var names = new List<string>();
+
+            for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+            {
+                var bit = GetMaskFromValue(i);
+                if ((bit & mask) != 0)
+                    names.Add(shortNames ? ShortNames[i] : Names[i]);
+            }
+
+            return string.Join(", ", names);
         }
     }
 

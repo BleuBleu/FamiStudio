@@ -273,6 +273,20 @@ namespace FamiStudio
             return arp;
         }
 
+        protected void SetEffectValueWithRangeCheck(Pattern pattern, int n, Note note, byte fxFT, int fxFS, int val)
+        {
+            var min = Note.GetEffectMinValue(pattern.Song, pattern.Channel, fxFS);
+            var max = Note.GetEffectMaxValue(pattern.Song, pattern.Channel, fxFS);
+
+            if (val < min || val > max)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Value {val} for effect '{EffectToTextLookup[fxFT]}' is out of range. Clamping. {GetPatternString(pattern, n)}");
+                val = Utils.Clamp(val, min, max);
+            }
+
+            note.SetEffectValue(fxFS, val);
+        }
+
         protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, bool allowSongEffects)
         {
             Note note = null;
@@ -366,19 +380,19 @@ namespace FamiStudio
                 case Effect_DutyCycle:
                     if (pattern.Channel.SupportsEffect(Note.EffectDutyCycle))
                     {
-                        pattern.GetOrCreateNoteAt(n).DutyCycle = fx.param;
+                        SetEffectValueWithRangeCheck(pattern, n, pattern.GetOrCreateNoteAt(n), Effect_DutyCycle, Note.EffectDutyCycle, fx.param);
                     }
                     return;
                 case Effect_Delay:
                     if (pattern.Channel.SupportsEffect(Note.EffectNoteDelay))
                     {
-                        pattern.GetOrCreateNoteAt(n).NoteDelay = Math.Min((byte)31, fx.param);
+                        SetEffectValueWithRangeCheck(pattern, n, pattern.GetOrCreateNoteAt(n), Effect_Delay, Note.EffectNoteDelay, fx.param);
                     }
                     return;
                 case Effect_NoteCut:
                     if (pattern.Channel.SupportsEffect(Note.EffectCutDelay))
                     {
-                        pattern.GetOrCreateNoteAt(n).CutDelay = Math.Min((byte)31, fx.param);
+                        SetEffectValueWithRangeCheck(pattern, n, pattern.GetOrCreateNoteAt(n), Effect_NoteCut, Note.EffectCutDelay, fx.param);
                     }
                     return;
                 case Effect_Halt:
@@ -569,8 +583,9 @@ namespace FamiStudio
                     continue;
 
                 var lastNoteInstrument = (Instrument)null;
-                var lastNoteArpeggio = (Arpeggio)null;
                 var lastNoteValue = (byte)Note.NoteInvalid;
+
+                var currentArpeggio = (Arpeggio)null;
 
                 for (int p = 0; p < s.Length; p++)
                 {
@@ -604,15 +619,19 @@ namespace FamiStudio
                                     it.Resync();
                                 }
 
-                                note.Arpeggio = GetOrCreateArpeggio(fx.param);
+                                currentArpeggio = GetOrCreateArpeggio(fx.param);
                             }
+                        }
+
+                        if (note != null)
+                        {
+                            note.Arpeggio = currentArpeggio;
                         }
 
                         if (note != null && note.IsValid)
                         {
                             lastNoteValue      = note.Value;
                             lastNoteInstrument = note.Instrument;
-                            lastNoteArpeggio   = note.Arpeggio;
                         }
                     }
                 }

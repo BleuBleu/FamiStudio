@@ -310,6 +310,8 @@ namespace FamiStudio
             var defaultPitchOrReleaseEnvCRC = CRC32.Compute(defaultPitchOrReleaseEnv);
             var defaultEnvName = "";
             var defaultPitchEnvName = "";
+            var vibToCrc = new Dictionary<byte, uint>();
+            var arpToCrc = new Dictionary<Arpeggio, uint>();
 
             uniqueEnvelopes.Add(defaultEnvCRC, defaultEnv);
 
@@ -408,19 +410,57 @@ namespace FamiStudio
             if (kernel == FamiToneKernel.FamiStudio)
             {
                 // Write the arpeggio envelopes.
-                var arpeggioEnvelopes = new Dictionary<Arpeggio, uint>();
-
                 foreach (var arpeggio in project.Arpeggios)
                 {
                     var processed = ProcessEnvelope(arpeggio.Envelope, false, false);
                     uint crc = CRC32.Compute(processed);
-                    arpeggioEnvelopes[arpeggio] = crc;
+                    arpToCrc[arpeggio] = crc;
                     uniqueEnvelopes[crc] = processed;
                 }
 
-                foreach (var arpeggio in project.Arpeggios)
+                // Create all the unique vibrato envelopes.
+                var uniqueVibratos = new HashSet<byte>();
+
+                foreach (var s in project.Songs)
                 {
-                    arpeggioEnvelopeNames[arpeggio] = $"{ll}env{uniqueEnvelopes.IndexOfKey(arpeggioEnvelopes[arpeggio])}";
+                    foreach (var c in s.Channels)
+                    {
+                        foreach (var p in c.Patterns)
+                        {
+                            foreach (var note in p.Notes.Values)
+                            {
+                                if (note.HasVibrato)
+                                {
+                                    uniqueVibratos.Add(note.RawVibrato);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                foreach (var vib in uniqueVibratos)
+                {
+                    // TODO : Create a pack/unpack function. We dont need to know how its encoded here.
+                    var depth = (vib >> 0) & 0xf;
+                    var speed = (vib >> 4) & 0xf;
+
+                    if (speed != 0 && depth != 0)
+                    {
+                        var env = Envelope.CreateVibratoEnvelope(speed, depth);
+                        var processed = ProcessEnvelope(env, false, true);
+                        uint crc = CRC32.Compute(processed);
+
+                        vibToCrc.Add(vib, crc);
+
+                        if (!uniqueEnvelopes.ContainsKey(crc))
+                        {
+                            uniqueEnvelopes[crc] = processed;
+                        }
+                        else
+                        {
+                            Debug.Assert(Utils.CompareArrays(uniqueEnvelopes[crc], processed) == 0);
+                        }
+                    }
                 }
             }
 
@@ -637,45 +677,18 @@ namespace FamiStudio
 
             noArpeggioEnvelopeName = defaultEnvName;
 
-            // Write the unique vibrato envelopes.
-            if (kernel == FamiToneKernel.FamiStudio)
+            // Setup arpeggio envelopes.
+            foreach (var kv in arpToCrc)
             {
-                // Create all the unique vibrato envelopes.
-                foreach (var s in project.Songs)
-                {
-                    foreach (var c in s.Channels)
-                    {
-                        foreach (var p in c.Patterns)
-                        {
-                            foreach (var note in p.Notes.Values)
-                            {
-                                if (note.HasVibrato)
-                                {
-                                    if (note.VibratoDepth == 0 || note.VibratoSpeed == 0)
-                                    {
-                                        note.RawVibrato = 0;
-                                        vibratoEnvelopeNames[0] = defaultPitchEnvName;
-                                        continue;
-                                    }
+                arpeggioEnvelopeNames[kv.Key] = $"{ll}env{uniqueEnvelopes.IndexOfKey(kv.Value)}";
+            }
 
-                                    var env = Envelope.CreateVibratoEnvelope(note.VibratoSpeed, note.VibratoDepth);
-                                    var processed = ProcessEnvelope(env, false, true);
-                                    uint crc = CRC32.Compute(processed);
-                                    if (!uniqueEnvelopes.ContainsKey(crc))
-                                    {
-                                        var name = $"{ll}env{idx++}";
-                                        lines.Add($"{name}:");
-                                        lines.Add($"\t{db} {String.Join(",", processed.Select(i => $"${i:x2}"))}");
+            // Setup the vibrato envelopes.
+            vibratoEnvelopeNames[0] = defaultPitchEnvName;
 
-                                        uniqueEnvelopes[crc] = processed;
-                                        vibratoEnvelopeNames[note.RawVibrato] = name;
-                                        size += processed.Length;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            foreach (var kv in vibToCrc)
+            {
+                vibratoEnvelopeNames[kv.Key] = $"{ll}env{uniqueEnvelopes.IndexOfKey(kv.Value)}";
             }
 
             return size;
@@ -1009,13 +1022,14 @@ namespace FamiStudio
 
                         if (note.HasVibrato)
                         {
+                            var vib = (byte)(note.VibratoSpeed == 0 || note.VibratoDepth == 0 ? 0 : note.RawVibrato);
+
                             // TODO: If note has attack, no point in setting the default vibrato envelope, instrument will do it anyway.
                             songData.Add($"${OpcodeOverridePitchEnv:x2}+");
-                            songData.Add($"{lo}({vibratoEnvelopeNames[note.RawVibrato]})");
-                            songData.Add($"{hi}({vibratoEnvelopeNames[note.RawVibrato]})");
+                            songData.Add($"{lo}({vibratoEnvelopeNames[vib]})");
+                            songData.Add($"{hi}({vibratoEnvelopeNames[vib]})");
 
-                            // TODO : Why do we do that right after? Cant remember.
-                            if (note.RawVibrato == 0)
+                            if (vib == 0)
                                 songData.Add($"${OpcodeClearPitchEnvOverride:x2}+");
 
                             usesVibrato = true;
@@ -1568,6 +1582,11 @@ namespace FamiStudio
                                 if (note.HasNoteDelay && (!note.IsValid && (note.EffectMask & (~(Note.EffectNoteDelayMask | Note.EffectSpeed))) == 0))
                                 {
                                     note.HasNoteDelay = false;
+                                }
+
+                                if (note.HasVibrato && note.VibratoDepth > 13)
+                                {
+                                    Log.LogMessage(LogSeverity.Warning, $"Vibrato depths > 13 will not sound correct in the sound engine and will likely be removed in the future. ({channel.NameWithExpansion}, {pattern.Name}).");
                                 }
                             }
                         }

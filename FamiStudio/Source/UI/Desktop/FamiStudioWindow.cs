@@ -83,8 +83,8 @@ namespace FamiStudio
             BindGLFWCallbacks();
             SetWindowIcon();
             InitialFrameBufferClear();
-
             controls.InitializeGL();
+            RefreshLayout();
         }
 
         private void BindGLFWCallbacks()
