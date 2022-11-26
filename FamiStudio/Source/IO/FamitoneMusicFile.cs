@@ -1583,6 +1583,11 @@ namespace FamiStudio
                                 {
                                     note.HasNoteDelay = false;
                                 }
+
+                                if (note.HasVibrato && note.VibratoDepth > 13)
+                                {
+                                    Log.LogMessage(LogSeverity.Warning, $"Vibrato depths > 13 will not sound correct in the sound engine and will likely be removed in the future. ({channel.NameWithExpansion}, {pattern.Name}).");
+                                }
                             }
                         }
                     }
