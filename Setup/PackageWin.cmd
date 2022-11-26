@@ -18,9 +18,6 @@ cd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\Co
 cd "%~dp0"
 devenv ..\FamiStudio.sln /Project Setup /rebuild Release
 
-:: Until we switch to 64-bit, make the process large addressaware to use up to 3-4GB.
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x86\editbin.exe" /largeaddressaware ..\FamiStudio\bin\Release\FamiStudio.exe
-
 cd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\VSI\DisableOutOfProcBuild"
 @call DisableOutOfProcBuild.exe undo
 
