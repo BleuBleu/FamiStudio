@@ -1,5 +1,13 @@
 4.1.0
 =====
+- DPCM 
+	- In app, you get up to 128KB of samples
+	- We will need multiple DPCM instruments.
+	- Each insturment will have a bank # which only has impact on engine export.
+	- In sound engine, add option for DPCM bank switching.
+	- When a sample plays, callback with bank #.
+	- For NSF export, 16x8KB (2 banks) export
+	- For ROM export, 16x8KB (1 bank) export. What about VRC6? 
 - Option to set snapping auto depending on last resize.
 - Dual APU (VT02) support?
 - Stereo export and NSF import on Android?
