@@ -1302,7 +1302,7 @@ namespace FamiStudio
 
             if (((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && CanEnvelopeDisplayFrame()) || (editMode == EditionMode.Channel))
             {
-                var seekFrame = editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio) : GetSeekFrameToDraw();
+                var seekFrame = editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editArpeggio, editEnvelope, editMode == EditionMode.Arpeggio) : GetSeekFrameToDraw();
                 if (seekFrame >= 0)
                 {
                     r.ch.PushTranslation(GetPixelForNote(seekFrame), 0);
@@ -1851,7 +1851,7 @@ namespace FamiStudio
                     }
 
                     // TODO : Create a function for this, this is a mess.
-                    var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope);
+                    var seekFrame = App.GetEnvelopeFrame(editInstrument, editArpeggio, editEnvelope);
                     if (seekFrame >= 0)
                     {
                         var seekX = GetPixelForNote(seekFrame);
@@ -2786,7 +2786,7 @@ namespace FamiStudio
 
             if ((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && CanEnvelopeDisplayFrame())
             {
-                var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio);
+                var seekFrame = App.GetEnvelopeFrame(editInstrument, editArpeggio, editEnvelope, editMode == EditionMode.Arpeggio);
                 if (seekFrame >= 0)
                 {
                     var seekX = GetPixelForNote(seekFrame);
@@ -2951,6 +2951,9 @@ namespace FamiStudio
             else
             {
                 r.cf.DrawText($"Editing Arpeggio {editArpeggio.Name}", FontResources.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+
+                if (App.SelectedArpeggio != editArpeggio)
+                    r.cf.DrawText($"Warning : Arpeggio is currently not selected. Selected arpeggio '{App.SelectedArpeggio.Name}' will be heard when playing the piano.", FontResources.FontMedium, bigTextPosX, bigTextPosY + FontResources.FontVeryLarge.LineHeight, Theme.LightRedColor);
             }
 
             var gizmos = GetEnvelopeGizmos();

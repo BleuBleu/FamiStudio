@@ -23,7 +23,7 @@ x Alex PR : Freq still weird in low octaves?
 x Discord : Crash 64_the_third.
 x MisterX : Squares issue around 38sec, EPSM squares.
 x REcompile ROM, NSF, etc.
-- Discord: Alex arp cursor confusion 
+x Discord: Alex arp cursor confusion 
 - FDS oscilloscope can assert if you use modulation table to produce very low sound.
 - How2 PWM stuff
 
