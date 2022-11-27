@@ -35,7 +35,7 @@ namespace FamiStudio
         }
 
         public int    TrianglePeriod    => (regs.GetMergedRegisterValue(ExpansionType.None, NesApu.APU_TRI_LO, NesApu.APU_TRI_HI, 0x7));
-        public double TriangleFrequency => NesPeriodToFreq(TrianglePeriod, 16);
+        public double TriangleFrequency => NesPeriodToFreq(TrianglePeriod, 32);
         public int    NoisePeriod       => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_LO) & 0xf);
         public int    NoiseVolume       => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_VOL) & 0xf);
         public int    NoiseMode         => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_LO) >> 7) & 0x1;
@@ -234,7 +234,7 @@ namespace FamiStudio
 
         public int GetVolume(int i)
         {
-            return regs.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, NesApu.N163_REG_VOLUME + i) & 0xf;
+            return regs.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, NesApu.N163_REG_VOLUME - 8 * i) & 0xf;
         }
     }
 

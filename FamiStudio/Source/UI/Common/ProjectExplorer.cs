@@ -97,22 +97,22 @@ namespace FamiStudio
 
         private static string GetNoteString(int value)
         {
-            int octave = (value - 1) / 12;
-            int note = (value - 1) % 12;
+            int octave = (value + 11) / 12 - 1;
+            int note = (value + 11) % 12;
 
             return $"{NoteNamesPadded[note]}{octave}";
         }
 
         private static string GetPitchString(int period, double frequency)
         {
-            if (period == 0 || frequency < NesApu.FreqC0)
+            if (period == 0 || frequency < NesApu.FreqCm1)
             {
                 return $"---+{Math.Abs(0):00} ({0,7:0.00}Hz)";
             }
             else
             {
                 var noteFloat = NoteFromFreq(frequency);
-                Debug.Assert(noteFloat >= 0);
+                Debug.Assert(noteFloat >= -12.5);
 
                 var note = (int)Math.Round(noteFloat);
                 var cents = (int)Math.Round((noteFloat - note) * 100.0);
