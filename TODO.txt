@@ -8,6 +8,7 @@
 	- When a sample plays, callback with bank #.
 	- For NSF export, 16x8KB (2 banks) export
 	- For ROM export, 16x8KB (1 bank) export. What about VRC6? 
+- Export DMC samples on Mobile.
 - Mark : Option to prevent android from going to sleep while playing.
 - Option to set snapping auto depending on last resize.
 - Dual APU (VT02) support?
