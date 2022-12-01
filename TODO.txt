@@ -19,9 +19,12 @@ x Recompile openal32 on Linux.
 x Discord: LuxuryKid bizarre snapping behavior on mobile. => Can repro!
 x Discord : Video export crash Imagino.
 x Discord : Can delete wave envelope??? (Luxyry kid)
-/ Discord: Alex arp cursor confusion => NEED MORE INFO.
-- MisterX : Squares issue around 38sec, EPSM squares.
-- Alex PR : Freq still weird in low octaves?
+x Alex PR : Freq still weird in low octaves?
+x Discord : Crash 64_the_third.
+x MisterX : Squares issue around 38sec, EPSM squares.
+x REcompile ROM, NSF, etc.
+x Discord: Alex arp cursor confusion 
+- FDS oscilloscope can assert if you use modulation table to produce very low sound.
 - How2 PWM stuff
 
 4.1.0

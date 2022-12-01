@@ -2063,9 +2063,11 @@ namespace FamiStudio
             }
         }
 
-        public int GetEnvelopeFrame(Instrument instrument, int envelopeIdx, bool force = false)
+        public int GetEnvelopeFrame(Instrument inst, Arpeggio arp, int envelopeIdx, bool arpMode = false)
         {
-            if (instrumentPlayer != null && (selectedInstrument == instrument || force))
+            bool match = arpMode && (selectedArpeggio == arp) || !arpMode && (selectedInstrument == inst);
+
+            if (instrumentPlayer != null && match)
                 return instrumentPlayer.GetEnvelopeFrame(envelopeIdx);
             else
                 return -1;

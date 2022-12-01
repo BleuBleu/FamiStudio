@@ -38,7 +38,8 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0649</NoWarn>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>true</Prefer32Bit>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -51,7 +52,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugSymbols>true</DebugSymbols>
     <NoWarn>CS0162,CS0649</NoWarn>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>true</Prefer32Bit>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -195,7 +197,7 @@
     <Compile Include="Source\UI\Desktop\Program.cs" />
     <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
-    <Compile Include="Source\UI\Desktop\Toast.cs" />    
+    <Compile Include="Source\UI\Desktop\Toast.cs" />
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
     <Compile Include="Source\UI\Windows\Cursors.cs" />
     <Compile Include="Source\UI\Windows\FamiStudioWindow.cs" />

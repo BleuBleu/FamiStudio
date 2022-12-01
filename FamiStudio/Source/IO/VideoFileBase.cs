@@ -170,7 +170,7 @@ namespace FamiStudio
 
                 maxAbsSamples[stateIndex] = WaveUtils.GetMaxAbsValue(state.wav);
 
-                System.GC.Collect();
+                GC.Collect();
 
                 return true;
             });
@@ -278,11 +278,12 @@ namespace FamiStudio
                 foreach (var c in channelStates)
                     c.icon?.Dispose();
                 File.Delete(tempAudioFile);
-
                 cleanup?.Invoke();
+                channelStates = null;
+                metadata = null;
             }
 
-            System.GC.Collect();
+            GC.Collect();
 
             return success;
         }

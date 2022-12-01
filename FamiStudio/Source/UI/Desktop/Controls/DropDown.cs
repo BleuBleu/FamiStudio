@@ -83,6 +83,33 @@ namespace FamiStudio
             bmpArrow = g.GetBitmapAtlasRef("DropDownArrow");
         }
 
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            if (listOpened && e.Y > rowHeight)
+            {
+                if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
+                {
+                    var y = e.Y - rowHeight;
+
+                    if (y < scrollBarPos)
+                    {
+                        listScroll = Math.Max(0, listScroll - largeStepSize);
+                    }
+                    else if (y > (scrollBarPos + scrollBarSize))
+                    {
+                        listScroll = Math.Min(maxListScroll, listScroll + largeStepSize);
+                    }
+                    else
+                    {
+                        Capture = true;
+                        draggingScrollbars = true;
+                        captureScrollBarPos = scrollBarPos;
+                        captureMouseY = e.Y;
+                    }
+                }
+            }
+        }
+
         protected override void OnMouseUp(MouseEventArgs e)
         {
             if (listJustOpened && isGridChild)
@@ -107,20 +134,12 @@ namespace FamiStudio
 
                         if (y < scrollBarPos)
                         {
-                            listScroll = Math.Max(0, listScroll - largeStepSize);
+                            SetAndMarkDirty(ref listScroll, Math.Max(0, listScroll - largeStepSize));
                         }
                         else if (y > (scrollBarPos + scrollBarSize))
                         {
-                            listScroll = Math.Min(maxListScroll, listScroll + largeStepSize);
+                            SetAndMarkDirty(ref listScroll, Math.Min(maxListScroll, listScroll + largeStepSize));
                         }
-                        else
-                        {
-                            Capture = true;
-                            draggingScrollbars = true;
-                            captureScrollBarPos = scrollBarPos;
-                            captureMouseY = e.Y;
-                        }
-
                         return;
                     }
 
@@ -157,7 +176,7 @@ namespace FamiStudio
 
         private void UpdateScrollParams()
         {
-            largeStepSize = Math.Min(4, items.Length / 20); 
+            largeStepSize = Utils.Clamp(items.Length / 20, 1, 4); 
             maxListScroll = Math.Max(0, items.Length - MaxItemsInList);
             numItemsInList = Math.Min(items.Length, MaxItemsInList);
         }
