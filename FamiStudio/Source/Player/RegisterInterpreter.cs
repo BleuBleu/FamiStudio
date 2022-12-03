@@ -21,6 +21,9 @@ namespace FamiStudio
 
         public double GetSquareFrequency(int i)
         {
+            //The square channels are muted with period < 8 in both NTSC and PAL only on the 2A03
+            if (GetSquarePeriod(i) < 8)
+                return 0;   
             return NesPeriodToFreq(GetSquarePeriod(i), 16);
         }
 
@@ -196,7 +199,7 @@ namespace FamiStudio
 
         public int GetSquareDuty(int i)
         {
-            return (regs.GetRegisterValue(ExpansionType.Mmc5, NesApu.MMC5_PL1_VOL + i * 4) >> 4) & 0x7;
+            return (regs.GetRegisterValue(ExpansionType.Mmc5, NesApu.MMC5_PL1_VOL + i * 4) >> 6) & 0x3;
         }
     }
 
@@ -264,7 +267,7 @@ namespace FamiStudio
 
         public int GetVolume(int i)
         {
-            return regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_VOL_A + i * 2) & 0xf;
+            return regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_VOL_A + i) & 0xf;
         }
     }
 
@@ -313,7 +316,7 @@ namespace FamiStudio
         public int GetVolume(int i,int op = 0)
         {
             if(i < 3)
-                return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_VOL_A + i * 2) & 0xf;
+                return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_VOL_A + i) & 0xf;
             if (i >= 3 && i < 6)
                 return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0x40 + (i-3) + op * 4) & 0x7f;
             if (i >= 6 && i < 9)

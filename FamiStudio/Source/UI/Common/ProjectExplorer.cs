@@ -97,27 +97,27 @@ namespace FamiStudio
 
         private static string GetNoteString(int value)
         {
-            int octave = (value + 11) / 12 - 1;
-            int note = (value + 11) % 12;
+            int octave = value / 12;
+            int note = value % 12;
 
             return $"{NoteNamesPadded[note]}{octave}";
         }
 
         private static string GetPitchString(int period, double frequency)
         {
-            if (period == 0 || frequency < NesApu.FreqCm1)
+            if (period == 0 || frequency < NesApu.FreqRegMin)
             {
                 return $"---+{Math.Abs(0):00} ({0,7:0.00}Hz)";
             }
             else
             {
                 var noteFloat = NoteFromFreq(frequency);
-                Debug.Assert(noteFloat >= -12.5);
+                Debug.Assert(noteFloat >= -0.5);
 
                 var note = (int)Math.Round(noteFloat);
                 var cents = (int)Math.Round((noteFloat - note) * 100.0);
 
-                return $"{GetNoteString(note + 1),-3}{(cents < 0 ? "-" : "+")}{Math.Abs(cents):00} ({frequency,7:0.00}Hz)";
+                return $"{GetNoteString(note),-3}{(cents < 0 ? "-" : "+")}{Math.Abs(cents):00} ({frequency,7:0.00}Hz)";
             }
         }
 
@@ -300,8 +300,10 @@ namespace FamiStudio
                 ChannelRows = new RegisterViewerRow[1][];
                 ChannelRows[0] = new[]
                 {
-                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.Period, i.Frequency), true),
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.WavePeriod, i.WaveFrequency), true), 
                     new RegisterViewerRow("Volume", () => i.Volume.ToString("00"), true),
+                    new RegisterViewerRow("Mod Speed", () => $"{i.ModSpeed,-4} ({i.ModFrequency,7:0.00}Hz, {GetPitchString(i.ModSpeed, i.ModFrequency).Substring(0,6)})", true),
+                    new RegisterViewerRow("Mod Depth", () => i.ModDepth.ToString("00"), true),
                     new RegisterViewerRow("Wave", DrawWaveTable, 32),
                     new RegisterViewerRow("Mod", DrawModTable, 32),
                 };
