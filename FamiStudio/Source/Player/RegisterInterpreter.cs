@@ -147,9 +147,13 @@ namespace FamiStudio
         }
 
         public bool   WaveEnabled => (regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_HI) & 0x80) == 0;
-        public int    Period      => regs.GetMergedRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_LO, NesApu.FDS_FREQ_HI, 0xf);
+        public int    WavePeriod      => regs.GetMergedRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_LO, NesApu.FDS_FREQ_HI, 0xf);
         public int    Volume      => regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_VOL_ENV) & 0x1f;
-        public double Frequency   => WaveEnabled ? FdsPeriodToFrequency(Period) : 0;
+        public double WaveFrequency   => WaveEnabled ? FdsPeriodToFrequency(WavePeriod) : 0;
+        public bool   ModEnabled => (regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_MOD_HI) & 0x8F) == 0 || (regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_SWEEP_ENV) & 0x3f) != 0;
+        public int    ModSpeed => regs.GetMergedRegisterValue(ExpansionType.Fds, NesApu.FDS_MOD_LO, NesApu.FDS_MOD_HI, 0xf);
+        public int    ModDepth => regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_SWEEP_ENV) & 0x3f;
+        public double ModFrequency => ModEnabled ? FdsPeriodToFrequency(ModSpeed) : 0;
 
         public byte[] GetWaveTable()
         {
