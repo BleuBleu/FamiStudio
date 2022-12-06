@@ -24,8 +24,9 @@ x Discord : Crash 64_the_third.
 x MisterX : Squares issue around 38sec, EPSM squares.
 x REcompile ROM, NSF, etc.
 x Discord: Alex arp cursor confusion 
-- FDS oscilloscope can assert if you use modulation table to produce very low sound.
-- How2 PWM stuff
+- NSF import issue TF74
+- How2 VRC7/EPSM releases.
+- Minitube VRC7 instrument crash.
 
 4.1.0
 =====
@@ -116,6 +117,7 @@ Discord
 
 Backlog: 
 =========
+- FDS oscilloscope can assert if you use modulation table to produce very low sound.
 - Fix "SeparateChannelsExportTndMode"
 - Can we pahse reset N163? Steo mentionned that in very low note, he notices that the waveform starts from the middle.
 - S5B is 1 octave off. Periods are 12 bits, so technically can do lower, but we still bottom at A0???
