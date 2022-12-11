@@ -25,10 +25,10 @@ x MisterX : Squares issue around 38sec, EPSM squares.
 x REcompile ROM, NSF, etc.
 x Discord: Alex arp cursor confusion 
 x Minitube VRC7 instrument crash. (import bug1 in a blank project, assert!!!)
+x Return to old play position option.
 / How2 VRC7/EPSM releases. Perkka need to make sure EPSM is OK.
 / NSF import issue TF74
-- Return to old play position option.
-- Merge PRs.
+/ Merge PRs.
 
 4.1.0
 =====
