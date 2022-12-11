@@ -44,6 +44,7 @@ namespace FamiStudio
         public static bool ShowTutorial = true;
         public static bool ClearUndoRedoOnSave = true;
         public static bool OpenLastProjectOnStart = Platform.IsDesktop;
+        public static bool RewindAfterPlay = false;
         public static bool AutoSaveCopy = true;
         public static string PatternNamePrefix = "Pattern ";
         public static int PatternNameNumDigits = 1;
@@ -235,6 +236,7 @@ namespace FamiStudio
             CheckUpdates = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates", true ); // At version 2 (FamiStudio 3.0.0, changed section)
             ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial", true ); // At version 2 (FamiStudio 3.0.0, changed section)
             ClearUndoRedoOnSave = ini.GetBool("General", "ClearUndoRedoOnSave", true);
+            RewindAfterPlay = ini.GetBool("General", "RewindAfterPlay", false);
             OpenLastProjectOnStart = ini.GetBool("General", "OpenLastProjectOnStart", true);
             AutoSaveCopy = ini.GetBool("General", "AutoSaveCopy", true);
             PatternNamePrefix = ini.GetString("General", "PatternNamePrefix", "Pattern ");
@@ -422,6 +424,7 @@ namespace FamiStudio
             ini.SetBool("General", "CheckUpdates", CheckUpdates);
             ini.SetBool("General", "ShowTutorial", ShowTutorial);
             ini.SetBool("General", "ClearUndoRedoOnSave", ClearUndoRedoOnSave);
+            ini.SetBool("General", "RewindAfterPlay", RewindAfterPlay);
             ini.SetBool("General", "OpenLastProjectOnStart", OpenLastProjectOnStart);
             ini.SetString("General", "LastProjectFile", OpenLastProjectOnStart ? LastProjectFile : "");
             ini.SetString("General", "PatternNamePrefix", PatternNamePrefix);

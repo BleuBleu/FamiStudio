@@ -83,6 +83,7 @@ namespace FamiStudio
         private readonly string CheckUpdatesTooltip             = "When enabled, FamiStudio will check for updates every time you start the app.";
         private readonly string ShowTutorialTooltip             = "When enabled, the first time tutorial will be displayed next time the app is started.";
         private readonly string ClearUndoRedoTooltip            = "When enabled, the undo/redo stack will be cleared every time you save. Disabling this can help keep the memory usage down.";
+        private readonly string ReviewAfterPlayTooltip          = "When enabled, FamiStudio will seek back to the previous play position after stopping the song.";
         private readonly string OpenLastTooltip                 = "When enabled, FamiStudio will open the last project you were working on when you last closed the app.";
         private readonly string AutosaveTooltip                 = "When enabled, a copy of your project will be save approximately every 2 minutes. This can prevent loosing data when a crash occurs.";
         private readonly string PatternNamePrefixTooltip        = "Prefix to add to automatically generated pattern names.";
@@ -192,17 +193,18 @@ namespace FamiStudio
                     page.AddCheckBox("Check for updates:", Settings.CheckUpdates, CheckUpdatesTooltip); // 0
                     page.AddCheckBox("Show Tutorial at Startup:", Settings.ShowTutorial, ShowTutorialTooltip); // 1
                     page.AddCheckBox("Clear Undo/Redo on save:", Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 2
-                    page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 3
-                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 4
-                    page.AddTextBox("Pattern name prefix:", Settings.PatternNamePrefix, 64, PatternNamePrefixTooltip); // 5
-                    page.AddNumericUpDown("Pattern name digits:", Settings.PatternNameNumDigits, 1, 4, PatternNameNumDigitsTooltip); // 6
-                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 7
+                    page.AddCheckBox("Rewind after play:", Settings.RewindAfterPlay, ReviewAfterPlayTooltip); // 3
+                    page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 4
+                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 5
+                    page.AddTextBox("Pattern name prefix:", Settings.PatternNamePrefix, 64, PatternNamePrefixTooltip); // 6
+                    page.AddNumericUpDown("Pattern name digits:", Settings.PatternNameNumDigits, 1, 4, PatternNameNumDigitsTooltip); // 7
+                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 8
                     page.PropertyClicked += GeneralPage_PropertyClicked;
                     page.SetPropertyVisible(0, Platform.IsDesktop);
                     page.SetPropertyVisible(2, Platform.IsDesktop);
-                    page.SetPropertyVisible(3, Platform.IsDesktop);
                     page.SetPropertyVisible(4, Platform.IsDesktop);
                     page.SetPropertyVisible(5, Platform.IsDesktop);
+                    page.SetPropertyVisible(6, Platform.IsDesktop);
                     break;
                 }
                 case ConfigSection.UserInterface:
@@ -514,10 +516,11 @@ namespace FamiStudio
                     Settings.CheckUpdates = pageGeneral.GetPropertyValue<bool>(0);
                     Settings.ShowTutorial = pageGeneral.GetPropertyValue<bool>(1);
                     Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(2);
-                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(3);
-                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(4);
-                    Settings.PatternNamePrefix = pageGeneral.GetPropertyValue<string>(5);
-                    Settings.PatternNameNumDigits = pageGeneral.GetPropertyValue<int>(6);
+                    Settings.RewindAfterPlay = pageGeneral.GetPropertyValue<bool>(3);
+                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(4);
+                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(5);
+                    Settings.PatternNamePrefix = pageGeneral.GetPropertyValue<string>(6);
+                    Settings.PatternNameNumDigits = pageGeneral.GetPropertyValue<int>(7);
 
                     // UI
                     var scalingString = pageUI.GetPropertyValue<string>(0);
