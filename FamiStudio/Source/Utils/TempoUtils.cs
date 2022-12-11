@@ -204,7 +204,7 @@ namespace FamiStudio
             if (cachedGrooveLengths.Value.TryGetValue(key, out var grooveLengthArray))
                 return grooveLengthArray[length];
 
-            grooveLengthArray = new int[Pattern.MaxLength];
+            grooveLengthArray = new int[Pattern.MaxLength + 1];
 
             // Add to cache if not found.
             var idx = 0;
