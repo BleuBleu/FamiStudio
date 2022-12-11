@@ -24,8 +24,8 @@ namespace FamiStudio
         protected Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         protected int[] envelopeIdx = new int[EnvelopeType.Count];
         protected int[] envelopeValues = new int[EnvelopeType.Count];
-        protected bool customRelease = false;
         protected bool noteTriggered = false;
+        protected bool noteReleased = false;
         protected bool forceInstrumentReload = false;
         protected ushort[] noteTable = null;
         protected bool palPlayback = false;
@@ -206,10 +206,8 @@ namespace FamiStudio
                     }
                 }
 
-                // Channels with custom release code (VRC7) will do their own thing.
-                if (!customRelease)
-                    newNote.Value = note.Value;
-
+                noteReleased = newNote.IsRelease;
+                newNote.Value = note.Value;
                 note = newNote;
             }
             else if (newNote.IsMusical)
@@ -562,6 +560,7 @@ namespace FamiStudio
         public virtual void UpdateAPU()
         {
             noteTriggered = false;
+            noteReleased = false;
             NesApu.SkipCycles(apuIdx, CyclesBetweenChannels);
         }
 

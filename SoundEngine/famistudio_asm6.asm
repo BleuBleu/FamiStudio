@@ -2054,35 +2054,17 @@ famistudio_vrc7_wait_reg_select:
 
 famistudio_update_vrc7_channel_sound:
 
+    tmp   = famistudio_r0
     pitch = famistudio_ptr1
 
     lda #0
     sta famistudio_chn_inst_changed,y
 
-    lda famistudio_chn_vrc7_trigger,y
-    bpl @check_cut
-
-@release:
-   
-    ; Untrigger note.  
-    lda famistudio_vrc7_reg_table_hi,y
-    sta FAMISTUDIO_VRC7_REG_SEL
-    jsr famistudio_vrc7_wait_reg_select
-
-    lda famistudio_chn_vrc7_prev_hi, y
-    and #$ef ; remove trigger
-    sta famistudio_chn_vrc7_prev_hi, y
-    sta FAMISTUDIO_VRC7_REG_WRITE
-    jsr famistudio_vrc7_wait_reg_write   
-
-    rts
-
-@check_cut:
-
+check_cut:
     lda famistudio_chn_note+FAMISTUDIO_VRC7_CH0_IDX,y
-    bne @nocut
+    bne check_release
 
-@cut:  
+cut:  
     ; Untrigger note.  
     lda famistudio_vrc7_reg_table_hi,y
     sta FAMISTUDIO_VRC7_REG_SEL
@@ -2096,7 +2078,47 @@ famistudio_update_vrc7_channel_sound:
 
     rts
 
-@nocut:
+check_release:
+
+    lda famistudio_chn_vrc7_trigger,y
+    bpl check_attack
+
+    release:
+       
+        lda famistudio_chn_vrc7_prev_hi, y
+        and #$ef ; remove trigger
+        sta famistudio_chn_vrc7_prev_hi, y
+        jmp musical_note
+
+check_attack:
+
+    lda famistudio_chn_vrc7_trigger,y
+    and #1
+    beq musical_note
+
+    attack:
+
+        lda famistudio_chn_vrc7_prev_hi, y
+        and #$10
+        beq prev_note_had_release
+
+        ; Two attacks in a row, need to insert a dummy release.
+        prev_note_had_attack:
+
+            lda famistudio_vrc7_reg_table_hi,y
+            sta FAMISTUDIO_VRC7_REG_SEL
+            jsr famistudio_vrc7_wait_reg_select
+            lda #0
+            sta FAMISTUDIO_VRC7_REG_WRITE
+            jsr famistudio_vrc7_wait_reg_write
+            jmp musical_note
+
+        prev_note_had_release:
+            lda famistudio_chn_vrc7_prev_hi, y
+            ora #$10
+            sta famistudio_chn_vrc7_prev_hi, y
+
+musical_note:
 
     ; Read/multiply volume
     ldx famistudio_vrc7_env_table,y
@@ -2137,17 +2159,17 @@ famistudio_update_vrc7_channel_sound:
 
     ; Compute octave by dividing by 2 until we are <= 512 (0x100).
     ldx #0
-    @compute_octave_loop:
+    compute_octave_loop:
         lda pitch+1
         cmp #2
-        bcc @octave_done
+        bcc octave_done
         lsr
         sta pitch+1
         ror pitch+0
         inx
-        jmp @compute_octave_loop
+        jmp compute_octave_loop
 
-    @octave_done:
+    octave_done:
 
     ; Write pitch (lo)
     lda famistudio_vrc7_reg_table_lo,y
@@ -2158,33 +2180,20 @@ famistudio_update_vrc7_channel_sound:
     sta FAMISTUDIO_VRC7_REG_WRITE
     jsr famistudio_vrc7_wait_reg_write
 
-    ; Un-trigger previous note if needed.
-    lda famistudio_chn_vrc7_prev_hi, y
-    and #$10 ; set trigger.
-    beq @write_hi_period
-    lda famistudio_chn_vrc7_trigger,y
-    beq @write_hi_period
-    @untrigger_prev_note:
-        lda famistudio_vrc7_reg_table_hi,y
-        sta FAMISTUDIO_VRC7_REG_SEL
-        jsr famistudio_vrc7_wait_reg_select
-
-        lda famistudio_chn_vrc7_prev_hi,y
-        and #$ef ; remove trigger
-        sta FAMISTUDIO_VRC7_REG_WRITE
-        jsr famistudio_vrc7_wait_reg_write
-
-    @write_hi_period:
-
     ; Write pitch (hi)
+    lda famistudio_chn_vrc7_prev_hi, y
+    and #$10
+    sta tmp
+
     lda famistudio_vrc7_reg_table_hi,y
     sta FAMISTUDIO_VRC7_REG_SEL
     jsr famistudio_vrc7_wait_reg_select
 
     txa
     asl
-    ora #$30
+    ora #$20
     ora pitch+1
+    ora tmp
     sta famistudio_chn_vrc7_prev_hi, y
     sta FAMISTUDIO_VRC7_REG_WRITE
     jsr famistudio_vrc7_wait_reg_write
