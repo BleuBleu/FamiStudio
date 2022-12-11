@@ -213,10 +213,11 @@ namespace FamiStudio
             var data = new byte[256];
 
             byte ptr = (byte)(allowReleases || newPitchEnvelope ? 1 : 0);
-            byte ptr_loop = 0xff;
-            byte rle_cnt = 0;
-            byte prev_val = (byte)(env.Values[0] + 1);//prevent rle match
-            bool found_release = false;
+            byte ptrLoop = 0xff;
+            byte relCount = 0;
+            byte prevVal = (byte)(env.Values[0] + 1);//prevent rle match
+            bool foundRelease = false;
+            bool allowRle = !env.Relative;
 
             if (newPitchEnvelope)
                 data[0] = (byte)(env.Relative ? 0x80 : 0x00);
@@ -234,61 +235,61 @@ namespace FamiStudio
 
                 val += 192;
 
-                if (prev_val != val || j == env.Loop || (allowReleases && j == env.Release) || j == env.Length - 1 || (rle_cnt == 127 && newPitchEnvelope))
+                if (prevVal != val || !allowRle || j == env.Loop || (allowReleases && j == env.Release) || j == env.Length - 1 || (relCount == 127 && newPitchEnvelope))
                 {
-                    if (rle_cnt != 0)
+                    if (relCount != 0)
                     {
-                        if (rle_cnt == 1)
+                        if (relCount == 1)
                         {
-                            data[ptr++] = prev_val;
+                            data[ptr++] = prevVal;
                         }
                         else
                         {
-                            while (rle_cnt > 127)
+                            while (relCount > 127)
                             {
                                 data[ptr++] = 127;
-                                rle_cnt -= 127;
+                                relCount -= 127;
                             }
 
-                            data[ptr++] = rle_cnt;
+                            data[ptr++] = relCount;
                         }
 
-                        rle_cnt = 0;
+                        relCount = 0;
                     }
 
-                    if (j == env.Loop) ptr_loop = ptr;
+                    if (j == env.Loop) ptrLoop = ptr;
 
                     if (j == env.Release && allowReleases)
                     {
                         // A release implies the end of the loop.
-                        Debug.Assert(ptr_loop != 0xff && data[ptr_loop] >= 128); // Cant be jumping back to the middle of RLE.
-                        found_release = true;
+                        Debug.Assert(ptrLoop != 0xff && data[ptrLoop] >= 128); // Cant be jumping back to the middle of RLE.
+                        foundRelease = true;
                         data[ptr++] = 0;
-                        data[ptr++] = ptr_loop;
+                        data[ptr++] = ptrLoop;
                         data[0] = ptr;
                     }
 
                     data[ptr++] = val;
 
-                    prev_val = val;
+                    prevVal = val;
                 }
                 else
                 {
-                    ++rle_cnt;
+                    ++relCount;
                 }
             }
 
-            if (ptr_loop == 0xff || found_release)
+            if (ptrLoop == 0xff || foundRelease)
             {
-                ptr_loop = (byte)(ptr - 1);
+                ptrLoop = (byte)(ptr - 1);
             }
             else
             {
-                Debug.Assert(data[ptr_loop] >= 128); // Cant be jumping back to the middle of RLE.
+                Debug.Assert(data[ptrLoop] >= 128); // Cant be jumping back to the middle of RLE.
             }
 
             data[ptr++] = 0;
-            data[ptr++] = ptr_loop;
+            data[ptr++] = ptrLoop;
 
             Array.Resize(ref data, ptr);
 

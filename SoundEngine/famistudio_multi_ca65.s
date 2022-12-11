@@ -3225,40 +3225,8 @@ famistudio_update:
     ldx #0
     jmp @pitch_env_process
 
-@pitch_relative_update_with_last_value:
-    lda famistudio_pitch_env_repeat,x
-    sec 
-    sbc #1
-    sta famistudio_pitch_env_repeat,x
-    and #$7f 
-    beq @pitch_env_read
-    lda famistudio_pitch_env_addr_lo,x 
-    sta @pitch_env_ptr+0
-    lda famistudio_pitch_env_addr_hi,x
-    sta @pitch_env_ptr+1
-    ldy famistudio_pitch_env_ptr,x
-    dey    
-    dey
-    lda (@pitch_env_ptr),y
-    clc  
-    adc #256-192
-    sta @temp_pitch
-    clc
-    adc famistudio_pitch_env_value_lo,x
-    sta famistudio_pitch_env_value_lo,x
-    lda @temp_pitch
-    bpl @pitch_relative_last_pos  
-    lda #$ff
-@pitch_relative_last_pos:
-    adc famistudio_pitch_env_value_hi,x
-    sta famistudio_pitch_env_value_hi,x
-    jmp @pitch_env_next
-
 @pitch_env_process:
     lda famistudio_pitch_env_repeat,x
-    cmp #$81
-    bcs @pitch_relative_update_with_last_value
-    and #$7f
     beq @pitch_env_read
     dec famistudio_pitch_env_repeat,x
     bne @pitch_env_next
