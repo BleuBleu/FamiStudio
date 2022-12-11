@@ -1205,41 +1205,44 @@ namespace FamiStudio
                 for (int i = 0; i < otherProject.instruments.Count; i++)
                 {
                     var otherInstrument = otherProject.instruments[i];
-                    var existingInstrument = GetInstrument(otherInstrument.Name);
-                    if (existingInstrument != null)
-                    {
-                        Log.LogMessage(LogSeverity.Warning, $"Project already contains an instrument named '{existingInstrument.Name}', assuming it is the same.");
-
-                        if (existingInstrument.Expansion == otherInstrument.Expansion)
+                    if (otherInstrument.Expansion == ExpansionType.None || (expansionMask & ExpansionType.GetMaskFromValue(otherInstrument.Expansion)) != 0)
+                    { 
+                        var existingInstrument = GetInstrument(otherInstrument.Name);
+                        if (existingInstrument != null)
                         {
-                            otherProject.ReplaceInstrument(otherInstrument, existingInstrument);
-                            otherProject.instruments.Insert(otherProject.instruments.IndexOf(otherInstrument), existingInstrument); // To pass validation.
-                            otherProject.DeleteInstrument(otherInstrument);
-                            otherInstrument.SetProject(this);
-                        }
-                        else
-                        {
-                            Log.LogMessage(LogSeverity.Warning, $"Instrument '{otherInstrument.Name}' already exists but uses a different expansion, renaming.");
+                            Log.LogMessage(LogSeverity.Warning, $"Project already contains an instrument named '{existingInstrument.Name}', assuming it is the same.");
 
-                            // Generate a new name that is unique in both projects.
-                            for (int j = 2; ; j++)
+                            if (existingInstrument.Expansion == otherInstrument.Expansion)
                             {
-                                var newName = otherInstrument.Name += $" ({j})";
-                                if (GetInstrument(newName) == null && instruments.FindIndex(k => k.Name == newName) < 0)
-                                {
-                                    otherInstrument.Name = newName;
-                                    break;
-                                }
+                                otherProject.ReplaceInstrument(otherInstrument, existingInstrument);
+                                otherProject.instruments.Insert(otherProject.instruments.IndexOf(otherInstrument), existingInstrument); // To pass validation.
+                                otherProject.DeleteInstrument(otherInstrument);
+                                otherInstrument.SetProject(this);
                             }
+                            else
+                            {
+                                Log.LogMessage(LogSeverity.Warning, $"Instrument '{otherInstrument.Name}' already exists but uses a different expansion, renaming.");
 
+                                // Generate a new name that is unique in both projects.
+                                for (int j = 2; ; j++)
+                                {
+                                    var newName = otherInstrument.Name += $" ({j})";
+                                    if (GetInstrument(newName) == null && instruments.FindIndex(k => k.Name == newName) < 0)
+                                    {
+                                        otherInstrument.Name = newName;
+                                        break;
+                                    }
+                                }
+
+                                otherInstrument.SetProject(this);
+                                instruments.Add(otherInstrument);
+                            }
+                        }
+                        else 
+                        {
                             otherInstrument.SetProject(this);
                             instruments.Add(otherInstrument);
                         }
-                    }
-                    else if (otherInstrument.Expansion == ExpansionType.None || (expansionMask & ExpansionType.GetMaskFromValue(otherInstrument.Expansion)) != 0)
-                    {
-                        otherInstrument.SetProject(this);
-                        instruments.Add(otherInstrument);
                     }
                     else
                     {
@@ -1249,7 +1252,6 @@ namespace FamiStudio
                     otherInstrument.PerformPostLoadActions();
                 }
 
-                // otherProject.ValidateIntegrity(); Cant do this, we changed the project of some of the instruments.
                 ValidateIntegrity();
             }
 
@@ -1274,7 +1276,6 @@ namespace FamiStudio
                     }
                 }
 
-                otherProject.ValidateIntegrity();
                 ValidateIntegrity();
             }
 
@@ -1299,7 +1300,6 @@ namespace FamiStudio
                     }
                 }
 
-                otherProject.ValidateIntegrity();
                 ValidateIntegrity();
             }
 
@@ -1324,7 +1324,6 @@ namespace FamiStudio
                     }
                 }
 
-                otherProject.ValidateIntegrity();
                 ValidateIntegrity();
             }
 

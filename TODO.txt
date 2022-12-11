@@ -24,10 +24,11 @@ x Discord : Crash 64_the_third.
 x MisterX : Squares issue around 38sec, EPSM squares.
 x REcompile ROM, NSF, etc.
 x Discord: Alex arp cursor confusion 
+x Minitube VRC7 instrument crash. (import bug1 in a blank project, assert!!!)
+/ How2 VRC7/EPSM releases. Perkka need to make sure EPSM is OK.
 - Return to old play position option.
 - NSF import issue TF74
-/ How2 VRC7/EPSM releases. Perkka need to make sure EPSM is OK.
-- Minitube VRC7 instrument crash. (import bug1 in a blank project, assert!!!)
+- Merge PRs.
 
 4.1.0
 =====
