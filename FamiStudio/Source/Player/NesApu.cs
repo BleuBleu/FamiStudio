@@ -241,7 +241,10 @@ namespace FamiStudio
         public const int FreqPal  = 1662607;
         public const int FreqEPSM = 8000000;
 
-        public const double FreqC0 = 32.7032; 
+        public const double FreqC1 = 32.7032;
+        public const double FreqC0 = 16.3516;
+        public const double FreqRegMin = 15.8862;  //The minimum frequency displayed in the registers tab, C0 - 49.9893 cents
+
 
         // Volume set in Nes_Apu::volume for the DMC channel. This is simply to 
         // make sure our preview of DPCM sample somewhat matches the volume of 
@@ -307,7 +310,7 @@ namespace FamiStudio
             for (int i = 1; i < NoteTableNTSC.Length; ++i)
             {
                 var octave = (i - 1) / 12;
-                var freq = FreqC0 * Math.Pow(2.0, (i - 1) / 12.0);
+                var freq = FreqC1 * Math.Pow(2.0, (i - 1) / 12.0);
                 NoteTableNTSC[i]    = (ushort)(clockNtsc / freq - 0.5);
                 NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
                 NoteTableEPSM[i]    = (ushort)(clockEPSM / freq - 0.5);
