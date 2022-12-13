@@ -171,6 +171,8 @@ namespace FamiStudio
                     cmd.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.icon.Size.Width - 1, channelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
                     cmd.DrawBitmap(s.icon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
                     cmd.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, Theme.LightGreyColor1);
+
+                    ConditionalFlushCommandList(ref cmd);
                 }
 
                 // Grid lines
