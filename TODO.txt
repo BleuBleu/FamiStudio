@@ -1,16 +1,3 @@
-
-=================
-
-x Recompile NSF, ROM, etc. 
-x Re-run all unit tests
-x Changelog
-- Package + test.
-- Publish:
-	- Github
-	- Website
-	- Itch.io
-	- Flatpak
-
 4.1.0
 =====
 - NSF import issue TF74
