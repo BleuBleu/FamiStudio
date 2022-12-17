@@ -27,7 +27,7 @@ Changes/Fixes:
 * Fixed various issues with dropdown list scrollbars 
 * Fixed crash when exporting video with lots of channels
 * Fixed releases for VRC7 and EPSM 
-* Fixed multiple inconsistencies in the register viewer (Thanks Alex!)
+* Fixed multiple inconsistencies and improved the register viewer (Thanks alexmush!)
 
 Sound Engine changes/fixes:
 
