@@ -9,7 +9,7 @@ music_data_shatterhand:
 	.word @instruments
 	.word @samples-4
 	.word @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4 ; 00 : Final Area
-	.byte .lobyte(@tempo_env_9_mid), .hibyte(@tempo_env_9_mid), 0, 0
+	.byte .lobyte(@tempo_env_1_mid), .hibyte(@tempo_env_1_mid), 0, 0
 
 .export music_data_shatterhand
 .global FAMISTUDIO_DPCM_PTR
@@ -57,12 +57,12 @@ music_data_shatterhand:
 @env14:
 	.byte $00,$cb,$cb,$c5,$03,$c4,$03,$c3,$03,$c2,$00,$09
 
-@tempo_env_9_mid:
-	.byte $03,$06,$04,$05,$80
+@tempo_env_1_mid:
+	.byte $03,$05,$80
 
 @song0ch0:
 @song0ch0loop:
-	.byte $46, .lobyte(@tempo_env_9_mid), .hibyte(@tempo_env_9_mid), $7e, $88
+	.byte $46, .lobyte(@tempo_env_1_mid), .hibyte(@tempo_env_1_mid), $7e, $88
 @song0ref7:
 	.byte $16, $9b, $44, $83, $19, $89, $44, $81, $43, $16, $16, $9b, $44, $83, $1b, $89, $44, $81, $43, $16, $16, $9b, $44, $83
 	.byte $1e, $89, $44, $81, $43, $16, $16, $9b, $44, $83, $1d, $9b, $44, $83, $1b, $89, $44, $81, $43, $1d

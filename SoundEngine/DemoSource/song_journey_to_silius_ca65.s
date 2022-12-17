@@ -9,7 +9,7 @@ music_data_journey_to_silius:
 	.word @instruments
 	.word @samples-64
 	.word @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4 ; 00 : Title Screen
-	.byte .lobyte(@tempo_env_5_mid), .hibyte(@tempo_env_5_mid), 0, 0
+	.byte .lobyte(@tempo_env_1_mid), .hibyte(@tempo_env_1_mid), 0, 0
 
 .export music_data_journey_to_silius
 .global FAMISTUDIO_DPCM_PTR
@@ -89,16 +89,16 @@ music_data_journey_to_silius:
 	.byte $c0,$c6,$00,$01
 @env17:
 	.byte $00,$cd,$ce,$cc,$c8,$c9,$c7,$c6,$c4,$c3,$c1,$c0,$00,$0b
-
 @env18:
 	.byte $00,$c0,$be,$bc,$bc,$bd,$bf,$c1,$c3,$c4,$c4,$c2,$00,$01
-@tempo_env_5_mid:
-	.byte $03,$04,$07,$04,$05,$05,$80
+
+@tempo_env_1_mid:
+	.byte $03,$05,$80
 
 @song0ch0:
 	.byte $cf
 @song0ch0loop:
-	.byte $46, .lobyte(@tempo_env_5_mid), .hibyte(@tempo_env_5_mid), $00, $a5, $8a, $19, $91, $1c, $91, $19, $91, $1e, $1f, $81
+	.byte $46, .lobyte(@tempo_env_1_mid), .hibyte(@tempo_env_1_mid), $00, $a5, $8a, $19, $91, $1c, $91, $19, $91, $1e, $1f, $81
 	.byte $20, $9f, $1e, $91
 @song0ref22:
 	.byte $82, $14, $af, $44, $87, $16
