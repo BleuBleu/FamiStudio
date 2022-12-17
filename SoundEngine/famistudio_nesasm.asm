@@ -2550,6 +2550,7 @@ famistudio_update_epsm_fm_channel_sound:
         sta FAMISTUDIO_EPSM_REG_SEL0,x
         ldx <.vol_offset
         lda famistudio_chn_epsm_vol_op1,y
+        clc
         adc famistudio_epsm_fm_vol_table,x
         cmp #127
         bmi .save_op1
@@ -2563,6 +2564,7 @@ famistudio_update_epsm_fm_channel_sound:
         sta FAMISTUDIO_EPSM_REG_SEL0,x
         ldx <.vol_offset
         lda famistudio_chn_epsm_vol_op3,y
+        clc
         adc famistudio_epsm_fm_vol_table,x
         cmp #127
         bmi .save_op3
@@ -2576,6 +2578,7 @@ famistudio_update_epsm_fm_channel_sound:
         sta FAMISTUDIO_EPSM_REG_SEL0,x
         ldx <.vol_offset
         lda famistudio_chn_epsm_vol_op2,y
+        clc
         adc famistudio_epsm_fm_vol_table,x
         cmp #127
         bmi .save_op2
@@ -2590,6 +2593,7 @@ famistudio_update_epsm_fm_channel_sound:
         sta FAMISTUDIO_EPSM_REG_SEL0,x
         ldx <.vol_offset
         lda famistudio_chn_epsm_vol_op4,y
+        clc
         adc famistudio_epsm_fm_vol_table,x
         cmp #127
         bmi .save_op4
