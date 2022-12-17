@@ -28,6 +28,7 @@ x Minitube VRC7 instrument crash. (import bug1 in a blank project, assert!!!)
 x Return to old play position option.
 x How2 VRC7/EPSM releases. Perkka need to make sure EPSM is OK.
 x Video crash T7F4.
+- Anroid API level 30 or more.
 / NSF import issue TF74
 / Merge PRs.
 
