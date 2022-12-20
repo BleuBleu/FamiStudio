@@ -2,6 +2,12 @@
 
 Version history / release notes for each release.
 
+## Version 4.0.6 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed issue where modifying the N163 repeat envelope would sometimes reset the loop point.
+
 ## Version 4.0.5 (Hotfix)
 
 Changes/Fixes:
