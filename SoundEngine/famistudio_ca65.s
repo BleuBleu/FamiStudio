@@ -2462,21 +2462,6 @@ famistudio_update_epsm_fm_channel_sound:
     @fm_0_2:
     sta @reg_offset
 
-    lda famistudio_chn_epsm_trigger,y
-    bpl @check_cut
-
-@release:
-   
-    ; Untrigger note.  
-    lda #FAMISTUDIO_EPSM_REG_KEY
-    sta FAMISTUDIO_EPSM_REG_SEL0
-
-    lda famistudio_epsm_channel_key_table, y
-    and #$0f ; remove trigger
-    sta FAMISTUDIO_EPSM_REG_WRITE0
-
-    rts
-
 @check_cut:
 
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CHAN_FM_START,y
@@ -2604,11 +2589,6 @@ famistudio_update_epsm_fm_channel_sound:
     .endif    
         sta @vol_offset
 
-    
-    ;sta @vol_offset
-        lda #0
-        sta famistudio_chn_epsm_trigger,y
-
     @update_volume:
     
     lda famistudio_chn_epsm_alg,y
@@ -2678,11 +2658,25 @@ famistudio_update_epsm_fm_channel_sound:
     @save_op4:
         ldx @reg_offset
         sta FAMISTUDIO_EPSM_REG_WRITE0,x
+		
         nop
-        nop
-        nop
-        nop
-        nop
+        clc
+		lda famistudio_chn_epsm_trigger,y
+		bpl @no_release
+
+@release:
+		; Untrigger note.  
+		lda #FAMISTUDIO_EPSM_REG_KEY
+		sta FAMISTUDIO_EPSM_REG_SEL0
+
+		lda famistudio_epsm_channel_key_table, y
+		and #$0f ; remove trigger
+		sta FAMISTUDIO_EPSM_REG_WRITE0
+
+		rts
+@no_release:
+        lda #0
+        sta famistudio_chn_epsm_trigger,y
         lda #FAMISTUDIO_EPSM_REG_KEY
         sta FAMISTUDIO_EPSM_REG_SEL0
         lda famistudio_epsm_channel_key_table, y
