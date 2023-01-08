@@ -435,7 +435,6 @@ namespace FamiStudio
             switch (expansion)
             {
                 case ExpansionType.N163:
-                    N163WavePos = n163WavPos; // This will clamp everything.
                     N163WaveformEnvelope.SetChunkMaxLengthUnsafe(n163WavSize, N163MaxWaveCount * n163WavSize);
                     UpdateN163WaveEnvelope(); // Safety
                     break;

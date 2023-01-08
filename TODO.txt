@@ -1,37 +1,6 @@
-4.0.5:
-=====
-x MisterX song doesnt sound the same. After the "kiss me" part.
-x How2: Write which expansions are used when importing songs.
-x Bug note overlap : https://discord.com/channels/747649221879922840/747649222354010173/1023685891589419028
-x Bug notes end early at end of song (See how2 PM `Song_End_Issue.fms`)
-x Test buffer size x 2 fix.
-x Github NSF size issue.
-x Pattern naming template (Pattern 000 => 000) to get rid of prefix.
-x Discord: Key scaling labels
-x Discord: N163 sliders out of range. Import 2ch in instrument in 8ch project.
-x Discord: Crash of not saving N163 on mobile? (Luxury) => CANT REPRO
-x Discord: MIDI import not out of range.
-x Discord: Visual bug, thumbnails not aligned?
-x Discord: 8bit city pop doesnt export correctly to NSF.
-x Discord: Alex Famitracker arp 000
-x Discord: Alex pattern export 0, 1, 0
-x Recompile openal32 on Linux.
-x Discord: LuxuryKid bizarre snapping behavior on mobile. => Can repro!
-x Discord : Video export crash Imagino.
-x Discord : Can delete wave envelope??? (Luxyry kid)
-x Alex PR : Freq still weird in low octaves?
-x Discord : Crash 64_the_third.
-x MisterX : Squares issue around 38sec, EPSM squares.
-x REcompile ROM, NSF, etc.
-x Discord: Alex arp cursor confusion 
-x Minitube VRC7 instrument crash. (import bug1 in a blank project, assert!!!)
-x Return to old play position option.
-/ How2 VRC7/EPSM releases. Perkka need to make sure EPSM is OK.
-/ NSF import issue TF74
-/ Merge PRs.
-
 4.1.0
 =====
+- NSF import issue TF74
 - Mark : Option to prevent android from going to sleep while playing.
 - Option to set snapping auto depending on last resize.
 - Dual APU (VT02) support?

@@ -1512,8 +1512,7 @@ namespace FamiStudio
 
             if (selectedInstrument != null && 
                 selectedInstrument.CanRelease &&
-                channel.SupportsInstrument(selectedInstrument) && 
-                !channel.IsEPSMSquareChannel)
+                channel.SupportsInstrument(selectedInstrument))
             {
                 instrumentPlayer.ReleaseNote(selectedChannelIndex);
             }

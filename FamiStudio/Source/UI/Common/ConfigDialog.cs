@@ -204,7 +204,7 @@ namespace FamiStudio
                     page.SetPropertyVisible(2, Platform.IsDesktop);
                     page.SetPropertyVisible(4, Platform.IsDesktop);
                     page.SetPropertyVisible(5, Platform.IsDesktop);
-                    page.SetPropertyVisible(6, Platform.IsDesktop);
+                    page.SetPropertyVisible(8, Platform.IsDesktop);
                     break;
                 }
                 case ConfigSection.UserInterface:

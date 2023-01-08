@@ -5,16 +5,16 @@ music_data_silver_surfer_c_stephen_ruddy:
 	.dw .instruments
 	.dw .samples-4
 	.dw .song0ch0,.song0ch1,.song0ch2,.song0ch3,.song0ch4 ; 00 : BGM2
-	.db LOW(.tempo_env_6_mid), HIGH(.tempo_env_6_mid), 0, 0
+	.db LOW(.tempo_env_1_mid), HIGH(.tempo_env_1_mid), 0, 0
 
 .instruments:
-	.dw .env59,.env39,.env35,.env0 ; 00 : NoiseBassDrumLong
-	.dw .env51,.env44,.env35,.env0 ; 01 : NoiseBassDrumShort
+	.dw .env60,.env39,.env35,.env0 ; 00 : NoiseBassDrumLong
+	.dw .env52,.env45,.env35,.env0 ; 01 : NoiseBassDrumShort
 	.dw .env40,.env39,.env35,.env0 ; 02 : NoiseHiHat2
-	.dw .env45,.env39,.env35,.env0 ; 03 : NoiseHitHat1
-	.dw .env20,.env48,.env35,.env0 ; 04 : NoiseIntroCrash1
+	.dw .env46,.env39,.env35,.env0 ; 03 : NoiseHitHat1
+	.dw .env20,.env49,.env35,.env0 ; 04 : NoiseIntroCrash1
 	.dw .env14,.env42,.env35,.env0 ; 05 : NoiseIntroCrash2
-	.dw .env37,.env43,.env35,.env0 ; 06 : NoiseIntroCrash3
+	.dw .env37,.env44,.env35,.env0 ; 06 : NoiseIntroCrash3
 	.dw .env31,.env39,.env35,.env0 ; 07 : NoiseIntroCrash4
 	.dw .env12,.env41,.env35,.env0 ; 08 : NoiseSnare
 	.dw .env22,.env33,.env38,.env0 ; 09 : NoiseWeirdIntro1
@@ -23,24 +23,24 @@ music_data_silver_surfer_c_stephen_ruddy:
 	.dw .env22,.env30,.env36,.env0 ; 0c : PlainDuty2
 	.dw .env22,.env30,.env7,.env0 ; 0d : PlainDuty3
 	.dw .env32,.env27,.env35,.env11 ; 0e : SqGuitarOctave
-	.dw .env32,.env26,.env7,.env50 ; 0f : SqGuitarOctaveAlt
-	.dw .env53,.env26,.env7,.env50 ; 10 : SqGuitarOctaveAltFast
-	.dw .env17,.env30,.env36,.env61 ; 11 : SqHighPitchNoise
+	.dw .env32,.env26,.env7,.env51 ; 0f : SqGuitarOctaveAlt
+	.dw .env54,.env26,.env7,.env51 ; 10 : SqGuitarOctaveAltFast
+	.dw .env17,.env30,.env36,.env62 ; 11 : SqHighPitchNoise
 	.dw .env6,.env30,.env35,.env0 ; 12 : SqIntroArpeggio
 	.dw .env5,.env30,.env36,.env29 ; 13 : SqIntroSlide
-	.dw .env55,.env13,.env7,.env0 ; 14 : SqOutroOctave
-	.dw .env58,.env30,.env38,.env0 ; 15 : SqVerseAArpeggio
+	.dw .env56,.env13,.env7,.env0 ; 14 : SqOutroOctave
+	.dw .env59,.env30,.env38,.env0 ; 15 : SqVerseAArpeggio
 	.dw .env22,.env4,.env35,.env0 ; 16 : SqVerseABleepOctave
 	.dw .env9,.env30,.env36,.env0 ; 17 : SqVerseABleeps
 	.dw .env8,.env30,.env35,.env24 ; 18 : SqVerseAMelodyDuty0
 	.dw .env8,.env19,.env35,.env0 ; 19 : SqVerseAMelodyDuty0Oct
 	.dw .env8,.env30,.env38,.env24 ; 1a : SqVerseAMelodyDuty1
 	.dw .env8,.env30,.env36,.env24 ; 1b : SqVerseAMelodyDuty2
-	.dw .env55,.env30,.env35,.env0 ; 1c : SqVerseBArpeggio
-	.dw .env54,.env30,.env36,.env52 ; 1d : SqVerseBMelodyDuty2
-	.dw .env47,.env30,.env7,.env3 ; 1e : SqVerseBMelodyDuty3
-	.dw .env56,.env28,.env35,.env0 ; 1f : TriBassDrum
-	.dw .env60,.env57,.env35,.env0 ; 20 : TriSnare
+	.dw .env56,.env30,.env35,.env0 ; 1c : SqVerseBArpeggio
+	.dw .env55,.env30,.env36,.env53 ; 1d : SqVerseBMelodyDuty2
+	.dw .env48,.env30,.env7,.env3 ; 1e : SqVerseBMelodyDuty3
+	.dw .env57,.env28,.env35,.env0 ; 1f : TriBassDrum
+	.dw .env61,.env58,.env35,.env0 ; 20 : TriSnare
 
 .samples:
 
@@ -131,47 +131,47 @@ music_data_silver_surfer_c_stephen_ruddy:
 .env42:
 	.db $c0,$c6,$00,$01
 .env43:
-	.db $c0,$c4,$00,$01
+	.db $00,$c0,$bf,$be,$02,$bf,$c1,$c2,$02,$c1,$00,$01
 .env44:
-	.db $c0,$c5,$00,$01
+	.db $c0,$c4,$00,$01
 .env45:
-	.db $00,$c4,$02,$c3,$02,$c2,$02,$c1,$00,$07
+	.db $c0,$c5,$00,$01
 .env46:
-	.db $c0,$c0,$cc,$cc,$c4,$c4,$cf,$cf,$c7,$c7,$d3,$d3,$cc,$cc,$d8,$d8,$c7,$c7,$cc,$cc,$cf,$cf,$d3,$d3,$00,$00
+	.db $00,$c4,$02,$c3,$02,$c2,$02,$c1,$00,$07
 .env47:
-	.db $04,$c5,$00,$01,$c3,$c1,$00,$05
+	.db $c0,$c0,$cc,$cc,$c4,$c4,$cf,$cf,$c7,$c7,$d3,$d3,$cc,$cc,$d8,$d8,$c7,$c7,$cc,$cc,$cf,$cf,$d3,$d3,$00,$00
 .env48:
-	.db $c0,$c4,$02,$c5,$03,$c6,$04,$c7,$00,$07
+	.db $04,$c5,$00,$01,$c3,$c1,$00,$05
 .env49:
-	.db $c0,$02,$c5,$02,$c7,$02,$c5,$c5,$c5,$00,$00
+	.db $c0,$c4,$02,$c5,$03,$c6,$04,$c7,$00,$07
 .env50:
-	.db $00,$c0,$c1,$00,$02
+	.db $c0,$02,$c5,$02,$c7,$02,$c5,$c5,$c5,$00,$00
 .env51:
-	.db $00,$c5,$c3,$c2,$c1,$c0,$00,$05
+	.db $00,$c0,$c1,$00,$02
 .env52:
-	.db $00,$c0,$03,$c0,$bf,$be,$bd,$be,$bf,$c0,$c1,$c2,$c3,$c2,$c1,$00,$03
+	.db $00,$c5,$c3,$c2,$c1,$c0,$00,$05
 .env53:
-	.db $00,$c4,$c3,$c4,$c4,$c2,$c1,$00,$06
+	.db $00,$c0,$03,$c0,$bf,$be,$bd,$be,$bf,$c0,$c1,$c2,$c3,$c2,$c1,$00,$03
 .env54:
-	.db $04,$c4,$00,$01,$c2,$c1,$00,$05
+	.db $00,$c4,$c3,$c4,$c4,$c2,$c1,$00,$06
 .env55:
-	.db $00,$c5,$c5,$c4,$c4,$00,$01
+	.db $04,$c4,$00,$01,$c2,$c1,$00,$05
 .env56:
-	.db $00,$cf,$05,$c0,$00,$03
+	.db $00,$c5,$c5,$c4,$c4,$00,$01
 .env57:
-	.db $c0,$bf,$00,$01
+	.db $00,$cf,$05,$c0,$00,$03
 .env58:
-	.db $00,$c5,$c5,$c4,$02,$c3,$00,$05
+	.db $c0,$bf,$00,$01
 .env59:
-	.db $00,$c5,$c4,$c4,$c3,$02,$c2,$02,$c1,$00,$08
+	.db $00,$c5,$c5,$c4,$02,$c3,$00,$05
 .env60:
-	.db $00,$cf,$cf,$c0,$00,$03
+	.db $00,$c5,$c4,$c4,$c3,$02,$c2,$02,$c1,$00,$08
 .env61:
+	.db $00,$cf,$cf,$c0,$00,$03
+.env62:
 	.db $00,$bf,$c0,$00,$02
 
-.env62:
-	.db $00,$c0,$bf,$be,$02,$bf,$c1,$c2,$02,$c1,$00,$01
-.tempo_env_6_mid:
+.tempo_env_1_mid:
 	.db $03,$05,$80
 
 .song0ch0:
@@ -180,11 +180,11 @@ music_data_silver_surfer_c_stephen_ruddy:
 	.db $22, $89, $27, $89, $22, $89, $27, $89, $22, $89, $27, $89, $22, $89, $27, $89, $22, $89, $27, $89, $22, $89, $27, $89
 	.db $22, $89, $27, $89, $22, $89, $27, $89, $22, $89, $27, $89, $22, $89
 .song0ch0loop:
-	.db $4b, $46, LOW(.tempo_env_6_mid), HIGH(.tempo_env_6_mid), $7f, $4a, LOW(.env18), HIGH(.env18), $a4, $19, $c5, $4a, LOW(.env1)
+	.db $4b, $46, LOW(.tempo_env_1_mid), HIGH(.tempo_env_1_mid), $7f, $4a, LOW(.env18), HIGH(.env18), $a4, $19, $c5, $4a, LOW(.env1)
 	.db HIGH(.env1), $43, $1b, $b1, $44, $91, $4a, LOW(.env18), HIGH(.env18), $1e, $ad, $43, $20, $ff, $a9, $44, $91, $47, $4c
 	.db $19, $c5, $4a, LOW(.env1), HIGH(.env1), $43, $1b, $b1, $44, $91, $4a, LOW(.env18), HIGH(.env18), $1e, $ad, $43, $20, $ff
 	.db $a9, $44, $91, $47, $4c, $19, $c5, $4a, LOW(.env1), HIGH(.env1), $43, $1b, $b1, $44, $91, $4a, LOW(.env18), HIGH(.env18)
-	.db $1e, $ad, $43, $20, $ff, $a9, $44, $91, $4c, $20, $95, $47, $74, $4a, LOW(.env46), HIGH(.env46), $96, $1c, $ff, $bd, $4a
+	.db $1e, $ad, $43, $20, $ff, $a9, $44, $91, $4c, $20, $95, $47, $74, $4a, LOW(.env47), HIGH(.env47), $96, $1c, $ff, $bd, $4a
 	.db LOW(.env23), HIGH(.env23), $1c, $ff, $bd, $47, $7f, $4a, LOW(.env30), HIGH(.env30), $4b, $9c
 .song0ref165:
 	.db $18, $85, $00, $81, $0c, $85, $00, $81, $0c, $85, $00, $81, $0c, $85, $00, $81, $0c, $85, $00, $81, $0c, $85, $00, $81
@@ -209,12 +209,12 @@ music_data_silver_surfer_c_stephen_ruddy:
 	.db $41, $58
 	.dw .song0ref165
 	.db $47, $4a, LOW(.env16), HIGH(.env16), $aa, $1f, $dd, $4a, LOW(.env2), HIGH(.env2), $20, $dd, $4a, LOW(.env34), HIGH(.env34)
-	.db $1d, $dd, $4a, LOW(.env49), HIGH(.env49), $1f, $ad, $4a, LOW(.env25), HIGH(.env25), $1f, $ad, $47, $4a, LOW(.env16), HIGH(.env16)
-	.db $43, $1f, $dd, $4a, LOW(.env2), HIGH(.env2), $20, $dd, $4a, LOW(.env34), HIGH(.env34), $1d, $dd, $4a, LOW(.env49), HIGH(.env49)
+	.db $1d, $dd, $4a, LOW(.env50), HIGH(.env50), $1f, $ad, $4a, LOW(.env25), HIGH(.env25), $1f, $ad, $47, $4a, LOW(.env16), HIGH(.env16)
+	.db $43, $1f, $dd, $4a, LOW(.env2), HIGH(.env2), $20, $dd, $4a, LOW(.env34), HIGH(.env34), $1d, $dd, $4a, LOW(.env50), HIGH(.env50)
 	.db $1f, $ad, $4a, LOW(.env25), HIGH(.env25), $1f, $ad, $47, $4a, LOW(.env16), HIGH(.env16), $43, $1f, $dd, $4a, LOW(.env2)
-	.db HIGH(.env2), $20, $dd, $4a, LOW(.env34), HIGH(.env34), $1d, $dd, $4a, LOW(.env49), HIGH(.env49), $1f, $ad, $4a, LOW(.env25)
+	.db HIGH(.env2), $20, $dd, $4a, LOW(.env34), HIGH(.env34), $1d, $dd, $4a, LOW(.env50), HIGH(.env50), $1f, $ad, $4a, LOW(.env25)
 	.db HIGH(.env25), $1f, $ad, $47, $4a, LOW(.env16), HIGH(.env16), $43, $1f, $dd, $4a, LOW(.env2), HIGH(.env2), $20, $dd, $4a
-	.db LOW(.env34), HIGH(.env34), $1d, $dd, $4a, LOW(.env49), HIGH(.env49), $1f, $ad, $4a, LOW(.env25), HIGH(.env25), $1f, $ad
+	.db LOW(.env34), HIGH(.env34), $1d, $dd, $4a, LOW(.env50), HIGH(.env50), $1f, $ad, $4a, LOW(.env25), HIGH(.env25), $1f, $ad
 	.db $47, $73, $4a, LOW(.env30), HIGH(.env30), $4b, $98, $24, $ad, $43, $4f, $fd, $30, $48, $ff, $ff, $cd, $47, $7f, $a2, $40
 	.db $57, $dd, $40, $57, $dd, $40, $57, $dd, $40, $57, $dd, $47, $40, $57, $dd, $40, $57, $dd, $40, $57, $dd, $40, $57, $dd
 .song0ref430:
@@ -259,17 +259,17 @@ music_data_silver_surfer_c_stephen_ruddy:
 	.db $a6, $4f, $fe, $2f, $44, $ff, $ff, $e5
 .song0ch1loop:
 	.db $74, $98, $24, $25, $9b, $4f, $0f, $31, $2c, $91, $72, $4f, $0f, $31, $2c, $91, $74, $26, $27, $9b, $4f, $13, $33, $2c
-	.db $91, $72, $4f, $13, $33, $2c, $91, $74, $28, $29, $2a, $89, $48, LOW(.env62), HIGH(.env62), $9d, $48, LOW(.env0), HIGH(.env0)
-	.db $49, $81, $2b, $2c, $8d, $48, LOW(.env62), HIGH(.env62), $ff, $83, $48, LOW(.env0), HIGH(.env0), $49, $81, $4f, $0c, $38
+	.db $91, $72, $4f, $13, $33, $2c, $91, $74, $28, $29, $2a, $89, $48, LOW(.env43), HIGH(.env43), $9d, $48, LOW(.env0), HIGH(.env0)
+	.db $49, $81, $2b, $2c, $8d, $48, LOW(.env43), HIGH(.env43), $ff, $83, $48, LOW(.env0), HIGH(.env0), $49, $81, $4f, $0c, $38
 	.db $32, $91, $72, $4f, $0c, $38, $32, $91, $74, $9a, $30, $31, $9b, $4f, $0f, $3d, $34, $91, $72, $4f, $0f, $3d, $34, $91
-	.db $74, $32, $33, $9b, $4f, $16, $3f, $32, $91, $72, $4f, $16, $3f, $32, $91, $74, $34, $35, $36, $89, $48, LOW(.env62)
-	.db HIGH(.env62), $9d, $48, LOW(.env0), HIGH(.env0), $49, $81, $37, $38, $8d, $48, LOW(.env62), HIGH(.env62), $ff, $83, $48
+	.db $74, $32, $33, $9b, $4f, $16, $3f, $32, $91, $72, $4f, $16, $3f, $32, $91, $74, $34, $35, $36, $89, $48, LOW(.env43)
+	.db HIGH(.env43), $9d, $48, LOW(.env0), HIGH(.env0), $49, $81, $37, $38, $8d, $48, LOW(.env43), HIGH(.env43), $ff, $83, $48
 	.db LOW(.env0), HIGH(.env0), $49, $81, $4f, $0d, $44, $39, $91, $72, $4f, $0d, $44, $39, $91, $74, $98, $37, $38, $9b, $4f
 	.db $0f, $44, $38, $91, $72, $4f, $0f, $44, $38, $91, $74, $39, $3a, $9b, $4f, $14, $46, $36, $91, $72, $4f, $14, $46, $36
-	.db $91, $74, $3b, $3c, $3d, $87, $48, LOW(.env62), HIGH(.env62), $9f, $48, LOW(.env0), HIGH(.env0), $49, $81, $3e, $3f, $8d
-	.db $48, LOW(.env62), HIGH(.env62), $ff, $83, $48, LOW(.env0), HIGH(.env0), $49, $81, $4f, $0c, $4b, $3d, $91, $72, $4f, $0c
-	.db $4b, $3d, $91, $00, $95, $74, $3a, $3b, $97, $48, LOW(.env62), HIGH(.env62), $f9, $48, LOW(.env0), HIGH(.env0), $49, $81
-	.db $4f, $0c, $47, $3b, $91, $72, $4f, $0c, $47, $3b, $91, $74, $3c, $3d, $8d, $48, LOW(.env62), HIGH(.env62), $ff, $81, $48
+	.db $91, $74, $3b, $3c, $3d, $87, $48, LOW(.env43), HIGH(.env43), $9f, $48, LOW(.env0), HIGH(.env0), $49, $81, $3e, $3f, $8d
+	.db $48, LOW(.env43), HIGH(.env43), $ff, $83, $48, LOW(.env0), HIGH(.env0), $49, $81, $4f, $0c, $4b, $3d, $91, $72, $4f, $0c
+	.db $4b, $3d, $91, $00, $95, $74, $3a, $3b, $97, $48, LOW(.env43), HIGH(.env43), $f9, $48, LOW(.env0), HIGH(.env0), $49, $81
+	.db $4f, $0c, $47, $3b, $91, $72, $4f, $0c, $47, $3b, $91, $74, $3c, $3d, $8d, $48, LOW(.env43), HIGH(.env43), $ff, $81, $48
 	.db LOW(.env0), HIGH(.env0), $49, $81, $4f, $0b, $49, $3c, $93, $72, $4f, $0c, $49, $3c, $91, $7f, $ae
 .song0ref982:
 	.db $22, $85, $29, $81, $27, $85, $22, $81, $2b, $85, $27, $81, $22, $85, $2b, $81, $27, $85, $22, $81, $2b, $85, $27, $81

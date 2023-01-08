@@ -19,7 +19,7 @@
     <AndroidResgenClass>Resource</AndroidResgenClass>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-    <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v12.0</TargetFrameworkVersion>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
@@ -174,7 +174,7 @@
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\arm64-v8a\libGifDec.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidNativeLibrary>    
+    </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
@@ -183,7 +183,7 @@
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libGifDec.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidNativeLibrary>    
+    </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
@@ -192,7 +192,7 @@
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86\libGifDec.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidNativeLibrary>    
+    </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86_64\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
@@ -201,11 +201,11 @@
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86_64\libGifDec.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidNativeLibrary>    
+    </AndroidNativeLibrary>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Source\AudioStreams\AndroidAudioStream.cs" />    
+    <Compile Include="Source\AudioStreams\AndroidAudioStream.cs" />
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
@@ -248,7 +248,7 @@
     <Compile Include="Source\IO\VideoFilePianoRoll.cs" />
     <Compile Include="Source\IO\VorbisFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
-    <Compile Include="Source\Platform\Droid\Platform.cs" />    
+    <Compile Include="Source\Platform\Droid\Platform.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\AudioStreamInterface.cs" />
     <Compile Include="Source\Player\BasePlayer.cs" />
@@ -268,7 +268,7 @@
     <Compile Include="Source\Project\Note.cs" />
     <Compile Include="Source\Project\Pattern.cs" />
     <Compile Include="Source\Project\Project.cs" />
-    <Compile Include="Source\Project\ProjectBuffer.cs" />    
+    <Compile Include="Source\Project\ProjectBuffer.cs" />
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
@@ -320,7 +320,7 @@
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
-    <Compile Include="Source\Video\VideoEncoderAndroid.cs" />    
+    <Compile Include="Source\Video\VideoEncoderAndroid.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
@@ -550,7 +550,7 @@
     <EmbeddedResource Include="Resources\MobileMenuSave.tga" />
     <EmbeddedResource Include="Resources\MobileMenuSelectAll.tga" />
     <EmbeddedResource Include="Resources\MobileMenuSelectNote.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuSelectPattern.tga" /> 
+    <EmbeddedResource Include="Resources\MobileMenuSelectPattern.tga" />
     <EmbeddedResource Include="Resources\MobileMenuSnap.tga" />
     <EmbeddedResource Include="Resources\MobileMenuSolo.tga" />
     <EmbeddedResource Include="Resources\MobileMenuStar.tga" />
@@ -689,35 +689,35 @@
     <EmbeddedResource Include="Resources\Yes@2x.tga" />
     <EmbeddedResource Include="Rom\fds.fds" />
     <EmbeddedResource Include="Rom\fds_famitracker.fds" />
-    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_epsm_ntsc_famitracker.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc_famitracker.nes" />
     <EmbeddedResource Include="Rom\rom_pal.nes" />
     <EmbeddedResource Include="Rom\rom_pal_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_mmc5_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_mmc5_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_mmc5_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_1ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_1ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_1ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_2ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_2ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_2ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_3ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_3ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_3ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_4ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_4ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_4ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_5ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_5ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_5ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_6ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_6ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_6ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_7ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_7ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_7ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_n163_8ch_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_n163_8ch_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_n163_8ch_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_s5b_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_s5b_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_s5b_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_vrc6_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_vrc6_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_vrc6_ntsc_famitracker.nes" />
-    <EmbeddedResource Include="Rom\rom_vrc7_ntsc.nes" />    
+    <EmbeddedResource Include="Rom\rom_vrc7_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_vrc7_ntsc_famitracker.nes" />
   </ItemGroup>
   <ItemGroup>

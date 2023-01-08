@@ -5554,7 +5554,11 @@ namespace FamiStudio
                     {
                         MapDPCMSample(noteValue);
                     }
-                    else 
+                    else if (ModifierKeys.Shift)
+                    {
+                        ClearDPCMSampleMapping(noteValue);
+                    }
+                    else
                     {
                         StartDragDPCMSampleMapping(e.X, e.Y, noteValue);
                     }
