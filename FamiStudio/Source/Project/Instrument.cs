@@ -78,6 +78,8 @@ namespace FamiStudio
         public Envelope FdsWaveformEnvelope    => envelopes[EnvelopeType.FdsWaveform];
         public Envelope FdsModulationEnvelope  => envelopes[EnvelopeType.FdsModulation];
         public Envelope WaveformRepeatEnvelope => envelopes[EnvelopeType.WaveformRepeat];
+        public Envelope S5BToneNoiseEnvelope   => envelopes[EnvelopeType.S5BToneNoise];
+        public Envelope S5BNoiseFreqEnvelope   => envelopes[EnvelopeType.S5BNoiseFreq];
 
         public const int MaxResampleWavSamples = 12000;
 
@@ -107,6 +109,11 @@ namespace FamiStudio
             else if (expansion == ExpansionType.N163)
             {
                 UpdateN163WaveEnvelope();
+            }
+            else if (expansion == ExpansionType.S5B)
+            {
+                UpdateS5BToneNoiseEnvelope();
+                UpdateS5BNoiseFreqEnvelope();
             }
             else if (expansion == ExpansionType.Vrc7)
             {
@@ -146,6 +153,11 @@ namespace FamiStudio
             else if (envelopeType == EnvelopeType.WaveformRepeat)
             {
                 return expansion == ExpansionType.N163;
+            }
+            else if (envelopeType == EnvelopeType.S5BNoiseFreq ||
+                     envelopeType == EnvelopeType.S5BToneNoise)
+            {
+                return expansion == ExpansionType.S5B;
             }
 
             return false;
@@ -359,6 +371,15 @@ namespace FamiStudio
             fdsResampleWavPeriod = 128;
             if (fdsWavPreset == WavePresetType.Resample)
                 fdsWavPreset = WavePresetType.Custom;
+        }
+
+        public void UpdateS5BToneNoiseEnvelope()
+        {
+
+        }
+        public void UpdateS5BNoiseFreqEnvelope()
+        {
+
         }
 
         public void UpdateN163WaveEnvelope()
@@ -746,6 +767,11 @@ namespace FamiStudio
             {
                 envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
                 envelopes[EnvelopeType.WaveformRepeat].Length = 1;
+            }
+            if (IsS5B)
+            {
+                envelopes[EnvelopeType.S5BNoiseFreq] = new Envelope(EnvelopeType.S5BNoiseFreq);
+                envelopes[EnvelopeType.S5BToneNoise] = new Envelope(EnvelopeType.S5BToneNoise);
             }
 
             // Revert back presets to "customs" if they no longer match what the code generates.

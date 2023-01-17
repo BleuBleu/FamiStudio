@@ -35,7 +35,7 @@ namespace FamiStudio
             values = new sbyte[maxLength];
             canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
             canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
-            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.S5BNoiseFreq || type == EnvelopeType.S5BToneNoise;
             chunkLength = type == EnvelopeType.N163Waveform ? 16 : 1;
 
             if (canResize)
@@ -517,6 +517,8 @@ namespace FamiStudio
                     return 1;
                 case EnvelopeType.FdsWaveform:
                     return 32;
+                case EnvelopeType.S5BToneNoise:
+                    return 2;
                 default:
                     return 0;
             }
@@ -587,6 +589,16 @@ namespace FamiStudio
                 min = 1;
                 max = 15; // Arbitrary.
             }
+            else if (type == EnvelopeType.S5BToneNoise)
+            {
+                min = 1;
+                max = 3;
+            }
+            else if (type == EnvelopeType.S5BNoiseFreq)
+            {
+                min = 0;
+                max = 15;
+            }
             else
             {
                 min = -64;
@@ -649,7 +661,9 @@ namespace FamiStudio
         public const int FdsModulation  = 5;
         public const int N163Waveform   = 6;
         public const int WaveformRepeat = 7;
-        public const int Count          = 8;
+        public const int S5BToneNoise   = 8;
+        public const int S5BNoiseFreq   = 9;
+        public const int Count          = 10;
 
         public static readonly string[] Names =
         {
@@ -661,6 +675,8 @@ namespace FamiStudio
             "FDS Modulation Table",
             "N163 Waveform",
             "Repeat",
+            "S5B Tone/Noise Enable",
+            "S5B Noise Frequency",
         };
 
         public static readonly string[] ShortNames =
@@ -672,7 +688,9 @@ namespace FamiStudio
             "FDSWave",
             "FDSMod",
             "N163Wave",
-            "Repeat"
+            "Repeat",
+            "S5BToneNoise",
+            "S5BNoiseFreq",
         };
 
         public static readonly string[] Icons = new string[]
@@ -683,6 +701,8 @@ namespace FamiStudio
             "EnvelopeDuty",
             "EnvelopeWave",
             "EnvelopeMod",
+            "EnvelopeWave",
+            "EnvelopeWave",
             "EnvelopeWave",
             "EnvelopeWave", // Never actually displayed
         };
