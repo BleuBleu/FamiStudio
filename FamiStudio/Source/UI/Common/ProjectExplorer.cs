@@ -598,6 +598,8 @@ namespace FamiStudio
             FdsWaveformEnvelope   = EnvelopeType.FdsWaveform,
             FdsModulationEnvelope = EnvelopeType.FdsModulation,
             N163WaveformEnvelope  = EnvelopeType.N163Waveform,
+            S5BToneNoiseEnvelope  = EnvelopeType.S5BToneNoise,
+            S5BNoiseFreqEnvelope  = EnvelopeType.S5BNoiseFreq,
             EnvelopeMax           = EnvelopeType.Count,
 
             // Other buttons
@@ -624,7 +626,9 @@ namespace FamiStudio
             EnvelopeType.DutyCycle,
             EnvelopeType.FdsModulation,
             EnvelopeType.FdsWaveform,
-            EnvelopeType.N163Waveform
+            EnvelopeType.N163Waveform,
+            EnvelopeType.S5BToneNoise,
+            EnvelopeType.S5BNoiseFreq
         };
 
         enum CaptureOperation
