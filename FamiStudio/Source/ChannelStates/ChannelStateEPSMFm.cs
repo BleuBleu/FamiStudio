@@ -49,7 +49,6 @@ namespace FamiStudio
         public ChannelStateEPSMFm(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
             channelIdx = channelType - ChannelType.EPSMFm1;
-            customRelease = true;
         }
 
         protected override void LoadInstrument(Instrument instrument)
@@ -100,12 +99,6 @@ namespace FamiStudio
                 WriteEPSMRegister(0xb4 + channelIdxHigh, 0x00, a1); //volume 0
                 stop = true;
                 release = false;
-            }
-            else if (note.IsRelease && !release)
-            {
-                release = true;
-                stop = false;
-                WriteEPSMRegister(0x28, 0x00 + channelKey);
             }
             else if (note.IsMusical)
             {
@@ -193,6 +186,10 @@ namespace FamiStudio
                     WriteEPSMRegister(0x28, 0x00 + channelKey);
                     WriteEPSMRegister(0x28, 0xF0 + channelKey);
                     WriteEPSMRegister(Registers[1] + channelIdxHigh, stereoFlags, a1);
+                }
+                else if (noteReleased)
+                {
+                    WriteEPSMRegister(0x28, 0x00 + channelKey);
                 }
             }
 

@@ -215,6 +215,7 @@ Here is a list of useful keyboard shortcuts:
 * **Ctrl+1**: Toggle the effect panel.
 * **Shift+S**: Toggle snapping in the piano roll.
 * **Alt+1**, **Alt+2**, **Alt+3**, **Alt+4** : Changes snap precision to 1, 1/2, 1/4 and 1/8 of a beat respectively.
+* **Page up/down**: Shifts octave of QWERTY keyboard.
 
 Some keyboard shortcuts specific to the sequencer:
 

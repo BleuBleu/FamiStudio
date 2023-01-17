@@ -39,6 +39,7 @@ namespace FamiStudio
         private int previewDPCMSampleId = -1;
         private int previewDPCMSampleRate = 44100;
         private int lastRecordingKeyDown = -1;
+        private int lastPlayPosition = 0;
         private bool previewDPCMIsSource = false;
         private bool metronome = false;
         private bool palPlayback = false;
@@ -1511,8 +1512,7 @@ namespace FamiStudio
 
             if (selectedInstrument != null && 
                 selectedInstrument.CanRelease &&
-                channel.SupportsInstrument(selectedInstrument) && 
-                !channel.IsEPSMSquareChannel)
+                channel.SupportsInstrument(selectedInstrument))
             {
                 instrumentPlayer.ReleaseNote(selectedChannelIndex);
             }
@@ -1957,6 +1957,7 @@ namespace FamiStudio
 
             if (songPlayer != null && !songPlayer.IsPlaying)
             {
+                lastPlayPosition = songPlayer.PlayPosition;
                 instrumentPlayer.ConnectOscilloscope(null);
                 songPlayer.ConnectOscilloscope(oscilloscope);
                 songPlayer.Play(song, songPlayer.PlayPosition, palPlayback);
@@ -1971,12 +1972,19 @@ namespace FamiStudio
                 instrumentPlayer.ConnectOscilloscope(oscilloscope);
                 songPlayer.ConnectOscilloscope(null);
 
-                // HACK: Update continuous follow mode only last time so it catches up to the 
-                // real final player position.
-                lastTickCurrentFrame = songPlayer.PlayPosition;
-                Sequencer.UpdateFollowMode(true);
-                PianoRoll.UpdateFollowMode(true);
-                lastTickCurrentFrame = -1;
+                if (Settings.RewindAfterPlay)
+                {
+                    SeekSong(lastPlayPosition);
+                }
+                else
+                {
+                    // HACK: Update continuous follow mode only last time so it catches up to the 
+                    // real final player position.
+                    lastTickCurrentFrame = songPlayer.PlayPosition;
+                    Sequencer.UpdateFollowMode(true);
+                    PianoRoll.UpdateFollowMode(true);
+                    lastTickCurrentFrame = -1;
+                }
 
                 MarkEverythingDirty();
             }

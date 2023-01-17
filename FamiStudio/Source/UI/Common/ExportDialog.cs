@@ -221,7 +221,7 @@ namespace FamiStudio
         const string RomFdsFormatTooltip   = "ROMs are better suited for the original NES or Famicom. FDS disks can be played on the Famicom Disk System.";
 
         // MIDI tooltips
-        const string MidiVelocityTooltip   = "If enabled, values in the volume track will be used a note velocities.";
+        const string MidiVelocityTooltip   = "If enabled, values in the volume track will be used as note velocities.";
         const string MidiPitchTooltip      = "If enabled, slide notes will be exported as pitch wheel MIDI events.";
         const string MidiPitchRangeTooltip = "The range of the pitch wheel. Larger range can support larger slide notes, but has less precision.";
         const string MidiInstrumentTooltip = "How to assign MIDI instrument from the FamiStudio project. In 'Instrument' mode, You can map each FamiStudio instrument to a General MIDI instrument. In 'Channel' mode, you simply assign one MIDI instrument for each channel";

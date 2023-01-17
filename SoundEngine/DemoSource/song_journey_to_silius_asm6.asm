@@ -5,7 +5,7 @@ music_data_journey_to_silius:
 	dw @instruments
 	dw @samples-64
 	dw @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4 ; 00 : Title Screen
-	db <(@tempo_env_5_mid), >(@tempo_env_5_mid), 0, 0
+	db <(@tempo_env_1_mid), >(@tempo_env_1_mid), 0, 0
 
 @instruments:
 	dw @env2,@env8,@env10,@env4 ; 00 : LeadDuty0Buzz
@@ -82,16 +82,16 @@ music_data_journey_to_silius:
 	db $c0,$c6,$00,$01
 @env17:
 	db $00,$cd,$ce,$cc,$c8,$c9,$c7,$c6,$c4,$c3,$c1,$c0,$00,$0b
-
 @env18:
 	db $00,$c0,$be,$bc,$bc,$bd,$bf,$c1,$c3,$c4,$c4,$c2,$00,$01
-@tempo_env_5_mid:
-	db $03,$04,$07,$04,$05,$05,$80
+
+@tempo_env_1_mid:
+	db $03,$05,$80
 
 @song0ch0:
 	db $cf
 @song0ch0loop:
-	db $46, <(@tempo_env_5_mid), >(@tempo_env_5_mid), $00, $a5, $8a, $19, $91, $1c, $91, $19, $91, $1e, $1f, $81, $20, $9f, $1e
+	db $46, <(@tempo_env_1_mid), >(@tempo_env_1_mid), $00, $a5, $8a, $19, $91, $1c, $91, $19, $91, $1e, $1f, $81, $20, $9f, $1e
 	db $91
 @song0ref22:
 	db $82, $14, $af, $44, $87, $16

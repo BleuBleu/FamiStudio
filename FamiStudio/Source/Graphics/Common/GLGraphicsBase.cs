@@ -2139,5 +2139,18 @@ namespace FamiStudio
 
             return drawData;
         }
+
+        public bool IsAlmostFull()
+        {
+            foreach (var batch in lineBatches)
+            {
+                if (batch.vtxIdx > batch.vtxArray.Length * 3 / 4)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

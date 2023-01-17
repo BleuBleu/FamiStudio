@@ -12,7 +12,7 @@ namespace FamiStudio
         {
             dialog = new PropertyDialog(win, "Delete Special", 260);
             dialog.Properties.AddLabelCheckBox("Delete Notes", notes, 0, "When enabled, will delete the musical notes."); // 0
-            dialog.Properties.AddLabel(null, "Effects to paste:"); // 1
+            dialog.Properties.AddLabel(null, "Effects to delete:"); // 1
 
             var effectList  = new List<string>();
             var checkedList = new List<bool>();

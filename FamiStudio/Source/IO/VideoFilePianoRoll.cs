@@ -345,6 +345,8 @@ namespace FamiStudio
                     bg.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
                 }
 
+                videoGraphics.DrawCommandList(bg);
+
                 // Gradient
                 fg.FillRectangleGradient(0, 0, videoResX, gradientSizeY, Color.Black, Color.Transparent, true, gradientSizeY);
 
@@ -372,9 +374,10 @@ namespace FamiStudio
                     fg.PushTransform(channelPosX0 + 10, (oscMinY + oscMaxY) / 2, channelPosX1 - channelPosX0 - 20, (oscMinY - oscMaxY) / 2);
                     fg.DrawGeometry(oscilloscope, Theme.LightGreyColor1, 1, true);
                     fg.PopTransform();
+
+                    ConditionalFlushCommandList(ref fg);
                 }
 
-                videoGraphics.DrawCommandList(bg);
                 videoGraphics.DrawCommandList(fg);
             }, () =>
             {

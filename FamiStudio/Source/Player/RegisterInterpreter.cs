@@ -21,6 +21,9 @@ namespace FamiStudio
 
         public double GetSquareFrequency(int i)
         {
+            //The square channels are muted with period < 8 in both NTSC and PAL only on the 2A03
+            if (GetSquarePeriod(i) < 8)
+                return 0;   
             return NesPeriodToFreq(GetSquarePeriod(i), 16);
         }
 
@@ -35,7 +38,7 @@ namespace FamiStudio
         }
 
         public int    TrianglePeriod    => (regs.GetMergedRegisterValue(ExpansionType.None, NesApu.APU_TRI_LO, NesApu.APU_TRI_HI, 0x7));
-        public double TriangleFrequency => NesPeriodToFreq(TrianglePeriod, 16);
+        public double TriangleFrequency => NesPeriodToFreq(TrianglePeriod, 32);
         public int    NoisePeriod       => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_LO) & 0xf);
         public int    NoiseVolume       => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_VOL) & 0xf);
         public int    NoiseMode         => (regs.GetRegisterValue(ExpansionType.None, NesApu.APU_NOISE_LO) >> 7) & 0x1;
@@ -144,9 +147,13 @@ namespace FamiStudio
         }
 
         public bool   WaveEnabled => (regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_HI) & 0x80) == 0;
-        public int    Period      => regs.GetMergedRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_LO, NesApu.FDS_FREQ_HI, 0xf);
+        public int    WavePeriod      => regs.GetMergedRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_LO, NesApu.FDS_FREQ_HI, 0xf);
         public int    Volume      => regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_VOL_ENV) & 0x1f;
-        public double Frequency   => WaveEnabled ? FdsPeriodToFrequency(Period) : 0;
+        public double WaveFrequency   => WaveEnabled ? FdsPeriodToFrequency(WavePeriod) : 0;
+        public bool   ModEnabled => (regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_MOD_HI) & 0x8F) == 0 || (regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_SWEEP_ENV) & 0x3f) != 0;
+        public int    ModSpeed => regs.GetMergedRegisterValue(ExpansionType.Fds, NesApu.FDS_MOD_LO, NesApu.FDS_MOD_HI, 0xf);
+        public int    ModDepth => regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_SWEEP_ENV) & 0x3f;
+        public double ModFrequency => ModEnabled ? FdsPeriodToFrequency(ModSpeed) : 0;
 
         public byte[] GetWaveTable()
         {
@@ -196,7 +203,7 @@ namespace FamiStudio
 
         public int GetSquareDuty(int i)
         {
-            return (regs.GetRegisterValue(ExpansionType.Mmc5, NesApu.MMC5_PL1_VOL + i * 4) >> 4) & 0x7;
+            return (regs.GetRegisterValue(ExpansionType.Mmc5, NesApu.MMC5_PL1_VOL + i * 4) >> 6) & 0x3;
         }
     }
 
@@ -234,7 +241,7 @@ namespace FamiStudio
 
         public int GetVolume(int i)
         {
-            return regs.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, NesApu.N163_REG_VOLUME + i) & 0xf;
+            return regs.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, NesApu.N163_REG_VOLUME - 8 * i) & 0xf;
         }
     }
 
@@ -264,7 +271,7 @@ namespace FamiStudio
 
         public int GetVolume(int i)
         {
-            return regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_VOL_A + i * 2) & 0xf;
+            return regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_VOL_A + i) & 0xf;
         }
     }
 
@@ -313,7 +320,7 @@ namespace FamiStudio
         public int GetVolume(int i,int op = 0)
         {
             if(i < 3)
-                return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_VOL_A + i * 2) & 0xf;
+                return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_VOL_A + i) & 0xf;
             if (i >= 3 && i < 6)
                 return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0x40 + (i-3) + op * 4) & 0x7f;
             if (i >= 6 && i < 9)

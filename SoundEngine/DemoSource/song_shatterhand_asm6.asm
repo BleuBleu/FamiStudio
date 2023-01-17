@@ -5,7 +5,7 @@ music_data_shatterhand:
 	dw @instruments
 	dw @samples-4
 	dw @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4 ; 00 : Final Area
-	db <(@tempo_env_9_mid), >(@tempo_env_9_mid), 0, 0
+	db <(@tempo_env_1_mid), >(@tempo_env_1_mid), 0, 0
 
 @instruments:
 	dw @env3,@env6,@env9,@env0 ; 00 : Bass
@@ -50,12 +50,12 @@ music_data_shatterhand:
 @env14:
 	db $00,$cb,$cb,$c5,$03,$c4,$03,$c3,$03,$c2,$00,$09
 
-@tempo_env_9_mid:
-	db $03,$06,$04,$05,$80
+@tempo_env_1_mid:
+	db $03,$05,$80
 
 @song0ch0:
 @song0ch0loop:
-	db $46, <(@tempo_env_9_mid), >(@tempo_env_9_mid), $7e, $88
+	db $46, <(@tempo_env_1_mid), >(@tempo_env_1_mid), $7e, $88
 @song0ref7:
 	db $16, $9b, $44, $83, $19, $89, $44, $81, $43, $16, $16, $9b, $44, $83, $1b, $89, $44, $81, $43, $16, $16, $9b, $44, $83
 	db $1e, $89, $44, $81, $43, $16, $16, $9b, $44, $83, $1d, $9b, $44, $83, $1b, $89, $44, $81, $43, $1d

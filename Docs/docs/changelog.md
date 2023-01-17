@@ -2,6 +2,53 @@
 
 Version history / release notes for each release.
 
+## Version 4.0.6 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed issue where modifying the N163 repeat envelope would sometimes reset the loop point.
+
+## Version 4.0.5 (Hotfix)
+
+Changes/Fixes:
+
+* Added option for default pattern name
+* Added option to rewind to the previous position when stopping playback
+* Added warning when user is editing an arpeggio different than the currently selected one
+* Added a proper warning when songs are too big to be exported to NSF, ROM or sound engine
+* Allowed longer pattern on NSF import
+* Fixed crash when using pattern length of 2048 frames
+* Fixed opening of NSF when FamiStudio is set to the default app
+* Fixed glitch that could cause visual overlap of notes in piano roll
+* Fixed notes ending prematurely near the end of songs
+* Fixed crash when exporting to NSF, ROM or sound engine with certain vibrato settings
+* Fixed multiple issues when importing instruments from other projects
+* Fixed issue causing exported NSFe to start at song #2.
+* Fixed crash when MIDI notes are out of range.
+* Fixed rasterization issue in the pattern thumbnails
+* Fixed multiple FamiTracker (FTM/TXT) import/export issues
+* Fixed minor annoyances in the piano roll on mobile
+* Fixed app crashing when using more than 2GB of RAM on Windows
+* Fixed loophole where the FDS envelopes could be cleared/resized
+* Fixed various issues with dropdown list scrollbars 
+* Fixed crash when exporting video with lots of channels
+* Fixed releases for VRC7 and EPSM 
+* Fixed multiple inconsistencies and improved the register viewer (Thanks alexmush!)
+
+Sound Engine changes/fixes:
+
+* Fixed inconsistencies with vibrato with the main app
+* Fixed issues with relative pitch envelopes
+* Fixed notes always reapply instruments on EPSM FM Channel 4,5,6 in NSF driver (Thanks Perkka!)
+* Fixed EPSM rhythm occasionally missing beats (Thanks Perkka!)
+* Fixed volume being off by one for EPSM (Thanks Perkka!)
+
+Breaking/Behavior changes:
+
+* The register viewer will now show the real note pitches and wont necessarily match the notes on the piano roll
+* Vibrato depths of more than 13 cant unfortunately be supported in the sound engine at the moment. A warning will be given instead of producing the wrong result.
+* Releases for VRC7/EPSM instrument will now be handled correctly. That was always the intention, but a bug was preventing them from working
+
 ## Version 4.0.4 (Hotfix)
 
 Fixes:
