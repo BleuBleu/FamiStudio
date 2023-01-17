@@ -1,3 +1,15 @@
+4.0.7
+=====
+- Add temple raiders demo song (MMC5)
+- Add replace with current instrument on PC.
+- Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
+- Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
+- Bug NSF vibrato github
+- N163 multiplex?
+- Numpad delete
+- Context menu to copy/paste EPSM/VRC7 register values as text.
+- Add confirmation for overwrite on mobile
+
 4.1.0
 =====
 - NSF import issue TF74
@@ -7,6 +19,7 @@
 - Stereo export and NSF import on Android?
 - CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
 - Proportionnal volume adjust
+- "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
 
 Batch convert PNG -> TGA
 ==========================
