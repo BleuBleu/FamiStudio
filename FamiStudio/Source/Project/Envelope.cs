@@ -487,7 +487,15 @@ namespace FamiStudio
 
         public static sbyte GetEnvelopeZeroValue(int type)
         {
-            return type == EnvelopeType.Volume ? (sbyte)15: (sbyte)0;
+            switch (type)
+            {
+                case EnvelopeType.Volume:
+                    return (sbyte)15;
+                case EnvelopeType.S5BToneNoise:
+                    return (sbyte)2;
+                default:
+                    return (sbyte)0;
+            }
         }
 
         public static int GetEnvelopeMaxLength(int type)
@@ -518,7 +526,7 @@ namespace FamiStudio
                 case EnvelopeType.FdsWaveform:
                     return 32;
                 case EnvelopeType.S5BToneNoise:
-                    return 0;
+                    return 2;
                 default:
                     return 0;
             }
