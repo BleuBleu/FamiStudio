@@ -518,7 +518,7 @@ namespace FamiStudio
                 case EnvelopeType.FdsWaveform:
                     return 32;
                 case EnvelopeType.S5BToneNoise:
-                    return 2;
+                    return 0;
                 default:
                     return 0;
             }
@@ -591,13 +591,13 @@ namespace FamiStudio
             }
             else if (type == EnvelopeType.S5BToneNoise)
             {
-                min = 1;
-                max = 3;
+                min = 0;
+                max = 2;
             }
             else if (type == EnvelopeType.S5BNoiseFreq)
             {
                 min = 0;
-                max = 15;
+                max = 31;
             }
             else
             {

@@ -514,6 +514,10 @@ namespace FamiStudio
         {
         }
 
+        public virtual void UpdateToneNoiseNotify(int toneNoise)
+        {
+        }
+
         public void ForceInstrumentReload()
         {
             forceInstrumentReload = true;
@@ -555,6 +559,12 @@ namespace FamiStudio
         protected int GetDuty()
         {
             return envelopeValues[EnvelopeType.DutyCycle];
+        }
+
+        protected int GetToneNoise()
+        {
+            var toneNoise = (envelopeValues[EnvelopeType.S5BToneNoise] & 0x1) + ((envelopeValues[EnvelopeType.S5BToneNoise] & 0x2) << 2);
+            return toneNoise;
         }
 
         public virtual void UpdateAPU()
