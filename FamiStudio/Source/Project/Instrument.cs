@@ -883,6 +883,7 @@ namespace FamiStudio
             }
 
             ushort envelopeMask = 0;
+            byte envelopeMaskOld = 0;
             if (buffer.IsWriting)
             {
                 for (int i = 0; i < EnvelopeType.Count; i++)
@@ -891,19 +892,40 @@ namespace FamiStudio
                         envelopeMask = (ushort)(envelopeMask | (1 << i));
                 }
             }
-            buffer.Serialize(ref envelopeMask);
 
-            for (int i = 0; i < EnvelopeType.Count; i++)
+            if (buffer.Version >= 15)
             {
-                if ((envelopeMask & (1 << i)) != 0)
+                buffer.Serialize(ref envelopeMask);
+                for (int i = 0; i < EnvelopeType.Count; i++)
                 {
-                    if (buffer.IsReading)
-                        envelopes[i] = new Envelope(i);
-                    envelopes[i].SerializeState(buffer, i);
+                    if ((envelopeMask & (1 << i)) != 0)
+                    {
+                        if (buffer.IsReading)
+                            envelopes[i] = new Envelope(i);
+                        envelopes[i].SerializeState(buffer, i);
+                    }
+                    else
+                    {
+                        envelopes[i] = null;
+                    }
                 }
-                else
+            }
+            else
+            {
+                envelopeMaskOld = (byte)envelopeMask;
+                buffer.Serialize(ref envelopeMaskOld);
+                for (int i = 0; i < EnvelopeType.Count; i++)
                 {
-                    envelopes[i] = null;
+                    if ((envelopeMaskOld & (1 << i)) != 0)
+                    {
+                        if (buffer.IsReading)
+                            envelopes[i] = new Envelope(i);
+                        envelopes[i].SerializeState(buffer, i);
+                    }
+                    else
+                    {
+                        envelopes[i] = null;
+                    }
                 }
             }
 
@@ -977,6 +999,12 @@ namespace FamiStudio
                         }
                     }
                 }
+            }
+
+            if (buffer.Version < 15 && (IsS5B || IsEpsm))
+            {
+                envelopes[EnvelopeType.S5BToneNoise] = new Envelope(EnvelopeType.S5BToneNoise);
+                envelopes[EnvelopeType.S5BNoiseFreq] = new Envelope(EnvelopeType.S5BNoiseFreq);
             }
 
             // Revert back presets to "customs" if they no longer match what the code generates.
