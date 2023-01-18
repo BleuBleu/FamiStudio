@@ -101,6 +101,14 @@ long Nes_Sunsoft::run_until(cpu_time_t time)
 			last_amp = sample;
 		}
 
+		for (int i = 0; i < 3; i++)
+		{
+			if (psg->trigger_mask & (1 << i))
+				update_trigger(output_buffer, t, triggers[i]);
+			else if (psg->freq[i] <= 1)
+				triggers[i] = trigger_none;
+		}
+
 		t += 16;
 	}
 
@@ -144,13 +152,24 @@ void Nes_Sunsoft::write_shadow_register(int addr, int data)
 		shadow_internal_regs[reg] = data;
 }
 
-//void Nes_Sunsoft::get_register_values(struct s5b_register_values* regs)
-//{
-//	for (int i = 0; i < array_count(regs->regs); i++)
-//	{
-//		regs->regs[i] = psg->reg[i];
-//		regs->ages[i] = ages[i];
-//
-//		ages[i] = increment_saturate(ages[i]);
-//	}
-//}
+void Nes_Sunsoft::get_register_values(struct sunsoft5b_register_values* regs)
+{
+	for (int i = 0; i < array_count(regs->regs); i++)
+	{
+		regs->regs[i] = psg->reg[i];
+		regs->ages[i] = ages[i];
+
+		ages[i] = increment_saturate(ages[i]);
+	}
+}
+
+void Nes_Sunsoft::reset_triggers(bool force_none)
+{
+	for (int i = 0; i < array_count(triggers); i++)
+		triggers[i] = force_none ? trigger_none : (i >= 9 ? trigger_none : trigger_hold);
+}
+
+int Nes_Sunsoft::get_channel_trigger(int idx) const
+{
+	return triggers[idx];
+}

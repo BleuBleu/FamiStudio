@@ -158,7 +158,8 @@ namespace FamiStudio
             else if (envelopeType == EnvelopeType.S5BNoiseFreq ||
                      envelopeType == EnvelopeType.S5BToneNoise)
             {
-                return expansion == ExpansionType.S5B;
+                return expansion == ExpansionType.S5B ||
+                       expansion == ExpansionType.EPSM;
             }
 
             return false;
@@ -881,13 +882,13 @@ namespace FamiStudio
                 }
             }
 
-            byte envelopeMask = 0;
+            ushort envelopeMask = 0;
             if (buffer.IsWriting)
             {
                 for (int i = 0; i < EnvelopeType.Count; i++)
                 {
                     if (envelopes[i] != null)
-                        envelopeMask = (byte)(envelopeMask | (1 << i));
+                        envelopeMask = (ushort)(envelopeMask | (1 << i));
                 }
             }
             buffer.Serialize(ref envelopeMask);
@@ -931,11 +932,6 @@ namespace FamiStudio
             {
                 envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
                 envelopes[EnvelopeType.WaveformRepeat].Length = 1;
-            }
-            if (IsS5B)
-            {
-                envelopes[EnvelopeType.S5BNoiseFreq] = new Envelope(EnvelopeType.S5BNoiseFreq);
-                envelopes[EnvelopeType.S5BToneNoise] = new Envelope(EnvelopeType.S5BToneNoise);
             }
 
             if (IsRegular)

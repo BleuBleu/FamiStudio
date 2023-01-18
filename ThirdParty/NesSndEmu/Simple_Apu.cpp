@@ -113,7 +113,7 @@ void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 			case expansion_fds: fds.output(enable ? &buf : NULL); break;
 			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
 			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_sunsoft: sunsoft.enable_channel(idx, enable ? &buf : NULL); break;
 			case expansion_epsm: epsm.enable_channel(idx, enable); break;
 		}
 	}
@@ -231,7 +231,7 @@ void Simple_Apu::get_register_values(int exp, void* regs)
 		case expansion_fds: fds.get_register_values((fds_register_values*)regs); break;
 		case expansion_mmc5: mmc5.get_register_values((mmc5_register_values*)regs); break;
 		case expansion_namco: namco.get_register_values((n163_register_values*)regs); break;
-		case expansion_sunsoft: sunsoft.get_register_values((s5b_register_values*)regs); break;
+		case expansion_sunsoft: sunsoft.get_register_values((sunsoft5b_register_values*)regs); break;
 		case expansion_epsm: epsm.get_register_values((epsm_register_values*)regs); break;
 	}
 }
