@@ -12,9 +12,9 @@ namespace FamiStudio
             channelIdx = channelType - ChannelType.S5BSquare1;
         }
 
-        public override void UpdateToneNoiseNotify(int  toneNoise)
+        public override void UpdateYMMixerSettingsNotify(int  ymMixerSettings)
         {
-            toneReg = toneNoise;
+            toneReg = ymMixerSettings;
         }
 
         public override void UpdateAPU()
@@ -31,16 +31,16 @@ namespace FamiStudio
 
                 var periodHi = (period >> 8) & 0x0f;
                 var periodLo = (period >> 0) & 0xff;
-                var toneNoise = envelopeValues[EnvelopeType.S5BToneNoise];
-                var noiseFreq = envelopeValues[EnvelopeType.S5BNoiseFreq];
+                var ymMixerSettings = envelopeValues[EnvelopeType.YMMixerSettings];
+                var noiseFreq = envelopeValues[EnvelopeType.YMNoiseFreq];
                 int mask = 0xff;
                 mask = mask - (9 << channelIdx);
-                player.UpdateToneNoise(
-                    ((toneReg & mask) + (GetToneNoise() << channelIdx)),
+                player.UpdateYMMixerSettings(
+                    ((toneReg & mask) + (GetYMMixerSettings() << channelIdx)),
                     (1L << ChannelType.S5BSquare1) |
                     (1L << ChannelType.S5BSquare2) |
                     (1L << ChannelType.S5BSquare3));
-                int noiseCheck = GetToneNoise() & 0x2;
+                int noiseCheck = GetYMMixerSettings() & 0x2;
                 Console.Write(toneReg + "\n");
                 WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_TONE);
                 WriteRegister(NesApu.S5B_DATA, toneReg);
