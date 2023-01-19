@@ -710,9 +710,9 @@ namespace FamiStudio
             "EnvelopeWave",
             "EnvelopeMod",
             "EnvelopeWave",
-            "EnvelopeWave",
-            "EnvelopeWave",
-            "EnvelopeWave", // Never actually displayed
+            "EnvelopeWave",// Never actually displayed
+            "ConfigMixer",
+            "ChannelNoise", 
         };
 
         public static int GetValueForName(string str)
