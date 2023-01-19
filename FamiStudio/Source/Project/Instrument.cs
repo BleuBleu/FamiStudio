@@ -68,15 +68,15 @@ namespace FamiStudio
         public bool IsS5B     => expansion == ExpansionType.S5B;
         public bool IsEpsm    => expansion == ExpansionType.EPSM;
 
-        public Envelope VolumeEnvelope         => envelopes[EnvelopeType.Volume];
-        public Envelope PitchEnvelope          => envelopes[EnvelopeType.Pitch];
-        public Envelope ArpeggioEnvelope       => envelopes[EnvelopeType.Arpeggio];
-        public Envelope N163WaveformEnvelope   => envelopes[EnvelopeType.N163Waveform];
-        public Envelope FdsWaveformEnvelope    => envelopes[EnvelopeType.FdsWaveform];
-        public Envelope FdsModulationEnvelope  => envelopes[EnvelopeType.FdsModulation];
-        public Envelope WaveformRepeatEnvelope => envelopes[EnvelopeType.WaveformRepeat];
-        public Envelope S5BToneNoiseEnvelope   => envelopes[EnvelopeType.S5BToneNoise];
-        public Envelope S5BNoiseFreqEnvelope   => envelopes[EnvelopeType.S5BNoiseFreq];
+        public Envelope VolumeEnvelope          => envelopes[EnvelopeType.Volume];
+        public Envelope PitchEnvelope           => envelopes[EnvelopeType.Pitch];
+        public Envelope ArpeggioEnvelope        => envelopes[EnvelopeType.Arpeggio];
+        public Envelope N163WaveformEnvelope    => envelopes[EnvelopeType.N163Waveform];
+        public Envelope FdsWaveformEnvelope     => envelopes[EnvelopeType.FdsWaveform];
+        public Envelope FdsModulationEnvelope   => envelopes[EnvelopeType.FdsModulation];
+        public Envelope WaveformRepeatEnvelope  => envelopes[EnvelopeType.WaveformRepeat];
+        public Envelope YMMixerSettingsEnvelope => envelopes[EnvelopeType.YMMixerSettings];
+        public Envelope YMNoiseFreqEnvelope     => envelopes[EnvelopeType.YMNoiseFreq];
 
         public const int MaxResampleWavSamples = 12000;
 
@@ -109,8 +109,8 @@ namespace FamiStudio
             }
             else if (expansion == ExpansionType.S5B)
             {
-                UpdateS5BToneNoiseEnvelope();
-                UpdateS5BNoiseFreqEnvelope();
+                UpdateYMMixerSettingsEnvelope();
+                UpdateYMNoiseFreqEnvelope();
             }
             else if (expansion == ExpansionType.Vrc7)
             {
@@ -155,8 +155,8 @@ namespace FamiStudio
             {
                 return expansion == ExpansionType.N163;
             }
-            else if (envelopeType == EnvelopeType.S5BNoiseFreq ||
-                     envelopeType == EnvelopeType.S5BToneNoise)
+            else if (envelopeType == EnvelopeType.YMNoiseFreq ||
+                     envelopeType == EnvelopeType.YMMixerSettings)
             {
                 return expansion == ExpansionType.S5B ||
                        expansion == ExpansionType.EPSM;
@@ -384,11 +384,11 @@ namespace FamiStudio
                 fdsWavPreset = WavePresetType.Custom;
         }
 
-        public void UpdateS5BToneNoiseEnvelope()
+        public void UpdateYMMixerSettingsEnvelope()
         {
 
         }
-        public void UpdateS5BNoiseFreqEnvelope()
+        public void UpdateYMNoiseFreqEnvelope()
         {
 
         }
@@ -1003,8 +1003,8 @@ namespace FamiStudio
 
             if (buffer.Version < 15 && (IsS5B || IsEpsm))
             {
-                envelopes[EnvelopeType.S5BToneNoise] = new Envelope(EnvelopeType.S5BToneNoise);
-                envelopes[EnvelopeType.S5BNoiseFreq] = new Envelope(EnvelopeType.S5BNoiseFreq);
+                envelopes[EnvelopeType.YMMixerSettings] = new Envelope(EnvelopeType.YMMixerSettings);
+                envelopes[EnvelopeType.YMNoiseFreq] = new Envelope(EnvelopeType.YMNoiseFreq);
             }
 
             // Revert back presets to "customs" if they no longer match what the code generates.

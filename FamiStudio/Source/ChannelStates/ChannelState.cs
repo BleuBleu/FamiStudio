@@ -520,7 +520,7 @@ namespace FamiStudio
         {
         }
 
-        public virtual void UpdateToneNoiseNotify(int toneNoise)
+        public virtual void UpdateYMMixerSettingsNotify(int ymMixerSettings)
         {
         }
 
@@ -567,10 +567,10 @@ namespace FamiStudio
             return envelopeValues[EnvelopeType.DutyCycle];
         }
 
-        protected int GetToneNoise()
+        protected int GetYMMixerSettings()
         {
-            var toneNoise = (envelopeValues[EnvelopeType.S5BToneNoise] & 0x1) + ((envelopeValues[EnvelopeType.S5BToneNoise] & 0x2) << 2);
-            return toneNoise;
+            var ymMixerSettings = (envelopeValues[EnvelopeType.YMMixerSettings] & 0x1) + ((envelopeValues[EnvelopeType.YMMixerSettings] & 0x2) << 2);
+            return ymMixerSettings;
         }
 
         public virtual void UpdateAPU()
