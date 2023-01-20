@@ -261,17 +261,17 @@ namespace FamiStudio
 
         public static bool IsVS2019RuntimeInstalled()
         {
-            try
+            //try
             {
                 // Super ghetto way of detecting if the runtime is installed is simply by calling
                 // any function that will cause a C++ DLL to be loaded.
                 NesApu.GetAudioExpansions(0);
                 return true;
             }
-            catch
-            {
-                return false;
-            }
+            //catch
+            //{
+            //    return false;
+            //}
         }
 
         public static bool DetectRequiredDependencies()
@@ -313,7 +313,7 @@ namespace FamiStudio
 
         public static void Beep()
         {
-            SystemSounds.Beep.Play();
+            //SystemSounds.Beep.Play(); // NET5TODO: Find alternative 
         }
 
         [DllImport("user32.dll")]
@@ -460,6 +460,8 @@ namespace FamiStudio
 
         private static bool SetKeyDefaultValue(string keyPath, string value)
         {
+            // NET5TODO : Win32 API directly.
+            /*
             using (var key = Registry.CurrentUser.CreateSubKey(keyPath))
             {
                 if (key.GetValue(null) as string != value)
@@ -468,6 +470,7 @@ namespace FamiStudio
                     return true;
                 }
             }
+            */
 
             return false;
         }

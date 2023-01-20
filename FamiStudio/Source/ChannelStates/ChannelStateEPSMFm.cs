@@ -39,7 +39,6 @@ namespace FamiStudio
         private readonly int[] ChannelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
 
         private int    stereoFlags = 0;
-        private bool   release = false;
         private bool   stop = false;
         private int    lastVolume = 0;
         private byte[] patchRegs = null; // Only set when a new instrument is loaded.
@@ -98,11 +97,9 @@ namespace FamiStudio
                 WriteEPSMRegister(0x28, 0x00 + channelKey);
                 WriteEPSMRegister(0xb4 + channelIdxHigh, 0x00, a1); //volume 0
                 stop = true;
-                release = false;
             }
             else if (note.IsMusical)
             {
-                release = false;
                 stop = false;
 
                 var period = GetPeriod();

@@ -9,8 +9,18 @@
 - Numpad delete
 - Context menu to copy/paste EPSM/VRC7 register values as text.
 - Add confirmation for overwrite on mobile
+
 4.1.0
 =====
+- OpenGL upgrade/.NET 5.0
+	- Merge projects/solution
+		=> Linux/Mac, how will this work?
+	- Merge graphics code
+	- Merge control code
+	- Migrate rendering to new control system
+	- Project explorer will be first to be migrated
+/ 64-bit Windows
+	=> Need x64 vorbis libs
 - NSF import issue TF74
 - DPCM 
 	- In app, you get up to 128KB of samples

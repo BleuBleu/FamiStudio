@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 #if !FAMISTUDIO_ANDROID
-using System.Web.Script.Serialization;
+//using System.Web.Script.Serialization; // NET5TODO
 #endif
 
 namespace FamiStudio
@@ -1241,7 +1241,7 @@ namespace FamiStudio
 
         private void CheckForNewRelease()
         {
-        #if !FAMISTUDIO_ANDROID
+        #if false // !FAMISTUDIO_ANDROID // NET5TODO : Find new apis for this.
             try
             {
                 using (var client = new HttpClient())

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32106.194
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FamiStudio", "FamiStudio\FamiStudio.csproj", "{20AC976F-95BC-42A4-B95C-85609728A36B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FamiStudio", "FamiStudio\FamiStudio.csproj", "{20AC976F-95BC-42A4-B95C-85609728A36B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{CE0D60E2-1356-4531-825F-A159850FB9D5} = {CE0D60E2-1356-4531-825F-A159850FB9D5}
 	EndProjectSection
@@ -55,7 +55,7 @@ Global
 		{CE0D60E2-1356-4531-825F-A159850FB9D5}.Release|x64.ActiveCfg = Release|x64
 		{CE0D60E2-1356-4531-825F-A159850FB9D5}.Release|x86.ActiveCfg = Debug|Win32
 		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Debug|x64.ActiveCfg = Debug|Win32
+		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Debug|x64.ActiveCfg = Debug|x64
 		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Debug|x86.ActiveCfg = Debug|Win32
 		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|Any CPU.ActiveCfg = Release|Win32
 		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|x64.ActiveCfg = Release|Win32
@@ -68,7 +68,6 @@ Global
 		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Release|x86.ActiveCfg = Debug|Win32
 		{3FFA6EA5-8854-47AE-8765-D2B8DCBFB4CD}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{3FFA6EA5-8854-47AE-8765-D2B8DCBFB4CD}.Debug|x64.ActiveCfg = Debug|x64
-		{3FFA6EA5-8854-47AE-8765-D2B8DCBFB4CD}.Debug|x64.Build.0 = Debug|x64
 		{3FFA6EA5-8854-47AE-8765-D2B8DCBFB4CD}.Debug|x86.ActiveCfg = Debug|Win32
 		{3FFA6EA5-8854-47AE-8765-D2B8DCBFB4CD}.Release|Any CPU.ActiveCfg = Release|Win32
 		{3FFA6EA5-8854-47AE-8765-D2B8DCBFB4CD}.Release|x64.ActiveCfg = Release|x64
@@ -76,7 +75,6 @@ Global
 		{3FFA6EA5-8854-47AE-8765-D2B8DCBFB4CD}.Release|x86.ActiveCfg = Debug|Win32
 		{B3C88B02-00DF-4C08-8E50-7A361FAB0D7C}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{B3C88B02-00DF-4C08-8E50-7A361FAB0D7C}.Debug|x64.ActiveCfg = Debug|x64
-		{B3C88B02-00DF-4C08-8E50-7A361FAB0D7C}.Debug|x64.Build.0 = Debug|x64
 		{B3C88B02-00DF-4C08-8E50-7A361FAB0D7C}.Debug|x86.ActiveCfg = Debug|Win32
 		{B3C88B02-00DF-4C08-8E50-7A361FAB0D7C}.Debug|x86.Build.0 = Debug|Win32
 		{B3C88B02-00DF-4C08-8E50-7A361FAB0D7C}.Release|Any CPU.ActiveCfg = Release|Win32

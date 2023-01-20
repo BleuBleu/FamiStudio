@@ -9,16 +9,16 @@ namespace FamiStudio
     public partial class FamiStudioWindow
     {
         [DllImport("user32.dll")]
-        private static extern IntPtr SetWindowLong(IntPtr hwnd, int nIndex, IntPtr newProc);
+        private static extern IntPtr SetWindowLongPtr(IntPtr hwnd, int nIndex, IntPtr newProc);
 
         [DllImport("user32.dll")]
-        private static extern IntPtr SetWindowLong(IntPtr hwnd, int nIndex, WndProcDelegate newProc);
+        private static extern IntPtr SetWindowLongPtr(IntPtr hwnd, int nIndex, WndProcDelegate newProc);
 
         [DllImport("user32.dll")]
-        private static extern IntPtr GetWindowLong(IntPtr hwnd, int nIndex);
+        private static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int nIndex);
 
         [DllImport("user32.dll")]
-        private static extern IntPtr CallWindowProc(IntPtr proc, IntPtr hwnd, int msg, int wparam, int lparam);
+        private static extern IntPtr CallWindowProc(IntPtr proc, IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam);
 
         [DllImport("user32.dll")]
         static extern IntPtr SetTimer(IntPtr hwnd, IntPtr evt, uint elapse, TimerProcDelegate func);
@@ -31,7 +31,7 @@ namespace FamiStudio
         private const int WM_EXITSIZEMOVE = 0x232;
         private const int WM_TIMER = 0x113;
 
-        private delegate IntPtr WndProcDelegate(IntPtr hwnd, int msg, int wparam, int lparam);
+        private delegate IntPtr WndProcDelegate(IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam);
         private delegate void TimerProcDelegate(IntPtr hwnd, int msg, int id, int time);
 
         private TimerProcDelegate timerProc;
@@ -49,13 +49,13 @@ namespace FamiStudio
                 {
                     Debug.Assert(newWndProc == null);
                     newWndProc = new WndProcDelegate(WndProc);
-                    oldWndProc = GetWindowLong(hwnd, GWL_WNDPROC);
-                    SetWindowLong(hwnd, GWL_WNDPROC, newWndProc);
+                    oldWndProc = GetWindowLongPtr(hwnd, GWL_WNDPROC);
+                    SetWindowLongPtr(hwnd, GWL_WNDPROC, newWndProc);
                 }
                 else
                 {
                     Debug.Assert(oldWndProc != IntPtr.Zero);
-                    SetWindowLong(hwnd, GWL_WNDPROC, oldWndProc);
+                    SetWindowLongPtr(hwnd, GWL_WNDPROC, oldWndProc);
                 }
             }
         }
@@ -71,7 +71,7 @@ namespace FamiStudio
             }
         }
 
-        private IntPtr WndProc(IntPtr hwnd, int msg, int wparam, int lparam)
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam)
         {
             if (msg == WM_ENTERSIZEMOVE) // WM_ENTERSIZEMOVE 
             {
