@@ -25,6 +25,7 @@ void Nes_Sunsoft::reset()
 	memset(&ages[0], 0, array_count(ages));
 	last_time = 0;
 	last_amp = 0;
+	reset_triggers();
 }
 
 void Nes_Sunsoft::volume(double v)
@@ -163,10 +164,10 @@ void Nes_Sunsoft::get_register_values(struct sunsoft5b_register_values* regs)
 	}
 }
 
-void Nes_Sunsoft::reset_triggers(bool force_none)
+void Nes_Sunsoft::reset_triggers()
 {
 	for (int i = 0; i < array_count(triggers); i++)
-		triggers[i] = force_none ? trigger_none : (i >= 9 ? trigger_none : trigger_hold);
+		triggers[i] = trigger_hold;
 }
 
 int Nes_Sunsoft::get_channel_trigger(int idx) const
