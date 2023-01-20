@@ -33,7 +33,7 @@ public:
 	void stop_seeking(blip_time_t& clock);
 	void write_shadow_register(int addr, int data);
 
-	void reset_triggers(bool force_none = false);
+	void reset_triggers();
 	int  get_channel_trigger(int idx) const;
 
 private:
