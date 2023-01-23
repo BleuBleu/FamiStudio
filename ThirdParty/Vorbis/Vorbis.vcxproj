@@ -109,7 +109,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>ogg.lib;vorbis.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)\ogg\Win32\;$(ProjectDir)\vorbis\Win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\ogg\Win64\;$(ProjectDir)\vorbis\Win64\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -146,7 +146,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>ogg.lib;vorbis.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)\ogg\Win32\;$(ProjectDir)\vorbis\Win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\ogg\Win64\;$(ProjectDir)\vorbis\Win64\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>Vorbis.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
