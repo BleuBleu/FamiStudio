@@ -46,17 +46,17 @@ namespace FamiStudio
             propertyPage = new PropertyPage(this, margin, margin + titleBarSizeY, Width - margin * 2);
             propertyPage.PropertyWantsClose += PropertyPage_PropertyWantsClose;
 
-            buttonYes = new Button(this, "Yes", null);
+            buttonYes = new Button("Yes", null); // CTRLTODO : Add
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(buttonSize, buttonSize);
             buttonYes.ToolTip = "Accept";
 
-            buttonNo = new Button(this, "No", null);
+            buttonNo = new Button("No", null); // CTRLTODO : Add
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(buttonSize, buttonSize);
             buttonNo.ToolTip = "Cancel";
 
-            buttonAdvanced = new Button(this, "PlusSmall", null);
+            buttonAdvanced = new Button("PlusSmall", null); // CTRLTODO : Add
             buttonAdvanced.Click += ButtonAdvanced_Click;
             buttonAdvanced.Resize(buttonSize, buttonSize);
             buttonAdvanced.Visible = false;

@@ -5,14 +5,9 @@ using System.Linq;
 
 namespace FamiStudio
 {
-    public class FamiStudioControls
+    public class FamiStudioContainer : Container
     {
-        private int width;
-        private int height;
-        private Graphics gfx;
-        private Control[] controls = new Control[4];
-        private List<Dialog> dialogs = new List<Dialog>();
-        private FontRenderResources fontRes;
+        private List<Dialog> dialogs = new List<Dialog>(); // CTRLTODO : Do we need this?
         private float dialogDimming = 0.0f;
         private bool contextMenuVisible;
 
@@ -33,14 +28,11 @@ namespace FamiStudio
         public MobilePiano MobilePiano => mobilePiano;
         public ContextMenu ContextMenu => contextMenu;
         public Toast Toast => toast;
-        public Graphics Graphics => gfx;
         public bool IsContextMenuActive => contextMenuVisible;
         public bool IsDialogActive => dialogs.Count > 0;
         public Dialog TopDialog => dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
 
-        public Control[] Controls => controls;
-
-        public FamiStudioControls(FamiStudioWindow parent)
+        public FamiStudioContainer(FamiStudioWindow parent)
         {
             toolbar = new Toolbar(parent);
             sequencer = new Sequencer(parent);
@@ -50,13 +42,15 @@ namespace FamiStudio
             mobilePiano = new MobilePiano(parent);
             contextMenu = new ContextMenu(parent);
             toast = new Toast(parent);
+            window = parent;
 
-            controls[0] = toolbar;
-            controls[1] = sequencer;
-            controls[2] = pianoRoll;
-            controls[3] = projectExplorer;
+            AddControl(toolbar);
+            AddControl(sequencer);
+            AddControl(pianoRoll);
+            AddControl(projectExplorer);
         }
 
+        /*
         public void Resize(int w, int h)
         {
             width  = Math.Max(1, w);
@@ -76,89 +70,34 @@ namespace FamiStudio
 
             toast.Reposition();
         }
+        */
 
-        private bool PointInControlTest(Control ctrl, int formX, int formY, out int ctrlX, out int ctrlY)
-        {
-            ctrlX = formX - ctrl.WindowLeft;
-            ctrlY = formY - ctrl.WindowTop;
-
-            if (ctrlX >= 0 &&
-                ctrlY >= 0 &&
-                ctrlX < ctrl.Width &&
-                ctrlY < ctrl.Height)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
+        // CTRLTODO : See where we can fit this? Override the functions from Container to get control?
         public bool CanInteractWithControls()
-        {   
-            // HACK : Dont allow any interaction with the main controls if there is no current song
-            // since all the code assume this is non-null. This happens when event processing runs
-            // during file loading (ex: when calling Thread.Join).
-            return controls[0].App.SelectedSong != null;
-        }
-
-        public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
-            // Toast
-            if (toast.IsClickable && PointInControlTest(toast, formX, formY, out ctrlX, out ctrlY))
-            {
-                return toast;
-            }
-
-            // Don't send any events if the context menu is visible.
-            if (contextMenuVisible && PointInControlTest(contextMenu, formX, formY, out ctrlX, out ctrlY))
-            {
-                return contextMenu;
-            }
-
-            // If there is an active dialog, it also eats all of the input.
-            if (dialogs.Count > 0)
-            {
-                return TopDialog.GetControlAt(formX, formY, out ctrlX, out ctrlY);
-            }
-
             // HACK : Dont allow any interaction with the main controls if there is no current song
             // since all the code assume this is non-null. This happens when event processing runs
             // during file loading (ex: when calling Thread.Join).
-            if (!CanInteractWithControls())
-            {
-                ctrlX = 0;
-                ctrlY = 0;
-                return null;
-            }
-
-            // Finally, send to one of the main controls.
-            foreach (var ctrl in controls)
-            {
-                if (PointInControlTest(ctrl, formX, formY, out ctrlX, out ctrlY))
-                {
-                    return ctrl;
-                }
-            }
-
-            ctrlX = 0;
-            ctrlY = 0;
-            return null;
+            return true; // controls[0].App.SelectedSong != null;
         }
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
+            // CTRLTODO : Bring this back.
+            /*
             contextMenu.Initialize(gfx, options);
 
             // Keep the menu inside the bounds of the window.
-            var alignX = x + contextMenu.Width  > width;
+            var alignX = x + contextMenu.Width > width;
             var alignY = y + contextMenu.Height > height;
 
             contextMenu.Move(
-                alignX ? x - contextMenu.Width  - 1 : x + 1,
+                alignX ? x - contextMenu.Width - 1 : x + 1,
                 alignY ? y - contextMenu.Height - 1 : y + 1);
 
             contextMenuVisible = true;
             MarkDirty();
+            */
         }
 
         public void HideContextMenu()
@@ -170,6 +109,8 @@ namespace FamiStudio
             }
         }
 
+        // CTRLTODO : Tick.
+        /*
         public void Tick(float delta)
         {
             var newDialogDimming = dialogDimming;
@@ -192,15 +133,14 @@ namespace FamiStudio
 
             toast.Tick(delta);
         }
-
-        public void MarkDirty()
-        {
-            foreach (var ctrl in controls)
-                ctrl.MarkDirty();
-        }
+        */
 
         public bool AnyControlNeedsRedraw()
         {
+            return true;
+
+            // CTRLTODO : Bring back?
+            /*
             bool anyNeedsRedraw = false;
             foreach (var control in controls)
                 anyNeedsRedraw |= control.NeedsRedraw;
@@ -211,8 +151,11 @@ namespace FamiStudio
             if (toast.IsVisible)
                 anyNeedsRedraw |= toast.NeedsRedraw;
             return anyNeedsRedraw;
+            */
         }
 
+        // CTRLTODO
+        /*
         public unsafe bool Redraw()
         {
             if (AnyControlNeedsRedraw())
@@ -266,12 +209,16 @@ namespace FamiStudio
 
             return false;
         }
+        */
 
         public void InitDialog(Dialog dialog)
         {
+            // CTRLTODO : Dialogs.
+            /*
             dialog.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            dialog.SetFontRenderResource(fontRes);
+            dialog.SetFontRenderResource(fonts);
             dialog.RenderInitialized(gfx);
+            */
         }
 
         public void PushDialog(Dialog dialog)
@@ -283,7 +230,6 @@ namespace FamiStudio
         {
             Debug.Assert(TopDialog == dialog);
             dialogs.RemoveAt(dialogs.Count - 1);
-            dialog.RenderTerminated();
         }
 
         public void ShowToast(string text, bool longDuration = false, Action click = null)
@@ -293,34 +239,40 @@ namespace FamiStudio
 
         public void InitializeGL()
         {
-            gfx = new Graphics(DpiScaling.Window, DpiScaling.Font);
-            fontRes = new FontRenderResources(gfx);
+            // CTRLTODO : This will be moved to Window.
+            /*
+            gfx = new Graphics();
+            fonts = new Fonts(gfx);
 
             foreach (var ctrl in controls)
             {
                 ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-                ctrl.SetFontRenderResource(fontRes);
+                ctrl.SetFontRenderResource(fonts);
                 ctrl.RenderInitialized(gfx);
             }
 
             contextMenu.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            contextMenu.SetFontRenderResource(fontRes);
+            contextMenu.SetFontRenderResource(fonts);
             contextMenu.RenderInitialized(gfx);
 
             toast.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            toast.SetFontRenderResource(fontRes);
+            toast.SetFontRenderResource(fonts);
             toast.RenderInitialized(gfx);
+            */
         }
 
         public void ShutdownGL()
         {
+            // CTRLTODO : Moved to Window?
+            /*
             foreach (var ctrl in controls)
             {
                 ctrl.RenderTerminated();
                 ctrl.SetFontRenderResource(null);
             }
 
-            fontRes.Dispose();
+            fonts.Dispose();
+            */
         }
     }
 }

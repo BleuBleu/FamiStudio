@@ -22,12 +22,13 @@ namespace FamiStudio
         BitmapAtlasRef bmpMenuRadio;
         ContextMenuOption[] menuOptions;
 
-        public ContextMenu(FamiStudioWindow win) : base(win)
+        public ContextMenu(FamiStudioWindow win) // CTRLTODO : base(win)
         {
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
+            var g = ParentWindow.Graphics;
             bmpMenuCheckOn  = g.GetBitmapAtlasRef("MenuCheckOn");
             bmpMenuCheckOff = g.GetBitmapAtlasRef("MenuCheckOff");
             bmpMenuRadio    = g.GetBitmapAtlasRef("MenuRadio");
@@ -35,10 +36,10 @@ namespace FamiStudio
 
         private void UpdateRenderCoords()
         {
-            itemSizeY = ScaleForWindow(DefaultItemSizeY);
-            iconPos   = ScaleForWindow(DefaultIconPos);
-            textPosX  = ScaleForWindow(DefaultTextPosX);
-            minSizeX  = ScaleForWindow(DefaultMenuMinSizeX);
+            itemSizeY = DpiScaling.ScaleForWindow(DefaultItemSizeY);
+            iconPos   = DpiScaling.ScaleForWindow(DefaultIconPos);
+            textPosX  = DpiScaling.ScaleForWindow(DefaultTextPosX);
+            minSizeX  = DpiScaling.ScaleForWindow(DefaultMenuMinSizeX);
         }
 
         public void Initialize(Graphics g, ContextMenuOption[] options)
@@ -56,7 +57,7 @@ namespace FamiStudio
             {
                 ContextMenuOption option = menuOptions[i];
 
-                sizeX = Math.Max(sizeX, (int)g.MeasureString(option.Text, FontResources.FontMedium));
+                sizeX = Math.Max(sizeX, (int)g.MeasureString(option.Text, Fonts.FontMedium));
                 sizeY += itemSizeY;
 
                 if (!string.IsNullOrEmpty(option.Image))
@@ -158,6 +159,8 @@ namespace FamiStudio
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
+            // GLTODO : Bring this back.
+            /*
             var c = g.CreateCommandList();
             c.DrawRectangle(0, 0, Width - 1, Height - 1, Theme.LightGreyColor1);
 
@@ -206,6 +209,8 @@ namespace FamiStudio
 
             g.Clear(Theme.DarkGreyColor4);
             g.DrawCommandList(c);
+            */
+
         }
     }
 }

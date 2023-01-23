@@ -215,6 +215,14 @@ namespace FamiStudio
             this.height = height;
         }
 
+        public Rectangle(Point p, Size s)
+        {
+            x = p.X;
+            y = p.Y;
+            width  = s.Width;
+            height = s.Height;
+        }
+
         public Size Size
         {
             get
@@ -244,6 +252,11 @@ namespace FamiStudio
         {
             this.x += x;
             this.y += y;
+        }
+
+        public Rectangle Resized(int sx, int sy)
+        {
+            return new Rectangle(x, y, width + sx, height + sy);
         }
 
         public static Rectangle Union(Rectangle a, Rectangle b)
@@ -284,6 +297,21 @@ namespace FamiStudio
             this.y = y;
             this.width = width;
             this.height = height;
+        }
+
+        public static RectangleF Intersect(RectangleF a, RectangleF b)
+        {
+            float maxX = Math.Max(a.X, b.X);
+            float minX = Math.Min(a.X + a.Width, b.X + b.Width);
+            float maxY = Math.Max(a.Y, b.Y);
+            float minY = Math.Min(a.Y + a.Height, b.Y + b.Height);
+
+            if (minX >= maxX && minY >= maxY)
+            {
+                return new RectangleF(maxX, maxY, minX - maxX, minY - maxY);
+            }
+
+            return Empty;
         }
     }
 }

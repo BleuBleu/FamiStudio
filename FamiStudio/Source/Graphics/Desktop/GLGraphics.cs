@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using static GLFWDotNet.GLFW;
@@ -8,60 +9,178 @@ namespace FamiStudio
 {
      public class Graphics : GraphicsBase
     {
-        private bool supportsLineWidth = true;
+        private int polyProgram;
+        private int polyScaleBiasUniform;
+        private int polyVao;
 
-        public Graphics(float mainScale, float fontScale) : base(mainScale, fontScale)
+        private int lineProgram;
+        private int lineScaleBiasUniform;
+        private int lineDashTextureUniform;
+        private int lineVao;
+
+        private int lineSmoothProgram;
+        private int lineSmoothScaleBiasUniform;
+        private int lineSmoothWindowSizeUniform;
+        private int lineSmoothVao;
+
+        private int bmpProgram;
+        private int bmpScaleBiasUniform;
+        private int bmpTextureUniform;
+        private int bmpVao;
+
+        private int depthProgram;
+        private int depthScaleBiasUniform;
+        private int depthVao;
+
+        // MATTT, more buffers? Compare performance.
+        private int vertexBuffer;
+        private int colorBuffer;
+        private int centerBuffer;
+        private int texCoordBuffer;
+        private int lineDistBuffer;
+        private int indexBuffer;
+        private int depthBuffer;
+        private int quadIdxBuffer;
+
+#if DEBUG
+        private GL.DebugCallback debugCallback;
+#endif
+
+        public Graphics() 
         {
             GL.StaticInitialize();
+
+#if DEBUG
+            debugCallback = new GL.DebugCallback(GLDebugMessageCallback);
+            GL.DebugMessageCallback(debugCallback, IntPtr.Zero);
+#endif
+
+            polyVao       = GL.GenVertexArray();
+            lineVao       = GL.GenVertexArray();
+            lineSmoothVao = GL.GenVertexArray();
+            bmpVao        = GL.GenVertexArray();
+            depthVao      = GL.GenVertexArray();
+
+            // MATTT : More buffers?
+            vertexBuffer    = GL.GenBuffer();
+            colorBuffer     = GL.GenBuffer();
+            centerBuffer    = GL.GenBuffer();
+            texCoordBuffer  = GL.GenBuffer();
+            lineDistBuffer = GL.GenBuffer();
+            indexBuffer     = GL.GenBuffer();
+            depthBuffer     = GL.GenBuffer();
+
+            quadIdxBuffer = GL.GenBuffer();
+            GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
+            GL.BufferData(GL.ElementArrayBuffer, quadIdxArray, quadIdxArray.Length, GL.StaticDraw);
+
+            InitializeShaders();
 
             dashedBitmap = CreateBitmapFromResource("Dash");
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.Repeat);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.Repeat);
-
-            if (Platform.IsLinux)
-            {
-                var lineWidths = new float[2];
-                GL.GetFloat(GL.LineWidthRange, lineWidths);
-                supportsLineWidth = lineWidths[1] > 1.0f;
-            }
         }
 
-        public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
+        private int CompileShader(string resourceName, int type)
         {
-            base.BeginDrawControl(unflippedControlRect, windowSizeY);
+            var code = "";
+            using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(resourceName))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                code = reader.ReadToEnd();
+            }
 
-            GL.Viewport(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
-            GL.MatrixMode(GL.Projection);
-            GL.LoadIdentity();
-            GL.Ortho(0, unflippedControlRect.Width, unflippedControlRect.Height, 0, -1, 1);
+            var shader = GL.CreateShader(type);
+            var source = new []
+            {
+                "#version 330 core\n",
+                "#line 1\n",
+                code
+            };
+
+            GL.ShaderSource(shader, source);
+            GL.CompileShader(shader);
+
+            var status = GL.GetShaderInt(shader, GL.CompileStatus);
+
+            if (status == 0)
+            {
+                var log = GL.GetShaderInfoLog(shader);
+                Debug.WriteLine(resourceName);
+                Debug.WriteLine(log);
+                Debug.Assert(false);
+                return 0;
+            }
+
+            return shader;
+        }
+
+        private int CompileAndLinkProgram(string resourceName, bool useFragment = true)
+        {
+            var program = GL.CreateProgram();
+
+            var vert = CompileShader(resourceName + ".vert", GL.VertexShader);
+            GL.AttachShader(program, vert);
+
+            if (useFragment)
+            { 
+                var frag = CompileShader(resourceName + ".frag", GL.FragmentShader);
+                GL.AttachShader(program, frag);
+            }
+
+            GL.LinkProgram(program);
+            
+            var status = GL.GetProgramInt(program, GL.LinkStatus);
+
+			if (status == 0)
+			{
+                var log = GL.GetProgramInfoLog(program);
+                Debug.WriteLine(resourceName);
+                Debug.WriteLine(log);
+                Debug.Assert(false);
+                return 0;
+            }
+
+            GL.UseProgram(program);
+
+            return program;
+        }
+
+        private void InitializeShaders()
+        {
+            polyProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Poly");
+            polyScaleBiasUniform = GL.GetUniformLocation(polyProgram, "screenScaleBias");
+
+            lineProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Line");
+            lineScaleBiasUniform = GL.GetUniformLocation(lineProgram, "screenScaleBias");
+            lineDashTextureUniform = GL.GetUniformLocation(lineProgram, "dashTexture");
+
+            lineSmoothProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.LineSmooth");
+            lineSmoothScaleBiasUniform = GL.GetUniformLocation(lineSmoothProgram, "screenScaleBias");
+            lineSmoothWindowSizeUniform = GL.GetUniformLocation(lineSmoothProgram, "windowSize");
+
+            bmpProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Bitmap");
+            bmpScaleBiasUniform = GL.GetUniformLocation(bmpProgram, "screenScaleBias");
+            bmpTextureUniform = GL.GetUniformLocation(bmpProgram, "tex");
+
+            depthProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Depth", false);
+            depthScaleBiasUniform = GL.GetUniformLocation(depthProgram, "screenScaleBias");
+        }
+
+        protected override void Clear()
+        {
+            GL.Viewport(screenRectFlip.Left, screenRectFlip.Top, screenRectFlip.Width, screenRectFlip.Height);
             GL.Disable(GL.CullFace);
-            GL.MatrixMode(GL.Modelview);
-            GL.LoadIdentity();
+            GL.PolygonMode(GL.FrontAndBack, GL.Fill);
             GL.BlendFunc(GL.SrcAlpha, GL.OneMinusSrcAlpha);
             GL.Enable(GL.Blend);
-            GL.Disable(GL.DepthTest);
+            GL.Enable(GL.DepthTest);
+            GL.DepthFunc(GL.Always);
             GL.Disable(GL.StencilTest);
-            GL.Enable(GL.ScissorTest);
-            GL.Scissor(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
-            GL.EnableClientState(GL.VertexArray);
-        }
+            GL.Disable(GL.ScissorTest);
 
-        private void SetScissorRect(int x0, int y0, int x1, int y1)
-        {
-            var scissor = new Rectangle(controlRect.X + x0, controlRect.Y + y0, x1 - x0, y1 - y0);
-            scissor = FlipRectangleY(scissor);
-            GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
-        }
-
-        private void ClearScissorRect()
-        {
-            GL.Scissor(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
-        }
-
-        public void Clear(Color color)
-        {
-            GL.ClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-            GL.Clear(GL.ColorBufferBit);
+            GL.ClearColor(clearColor.R / 255.0f, clearColor.G / 255.0f, clearColor.B / 255.0f, clearColor.A / 255.0f);
+            GL.Clear(GL.ColorBufferBit | GL.DepthBufferBit);
         }
 
         public void UpdateBitmap(Bitmap bmp, int x, int y, int width, int height, byte[] data)
@@ -115,14 +234,14 @@ namespace FamiStudio
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.tga") != null)
+            if (DpiScaling.Window == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.tga") != null)
             {
                 needsScaling = false;
                 return $"FamiStudio.Resources.{name}@15x.tga";
             }
-            else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.tga") != null)
+            else if (DpiScaling.Window > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.tga") != null)
             {
-                needsScaling = windowScaling != 2.0f;
+                needsScaling = DpiScaling.Window != 2.0f;
                 return $"FamiStudio.Resources.{name}@2x.tga";
             }
             else
@@ -143,7 +262,7 @@ namespace FamiStudio
             return new Bitmap(this, g.Texture, g.SizeX, g.SizeY, false);
         }
 
-        public unsafe override BitmapAtlas CreateBitmapAtlasFromResources(string[] names)
+        protected unsafe override BitmapAtlas CreateBitmapAtlasFromResources(string[] names)
         {
             // Need to sort since we do binary searches on the names.
             Array.Sort(names);
@@ -209,136 +328,213 @@ namespace FamiStudio
             return new BitmapAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects);
         }
 
-        public override CommandList CreateCommandList()
+        protected override CommandList CreateCommandList()
         {
-            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias, supportsLineWidth);
+            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias);
         }
 
-        public unsafe override void DrawCommandList(CommandList list, Rectangle scissor)
+        private void BindAndUpdateVertexBuffer(int attrib, int buffer, float[] array, int arraySize)
+        {
+            GL.BindBuffer(GL.ArrayBuffer, buffer);
+            GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
+            GL.EnableVertexAttribArray(attrib);
+            GL.VertexAttribPointer(attrib, 2, GL.Float, false, 0, null);
+        }
+
+        private void BindAndUpdateColorBuffer(int attrib, int buffer, int[] array, int arraySize)
+        {
+            GL.BindBuffer(GL.ArrayBuffer, buffer);
+            GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
+            GL.EnableVertexAttribArray(attrib);
+            GL.VertexAttribPointer(attrib, 4, GL.UnsignedByte, true, 0, null);
+        }
+
+        private void BindAndUpdateByteBuffer(int attrib, int buffer, byte[] array, int arraySize, bool signed = false)
+        {
+            GL.BindBuffer(GL.ArrayBuffer, buffer);
+            GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
+            GL.EnableVertexAttribArray(attrib);
+            GL.VertexAttribPointer(attrib, 1, signed ? GL.Byte : GL.UnsignedByte, true, 0, null);
+        }
+
+        private void BindAndUpdateIndexBuffer(int buffer, short[] array, int arraySize)
+        {
+            GL.BindBuffer(GL.ElementArrayBuffer, buffer);
+            GL.BufferData(GL.ElementArrayBuffer, array, arraySize, GL.DynamicDraw);
+        }
+
+        protected override void DrawDepthPrepass()
+        {
+            if (clipRegions.Count == 0)
+                return;
+
+            GL.PushDebugGroup("Depth Pre-pass");
+            GL.DepthFunc(GL.Always);
+            GL.ColorMask(false, false, false, false);
+
+            var vtxIdx = 0;
+            var depIdx = 0;
+
+            for (int i = 0; i < clipRegions.Count; i++)
+            {
+                var clip = clipRegions[i];
+
+                var x0 = clip.rect.Left;
+                var y0 = clip.rect.Top;
+                var x1 = clip.rect.Right;
+                var y1 = clip.rect.Bottom;
+
+                vtxArray[vtxIdx++] = x0;
+                vtxArray[vtxIdx++] = y0;
+                vtxArray[vtxIdx++] = x1;
+                vtxArray[vtxIdx++] = y0;
+                vtxArray[vtxIdx++] = x1;
+                vtxArray[vtxIdx++] = y1;
+                vtxArray[vtxIdx++] = x0;
+                vtxArray[vtxIdx++] = y1;
+
+                depArray[depIdx++] = clip.depthValue;
+                depArray[depIdx++] = clip.depthValue;
+                depArray[depIdx++] = clip.depthValue;
+                depArray[depIdx++] = clip.depthValue;
+            }
+
+            GL.UseProgram(depthProgram);
+            GL.BindVertexArray(depthVao);
+            GL.Uniform(depthScaleBiasUniform, viewportScaleBias); // MATTT : Wrong, needs full screen!
+
+            BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxIdx);
+            BindAndUpdateByteBuffer(1, depthBuffer, depArray, depIdx, true);
+            GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
+            GL.DrawElements(GL.Triangles, vtxIdx / 8 * 6, GL.UnsignedShort, IntPtr.Zero);
+
+            GL.DepthFunc(GL.Equal);
+            GL.ColorMask(true, true, true, true);
+            GL.PopDebugGroup();
+        }
+
+        protected override void DrawCommandList(CommandList list)
         {
             if (list == null)
                 return;
 
             if (list.HasAnything)
             {
-                if (!scissor.IsEmpty)
-                    SetScissorRect(scissor.Left, scissor.Top, scissor.Right, scissor.Bottom);
+                GL.PushDebugGroup("Draw Command List");
 
-                if (list.HasAnyMeshes)
+                if (list.HasAnyPolygons)
                 {
-                    var drawData = list.GetMeshDrawData();
+                    var draw = list.GetPolygonDrawData();
 
-                    GL.EnableClientState(GL.ColorArray);
+                    GL.UseProgram(polyProgram);
+                    GL.BindVertexArray(polyVao);
+                    GL.Uniform(polyScaleBiasUniform, viewportScaleBias);
 
-                    foreach (var draw in drawData)
-                    {
-                        if (draw.smooth) GL.Enable(GL.PolygonSmooth);
-                        GL.ColorPointer(4, GL.UnsignedByte, 0, draw.colArray);
-                        GL.VertexPointer(2, GL.Float, 0, draw.vtxArray);
-                        GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, draw.idxArray);
-                        if (draw.smooth) GL.Disable(GL.PolygonSmooth);
-                    }
+                    BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
+                    BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
+                    BindAndUpdateByteBuffer(2, depthBuffer, draw.depArray, draw.depArraySize, true);
+                    BindAndUpdateIndexBuffer(indexBuffer,  draw.idxArray, draw.idxArraySize);
 
-                    GL.DisableClientState(GL.ColorArray);
+                    GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, IntPtr.Zero);
                 }
 
                 if (list.HasAnyLines)
                 {
-                    var drawData = list.GetLineDrawData();
+                    var draw = list.GetLineDrawData();
 
-                    GL.PushMatrix();
-                    GL.Translate(0.5f, 0.5f, 0.0f);
-                    GL.Enable(GL.Texture2D);
+                    GL.UseProgram(lineProgram);
+                    GL.BindVertexArray(lineVao);
+                    GL.Uniform(lineScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(lineDashTextureUniform, 0);
+                    GL.ActiveTexture(GL.Texture0 + 0);
                     GL.BindTexture(GL.Texture2D, dashedBitmap.Id);
-                    GL.EnableClientState(GL.ColorArray);
-                    GL.EnableClientState(GL.TextureCoordArray);
 
-                    foreach (var draw in drawData)
-                    {
-                        if (draw.smooth) GL.Enable(GL.LineSmooth);
-                        GL.LineWidth(draw.lineWidth);
-                        GL.TexCoordPointer(2, GL.Float, 0, draw.texArray);
-                        GL.ColorPointer(4, GL.UnsignedByte, 0, draw.colArray);
-                        GL.VertexPointer(2, GL.Float, 0, draw.vtxArray);
-                        GL.DrawArrays(GL.Lines, 0, draw.numVertices);
-                        if (draw.smooth) GL.Disable(GL.LineSmooth);
-                    }
+                    BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
+                    BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
+                    BindAndUpdateVertexBuffer(2, texCoordBuffer, draw.texArray, draw.texArraySize);
+                    BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
 
-                    GL.DisableClientState(GL.ColorArray);
-                    GL.DisableClientState(GL.TextureCoordArray);
-                    GL.Disable(GL.Texture2D);
-                    GL.PopMatrix();
+                    GL.DrawArrays(GL.Lines, 0, draw.numVertices);
                 }
 
-                if (Platform.IsLinux && list.HasAnyTickLineMeshes)
+                if (list.HasAnySmoothLines)
                 {
-                    var draw = list.GetThickLineAsPolygonDrawData();
+                    var draw = list.GetSmoothLineDrawData();
 
-                    /*if (draw.smooth)*/ GL.Enable(GL.PolygonSmooth);
-                    GL.EnableClientState(GL.ColorArray);
-                    GL.ColorPointer(4, GL.UnsignedByte, 0, draw.colArray);
-                    GL.VertexPointer(2, GL.Float, 0, draw.vtxArray);
-                    GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, draw.idxArray);
-                    GL.DisableClientState(GL.ColorArray);
-                    /*if (draw.smooth)*/ GL.Disable(GL.PolygonSmooth);
+                    GL.UseProgram(lineSmoothProgram);
+                    GL.BindVertexArray(lineSmoothVao);
+                    GL.Uniform(lineSmoothScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(lineSmoothWindowSizeUniform, screenRect.Width, screenRect.Height);
+
+                    BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
+                    BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
+                    BindAndUpdateByteBuffer(2, lineDistBuffer, draw.dstArray, draw.dstArraySize);
+                    BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
+                    BindAndUpdateIndexBuffer(indexBuffer, draw.idxArray, draw.idxArraySize);
+
+                    GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, IntPtr.Zero);
                 }
 
                 if (list.HasAnyBitmaps)
                 {
-                    var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out _, out _, out _, out _);
+                    var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out _);
 
-                    GL.Enable(GL.Texture2D);
-                    GL.EnableClientState(GL.ColorArray);
-                    GL.EnableClientState(GL.TextureCoordArray);
-                    GL.TexCoordPointer(2, GL.Float, 0, texArray);
-                    GL.ColorPointer(4, GL.UnsignedByte, 0, colArray);
-                    GL.VertexPointer(2, GL.Float, 0, vtxArray);
+                    GL.UseProgram(bmpProgram);
+                    GL.BindVertexArray(bmpVao);
+                    GL.Uniform(bmpScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(bmpTextureUniform, 0);
+                    GL.ActiveTexture(GL.Texture0 + 0);
 
-                    fixed (short* ptr = quadIdxArray)
+                    BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxSize);
+                    BindAndUpdateColorBuffer(1, colorBuffer, colArray, colSize);
+                    BindAndUpdateVertexBuffer(2, texCoordBuffer, texArray, texSize);
+                    BindAndUpdateByteBuffer(3, depthBuffer, depArray, depSize, true);
+                    GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
+
+                    foreach (var draw in drawData)
                     {
-                        foreach (var draw in drawData)
-                        {
-                            GL.BindTexture(GL.Texture2D, draw.textureId);
-                            GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(ptr + draw.start));
-                        }
+                        GL.BindTexture(GL.Texture2D, draw.textureId);
+                        GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(draw.start * sizeof(short)));
                     }
-
-                    GL.DisableClientState(GL.ColorArray);
-                    GL.DisableClientState(GL.TextureCoordArray);
-                    GL.Disable(GL.Texture2D);
                 }
 
                 if (list.HasAnyTexts)
                 {
-                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out _, out _, out _, out _);
+                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out _);
 
-                    GL.Enable(GL.Texture2D);
-                    GL.EnableClientState(GL.ColorArray);
-                    GL.EnableClientState(GL.TextureCoordArray);
-                    GL.TexCoordPointer(2, GL.Float, 0, texArray);
-                    GL.ColorPointer(4, GL.UnsignedByte, 0, colArray);
-                    GL.VertexPointer(2, GL.Float, 0, vtxArray);
+                    GL.UseProgram(bmpProgram);
+                    GL.BindVertexArray(bmpVao);
+                    GL.Uniform(bmpScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(bmpTextureUniform, 0);
+                    GL.ActiveTexture(GL.Texture0 + 0);
 
-                    fixed (short* ptr = quadIdxArray)
+                    BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxSize);
+                    BindAndUpdateColorBuffer(1, colorBuffer, colArray, colSize);
+                    BindAndUpdateVertexBuffer(2, texCoordBuffer, texArray, texSize);
+                    BindAndUpdateByteBuffer(3, depthBuffer, depArray, depSize, true);
+                    GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
+
+                    foreach (var draw in drawData)
                     {
-                        foreach (var draw in drawData)
-                        {
-                            GL.BindTexture(GL.Texture2D, draw.textureId);
-                            GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(ptr + draw.start));
-                        }
+                        GL.BindTexture(GL.Texture2D, draw.textureId);
+                        GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(draw.start * sizeof(short)));
                     }
-
-                    GL.DisableClientState(GL.ColorArray);
-                    GL.DisableClientState(GL.TextureCoordArray);
-                    GL.Disable(GL.Texture2D);
                 }
 
-                if (!scissor.IsEmpty)
-                    ClearScissorRect();
+                GL.PopDebugGroup();
             }
-
-            list.Release();
         }
+
+#if DEBUG
+        static void GLDebugMessageCallback(int source, int type, int id, int severity, int length, string message, IntPtr userParam)
+        {
+            if (severity != GL.DebugSeverityNotification)
+            {
+                Debug.WriteLine(message);
+                Debug.Assert(severity != GL.DebugSeverityHigh);
+            }
+        }
+#endif
     };
 
     public class OffscreenGraphics : Graphics
@@ -352,7 +548,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(1.0f, 1.0f) 
+        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base() 
         {
             resX = imageSizeX;
             resY = imageSizeY;
@@ -376,17 +572,18 @@ namespace FamiStudio
             return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
         }
 
-        public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
+        // MATTT : This is surely wrong, we do all the drawing at end of frame now.
+        public override void BeginDrawFrame(Rectangle rect, Color clear)
         {
-            base.BeginDrawControl(unflippedControlRect, windowSizeY);
-
             GL.BindFramebuffer(GL.DrawFramebuffer, fbo);
             GL.DrawBuffer(GL.ColorAttachment0);
+
+            base.BeginDrawFrame(rect, clear);
         }
 
-        public override void EndDrawControl()
+        public override void EndDrawFrame()
         {
-            base.EndDrawControl();
+            base.EndDrawFrame();
 
             GL.BindFramebuffer(GL.DrawFramebuffer, 0);
         }
@@ -436,64 +633,89 @@ namespace FamiStudio
     {
         private static bool initialized;
 
-        public const int ColorBufferBit    = 0x4000;
-        public const int Texture2D         = 0x0DE1;
-        public const int Modelview         = 0x1700;
-        public const int Projection        = 0x1701;
-        public const int CullFace          = 0x0B44;
-        public const int VertexArray       = 0x8074;
-        public const int TextureWrapS      = 0x2802;
-        public const int TextureWrapT      = 0x2803;
-        public const int Clamp             = 0x2900;
-        public const int Repeat            = 0x2901;
-        public const int ClampToBorder     = 0x812D;
-        public const int SrcAlpha          = 0x0302;
-        public const int OneMinusSrcAlpha  = 0x0303;
-        public const int Blend             = 0x0BE2;
-        public const int DepthTest         = 0x0B71;
-        public const int StencilTest       = 0x0B90;
-        public const int ScissorTest       = 0x0C11;
-        public const int Bgr               = 0x80E0;
-        public const int Bgra              = 0x80E1;
-        public const int Rgb               = 0x1907;
-        public const int Rgba              = 0x1908;
-        public const int UnsignedByte      = 0x1401;
-        public const int TextureMagFilter  = 0x2800;
-        public const int TextureMinFilter  = 0x2801;
-        public const int Nearest           = 0x2600;
-        public const int Linear            = 0x2601;
-        public const int ClampToEdge       = 0x812F;
-        public const int Rgb8              = 0x8051;
-        public const int Rgba8             = 0x8058;
-        public const int ColorArray        = 0x8076;
-        public const int TextureCoordArray = 0x8078;
-        public const int LineSmooth        = 0x0B20;
-        public const int PolygonSmooth     = 0x0B41;
-        public const int Float             = 0x1406;
-        public const int Lines             = 0x0001;
-        public const int Triangles         = 0x0004;
-        public const int Quads             = 0x0007;
-        public const int UnsignedShort     = 0x1403;
-        public const int Framebuffer       = 0x8D40;
-        public const int ColorAttachment0  = 0x8CE0;
-        public const int DrawFramebuffer   = 0x8CA9;
-        public const int ReadFramebuffer   = 0x8CA8;
-        public const int LineWidthRange    = 0x0B22;
+        public const int DepthBufferBit            = 0x0100;
+        public const int ColorBufferBit            = 0x4000;
+        public const int Texture2D                 = 0x0DE1;
+        public const int Modelview                 = 0x1700;
+        public const int Projection                = 0x1701;
+        public const int CullFace                  = 0x0B44;
+        public const int VertexArray               = 0x8074;
+        public const int TextureWrapS              = 0x2802;
+        public const int TextureWrapT              = 0x2803;
+        public const int Clamp                     = 0x2900;
+        public const int Repeat                    = 0x2901;
+        public const int ClampToBorder             = 0x812D;
+        public const int SrcAlpha                  = 0x0302;
+        public const int OneMinusSrcAlpha          = 0x0303;
+        public const int Blend                     = 0x0BE2;
+        public const int DepthTest                 = 0x0B71;
+        public const int StencilTest               = 0x0B90;
+        public const int ScissorTest               = 0x0C11;
+        public const int Bgr                       = 0x80E0;
+        public const int Bgra                      = 0x80E1;
+        public const int Rgb                       = 0x1907;
+        public const int Rgba                      = 0x1908;
+        public const int Byte                      = 0x1400;
+        public const int UnsignedByte              = 0x1401;
+        public const int TextureMagFilter          = 0x2800;
+        public const int TextureMinFilter          = 0x2801;
+        public const int Nearest                   = 0x2600;
+        public const int Linear                    = 0x2601;
+        public const int ClampToEdge               = 0x812F;
+        public const int Rgb8                      = 0x8051;
+        public const int Rgba8                     = 0x8058;
+        public const int ColorArray                = 0x8076;
+        public const int TextureCoordArray         = 0x8078;
+        public const int LineSmooth                = 0x0B20;
+        public const int PolygonSmooth             = 0x0B41;
+        public const int Float                     = 0x1406;
+        public const int Lines                     = 0x0001;
+        public const int Triangles                 = 0x0004;
+        public const int Quads                     = 0x0007;
+        public const int UnsignedShort             = 0x1403;
+        public const int Framebuffer               = 0x8D40;
+        public const int ColorAttachment0          = 0x8CE0;
+        public const int DrawFramebuffer           = 0x8CA9;
+        public const int ReadFramebuffer           = 0x8CA8;
+        public const int LineWidthRange            = 0x0B22;
+        public const int DebugSeverityHigh         = 0x9146;
+        public const int DebugSeverityLow          = 0x9148;
+        public const int DebugSeverityMedium       = 0x9147;
+        public const int DebugSeverityNotification = 0x826B;
+        public const int VertexShader              = 0x8B31;
+        public const int FragmentShader            = 0x8B30;
+        public const int CompileStatus             = 0x8B81;
+        public const int LinkStatus                = 0x8B82;
+        public const int ActiveUniforms            = 0x8B86;
+        public const int DynamicDraw               = 0x88E8;
+        public const int StaticDraw                = 0x88E4;
+        public const int ArrayBuffer               = 0x8892;
+        public const int ElementArrayBuffer        = 0x8893;
+        public const int Nicest                    = 0x1102;
+        public const int LineSmoothHint            = 0x0C52;
+        public const int Texture0                  = 0x84C0;
+        public const int Always                    = 0x0207;
+        public const int Equal                     = 0x0202;
+        public const int DebugSourceApplication    = 0x824A;
+        public const int FrontAndBack              = 0x0408;
+        public const int Fill                      = 0x1B02;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void DebugCallback(int source, int type, int id, int severity, int length, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userParam);
 
         public delegate void ClearDelegate(uint mask);
         public delegate void ClearColorDelegate(float red, float green, float blue, float alpha);
         public delegate void ViewportDelegate(int left, int top, int width, int height);
-        public delegate void MatrixModeDelegate(int mode);
-        public delegate void LoadIdentityDelegate();
-        public delegate void OrthoDelegate(double left, double right, double bottom, double top, double near, double far);
         public delegate void EnableDelegate(int cap);
         public delegate void DisableDelegate(int cap);
         public delegate void BlendFuncDelegate(int src, int dst);
+        public delegate void PolygonModeDelegate(int face, int mode);
         public delegate void ScissorDelegate(int x, int y, int width, int height);
         public delegate void EnableClientStateDelegate(int cap);
         public delegate void DisableClientStateDelegate(int cap);
         public delegate void TexParameterDelegate(int target, int name, int val);
         public delegate void BindTextureDelegate(int target, int id);
+        public delegate void ActiveTextureDelegate(int texture);
         public delegate void TexImage2DDelegate(int target, int level, int internalformat, int width, int height, int border, int format, int type, IntPtr data);
         public delegate void TexSubImage2DDelegate(int target, int level, int xoffset, int yoffset, int width, int height, int format, int type, IntPtr pixels);
         public delegate void GenTexturesDelegate(int n, IntPtr textures);
@@ -503,9 +725,6 @@ namespace FamiStudio
         public delegate void TexCoordPointerDelegate(int size, int type, int stride, IntPtr pointer);
         public delegate void DrawArraysDelegate(int mode, int first, int count);
         public delegate void DrawElementsDelegate(int mode, int count, int type, IntPtr indices);
-        public delegate void PushMatrixDelegate();
-        public delegate void PopMatrixDelegate();
-        public delegate void TranslateDelegate(float x, float y, float z);
         public delegate void LineWidthDelegate(float width);
         public delegate void GenFramebuffersDelegate(int n, IntPtr indices);
         public delegate void BindFramebufferDelegate(int target, int framebuffer);
@@ -513,22 +732,57 @@ namespace FamiStudio
         public delegate void FramebufferTexture2DDelegate(int target,int attachment, int textarget, int texture, int level);
         public delegate void ReadPixelsDelegate(int x, int y, int width, int height, int format, int type, IntPtr data);
         public delegate void DeleteFramebuffersDelegate(int n, IntPtr framebuffers);
-        public delegate void GetFloatDelegate(int param, IntPtr floats);
+        public delegate void GetFloatDelegate(int par3am, IntPtr floats);
+        public delegate void DebugMessageCallbackDelegate([MarshalAs(UnmanagedType.FunctionPtr)] DebugCallback callback, IntPtr userParam);
+        public delegate int  CreateShaderDelegate(int shaderType);
+        public delegate void ShaderSourceDelegate(int shader, int count, IntPtr strings, IntPtr length);
+        public delegate void CompileShaderDelegate(int shader);
+        public delegate void GetShaderIntDelegate(int shader, int param, IntPtr ints);
+        public delegate void GetShaderInfoLogDelegate(int shader, int maxLength, ref int length, IntPtr infoLog);
+        public delegate int  CreateProgramDelegate();
+        public delegate void AttachShaderDelegate(int program, int shader);
+        public delegate void LinkProgramDelegate(int program);
+        public delegate void GetProgramIntDelegate(int program, int param, IntPtr ints);
+        public delegate void GetProgramInfoLogDelegate(int shader, int maxLength, ref int length, IntPtr infoLog);
+        public delegate void UseProgramDelegate(int program);
+        public delegate int  GetUniformLocationDelegate(int program, [MarshalAs(UnmanagedType.LPStr)] string name);
+        public delegate void VertexAttribPointerDelegate(int index, int size, int type, byte normalized, int stride, IntPtr pointer);
+        public delegate void GenBuffersDelegate(int n, IntPtr buffers);
+        public delegate void BindBufferDelegate(int target, int buffer);
+        public delegate void BufferDataDelegate(int target, IntPtr size, IntPtr data, int usage);
+        public delegate void BufferSubDataDelegate(int target, IntPtr offset, IntPtr size, IntPtr data);
+        public delegate void GenVertexArraysDelegate(int n, IntPtr arrays);
+        public delegate void BindVertexArrayDelegate(int vao);
+        public delegate void EnableVertexAttribArrayDelegate(int index);
+        public delegate void FlushDelegate();
+        public delegate void Uniform1iDelegate(int location, int x);
+        public delegate void Uniform1fDelegate(int location, float x);
+        public delegate void Uniform2fDelegate(int location, float x, float y);
+        public delegate void Uniform3fDelegate(int location, float x, float y, float z);
+        public delegate void Uniform4fDelegate(int location, float x, float y, float z, float w);
+        public delegate void Uniform1fvDelegate(int location, int count, IntPtr values);
+        public delegate void Uniform2fvDelegate(int location, int count, IntPtr values);
+        public delegate void Uniform3fvDelegate(int location, int count, IntPtr values);
+        public delegate void Uniform4fvDelegate(int location, int count, IntPtr values);
+        public delegate void HintDelegate(int target, int mode);
+        public delegate void DepthFuncDelegate(int func);
+        public delegate void ColorMaskDelegate(byte red, byte green, byte blue, byte alpha);
+        public delegate void PushDebugGroupDelegate(int source, int id, int length, [MarshalAs(UnmanagedType.LPStr)] string message);
+        public delegate void PopDebugGroupDelegate();
 
         public static ClearDelegate                Clear;
         public static ClearColorDelegate           ClearColor;
         public static ViewportDelegate             Viewport;
-        public static MatrixModeDelegate           MatrixMode;
-        public static LoadIdentityDelegate         LoadIdentity;
-        public static OrthoDelegate                Ortho;
         public static EnableDelegate               Enable;
         public static DisableDelegate              Disable;
         public static BlendFuncDelegate            BlendFunc;
+        public static PolygonModeDelegate          PolygonMode;
         public static ScissorDelegate              Scissor;
         public static EnableClientStateDelegate    EnableClientState;
         public static DisableClientStateDelegate   DisableClientState;
         public static TexParameterDelegate         TexParameter;
         public static BindTextureDelegate          BindTexture;
+        public static ActiveTextureDelegate        ActiveTexture;
         public static TexImage2DDelegate           TexImage2DRaw;
         public static TexSubImage2DDelegate        TexSubImage2DRaw;
         public static GenTexturesDelegate          GenTextures;
@@ -538,9 +792,6 @@ namespace FamiStudio
         public static TexCoordPointerDelegate      TexCoordPointerRaw;
         public static DrawArraysDelegate           DrawArrays;
         public static DrawElementsDelegate         DrawElementsRaw;
-        public static TranslateDelegate            Translate;
-        public static PushMatrixDelegate           PushMatrix;
-        public static PopMatrixDelegate            PopMatrix;
         public static LineWidthDelegate            LineWidth;
         public static GenFramebuffersDelegate      GenFramebuffers;
         public static BindFramebufferDelegate      BindFramebuffer;
@@ -549,47 +800,116 @@ namespace FamiStudio
         public static ReadPixelsDelegate           ReadPixels;
         public static DeleteFramebuffersDelegate   DeleteFramebuffers;
         public static GetFloatDelegate             GetFloatRaw;
+        public static DebugMessageCallbackDelegate DebugMessageCallback;
+        public static CreateShaderDelegate         CreateShader;
+        public static ShaderSourceDelegate         ShaderSourceRaw;
+        public static CompileShaderDelegate        CompileShader;
+        public static GetShaderIntDelegate         GetShaderIntRaw;
+        public static GetShaderInfoLogDelegate     GetShaderInfoLogRaw;
+        public static CreateProgramDelegate        CreateProgram;
+        public static AttachShaderDelegate         AttachShader;
+        public static LinkProgramDelegate          LinkProgram;
+        public static GetProgramIntDelegate        GetProgramIntRaw;
+        public static GetProgramInfoLogDelegate    GetProgramInfoLogRaw;
+        public static UseProgramDelegate           UseProgram;
+        public static GetUniformLocationDelegate   GetUniformLocation;
+        public static VertexAttribPointerDelegate  VertexAttribPointerRaw;
+        public static GenBuffersDelegate           GenBuffersRaw;
+        public static GenVertexArraysDelegate      GenVertexArraysRaw;
+        public static BindBufferDelegate           BindBuffer;
+        public static BufferDataDelegate           BufferDataRaw;
+        public static BufferSubDataDelegate        BufferSubDataRaw;
+        public static BindVertexArrayDelegate      BindVertexArray;
+        public static EnableVertexAttribArrayDelegate EnableVertexAttribArray;
+        public static FlushDelegate                Flush;
+        public static Uniform1iDelegate            Uniform1iRaw;
+        public static Uniform1fDelegate            Uniform1fRaw;
+        public static Uniform2fDelegate            Uniform2fRaw;
+        public static Uniform3fDelegate            Uniform3fRaw;
+        public static Uniform4fDelegate            Uniform4fRaw;
+        public static Uniform1fvDelegate           Uniform1fvRaw;
+        public static Uniform2fvDelegate           Uniform2fvRaw;
+        public static Uniform3fvDelegate           Uniform3fvRaw;
+        public static Uniform4fvDelegate           Uniform4fvRaw;
+        public static HintDelegate                 Hint;
+        public static DepthFuncDelegate            DepthFunc;
+        public static ColorMaskDelegate            ColorMaskRaw;
+        public static PushDebugGroupDelegate       PushDebugGroupRaw;
+        public static PopDebugGroupDelegate        PopDebugGroupRaw;
 
         public static void StaticInitialize()
         {
             if (initialized)
                 return;
 
-            Clear                = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(glfwGetProcAddress("glClear"));
-            ClearColor           = Marshal.GetDelegateForFunctionPointer<ClearColorDelegate>(glfwGetProcAddress("glClearColor"));
-            Viewport             = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(glfwGetProcAddress("glViewport"));
-            MatrixMode           = Marshal.GetDelegateForFunctionPointer<MatrixModeDelegate>(glfwGetProcAddress("glMatrixMode"));
-            LoadIdentity         = Marshal.GetDelegateForFunctionPointer<LoadIdentityDelegate>(glfwGetProcAddress("glLoadIdentity"));
-            Ortho                = Marshal.GetDelegateForFunctionPointer<OrthoDelegate>(glfwGetProcAddress("glOrtho"));
-            Enable               = Marshal.GetDelegateForFunctionPointer<EnableDelegate>(glfwGetProcAddress("glEnable"));
-            Disable              = Marshal.GetDelegateForFunctionPointer<DisableDelegate>(glfwGetProcAddress("glDisable"));
-            BlendFunc            = Marshal.GetDelegateForFunctionPointer<BlendFuncDelegate>(glfwGetProcAddress("glBlendFunc"));
-            Scissor              = Marshal.GetDelegateForFunctionPointer<ScissorDelegate>(glfwGetProcAddress("glScissor"));
-            EnableClientState    = Marshal.GetDelegateForFunctionPointer<EnableClientStateDelegate>(glfwGetProcAddress("glEnableClientState"));
-            DisableClientState   = Marshal.GetDelegateForFunctionPointer<DisableClientStateDelegate>(glfwGetProcAddress("glDisableClientState"));
-            TexParameter         = Marshal.GetDelegateForFunctionPointer<TexParameterDelegate>(glfwGetProcAddress("glTexParameteri"));
-            BindTexture          = Marshal.GetDelegateForFunctionPointer<BindTextureDelegate>(glfwGetProcAddress("glBindTexture"));
-            TexImage2DRaw        = Marshal.GetDelegateForFunctionPointer<TexImage2DDelegate>(glfwGetProcAddress("glTexImage2D"));
-            TexSubImage2DRaw     = Marshal.GetDelegateForFunctionPointer<TexSubImage2DDelegate>(glfwGetProcAddress("glTexSubImage2D"));
-            GenTextures          = Marshal.GetDelegateForFunctionPointer<GenTexturesDelegate>(glfwGetProcAddress("glGenTextures"));
-            DeleteTextures       = Marshal.GetDelegateForFunctionPointer<DeleteTexturesDelegate>(glfwGetProcAddress("glDeleteTextures"));
-            ColorPointerRaw      = Marshal.GetDelegateForFunctionPointer<ColorPointerDelegate>(glfwGetProcAddress("glColorPointer"));
-            VertexPointerRaw     = Marshal.GetDelegateForFunctionPointer<VertexPointerDelegate>(glfwGetProcAddress("glVertexPointer"));
-            TexCoordPointerRaw   = Marshal.GetDelegateForFunctionPointer<TexCoordPointerDelegate>(glfwGetProcAddress("glTexCoordPointer"));
-            DrawArrays           = Marshal.GetDelegateForFunctionPointer<DrawArraysDelegate>(glfwGetProcAddress("glDrawArrays"));
-            DrawElementsRaw      = Marshal.GetDelegateForFunctionPointer<DrawElementsDelegate>(glfwGetProcAddress("glDrawElements"));
-            PushMatrix           = Marshal.GetDelegateForFunctionPointer<PushMatrixDelegate>(glfwGetProcAddress("glPushMatrix"));
-            PopMatrix            = Marshal.GetDelegateForFunctionPointer<PopMatrixDelegate>(glfwGetProcAddress("glPopMatrix"));
-            PopMatrix            = Marshal.GetDelegateForFunctionPointer<PopMatrixDelegate>(glfwGetProcAddress("glPopMatrix"));
-            Translate            = Marshal.GetDelegateForFunctionPointer<TranslateDelegate>(glfwGetProcAddress("glTranslatef"));
-            LineWidth            = Marshal.GetDelegateForFunctionPointer<LineWidthDelegate>(glfwGetProcAddress("glLineWidth"));
-            DrawBuffer           = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(glfwGetProcAddress("glDrawBuffer"));
-            ReadPixels           = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(glfwGetProcAddress("glReadPixels"));
-            GetFloatRaw          = Marshal.GetDelegateForFunctionPointer<GetFloatDelegate>(glfwGetProcAddress("glGetFloatv"));
-            GenFramebuffers      = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(GetExtProcAddress("glGenFramebuffers"));
-            BindFramebuffer      = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(GetExtProcAddress("glBindFramebuffer"));
-            FramebufferTexture2D = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(GetExtProcAddress("glFramebufferTexture2D"));
-            DeleteFramebuffers   = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(GetExtProcAddress("glDeleteFramebuffers"));
+            Clear                   = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(glfwGetProcAddress("glClear"));
+            ClearColor              = Marshal.GetDelegateForFunctionPointer<ClearColorDelegate>(glfwGetProcAddress("glClearColor"));
+            Viewport                = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(glfwGetProcAddress("glViewport"));
+            Enable                  = Marshal.GetDelegateForFunctionPointer<EnableDelegate>(glfwGetProcAddress("glEnable"));
+            Disable                 = Marshal.GetDelegateForFunctionPointer<DisableDelegate>(glfwGetProcAddress("glDisable"));
+            BlendFunc               = Marshal.GetDelegateForFunctionPointer<BlendFuncDelegate>(glfwGetProcAddress("glBlendFunc"));
+            PolygonMode             = Marshal.GetDelegateForFunctionPointer<PolygonModeDelegate>(glfwGetProcAddress("glPolygonMode"));
+            Scissor                 = Marshal.GetDelegateForFunctionPointer<ScissorDelegate>(glfwGetProcAddress("glScissor"));
+            EnableClientState       = Marshal.GetDelegateForFunctionPointer<EnableClientStateDelegate>(glfwGetProcAddress("glEnableClientState"));
+            DisableClientState      = Marshal.GetDelegateForFunctionPointer<DisableClientStateDelegate>(glfwGetProcAddress("glDisableClientState"));
+            TexParameter            = Marshal.GetDelegateForFunctionPointer<TexParameterDelegate>(glfwGetProcAddress("glTexParameteri"));
+            BindTexture             = Marshal.GetDelegateForFunctionPointer<BindTextureDelegate>(glfwGetProcAddress("glBindTexture"));
+            ActiveTexture           = Marshal.GetDelegateForFunctionPointer<ActiveTextureDelegate>(glfwGetProcAddress("glActiveTexture"));
+            TexImage2DRaw           = Marshal.GetDelegateForFunctionPointer<TexImage2DDelegate>(glfwGetProcAddress("glTexImage2D"));
+            TexSubImage2DRaw        = Marshal.GetDelegateForFunctionPointer<TexSubImage2DDelegate>(glfwGetProcAddress("glTexSubImage2D"));
+            GenTextures             = Marshal.GetDelegateForFunctionPointer<GenTexturesDelegate>(glfwGetProcAddress("glGenTextures"));
+            DeleteTextures          = Marshal.GetDelegateForFunctionPointer<DeleteTexturesDelegate>(glfwGetProcAddress("glDeleteTextures"));
+            ColorPointerRaw         = Marshal.GetDelegateForFunctionPointer<ColorPointerDelegate>(glfwGetProcAddress("glColorPointer"));
+            VertexPointerRaw        = Marshal.GetDelegateForFunctionPointer<VertexPointerDelegate>(glfwGetProcAddress("glVertexPointer"));
+            TexCoordPointerRaw      = Marshal.GetDelegateForFunctionPointer<TexCoordPointerDelegate>(glfwGetProcAddress("glTexCoordPointer"));
+            DrawArrays              = Marshal.GetDelegateForFunctionPointer<DrawArraysDelegate>(glfwGetProcAddress("glDrawArrays"));
+            DrawElementsRaw         = Marshal.GetDelegateForFunctionPointer<DrawElementsDelegate>(glfwGetProcAddress("glDrawElements"));
+            LineWidth               = Marshal.GetDelegateForFunctionPointer<LineWidthDelegate>(glfwGetProcAddress("glLineWidth"));
+            DrawBuffer              = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(glfwGetProcAddress("glDrawBuffer"));
+            ReadPixels              = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(glfwGetProcAddress("glReadPixels"));
+            GetFloatRaw             = Marshal.GetDelegateForFunctionPointer<GetFloatDelegate>(glfwGetProcAddress("glGetFloatv"));
+            DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(glfwGetProcAddress("glDebugMessageCallback"));
+            CreateShader            = Marshal.GetDelegateForFunctionPointer<CreateShaderDelegate>(glfwGetProcAddress("glCreateShader"));
+            ShaderSourceRaw         = Marshal.GetDelegateForFunctionPointer<ShaderSourceDelegate>(glfwGetProcAddress("glShaderSource"));
+            CompileShader           = Marshal.GetDelegateForFunctionPointer<CompileShaderDelegate>(glfwGetProcAddress("glCompileShader"));
+            GetShaderIntRaw         = Marshal.GetDelegateForFunctionPointer<GetShaderIntDelegate>(glfwGetProcAddress("glGetShaderiv"));
+            GetShaderInfoLogRaw     = Marshal.GetDelegateForFunctionPointer<GetShaderInfoLogDelegate>(glfwGetProcAddress("glGetShaderInfoLog"));
+            CreateProgram           = Marshal.GetDelegateForFunctionPointer<CreateProgramDelegate>(glfwGetProcAddress("glCreateProgram"));
+            AttachShader            = Marshal.GetDelegateForFunctionPointer<AttachShaderDelegate>(glfwGetProcAddress("glAttachShader"));
+            LinkProgram             = Marshal.GetDelegateForFunctionPointer<LinkProgramDelegate>(glfwGetProcAddress("glLinkProgram"));
+            GetProgramIntRaw        = Marshal.GetDelegateForFunctionPointer<GetProgramIntDelegate>(glfwGetProcAddress("glGetProgramiv"));
+            GetProgramInfoLogRaw    = Marshal.GetDelegateForFunctionPointer<GetProgramInfoLogDelegate>(glfwGetProcAddress("glGetProgramInfoLog"));
+            UseProgram              = Marshal.GetDelegateForFunctionPointer<UseProgramDelegate>(glfwGetProcAddress("glUseProgram"));
+            GetUniformLocation      = Marshal.GetDelegateForFunctionPointer<GetUniformLocationDelegate>(glfwGetProcAddress("glGetUniformLocation"));
+            VertexAttribPointerRaw  = Marshal.GetDelegateForFunctionPointer<VertexAttribPointerDelegate>(glfwGetProcAddress("glVertexAttribPointer"));
+            GenBuffersRaw           = Marshal.GetDelegateForFunctionPointer<GenBuffersDelegate>(glfwGetProcAddress("glGenBuffers"));
+            BindBuffer              = Marshal.GetDelegateForFunctionPointer<BindBufferDelegate>(glfwGetProcAddress("glBindBuffer"));
+            BufferDataRaw           = Marshal.GetDelegateForFunctionPointer<BufferDataDelegate>(glfwGetProcAddress("glBufferData"));
+            BufferSubDataRaw        = Marshal.GetDelegateForFunctionPointer<BufferSubDataDelegate>(glfwGetProcAddress("glBufferSubData"));
+            GenVertexArraysRaw      = Marshal.GetDelegateForFunctionPointer<GenVertexArraysDelegate>(glfwGetProcAddress("glGenVertexArrays"));
+            BindVertexArray         = Marshal.GetDelegateForFunctionPointer<BindVertexArrayDelegate>(glfwGetProcAddress("glBindVertexArray"));
+            EnableVertexAttribArray = Marshal.GetDelegateForFunctionPointer<EnableVertexAttribArrayDelegate>(glfwGetProcAddress("glEnableVertexAttribArray"));
+            Flush                   = Marshal.GetDelegateForFunctionPointer<FlushDelegate>(glfwGetProcAddress("glFlush"));
+            Uniform1iRaw            = Marshal.GetDelegateForFunctionPointer<Uniform1iDelegate>(glfwGetProcAddress("glUniform1i"));
+            Uniform1fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform1fDelegate>(glfwGetProcAddress("glUniform1f"));
+            Uniform2fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform2fDelegate>(glfwGetProcAddress("glUniform2f"));
+            Uniform3fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform3fDelegate>(glfwGetProcAddress("glUniform3f"));
+            Uniform4fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform4fDelegate>(glfwGetProcAddress("glUniform4f"));
+            Uniform1fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform1fvDelegate>(glfwGetProcAddress("glUniform1fv"));
+            Uniform2fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform2fvDelegate>(glfwGetProcAddress("glUniform2fv"));
+            Uniform3fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform3fvDelegate>(glfwGetProcAddress("glUniform3fv"));
+            Uniform4fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform4fvDelegate>(glfwGetProcAddress("glUniform4fv"));
+            Hint                    = Marshal.GetDelegateForFunctionPointer<HintDelegate>(glfwGetProcAddress("glHint"));
+            DepthFunc               = Marshal.GetDelegateForFunctionPointer<DepthFuncDelegate>(glfwGetProcAddress("glDepthFunc"));
+            ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(glfwGetProcAddress("glColorMask"));
+            PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));
+            PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(glfwGetProcAddress("glPopDebugGroupKHR"));
+
+            // MATTT : See if those are now part of the stock OpenGL 3.3.
+            GenFramebuffers = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(GetExtProcAddress("glGenFramebuffers"));
+            BindFramebuffer         = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(GetExtProcAddress("glBindFramebuffer"));
+            FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(GetExtProcAddress("glFramebufferTexture2D"));
+            DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(GetExtProcAddress("glDeleteFramebuffers"));
 
             initialized = true;
         }
@@ -604,6 +924,59 @@ namespace FamiStudio
         {
             fixed (float* p = &floats[0])
                 GetFloatRaw(param, (IntPtr)p);
+        }
+
+        public static unsafe void ShaderSource(int shader, string[] source)
+        {
+            var ptrs = new IntPtr[source.Length];
+            for (int i = 0; i < source.Length; i++)
+                ptrs[i] = Marshal.StringToHGlobalAnsi(source[i]);
+
+            fixed (IntPtr* p = &ptrs[0])
+                ShaderSourceRaw(shader, source.Length, (IntPtr)p, IntPtr.Zero);
+
+            for (int i = 0; i < source.Length; i++)
+                Marshal.FreeHGlobal(ptrs[i]);
+        }
+
+        public static unsafe string GetShaderInfoLog(int shader)
+        {
+            var ptr = Marshal.AllocHGlobal(4096);
+            var len = 0;
+
+            GL.GetShaderInfoLogRaw(shader, 4096, ref len, ptr);
+
+            var log = Marshal.PtrToStringAnsi(ptr);
+            Marshal.FreeHGlobal(ptr);
+
+            return log;
+        }
+
+        public static unsafe string GetProgramInfoLog(int shader)
+        {
+            var ptr = Marshal.AllocHGlobal(4096);
+            var len = 0;
+
+            GL.GetProgramInfoLogRaw(shader, 4096, ref len, ptr);
+
+            var log = Marshal.PtrToStringAnsi(ptr);
+            Marshal.FreeHGlobal(ptr);
+
+            return log;
+        }
+
+        public static unsafe int GetShaderInt(int shader, int param)
+        {
+            int val = 0;
+            GetShaderIntRaw(shader, param, new IntPtr(&val));
+            return val;
+        }
+
+        public static unsafe int GetProgramInt(int program, int param)
+        {
+            int val = 0;
+            GetProgramIntRaw(program, param, new IntPtr(&val));
+            return val;
         }
 
         public unsafe static int GenFramebuffer()
@@ -639,6 +1012,28 @@ namespace FamiStudio
                 TexCoordPointerRaw(size, type, stride, new IntPtr(p));
         }
 
+        public unsafe static void VertexAttribPointer(int index, int size, int type, bool normalized, int stride, float[] data)
+        {
+            if (data != null)
+            { 
+                fixed (float* p = &data[0])
+                    VertexAttribPointerRaw(index, size, type, (byte)(normalized ? 1 : 0), stride, new IntPtr(p));
+            }
+            else
+            {
+                VertexAttribPointerRaw(index, size, type, (byte)(normalized ? 1 : 0), stride, IntPtr.Zero);
+            }
+        }
+
+        public static void ColorMask(bool r, bool g, bool b, bool a)
+        {
+            ColorMaskRaw(
+                (byte)(r ? 1 : 0),
+                (byte)(g ? 1 : 0),
+                (byte)(b ? 1 : 0),
+                (byte)(a ? 1 : 0));
+        }
+
         public unsafe static void DrawElements(int mode, int count, int type, IntPtr data)
         {
             DrawElementsRaw(mode, count, type, data);
@@ -663,6 +1058,94 @@ namespace FamiStudio
             var tmp = new int[1] { id };
             fixed (int* p = &tmp[0])
                 DeleteTextures(1, new IntPtr(p));
+        }
+
+        public unsafe static int GenBuffer()
+        {
+            var tmp = new int[1];
+            fixed (int* p = &tmp[0])
+                GenBuffersRaw(1, new IntPtr(p));
+            return tmp[0];
+        }
+
+        public unsafe static int GenVertexArray()
+        {
+            var tmp = new int[1];
+            fixed (int* p = &tmp[0])
+                GenVertexArraysRaw(1, new IntPtr(p));
+            return tmp[0];
+        }
+
+        public unsafe static void BufferData(int target, float[] data, int len, int usage)
+        {
+            Debug.Assert(len <= data.Length);
+
+            fixed (float* p = &data[0])
+                BufferDataRaw(target, new IntPtr(len * sizeof(float)), (IntPtr)p, usage);
+        }
+
+        public unsafe static void BufferData(int target, int[] data, int len, int usage)
+        {
+            Debug.Assert(len <= data.Length);
+
+            fixed (int* p = &data[0])
+                BufferDataRaw(target, new IntPtr(len * sizeof(int)), (IntPtr)p, usage);
+        }
+
+        public unsafe static void BufferData(int target, short[] data, int len, int usage)
+        {
+            Debug.Assert(len <= data.Length);
+
+            fixed (short* p = &data[0])
+                BufferDataRaw(target, new IntPtr(len * sizeof(short)), (IntPtr)p, usage);
+        }
+
+        public unsafe static void BufferData(int target, byte[] data, int len, int usage)
+        {
+            Debug.Assert(len <= data.Length);
+
+            fixed (byte* p = &data[0])
+                BufferDataRaw(target, new IntPtr(len * sizeof(byte)), (IntPtr)p, usage);
+        }
+
+        public static void Uniform(int location, int x)
+        {
+            Uniform1iRaw(location, x);
+        }
+
+        public static void Uniform(int location, float x)
+        {
+            Uniform1fRaw(location, x);
+        }
+
+        public static void Uniform(int location, float x, float y)
+        {
+            Uniform2fRaw(location, x, y);
+        }
+
+        public static void Uniform(int location, float x, float y, float z)
+        {
+            Uniform3fRaw(location, x, y, z);
+        }
+
+        public static void Uniform(int location, float x, float y, float z, float w)
+        {
+            Uniform4fRaw(location, x, y, z, w);
+        }
+
+        public static unsafe void Uniform(int location, float[] values)
+        {
+            fixed (float* p = &values[0])
+            {
+                switch (values.Length)
+                {
+                    case 1: Uniform1fvRaw(location, 1, (IntPtr)p); break;
+                    case 2: Uniform2fvRaw(location, 1, (IntPtr)p); break;
+                    case 3: Uniform3fvRaw(location, 1, (IntPtr)p); break;
+                    case 4: Uniform4fvRaw(location, 1, (IntPtr)p); break;
+                    default: Debug.Assert(false); break;
+                }
+            }
         }
 
         public unsafe static void TexImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, IntPtr data)
@@ -697,6 +1180,22 @@ namespace FamiStudio
         {
             fixed (byte* p = &data[0])
                 TexSubImage2DRaw(target, level, xoffset, yoffset, width, height, format, type, new IntPtr(p));
+        }
+
+        public static void PushDebugGroup(string name)
+        {
+#if DEBUG
+            if (PushDebugGroupRaw != null)
+                PushDebugGroupRaw(DebugSourceApplication, 0, -1, name);
+#endif
+        }
+
+        public static void PopDebugGroup()
+        {
+#if DEBUG
+            if (PopDebugGroupRaw != null)
+                PopDebugGroupRaw();
+#endif
         }
     }
 }

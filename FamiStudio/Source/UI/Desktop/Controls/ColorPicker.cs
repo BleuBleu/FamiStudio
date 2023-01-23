@@ -13,7 +13,7 @@ namespace FamiStudio
         private Color selectedColor;
         public Color SelectedColor => selectedColor;
 
-        public ColorPicker(Dialog dlg, Color color) : base(dlg)
+        public ColorPicker(Color color)
         {
             selectedColor = color;
         }
@@ -66,7 +66,7 @@ namespace FamiStudio
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
 
             var numColorsX = Theme.CustomColors.GetLength(0);
             var numColorsY = Theme.CustomColors.GetLength(1);

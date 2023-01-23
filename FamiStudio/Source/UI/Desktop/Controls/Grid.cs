@@ -61,7 +61,7 @@ namespace FamiStudio
         public int ItemCount => data.GetLength(0);
         public bool FullRowSelect { get => fullRowSelect; set => fullRowSelect = value; }
 
-        public Grid(Dialog dlg, ColumnDesc[] columnDescs, int rows, bool hasHeader = true) : base(dlg) 
+        public Grid(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
         {
             columns = columnDescs;
             numRows = rows;
@@ -80,8 +80,9 @@ namespace FamiStudio
 
             if (hasAnyDropDowns)
             {
-                dropDownInactive = new DropDown(dlg, new[] { "" }, 0, true);
-                dropDownActive = new DropDown(dlg, new[] { "" }, 0);
+                // CTRLTODO : Add to dialog!
+                dropDownInactive = new DropDown(new[] { "" }, 0, true);
+                dropDownActive = new DropDown(new[] { "" }, 0);
                 dropDownInactive.SetRowHeight(rowHeight);
                 dropDownActive.SetRowHeight(rowHeight);
                 dropDownInactive.Visible = false;
@@ -145,7 +146,7 @@ namespace FamiStudio
             data = newData;
             Debug.Assert(data.GetLength(1) == columns.Length);
 
-            if (parentDialog != null)
+            if (window != null)
                 UpdateLayout();
             MarkDirty();
         }
@@ -208,22 +209,20 @@ namespace FamiStudio
             SetAndMarkDirty(ref scroll, 0);
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
+            var g = Graphics;
             bmpCheckOn  = g.GetBitmapAtlasRef("CheckBoxYes");
             bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
             bmpRadioOn  = g.GetBitmapAtlasRef("RadioButtonOn");
             bmpRadioOff = g.GetBitmapAtlasRef("RadioButtonOff");
-        }
 
-        protected override void OnAddedToDialog()
-        {
             UpdateLayout();
 
             if (hasAnyDropDowns)
             {
-                parentDialog.AddControl(dropDownInactive);
-                parentDialog.AddControl(dropDownActive);
+                ParentContainer.AddControl(dropDownInactive);
+                ParentContainer.AddControl(dropDownActive);
             }
         }
 
@@ -336,7 +335,7 @@ namespace FamiStudio
                                     dropDownActive.SetItems(colDesc.DropDownValues);
                                     dropDownActive.SelectedIndex = Array.IndexOf(colDesc.DropDownValues, (string)data[row, col]);
                                     dropDownActive.SetListOpened(true);
-                                    dropDownActive.GrabDialogFocus();
+                                    //dropDownActive.GrabDialogFocus(); // CTRLTODO : Focus!
                                     dropDownRow = row;
                                     dropDownCol = col;
                                     break;
@@ -431,7 +430,7 @@ namespace FamiStudio
                 {
                     dropDownActive.SetListOpened(false);
                     dropDownActive.Visible = false;
-                    GrabDialogFocus();
+                    // GrabDialogFocus(); CTRLTODO : Focus
                 }
 
                 UpdateHover(e);
@@ -470,7 +469,7 @@ namespace FamiStudio
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
             var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
@@ -502,7 +501,7 @@ namespace FamiStudio
             {
                 c.FillRectangle(0, 0, width, rowHeight, Theme.DarkGreyColor3);
                 for (var j = 0; j < columns.Length; j++) 
-                    c.DrawText(columns[j].Name, FontResources.FontMedium, columnOffsets[j] + margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
+                    c.DrawText(columns[j].Name, Fonts.FontMedium, columnOffsets[j] + margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
             }
 
             // Data
@@ -550,10 +549,10 @@ namespace FamiStudio
                             case ColumnType.Button:
                             {
                                 var buttonBaseX = colWidth - rowHeight;
-                                c.DrawText((string)val, FontResources.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
+                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
                                 c.PushTranslation(buttonBaseX, 0);
                                 c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight, hoverRow == k && hoverCol == j && hoverButton ? Theme.MediumGreyColor1 : Theme.DarkGreyColor3, foreColor);
-                                c.DrawText("...", FontResources.FontMediumBold, 0, 0, foreColor, TextFlags.MiddleCenter, rowHeight, rowHeight);
+                                c.DrawText("...", Fonts.FontMediumBold, 0, 0, foreColor, TextFlags.MiddleCenter, rowHeight, rowHeight);
                                 c.PopTransform();
                                 break;
                             }
@@ -562,17 +561,17 @@ namespace FamiStudio
                                 if (colEnabled)
                                 {
                                     c.FillRectangle(0, 0, (int)Math.Round((int)val / 100.0f * colWidth), rowHeight, Theme.DarkGreyColor6);
-                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), FontResources.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), Fonts.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
-                                    c.DrawText("N/A", FontResources.FontMedium, 0, 0, Theme.MediumGreyColor1, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText("N/A", Fonts.FontMedium, 0, 0, Theme.MediumGreyColor1, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 break;
                             }
                             case ColumnType.Label:
                             {
-                                c.DrawText((string)val, FontResources.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
+                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
                                 break;
                             }
                             case ColumnType.Radio:

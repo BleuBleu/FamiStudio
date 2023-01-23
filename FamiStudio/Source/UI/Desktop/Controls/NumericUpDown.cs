@@ -18,7 +18,7 @@ namespace FamiStudio
 
         protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
-        public NumericUpDown(Dialog dlg, int value, int minVal, int maxVal) : base(dlg, value, minVal, maxVal)
+        public NumericUpDown(int value, int minVal, int maxVal) : base(value, minVal, maxVal)
         {
             val = value;
             min = minVal;
@@ -56,21 +56,18 @@ namespace FamiStudio
             set { max = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
         }
 
-        protected override void OnAddedToDialog()
+        protected override void OnAddedToContainer()
         {
-            outerMargin = GetButtonRect(0).Width + textBoxMargin;
-            base.OnAddedToDialog();
-        }
+            base.OnAddedToContainer();
 
-        protected override void OnRenderInitialized(Graphics g)
-        {
+            outerMargin = GetButtonRect(0).Width + textBoxMargin;
+
+            var g = ParentWindow.Graphics;
             bmp = new[]
             {
                 g.GetBitmapAtlasRef("UpDownMinus"),
                 g.GetBitmapAtlasRef("UpDownPlus")
             };
-
-            base.OnRenderInitialized(g);
         }
 
         private Rectangle GetButtonRect(int idx)
@@ -208,7 +205,7 @@ namespace FamiStudio
         {
             base.OnRender(g);
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
             var rects = new []

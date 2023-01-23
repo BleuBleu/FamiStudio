@@ -18,13 +18,13 @@ namespace FamiStudio
         public static int ScaleCustom(float val, float scale)
         {
             Debug.Assert(initialized);
-            return (int)Math.Round(scale * windowScaling);
+            return (int)Math.Round(val * scale);
         }
 
         public static float ScaleCustomFloat(float val, float scale)
         {
             Debug.Assert(initialized);
-            return scale * windowScaling;
+            return val * scale;
         }
 
         public static int ScaleForWindow(float val)
@@ -37,6 +37,18 @@ namespace FamiStudio
         {
             Debug.Assert(initialized);
             return val * windowScaling;
+        }
+
+        public static int ScaleForFont(float val)
+        {
+            Debug.Assert(initialized);
+            return (int)Math.Round(val * fontScaling);
+        }
+
+        public static float ScaleForFontFloat(float val)
+        {
+            Debug.Assert(initialized);
+            return val * fontScaling;
         }
 
         public static int[] GetAvailableScalings()

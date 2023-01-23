@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace FamiStudio
 {
-    public class FontRenderResources : IDisposable
+    public class Fonts : IDisposable
     {
         protected enum RenderFontStyle
         {
@@ -56,14 +56,14 @@ namespace FamiStudio
         public Font FontVeryLargeBold => fonts[8];
         public Font FontHuge          => fonts[9];
 
-        public FontRenderResources(Graphics g)
+        public Fonts(Graphics g)
         {
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
                 fonts[i] = g.CreateFontFromResource(
                     FontDefinitions[i].Name,
                     FontDefinitions[i].Bold,
-                    (int)(FontDefinitions[i].Size * g.FontScaling));
+                    DpiScaling.ScaleForFont(FontDefinitions[i].Size));
             }
         }
 

@@ -131,10 +131,7 @@ namespace FamiStudio
             return LaunchEncoderLoop((f) =>
             {
                 var frame = metadata[f];
-
-                videoGraphics.Clear(Theme.DarkGreyColor2);
-
-                var cmd = videoGraphics.CreateCommandList();
+                var cmd = videoGraphics.DefaultLayer;
 
                 // Draw gradients.
                 for (int i = 0; i < numRows; i++)
@@ -180,8 +177,6 @@ namespace FamiStudio
                     cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
                 for (int i = 1; i < numColumns; i++)
                     cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
-
-                videoGraphics.DrawCommandList(cmd);
             });
         }
     }

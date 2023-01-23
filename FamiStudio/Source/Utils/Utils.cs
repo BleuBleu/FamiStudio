@@ -445,6 +445,18 @@ namespace FamiStudio
                 }).Start();
             }
         }
+
+        public static float Dot(float x0, float y0, float x1, float y1)
+        {
+            return x0 * x1 + y0 * y1;
+        }
+
+        public static void Normalize(ref float x, ref float y)
+        {
+            var invLen = 1.0f / (float)Math.Sqrt(x * x + y * y);
+            x *= invLen;
+            y *= invLen;
+        }
     }
 
     public class ThreadSafeCounter

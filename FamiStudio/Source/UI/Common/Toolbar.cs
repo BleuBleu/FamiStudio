@@ -291,17 +291,18 @@ namespace FamiStudio
 
         private float iconScaleFloat = 1.0f;
 
-        public Toolbar(FamiStudioWindow win) : base(win)
+        public Toolbar(FamiStudioWindow win) // CTRLTODO : base(win)
         {
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
+            var g = ParentWindow.Graphics;
             bmpButtons = g.GetBitmapAtlasRefs(ButtonImageNames);
-            timeCodeFont = FontResources.FontHuge;
+            timeCodeFont = Fonts.FontHuge;
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
             buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = Platform.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
@@ -334,27 +335,27 @@ namespace FamiStudio
                 var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
                 var bitmapSize = bmpButtons[0].ElementSize;
 
-                buttonIconPosX = ScaleCustom(DefaultButtonIconPosX, scale);
-                buttonIconPosY = ScaleCustom(DefaultButtonIconPosY, scale);
-                buttonSize     = ScaleCustom(DefaultButtonSize, scale);
-                iconSize       = ScaleCustom(DefaultIconSize, scale);
+                buttonIconPosX = DpiScaling.ScaleCustom(DefaultButtonIconPosX, scale);
+                buttonIconPosY = DpiScaling.ScaleCustom(DefaultButtonIconPosY, scale);
+                buttonSize     = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
+                iconSize       = DpiScaling.ScaleCustom(DefaultIconSize, scale);
                 iconScaleFloat = iconSize / (float)(bitmapSize.Width);
             }
             else
             {
                 buttons[(int)ButtonType.Qwerty] = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
 
-                timecodePosY            = ScaleForWindow(DefaultTimecodePosY);
-                oscilloscopePosY        = ScaleForWindow(DefaultTimecodePosY);
-                timecodeOscSizeX        = ScaleForWindow(DefaultTimecodeSizeX);
-                tooltipSingleLinePosY   = ScaleForWindow(DefaultTooltipSingleLinePosY);
-                tooltipMultiLinePosY    = ScaleForWindow(DefaultTooltipMultiLinePosY);
-                tooltipLineSizeY        = ScaleForWindow(DefaultTooltipLineSizeY);
-                tooltipSpecialCharSizeX = ScaleForWindow(DefaultTooltipSpecialCharSizeX);
-                tooltipSpecialCharSizeY = ScaleForWindow(DefaultTooltipSpecialCharSizeY);
-                buttonIconPosX          = ScaleForWindow(DefaultButtonIconPosX);
-                buttonIconPosY          = ScaleForWindow(DefaultButtonIconPosY);
-                buttonSize              = ScaleForWindow(DefaultButtonSize);
+                timecodePosY            = DpiScaling.ScaleForWindow(DefaultTimecodePosY);
+                oscilloscopePosY        = DpiScaling.ScaleForWindow(DefaultTimecodePosY);
+                timecodeOscSizeX        = DpiScaling.ScaleForWindow(DefaultTimecodeSizeX);
+                tooltipSingleLinePosY   = DpiScaling.ScaleForWindow(DefaultTooltipSingleLinePosY);
+                tooltipMultiLinePosY    = DpiScaling.ScaleForWindow(DefaultTooltipMultiLinePosY);
+                tooltipLineSizeY        = DpiScaling.ScaleForWindow(DefaultTooltipLineSizeY);
+                tooltipSpecialCharSizeX = DpiScaling.ScaleForWindow(DefaultTooltipSpecialCharSizeX);
+                tooltipSpecialCharSizeY = DpiScaling.ScaleForWindow(DefaultTooltipSpecialCharSizeY);
+                buttonIconPosX          = DpiScaling.ScaleForWindow(DefaultButtonIconPosX);
+                buttonIconPosY          = DpiScaling.ScaleForWindow(DefaultButtonIconPosY);
+                buttonSize              = DpiScaling.ScaleForWindow(DefaultButtonSize);
 
                 bmpSpecialCharacters = g.GetBitmapAtlasRefs(SpecialCharImageNames);
 
@@ -379,32 +380,32 @@ namespace FamiStudio
                 buttons[(int)ButtonType.Follow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift}{F}";
                 buttons[(int)ButtonType.Help].ToolTip      = "{MouseLeft} Online documentation";
 
-                specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(32) };
-                specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(38) };
-                specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = ScaleForWindow(38) };
-                specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = ScaleForWindow(28) };
-                specialCharacters["ForceCtrl"]  = new TooltipSpecialCharacter { Width = ScaleForWindow(28) };
-                specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["Tab"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(38) };
-                specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["F1"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F2"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F3"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F4"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F5"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F6"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F7"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F8"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F9"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F10"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["F11"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["F12"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = ScaleForWindow(2) };
-                specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = ScaleForWindow(2) };
-                specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = ScaleForWindow(2) };
-                specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = ScaleForWindow(2) };
+                specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(32) };
+                specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
+                specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
+                specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(28) };
+                specialCharacters["ForceCtrl"]  = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(28) };
+                specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["Tab"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
+                specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["F1"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F2"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F3"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F4"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F5"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F6"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F7"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F8"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F9"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F10"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["F11"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["F12"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = DpiScaling.ScaleForWindow(2) };
+                specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = DpiScaling.ScaleForWindow(2) };
+                specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = DpiScaling.ScaleForWindow(2) };
+                specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = DpiScaling.ScaleForWindow(2) };
                 specialCharacters["Warning"]    = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Warning };
 
                 for (char i = 'A'; i <= 'Z'; i++)
@@ -425,21 +426,16 @@ namespace FamiStudio
             UpdateButtonLayout();
         }
 
-        protected override void OnRenderTerminated()
-        {
-            specialCharacters.Clear();
-        }
-
         private void UpdateButtonLayout()
         {
-            if (!IsRenderInitialized)
+            if (ParentContainer == null)
                 return;
 
             if (Platform.IsDesktop)
             {
                 // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
-                var hideLessImportantButtons = Width < 1420 * WindowScaling;
-                var hideOscilloscope         = Width < 1250 * WindowScaling;
+                var hideLessImportantButtons = Width < 1420 * DpiScaling.Window;
+                var hideOscilloscope         = Width < 1250 * DpiScaling.Window;
 
                 var x = 0;
 
@@ -537,7 +533,7 @@ namespace FamiStudio
                 oscilloscopePosX = buttonIconPosX + oscCol * buttonSize;
                 oscilloscopePosY = buttonIconPosX + oscRow * buttonSize;
 
-                timeCodeFont = FontResources.GetBestMatchingFontByWidth("00:00:000", timecodeOscSizeX, false);
+                timeCodeFont = Fonts.GetBestMatchingFontByWidth("00:00:000", timecodeOscSizeX, false);
             }
         }
 
@@ -1002,10 +998,10 @@ namespace FamiStudio
 
         private void RenderWarningAndTooltip(CommandList c)
         {
-            var scaling = WindowScaling;
+            var scaling = DpiScaling.Window;
             var message = tooltip;
             var messageColor = redTooltip ? warningColor : Theme.LightGreyColor2;
-            var messageFont = FontResources.FontMedium;
+            var messageFont = Fonts.FontMedium;
 
             // Tooltip
             if (!string.IsNullOrEmpty(message))
@@ -1089,6 +1085,8 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
+            // GLTODO : Bring this back.
+            /*
             var c = g.CreateCommandList(); // Main
 
             RenderShadow(c);
@@ -1112,6 +1110,7 @@ namespace FamiStudio
                 else
                     c.DrawLine(0, Height - 1, Width, Height - 1, Theme.BlackColor);
             }
+            */
         }
 
         public bool ShouldRefreshOscilloscope(bool hasNonZeroSample)
@@ -1149,7 +1148,7 @@ namespace FamiStudio
                 Utils.SplitVersionNumber(Platform.ApplicationVersion, out var betaNumber);
 
                 if (betaNumber > 0)
-                    c.DrawText($"BETA {betaNumber}", FontResources.FontSmall, x + 4, y + 4, Theme.LightRedColor);
+                    c.DrawText($"BETA {betaNumber}", Fonts.FontSmall, x + 4, y + 4, Theme.LightRedColor);
             }
 
             c.DrawRectangle(x, y, x + sx, y + sy, Theme.LightGreyColor2);

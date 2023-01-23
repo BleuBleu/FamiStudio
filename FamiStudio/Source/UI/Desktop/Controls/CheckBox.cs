@@ -12,7 +12,7 @@ namespace FamiStudio
         private BitmapAtlasRef bmpCheckOn;
         private BitmapAtlasRef bmpCheckOff;
 
-        public CheckBox(Dialog dlg, bool chk, string txt = null) : base(dlg)
+        public CheckBox(bool chk, string txt = null)
         {
             text = txt;
             check = chk;
@@ -25,10 +25,10 @@ namespace FamiStudio
             set { if (SetAndMarkDirty(ref check, value)) CheckedChanged?.Invoke(this, check); }
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
-            bmpCheckOn  = g.GetBitmapAtlasRef("CheckBoxYes");
-            bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
+            bmpCheckOn  = window.Graphics.GetBitmapAtlasRef("CheckBoxYes");
+            bmpCheckOff = window.Graphics.GetBitmapAtlasRef("CheckBoxNo");
         }
 
         public bool IsPointInCheckBox(int x, int y)
@@ -45,6 +45,11 @@ namespace FamiStudio
                 Checked = !Checked;
         }
 
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            OnMouseDown(e);
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             SetAndMarkDirty(ref hover, IsPointInCheckBox(e.X, e.Y));
@@ -57,7 +62,7 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             var bmpSize = bmpCheckOn.ElementSize;
             var baseY = (height - bmpSize.Height) / 2;
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
@@ -66,7 +71,7 @@ namespace FamiStudio
             c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, color);
 
             if (!string.IsNullOrEmpty(text))
-                c.DrawText(text, FontResources.FontMedium, bmpSize.Width + margin, 0, color, TextFlags.MiddleLeft, 0, height);
+                c.DrawText(text, Fonts.FontMedium, bmpSize.Width + margin, 0, color, TextFlags.MiddleLeft, 0, height);
         }
     }
 }

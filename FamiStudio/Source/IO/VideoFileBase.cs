@@ -33,7 +33,7 @@ namespace FamiStudio
         protected VideoEncoder videoEncoder;
         protected VideoChannelState[] channelStates;
         protected VideoFrameMetadata[] metadata;
-        protected FontRenderResources fontResources;
+        protected Fonts fontResources;
         protected Bitmap watermark;
 
         // TODO : This is is very similar to Oscilloscope.cs, unify eventually...
@@ -199,7 +199,7 @@ namespace FamiStudio
                 return false;
             }
 
-            fontResources = new FontRenderResources(videoGraphics);
+            fontResources = new Fonts(videoGraphics);
             watermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 
             // Generate metadata
@@ -212,14 +212,15 @@ namespace FamiStudio
             return true;
         }
 
+        // GLTODO : Retest massive video issue, shouldnt happen anymore.
         protected void ConditionalFlushCommandList(ref CommandList cmd)
         {
-            if (cmd.IsAlmostFull())
-            {
-                var g = cmd.Graphics;
-                g.DrawCommandList(cmd);
-                cmd = g.CreateCommandList();
-            }
+            //if (cmd.IsAlmostFull())
+            //{
+            //    var g = cmd.Graphics;
+            //    g.DrawCommandList(cmd);
+            //    cmd = g.CreateCommandList();
+            //}
         }
 
         protected bool LaunchEncoderLoop(Action<int> body, Action cleanup = null)
@@ -251,17 +252,12 @@ namespace FamiStudio
 
                     var frame = metadata[f];
 
-                    videoGraphics.BeginDrawFrame();
-                    videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
+                    videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), Theme.DarkGreyColor2);
 
                     body(f);
 
                     // Watermark.
-                    var cmd = videoGraphics.CreateCommandList();
-                    cmd.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
-                    videoGraphics.DrawCommandList(cmd);
-
-                    videoGraphics.EndDrawControl();
+                    videoGraphics.ForegroundLayer.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
                     videoGraphics.EndDrawFrame();
 
                     // Readback

@@ -119,6 +119,7 @@
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\Control.cs" />
+    <Compile Include="Source\UI\Common\Container.cs" />
     <Compile Include="Source\UI\Common\Cursors.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\Dialog.cs" />
@@ -138,7 +139,7 @@
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Common\Theme.cs" />
-    <Compile Include="Source\UI\Common\FontRenderResources.cs" />
+    <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
     <Compile Include="Source\UI\Desktop\ContextMenu.cs" />
@@ -158,7 +159,7 @@
     <Compile Include="Source\UI\Desktop\Controls\TextBox.cs" />
     <Compile Include="Source\UI\Desktop\CommandLineInterface.cs" />
     <Compile Include="Source\UI\Desktop\Cursors.cs" />
-    <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Desktop\FamiStudioContainer.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioWindow.cs" />
     <Compile Include="Source\UI\Desktop\FileDialog.cs" />
     <Compile Include="Source\UI\Desktop\GLFW.cs" />

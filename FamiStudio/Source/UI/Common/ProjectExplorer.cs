@@ -72,7 +72,7 @@ namespace FamiStudio
         };
 
         delegate object GetRegisterValueDelegate();
-        delegate void   DrawRegisterDelegate(CommandList c, FontRenderResources res, Rectangle rect);
+        delegate void   DrawRegisterDelegate(CommandList c, Fonts res, Rectangle rect);
 
         public static readonly string[] NoteNamesPadded =
 {
@@ -309,7 +309,7 @@ namespace FamiStudio
                 };
             }
 
-            void DrawInternal(CommandList c, FontRenderResources res, Rectangle rect, byte[] vals, int maxVal, bool signed)
+            void DrawInternal(CommandList c, Fonts res, Rectangle rect, byte[] vals, int maxVal, bool signed)
             {
                 var sx = rect.Width  / 64;
                 var sy = rect.Height / (float)maxVal;
@@ -333,12 +333,12 @@ namespace FamiStudio
                 c.DrawLine(64 * sx, 0, 64 * sx, rect.Height, Theme.BlackColor);
             }
 
-            void DrawWaveTable(CommandList c, FontRenderResources res, Rectangle rect)
+            void DrawWaveTable(CommandList c, Fonts res, Rectangle rect)
             {
                 DrawInternal(c, res, rect, i.GetWaveTable(), 63, true);
             }
 
-            void DrawModTable(CommandList c, FontRenderResources res, Rectangle rect)
+            void DrawModTable(CommandList c, Fonts res, Rectangle rect)
             {
                 DrawInternal(c, res, rect, i.GetModTable(), 7, false);
             }
@@ -412,7 +412,7 @@ namespace FamiStudio
                 }
             }
 
-            void DrawRamMap(CommandList c, FontRenderResources res, Rectangle rect)
+            void DrawRamMap(CommandList c, Fonts res, Rectangle rect)
             {
                 var ramSize   = 128 - i.NumActiveChannels * 8;
                 var numValues = ramSize * 2;
@@ -891,7 +891,7 @@ namespace FamiStudio
                         (type == ButtonType.Instrument && instrument == projectExplorer.App.SelectedInstrument) ||
                         (type == ButtonType.Arpeggio   && arpeggio   == projectExplorer.App.SelectedArpeggio))
                     {
-                        return projectExplorer.FontResources.FontMediumBold;
+                        return projectExplorer.Fonts.FontMediumBold;
                     }
                     else if (
                         type == ButtonType.ProjectSettings         ||
@@ -902,11 +902,11 @@ namespace FamiStudio
                         type == ButtonType.RegisterExpansionHeader ||
                         type == ButtonType.RegisterChannelHeader)
                     {
-                        return projectExplorer.FontResources.FontMediumBold;
+                        return projectExplorer.Fonts.FontMediumBold;
                     }
                     else
                     {
-                        return projectExplorer.FontResources.FontMedium;
+                        return projectExplorer.Fonts.FontMedium;
                     }
                 }
             }
@@ -996,7 +996,7 @@ namespace FamiStudio
         public event DPCMSamplePointDelegate DPCMSampleMapped;
         public event EmptyDelegate ProjectModified;
 
-        public ProjectExplorer(FamiStudioWindow win) : base(win)
+        public ProjectExplorer(FamiStudioWindow win) // CTRLTODO : base(win)
         {
             UpdateRenderCoords();
 
@@ -1013,26 +1013,26 @@ namespace FamiStudio
 
         private void UpdateRenderCoords(bool updateVirtualSizeY = true)
         {
-            expandButtonSizeX    = ScaleForWindow(DefaultExpandButtonSizeX);
-            buttonIconPosX       = ScaleForWindow(DefaultButtonIconPosX);      
-            buttonIconPosY       = ScaleForWindow(DefaultButtonIconPosY);      
-            buttonTextPosX       = ScaleForWindow(DefaultButtonTextPosX);      
-            buttonTextNoIconPosX = ScaleForWindow(DefaultButtonTextNoIconPosX);
-            expandButtonPosX     = ScaleForWindow(DefaultExpandButtonPosX);
-            expandButtonPosY     = ScaleForWindow(DefaultExpandButtonPosY);
-            subButtonSpacingX    = ScaleForWindow(DefaultSubButtonSpacingX);   
-            subButtonPosY        = ScaleForWindow(DefaultSubButtonPosY);       
-            buttonSizeY          = ScaleForWindow(DefaultButtonSizeY);
-            sliderPosX           = ScaleForWindow(DefaultSliderPosX);
-            sliderPosY           = ScaleForWindow(DefaultSliderPosY);
-            sliderSizeX          = ScaleForWindow(DefaultSliderSizeX);
-            sliderSizeY          = ScaleForWindow(DefaultSliderSizeY);
-            checkBoxPosX         = ScaleForWindow(DefaultCheckBoxPosX);
-            checkBoxPosY         = ScaleForWindow(DefaultCheckBoxPosY);
-            paramRightPadX       = ScaleForWindow(DefaultParamRightPadX);
-            draggedLineSizeY     = ScaleForWindow(DefaultDraggedLineSizeY);
-            registerLabelSizeX   = ScaleForWindow(DefaultRegisterLabelSizeX);
-            paramButtonSizeX     = bmpButtonPlus != null ? ScaleCustom(bmpButtonPlus.ElementSize.Width, bitmapScale) : 16;
+            expandButtonSizeX    = DpiScaling.ScaleForWindow(DefaultExpandButtonSizeX);
+            buttonIconPosX       = DpiScaling.ScaleForWindow(DefaultButtonIconPosX);      
+            buttonIconPosY       = DpiScaling.ScaleForWindow(DefaultButtonIconPosY);      
+            buttonTextPosX       = DpiScaling.ScaleForWindow(DefaultButtonTextPosX);      
+            buttonTextNoIconPosX = DpiScaling.ScaleForWindow(DefaultButtonTextNoIconPosX);
+            expandButtonPosX     = DpiScaling.ScaleForWindow(DefaultExpandButtonPosX);
+            expandButtonPosY     = DpiScaling.ScaleForWindow(DefaultExpandButtonPosY);
+            subButtonSpacingX    = DpiScaling.ScaleForWindow(DefaultSubButtonSpacingX);   
+            subButtonPosY        = DpiScaling.ScaleForWindow(DefaultSubButtonPosY);       
+            buttonSizeY          = DpiScaling.ScaleForWindow(DefaultButtonSizeY);
+            sliderPosX           = DpiScaling.ScaleForWindow(DefaultSliderPosX);
+            sliderPosY           = DpiScaling.ScaleForWindow(DefaultSliderPosY);
+            sliderSizeX          = DpiScaling.ScaleForWindow(DefaultSliderSizeX);
+            sliderSizeY          = DpiScaling.ScaleForWindow(DefaultSliderSizeY);
+            checkBoxPosX         = DpiScaling.ScaleForWindow(DefaultCheckBoxPosX);
+            checkBoxPosY         = DpiScaling.ScaleForWindow(DefaultCheckBoxPosY);
+            paramRightPadX       = DpiScaling.ScaleForWindow(DefaultParamRightPadX);
+            draggedLineSizeY     = DpiScaling.ScaleForWindow(DefaultDraggedLineSizeY);
+            registerLabelSizeX   = DpiScaling.ScaleForWindow(DefaultRegisterLabelSizeX);
+            paramButtonSizeX     = bmpButtonPlus != null ? DpiScaling.ScaleCustom(bmpButtonPlus.ElementSize.Width, bitmapScale) : 16;
             topTabSizeY          = Settings.ShowRegisterViewer ? buttonSizeY : 0;
             scrollAreaSizeY      = Height - topTabSizeY;
             contentSizeX         = Width;
@@ -1053,7 +1053,7 @@ namespace FamiStudio
                 needsScrollBar = virtualSizeY > scrollAreaSizeY;
 
                 if (needsScrollBar)
-                    scrollBarThickness = ScaleForWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
+                    scrollBarThickness = DpiScaling.ScaleForWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
                 else
                     scrollBarThickness = 0;
 
@@ -1096,7 +1096,7 @@ namespace FamiStudio
         {
             var h = 0;
             for (int i = 0; i < regs.Length; i++)
-                h += ScaleForWindow(regs[i].Height);
+                h += DpiScaling.ScaleForWindow(regs[i].Height);
             return h;
         }
 
@@ -1112,7 +1112,7 @@ namespace FamiStudio
             buttons.Clear();
             var project = App.Project;
 
-            if (!IsRenderInitialized || project == null)
+            if (/*!IsRenderInitialized ||*/ project == null) // CTRLTODO : Relevant??
                 return;
 
             if (selectedTab == TabType.Project)
@@ -1247,8 +1247,9 @@ namespace FamiStudio
                 MarkDirty();
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
+            var g = ParentWindow.Graphics;
             bmpExpansions  = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpEnvelopes   = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
             bmpChannels    = g.GetBitmapAtlasRefs(ChannelType.Icons);
@@ -1286,17 +1287,9 @@ namespace FamiStudio
             }
 
             if (Platform.IsMobile)
-                bitmapScale = g.WindowScaling * 0.25f;
+                bitmapScale = DpiScaling.Window * 0.25f;
 
             RefreshButtons();
-        }
-
-        protected override void OnRenderTerminated()
-        {
-            //Utils.DisposeAndNullify(ref bmpMiscAtlas);
-            //Utils.DisposeAndNullify(ref bmpExpansionsAtlas);
-            //Utils.DisposeAndNullify(ref bmpEnvelopesAtlas);
-            //Utils.DisposeAndNullify(ref bmpAtlasChannels);
         }
 
         protected bool ShowExpandButtons()
@@ -1318,9 +1311,7 @@ namespace FamiStudio
 #if DEBUG
             if (Platform.IsMobile)
             {
-                var c = g.CreateCommandList();
-                c.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
-                g.DrawCommandList(c);
+                g.OverlayLayer.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
             }
 #endif
         }
@@ -1335,7 +1326,7 @@ namespace FamiStudio
                 var activeTab = i == (int)selectedTab;
                 var tabColor  = activeTab ? Theme.DarkGreyColor4 : Theme.Darken(Theme.DarkGreyColor4);
                 var textBrush = activeTab ? Theme.LightGreyColor2 : Theme.LightGreyColor1;
-                var textFont  = activeTab ? FontResources.FontMediumBold : FontResources.FontMedium;
+                var textFont  = activeTab ? Fonts.FontMediumBold : Fonts.FontMedium;
                 var x0 = (i + 0) * tabSizeX;
                 var x1 = (i + 1) * tabSizeX;
                 c.FillAndDrawRectangleGradient(x0, 0, x1, buttonSizeY, tabColor, Color.FromArgb(200, tabColor), Theme.BlackColor, true, buttonSizeY, 1);
@@ -1350,7 +1341,7 @@ namespace FamiStudio
             for (int i = 0; i < button.regs.Length; i++)
             {
                 var reg = button.regs[i];
-                var regSizeY = ScaleForWindow(reg.Height);
+                var regSizeY = DpiScaling.ScaleForWindow(reg.Height);
 
                 c.PushTranslation(0, y);
 
@@ -1360,10 +1351,10 @@ namespace FamiStudio
                 if (reg.CustomDraw != null)
                 {
                     var label = reg.Label;
-                    c.DrawText(label, FontResources.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
+                    c.DrawText(label, Fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
 
                     c.PushTranslation(registerLabelSizeX + 1, 0);
-                    reg.CustomDraw(c, FontResources, new Rectangle(0, 0, contentSizeX - registerLabelSizeX - 1, regSizeY));
+                    reg.CustomDraw(c, Fonts, new Rectangle(0, 0, contentSizeX - registerLabelSizeX - 1, regSizeY));
                     c.PopTransform();
                 }
                 else if (reg.GetValue != null)
@@ -1372,14 +1363,14 @@ namespace FamiStudio
                     var value = reg.GetValue().ToString();
                     var flags = reg.Monospace ? TextFlags.Middle | TextFlags.Monospace : TextFlags.Middle;
 
-                    c.DrawText(label, FontResources.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
-                    c.DrawText(value, FontResources.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, Theme.LightGreyColor2, flags, 0, regSizeY);
+                    c.DrawText(label, Fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
+                    c.DrawText(value, Fonts.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, Theme.LightGreyColor2, flags, 0, regSizeY);
                 }
                 else
                 {
                     Debug.Assert(exp >= 0);
 
-                    c.DrawText(reg.Label, FontResources.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
+                    c.DrawText(reg.Label, Fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
 
                     var flags = TextFlags.Monospace | TextFlags.Middle;
                     var x = buttonTextNoIconPosX + registerLabelSizeX;
@@ -1392,8 +1383,8 @@ namespace FamiStudio
                             var str = $"${val:X2} ";
                             var color = registerColors[Math.Min(age, registerColors.Length - 1)];
 
-                            c.DrawText(str, FontResources.FontSmall, x, 0, color, flags, 0, regSizeY);
-                            x += (int)c.Graphics.MeasureString(str, FontResources.FontSmall, true);
+                            c.DrawText(str, Fonts.FontSmall, x, 0, color, flags, 0, regSizeY);
+                            x += (int)c.Graphics.MeasureString(str, Fonts.FontSmall, true);
                         }
                     }
                 }
@@ -1407,6 +1398,8 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
+            // GLTODO : Rendering.
+            /*
             CommandList ct = null;
             CommandList c = null;
 
@@ -1653,7 +1646,7 @@ namespace FamiStudio
             {
                 if (captureOperation == CaptureOperation.DragSong)
                 {
-                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
+                    var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
                     var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
 
                     if (buttonIdx >= 0)
@@ -1670,7 +1663,7 @@ namespace FamiStudio
                 }
                 else if ((captureOperation == CaptureOperation.DragInstrument && envelopeDragIdx >= 0) || (captureOperation == CaptureOperation.DragArpeggio && draggedArpeggio != null))
                 {
-                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
+                    var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
                     if (ClientRectangle.Contains(pt))
                     {
                         var button = buttons[captureButtonIdx];
@@ -1712,6 +1705,7 @@ namespace FamiStudio
             }
 
             RenderDebug(g);
+            */
         }
 
         private bool GetScrollBarParams(out int posY, out int sizeY)
@@ -2077,7 +2071,7 @@ namespace FamiStudio
             {
                 if (final)
                 {
-                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(PointToScreen(new Point(x, y)));
+                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(ControlToScreen(new Point(x, y)));
                     if (App.Project.NoteSupportsDPCM(mappingNote))
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
@@ -2085,12 +2079,12 @@ namespace FamiStudio
                         App.Project.MapDPCMSample(mappingNote, draggedSample);
                         App.UndoRedoManager.EndTransaction();
 
-                        DPCMSampleMapped?.Invoke(draggedSample, PointToScreen(new Point(x, y)));
+                        DPCMSampleMapped?.Invoke(draggedSample, ControlToScreen(new Point(x, y)));
                     }
                 }
                 else if (Platform.IsDesktop)
                 {
-                    DPCMSampleDraggedOutside?.Invoke(draggedSample, PointToScreen(new Point(x, y)));
+                    DPCMSampleDraggedOutside?.Invoke(draggedSample, ControlToScreen(new Point(x, y)));
                 }
             }
         }
@@ -2180,7 +2174,7 @@ namespace FamiStudio
                 }
                 else if (Platform.IsDesktop)
                 {
-                    InstrumentDroppedOutside(draggedInstrument, PointToScreen(new Point(x, y)));
+                    InstrumentDroppedOutside(draggedInstrument, ControlToScreen(new Point(x, y)));
                 }
             }
             else
@@ -2220,7 +2214,7 @@ namespace FamiStudio
                 }
                 else if (Platform.IsDesktop)
                 {
-                    ArpeggioDroppedOutside?.Invoke(draggedArpeggio, PointToScreen(new Point(x, y)));
+                    ArpeggioDroppedOutside?.Invoke(draggedArpeggio, ControlToScreen(new Point(x, y)));
                 }
             }
             else
@@ -4096,7 +4090,7 @@ namespace FamiStudio
 
         private bool IsPointInButtonIcon(Button button, int buttonRelX, int buttonRelY)
         {
-            var iconSize = ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
+            var iconSize = DpiScaling.ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
             var iconRelX = buttonRelX - (buttonIconPosX + (ShowExpandButtons() ? expandButtonPosX + expandButtonSizeX : 0));
             var iconRelY = buttonRelY - buttonIconPosY;
 
@@ -4411,7 +4405,7 @@ namespace FamiStudio
                         toast += "Changing the number of N163 channels may have changed the wave position of N163 instruments.";
 
                     if (!string.IsNullOrEmpty(toast))
-                        Platform.ShowToast(parentWindow, toast, true);
+                        Platform.ShowToast(window, toast, true);
 
                     App.UndoRedoManager.EndTransaction();
                     RefreshButtons();

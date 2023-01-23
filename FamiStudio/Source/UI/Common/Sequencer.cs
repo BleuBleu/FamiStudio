@@ -161,9 +161,8 @@ namespace FamiStudio
         public event EmptyDelegate SelectionChanged;
         public event EmptyDelegate ShyChanged;
 
-        public Sequencer(FamiStudioWindow win) : base(win)
+        public Sequencer(FamiStudioWindow win) // CTRLTODO : base(win)
         {
-            UpdateRenderCoords();
         }
 
         private Song Song
@@ -191,29 +190,29 @@ namespace FamiStudio
 
             ComputeDesiredSizeY(out var unscaledChannelSizeY, out allowVerticalScrolling);
 
-            channelNameSizeX   = ScaleForWindow(DefaultChannelNameSizeX);
-            headerSizeY        = ScaleForWindow(DefaultHeaderSizeY);
-            channelSizeY       = ScaleForWindow(unscaledChannelSizeY);
-            barTextPosY        = ScaleForWindow(DefaultBarTextPosY);
-            channelIconPosX    = ScaleForWindow(DefaultChannelIconPosX);
-            channelIconPosY    = ScaleForWindow(DefaultChannelIconPosY);
-            channelNamePosX    = ScaleForWindow(DefaultChannelNamePosX);
-            ghostNoteOffsetX   = ScaleForWindow(DefaultGhostNoteOffsetX);
-            ghostNoteOffsetY   = ScaleForWindow(DefaultGhostNoteOffsetY);
-            patternNamePosX    = ScaleForWindow(DefaultPatternNamePosX);
-            headerIconPosX     = ScaleForWindow(DefaultHeaderIconPosX);
-            headerIconPosY     = ScaleForWindow(DefaultHeaderIconPosY);
-            scrollBarThickness = ScaleForWindow(scrollBarSize);
-            minScrollBarLength = ScaleForWindow(DefaultMinScrollBarLength);
-            noteSizeX          = ScaleForWindowFloat(zoom * patternZoom);
+            channelNameSizeX   = DpiScaling.ScaleForWindow(DefaultChannelNameSizeX);
+            headerSizeY        = DpiScaling.ScaleForWindow(DefaultHeaderSizeY);
+            channelSizeY       = DpiScaling.ScaleForWindow(unscaledChannelSizeY);
+            barTextPosY        = DpiScaling.ScaleForWindow(DefaultBarTextPosY);
+            channelIconPosX    = DpiScaling.ScaleForWindow(DefaultChannelIconPosX);
+            channelIconPosY    = DpiScaling.ScaleForWindow(DefaultChannelIconPosY);
+            channelNamePosX    = DpiScaling.ScaleForWindow(DefaultChannelNamePosX);
+            ghostNoteOffsetX   = DpiScaling.ScaleForWindow(DefaultGhostNoteOffsetX);
+            ghostNoteOffsetY   = DpiScaling.ScaleForWindow(DefaultGhostNoteOffsetY);
+            patternNamePosX    = DpiScaling.ScaleForWindow(DefaultPatternNamePosX);
+            headerIconPosX     = DpiScaling.ScaleForWindow(DefaultHeaderIconPosX);
+            headerIconPosY     = DpiScaling.ScaleForWindow(DefaultHeaderIconPosY);
+            scrollBarThickness = DpiScaling.ScaleForWindow(scrollBarSize);
+            minScrollBarLength = DpiScaling.ScaleForWindow(DefaultMinScrollBarLength);
+            noteSizeX          = DpiScaling.ScaleForWindowFloat(zoom * patternZoom);
             virtualSizeY       = rowToChannel != null ? channelSizeY * rowToChannel.Length : 0;
             scrollMargin       = (width - channelNameSizeX) / 8;
 
             // Shave a couple pixels when the size is getting too small.
             if (unscaledChannelSizeY < 24)
-                patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY - 2);
+                patternHeaderSizeY = DpiScaling.ScaleForFont(DefaultPatternHeaderSizeY - 2);
             else
-                patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY);
+                patternHeaderSizeY = DpiScaling.ScaleForFont(DefaultPatternHeaderSizeY);
         }
 
         private int GetPixelForNote(int n, bool scroll = true)
@@ -272,15 +271,15 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 verticalScoll = true;
-                channelSizeY = Math.Max((Height / (int)WindowScaling - DefaultHeaderSizeY) / channelCount, 20);
+                channelSizeY = Math.Max((Height / (int)DpiScaling.Window - DefaultHeaderSizeY) / channelCount, 20);
                 return channelSizeY * channelCount + constantSize;
             }
             else
             {
-                var oddWindowScaling = Utils.Frac(WindowScaling) != 0.0f;
+                var oddWindowScaling = Utils.Frac(DpiScaling.Window) != 0.0f;
                 var minChannelSize = oddWindowScaling ? 22 : 21;
                 var sizeMask = oddWindowScaling ? 0xfffe : 0xffff; // Keep size even at 150%.
-                var idealSequencerHeight = parentWindow.Height * Settings.IdealSequencerSize / 100;
+                var idealSequencerHeight = ParentWindow.Height * Settings.IdealSequencerSize / 100;
                 
                 channelSizeY = channelCount > 0 ? Math.Max((idealSequencerHeight / channelCount) & sizeMask, minChannelSize) : minChannelSize;
 
@@ -435,10 +434,11 @@ namespace FamiStudio
             flingVelY = y;
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
             UpdateRenderCoords();
 
+            var g = ParentWindow.Graphics;
             patternCache = new PatternBitmapCache(g);
             bmpExpansions = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
@@ -450,8 +450,8 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                bitmapScale = g.WindowScaling * 0.5f;
-                channelBitmapScale = g.WindowScaling * 0.25f;
+                bitmapScale = DpiScaling.ScaleForWindowFloat(0.5f);
+                channelBitmapScale = DpiScaling.ScaleForWindowFloat(0.25f);
             }
             else
             {
@@ -467,11 +467,12 @@ namespace FamiStudio
             }, true);
         }
 
-        protected override void OnRenderTerminated()
-        {
-            Utils.DisposeAndNullify(ref seekGeometry);
-            InvalidatePatternCache();
-        }
+        // CTRLTODO : Would need a OnRemovedFromDialog()
+        //protected override void OnRenderTerminated()
+        //{
+        //    Utils.DisposeAndNullify(ref seekGeometry);
+        //    InvalidatePatternCache();
+        //}
 
         protected override void OnResize(EventArgs e)
         {
@@ -538,6 +539,8 @@ namespace FamiStudio
 
         protected void RenderChannelNames(Graphics g)
         {
+            // GLTODO : Bring this back!
+            /*
             var ch = g.CreateCommandList();
             var cc = g.CreateCommandList();
 
@@ -602,10 +605,12 @@ namespace FamiStudio
             
             g.DrawCommandList(cc, new Rectangle(0, headerSizeY, channelNameSizeX, Height - scrollBarThickness - headerSizeY + 1));
             g.DrawCommandList(ch);
+            */
         }
 
         protected void RenderPatternArea(Graphics g)
         {
+            /*
             var ch = g.CreateCommandList(); // Header stuff 
             var cb = g.CreateCommandList(); // Background stuff
             var cp = g.CreateCommandList(); // Pattern stuff
@@ -883,6 +888,7 @@ namespace FamiStudio
             g.DrawCommandList(cp, patternRect);
             g.DrawCommandList(cf, patternRect);
             g.DrawCommandList(cs, patternRect);
+            */
         }
 
         protected void RenderDebug(Graphics g)
@@ -890,15 +896,15 @@ namespace FamiStudio
 #if DEBUG
             if (Platform.IsMobile)
             {
-                var c = g.CreateCommandList();
-                c.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
-                g.DrawCommandList(c);
+                g.OverlayLayer.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
             }
 #endif
         }
 
         protected override void OnRender(Graphics g)
         {
+            // GLTODO : Bring rendering back.
+            /*
             // Happens when piano roll is maximized.
             if (Height <= 1)
             {
@@ -911,6 +917,7 @@ namespace FamiStudio
             RenderChannelNames(g);
             RenderPatternArea(g);
             RenderDebug(g);
+            */
         }
 
         private void ReplaceSelectionUtil(Point pos, bool forceInSelection, Func<Channel, bool> channelValid, Action<Pattern> action)
@@ -1124,8 +1131,8 @@ namespace FamiStudio
             return new Rectangle(
                 channelIconPosX,
                 channelIconPosY + headerSizeY + rowIdx * channelSizeY - scrollY, 
-                ScaleForWindow(16),
-                ScaleForWindow(16));
+                DpiScaling.ScaleForWindow(16),
+                DpiScaling.ScaleForWindow(16));
         }
 
         Rectangle GetRowGhostRect(int rowIdx)
@@ -1133,8 +1140,8 @@ namespace FamiStudio
             return new Rectangle(
                 channelNameSizeX - ghostNoteOffsetX, 
                 headerSizeY + (rowIdx + 1) * channelSizeY - ghostNoteOffsetY - scrollY - 1,
-                ScaleForWindow(12),
-                ScaleForWindow(12));
+                DpiScaling.ScaleForWindow(12),
+                DpiScaling.ScaleForWindow(12));
         }
 
         Rectangle GetShyButtonRect()
@@ -2645,7 +2652,7 @@ namespace FamiStudio
         {
             if (e == null)
             {
-                var pt = PointToClient(CursorPosition);
+                var pt = ScreenToControl(CursorPosition);
                 e = new MouseEventArgs(0, pt.X, pt.Y);
             }
 

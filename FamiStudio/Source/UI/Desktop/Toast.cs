@@ -22,7 +22,7 @@ namespace FamiStudio
         public bool IsVisible => alpha > 0;
         public bool IsClickable => alpha > 0 && action != null;
 
-        public Toast(FamiStudioWindow win) : base(win)
+        public Toast(FamiStudioWindow win) // CTRLTODO : base(win)
         {
         }
 
@@ -42,7 +42,7 @@ namespace FamiStudio
         {
             if (lines != null)
             {
-                var font = FontResources.FontMedium;
+                var font = ParentWindow.Fonts.FontMedium;
                 var sizeX = lines.Max(l => font.MeasureString(l, false)) + pad * 2;
                 var sizeY = font.LineHeight * lines.Length + pad * 2;
                 var posX = (ParentWindowSize.Width - sizeX) / 2;
@@ -52,10 +52,10 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
-            pad = ScaleForWindow(DefaultPad);
-            posFromBottom = ScaleForWindow(DefaultPositionFromBottom);
+            pad = DpiScaling.ScaleForWindow(DefaultPad);
+            posFromBottom = DpiScaling.ScaleForWindow(DefaultPositionFromBottom);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -89,6 +89,8 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
+            // GLTODO : Bring this back!
+            /*
             var c = g.CreateCommandList();
 
             c.FillAndDrawRectangle(0, 0, width - 1, height - 1, Color.FromArgb(alpha, Theme.DarkGreyColor1), Color.FromArgb(alpha, Theme.BlackColor));
@@ -99,6 +101,7 @@ namespace FamiStudio
                 c.DrawText(lines[i], font, 0, pad + i * font.LineHeight, Color.FromArgb(alpha, Theme.LightGreyColor1), TextFlags.MiddleCenter, width, font.LineHeight);
 
             g.DrawCommandList(c);
+            */
         }
     }
 }

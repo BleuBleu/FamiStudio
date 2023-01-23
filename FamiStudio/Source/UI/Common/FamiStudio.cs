@@ -497,7 +497,7 @@ namespace FamiStudio
 
         public int GetDPCMSampleMappingNoteAtPos(Point pos)
         {
-            return PianoRoll.GetDPCMSampleMappingNoteAtPos(PianoRoll.PointToClient(pos));
+            return PianoRoll.GetDPCMSampleMappingNoteAtPos(PianoRoll.ScreenToControl(pos));
         }
 
         private void ProjectExplorer_DPCMSampleMapped(DPCMSample instrument, Point pos)
@@ -508,7 +508,7 @@ namespace FamiStudio
 
         private void ProjectExplorer_DPCMSampleDraggedOutside(DPCMSample instrument, Point pos)
         {
-            if (PianoRoll.ClientRectangle.Contains(PianoRoll.PointToClient(pos)))
+            if (PianoRoll.ClientRectangle.Contains(PianoRoll.ScreenToControl(pos)))
                 PianoRoll.MarkDirty();
         }
 
@@ -580,20 +580,20 @@ namespace FamiStudio
 
         private void ProjectExplorer_InstrumentDroppedOutside(Instrument instrument, Point pos)
         {
-            var pianoRollPos = PianoRoll.PointToClient(pos);
+            var pianoRollPos = PianoRoll.ScreenToControl(pos);
             if (PianoRoll.ClientRectangle.Contains(pianoRollPos))
                 PianoRoll.ReplaceSelectionInstrument(instrument, pianoRollPos);
-            var sequencerPos = Sequencer.PointToClient(pos);
+            var sequencerPos = Sequencer.ScreenToControl(pos);
             if (Sequencer.ClientRectangle.Contains(sequencerPos))
                 Sequencer.ReplaceSelectionInstrument(instrument, sequencerPos);
         }
 
         private void ProjectExplorer_ArpeggioDroppedOutside(Arpeggio arpeggio, Point pos)
         {
-            var pianoRollPos = PianoRoll.PointToClient(pos);
+            var pianoRollPos = PianoRoll.ScreenToControl(pos);
             if (PianoRoll.ClientRectangle.Contains(pianoRollPos))
                 PianoRoll.ReplaceSelectionArpeggio(arpeggio, pianoRollPos);
-            var sequencerPos = Sequencer.PointToClient(pos);
+            var sequencerPos = Sequencer.ScreenToControl(pos);
             if (Sequencer.ClientRectangle.Contains(sequencerPos))
                 Sequencer.ReplaceSelectionArpeggio(arpeggio, sequencerPos);
         }

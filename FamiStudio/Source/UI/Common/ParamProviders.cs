@@ -22,7 +22,7 @@ namespace FamiStudio
         public delegate bool EnabledDelegate();
         public delegate void SetValueDelegate(int value);
         public delegate string GetValueStringDelegate();
-        public delegate void CustomDrawDelegate(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2);
+        public delegate void CustomDrawDelegate(CommandList c, Fonts res, Rectangle rect, object userData1, object userData2);
 
         public EnabledDelegate IsEnabled;
         public GetValueDelegate GetValue;
@@ -275,7 +275,7 @@ namespace FamiStudio
             return paramInfos.Count == 0 ? null : paramInfos.ToArray();
         }
 
-        public static void CustomDrawAdsrGraph(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawAdsrGraph(CommandList c, Fonts res, Rectangle rect, object userData1, object userData2)
         {
             var g = c.Graphics;
             var instrument = userData1 as Instrument;
@@ -283,7 +283,7 @@ namespace FamiStudio
 
             var graphWidth  = rect.Width;
             var graphHeight = rect.Height;
-            var graphPaddingTop   = (int)(g.WindowScaling * 3);
+            var graphPaddingTop = DpiScaling.ScaleForWindow(3); 
             var graphPaddingCurve = rect.Height / 10;
             var graphHeightMinusPadding = graphHeight - graphPaddingTop - graphPaddingCurve;
 
@@ -394,7 +394,7 @@ namespace FamiStudio
             c.DrawLine(line, Theme.BlackColor, 1, true);
         }
 
-        public static void CustomDrawEpsmAlgorithm(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawEpsmAlgorithm(CommandList c, Fonts res, Rectangle rect, object userData1, object userData2)
         {
             var instrument = userData1 as Instrument;
             var algo = instrument.EpsmPatchRegs[0] & 0x07;

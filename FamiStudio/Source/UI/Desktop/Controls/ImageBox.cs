@@ -10,14 +10,14 @@ namespace FamiStudio
         private Color tint = Color.White;
         private bool scale;
 
-        public ImageBox(Dialog dlg, string image) : base(dlg)
+        public ImageBox(string image)
         {
             height = DpiScaling.ScaleForWindow(24);
             atlasImageName = image;
             UpdateAtlasBitmap();
         }
 
-        public ImageBox(Dialog dlg, Bitmap b) : base(dlg)
+        public ImageBox(Bitmap b)
         {
             height = DpiScaling.ScaleForWindow(24);
             bmp = b;
@@ -51,7 +51,7 @@ namespace FamiStudio
         {
             if (!string.IsNullOrEmpty(atlasImageName))
             {
-                bmpAtlas = parentWindow.Graphics.GetBitmapAtlasRef(atlasImageName);
+                bmpAtlas = Graphics.GetBitmapAtlasRef(atlasImageName);
                 Debug.Assert(bmpAtlas != null);
             }
         }
@@ -60,7 +60,7 @@ namespace FamiStudio
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
 
             if (bmp != null)
             {

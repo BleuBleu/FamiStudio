@@ -33,7 +33,7 @@ namespace FamiStudio
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
         private int rowHeight      = DpiScaling.ScaleForWindow(24);
 
-        public DropDown(Dialog dlg, string[] list, int index, bool trans = false) : base(dlg)
+        public DropDown(string[] list, int index, bool trans = false)
         {
             items = list;
             selectedIndex = index;
@@ -78,9 +78,9 @@ namespace FamiStudio
             UpdateScrollParams();
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
-            bmpArrow = g.GetBitmapAtlasRef("DropDownArrow");
+            bmpArrow = Graphics.GetBitmapAtlasRef("DropDownArrow");
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -155,7 +155,7 @@ namespace FamiStudio
             if (e.Key == Keys.Escape)
             {
                 SetListOpened(false);
-                ClearDialogFocus();
+                //ClearDialogFocus(); CTRLTODO : Dialog focus.
                 e.Handled = true;
             }
         }
@@ -256,7 +256,7 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             var bmpSize = bmpArrow.ElementSize;
-            var cb = parentDialog.CommandList;
+            var cb = g.GetCommandList();
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
             if (!transparent)
@@ -265,11 +265,11 @@ namespace FamiStudio
             cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyColor2 : color);
 
             if (selectedIndex >= 0)
-                cb.DrawText(items[selectedIndex], FontResources.FontMedium, margin, 0, color, TextFlags.MiddleLeft, 0, rowHeight);
+                cb.DrawText(items[selectedIndex], Fonts.FontMedium, margin, 0, color, TextFlags.MiddleLeft, 0, rowHeight);
 
             if (listOpened)
             {
-                var cf = parentDialog.CommandListForeground;
+                var cf = g.GetCommandList(GraphicsLayer.Foreground);
                 var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
                 var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
@@ -281,7 +281,7 @@ namespace FamiStudio
                     var absItemIndex = i + listScroll;
                     if (absItemIndex == selectedIndex || absItemIndex == listHover)
                         cf.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, absItemIndex == selectedIndex ? Theme.DarkGreyColor4 : Theme.DarkGreyColor3);
-                    cf.DrawText(items[absItemIndex], FontResources.FontMedium, margin, i * rowHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
+                    cf.DrawText(items[absItemIndex], Fonts.FontMedium, margin, i * rowHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
                 }
 
                 if (hasScrollBar)

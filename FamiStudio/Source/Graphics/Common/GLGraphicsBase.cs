@@ -8,51 +8,66 @@ namespace FamiStudio
 {
     public abstract class GraphicsBase : IDisposable
     {
-        protected float windowScaling = 1.0f;
-        protected float fontScaling = 1.0f;
         protected bool builtAtlases;
-        protected int windowSizeY;
         protected int lineWidthBias;
-        protected int maxSmoothLineWidth = int.MaxValue;
-        protected Rectangle controlRect;
-        protected Rectangle controlRectFlip;
+        protected float[] viewportScaleBias = new float[4]; // MATTT : Will be just relative to full screen now.
+        protected Rectangle screenRect;
+        protected Rectangle screenRectFlip;
         protected TransformStack transform = new TransformStack();
         protected Bitmap dashedBitmap;
         protected Dictionary<int, BitmapAtlas> atlases = new Dictionary<int, BitmapAtlas>();
+        protected List<ClipRegion> clipRegions = new List<ClipRegion>();
+        protected Stack<ClipRegion> clipStack = new Stack<ClipRegion>();
+        protected CommandList[] layerCommandLists = new CommandList[(int)GraphicsLayer.Count];
+        protected byte curDepthValue = 0x80; // -128
+        protected byte maxDepthValue = 0x80; // -128
+        protected Color clearColor;
 
-        public float FontScaling => fontScaling;
-        public float WindowScaling => windowScaling;
+        protected struct ClipRegion
+        {
+            public RectangleF rect;
+            public byte depthValue;
+        }
+
+        public byte DepthValue => curDepthValue;
         public int DashTextureSize => dashedBitmap.Size.Width;
-        public int WindowSizeY => windowSizeY;
         public TransformStack Transform => transform;
+        public RectangleF CurrentClipRegion => clipStack.Peek().rect;
 
         protected const int MaxAtlasResolution = 1024;
         protected const int MaxVertexCount = 128 * 1024;
         protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
+        // These are only used temporarely during text/bmp rendering.
         protected float[] vtxArray = new float[MaxVertexCount * 2];
         protected float[] texArray = new float[MaxVertexCount * 2];
         protected int[]   colArray = new int[MaxVertexCount];
+        protected byte[]  depArray = new byte[MaxVertexCount];
+
         protected short[] quadIdxArray = new short[MaxIndexCount];
 
-        protected List<float[]> freeVtxArrays = new List<float[]>();
-        protected List<int[]>   freeColArrays = new List<int[]>();
-        protected List<short[]> freeIdxArrays = new List<short[]>();
+        protected List<float[]> freeVertexArrays = new List<float[]>();
+        protected List<byte[]>  freeByteArrays = new List<byte[]>();
+        protected List<int[]>   freeColorArrays  = new List<int[]>();
+        protected List<short[]> freeIndexArrays  = new List<short[]>();
 
         protected abstract int CreateEmptyTexture(int width, int height, bool alpha, bool filter);
         protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
+        protected abstract void Clear();
+        protected abstract void DrawCommandList(CommandList list);
+        protected abstract void DrawDepthPrepass();
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
+        protected abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
         public abstract void DeleteTexture(int id);
-        public abstract void DrawCommandList(CommandList list, Rectangle scissor);
-        public abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
 
-        protected GraphicsBase(float mainScale, float fontScale)
+        public CommandList BackgroundLayer => GetCommandList(GraphicsLayer.Background);
+        public CommandList DefaultLayer    => GetCommandList(GraphicsLayer.Default);
+        public CommandList ForegroundLayer => GetCommandList(GraphicsLayer.Foreground);
+        public CommandList OverlayLayer    => GetCommandList(GraphicsLayer.Overlay);
+
+        protected GraphicsBase()
         {
-            windowScaling = mainScale;
-            fontScaling = fontScale;
-
             // Quad index buffer.
-            // TODO : On PC, we have GL_QUADS, we could get rid of this.
             for (int i = 0, j = 0; i < MaxVertexCount; i += 4)
             {
                 var i0 = (short)(i + 0);
@@ -70,30 +85,98 @@ namespace FamiStudio
 
             // HACK : If we are on android with a scaling of 1.0, this mean we are
             // rendering a video and we dont need any of the atlases.
-            if (!Platform.IsAndroid || mainScale != 1.0f)
+            if (!Platform.IsAndroid || DpiScaling.Window != 1.0f)
                 BuildBitmapAtlases();
         }
 
-        public virtual void BeginDrawFrame()
+        public virtual void BeginDrawFrame(Rectangle rect, Color clear)
         {
+            Debug.Assert(transform.IsEmpty);
+            Debug.Assert(clipStack.Count == 0);
+
+            clearColor = clear;
+            clipRegions.Clear();
+
+            lineWidthBias = 0;
+            screenRect = rect;
+            screenRectFlip = FlipRectangleY(rect, rect.Height); // MATTT Clean that up.
+            transform.SetIdentity();
+            curDepthValue = 0x80;
+            maxDepthValue = 0x80;
+
+            viewportScaleBias[0] =  2.0f / screenRect.Width;
+            viewportScaleBias[1] = -2.0f / screenRect.Height;
+            viewportScaleBias[2] = -1.0f;
+            viewportScaleBias[3] =  1.0f;
         }
 
         public virtual void EndDrawFrame()
         {
+            Debug.Assert(transform.IsEmpty);
+            Debug.Assert(clipStack.Count == 0);
+
+            Clear();
+            DrawDepthPrepass();
+
+            for (int i = 0; i < layerCommandLists.Length; i++)
+            {
+                if (layerCommandLists[i] != null)
+                { 
+                    DrawCommandList(layerCommandLists[i]);
+                }
+            }
+
+            for (int i = 0; i < layerCommandLists.Length; i++)
+            {
+                if (layerCommandLists[i] != null)
+                {
+                    layerCommandLists[i].Release();
+                    layerCommandLists[i] = null;
+                }
+            }
         }
 
-        public virtual void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
+        public virtual void PushClipRegion(Point p, Size s)
         {
-            this.windowSizeY = windowSizeY;
-
-            lineWidthBias = 0;
-            controlRect = unflippedControlRect;
-            controlRectFlip = FlipRectangleY(unflippedControlRect);
-            transform.SetIdentity();
+            PushClipRegion(p.X, p.Y, s.Width, s.Height);
         }
 
-        public virtual void EndDrawControl()
+        public virtual void PushClipRegion(float x, float y, float width, float height)
         {
+            var ox = 0.0f;
+            var oy = 0.0f;
+
+            transform.TransformPoint(ref ox, ref oy);
+
+            maxDepthValue = (byte)((maxDepthValue + 1) & 0xff);
+            curDepthValue = maxDepthValue;
+
+            var clip = new ClipRegion();
+
+            // MATTT : Clip with all parent clip regions.
+            clip.rect = new RectangleF(ox, oy, width, height);
+            clip.depthValue = curDepthValue;
+
+            clipRegions.Add(clip);
+            clipStack.Push(clip);
+        }
+
+        public virtual void PopClipRegion()
+        {
+            var region = clipStack.Pop();
+            curDepthValue = clipStack.Count > 0 ? clipStack.Peek().depthValue : (byte)0x80;
+        }
+
+        public CommandList GetCommandList(GraphicsLayer layer = GraphicsLayer.Default)
+        {
+            var idx = (int)layer;
+
+            if (layerCommandLists[idx] == null)
+            {
+                layerCommandLists[idx] = new CommandList(this, dashedBitmap.Size.Width);
+            }
+
+            return layerCommandLists[idx];
         }
 
         protected SimpleBitmap LoadBitmapFromResourceWithScaling(string name)
@@ -104,8 +187,8 @@ namespace FamiStudio
             // Pre-resize all images so we dont have to deal with scaling later.
             if (needsScaling)
             {
-                var newWidth  = Math.Max(1, (int)(bmp.Width  * (windowScaling / 2.0f)));
-                var newHeight = Math.Max(1, (int)(bmp.Height * (windowScaling / 2.0f)));
+                var newWidth  = Math.Max(1, (int)(bmp.Width  * (DpiScaling.Window / 2.0f)));
+                var newHeight = Math.Max(1, (int)(bmp.Height * (DpiScaling.Window / 2.0f)));
 
                 bmp = bmp.Resize(newWidth, newHeight);
             }
@@ -113,6 +196,7 @@ namespace FamiStudio
             return bmp;
         }
 
+		// GLTODO : Move all relevant bitmaps to a folder and filter with that.
         private bool IsAtlasBitmap(string name)
         {
             // Ignore fonts and other things we load differently.
@@ -146,7 +230,7 @@ namespace FamiStudio
             }
 
             // Keep 1 atlas per power-of-two size. 
-            var minWidth = (int)(16 * windowScaling);
+            var minWidth = DpiScaling.ScaleForWindow(16);
 
             foreach (var res in filteredImages)
             {
@@ -155,8 +239,8 @@ namespace FamiStudio
 
                 if (needsScaling)
                 {
-                    width  = Math.Max(1, (int)(width  * (windowScaling / 2.0f)));
-                    height = Math.Max(1, (int)(height * (windowScaling / 2.0f)));
+                    width  = Math.Max(1, (int)(width  * (DpiScaling.Window / 2.0f)));
+                    height = Math.Max(1, (int)(height * (DpiScaling.Window / 2.0f)));
                 }
 
                 width  = Math.Max(minWidth, width);
@@ -194,7 +278,7 @@ namespace FamiStudio
                     return new BitmapAtlasRef(a, idx);
             }
 
-            Debug.Assert(!builtAtlases); // On Android, when rendering videos, we ignore missing bitmaps.
+            Debug.Assert(false); // Not found!
             return null;
         }
 
@@ -211,19 +295,14 @@ namespace FamiStudio
             lineWidthBias = bias;
         }
 
-        public void DrawCommandList(CommandList list)
+        protected virtual CommandList CreateCommandList()
         {
-            DrawCommandList(list, Rectangle.Empty);
+            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias);
         }
 
-        public virtual CommandList CreateCommandList()
+        protected Rectangle FlipRectangleY(Rectangle rc, int sizeY)
         {
-            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias, true, maxSmoothLineWidth);
-        }
-
-        protected Rectangle FlipRectangleY(Rectangle rc)
-        {
-            return new Rectangle(rc.Left, windowSizeY - rc.Top - rc.Height, rc.Width, rc.Height);
+            return new Rectangle(rc.Left, sizeY - rc.Top - rc.Height, rc.Width, rc.Height);
         }
 
         public float MeasureString(string text, Font font, bool mono = false)
@@ -233,7 +312,8 @@ namespace FamiStudio
 
         public Geometry CreateGeometry(float[,] points, bool closed = true)
         {
-            return new Geometry(points, closed);
+            return null; // GLTODO : geometry support.
+            //return new Geometry(points, closed);
         }
 
         public Bitmap CreateEmptyBitmap(int width, int height, bool alpha, bool filter)
@@ -345,11 +425,11 @@ namespace FamiStudio
 
         public float[] GetVertexArray()
         {
-            if (freeVtxArrays.Count > 0)
+            if (freeVertexArrays.Count > 0)
             {
-                var lastIdx = freeVtxArrays.Count - 1;
-                var arr = freeVtxArrays[lastIdx];
-                freeVtxArrays.RemoveAt(lastIdx);
+                var lastIdx = freeVertexArrays.Count - 1;
+                var arr = freeVertexArrays[lastIdx];
+                freeVertexArrays.RemoveAt(lastIdx);
                 return arr;
             }
             else
@@ -358,13 +438,28 @@ namespace FamiStudio
             }
         }
 
+        public byte[] GetByteArray()
+        {
+            if (freeByteArrays.Count > 0)
+            {
+                var lastIdx = freeByteArrays.Count - 1;
+                var arr = freeByteArrays[lastIdx];
+                freeByteArrays.RemoveAt(lastIdx);
+                return arr;
+            }
+            else
+            {
+                return new byte[MaxVertexCount];
+            }
+        }
+
         public int[] GetColorArray()
         {
-            if (freeColArrays.Count > 0)
+            if (freeColorArrays.Count > 0)
             {
-                var lastIdx = freeColArrays.Count - 1;
-                var arr = freeColArrays[lastIdx];
-                freeColArrays.RemoveAt(lastIdx);
+                var lastIdx = freeColorArrays.Count - 1;
+                var arr = freeColorArrays[lastIdx];
+                freeColorArrays.RemoveAt(lastIdx);
                 return arr;
             }
             else
@@ -375,11 +470,11 @@ namespace FamiStudio
 
         public short[] GetIndexArray()
         {
-            if (freeIdxArrays.Count > 0)
+            if (freeIndexArrays.Count > 0)
             {
-                var lastIdx = freeIdxArrays.Count - 1;
-                var arr = freeIdxArrays[lastIdx];
-                freeIdxArrays.RemoveAt(lastIdx);
+                var lastIdx = freeIndexArrays.Count - 1;
+                var arr = freeIndexArrays[lastIdx];
+                freeIndexArrays.RemoveAt(lastIdx);
                 return arr;
             }
             else
@@ -390,18 +485,33 @@ namespace FamiStudio
 
         public void ReleaseVertexArray(float[] a)
         {
-            freeVtxArrays.Add(a);
+            freeVertexArrays.Add(a);
+        }
+
+
+        public void ReleaseByteArray(byte[] a)
+        {
+            freeByteArrays.Add(a);
         }
 
         public void ReleaseColorArray(int[] a)
         {
-            freeColArrays.Add(a);
+            freeColorArrays.Add(a);
         }
 
         public void ReleaseIndexArray(short[] a)
         {
-            freeIdxArrays.Add(a);
+            freeIndexArrays.Add(a);
         }
+    };
+
+    public enum GraphicsLayer
+    {
+        Background,
+        Default,
+        Foreground,
+        Overlay,
+        Count
     };
 
     public class Font : IDisposable
@@ -577,6 +687,7 @@ namespace FamiStudio
         }
     }
 
+    // GLTODO : This is wrong.
     public class Geometry : IDisposable
     {
         public float[] Points { get; private set; }
@@ -743,10 +854,11 @@ namespace FamiStudio
 
     public class TransformStack
     {
-        private Transform transform = new Transform(); // xy = scale, zw = translation
+        private Transform transform = new Transform(1, 1, 0, 0); // xy = scale, zw = translation
         private Stack<Transform> transformStack = new Stack<Transform>();
 
         public bool HasScaling => transform.HasScaling;
+        public bool IsEmpty => transformStack.Count == 0;
 
         public void SetIdentity()
         {
@@ -832,29 +944,45 @@ namespace FamiStudio
     // This is common to both OGL, it only does data packing, no GL calls.
     public class CommandList
     {
-        private class MeshBatch
+        private class PolyBatch
         {
             public float[] vtxArray;
             public int[]   colArray;
             public short[] idxArray;
+            public byte[]  depArray;
 
             public int vtxIdx = 0;
             public int colIdx = 0;
             public int idxIdx = 0;
+            public int depIdx = 0;
         };
 
         private class LineBatch
         {
-            public bool smooth;
-            public float lineWidth;
-
             public float[] vtxArray;
             public float[] texArray;
             public int[]   colArray;
+            public byte[]  depArray;
 
             public int vtxIdx = 0;
             public int texIdx = 0;
             public int colIdx = 0;
+            public int depIdx = 0;
+        };
+        
+        private class LineSmoothBatch
+        {
+            public float[] vtxArray;
+            public byte[]  dstArray;
+            public int[]   colArray;
+            public short[] idxArray;
+            public byte[]  depArray;
+
+            public int vtxIdx = 0;
+            public int dstIdx = 0;
+            public int colIdx = 0;
+            public int idxIdx = 0;
+            public int depIdx = 0;
         };
 
         private class TextInstance
@@ -864,6 +992,7 @@ namespace FamiStudio
             public TextFlags flags;
             public string text;
             public Color color;
+            public byte depth;
         };
 
         private class BitmapInstance
@@ -879,17 +1008,20 @@ namespace FamiStudio
             public float opacity;
             public Color tint;
             public bool rotated;
+            public byte depth;
         }
 
-        public class MeshDrawData
+        public class PolyDrawData
         {
             public float[] vtxArray;
             public int[]   colArray;
             public short[] idxArray;
+            public byte[]  depArray;
 
             public int vtxArraySize;
             public int colArraySize;
             public int idxArraySize;
+            public int depArraySize;
 
             public bool smooth;
             public int numIndices;
@@ -900,14 +1032,33 @@ namespace FamiStudio
             public float[] vtxArray;
             public float[] texArray;
             public int[]   colArray;
+            public byte[]  depArray;
 
             public int vtxArraySize;
             public int texArraySize;
             public int colArraySize;
+            public int depArraySize;
 
             public int numVertices;
             public bool smooth;
             public float lineWidth;
+        };
+
+        public class LineSmoothDrawData
+        {
+            public float[] vtxArray;
+            public byte[]  dstArray;
+            public int[]   colArray;
+            public short[] idxArray;
+            public byte[]  depArray;
+
+            public int vtxArraySize;
+            public int dstArraySize;
+            public int colArraySize;
+            public int idxArraySize;
+            public int depArraySize;
+
+            public int numIndices;
         };
 
         public class DrawData
@@ -917,17 +1068,12 @@ namespace FamiStudio
             public int count;
         };
 
-        private bool drawThickLineAsPolygon;
-        private MeshBatch thickLineBatch; // Linux only
-        public bool HasAnyTickLineMeshes => thickLineBatch != null;
-
-        private int maxSmoothLineWidth = int.MaxValue;
         private int lineWidthBias;
         private float invDashTextureSize;
-        private MeshBatch meshBatch;
-        private MeshBatch meshSmoothBatch;
-        private LineBatch currentLineBatch;
-        private List<LineBatch> lineBatches = new List<LineBatch>();
+        private PolyBatch polyBatch;
+        private LineBatch lineBatch;
+        private LineSmoothBatch lineSmoothBatch;
+
         private Dictionary<Font,   List<TextInstance>>   texts   = new Dictionary<Font,   List<TextInstance>>();
         private Dictionary<Bitmap, List<BitmapInstance>> bitmaps = new Dictionary<Bitmap, List<BitmapInstance>>();
 
@@ -937,20 +1083,19 @@ namespace FamiStudio
         public TransformStack Transform => xform;
         public GraphicsBase Graphics => graphics;
 
-        public bool HasAnyMeshes  => meshBatch != null || meshSmoothBatch != null;
-        public bool HasAnyLines   => lineBatches.Count > 0;
-        public bool HasAnyTexts   => texts.Count > 0;
-        public bool HasAnyBitmaps => bitmaps.Count > 0;
-        public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps || HasAnyTickLineMeshes;
+        public bool HasAnyPolygons       => polyBatch != null;
+        public bool HasAnyLines          => lineBatch != null;
+        public bool HasAnySmoothLines    => lineSmoothBatch != null;
+        public bool HasAnyTexts          => texts.Count > 0;
+        public bool HasAnyBitmaps        => bitmaps.Count > 0;
+        public bool HasAnything          => HasAnyPolygons || HasAnyLines || HasAnySmoothLines || HasAnyTexts || HasAnyBitmaps;
 
-        public CommandList(GraphicsBase g, int dashTextureSize, int lineBias = 0, bool supportsLineWidth = true, int maxSmoothWidth = int.MaxValue)
+        public CommandList(GraphicsBase g, int dashTextureSize, int lineBias = 0)
         {
             graphics = g;
             xform = g.Transform;
             invDashTextureSize = 1.0f / dashTextureSize;
             lineWidthBias = lineBias;
-            maxSmoothLineWidth = maxSmoothWidth;
-            drawThickLineAsPolygon = !supportsLineWidth;
         }
 
         public void PushTranslation(float x, float y)
@@ -970,107 +1115,63 @@ namespace FamiStudio
 
         public void Release()
         {
-            if (meshBatch != null)
+            if (polyBatch != null)
             {
-                graphics.ReleaseVertexArray(meshBatch.vtxArray);
-                graphics.ReleaseColorArray(meshBatch.colArray);
-                graphics.ReleaseIndexArray(meshBatch.idxArray);
+                graphics.ReleaseVertexArray(polyBatch.vtxArray);
+                graphics.ReleaseColorArray(polyBatch.colArray);
+                graphics.ReleaseIndexArray(polyBatch.idxArray);
+                graphics.ReleaseByteArray(polyBatch.depArray);
             }
 
-            if (meshSmoothBatch != null)
+            if (lineBatch != null)
             {
-                graphics.ReleaseVertexArray(meshSmoothBatch.vtxArray);
-                graphics.ReleaseColorArray(meshSmoothBatch.colArray);
-                graphics.ReleaseIndexArray(meshSmoothBatch.idxArray);
+                graphics.ReleaseVertexArray(lineBatch.vtxArray);
+                graphics.ReleaseVertexArray(lineBatch.texArray);
+                graphics.ReleaseColorArray(lineBatch.colArray);
+                graphics.ReleaseByteArray(lineBatch.depArray);
             }
 
-            foreach (var batch in lineBatches)
+            if (lineSmoothBatch != null)
             {
-                graphics.ReleaseVertexArray(batch.vtxArray);
-                graphics.ReleaseVertexArray(batch.texArray);
-                graphics.ReleaseColorArray(batch.colArray);
+                graphics.ReleaseVertexArray(lineSmoothBatch.vtxArray);
+                graphics.ReleaseByteArray(lineSmoothBatch.dstArray);
+                graphics.ReleaseColorArray(lineSmoothBatch.colArray);
+                graphics.ReleaseIndexArray(lineSmoothBatch.idxArray);
+                graphics.ReleaseByteArray(lineSmoothBatch.depArray);
             }
 
-            meshBatch = null;
-            meshSmoothBatch = null;
-            lineBatches.Clear();
+            polyBatch = null;
+            lineBatch = null;
+            lineSmoothBatch = null;
         }
 
-        private MeshBatch GetMeshBatch(bool smooth)
+        private PolyBatch GetPolygonBatch()
         {
-            MeshBatch batch;
-
-            if (smooth)
+            if (polyBatch == null)
             {
-                if (meshSmoothBatch == null)
-                {
-                    meshSmoothBatch = new MeshBatch();
-                    meshSmoothBatch.vtxArray = graphics.GetVertexArray();
-                    meshSmoothBatch.colArray = graphics.GetColorArray();
-                    meshSmoothBatch.idxArray = graphics.GetIndexArray();
-                }
-
-                batch = meshSmoothBatch;
-            }
-            else
-            {
-                if (meshBatch == null)
-                {
-                    meshBatch = new MeshBatch();
-                    meshBatch.vtxArray = graphics.GetVertexArray();
-                    meshBatch.colArray = graphics.GetColorArray();
-                    meshBatch.idxArray = graphics.GetIndexArray();
-                }
-
-                batch = meshBatch;
+                polyBatch = new PolyBatch();
+                polyBatch.vtxArray = graphics.GetVertexArray();
+                polyBatch.colArray = graphics.GetColorArray();
+                polyBatch.idxArray = graphics.GetIndexArray();
+                polyBatch.depArray = graphics.GetByteArray();
             }
 
-            return batch;
+            return polyBatch;
         }
 
-        private LineBatch GetLineBatch(float width, bool smooth)
+        private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, bool dash)
         {
-            if (currentLineBatch == null ||
-                currentLineBatch.lineWidth != width ||
-                currentLineBatch.smooth != smooth)
+            if (lineBatch == null)
             {
-                currentLineBatch = null;
-
-                foreach (var batch in lineBatches)
-                {
-                    if (batch.lineWidth == width && batch.smooth == smooth)
-                    {
-                        currentLineBatch = batch;
-                        break;
-                    }
-                }
-
-                if (currentLineBatch == null)
-                {
-                    currentLineBatch = new LineBatch();
-                    currentLineBatch.smooth = smooth;
-                    currentLineBatch.lineWidth = width;
-                    currentLineBatch.vtxArray = graphics.GetVertexArray();
-                    currentLineBatch.texArray = graphics.GetVertexArray();
-                    currentLineBatch.colArray = graphics.GetColorArray();
-                    lineBatches.Add(currentLineBatch);
-                }
-
-                return currentLineBatch;
+                lineBatch = new LineBatch();
+                lineBatch.vtxArray = graphics.GetVertexArray();
+                lineBatch.texArray = graphics.GetVertexArray();
+                lineBatch.colArray = graphics.GetColorArray();
+                lineBatch.depArray = graphics.GetByteArray();
             }
 
-            return currentLineBatch;
-        }
-
-        private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool smooth, bool dash)
-        {
-            if (width > 1.0f && drawThickLineAsPolygon)
-            {
-                DrawThickLineAsPolygonInternal(x0, y0, x1, y1, color, width);
-                return;
-            }
-
-            var batch = GetLineBatch(width, smooth);
+            var batch = lineBatch;
+            var depth = graphics.DepthValue;
 
             batch.vtxArray[batch.vtxIdx++] = x0;
             batch.vtxArray[batch.vtxIdx++] = y0;
@@ -1104,51 +1205,100 @@ namespace FamiStudio
 
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
         }
 
-        private void DrawThickLineAsPolygonInternal(float x0, float y0, float x1, float y1, Color color, float width)
+        private void DrawSmoothLineInternal(float x0, float y0, float x1, float y1, Color color, float width, bool miter)
         {
-            if (thickLineBatch == null)
+            Debug.Assert(width < 16.0f);
+
+            if (lineSmoothBatch == null)
             {
-                thickLineBatch = new MeshBatch();
-                thickLineBatch.vtxArray = graphics.GetVertexArray();
-                thickLineBatch.colArray = graphics.GetColorArray();
-                thickLineBatch.idxArray = graphics.GetIndexArray();
+                lineSmoothBatch = new LineSmoothBatch();
+                lineSmoothBatch.vtxArray = graphics.GetVertexArray();
+                lineSmoothBatch.dstArray = graphics.GetByteArray();
+                lineSmoothBatch.colArray = graphics.GetColorArray();
+                lineSmoothBatch.idxArray = graphics.GetIndexArray();
+                lineSmoothBatch.depArray = graphics.GetByteArray();
             }
 
-            var batch = thickLineBatch;
+            var batch = lineSmoothBatch;
+            var depth = graphics.DepthValue;
+
+            // Cant draw nice AA line that are 1 pixel wide.
+            width = Math.Max(2.0f, width); // MATTT : Review this. 1.41?
 
             var dx = x1 - x0;
             var dy = y1 - y0;
             var invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
             dx *= invHalfWidth;
             dy *= invHalfWidth;
+            var packedWidth = (byte)(width * 16.0f);
+
+            // MATTT : This is wrong, need to take angle into account.
+            if (miter)
+            {
+                x0 -= dx;
+                y0 -= dy;
+                x1 += dx;
+                y1 += dy;
+            }
 
             var i0 = (short)(batch.vtxIdx / 2 + 0);
             var i1 = (short)(batch.vtxIdx / 2 + 1);
             var i2 = (short)(batch.vtxIdx / 2 + 2);
             var i3 = (short)(batch.vtxIdx / 2 + 3);
+            var i4 = (short)(batch.vtxIdx / 2 + 4);
+            var i5 = (short)(batch.vtxIdx / 2 + 5);
 
             batch.idxArray[batch.idxIdx++] = i0;
             batch.idxArray[batch.idxIdx++] = i1;
             batch.idxArray[batch.idxIdx++] = i2;
-            batch.idxArray[batch.idxIdx++] = i0;
+            batch.idxArray[batch.idxIdx++] = i1;
+            batch.idxArray[batch.idxIdx++] = i3;
+            batch.idxArray[batch.idxIdx++] = i2;
             batch.idxArray[batch.idxIdx++] = i2;
             batch.idxArray[batch.idxIdx++] = i3;
+            batch.idxArray[batch.idxIdx++] = i4;
+            batch.idxArray[batch.idxIdx++] = i2;
+            batch.idxArray[batch.idxIdx++] = i5;
+            batch.idxArray[batch.idxIdx++] = i4;
 
-            batch.vtxArray[batch.vtxIdx++] = x0 + dy;
-            batch.vtxArray[batch.vtxIdx++] = y0 + dx;
-            batch.vtxArray[batch.vtxIdx++] = x1 + dy;
-            batch.vtxArray[batch.vtxIdx++] = y1 + dx;
-            batch.vtxArray[batch.vtxIdx++] = x1 - dy;
-            batch.vtxArray[batch.vtxIdx++] = y1 - dx;
             batch.vtxArray[batch.vtxIdx++] = x0 - dy;
+            batch.vtxArray[batch.vtxIdx++] = y0 + dx;
+            batch.vtxArray[batch.vtxIdx++] = x1 - dy;
+            batch.vtxArray[batch.vtxIdx++] = y1 + dx;
+            batch.vtxArray[batch.vtxIdx++] = x0;
+            batch.vtxArray[batch.vtxIdx++] = y0;
+            batch.vtxArray[batch.vtxIdx++] = x1;
+            batch.vtxArray[batch.vtxIdx++] = y1;
+            batch.vtxArray[batch.vtxIdx++] = x1 + dy;
+            batch.vtxArray[batch.vtxIdx++] = y1 - dx;
+            batch.vtxArray[batch.vtxIdx++] = x0 + dy;
             batch.vtxArray[batch.vtxIdx++] = y0 - dx;
 
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+            batch.dstArray[batch.dstIdx++] = 0;
+            batch.dstArray[batch.dstIdx++] = 0;
+            batch.dstArray[batch.dstIdx++] = (byte)width;
+            batch.dstArray[batch.dstIdx++] = (byte)width;
+            batch.dstArray[batch.dstIdx++] = 0;
+            batch.dstArray[batch.dstIdx++] = 0;
+
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
         }
 
         public void DrawLine(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool dash = false)
@@ -1158,76 +1308,66 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            DrawLineInternal(x0, y0, x1, y1, color, width, smooth, dash);
+            if (width <= 1.0f && !smooth)
+            { 
+                DrawLineInternal(x0, y0, x1, y1, color, dash);
+            }
+            else
+            { 
+                DrawSmoothLineInternal(x0, y0, x1, y1, color, width, false);
+            }
         }
 
-        public void DrawLine(IList<float> points, Color color, int width = 1, bool smooth = false)
+        public void DrawLine(float[,] points, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
-            if (points.Count == 0)
+            // GLTODO : Create a span from the 2D array (without copy).
+        }
+
+        public void DrawLine(Span<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)
+        {
+            Debug.Assert(width > 1.0f || !miter);
+
+            if (points.Length == 0)
                 return;
 
             width += lineWidthBias;
+            smooth |= width > 1.0f;
 
             var x0 = points[0];
             var y0 = points[1];
 
             xform.TransformPoint(ref x0, ref y0);
 
-            for (int i = 2; i < points.Count; i += 2)
+            for (int i = 2; i < points.Length; i += 2)
             {
                 var x1 = points[i + 0];
                 var y1 = points[i + 1];
                 
                 xform.TransformPoint(ref x1, ref y1);
-                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
+
+                if (smooth)
+                {
+                    DrawSmoothLineInternal(x0, y0, x1, y1, color, width, false);
+                }
+                else
+                {
+                    DrawLineInternal(x0, y0, x1, y1, color, false);
+                }
 
                 x0 = x1;
                 y0 = y1;
             }
         }
 
-        public void DrawLine(float[,] points, Color color, int width = 1, bool smooth = false)
+        // GLTODO : Bring this back.
+        // GLTODO : Offset 1D/2D version, one will just create a Span<> of the 2D version. 
+        public void DrawGeometry(Span<float> points, Color color, int width = 1, bool smooth = false)
         {
-            width += lineWidthBias;
-
-            var x0 = points[0, 0];
-            var y0 = points[0, 1];
-
-            xform.TransformPoint(ref x0, ref y0);
-
-            for (int i = 1; i < points.GetLength(0); i++)
-            {
-                var x1 = points[i, 0];
-                var y1 = points[i, 1];
-
-                xform.TransformPoint(ref x1, ref y1);
-                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
-
-                x0 = x1;
-                y0 = y1;
-            }
         }
 
         public void DrawGeometry(float[,] points, Color color, int width = 1, bool smooth = false)
         {
-            width += lineWidthBias;
-
-            var x0 = points[0, 0];
-            var y0 = points[0, 1];
-
-            xform.TransformPoint(ref x0, ref y0);
-
-            for (int i = 1; i < points.GetLength(0); i++)
-            {
-                var x1 = points[i, 0];
-                var y1 = points[i, 1];
-
-                xform.TransformPoint(ref x1, ref y1);
-                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
-
-                x0 = x1;
-                y0 = y1;
-            }
+            // GLTODO : See stack overflow post MemoryMarshal.CreateSpan(...);
         }
 
         public void DrawRectangle(Rectangle rect, Color color, int width = 1, bool smooth = false)
@@ -1247,62 +1387,71 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            var halfWidth = 0.0f;
+            // Line rasterization rules makes is so that the last pixel is missing.
             var extraPixel = smooth ? 0 : 1;
 
-            if (Platform.IsAndroid && width > maxSmoothLineWidth)
-            {
-                smooth = false;
-                halfWidth = (float)Math.Floor(width * 0.5f);
-                extraPixel = 0;
+            if (width <= 1.0f && !smooth)
+            { 
+                DrawLineInternal(x0, y0, x1 + extraPixel, y0, color, false);
+                DrawLineInternal(x1, y0, x1, y1 + extraPixel, color, false);
+                DrawLineInternal(x0, y1, x1 + extraPixel, y1, color, false);
+                DrawLineInternal(x0, y0, x0, y1 + extraPixel, color, false);
             }
+            else
+            { 
+                var thick = width > 1.0f;
+                var halfWidth = thick ? width * 0.5f : 0.0f;
 
-            DrawLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, color, width, smooth, false);
-            DrawLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, color, width, smooth, false);
-            DrawLineInternal(x0 - halfWidth, y1, x1 + extraPixel + halfWidth, y1, color, width, smooth, false);
-            DrawLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, color, width, smooth, false);
+                DrawSmoothLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, color, width, thick);
+                DrawSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, color, width, thick);
+                DrawSmoothLineInternal(x0 - halfWidth, y1, x1 + extraPixel + halfWidth, y1, color, width, thick);
+                DrawSmoothLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, color, width, thick);
+            }
         }
 
+        // GLTODO : Geometry + review miter.
         public void DrawGeometry(Geometry geo, Color color, int width, bool smooth = false, bool miter = false)
         {
-            width += lineWidthBias;
+        //    width += lineWidthBias;
 
-            if (Platform.IsAndroid && width > maxSmoothLineWidth)
-            {
-                smooth = false;
-                miter = !xform.HasScaling; // Miter doesnt work with scaling atm.
-            }
+        //    if (Platform.IsAndroid && width > maxSmoothLineWidth)
+        //    {
+        //        smooth = false;
+        //        miter = !xform.HasScaling; // Miter doesnt work with scaling atm.
+        //    }
 
-            var points = miter ? geo.GetMiterPoints(width) : geo.Points;
+        //    var points = miter ? geo.GetMiterPoints(width) : geo.Points;
 
-            var x0 = points[0];
-            var y0 = points[1];
+        //    var x0 = points[0];
+        //    var y0 = points[1];
 
-            xform.TransformPoint(ref x0, ref y0);
+        //    xform.TransformPoint(ref x0, ref y0);
 
-            for (int i = 0; i < points.Length / 2 - 1; i++)
-            {
-                var x1 = points[(i + 1) * 2 + 0];
-                var y1 = points[(i + 1) * 2 + 1];
+        //    for (int i = 0; i < points.Length / 2 - 1; i++)
+        //    {
+        //        var x1 = points[(i + 1) * 2 + 0];
+        //        var y1 = points[(i + 1) * 2 + 1];
 
-                xform.TransformPoint(ref x1, ref y1);
+        //        xform.TransformPoint(ref x1, ref y1);
 
-                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
+        //        DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
 
-                x0 = x1;
-                y0 = y1;
-            }
+        //        x0 = x1;
+        //        y0 = y1;
+        //    }
         }
 
+        // GLTODO : Geometry.
         public void FillAndDrawGeometry(Geometry geo, Color fillColor, Color lineColor, int lineWidth = 1, bool smooth = false, bool miter = false)
         {
-            FillGeometry(geo, fillColor, smooth);
-            DrawGeometry(geo, lineColor, lineWidth, smooth, miter);
+        //    FillGeometry(geo, fillColor, smooth);
+        //    DrawGeometry(geo, lineColor, lineWidth, smooth, miter);
         }
 
         public void FillRectangle(float x0, float y0, float x1, float y1, Color color)
         {
-            var batch = GetMeshBatch(false);
+            var batch = GetPolygonBatch();
+            var depth = graphics.DepthValue;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
@@ -1333,12 +1482,18 @@ namespace FamiStudio
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
 
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
         public void FillRectangleGradient(float x0, float y0, float x1, float y1, Color color0, Color color1, bool vertical, float gradientSize)
         {
-            var batch = GetMeshBatch(false);
+            var batch = GetPolygonBatch();
+            var depth = graphics.DepthValue;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
@@ -1383,6 +1538,11 @@ namespace FamiStudio
                     batch.colArray[batch.colIdx++] = color1.ToAbgr();
                     batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 }
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
             }
             else
             {
@@ -1459,10 +1619,30 @@ namespace FamiStudio
                 batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 batch.colArray[batch.colIdx++] = color1.ToAbgr();
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
             }
 
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
+
+        //public void FillClipRegion(Color color)
+        //{
+        //    FillRectangle(graphics.CurrentClipRegion, color);
+        //}
+
+        //public void FillAndDrawClipRegion(Color fillColor, Color lineColor, int width = 1, bool smooth = false)
+        //{
+        //    FillRectangle(graphics.CurrentClipRegion, fillColor);
+        //    DrawRectangle(graphics.CurrentClipRegion, lineColor, width, smooth);
+        //}
 
         public void FillRectangle(Rectangle rect, Color color)
         {
@@ -1505,93 +1685,157 @@ namespace FamiStudio
 
         public void FillGeometry(Geometry geo, Color color, bool smooth = false)
         {
-            var batch = GetMeshBatch(smooth);
-            var i0 = (short)(batch.vtxIdx / 2);
+        //    var batch = GetPolygonSmoothBatch(/*smooth*/); // MATTT Non smooth support.
+        //    var i0 = (short)(batch.vtxIdx / 2);
 
-            // All our geometries are closed, so no need for the last vert.
-            for (int i = 0; i < geo.Points.Length - 2; i += 2)
-            {
-                float x = geo.Points[i + 0];
-                float y = geo.Points[i + 1];
+        //    // All our geometries are closed, so no need for the last vert.
+        //    for (int i = 0; i < geo.Points.Length - 2; i += 2)
+        //    {
+        //        float x = geo.Points[i + 0];
+        //        float y = geo.Points[i + 1];
 
-                xform.TransformPoint(ref x, ref y);
+        //        xform.TransformPoint(ref x, ref y);
 
-                batch.vtxArray[batch.vtxIdx++] = x;
-                batch.vtxArray[batch.vtxIdx++] = y;
-                batch.colArray[batch.colIdx++] = color.ToAbgr();
-            }
+        //        batch.vtxArray[batch.vtxIdx++] = x;
+        //        batch.vtxArray[batch.vtxIdx++] = y;
+        //        batch.colArray[batch.colIdx++] = color.ToAbgr();
+        //    }
 
-            // Simple fan
-            var numVertices = geo.Points.Length / 2 - 1;
-            for (int i = 0; i < numVertices - 2; i++)
-            {
-                batch.idxArray[batch.idxIdx++] = i0;
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
-            }
+        //    // Simple fan
+        //    var numVertices = geo.Points.Length / 2 - 1;
+        //    for (int i = 0; i < numVertices - 2; i++)
+        //    {
+        //        batch.idxArray[batch.idxIdx++] = i0;
+        //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
+        //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
+        //    }
 
-            Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
+        //    Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
-        // Assumed to be a vertical gradient.
-        public void FillGeometryGradient(Geometry geo, Color color0, Color color1, int gradientSize, bool smooth = false)
-        {
-            var batch = GetMeshBatch(smooth);
-            var i0 = (short)(batch.vtxIdx / 2);
+        //// Assumed to be a vertical gradient.
+        //public void FillGeometryGradient(Geometry geo, Color color0, Color color1, int gradientSize, bool smooth = false)
+        //{
+        //    var batch = GetPolygonSmoothBatch(/*smooth*/); // MATTT Non smooth support.
+        //    var i0 = (short)(batch.vtxIdx / 2);
 
-            // All our geometries are closed, so no need for the last vert.
-            for (int i = 0; i < geo.Points.Length; i += 2)
-            {
-                float x = geo.Points[i + 0];
-                float y = geo.Points[i + 1];
+        //    // All our geometries are closed, so no need for the last vert.
+        //    for (int i = 0; i < geo.Points.Length; i += 2)
+        //    {
+        //        float x = geo.Points[i + 0];
+        //        float y = geo.Points[i + 1];
 
-                float lerp = y / gradientSize;
-                byte r = (byte)(color0.R * (1.0f - lerp) + (color1.R * lerp));
-                byte g = (byte)(color0.G * (1.0f - lerp) + (color1.G * lerp));
-                byte b = (byte)(color0.B * (1.0f - lerp) + (color1.B * lerp));
-                byte a = (byte)(color0.A * (1.0f - lerp) + (color1.A * lerp));
+        //        float lerp = y / gradientSize;
+        //        byte r = (byte)(color0.R * (1.0f - lerp) + (color1.R * lerp));
+        //        byte g = (byte)(color0.G * (1.0f - lerp) + (color1.G * lerp));
+        //        byte b = (byte)(color0.B * (1.0f - lerp) + (color1.B * lerp));
+        //        byte a = (byte)(color0.A * (1.0f - lerp) + (color1.A * lerp));
 
-                xform.TransformPoint(ref x, ref y);
+        //        xform.TransformPoint(ref x, ref y);
 
-                batch.vtxArray[batch.vtxIdx++] = x;
-                batch.vtxArray[batch.vtxIdx++] = y;
-                batch.colArray[batch.colIdx++] = new Color(r, g, b, a).ToAbgr();
-            }
+        //        batch.vtxArray[batch.vtxIdx++] = x;
+        //        batch.vtxArray[batch.vtxIdx++] = y;
+        //        batch.colArray[batch.colIdx++] = new Color(r, g, b, a).ToAbgr();
+        //    }
 
-            // Simple fan
-            var numVertices = geo.Points.Length / 2 - 1;
-            for (int i = 0; i < numVertices - 2; i++)
-            {
-                batch.idxArray[batch.idxIdx++] = i0;
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
-            }
-        }
+        //    // Simple fan
+        //    var numVertices = geo.Points.Length / 2 - 1;
+        //    for (int i = 0; i < numVertices - 2; i++)
+        //    {
+        //        batch.idxArray[batch.idxIdx++] = i0;
+        //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
+        //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
+        //    }
+        //}
 
+        // MATTT : Move all this to a function where we can pre-compute (aka Geometry) and just draw later.
+        // The default function will not be smooth.
         public void FillGeometry(float[,] points, Color color, bool smooth = false)
         {
-            var batch = GetMeshBatch(smooth);
+            var batch = GetPolygonBatch();
             var i0 = (short)(batch.vtxIdx / 2);
+            var numVerts = points.GetLength(0);
 
-            for (int i = 0; i < points.GetLength(0); i++)
+            var px = points[numVerts - 1, 0];
+            var py = points[numVerts - 1, 1];
+            xform.TransformPoint(ref px, ref py);
+
+            float cx = points[0, 0];
+            float cy = points[0, 1];
+            xform.TransformPoint(ref cx, ref cy);
+
+            var dpx = cx - px;
+            var dpy = cy - py;
+            Utils.Normalize(ref dpx, ref dpy);
+
+            var depth = graphics.DepthValue;
+
+            for (int i = 0; i < numVerts; i++)
             {
-                float x = points[i, 0];
-                float y = points[i, 1];
+                var ni = (i + 1) % numVerts;
 
-                xform.TransformPoint(ref x, ref y);
+                float nx = points[ni, 0];
+                float ny = points[ni, 1];
+                xform.TransformPoint(ref nx, ref ny);
 
-                batch.vtxArray[batch.vtxIdx++] = x;
-                batch.vtxArray[batch.vtxIdx++] = y;
+                var dnx = nx - cx;
+                var dny = ny - cy;
+                Utils.Normalize(ref dnx, ref dny);
+
+                var dx = (dnx - dpx) * 0.5f;
+                var dy = (dny - dpy) * 0.5f;
+                Utils.Normalize(ref dx, ref dy);
+
+                // Cos -> Csc
+                var d = 0.7071f / (float)Math.Sqrt(1.0f - Utils.Saturate(Utils.Dot(dnx, dny, -dpx, -dpy)));
+                var ix = cx + dx * d;
+                var iy = cy + dy * d;
+                var ox = cx - dx * d;
+                var oy = cy - dy * d;
+
+                batch.vtxArray[batch.vtxIdx++] = ix;
+                batch.vtxArray[batch.vtxIdx++] = iy;
+                batch.vtxArray[batch.vtxIdx++] = ox;
+                batch.vtxArray[batch.vtxIdx++] = oy;
+
                 batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = Color.FromArgb(0, color).ToAbgr();
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+
+                cx = nx;
+                cy = ny;
+                dpx = dnx;
+                dpy = dny;
             }
 
-            // Simple fan.
-            var numVertices = points.Length / 2;
-            for (int i = 0; i < numVertices - 2; i++)
+            // Simple fan for the inside
+            for (int i = 0; i < numVerts - 2; i++)
             {
                 batch.idxArray[batch.idxIdx++] = i0;
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
+                batch.idxArray[batch.idxIdx++] = (short)(i0 + i * 2 + 2);
+                batch.idxArray[batch.idxIdx++] = (short)(i0 + i * 2 + 4);
+            }
+
+            // A few more quads for the anti-aliased section.
+            for (int i = 0; i < numVerts; i++)
+            {
+                var ni = (i + 1) % numVerts;
+
+                var qi0 = (short)(i0 + i  * 2 + 0);
+                var qi1 = (short)(i0 + i  * 2 + 1);
+                var qi2 = (short)(i0 + ni * 2 + 0);
+                var qi3 = (short)(i0 + ni * 2 + 1);
+
+                batch.idxArray[batch.idxIdx++] = qi0;
+                batch.idxArray[batch.idxIdx++] = qi1;
+                batch.idxArray[batch.idxIdx++] = qi2;
+                batch.idxArray[batch.idxIdx++] = qi1;
+                batch.idxArray[batch.idxIdx++] = qi3;
+                batch.idxArray[batch.idxIdx++] = qi2;
             }
         }
 
@@ -1620,6 +1864,7 @@ namespace FamiStudio
             inst.flags = flags;
             inst.text = text;
             inst.color = color;
+            inst.depth = graphics.DepthValue;
 
             if (clipMaxX > clipMinX)
             {
@@ -1696,6 +1941,7 @@ namespace FamiStudio
             inst.sx = width;
             inst.sy = height;
             inst.tint = tint;
+            inst.depth = graphics.DepthValue;
 
             if (bmp.IsAtlas && bmp.Filtering) 
             {
@@ -1722,90 +1968,80 @@ namespace FamiStudio
             list.Add(inst);
         }
 
-        public List<MeshDrawData> GetMeshDrawData()
+        public PolyDrawData GetPolygonDrawData()
         {
-            var drawData = new List<MeshDrawData>();
+            var draw = (PolyDrawData)null;
 
-            if (meshBatch != null)
+            if (polyBatch != null)
             {
-                var draw = new MeshDrawData();
-                draw.vtxArray = meshBatch.vtxArray;
-                draw.colArray = meshBatch.colArray;
-                draw.idxArray = meshBatch.idxArray;
-                draw.numIndices = meshBatch.idxIdx;
-                draw.vtxArraySize = meshBatch.vtxIdx;
-                draw.colArraySize = meshBatch.colIdx;
-                draw.idxArraySize = meshBatch.idxIdx;
-                drawData.Add(draw);
-            }
-
-            if (meshSmoothBatch != null)
-            {
-                var draw = new MeshDrawData();
-                draw.smooth = true;
-                draw.vtxArray = meshSmoothBatch.vtxArray;
-                draw.colArray = meshSmoothBatch.colArray;
-                draw.idxArray = meshSmoothBatch.idxArray;
-                draw.numIndices = meshSmoothBatch.idxIdx;
-                draw.vtxArraySize = meshSmoothBatch.vtxIdx;
-                draw.colArraySize = meshSmoothBatch.colIdx;
-                draw.idxArraySize = meshSmoothBatch.idxIdx;
-                drawData.Add(draw);
-            }
-
-            return drawData;
-        }
-
-        public MeshDrawData GetThickLineAsPolygonDrawData()
-        {
-            var draw = (MeshDrawData)null;
-
-            if (thickLineBatch != null)
-            {
-                draw = new MeshDrawData();
-                draw.vtxArray = thickLineBatch.vtxArray;
-                draw.colArray = thickLineBatch.colArray;
-                draw.idxArray = thickLineBatch.idxArray;
-                draw.numIndices = thickLineBatch.idxIdx;
-                draw.vtxArraySize = thickLineBatch.vtxIdx;
-                draw.colArraySize = thickLineBatch.colIdx;
-                draw.idxArraySize = thickLineBatch.idxIdx;
+                draw = new PolyDrawData();
+                draw.vtxArray = polyBatch.vtxArray;
+                draw.colArray = polyBatch.colArray;
+                draw.idxArray = polyBatch.idxArray;
+                draw.depArray = polyBatch.depArray;
+                draw.numIndices = polyBatch.idxIdx;
+                draw.vtxArraySize = polyBatch.vtxIdx;
+                draw.colArraySize = polyBatch.colIdx;
+                draw.idxArraySize = polyBatch.idxIdx;
+                draw.depArraySize = polyBatch.depIdx;
             }
 
             return draw;
         }
 
-        public List<LineDrawData> GetLineDrawData()
+        public LineSmoothDrawData GetSmoothLineDrawData()
         {
-            var drawData = new List<LineDrawData>();
+            var draw = (LineSmoothDrawData)null;
 
-            foreach (var batch in lineBatches)
-            {
-                var draw = new LineDrawData();
-                draw.vtxArray = batch.vtxArray;
-                draw.texArray = batch.texArray;
-                draw.colArray = batch.colArray;
-                draw.numVertices = batch.vtxIdx / 2;
-                draw.smooth = batch.smooth;
-                draw.lineWidth = batch.lineWidth;
-                draw.vtxArraySize = batch.vtxIdx;
-                draw.texArraySize = batch.texIdx;
-                draw.colArraySize = batch.colIdx;
-                drawData.Add(draw);
+            if (lineSmoothBatch != null)
+            { 
+                draw = new LineSmoothDrawData();
+                draw.vtxArray = lineSmoothBatch.vtxArray;
+                draw.dstArray = lineSmoothBatch.dstArray;
+                draw.colArray = lineSmoothBatch.colArray;
+                draw.idxArray = lineSmoothBatch.idxArray;
+                draw.depArray = lineSmoothBatch.depArray;
+                draw.numIndices = lineSmoothBatch.idxIdx;
+                draw.vtxArraySize = lineSmoothBatch.vtxIdx;
+                draw.dstArraySize = lineSmoothBatch.dstIdx;
+                draw.colArraySize = lineSmoothBatch.colIdx;
+                draw.idxArraySize = lineSmoothBatch.idxIdx;
+                draw.depArraySize = lineSmoothBatch.depIdx;
             }
 
-            drawData.Sort((d1, d2) => d1.lineWidth == d2.lineWidth ? d1.smooth.CompareTo(d2.smooth) : d1.lineWidth.CompareTo(d2.lineWidth));
-
-            return drawData;
+            return draw;
         }
 
-        public List<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int idxArraySize)
+        public LineDrawData GetLineDrawData()
+        {
+            var draw = (LineDrawData)null;
+
+            if (lineBatch != null)
+            {
+                draw = new LineDrawData();
+                draw.vtxArray = lineBatch.vtxArray;
+                draw.texArray = lineBatch.texArray;
+                draw.colArray = lineBatch.colArray;
+                draw.depArray = lineBatch.depArray;
+                draw.numVertices = lineBatch.vtxIdx / 2;
+                draw.vtxArraySize = lineBatch.vtxIdx;
+                draw.texArraySize = lineBatch.texIdx;
+                draw.colArraySize = lineBatch.colIdx;
+                draw.depArraySize = lineBatch.depIdx;
+            }
+
+            return draw;
+        }
+
+        // MATTT : Create an object that contains everything.
+        public List<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
         {
             var drawData = new List<DrawData>();
 
             var vtxIdx = 0;
             var texIdx = 0;
             var colIdx = 0;
+            var depIdx = 0;
             var idxIdx = 0;
 
             foreach (var kv in texts)
@@ -1915,6 +2151,11 @@ namespace FamiStudio
                             colArray[colIdx++] = packedColor;
                             colArray[colIdx++] = packedColor;
 
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+
                             x += infoMono.xadvance;
                         }
 
@@ -1990,6 +2231,11 @@ namespace FamiStudio
                                 colArray[colIdx++] = packedColor;
                                 colArray[colIdx++] = packedColor;
 
+                                depArray[depIdx++] = inst.depth;
+                                depArray[depIdx++] = inst.depth;
+                                depArray[depIdx++] = inst.depth;
+                                depArray[depIdx++] = inst.depth;
+
                                 idxIdx += 6;
                                 draw.count += 6;
                             }
@@ -2037,6 +2283,11 @@ namespace FamiStudio
                             colArray[colIdx++] = packedColor;
                             colArray[colIdx++] = packedColor;
 
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+
                             x += info.xadvance;
                             if (i != inst.text.Length - 1)
                             {
@@ -2056,18 +2307,20 @@ namespace FamiStudio
             vtxArraySize = vtxIdx;
             texArraySize = texIdx;
             colArraySize = colIdx;
+            depArraySize = depIdx;
             idxArraySize = idxIdx;
 
             return drawData;
         }
 
-        public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int idxArraySize)
+        public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
         {
             var drawData = new List<DrawData>();
 
             var vtxIdx = 0;
             var texIdx = 0;
             var colIdx = 0;
+            var depIdx = 0;
             var idxIdx = 0;
 
             foreach (var kv in bitmaps)
@@ -2078,7 +2331,7 @@ namespace FamiStudio
 
                 draw.textureId = bmp.Id;
                 draw.start = idxIdx;
-
+                
                 foreach (var inst in list)
                 {
                     var x0 = inst.x;
@@ -2125,6 +2378,11 @@ namespace FamiStudio
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;
 
+                    depArray[depIdx++] = inst.depth;
+                    depArray[depIdx++] = inst.depth;
+                    depArray[depIdx++] = inst.depth;
+                    depArray[depIdx++] = inst.depth;
+
                     draw.count += 6;
                     idxIdx += 6;
                 }
@@ -2135,22 +2393,10 @@ namespace FamiStudio
             vtxArraySize = vtxIdx;
             texArraySize = texIdx;
             colArraySize = colIdx;
+            depArraySize = depIdx;
             idxArraySize = idxIdx;
 
             return drawData;
-        }
-
-        public bool IsAlmostFull()
-        {
-            foreach (var batch in lineBatches)
-            {
-                if (batch.vtxIdx > batch.vtxArray.Length * 3 / 4)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

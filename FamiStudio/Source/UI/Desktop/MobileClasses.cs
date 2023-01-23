@@ -4,7 +4,7 @@ namespace FamiStudio
 {
     public class MobilePiano : Control
     {
-        public MobilePiano(FamiStudioWindow win) : base(win)
+        public MobilePiano(FamiStudioWindow win) // CTRLTODO : base(win)
         {
         }
 
@@ -19,7 +19,7 @@ namespace FamiStudio
 
     public class QuickAccessBar : Control
     {
-        public QuickAccessBar(FamiStudioWindow win) : base(win)
+        public QuickAccessBar(FamiStudioWindow win) // CTRLTODO : base(win)
         {
         }
 

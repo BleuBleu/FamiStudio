@@ -24,7 +24,7 @@ namespace FamiStudio
         private int labelMargin;
         private int labelSize;
 
-        public Slider(Dialog dlg, double value, double minValue, double maxValue, double inc, bool showLabel, string fmt = "{0}") : base(dlg)
+        public Slider(double value, double minValue, double maxValue, double inc, bool showLabel, string fmt = "{0}")
         {
             min = minValue;
             max = maxValue;
@@ -37,8 +37,9 @@ namespace FamiStudio
             labelMargin = label ? DpiScaling.ScaleForWindow(4) : 0;
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
+            var g = ParentWindow.Graphics;
             bmpThumb = g.GetBitmapAtlasRef("SliderThumb");
             thumbSize = bmpThumb.ElementSize.Width;
         }
@@ -109,16 +110,16 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             var thumbRect = GetThumbRectangle();
 
-            c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, Theme.DarkGreyColor1, ScaleForWindow(3));
+            c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, Theme.DarkGreyColor1, DpiScaling.ScaleForWindow(3));
             c.DrawBitmapAtlas(bmpThumb, thumbRect.Left, thumbRect.Top, 1, 1, hover || dragging ? Theme.LightGreyColor2 : enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
 
             if (label)
             {
                 var str = string.Format(CultureInfo.InvariantCulture, format, val);
-                c.DrawText(str, FontResources.FontMedium, width - labelSize, 0, enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1, TextFlags.MiddleRight, labelSize, height);
+                c.DrawText(str, Fonts.FontMedium, width - labelSize, 0, enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1, TextFlags.MiddleRight, labelSize, height);
             }
         }
     }

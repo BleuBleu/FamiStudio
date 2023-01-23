@@ -56,26 +56,26 @@ namespace FamiStudio
 
         private void Init()
         {
-            buttonLeft = new Button(this, "ArrowLeft", null);
+            buttonLeft = new Button("ArrowLeft", null); // CTRLTODO : Add!
             buttonLeft.Click += ButtonLeft_Click;
             buttonLeft.Resize(buttonSize, buttonSize);
             buttonLeft.ToolTip = "Previous";
             buttonLeft.Move(width - buttonSize * 2 - margin * 2, height - buttonSize - margin);
 
-            buttonRight = new Button(this, "ArrowRight", null);
+            buttonRight = new Button("ArrowRight", null); // CTRLTODO : Add!
             buttonRight.Click += ButtonRight_Click;
             buttonRight.Resize(buttonSize, buttonSize);
             buttonRight.ToolTip = "Next";
             buttonRight.Move(width - buttonSize - margin, height - buttonSize - margin);
 
-            label = new Label(this, "This is a nice label", true);
+            label = new Label("This is a nice label", true); // CTRLTODO : Add!
             label.Move(margin, margin + titleBarSizeY, width - margin, labelSizeY);
 
-            imageBox = new ImageBox(this, (Bitmap)null);
+            imageBox = new ImageBox((Bitmap)null); // CTRLTODO : Add!
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
             imageBox.ScaleImage = DpiScaling.Window > 1;
 
-            checkBoxDontShow = new CheckBox(this, false, "Do not show again");
+            checkBoxDontShow = new CheckBox(false, "Do not show again"); // CTRLTODO : Add!
             checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY + titleBarSizeY, width - buttonSize * 3, checkSizeY);
 
             AddControl(buttonLeft);
@@ -107,7 +107,7 @@ namespace FamiStudio
             gifSizeX = Gif.GetWidth(gif);
             gifSizeY = Gif.GetHeight(gif);
             gifBuffer = new byte[gifSizeX * gifSizeY * 3];
-            gifBmp = ParentWindow.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, false, windowScaling > 1.0f);
+            gifBmp = ParentWindow.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, false, DpiScaling.Window > 1.0f);
             imageBox.Image = gifBmp;
         }
 

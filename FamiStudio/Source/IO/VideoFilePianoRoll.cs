@@ -283,7 +283,6 @@ namespace FamiStudio
             // Setup piano roll and images.
             var pianoRoll = new PianoRoll(null);
             pianoRoll.Move(0, 0, channelResX, channelResY);
-            pianoRoll.SetFontRenderResource(fontResources);
             pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
 
             // Build the scrolling data.
@@ -321,22 +320,16 @@ namespace FamiStudio
                         }
                     }
 
-                    s.graphics.BeginDrawFrame();
-                    s.graphics.BeginDrawControl(new Rectangle(0, 0, channelResX, channelResY), channelResY);
-
+                    s.graphics.BeginDrawFrame(new Rectangle(0, 0, channelResX, channelResY), Color.Black);
                     pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.channelData[s.songChannelIndex].scroll, note.Value, color);
-
-                    s.graphics.EndDrawControl();
                     s.graphics.EndDrawFrame();
                 }
 
                 // Render the full screen overlay.
-                videoGraphics.BeginDrawFrame();
-                videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
-                videoGraphics.Clear(Color.Black);
+                videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), Color.Black);
 
-                var bg = videoGraphics.CreateCommandList();
-                var fg = videoGraphics.CreateCommandList();
+                var bg = videoGraphics.BackgroundLayer;
+                var fg = videoGraphics.DefaultLayer;
 
                 // Composite the channel renders.
                 foreach (var s in channelStates)
@@ -344,8 +337,6 @@ namespace FamiStudio
                     int channelPosX0 = (int)Math.Round(s.videoChannelIndex * channelResXFloat);
                     bg.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
                 }
-
-                videoGraphics.DrawCommandList(bg);
 
                 // Gradient
                 fg.FillRectangleGradient(0, 0, videoResX, gradientSizeY, Color.Black, Color.Transparent, true, gradientSizeY);
@@ -377,8 +368,6 @@ namespace FamiStudio
 
                     ConditionalFlushCommandList(ref fg);
                 }
-
-                videoGraphics.DrawCommandList(fg);
             }, () =>
             {
                 // Cleanup.

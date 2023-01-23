@@ -18,7 +18,7 @@ namespace FamiStudio
         private bool hover;
         private bool press;
 
-        public Button(Dialog dlg, string img, string txt) : base(dlg)
+        public Button(string img, string txt) 
         {
             Image = img;
             text  = txt;
@@ -58,7 +58,7 @@ namespace FamiStudio
         {
             // Only bothered to support this one use case.
             Debug.Assert(!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(imageName));
-            width = margin * 3 + bmp.ElementSize.Width + FontResources.FontMedium.MeasureString(text, false);
+            width = margin * 3 + bmp.ElementSize.Width + ParentWindow.Fonts.FontMedium.MeasureString(text, false);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -96,14 +96,14 @@ namespace FamiStudio
         {
             if (!string.IsNullOrEmpty(imageName))
             {
-                bmp = parentWindow.Graphics.GetBitmapAtlasRef(imageName);
+                bmp = ParentWindow.Graphics.GetBitmapAtlasRef(imageName);
                 Debug.Assert(bmp != null);
             }
         }
 
         protected override void OnRender(Graphics g)
         {
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
@@ -131,12 +131,12 @@ namespace FamiStudio
             }
             else if (hasText && bmp == null)
             {
-                c.DrawText(text, bold ? FontResources.FontMediumBold : FontResources.FontMedium, 0, 0, color, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
+                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, 0, 0, color, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
             }
             else if (hasText && bmp != null)
             {
                 c.DrawBitmapAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, 1, color);
-                c.DrawText(text, bold ? FontResources.FontMediumBold : FontResources.FontMedium, bmpSize.Width + margin * 2, 0, color, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
+                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, color, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 
             c.PopTransform();
