@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class Toolbar : Control
+    public class Toolbar : Container
     {
         private enum ButtonType
         {
@@ -235,6 +235,7 @@ namespace FamiStudio
         };
 
         int lastButtonX = 500;
+        int helpButtonX = 500;
         bool redTooltip = false;
         new string tooltip = "";
         Font timeCodeFont;
@@ -449,6 +450,7 @@ namespace FamiStudio
                     if (i == (int)ButtonType.Help)
                     {
                         btn.Rect = new Rectangle(Width - buttonSize, 0, buttonSize, buttonSize);
+                        helpButtonX = btn.Rect.Left;
                     }
                     else
                     {
@@ -1085,9 +1087,7 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            // GLTODO : Bring this back.
-            /*
-            var c = g.CreateCommandList(); // Main
+            var c = g.DefaultCommandList;
 
             RenderShadow(c);
             RenderBackground(c);
@@ -1095,13 +1095,12 @@ namespace FamiStudio
             RenderTimecode(c, timecodePosX, timecodePosY, timecodeOscSizeX, timecodeOscSizeY);
             RenderOscilloscope(c, oscilloscopePosX, oscilloscopePosY, timecodeOscSizeX, timecodeOscSizeY);
 
-            g.DrawCommandList(c);
-
             if (Platform.IsDesktop)
             {
-                var ct = g.CreateCommandList(); // Tooltip (clipped)
-                RenderWarningAndTooltip(ct);
-                g.DrawCommandList(ct, new Rectangle(lastButtonX, 0, Width, Height));
+                g.PushClipRegion(lastButtonX, 0, helpButtonX - lastButtonX, Height);
+                RenderBackground(c);
+                RenderWarningAndTooltip(c);
+                g.PopClipRegion();
             }
             else
             {
@@ -1110,7 +1109,6 @@ namespace FamiStudio
                 else
                     c.DrawLine(0, Height - 1, Width, Height - 1, Theme.BlackColor);
             }
-            */
         }
 
         public bool ShouldRefreshOscilloscope(bool hasNonZeroSample)

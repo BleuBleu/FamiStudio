@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class ContextMenu : Control
+    public class ContextMenu : Container
     {
         const int DefaultItemSizeY    = 22;
         const int DefaultIconPos      = 3;

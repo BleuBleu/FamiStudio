@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace FamiStudio
 {
-    public class PianoRoll : Control
+    public class PianoRoll : Container
     {
         const float MinZoomFamiStudio       = 1.0f / 32.0f;
         const float MinZoomOther            = 1.0f / 8.0f;
@@ -3459,7 +3459,7 @@ namespace FamiStudio
 #if DEBUG
             if (Platform.IsMobile)
             {
-                r.g.OverlayLayer.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
+                r.g.OverlayCommandList.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
             }
 #endif
         }

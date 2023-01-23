@@ -2,7 +2,7 @@ using System;
 
 namespace FamiStudio
 {
-    public class MobilePiano : Control
+    public class MobilePiano : Container
     {
         public MobilePiano(FamiStudioWindow win) // CTRLTODO : base(win)
         {
@@ -17,7 +17,7 @@ namespace FamiStudio
         }
     }
 
-    public class QuickAccessBar : Control
+    public class QuickAccessBar : Container
     {
         public QuickAccessBar(FamiStudioWindow win) // CTRLTODO : base(win)
         {

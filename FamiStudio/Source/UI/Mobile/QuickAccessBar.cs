@@ -7,7 +7,7 @@ using Rectangle = System.Drawing.Rectangle;
 
 namespace FamiStudio
 {
-    public class QuickAccessBar : Control
+    public class QuickAccessBar : Container
     {
         // All of these were calibrated at 1080p and will scale up/down from there.
         const int DefaultNavButtonSize    = 120;

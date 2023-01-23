@@ -60,10 +60,10 @@ namespace FamiStudio
         protected abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
         public abstract void DeleteTexture(int id);
 
-        public CommandList BackgroundLayer => GetCommandList(GraphicsLayer.Background);
-        public CommandList DefaultLayer    => GetCommandList(GraphicsLayer.Default);
-        public CommandList ForegroundLayer => GetCommandList(GraphicsLayer.Foreground);
-        public CommandList OverlayLayer    => GetCommandList(GraphicsLayer.Overlay);
+        public CommandList BackgroundCommandList => GetCommandList(GraphicsLayer.Background);
+        public CommandList DefaultCommandList    => GetCommandList(GraphicsLayer.Default);
+        public CommandList ForegroundCommandList => GetCommandList(GraphicsLayer.Foreground);
+        public CommandList OverlayCommandList    => GetCommandList(GraphicsLayer.Overlay);
 
         protected GraphicsBase()
         {
@@ -143,8 +143,8 @@ namespace FamiStudio
 
         public virtual void PushClipRegion(float x, float y, float width, float height)
         {
-            var ox = 0.0f;
-            var oy = 0.0f;
+            var ox = x;
+            var oy = y;
 
             transform.TransformPoint(ref ox, ref oy);
 

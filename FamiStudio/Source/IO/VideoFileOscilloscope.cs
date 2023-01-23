@@ -131,7 +131,7 @@ namespace FamiStudio
             return LaunchEncoderLoop((f) =>
             {
                 var frame = metadata[f];
-                var cmd = videoGraphics.DefaultLayer;
+                var cmd = videoGraphics.DefaultCommandList;
 
                 // Draw gradients.
                 for (int i = 0; i < numRows; i++)

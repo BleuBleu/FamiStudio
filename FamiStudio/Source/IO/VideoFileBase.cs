@@ -257,7 +257,7 @@ namespace FamiStudio
                     body(f);
 
                     // Watermark.
-                    videoGraphics.ForegroundLayer.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
+                    videoGraphics.ForegroundCommandList.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
                     videoGraphics.EndDrawFrame();
 
                     // Readback

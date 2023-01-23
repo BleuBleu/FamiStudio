@@ -62,13 +62,13 @@ namespace FamiStudio
             depthVao      = GL.GenVertexArray();
 
             // MATTT : More buffers?
-            vertexBuffer    = GL.GenBuffer();
-            colorBuffer     = GL.GenBuffer();
-            centerBuffer    = GL.GenBuffer();
-            texCoordBuffer  = GL.GenBuffer();
+            vertexBuffer   = GL.GenBuffer();
+            colorBuffer    = GL.GenBuffer();
+            centerBuffer   = GL.GenBuffer();
+            texCoordBuffer = GL.GenBuffer();
             lineDistBuffer = GL.GenBuffer();
-            indexBuffer     = GL.GenBuffer();
-            depthBuffer     = GL.GenBuffer();
+            indexBuffer    = GL.GenBuffer();
+            depthBuffer    = GL.GenBuffer();
 
             quadIdxBuffer = GL.GenBuffer();
             GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);

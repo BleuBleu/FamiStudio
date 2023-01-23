@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class ProjectExplorer : Control
+    public class ProjectExplorer : Container
     {
         const int DefaultExpandButtonSizeX    = 8;
         const int DefaultExpandButtonPosX     = 3;
@@ -1311,7 +1311,7 @@ namespace FamiStudio
 #if DEBUG
             if (Platform.IsMobile)
             {
-                g.OverlayLayer.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
+                g.OverlayCommandList.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
             }
 #endif
         }

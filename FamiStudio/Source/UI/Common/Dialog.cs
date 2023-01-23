@@ -55,7 +55,7 @@ namespace FamiStudio
             visible = false;
             title = t;
             titleBarSizeY = string.IsNullOrEmpty(t) ? 0 : DpiScaling.ScaleForWindow(24);
-            //parentWindow.InitDialog(this);
+            win.InitDialog(this);
         }
 
         private void ShowDialogInternal()
@@ -63,7 +63,7 @@ namespace FamiStudio
             result = DialogResult.None;
             visible = true;
             OnShowDialog();
-            //parentWindow.PushDialog(this);
+            window.PushDialog(this);
         }
 
         public void ShowDialogNonModal()
@@ -225,28 +225,17 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            /*
-            commandList = g.DefaultLayer;
-            commandListForeground = g.ForegroundLayer;
+            var cd = g.DefaultCommandList;
+            var cf = g.ForegroundCommandList;
 
             // Fill + Border
-            commandList.FillAndDrawRectangle(0, 0, width - 1, height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
+            cd.FillAndDrawRectangle(0, 0, width - 1, height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
 
+            /*
             if (titleBarSizeY > 0)
             {
                 commandList.FillAndDrawRectangle(0, 0, width, titleBarSizeY, Theme.DarkGreyColor1, Theme.BlackColor);
                 commandList.DrawText(title, FontResources.FontMediumBold, titleBarMargin, 0, Theme.LightGreyColor1, TextFlags.MiddleLeft, 0, titleBarSizeY);
-            }
-
-            // Render child controls
-            foreach (var ctrl in controls)
-            {
-                if (ctrl.Visible)
-                {
-                    g.Transform.PushTranslation(ctrl.Left, ctrl.Top);
-                    ctrl.Render(g);
-                    g.Transform.PopTransform();
-                }
             }
 
             if (ShouldDisplayTooltip())
@@ -278,6 +267,8 @@ namespace FamiStudio
                 }
             }
             */
+
+            base.OnRender(g);
         }
     }
 }

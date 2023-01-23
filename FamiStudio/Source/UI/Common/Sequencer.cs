@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class Sequencer : Control
+    public class Sequencer : Container
     {
         const int DefaultChannelNameSizeX    = Platform.IsMobile ? 64 : 94;
         const int DefaultHeaderSizeY         = 17;
@@ -896,7 +896,7 @@ namespace FamiStudio
 #if DEBUG
             if (Platform.IsMobile)
             {
-                g.OverlayLayer.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
+                g.OverlayCommandList.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
             }
 #endif
         }

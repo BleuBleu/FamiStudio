@@ -34,6 +34,7 @@ namespace FamiStudio
 
         public FamiStudioContainer(FamiStudioWindow parent)
         {
+            window = parent;
             toolbar = new Toolbar(parent);
             sequencer = new Sequencer(parent);
             pianoRoll = new PianoRoll(parent);
@@ -42,7 +43,6 @@ namespace FamiStudio
             mobilePiano = new MobilePiano(parent);
             contextMenu = new ContextMenu(parent);
             toast = new Toast(parent);
-            window = parent;
 
             AddControl(toolbar);
             AddControl(sequencer);
@@ -50,7 +50,6 @@ namespace FamiStudio
             AddControl(projectExplorer);
         }
 
-        /*
         public void Resize(int w, int h)
         {
             width  = Math.Max(1, w);
@@ -70,7 +69,6 @@ namespace FamiStudio
 
             toast.Reposition();
         }
-        */
 
         // CTRLTODO : See where we can fit this? Override the functions from Container to get control?
         public bool CanInteractWithControls()
@@ -213,16 +211,12 @@ namespace FamiStudio
 
         public void InitDialog(Dialog dialog)
         {
-            // CTRLTODO : Dialogs.
-            /*
-            dialog.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            dialog.SetFontRenderResource(fonts);
-            dialog.RenderInitialized(gfx);
-            */
+            AddControl(dialog);
         }
 
         public void PushDialog(Dialog dialog)
         {
+            AddControl(dialog);
             dialogs.Add(dialog);
         }
 
@@ -230,49 +224,12 @@ namespace FamiStudio
         {
             Debug.Assert(TopDialog == dialog);
             dialogs.RemoveAt(dialogs.Count - 1);
+            RemoveControl(dialog);
         }
 
         public void ShowToast(string text, bool longDuration = false, Action click = null)
         {
             toast.Initialize(text, longDuration, click);
-        }
-
-        public void InitializeGL()
-        {
-            // CTRLTODO : This will be moved to Window.
-            /*
-            gfx = new Graphics();
-            fonts = new Fonts(gfx);
-
-            foreach (var ctrl in controls)
-            {
-                ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-                ctrl.SetFontRenderResource(fonts);
-                ctrl.RenderInitialized(gfx);
-            }
-
-            contextMenu.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            contextMenu.SetFontRenderResource(fonts);
-            contextMenu.RenderInitialized(gfx);
-
-            toast.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            toast.SetFontRenderResource(fonts);
-            toast.RenderInitialized(gfx);
-            */
-        }
-
-        public void ShutdownGL()
-        {
-            // CTRLTODO : Moved to Window?
-            /*
-            foreach (var ctrl in controls)
-            {
-                ctrl.RenderTerminated();
-                ctrl.SetFontRenderResource(null);
-            }
-
-            fonts.Dispose();
-            */
         }
     }
 }

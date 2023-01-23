@@ -161,8 +161,8 @@ namespace FamiStudio
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-            glfwWindowHint(GLFW_MAXIMIZED, 0);
-            glfwWindowHint(GLFW_RESIZABLE, 0);
+            glfwWindowHint(GLFW_MAXIMIZED, 1);
+            glfwWindowHint(GLFW_RESIZABLE, 1);
             glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
             glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, 1);
             glfwWindowHint(GLFW_DEPTH_BITS, 16);
@@ -845,20 +845,17 @@ namespace FamiStudio
 
         public void InitDialog(Dialog dialog)
         {
-			// CTRLTODO
-            //container.InitDialog(dialog);
+			container.InitDialog(dialog);
         }
 
         public void PushDialog(Dialog dialog)
 		{
-			// CTRLTODO
-            //container.PushDialog(dialog);
+            container.PushDialog(dialog);
         }
 
         public void PopDialog(Dialog dialog)
         {
-			// CTRLTODO
-            //container.PopDialog(dialog);
+			container.PopDialog(dialog);
         }
 
         public void ShowToast(string text, bool longDuration = false, Action click = null)

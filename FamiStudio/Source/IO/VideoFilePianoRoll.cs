@@ -328,8 +328,8 @@ namespace FamiStudio
                 // Render the full screen overlay.
                 videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), Color.Black);
 
-                var bg = videoGraphics.BackgroundLayer;
-                var fg = videoGraphics.DefaultLayer;
+                var bg = videoGraphics.BackgroundCommandList;
+                var fg = videoGraphics.DefaultCommandList;
 
                 // Composite the channel renders.
                 foreach (var s in channelStates)

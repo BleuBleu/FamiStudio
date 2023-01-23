@@ -6,7 +6,7 @@ using Rectangle = System.Drawing.Rectangle;
 
 namespace FamiStudio
 {
-    public class MobilePiano : Control
+    public class MobilePiano : Container
     {
         const int NumOctaves = 8;
         const int NumNotes   = NumOctaves * 12;

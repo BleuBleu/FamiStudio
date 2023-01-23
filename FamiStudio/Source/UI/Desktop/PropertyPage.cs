@@ -777,7 +777,12 @@ namespace FamiStudio
             {
                 var prop = properties[i];
                 if (prop.visible && prop.label != null)
+                {
+                    // HACK : Control need to be added to measure string.
+                    dialog.AddControl(prop.label);
                     maxLabelWidth = Math.Max(maxLabelWidth, prop.label.MeasureWidth());
+                    dialog.RemoveControl(prop.label);
+                }
             }
 
             int totalHeight = 0;

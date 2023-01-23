@@ -25,8 +25,9 @@ namespace FamiStudio
 
         public void RemoveControl(Control ctrl)
         {
-            if (ctrl != null)
+            if (ctrl != null && controls.Contains(ctrl))
             {
+                ctrl.SetParentContainer(null);
                 controls.Remove(ctrl);
             }
         }
@@ -127,7 +128,7 @@ namespace FamiStudio
 
         public override void Render(Graphics g)
         {
-            g.PushClipRegion(WindowPosition, Size);
+            g.PushClipRegion(0, 0, width, height);
             OnRender(g);
             g.PopClipRegion();
         }

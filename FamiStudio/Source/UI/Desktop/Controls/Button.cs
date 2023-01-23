@@ -61,6 +61,11 @@ namespace FamiStudio
             width = margin * 3 + bmp.ElementSize.Width + ParentWindow.Fonts.FontMedium.MeasureString(text, false);
         }
 
+        protected override void OnAddedToContainer()
+        {
+            UpdateAtlasBitmap();
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (enabled && e.Left)
@@ -94,7 +99,7 @@ namespace FamiStudio
 
         private void UpdateAtlasBitmap()
         {
-            if (!string.IsNullOrEmpty(imageName))
+            if (HasParent && !string.IsNullOrEmpty(imageName))
             {
                 bmp = ParentWindow.Graphics.GetBitmapAtlasRef(imageName);
                 Debug.Assert(bmp != null);

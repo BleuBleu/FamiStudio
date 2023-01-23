@@ -117,6 +117,7 @@ namespace FamiStudio
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
         public void MarkDirty() { window?.MarkDirty(); }
 
+        public bool HasParent => container != null;
         public Point CursorPosition => ParentWindow.GetCursorPosition();
         public ModifierKeys ModifierKeys => ParentWindow.GetModifierKeys();
         public FamiStudio App => ParentWindow?.FamiStudio;
@@ -170,13 +171,12 @@ namespace FamiStudio
 
         public void SetParentContainer(Container c)
         {
-            // Container must already be added.
-            Debug.Assert(container == null && c != null);
-            Debug.Assert(c.ParentTopContainer != null);
-            Debug.Assert(c.ParentWindow != null);
+            Debug.Assert((container == null) != (c == null));
+            Debug.Assert(c == null || c.ParentTopContainer != null);
+            Debug.Assert(c == null || c.ParentWindow != null);
 
             container = c;
-            window = c.ParentWindow;
+            window = c?.ParentWindow;
         }
 
         public void Move(int x, int y, bool fireResizeEvent = true)

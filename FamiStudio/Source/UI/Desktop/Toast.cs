@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace FamiStudio
 {
-    public class Toast : Control
+    public class Toast : Container
     {
         private const int   DefaultPad = 8;
         private const int   DefaultPositionFromBottom = 32;
