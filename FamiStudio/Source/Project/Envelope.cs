@@ -493,8 +493,6 @@ namespace FamiStudio
                     return (sbyte)15;
                 case EnvelopeType.YMMixerSettings:
                     return (sbyte)2;
-                case EnvelopeType.YMNoiseFreq:
-                    return (sbyte)-1;
                 default:
                     return (sbyte)0;
             }
@@ -529,8 +527,6 @@ namespace FamiStudio
                     return 32;
                 case EnvelopeType.YMMixerSettings:
                     return 2;
-                case EnvelopeType.YMNoiseFreq:
-                    return -1;
                 default:
                     return 0;
             }
@@ -608,7 +604,7 @@ namespace FamiStudio
             }
             else if (type == EnvelopeType.YMNoiseFreq)
             {
-                min = -1;
+                min = 0;
                 max = 31;
             }
             else
