@@ -266,8 +266,13 @@ namespace FamiStudio
             if (dirty || force)
             {
                 var rect = new Rectangle(Point.Empty, Size);
+#if DEBUG
+                var clearColor = new Color(255, 0, 255);
+#else
+                var clearColor = Theme.DarkGreyColor2;
+#endif
 
-                graphics.BeginDrawFrame(rect, Color.Black);
+                graphics.BeginDrawFrame(rect, clearColor);
                 container.Render(graphics);
                 graphics.EndDrawFrame();
 

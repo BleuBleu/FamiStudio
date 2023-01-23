@@ -54,7 +54,7 @@ namespace FamiStudio
         protected abstract int CreateEmptyTexture(int width, int height, bool alpha, bool filter);
         protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
         protected abstract void Clear();
-        protected abstract void DrawCommandList(CommandList list);
+        protected abstract void DrawCommandList(CommandList list, bool depthTest);
         protected abstract void DrawDepthPrepass();
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
         protected abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
@@ -122,7 +122,7 @@ namespace FamiStudio
             {
                 if (layerCommandLists[i] != null)
                 { 
-                    DrawCommandList(layerCommandLists[i]);
+                    DrawCommandList(layerCommandLists[i], i != (int)GraphicsLayer.Overlay);
                 }
             }
 
@@ -153,9 +153,11 @@ namespace FamiStudio
 
             var clip = new ClipRegion();
 
-            // MATTT : Clip with all parent clip regions.
             clip.rect = new RectangleF(ox, oy, width, height);
             clip.depthValue = curDepthValue;
+
+            if (clipStack.Count > 0)
+                clip.rect = RectangleF.Intersect(clip.rect, clipStack.Peek().rect);
 
             clipRegions.Add(clip);
             clipStack.Push(clip);
@@ -1633,10 +1635,11 @@ namespace FamiStudio
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
-        //public void FillClipRegion(Color color)
-        //{
-        //    FillRectangle(graphics.CurrentClipRegion, color);
-        //}
+        public void FillClipRegion(Color color)
+        {
+            var clipRect = graphics.CurrentClipRegion;
+            FillRectangle(0, 0, clipRect.Width, clipRect.Height, color);
+        }
 
         //public void FillAndDrawClipRegion(Color fillColor, Color lineColor, int width = 1, bool smooth = false)
         //{

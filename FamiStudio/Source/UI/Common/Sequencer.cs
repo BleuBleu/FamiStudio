@@ -161,7 +161,7 @@ namespace FamiStudio
         public event EmptyDelegate SelectionChanged;
         public event EmptyDelegate ShyChanged;
 
-        public Sequencer(FamiStudioWindow win) // CTRLTODO : base(win)
+        public Sequencer(FamiStudioWindow win) 
         {
         }
 
@@ -467,13 +467,6 @@ namespace FamiStudio
             }, true);
         }
 
-        // CTRLTODO : Would need a OnRemovedFromDialog()
-        //protected override void OnRenderTerminated()
-        //{
-        //    Utils.DisposeAndNullify(ref seekGeometry);
-        //    InvalidatePatternCache();
-        //}
-
         protected override void OnResize(EventArgs e)
         {
             UpdateRenderCoords();
@@ -539,35 +532,35 @@ namespace FamiStudio
 
         protected void RenderChannelNames(Graphics g)
         {
-            // GLTODO : Bring this back!
-            /*
-            var ch = g.CreateCommandList();
-            var cc = g.CreateCommandList();
+            var c = g.DefaultCommandList;
 
             // Track name background
-            ch.DrawRectangle(0, 0, channelNameSizeX, Height, Theme.DarkGreyColor4);
-            ch.DrawLine(0, headerSizeY, Width, headerSizeY, Theme.BlackColor);
+            c.FillRectangle(0, 0, channelNameSizeX, headerSizeY, Theme.DarkGreyColor2);
+            c.DrawRectangle(0, 0, channelNameSizeX, Height, Theme.DarkGreyColor4);
+            c.DrawLine(0, headerSizeY, Width, headerSizeY, Theme.BlackColor);
 
             // Global lines
-            ch.DrawLine(channelNameSizeX - 1, 0, channelNameSizeX - 1, Height, Theme.BlackColor);
-            ch.DrawLine(0, 0, channelNameSizeX, 0, Theme.BlackColor);
-            ch.DrawLine(0, Height - scrollBarThickness, channelNameSizeX, Height - scrollBarThickness, Theme.BlackColor);
-            ch.DrawLine(0, Height - 1, channelNameSizeX, Height - 1, Theme.BlackColor);
+            c.DrawLine(channelNameSizeX - 1, 0, channelNameSizeX - 1, Height, Theme.BlackColor);
+            c.DrawLine(0, 0, channelNameSizeX, 0, Theme.BlackColor);
+            c.DrawLine(0, Height - scrollBarThickness, channelNameSizeX, Height - scrollBarThickness, Theme.BlackColor);
+            c.DrawLine(0, Height - 1, channelNameSizeX, Height - 1, Theme.BlackColor);
 
             // Shy
             if (Platform.IsDesktop)
-                ch.DrawBitmapAtlasCentered(hideEmptyChannels && !forceShyOff ? bmpShyOn : bmpShyOff, GetShyButtonRect(), 1, 1, hoverShy ? Theme.LightGreyColor1 : Theme.LightGreyColor2);
+                c.DrawBitmapAtlasCentered(hideEmptyChannels && !forceShyOff ? bmpShyOn : bmpShyOff, GetShyButtonRect(), 1, 1, hoverShy ? Theme.LightGreyColor1 : Theme.LightGreyColor2);
 
             // Vertical line seperating with the toolbar
             if (Platform.IsMobile && IsLandscape)
-                ch.DrawLine(0, 0, 0, Height, Theme.BlackColor);
+                c.DrawLine(0, 0, 0, Height, Theme.BlackColor);
 
             // Scrollable area.
-            cc.PushTranslation(0, headerSizeY - scrollY);
+            g.PushClipRegion(0, headerSizeY, channelNameSizeX, Height - scrollBarThickness - headerSizeY + 1);
+            c.PushTranslation(0, headerSizeY - scrollY);
+            c.FillClipRegion(Theme.DarkGreyColor2);
 
             // Horizontal lines seperating patterns.
             for (int i = 0, y = 0; i < rowToChannel.Length; i++, y += channelSizeY)
-                cc.DrawLine(0, y, Width, y, Theme.BlackColor);
+                c.DrawLine(0, y, channelNameSizeX, y, Theme.BlackColor);
 
             var showExpIcons = showExpansionIcons && Song.Project.UsesAnyExpansionAudio;
             var atlas = showExpIcons ? bmpExpansions : bmpChannels;
@@ -582,41 +575,41 @@ namespace FamiStudio
                     var channel = Song.Channels[i];
                     var bitmapIndex = showExpIcons ? channel.Expansion : channel.Type;
                     var iconHoverOpacity = isHoverRow && (hoverIconMask & 1) != 0 ? 0.75f : 1.0f;
-                    cc.DrawBitmapAtlas(atlas[bitmapIndex], channelIconPosX, y + channelIconPosY, ((App.ChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * iconHoverOpacity, channelBitmapScale, Theme.LightGreyColor1);
+                    c.DrawBitmapAtlas(atlas[bitmapIndex], channelIconPosX, y + channelIconPosY, ((App.ChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * iconHoverOpacity, channelBitmapScale, Theme.LightGreyColor1);
 
                     // Name
-                    var font = i == selectedChannelIndex ? FontResources.FontMediumBold : FontResources.FontMedium;
+                    var font = i == selectedChannelIndex ? Fonts.FontMediumBold : Fonts.FontMedium;
                     var iconHeight = bmpChannels[0].ElementSize.Height * channelBitmapScale;
-                    cc.DrawText(Song.Channels[i].Name, font, channelNamePosX, y + channelIconPosY, Theme.LightGreyColor2, TextFlags.MiddleLeft, 0, iconHeight);
+                    c.DrawText(Song.Channels[i].Name, font, channelNamePosX, y + channelIconPosY, Theme.LightGreyColor2, TextFlags.MiddleLeft, 0, iconHeight);
 
                     // Force display icon.
                     var ghostHoverOpacity = isHoverRow && (hoverIconMask & 2) != 0 ? 0.75f : 1.0f;
-                    cc.DrawBitmapAtlas(bmpForceDisplay, channelNameSizeX - ghostNoteOffsetX, y + channelSizeY - ghostNoteOffsetY - 1, ((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * ghostHoverOpacity, bitmapScale, Theme.LightGreyColor1);
+                    c.DrawBitmapAtlas(bmpForceDisplay, channelNameSizeX - ghostNoteOffsetX, y + channelSizeY - ghostNoteOffsetY - 1, ((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * ghostHoverOpacity, bitmapScale, Theme.LightGreyColor1);
 
                     // Hover
                     if (isHoverRow)
-                        cc.FillRectangle(0, y, channelNameSizeX, y + channelSizeY, Theme.MediumGreyColor1);
+                        c.FillRectangle(0, y, channelNameSizeX, y + channelSizeY, Theme.MediumGreyColor1);
 
                     y += channelSizeY;
                 }
             }
 
-            cc.PopTransform();
-            
-            g.DrawCommandList(cc, new Rectangle(0, headerSizeY, channelNameSizeX, Height - scrollBarThickness - headerSizeY + 1));
-            g.DrawCommandList(ch);
-            */
+            c.PopTransform();
+            g.PopClipRegion();
         }
 
         protected void RenderPatternArea(Graphics g)
         {
+            var b = g.BackgroundCommandList;
+            var c = g.DefaultCommandList;
+            var f = g.ForegroundCommandList;
+
             /*
-            var ch = g.CreateCommandList(); // Header stuff 
             var cb = g.CreateCommandList(); // Background stuff
             var cp = g.CreateCommandList(); // Pattern stuff
             var cf = g.CreateCommandList(); // Foreground stuff
             var cs = scrollBarThickness > 0 ? g.CreateCommandList() : null; // Scroll bars.
-
+            */
             var seekX = GetPixelForNote(GetSeekFrameToDraw());
             var minVisibleNoteIdx = Math.Max(GetNoteForPixel(0), 0);
             var maxVisibleNoteIdx = Math.Min(GetNoteForPixel(Width) + 1, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
@@ -624,30 +617,63 @@ namespace FamiStudio
             var maxVisiblePattern = Utils.Clamp(Song.PatternIndexFromAbsoluteNoteIndex(maxVisibleNoteIdx) + 1, 0, Song.Length);
             var actualSizeY = Height - scrollBarThickness;
 
-            // Grey background rectangles ever other pattern + vertical lines 
-            ch.PushTranslation(channelNameSizeX, 0);
+            // Header background
+            c.PushTranslation(channelNameSizeX, 0);
+            g.PushClipRegion(0, 0, width, headerSizeY);
 
             for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
             {
-                if ((i & 1) == 0 || i == hoverPattern)
+                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
+                var sx = GetPixelForNote(Song.GetPatternLength(i), false);
+                var color = i == hoverPattern ? Theme.MediumGreyColor1 : ((i & 1) == 0 ? Theme.DarkGreyColor4 : Theme.DarkGreyColor2);
+                c.FillRectangle(px, 0, px + sx, headerSizeY, color);
+
+                if (IsValidTimeOnlySelection())
                 {
-                    var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
-                    var sx = GetPixelForNote(Song.GetPatternLength(i), false);
-                    var y = 0;
-
-                    if (i == hoverPattern)
-                    {
-                        ch.FillRectangle(px, 0, px + sx, headerSizeY, Theme.MediumGreyColor1);
-                        y = headerSizeY;
-                    }
-
-                    if ((i & 1) == 0)
-                    {
-                        ch.FillRectangle(px, y, px + sx, height, Theme.DarkGreyColor4);
-                    }
+                    c.FillRectangle(
+                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), 0,
+                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), headerSizeY,
+                        IsActiveControl ? selectedPatternVisibleColor : selectedPatternInvisibleColor);
                 }
             }
 
+            // Header
+            c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
+            c.DrawLine(0, headerSizeY, Width, headerSizeY, Theme.BlackColor);
+            c.DrawLine(0, Height - 1, Width, Height - 1, Theme.BlackColor);
+
+            // Vertical lines (Header)
+            for (int i = Math.Max(1, minVisiblePattern); i <= maxVisiblePattern; i++)
+            {
+                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
+                c.DrawLine(px, 0, px, headerSizeY, Theme.BlackColor);
+            }
+
+            // Pattern names.
+            for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
+            {
+                var patternLen = Song.GetPatternLength(i);
+                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
+                var sx = GetPixelForNote(patternLen, false);
+
+                c.PushTranslation(px, 0);
+
+                var text = (i + 1).ToString();
+                if (Song.PatternHasCustomSettings(i))
+                    text += "*";
+                c.DrawText(text, Fonts.FontMedium, 0, barTextPosY, Theme.LightGreyColor1, TextFlags.Center | TextFlags.Clip, sx);
+
+                if (i == Song.LoopPoint)
+                    c.DrawBitmapAtlas(bmpLoopPoint, headerIconPosX, headerIconPosY, 1.0f, bitmapScale, Theme.LightGreyColor1);
+
+                c.PopTransform();
+            }
+
+            // MATTT TEMPORARY *******************
+            g.PopClipRegion();
+            c.PopTransform(); 
+
+            /*
             // Selection
             if (IsSelectionValid())
             {
@@ -658,45 +684,6 @@ namespace FamiStudio
                         GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), channelSizeY * (maxSelRow + 1) + headerSizeY - scrollY,
                         IsActiveControl ? selectedPatternVisibleColor : selectedPatternInvisibleColor);
                 }
-
-                if (IsValidTimeOnlySelection())
-                {
-                    ch.FillRectangle(
-                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), 0,
-                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), headerSizeY,
-                        IsActiveControl ? selectedPatternVisibleColor : selectedPatternInvisibleColor);
-                }
-            }
-
-            // Header
-            ch.DrawLine(0, 0, Width, 0, Theme.BlackColor);
-            ch.DrawLine(0, headerSizeY, Width, headerSizeY, Theme.BlackColor);
-            ch.DrawLine(0, Height - 1, Width, Height - 1, Theme.BlackColor);
-
-            // Vertical lines (Header)
-            for (int i = Math.Max(1, minVisiblePattern); i <= maxVisiblePattern; i++)
-            {
-                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
-                ch.DrawLine(px, 0, px, headerSizeY, Theme.BlackColor);
-            }
-
-            for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
-            {
-                var patternLen = Song.GetPatternLength(i);
-                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
-                var sx = GetPixelForNote(patternLen, false);
-
-                ch.PushTranslation(px, 0);
-
-                var text = (i + 1).ToString();
-                if (Song.PatternHasCustomSettings(i))
-                    text += "*";
-                ch.DrawText(text, FontResources.FontMedium, 0, barTextPosY, Theme.LightGreyColor1, TextFlags.Center | TextFlags.Clip, sx);
-
-                if (i == Song.LoopPoint)
-                    ch.DrawBitmapAtlas(bmpLoopPoint, headerIconPosX, headerIconPosY, 1.0f, bitmapScale, Theme.LightGreyColor1);
-
-                ch.PopTransform();
             }
 
             // Vertical lines
@@ -850,7 +837,7 @@ namespace FamiStudio
 
             // Seek bar
             cb.PushTranslation(seekX, 0);
-            ch.FillAndDrawGeometry(seekGeometry, GetSeekBarColor(), Theme.BlackColor, 1, true);
+            c.FillAndDrawGeometry(seekGeometry, GetSeekBarColor(), Theme.BlackColor, 1, true);
             cb.DrawLine(0, headerSizeY, 0, actualSizeY, GetSeekBarColor(), 3);
             cb.PopTransform();
 
@@ -876,14 +863,14 @@ namespace FamiStudio
             // Line seperating with the quick access bar.
             if (Platform.IsMobile && IsLandscape)
             {
-                ch.DrawLine(Width - 1, 0, Width - 1, Height, Theme.BlackColor);
+                c.DrawLine(Width - 1, 0, Width - 1, Height, Theme.BlackColor);
                 cf.DrawLine(Width - 1, 0, Width - 1, Height, Theme.BlackColor);
             }
 
             var headerRect  = new Rectangle(channelNameSizeX, 0, Width, Height);
             var patternRect = new Rectangle(channelNameSizeX, headerSizeY, Width, Height);
 
-            g.DrawCommandList(ch, headerRect);
+            g.DrawCommandList(c, headerRect);
             g.DrawCommandList(cb, patternRect);
             g.DrawCommandList(cp, patternRect);
             g.DrawCommandList(cf, patternRect);
@@ -903,21 +890,15 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            // GLTODO : Bring rendering back.
-            /*
             // Happens when piano roll is maximized.
             if (Height <= 1)
-            {
-                g.Clear(Theme.BlackColor);
                 return;
-            }
 
-            g.Clear(Theme.DarkGreyColor2);
+            //g.Clear(Theme.DarkGreyColor2); 
            
             RenderChannelNames(g);
             RenderPatternArea(g);
             RenderDebug(g);
-            */
         }
 
         private void ReplaceSelectionUtil(Point pos, bool forceInSelection, Func<Channel, bool> channelValid, Action<Pattern> action)

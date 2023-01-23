@@ -369,6 +369,7 @@ namespace FamiStudio
                 return;
 
             GL.PushDebugGroup("Depth Pre-pass");
+            GL.DepthMask(1);
             GL.DepthFunc(GL.Always);
             GL.ColorMask(false, false, false, false);
 
@@ -408,12 +409,13 @@ namespace FamiStudio
             GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
             GL.DrawElements(GL.Triangles, vtxIdx / 8 * 6, GL.UnsignedShort, IntPtr.Zero);
 
+            GL.DepthMask(0);
             GL.DepthFunc(GL.Equal);
             GL.ColorMask(true, true, true, true);
             GL.PopDebugGroup();
         }
 
-        protected override void DrawCommandList(CommandList list)
+        protected override void DrawCommandList(CommandList list, bool depthTest)
         {
             if (list == null)
                 return;
@@ -421,6 +423,7 @@ namespace FamiStudio
             if (list.HasAnything)
             {
                 GL.PushDebugGroup("Draw Command List");
+                GL.DepthFunc(depthTest ? GL.Equal : GL.Always);
 
                 if (list.HasAnyPolygons)
                 {
@@ -766,6 +769,7 @@ namespace FamiStudio
         public delegate void Uniform4fvDelegate(int location, int count, IntPtr values);
         public delegate void HintDelegate(int target, int mode);
         public delegate void DepthFuncDelegate(int func);
+        public delegate void DepthMaskDelegate(int func);
         public delegate void ColorMaskDelegate(byte red, byte green, byte blue, byte alpha);
         public delegate void PushDebugGroupDelegate(int source, int id, int length, [MarshalAs(UnmanagedType.LPStr)] string message);
         public delegate void PopDebugGroupDelegate();
@@ -833,6 +837,7 @@ namespace FamiStudio
         public static Uniform4fvDelegate           Uniform4fvRaw;
         public static HintDelegate                 Hint;
         public static DepthFuncDelegate            DepthFunc;
+        public static DepthMaskDelegate            DepthMask;
         public static ColorMaskDelegate            ColorMaskRaw;
         public static PushDebugGroupDelegate       PushDebugGroupRaw;
         public static PopDebugGroupDelegate        PopDebugGroupRaw;
@@ -901,6 +906,7 @@ namespace FamiStudio
             Uniform4fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform4fvDelegate>(glfwGetProcAddress("glUniform4fv"));
             Hint                    = Marshal.GetDelegateForFunctionPointer<HintDelegate>(glfwGetProcAddress("glHint"));
             DepthFunc               = Marshal.GetDelegateForFunctionPointer<DepthFuncDelegate>(glfwGetProcAddress("glDepthFunc"));
+            DepthMask               = Marshal.GetDelegateForFunctionPointer<DepthMaskDelegate>(glfwGetProcAddress("glDepthMask"));
             ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(glfwGetProcAddress("glColorMask"));
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));
             PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(glfwGetProcAddress("glPopDebugGroupKHR"));

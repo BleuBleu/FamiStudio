@@ -70,13 +70,25 @@ namespace FamiStudio
             toast.Reposition();
         }
 
-        // CTRLTODO : See where we can fit this? Override the functions from Container to get control?
-        public bool CanInteractWithControls()
+        // CTRLTODO : Re-test this.
+        public override bool CanInteractWithContainer(Container c)
         {
             // HACK : Dont allow any interaction with the main controls if there is no current song
             // since all the code assume this is non-null. This happens when event processing runs
             // during file loading (ex: when calling Thread.Join).
-            return true; // controls[0].App.SelectedSong != null;
+            if (FamiStudio.StaticInstance.SelectedSong == null)
+            {
+                return false;
+            }
+
+            // Only top dialog can be interacted with.
+            if (dialogs.Count > 0 && c != dialogs.Last())
+            {
+                return false;
+            }
+
+            // CTRLTODO : What about context menus, etc.
+            return true;
         }
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
@@ -107,10 +119,10 @@ namespace FamiStudio
             }
         }
 
-        // CTRLTODO : Tick.
-        /*
-        public void Tick(float delta)
+        public override void Tick(float delta)
         {
+            base.Tick(delta);
+
             var newDialogDimming = dialogDimming;
 
             if (dialogs.Count > 0)
@@ -131,83 +143,31 @@ namespace FamiStudio
 
             toast.Tick(delta);
         }
-        */
 
-        public bool AnyControlNeedsRedraw()
+        protected override void OnRender(Graphics g)
         {
-            return true;
+            base.OnRender(g);
 
-            // CTRLTODO : Bring back?
-            /*
-            bool anyNeedsRedraw = false;
-            foreach (var control in controls)
-                anyNeedsRedraw |= control.NeedsRedraw;
-            foreach (var dlg in dialogs)
-                anyNeedsRedraw |= dlg.NeedsRedraw;
-            if (contextMenuVisible)
-                anyNeedsRedraw |= contextMenu.NeedsRedraw;
-            if (toast.IsVisible)
-                anyNeedsRedraw |= toast.NeedsRedraw;
-            return anyNeedsRedraw;
-            */
-        }
-
-        // CTRLTODO
-        /*
-        public unsafe bool Redraw()
-        {
-            if (AnyControlNeedsRedraw())
+            if (dialogDimming != 0.0f)
             {
-                Debug.Assert(controls[0].App.Project != null);
+                var c = g.OverlayCommandList;
+                var color = Color.FromArgb(Utils.Lerp(0.0f, 0.4f, dialogDimming), Color.Black);
 
-                var fullWindowRect = new Rectangle(0, 0, width, height);
-
-                gfx.BeginDrawFrame();
-
-                foreach (var control in controls)
+                if (dialogs.Count != 0)
                 {
-                    gfx.BeginDrawControl(control.WindowRectangle, height);
-                    control.Render(gfx);
-                    control.ClearDirtyFlag();
+                    // The overlay command list has no depth depth. Draw negative of the rect.
+                    var rc = dialogs.Last().WindowRectangle;
+                    c.FillRectangle(0, 0, width, rc.Top, color);
+                    c.FillRectangle(0, rc.Top, rc.Left, rc.Bottom, color);
+                    c.FillRectangle(rc.Right, rc.Top, width, rc.Bottom, color);
+                    c.FillRectangle(0, rc.Bottom, width, height, color);
                 }
-
-                if (dialogDimming != 0.0f)
+                else
                 {
-                    gfx.BeginDrawControl(fullWindowRect, height);
-                    var c = gfx.CreateCommandList();
-                    c.FillRectangle(fullWindowRect, Color.FromArgb(Utils.Lerp(0.0f, 0.4f, dialogDimming), Color.Black));
-                    gfx.DrawCommandList(c);
+                    c.FillRectangle(0, 0, width, height, color);
                 }
-
-                foreach (var dlg in dialogs)
-                {
-                    gfx.BeginDrawControl(fullWindowRect, height);
-                    gfx.Transform.PushTranslation(dlg.WindowLeft, dlg.WindowTop);
-                    dlg.Render(gfx);
-                    dlg.ClearDirtyFlag();
-                    gfx.Transform.PopTransform();
-                }
-
-                if (contextMenuVisible)
-                {
-                    gfx.BeginDrawControl(contextMenu.WindowRectangle, height);
-                    contextMenu.Render(gfx);
-                }
-
-                if (toast.IsVisible)
-                {
-                    gfx.BeginDrawControl(toast.WindowRectangle, height);
-                    toast.Render(gfx);
-                }
-
-                gfx.EndDrawFrame();
-
-                return true;
             }
-
-            return false;
         }
-        */
 
         public void InitDialog(Dialog dialog)
         {

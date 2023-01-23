@@ -58,8 +58,6 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
-            base.OnAddedToContainer();
-
             outerMargin = GetButtonRect(0).Width + textBoxMargin;
 
             var g = ParentWindow.Graphics;
@@ -68,6 +66,9 @@ namespace FamiStudio
                 g.GetBitmapAtlasRef("UpDownMinus"),
                 g.GetBitmapAtlasRef("UpDownPlus")
             };
+
+            // "outerMargin" needs to be set before calling this.
+            base.OnAddedToContainer();
         }
 
         private Rectangle GetButtonRect(int idx)

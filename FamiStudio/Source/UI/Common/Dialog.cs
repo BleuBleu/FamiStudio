@@ -94,9 +94,9 @@ namespace FamiStudio
             //if (destroyControlsOnClose)
             //    DestroyControls();
 
-            //parentWindow.PopDialog(this);
-            //result = res;
-            //visible = false;
+            window.PopDialog(this);
+            result = res;
+            visible = false;
         }
 
         protected virtual void OnShowDialog()

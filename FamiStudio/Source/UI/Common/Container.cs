@@ -32,19 +32,27 @@ namespace FamiStudio
             }
         }
 
+        public virtual bool CanInteractWithContainer(Container c)
+        {
+            return true;
+        }
+
         public Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
         {
             // First look for containers. Last containers are considered to have higher Z-order.
             for (int i = controls.Count - 1; i >= 0; i--)
             {
-                if (controls[i] is Container c)
+                if (controls[i] is Container c && CanInteractWithContainer(c))
                 {
                     if (c.WindowRectangle.Contains(winX, winY))
                     {
                         var ctrl = c.GetControlAt(winX, winY, out ctrlX, out ctrlY);
                         
-                        // We are in the container, but not in a specific child.
-                        if (ctrl == null)
+                        if (ctrl != null)
+                        {
+                            return ctrl;
+                        }
+                        else // We are in the container, but not in a specific child.
                         {
                             var winPos = c.WindowPosition;
                             ctrlX = winX - winPos.X;

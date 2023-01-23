@@ -262,6 +262,7 @@ namespace FamiStudio
             quadIdxBuffer.Position(0);
             GLES20.GlDrawElements(GLES20.GlTriangles, vtxIdx / 8 * 6, GLES20.GlUnsignedShort, quadIdxBuffer);
 
+            // GLTODO : Disable depth write here.
             GLES20.GlDepthFunc(GLES20.GlEqual);
             GLES20.GlColorMask(true, true, true, true);
         }
@@ -579,7 +580,8 @@ namespace FamiStudio
             GLES20.GlVertexAttribPointer(attrib, 1, signed ? GLES20.GlByte : GLES20.GlUnsignedByte, true, 0, bb);
         }
 
-        protected override void DrawCommandList(CommandList list)
+        // GLTODO : Consider the "depthTest" param.
+        protected override void DrawCommandList(CommandList list, bool depthTest)
         {
             if (list == null)
                 return;
