@@ -493,6 +493,8 @@ namespace FamiStudio
                     return (sbyte)15;
                 case EnvelopeType.YMMixerSettings:
                     return (sbyte)2;
+                case EnvelopeType.YMNoiseFreq:
+                    return (sbyte)-1;
                 default:
                     return (sbyte)0;
             }
@@ -527,6 +529,8 @@ namespace FamiStudio
                     return 32;
                 case EnvelopeType.YMMixerSettings:
                     return 2;
+                case EnvelopeType.YMNoiseFreq:
+                    return -1;
                 default:
                     return 0;
             }
@@ -604,7 +608,7 @@ namespace FamiStudio
             }
             else if (type == EnvelopeType.YMNoiseFreq)
             {
-                min = 0;
+                min = -1;
                 max = 31;
             }
             else
@@ -669,8 +673,8 @@ namespace FamiStudio
         public const int FdsModulation  = 5;
         public const int N163Waveform   = 6;
         public const int WaveformRepeat = 7;
-        public const int YMMixerSettings   = 8;
-        public const int YMNoiseFreq   = 9;
+        public const int YMMixerSettings= 8;
+        public const int YMNoiseFreq    = 9;
         public const int Count          = 10;
 
         public static readonly string[] Names =

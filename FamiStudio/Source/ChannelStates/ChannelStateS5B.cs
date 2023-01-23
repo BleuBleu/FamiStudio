@@ -40,11 +40,11 @@ namespace FamiStudio
                     (1L << ChannelType.S5BSquare1) |
                     (1L << ChannelType.S5BSquare2) |
                     (1L << ChannelType.S5BSquare3));
-                int noiseCheck = GetYMMixerSettings() & 0x2;
-                Console.Write(toneReg + "\n");
+                //int noiseCheck = GetYMMixerSettings() & 0x2;
+                //Console.Write(toneReg + "\n");
                 WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_TONE);
                 WriteRegister(NesApu.S5B_DATA, toneReg);
-                if (noiseCheck == 0)
+                if (noiseFreq >= 0)
                 {
                     WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_NOISE);
                     WriteRegister(NesApu.S5B_DATA, noiseFreq);
