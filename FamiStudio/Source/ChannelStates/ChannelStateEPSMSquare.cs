@@ -44,7 +44,7 @@ namespace FamiStudio
                 Console.Write(toneReg + "\n");
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_TONE);
                 WriteRegister(NesApu.EPSM_DATA0, toneReg);
-                if (noiseFreq >= 0)
+                if (noiseFreq > 0)
                 {
                     WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_NOISE);
                     WriteRegister(NesApu.EPSM_DATA0, noiseFreq);
