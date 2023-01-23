@@ -40,11 +40,11 @@ namespace FamiStudio
                     (1L << ChannelType.EPSMSquare1) |
                     (1L << ChannelType.EPSMSquare2) |
                     (1L << ChannelType.EPSMSquare3));
-                int noiseCheck = GetYMMixerSettings() & 0x2;
+                //int noiseCheck = GetYMMixerSettings() & 0x2;
                 Console.Write(toneReg + "\n");
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_TONE);
                 WriteRegister(NesApu.EPSM_DATA0, toneReg);
-                if (noiseCheck == 0)
+                if (noiseFreq >= 0)
                 {
                     WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_NOISE);
                     WriteRegister(NesApu.EPSM_DATA0, noiseFreq);
