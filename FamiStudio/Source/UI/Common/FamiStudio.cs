@@ -8,7 +8,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 #if !FAMISTUDIO_ANDROID
-//using System.Web.Script.Serialization; // NET5TODO
+    // NET5TODO : Migrate all platforms to new serializer.
+    #if FAMISTUDIO_WINDOWS
+        using System.Text.Json;
+    #else
+        using System.Web.Script.Serialization; 
+    #endif
 #endif
 
 namespace FamiStudio
@@ -139,7 +144,7 @@ namespace FamiStudio
             else
                 NewProject(true);
 
-#if !DEBUG
+#if true // MATTT !DEBUG
             if (Settings.CheckUpdates)
                 Task.Factory.StartNew(CheckForNewRelease);
 #endif
@@ -1241,7 +1246,7 @@ namespace FamiStudio
 
         private void CheckForNewRelease()
         {
-        #if false // !FAMISTUDIO_ANDROID // NET5TODO : Find new apis for this.
+        #if !FAMISTUDIO_ANDROID
             try
             {
                 using (var client = new HttpClient())
@@ -1252,9 +1257,12 @@ namespace FamiStudio
                     if (response.IsSuccessStatusCode)
                     {
                         var json = response.Content.ReadAsStringAsync().Result;
-                        var jsonSerializer = new JavaScriptSerializer();
 
-                        dynamic release = jsonSerializer.Deserialize<dynamic>(json);
+                    #if FAMISTUDIO_WINDOWS // NET5TODO : Migrate all platforms to .NET 5.
+                        dynamic release = JsonSerializer.Deserialize<dynamic>(json, new JsonSerializerOptions { Converters = { new DynamicJsonConverter() } });
+                    #else
+                        dynamic release = new JavaScriptSerializer().Deserialize<dynamic>(json);
+                    #endif
 
                         newReleaseString = release["tag_name"].ToString();
                         newReleaseUrl = release["html_url"].ToString();

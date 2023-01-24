@@ -311,9 +311,12 @@ namespace FamiStudio
             catch { }
         }
 
+        [DllImport("user32.dll")]
+        static extern int MessageBeep(int type);
+
         public static void Beep()
         {
-            //SystemSounds.Beep.Play(); // NET5TODO: Find alternative 
+            MessageBeep(0);
         }
 
         [DllImport("user32.dll")]
@@ -452,25 +455,86 @@ namespace FamiStudio
             return buffer;
         }
 
-        [System.Runtime.InteropServices.DllImport("Shell32.dll")]
+        [DllImport("Shell32.dll")]
         private static extern int SHChangeNotify(int eventId, int flags, IntPtr item1, IntPtr item2);
 
         private const int SHCNE_ASSOCCHANGED = 0x8000000;
         private const int SHCNF_FLUSH = 0x1000;
 
+        private const uint HKEY_CURRENT_USER = 0x80000001;
+
+        private const int KEY_CREATE_SUB_KEY = 0x0004;
+        private const int KEY_ENUMERATE_SUB_KEYS = 0x0008;
+        private const int KEY_QUERY_VALUE = 0x0001;
+        private const int KEY_READ = 0x20019;
+        private const int KEY_SET_VALUE = 0x0002;
+        private const int KEY_WRITE = 0x20006;
+
+        private const int RRF_RT_REG_SZ = 0x00000002;
+
+        [DllImport("advapi32.dll", SetLastError = false)]
+        static extern int RegCreateKeyEx(
+                    IntPtr hKey,
+                    string lpSubKey,
+                    IntPtr Reserved,
+                    string lpClass,
+                    int dwOptions,
+                    int samDesired,
+                    IntPtr lpSecurityAttributes,
+                    out IntPtr phkResult,
+                    out int lpdwDisposition);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        public static extern int RegCloseKey(IntPtr hKey);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        static extern uint RegQueryValueEx(
+            IntPtr hKey,
+            string lpValueName,
+            int lpReserved,
+            ref int lpType,
+            IntPtr lpData,
+            ref int lpcbData);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        static extern int RegSetValueEx(
+            IntPtr hKey,
+            [MarshalAs(UnmanagedType.LPStr)] string lpValueName,
+            int Reserved,
+            int dwType,
+            IntPtr lpData,
+            int cbData);
+
+        private static string GetKeyDefaultValueString(IntPtr hkey)
+        {
+            var size = 0;
+            var type = RRF_RT_REG_SZ;
+            RegQueryValueEx(hkey, null, 0, ref type, IntPtr.Zero, ref size);
+            var result = Marshal.AllocHGlobal(size);
+            RegQueryValueEx(hkey, null, 0, ref type, result, ref size);
+            var str = Marshal.PtrToStringAnsi(result);
+            Marshal.FreeHGlobal(result);
+            return str;
+        }
+
+        private static void SetKeyDefaultValueString(IntPtr hkey, string value)
+        {
+            var size = value.Length + 1;
+            var data = Marshal.StringToHGlobalAnsi(value);
+            RegSetValueEx(hkey, null, 0, RRF_RT_REG_SZ, data, size);
+        }
+
         private static bool SetKeyDefaultValue(string keyPath, string value)
         {
-            // NET5TODO : Win32 API directly.
-            /*
-            using (var key = Registry.CurrentUser.CreateSubKey(keyPath))
+            if (RegCreateKeyEx(new IntPtr(HKEY_CURRENT_USER), keyPath, IntPtr.Zero, null, 0, KEY_QUERY_VALUE | KEY_SET_VALUE, IntPtr.Zero, out var hkey, out _) == 0)
             {
-                if (key.GetValue(null) as string != value)
+                if (GetKeyDefaultValueString(hkey) != value)
                 {
-                    key.SetValue(null, value);
-                    return true;
+                    SetKeyDefaultValueString(hkey, value);
                 }
+
+                RegCloseKey(hkey);
             }
-            */
 
             return false;
         }

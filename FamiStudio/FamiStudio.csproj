@@ -179,6 +179,7 @@
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
     <Compile Include="Source\Utils\Drawing.cs" />
+    <Compile Include="Source\Utils\DynamicJsonConverter.cs" />
     <Compile Include="Source\Utils\EpsmUnitTests.cs" />
     <Compile Include="Source\Utils\Gif.cs" />
     <Compile Include="Source\Utils\Log.cs" />
