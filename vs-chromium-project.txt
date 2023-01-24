@@ -5,6 +5,8 @@
 *.h
 *.xml
 *.plist
+*.vert
+*.frag
 
 [SearchableFiles.ignore]
 obj/

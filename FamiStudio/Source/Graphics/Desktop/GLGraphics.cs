@@ -180,6 +180,7 @@ namespace FamiStudio
             GL.Disable(GL.ScissorTest);
 
             GL.ClearColor(clearColor.R / 255.0f, clearColor.G / 255.0f, clearColor.B / 255.0f, clearColor.A / 255.0f);
+            GL.ClearDepth(0.0f);
             GL.Clear(GL.ColorBufferBit | GL.DepthBufferBit);
         }
 
@@ -426,11 +427,7 @@ namespace FamiStudio
             if (list.HasAnything)
             {
                 GL.PushDebugGroup("Draw Command List");
-#if !FAMISTUDIO_MACOS                
                 GL.DepthFunc(depthTest ? GL.Equal : GL.Always); // GLTODO : Issue with depth test on MacOS.
-#else                
-                GL.DepthFunc(GL.Always);
-#endif                
 
                 if (list.HasAnyPolygons)
                 {
@@ -715,6 +712,7 @@ namespace FamiStudio
         public delegate void DebugCallback(int source, int type, int id, int severity, int length, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userParam);
 
         public delegate void ClearDelegate(uint mask);
+        public delegate void ClearDepthDelegate(float depth);
         public delegate void ClearColorDelegate(float red, float green, float blue, float alpha);
         public delegate void ViewportDelegate(int left, int top, int width, int height);
         public delegate void EnableDelegate(int cap);
@@ -783,6 +781,7 @@ namespace FamiStudio
         public delegate void PopDebugGroupDelegate();
 
         public static ClearDelegate                Clear;
+        public static ClearDepthDelegate           ClearDepth;
         public static ClearColorDelegate           ClearColor;
         public static ViewportDelegate             Viewport;
         public static EnableDelegate               Enable;
@@ -857,6 +856,7 @@ namespace FamiStudio
 
             Clear                   = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(glfwGetProcAddress("glClear"));
             ClearColor              = Marshal.GetDelegateForFunctionPointer<ClearColorDelegate>(glfwGetProcAddress("glClearColor"));
+            ClearDepth              = Marshal.GetDelegateForFunctionPointer<ClearDepthDelegate>(glfwGetProcAddress("glClearDepth"));
             Viewport                = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(glfwGetProcAddress("glViewport"));
             Enable                  = Marshal.GetDelegateForFunctionPointer<EnableDelegate>(glfwGetProcAddress("glEnable"));
             Disable                 = Marshal.GetDelegateForFunctionPointer<DisableDelegate>(glfwGetProcAddress("glDisable"));
