@@ -50,7 +50,7 @@ namespace FamiStudio
         {
             GL.StaticInitialize();
 
-#if DEBUG
+#if DEBUG && !FAMISTUDIO_MACOS
             debugCallback = new GL.DebugCallback(GLDebugMessageCallback);
             GL.DebugMessageCallback(debugCallback, IntPtr.Zero);
 #endif
@@ -423,7 +423,11 @@ namespace FamiStudio
             if (list.HasAnything)
             {
                 GL.PushDebugGroup("Draw Command List");
-                GL.DepthFunc(depthTest ? GL.Equal : GL.Always);
+#if !FAMISTUDIO_MACOS                
+                GL.DepthFunc(depthTest ? GL.Equal : GL.Always); // GLTODO : Issue with depth test on MacOS.
+#else                
+                GL.DepthFunc(GL.Always);
+#endif                
 
                 if (list.HasAnyPolygons)
                 {
@@ -873,7 +877,6 @@ namespace FamiStudio
             DrawBuffer              = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(glfwGetProcAddress("glDrawBuffer"));
             ReadPixels              = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(glfwGetProcAddress("glReadPixels"));
             GetFloatRaw             = Marshal.GetDelegateForFunctionPointer<GetFloatDelegate>(glfwGetProcAddress("glGetFloatv"));
-            DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(glfwGetProcAddress("glDebugMessageCallback"));
             CreateShader            = Marshal.GetDelegateForFunctionPointer<CreateShaderDelegate>(glfwGetProcAddress("glCreateShader"));
             ShaderSourceRaw         = Marshal.GetDelegateForFunctionPointer<ShaderSourceDelegate>(glfwGetProcAddress("glShaderSource"));
             CompileShader           = Marshal.GetDelegateForFunctionPointer<CompileShaderDelegate>(glfwGetProcAddress("glCompileShader"));
@@ -908,11 +911,15 @@ namespace FamiStudio
             DepthFunc               = Marshal.GetDelegateForFunctionPointer<DepthFuncDelegate>(glfwGetProcAddress("glDepthFunc"));
             DepthMask               = Marshal.GetDelegateForFunctionPointer<DepthMaskDelegate>(glfwGetProcAddress("glDepthMask"));
             ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(glfwGetProcAddress("glColorMask"));
+
+#if DEBUG && !FAMISTUDIO_MACOS 
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));
             PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(glfwGetProcAddress("glPopDebugGroupKHR"));
+            DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(glfwGetProcAddress("glDebugMessageCallback"));
+#endif
 
             // MATTT : See if those are now part of the stock OpenGL 3.3.
-            GenFramebuffers = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(GetExtProcAddress("glGenFramebuffers"));
+            GenFramebuffers         = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(GetExtProcAddress("glGenFramebuffers"));
             BindFramebuffer         = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(GetExtProcAddress("glBindFramebuffer"));
             FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(GetExtProcAddress("glFramebufferTexture2D"));
             DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(GetExtProcAddress("glDeleteFramebuffers"));
@@ -1190,7 +1197,7 @@ namespace FamiStudio
 
         public static void PushDebugGroup(string name)
         {
-#if DEBUG
+#if DEBUG && !FAMISTUDIO_MACOS
             if (PushDebugGroupRaw != null)
                 PushDebugGroupRaw(DebugSourceApplication, 0, -1, name);
 #endif
@@ -1198,7 +1205,7 @@ namespace FamiStudio
 
         public static void PopDebugGroup()
         {
-#if DEBUG
+#if DEBUG && !FAMISTUDIO_MACOS
             if (PopDebugGroupRaw != null)
                 PopDebugGroupRaw();
 #endif

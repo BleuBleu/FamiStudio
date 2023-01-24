@@ -167,6 +167,9 @@ namespace FamiStudio
             glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, 1);
             glfwWindowHint(GLFW_DEPTH_BITS, 16);
             glfwWindowHint(GLFW_STENCIL_BITS, 0);
+        #if FAMISTUDIO_MACOS
+            glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, 1);
+        #endif            
         #if DEBUG
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
         #endif
