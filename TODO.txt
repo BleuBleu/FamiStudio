@@ -9,6 +9,9 @@
 - Numpad delete
 - Context menu to copy/paste EPSM/VRC7 register values as text.
 - Add confirmation for overwrite on mobile
+- 100 autosaves
+- Linux file dialog cant sort if you scroll down a bit.
+
 4.1.0
 =====
 - NSF import issue TF74
