@@ -77,7 +77,7 @@ namespace FamiStudio
 
         public static void Beep()
         {
-            SystemSounds.Beep.Play(); // NET5TODO : Alternative.
+            //SystemSounds.Beep.Play(); // NET5TODO : Alternative.
         }
 
         [DllImport("libc")]
