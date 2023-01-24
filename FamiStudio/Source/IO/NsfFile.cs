@@ -685,15 +685,32 @@ namespace FamiStudio
             }
         }
 
-        private Instrument GetS5BInstrument()
+        private Instrument GetS5BInstrument(int noise, int mixer)
         {
-            foreach (var inst in project.Instruments)
+            /*foreach (var inst in project.Instruments)
             {
                 if (inst.IsS5B)
                     return inst;
+            }*/
+
+            var name = "S5B";
+            if (mixer != 2 && noise == 0)
+                noise = 1;
+            if (mixer != 2)
+                name = $"S5B Noise {noise} M {mixer}";
+
+            var instrument = project.GetInstrument(name);
+            if (instrument == null)
+            {
+                instrument = project.CreateInstrument(ExpansionType.S5B, name);
+                instrument.Envelopes[EnvelopeType.YMNoiseFreq].Length = 1;
+                instrument.Envelopes[EnvelopeType.YMNoiseFreq].Values[0] = (sbyte)noise;
+                instrument.Envelopes[EnvelopeType.YMMixerSettings].Length = 1;
+                instrument.Envelopes[EnvelopeType.YMMixerSettings].Values[0] = (sbyte)mixer;
             }
 
-            return project.CreateInstrument(ExpansionType.S5B, "S5B");
+            return instrument;
+
         }
 
         private Instrument GetDPCMInstrument()
@@ -965,7 +982,10 @@ namespace FamiStudio
                 }
                 else if (channel.Type >= ChannelType.S5BSquare1 && channel.Type <= ChannelType.S5BSquare3)
                 {
-                    instrument = GetS5BInstrument();
+                    var noise = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0);
+                    var mixer = (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BMIXER, 0);
+                    mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
+                    instrument = GetS5BInstrument(noise,mixer);
                 }
                 else 
                 {
