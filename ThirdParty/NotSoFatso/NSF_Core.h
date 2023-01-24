@@ -150,6 +150,8 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_N163WAVESIZE       20
 #define STATE_N163WAVE           21
 #define STATE_N163NUMCHANNELS    22
+#define STATE_S5BMIXER           23
+#define STATE_S5BNOISEFREQUENCY  24
 
 #include <math.h>
 

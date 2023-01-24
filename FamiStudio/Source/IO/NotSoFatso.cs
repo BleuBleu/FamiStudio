@@ -87,5 +87,7 @@ namespace FamiStudio
         public const int STATE_N163WAVESIZE       = 20;
         public const int STATE_N163WAVE           = 21;
         public const int STATE_N163NUMCHANNELS    = 22;
+        public const int STATE_S5BMIXER           = 23;
+        public const int STATE_S5BNOISEFREQUENCY  = 24;
     }
 }
