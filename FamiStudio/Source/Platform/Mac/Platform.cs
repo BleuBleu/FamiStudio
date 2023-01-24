@@ -103,7 +103,7 @@ namespace FamiStudio
 
         public static void Beep()
         {
-            SystemSounds.Beep.Play(); // NET5TODO : Alternative.
+            //SystemSounds.Beep.Play(); // NET5TODO : Alternative.
         }
 
         public static int GetCursorSize(float scaling)

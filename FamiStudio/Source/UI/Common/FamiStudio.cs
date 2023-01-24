@@ -8,12 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 #if !FAMISTUDIO_ANDROID
-    // NET5TODO : Migrate all platforms to new serializer.
-    #if FAMISTUDIO_WINDOWS
-        using System.Text.Json;
-    #else
-        using System.Web.Script.Serialization; 
-    #endif
+    using System.Text.Json;
 #endif
 
 namespace FamiStudio
@@ -1257,12 +1252,7 @@ namespace FamiStudio
                     if (response.IsSuccessStatusCode)
                     {
                         var json = response.Content.ReadAsStringAsync().Result;
-
-                    #if FAMISTUDIO_WINDOWS // NET5TODO : Migrate all platforms to .NET 5.
-                        dynamic release = JsonSerializer.Deserialize<dynamic>(json, new JsonSerializerOptions { Converters = { new DynamicJsonConverter() } });
-                    #else
-                        dynamic release = new JavaScriptSerializer().Deserialize<dynamic>(json);
-                    #endif
+                        var release = JsonSerializer.Deserialize<dynamic>(json, new JsonSerializerOptions { Converters = { new DynamicJsonConverter() } });
 
                         newReleaseString = release["tag_name"].ToString();
                         newReleaseUrl = release["html_url"].ToString();
