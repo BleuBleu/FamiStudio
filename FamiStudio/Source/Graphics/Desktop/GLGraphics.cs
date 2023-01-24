@@ -372,6 +372,7 @@ namespace FamiStudio
             GL.PushDebugGroup("Depth Pre-pass");
             GL.DepthMask(1);
             GL.DepthFunc(GL.Always);
+            GL.Disable(GL.Blend);
             GL.ColorMask(false, false, false, false);
 
             var vtxIdx = 0;
@@ -412,6 +413,7 @@ namespace FamiStudio
 
             GL.DepthMask(0);
             GL.DepthFunc(GL.Equal);
+            GL.Enable(GL.Blend);
             GL.ColorMask(true, true, true, true);
             GL.PopDebugGroup();
 
