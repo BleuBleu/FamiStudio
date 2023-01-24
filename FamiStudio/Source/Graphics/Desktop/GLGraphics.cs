@@ -363,7 +363,7 @@ namespace FamiStudio
             GL.BufferData(GL.ElementArrayBuffer, array, arraySize, GL.DynamicDraw);
         }
 
-        protected override void DrawDepthPrepass()
+        protected unsafe override void DrawDepthPrepass()
         {
             if (clipRegions.Count == 0)
                 return;
@@ -413,6 +413,9 @@ namespace FamiStudio
             GL.DepthFunc(GL.Equal);
             GL.ColorMask(true, true, true, true);
             GL.PopDebugGroup();
+
+            float depth = 0.0f;
+            GL.ReadPixels(10, 10, 1, 1, GL.DepthComponent, GL.Float, new IntPtr(&depth));
         }
 
         protected override void DrawCommandList(CommandList list, bool depthTest)
@@ -706,6 +709,7 @@ namespace FamiStudio
         public const int DebugSourceApplication    = 0x824A;
         public const int FrontAndBack              = 0x0408;
         public const int Fill                      = 0x1B02;
+        public const int DepthComponent            = 0x1902;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void DebugCallback(int source, int type, int id, int severity, int length, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userParam);
