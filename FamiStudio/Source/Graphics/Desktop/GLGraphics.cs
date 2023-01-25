@@ -125,7 +125,7 @@ namespace FamiStudio
             // Fragment shaders are optional, but MacOS misbehave when there is
             // none bound. I don't trust exotic GL implementations, so we force
             // a fragment shader on all platforms but Windows.
-        #if !FAMISTUDIO_WINDOWS
+        #if FAMISTUDIO_WINDOWS
             if (useFragment)
         #endif
             { 
@@ -185,7 +185,6 @@ namespace FamiStudio
             GL.Disable(GL.ScissorTest);
 
             GL.ClearColor(clearColor.R / 255.0f, clearColor.G / 255.0f, clearColor.B / 255.0f, clearColor.A / 255.0f);
-            GL.ClearDepth(0.0f);
             GL.Clear(GL.ColorBufferBit | GL.DepthBufferBit);
         }
 
