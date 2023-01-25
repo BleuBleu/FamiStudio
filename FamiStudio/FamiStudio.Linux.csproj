@@ -482,6 +482,7 @@
     <EmbeddedResource Include="Resources\InstrumentVRC6@2x.tga" />
     <EmbeddedResource Include="Resources\InstrumentVRC7.tga" />
     <EmbeddedResource Include="Resources\InstrumentVRC7@2x.tga" />
+    <EmbeddedResource Include="Resources\LinuxBeep.wav" />
     <EmbeddedResource Include="Resources\Loop.tga" />
     <EmbeddedResource Include="Resources\Loop@2x.tga" />
     <EmbeddedResource Include="Resources\LoopNone.tga" />

@@ -16,7 +16,6 @@ namespace FamiStudio
         private DialogResult result = DialogResult.None;
         private float tooltipTimer;
         private string title;
-        private bool destroyControlsOnClose = true;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForWindow(2);
         private int tooltipSideMargin = DpiScaling.ScaleForWindow(4);

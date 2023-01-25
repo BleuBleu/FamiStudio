@@ -25,14 +25,14 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DefineConstants>TRACE;DEBUG;FAMISTUDIO_WINDOWS</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>CS0162,CS0649;CA1416</NoWarn>
+    <NoWarn>CS0162,CS0649;CA1416;CS0618</NoWarn>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DefineConstants>TRACE;FAMISTUDIO_WINDOWS</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugSymbols>true</DebugSymbols>
-    <NoWarn>CS0162,CS0649;CA1416</NoWarn>
+    <NoWarn>CS0162,CS0649;CA1416;CS0618</NoWarn>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup>

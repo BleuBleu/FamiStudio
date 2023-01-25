@@ -637,23 +637,8 @@ namespace FamiStudio
 
         private void InitializeMetronome()
         {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Resources.Metronome.wav"))
-            {
-                using (var reader = new BinaryReader(stream))
-                {
-                    // Pad the first part with a bunch of zero samples.
-                    metronomeSound = new short[reader.BaseStream.Length / 2];
-
-                    var i = 0;
-                    var volume = Settings.MetronomeVolume / 100.0f;
-
-                    while (reader.BaseStream.Position != reader.BaseStream.Length)
-                    {
-                        var sample = reader.ReadInt16();
-                        metronomeSound[i++] = (short)Utils.Clamp((int)(sample * volume), short.MinValue, short.MaxValue);
-                    }
-                }
-            }
+            metronomeSound = WaveFile.LoadFromResource("FamiStudio.Resources.Metronome.wav", out _);
+            WaveUtils.AdjustVolume(metronomeSound, Settings.MetronomeVolume / 100.0f);
         }
 
         private void InitializeDeviceChangeEvent()
@@ -1637,6 +1622,14 @@ namespace FamiStudio
 
             if (wave.Length > 0)
                 instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolume));
+        }
+
+        public void PlayRawPcmSample(short[] data, int sampleRate, float volume = 1.0f)
+        {
+            if (instrumentPlayer != null)
+            {
+                instrumentPlayer.PlayRawPcmSample(data, sampleRate, volume);
+            }
         }
 
         public bool PalPlayback

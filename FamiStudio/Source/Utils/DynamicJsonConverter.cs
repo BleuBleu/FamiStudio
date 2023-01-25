@@ -66,9 +66,9 @@ namespace FamiStudio
             }
             return dict;
         }
-        private object? ReadValue(JsonElement jsonElement)
+        private object ReadValue(JsonElement jsonElement)
         {
-            object? result = null;
+            object result = null;
             switch (jsonElement.ValueKind)
             {
                 case JsonValueKind.Object:
@@ -105,9 +105,9 @@ namespace FamiStudio
             return result;
         }
 
-        private object? ReadList(JsonElement jsonElement)
+        private object ReadList(JsonElement jsonElement)
         {
-            IList<object?> list = new List<object?>();
+            IList<object> list = new List<object>();
             foreach (var item in jsonElement.EnumerateArray())
             {
                 list.Add(ReadValue(item));

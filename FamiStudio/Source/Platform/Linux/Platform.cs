@@ -13,6 +13,8 @@ namespace FamiStudio
     {
         private static byte[] internalClipboardData;
 
+        private static short[] beep;
+
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
         public static string UserProjectsDirectory => null;
         public static float DoubleClickTime => 0.5f; // 0.5 sec is the default on both Windows and Mac. So let's use that.
@@ -26,6 +28,8 @@ namespace FamiStudio
                 return false;
 
             SetProcessName("FamiStudio");
+
+            beep = WaveFile.LoadFromResource("FamiStudio.Resources.LinuxBeep.wav", out _);
 
             return true;
         }
@@ -77,7 +81,7 @@ namespace FamiStudio
 
         public static void Beep()
         {
-            //SystemSounds.Beep.Play(); // NET5TODO : Alternative.
+            FamiStudio.StaticInstance.PlayRawPcmSample(beep, 44100);
         }
 
         [DllImport("libc")]
