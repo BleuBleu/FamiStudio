@@ -122,7 +122,12 @@ namespace FamiStudio
             var vert = CompileShader(resourceName + ".vert", GL.VertexShader);
             GL.AttachShader(program, vert);
 
+            // Fragment shaders are optional, but MacOS misbehave when there is
+            // none bound. I don't trust exotic GL implementations, so we force
+            // a fragment shader on all platforms but Windows.
+        #if !FAMISTUDIO_WINDOWS
             if (useFragment)
+        #endif
             { 
                 var frag = CompileShader(resourceName + ".frag", GL.FragmentShader);
                 GL.AttachShader(program, frag);
@@ -372,7 +377,6 @@ namespace FamiStudio
             GL.PushDebugGroup("Depth Pre-pass");
             GL.DepthMask(1);
             GL.DepthFunc(GL.Always);
-            GL.Disable(GL.Blend);
             GL.ColorMask(false, false, false, false);
 
             var vtxIdx = 0;
@@ -413,12 +417,8 @@ namespace FamiStudio
 
             GL.DepthMask(0);
             GL.DepthFunc(GL.Equal);
-            GL.Enable(GL.Blend);
             GL.ColorMask(true, true, true, true);
             GL.PopDebugGroup();
-
-            float depth = 0.0f;
-            GL.ReadPixels(10, 10, 1, 1, GL.DepthComponent, GL.Float, new IntPtr(&depth));
         }
 
         protected override void DrawCommandList(CommandList list, bool depthTest)
