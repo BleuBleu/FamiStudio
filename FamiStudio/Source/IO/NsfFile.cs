@@ -663,12 +663,6 @@ namespace FamiStudio
 
         private Instrument GetS5BInstrument(int noise, int mixer)
         {
-            /*foreach (var inst in project.Instruments)
-            {
-                if (inst.IsS5B)
-                    return inst;
-            }*/
-
             var name = "S5B";
             if (mixer != 2 && noise == 0)
                 noise = 1;
