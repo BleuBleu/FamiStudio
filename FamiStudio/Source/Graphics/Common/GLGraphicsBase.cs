@@ -1373,7 +1373,7 @@ namespace FamiStudio
             else
             { 
                 var thick = width > 1.0f;
-                var halfWidth = thick ? width * 0.5f : 0.0f;
+                var halfWidth = 0; // GLTODO : Review. Looks like ass. thick ? width * 0.5f : 0.0f;
 
                 DrawSmoothLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, color, width, false);
                 DrawSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, color, width, false);
