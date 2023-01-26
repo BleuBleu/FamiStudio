@@ -313,12 +313,6 @@ namespace FamiStudio
             return font.MeasureString(text, mono);
         }
 
-        public Geometry CreateGeometry(float[,] points, bool closed = true)
-        {
-            return null; // GLTODO : geometry support.
-            //return new Geometry(points, closed);
-        }
-
         public Bitmap CreateEmptyBitmap(int width, int height, bool alpha, bool filter)
         {
             return new Bitmap(this, CreateEmptyTexture(width, height, alpha, filter), width, height, true, filter);
@@ -687,64 +681,6 @@ namespace FamiStudio
             }
 
             return x;
-        }
-    }
-
-    // GLTODO : This is wrong.
-    public class Geometry : IDisposable
-    {
-        public float[] Points { get; private set; }
-
-        public Dictionary<float, float[]> miterPoints = new Dictionary<float, float[]>();
-
-        public Geometry(float[,] points, bool closed)
-        {
-            var numPoints = points.GetLength(0);
-            var closedPoints = new float[(numPoints + (closed ? 1 : 0)) * 2];
-
-            for (int i = 0; i < closedPoints.Length / 2; i++)
-            {
-                closedPoints[i * 2 + 0] = points[i % points.GetLength(0), 0];
-                closedPoints[i * 2 + 1] = points[i % points.GetLength(0), 1];
-            }
-
-            Points = closedPoints;
-        }
-
-        public float[] GetMiterPoints(float lineWidth)
-        {
-            if (miterPoints.TryGetValue(lineWidth, out var points))
-                return points;
-
-            points = new float[Points.Length * 2];
-
-            for (int i = 0; i < Points.Length / 2 - 1; i++)
-            {
-                var x0 = Points[(i + 0) * 2 + 0];
-                var x1 = Points[(i + 1) * 2 + 0];
-                var y0 = Points[(i + 0) * 2 + 1];
-                var y1 = Points[(i + 1) * 2 + 1];
-
-                var dx = x1 - x0;
-                var dy = y1 - y0;
-                var len = (float)Math.Sqrt(dx * dx + dy * dy);
-
-                var nx = dx / len * lineWidth * 0.5f;
-                var ny = dy / len * lineWidth * 0.5f;
-
-                points[(2 * i + 0) * 2 + 0] = x0 - nx;
-                points[(2 * i + 0) * 2 + 1] = y0 - ny;
-                points[(2 * i + 1) * 2 + 0] = x1 + nx;
-                points[(2 * i + 1) * 2 + 1] = y1 + ny;
-            }
-
-            miterPoints.Add(lineWidth, points);
-
-            return points;
-        }
-
-        public void Dispose()
-        {
         }
     }
 
@@ -1254,9 +1190,8 @@ namespace FamiStudio
             var invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
             dx *= invHalfWidth;
             dy *= invHalfWidth;
-            var packedWidth = (byte)(width * 16.0f);
+            //var packedWidth = (byte)(width * 16.0f); MATTT What was that?
 
-            // MATTT : This is wrong, need to take angle into account.
             if (miter)
             {
                 x0 -= dx;
@@ -1337,11 +1272,6 @@ namespace FamiStudio
             }
         }
 
-        public void DrawLine(float[,] points, Color color, int width = 1, bool smooth = false, bool miter = false)
-        {
-            // GLTODO : Create a span from the 2D array (without copy).
-        }
-
         public void DrawLine(List<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
             DrawLine(CollectionsMarshal.AsSpan(points), color, width, smooth, miter);
@@ -1383,15 +1313,34 @@ namespace FamiStudio
             }
         }
 
-        // GLTODO : Bring this back.
-        // GLTODO : Offset 1D/2D version, one will just create a Span<> of the 2D version. 
         public void DrawGeometry(Span<float> points, Color color, int width = 1, bool smooth = false)
         {
-        }
+            width += lineWidthBias;
+            
+            var miter = width > 1 && !xform.HasScaling; // Miter doesnt work with scaling atm.
 
-        public void DrawGeometry(float[,] points, Color color, int width = 1, bool smooth = false)
-        {
-            // GLTODO : See stack overflow post MemoryMarshal.CreateSpan(...);
+            var x0 = points[0];
+            var y0 = points[1];
+            xform.TransformPoint(ref x0, ref y0);
+
+            for (int i = 0; i < points.Length / 2 - 1; i++)
+            {
+                var x1 = points[(i + 1) * 2 + 0];
+                var y1 = points[(i + 1) * 2 + 1];
+                xform.TransformPoint(ref x1, ref y1);
+
+                if (width > 1 || smooth)
+                {
+                    DrawSmoothLineInternal(x0, y0, x1, y1, color, width, miter);
+                }
+                else
+                {
+                    DrawLineInternal(x0, y0, x1, y1, color, false);
+                }
+
+                x0 = x1;
+                y0 = y1;
+            }
         }
 
         public void DrawRectangle(Rectangle rect, Color color, int width = 1, bool smooth = false)
@@ -1426,52 +1375,28 @@ namespace FamiStudio
                 var thick = width > 1.0f;
                 var halfWidth = thick ? width * 0.5f : 0.0f;
 
-                DrawSmoothLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, color, width, thick);
-                DrawSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, color, width, thick);
-                DrawSmoothLineInternal(x0 - halfWidth, y1, x1 + extraPixel + halfWidth, y1, color, width, thick);
-                DrawSmoothLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, color, width, thick);
+                DrawSmoothLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, color, width, false);
+                DrawSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, color, width, false);
+                DrawSmoothLineInternal(x0 - halfWidth, y1, x1 + extraPixel + halfWidth, y1, color, width, false);
+                DrawSmoothLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, color, width, false);
             }
         }
-
-        // GLTODO : Geometry + review miter.
-        public void DrawGeometry(Geometry geo, Color color, int width, bool smooth = false, bool miter = false)
+        public void FillGeometry(Span<float> geo, Color color, bool smooth = false)
         {
-        //    width += lineWidthBias;
-
-        //    if (Platform.IsAndroid && width > maxSmoothLineWidth)
-        //    {
-        //        smooth = false;
-        //        miter = !xform.HasScaling; // Miter doesnt work with scaling atm.
-        //    }
-
-        //    var points = miter ? geo.GetMiterPoints(width) : geo.Points;
-
-        //    var x0 = points[0];
-        //    var y0 = points[1];
-
-        //    xform.TransformPoint(ref x0, ref y0);
-
-        //    for (int i = 0; i < points.Length / 2 - 1; i++)
-        //    {
-        //        var x1 = points[(i + 1) * 2 + 0];
-        //        var y1 = points[(i + 1) * 2 + 1];
-
-        //        xform.TransformPoint(ref x1, ref y1);
-
-        //        DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
-
-        //        x0 = x1;
-        //        y0 = y1;
-        //    }
+            FillGeometryInternal(geo, color, color, 0, smooth);
         }
 
-        // GLTODO : Geometry.
-        public void FillAndDrawGeometry(Geometry geo, Color fillColor, Color lineColor, int lineWidth = 1, bool smooth = false, bool miter = false)
+        public void FillGeometryGradient(Span<float> geo, Color color0, Color color1, int gradientSize, bool smooth = false)
         {
-        //    FillGeometry(geo, fillColor, smooth);
-        //    DrawGeometry(geo, lineColor, lineWidth, smooth, miter);
+            FillGeometryInternal(geo, color0, color1, gradientSize, smooth);
         }
-
+        
+        public void FillAndDrawGeometry(Span<float> geo, Color fillColor, Color lineColor, int lineWidth = 1, bool smooth = false)
+        {
+        	FillGeometry(geo, fillColor, smooth);
+			DrawGeometry(geo, lineColor, lineWidth, smooth);
+        }
+		
         public void FillRectangle(float x0, float y0, float x1, float y1, Color color)
         {
             var batch = GetPolygonBatch();
@@ -1669,12 +1594,6 @@ namespace FamiStudio
             FillRectangle(x, y, x + clipRect.Width, y + clipRect.Height, color);
         }
 
-        //public void FillAndDrawClipRegion(Color fillColor, Color lineColor, int width = 1, bool smooth = false)
-        //{
-        //    FillRectangle(graphics.CurrentClipRegion, fillColor);
-        //    DrawRectangle(graphics.CurrentClipRegion, lineColor, width, smooth);
-        //}
-
         public void FillRectangle(Rectangle rect, Color color)
         {
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color);
@@ -1714,161 +1633,151 @@ namespace FamiStudio
             DrawRectangle(rect, lineColor, width, smooth);
         }
 
-        public void FillGeometry(Geometry geo, Color color, bool smooth = false)
+        private void FillGeometryInternal(Span<float> points, Color color0, Color color1, int gradientSize, bool smooth = false)
         {
-        //    var batch = GetPolygonSmoothBatch(/*smooth*/); // MATTT Non smooth support.
-        //    var i0 = (short)(batch.vtxIdx / 2);
-
-        //    // All our geometries are closed, so no need for the last vert.
-        //    for (int i = 0; i < geo.Points.Length - 2; i += 2)
-        //    {
-        //        float x = geo.Points[i + 0];
-        //        float y = geo.Points[i + 1];
-
-        //        xform.TransformPoint(ref x, ref y);
-
-        //        batch.vtxArray[batch.vtxIdx++] = x;
-        //        batch.vtxArray[batch.vtxIdx++] = y;
-        //        batch.colArray[batch.colIdx++] = color.ToAbgr();
-        //    }
-
-        //    // Simple fan
-        //    var numVertices = geo.Points.Length / 2 - 1;
-        //    for (int i = 0; i < numVertices - 2; i++)
-        //    {
-        //        batch.idxArray[batch.idxIdx++] = i0;
-        //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
-        //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
-        //    }
-
-        //    Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
-        }
-
-        // Assumed to be a vertical gradient.
-        public void FillGeometryGradient(Geometry geo, Color color0, Color color1, int gradientSize, bool smooth = false)
-        {
-            // GLTODO!!!
-
-        //    var batch = GetPolygonSmoothBatch(/*smooth*/); // MATTT Non smooth support.
-        //    var i0 = (short)(batch.vtxIdx / 2);
-
-        //    // All our geometries are closed, so no need for the last vert.
-        //    for (int i = 0; i < geo.Points.Length; i += 2)
-        //    {
-        //        float x = geo.Points[i + 0];
-        //        float y = geo.Points[i + 1];
-
-        //        float lerp = y / gradientSize;
-        //        byte r = (byte)(color0.R * (1.0f - lerp) + (color1.R * lerp));
-        //        byte g = (byte)(color0.G * (1.0f - lerp) + (color1.G * lerp));
-        //        byte b = (byte)(color0.B * (1.0f - lerp) + (color1.B * lerp));
-        //        byte a = (byte)(color0.A * (1.0f - lerp) + (color1.A * lerp));
-
-        //        xform.TransformPoint(ref x, ref y);
-
-        //        batch.vtxArray[batch.vtxIdx++] = x;
-        //        batch.vtxArray[batch.vtxIdx++] = y;
-        //        batch.colArray[batch.colIdx++] = new Color(r, g, b, a).ToAbgr();
-        //    }
-
-        //    // Simple fan
-        //    var numVertices = geo.Points.Length / 2 - 1;
-        //    for (int i = 0; i < numVertices - 2; i++)
-        //    {
-        //        batch.idxArray[batch.idxIdx++] = i0;
-        //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
-        //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
-        //    }
-        }
-
-        // MATTT : Move all this to a function where we can pre-compute (aka Geometry) and just draw later.
-        // The default function will not be smooth.
-        public void FillGeometry(float[,] points, Color color, bool smooth = false)
-        {
+            var gradient = gradientSize > 0;
             var batch = GetPolygonBatch();
             var i0 = (short)(batch.vtxIdx / 2);
-            var numVerts = points.GetLength(0);
-
-            var px = points[numVerts - 1, 0];
-            var py = points[numVerts - 1, 1];
-            xform.TransformPoint(ref px, ref py);
-
-            float cx = points[0, 0];
-            float cy = points[0, 1];
-            xform.TransformPoint(ref cx, ref cy);
-
-            var dpx = cx - px;
-            var dpy = cy - py;
-            Utils.Normalize(ref dpx, ref dpy);
-
+            var numVerts = points.Length / 2;
             var depth = graphics.DepthValue;
 
-            for (int i = 0; i < numVerts; i++)
-            {
-                var ni = (i + 1) % numVerts;
+            if (smooth)
+            { 
+                var px = points[points.Length - 2];
+                var py = points[points.Length - 1];
+                xform.TransformPoint(ref px, ref py);
 
-                float nx = points[ni, 0];
-                float ny = points[ni, 1];
-                xform.TransformPoint(ref nx, ref ny);
+                float cx = points[0];
+                float cy = points[1];
+                xform.TransformPoint(ref cx, ref cy);
 
-                var dnx = nx - cx;
-                var dny = ny - cy;
-                Utils.Normalize(ref dnx, ref dny);
+                var dpx = cx - px;
+                var dpy = cy - py;
+                Utils.Normalize(ref dpx, ref dpy);
 
-                var dx = (dnx - dpx) * 0.5f;
-                var dy = (dny - dpy) * 0.5f;
-                Utils.Normalize(ref dx, ref dy);
+                for (int i = 0; i < numVerts; i++)
+                {
+                    var ni = (i + 1) % numVerts;
 
-                // Cos -> Csc
-                var d = 0.7071f / (float)Math.Sqrt(1.0f - Utils.Saturate(Utils.Dot(dnx, dny, -dpx, -dpy)));
-                var ix = cx + dx * d;
-                var iy = cy + dy * d;
-                var ox = cx - dx * d;
-                var oy = cy - dy * d;
+                    float nx = points[ni * 2 + 0];
+                    float ny = points[ni * 2 + 1];
 
-                batch.vtxArray[batch.vtxIdx++] = ix;
-                batch.vtxArray[batch.vtxIdx++] = iy;
-                batch.vtxArray[batch.vtxIdx++] = ox;
-                batch.vtxArray[batch.vtxIdx++] = oy;
+                    Color gradientColor;
 
-                batch.colArray[batch.colIdx++] = color.ToAbgr();
-                batch.colArray[batch.colIdx++] = Color.FromArgb(0, color).ToAbgr();
+                    if (gradient)
+                    {
+                        float lerp = ny / gradientSize;
+                        byte r = (byte)(color0.R * (1.0f - lerp) + (color1.R * lerp));
+                        byte g = (byte)(color0.G * (1.0f - lerp) + (color1.G * lerp));
+                        byte b = (byte)(color0.B * (1.0f - lerp) + (color1.B * lerp));
+                        byte a = (byte)(color0.A * (1.0f - lerp) + (color1.A * lerp));
+                        gradientColor = new Color(r, g, b, a);
+                    }
+                    else
+                    {
+                        gradientColor = color0;
+                    }
 
-                batch.depArray[batch.depIdx++] = depth;
-                batch.depArray[batch.depIdx++] = depth;
-                batch.depArray[batch.depIdx++] = depth;
-                batch.depArray[batch.depIdx++] = depth;
+                    xform.TransformPoint(ref nx, ref ny);
 
-                cx = nx;
-                cy = ny;
-                dpx = dnx;
-                dpy = dny;
+                    var dnx = nx - cx;
+                    var dny = ny - cy;
+                    Utils.Normalize(ref dnx, ref dny);
+
+                    var dx = (dnx - dpx) * 0.5f;
+                    var dy = (dny - dpy) * 0.5f;
+                    Utils.Normalize(ref dx, ref dy);
+
+                    // Cos -> Csc
+                    var d = 0.7071f / (float)Math.Sqrt(1.0f - Utils.Saturate(Utils.Dot(dnx, dny, -dpx, -dpy)));
+                    var ix = cx + dx * d;
+                    var iy = cy + dy * d;
+                    var ox = cx - dx * d;
+                    var oy = cy - dy * d;
+
+                    batch.vtxArray[batch.vtxIdx++] = ix;
+                    batch.vtxArray[batch.vtxIdx++] = iy;
+                    batch.vtxArray[batch.vtxIdx++] = ox;
+                    batch.vtxArray[batch.vtxIdx++] = oy;
+
+                    batch.colArray[batch.colIdx++] = gradientColor.ToAbgr();
+                    batch.colArray[batch.colIdx++] = Color.FromArgb(0, gradientColor).ToAbgr();
+
+                    batch.depArray[batch.depIdx++] = depth;
+                    batch.depArray[batch.depIdx++] = depth;
+
+                    cx = nx;
+                    cy = ny;
+                    dpx = dnx;
+                    dpy = dny;
+                }
+
+                // Simple fan for the inside
+                for (int i = 0; i < numVerts - 2; i++)
+                {
+                    batch.idxArray[batch.idxIdx++] = i0;
+                    batch.idxArray[batch.idxIdx++] = (short)(i0 + i * 2 + 2);
+                    batch.idxArray[batch.idxIdx++] = (short)(i0 + i * 2 + 4);
+                }
+
+                // A few more quads for the anti-aliased section.
+                for (int i = 0; i < numVerts; i++)
+                {
+                    var ni = (i + 1) % numVerts;
+
+                    var qi0 = (short)(i0 + i  * 2 + 0);
+                    var qi1 = (short)(i0 + i  * 2 + 1);
+                    var qi2 = (short)(i0 + ni * 2 + 0);
+                    var qi3 = (short)(i0 + ni * 2 + 1);
+
+                    batch.idxArray[batch.idxIdx++] = qi0;
+                    batch.idxArray[batch.idxIdx++] = qi1;
+                    batch.idxArray[batch.idxIdx++] = qi2;
+                    batch.idxArray[batch.idxIdx++] = qi1;
+                    batch.idxArray[batch.idxIdx++] = qi3;
+                    batch.idxArray[batch.idxIdx++] = qi2;
+                }
             }
-
-            // Simple fan for the inside
-            for (int i = 0; i < numVerts - 2; i++)
+            else
             {
-                batch.idxArray[batch.idxIdx++] = i0;
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i * 2 + 2);
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i * 2 + 4);
-            }
+                for (int i = 0; i < numVerts; i++)
+                {
+                    var ni = (i + 1) % numVerts;
 
-            // A few more quads for the anti-aliased section.
-            for (int i = 0; i < numVerts; i++)
-            {
-                var ni = (i + 1) % numVerts;
+                    float nx = points[ni * 2 + 0];
+                    float ny = points[ni * 2 + 1];
 
-                var qi0 = (short)(i0 + i  * 2 + 0);
-                var qi1 = (short)(i0 + i  * 2 + 1);
-                var qi2 = (short)(i0 + ni * 2 + 0);
-                var qi3 = (short)(i0 + ni * 2 + 1);
+                    Color gradientColor;
 
-                batch.idxArray[batch.idxIdx++] = qi0;
-                batch.idxArray[batch.idxIdx++] = qi1;
-                batch.idxArray[batch.idxIdx++] = qi2;
-                batch.idxArray[batch.idxIdx++] = qi1;
-                batch.idxArray[batch.idxIdx++] = qi3;
-                batch.idxArray[batch.idxIdx++] = qi2;
+                    if (gradient)
+                    {
+                        float lerp = ny / gradientSize;
+                        byte r = (byte)(color0.R * (1.0f - lerp) + (color1.R * lerp));
+                        byte g = (byte)(color0.G * (1.0f - lerp) + (color1.G * lerp));
+                        byte b = (byte)(color0.B * (1.0f - lerp) + (color1.B * lerp));
+                        byte a = (byte)(color0.A * (1.0f - lerp) + (color1.A * lerp));
+                        gradientColor = new Color(r, g, b, a);
+                    }
+                    else
+                    {
+                        gradientColor = color0;
+                    }
+
+                    xform.TransformPoint(ref nx, ref ny);
+
+                    batch.vtxArray[batch.vtxIdx++] = nx;
+                    batch.vtxArray[batch.vtxIdx++] = ny;
+                    batch.colArray[batch.colIdx++] = gradientColor.ToAbgr();
+                    batch.depArray[batch.depIdx++] = depth;
+                }
+
+                // Simple fan
+                for (int i = 0; i < numVerts - 2; i++)
+                {
+                    batch.idxArray[batch.idxIdx++] = i0;
+                    batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
+                    batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
+                }
             }
         }
 

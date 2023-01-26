@@ -98,7 +98,7 @@ namespace FamiStudio
         Color selectedPatternVisibleColor   = Color.FromArgb(64, Theme.LightGreyColor1);
         Color selectedPatternInvisibleColor = Color.FromArgb(16, Theme.LightGreyColor1);
 
-        Geometry seekGeometry;
+        float[] seekGeometry;
         BitmapAtlasRef[] bmpExpansions;
         BitmapAtlasRef[] bmpChannels;
         BitmapAtlasRef bmpForceDisplay;
@@ -459,12 +459,12 @@ namespace FamiStudio
                 bmpShyOff = g.GetBitmapAtlasRef("ShyOff");
             }
             
-            seekGeometry = g.CreateGeometry(new float[,]
+            seekGeometry = new float[]
             {
-                { -headerSizeY / 2, 1 },
-                { 0, headerSizeY - 2 },
-                { headerSizeY / 2, 1 }
-            }, true);
+                -headerSizeY / 2, 1,
+                0, headerSizeY - 2,
+                headerSizeY / 2, 1 
+            };
         }
 
         protected override void OnResize(EventArgs e)

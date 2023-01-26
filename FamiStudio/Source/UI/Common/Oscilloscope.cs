@@ -26,7 +26,7 @@ namespace FamiStudio
         private int lastSampleCount = 0;
         private int holdFrameCount = 0;
         private bool stereo;
-        private volatile float[,] geometry;
+        private volatile float[] geometry;
         private volatile bool hasNonZeroData = false;
         private Dictionary<int, short[]> mixDownBuffers = new Dictionary<int, short[]>();
 
@@ -65,7 +65,7 @@ namespace FamiStudio
             }
         }
 
-        public float[,] GetGeometry(out bool outHasNonZeroSample)
+        public float[] GetGeometry(out bool outHasNonZeroSample)
         {
             outHasNonZeroSample = hasNonZeroData;
             return geometry;
@@ -157,7 +157,7 @@ namespace FamiStudio
                         if (lastTrigger >= 0)
                         {
                             var newHasNonZeroData = false;
-                            var vertices = new float[lastSampleCount, 2];
+                            var vertices = new float[lastSampleCount * 2];
 
                             var j = lastTrigger - lastSampleCount / 2; 
                             if (j < 0) j += sampleBuffer.Length;
@@ -166,8 +166,8 @@ namespace FamiStudio
                             {
                                 var samp = (int)sampleBuffer[j];
 
-                                vertices[i, 0] = i / (float)(lastSampleCount - 1);
-                                vertices[i, 1] = Utils.Clamp(samp / 32768.0f * SampleScale, -1.0f, 1.0f);
+                                vertices[i * 2 + 0] = i / (float)(lastSampleCount - 1);
+                                vertices[i * 2 + 1] = Utils.Clamp(samp / 32768.0f * SampleScale, -1.0f, 1.0f);
 
                                 newHasNonZeroData |= Math.Abs(samp) > 1024;
                             }

@@ -379,11 +379,11 @@ namespace FamiStudio
             releaseStartY = graphHeight - releaseStartY;
             releaseEndY   = graphHeight - releaseEndY;
 
-            var attackGeo  = new float[4, 2] { { 0, graphHeight }, { decayStartX, graphHeight }, { decayStartX, decayStartY }, { 0, graphHeight } };
-            var decayGeo   = new float[4, 2] { { decayStartX, graphHeight }, { sustainStartX, graphHeight }, { sustainStartX, sustainStartY }, { decayStartX, decayStartY } }; 
-            var sustainGeo = new float[4, 2] { { sustainStartX, graphHeight }, { releaseStartX, graphHeight }, { releaseStartX, releaseStartY }, { sustainStartX, sustainStartY } }; 
-            var releaseGeo = new float[4, 2] { { releaseStartX, graphHeight }, { releaseEndX, graphHeight }, { releaseEndX, releaseEndY }, { releaseStartX, releaseStartY } }; 
-            var line       = new float[5, 2] { { 0, graphHeight }, { decayStartX, decayStartY }, { sustainStartX, sustainStartY }, { releaseStartX, releaseStartY }, { releaseEndX, releaseEndY } };
+            var attackGeo  = new float[4 * 2] { 0, graphHeight, decayStartX, graphHeight, decayStartX, decayStartY,  0, graphHeight };
+            var decayGeo   = new float[4 * 2] { decayStartX, graphHeight,  sustainStartX, graphHeight, sustainStartX, sustainStartY, decayStartX, decayStartY }; 
+            var sustainGeo = new float[4 * 2] { sustainStartX, graphHeight, releaseStartX, graphHeight, releaseStartX, releaseStartY, sustainStartX, sustainStartY }; 
+            var releaseGeo = new float[4 * 2] { releaseStartX, graphHeight, releaseEndX, graphHeight, releaseEndX, releaseEndY,  releaseStartX, releaseStartY }; 
+            var line       = new float[5 * 2] { 0, graphHeight,  decayStartX, decayStartY, sustainStartX, sustainStartY, releaseStartX, releaseStartY, releaseEndX, releaseEndY };
 
             var fillColor = Color.FromArgb(75, Color.Black);
             c.FillAndDrawRectangle(0, graphPaddingTop, graphWidth, graphHeight, fillColor, Theme.BlackColor);

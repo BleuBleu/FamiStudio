@@ -10,7 +10,7 @@ noperspective out vec2 texCoordsInterp;
 
 void main()
 {
-    // MATTT : Review this 0.5, move to scale/bias.
+    // GLTODO : Review this, if good, move to scale/bias.
     gl_Position = vec4((inPosition.xy + 0.5f) * screenScaleBias.xy + screenScaleBias.zw, inDepth, 1);
     colorInterp = inColor;
     texCoordsInterp = inTexCoords;

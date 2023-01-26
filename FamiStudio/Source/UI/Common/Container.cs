@@ -83,11 +83,8 @@ namespace FamiStudio
             return null;
         }
 
-        public virtual Point ControlToWindow(Point p)
+        public override Point ControlToWindow(Point p)
         {
-            p.X += left;
-            p.Y += top;
-
             if (container == null)
             {
                 return p;

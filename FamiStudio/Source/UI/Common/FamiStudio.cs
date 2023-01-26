@@ -1579,7 +1579,7 @@ namespace FamiStudio
             }
         }
 
-        public float[,] GetOscilloscopeGeometry(out bool hHasNonZeroSample)
+        public float[] GetOscilloscopeGeometry(out bool hHasNonZeroSample)
         {
             if (oscilloscope != null)
                 return oscilloscope.GetGeometry(out hHasNonZeroSample);

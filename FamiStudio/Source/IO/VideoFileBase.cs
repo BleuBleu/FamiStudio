@@ -37,7 +37,7 @@ namespace FamiStudio
         protected Bitmap watermark;
 
         // TODO : This is is very similar to Oscilloscope.cs, unify eventually...
-        protected float[,] UpdateOscilloscope(VideoChannelState state, int frameIndex)
+        protected float[] UpdateOscilloscope(VideoChannelState state, int frameIndex)
         {
             var meta = metadata[frameIndex];
             var newTrigger = meta.channelData[state.songChannelIndex].trigger;
@@ -75,15 +75,15 @@ namespace FamiStudio
             // have at the moment are very low EPSM notes with periods about 8 frames.
             Debug.Assert(state.holdFrameCount < 10);
 
-            var vertices = new float[oscRenderWindowSize, 2];
+            var vertices = new float[oscRenderWindowSize * 2];
             var startIdx = newTrigger >= 0 ? newTrigger : state.lastTrigger;
 
             for (int i = 0, j = startIdx - oscRenderWindowSize / 2; i < oscRenderWindowSize; i++, j++)
             {
                 var samp = j < 0 || j >= state.wav.Length ? 0 : state.wav[j];
 
-                vertices[i, 0] = i / (float)(oscRenderWindowSize - 1);
-                vertices[i, 1] = Utils.Clamp(samp / 32768.0f * state.oscScale, -1.0f, 1.0f);
+                vertices[i * 2 + 0] = i / (float)(oscRenderWindowSize - 1);
+                vertices[i * 2 + 1] = Utils.Clamp(samp / 32768.0f * state.oscScale, -1.0f, 1.0f);
             }
         
             if (newTrigger >= 0)

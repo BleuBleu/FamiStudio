@@ -11,7 +11,9 @@ noperspective out float lineDistInterp;
 
 void main()
 {
+    // GLTODO : Review this.
     gl_Position = vec4(inPosition * screenScaleBias.xy + screenScaleBias.zw, inDepth, 1);
+    //gl_Position = vec4((inPosition + 0.5f) * screenScaleBias.xy + screenScaleBias.zw, inDepth, 1);
     
     colorInterp = inColor;
     lineDistInterp = inLineDist * 127.5f;

@@ -143,12 +143,12 @@ namespace FamiStudio
         BitmapAtlasRef bmpEffectFrame;
         BitmapAtlasRef bmpEffectRepeat;
         BitmapAtlasRef[] bmpEffects;
-        Geometry[] stopNoteGeometry        = new Geometry[2]; // [1] is used to draw arps.
-        Geometry[] stopReleaseNoteGeometry = new Geometry[2]; // [1] is used to draw arps.
-        Geometry[] releaseNoteGeometry     = new Geometry[2]; // [1] is used to draw arps.
-        Geometry   slideNoteGeometry;
-        Geometry   seekGeometry;
-        Geometry   sampleGeometry;
+        float[][] stopNoteGeometry        = new float[2][]; // [1] is used to draw arps.
+        float[][] stopReleaseNoteGeometry = new float[2][]; // [1] is used to draw arps.
+        float[][] releaseNoteGeometry     = new float[2][]; // [1] is used to draw arps.
+        float[]   slideNoteGeometry;
+        float[]   seekGeometry;
+        float[]   sampleGeometry;
 
         enum CaptureOperation
         {
@@ -924,20 +924,20 @@ namespace FamiStudio
                 effectBitmapScale = DpiScaling.ScaleForWindowFloat(0.25f);
             }
 
-            seekGeometry = g.CreateGeometry(new float[,]
+            seekGeometry = new float[]
             {
-                { -headerSizeY / 4, 1 },
-                { 0, headerSizeY / 2 - 2 },
-                { headerSizeY / 4, 1 }
-            });
+                -headerSizeY / 4, 1,
+                0, headerSizeY / 2 - 2,
+                headerSizeY / 4, 1
+            };
 
-            sampleGeometry = g.CreateGeometry(new float[,]
+            sampleGeometry = new float[]
             {
-                { -waveGeometrySampleSize, -waveGeometrySampleSize },
-                {  waveGeometrySampleSize, -waveGeometrySampleSize },
-                {  waveGeometrySampleSize,  waveGeometrySampleSize },
-                { -waveGeometrySampleSize,  waveGeometrySampleSize }
-            });
+                -waveGeometrySampleSize, -waveGeometrySampleSize,
+                 waveGeometrySampleSize, -waveGeometrySampleSize,
+                 waveGeometrySampleSize,  waveGeometrySampleSize,
+                -waveGeometrySampleSize,  waveGeometrySampleSize
+            };
 
             ConditionalUpdateNoteGeometries(g);
         }
@@ -949,64 +949,56 @@ namespace FamiStudio
 
             geometryNoteSizeY = noteSizeY;
 
-            Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref stopNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref releaseNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref releaseNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref slideNoteGeometry);
-            
-            stopNoteGeometry[0] = g.CreateGeometry(new float[,]
+            stopNoteGeometry[0] = new float[]
             {
-                { 0.0f, 0 },
-                { 0.0f, noteSizeY },
-                { 1.0f, noteSizeY / 2 }
-            });
+                0.0f, 0,
+                0.0f, noteSizeY,
+                1.0f, noteSizeY / 2
+            };
 
-            stopNoteGeometry[1] = g.CreateGeometry(new float[,]
+            stopNoteGeometry[1] = new float[]
             {
-                { 0.0f, 1 },
-                { 0.0f, noteSizeY },
-                { 1.0f, noteSizeY / 2 }
-            });
+                0.0f, 1,
+                0.0f, noteSizeY,
+                1.0f, noteSizeY / 2
+            };
 
-            releaseNoteGeometry[0] = g.CreateGeometry(new float[,]
+            releaseNoteGeometry[0] = new float[]
             {
-                { 0.0f, 0 },
-                { 0.0f, noteSizeY },
-                { 1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
-                { 1.0f, noteSizeY / 2 - releaseNoteSizeY / 2 }
-            });
+                0.0f, 0,
+                0.0f, noteSizeY,
+                1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2,
+                1.0f, noteSizeY / 2 - releaseNoteSizeY / 2
+            };
 
-            releaseNoteGeometry[1] = g.CreateGeometry(new float[,]
+            releaseNoteGeometry[1] = new float[]
             {
-                { 0.0f, 1 },
-                { 0.0f, noteSizeY },
-                { 1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
-                { 1.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 }
-            });
+                0.0f, 1,
+                0.0f, noteSizeY,
+                1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2,
+                1.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1
+            };
 
-            stopReleaseNoteGeometry[0] = g.CreateGeometry(new float[,]
+            stopReleaseNoteGeometry[0] = new float[]
             {
-                { 0.0f, noteSizeY / 2 - releaseNoteSizeY / 2 },
-                { 0.0f, noteSizeY / 2 + releaseNoteSizeY / 2 },
-                { 1.0f, noteSizeY / 2 }
-            });
+                0.0f, noteSizeY / 2 - releaseNoteSizeY / 2,
+                0.0f, noteSizeY / 2 + releaseNoteSizeY / 2,
+                1.0f, noteSizeY / 2
+            };
 
-            stopReleaseNoteGeometry[1] = g.CreateGeometry(new float[,]
+            stopReleaseNoteGeometry[1] = new float[]
             {
-                { 0.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 },
-                { 0.0f, noteSizeY / 2 + releaseNoteSizeY / 2 },
-                { 1.0f, noteSizeY / 2 }
-            });
+                0.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1,
+                0.0f, noteSizeY / 2 + releaseNoteSizeY / 2,
+                1.0f, noteSizeY / 2
+            };
 
-            slideNoteGeometry = g.CreateGeometry(new float[,]
+            slideNoteGeometry = new float[]
             {
-                { 0.0f, 0 },
-                { 1.0f, 0 },
-                { 1.0f, noteSizeY }
-            });
+                0.0f, 0,
+                1.0f, 0,
+                1.0f, noteSizeY
+            };
         }
 
         private bool IsBlackKey(int key)
@@ -1580,12 +1572,12 @@ namespace FamiStudio
                                         var sizeY0 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastValue / (float)Note.VolumeMax * effectPanelSizeY);
                                         var sizeY1 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastSlide / (float)Note.VolumeMax * effectPanelSizeY);
 
-                                        var points = new float[4, 2]
+                                        var points = new float[4 * 2]
                                         {
-                                            { X0, effectPanelSizeY - sizeY0 },
-                                            { X0, effectPanelSizeY },
-                                            { X1, effectPanelSizeY },
-                                            { X1, effectPanelSizeY - sizeY1 }
+                                            X0, effectPanelSizeY - sizeY0,
+                                            X0, effectPanelSizeY,
+                                            X1, effectPanelSizeY,
+                                            X1, effectPanelSizeY - sizeY1
                                         };
 
                                         r.c.FillGeometry(points, Theme.DarkGreyColor5);
@@ -1624,12 +1616,12 @@ namespace FamiStudio
                                 var sizeY0 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastValue / (float)Note.VolumeMax * effectPanelSizeY);
                                 var sizeY1 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastSlide / (float)Note.VolumeMax * effectPanelSizeY);
 
-                                var points = new float[4, 2]
+                                var points = new float[4 * 2]
                                 {
-                                    { X0, effectPanelSizeY - sizeY0 },
-                                    { X0, effectPanelSizeY },
-                                    { X1, effectPanelSizeY },
-                                    { X1, effectPanelSizeY - sizeY1 }
+                                    X0, effectPanelSizeY - sizeY0,
+                                    X0, effectPanelSizeY,
+                                    X1, effectPanelSizeY,
+                                    X1, effectPanelSizeY - sizeY1
                                 };
 
                                 r.c.FillGeometry(points, Theme.DarkGreyColor5);
@@ -1867,12 +1859,12 @@ namespace FamiStudio
                     // Filled part.
                     for (int i = 0; i < 3; i++)
                     {
-                        var points = new float[4, 2]
+                        var points = new float[4 * 2]
                         {
-                            { envelopePoints[i + 1].X, envelopePoints[i + 1].Y },
-                            { envelopePoints[i + 0].X, envelopePoints[i + 0].Y },
-                            { envelopePoints[i + 0].X, effectPanelSizeY },
-                            { envelopePoints[i + 1].X, effectPanelSizeY }
+                            envelopePoints[i + 1].X, envelopePoints[i + 1].Y,
+                            envelopePoints[i + 0].X, envelopePoints[i + 0].Y,
+                            envelopePoints[i + 0].X, effectPanelSizeY,
+                            envelopePoints[i + 1].X, effectPanelSizeY
                         };
 
                         r.c.FillGeometry(points, Theme.DarkGreyColor4);
@@ -3021,7 +3013,7 @@ namespace FamiStudio
                 r.c.FillRectangleGradient(0, activeChannelInt, sx, sy, color, color.Scaled(0.8f), true, sy);
             
             if (activeChannel)
-                r.c.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 2 : 1, selected || outline);
+                r.c.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 3 : 1, selected || outline);
 
             if (!outline)
             {
@@ -3177,15 +3169,15 @@ namespace FamiStudio
 
                 if (numVisibleSample > 0)
                 {
-                    var points = new float[numVisibleSample, 2];
+                    var points = new float[numVisibleSample * 2];
                     var indices = isSource && drawSamples ? new int[numVisibleSample] : null;
                     var scaleX = 1.0f / (rate * viewTime) * viewWidth;
                     var biasX = (float)-scrollX;
 
                     for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i += sampleSkip, j++)
                     {
-                        points[j, 0] = i * scaleX + biasX;
-                        points[j, 1] = halfHeight + data[i] / (float)short.MinValue * halfHeightPad;
+                        points[j * 2 + 0] = i * scaleX + biasX;
+                        points[j * 2 + 1] = halfHeight + data[i] / (float)short.MinValue * halfHeightPad;
                         if (indices != null) indices[j] = i;
                     }
 
@@ -3200,7 +3192,7 @@ namespace FamiStudio
                             var selected = isSource && selectionValid && indices[i] >= selectionMin && indices[i] <= selectionMax;
                             var sampleScale = selected ? 1.5f : 1.0f;
 
-                            r.c.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
+                            r.c.PushTransform(points[i * 2 + 0], points[i * 2 + 1], sampleScale, sampleScale);
                             r.c.FillGeometry(sampleGeometry, selected ? Theme.WhiteColor : color);
                             r.c.PopTransform();
                         }
@@ -3238,7 +3230,7 @@ namespace FamiStudio
 
                 if (numVisibleSample > 0)
                 {
-                    var points = new float[numVisibleSample, 2];
+                    var points = new float[numVisibleSample * 2];
                     var indices = isSource && drawSamples ? new int[numVisibleSample] : null;
                     var scaleX = 1.0f / (rate * viewTime) * viewWidth;
                     var biasX = GetPixelForWaveTime(baseTime, scrollX);
@@ -3260,8 +3252,8 @@ namespace FamiStudio
                     {
                         if ((i & (sampleSkip - 1)) == 0)
                         {
-                            points[j, 0] = i * scaleX + biasX;
-                            points[j, 1] = (-(dpcmCounter - 32) / 64.0f) * 2.0f * halfHeightPad + halfHeight; // DPCMTODO : Is that centered correctly? Also negative value?
+                            points[j * 2 + 0] = i * scaleX + biasX;
+                            points[j * 2 + 1] = (-(dpcmCounter - 32) / 64.0f) * 2.0f * halfHeightPad + halfHeight; // DPCMTODO : Is that centered correctly? Also negative value?
                             if (indices != null) indices[j] = i - 1;
                             j++;
                         }
@@ -3289,7 +3281,7 @@ namespace FamiStudio
                             var selected = isSource && selectionValid && indices[i] >= selectionMin && indices[i] <= selectionMax;
                             var sampleScale = selected ? 1.5f : 1.0f;
 
-                            r.c.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
+                            r.c.PushTransform(points[i * 2 + 0], points[i * 2 + 1], sampleScale, sampleScale);
                             r.c.FillGeometry(sampleGeometry, selected ? Theme.WhiteColor : color);
                             r.c.PopTransform();
                         }
