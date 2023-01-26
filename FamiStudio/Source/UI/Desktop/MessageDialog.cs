@@ -46,6 +46,11 @@ namespace FamiStudio
             CreateControls(text, buttons);
         }
 
+        protected override void OnShowDialog()
+        {
+            Platform.Beep();
+        }
+
         private void CreateControls(string text, MessageBoxButtons btns)
         {
             var imageName = "MessageInfo";
@@ -70,8 +75,8 @@ namespace FamiStudio
 
             label = new Label(text); // CTRLTODO Add!
             label.Move(margin * 2 + image.Width, margin + titleBarSizeY, width - margin * 3 - image.Width, label.Height);
-            label.AutosizeWidth();
             AddControl(label);
+            label.AutosizeWidth();
 
             if (label.Width > maxTextSize)
             {

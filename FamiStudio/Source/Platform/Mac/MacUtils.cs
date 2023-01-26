@@ -585,7 +585,7 @@ namespace FamiStudio
 
         public static void Beep()
         {
-            SendVoid(clsNSSound, selBeep);
+            NSBeep();
         }
 
         public static unsafe void SetPasteboardData(byte[] data)
