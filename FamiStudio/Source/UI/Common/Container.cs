@@ -83,6 +83,36 @@ namespace FamiStudio
             return null;
         }
 
+        public virtual Point ControlToWindow(Point p)
+        {
+            p.X += left;
+            p.Y += top;
+
+            if (container == null)
+            {
+                return p;
+            }
+            else
+            {
+                return base.ControlToWindow(p);
+            }
+        }
+
+        public override Point WindowToControl(Point p)
+        {
+            p.X -= left;
+            p.Y -= top;
+
+            if (container == null)
+            {
+                return p;
+            }
+            else
+            {
+                return base.WindowToControl(p);
+            }
+        }
+
         //protected override void OnKeyDown(KeyEventArgs e)
         //{
         //    DialogKeyDown?.Invoke(this, e);

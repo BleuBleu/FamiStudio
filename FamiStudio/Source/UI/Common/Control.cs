@@ -128,7 +128,7 @@ namespace FamiStudio
         public Fonts Fonts => ParentWindow?.Fonts;
         public Point WindowPosition => ControlToWindow(Point.Empty);
 
-        public Point ControlToWindow(Point p)
+        public virtual Point ControlToWindow(Point p)
         {
             Container c = container;
 
@@ -145,7 +145,7 @@ namespace FamiStudio
             return p;
         }
 
-        public Point WindowToControl(Point p)
+        public virtual Point WindowToControl(Point p)
         {
             Container c = container;
 
