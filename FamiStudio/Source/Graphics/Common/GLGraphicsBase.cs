@@ -1165,6 +1165,7 @@ namespace FamiStudio
             batch.depArray[batch.depIdx++] = depth;
         }
 
+        // GLTODO : We need a thick line that is NOT smooth too.
         private void DrawSmoothLineInternal(float x0, float y0, float x1, float y1, Color color, float width, bool miter)
         {
             Debug.Assert(width < 16.0f);
