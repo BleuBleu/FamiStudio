@@ -269,8 +269,8 @@ namespace FamiStudio
             if (dirty || force)
             {
                 var rect = new Rectangle(Point.Empty, Size);
-#if DEBUG
-                var clearColor = new Color(255, 0, 255);
+#if false //DEBUG
+                var clearColor = new Color(128, 128, 128);
 #else
                 var clearColor = Theme.DarkGreyColor2;
 #endif
@@ -414,8 +414,6 @@ namespace FamiStudio
 
             if (action == GLFW_PRESS)
             {
-                MarkDirty(); // MATTT
-
                 if (captureControl != null)
                     return;
 

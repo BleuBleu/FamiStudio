@@ -20,7 +20,7 @@ namespace FamiStudio
         const int DefaultHeaderIconPosY      = 3;
         const int DefaultScrollBarThickness1 = 10;
         const int DefaultScrollBarThickness2 = 16;
-        const int DefaultMinScrollBarLength  = 128;
+        const int DefaultMinScrollBarLength  = 64;
         const float ContinuousFollowPercent  = 0.75f;
         const float ScrollSpeedFactor        = Platform.IsMobile ? 2.0f : 1.0f;
         const float DefaultZoom              = Platform.IsMobile ? 0.5f : 2.0f;
@@ -535,15 +535,12 @@ namespace FamiStudio
             var c = g.DefaultCommandList;
 
             // Track name background
-            c.FillRectangle(0, 0, channelNameSizeX, headerSizeY, Theme.DarkGreyColor2);
-            c.DrawRectangle(0, 0, channelNameSizeX, Height, Theme.DarkGreyColor4);
-            c.DrawLine(0, headerSizeY, Width, headerSizeY, Theme.BlackColor);
-
-            // Global lines
+            c.FillRectangle(0, 0, channelNameSizeX, height, Theme.DarkGreyColor2);
             c.DrawLine(channelNameSizeX - 1, 0, channelNameSizeX - 1, Height, Theme.BlackColor);
             c.DrawLine(0, 0, channelNameSizeX, 0, Theme.BlackColor);
-            c.DrawLine(0, Height - scrollBarThickness, channelNameSizeX, Height - scrollBarThickness, Theme.BlackColor);
+            c.DrawLine(0, height - scrollBarThickness, channelNameSizeX, height - scrollBarThickness, Theme.BlackColor);
             c.DrawLine(0, Height - 1, channelNameSizeX, Height - 1, Theme.BlackColor);
+            c.DrawLine(0, headerSizeY, channelNameSizeX, headerSizeY, Theme.BlackColor);
 
             // Shy
             if (Platform.IsDesktop)
@@ -554,9 +551,10 @@ namespace FamiStudio
                 c.DrawLine(0, 0, 0, Height, Theme.BlackColor);
 
             // Scrollable area.
-            g.PushClipRegion(0, headerSizeY, channelNameSizeX, Height - scrollBarThickness - headerSizeY + 1);
-            c.PushTranslation(0, headerSizeY - scrollY);
+            c.PushClipRegion(0, headerSizeY + 1, channelNameSizeX, height - scrollBarThickness - headerSizeY - 1);
             c.FillClipRegion(Theme.DarkGreyColor2);
+            c.DrawLine(channelNameSizeX - 1, 0, channelNameSizeX - 1, Height, Theme.BlackColor);
+            c.PushTranslation(0, headerSizeY - scrollY);
 
             // Horizontal lines seperating patterns.
             for (int i = 0, y = 0; i < rowToChannel.Length; i++, y += channelSizeY)
@@ -595,21 +593,13 @@ namespace FamiStudio
             }
 
             c.PopTransform();
-            g.PopClipRegion();
+            c.PopClipRegion();
         }
 
         protected void RenderPatternArea(Graphics g)
         {
-            var b = g.BackgroundCommandList;
             var c = g.DefaultCommandList;
-            var f = g.ForegroundCommandList;
 
-            /*
-            var cb = g.CreateCommandList(); // Background stuff
-            var cp = g.CreateCommandList(); // Pattern stuff
-            var cf = g.CreateCommandList(); // Foreground stuff
-            var cs = scrollBarThickness > 0 ? g.CreateCommandList() : null; // Scroll bars.
-            */
             var seekX = GetPixelForNote(GetSeekFrameToDraw());
             var minVisibleNoteIdx = Math.Max(GetNoteForPixel(0), 0);
             var maxVisibleNoteIdx = Math.Min(GetNoteForPixel(Width) + 1, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
@@ -617,10 +607,12 @@ namespace FamiStudio
             var maxVisiblePattern = Utils.Clamp(Song.PatternIndexFromAbsoluteNoteIndex(maxVisibleNoteIdx) + 1, 0, Song.Length);
             var actualSizeY = Height - scrollBarThickness;
 
-            // Header background
+            // Header
             c.PushTranslation(channelNameSizeX, 0);
-            g.PushClipRegion(0, 0, width, headerSizeY);
+            c.PushClipRegion(0, 0, width - channelNameSizeX, headerSizeY + 1);
+            c.DrawLine(0, headerSizeY, Width, headerSizeY, Theme.BlackColor);
 
+            // Header Background
             for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
             {
                 var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
@@ -639,10 +631,9 @@ namespace FamiStudio
 
             // Header
             c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
-            c.DrawLine(0, headerSizeY, Width, headerSizeY, Theme.BlackColor);
             c.DrawLine(0, Height - 1, Width, Height - 1, Theme.BlackColor);
 
-            // Vertical lines (Header)
+            // Vertical lines 
             for (int i = Math.Max(1, minVisiblePattern); i <= maxVisiblePattern; i++)
             {
                 var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
@@ -669,17 +660,31 @@ namespace FamiStudio
                 c.PopTransform();
             }
 
-            // MATTT TEMPORARY *******************
-            g.PopClipRegion();
-            c.PopTransform(); 
+            // Seek bar
+            c.PushTranslation(seekX, 0);
+            c.FillAndDrawGeometry(seekGeometry, GetSeekBarColor(), Theme.BlackColor, 1, true);
+            c.PopTransform();
 
-            /*
+            // Scrollable pattern area
+            c.PopClipRegion();
+            c.PushTranslation(0, headerSizeY);
+            c.PushClipRegion(0, 1, width - channelNameSizeX - scrollBarThickness, height - headerSizeY - scrollBarThickness - 1);
+            c.DrawLine(0, 0, width - channelNameSizeX - scrollBarThickness, 0, Theme.BlackColor);
+
+            for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
+            {
+                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
+                var sx = GetPixelForNote(Song.GetPatternLength(i), false);
+                var color = i == hoverPattern ? Theme.MediumGreyColor1 : ((i & 1) == 0 ? Theme.DarkGreyColor4 : Theme.DarkGreyColor2);
+                c.FillRectangle(px, 0, px + sx, height - headerSizeY, color);
+            }
+
             // Selection
             if (IsSelectionValid())
             {
                 if (GetMinMaxSelectedRow(out var minSelRow, out var maxSelRow))
                 {
-                    cp.FillRectangle(
+                    c.FillRectangle(
                         GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), channelSizeY * (minSelRow + 0) + headerSizeY - scrollY,
                         GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), channelSizeY * (maxSelRow + 1) + headerSizeY - scrollY,
                         IsActiveControl ? selectedPatternVisibleColor : selectedPatternInvisibleColor);
@@ -690,66 +695,66 @@ namespace FamiStudio
             for (int i = Math.Max(1, minVisiblePattern); i <= maxVisiblePattern; i++)
             {
                 var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
-                cb.DrawLine(px, 0, px, Height - scrollBarThickness, Theme.BlackColor);
+                c.DrawLine(px, 0, px, Height - scrollBarThickness, Theme.BlackColor);
             }
 
-            cb.PushTranslation(0, -scrollY);
+            c.PushTranslation(0, -scrollY);
 
             // Horizontal lines
-            for (int i = 0, y = headerSizeY; i < rowToChannel.Length; i++, y += channelSizeY)
-                cb.DrawLine(0, y, Width, y, Theme.BlackColor);
-            
-            // Patterns
-            var highlightedPatternRect = Rectangle.Empty;
+            for (int i = 0, y = 0; i < rowToChannel.Length; i++, y += channelSizeY)
+                c.DrawLine(0, y, Width, y, Theme.BlackColor);
 
-            int patternCacheSizeY = channelSizeY - patternHeaderSizeY - 1;
+            // Patterns
+            var patternCacheSizeY = channelSizeY - patternHeaderSizeY - 1;
             patternCache.Update(patternCacheSizeY);
 
-            for (int p = minVisiblePattern; p < maxVisiblePattern; p++)
+            for (int pi = minVisiblePattern; pi < maxVisiblePattern; pi++)
             {
-                var patternLen = Song.GetPatternLength(p);
-                var noteLen = Song.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(p);
-                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(p));
+                var patternLen = Song.GetPatternLength(pi);
+                var noteLen = Song.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(pi);
+                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(pi));
                 var sx = GetPixelForNote(patternLen, false);
 
-                cb.PushTranslation(px, 0);
+                c.PushTranslation(px, 0);
 
                 // TODO : Dont draw channels that are not visible!
-                for (int c = 0, py = headerSizeY; c < Song.Channels.Length; c++)
+                for (int ci = 0, py = 0; ci < Song.Channels.Length; ci++)
                 {
-                    if (channelVisible[c])
+                    if (channelVisible[ci])
                     {
-                        var location = new PatternLocation(c, p);
+                        var location = new PatternLocation(ci, pi);
                         var pattern = Song.GetPatternInstance(location);
 
                         if (pattern != null)
                         {
                             var bmp = patternCache.GetOrAddPattern(pattern, patternLen, noteLen, out var u0, out var v0, out var u1, out var v1);
 
-                            cp.PushTranslation(0, py);
-                            cb.FillRectangleGradient(1, 1, sx, patternHeaderSizeY, pattern.Color, pattern.Color.Scaled(0.8f), true, patternHeaderSizeY);
-                            cb.FillRectangle(1, patternHeaderSizeY, sx, channelSizeY, Color.FromArgb(75, pattern.Color));
-                            cp.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, Theme.BlackColor);
-                            cp.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1);
-                            cp.DrawText(pattern.Name, FontResources.FontSmall, patternNamePosX, 0, Theme.BlackColor, TextFlags.Left | TextFlags.Middle | TextFlags.Clip, sx - patternNamePosX, patternHeaderSizeY);
+                            c.PushTranslation(0, py);
+                            c.FillRectangleGradient(1, 1, sx, patternHeaderSizeY, pattern.Color, pattern.Color.Scaled(0.8f), true, patternHeaderSizeY);
+                            c.FillRectangle(1, patternHeaderSizeY, sx, channelSizeY, Color.FromArgb(75, pattern.Color));
+                            c.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, Theme.BlackColor);
+                            c.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1);
+                            c.DrawText(pattern.Name, Fonts.FontSmall, patternNamePosX, 0, Theme.BlackColor, TextFlags.Left | TextFlags.Middle | TextFlags.Clip, sx - patternNamePosX, patternHeaderSizeY);
                             if (IsPatternSelected(location))
-                                cf.DrawRectangle(0, 0, sx, channelSizeY, Theme.LightGreyColor1, 2, true);
-                            cp.PopTransform();
+                                c.DrawRectangle(0, 0, sx, channelSizeY, Theme.LightGreyColor1, 2, true);
+                            c.PopTransform();
                         }
 
+                        // GLTODO : Test this! 
                         if (Platform.IsMobile && highlightLocation == location)
-                            highlightedPatternRect = new Rectangle(px, py, sx, channelSizeY);
+                        {
+                            c.DrawRectangle(px, py, sx, channelSizeY, Theme.WhiteColor, 2, false);
+                        }
 
                         py += channelSizeY;
                     }
                 }
 
-                cp.PopTransform();
+                c.PopTransform();
             }
 
-            // Draw highlighted pattern at end for proper sorting.
-            cf.DrawRectangle(highlightedPatternRect, Theme.WhiteColor, 2, false);
-
+            // GLTODO : Bring this back.
+            /*
             // TODO : This is really bad, since all the logic is in the rendering code. Make
             // this more like any other capture op eventually.
             if (captureOperation == CaptureOperation.DragSelection)
@@ -824,58 +829,48 @@ namespace FamiStudio
                     }
                 }
             }
+            */
 
             // Piano roll view rect
             if (App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex) && channelToRow[pianoRollChannelIndex] >= 0)
             {
-                cp.PushTranslation(GetPixelForNote(pianoRollMinNoteIdx), channelToRow[pianoRollChannelIndex] * channelSizeY + headerSizeY);
-                cp.DrawRectangle(1, patternHeaderSizeY + 1, GetPixelForNote(pianoRollMaxNoteIdx - pianoRollMinNoteIdx, false) - 1, channelSizeY - 1, Theme.LightGreyColor2);
-                cp.PopTransform();
+                c.PushTranslation(GetPixelForNote(pianoRollMinNoteIdx), channelToRow[pianoRollChannelIndex] * channelSizeY);
+                c.DrawRectangle(1, patternHeaderSizeY + 1, GetPixelForNote(pianoRollMaxNoteIdx - pianoRollMinNoteIdx, false) - 1, channelSizeY - 1, Theme.LightGreyColor2);
+                c.PopTransform();
             }
 
-            cb.PopTransform();
-
             // Seek bar
-            cb.PushTranslation(seekX, 0);
-            c.FillAndDrawGeometry(seekGeometry, GetSeekBarColor(), Theme.BlackColor, 1, true);
-            cb.DrawLine(0, headerSizeY, 0, actualSizeY, GetSeekBarColor(), 3);
-            cb.PopTransform();
+            c.DrawLine(seekX, headerSizeY, seekX, actualSizeY, GetSeekBarColor(), 3);
 
-            cb.PopTransform();
+            c.PopTransform();
+            c.PopClipRegion();
+
+            c.PopTransform();
+            c.PopTransform();
 
             // Scroll bar (optional)
             if (GetScrollBarParams(true, out var scrollBarPosX, out var scrollBarSizeX))
             {
-                cs.PushTranslation(channelNameSizeX - 1, 0);
-                cs.FillAndDrawRectangle(0, actualSizeY, Width, Height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
-                cs.FillAndDrawRectangle(scrollBarPosX, actualSizeY, scrollBarPosX + scrollBarSizeX, Height - 1, Theme.MediumGreyColor1, Theme.BlackColor);
-                cs.PopTransform();
+                c.PushTranslation(channelNameSizeX - 1, 0);
+                c.FillAndDrawRectangle(0, actualSizeY, Width, Height, Theme.DarkGreyColor4, Theme.BlackColor);
+                c.FillAndDrawRectangle(scrollBarPosX, actualSizeY, scrollBarPosX + scrollBarSizeX, Height, Theme.MediumGreyColor1, Theme.BlackColor);
+                c.PopTransform();
             }
 
             if (GetScrollBarParams(false, out var scrollBarPosY, out var scrollBarSizeY))
             {
-                cs.PushTranslation(0, headerSizeY);
-                cs.FillAndDrawRectangle(Width - scrollBarThickness + 1, 0, Width, Height, Theme.DarkGreyColor4, Theme.BlackColor);
-                cs.FillAndDrawRectangle(Width - scrollBarThickness + 1, scrollBarPosY, Width, scrollBarPosY + scrollBarSizeY, Theme.MediumGreyColor1, Theme.BlackColor);
-                cs.PopTransform();
+                c.PushTranslation(0, headerSizeY);
+                c.FillAndDrawRectangle(Width - scrollBarThickness, 0, Width, Height, Theme.DarkGreyColor4, Theme.BlackColor);
+                c.FillAndDrawRectangle(Width - scrollBarThickness, scrollBarPosY, Width, scrollBarPosY + scrollBarSizeY, Theme.MediumGreyColor1, Theme.BlackColor);
+                c.PopTransform();
             }
 
+            // GLTODO! Test that
             // Line seperating with the quick access bar.
             if (Platform.IsMobile && IsLandscape)
             {
                 c.DrawLine(Width - 1, 0, Width - 1, Height, Theme.BlackColor);
-                cf.DrawLine(Width - 1, 0, Width - 1, Height, Theme.BlackColor);
             }
-
-            var headerRect  = new Rectangle(channelNameSizeX, 0, Width, Height);
-            var patternRect = new Rectangle(channelNameSizeX, headerSizeY, Width, Height);
-
-            g.DrawCommandList(c, headerRect);
-            g.DrawCommandList(cb, patternRect);
-            g.DrawCommandList(cp, patternRect);
-            g.DrawCommandList(cf, patternRect);
-            g.DrawCommandList(cs, patternRect);
-            */
         }
 
         protected void RenderDebug(Graphics g)
@@ -888,14 +883,14 @@ namespace FamiStudio
 #endif
         }
 
+        // GLTODO : Mostly ported over, look attentively for missing little lines between
+        // cells, test with and without scrollbars.
         protected override void OnRender(Graphics g)
         {
             // Happens when piano roll is maximized.
             if (Height <= 1)
                 return;
 
-            //g.Clear(Theme.DarkGreyColor2); 
-           
             RenderChannelNames(g);
             RenderPatternArea(g);
             RenderDebug(g);

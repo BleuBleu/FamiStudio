@@ -1,7 +1,8 @@
 {
   "profiles": {
     "FamiStudio": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\bleub\\Documents\\GitHub\\FamiStudio\\Setup\\Demo Songs\\Sonic 3.fms\""
     }
   }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace FamiStudio
 {
@@ -898,6 +899,12 @@ namespace FamiStudio
             y = y * transform.ScaleY + transform.TranslationY;
         }
 
+        public void ReverseTransformPoint(ref float x, ref float y)
+        {
+            x = (x - transform.TranslationX) / transform.ScaleX;
+            y = (y - transform.TranslationY) / transform.ScaleY;
+        }
+
         public void ScaleSize(ref float width, ref float height)
         {
             width  *= transform.ScaleX;
@@ -1115,6 +1122,16 @@ namespace FamiStudio
             xform.PopTransform();
         }
 
+        public void PushClipRegion(float x, float y, float width, float height)
+        {
+            graphics.PushClipRegion(x, y, width, height);
+        }
+
+        public void PopClipRegion()
+        {
+            graphics.PopClipRegion();
+        }
+
         public void Release()
         {
             if (polyBatch != null)
@@ -1323,6 +1340,11 @@ namespace FamiStudio
         public void DrawLine(float[,] points, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
             // GLTODO : Create a span from the 2D array (without copy).
+        }
+
+        public void DrawLine(List<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)
+        {
+            DrawLine(CollectionsMarshal.AsSpan(points), color, width, smooth, miter);
         }
 
         public void DrawLine(Span<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)
@@ -1637,8 +1659,14 @@ namespace FamiStudio
 
         public void FillClipRegion(Color color)
         {
+            Debug.Assert(!xform.HasScaling);
+
             var clipRect = graphics.CurrentClipRegion;
-            FillRectangle(0, 0, clipRect.Width, clipRect.Height, color);
+            var x = clipRect.X;
+            var y = clipRect.Y;
+            xform.ReverseTransformPoint(ref x, ref y);
+
+            FillRectangle(x, y, x + clipRect.Width, y + clipRect.Height, color);
         }
 
         //public void FillAndDrawClipRegion(Color fillColor, Color lineColor, int width = 1, bool smooth = false)
@@ -1716,9 +1744,11 @@ namespace FamiStudio
         //    Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
-        //// Assumed to be a vertical gradient.
-        //public void FillGeometryGradient(Geometry geo, Color color0, Color color1, int gradientSize, bool smooth = false)
-        //{
+        // Assumed to be a vertical gradient.
+        public void FillGeometryGradient(Geometry geo, Color color0, Color color1, int gradientSize, bool smooth = false)
+        {
+            // GLTODO!!!
+
         //    var batch = GetPolygonSmoothBatch(/*smooth*/); // MATTT Non smooth support.
         //    var i0 = (short)(batch.vtxIdx / 2);
 
@@ -1749,7 +1779,7 @@ namespace FamiStudio
         //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
         //        batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
         //    }
-        //}
+        }
 
         // MATTT : Move all this to a function where we can pre-compute (aka Geometry) and just draw later.
         // The default function will not be smooth.

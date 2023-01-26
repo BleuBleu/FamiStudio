@@ -14,7 +14,6 @@ namespace FamiStudio
         {
             height = DpiScaling.ScaleForWindow(24);
             atlasImageName = image;
-            UpdateAtlasBitmap();
         }
 
         public ImageBox(Bitmap b)
@@ -54,6 +53,11 @@ namespace FamiStudio
                 bmpAtlas = Graphics.GetBitmapAtlasRef(atlasImageName);
                 Debug.Assert(bmpAtlas != null);
             }
+        }
+
+        protected override void OnAddedToContainer()
+        {
+            UpdateAtlasBitmap();
         }
 
         protected override void OnRender(Graphics g)

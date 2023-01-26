@@ -1097,10 +1097,10 @@ namespace FamiStudio
 
             if (Platform.IsDesktop)
             {
-                g.PushClipRegion(lastButtonX, 0, helpButtonX - lastButtonX, Height);
+                c.PushClipRegion(lastButtonX, 0, helpButtonX - lastButtonX, Height);
                 RenderBackground(c);
                 RenderWarningAndTooltip(c);
-                g.PopClipRegion();
+                c.PopClipRegion();
             }
             else
             {

@@ -44,7 +44,7 @@ namespace FamiStudio
             {
                 if (controls[i] is Container c && CanInteractWithContainer(c))
                 {
-                    if (c.WindowRectangle.Contains(winX, winY))
+                    if (c.Visible && c.WindowRectangle.Contains(winX, winY))
                     {
                         var ctrl = c.GetControlAt(winX, winY, out ctrlX, out ctrlY);
                         
@@ -68,7 +68,7 @@ namespace FamiStudio
             {
                 if (!(c is Container))
                 {
-                    if (c.WindowRectangle.Contains(winX, winY))
+                    if (c.Visible && c.WindowRectangle.Contains(winX, winY))
                     {
                         var winPos = c.WindowPosition;
                         ctrlX = winX - winPos.X;

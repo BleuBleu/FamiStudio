@@ -224,21 +224,21 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var cd = g.DefaultCommandList;
-            var cf = g.ForegroundCommandList;
+            var c = g.DefaultCommandList;
+            var fonts = Fonts;
 
             // Fill + Border
-            cd.FillAndDrawRectangle(0, 0, width - 1, height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
+            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
 
-            /*
             if (titleBarSizeY > 0)
             {
-                commandList.FillAndDrawRectangle(0, 0, width, titleBarSizeY, Theme.DarkGreyColor1, Theme.BlackColor);
-                commandList.DrawText(title, FontResources.FontMediumBold, titleBarMargin, 0, Theme.LightGreyColor1, TextFlags.MiddleLeft, 0, titleBarSizeY);
+                c.FillAndDrawRectangle(0, 0, width, titleBarSizeY, Theme.DarkGreyColor1, Theme.BlackColor);
+                c.DrawText(title, fonts.FontMediumBold, titleBarMargin, 0, Theme.LightGreyColor1, TextFlags.MiddleLeft, 0, titleBarSizeY);
             }
 
             if (ShouldDisplayTooltip())
             {
+                var o = g.OverlayCommandList;
                 var pt = ScreenToControl(CursorPosition);
                 var formPt = pt + new Size(left, top);
                 var ctrl = GetControlAt(left + pt.X, top + pt.Y, out _, out _);
@@ -247,25 +247,23 @@ namespace FamiStudio
                 {
                     var splits = SplitLongTooltip(ctrl.ToolTip);
                     var sizeX = 0;
-                    var sizeY = FontResources.FontMedium.LineHeight * splits.Count + tooltipTopMargin;
+                    var sizeY = fonts.FontMedium.LineHeight * splits.Count + tooltipTopMargin;
 
                     for (int i = 0; i < splits.Count; i++)
-                        sizeX = Math.Max(sizeX, FontResources.FontMedium.MeasureString(splits[i], false));
+                        sizeX = Math.Max(sizeX, fonts.FontMedium.MeasureString(splits[i], false));
 
                     var totalSizeX = sizeX + tooltipSideMargin * 2;
                     var rightAlign = formPt.X + totalSizeX > ParentWindow.Width;
 
-                    var c = g.OverlayLayer; // GLTODO : Probably not right.
                     g.Transform.PushTranslation(pt.X - (rightAlign ? totalSizeX : 0), pt.Y + tooltipOffsetY);
 
                     for (int i = 0; i < splits.Count; i++)
-                        c.DrawText(splits[i], FontResources.FontMedium, tooltipSideMargin, i * FontResources.FontMedium.LineHeight + tooltipTopMargin, Theme.LightGreyColor1);
+                        o.DrawText(splits[i], Fonts.FontMedium, tooltipSideMargin, i * fonts.FontMedium.LineHeight + tooltipTopMargin, Theme.LightGreyColor1);
 
-                    c.FillAndDrawRectangle(0, 0, totalSizeX, sizeY, Theme.DarkGreyColor1, Theme.LightGreyColor1);
+                    o.FillAndDrawRectangle(0, 0, totalSizeX, sizeY, Theme.DarkGreyColor1, Theme.LightGreyColor1);
                     g.Transform.PopTransform();
                 }
             }
-            */
 
             base.OnRender(g);
         }

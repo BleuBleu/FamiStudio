@@ -1305,6 +1305,11 @@ namespace FamiStudio
 
             return false;
         }
+        
+        public int ScaleLineForWindow(int width) 
+        { 
+            return width == 1 ? 1 : DpiScaling.ScaleForWindow(width) | 1; 
+        }
 
         private void RenderDebug(Graphics g)
         {
@@ -1398,21 +1403,13 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            // GLTODO : Rendering.
-            /*
-            CommandList ct = null;
-            CommandList c = null;
+            CommandList c = g.DefaultCommandList;
 
             if (Settings.ShowRegisterViewer)
             {
-                ct = g.CreateCommandList();
-                RenderTabs(ct);
-                c = g.CreateCommandList();
+                RenderTabs(c);
                 c.PushTranslation(0, buttonSizeY);
-            }
-            else
-            {
-                c = g.CreateCommandList();
+                c.PushClipRegion(0, 0, width, height - buttonSizeY);
             }
 
             if (selectedTab == TabType.Registers)
@@ -1425,7 +1422,7 @@ namespace FamiStudio
             var showExpandButton = ShowExpandButtons();
             var firstParam = true;
             var y = -scrollY;
-            var iconSize = ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
+            var iconSize = DpiScaling.ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
 
             var minInstIdx = 1000000;
             var maxInstIdx = 0;
@@ -1508,7 +1505,7 @@ namespace FamiStudio
 
                     if (button.type == ButtonType.ParamCustomDraw)
                     {
-                        button.param.CustomDraw(c, FontResources, new Rectangle(0, 0, contentSizeX - leftPadding - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
+                        button.param.CustomDraw(c, Fonts, new Rectangle(0, 0, contentSizeX - leftPadding - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
                     }
                     else if (button.type >= ButtonType.ExpansionRegistersFirst && button.type < ButtonType.ChannelStateFirst)
                     {
@@ -1555,7 +1552,7 @@ namespace FamiStudio
                             c.PushTranslation(paramButtonSizeX, 0);
                             c.FillRectangle(1, 1, valSizeX, sliderSizeY, sliderFillColor);
                             c.DrawRectangle(0, 0, actualSliderSizeX, sliderSizeY, enabled ? Theme.BlackColor : disabledColor, 1);
-                            c.DrawText(paramStr, FontResources.FontMedium, 0, -sliderPosY, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
+                            c.DrawText(paramStr, Fonts.FontMedium, 0, -sliderPosY, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
                             c.PopTransform();
                             c.DrawBitmapAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, opacityR, bitmapScale, Color.Black);
                             c.PopTransform();
@@ -1579,7 +1576,7 @@ namespace FamiStudio
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
                             c.DrawBitmapAtlas(bmpButtonLeft, 0, 0, opacityL, bitmapScale, Color.Black);
                             c.DrawBitmapAtlas(bmpButtonRight, sliderSizeX - paramButtonSizeX, 0, opacityR, bitmapScale, Color.Black);
-                            c.DrawText(paramStr, FontResources.FontMedium, 0, -sliderPosY, Theme.BlackColor, TextFlags.MiddleCenter, sliderSizeX, button.height);
+                            c.DrawText(paramStr, Fonts.FontMedium, 0, -sliderPosY, Theme.BlackColor, TextFlags.MiddleCenter, sliderSizeX, button.height);
                             c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamTabs)
@@ -1592,7 +1589,7 @@ namespace FamiStudio
                                 var tabHoverOpacity = hovered && hoverSubButtonTypeOrParamIndex == j ? 0.6f : 1.0f;
                                 var tabSelect       = tabName == selectedInstrumentTab;
                                 var tabLineBrush    = Color.FromArgb((tabSelect ? 1.0f : 0.5f) * tabHoverOpacity, Color.Black);
-                                var tabFont         = tabSelect ? FontResources.FontMediumBold : FontResources.FontMedium;
+                                var tabFont         = tabSelect ? Fonts.FontMediumBold : Fonts.FontMedium;
                                 var tabLine         = tabSelect ? 3 : 1;
 
                                 c.PushTranslation(leftPadding + tabWidth * j, 0);
@@ -1691,21 +1688,13 @@ namespace FamiStudio
 
             c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
-            g.Clear(Theme.DarkGreyColor4);
-
             if (Settings.ShowRegisterViewer)
             {
+                c.PopClipRegion();
                 c.PopTransform();
-                g.DrawCommandList(ct);
-                g.DrawCommandList(c, new Rectangle(0, buttonSizeY, Width, Height));
-            }
-            else
-            {
-                g.DrawCommandList(c);
             }
 
             RenderDebug(g);
-            */
         }
 
         private bool GetScrollBarParams(out int posY, out int sizeY)
