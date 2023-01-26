@@ -428,7 +428,7 @@ namespace FamiStudio
             if (list.HasAnything)
             {
                 GL.PushDebugGroup("Draw Command List");
-                GL.DepthFunc(depthTest ? GL.Equal : GL.Always); // GLTODO : Issue with depth test on MacOS.
+                GL.DepthFunc(depthTest ? GL.Equal : GL.Always); 
 
                 if (list.HasAnyPolygons)
                 {
