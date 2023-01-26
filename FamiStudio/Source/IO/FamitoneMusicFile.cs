@@ -137,7 +137,7 @@ namespace FamiStudio
             lines.Add($"\t{db} {project.Songs.Count}");
             lines.Add($"\t{dw} {ll}instruments");
 
-            if (project.UsesFdsExpansion || project.UsesN163Expansion || project.UsesVrc7Expansion || project.UsesEPSMExpansion)
+            if (project.UsesFdsExpansion || project.UsesN163Expansion || project.UsesVrc7Expansion || project.UsesEPSMExpansion || project.UsesS5BExpansion)
             {
                 lines.Add($"\t{dw} {ll}instruments_exp");
                 size += 2;
