@@ -3013,7 +3013,7 @@ namespace FamiStudio
                 r.c.FillRectangleGradient(0, activeChannelInt, sx, sy, color, color.Scaled(0.8f), true, sy);
             
             if (activeChannel)
-                r.c.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 3 : 1, selected || outline);
+                r.c.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 4 : 1, selected || outline);
 
             if (!outline)
             {
@@ -3056,7 +3056,7 @@ namespace FamiStudio
             if (!outline)
                 r.c.FillGeometryGradient(geo[activeChannel ? 0 : 1], color, color.Scaled(0.8f), noteSizeY);
             if (activeChannel)
-                r.c.DrawGeometry(geo[0], outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), outline || selected ? 2 : 1, true);
+                r.c.DrawGeometry(geo[0], outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), outline || selected ? 4 : 1, true);
             r.c.PopTransform();
 
             r.c.PushTranslation(x, y);
@@ -3440,6 +3440,41 @@ namespace FamiStudio
 #endif
         }
 
+        private void RenderLineDebug(Graphics g)
+        {
+            releaseNoteGeometry[0][4] = 10.0f;
+            releaseNoteGeometry[0][6] = 10.0f;
+
+            for (int i = 1; i <= 8; i++)
+            {
+                g.Transform.PushTranslation(i * 200, 100);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 100, new Color(255, 0, 255), i, true);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 0, new Color(255, 0, 255), i, true);
+                g.OverlayCommandList.DrawLine(0, 0, 0, 100, new Color(255, 0, 255), i, true);
+                g.OverlayCommandList.FillAndDrawRectangle(0, 200, 100, 210, new Color(255, 0, 255), new Color(0, 255, 0), i, true);
+                g.Transform.PushTranslation(0, 110);
+                g.OverlayCommandList.FillGeometry(releaseNoteGeometry[0], Color.Pink, true);
+                g.Transform.PushTranslation(0, 20);
+                g.OverlayCommandList.DrawGeometry(releaseNoteGeometry[0], Color.SpringGreen, i, true, true);
+                g.Transform.PopTransform();
+                g.Transform.PopTransform();
+                g.Transform.PopTransform();
+
+                g.Transform.PushTranslation(i * 200, 500);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 100, new Color(255, 0, 255), i, false);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 0, new Color(255, 0, 255), i, false);
+                g.OverlayCommandList.DrawLine(0, 0, 0, 100, new Color(255, 0, 255), i, false);
+                g.OverlayCommandList.FillAndDrawRectangle(0, 200, 100, 210, new Color(255, 0, 255), new Color(0, 255, 0), i, false);
+                g.Transform.PushTranslation(0, 110);
+                g.OverlayCommandList.FillGeometry(releaseNoteGeometry[0], Color.Pink, false);
+                g.Transform.PushTranslation(0, 20);
+                g.OverlayCommandList.DrawGeometry(releaseNoteGeometry[0], Color.SpringGreen, i, false, true);
+                g.Transform.PopTransform();
+                g.Transform.PopTransform();
+                g.Transform.PopTransform();
+            }
+        }
+
         // GLTODO : Mostly ported, review lines separating controls, sorting, test scrollbars on/off.
         protected override void OnRender(Graphics g)
         {
@@ -3469,6 +3504,8 @@ namespace FamiStudio
             }
 
             ConditionalUpdateNoteGeometries(g);
+
+            RenderLineDebug(g); return;
 
             // Prepare command list.
             RenderHeader(r);

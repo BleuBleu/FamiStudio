@@ -11,7 +11,7 @@ namespace FamiStudio
     {
         protected bool builtAtlases;
         protected int lineWidthBias;
-        protected float[] viewportScaleBias = new float[4]; // MATTT : Will be just relative to full screen now.
+        protected float[] viewportScaleBias = new float[4];
         protected Rectangle screenRect;
         protected Rectangle screenRectFlip;
         protected TransformStack transform = new TransformStack();
@@ -1165,10 +1165,84 @@ namespace FamiStudio
             batch.depArray[batch.depIdx++] = depth;
         }
 
-        // GLTODO : We need a thick line that is NOT smooth too.
-        private void DrawSmoothLineInternal(float x0, float y0, float x1, float y1, Color color, float width, bool miter)
+        private void DrawThickLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool miter)
         {
-            Debug.Assert(width < 16.0f);
+            Debug.Assert(width > 1 && width < 100);
+            //Debug.Assert((width & 1) == 0); // Odd values are a bit misbehaved.
+
+            if (polyBatch == null)
+            {
+                polyBatch = new PolyBatch();
+                polyBatch.vtxArray = graphics.GetVertexArray();
+                polyBatch.colArray = graphics.GetColorArray();
+                polyBatch.idxArray = graphics.GetIndexArray();
+                polyBatch.depArray = graphics.GetByteArray();
+            }
+
+            var batch = polyBatch;
+            var depth = graphics.DepthValue;
+
+            var dx = x1 - x0;
+            var dy = y1 - y0;
+            var invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
+            dx *= invHalfWidth;
+            dy *= invHalfWidth;
+
+            if (miter)
+            {
+                x0 -= dx;
+                y0 -= dy;
+                x1 += dx;
+                y1 += dy;
+            }
+
+            var i0 = (short)(batch.vtxIdx / 2 + 0);
+            var i1 = (short)(batch.vtxIdx / 2 + 1);
+            var i2 = (short)(batch.vtxIdx / 2 + 2);
+            var i3 = (short)(batch.vtxIdx / 2 + 3);
+ 
+            batch.idxArray[batch.idxIdx++] = i0;
+            batch.idxArray[batch.idxIdx++] = i1;
+            batch.idxArray[batch.idxIdx++] = i2;
+            batch.idxArray[batch.idxIdx++] = i0;
+            batch.idxArray[batch.idxIdx++] = i2;
+            batch.idxArray[batch.idxIdx++] = i3;
+
+            batch.vtxArray[batch.vtxIdx++] = x0 - dy;
+            batch.vtxArray[batch.vtxIdx++] = y0 + dx;
+            batch.vtxArray[batch.vtxIdx++] = x1 - dy;
+            batch.vtxArray[batch.vtxIdx++] = y1 + dx;
+            batch.vtxArray[batch.vtxIdx++] = x1 + dy;
+            batch.vtxArray[batch.vtxIdx++] = y1 - dx;
+            batch.vtxArray[batch.vtxIdx++] = x0 + dy;
+            batch.vtxArray[batch.vtxIdx++] = y0 - dx;
+
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+            batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+        }
+
+        private void DrawThickSmoothLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool miter)
+        {
+            Debug.Assert(width < 100);
+
+            // Cant draw nice AA line that are 1 pixel wide.
+            width = Math.Max(2, width);
+
+            // Odd values are tricky to make work with rasterization rules.
+            // This works OK, but tend to create lines that are a bit see-through.
+            var encodedWidth = (byte)width;
+            if ((width & 1) != 0)
+            {
+                width++;
+                encodedWidth--;
+            }
 
             if (lineSmoothBatch == null)
             {
@@ -1183,15 +1257,11 @@ namespace FamiStudio
             var batch = lineSmoothBatch;
             var depth = graphics.DepthValue;
 
-            // Cant draw nice AA line that are 1 pixel wide.
-            width = Math.Max(2.0f, width); // MATTT : Review this. 1.41?
-
             var dx = x1 - x0;
             var dy = y1 - y0;
             var invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
             dx *= invHalfWidth;
             dy *= invHalfWidth;
-            //var packedWidth = (byte)(width * 16.0f); MATTT What was that?
 
             if (miter)
             {
@@ -1243,8 +1313,8 @@ namespace FamiStudio
 
             batch.dstArray[batch.dstIdx++] = 0;
             batch.dstArray[batch.dstIdx++] = 0;
-            batch.dstArray[batch.dstIdx++] = (byte)width;
-            batch.dstArray[batch.dstIdx++] = (byte)width;
+            batch.dstArray[batch.dstIdx++] = encodedWidth;
+            batch.dstArray[batch.dstIdx++] = encodedWidth;
             batch.dstArray[batch.dstIdx++] = 0;
             batch.dstArray[batch.dstIdx++] = 0;
 
@@ -1263,13 +1333,17 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            if (width <= 1.0f && !smooth)
+            if (smooth)
             { 
-                DrawLineInternal(x0, y0, x1, y1, color, dash);
+                DrawThickSmoothLineInternal(x0, y0, x1, y1, color, width, false);
+            }
+            else if (width > 1)
+            {
+                DrawThickLineInternal(x0, y0, x1, y1, color, width, false);
             }
             else
-            { 
-                DrawSmoothLineInternal(x0, y0, x1, y1, color, width, false);
+            {
+                DrawLineInternal(x0, y0, x1, y1, color, dash);
             }
         }
 
@@ -1302,7 +1376,11 @@ namespace FamiStudio
 
                 if (smooth)
                 {
-                    DrawSmoothLineInternal(x0, y0, x1, y1, color, width, false);
+                    DrawThickSmoothLineInternal(x0, y0, x1, y1, color, width, false);
+                }
+                else if (width > 1)
+                {
+                    DrawThickLineInternal(x0, y0, x1, y1, color, width, false);
                 }
                 else
                 {
@@ -1314,25 +1392,32 @@ namespace FamiStudio
             }
         }
 
-        public void DrawGeometry(Span<float> points, Color color, int width = 1, bool smooth = false)
+        public void DrawGeometry(Span<float> points, Color color, int width = 1, bool smooth = false, bool close = true)
         {
             width += lineWidthBias;
             
-            var miter = width > 1 && !xform.HasScaling; // Miter doesnt work with scaling atm.
+            var miter = false; //width > 1 && !xform.HasScaling; // Miter doesnt work with scaling atm.
 
             var x0 = points[0];
             var y0 = points[1];
             xform.TransformPoint(ref x0, ref y0);
 
-            for (int i = 0; i < points.Length / 2 - 1; i++)
+            var numVerts = points.Length / 2;
+            var numLines = numVerts - (close ? 0 : 1);
+
+            for (int i = 0; i < numLines; i++)
             {
-                var x1 = points[(i + 1) * 2 + 0];
-                var y1 = points[(i + 1) * 2 + 1];
+                var x1 = points[((i + 1) % numVerts) * 2 + 0];
+                var y1 = points[((i + 1) % numVerts) * 2 + 1];
                 xform.TransformPoint(ref x1, ref y1);
 
-                if (width > 1 || smooth)
+                if (smooth)
                 {
-                    DrawSmoothLineInternal(x0, y0, x1, y1, color, width, miter);
+                    DrawThickSmoothLineInternal(x0, y0, x1, y1, color, width, miter);
+                }
+                else if (width > 1)
+                {
+                    DrawThickLineInternal(x0, y0, x1, y1, color, width, miter);
                 }
                 else
                 {
@@ -1361,25 +1446,30 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            // Line rasterization rules makes is so that the last pixel is missing.
-            var extraPixel = smooth ? 0 : 1;
+            var halfWidth = 0.0f;  // GLTODO : Review. Looks like ass. thick ? width * 0.5f : 0.0f;
 
-            if (width <= 1.0f && !smooth)
-            { 
-                DrawLineInternal(x0, y0, x1 + extraPixel, y0, color, false);
-                DrawLineInternal(x1, y0, x1, y1 + extraPixel, color, false);
-                DrawLineInternal(x0, y1, x1 + extraPixel, y1, color, false);
-                DrawLineInternal(x0, y0, x0, y1 + extraPixel, color, false);
+            if (smooth)
+            {
+                DrawThickSmoothLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
+                DrawThickSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
+                DrawThickSmoothLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
+                DrawThickSmoothLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, color, width, false);
+            }
+            else if (width > 1)
+            {
+                halfWidth = width * 0.5f;
+                DrawThickLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
+                DrawThickLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
+                DrawThickLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
+                DrawThickLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, color, width, false);
             }
             else
-            { 
-                var thick = width > 1.0f;
-                var halfWidth = 0; // GLTODO : Review. Looks like ass. thick ? width * 0.5f : 0.0f;
-
-                DrawSmoothLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, color, width, false);
-                DrawSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, color, width, false);
-                DrawSmoothLineInternal(x0 - halfWidth, y1, x1 + extraPixel + halfWidth, y1, color, width, false);
-                DrawSmoothLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, color, width, false);
+            {
+                // Line rasterization rules makes is so that the last pixel is missing. So +1.
+                DrawLineInternal(x0, y0, x1 + 1, y0, color, false);
+                DrawLineInternal(x1, y0, x1, y1 + 1, color, false);
+                DrawLineInternal(x0, y1, x1 + 1, y1, color, false);
+                DrawLineInternal(x0, y0, x0, y1 + 1, color, false);
             }
         }
         public void FillGeometry(Span<float> geo, Color color, bool smooth = false)
@@ -1395,7 +1485,7 @@ namespace FamiStudio
         public void FillAndDrawGeometry(Span<float> geo, Color fillColor, Color lineColor, int lineWidth = 1, bool smooth = false)
         {
         	FillGeometry(geo, fillColor, smooth);
-			DrawGeometry(geo, lineColor, lineWidth, smooth);
+			DrawGeometry(geo, lineColor, lineWidth, smooth, true);
         }
 		
         public void FillRectangle(float x0, float y0, float x1, float y1, Color color)
