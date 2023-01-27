@@ -1221,7 +1221,14 @@ namespace FamiStudio
             Debug.Assert(width < 100);
 
             // Cant draw nice AA line that are 1 pixel wide.
-            width = Math.Max(2, width);
+            if (width == 1)
+            {
+                width = 2;
+                x0 += 0.5f;
+                y0 += 0.5f;
+                x1 += 0.5f;
+                y1 += 0.5f;
+            }
 
             // Odd values are tricky to make work with rasterization rules.
             // This works OK, but tend to create lines that are a bit see-through.
