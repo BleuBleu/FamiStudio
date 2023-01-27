@@ -36,10 +36,10 @@ namespace FamiStudio
         public RectangleF CurrentClipRegion => clipStack.Peek().rect;
 
         protected const int MaxAtlasResolution = 1024;
-        protected const int MaxVertexCount = 128 * 1024;
+        protected const int MaxVertexCount = 160 * 1024;
         protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
-        // These are only used temporarely during text/bmp rendering.
+        // These are only used temporarily during text/bmp rendering.
         protected float[] vtxArray = new float[MaxVertexCount * 2];
         protected float[] texArray = new float[MaxVertexCount * 2];
         protected int[]   colArray = new int[MaxVertexCount];
@@ -60,6 +60,8 @@ namespace FamiStudio
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
         protected abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
         public abstract void DeleteTexture(int id);
+
+        protected const string AtlasPrefix = "FamiStudio.Resources.Atlas.";
 
         public CommandList BackgroundCommandList => GetCommandList(GraphicsLayer.Background);
         public CommandList DefaultCommandList    => GetCommandList(GraphicsLayer.Default);
@@ -199,20 +201,6 @@ namespace FamiStudio
             return bmp;
         }
 
-		// GLTODO : Move all relevant bitmaps to a folder and filter with that.
-        private bool IsAtlasBitmap(string name)
-        {
-            // Ignore fonts and other things we load differently.
-            return
-                name.StartsWith("FamiStudio.Resources.") && 
-                name.EndsWith(".tga") && 
-                !name.Contains("Cursor") &&
-                !name.Contains("QuickSand") &&
-                !name.Contains("MobileMenu") && 
-                !name.Contains("FamiStudio_") &&
-                !name.Contains("VideoWatermark");
-        }
-
         private void BuildBitmapAtlases()
         {
             // Build atlases.
@@ -223,11 +211,11 @@ namespace FamiStudio
 
             foreach (var res in resourceNames)
             {
-                if (IsAtlasBitmap(res))
+                if (res.StartsWith(AtlasPrefix))
                 {
                     // Remove any scaling from the name.
                     var at = res.IndexOf('@');
-                    var cleanedFilename = res.Substring(21, at >= 0 ? at - 21 : res.Length - 25);
+                    var cleanedFilename = res.Substring(AtlasPrefix.Length, at >= 0 ? at - AtlasPrefix.Length : res.Length - AtlasPrefix.Length - 4);
                     filteredImages.Add(cleanedFilename);
                 }
             }
@@ -237,7 +225,7 @@ namespace FamiStudio
 
             foreach (var res in filteredImages)
             {
-                var scaledFilename = GetScaledFilename(res, out var needsScaling);
+                var scaledFilename = GetScaledFilename(AtlasPrefix + res, out var needsScaling);
                 TgaFile.GetResourceImageSize(scaledFilename, out var width, out var height);
 
                 if (needsScaling)
@@ -341,8 +329,8 @@ namespace FamiStudio
         {
             var suffix = bold ? "Bold" : "";
             var basename = $"{name}{size}{suffix}";
-            var fntfile = $"FamiStudio.Resources.{basename}.fnt";
-            var imgfile = $"FamiStudio.Resources.{basename}_0.tga";
+            var fntfile = $"FamiStudio.Resources.Fonts.{basename}.fnt";
+            var imgfile = $"FamiStudio.Resources.Fonts.{basename}_0.tga";
 
             var str = "";
             using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(fntfile))
@@ -1446,7 +1434,7 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            var halfWidth = 0.0f;  // GLTODO : Review. Looks like ass. thick ? width * 0.5f : 0.0f;
+            var halfWidth = 0.0f; // Do we need miter on smooth rects?
 
             if (smooth)
             {

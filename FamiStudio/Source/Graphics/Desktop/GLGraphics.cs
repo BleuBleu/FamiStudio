@@ -76,7 +76,7 @@ namespace FamiStudio
 
             InitializeShaders();
 
-            dashedBitmap = CreateBitmapFromResource("Dash");
+            dashedBitmap = CreateBitmapFromResource("FamiStudio.Resources.Misc.Dash");
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.Repeat);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.Repeat);
         }
@@ -239,20 +239,20 @@ namespace FamiStudio
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            if (DpiScaling.Window == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.tga") != null)
+            if (DpiScaling.Window == 1.5f && assembly.GetManifestResourceInfo($"{name}@15x.tga") != null)
             {
                 needsScaling = false;
-                return $"FamiStudio.Resources.{name}@15x.tga";
+                return $"{name}@15x.tga";
             }
-            else if (DpiScaling.Window > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.tga") != null)
+            else if (DpiScaling.Window > 1.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
             {
                 needsScaling = DpiScaling.Window != 2.0f;
-                return $"FamiStudio.Resources.{name}@2x.tga";
+                return $"{name}@2x.tga";
             }
             else
             {
                 needsScaling = false;
-                return $"FamiStudio.Resources.{name}.tga";
+                return $"{name}.tga";
             }
         }
 
@@ -278,7 +278,7 @@ namespace FamiStudio
 
             for (int i = 0; i < names.Length; i++)
             {
-                var bmp = LoadBitmapFromResourceWithScaling(names[i]);
+                var bmp = LoadBitmapFromResourceWithScaling(AtlasPrefix + names[i]);
 
                 elementSizeX = Math.Max(elementSizeX, bmp.Width);
                 elementSizeY = Math.Max(elementSizeY, bmp.Height);

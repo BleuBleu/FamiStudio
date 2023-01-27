@@ -17,7 +17,7 @@ namespace FamiStudio
             var suffix = size >= 64 ? "64" : 
                          size >= 48 ? "48" : "32";
 
-            var bmp = TgaFile.LoadFromResource($"FamiStudio.Resources.{name}{suffix}.tga");
+            var bmp = TgaFile.LoadFromResource($"FamiStudio.Resources.Cursors.{name}{suffix}.tga");
 
             // Hotspot is always specified with respect to 32x32.
             ScaleHotspot(size / 32.0f, ref hotx, ref hoty);

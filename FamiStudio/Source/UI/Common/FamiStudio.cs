@@ -637,7 +637,7 @@ namespace FamiStudio
 
         private void InitializeMetronome()
         {
-            metronomeSound = WaveFile.LoadFromResource("FamiStudio.Resources.Metronome.wav", out _);
+            metronomeSound = WaveFile.LoadFromResource("FamiStudio.Resources.Sounds.Metronome.wav", out _);
             WaveUtils.AdjustVolume(metronomeSound, Settings.MetronomeVolume / 100.0f);
         }
 

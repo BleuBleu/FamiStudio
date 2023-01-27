@@ -209,10 +209,10 @@ namespace FamiStudio
 
         private unsafe void SetWindowIcon()
         {
-            var icon16 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_16.tga", true);
-            var icon24 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_24.tga", true);
-            var icon32 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_32.tga", true);
-            var icon64 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_64.tga", true);
+            var icon16 = TgaFile.LoadFromResource($"FamiStudio.Resources.Icons.FamiStudio_16.tga", true);
+            var icon24 = TgaFile.LoadFromResource($"FamiStudio.Resources.Icons.FamiStudio_24.tga", true);
+            var icon32 = TgaFile.LoadFromResource($"FamiStudio.Resources.Icons.FamiStudio_32.tga", true);
+            var icon64 = TgaFile.LoadFromResource($"FamiStudio.Resources.Icons.FamiStudio_64.tga", true);
             var images = new GLFWimage[4];
 
             fixed (int* p16 = &icon16.Data[0], 

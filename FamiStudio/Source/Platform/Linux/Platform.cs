@@ -29,7 +29,7 @@ namespace FamiStudio
 
             SetProcessName("FamiStudio");
 
-            beep = WaveFile.LoadFromResource("FamiStudio.Resources.LinuxBeep.wav", out _);
+            beep = WaveFile.LoadFromResource("FamiStudio.Resources.Sounds.LinuxBeep.wav", out _);
 
             return true;
         }

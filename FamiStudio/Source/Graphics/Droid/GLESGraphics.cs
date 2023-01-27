@@ -78,7 +78,7 @@ namespace FamiStudio
 
             InitializeShaders();
 
-            dashedBitmap = CreateBitmapFromResource("Dash");
+            dashedBitmap = CreateBitmapFromResource("FamiStudio.Resources.Misc.Dash");
             GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureWrapS, GLES20.GlRepeat);
             GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureWrapT, GLES20.GlRepeat);
         }
@@ -364,7 +364,7 @@ namespace FamiStudio
 
             for (int i = 0; i < names.Length; i++)
             {
-                var bmp = LoadBitmapFromResourceWithScaling(names[i]);
+                var bmp = LoadBitmapFromResourceWithScaling(AtlasPrefix + names[i]);
 
                 elementSizeX = Math.Max(elementSizeX, bmp.Width);
                 elementSizeY = Math.Max(elementSizeY, bmp.Height);
