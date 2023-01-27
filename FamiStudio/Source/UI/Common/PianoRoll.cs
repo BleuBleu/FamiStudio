@@ -3440,6 +3440,8 @@ namespace FamiStudio
 #endif
         }
 
+#if DEBUG
+        // OpenGL line rasterization tests.
         private void RenderLineDebug(Graphics g)
         {
             releaseNoteGeometry[0][4] = 10.0f;
@@ -3474,6 +3476,7 @@ namespace FamiStudio
                 g.Transform.PopTransform();
             }
         }
+#endif
 
         // GLTODO : Mostly ported, review lines separating controls, sorting, test scrollbars on/off.
         protected override void OnRender(Graphics g)
@@ -3505,7 +3508,7 @@ namespace FamiStudio
 
             ConditionalUpdateNoteGeometries(g);
 
-            RenderLineDebug(g); return;
+            //RenderLineDebug(g); return;
 
             // Prepare command list.
             RenderHeader(r);
