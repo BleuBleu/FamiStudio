@@ -676,7 +676,7 @@ namespace FamiStudio
             {
                 var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
                 var sx = GetPixelForNote(Song.GetPatternLength(i), false);
-                var color = i == hoverPattern ? Theme.MediumGreyColor1 : ((i & 1) == 0 ? Theme.DarkGreyColor4 : Theme.DarkGreyColor2);
+                var color = (i & 1) == 0 ? Theme.DarkGreyColor4 : Theme.DarkGreyColor2;
                 c.FillRectangle(px, 0, px + sx, height - headerSizeY, color);
             }
 
