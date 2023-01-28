@@ -8,12 +8,14 @@ set -x
 # IMPORTANT : This does not update info.plist! Still needs to be done manually.
 
 # Build
-msbuild ../FamiStudio/FamiStudio.Mac.csproj /t:Rebuild /p:Configuration=Release /verbosity:quiet
+dotnet clean -c:Release ../FamiStudio/FamiStudio.Mac.csproj
+dotnet build -c:Release ../FamiStudio/FamiStudio.Mac.csproj
 
 # Copy binaries to package.
-cp ../FamiStudio/bin/Release/*.exe ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Release/*.dylib ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Release/FamiStudio.pdb ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net6.0/*.dll ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net6.0/*.json ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net6.0/*.dylib ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net6.0/FamiStudio.pdb ./FamiStudio.app/Contents/MacOS/
 
 version=`cat Version.txt`
 filename=FamiStudio$version-MacOS.zip
