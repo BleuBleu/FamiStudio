@@ -414,7 +414,8 @@ namespace FamiStudio
                     return;
 
                 var ctrl = container.GetControlAt(lastCursorX, lastCursorY, out int cx, out int cy);
-                
+                container.ConditionalHideContextMenu(ctrl);
+
                 lastButtonPress = button; 
 
                 // Double click emulation.
@@ -442,10 +443,6 @@ namespace FamiStudio
                 if (ctrl != null)
                 {
                     SetActiveControl(ctrl);
-
-                    // Ignore the first click.
-                    if (ctrl != ContextMenu)
-                        container.HideContextMenu();
 
                     if (doubleClick)
                     {

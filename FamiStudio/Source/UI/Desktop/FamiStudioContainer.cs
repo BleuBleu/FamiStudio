@@ -96,22 +96,22 @@ namespace FamiStudio
 
         public List<Control> GetControlsForKeyboard(out bool isMainFamistudioControls)
         {
-            var controls = new List<Control>();
+            var keyControls = new List<Control>();
             
             isMainFamistudioControls = false;
 
             if (FamiStudio.StaticInstance.SelectedSong == null)
             {
-                return controls;
+                return keyControls;
             }
 
             if (IsDialogActive)
             {
-                controls.Add(TopDialog);
+                keyControls.Add(TopDialog);
             }
             else if (IsContextMenuActive)
             {
-                controls.Add(contextMenu);
+                keyControls.Add(contextMenu);
             }
             else
             {
@@ -119,14 +119,14 @@ namespace FamiStudio
                 {
                     if (ctrl.Visible)
                     {
-                        controls.Add(ctrl);
+                        keyControls.Add(ctrl);
                     }
                 }
 
                 isMainFamistudioControls = true;
             }
 
-            return controls;
+            return keyControls;
         }
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)

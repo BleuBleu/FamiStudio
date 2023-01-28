@@ -6,7 +6,7 @@ namespace FamiStudio
 {
     public class Container : Control
     {
-        private List<Control> controls = new List<Control>();
+        protected List<Control> controls = new List<Control>();
         public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
         public Container()
