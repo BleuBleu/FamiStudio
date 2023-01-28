@@ -1443,6 +1443,7 @@ namespace FamiStudio
 
             if (smooth)
             {
+                Debug.Assert((width & 1) == 0); // Odd line widths look bad right now.
                 var halfWidth = miter ? width * 0.25f : 0.0f;
                 DrawThickSmoothLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
                 DrawThickSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
