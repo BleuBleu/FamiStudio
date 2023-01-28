@@ -34,6 +34,17 @@
 - Proportionnal volume adjust
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
 
+4.1.0 Change Log
+================
+- Windows version is now 64-bit and targets .NET 5.0.
+- Linux/MacOS versions now uses .NET 6.0. Mono is not longer used.
+	- Install .NET for macOS here : https://learn.microsoft.com/en-us/dotnet/core/install/macos
+	- Install .NET for Linux here : https://learn.microsoft.com/en-us/dotnet/core/install/linux
+- All desktop version now requires OpenGL 3.3.
+- Android version now requires OpenGL ES 2.0.
+- Windows 7 is no longer supported.
+- 
+
 Batch convert PNG -> TGA
 ==========================
 "c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png

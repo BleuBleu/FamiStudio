@@ -178,10 +178,10 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.5.0.x64"
                     {
-                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
-                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    "Name" = "8:.NET Desktop Runtime 5.0.17 (x64)"
+                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.5.0.x64"
                     }
                 }
             }
@@ -210,10 +210,10 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.5.0.x64"
                     {
-                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
-                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    "Name" = "8:.NET Desktop Runtime 5.0.17 (x64)"
+                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.5.0.x64"
                     }
                 }
             }
@@ -239,18 +239,10 @@
                 "Name" = "8:.NET Core"
                 "Message" = "8:[VSDNETCOREMSG]"
                 "AllowLaterVersions" = "11:FALSE"
-                "InstallUrl" = "8:https://dotnet.microsoft.com/download/dotnet-core/[NetCoreVerMajorDotMinor]"
+                "InstallUrl" = "8:https://dotnet.microsoft.com/en-us/download/dotnet/5.0"
                 "IsNETCore" = "11:TRUE"
                 "Architecture" = "2:0"
                 "Runtime" = "2:0"
-                }
-                "{A06ECF26-33A3-4562-8140-9B0E340D4F24}:_E7CCBAA4B3C34722A3163029E45320AE"
-                {
-                "Name" = "8:.NET Framework"
-                "Message" = "8:[VSDNETMSG]"
-                "FrameworkVersion" = "8:.NETFramework,Version=v4.6.1"
-                "AllowLaterVersions" = "11:FALSE"
-                "InstallUrl" = "8:http://go.microsoft.com/fwlink/?LinkId=671728"
                 }
             }
         }
@@ -727,7 +719,7 @@
         {
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_35E89725F8BA48E0AC14F44C8E513BED"
             {
-            "DefaultLocation" = "8:[ProgramFilesFolder][ProductName]"
+            "DefaultLocation" = "8:[ProgramFiles64Folder][ProductName]"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:FALSE"
             "Condition" = "8:"
@@ -798,7 +790,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
         "ProductCode" = "8:{2C30553C-3EFE-4E0D-81CC-DD8AB9A6E2AF}"
-        "PackageCode" = "8:{86CC18EF-4B41-4559-8578-CEC3D1E983EE}"
+        "PackageCode" = "8:{E3F735B3-8830-43E5-B817-CECDE9685904}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
