@@ -259,17 +259,17 @@ namespace FamiStudio
 
         public static bool IsVS2019RuntimeInstalled()
         {
-            //try
+            try
             {
                 // Super ghetto way of detecting if the runtime is installed is simply by calling
                 // any function that will cause a C++ DLL to be loaded.
                 NesApu.GetAudioExpansions(0);
                 return true;
             }
-            //catch
-            //{
-            //    return false;
-            //}
+            catch
+            {
+                return false;
+            }
         }
 
         public static bool DetectRequiredDependencies()

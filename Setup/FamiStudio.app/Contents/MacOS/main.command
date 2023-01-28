@@ -23,7 +23,7 @@ DOWNLOAD_URL="https://learn.microsoft.com/en-us/dotnet/core/install/macos"
 
 DOTNET_VERSION="$(dotnet --version )"
 DOTNET_VERSION_MAJOR="$(echo $DOTNET_VERSION | cut -f1 -d.)"
-DOTNET_VERSION_MINOR="$(echo s$DOTNET_VERSION | cut -f2 -d.)"
+DOTNET_VERSION_MINOR="$(echo $DOTNET_VERSION | cut -f2 -d.)"
 if [ -z "$DOTNET_VERSION" ] \
     || [ $DOTNET_VERSION_MAJOR -lt $REQUIRED_MAJOR ] \
     || [ $DOTNET_VERSION_MAJOR -eq $REQUIRED_MAJOR -a $DOTNET_VERSION_MINOR -lt $REQUIRED_MINOR ]
