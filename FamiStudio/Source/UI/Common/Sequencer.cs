@@ -736,14 +736,14 @@ namespace FamiStudio
                             c.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1);
                             c.DrawText(pattern.Name, Fonts.FontSmall, patternNamePosX, 0, Theme.BlackColor, TextFlags.Left | TextFlags.Middle | TextFlags.Clip, sx - patternNamePosX, patternHeaderSizeY);
                             if (IsPatternSelected(location))
-                                c.DrawRectangle(0, 0, sx, channelSizeY, Theme.LightGreyColor1, 2, true);
+                                c.DrawRectangle(0, 0, sx, channelSizeY, Theme.LightGreyColor1, 4, true, true);
                             c.PopTransform();
                         }
 
                         // GLTODO : Test this! 
                         if (Platform.IsMobile && highlightLocation == location)
                         {
-                            c.DrawRectangle(px, py, sx, channelSizeY, Theme.WhiteColor, 2, false);
+                            c.DrawRectangle(px, py, sx, channelSizeY, Theme.WhiteColor, 4, true, true);
                         }
 
                         py += channelSizeY;

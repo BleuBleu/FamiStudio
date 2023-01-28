@@ -1424,27 +1424,26 @@ namespace FamiStudio
             }
         }
 
-        public void DrawRectangle(Rectangle rect, Color color, int width = 1, bool smooth = false)
+        public void DrawRectangle(Rectangle rect, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color, width, smooth);
         }
 
-        public void DrawRectangle(RectangleF rect, Color color, int width = 1, bool smooth = false)
+        public void DrawRectangle(RectangleF rect, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color, width, smooth);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
             width += lineWidthBias;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            var halfWidth = 0.0f; // Do we need miter on smooth rects?
-
             if (smooth)
             {
+                var halfWidth = miter ? width * 0.25f : 0.0f;
                 DrawThickSmoothLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
                 DrawThickSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
                 DrawThickSmoothLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
@@ -1452,7 +1451,7 @@ namespace FamiStudio
             }
             else if (width > 1)
             {
-                halfWidth = width * 0.5f;
+                var halfWidth = miter ? width * 0.5f : 0.0f;
                 DrawThickLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
                 DrawThickLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
                 DrawThickLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
@@ -1695,22 +1694,22 @@ namespace FamiStudio
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color);
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, Color fillColor, Color lineColor, int width = 1, bool smooth = false)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, Color fillColor, Color lineColor, int width = 1, bool smooth = false, bool miter = false)
         {
             FillRectangle(x0, y0, x1, y1, fillColor);
-            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth);
+            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth, miter);
         }
 
-        public void FillAndDrawRectangleGradient(float x0, float y0, float x1, float y1, Color fillColor0, Color fillColor1, Color lineColor, bool vertical, int gradientSize, int width = 1, bool smooth = false)
+        public void FillAndDrawRectangleGradient(float x0, float y0, float x1, float y1, Color fillColor0, Color fillColor1, Color lineColor, bool vertical, int gradientSize, int width = 1, bool smooth = false, bool miter = false)
         {
             FillRectangleGradient(x0, y0, x1, y1, fillColor0, fillColor1, vertical, gradientSize);
-            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth);
+            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth, miter);
         }
 
-        public void FillAndDrawRectangle(Rectangle rect, Color fillColor, Color lineColor, int width = 1, bool smooth = false)
+        public void FillAndDrawRectangle(Rectangle rect, Color fillColor, Color lineColor, int width = 1, bool smooth = false, bool miter = false)
         {
             FillRectangle(rect, fillColor);
-            DrawRectangle(rect, lineColor, width, smooth);
+            DrawRectangle(rect, lineColor, width, smooth, miter);
         }
 
         public void FillAndDrawRectangleGradient(Rectangle rect, Color fillColor0, Color fillColor1, Color lineColor, bool vertical, int gradientSize, int width = 1, bool smooth = false)

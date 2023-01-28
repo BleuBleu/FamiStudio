@@ -1712,7 +1712,7 @@ namespace FamiStudio
 
                             // GLTODO : Was using "cz" here, whats that?
                             if (highlighted || selected)
-                                r.c.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 2, true);
+                                r.c.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 4, true, true);
                             else
                                 r.c.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, Theme.BlackColor);
 
@@ -2647,7 +2647,7 @@ namespace FamiStudio
                         var highlighted = i == highlightDPCMSample;
 
                         r.c.PushTranslation(0, y);
-                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, noteSizeY, highlighted ? 2 : 1);
+                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, noteSizeY, highlighted ? 4 : 1, highlighted, highlighted);
 
                         string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                         if (mapping.Loop) text += ", Looping";
@@ -2677,7 +2677,7 @@ namespace FamiStudio
                     {
                         var y = virtualSizeY - noteValue * noteSizeY - scrollY;
                         r.c.PushTranslation(0, y);
-                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, dragSample.Color, dragSample.Color.Scaled(0.8f), Theme.WhiteColor, true, noteSizeY, 2, true);
+                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, dragSample.Color, dragSample.Color.Scaled(0.8f), Theme.WhiteColor, true, noteSizeY, 4, true, true);
                         r.c.PopTransform();
                     }
                 }
@@ -2693,7 +2693,7 @@ namespace FamiStudio
                             var y = virtualSizeY - highlightNoteValue * noteSizeY - scrollY;
 
                             r.c.PushTranslation(0, y);
-                            r.c.DrawRectangle(0, 0, Width - pianoSizeX, noteSizeY, Theme.WhiteColor, 2, true);
+                            r.c.DrawRectangle(0, 0, Width - pianoSizeX, noteSizeY, Theme.WhiteColor,  4, true, true);
                             r.c.PopTransform();
                         }
                     }
@@ -2797,7 +2797,7 @@ namespace FamiStudio
                     r.c.FillRectangle(x0, y - envelopeValueSizeY, x1, y, brush);
 
                     if (!highlighted)
-                        r.c.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 2 : 1, selected);
+                        r.c.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 4 : 1, selected, selected);
                     else
                         highlightRect = new RectangleF(x0,y - envelopeValueSizeY, x1 - x0, envelopeValueSizeY);
 
@@ -2835,7 +2835,7 @@ namespace FamiStudio
                     r.c.FillRectangle(x0, y0, x1, y1, brush);
 
                     if (!highlighted)
-                        r.c.DrawRectangle(x0, y0, x1, y1, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 2 : 1, selected);
+                        r.c.DrawRectangle(x0, y0, x1, y1, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 4 : 1, selected, selected);
                     else
                         highlightRect = new RectangleF(x0, y0, x1 - x0, y1 - y0);
 
@@ -2852,7 +2852,7 @@ namespace FamiStudio
             }
 
             if (!highlightRect.IsEmpty)
-                r.c.DrawRectangle(highlightRect, Theme.WhiteColor, 2, true);
+                r.c.DrawRectangle(highlightRect, Theme.WhiteColor, 4, true, true);
 
             // Drawing the N163/FDS waveform on top. 
             if (resampled)
@@ -3013,7 +3013,7 @@ namespace FamiStudio
                 r.c.FillRectangleGradient(0, activeChannelInt, sx, sy, color, color.Scaled(0.8f), true, sy);
             
             if (activeChannel)
-                r.c.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 4 : 1, selected || outline);
+                r.c.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 4 : 1, selected || outline, selected || outline);
 
             if (!outline)
             {
@@ -3270,13 +3270,13 @@ namespace FamiStudio
                         }
                     }
 
-                    r.c.DrawGeometry(points, color, 1, true);
+                    r.c.DrawGeometry(points, color, 1, true, false);
 
                     if (drawSamples)
                     {
                         var selectionValid = IsSelectionValid();
 
-                        for (int i = 0; i < points.GetLength(0); i++)
+                        for (int i = 0; i < points.GetLength(0) / 2; i++)
                         {
                             var selected = isSource && selectionValid && indices[i] >= selectionMin && indices[i] <= selectionMax;
                             var sampleScale = selected ? 1.5f : 1.0f;
@@ -3453,7 +3453,7 @@ namespace FamiStudio
                 g.OverlayCommandList.DrawLine(0, 0, 100, 100, new Color(255, 0, 255), i, true);
                 g.OverlayCommandList.DrawLine(0, 0, 100, 0, new Color(255, 0, 255), i, true);
                 g.OverlayCommandList.DrawLine(0, 0, 0, 100, new Color(255, 0, 255), i, true);
-                g.OverlayCommandList.FillAndDrawRectangle(0, 200, 100, 210, new Color(255, 0, 255), new Color(0, 255, 0), i, true);
+                g.OverlayCommandList.FillAndDrawRectangle(0, 200, 100, 210, new Color(255, 0, 255), new Color(0, 255, 0), i, true, i > 1);
                 g.Transform.PushTranslation(0, 110);
                 g.OverlayCommandList.FillGeometry(releaseNoteGeometry[0], Color.Pink, true);
                 g.Transform.PushTranslation(0, 20);

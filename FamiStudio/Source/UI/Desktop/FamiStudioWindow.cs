@@ -884,15 +884,19 @@ namespace FamiStudio
         {
             ProcessPlatformEvents();
             ProcessEvents();
-            Tick();
-            RenderFrameAndSwapBuffer();
-            ConditionalEmitDelayedRightClick();
 
-            if (allowSleep)
-            {
-                // Always sleep a bit, even if we rendered something. This handles cases where people
-                // turn off vsync and we end up eating 100% CPU. 
-                System.Threading.Thread.Sleep(4);
+            if (!quit)
+            { 
+                Tick();
+                RenderFrameAndSwapBuffer();
+                ConditionalEmitDelayedRightClick();
+
+                if (allowSleep)
+                {
+                    // Always sleep a bit, even if we rendered something. This handles cases where people
+                    // turn off vsync and we end up eating 100% CPU. 
+                    System.Threading.Thread.Sleep(4);
+                }
             }
         }
 

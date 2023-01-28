@@ -158,7 +158,7 @@ namespace FamiStudio
                     var oscilloscope = UpdateOscilloscope(s, f);
 
                     cmd.PushTransform(channelPosX0, channelPosY0 + channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
-                    cmd.DrawGeometry(oscilloscope, frame.channelData[i].color, lineThickness, true);
+                    cmd.DrawGeometry(oscilloscope, frame.channelData[i].color, lineThickness, true, false);
                     cmd.PopTransform();
 
                     // Icons + text
