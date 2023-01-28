@@ -281,7 +281,7 @@ namespace FamiStudio
             LoadChannelIcons(!smallChannelText);
 
             // Setup piano roll and images.
-            var pianoRoll = new PianoRoll(null);
+            var pianoRoll = new PianoRoll();
             pianoRoll.Move(0, 0, channelResX, channelResY);
             pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
 

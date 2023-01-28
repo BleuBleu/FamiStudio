@@ -67,11 +67,11 @@ namespace FamiStudio
         public virtual void Tick(float delta) { }
 
         public virtual void Render(Graphics g) { OnRender(g); }
-        public void MouseDown(MouseEventArgs e) { OnMouseDown(e); /*DialogMouseDownNotify(e);*/ } // CTRLTODO : What was this notify?
+        public void MouseDown(MouseEventArgs e) { OnMouseDown(e); DialogMouseDownNotify(e); }
         public void MouseDownDelayed(MouseEventArgs e) { OnMouseDownDelayed(e); }
         public void MouseUp(MouseEventArgs e) { OnMouseUp(e); }
         public void MouseDoubleClick(MouseEventArgs e) { OnMouseDoubleClick(e); }
-        public void MouseMove(MouseEventArgs e) { OnMouseMove(e); /*DialogMouseDownNotify(e);*/ } // CTRLTODO : What was this notify?
+        public void MouseMove(MouseEventArgs e) { OnMouseMove(e); DialogMouseDownNotify(e); }
         public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
         public void MouseWheel(MouseEventArgs e) { OnMouseWheel(e); }
         public void MouseHorizontalWheel(MouseEventArgs e) { OnMouseHorizontalWheel(e); }
@@ -92,9 +92,8 @@ namespace FamiStudio
         public void AcquiredDialogFocus() { OnAcquiredDialogFocus(); }
         public void AddedToContainer() { OnAddedToContainer(); }
         
-		// CTRLTODO : What as this?
-		//public void DialogMouseDownNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
-        //public void DialogMouseMoveNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }
+		public void DialogMouseDownNotify(MouseEventArgs e) { ParentDialog?.DialogMouseDownNotify(this, e); }
+        public void DialogMouseMoveNotify(MouseEventArgs e) { ParentDialog?.DialogMouseMoveNotify(this, e); }
 
         public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
         public Rectangle WindowRectangle => new Rectangle(WindowPosition, Size);
@@ -108,10 +107,9 @@ namespace FamiStudio
         public int Height => height;
         public Size Size => new Size(width, height);
         public bool Capture { set { if (value) ParentWindow.CaptureMouse(this); else ParentWindow.ReleaseMouse(); } }
-		// CTRLTODO : Dialog focus management.
-        //public bool HasDialogFocus => parentContainer != null && parentContainer.FocusedControl == this;
-        //public void GrabDialogFocus() { if (parentContainer != null) parentContainer.FocusedControl = this; }
-        //public void ClearDialogFocus() { if (parentContainer != null) parentContainer.FocusedControl = null; }
+        public bool HasDialogFocus => ParentDialog?.FocusedControl == this;
+        public void GrabDialogFocus()  { if (ParentDialog != null) ParentDialog.FocusedControl = this; }
+        public void ClearDialogFocus() { if (ParentDialog != null) ParentDialog.FocusedControl = null; }
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
         public bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
@@ -124,6 +122,7 @@ namespace FamiStudio
         public IntPtr Cursor { get => cursor; set { cursor = value; ParentWindow.RefreshCursor(); } }
         public FamiStudioWindow ParentWindow => window;
         public Container ParentContainer => container;
+        public Dialog ParentDialog => container as Dialog;
         public Graphics Graphics => ParentWindow?.Graphics;
         public Fonts Fonts => ParentWindow?.Fonts;
         public Point WindowPosition => ControlToWindow(Point.Empty);

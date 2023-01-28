@@ -161,10 +161,6 @@ namespace FamiStudio
         public event EmptyDelegate SelectionChanged;
         public event EmptyDelegate ShyChanged;
 
-        public Sequencer(FamiStudioWindow win) 
-        {
-        }
-
         private Song Song
         {
             get { return App?.SelectedSong; }

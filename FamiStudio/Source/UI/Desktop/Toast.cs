@@ -22,10 +22,6 @@ namespace FamiStudio
         public bool IsVisible => alpha > 0;
         public bool IsClickable => alpha > 0 && action != null;
 
-        public Toast(FamiStudioWindow win) // CTRLTODO : base(win)
-        {
-        }
-
         public void Initialize(string text, bool longDuration, Action click = null)
         {
             lines = text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -81,6 +77,7 @@ namespace FamiStudio
                     lines = null;
                     action = null;
                     duration = 0.0f;
+                    ParentContainer.RemoveControl(this);
                 }
 
                 SetAndMarkDirty(ref alpha, CalculateAlpha());
@@ -89,19 +86,13 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            // GLTODO : Bring this back!
-            /*
-            var c = g.CreateCommandList();
+            var c = g.DefaultCommandList;
+            var font = Fonts.FontMedium;
 
             c.FillAndDrawRectangle(0, 0, width - 1, height - 1, Color.FromArgb(alpha, Theme.DarkGreyColor1), Color.FromArgb(alpha, Theme.BlackColor));
 
-            var font = FontResources.FontMedium;
-
             for (int i = 0; i < lines.Length; i++)
                 c.DrawText(lines[i], font, 0, pad + i * font.LineHeight, Color.FromArgb(alpha, Theme.LightGreyColor1), TextFlags.MiddleCenter, width, font.LineHeight);
-
-            g.DrawCommandList(c);
-            */
         }
     }
 }

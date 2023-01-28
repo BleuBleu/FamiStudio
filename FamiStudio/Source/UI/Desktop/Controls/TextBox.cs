@@ -292,7 +292,7 @@ namespace FamiStudio
             }
             else if (e.Key == Keys.Escape)
             {
-                //ClearDialogFocus(); CTRLTODO : Focus!
+                ClearDialogFocus();
                 e.Handled = true;
             }
             else if (e.Key == Keys.V && e.Control)
@@ -346,17 +346,15 @@ namespace FamiStudio
                 }
             }
 
-            // CTRLTODO : Focus management.
-            /*
             if (nextIdx >= 0)
             {
-                parentDialog.FocusedControl = ctrls[nextIdx];
+                ParentDialog.FocusedControl = ctrls[nextIdx];
             }
             else
             {
                 ClearDialogFocus();
                 GrabDialogFocus();
-            }*/
+            }
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
@@ -533,8 +531,6 @@ namespace FamiStudio
             c.PushTranslation(outerMargin, 0);
             c.FillAndDrawRectangle(0, 0, textAreaWidth - 1, height - 1, backColor, enabled ? foreColor : disabledColor);
             
-            // CTRLTODO : Dialog focus.
-            /*
             if (selectionLength > 0 && HasDialogFocus && enabled)
             {
                 var sx0 = Utils.Clamp(CharToPixel(selectionStart), innerMargin, textAreaWidth - innerMargin);
@@ -542,17 +538,15 @@ namespace FamiStudio
 
                 if (sx0 != sx1)
                     c.FillRectangle(sx0, topMargin, sx1, height - topMargin, selColor);
-            }*/
+            }
 
             c.DrawText(text, Fonts.FontMedium, innerMargin - scrollX, 0, enabled ? foreColor : disabledColor, TextFlags.MiddleLeft | TextFlags.Clip, 0, height, innerMargin, textAreaWidth - innerMargin);
 
-            // CTRLTODO : Dialog focus.
-            /*
             if (caretBlink && HasDialogFocus && enabled)
             {
                 var cx = CharToPixel(caretIndex);
                 c.DrawLine(cx, topMargin, cx, height - topMargin, foreColor);
-            }*/
+            }
 
             c.PopTransform();
         }

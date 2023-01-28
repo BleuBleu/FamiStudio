@@ -438,11 +438,6 @@ namespace FamiStudio
         public event DPCMMappingDelegate DPCMSampleMapped;
         public event DPCMMappingDelegate DPCMSampleUnmapped;
 
-        public PianoRoll(FamiStudioWindow win) // CTRLTODO : base(win)
-        {
-            UpdateRenderCoords();
-        }
-
         private void UpdateRenderCoords()
         {
             var videoMode = editMode == EditionMode.VideoRecording;

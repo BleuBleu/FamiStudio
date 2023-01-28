@@ -460,7 +460,7 @@ namespace FamiStudio
                     else
                     {
                         var ex = new MouseEventArgs(MakeButtonFlags(button), cx, cy);
-                        //ctrl.GrabDialogFocus(); CTRLTODO : Dialog focus.
+                        ctrl.GrabDialogFocus();
                         ctrl.MouseDown(ex);
                         if (ex.IsRightClickDelayed)
                             DelayRightClick(ctrl, ex);
@@ -471,7 +471,7 @@ namespace FamiStudio
             {
                 int cx;
                 int cy;
-                Control ctrl = null;
+                Control ctrl;
 
                 if (captureControl != null)
                 {
@@ -492,10 +492,7 @@ namespace FamiStudio
                     if (button == GLFW_MOUSE_BUTTON_RIGHT)
                         ConditionalEmitDelayedRightClick(true, true, ctrl);
 
-					// CTRLTODO
-                    //if (ctrl != ContextMenu)
-                    //    container.HideContextMenu();
-
+                    container.ConditionalHideContextMenu(ctrl);
                     ctrl.MouseUp(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
                 }
             }
@@ -571,9 +568,7 @@ namespace FamiStudio
             var ctrl = container.GetControlAt(lastCursorX, lastCursorY, out int cx, out int cy);
             if (ctrl != null)
             {
-				// CTRLTODO.
-                //if (ctrl != ContextMenu)
-                //    container.HideContextMenu();
+                container.ConditionalHideContextMenu(ctrl);
 
                 const float Multiplier = Platform.IsWindows ? 10.0f : 2.0f;
 
@@ -605,63 +600,35 @@ namespace FamiStudio
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
             mods = FixKeyboardMods(mods, key, action);
+            modifiers.Set(mods);
 
             Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode}, Action = {action}, Mods = {mods}");
 
-            modifiers.Set(mods);
-
+            var controls = container.GetControlsForKeyboard(out var mainFamistudioControl);
             var down = action == GLFW_PRESS || action == GLFW_REPEAT;
             var e = new KeyEventArgs((Keys)key, mods, action == GLFW_REPEAT, scancode);
-            
-			// CTRLTODO
-			/*
-            if (container.IsContextMenuActive)
-            {
-                SendKeyUpOrDown(container.ContextMenu, e, down);
-            }
-            else if (container.IsDialogActive)
-            {
-                SendKeyUpOrDown(container.TopDialog, e, down);
-            }
-            else
+
+            if (mainFamistudioControl)
             {
                 if (down)
                     famistudio.KeyDown(e);
                 else
                     famistudio.KeyUp(e);
-
-                // FamiStudio can decide to quit.
-                if (!quit && container.CanInteractWithControls())
-                {
-                    foreach (var ctrl in container.Controls)
-                        SendKeyUpOrDown(ctrl, e, down);
-                }
             }
-			*/
+
+            foreach (var ctrl in controls)
+                SendKeyUpOrDown(ctrl, e, down);
         }
 
         private void CharCallback(IntPtr window, uint codepoint)
         {
             Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
 
+            var controls = container.GetControlsForKeyboard(out _);
             var e = new CharEventArgs((char)codepoint, modifiers.Modifiers);
 
-			// CTRLTODO
-			/*
-            if (container.IsContextMenuActive)
-            {
-                container.ContextMenu.Char(e);
-            }
-            else if (container.IsDialogActive)
-            {
-                container.TopDialog.Char(e);
-            }
-            else if (container.CanInteractWithControls())
-            {
-                foreach (var ctrl in container.Controls)
-                    ctrl.Char(e);
-            }
-			*/
+            foreach (var ctrl in controls)
+                ctrl.Char(e);
         }
 
         private void CharModsCallback(IntPtr window, uint codepoint, int mods)
@@ -824,29 +791,24 @@ namespace FamiStudio
 
         public void SetActiveControl(Control ctrl, bool animate = true)
         {
-			// CTRLTODO		
-			/*
             if (ctrl != null && ctrl != activeControl && (ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer))
             {
                 activeControl.MarkDirty();
                 activeControl = ctrl;
                 activeControl.MarkDirty();
             }
-			*/
         }
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
-			// CTRLTODO
-            //contextMenuPoint = PointToScreen(new Point(x, y));
-            //container.ShowContextMenu(x, y, options);
-            //RefreshCursor(container.ContextMenu);
+            contextMenuPoint = WindowToScreen(new Point(x, y));
+            container.ShowContextMenu(x, y, options);
+            RefreshCursor(container.ContextMenu);
         }
 
         public void HideContextMenu()
         {
-			// CTRLTODO
-            //container.HideContextMenu();
+            container.HideContextMenu();
         }
 
         public void InitDialog(Dialog dialog)
@@ -866,8 +828,7 @@ namespace FamiStudio
 
         public void ShowToast(string text, bool longDuration = false, Action click = null)
         {
-			// CTRLTODO
-            //container.ShowToast(text, longDuration, click);
+            container.ShowToast(text, longDuration, click);
         }
 
         public bool IsKeyDown(Keys k)

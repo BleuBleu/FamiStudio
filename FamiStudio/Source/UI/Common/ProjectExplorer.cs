@@ -996,10 +996,8 @@ namespace FamiStudio
         public event DPCMSamplePointDelegate DPCMSampleMapped;
         public event EmptyDelegate ProjectModified;
 
-        public ProjectExplorer(FamiStudioWindow win) // CTRLTODO : base(win)
+        public ProjectExplorer()
         {
-            UpdateRenderCoords();
-
             registerValues = new NesApu.NesRegisterValues();
             registerViewers[ExpansionType.None] = new ApuRegisterViewer(registerValues);
             registerViewers[ExpansionType.Vrc6] = new Vrc6RegisterViewer(registerValues);
@@ -1112,7 +1110,7 @@ namespace FamiStudio
             buttons.Clear();
             var project = App.Project;
 
-            if (/*!IsRenderInitialized ||*/ project == null) // CTRLTODO : Relevant??
+            if (ParentWindow == null || project == null)
                 return;
 
             if (selectedTab == TabType.Project)
@@ -1289,6 +1287,7 @@ namespace FamiStudio
             if (Platform.IsMobile)
                 bitmapScale = DpiScaling.Window * 0.25f;
 
+            UpdateRenderCoords();
             RefreshButtons();
         }
 

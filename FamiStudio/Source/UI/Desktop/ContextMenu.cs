@@ -22,8 +22,9 @@ namespace FamiStudio
         BitmapAtlasRef bmpMenuRadio;
         ContextMenuOption[] menuOptions;
 
-        public ContextMenu(FamiStudioWindow win) // CTRLTODO : base(win)
+        public ContextMenu()
         {
+            visible = false;
         }
 
         protected override void OnAddedToContainer()
@@ -42,7 +43,7 @@ namespace FamiStudio
             minSizeX  = DpiScaling.ScaleForWindow(DefaultMenuMinSizeX);
         }
 
-        public void Initialize(Graphics g, ContextMenuOption[] options)
+        public void Initialize(ContextMenuOption[] options)
         {
             UpdateRenderCoords();
 
@@ -50,6 +51,7 @@ namespace FamiStudio
             bmpContextMenu = new BitmapAtlasRef[options.Length];
 
             // Measure size.
+            var g = ParentWindow.Graphics;
             var sizeX = 0;
             var sizeY = 0;
 
@@ -57,7 +59,7 @@ namespace FamiStudio
             {
                 ContextMenuOption option = menuOptions[i];
 
-                sizeX = Math.Max(sizeX, (int)g.MeasureString(option.Text, Fonts.FontMedium));
+                sizeX = Math.Max(sizeX, (int)ParentWindow.Graphics.MeasureString(option.Text, Fonts.FontMedium));
                 sizeY += itemSizeY;
 
                 if (!string.IsNullOrEmpty(option.Image))
@@ -108,7 +110,10 @@ namespace FamiStudio
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            SetHoveredItemIndex(-1);
+            if (ParentWindow != null && visible)
+            { 
+                SetHoveredItemIndex(-1);
+            }
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -159,12 +164,10 @@ namespace FamiStudio
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
-            // GLTODO : Bring this back.
-            /*
-            var c = g.CreateCommandList();
-            c.DrawRectangle(0, 0, Width - 1, Height - 1, Theme.LightGreyColor1);
-
+            var c = g.DefaultCommandList;
             var prevWantedSeparator = false;
+
+            c.DrawRectangle(0, 0, Width - 1, Height - 1, Theme.LightGreyColor1);
 
             for (int i = 0, y = 0; i < menuOptions.Length; i++, y += itemSizeY)
             {
@@ -201,16 +204,11 @@ namespace FamiStudio
                     c.DrawBitmapAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
                 }
 
-                c.DrawText(option.Text, FontResources.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
+                c.DrawText(option.Text, Fonts.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
 
                 prevWantedSeparator = option.Separator.HasFlag(ContextMenuSeparator.After);
             }
-
-            g.Clear(Theme.DarkGreyColor4);
-            g.DrawCommandList(c);
-            */
-
         }
     }
 }

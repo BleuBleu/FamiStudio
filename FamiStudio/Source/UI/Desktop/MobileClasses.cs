@@ -4,14 +4,6 @@ namespace FamiStudio
 {
     public class MobilePiano : Container
     {
-        public MobilePiano(FamiStudioWindow win) // CTRLTODO : base(win)
-        {
-        }
-
-        public override void Tick(float deltaTime)
-        {
-        }
-
         public void HighlightPianoNote(int note)
         {
         }
@@ -19,13 +11,6 @@ namespace FamiStudio
 
     public class QuickAccessBar : Container
     {
-        public QuickAccessBar(FamiStudioWindow win) // CTRLTODO : base(win)
-        {
-        }
-
-        public override void Tick(float deltaTime)
-        {
-        }
     }
 
     public class MobileProjectDialog

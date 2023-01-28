@@ -4,7 +4,6 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    // CTRL : None of this works.
     public class Dialog : Container
     {
         public delegate void KeyDownDelegate(Dialog dlg, KeyEventArgs e);
@@ -16,6 +15,7 @@ namespace FamiStudio
         private DialogResult result = DialogResult.None;
         private float tooltipTimer;
         private string title;
+        private Control focusedControl;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForWindow(2);
         private int tooltipSideMargin = DpiScaling.ScaleForWindow(4);
@@ -26,8 +26,6 @@ namespace FamiStudio
 
         public DialogResult DialogResult => result;
 
-		// CTRLTODO : Focus management???
-		/*
         public Control FocusedControl
         {
             get { return focusedControl; }
@@ -47,7 +45,6 @@ namespace FamiStudio
                 MarkDirty();
             }
         }
-		*/
 
         public Dialog(FamiStudioWindow win, string t = "")
         {
@@ -88,11 +85,7 @@ namespace FamiStudio
 
         public void Close(DialogResult res)
         {
-            //FocusedControl = null;
-
-            //if (destroyControlsOnClose)
-            //    DestroyControls();
-
+            FocusedControl = null;
             window.PopDialog(this);
             result = res;
             visible = false;
@@ -104,14 +97,7 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            /*
-            foreach (var ctrl in controls)
-            {
-                if (ctrl.Visible)
-                {
-                    ctrl.Tick(delta);
-                }
-            }
+            base.Tick(delta);
 
             var v1 = ShouldDisplayTooltip();
             tooltipTimer += delta;
@@ -119,7 +105,6 @@ namespace FamiStudio
 
             if (!v1 && v2)
                 MarkDirty();
-            */
         }
 
         private bool ShouldDisplayTooltip()
@@ -146,7 +131,7 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            //FocusedControl = null;
+            FocusedControl = null;
             ResetToolTip();
         }
 
@@ -154,26 +139,24 @@ namespace FamiStudio
         {
             DialogKeyDown?.Invoke(this, e);
 
-            //if (focusedControl != null && focusedControl.Visible)
-            //{
-            //    focusedControl.KeyDown(e);
-            //}
+            if (focusedControl != null && focusedControl.Visible)
+               focusedControl.KeyDown(e);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            //if (focusedControl != null && focusedControl.Visible)
-            //{
-            //    focusedControl.KeyUp(e);
-            //}
+            if (focusedControl != null && focusedControl.Visible)
+            {
+                focusedControl.KeyUp(e);
+            }
         }
 
         protected override void OnChar(CharEventArgs e)
         {
-            //if (focusedControl != null && focusedControl.Visible)
-            //{
-            //    focusedControl.Char(e);
-            //}
+            if (focusedControl != null && focusedControl.Visible)
+            {
+                focusedControl.Char(e);
+            }
         }
 
         private List<string> SplitLongString(string str)

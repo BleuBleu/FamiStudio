@@ -155,7 +155,7 @@ namespace FamiStudio
             if (e.Key == Keys.Escape)
             {
                 SetListOpened(false);
-                //ClearDialogFocus(); CTRLTODO : Dialog focus.
+                ClearDialogFocus();
                 e.Handled = true;
             }
         }

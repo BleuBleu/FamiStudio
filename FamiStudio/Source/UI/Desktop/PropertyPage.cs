@@ -71,21 +71,21 @@ namespace FamiStudio
         {
             Debug.Assert(!string.IsNullOrEmpty(str));
 
-            var label = new Label(str, multiline); // CTRLTODO Add!
+            var label = new Label(str, multiline);
             label.ToolTip = tooltip;
             return label;
         }
 
         private LinkLabel CreateLinkLabel(string str, string url, string tooltip = null)
         {
-            var label = new LinkLabel(str, url); // CTRLTODO Add!
+            var label = new LinkLabel(str, url);
             label.ToolTip = tooltip;
             return label;
         }
 
         private TextBox CreateColoredTextBox(string txt, Color backColor)
         {
-            var textBox = new TextBox(txt); // CTRLTODO Add!
+            var textBox = new TextBox(txt);
             textBox.BackColor = backColor;
             textBox.ForeColor = Theme.BlackColor;
             textBox.DisabledColor = Theme.BlackColor;
@@ -95,7 +95,7 @@ namespace FamiStudio
 
         private TextBox CreateTextBox(string txt, int maxLength, string tooltip = null)
         {
-            var textBox = new TextBox(txt, maxLength); // CTRLTODO Add!
+            var textBox = new TextBox(txt, maxLength);
             textBox.ToolTip = tooltip;
 
             return textBox;
@@ -103,12 +103,12 @@ namespace FamiStudio
 
         private LogTextBox CreateLogTextBox()
         {
-            return new LogTextBox(15); // CTRLTODO Add!
+            return new LogTextBox(15);
         }
 
         private ColorPicker CreateColorPicker(Color color)
         {
-            var colorPicker = new ColorPicker(color); // CTRLTODO Add.
+            var colorPicker = new ColorPicker(color);
             colorPicker.SetNiceSize(layoutWidth);
             colorPicker.ColorChanged += ColorPicker_ColorChanged;
             colorPicker.DoubleClicked += ColorPicker_ColorDoubleClicked;
@@ -134,12 +134,12 @@ namespace FamiStudio
 
         private ImageBox CreateImageBox(string image)
         {
-            return new ImageBox(image); // CTRLTODO Add!
+            return new ImageBox(image);
         }
 
         private NumericUpDown CreateNumericUpDown(int value, int min, int max, string tooltip = null)
         {
-            var upDown = new NumericUpDown(value, min, max); // CTRLTODO Add!
+            var upDown = new NumericUpDown(value, min, max);
 
             upDown.ValueChanged += UpDown_ValueChanged;
             upDown.ToolTip = tooltip;
@@ -149,7 +149,7 @@ namespace FamiStudio
 
         private ProgressBar CreateProgressBar()
         {
-            var progress = new ProgressBar(); // CTRLTODO Add!
+            var progress = new ProgressBar();
             return progress;
         }
 
@@ -181,7 +181,7 @@ namespace FamiStudio
 
         private DropDown CreateDropDownList(string[] values, string value, string tooltip = null)
         {
-            var dropDown = new DropDown(values, Array.IndexOf(values, value)); // CTRLTODO Add.
+            var dropDown = new DropDown(values, Array.IndexOf(values, value));
             dropDown.SelectedIndexChanged += DropDown_SelectedIndexChanged;
             dropDown.ToolTip = tooltip;
 
@@ -202,7 +202,7 @@ namespace FamiStudio
                 new ColumnDesc("B", 1.0f, ColumnType.Label)
             };
 
-            var grid = new Grid(columns, numRows, false);  // CTRLTODO Add!
+            var grid = new Grid(columns, numRows, false);
             var data = new object[values.Length, 2];
 
             for (int i = 0; i < values.Length; i++)
@@ -226,7 +226,7 @@ namespace FamiStudio
                 new ColumnDesc("B", 1.0f, ColumnType.Label)
             };
 
-            var grid = new Grid(columns, numRows, false); // CTRLTODO Add!
+            var grid = new Grid(columns, numRows, false);
             var data = new object[values.Length, 2];
 
             for (int i = 0; i < values.Length; i++)
@@ -255,7 +255,7 @@ namespace FamiStudio
 
         private Button CreateButton(string text, string tooltip)
         {
-            var button = new Button(null, text); // CTRLTODO : Add
+            var button = new Button(null, text);
             button.Border = true;
             button.Click += Button_Click;
             button.Resize(button.Width, DpiScaling.ScaleForWindow(32));
@@ -503,7 +503,7 @@ namespace FamiStudio
 
         private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
         {
-            var slider = new Slider(value, min, max, increment, showLabel, format); // CTRLTODO Add!
+            var slider = new Slider(value, min, max, increment, showLabel, format);
             slider.ValueChanged += Slider_ValueChanged;
             slider.ToolTip = tooltip;
             return slider;
@@ -529,7 +529,7 @@ namespace FamiStudio
 
         private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
         {
-            var grid = new Grid(columnDescs, numRows, true); // CTRLTODO Add!
+            var grid = new Grid(columnDescs, numRows, true);
 
             if (data != null)
                 grid.UpdateData(data);
@@ -819,7 +819,7 @@ namespace FamiStudio
                 if (prop.type == PropertyType.ColoredTextBox)
                 {
                     (prop.control as TextBox).SelectAll();
-                    //prop.control.GrabDialogFocus(); CTRLTODO : Focus.
+                    prop.control.GrabDialogFocus();
                 }
 
                 height = Math.Max(prop.control.Height, height);

@@ -7,9 +7,8 @@ namespace FamiStudio
 {
     public class FamiStudioContainer : Container
     {
-        private List<Dialog> dialogs = new List<Dialog>(); // CTRLTODO : Do we need this?
+        private List<Dialog> dialogs = new List<Dialog>();
         private float dialogDimming = 0.0f;
-        private bool contextMenuVisible;
 
         private Toolbar toolbar;
         private Sequencer sequencer;
@@ -28,21 +27,21 @@ namespace FamiStudio
         public MobilePiano MobilePiano => mobilePiano;
         public ContextMenu ContextMenu => contextMenu;
         public Toast Toast => toast;
-        public bool IsContextMenuActive => contextMenuVisible;
+        public bool IsContextMenuActive => contextMenu.Visible;
         public bool IsDialogActive => dialogs.Count > 0;
         public Dialog TopDialog => dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
 
         public FamiStudioContainer(FamiStudioWindow parent)
         {
             window = parent;
-            toolbar = new Toolbar(parent);
-            sequencer = new Sequencer(parent);
-            pianoRoll = new PianoRoll(parent);
-            projectExplorer = new ProjectExplorer(parent);
-            quickAccessBar = new QuickAccessBar(parent);
-            mobilePiano = new MobilePiano(parent);
-            contextMenu = new ContextMenu(parent);
-            toast = new Toast(parent);
+            toolbar = new Toolbar();
+            sequencer = new Sequencer();
+            pianoRoll = new PianoRoll();
+            projectExplorer = new ProjectExplorer();
+            quickAccessBar = new QuickAccessBar();
+            mobilePiano = new MobilePiano();
+            contextMenu = new ContextMenu();
+            toast = new Toast();
 
             AddControl(toolbar);
             AddControl(sequencer);
@@ -70,7 +69,6 @@ namespace FamiStudio
             toast.Reposition();
         }
 
-        // CTRLTODO : Re-test this.
         public override bool CanInteractWithContainer(Container c)
         {
             // HACK : Dont allow any interaction with the main controls if there is no current song
@@ -81,21 +79,62 @@ namespace FamiStudio
                 return false;
             }
 
-            // Only top dialog can be interacted with.
-            if (dialogs.Count > 0 && c != dialogs.Last())
+            // Context menu have highest priority priority.
+            if (contextMenu.Visible && c != contextMenu)
             {
                 return false;
             }
 
-            // CTRLTODO : What about context menus, etc.
+            // Only top dialog can be interacted with.
+            if (IsDialogActive && c != dialogs.Last())
+            {
+                return false;
+            }
+
             return true;
+        }
+
+        public List<Control> GetControlsForKeyboard(out bool isMainFamistudioControls)
+        {
+            var controls = new List<Control>();
+            
+            isMainFamistudioControls = false;
+
+            if (FamiStudio.StaticInstance.SelectedSong == null)
+            {
+                return controls;
+            }
+
+            if (IsDialogActive)
+            {
+                controls.Add(TopDialog);
+            }
+            else if (IsContextMenuActive)
+            {
+                controls.Add(contextMenu);
+            }
+            else
+            {
+                foreach (var ctrl in controls)
+                {
+                    if (ctrl.Visible)
+                    {
+                        controls.Add(ctrl);
+                    }
+                }
+
+                isMainFamistudioControls = true;
+            }
+
+            return controls;
         }
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
-            // CTRLTODO : Bring this back.
-            /*
-            contextMenu.Initialize(gfx, options);
+            AddControl(contextMenu);
+
+            contextMenu.Visible = true;
+            contextMenu.Initialize(options);
 
             // Keep the menu inside the bounds of the window.
             var alignX = x + contextMenu.Width > width;
@@ -105,17 +144,24 @@ namespace FamiStudio
                 alignX ? x - contextMenu.Width - 1 : x + 1,
                 alignY ? y - contextMenu.Height - 1 : y + 1);
 
-            contextMenuVisible = true;
             MarkDirty();
-            */
         }
 
         public void HideContextMenu()
         {
-            if (contextMenuVisible)
-            {
-                contextMenuVisible = false;
+            if (contextMenu.Visible)
+            { 
+                contextMenu.Visible = false;
+                RemoveControl(contextMenu);
                 MarkDirty();
+            }
+        }
+
+        public void ConditionalHideContextMenu(Control ctrl)
+        {
+            if (ctrl != contextMenu)
+            {
+                HideContextMenu();
             }
         }
 
@@ -125,7 +171,7 @@ namespace FamiStudio
 
             var newDialogDimming = dialogDimming;
 
-            if (dialogs.Count > 0)
+            if (IsDialogActive)
             {
                 TopDialog.Tick(delta);
                 newDialogDimming = Math.Min(1.0f, dialogDimming + delta * 6.0f);
@@ -146,8 +192,6 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            base.OnRender(g);
-
             if (dialogDimming != 0.0f)
             {
                 var c = g.OverlayCommandList;
@@ -167,6 +211,8 @@ namespace FamiStudio
                     c.FillRectangle(0, 0, width, height, color);
                 }
             }
+
+            base.OnRender(g);
         }
 
         public void InitDialog(Dialog dialog)
@@ -190,6 +236,7 @@ namespace FamiStudio
         public void ShowToast(string text, bool longDuration = false, Action click = null)
         {
             toast.Initialize(text, longDuration, click);
+            AddControl(toast);
         }
     }
 }

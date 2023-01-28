@@ -292,10 +292,6 @@ namespace FamiStudio
 
         private float iconScaleFloat = 1.0f;
 
-        public Toolbar(FamiStudioWindow win) // CTRLTODO : base(win)
-        {
-        }
-
         protected override void OnAddedToContainer()
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);

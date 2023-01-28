@@ -56,26 +56,26 @@ namespace FamiStudio
 
         private void Init()
         {
-            buttonLeft = new Button("ArrowLeft", null); // CTRLTODO : Add!
+            buttonLeft = new Button("ArrowLeft", null);
             buttonLeft.Click += ButtonLeft_Click;
             buttonLeft.Resize(buttonSize, buttonSize);
             buttonLeft.ToolTip = "Previous";
             buttonLeft.Move(width - buttonSize * 2 - margin * 2, height - buttonSize - margin);
 
-            buttonRight = new Button("ArrowRight", null); // CTRLTODO : Add!
+            buttonRight = new Button("ArrowRight", null);
             buttonRight.Click += ButtonRight_Click;
             buttonRight.Resize(buttonSize, buttonSize);
             buttonRight.ToolTip = "Next";
             buttonRight.Move(width - buttonSize - margin, height - buttonSize - margin);
 
-            label = new Label("This is a nice label", true); // CTRLTODO : Add!
+            label = new Label("This is a nice label", true);
             label.Move(margin, margin + titleBarSizeY, width - margin, labelSizeY);
 
-            imageBox = new ImageBox((Bitmap)null); // CTRLTODO : Add!
+            imageBox = new ImageBox((Bitmap)null);
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
             imageBox.ScaleImage = DpiScaling.Window > 1;
 
-            checkBoxDontShow = new CheckBox(false, "Do not show again"); // CTRLTODO : Add!
+            checkBoxDontShow = new CheckBox(false, "Do not show again");
             checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY + titleBarSizeY, width - buttonSize * 3, checkSizeY);
 
             AddControl(buttonLeft);

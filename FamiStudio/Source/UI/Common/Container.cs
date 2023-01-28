@@ -136,6 +136,17 @@ namespace FamiStudio
         //    }
         //}
 
+        public override void Tick(float delta)
+        {
+            foreach (var ctrl in controls)
+            {
+                if (ctrl.Visible)
+                {
+                    ctrl.Tick(delta);
+                }
+            }
+        }
+
         protected void RenderChildControlsAndContainers(Graphics g)
         {
             // First render our controls, then other containers.

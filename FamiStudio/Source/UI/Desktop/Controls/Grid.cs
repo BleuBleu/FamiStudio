@@ -4,6 +4,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
+    // CTRLTODO : The bug where if you click on the drop down outside of the grid is back!
     public class Grid : Control
     {
         public delegate void ValueChangedDelegate(Control sender, int rowIndex, int colIndex, object value);
@@ -80,7 +81,6 @@ namespace FamiStudio
 
             if (hasAnyDropDowns)
             {
-                // CTRLTODO : Add to dialog!
                 dropDownInactive = new DropDown(new[] { "" }, 0, true);
                 dropDownActive = new DropDown(new[] { "" }, 0);
                 dropDownInactive.SetRowHeight(rowHeight);
@@ -335,7 +335,7 @@ namespace FamiStudio
                                     dropDownActive.SetItems(colDesc.DropDownValues);
                                     dropDownActive.SelectedIndex = Array.IndexOf(colDesc.DropDownValues, (string)data[row, col]);
                                     dropDownActive.SetListOpened(true);
-                                    //dropDownActive.GrabDialogFocus(); // CTRLTODO : Focus!
+                                    dropDownActive.GrabDialogFocus();
                                     dropDownRow = row;
                                     dropDownCol = col;
                                     break;
@@ -430,7 +430,7 @@ namespace FamiStudio
                 {
                     dropDownActive.SetListOpened(false);
                     dropDownActive.Visible = false;
-                    // GrabDialogFocus(); CTRLTODO : Focus
+                    GrabDialogFocus();
                 }
 
                 UpdateHover(e);

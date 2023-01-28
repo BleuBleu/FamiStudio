@@ -68,12 +68,12 @@ namespace FamiStudio
                 tint = Theme.DarkRedColor;
             }
 
-            image = new ImageBox(imageName); // CTRLTODO Add!
+            image = new ImageBox(imageName);
             image.Tint = tint;
             image.Move(margin, margin + titleBarSizeY, imageSize, imageSize);
             AddControl(image);
 
-            label = new Label(text); // CTRLTODO Add!
+            label = new Label(text);
             label.Move(margin * 2 + image.Width, margin + titleBarSizeY, width - margin * 3 - image.Width, label.Height);
             AddControl(label);
             label.AutosizeWidth();
@@ -107,7 +107,7 @@ namespace FamiStudio
             for (int i = results.Length - 1; i >= 0; i--)
             {
                 var result = results[i];
-                var button = new Button(ButtonIcons[(int)result], ButtonLabels[(int)result]); // CTRLTODO : Add
+                var button = new Button(ButtonIcons[(int)result], ButtonLabels[(int)result]);
                 buttons[i] = button;
                 AddControl(button);
 
