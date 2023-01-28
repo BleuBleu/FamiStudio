@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # Build
-mdtool build -c:Release -t:Clean ../FamiStudio.Linux.sln
-mdtool build -c:Release -t:Build ../FamiStudio.Linux.sln
+dotnet clean -c:Release ../FamiStudio/FamiStudio.Linux.csproj
+dotnet build -c:Release ../FamiStudio/FamiStudio.Linux.csproj
 
 # Compress
 version=`cat Version.txt`
@@ -10,7 +10,7 @@ filename=FamiStudio$version-LinuxAMD64.zip
 
 rm $filename
 zip -9 $filename Demo\ Songs/*.* LinuxReadme.txt
-cd ../FamiStudio/bin/Release/
-zip -u -9 ../../../Setup/$filename *.so *.exe *.dll *.config LICENSE FamiStudio.pdb Resources/*.*
-cd ../../../Setup/
+cd ../FamiStudio/bin/Release/net6.0
+zip -u -9 ../../../../Setup/$filename *.so *.dll *.config *.json LICENSE FamiStudio.pdb
+cd ../../../../Setup/
 
