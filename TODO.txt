@@ -38,6 +38,10 @@ Batch convert PNG -> TGA
 ==========================
 "c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png
 
+Android SDK 12
+==============
+- Java path : C:\Program Files\Microsoft\jdk-11.0.12.7-hotspot
+
 Linux notes 
 =========== 
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 

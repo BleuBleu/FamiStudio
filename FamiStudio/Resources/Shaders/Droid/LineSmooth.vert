@@ -15,5 +15,5 @@ void main()
     gl_Position = vec4(inPosition * screenScaleBias.xy + screenScaleBias.zw, inDepth, 1);
     
     colorInterp = inColor;
-    lineDistInterp = inLineDist * 127.5f;
+    lineDistInterp = inLineDist * 127.5;
 }

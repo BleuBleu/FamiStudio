@@ -315,6 +315,11 @@ namespace FamiStudio
 
         private void RebuildChannelMap()
         {
+            if (Song == null)
+            {
+                return;
+            }
+
             channelVisible = new bool[Song.Channels.Length];
             channelToRow = new int[Song.Channels.Length];
 

@@ -3,21 +3,17 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class FamiStudioControls
+    public class FamiStudioContainer : Container
     {
         private const bool ShowRenderingTimes = false;
 
         private int width;
         private int height;
 
-        private Graphics  gfx;
-        private FontRenderResources fontRes;
-
-        private Control[] controls = new Control[6];
-        private Control   transitionControl;
-        private Control   activeControl;
-        private float     transitionTimer;
-        private bool      mobilePianoVisible = false;
+        private Control transitionControl;
+        private Control activeControl;
+        private float   transitionTimer;
+        private bool    mobilePianoVisible = false;
 
         private Toolbar         toolbar;
         private Sequencer       sequencer;
@@ -33,9 +29,7 @@ namespace FamiStudio
         public QuickAccessBar  QuickAccessBar  => quickAccessBar;
         public MobilePiano     MobilePiano     => mobilePiano;
         public Control         ActiveControl   => activeControl;
-        public Graphics        Graphics        => gfx; 
 
-        public Control[] Controls => controls;
         public bool IsLandscape => width > height;
         
         public bool MobilePianoVisible
@@ -48,26 +42,31 @@ namespace FamiStudio
             }
         }
 
-        public FamiStudioControls(FamiStudioWindow parent)
+        public FamiStudioContainer(FamiStudioWindow parent)
         {
-            toolbar         = new Toolbar(parent);
-            sequencer       = new Sequencer(parent);
-            pianoRoll       = new PianoRoll(parent);
-            projectExplorer = new ProjectExplorer(parent);
-            quickAccessBar  = new QuickAccessBar(parent);
-            mobilePiano     = new MobilePiano(parent);
-
-            controls[0] = sequencer;
-            controls[1] = pianoRoll;
-            controls[2] = projectExplorer;
-            controls[3] = quickAccessBar;
-            controls[4] = toolbar;
-            controls[5] = mobilePiano;
-
+            window = parent;
+            toolbar = new Toolbar();
+            sequencer = new Sequencer();
+            pianoRoll = new PianoRoll();
+            projectExplorer = new ProjectExplorer();
+            quickAccessBar = new QuickAccessBar();
+            mobilePiano = new MobilePiano();
             activeControl = sequencer;
+
+            pianoRoll.Visible = false;
+            projectExplorer.Visible = false;
+            mobilePiano.Visible = false;
+
+            AddControl(sequencer);
+            AddControl(pianoRoll);
+            AddControl(projectExplorer);
+            AddControl(quickAccessBar);
+            AddControl(toolbar);
+            AddControl(mobilePiano);
         }
 
-       public void SetActiveControl(Control ctrl, bool animate = true)
+        // CTRLTODO : Show/hide controls as needed.
+        public void SetActiveControl(Control ctrl, bool animate = true)
         {
             if (activeControl != ctrl)
             {
@@ -135,22 +134,7 @@ namespace FamiStudio
             }
         }
 
-        private bool IsPointInControl(Control ctrl, int x, int y, out int ctrlX, out int ctrlY)
-        {
-            ctrlX = x - ctrl.WindowLeft;
-            ctrlY = y - ctrl.WindowTop;
-
-            if (ctrlX >= 0 &&
-                ctrlY >= 0 &&
-                ctrlX < ctrl.Width &&
-                ctrlY < ctrl.Height)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
+        // CTRLTODO : Change!
         public bool CanAcceptInput
         {
             get
@@ -159,63 +143,47 @@ namespace FamiStudio
             }
         }
 
-        public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
-        {
-            if (!CanAcceptInput)
-            {
-                ctrlX = 0;
-                ctrlY = 0;
-                return null;
-            }
+        // CTRLTODO : Change!
+        //public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
+        //{
+        //    if (!CanAcceptInput)
+        //    {
+        //        ctrlX = 0;
+        //        ctrlY = 0;
+        //        return null;
+        //    }
 
-            // These 2 are allowed to steal the input when they are expanded.
-            if (quickAccessBar.IsExpanded)
-            {
-                IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY);
-                return quickAccessBar;
-            }
+        //    // These 2 are allowed to steal the input when they are expanded.
+        //    if (quickAccessBar.IsExpanded)
+        //    {
+        //        IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY);
+        //        return quickAccessBar;
+        //    }
 
-            if (toolbar.IsExpanded)
-            {
-                IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY);
-                return toolbar;
-            }
+        //    if (toolbar.IsExpanded)
+        //    {
+        //        IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY);
+        //        return toolbar;
+        //    }
 
-            if (mobilePianoVisible)
-            {
-                if (IsPointInControl(mobilePiano, formX, formY, out ctrlX, out ctrlY))
-                    return mobilePiano;
-            }
+        //    if (mobilePianoVisible)
+        //    {
+        //        if (IsPointInControl(mobilePiano, formX, formY, out ctrlX, out ctrlY))
+        //            return mobilePiano;
+        //    }
 
-            if (IsPointInControl(activeControl, formX, formY, out ctrlX, out ctrlY))
-                return activeControl;
-            if (IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY))
-                return quickAccessBar;
-            if (IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY))
-                return toolbar;
+        //    if (IsPointInControl(activeControl, formX, formY, out ctrlX, out ctrlY))
+        //        return activeControl;
+        //    if (IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY))
+        //        return quickAccessBar;
+        //    if (IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY))
+        //        return toolbar;
 
-            return null;
-        }
+        //    return null;
+        //}
 
-        public void MarkDirty()
-        {
-            foreach (var ctrl in controls)
-                ctrl.MarkDirty();
-        }
-
-        public bool NeedsRedraw()
-        {
-            bool anyNeedsRedraw = transitionTimer > 0.0f;
-
-            anyNeedsRedraw |= activeControl.NeedsRedraw;
-            anyNeedsRedraw |= quickAccessBar.NeedsRedraw;
-            anyNeedsRedraw |= toolbar.NeedsRedraw;
-            if (mobilePianoVisible)
-                anyNeedsRedraw |= mobilePiano.NeedsRedraw;
-
-            return anyNeedsRedraw;
-        }
-
+        // GLTODO : Migrate.
+        /*
         private void RenderControl(Control ctrl)
         {
             var fullscreenViewport = ctrl.WantsFullScreenViewport;
@@ -248,9 +216,12 @@ namespace FamiStudio
 
             ctrl.ClearDirtyFlag();
         }
+        */
 
         private void RenderTransitionOverlay()
         {
+            // GLTODO : Migrate.
+            /*
             if (transitionTimer > 0.0f)
             {
                 gfx.BeginDrawControl(new Rectangle(0, 0, width, height), height);
@@ -264,14 +235,17 @@ namespace FamiStudio
                 gfx.DrawCommandList(cmd);
                 gfx.EndDrawControl();
             }
+            */
         }
 
-        public void Tick(float timeDelta)
+        public override void Tick(float delta)
         {
+            base.Tick(delta);
+
             if (transitionTimer > 0.0f)
             {
                 var prevTimer = transitionTimer;
-                transitionTimer = Math.Max(0.0f, transitionTimer - timeDelta * 6);
+                transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
 
                 if (prevTimer > 0.5f && transitionTimer <= 0.5f)
                 {
@@ -284,47 +258,33 @@ namespace FamiStudio
             }
         }
 
-        public bool Redraw()
-        {
-            gfx.BeginDrawFrame();
-            {
-                RenderControl(activeControl);
-                RenderTransitionOverlay();
+        // GLTODO : This wont be needed.
+        //public bool Redraw()
+        //{
+        //    gfx.BeginDrawFrame();
+        //    {
+        //        RenderControl(activeControl);
+        //        RenderTransitionOverlay();
 
-                if (mobilePianoVisible)
-                {
-                    RenderControl(mobilePiano);
-                }
+        //        if (mobilePianoVisible)
+        //        {
+        //            RenderControl(mobilePiano);
+        //        }
 
-                if (toolbar.IsExpanded)
-                {
-                    RenderControl(quickAccessBar);
-                    RenderControl(toolbar);
-                }
-                else
-                {
-                    RenderControl(toolbar);
-                    RenderControl(quickAccessBar);
-                }
-            }
-            gfx.EndDrawFrame();
+        //        if (toolbar.IsExpanded)
+        //        {
+        //            RenderControl(quickAccessBar);
+        //            RenderControl(toolbar);
+        //        }
+        //        else
+        //        {
+        //            RenderControl(toolbar);
+        //            RenderControl(quickAccessBar);
+        //        }
+        //    }
+        //    gfx.EndDrawFrame();
 
-            return false;
-        }
-
-        public void InitializeGL()
-        {
-            Debug.Assert(gfx == null);
-
-            gfx = new Graphics(DpiScaling.Window, DpiScaling.Font);
-            fontRes = new FontRenderResources(gfx);
-            
-            foreach (var ctrl in controls)
-            {
-                ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-                ctrl.SetFontRenderResource(fontRes);
-                ctrl.RenderInitialized(gfx);
-            }
-        }
+        //    return false;
+        //}
     }
 }

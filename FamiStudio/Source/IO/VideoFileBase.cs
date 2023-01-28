@@ -199,6 +199,7 @@ namespace FamiStudio
                 return false;
             }
 
+            // GLTODO : We dont need this anymore, unless for mobile maybe?
             fontResources = new Fonts(videoGraphics);
             watermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 

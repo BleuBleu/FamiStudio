@@ -110,32 +110,6 @@ namespace FamiStudio
             }
         }
 
-        //protected override void OnKeyDown(KeyEventArgs e)
-        //{
-        //    DialogKeyDown?.Invoke(this, e);
-
-        //    if (focusedControl != null && focusedControl.Visible)
-        //    {
-        //        focusedControl.KeyDown(e);
-        //    }
-        //}
-
-        //protected override void OnKeyUp(KeyEventArgs e)
-        //{
-        //    if (focusedControl != null && focusedControl.Visible)
-        //    {
-        //        focusedControl.KeyUp(e);
-        //    }
-        //}
-
-        //protected override void OnChar(CharEventArgs e)
-        //{
-        //    if (focusedControl != null && focusedControl.Visible)
-        //    {
-        //        focusedControl.Char(e);
-        //    }
-        //}
-
         public override void Tick(float delta)
         {
             foreach (var ctrl in controls)

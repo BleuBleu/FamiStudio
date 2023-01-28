@@ -53,17 +53,14 @@ namespace FamiStudio
         
         public int LayoutSize => layoutSize;
 
-        public MobilePiano(FamiStudioWindow win) : base(win)
-        {
-        }
-
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
             var screenSize = Platform.GetScreenResolution();
             layoutSize = Math.Min(screenSize.Width, screenSize.Height) / 4;
 
-            bmpMobilePianoDrag   = g.GetBitmapAtlasRef("MobilePianoDrag");
-            bmpMobilePianoRest   = g.GetBitmapAtlasRef("MobilePianoRest");
+            var g = ParentWindow.Graphics;
+            bmpMobilePianoDrag = g.GetBitmapAtlasRef("MobilePianoDrag");
+            bmpMobilePianoRest = g.GetBitmapAtlasRef("MobilePianoRest");
         }
         
         private void UpdateRenderCoords()
@@ -71,18 +68,14 @@ namespace FamiStudio
             var screenSize = Platform.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
-            whiteKeySizeX = ScaleCustom(DefaultWhiteKeySizeX, scale * zoom);
-            blackKeySizeX = ScaleCustom(DefaultBlackKeySizeX, scale * zoom);
+            whiteKeySizeX = DpiScaling.ScaleCustom(DefaultWhiteKeySizeX, scale * zoom);
+            blackKeySizeX = DpiScaling.ScaleCustom(DefaultBlackKeySizeX, scale * zoom);
             octaveSizeX   = 7 * whiteKeySizeX;
             virtualSizeX  = octaveSizeX * NumOctaves;
 
             // Center the piano initially.
             if (scrollX < 0)
                 scrollX = (virtualSizeX - Width) / 2;
-        }
-
-        protected override void OnRenderTerminated()
-        {
         }
 
         protected override void OnResize(EventArgs e)
@@ -165,9 +158,7 @@ namespace FamiStudio
 #if DEBUG
             if (Platform.IsMobile)
             {
-                var c = g.CreateCommandList();
-                c.FillRectangle(lastX - 30, lastY - 30, lastX + 30, lastY + 30, Theme.WhiteColor);
-                g.DrawCommandList(c);
+                g.OverlayCommandList.FillRectangle(lastX - 30, lastY - 30, lastX + 30, lastY + 30, Theme.WhiteColor);
             }
 #endif
         }
@@ -177,6 +168,8 @@ namespace FamiStudio
             int minVisibleOctave = Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
             int maxVisibleOctave = Utils.Clamp((int)Math.Ceiling((scrollX + Width) / (float)octaveSizeX), 0, NumOctaves);
 
+            // GLTODO : Bring this back!
+            /*
             var cb = g.CreateCommandList();
             var cp = g.CreateCommandList();
            
@@ -271,6 +264,7 @@ namespace FamiStudio
 
             g.DrawCommandList(cb);
             g.DrawCommandList(cp, new Rectangle(0, 0, Width, Height));
+            */
         }
 
         protected override void OnRender(Graphics g)

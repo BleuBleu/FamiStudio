@@ -86,10 +86,20 @@ namespace FamiStudio
         private int CompileShader(string resourceName, int type, out List<string> attributes)
         {
             var code = "";
+            
+            if (type == GLES20.GlVertexShader)
+            {
+                code += "precision highp float;\n";
+            }
+            else
+            {
+                code += "precision mediump float;\n";
+            }
+
             using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(resourceName))
             using (StreamReader reader = new StreamReader(stream))
             {
-                code = reader.ReadToEnd();
+                code += reader.ReadToEnd();
             }
 
             if (type == GLES20.GlVertexShader)
@@ -333,17 +343,17 @@ namespace FamiStudio
             var assembly = Assembly.GetExecutingAssembly();
             needsScaling = false;
 
-            if (DpiScaling.Window >= 4.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@4x.tga") != null)
+            if (DpiScaling.Window >= 4.0f && assembly.GetManifestResourceInfo($"{name}@4x.tga") != null)
             {
-                return $"FamiStudio.Resources.{name}@4x.tga";
+                return $"{name}@4x.tga";
             }
-            else if (DpiScaling.Window >= 2.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.tga") != null)
+            else if (DpiScaling.Window >= 2.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
             {
-                return $"FamiStudio.Resources.{name}@2x.tga";
+                return $"{name}@2x.tga";
             }
             else
             {
-                return $"FamiStudio.Resources.{name}.tga";
+                return $"{name}.tga";
             }
         }
 
@@ -411,8 +421,6 @@ namespace FamiStudio
                 Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
 
                 GLES20.GlTexSubImage2D(GLES20.GlTexture2d, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, GLES20.GlRgba, GLES20.GlUnsignedByte, buffer);
-
-                names[i] = names[i].Substring(6); // Remove "Atlas."
             }
 
             return new BitmapAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, true);

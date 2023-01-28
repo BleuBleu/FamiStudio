@@ -61,7 +61,6 @@ namespace FamiStudio
             bmpVao        = GL.GenVertexArray();
             depthVao      = GL.GenVertexArray();
 
-            // MATTT : More buffers?
             vertexBuffer   = GL.GenBuffer();
             colorBuffer    = GL.GenBuffer();
             centerBuffer   = GL.GenBuffer();

@@ -11,6 +11,7 @@ using Android.Runtime;
 using Android.Util;
 using Android.Views;
 using Android.Content.PM;
+using AndroidX.Core.Graphics;
 using AndroidX.Core.View;
 using AndroidX.AppCompat.App;
 using AndroidX.Core.Content;
@@ -18,7 +19,6 @@ using Javax.Microedition.Khronos.Opengles;
 using Google.Android.Material.BottomSheet;
 
 using Debug = System.Diagnostics.Debug;
-using AndroidX.Core.Graphics;
 
 namespace FamiStudio
 {
@@ -29,12 +29,16 @@ namespace FamiStudio
         private GLSurfaceView glSurfaceView;
 
         private FamiStudio famistudio;
-        private FamiStudioControls controls;
+        private FamiStudioContainer container;
+        private Graphics graphics;
+        private Fonts fonts;
+        private bool dirty = true;
 
         // For context menus.
         BottomSheetDialog contextMenuDialog;
 
         // For property or multi-property dialogs.
+        private bool appWasAlreadyRunning;
         private bool glThreadIsRunning;
         private static bool activityRunning;
         private long lastFrameTime = -1;
@@ -52,21 +56,22 @@ namespace FamiStudio
         public BaseDialogActivityInfo ActiveDialog => activeDialog;
         public bool IsAsyncDialogInProgress => activeDialog != null;
 
-        public FamiStudio      FamiStudio      => famistudio;
-        public Toolbar         ToolBar         => controls.ToolBar;
-        public Sequencer       Sequencer       => controls.Sequencer;
-        public PianoRoll       PianoRoll       => controls.PianoRoll;
-        public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
-        public QuickAccessBar  QuickAccessBar  => controls.QuickAccessBar;
-        public MobilePiano     MobilePiano     => controls.MobilePiano;
-        public Control         ActiveControl   => controls.ActiveControl;
-        public Graphics        Graphics        => controls.Graphics;
+        public FamiStudio FamiStudio => famistudio;
+        public Toolbar ToolBar => container.ToolBar;
+        public Sequencer Sequencer => container.Sequencer;
+        public PianoRoll PianoRoll => container.PianoRoll;
+        public ProjectExplorer ProjectExplorer => container.ProjectExplorer;
+        public QuickAccessBar QuickAccessBar => container.QuickAccessBar;
+        public MobilePiano MobilePiano => container.MobilePiano;
+        public Control ActiveControl => container.ActiveControl;
+        public Graphics Graphics => graphics;
+        public Fonts Fonts => fonts;
 
         public int Width  => glSurfaceView.Width;
         public int Height => glSurfaceView.Height;
         public Size Size => new Size(glSurfaceView.Width, glSurfaceView.Height);
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
-        public bool MobilePianoVisible { get => controls.MobilePianoVisible; set => controls.MobilePianoVisible = value; }
+        public bool MobilePianoVisible { get => container.MobilePianoVisible; set => container.MobilePianoVisible = value; }
         public string Text { get; set; }
 
         private GestureDetectorCompat detector;
@@ -93,7 +98,7 @@ namespace FamiStudio
 
         public void SetActiveControl(Control ctrl, bool animate = true)
         {
-            controls.SetActiveControl(ctrl, animate);
+            container.SetActiveControl(ctrl, animate);
         }
 
         private void EnableFullscreenMode(Window win)
@@ -119,57 +124,51 @@ namespace FamiStudio
             EnableFullscreenMode(Window);
             Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
 
-#if DEBUG
+        #if DEBUG
             Debug.Listeners.Add(new DebuggerBreakListener());
-#endif
+        #endif
 
             Init.InitializeBaseSystems();
 
             // Only create the app once.
-            var appAlreadyExists = FamiStudio.StaticInstance != null;
+            appWasAlreadyRunning = FamiStudio.StaticInstance != null;
 
-            if (appAlreadyExists)
+            if (appWasAlreadyRunning)
                 famistudio = FamiStudio.StaticInstance;
             else
                 famistudio = new FamiStudio();
 
-            glSurfaceView = new GLSurfaceView(this);
-            glSurfaceView.PreserveEGLContextOnPause = true;
-#if DEBUG
-            glSurfaceView.DebugFlags = DebugFlags.CheckGlError;
-#endif
-            glSurfaceView.SetEGLContextClientVersion(1);
-            glSurfaceView.SetEGLConfigChooser(8, 8, 8, 8, 0, 0);
-            glSurfaceView.SetRenderer(this);
-            glSurfaceView.RenderMode = Rendermode.WhenDirty;
-            glThreadIsRunning = true;
+            lock (renderLock)
+            {
+                glSurfaceView = new GLSurfaceView(this);
+                glSurfaceView.PreserveEGLContextOnPause = true;
+            #if DEBUG
+                glSurfaceView.DebugFlags = DebugFlags.CheckGlError;
+            #endif
+                glSurfaceView.SetEGLContextClientVersion(2);
+                glSurfaceView.SetEGLConfigChooser(8, 8, 8, 8, 16, 0);
+                glSurfaceView.SetRenderer(this);
+                glSurfaceView.RenderMode = Rendermode.WhenDirty;
+                glThreadIsRunning = true;
 
-            linearLayout = new LinearLayout(this);
-            linearLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
-            linearLayout.AddView(glSurfaceView);
+                linearLayout = new LinearLayout(this);
+                linearLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
+                linearLayout.AddView(glSurfaceView);
 
-            SetContentView(linearLayout);
+                SetContentView(linearLayout);
+                Instance = this;
 
-            controls = new FamiStudioControls(this);
+                detector = new GestureDetectorCompat(this, this);
+                detector.IsLongpressEnabled = true;
+                detector.SetOnDoubleTapListener(this);
+                scaleDetector = new ScaleGestureDetector(this, this);
+                scaleDetector.QuickScaleEnabled = false;
 
-            Instance = this;
+                Choreographer.Instance.PostFrameCallback(this);
 
-            // Simply update the form if the app already exists.
-            if (appAlreadyExists)
-                famistudio.SetWindow(this, true);
-            else
-                famistudio.Initialize(this, null);
-
-            detector = new GestureDetectorCompat(this, this);
-            detector.IsLongpressEnabled = true;
-            detector.SetOnDoubleTapListener(this);
-            scaleDetector = new ScaleGestureDetector(this, this);
-            scaleDetector.QuickScaleEnabled = false;
-
-            Choreographer.Instance.PostFrameCallback(this);
-            
-            UpdateForceLandscape();
-            StartCleanCacheFolder();
+                UpdateForceLandscape();
+                StartCleanCacheFolder();
+            }
         }
 
         private void StartCleanCacheFolder()
@@ -361,7 +360,7 @@ namespace FamiStudio
             if (lastFrameTime < 0)
                 lastFrameTime = frameTimeNanos;
 
-            if (glThreadIsRunning && !IsAsyncDialogInProgress)
+            if (glThreadIsRunning && container != null && !IsAsyncDialogInProgress)
             {
                 var deltaTime = (float)Math.Min(0.25f, (float)((frameTimeNanos - lastFrameTime) / 1000000000.0));
 
@@ -370,13 +369,16 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     famistudio.Tick(deltaTime);
-                    controls.Tick(deltaTime);
+                    container.Tick(deltaTime);
                 }
 
                 ConditionalShowDelayedMessageBox();
 
-                if (controls.NeedsRedraw())
+                if (dirty)
+                { 
                     glSurfaceView.RequestRender();
+                    dirty = false;
+                }
             }
 
             Choreographer.Instance.PostFrameCallback(this);
@@ -387,14 +389,26 @@ namespace FamiStudio
         public void OnDrawFrame(IGL10 gl)
         {
             lock (renderLock)
-                controls.Redraw();
+            {
+                var rect = new Rectangle(Point.Empty, Size);
+                var clearColor = global::FamiStudio.Theme.DarkGreyColor2;
+
+                graphics.BeginDrawFrame(rect, clearColor);
+                container.Render(graphics);
+                graphics.EndDrawFrame();
+            }
         }
 
         // GL thread.
         public void OnSurfaceChanged(IGL10 gl, int width, int height)
         {
             lock (renderLock)
-                controls.Resize(width, height);
+            { 
+                if (container != null)
+                { 
+                    container.Resize(width, height);
+                }
+            }
         }
 
         // GL thread.
@@ -402,8 +416,20 @@ namespace FamiStudio
         {
             lock (renderLock)
             {
-                controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
-                controls.InitializeGL();
+                graphics = new Graphics();
+                fonts = new Fonts(graphics);
+
+                if (container == null)
+                { 
+                    container = new FamiStudioContainer(this);
+                    container.Resize(glSurfaceView.Width, glSurfaceView.Height);
+
+                    // Simply update the form if the app already exists.
+                    if (appWasAlreadyRunning)
+                        famistudio.SetWindow(this, true);
+                    else
+                        famistudio.Initialize(this, null);
+                }
             }
         }
 
@@ -417,25 +443,25 @@ namespace FamiStudio
             return Point.Empty;
         }
 
-        public Point PointToClient(Point p)
+        public Point ScreenToWindow(Point p)
         {
             return Point.Empty;
         }
 
-        public Point PointToScreen(Point p)
+        public Point WindowToScreen(Point p)
         {
             return Point.Empty;
         }
 
-        public Point PointToClient(Control ctrl, Point p)
-        {
-            return Point.Empty;
-        }
+        //public Point PointToClient(Control ctrl, Point p)
+        //{
+        //    return Point.Empty;
+        //}
 
-        public Point PointToScreen(Control ctrl, Point p)
-        {
-            return Point.Empty;
-        }
+        //public Point PointToScreen(Control ctrl, Point p)
+        //{
+        //    return Point.Empty;
+        //}
 
         public void RunEventLoop(bool allowSleep = false)
         {
@@ -486,17 +512,17 @@ namespace FamiStudio
 
         public void RefreshLayout()
         {
-            controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
+            container.Resize(glSurfaceView.Width, glSurfaceView.Height);
         }
 
         public void MarkDirty()
         {
-            controls.MarkDirty();
+            dirty = true;
         }
 
         public void Refresh()
         {
-            controls.MarkDirty();
+            MarkDirty();
         }
 
         public void RefreshCursor()
@@ -686,17 +712,23 @@ namespace FamiStudio
 
         private Control GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
+            ctrlX = 0;
+            ctrlY = 0;
+            return null;
+
+            // CTRLTODO : Migrate.
+            /*
             if (captureControl != null)
             {
-                Debug.Assert(controls.CanAcceptInput);
+                Debug.Assert(container.CanAcceptInput);
 
                 ctrlX = formX - captureControl.WindowLeft;
                 ctrlY = formY - captureControl.WindowTop;
                 return captureControl;
             }
-            else if (controls.CanAcceptInput)
+            else if (container.CanAcceptInput)
             {
-                return controls.GetControlAtCoord(formX, formY, out ctrlX, out ctrlY);
+                return container.GetControlAtCoord(formX, formY, out ctrlX, out ctrlY);
             }
             else
             {
@@ -704,6 +736,7 @@ namespace FamiStudio
                 ctrlY = 0;
                 return null;
             }
+            */
         }
 
         public override bool OnTouchEvent(MotionEvent e)

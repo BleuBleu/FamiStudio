@@ -1347,7 +1347,7 @@ namespace FamiStudio
         {
             if (Platform.IsMobile)
             {
-                Debug.Assert(Platform.IsInMainThread());
+                //Debug.Assert(Platform.IsInMainThread());
 
                 SaveProjectCopy(WipProject);
                 SaveWipSettings();
