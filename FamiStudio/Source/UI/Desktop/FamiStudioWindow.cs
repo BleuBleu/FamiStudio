@@ -561,6 +561,7 @@ namespace FamiStudio
             var ctrl = container.GetControlAt(lastCursorX, lastCursorY, out int cx, out int cy);
             if (ctrl != null)
             {
+                SetActiveControl(ctrl);
                 container.ConditionalHideContextMenu(ctrl);
 
                 const float Multiplier = Platform.IsWindows ? 10.0f : 2.0f;
