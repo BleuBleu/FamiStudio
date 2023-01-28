@@ -93,7 +93,6 @@
     <Compile Include="Source\IO\VorbisFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Platform\Desktop\Platform.cs" />
-    <Compile Include="Source\Platform\Windows\MultiMediaNotifications.cs" />
     <Compile Include="Source\Platform\Windows\Platform.cs" />
     <Compile Include="Source\Player\AudioStreamInterface.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />

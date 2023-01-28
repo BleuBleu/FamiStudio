@@ -29,8 +29,6 @@ namespace FamiStudio
             if (!InitializeDesktop(commandLine))
                 return false;
 
-            InitializeMultiMediaNotifications();
-
             clipboardFormat = RegisterClipboardFormat("FamiStudio");
             doubleClickTime = GetDoubleClickTime() / 1000.0f;
 
@@ -575,21 +573,6 @@ namespace FamiStudio
         public static void ShutdownConsole()
         {
             SendMessage(GetConsoleWindow(), WM_CHAR, (IntPtr)VK_ENTER, IntPtr.Zero);
-        }
-
-        private static MultiMediaNotificationListener mmNoticiations;
-
-        private static void InitializeMultiMediaNotifications()
-        {
-            // Windows 7 falls back to XAudio 2.7 which does not have 
-            // a virtual audio end point, which mean we need to detect 
-            // device changes a lot more manually.
-            if (Environment.OSVersion.Version.Major == 6 &&
-                Environment.OSVersion.Version.Minor <= 1)
-            {
-                mmNoticiations = new MultiMediaNotificationListener();
-                mmNoticiations.DefaultDeviceChanged += MmNoticiations_DefaultDeviceChanged;
-            }
         }
 
         private static void MmNoticiations_DefaultDeviceChanged()
