@@ -1230,6 +1230,11 @@ namespace FamiStudio
                 y1 += 0.5f;
             }
 
+            if (miter && width < 4)
+            {
+                miter = false;
+            }
+
             if (lineSmoothBatch == null)
             {
                 lineSmoothBatch = new LineSmoothBatch();
@@ -1267,12 +1272,14 @@ namespace FamiStudio
                 var odx = dx * ohw;
                 var ody = dy * ohw;
 
+                var miterAmount = miter ? ohw + 0.1f : 0.1f;
+
                 dx *= il;
                 dy *= il;
-                x0 -= dx * 0.1f;
-                y0 -= dy * 0.1f;
-                x1 += dx * 0.1f;  
-                y1 += dy * 0.1f;
+                x0 -= dx * miterAmount;
+                y0 -= dy * miterAmount;
+                x1 += dx * miterAmount;  
+                y1 += dy * miterAmount;
 
                 var i0 = (short)(batch.vtxIdx / 2 + 0);
                 var i1 = (short)(i0 + 1);
@@ -1357,10 +1364,10 @@ namespace FamiStudio
 
                 if (miter)
                 {
-                    x0 -= dx;
-                    y0 -= dy;
-                    x1 += dx;
-                    y1 += dy;
+                    x0 -= dx * 0.49f;
+                    y0 -= dy * 0.49f;
+                    x1 += dx * 0.49f;
+                    y1 += dy * 0.49f;
                 }
 
                 var i0 = (short)(batch.vtxIdx / 2 + 0);
@@ -1490,12 +1497,10 @@ namespace FamiStudio
             }
         }
 
-        public void DrawGeometry(Span<float> points, Color color, int width = 1, bool smooth = false, bool close = true)
+        public void DrawGeometry(Span<float> points, Color color, int width = 1, bool smooth = false, bool close = true, bool miter = false)
         {
             width += lineWidthBias;
             
-            var miter = false; //width > 1 && !xform.HasScaling; // Miter doesnt work with scaling atm.
-
             var x0 = points[0];
             var y0 = points[1];
             xform.TransformPoint(ref x0, ref y0);
@@ -1546,7 +1551,7 @@ namespace FamiStudio
 
             if (smooth)
             {
-                var halfWidth = 0.0f; //miter ? width * 0.5f : 0.0f;
+                var halfWidth = miter && width >= 4 ? width * 0.35f : 0.0f;
                 DrawThickSmoothLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
                 DrawThickSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
                 DrawThickSmoothLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
