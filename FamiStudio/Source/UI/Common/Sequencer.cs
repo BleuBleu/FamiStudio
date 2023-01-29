@@ -886,6 +886,8 @@ namespace FamiStudio
 
         // GLTODO : Mostly ported over, look attentively for missing little lines between
         // cells, test with and without scrollbars.
+        // GLTODO : When scrollbars ON but vertical scrolling OFF, we still leave room for
+        // scroll bars on the right.
         protected override void OnRender(Graphics g)
         {
             // Happens when piano roll is maximized.
