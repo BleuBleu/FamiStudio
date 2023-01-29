@@ -1707,7 +1707,7 @@ namespace FamiStudio
 
                             // GLTODO : Was using "cz" here, whats that?
                             if (highlighted || selected)
-                                r.c.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 4, true, true);
+                                r.c.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 3, true, true);
                             else
                                 r.c.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, Theme.BlackColor);
 
@@ -1798,7 +1798,7 @@ namespace FamiStudio
 
                         // GLTODO : Was using "cz" here.
                         if (highlighted || selected)
-                            r.c.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 2, true);
+                            r.c.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 3, true);
                         else
                             r.c.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, Theme.BlackColor);
 
@@ -2642,7 +2642,7 @@ namespace FamiStudio
                         var highlighted = i == highlightDPCMSample;
 
                         r.c.PushTranslation(0, y);
-                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, noteSizeY, highlighted ? 4 : 1, highlighted, highlighted);
+                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, noteSizeY, highlighted ? 3 : 1, highlighted, highlighted);
 
                         string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                         if (mapping.Loop) text += ", Looping";
@@ -2672,7 +2672,7 @@ namespace FamiStudio
                     {
                         var y = virtualSizeY - noteValue * noteSizeY - scrollY;
                         r.c.PushTranslation(0, y);
-                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, dragSample.Color, dragSample.Color.Scaled(0.8f), Theme.WhiteColor, true, noteSizeY, 4, true, true);
+                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, dragSample.Color, dragSample.Color.Scaled(0.8f), Theme.WhiteColor, true, noteSizeY, 3, true, true);
                         r.c.PopTransform();
                     }
                 }
@@ -2688,7 +2688,7 @@ namespace FamiStudio
                             var y = virtualSizeY - highlightNoteValue * noteSizeY - scrollY;
 
                             r.c.PushTranslation(0, y);
-                            r.c.DrawRectangle(0, 0, Width - pianoSizeX, noteSizeY, Theme.WhiteColor,  4, true, true);
+                            r.c.DrawRectangle(0, 0, Width - pianoSizeX, noteSizeY, Theme.WhiteColor, 3, true, true);
                             r.c.PopTransform();
                         }
                     }
@@ -2792,7 +2792,7 @@ namespace FamiStudio
                     r.c.FillRectangle(x0, y - envelopeValueSizeY, x1, y, brush);
 
                     if (!highlighted)
-                        r.c.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 4 : 1, selected, selected);
+                        r.c.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 3 : 1, selected, selected);
                     else
                         highlightRect = new RectangleF(x0,y - envelopeValueSizeY, x1 - x0, envelopeValueSizeY);
 
@@ -2830,7 +2830,7 @@ namespace FamiStudio
                     r.c.FillRectangle(x0, y0, x1, y1, brush);
 
                     if (!highlighted)
-                        r.c.DrawRectangle(x0, y0, x1, y1, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 4 : 1, selected, selected);
+                        r.c.DrawRectangle(x0, y0, x1, y1, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 3 : 1, selected, selected);
                     else
                         highlightRect = new RectangleF(x0, y0, x1 - x0, y1 - y0);
 
@@ -2847,7 +2847,7 @@ namespace FamiStudio
             }
 
             if (!highlightRect.IsEmpty)
-                r.c.DrawRectangle(highlightRect, Theme.WhiteColor, 4, true, true);
+                r.c.DrawRectangle(highlightRect, Theme.WhiteColor, 3, true, true);
 
             // Drawing the N163/FDS waveform on top. 
             if (resampled)
@@ -3008,7 +3008,7 @@ namespace FamiStudio
                 r.c.FillRectangleGradient(0, activeChannelInt, sx, sy, color, color.Scaled(0.8f), true, sy);
             
             if (activeChannel)
-                r.c.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 4 : 1, selected || outline, selected || outline);
+                r.c.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 3 : 1, selected || outline, selected || outline);
 
             if (!outline)
             {
@@ -3051,7 +3051,7 @@ namespace FamiStudio
             if (!outline)
                 r.c.FillGeometryGradient(geo[activeChannel ? 0 : 1], color, color.Scaled(0.8f), noteSizeY);
             if (activeChannel)
-                r.c.DrawGeometry(geo[0], outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), outline || selected ? 4 : 1, true);
+                r.c.DrawGeometry(geo[0], outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), outline || selected ? 3 : 1, true);
             r.c.PopTransform();
 
             r.c.PushTranslation(x, y);
@@ -3439,9 +3439,26 @@ namespace FamiStudio
         // OpenGL line rasterization tests.
         private void RenderLineDebug(Graphics g)
         {
+#if false
+            for (int i = 1; i <= 8; i++)
+            {
+                g.Transform.PushTranslation(i * 110, 100);
+                for (int j = 0; j < 16; j++)
+                {
+                    var cos = (float)Math.Cos(j / 16.0 * Math.PI * 2.0);
+                    var sin = (float)Math.Sin(j / 16.0 * Math.PI * 2.0);
+
+                    g.DefaultCommandList.DrawLine(0, 0, cos * 50, sin * 50, new Color(255, 0, 255), i, true);
+                    g.ForegroundCommandList.DrawLine(0, 0, cos * 50, sin * 50, new Color(0, 255, 0), 1, false);
+                }
+
+                g.DefaultCommandList.DrawRectangle(-50, 100, 50, 110, new Color(255, 0, 255), i, true);
+                g.ForegroundCommandList.DrawRectangle(-50, 100, 50, 110, new Color(0, 255, 0), 1, false);
+                g.Transform.PopTransform();
+            }
+#else
             releaseNoteGeometry[0][4] = 10.0f;
             releaseNoteGeometry[0][6] = 10.0f;
-
             for (int i = 1; i <= 8; i++)
             {
                 g.Transform.PushTranslation(i * 200, 100);
@@ -3456,7 +3473,6 @@ namespace FamiStudio
                 g.Transform.PopTransform();
                 g.Transform.PopTransform();
                 g.Transform.PopTransform();
-
                 g.Transform.PushTranslation(i * 200, 500);
                 g.OverlayCommandList.DrawLine(0, 0, 100, 100, new Color(255, 0, 255), i, false);
                 g.OverlayCommandList.DrawLine(0, 0, 100, 0, new Color(255, 0, 255), i, false);
@@ -3470,6 +3486,7 @@ namespace FamiStudio
                 g.Transform.PopTransform();
                 g.Transform.PopTransform();
             }
+#endif
         }
 #endif
 

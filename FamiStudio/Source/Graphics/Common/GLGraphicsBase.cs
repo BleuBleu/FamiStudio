@@ -1172,7 +1172,7 @@ namespace FamiStudio
 
             var dx = x1 - x0;
             var dy = y1 - y0;
-            var invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
+            var invHalfWidth = (width * 0.5f) / (float)MathF.Sqrt(dx * dx + dy * dy);
             dx *= invHalfWidth;
             dy *= invHalfWidth;
 
@@ -1230,15 +1230,6 @@ namespace FamiStudio
                 y1 += 0.5f;
             }
 
-            // Odd values are tricky to make work with rasterization rules.
-            // This works OK, but tend to create lines that are a bit see-through.
-            var encodedWidth = (byte)width;
-            if ((width & 1) != 0)
-            {
-                width++;
-                encodedWidth--;
-            }
-
             if (lineSmoothBatch == null)
             {
                 lineSmoothBatch = new LineSmoothBatch();
@@ -1252,73 +1243,180 @@ namespace FamiStudio
             var batch = lineSmoothBatch;
             var depth = graphics.DepthValue;
 
-            var dx = x1 - x0;
-            var dy = y1 - y0;
-            var invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
-            dx *= invHalfWidth;
-            dy *= invHalfWidth;
-
-            if (miter)
+            // Odd values require extra vertices to work well with rasterization rules.
+            if ((width & 1) != 0)
             {
-                x0 -= dx;
-                y0 -= dy;
-                x1 += dx;
-                y1 += dy;
+                x0 += 0.49f;
+                y0 += 0.49f;
+                x1 += 0.49f;
+                y1 += 0.49f; 
+
+                if (y1 < y0)
+                {
+                    Utils.Swap(ref x0, ref x1);  
+                    Utils.Swap(ref y0, ref y1);
+                }
+
+                var dx = x1 - x0;
+                var dy = y1 - y0;
+                var il = 1.0f / MathF.Sqrt(dx * dx + dy * dy);
+                var ihw = 0.5f * il;
+                var ohw = width * 0.5f * il;
+                var idx = dx * ihw;
+                var idy = dy * ihw;
+                var odx = dx * ohw;
+                var ody = dy * ohw;
+
+                dx *= il;
+                dy *= il;
+                x0 -= dx * 0.1f;
+                y0 -= dy * 0.1f;
+                x1 += dx * 0.1f;  
+                y1 += dy * 0.1f;
+
+                var i0 = (short)(batch.vtxIdx / 2 + 0);
+                var i1 = (short)(i0 + 1);
+                var i2 = (short)(i0 + 2);
+                var i3 = (short)(i0 + 3);
+                var i4 = (short)(i0 + 4);
+                var i5 = (short)(i0 + 5);
+                var i6 = (short)(i0 + 6);
+                var i7 = (short)(i0 + 7);
+
+                batch.idxArray[batch.idxIdx++] = i0;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i5;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i5;
+                batch.idxArray[batch.idxIdx++] = i6;
+                batch.idxArray[batch.idxIdx++] = i5;
+                batch.idxArray[batch.idxIdx++] = i7;
+                batch.idxArray[batch.idxIdx++] = i6;
+
+                batch.vtxArray[batch.vtxIdx++] = x0 - ody;
+                batch.vtxArray[batch.vtxIdx++] = y0 + odx;
+                batch.vtxArray[batch.vtxIdx++] = x1 - ody;
+                batch.vtxArray[batch.vtxIdx++] = y1 + odx;
+                batch.vtxArray[batch.vtxIdx++] = x0 - idy;
+                batch.vtxArray[batch.vtxIdx++] = y0 + idx;
+                batch.vtxArray[batch.vtxIdx++] = x1 - idy;
+                batch.vtxArray[batch.vtxIdx++] = y1 + idx;
+                batch.vtxArray[batch.vtxIdx++] = x0 + idy;
+                batch.vtxArray[batch.vtxIdx++] = y0 - idx;
+                batch.vtxArray[batch.vtxIdx++] = x1 + idy;
+                batch.vtxArray[batch.vtxIdx++] = y1 - idx;
+                batch.vtxArray[batch.vtxIdx++] = x0 + ody;
+                batch.vtxArray[batch.vtxIdx++] = y0 - odx;
+                batch.vtxArray[batch.vtxIdx++] = x1 + ody;
+                batch.vtxArray[batch.vtxIdx++] = y1 - odx;
+
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = (byte)(width - 1); 
+                batch.dstArray[batch.dstIdx++] = (byte)(width - 1);
+                batch.dstArray[batch.dstIdx++] = (byte)(width - 1);
+                batch.dstArray[batch.dstIdx++] = (byte)(width - 1);
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
             }
+            else
+            {
+                var dx = x1 - x0;
+                var dy = y1 - y0;
+                var il = 1.0f / (float)MathF.Sqrt(dx * dx + dy * dy);
+                var hw = (width * 0.5f) * il;
+                dx *= hw;
+                dy *= hw;
 
-            var i0 = (short)(batch.vtxIdx / 2 + 0);
-            var i1 = (short)(batch.vtxIdx / 2 + 1);
-            var i2 = (short)(batch.vtxIdx / 2 + 2);
-            var i3 = (short)(batch.vtxIdx / 2 + 3);
-            var i4 = (short)(batch.vtxIdx / 2 + 4);
-            var i5 = (short)(batch.vtxIdx / 2 + 5);
+                if (miter)
+                {
+                    x0 -= dx;
+                    y0 -= dy;
+                    x1 += dx;
+                    y1 += dy;
+                }
 
-            batch.idxArray[batch.idxIdx++] = i0;
-            batch.idxArray[batch.idxIdx++] = i1;
-            batch.idxArray[batch.idxIdx++] = i2;
-            batch.idxArray[batch.idxIdx++] = i1;
-            batch.idxArray[batch.idxIdx++] = i3;
-            batch.idxArray[batch.idxIdx++] = i2;
-            batch.idxArray[batch.idxIdx++] = i2;
-            batch.idxArray[batch.idxIdx++] = i3;
-            batch.idxArray[batch.idxIdx++] = i4;
-            batch.idxArray[batch.idxIdx++] = i2;
-            batch.idxArray[batch.idxIdx++] = i5;
-            batch.idxArray[batch.idxIdx++] = i4;
+                var i0 = (short)(batch.vtxIdx / 2 + 0);
+                var i1 = (short)(i0 + 1);
+                var i2 = (short)(i0 + 2);
+                var i3 = (short)(i0 + 3);
+                var i4 = (short)(i0 + 4);
+                var i5 = (short)(i0 + 5);
 
-            batch.vtxArray[batch.vtxIdx++] = x0 - dy;
-            batch.vtxArray[batch.vtxIdx++] = y0 + dx;
-            batch.vtxArray[batch.vtxIdx++] = x1 - dy;
-            batch.vtxArray[batch.vtxIdx++] = y1 + dx;
-            batch.vtxArray[batch.vtxIdx++] = x0;
-            batch.vtxArray[batch.vtxIdx++] = y0;
-            batch.vtxArray[batch.vtxIdx++] = x1;
-            batch.vtxArray[batch.vtxIdx++] = y1;
-            batch.vtxArray[batch.vtxIdx++] = x1 + dy;
-            batch.vtxArray[batch.vtxIdx++] = y1 - dx;
-            batch.vtxArray[batch.vtxIdx++] = x0 + dy;
-            batch.vtxArray[batch.vtxIdx++] = y0 - dx;
+                batch.idxArray[batch.idxIdx++] = i0;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i5;
+                batch.idxArray[batch.idxIdx++] = i4;
 
-            batch.colArray[batch.colIdx++] = color.ToAbgr();
-            batch.colArray[batch.colIdx++] = color.ToAbgr();
-            batch.colArray[batch.colIdx++] = color.ToAbgr();
-            batch.colArray[batch.colIdx++] = color.ToAbgr();
-            batch.colArray[batch.colIdx++] = color.ToAbgr();
-            batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.vtxArray[batch.vtxIdx++] = x0 - dy;
+                batch.vtxArray[batch.vtxIdx++] = y0 + dx;
+                batch.vtxArray[batch.vtxIdx++] = x1 - dy;
+                batch.vtxArray[batch.vtxIdx++] = y1 + dx;
+                batch.vtxArray[batch.vtxIdx++] = x0;
+                batch.vtxArray[batch.vtxIdx++] = y0;
+                batch.vtxArray[batch.vtxIdx++] = x1;
+                batch.vtxArray[batch.vtxIdx++] = y1;
+                batch.vtxArray[batch.vtxIdx++] = x1 + dy;
+                batch.vtxArray[batch.vtxIdx++] = y1 - dx;
+                batch.vtxArray[batch.vtxIdx++] = x0 + dy;
+                batch.vtxArray[batch.vtxIdx++] = y0 - dx;
 
-            batch.dstArray[batch.dstIdx++] = 0;
-            batch.dstArray[batch.dstIdx++] = 0;
-            batch.dstArray[batch.dstIdx++] = encodedWidth;
-            batch.dstArray[batch.dstIdx++] = encodedWidth;
-            batch.dstArray[batch.dstIdx++] = 0;
-            batch.dstArray[batch.dstIdx++] = 0;
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
 
-            batch.depArray[batch.depIdx++] = depth;
-            batch.depArray[batch.depIdx++] = depth;
-            batch.depArray[batch.depIdx++] = depth;
-            batch.depArray[batch.depIdx++] = depth;
-            batch.depArray[batch.depIdx++] = depth;
-            batch.depArray[batch.depIdx++] = depth;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = (byte)width;
+                batch.dstArray[batch.dstIdx++] = (byte)width;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+            }
         }
 
         public void DrawLine(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool dash = false)
@@ -1448,8 +1546,7 @@ namespace FamiStudio
 
             if (smooth)
             {
-                Debug.Assert((width & 1) == 0); // Odd line widths look bad right now.
-                var halfWidth = miter ? width * 0.25f : 0.0f;
+                var halfWidth = 0.0f; //miter ? width * 0.5f : 0.0f;
                 DrawThickSmoothLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
                 DrawThickSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
                 DrawThickSmoothLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
@@ -1538,8 +1635,8 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
                 
-            bool fullHorizontalGradient = !vertical && Math.Abs(gradientSize) >= Math.Abs(x1 - x0);
-            bool fullVerticalGradient   =  vertical && Math.Abs(gradientSize) >= Math.Abs(y1 - y0);
+            bool fullHorizontalGradient = !vertical && MathF.Abs(gradientSize) >= MathF.Abs(x1 - x0);
+            bool fullVerticalGradient   =  vertical && MathF.Abs(gradientSize) >= MathF.Abs(y1 - y0);
 
             if (fullHorizontalGradient || fullVerticalGradient)
             {
@@ -1780,7 +1877,7 @@ namespace FamiStudio
                     Utils.Normalize(ref dx, ref dy);
 
                     // Cos -> Csc
-                    var d = 0.7071f / (float)Math.Sqrt(1.0f - Utils.Saturate(Utils.Dot(dnx, dny, -dpx, -dpy)));
+                    var d = 0.7071f / MathF.Sqrt(1.0f - Utils.Saturate(Utils.Dot(dnx, dny, -dpx, -dpy)));
                     var ix = cx + dx * d;
                     var iy = cy + dy * d;
                     var ox = cx - dx * d;

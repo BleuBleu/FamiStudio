@@ -56,22 +56,22 @@ namespace FamiStudio
 
         public static bool IsNearlyEqual(float a, float b, float delta = 1e-5f)
         {
-            return Math.Abs(a - b) < delta;
+            return MathF.Abs(a - b) < delta;
         }
 
         public static bool IsNearlyEqual(int a, int b, int delta = 10)
         {
-            return Math.Abs(a - b) < delta;
+            return MathF.Abs(a - b) < delta;
         }
 
         public static int SignedCeil(float x)
         {
-            return (x > 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
+            return (x > 0) ? (int)MathF.Ceiling(x) : (int)MathF.Floor(x);
         }
 
         public static int SignedFloor(float x)
         {
-            return (x < 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
+            return (x < 0) ? (int)MathF.Ceiling(x) : (int)MathF.Floor(x);
         }
 
         public static float Frac(float x)
@@ -142,6 +142,11 @@ namespace FamiStudio
         public static int DivideAndRoundUp(int x, int y)
         {
             return (x + y - 1) / y;
+        }
+
+        public static int DivideAndRoundDown(int x, int y)
+        {
+            return x / y;
         }
 
         public static int NumDecimalDigits(int n)
@@ -287,7 +292,7 @@ namespace FamiStudio
 
         public static float DbToAmplitude(float db)
         {
-            return (float)Math.Pow(10.0f, db / 20.0f);
+            return (float)MathF.Pow(10.0f, db / 20.0f);
         }
 
         public static int Min(int[] array)
@@ -338,7 +343,7 @@ namespace FamiStudio
 
         public static bool CompareFloats(float f1, float f2, float tolerance = 0.001f)
         {
-            return Math.Abs(f1 - f2) < tolerance;
+            return MathF.Abs(f1 - f2) < tolerance;
         }
 
         public static int CompareArrays(byte[] a1, byte[] a2)
@@ -453,7 +458,7 @@ namespace FamiStudio
 
         public static void Normalize(ref float x, ref float y)
         {
-            var invLen = 1.0f / (float)Math.Sqrt(x * x + y * y);
+            var invLen = 1.0f / (float)MathF.Sqrt(x * x + y * y);
             x *= invLen;
             y *= invLen;
         }

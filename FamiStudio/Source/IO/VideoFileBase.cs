@@ -188,7 +188,7 @@ namespace FamiStudio
 
             // Apply a square root to keep other channels proportional, but still decent size.
             for (int i = 0; i < channelStates.Length; i++)
-                channelStates[i].oscScale = maxAbsSamples[i] == 0 ? 1.0f : (float)Math.Sqrt(globalMaxAbsSample / (float)maxAbsSamples[i]) * (32768.0f / globalMaxAbsSample);
+                channelStates[i].oscScale = maxAbsSamples[i] == 0 ? 1.0f : (float)MathF.Sqrt(globalMaxAbsSample / (float)maxAbsSamples[i]) * (32768.0f / globalMaxAbsSample);
 
             // Create graphics resources.
             videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, true);
