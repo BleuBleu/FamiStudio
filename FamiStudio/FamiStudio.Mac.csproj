@@ -26,14 +26,14 @@
     <DefineConstants>TRACE;DEBUG;FAMISTUDIO_MACOS</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0649;CA1416</NoWarn>
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DefineConstants>TRACE;FAMISTUDIO_MACOS</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugSymbols>true</DebugSymbols>
     <NoWarn>CS0162,CS0649;CA1416</NoWarn>
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\Icons\FamiStudio.ico</ApplicationIcon>
@@ -808,17 +808,5 @@
     <Content Include="NotSoFatso.dylib"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
     <Content Include="ShineMp3.dylib"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
     <Content Include="Vorbis.dylib"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
   </ItemGroup>
 </Project>
