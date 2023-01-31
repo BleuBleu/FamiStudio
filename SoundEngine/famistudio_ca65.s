@@ -812,6 +812,14 @@ famistudio_chn_vrc7_prev_hi:      .res 6
 famistudio_chn_vrc7_patch:        .res 6
 famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 .endif
+.if FAMISTUDIO_EXP_S5B
+famistudio_chn_s5b_mixer:          .res 1
+famistudio_chn_s5b_env:            .res 6
+famistudio_chn_s5b_env_lo:         .res 6
+famistudio_chn_s5b_env_hi:         .res 6
+famistudio_chn_s5b_env_repeat:     .res 6
+famistudio_chn_s5b_env_ptr:        .res 6
+.endif
 .if FAMISTUDIO_EXP_EPSM
 famistudio_chn_epsm_trigger:       .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:    .res 6
@@ -2957,6 +2965,8 @@ famistudio_s5b_vol_table:
     .byte FAMISTUDIO_S5B_REG_VOL_A, FAMISTUDIO_S5B_REG_VOL_B, FAMISTUDIO_S5B_REG_VOL_C
 famistudio_s5b_env_table:
     .byte FAMISTUDIO_S5B_CH0_ENVS, FAMISTUDIO_S5B_CH1_ENVS, FAMISTUDIO_S5B_CH2_ENVS
+famistudio_s5b_mixer_table:
+    .byte %00000000,  %00000001,  %00001000 
 
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_S5B_CHANNEL_SOUND (internal)
@@ -2969,14 +2979,45 @@ famistudio_s5b_env_table:
 famistudio_update_s5b_channel_sound:
     
     @pitch = famistudio_ptr1
-
+    @temp  = famistudio_r0
+	
     lda famistudio_chn_note+FAMISTUDIO_S5B_CH0_IDX,y
     bne @nocut
     ldx #0 ; This will fetch volume 0.
-    beq @update_volume
-
+    beq @update_volume_jmp
+    jmp @nocut
+@update_volume_jmp:
+	jmp @update_volume
 @nocut:
-    
+
+	lda #$07
+    sta FAMISTUDIO_S5B_ADDR
+    ldx famistudio_chn_s5b_env+2 ;load mixer envelope
+    lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
+    sta @temp
+    asl @temp
+    ldx famistudio_chn_s5b_env+1 ;load mixer envelope
+    lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
+    ora @temp
+    sta @temp
+    asl @temp
+    ldx famistudio_chn_s5b_env ;load mixer envelope
+    lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
+    ora @temp
+    sta @temp
+    sta FAMISTUDIO_S5B_DATA
+
+
+
+	lda famistudio_chn_s5b_env+3,y
+	beq @nonoise
+    lda #$06
+    sta FAMISTUDIO_S5B_ADDR
+	lda famistudio_chn_s5b_env+3,y
+	sta FAMISTUDIO_S5B_DATA
+@nonoise:
+
+    lda famistudio_chn_note+FAMISTUDIO_S5B_CH0_IDX,y
     ; Read note, apply arpeggio 
     clc
     ldx famistudio_s5b_env_table,y
@@ -3318,6 +3359,54 @@ famistudio_update:
     cpx #FAMISTUDIO_NUM_ENVELOPES
     bne @env_process
 
+;----------------------------------------------------------------------------------------------------------------------
+.if FAMISTUDIO_EXP_S5B
+@update_envelopes_s5b:
+    ldx #0
+
+@env_process_s5b:
+    lda famistudio_chn_s5b_env_repeat,x
+    beq @env_read_s5b  
+    dec famistudio_chn_s5b_env_repeat,x
+    bne @env_next_s5b
+
+@env_read_s5b:
+    lda famistudio_chn_s5b_env_lo,x
+    sta @env_ptr+0
+    lda famistudio_chn_s5b_env_hi,x
+    sta @env_ptr+1
+    ldy famistudio_chn_s5b_env_ptr,x
+
+@env_read_value_s5b:
+    lda (@env_ptr),y
+    bpl @env_special_s5b ; Values below 128 used as a special code, loop or repeat
+    clc              ; Values above 128 are output value+192 (output values are signed -63..64)
+    adc #256-192
+    sta famistudio_chn_s5b_env,x
+    iny
+    bne @env_next_store_ptr_s5b
+
+@env_special_s5b:
+    bne @env_set_repeat_s5b  ; Zero is the loop point, non-zero values used for the repeat counter
+    iny
+    lda (@env_ptr),y     ; Read loop position
+    tay
+    jmp @env_read_value_s5b
+
+@env_set_repeat_s5b:
+    iny
+    sta famistudio_chn_s5b_env_repeat,x ; Store the repeat counter value
+
+@env_next_store_ptr_s5b:
+    tya
+    sta famistudio_chn_s5b_env_ptr,x
+
+@env_next_s5b:
+    inx
+
+    cpx #6 ;s5b envelopes, 3 mixer + 3 noise frequency
+    bne @env_process_s5b
+.endif
 ;----------------------------------------------------------------------------------------------------------------------
 @update_pitch_envelopes:
     ldx #0
@@ -3761,13 +3850,7 @@ famistudio_set_instrument:
     ; Duty cycle envelope
     lda @chan_idx
     cmp #2 ; Triangle has no duty.
-;.if !FAMISTUDIO_EXP_S5B
     bne @duty
-;.else
-;    beq @no_duty
-;    cmp #FAMISTUDIO_S5B_CH0_IDX ; S5B has no duty.
-;    bcc @duty
-;.endif
     @no_duty:
         iny
         iny
@@ -4016,11 +4099,30 @@ famistudio_set_s5b_instrument:
     @chan_idx   = famistudio_r1
 
     famistudio_set_exp_instrument
+	ldx @chan_idx
+	@mixer:
+	lda (@ptr),y
+	sta famistudio_chn_s5b_env_lo-FAMISTUDIO_S5B_CH0_IDX,x
+	iny
+	lda (@ptr),y
+	sta famistudio_chn_s5b_env_hi-FAMISTUDIO_S5B_CH0_IDX,x
+	lda #0
+	sta famistudio_chn_s5b_env_repeat-FAMISTUDIO_S5B_CH0_IDX,x
+	sta famistudio_chn_s5b_env_ptr-FAMISTUDIO_S5B_CH0_IDX,x
+	sta famistudio_chn_s5b_env-FAMISTUDIO_S5B_CH0_IDX,x
+	
+	@noise:
+	iny
+	lda (@ptr),y
+	sta famistudio_chn_s5b_env_lo+3-FAMISTUDIO_S5B_CH0_IDX,x
+	iny
+	lda (@ptr),y
+	sta famistudio_chn_s5b_env_hi+3-FAMISTUDIO_S5B_CH0_IDX,x
+	lda #0
+	sta famistudio_chn_s5b_env_repeat+3-FAMISTUDIO_S5B_CH0_IDX,x
+	sta famistudio_chn_s5b_env_ptr+3-FAMISTUDIO_S5B_CH0_IDX,x
+	sta famistudio_chn_s5b_env+3-FAMISTUDIO_S5B_CH0_IDX,x
 
-	iny
-	iny
-	iny
-	iny
 
     ldx @chan_idx
     rts
