@@ -813,7 +813,6 @@ famistudio_chn_vrc7_patch:        .res 6
 famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 .endif
 .if FAMISTUDIO_EXP_S5B
-famistudio_chn_s5b_mixer:          .res 1
 famistudio_chn_s5b_env:            .res 6
 famistudio_chn_s5b_env_lo:         .res 6
 famistudio_chn_s5b_env_hi:         .res 6
@@ -830,6 +829,11 @@ famistudio_chn_epsm_vol_op1:       .res 6
 famistudio_chn_epsm_vol_op2:       .res 6
 famistudio_chn_epsm_vol_op3:       .res 6
 famistudio_chn_epsm_vol_op4:       .res 6
+famistudio_chn_epsm_env:           .res 6
+famistudio_chn_epsm_env_lo:        .res 6
+famistudio_chn_epsm_env_hi:        .res 6
+famistudio_chn_epsm_env_repeat:    .res 6
+famistudio_chn_epsm_env_ptr:       .res 6
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_wave_index:   .res FAMISTUDIO_EXP_N163_CHN_CNT
@@ -2377,6 +2381,8 @@ famistudio_epsm_square_vol_table:
     .byte FAMISTUDIO_EPSM_REG_VOL_A, FAMISTUDIO_EPSM_REG_VOL_B, FAMISTUDIO_EPSM_REG_VOL_C
 famistudio_epsm_square_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS, FAMISTUDIO_EPSM_CH1_ENVS, FAMISTUDIO_EPSM_CH2_ENVS
+famistudio_epsm_mixer_table:
+    .byte %00000000,  %00000001,  %00001000 
     
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_SQUARE_CHANNEL_SOUND (internal)
@@ -2389,14 +2395,46 @@ famistudio_epsm_square_env_table:
 famistudio_update_epsm_square_channel_sound:
     
     @pitch = famistudio_ptr1
+	@temp  = famistudio_r0
 
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CH0_IDX,y
     bne @nocut
     ldx #0 ; This will fetch volume 0.
-    beq @update_volume
+    beq @update_volume_jmp
+    jmp @nocut
+@update_volume_jmp:
+	jmp @update_volume
 
 @nocut:
     
+	lda #$07
+    sta FAMISTUDIO_EPSM_ADDR
+    ldx famistudio_chn_epsm_env+2 ;load mixer envelope
+    lda famistudio_epsm_mixer_table, x ;convert mixer envelope to mixer settings base
+    sta @temp
+    asl @temp
+    ldx famistudio_chn_epsm_env+1 ;load mixer envelope
+    lda famistudio_epsm_mixer_table, x ;convert mixer envelope to mixer settings base
+    ora @temp
+    sta @temp
+    asl @temp
+    ldx famistudio_chn_epsm_env ;load mixer envelope
+    lda famistudio_epsm_mixer_table, x ;convert mixer envelope to mixer settings base
+    ora @temp
+    sta @temp
+    sta FAMISTUDIO_EPSM_DATA
+
+
+
+	lda famistudio_chn_epsm_env+3,y
+	beq @nonoise
+    lda #$06
+    sta FAMISTUDIO_EPSM_ADDR
+	lda famistudio_chn_epsm_env+3,y
+	sta FAMISTUDIO_EPSM_DATA
+@nonoise:
+
+    lda famistudio_chn_note+FAMISTUDIO_EPSM_CH0_IDX,y
     ; Read note, apply arpeggio 
     clc
     ldx famistudio_epsm_square_env_table,y
@@ -3408,6 +3446,54 @@ famistudio_update:
     bne @env_process_s5b
 .endif
 ;----------------------------------------------------------------------------------------------------------------------
+.if FAMISTUDIO_EXP_EPSM
+@update_envelopes_epsm:
+    ldx #0
+
+@env_process_epsm:
+    lda famistudio_chn_epsm_env_repeat,x
+    beq @env_read_epsm  
+    dec famistudio_chn_epsm_env_repeat,x
+    bne @env_next_epsm
+
+@env_read_epsm:
+    lda famistudio_chn_epsm_env_lo,x
+    sta @env_ptr+0
+    lda famistudio_chn_epsm_env_hi,x
+    sta @env_ptr+1
+    ldy famistudio_chn_epsm_env_ptr,x
+
+@env_read_value_epsm:
+    lda (@env_ptr),y
+    bpl @env_special_epsm ; Values below 128 used as a special code, loop or repeat
+    clc              ; Values above 128 are output value+192 (output values are signed -63..64)
+    adc #256-192
+    sta famistudio_chn_epsm_env,x
+    iny
+    bne @env_next_store_ptr_epsm
+
+@env_special_epsm:
+    bne @env_set_repeat_epsm  ; Zero is the loop point, non-zero values used for the repeat counter
+    iny
+    lda (@env_ptr),y     ; Read loop position
+    tay
+    jmp @env_read_value_epsm
+
+@env_set_repeat_epsm:
+    iny
+    sta famistudio_chn_epsm_env_repeat,x ; Store the repeat counter value
+
+@env_next_store_ptr_epsm:
+    tya
+    sta famistudio_chn_epsm_env_ptr,x
+
+@env_next_epsm:
+    inx
+
+    cpx #6 ;epsm envelopes, 3 mixer + 3 noise frequency
+    bne @env_process_epsm
+.endif
+;----------------------------------------------------------------------------------------------------------------------
 @update_pitch_envelopes:
     ldx #0
     jmp @pitch_env_process
@@ -4194,10 +4280,37 @@ famistudio_set_epsm_instrument:
 
     ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
 	; increase y and go past noise and mixer envelope indexes
-	iny
-	iny
-	iny
-	iny
+	
+
+    ; channels 0-2 (square) do not need any further handling since they do not support patches
+    lda @chan_idx
+    cmp #FAMISTUDIO_EPSM_CHAN_FM_START
+    bcs @not_square_channel
+        ldx @chan_idx
+        @mixer:
+        lda (@ptr),y
+        sta famistudio_chn_epsm_env_lo-FAMISTUDIO_EPSM_CH0_IDX,x
+        iny
+        lda (@ptr),y
+        sta famistudio_chn_epsm_env_hi-FAMISTUDIO_EPSM_CH0_IDX,x
+        lda #0
+        sta famistudio_chn_epsm_env_repeat-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_chn_epsm_env_ptr-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_chn_epsm_env-FAMISTUDIO_EPSM_CH0_IDX,x
+        
+        @noise:
+        iny
+        lda (@ptr),y
+        sta famistudio_chn_epsm_env_lo+3-FAMISTUDIO_EPSM_CH0_IDX,x
+        iny
+        lda (@ptr),y
+        sta famistudio_chn_epsm_env_hi+3-FAMISTUDIO_EPSM_CH0_IDX,x
+        lda #0
+        sta famistudio_chn_epsm_env_repeat+3-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_chn_epsm_env_ptr+3-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_chn_epsm_env+3-FAMISTUDIO_EPSM_CH0_IDX,x
+        rts
+    @not_square_channel:
 	
     lda (@ptr),y
     sta @ex_patch
@@ -4205,14 +4318,6 @@ famistudio_set_epsm_instrument:
     lda (@ptr),y
     sta @ex_patch+1
     iny
-
-    ; channels 0-2 (square) do not need any further handling since they do not support patches
-    lda @chan_idx
-    cmp #FAMISTUDIO_EPSM_CHAN_FM_START
-    bcs @not_square_channel
-        rts
-    @not_square_channel:
-
     ; Now we are dealing with either a FM or Rhythm instrument. a = channel index
     ; if we are an FM instrument then there is a offset we need to apply to the register select
     cmp #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
