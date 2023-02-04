@@ -4132,12 +4132,24 @@ famistudio_set_epsm_instrument:
 
     ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
 	; increase y and go past noise and mixer envelope indexes
-	
-
+	iny
+	iny
+	iny
+	iny
+    lda (@ptr),y
+    sta @ex_patch
+    iny
+    lda (@ptr),y
+    sta @ex_patch+1
+    iny
     ; channels 0-2 (square) do not need any further handling since they do not support patches
     lda @chan_idx
     cmp #FAMISTUDIO_EPSM_CHAN_FM_START
     bcs @not_square_channel
+	    dey
+		dey
+		dey
+		dey
         ldx @chan_idx
         @mixer:
         lda (@ptr),y
@@ -4163,13 +4175,7 @@ famistudio_set_epsm_instrument:
         sta famistudio_chn_epsm_env+3-FAMISTUDIO_EPSM_CH0_IDX,x
         rts
     @not_square_channel:
-	
-    lda (@ptr),y
-    sta @ex_patch
-    iny
-    lda (@ptr),y
-    sta @ex_patch+1
-    iny
+
     ; Now we are dealing with either a FM or Rhythm instrument. a = channel index
     ; if we are an FM instrument then there is a offset we need to apply to the register select
     cmp #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
