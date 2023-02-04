@@ -159,6 +159,22 @@ namespace FamiStudio
             }
         }
 
+        public override Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
+        {
+            // Focus control gets to check first. This is needed to handle drop downs
+            // that extends beyond the bounding of a dialog, for example.
+            if (focusedControl != null && focusedControl.WindowRectangle.Contains(winX, winY))
+            {
+                Debug.Assert(focusedControl.Visible);
+                var winPos = focusedControl.WindowPosition;
+                ctrlX = winX - winPos.X;
+                ctrlY = winY - winPos.Y;
+                return focusedControl;
+            }
+
+            return base.GetControlAt(winX, winY, out ctrlX, out ctrlY);
+        }
+
         private List<string> SplitLongString(string str)
         {
             var splits = new List<string>();

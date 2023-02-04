@@ -1104,6 +1104,11 @@ namespace FamiStudio
 
         private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, bool dash)
         {
+            //if (color == Color.Black)
+            //{
+            //    color = Color.Pink;
+            //}
+
             if (lineBatch == null)
             {
                 lineBatch = new LineBatch();
@@ -1156,7 +1161,15 @@ namespace FamiStudio
         private void DrawThickLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool miter)
         {
             Debug.Assert(width > 1 && width < 100);
-            //Debug.Assert((width & 1) == 0); // Odd values are a bit misbehaved.
+            
+            // This properly centers line, while keeping geometries symmetric and nice.
+            if ((width & 1) != 0)
+            {
+                x0 += 0.02f;
+                y0 += 0.02f;
+                x1 += 0.02f;
+                y1 += 0.02f;
+            }
 
             if (polyBatch == null)
             {

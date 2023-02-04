@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -150,6 +151,11 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            OnMouseDown(e);
+        }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.Key == Keys.Escape)
@@ -168,6 +174,7 @@ namespace FamiStudio
                     ListClosing?.Invoke(this);
                 listOpened = open;
                 listJustOpened = open;
+                MarkDirty();
             }
 
             height = rowHeight + (listOpened ? Math.Min(items.Length, MaxItemsInList) * rowHeight : 0);

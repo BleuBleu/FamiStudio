@@ -137,13 +137,16 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+            if (!e.Handled)
             {
-                Close(DialogResult.OK);
-            }
-            else if (e.Key == Keys.Escape)
-            {
-                Close(DialogResult.Cancel);
+                if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+                {
+                    Close(DialogResult.OK);
+                }
+                else if (e.Key == Keys.Escape)
+                {
+                    Close(DialogResult.Cancel);
+                }
             }
         }
 

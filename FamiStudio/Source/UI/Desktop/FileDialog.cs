@@ -200,9 +200,11 @@ namespace FamiStudio
                 for (int i = 0; i < splits.Length; i++)
                 {
                     tempButton.Text = TrimLongFilename(splits[i]);
+                    AddControl(tempButton);
                     tempButton.AutosizeWidth();
                     buttonSizes[i] = tempButton.Width;
                     totalSize += tempButton.Width + (i > 0 ? margin : 0);
+                    RemoveControl(tempButton);
                 }
 
                 var maxWidth = width - margin * 3 - buttonComputer.Width;
@@ -234,13 +236,13 @@ namespace FamiStudio
                 for (int i = startButtonIndex; i < splits.Length; i++)
                 {
                     var button = new Button("FileFolder", TrimLongFilename(splits[i]));
+                    AddControl(button);
                     button.Move(x, margin + titleBarSizeY, 100, pathButtonSizeY);
                     button.AutosizeWidth();
                     button.Click += Button_Click;
                     buttonsPath.Add(button);
                     buttonPathPaths.Add(BuildPath(splits, i));
                     x += button.Width + margin;
-                    AddControl(button);
                 }
             }
         }

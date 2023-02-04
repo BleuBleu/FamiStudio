@@ -3407,19 +3407,19 @@ namespace FamiStudio
         {
             if (Settings.ScrollBars != Settings.ScrollBarsNone && editMode != EditionMode.VideoRecording)
             {
-                if (GetScrollBarParams(true, out var scrollBarPosX, out var scrollBarSizeX))
+                if (GetScrollBarParams(true, out var scrollBarThumbPosX, out var scrollBarThumbSizeX, out var scrollBarSizeX))
                 {
                     r.c.PushTranslation(pianoSizeX - 1, 0);
-                    r.c.FillAndDrawRectangle(0, Height - scrollBarThickness, Width, Height, Theme.DarkGreyColor4, Theme.BlackColor);
-                    r.c.FillAndDrawRectangle(scrollBarPosX, Height - scrollBarThickness, scrollBarPosX + scrollBarSizeX, Height, Theme.MediumGreyColor1, Theme.BlackColor);
+                    r.c.FillAndDrawRectangle(0, Height - scrollBarThickness, scrollBarSizeX, Height, Theme.DarkGreyColor4, Theme.BlackColor);
+                    r.c.FillAndDrawRectangle(scrollBarThumbPosX, Height - scrollBarThickness, scrollBarThumbPosX + scrollBarThumbSizeX, Height, Theme.MediumGreyColor1, Theme.BlackColor);
                     r.c.PopTransform();
                 }
 
-                if (GetScrollBarParams(false, out var scrollBarPosY, out var scrollBarSizeY))
+                if (GetScrollBarParams(false, out var scrollBarThumbPosY, out var scrollBarThumbSizeY, out var scrollBarSizeY))
                 {
                     r.c.PushTranslation(0, headerAndEffectSizeY - 1);
-                    r.c.FillAndDrawRectangle(Width - scrollBarThickness, 0, Width, Height, Theme.DarkGreyColor4, Theme.BlackColor);
-                    r.c.FillAndDrawRectangle(Width - scrollBarThickness, scrollBarPosY, Width, scrollBarPosY + scrollBarSizeY + 1, Theme.MediumGreyColor1, Theme.BlackColor);
+                    r.c.FillAndDrawRectangle(Width - scrollBarThickness, 0, Width, scrollBarSizeY, Theme.DarkGreyColor4, Theme.BlackColor);
+                    r.c.FillAndDrawRectangle(Width - scrollBarThickness, scrollBarThumbPosY, Width, scrollBarThumbPosY + scrollBarThumbSizeY, Theme.MediumGreyColor1, Theme.BlackColor);
                     r.c.PopTransform();
                 }
             }
@@ -3477,6 +3477,9 @@ namespace FamiStudio
                 g.OverlayCommandList.DrawLine(0, 0, 100, 100, new Color(255, 0, 255), i, false);
                 g.OverlayCommandList.DrawLine(0, 0, 100, 0, new Color(255, 0, 255), i, false);
                 g.OverlayCommandList.DrawLine(0, 0, 0, 100, new Color(255, 0, 255), i, false);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 100, new Color(0, 255, 0), 1, false);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 0, new Color(0, 255, 0), 1, false);
+                g.OverlayCommandList.DrawLine(0, 0, 0, 100, new Color(0, 255, 0), 1, false);
                 g.OverlayCommandList.FillAndDrawRectangle(0, 200, 100, 210, new Color(255, 0, 255), new Color(0, 255, 0), i, false);
                 g.Transform.PushTranslation(0, 110);
                 g.OverlayCommandList.FillGeometry(releaseNoteGeometry[0], Color.Pink, false);
@@ -3533,10 +3536,11 @@ namespace FamiStudio
             RenderDebug(r);
         }
 
-        private bool GetScrollBarParams(bool horizontal, out int pos, out int size)
+        private bool GetScrollBarParams(bool horizontal, out int thumbPos, out int thumbSize, out int scrollSize)
         {
-            pos  = 0;
-            size = 0;
+            thumbPos   = 0;
+            thumbSize  = 0;
+            scrollSize = 0;
 
             if (scrollBarThickness > 0)
             {
@@ -3547,9 +3551,9 @@ namespace FamiStudio
                     if (minScrollX == maxScrollX)
                         return false;
 
-                    int scrollAreaSizeX = Width - pianoSizeX;
-                    size = Math.Max(minScrollBarLength, (int)Math.Round(scrollAreaSizeX * Math.Min(1.0f, scrollAreaSizeX / (float)(maxScrollX + scrollAreaSizeX))));
-                    pos  = (int)Math.Round((scrollAreaSizeX - size) * (scrollX / (float)maxScrollX));
+                    scrollSize = Width - pianoSizeX + 1;
+                    thumbSize = Math.Max(minScrollBarLength, (int)Math.Round(scrollSize * Math.Min(1.0f, scrollSize / (float)(maxScrollX + scrollSize))));
+                    thumbPos  = (int)Math.Round((scrollSize - thumbSize) * (scrollX / (float)maxScrollX));
                     return true;
                 }
                 else
@@ -3559,9 +3563,9 @@ namespace FamiStudio
                     if (minScrollY == maxScrollY)
                         return false;
 
-                    int scrollAreaSizeY = Height - headerAndEffectSizeY - scrollBarThickness;
-                    size = Math.Max(minScrollBarLength, (int)Math.Round(scrollAreaSizeY * Math.Min(1.0f, scrollAreaSizeY / (float)(maxScrollY + scrollAreaSizeY))));
-                    pos  = (int)Math.Round((scrollAreaSizeY - size) * (scrollY / (float)maxScrollY));
+                    scrollSize = Height - headerAndEffectSizeY - scrollBarThickness + 1;
+                    thumbSize = Math.Max(minScrollBarLength, (int)Math.Round(scrollSize * Math.Min(1.0f, scrollSize / (float)(maxScrollY + scrollSize))));
+                    thumbPos  = (int)Math.Round((scrollSize - thumbSize) * (scrollY / (float)maxScrollY));
                     return true;
                 }
             }
@@ -4088,11 +4092,10 @@ namespace FamiStudio
 
         private void UpdateScrollBarX(int x, int y)
         {
-            GetScrollBarParams(true, out _, out var scrollBarSizeX);
+            GetScrollBarParams(true, out _, out var scrollBarThumbSizeX, out var scrollAreaSizeX);
             GetMinMaxScroll(out _, out _, out var maxScrollX, out _);
 
-            int scrollAreaSizeX = Width - pianoSizeX;
-            scrollX = (int)Math.Round(captureScrollX + ((x - captureMouseX) / (float)(scrollAreaSizeX - scrollBarSizeX) * maxScrollX));
+            scrollX = (int)Math.Round(captureScrollX + ((x - captureMouseX) / (float)(scrollAreaSizeX - scrollBarThumbSizeX) * maxScrollX));
 
             ClampScroll();
             MarkDirty();
@@ -4100,11 +4103,10 @@ namespace FamiStudio
 
         private void UpdateScrollBarY(int x, int y)
         {
-            GetScrollBarParams(false, out _, out var scrollBarSizeY);
+            GetScrollBarParams(false, out _, out var scrollBarThumbSizeY, out var scrollAreaSizeY);
             GetMinMaxScroll(out _, out _, out _, out var maxScrollY);
 
-            int scrollAreaSizeY = Height - headerAndEffectSizeY;
-            scrollY = (int)Math.Round(captureScrollY + ((y - captureMouseY) / (float)(scrollAreaSizeY - scrollBarSizeY) * maxScrollY));
+            scrollY = (int)Math.Round(captureScrollY + ((y - captureMouseY) / (float)(scrollAreaSizeY - scrollBarThumbSizeY) * maxScrollY));
 
             ClampScroll();
             MarkDirty();
@@ -5130,43 +5132,43 @@ namespace FamiStudio
         {
             if (e.Left && scrollBarThickness > 0 && e.X > pianoSizeX && e.Y > headerAndEffectSizeY)
             {
-                if (e.Y >= (Height - scrollBarThickness) && GetScrollBarParams(true, out var scrollBarPosX, out var scrollBarSizeX))
+                if (e.Y >= (Height - scrollBarThickness) && GetScrollBarParams(true, out var scrollBarThumbPosX, out var scrollBarThumbSizeX, out _))
                 {
                     var x = e.X - pianoSizeX;
-                    if (x < scrollBarPosX)
+                    if (x < scrollBarThumbPosX)
                     {
                         scrollX -= (Width - pianoSizeX);
                         ClampScroll();
                         MarkDirty();
                     }
-                    else if (x > (scrollBarPosX + scrollBarSizeX))
+                    else if (x > (scrollBarThumbPosX + scrollBarThumbSizeX))
                     {
                         scrollX += (Width - pianoSizeX);
                         ClampScroll();
                         MarkDirty();
                     }
-                    else if (x >= scrollBarPosX && x <= (scrollBarPosX + scrollBarSizeX))
+                    else if (x >= scrollBarThumbPosX && x <= (scrollBarThumbPosX + scrollBarThumbSizeX))
                     {
                         StartCaptureOperation(e.X, e.Y, CaptureOperation.ScrollBarX);
                     }
                     return true;
                 }
-                if (e.X >= (Width - scrollBarThickness) && GetScrollBarParams(false, out var scrollBarPosY, out var scrollBarSizeY))
+                if (e.X >= (Width - scrollBarThickness) && GetScrollBarParams(false, out var scrollBarThumbPosY, out var scrollBarThumbSizeY, out _))
                 {
                     var y = e.Y - headerAndEffectSizeY;
-                    if (y < scrollBarPosY)
+                    if (y < scrollBarThumbPosY)
                     {
                         scrollY -= (Height - headerAndEffectSizeY);
                         ClampScroll();
                         MarkDirty();
                     }
-                    else if (y > (scrollBarPosY + scrollBarSizeY))
+                    else if (y > (scrollBarThumbPosY + scrollBarThumbSizeY))
                     {
                         scrollX += (Height - headerAndEffectSizeY);
                         ClampScroll();
                         MarkDirty();
                     }
-                    else if (y >= scrollBarPosY && y <= (scrollBarPosY + scrollBarSizeY))
+                    else if (y >= scrollBarThumbPosY && y <= (scrollBarThumbPosY + scrollBarThumbSizeY))
                     {
                         StartCaptureOperation(e.X, e.Y, CaptureOperation.ScrollBarY);
                     }

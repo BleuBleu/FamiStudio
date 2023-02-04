@@ -494,7 +494,7 @@ namespace FamiStudio
 
         private void ShowExportResultToast(string format, bool success = true)
         {
-            Platform.ShowToast(dialog.ParentWindow, $"{format} Export {(success ? "Successful" : "Failed")}!");
+            Platform.ShowToast(app.Window, $"{format} Export {(success ? "Successful" : "Failed")}!");
         }
 
         private void ExportWavMp3()

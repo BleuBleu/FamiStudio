@@ -139,7 +139,7 @@ namespace FamiStudio
             else
                 NewProject(true);
 
-#if true // MATTT !DEBUG
+#if !DEBUG
             if (Settings.CheckUpdates)
                 Task.Factory.StartNew(CheckForNewRelease);
 #endif

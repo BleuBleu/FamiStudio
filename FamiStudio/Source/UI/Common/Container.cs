@@ -37,7 +37,7 @@ namespace FamiStudio
             return true;
         }
 
-        public Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
+        public virtual Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
         {
             // First look for containers. Last containers are considered to have higher Z-order.
             for (int i = controls.Count - 1; i >= 0; i--)

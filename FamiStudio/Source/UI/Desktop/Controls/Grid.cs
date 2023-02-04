@@ -4,7 +4,6 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    // CTRLTODO : The bug where if you click on the drop down outside of the grid is back!
     public class Grid : Control
     {
         public delegate void ValueChangedDelegate(Control sender, int rowIndex, int colIndex, object value);
@@ -35,6 +34,7 @@ namespace FamiStudio
         private bool[] columnEnabled;
         private bool hasAnyDropDowns;
         private bool fullRowSelect;
+        private bool isClosingList;
         private ColumnDesc[] columns;
         private Color[] rowColors;
         private Color foreColor = Theme.LightGreyColor1;
@@ -128,11 +128,18 @@ namespace FamiStudio
 
         private void DropDownActive_ListClosing(Control sender)
         {
+            // Prevent recursion when clearing focus.
+            if (isClosingList)
+                return;
+
             Debug.Assert(dropDownActive.Visible);
+            isClosingList = true;
             dropDownActive.Visible = false;
             dropDownRow = -1;
             dropDownCol = -1;
+            GrabDialogFocus();
             MarkDirty();
+            isClosingList = false;
         }
 
         public void UpdateData(int row, int col, object val)
@@ -252,7 +259,14 @@ namespace FamiStudio
             }
 
             // Row -1 will mean header.
-            row = y / rowHeight - numHeaderRows + scroll;
+            row = y / rowHeight - numHeaderRows;
+
+            if (row < 0)
+            {
+                return false;
+            }
+
+            row += scroll;
 
             Debug.Assert(col >= 0);
             return row >= 0 && row < data.GetLength(0);
@@ -330,6 +344,8 @@ namespace FamiStudio
                                 }
                                 case ColumnType.DropDown:
                                 {
+                                                    Debug.WriteLine("LIST OPENING");
+
                                     dropDownActive.Visible = true;
                                     dropDownActive.Move(left + columnOffsets[col], top + (row + numHeaderRows - scroll) * rowHeight, columnWidths[col], rowHeight);
                                     dropDownActive.SetItems(colDesc.DropDownValues);
