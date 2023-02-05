@@ -168,19 +168,17 @@ namespace FamiStudio
             int minVisibleOctave = Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
             int maxVisibleOctave = Utils.Clamp((int)Math.Ceiling((scrollX + Width) / (float)octaveSizeX), 0, NumOctaves);
 
-            // GLTODO : Bring this back!
-            /*
-            var cb = g.CreateCommandList();
-            var cp = g.CreateCommandList();
+            var b = g.BackgroundCommandList;
+            var c = g.DefaultCommandList;
            
             // Background (white keys)
-            cb.FillRectangleGradient(0, 0, Width, Height, Theme.LightGreyColor1, Theme.LightGreyColor2, true, layoutSize);
+            b.FillRectangleGradient(0, 0, Width, Height, Theme.LightGreyColor1, Theme.LightGreyColor2, true, layoutSize);
 
             // Highlighted note.
             var playOctave = Note.IsMusicalNote(highlightAbsNote) ? (highlightAbsNote - 1) / 12 : -1;
             var playNote   = Note.IsMusicalNote(highlightAbsNote) ? (highlightAbsNote - 1) % 12 : -1;
             if (playNote >= 0 && !IsBlackKey(playNote))
-                cp.FillRectangleGradient(GetKeyRectangle(playOctave, playNote), LightGreyColor1Dark, LightGreyColor2Dark, true, layoutSize);
+                c.FillRectangleGradient(GetKeyRectangle(playOctave, playNote), LightGreyColor1Dark, LightGreyColor2Dark, true, layoutSize);
 
             // Early pass for DPCM white keys
             for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
@@ -188,7 +186,7 @@ namespace FamiStudio
                 for (int j = 0; j < 12; j++)
                 {
                     if (!IsBlackKey(j) && GetDPCMKeyColor(i * 12 + j + 1, out var color))
-                        cp.FillRectangleGradient(GetKeyRectangle(i, j), Theme.Darken(color, 20), color, true, Height);
+                        c.FillRectangleGradient(GetKeyRectangle(i, j), Theme.Darken(color, 20), color, true, Height);
                 }
             }
 
@@ -213,7 +211,7 @@ namespace FamiStudio
                             color1 = DarkGreyColor5Light;
                         }
 
-                        cp.FillRectangleGradient(GetKeyRectangle(i, j), color0, color1, true, Height / 2);
+                        c.FillRectangleGradient(GetKeyRectangle(i, j), color0, color1, true, Height / 2);
                     }
                 }
             }
@@ -229,19 +227,19 @@ namespace FamiStudio
                         var x = GetKeyRectangle(i, j).X;
                         var y = groupStart ? 0 : Height / 2;
                         var color = groupStart ? Theme.BlackColor: Theme.DarkGreyColor5;
-                        cp.DrawLine(x, y, x, Height, color);
+                        c.DrawLine(x, y, x, Height, color);
                     }
                 }
             }
 
             // Top line
-            cp.DrawLine(0, 0, Width, 0, Theme.BlackColor);
+            c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
             // Octave labels
             for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
             {
                 var r = GetKeyRectangle(i, 0);
-                cp.DrawText("C" + i, FontResources.FontSmall, r.X, r.Y, Theme.BlackColor, TextFlags.BottomCenter, r.Width, r.Height - FontResources.FontSmall.Size);
+                c.DrawText("C" + i, Fonts.FontSmall, r.X, r.Y, Theme.BlackColor, TextFlags.BottomCenter, r.Width, r.Height - Fonts.FontSmall.Size);
             }
 
             // Drag images
@@ -257,14 +255,10 @@ namespace FamiStudio
                         var posX = r.X + r.Width / 2 - (int)(size.Width * scale / 2);
                         var posY = r.Height / 2 - (int)(size.Height * scale / 2);
                         var bmp = App.IsRecording && j == 1 ? bmpMobilePianoRest : bmpMobilePianoDrag;
-                        cp.DrawBitmapAtlas(bmp, posX, posY, 0.25f, scale, Color.Black);
+                        c.DrawBitmapAtlas(bmp, posX, posY, 0.25f, scale, Color.Black);
                     }
                 }
             }
-
-            g.DrawCommandList(cb);
-            g.DrawCommandList(cp, new Rectangle(0, 0, Width, Height));
-            */
         }
 
         protected override void OnRender(Graphics g)

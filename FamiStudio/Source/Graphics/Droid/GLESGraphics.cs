@@ -233,6 +233,7 @@ namespace FamiStudio
 
         protected override void DrawDepthPrepass()
         {
+            GLES20.GlDepthMask(true);
             GLES20.GlDepthFunc(GLES20.GlAlways);
             GLES20.GlColorMask(false, false, false, false);
 
@@ -272,7 +273,7 @@ namespace FamiStudio
             quadIdxBuffer.Position(0);
             GLES20.GlDrawElements(GLES20.GlTriangles, vtxIdx / 8 * 6, GLES20.GlUnsignedShort, quadIdxBuffer);
 
-            // GLTODO : Disable depth write here.
+            GLES20.GlDepthMask(false);
             GLES20.GlDepthFunc(GLES20.GlEqual);
             GLES20.GlColorMask(true, true, true, true);
         }
@@ -588,7 +589,6 @@ namespace FamiStudio
             GLES20.GlVertexAttribPointer(attrib, 1, signed ? GLES20.GlByte : GLES20.GlUnsignedByte, true, 0, bb);
         }
 
-        // GLTODO : Consider the "depthTest" param.
         protected override void DrawCommandList(CommandList list, bool depthTest)
         {
             if (list == null)
@@ -596,6 +596,8 @@ namespace FamiStudio
 
             if (list.HasAnything)
             {
+                GLES20.GlDepthFunc(depthTest ? GLES20.GlEqual : GLES20.GlAlways);
+
                 if (list.HasAnyPolygons)
                 {
                     var draw = list.GetPolygonDrawData();
@@ -751,9 +753,9 @@ namespace FamiStudio
             base.BeginDrawFrame(rect, clear);
         }
 
-        public override void EndDrawFrame()
+        public override void EndDrawFrame(bool releaseLists = true)
         {
-            base.EndDrawFrame();
+            base.EndDrawFrame(releaseLists);
 
             if (fbo > 0)
                 GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, 0);

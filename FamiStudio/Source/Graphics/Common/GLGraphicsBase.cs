@@ -10,6 +10,7 @@ namespace FamiStudio
     public abstract class GraphicsBase : IDisposable
     {
         protected bool builtAtlases;
+        protected bool clearPrePassDone;
         protected int lineWidthBias;
         protected float[] viewportScaleBias = new float[4];
         protected Rectangle screenRect;
@@ -106,6 +107,7 @@ namespace FamiStudio
             transform.SetIdentity();
             curDepthValue = 0x80;
             maxDepthValue = 0x80;
+            clearPrePassDone = false;
 
             viewportScaleBias[0] =  2.0f / screenRect.Width;
             viewportScaleBias[1] = -2.0f / screenRect.Height;
@@ -113,13 +115,17 @@ namespace FamiStudio
             viewportScaleBias[3] =  1.0f;
         }
 
-        public virtual void EndDrawFrame()
+        public virtual void EndDrawFrame(bool releaseLists = true)
         {
             Debug.Assert(transform.IsEmpty);
             Debug.Assert(clipStack.Count == 0);
 
-            Clear();
-            DrawDepthPrepass();
+            if (!clearPrePassDone)
+            {
+                Clear();
+                DrawDepthPrepass();
+                clearPrePassDone = true;
+            }
 
             for (int i = 0; i < layerCommandLists.Length; i++)
             {
@@ -134,17 +140,32 @@ namespace FamiStudio
                 if (layerCommandLists[i] != null)
                 {
                     layerCommandLists[i].Release();
-                    layerCommandLists[i] = null;
+                    
+                    if (releaseLists)
+                        layerCommandLists[i] = null;
                 }
             }
         }
 
-        public virtual void PushClipRegion(Point p, Size s)
+        public void ConditionalFlushCommandLists()
         {
-            PushClipRegion(p.X, p.Y, s.Width, s.Height);
+            for (int i = 0; i < layerCommandLists.Length; i++)
+            {
+                if (layerCommandLists[i] != null && 
+                    layerCommandLists[i].IsAlmostFull)
+                {
+                    EndDrawFrame(false);
+                    return;
+                }
+            }
         }
 
-        public virtual void PushClipRegion(float x, float y, float width, float height)
+        public virtual void PushClipRegion(Point p, Size s, bool clipParents = true)
+        {
+            PushClipRegion(p.X, p.Y, s.Width, s.Height, clipParents);
+        }
+
+        public virtual void PushClipRegion(float x, float y, float width, float height, bool clipParents = true)
         {
             var ox = x;
             var oy = y;
@@ -159,7 +180,7 @@ namespace FamiStudio
             clip.rect = new RectangleF(ox, oy, width, height);
             clip.depthValue = curDepthValue;
 
-            if (clipStack.Count > 0)
+            if (clipParents && clipStack.Count > 0)
                 clip.rect = RectangleF.Intersect(clip.rect, clipStack.Peek().rect);
 
             clipRegions.Add(clip);
@@ -1023,6 +1044,17 @@ namespace FamiStudio
         public bool HasAnyBitmaps        => bitmaps.Count > 0;
         public bool HasAnything          => HasAnyPolygons || HasAnyLines || HasAnySmoothLines || HasAnyTexts || HasAnyBitmaps;
 
+        public bool IsAlmostFull
+        {
+            get
+            {
+                bool full = false;
+                full |= polyBatch != null && polyBatch.vtxIdx > (polyBatch.vtxArray.Length * 3 / 4);
+                full |= lineBatch != null && lineBatch.vtxIdx > (lineBatch.vtxArray.Length * 3 / 4);
+                return full;
+            }
+        }
+
         public CommandList(GraphicsBase g, int dashTextureSize, int lineBias = 0)
         {
             graphics = g;
@@ -1046,9 +1078,9 @@ namespace FamiStudio
             xform.PopTransform();
         }
 
-        public void PushClipRegion(float x, float y, float width, float height)
+        public void PushClipRegion(float x, float y, float width, float height, bool clipParents = true)
         {
-            graphics.PushClipRegion(x, y, width, height);
+            graphics.PushClipRegion(x, y, width, height, clipParents);
         }
 
         public void PopClipRegion()

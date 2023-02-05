@@ -588,9 +588,9 @@ namespace FamiStudio
             base.BeginDrawFrame(rect, clear);
         }
 
-        public override void EndDrawFrame()
+        public override void EndDrawFrame(bool releaseLists = true)
         {
-            base.EndDrawFrame();
+            base.EndDrawFrame(releaseLists);
 
             GL.BindFramebuffer(GL.DrawFramebuffer, 0);
         }

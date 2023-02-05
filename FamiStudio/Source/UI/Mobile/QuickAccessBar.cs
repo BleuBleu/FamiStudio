@@ -991,18 +991,34 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            // GLTODO : Bring this back.
-            /*
-            var c = g.CreateCommandList();
+            var c = g.DefaultCommandList;
+            var o = g.OverlayCommandList;
 
             c.Transform.GetOrigin(out var ox, out var oy);
+
+            var listRect = GetExpandedListRect();
+            var screenRect = new Rectangle(Point.Empty, ParentWindow.Size);
+            screenRect.Offset(-(int)ox, -(int)oy);
 
             // Background shadow.
             if (IsExpanded)
             {
-                var fullscreenRect = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);
-                fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, Color.FromArgb(popupRatio * 0.6f, Color.Black));
+                var shadowColor = Color.FromArgb(popupRatio * 0.6f, Color.Black);
+
+                if (IsLandscape)
+                {
+                    o.FillRectangle(screenRect.Left, screenRect.Top, listRect.Left, screenRect.Bottom, shadowColor);
+                    o.FillRectangle(listRect.Left, screenRect.Top, 0, listRect.Top, shadowColor);
+                    o.FillRectangle(listRect.Left, listRect.Bottom, 0, screenRect.Bottom, shadowColor);
+                    o.FillRectangle(0, 0, width, height, shadowColor);
+                }
+                else
+                {
+                    o.FillRectangle(screenRect.Left, screenRect.Top, screenRect.Right, listRect.Top, shadowColor);
+                    o.FillRectangle(screenRect.Left, listRect.Top, listRect.Left, 0, shadowColor);
+                    o.FillRectangle(listRect.Right, listRect.Top, screenRect.Right, 0, shadowColor);
+                    o.FillRectangle(0, 0, width, height, shadowColor);
+                }
             }
 
             // Clear BG.
@@ -1041,15 +1057,18 @@ namespace FamiStudio
             else
                 c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
-            g.DrawCommandList(c);
-
             // List items.
             if (popupButtonIdx >= 0)
-            {
-                c = g.CreateCommandList();
+            {              
+                if (IsLandscape)
+                    screenRect.Width -= width;
+                else
+                    screenRect.Height -= height;
 
-                var rect = GetExpandedListRect();
-                c.PushTranslation(rect.Left, rect.Top - scrollY);
+                screenRect = Rectangle.Intersect(screenRect, listRect);
+
+                c.PushClipRegion(screenRect.Left, screenRect.Top, screenRect.Width, screenRect.Height, false);
+                c.PushTranslation(listRect.Left, listRect.Top - scrollY);
 
                 for (int i = 0; i < listItems.Length; i++)
                 {
@@ -1060,7 +1079,7 @@ namespace FamiStudio
                     
                     if (item.Image != null)
                     { 
-                        c.DrawBitmapAtlas(itemf.Image, item.IconX, item.IconY, opacity, iconScaleFloat, Color.Black);
+                        c.DrawBitmapAtlas(item.Image, item.IconX, item.IconY, opacity, iconScaleFloat, Color.Black);
                     }
 
                     if (item.ExtraImage != null)
@@ -1078,20 +1097,19 @@ namespace FamiStudio
 
                 if ((Math.Abs(flingVelY) > 0.0f || captureOperation == CaptureOperation.MobilePan) && !scrollBarRect.IsEmpty)
                 {
-                    c.PushTranslation(rect.Left, rect.Top);
+                    c.PushTranslation(listRect.Left, listRect.Top);
                     c.FillRectangle(GetScrollBarRect(), scrollBarColor);
                     c.PopTransform();
                 }
 
                 if (IsLandscape)
-                    rect.Width  = -rect.X;
+                    listRect.Width  = -listRect.X;
                 else
-                    rect.Height = -rect.Y;
+                    listRect.Height = -listRect.Y;
 
-                rect.Offset((int)Math.Round(ox), (int)Math.Round(oy));
-                g.DrawCommandList(c, rect);
+                listRect.Offset((int)Math.Round(ox), (int)Math.Round(oy));
+                c.PopClipRegion();
             }
-            */
         }
 
         private void StartCaptureOperation(int x, int y, CaptureOperation op)

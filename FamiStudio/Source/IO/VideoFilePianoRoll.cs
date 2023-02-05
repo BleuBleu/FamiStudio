@@ -366,7 +366,7 @@ namespace FamiStudio
                     fg.DrawGeometry(oscilloscope, Theme.LightGreyColor1, 1, true, false);
                     fg.PopTransform();
 
-                    ConditionalFlushCommandList(ref fg);
+                    videoGraphics.ConditionalFlushCommandLists();
                 }
             }, () =>
             {

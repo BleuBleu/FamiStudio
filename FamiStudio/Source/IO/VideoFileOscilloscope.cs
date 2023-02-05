@@ -131,14 +131,14 @@ namespace FamiStudio
             return LaunchEncoderLoop((f) =>
             {
                 var frame = metadata[f];
-                var cmd = videoGraphics.DefaultCommandList;
+                var c = videoGraphics.DefaultCommandList;
 
                 // Draw gradients.
                 for (int i = 0; i < numRows; i++)
                 {
-                    cmd.PushTranslation(0, i * channelResY);
-                    cmd.FillRectangleGradient(0, 0, videoResX, channelResY, Color.Black, Color.Transparent, true, channelResY / 2);
-                    cmd.PopTransform();
+                    c.PushTranslation(0, i * channelResY);
+                    c.FillRectangleGradient(0, 0, videoResX, channelResY, Color.Black, Color.Transparent, true, channelResY / 2);
+                    c.PopTransform();
                 }
 
                 // Channel names + oscilloscope
@@ -157,26 +157,26 @@ namespace FamiStudio
                     // Oscilloscope
                     var oscilloscope = UpdateOscilloscope(s, f);
 
-                    cmd.PushTransform(channelPosX0, channelPosY0 + channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
-                    cmd.DrawGeometry(oscilloscope, frame.channelData[i].color, lineThickness, true, false);
-                    cmd.PopTransform();
+                    c.PushTransform(channelPosX0, channelPosY0 + channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
+                    c.DrawGeometry(oscilloscope, frame.channelData[i].color, lineThickness, true, false);
+                    c.PopTransform();
 
                     // Icons + text
                     var channelIconPosX = channelPosX0 + s.icon.Size.Width / 2;
                     var channelIconPosY = channelPosY0 + s.icon.Size.Height / 2;
 
-                    cmd.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.icon.Size.Width - 1, channelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
-                    cmd.DrawBitmap(s.icon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
-                    cmd.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, Theme.LightGreyColor1);
+                    c.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.icon.Size.Width - 1, channelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
+                    c.DrawBitmap(s.icon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
+                    c.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, Theme.LightGreyColor1);
 
-                    ConditionalFlushCommandList(ref cmd);
+                    videoGraphics.ConditionalFlushCommandLists();
                 }
 
                 // Grid lines
                 for (int i = 1; i < numRows; i++)
-                    cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
+                    c.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
                 for (int i = 1; i < numColumns; i++)
-                    cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
+                    c.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
             });
         }
     }

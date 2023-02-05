@@ -712,23 +712,16 @@ namespace FamiStudio
 
         private Control GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
-            ctrlX = 0;
-            ctrlY = 0;
-            return null;
-
-            // CTRLTODO : Migrate.
-            /*
             if (captureControl != null)
             {
                 Debug.Assert(container.CanAcceptInput);
-
-                ctrlX = formX - captureControl.WindowLeft;
-                ctrlY = formY - captureControl.WindowTop;
+                ctrlX = formX - captureControl.WindowPosition.X;
+                ctrlY = formY - captureControl.WindowPosition.Y;
                 return captureControl;
             }
             else if (container.CanAcceptInput)
             {
-                return container.GetControlAtCoord(formX, formY, out ctrlX, out ctrlY);
+                return container.GetControlAt(formX, formY, out ctrlX, out ctrlY);
             }
             else
             {
@@ -736,7 +729,6 @@ namespace FamiStudio
                 ctrlY = 0;
                 return null;
             }
-            */
         }
 
         public override bool OnTouchEvent(MotionEvent e)

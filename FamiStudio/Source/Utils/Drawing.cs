@@ -268,6 +268,21 @@ namespace FamiStudio
             
             return new Rectangle(minX, minY, maxX - minX, maxY - minY);
         }
+
+        public static Rectangle Intersect(Rectangle a, Rectangle b)
+        {
+            int maxX = Math.Max(a.X, b.X);
+            int minX = Math.Min(a.X + a.Width, b.X + b.Width);
+            int maxY = Math.Max(a.Y, b.Y);
+            int minY = Math.Min(a.Y + a.Height, b.Y + b.Height);
+
+            if (minX >= maxX && minY >= maxY)
+            {
+                return new Rectangle(maxX, maxY, minX - maxX, minY - maxY);
+            }
+
+            return Empty;
+        }
     }
 
 

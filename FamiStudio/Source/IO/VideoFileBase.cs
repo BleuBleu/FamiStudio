@@ -213,17 +213,6 @@ namespace FamiStudio
             return true;
         }
 
-        // GLTODO : Retest massive video issue, shouldnt happen anymore.
-        protected void ConditionalFlushCommandList(ref CommandList cmd)
-        {
-            //if (cmd.IsAlmostFull())
-            //{
-            //    var g = cmd.Graphics;
-            //    g.DrawCommandList(cmd);
-            //    cmd = g.CreateCommandList();
-            //}
-        }
-
         protected bool LaunchEncoderLoop(Action<int> body, Action cleanup = null)
         {
             var videoImage = new byte[videoResY * videoResX * 4];

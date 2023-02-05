@@ -7,9 +7,6 @@ namespace FamiStudio
     {
         private const bool ShowRenderingTimes = false;
 
-        private int width;
-        private int height;
-
         private Control transitionControl;
         private Control activeControl;
         private float   transitionTimer;
@@ -60,9 +57,9 @@ namespace FamiStudio
             AddControl(sequencer);
             AddControl(pianoRoll);
             AddControl(projectExplorer);
-            AddControl(quickAccessBar);
             AddControl(toolbar);
             AddControl(mobilePiano);
+            AddControl(quickAccessBar); // Needs to be last, draws on top of everything.
         }
 
         // CTRLTODO : Show/hide controls as needed.
@@ -85,11 +82,8 @@ namespace FamiStudio
             }
         }
 
-        public void Resize(int w, int h)
+        protected override void OnResize(EventArgs e)
         {
-            width  = w;
-            height = h;
-
             UpdateLayout(false);
         }
 
@@ -132,6 +126,10 @@ namespace FamiStudio
                 if (activeControl != pianoRoll)
                     pianoRoll.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize - pianoLayoutSize);
             }
+
+            sequencer.Visible = activeControl == sequencer;
+            pianoRoll.Visible = activeControl == pianoRoll;
+            projectExplorer.Visible = activeControl == projectExplorer;
         }
 
         // CTRLTODO : Change!
@@ -143,8 +141,17 @@ namespace FamiStudio
             }
         }
 
-        // CTRLTODO : Change!
-        //public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
+        public override bool CanInteractWithContainer(Container c)
+        {
+            if (!CanAcceptInput)
+            {
+                return false;
+            }
+
+            return base.CanInteractWithContainer(c);
+        }
+
+        //public override Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
         //{
         //    if (!CanAcceptInput)
         //    {
@@ -153,89 +160,18 @@ namespace FamiStudio
         //        return null;
         //    }
 
-        //    // These 2 are allowed to steal the input when they are expanded.
-        //    if (quickAccessBar.IsExpanded)
-        //    {
-        //        IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY);
-        //        return quickAccessBar;
-        //    }
-
-        //    if (toolbar.IsExpanded)
-        //    {
-        //        IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY);
-        //        return toolbar;
-        //    }
-
-        //    if (mobilePianoVisible)
-        //    {
-        //        if (IsPointInControl(mobilePiano, formX, formY, out ctrlX, out ctrlY))
-        //            return mobilePiano;
-        //    }
-
-        //    if (IsPointInControl(activeControl, formX, formY, out ctrlX, out ctrlY))
-        //        return activeControl;
-        //    if (IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY))
-        //        return quickAccessBar;
-        //    if (IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY))
-        //        return toolbar;
-
-        //    return null;
+        //    return base.GetControlAt(winX, winY, out ctrlX, out ctrlY);
         //}
 
-        // GLTODO : Migrate.
-        /*
-        private void RenderControl(Control ctrl)
+        private void RenderTransitionOverlay(Graphics g)
         {
-            var fullscreenViewport = ctrl.WantsFullScreenViewport;
-
-            if (fullscreenViewport)
-                gfx.BeginDrawControl(new Rectangle(0, 0, width, height), height);
-            else
-                gfx.BeginDrawControl(new Rectangle(ctrl.WindowLeft, ctrl.WindowTop, ctrl.Width, ctrl.Height), height);
-
-            gfx.SetLineBias(2);
-
-            if (fullscreenViewport)
-                gfx.Transform.PushTranslation(ctrl.WindowLeft, ctrl.WindowTop);
-
-            var t0 = DateTime.Now;
-            ctrl.Render(gfx);
-            var t1 = DateTime.Now;
-
-            if (ShowRenderingTimes)
-            {
-                var cmd = gfx.CreateCommandList();
-                cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", fontRes.FontVeryLargeBold, 10, 10, Color.SpringGreen);
-                gfx.DrawCommandList(cmd);
-            }
-
-            if (fullscreenViewport)
-                gfx.Transform.PopTransform();
-
-            gfx.EndDrawControl();
-
-            ctrl.ClearDirtyFlag();
-        }
-        */
-
-        private void RenderTransitionOverlay()
-        {
-            // GLTODO : Migrate.
-            /*
             if (transitionTimer > 0.0f)
             {
-                gfx.BeginDrawControl(new Rectangle(0, 0, width, height), height);
-
-                var cmd = gfx.CreateCommandList();
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
                 var color = Color.FromArgb(alpha, Theme.DarkGreyColor4);
 
-                cmd.FillRectangle(activeControl.WindowLeft, activeControl.WindowTop, activeControl.WindowRight, activeControl.WindowBottom, color);
-
-                gfx.DrawCommandList(cmd);
-                gfx.EndDrawControl();
+                g.OverlayCommandList.FillRectangle(activeControl.WindowRectangle, color);
             }
-            */
         }
 
         public override void Tick(float delta)
@@ -258,33 +194,10 @@ namespace FamiStudio
             }
         }
 
-        // GLTODO : This wont be needed.
-        //public bool Redraw()
-        //{
-        //    gfx.BeginDrawFrame();
-        //    {
-        //        RenderControl(activeControl);
-        //        RenderTransitionOverlay();
-
-        //        if (mobilePianoVisible)
-        //        {
-        //            RenderControl(mobilePiano);
-        //        }
-
-        //        if (toolbar.IsExpanded)
-        //        {
-        //            RenderControl(quickAccessBar);
-        //            RenderControl(toolbar);
-        //        }
-        //        else
-        //        {
-        //            RenderControl(toolbar);
-        //            RenderControl(quickAccessBar);
-        //        }
-        //    }
-        //    gfx.EndDrawFrame();
-
-        //    return false;
-        //}
+        protected override void OnRender(Graphics g)
+        {
+            RenderTransitionOverlay(g);
+            base.OnRender(g);
+        }
     }
 }
