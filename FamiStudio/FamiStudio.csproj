@@ -136,6 +136,7 @@
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
+    <Compile Include="Source\UI\Common\Settings.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Common\Theme.cs" />
     <Compile Include="Source\UI\Common\Fonts.cs" />
@@ -184,7 +185,6 @@
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\Utils\OscilloscopeTriggers.cs" />
-    <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\SimpleBitmap.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
@@ -420,8 +420,8 @@
     <EmbeddedResource Include="Resources\Atlas\ConfigMixer@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigMobile.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigMobile@2x.tga" />
-    <EmbeddedResource Include="Resources\Atlas\ConfigQWERTY.tga" />
-    <EmbeddedResource Include="Resources\Atlas\ConfigQWERTY@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigKeys.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigKeys@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigSound.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigSound@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigUserInterface.tga" />

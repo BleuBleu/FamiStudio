@@ -1838,60 +1838,60 @@ namespace FamiStudio
                 {
                     if (subButtonType == SubButtonType.Add)
                     {
-                        tooltip = "{MouseLeft} Add new song";
+                        tooltip = "<MouseLeft> Add new song";
                     }
                     else if (subButtonType == SubButtonType.Load)
                     {
-                        tooltip = "{MouseLeft} Import/merge song from another project";
+                        tooltip = "<MouseLeft> Import/merge song from another project";
                     }
                 }
                 else if (buttonType == ButtonType.Song)
                 {
                     if (subButtonType == SubButtonType.Properties)
                     {
-                        tooltip = "{MouseLeft} Song/Tempo properties";
+                        tooltip = "<MouseLeft> Song/Tempo properties";
                     }
                     else
                     {
-                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{Drag} Re-order song\n{MouseRight} More Options...";
+                        tooltip = "<MouseLeft> Make song current - <MouseLeft><Drag> Re-order song\n<MouseRight> More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.InstrumentHeader)
                 {
                     if (subButtonType == SubButtonType.Add)
                     {
-                        tooltip = "{MouseLeft} Add new instrument";
+                        tooltip = "<MouseLeft> Add new instrument";
                         if (App.Project.NeedsExpansionInstruments)
-                            tooltip += " - {MouseRight} More Options....";
+                            tooltip += " - <MouseRight> More Options....";
                     }
                     else if (subButtonType == SubButtonType.Load)
                     {
-                        tooltip = "{MouseLeft} Import/merge instrument from another project";
+                        tooltip = "<MouseLeft> Import/merge instrument from another project";
                     }
                 }
                 else if (buttonType == ButtonType.ArpeggioHeader)
                 {
                     if (subButtonType == SubButtonType.Add)
                     {
-                        tooltip = "{MouseLeft} Add new arpeggio";
+                        tooltip = "<MouseLeft> Add new arpeggio";
                     }
                 }
                 else if (buttonType == ButtonType.ProjectSettings)
                 {
                     if (subButtonType == SubButtonType.Properties)
                     {
-                        tooltip = "{MouseLeft} Project properties";
+                        tooltip = "<MouseLeft> Project properties";
                     }
                     else
                     {
-                        tooltip = "{MouseRight} More Options...";
+                        tooltip = "<MouseRight> More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.ParamCheckbox)
                 {
                     if (IsPointInCheckbox(x, y))
                     {
-                        tooltip = "{MouseLeft} Toggle value\n{MouseRight} More Options...";
+                        tooltip = "<MouseLeft> Toggle value\n<MouseRight> More Options...";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -1902,7 +1902,7 @@ namespace FamiStudio
                 {
                     if (x >= contentSizeX - sliderPosX)
                     {
-                        tooltip = "{MouseLeft}{Drag} Change value - {Ctrl}{MouseLeft}{Drag} Change value (fine)\n{MouseRight} More Options...";
+                        tooltip = "<MouseLeft><Drag> Change value - <Ctrl><MouseLeft><Drag> Change value (fine)\n<MouseRight> More Options...";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -1913,7 +1913,7 @@ namespace FamiStudio
                 {
                     if (x >= contentSizeX - sliderPosX)
                     {
-                        tooltip = "{MouseLeft} Change value\n{MouseRight} More Options...";
+                        tooltip = "<MouseLeft> Change value\n<MouseRight> More Options...";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -1925,19 +1925,19 @@ namespace FamiStudio
                     if (subButtonType == SubButtonType.Max)
                     {
                         if (buttons[buttonIdx].instrument == null)
-                            tooltip = "{MouseLeft} Select instrument";
+                            tooltip = "<MouseLeft> Select instrument";
                         else
-                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{Drag} Copy/Replace instrument\n{MouseRight} More Options...";
+                            tooltip = "<MouseLeft> Select instrument - <MouseLeft><Drag> Copy/Replace instrument\n<MouseRight> More Options...";
                     }
                     else
                     {
                         if (subButtonType == SubButtonType.DPCM)
                         {
-                            tooltip = "{MouseLeft} Edit DPCM samples";
+                            tooltip = "<MouseLeft> Edit DPCM samples";
                         }
                         else if (subButtonType < SubButtonType.EnvelopeMax)
                         {
-                            tooltip = $"{{MouseLeft}} Edit {EnvelopeType.Names[(int)subButtonType].ToLower()} envelope - {{MouseLeft}}{{Drag}} Copy envelope - {{MouseRight}} More Options...";
+                            tooltip = $"<MouseLeft> Edit {EnvelopeType.Names[(int)subButtonType].ToLower()} envelope - <MouseLeft><Drag> Copy envelope - <MouseRight> More Options...";
                         }
                         else if (subButtonType == SubButtonType.Overflow)
                         {
@@ -1946,7 +1946,7 @@ namespace FamiStudio
                         }
                         else if (subButtonType == SubButtonType.Properties)
                         {
-                            tooltip = "{MouseLeft} Instrument properties";
+                            tooltip = "<MouseLeft> Instrument properties";
                         }
                     }
                 }
@@ -1954,47 +1954,47 @@ namespace FamiStudio
                 {
                     if (subButtonType == SubButtonType.Play)
                     {
-                        tooltip = "{MouseLeft} Preview processed DPCM sample\n{MouseRight} Play source sample";
+                        tooltip = "<MouseLeft> Preview processed DPCM sample\n<MouseRight> Play source sample";
                     }
                     else if (subButtonType == SubButtonType.EditWave)
                     {
-                        tooltip = "{MouseLeft} Edit waveform";
+                        tooltip = "<MouseLeft> Edit waveform";
                     }
                     else if (subButtonType == SubButtonType.Reload)
                     {
-                        tooltip = "{MouseLeft} Reload source data (if available)\nOnly possible when data was loaded from a DMC/WAV file";
+                        tooltip = "<MouseLeft> Reload source data (if available)\nOnly possible when data was loaded from a DMC/WAV file";
                     }
                     else if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseRight} More Options...";
+                        tooltip = "<MouseRight> More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
-                        tooltip = "{MouseLeft} Instrument properties";
+                        tooltip = "<MouseLeft> Instrument properties";
                     }
                 }
                 else if (buttonType == ButtonType.DpcmHeader)
                 {
                     if (subButtonType == SubButtonType.Load)
                     {
-                        tooltip = "{MouseLeft} Load DPCM sample from WAV or DMC file";
+                        tooltip = "<MouseLeft> Load DPCM sample from WAV or DMC file";
                     }
                 }
                 else if (buttonType == ButtonType.Arpeggio)
                 {
                     if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{Drag} Replace arpeggio\n{MouseRight} More Options...";
+                        tooltip = "<MouseLeft> Select arpeggio - <MouseLeft><Drag> Replace arpeggio\n<MouseRight> More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
-                        tooltip = "{MouseLeft} Arpeggio properties";
+                        tooltip = "<MouseLeft> Arpeggio properties";
                     }
                 }
             }
             else if (needsScrollBar && x > contentSizeX)
             {
-                tooltip = "{MouseLeft}{Drag} Scroll";
+                tooltip = "<MouseLeft><Drag> Scroll";
             }
 
             App.SetToolTip(tooltip, redTooltip);
@@ -2275,7 +2275,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
+            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -2463,7 +2463,7 @@ namespace FamiStudio
             var buttonIdx = buttons.IndexOf(button);
             Debug.Assert(buttonIdx >= 0);
 
-            var ctrl = ModifierKeys.Control;
+            var ctrl = ModifierKeys.IsControlDown;
             var buttonTopY = 0;
 
             foreach (var b in buttons)
@@ -3089,7 +3089,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
+            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             if (middle)
             {

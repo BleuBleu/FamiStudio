@@ -18,7 +18,8 @@ namespace FamiStudio
         // Version 5   : FamiStudio 3.2.3 (Added snapping tutorial)
         // Version 6   : FamiStudio 3.3.0
         // Version 7   : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files, dialogs)
-        public const int SettingsVersion = 7;
+        // Version 8   : FamiStudio 4.1.0 (Configurable keys)
+        public const int SettingsVersion = 8;
         public const int NumRecentFiles = 10;
 
         // Constants for follow.
@@ -71,83 +72,146 @@ namespace FamiStudio
         public static bool AltLeftForMiddle = false;
         public static bool AltZoomAllowed = false;
 
-        public struct QwertyKeyAssignment
+        // Keys section
+        public static List<Shortcut> AllShortcuts = new List<Shortcut>();
+        public static List<Shortcut> DefaultShortcuts;
+
+        public static Shortcut FileNewShortcut          = new Shortcut("New Project",        "FileNew",          Keys.N, ModifierKeys.Control);
+        public static Shortcut FileOpenShortcut         = new Shortcut("Open Project",       "FileOpen",         Keys.O, ModifierKeys.Control);
+        public static Shortcut FileSaveShortcut         = new Shortcut("Save Project",       "FileSave",         Keys.S, ModifierKeys.Control);
+        public static Shortcut FileSaveAsShortcut       = new Shortcut("Save Project As",    "FileSaveAs",       Keys.S, ModifierKeys.ControlShift);
+        public static Shortcut FileExportShortcut       = new Shortcut("Export",             "FileExport",       Keys.E, ModifierKeys.Control);
+        public static Shortcut FileExportRepeatShortcut = new Shortcut("Repeat Last Export", "FileExportRepeat", Keys.E, ModifierKeys.ControlShift);
+
+        public static Shortcut CopyShortcut          = new Shortcut("Copy",           "Copy",          Keys.C, ModifierKeys.Control);
+        public static Shortcut CutShortcut           = new Shortcut("Cut",            "Cut",           Keys.X, ModifierKeys.Control);
+        public static Shortcut PasteShortcut         = new Shortcut("Paste",          "Paste",         Keys.V, ModifierKeys.Control);
+        public static Shortcut PasteSpecialShortcut  = new Shortcut("Paste Special",  "PasteSpecial",  Keys.V, ModifierKeys.ControlShift);
+        public static Shortcut DeleteShortcut        = new Shortcut("Delete",         "Delete",        Keys.Delete, ModifierKeys.Control);
+        public static Shortcut DeleteSpecialShortcut = new Shortcut("Delete Special", "DeleteSpecial", Keys.Delete, ModifierKeys.ControlShift);
+
+        public static Shortcut UndoShortcut       = new Shortcut("Undo", "Undo", Keys.Z, ModifierKeys.Control);
+        public static Shortcut RedoShortcut       = new Shortcut("Redo", "Redo", Keys.Y, ModifierKeys.Control, Keys.Z, ModifierKeys.ControlShift);
+
+        public static Shortcut QwertyShortcut     = new Shortcut("Toggle QWERTY Input",   "Qwerty",     Keys.Q, ModifierKeys.Shift);
+        public static Shortcut RecordingShortcut  = new Shortcut("Toggle Recording Mode", "Recording",  Keys.Enter);
+        public static Shortcut FollowModeShortcut = new Shortcut("Toggle Follow Mode",    "FollowMode", Keys.F, ModifierKeys.Shift);
+                                                  
+        public static Shortcut PlayShortcut             = new Shortcut("Play",                 "Play",            Keys.Space);
+        public static Shortcut PlayFromStartShortcut    = new Shortcut("Play From Start",      "PlayFromStart",   Keys.Space, ModifierKeys.Shift);
+        public static Shortcut PlayFromPatternShortcut  = new Shortcut("Play From Pattern",    "PlayFromPattern", Keys.Space, ModifierKeys.Shift);
+        public static Shortcut PlayFromLoopShortcut     = new Shortcut("Play From Loop Point", "PlayFromLoop",    Keys.Space, ModifierKeys.ControlShift);
+
+        public static Shortcut SeekStartShortcut        = new Shortcut("Seek to Start",            "SeekStart",        Keys.Home);
+        public static Shortcut SeekStartPatternShortcut = new Shortcut("Seek to Start of Pattern", "SeekStartPattenr", Keys.Home, ModifierKeys.Control);
+
+        public static Shortcut QwertySkipShortcut       = new Shortcut("QWERTY Skip",        "QwertySkip",       Keys.Tab);
+        public static Shortcut QwertyBackShortcut       = new Shortcut("QWERTY Delete",      "QwertyBack",       Keys.Backspace);
+        public static Shortcut QwertyStopShortcut       = new Shortcut("QWERTY Stop Note",   "QwertyStop",       Keys.D1);
+        public static Shortcut QwertyOctaveUpShortcut   = new Shortcut("QWERTY Octave Up",   "QwertyOctaveUp",   Keys.PageUp);
+        public static Shortcut QwertyOctaveDownShortcut = new Shortcut("QWERTY Octave Down", "QwertyOctaveDown", Keys.PageDown);
+
+        public static Shortcut SnapToggleShortcut        = new Shortcut("Toggle Snapping",     "SnapToggle",        Keys.S, ModifierKeys.Shift);
+        public static Shortcut EffectPanelShortcut       = new Shortcut("Toggle Effect Panel", "EffectPanel",       Keys.D1);
+        public static Shortcut MaximizePianoRollShortcut = new Shortcut("Maximize Piano Roll", "MaximizePianoRoll", Keys.D1, ModifierKeys.Control);
+
+        public static Shortcut[] QwertyNoteShortcuts = new Shortcut[]
         {
-            public QwertyKeyAssignment(Keys k, int scan = -1)
-            {
-                Key = k;
-                Scancode = scan;
-            }
+            new Shortcut("QWERTY C0",  "Qwerty00", Keys.Z, Keys.Unknown),
+            new Shortcut("QWERTY C#0", "Qwerty01", Keys.S, Keys.Unknown),
+            new Shortcut("QWERTY D0",  "Qwerty02", Keys.X, Keys.Unknown),
+            new Shortcut("QWERTY D#0", "Qwerty03", Keys.D, Keys.Unknown),
+            new Shortcut("QWERTY E0",  "Qwerty04", Keys.C, Keys.Unknown),
+            new Shortcut("QWERTY F0",  "Qwerty05", Keys.V, Keys.Unknown),
+            new Shortcut("QWERTY F#0", "Qwerty06", Keys.G, Keys.Unknown),
+            new Shortcut("QWERTY G0",  "Qwerty07", Keys.B, Keys.Unknown),
+            new Shortcut("QWERTY G#0", "Qwerty08", Keys.H, Keys.Unknown),
+            new Shortcut("QWERTY A0",  "Qwerty09", Keys.N, Keys.Unknown),
+            new Shortcut("QWERTY A#0", "Qwerty10", Keys.J, Keys.Unknown),
+            new Shortcut("QWERTY B0",  "Qwerty11", Keys.M, Keys.Unknown),
 
-            public override string ToString()
-            {
-                return $"{Key} ({Scancode})";
-            }
+            new Shortcut("QWERTY C1",  "Qwerty12", Keys.Q,  Keys.Comma),
+            new Shortcut("QWERTY C#1", "Qwerty13", Keys.D2, Keys.L),
+            new Shortcut("QWERTY D1",  "Qwerty14", Keys.W,  Keys.Period),
+            new Shortcut("QWERTY D#1", "Qwerty15", Keys.D3, Keys.SemiColon),
+            new Shortcut("QWERTY E1",  "Qwerty16", Keys.E,  Keys.Slash),
+            new Shortcut("QWERTY F1",  "Qwerty17", Keys.R,  Keys.Unknown),
+            new Shortcut("QWERTY F#1", "Qwerty18", Keys.D5, Keys.Unknown),
+            new Shortcut("QWERTY G1",  "Qwerty19", Keys.T,  Keys.Unknown),
+            new Shortcut("QWERTY G#1", "Qwerty20", Keys.D6, Keys.Unknown),
+            new Shortcut("QWERTY A1",  "Qwerty21", Keys.Y,  Keys.Unknown),
+            new Shortcut("QWERTY A#1", "Qwerty22", Keys.D7, Keys.Unknown),
+            new Shortcut("QWERTY B1",  "Qwerty23", Keys.U,  Keys.Unknown),
 
-            public void Clear()
-            {
-                Key = Keys.Unknown;
-                Scancode = 0;
-            }
-
-            public bool IsValid => Key != Keys.Unknown && (int)Key != 0 && Scancode >= 0;
-
-            public Keys Key;
-            public int  Scancode;
-        }
-
-        // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
-        public static readonly Keys[,] DefaultQwertyKeys = new Keys[37, 2]
-        {
-            // Stop note
-            { Keys.D1,           Keys.Unknown   },
-
-            // Octave 1
-            { Keys.Z,            Keys.Unknown   },
-            { Keys.S,            Keys.Unknown   },
-            { Keys.X,            Keys.Unknown   },
-            { Keys.D,            Keys.Unknown   },
-            { Keys.C,            Keys.Unknown   },
-            { Keys.V,            Keys.Unknown   },
-            { Keys.G,            Keys.Unknown   },
-            { Keys.B,            Keys.Unknown   },
-            { Keys.H,            Keys.Unknown   },
-            { Keys.N,            Keys.Unknown   },
-            { Keys.J,            Keys.Unknown   },
-            { Keys.M,            Keys.Unknown   },
-
-            // Octave 2
-            { Keys.Q,            Keys.Comma     },
-            { Keys.D2,           Keys.L         },
-            { Keys.W,            Keys.Period    },
-            { Keys.D3,           Keys.SemiColon }, 
-            { Keys.E,            Keys.Slash     },
-            { Keys.R,            Keys.Unknown   },
-            { Keys.D5,           Keys.Unknown   },
-            { Keys.T,            Keys.Unknown   },
-            { Keys.D6,           Keys.Unknown   },
-            { Keys.Y,            Keys.Unknown   },
-            { Keys.D7,           Keys.Unknown   },
-            { Keys.U,            Keys.Unknown   },
-
-            // Octave 3
-            { Keys.I,            Keys.Unknown   },
-            { Keys.D9,           Keys.Unknown   },
-            { Keys.O,            Keys.Unknown   },
-            { Keys.D0,           Keys.Unknown   },
-            { Keys.P,            Keys.Unknown   },
-            { Keys.LeftBracket,  Keys.Unknown   }, 
-            { Keys.Equal,        Keys.Unknown   }, 
-            { Keys.RightBracket, Keys.Unknown   }, 
-            { Keys.Unknown,      Keys.Unknown   },
-            { Keys.Unknown,      Keys.Unknown   },
-            { Keys.Unknown,      Keys.Unknown   },
-            { Keys.Unknown,      Keys.Unknown   }
+            new Shortcut("QWERTY C2",  "Qwerty24", Keys.I,            Keys.Unknown),
+            new Shortcut("QWERTY C#2", "Qwerty25", Keys.D9,           Keys.Unknown),
+            new Shortcut("QWERTY D2",  "Qwerty26", Keys.O,            Keys.Unknown),
+            new Shortcut("QWERTY D#2", "Qwerty27", Keys.D0,           Keys.Unknown),
+            new Shortcut("QWERTY E2",  "Qwerty28", Keys.P,            Keys.Unknown),
+            new Shortcut("QWERTY F2",  "Qwerty29", Keys.LeftBracket,  Keys.Unknown),
+            new Shortcut("QWERTY F#2", "Qwerty30", Keys.Equal,        Keys.Unknown),
+            new Shortcut("QWERTY G2",  "Qwerty31", Keys.RightBracket, Keys.Unknown),
+            new Shortcut("QWERTY G#2", "Qwerty32", Keys.Unknown,      Keys.Unknown),
+            new Shortcut("QWERTY A2",  "Qwerty33", Keys.Unknown,      Keys.Unknown),
+            new Shortcut("QWERTY A#2", "Qwerty34", Keys.Unknown,      Keys.Unknown),
+            new Shortcut("QWERTY B2",  "Qwerty35", Keys.Unknown,      Keys.Unknown)
         };
 
-        public static int[,] DefaultQwertyScancodes = new int[37, 2];
-        public static int[,] QwertyKeys = new int[37, 2];
-        public static Dictionary<int, int> ScanCodeToNoteMap = new Dictionary<int, int>();
+        public static Shortcut[] ActiveChannelShortcuts = new Shortcut[]
+        {
+            new Shortcut("Set Active Channel 1",  "Channel01", Keys.F1),
+            new Shortcut("Set Active Channel 2",  "Channel02", Keys.F2),
+            new Shortcut("Set Active Channel 3",  "Channel03", Keys.F3),
+            new Shortcut("Set Active Channel 4",  "Channel04", Keys.F4),
+            new Shortcut("Set Active Channel 5",  "Channel05", Keys.F5),
+            new Shortcut("Set Active Channel 6",  "Channel06", Keys.F6),
+            new Shortcut("Set Active Channel 7",  "Channel07", Keys.F7),
+            new Shortcut("Set Active Channel 8",  "Channel08", Keys.F8),
+            new Shortcut("Set Active Channel 9",  "Channel09", Keys.F9),
+            new Shortcut("Set Active Channel 10", "Channel10", Keys.F10),
+            new Shortcut("Set Active Channel 11", "Channel11", Keys.F11),
+            new Shortcut("Set Active Channel 12", "Channel12", Keys.F12),
+            new Shortcut("Set Active Channel 13", "Channel13", Keys.F13),
+            new Shortcut("Set Active Channel 14", "Channel14", Keys.F14),
+            new Shortcut("Set Active Channel 15", "Channel15", Keys.F15),
+            new Shortcut("Set Active Channel 16", "Channel16", Keys.F16),
+            new Shortcut("Set Active Channel 17", "Channel17", Keys.F17),
+            new Shortcut("Set Active Channel 18", "Channel18", Keys.F18),
+            new Shortcut("Set Active Channel 19", "Channel19", Keys.F19),
+            new Shortcut("Set Active Channel 20", "Channel20", Keys.F20),
+            new Shortcut("Set Active Channel 21", "Channel21", Keys.F21),
+            new Shortcut("Set Active Channel 22", "Channel22", Keys.F22),
+            new Shortcut("Set Active Channel 23", "Channel23", Keys.F23),
+            new Shortcut("Set Active Channel 24", "Channel24", Keys.F24),
+        };
+
+        public static Shortcut[] DisplayChannelShortcuts = new Shortcut[]
+        {
+            new Shortcut("Force Display Channel 1",  "DisplayChannel01", Keys.F1,  ModifierKeys.Control),
+            new Shortcut("Force Display Channel 2",  "DisplayChannel02", Keys.F2,  ModifierKeys.Control),
+            new Shortcut("Force Display Channel 3",  "DisplayChannel03", Keys.F3,  ModifierKeys.Control),
+            new Shortcut("Force Display Channel 4",  "DisplayChannel04", Keys.F4,  ModifierKeys.Control),
+            new Shortcut("Force Display Channel 5",  "DisplayChannel05", Keys.F5,  ModifierKeys.Control),
+            new Shortcut("Force Display Channel 6",  "DisplayChannel06", Keys.F6,  ModifierKeys.Control),
+            new Shortcut("Force Display Channel 7",  "DisplayChannel07", Keys.F7,  ModifierKeys.Control),
+            new Shortcut("Force Display Channel 8",  "DisplayChannel08", Keys.F8,  ModifierKeys.Control),
+            new Shortcut("Force Display Channel 9",  "DisplayChannel09", Keys.F9,  ModifierKeys.Control),
+            new Shortcut("Force Display Channel 10", "DisplayChannel10", Keys.F10, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 11", "DisplayChannel11", Keys.F11, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 12", "DisplayChannel12", Keys.F12, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 13", "DisplayChannel13", Keys.F13, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 14", "DisplayChannel14", Keys.F14, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 15", "DisplayChannel15", Keys.F15, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 16", "DisplayChannel16", Keys.F16, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 17", "DisplayChannel17", Keys.F17, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 18", "DisplayChannel18", Keys.F18, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 19", "DisplayChannel19", Keys.F19, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 20", "DisplayChannel20", Keys.F20, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 21", "DisplayChannel21", Keys.F21, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 22", "DisplayChannel22", Keys.F22, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 23", "DisplayChannel23", Keys.F23, ModifierKeys.Control),
+            new Shortcut("Force Display Channel 24", "DisplayChannel24", Keys.F24, ModifierKeys.Control),
+        };
 
         // Audio section
         const int DefaultNumBufferedAudioFrames = Platform.IsLinux ? 4 : Platform.IsAndroid ? 2 : 3;
@@ -213,16 +277,14 @@ namespace FamiStudio
 
         public static void Initialize()
         {
-            if (Platform.IsDesktop)
-            {
-                for (int i = 0; i < DefaultQwertyKeys.GetLength(0); i++)
-                {
-                    DefaultQwertyScancodes[i, 0] = DefaultQwertyKeys[i, 0] == Keys.Unknown ? -1 : Platform.GetKeyScancode(DefaultQwertyKeys[i, 0]);
-                    DefaultQwertyScancodes[i, 1] = DefaultQwertyKeys[i, 1] == Keys.Unknown ? -1 : Platform.GetKeyScancode(DefaultQwertyKeys[i, 1]);
-                }
-            }
-
+            InitShortcuts();
             Load();
+        }
+
+        private static void InitShortcuts()
+        {
+            AllShortcuts.Sort((c1, c2) => c1.ConfigName.CompareTo(c2.ConfigName));
+            DefaultShortcuts = Shortcut.CloneList(AllShortcuts);
         }
 
         public static void Load()
@@ -309,36 +371,23 @@ namespace FamiStudio
                 ExpansionMixerSettings[i].treble = ini.GetFloat(section, "Treble", DefaultExpansionMixerSettings[i].treble);
             }
 
-            // QWERTY
-            Array.Copy(DefaultQwertyScancodes, QwertyKeys, DefaultQwertyScancodes.Length);
-
-            // At version 7 (FamiStudio 4.0.0) we changed how the QWERTY keys are saved.
-            if (Version >= 7)
+            // At version 7 (FamiStudio 4.1.0) we allowed configuring all the keys.
+            if (Version >= 8)
             {
-                // Stop note.
+                foreach (var shortcut in AllShortcuts)
                 {
-                    if (ini.HasKey("QWERTY", "StopNote"))
-                        QwertyKeys[0, 0] = ini.GetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
-                    if (ini.HasKey("QWERTY", "StopNoteAlt"))
-                        QwertyKeys[0, 1] = ini.GetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
-                }
+                    var shortcutStr1 = ini.GetString("Keys", shortcut.ConfigName, null);
+                    if (shortcutStr1 != null)
+                        shortcut.FromConfigString(shortcutStr1, 0);
 
-                // Regular notes.
-                for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
-                {
-                    var octave = (idx - 1) / 12;
-                    var note = (idx - 1) % 12;
-                    var keyName1 = $"Octave{octave}Note{note}";
-                    var keyName2 = $"Octave{octave}Note{note}Alt";
-
-                    if (ini.HasKey("QWERTY", keyName1))
-                        QwertyKeys[idx, 0] = ini.GetInt("QWERTY", keyName1, QwertyKeys[idx, 0]);
-                    if (ini.HasKey("QWERTY", keyName2))
-                        QwertyKeys[idx, 1] = ini.GetInt("QWERTY", keyName2, QwertyKeys[idx, 1]);
+                    if (shortcut.AllowTwoShortcuts)
+                    {
+                        var shortcutStr2 = ini.GetString("Keys", shortcut.ConfigName + "_Alt", null);
+                        if (shortcutStr2 != null)
+                            shortcut.FromConfigString(shortcutStr2, 1);
+                    }
                 }
             }
-
-            UpdateKeyCodeMaps();
 
             if (Array.IndexOf(global::FamiStudio.DpiScaling.GetAvailableScalings(), DpiScaling) < 0)
                 DpiScaling = 0;
@@ -487,23 +536,12 @@ namespace FamiStudio
             // FFmpeg
             ini.SetString("FFmpeg", "ExecutablePath", FFmpegExecutablePath);
 
-            // QWERTY
-            // Stop note.
+            // Keyboard
+            foreach (var shortcut in AllShortcuts)
             {
-                ini.SetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
-                ini.SetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
-            }
-
-            // Regular notes.
-            for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
-            {
-                var octave = (idx - 1) / 12;
-                var note = (idx - 1) % 12;
-                var keyName0 = $"Octave{octave}Note{note}";
-                var keyName1 = $"Octave{octave}Note{note}Alt";
-
-                ini.SetInt("QWERTY", keyName0, QwertyKeys[idx, 0]);
-                ini.SetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
+                ini.SetString("Keys", shortcut.ConfigName, shortcut.ToConfigString(0));
+                if (shortcut.AllowTwoShortcuts)
+                    ini.SetString("Keys", shortcut.ConfigName + "_Alt", shortcut.ToConfigString(1));
             }
 
             // Mobile
@@ -518,22 +556,6 @@ namespace FamiStudio
             Directory.CreateDirectory(GetConfigFilePath());
 
             ini.Save(GetConfigFileName());
-        }
-
-        public static void UpdateKeyCodeMaps()
-        {
-            ScanCodeToNoteMap.Clear();
-
-            for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
-            {
-                var k0 = QwertyKeys[idx, 0];
-                var k1 = QwertyKeys[idx, 1];
-
-                if (k0 >= 0)
-                    ScanCodeToNoteMap[k0] = idx;
-                if (k1 >= 0)
-                    ScanCodeToNoteMap[k1] = idx;
-            }
         }
 
         public static void AddRecentFile(string file)

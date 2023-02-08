@@ -11,12 +11,14 @@ namespace FamiStudio
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
+        public delegate bool CellEnabledDelegate(Control sender, int rowIndex, int colIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
         public event HeaderCellClickedDelegate HeaderCellClicked;
+        public event CellEnabledDelegate CellEnabled;
 
         private int scroll;
         private int maxScroll;
@@ -31,7 +33,7 @@ namespace FamiStudio
         private object[,] data;
         private int[] columnWidths;
         private int[] columnOffsets;
-        private bool[] columnEnabled;
+        private byte columnEnabledMask;
         private bool hasAnyDropDowns;
         private bool fullRowSelect;
         private bool isClosingList;
@@ -64,6 +66,8 @@ namespace FamiStudio
 
         public Grid(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
         {
+            Debug.Assert(columnDescs.Length <= 8); // We use a byte for masks.
+
             columns = columnDescs;
             numRows = rows;
             numItemRows = hasHeader ? numRows - 1 : numRows;
@@ -93,18 +97,32 @@ namespace FamiStudio
                 dropDownActive.SelectedIndexChanged += DropDownActive_SelectedIndexChanged;
             }
 
-            columnEnabled = new bool[columns.Length];
-            for (int i = 0; i < columnEnabled.Length; i++)
-                columnEnabled[i] = true;
+            columnEnabledMask = 0xff;
         }
 
         public void SetColumnEnabled(int col, bool enabled)
         {
-            // This is the only one that I added support to disabled state right now.
-            //Debug.Assert(columns[col].Type == ColumnType.Slider);
+            if (enabled)
+                columnEnabledMask = (byte)(columnEnabledMask |  (1 << col));
+            else
+                columnEnabledMask = (byte)(columnEnabledMask & ~(1 << col));
 
-            columnEnabled[col] = enabled;
             MarkDirty();
+        }
+
+        public bool IsColumnEnabled(int col)
+        {
+            return (columnEnabledMask & (1 << col)) != 0;
+        }
+
+        public bool IsCellEnabled(int row, int col)
+        {
+            return CellEnabled == null || CellEnabled.Invoke(this, row, col);
+        }
+
+        public bool IsCellOrColumnEnabled(int row, int col)
+        {
+            return IsColumnEnabled(col) && IsCellEnabled(row, col);
         }
 
         public void SetRowColor(int row, Color color)
@@ -252,12 +270,6 @@ namespace FamiStudio
                 }
             }
 
-            if (!columnEnabled[col])
-            {
-                col = -1;
-                return false;
-            }
-
             // Row -1 will mean header.
             row = y / rowHeight - numHeaderRows;
 
@@ -269,7 +281,15 @@ namespace FamiStudio
             row += scroll;
 
             Debug.Assert(col >= 0);
-            return row >= 0 && row < data.GetLength(0);
+            if (row >= 0 && row < data.GetLength(0))
+            {
+                return IsCellOrColumnEnabled(row, col);
+            }
+            else
+            {
+                col = -1;
+                return false;
+            }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -309,7 +329,6 @@ namespace FamiStudio
                         if (valid)
                         { 
                             var colDesc = columns[col];
-                            var colEnabled = columnEnabled[col];
 
                             switch (colDesc.Type)
                             {
@@ -375,7 +394,7 @@ namespace FamiStudio
 
         private bool IsPointInButton(int x, int row, int col)
         {
-            if (row < 0 || col < 0 || !columnEnabled[col])
+            if (row < 0 || col < 0 || !IsCellOrColumnEnabled(row, col))
                 return false;
             var cellX = x - columnOffsets[col];
             var buttonX = cellX - columnWidths[col] + rowHeight;
@@ -542,7 +561,7 @@ namespace FamiStudio
                     {
                         var col = columns[j];
                         var colWidth = columnWidths[j];
-                        var colEnabled = columnEnabled[j];
+                        var cellEnabled = IsCellOrColumnEnabled(k, j);
                         var x = columnOffsets[j];
                         var val = data[k, j];
 
@@ -574,7 +593,7 @@ namespace FamiStudio
                             }
                             case ColumnType.Slider:
                             {
-                                if (colEnabled)
+                                if (cellEnabled)
                                 {
                                     c.FillRectangle(0, 0, (int)Math.Round((int)val / 100.0f * colWidth), rowHeight, Theme.DarkGreyColor6);
                                     c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), Fonts.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, colWidth, rowHeight);

@@ -177,16 +177,19 @@ namespace FamiStudio
 
         public static int GetKeyScancode(Keys key)
         {
-            return initializedGlfw ? glfwGetKeyScancode((int)key) : -1;
+            Debug.Assert(initializedGlfw);
+            return initializedGlfw && key != Keys.Unknown ? glfwGetKeyScancode((int)key) : -1;
         }
 
         public static string KeyToString(Keys key)
         {
+            Debug.Assert(initializedGlfw);
             return glfwGetKeyName((int)key, 0);
         }
 
         public static string ScancodeToString(int scancode)
         {
+            Debug.Assert(initializedGlfw);
             return glfwGetKeyName((int)Keys.Unknown, scancode);
         }
 

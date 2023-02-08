@@ -539,8 +539,15 @@ namespace FamiStudio
             grid.ButtonPressed += Grid_ButtonPressed;
             grid.CellDoubleClicked += Grid_CellDoubleClicked;
             grid.CellClicked += Grid_CellClicked;
+            grid.CellEnabled += Grid_CellEnabled;
 
             return grid;
+        }
+
+        private bool Grid_CellEnabled(Control sender, int rowIndex, int colIndex)
+        {
+            var propIdx = GetPropertyIndexForControl(sender);
+            return PropertyCellEnabled == null || PropertyCellEnabled.Invoke(this, propIdx, rowIndex, colIndex);
         }
 
         private void Grid_CellClicked(Control sender, bool left, int rowIndex, int colIndex)

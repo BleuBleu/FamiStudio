@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace FamiStudio
@@ -227,31 +228,108 @@ namespace FamiStudio
         }
     }
 
-    public class ModifierKeys
+    public struct ModifierKeys
     { 
         // Matches GLFW
-        private const int ModifierShift   = 1;
-        private const int ModifierControl = Platform.IsMacOS ? 10 : 2;
-        private const int ModifierAlt     = 4;
-        private const int ModifierSuper   = 8;
+        private const int ShiftMask   = 1;
+        private const int ControlMask = Platform.IsMacOS ? 10 : 2;
+        private const int AltMask     = 4;
+        private const int SuperMask   = 8;
 
-        private int modifiers;
-        private int forcedModifiers;
+        private int value;
 
-        public bool Shift     => (Modifiers & ModifierShift)   != 0;
-        public bool Control   => (Modifiers & ModifierControl) != 0;
-        public bool Alt       => (Modifiers & ModifierAlt)     != 0;
-        public bool Super     => (Modifiers & ModifierSuper)   != 0;
-        public int  Modifiers => (modifiers | forcedModifiers);
+        public bool IsShiftDown   => (value & ShiftMask)   != 0;
+        public bool IsControlDown => (value & ControlMask) != 0;
+        public bool IsAltDown     => (value & AltMask)     != 0;
+        public bool IsSuperDown   => (value & SuperMask)   != 0;
+        public int  Value         => value;
+
+        public static readonly ModifierKeys Control      = new ModifierKeys(ControlMask);
+        public static readonly ModifierKeys Shift        = new ModifierKeys(ShiftMask);
+        public static readonly ModifierKeys Alt          = new ModifierKeys(AltMask);
+        public static readonly ModifierKeys ControlShift = new ModifierKeys(ControlMask | ShiftMask);
+
+        public ModifierKeys(int val)
+        {
+            value = val;
+        }
 
         public void Set(int mods)
         {
-            modifiers = mods;
+            value = mods;
         }
 
-        public void SetForced(int mods)
+        public override bool Equals(object obj)
         {
-            forcedModifiers = mods;
+            var other = (ModifierKeys)obj;
+            return value == other.value;
+        }
+
+        public override int GetHashCode()
+        {
+            return value;
+        }
+
+        public static ModifierKeys operator |(ModifierKeys m0, ModifierKeys m1)
+        {
+            return new ModifierKeys(m0.value | m1.Value);
+        }
+
+        public static bool operator ==(ModifierKeys m0, ModifierKeys m1)
+        {
+            return m0.value == m1.value;
+        }
+
+        public static bool operator !=(ModifierKeys m0, ModifierKeys m1)
+        {
+            return m0.value != m1.value;
+        }
+
+        public string ToTooltipString()
+        {
+            var str = "";
+            if (IsControlDown) str += "<Ctrl>";
+            if (IsShiftDown)   str += "<Shift>";
+            if (IsAltDown)     str += "<Alt>";
+            return str;
+        }
+
+        public string ToDisplayString()
+        {
+            var str = "";
+            if (IsControlDown) str += "Ctrl+";
+            if (IsShiftDown)   str += "Shift+";
+            if (IsAltDown)     str += "Alt+";
+            return str;
+        }
+
+        public void FromConfigString(Span<string> splits)
+        {
+            value = 0;
+
+            foreach (var s in splits)
+            {
+                switch (s)
+                {
+                    case "Ctrl"  : value |= ControlMask; break;
+                    case "Shift" : value |= ShiftMask;   break;
+                    case "Alt"   : value |= AltMask;     break;
+                }
+            }
+        }
+
+        public string ToConfigString()
+        {
+            var str = "";
+            if (IsControlDown) str += "Ctrl+";
+            if (IsShiftDown)   str += "Shift+";
+            if (IsAltDown)     str += "Alt+";
+            return str;
+        }
+
+        public override string ToString()
+        {
+            return ToDisplayString();
         }
     }
 
@@ -297,28 +375,24 @@ namespace FamiStudio
 
     public class KeyEventArgs
     {   
-        // Matches GLFW
-        private const int ModifierShift   = 1;
-        private const int ModifierControl = Platform.IsMacOS ? 10 : 2;
-        private const int ModifierAlt     = 4;
-        private const int ModifierSuper   = 8;
-
         private Keys key;
-        private int  modifiers;
+        private ModifierKeys modifiers;
         private int  scancode;
         private bool repeat;
         private bool handled;
 
-        public Keys Key      => key;
-        public int  Scancode => scancode;
-        public bool Shift    => (modifiers & ModifierShift)   != 0;
-        public bool Control  => (modifiers & ModifierControl) != 0;
-        public bool Alt      => (modifiers & ModifierAlt)     != 0;
-        public bool Super    => (modifiers & ModifierSuper)   != 0;
-        public bool IsRepeat => repeat;
+        public Keys Key => key;
+        public ModifierKeys Modifiers => modifiers;
+        
+        public int  Scancode  => scancode;
+        public bool Shift     => modifiers.IsShiftDown;
+        public bool Control   => modifiers.IsControlDown;
+        public bool Alt       => modifiers.IsAltDown;
+        public bool Super     => modifiers.IsSuperDown;
+        public bool IsRepeat  => repeat;
         public bool Handled { get => handled; set => handled = value; }
 
-        public KeyEventArgs(Keys k, int mods, bool rep, int scan)
+        public KeyEventArgs(Keys k, ModifierKeys mods, bool rep, int scan)
         {
             key = k;
             modifiers = mods;
@@ -329,22 +403,18 @@ namespace FamiStudio
 
     public class CharEventArgs
     {
-        // Matches GLFW
-        private const int ModifierShift   = 1;
-        private const int ModifierControl = Platform.IsMacOS ? 10 : 2;
-        private const int ModifierAlt     = 4;
-        private const int ModifierSuper   = 8;
-
         private char chr;
-        private int  modifiers;
+        private ModifierKeys modifiers;
 
-        public char Char    => chr;
-        public bool Shift   => (modifiers & ModifierShift)   != 0;
-        public bool Control => (modifiers & ModifierControl) != 0;
-        public bool Alt     => (modifiers & ModifierAlt)     != 0;
-        public bool Super   => (modifiers & ModifierSuper)   != 0;
+        public char Char      => chr;
+        public bool Shift     => modifiers.IsShiftDown;
+        public bool Control   => modifiers.IsControlDown;
+        public bool Alt       => modifiers.IsAltDown;
+        public bool Super     => modifiers.IsSuperDown;
 
-        public CharEventArgs(char c, int mods)
+        public ModifierKeys Modifiers => modifiers;
+
+        public CharEventArgs(char c, ModifierKeys mods)
         {
             chr = c;
             modifiers = mods;
@@ -473,6 +543,206 @@ namespace FamiStudio
         RightSuper = 347,
         Menu = 348
     };
+
+    public class Shortcut
+    {
+        public string DisplayName { get; private set; }
+        public string ConfigName  { get; private set; }
+        public bool AllowTwoShortcuts { get; private set; }
+
+        //public int[] ScanCodes = new int[2];
+        public Keys[] KeyValues         { get; private set; } = new Keys[2];
+        public ModifierKeys[] Modifiers { get; private set; } = new ModifierKeys[2];
+
+        private Shortcut()
+        {
+        }
+
+        public Shortcut(string displayName, string configName, Keys k, ModifierKeys m = default(ModifierKeys))
+        {
+            DisplayName = displayName;
+            ConfigName = configName;
+            //ScanCodes[0]  = Platform.GetKeyScancode(k);
+            Modifiers[0] = m;
+            KeyValues[0] = k;
+            //ScanCodes[1] = -1;
+            KeyValues[1] = Keys.Unknown;
+            Settings.AllShortcuts.Add(this);
+        }
+
+        public Shortcut(string displayName, string configName, Keys k1, Keys k2)
+        {
+            DisplayName = displayName;
+            ConfigName = configName;
+            //ScanCodes[0] = Platform.GetKeyScancode(k1);
+            KeyValues[0] = k1;
+            ////ScanCodes[1] = Platform.GetKeyScancode(k2);
+            KeyValues[1] = k2;
+            AllowTwoShortcuts = true;
+            Settings.AllShortcuts.Add(this);
+        }
+
+        public Shortcut(string displayName, string configName, Keys k1, ModifierKeys m1, Keys k2, ModifierKeys m2)
+        {
+            DisplayName = displayName;
+            ConfigName = configName;
+            //ScanCodes[0] = Platform.GetKeyScancode(k1);
+            Modifiers[0] = m1;
+            KeyValues[0] = k1;
+            //ScanCodes[1] = Platform.GetKeyScancode(k2);
+            Modifiers[1] = m2;
+            KeyValues[1] = k2;
+            AllowTwoShortcuts = true;
+            Settings.AllShortcuts.Add(this);
+        }
+
+        private Shortcut Clone()
+        {
+            var clone = new Shortcut();
+            clone.DisplayName = DisplayName;
+            clone.ConfigName = ConfigName;
+            clone.AllowTwoShortcuts = AllowTwoShortcuts;
+            //clone.ScanCodes = ScanCodes.Clone() as int[];
+            clone.KeyValues = KeyValues.Clone() as Keys[];
+            clone.Modifiers = Modifiers.Clone() as ModifierKeys[];
+            return clone;
+        }
+
+        public static List<Shortcut> CloneList(List<Shortcut> list)
+        {
+            var clone = new List<Shortcut>();
+            foreach (var c in list)
+                clone.Add(c.Clone());
+            return clone;
+        }
+
+        public void Clear(int idx)
+        {
+            //ScanCodes[idx] = -1;
+            KeyValues[idx] = Keys.Unknown;
+            Modifiers[idx].Set(0);
+        }
+
+        public bool IsShortcutValid(int idx)
+        {
+            //return ScanCodes[idx] >= 0;
+            return KeyValues[idx] != Keys.Unknown;
+        }
+
+        public bool Matches(KeyEventArgs e, int idx)
+        {
+            //return IsShortcut1Valid(idx) && e.Modifiers == Modifiers[idx] && e.Scancode == ScanCodes[idx];
+            return IsShortcutValid(idx) && e.Modifiers == Modifiers[idx] && e.Key == KeyValues[idx];
+        }
+
+        public bool Matches(KeyEventArgs e)
+        {
+            return Matches(e, 0) || Matches(e, 1);
+        }
+
+        private string GetShortcutKeyString(int idx)
+        {
+            // CTRLTODO : Test this with exotic keyboard layouts.
+            // CTRLTODO : Look at GLFW doc about printable keys.
+
+            //var str = Platform.ScancodeToString(ScanCodes[idx]);
+            //if (string.IsNullOrEmpty(str))
+            //    str = Platform.KeyToString(KeyValues[idx]);
+            var str = Platform.KeyToString(KeyValues[idx]);
+            if (string.IsNullOrEmpty(str))
+                str = KeyValues[idx].ToString();
+            else
+                str = str.ToUpper();
+
+            // Fixup a few edge cases.
+            switch (str)
+            {
+                case "\t": str = "Tab";   break;
+                case "\r": str = "Enter"; break;
+                case null: str = "???";   break;
+            }
+
+            return str;
+        }
+
+        public string TooltipString
+        {
+            get
+            {
+                var str = "";
+
+                // CTRLTODO : Some stuff like "Redo" have 2 shortcuts AND tooltips.
+                if (IsShortcutValid(0))
+                {
+                    if (Modifiers[0].Value != 0)
+                        str = $"{Modifiers[0].ToTooltipString()}";
+                    str += $"<{GetShortcutKeyString(0)}>";
+                }
+
+                // HACK : 'Ctrl' gets converted to 'Cmd' in the tooltip, but for some
+                // commands on MacOS we will really want to display Ctrl since they
+                // conflict with some built-in OS shortcuts.
+                if (Platform.IsMacOS)
+                {
+                    switch (str)
+                    {
+                        case "<Ctrl>+<Space>": 
+                            str = "<ForceCtrl>+<Space>"; 
+                            break;
+                    }
+                }
+
+                return str;
+            }
+        }
+
+        public void FromConfigString(string s, int idx)
+        {
+            var splits = s.Split('+', StringSplitOptions.RemoveEmptyEntries);
+            
+            if (splits.Length > 0)
+            {
+                Modifiers[idx].FromConfigString(splits.AsSpan(0, splits.Length - 1));
+                KeyValues[idx] = (Keys)Enum.Parse(typeof(Keys), splits[splits.Length - 1]);
+                //ScanCodes[idx] = int.Parse();
+            }
+            else
+            {
+                // Should we leave to default here?
+                //ScanCodes[idx] = -1;
+                KeyValues[idx] = Keys.Unknown;
+            }
+        }
+
+        public string ToConfigString(int idx)
+        {
+            Debug.Assert(idx == 0 || AllowTwoShortcuts);
+            //return Modifiers[idx].ToConfigString() + ScanCodes[idx].ToString();
+            return Modifiers[idx].ToConfigString() + KeyValues[idx].ToString();
+        }
+
+        public string ToDisplayString(int idx)
+        {
+            var str = "";
+
+            if (IsShortcutValid(idx))
+            {
+                if (Modifiers[idx].Value != 0)
+                    str += $"{Modifiers[idx]}";
+                str += (GetShortcutKeyString(idx) ?? "Unknown");
+            }
+
+            return str;
+        }
+
+        public override string ToString()
+        {
+            var str = DisplayName + " " + ToDisplayString(0);
+            if (AllowTwoShortcuts)
+                str += " " + ToDisplayString(1);
+            return str;
+        }
+    }
 
     // Matches Windows Forms
     public enum DialogResult

@@ -15,7 +15,6 @@
 =====
 - OpenGL upgrade/.NET 5.0/64bit
 	- Retest DPI scaling A LOT.
-	- Windows setup must migrate to 64 bit correctly
 - NSF import issue TF74
 - DPCM 
 	- In app, you get up to 128KB of samples
@@ -33,6 +32,7 @@
 - CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
 - Proportionnal volume adjust
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
+- BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
 
 4.1.0 Change Log
 ================
@@ -43,6 +43,7 @@
 - All desktop version now requires OpenGL 3.3.
 - Android version now requires OpenGL ES 2.0.
 - Windows 7 is no longer supported.
+- More configurable keys
 - 
 
 Batch convert PNG -> TGA

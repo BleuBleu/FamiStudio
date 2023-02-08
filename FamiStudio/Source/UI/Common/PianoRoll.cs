@@ -1467,28 +1467,15 @@ namespace FamiStudio
             // QWERTY key labels.
             if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled) && Platform.IsDesktop)
             {
-                var keyStrings = new string[Note.MusicalNoteMax];
-
-                foreach (var kv in Settings.ScanCodeToNoteMap)
-                {
-                    var i = kv.Value - 1;
-                    var k = kv.Key;
-
-                    if (i < 0 || i >= keyStrings.Length)
-                        continue;
-
-                    if (keyStrings[i] == null)
-                        keyStrings[i] = Platform.ScancodeToString(k);
-                    else
-                        keyStrings[i] += $"   {Platform.ScancodeToString(k)}";
-                }
-
+                // GLTODO : Use min/max visible octave
                 for (int i = 0; i < Note.MusicalNoteMax; i++)
                 {
-                    if (keyStrings[i] == null)
+                    var keyString = App.GetRecordingKeyString(i);
+                    
+                    if (keyString == null)
                         continue;
 
-                    int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + App.BaseRecordingOctave)) - scrollY;
+                    int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12))) - scrollY;
                     int y = octaveBaseY - (i % 12) * noteSizeY;
 
                     Color color;
@@ -1497,7 +1484,7 @@ namespace FamiStudio
                     else
                         color = IsBlackKey(i % 12) ? Theme.LightGreyColor2 : Theme.BlackColor;
 
-                    r.c.DrawText(keyStrings[i], r.fonts.FontVerySmall, 0, y - recordingKeyOffsetY + 1, color, TextFlags.MiddleCenter, blackKeySizeX, noteSizeY - 1);
+                    r.c.DrawText(keyString, r.fonts.FontVerySmall, 0, y - recordingKeyOffsetY + 1, color, TextFlags.MiddleCenter, blackKeySizeX, noteSizeY - 1);
                 }
             }
 
@@ -2184,6 +2171,16 @@ namespace FamiStudio
                 PasteNotes();
             else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 PasteEnvelopeValues();
+        }
+
+        public void Delete()
+        {
+            if (editMode == EditionMode.Channel)
+                DeleteSelectedNotes();
+            else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
+                DeleteSelectedEnvelopeValues();
+            else if (editMode == EditionMode.DPCM)
+                DeleteSelectedWaveSection();
         }
 
         public void PasteSpecial()
@@ -2966,7 +2963,6 @@ namespace FamiStudio
                 RenderEnvelopeValues(r);
             }
 
-            r.c.PopClipRegion();
             r.c.PopTransform();
 
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
@@ -2975,6 +2971,8 @@ namespace FamiStudio
                 if (textWidth > 0)
                     r.f.DrawText(noteTooltip, r.fonts.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, Theme.LightGreyColor1, TextFlags.Right, textWidth);
             }
+
+            r.c.PopClipRegion();
         }
 
         private void RenderNoteBody(RenderInfo r, Note note, Color color, int time, int noteLen, bool outline, bool selected, bool activeChannel, bool released, bool isFirstPart, int slideDuration = -1)
@@ -3379,13 +3377,14 @@ namespace FamiStudio
             textY += r.fonts.FontMedium.LineHeight;
             r.f.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
 
-            r.b.PopClipRegion();
             r.b.PopTransform();
 
             if (!string.IsNullOrEmpty(noteTooltip))
             {
                 r.f.DrawText(noteTooltip, r.fonts.FontLarge, 0, actualHeight - tooltipTextPosY, Theme.LightGreyColor1, TextFlags.Right, Width - tooltipTextPosX);
             }
+
+            r.b.PopClipRegion();
         }
 
         public void RenderVideoFrame(Graphics g, int channel, int patternIndex, float noteIndex, float centerNote, int highlightKey, Color highlightColor)
@@ -3671,7 +3670,7 @@ namespace FamiStudio
 
             var delta = 0;
 
-            if (ModifierKeys.Control)
+            if (ModifierKeys.IsControlDown)
             {
                 delta = (captureMouseY - y) / 4;
             }
@@ -4858,16 +4857,13 @@ namespace FamiStudio
             {
                 SelectAll();
             }
-            else if (e.Key == Keys.D1 && !e.Alt)
+            else if (Settings.EffectPanelShortcut.Matches(e))
             {
-                if (e.Control)
-                {
-                    ToggleEffectPanel();
-                }
-                else
-                {
-                    ToggleMaximize();
-                }
+                ToggleEffectPanel();
+            }
+            else if (Settings.MaximizePianoRollShortcut.Matches(e))
+            {
+                ToggleMaximize();
             }
             else if (e.Key >= Keys.D1 && e.Key <= Keys.D9 && e.Alt)
             {
@@ -4880,7 +4876,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (e.Key == Keys.S && e.Shift)
+            else if (Settings.SnapToggleShortcut.Matches(e))
             {
                 if (SnapAllowed)
                 {
@@ -4890,38 +4886,29 @@ namespace FamiStudio
             }
             else if (IsActiveControl && IsSelectionValid())
             {
-                if (e.Control)
+                if (Settings.CopyShortcut.Matches(e))
                 {
-                    if (e.Key == Keys.C)
-                        Copy();
-                    else if (e.Key == Keys.X)
-                        Cut();
-                    else if (e.Key == Keys.V)
-                    {
-                        if (e.Shift)
-                            PasteSpecial();
-                        else
-                            Paste();
-                    }
+                    Copy();
                 }
-
-                if (e.Key == Keys.Delete)
+                else if (Settings.CutShortcut.Matches(e))
                 {
-                    if (editMode == EditionMode.Channel)
-                    {
-                        if (e.Control && e.Shift)
-                            DeleteSpecial();
-                        else
-                            DeleteSelectedNotes();
-                    }
-                    else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
-                    {
-                        DeleteSelectedEnvelopeValues();
-                    }
-                    else if (editMode == EditionMode.DPCM)
-                    {
-                        DeleteSelectedWaveSection();
-                    }
+                    Cut();
+                }
+                else if (Settings.PasteShortcut.Matches(e))
+                {
+                    Paste();
+                }
+                else if (Settings.PasteSpecialShortcut.Matches(e))
+                {
+                    PasteSpecial();
+                }
+                else if (Settings.DeleteShortcut.Matches(e))
+                {
+                    Delete();
+                }
+                else if (Settings.DeleteSpecialShortcut.Matches(e))
+                {
+                    DeleteSpecial();
                 }
 
                 if (editMode == EditionMode.Channel)
@@ -5116,7 +5103,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
+            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             if (middle && e.Y > headerSizeY && e.X > pianoSizeX)
             {
@@ -5267,7 +5254,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownAltZoom(MouseEventArgs e)
         {
-            if (e.Right && ModifierKeys.Alt && Settings.AltZoomAllowed)
+            if (e.Right && ModifierKeys.IsAltDown && Settings.AltZoomAllowed)
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.AltZoom);
                 return true;
@@ -5359,7 +5346,7 @@ namespace FamiStudio
                     {
                         StartDragVolumeSlide(e.X, e.Y, location);
                     }
-                    else if (ModifierKeys.Shift)
+                    else if (ModifierKeys.IsShiftDown)
                     {
                         ClearEffectValue(location);
                     }
@@ -5477,7 +5464,7 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    var delete  = ModifierKeys.Shift;
+                    var delete  = ModifierKeys.IsShiftDown;
                     var release = ParentWindow.IsKeyDown(Keys.R); 
                     var stop    = ParentWindow.IsKeyDown(Keys.T);
                     var slide   = ParentWindow.IsKeyDown(Keys.S);
@@ -5563,7 +5550,7 @@ namespace FamiStudio
                     {
                         MapDPCMSample(noteValue);
                     }
-                    else if (ModifierKeys.Shift)
+                    else if (ModifierKeys.IsShiftDown)
                     {
                         ClearDPCMSampleMapping(noteValue);
                     }
@@ -7756,44 +7743,44 @@ namespace FamiStudio
 
             if (IsPointInHeader(e.X, e.Y) && editMode == EditionMode.Channel)
             {
-                tooltip = "{MouseLeft} Seek - {MouseRight}{Drag} Select - {MouseRight} More Options...";
+                tooltip = "<MouseLeft> Seek - <MouseRight><Drag> Select - <MouseRight> More Options...";
             }
             else if (IsPointInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio))
             {
                 if (IsPointWhereCanResizeEnvelope(e.X, e.Y))
-                    tooltip = "{MouseLeft} Resize envelope\n";
+                    tooltip = "<MouseLeft> Resize envelope\n";
                 else
-                    tooltip = "{MouseRight}{Drag} Select";
+                    tooltip = "<MouseRight><Drag> Select";
             }
             else if (IsPointInHeaderBottomPart(e.X, e.Y) && ((editMode == EditionMode.Envelope && EditEnvelope.CanLoop) || editMode == EditionMode.Arpeggio))
             {
-                tooltip = "{MouseLeft} Set loop point" + ((editMode != EditionMode.Arpeggio && EditEnvelope.CanRelease) ? "\n{MouseRight} Set release point (must have loop point)" : "");
+                tooltip = "<MouseLeft> Set loop point" + ((editMode != EditionMode.Arpeggio && EditEnvelope.CanRelease) ? "\n<MouseRight> Set release point (must have loop point)" : "");
             }
             else if (IsPointInPiano(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan";
+                tooltip = "<MouseLeft> Play piano - <MouseWheel> Pan";
             }
             else if (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Toggle snapping {Shift}{S} - {MouseWheel} Change snap precision\n{MouseRight} More Options...";
+                tooltip = $"<MouseLeft> Toggle snapping {Settings.SnapToggleShortcut.TooltipString} - <MouseWheel> Change snap precision\n<MouseRight> More Options...";
             }
             else if (IsPointOnMaximizeButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Maximize/Minimize piano roll {1}";
+                tooltip = $"<MouseLeft> Maximize/Minimize piano roll {Settings.MaximizePianoRollShortcut.TooltipString}";
             }
             else if (IsPointInTopLeftCorner(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Show/hide effect panel {Ctrl}{1}";
+                tooltip = $"<MouseLeft> Show/hide effect panel {Settings.EffectPanelShortcut.TooltipString}";
             }
             else if (IsPointInEffectList(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Select effect track to edit";
+                tooltip = "<MouseLeft> Select effect track to edit";
             }
             else if (IsPointInEffectPanel(e.X, e.Y))
             {
                 if (editMode == EditionMode.Channel)
                 {
-                    tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{Ctrl}{MouseLeft} Set effect value (fine) - {MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Clear effect value";
+                    tooltip = "<MouseLeft> Set effect value - <MouseWheel> Pan\n<Ctrl><MouseLeft> Set effect value (fine) - <MouseLeft><MouseLeft> or <Shift><MouseLeft> Clear effect value";
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
@@ -7801,21 +7788,21 @@ namespace FamiStudio
 
                     if (vertexIdx >= 0)
                     {
-                        tooltip = "{MouseLeft}{Drag} Move volume envelope vertex\n{MouseRight} More Options...%";
+                        tooltip = "<MouseLeft><Drag> Move volume envelope vertex\n<MouseRight> More Options...%";
                     }
                 }
                 else if (editMode == EditionMode.Envelope)
                 {
-                    tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{MouseRight} More Options...";
+                    tooltip = "<MouseLeft> Set effect value - <MouseWheel> Pan\n<MouseRight> More Options...";
                 }
             }
             else if ((IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)) && editMode == EditionMode.DPCM)
             {
-                tooltip = "{MouseLeft}{Drag} or {MouseRight}{Drag} Select samples from source data";
+                tooltip = "<MouseLeft><Drag> or <MouseRight><Drag> Select samples from source data";
 
                 if (IsSelectionValid())
                 {
-                    tooltip += "\n{Del} Delete selected samples.";
+                    tooltip += $"\n{Settings.DeleteShortcut.TooltipString} Delete selected samples.";
                     newNoteTooltip = $"{(selectionMax - selectionMin + 1)} sample" + ((selectionMax - selectionMin) == 0 ? "" : "s") + " selected";
                 }
             }
@@ -7848,40 +7835,40 @@ namespace FamiStudio
                             case CaptureOperation.ResizeSelectionNoteStart:
                             case CaptureOperation.ResizeNoteEnd:
                             case CaptureOperation.ResizeSelectionNoteEnd:
-                                tooltipList.Add("{MouseLeft}{Drag} Resize note(s)");
+                                tooltipList.Add("<MouseLeft><Drag> Resize note(s)");
                                 break;
                             case CaptureOperation.MoveNoteRelease:
-                                tooltipList.Add("{MouseLeft}{Drag} Move release point");
+                                tooltipList.Add("<MouseLeft><Drag> Move release point");
                                 break;
                             case CaptureOperation.DragNote:
                             case CaptureOperation.DragSelection:
-                                tooltipList.Add("{MouseLeft}{Drag} Move note(s)");
+                                tooltipList.Add("<MouseLeft><Drag> Move note(s)");
                                 break;
                             default:
-                                tooltipList.Add("{MouseLeft}{Drag} Create note");
+                                tooltipList.Add("<MouseLeft><Drag> Create note");
                                 break;
                         }
 
                         if (note != null)
                         {
                             if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease)
-                                tooltipList.Add("{R}{MouseLeft} Set release point");
+                                tooltipList.Add("<R><MouseLeft> Set release point");
                             if (channel.SupportsSlideNotes)
-                                tooltipList.Add("{S}{MouseLeft}{Drag} Slide note");
+                                tooltipList.Add("<S><MouseLeft><Drag> Slide note");
                             if (note.IsMusical)
                             {
-                                tooltipList.Add("{A}{MouseLeft} Toggle note attack");
-                                tooltipList.Add("{I}{MouseLeft} Instrument Eyedrop");
+                                tooltipList.Add("<A><MouseLeft> Toggle note attack");
+                                tooltipList.Add("<I><MouseLeft> Instrument Eyedrop");
                             }
-                            tooltipList.Add("{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete note");
+                            tooltipList.Add("<MouseLeft><MouseLeft> or <Shift><MouseLeft> Delete note");
                         }
                         else 
                         {
                             if (channel.SupportsStopNotes)
-                                tooltipList.Add("{T}{MouseLeft} Add stop note");
+                                tooltipList.Add("<T><MouseLeft> Add stop note");
                         }
 
-                        tooltipList.Add("{MouseWheel} Pan");
+                        tooltipList.Add("<MouseWheel> Pan");
 
                         if (tooltipList.Count >= 3)
                         {
@@ -7905,7 +7892,7 @@ namespace FamiStudio
                 }
                 else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 {
-                    tooltip = "{MouseLeft} Set envelope value - {MouseWheel} Pan\n{MouseRight} More Options...";
+                    tooltip = "<MouseLeft> Set envelope value - <MouseWheel> Pan\n<MouseRight> More Options...";
 
                     if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
                     {
@@ -7946,11 +7933,11 @@ namespace FamiStudio
                             var mapping = App.Project.GetDPCMMapping(noteValue);
                             if (mapping == null)
                             {
-                                tooltip = "{MouseLeft} Assign DPCM sample - {MouseWheel} Pan";
+                                tooltip = "<MouseLeft> Assign DPCM sample - <MouseWheel> Pan";
                             }
                             else
                             {
-                                tooltip = "{MouseLeft}{MouseLeft} Sample properties - {MouseWheel} Pan\n{MouseRight} More Options...";
+                                tooltip = "<MouseLeft><MouseLeft> Sample properties - <MouseWheel> Pan\n<MouseRight> More Options...";
 
                                 if (mapping.Sample != null)
                                     newNoteTooltip += $" ({mapping.Sample.Name})";
@@ -7994,7 +7981,7 @@ namespace FamiStudio
 
         private int SnapNote(int absoluteNoteIndex, bool roundUp = false, bool forceSnap = false)
         {
-            var snapTemporaryDisabled = ModifierKeys.Alt && !Settings.AltLeftForMiddle;
+            var snapTemporaryDisabled = ModifierKeys.IsAltDown && !Settings.AltLeftForMiddle;
 
             if (SnapEnabled && !snapTemporaryDisabled || forceSnap)
             {
@@ -8282,7 +8269,7 @@ namespace FamiStudio
                         PromoteTransaction(TransactionScope.Channel, Song.Id, editChannel);
                 }
 
-                var copy = ModifierKeys.Control;
+                var copy = ModifierKeys.IsControlDown;
                 var keepFx = captureOperation != CaptureOperation.DragSelection;
 
                 // If not copying, delete original notes.
@@ -8640,7 +8627,7 @@ namespace FamiStudio
             {
                 Cursor = Cursors.SizeNS;
             }
-            else if (ModifierKeys.Control && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
+            else if (ModifierKeys.IsControlDown && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
             {
                 Cursor = Cursors.CopyCursor;
             }
@@ -8714,7 +8701,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
+            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -8813,7 +8800,7 @@ namespace FamiStudio
             { 
                 var options = new ContextMenuOption[SnapResolutionType.Max - SnapResolutionType.Min + 3];
 
-                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping for notes in the piano roll {Shift}{S}", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
+                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping for notes in the piano roll <Shift>{S}", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
                 options[1] = new ContextMenuOption("Snap Effect Values", "When snapping is enabled, also snap effect values", () => { snapEffects = !snapEffects; }, () => snapEffects ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked);
 
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
@@ -8825,7 +8812,7 @@ namespace FamiStudio
                     var tooltip = $"Sets the snap resolution to {name} {beats}";
 
                     if (SnapResolutionType.KeyboardShortcuts[i] != Keys.Unknown)
-                        tooltip += $" {{Alt}}{SnapResolutionType.KeyboardShortcuts[i] - Keys.D0}";
+                        tooltip += $" <Alt>{SnapResolutionType.KeyboardShortcuts[i] - Keys.D0}";
 
                     options[i + 2] = new ContextMenuOption(text, tooltip, () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0 ? ContextMenuSeparator.Before : ContextMenuSeparator.None);
                 }
@@ -8975,9 +8962,9 @@ namespace FamiStudio
         {
             if (e.X > pianoSizeX)
             {
-                if (Settings.TrackPadControls && !ModifierKeys.Control && !ModifierKeys.Alt)
+                if (Settings.TrackPadControls && !ModifierKeys.IsControlDown && !ModifierKeys.IsAltDown)
                 {
-                    if (ModifierKeys.Shift)
+                    if (ModifierKeys.IsShiftDown)
                         scrollX -= Utils.SignedCeil(e.ScrollY);
                     else
                         scrollY -= Utils.SignedCeil(e.ScrollY);
@@ -9277,7 +9264,5 @@ namespace FamiStudio
             Keys.Unknown,
             Keys.Unknown
         };
-
-
     }
 }

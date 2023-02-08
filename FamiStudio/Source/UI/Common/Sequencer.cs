@@ -1227,7 +1227,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
+            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             if (middle)
             {
@@ -1386,7 +1386,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownAltZoom(MouseEventArgs e)
         {
-            if (e.Right && ModifierKeys.Alt && Settings.AltZoomAllowed && GetPatternForCoord(e.X, e.Y, out _))
+            if (e.Right && ModifierKeys.IsAltDown && Settings.AltZoomAllowed && GetPatternForCoord(e.X, e.Y, out _))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.AltZoom);
                 return true;
@@ -1420,7 +1420,7 @@ namespace FamiStudio
                     {
                         if (pattern != null)
                         {
-                            if (ModifierKeys.Shift)
+                            if (ModifierKeys.IsShiftDown)
                             {
                                 DeletePattern(location);
                                 return true;
@@ -2265,8 +2265,8 @@ namespace FamiStudio
                         var dragRowIdxCurrent = GetRowIndexForCoord(y);
                         var rowIdxDelta = dragRowIdxCurrent - dragRowIdxStart;
 
-                        var copy = ModifierKeys.Control;
-                        var duplicate = copy && ModifierKeys.Shift || rowIdxDelta != 0;
+                        var copy = ModifierKeys.IsControlDown;
+                        var duplicate = copy && ModifierKeys.IsShiftDown || rowIdxDelta != 0;
 
                         MoveCopyOrDuplicateSelection(rowIdxDelta, patternIdxDelta, copy, duplicate);
 
@@ -2651,22 +2651,22 @@ namespace FamiStudio
                 var tooltipList = new List<string>();
 
                 if (pattern == null)
-                    tooltipList.Add("{MouseLeft} Add Pattern");
+                    tooltipList.Add("<MouseLeft> Add Pattern");
 
-                tooltipList.Add("{L}{MouseLeft} Set Loop Point");
-                tooltipList.Add("{MouseWheel}{Drag} Pan");
-                tooltipList.Add("{MouseRight}{Drag} Select Rectangle");
+                tooltipList.Add("<L><MouseLeft> Set Loop Point");
+                tooltipList.Add("<MouseWheel><Drag> Pan");
+                tooltipList.Add("<MouseRight><Drag> Select Rectangle");
 
                 if (pattern != null)
                 {
-                    tooltipList.Add("{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete Pattern");
-                    tooltipList.Add("{MouseRight} More Options...");
+                    tooltipList.Add("<MouseLeft><MouseLeft> or <Shift><MouseLeft> Delete Pattern");
+                    tooltipList.Add("<MouseRight> More Options...");
                 }
 
                 if (IsPatternSelected(location))
                 {
-                    tooltipList.Add("{Drag} Move Pattern");
-                    tooltipList.Add("{Ctrl}{Drag} Clone pattern");
+                    tooltipList.Add("<Drag> Move Pattern");
+                    tooltipList.Add("<Ctrl><Drag> Clone pattern");
                 }
 
                 if (tooltipList.Count >= 3)
@@ -2682,32 +2682,34 @@ namespace FamiStudio
             }
             else if (IsPointInShyButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Toggle Hide Unused Channels (shy mode)";
+                tooltip = "<MouseLeft> Toggle Hide Unused Channels (shy mode)";
             }
             else if (IsMouseInHeader(e))
             {
-                tooltip = "{MouseLeft} Seek - {MouseRight} More Options... - {MouseRight}{Drag} Select Column\n{L}{MouseLeft} Set Loop Point - {MouseWheel}{Drag} Pan";
+                tooltip = "<MouseLeft> Seek - <MouseRight> More Options... - <MouseRight><Drag> Select Column\n<L><MouseLeft> Set Loop Point - <MouseWheel><Drag> Pan";
             }
             else if (IsMouseInTrackName(e))
             {
                 if (GetChannelIndexFromIconPos(e) >= 0)
                 {
-                    tooltip = "{MouseLeft} Mute Channel - {MouseLeft}{MouseLeft} Solo Channel - {MouseRight} More Options...";
+                    tooltip = "<MouseLeft> Mute Channel - <MouseLeft><MouseLeft> Solo Channel";
                 }
                 else if (GetChannelIndexFromGhostIconPos(e) >= 0)
                 {
-                    tooltip = "{MouseLeft} Toggle channel force display in Piano Roll\n{MouseLeft}{MouseLeft} Toggle all channel force display - {MouseRight} More Options...";
-                    int idx = GetChannelIndexForCoord(e.Y) + 1;
-                    if (idx >= 1 && idx <= 12)
-                        tooltip += $" {{Ctrl}}{{F{idx}}}";
+                    tooltip = "<MouseLeft> Toggle channel force display in Piano Roll\n<MouseLeft><MouseLeft> Toggle all channel force display";
+                    int idx = GetChannelIndexForCoord(e.Y);
+                    if (idx >= 0 && idx < Settings.DisplayChannelShortcuts.Length)
+                        tooltip += $" {Settings.DisplayChannelShortcuts[idx].TooltipString}";
                 }
                 else
                 {
-                    tooltip = "{MouseLeft} Make channel active - {MouseRight} More Options...";
-                    int idx = GetChannelIndexForCoord(e.Y) + 1;
-                    if (idx >= 1 && idx <= 12)
-                        tooltip += $" {{F{idx}}}";
+                    tooltip = "<MouseLeft> Make channel active";
+                    int idx = GetChannelIndexForCoord(e.Y);
+                    if (idx >= 0 && idx < Settings.ActiveChannelShortcuts.Length)
+                        tooltip += $" {Settings.ActiveChannelShortcuts[idx].TooltipString}";
                 }
+
+                tooltip += " - <MouseRight> More Options...";
             }
 
             App.SetToolTip(tooltip);
@@ -2801,7 +2803,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
+            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -3029,9 +3031,9 @@ namespace FamiStudio
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (Settings.TrackPadControls && !ModifierKeys.Control && !ModifierKeys.Alt)
+            if (Settings.TrackPadControls && !ModifierKeys.IsControlDown && !ModifierKeys.IsAltDown)
             {
-                if (CanScrollVertically() && !ModifierKeys.Shift)
+                if (CanScrollVertically() && !ModifierKeys.IsShiftDown)
                     scrollY -= Utils.SignedCeil(e.ScrollY);
                 else
                     scrollX -= Utils.SignedCeil(e.ScrollY);

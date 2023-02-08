@@ -123,6 +123,7 @@ namespace FamiStudio
             StaticInstance = this;
 
             SetWindow(form);
+            InitializeKeys();
             InitializeMetronome();
             InitializeMidi();
             InitializeDeviceChangeEvent();
@@ -633,6 +634,11 @@ namespace FamiStudio
         public void HideContextMenu()
         {
             window.HideContextMenu();
+        }
+
+        private void InitializeKeys()
+        {
+
         }
 
         private void InitializeMetronome()
@@ -1658,37 +1664,57 @@ namespace FamiStudio
             }
         }
         
-        protected bool HandleRecordingKey(int scancode, bool keyDown, bool repeat)
+        public string GetRecordingKeyString(int noteValue)
         {
-            if (Settings.ScanCodeToNoteMap.TryGetValue(scancode, out var noteValue))
+            noteValue -= baseRecordingOctave * 12;
+            
+            var str = (string)null;
+
+            if (noteValue >= 1 && noteValue < Settings.QwertyNoteShortcuts.Length)
             {
-                if (keyDown && repeat)
-                    return true;
-
-                if (keyDown)
+                var shortcut = Settings.QwertyNoteShortcuts[noteValue];
+                if (shortcut.IsShortcutValid(0))
                 {
-                    if (noteValue == 0)
-                    {
-                        lastRecordingKeyDown = -1;
-                        StopOrReleaseIntrumentNote(true);
-                    }
-                    else
-                    {
-                        noteValue = noteValue - 1 + Note.FromFriendlyName("C0") + (baseRecordingOctave * 12);
-                        noteValue = Utils.Clamp(noteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                    str += Settings.QwertyNoteShortcuts[noteValue].ToDisplayString(0);
+                }
 
-                        lastRecordingKeyDown = scancode;
+                if (shortcut.IsShortcutValid(1))
+                {
+                    if (str != null)
+                        str += "   ";
+                    str += Settings.QwertyNoteShortcuts[noteValue].ToDisplayString(1);
+                }
+            }
+
+            return str;
+        }
+
+        protected bool HandleRecordingKey(KeyEventArgs e, bool keyDown, bool repeat)
+        {
+            for (int i = 0; i < Settings.QwertyNoteShortcuts.Length; i++)
+            {
+                if (Settings.QwertyNoteShortcuts[i].Matches(e))
+                {
+                    if (keyDown && repeat)
+                        return true;
+
+                    if (keyDown)
+                    {
+                        var noteValue = i;
+                        noteValue = noteValue + Note.FromFriendlyName("C0") + (baseRecordingOctave * 12);
+                        noteValue = Utils.Clamp(noteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                        lastRecordingKeyDown = e.Scancode;
 
                         PlayInstrumentNote(noteValue, true, true);
                     }
-                }
-                else if (scancode == lastRecordingKeyDown)
-                {
-                    lastRecordingKeyDown = -1;
-                    StopOrReleaseIntrumentNote(false);
-                }
+                    else if (e.Scancode == lastRecordingKeyDown)
+                    {
+                        lastRecordingKeyDown = -1;
+                        StopOrReleaseIntrumentNote(false);
+                    }
 
-                return true;
+                    return true;
+                }
             }
 
             return false;
@@ -1712,103 +1738,103 @@ namespace FamiStudio
                 return;
             }
 
-            if ((recordingMode || qwertyPiano) && !e.Control && !e.Shift && !e.Alt && HandleRecordingKey(e.Scancode, true, e.IsRepeat))
+            if ((recordingMode || qwertyPiano) && HandleRecordingKey(e, true, e.IsRepeat))
             {
                 return;
             }
+            else
+            {
+                lastRecordingKeyDown = -1;
+            }
 
-            if (recordingMode && e.Key == Keys.Tab)
+            if (recordingMode && Settings.QwertyStopShortcut.Matches(e))
+            {
+                StopOrReleaseIntrumentNote(true);
+            }
+            else if (recordingMode && Settings.QwertySkipShortcut.Matches(e))
             {
                 PianoRoll.AdvanceRecording(CurrentFrame, true);
             }
-            else if (recordingMode && e.Key == Keys.Backspace)
+            else if (recordingMode && Settings.QwertyBackShortcut.Matches(e))
             {
                 PianoRoll.DeleteRecording(CurrentFrame);
             }
-            else if (e.Key == Keys.PageUp)
+            else if ((recordingMode || qwertyPiano) && Settings.QwertyOctaveUpShortcut.Matches(e))
             {
                 baseRecordingOctave = Math.Min(7, baseRecordingOctave + 1);
                 PianoRoll.MarkDirty();
             }
-            else if (e.Key == Keys.PageDown)
+            else if ((recordingMode || qwertyPiano) && Settings.QwertyOctaveDownShortcut.Matches(e))
             {
                 baseRecordingOctave = Math.Max(0, baseRecordingOctave - 1);
                 PianoRoll.MarkDirty();
             }
-            else if (e.Key == Keys.Enter)
+            else if (Settings.RecordingShortcut.Matches(e))
             {
                 ToggleRecording();
             }
-            else if (e.Shift && e.Key == Keys.F)
+            else if (Settings.FollowModeShortcut.Matches(e))
             {
                 followMode = !followMode;
                 ToolBar.MarkDirty();
             }
-            else if (e.Key == Keys.Space)
+            else if (Settings.PlayShortcut.Matches(e))
             {
-                if (IsPlaying)
-                {
-                    StopSong();
-                }
-                else
-                {
-                    if (e.Control && e.Shift)
-                        PlaySongFromLoopPoint();
-                    else if (e.Shift)
-                        PlaySongFromBeginning();
-                    else if (e.Control)
-                        PlaySongFromStartOfPattern();
-                    else
-                        PlaySong();
-                }
+                TogglePlaySong();
             }
-            else if (e.Key == Keys.Home)
+            else if (Settings.PlayFromLoopShortcut.Matches(e))
             {
-                if (e.Control)
-                {
-                    SeekCurrentPattern();
-                }
-                else
-                {
-                    SeekSong(0);
-                }
+                TogglePlaySongFromLoopPoint();
             }
-            if (!recordingMode && e.Key >= Keys.F1 && e.Key <= Keys.F24)
+            else if (Settings.PlayFromPatternShortcut.Matches(e))
             {
-                if (e.Control)
-                    ForceDisplayChannelMask ^= (1L << (e.Key - Keys.F1));
-                else
-                    SelectedChannelIndex = (e.Key - Keys.F1);
-                Sequencer.MarkDirty();
+                TogglePlaySongFromStartOfPattern();
             }
-            else if ((e.Control && e.Key == Keys.Y) || (e.Control && e.Shift && e.Key == Keys.Z))
+            else if (Settings.PlayFromStartShortcut.Matches(e))
+            {
+                TogglePlaySongFromBeginning();
+            }
+            else if (Settings.SeekStartShortcut.Matches(e))
+            {
+                SeekSong(0);
+            }
+            else if (Settings.SeekStartPatternShortcut.Matches(e))
+            {
+                SeekCurrentPattern();
+            }
+            else if (Settings.RedoShortcut.Matches(e))
             {
                 undoRedoManager.Redo();
             }
-            else if (e.Control && e.Key == Keys.Z)
+            else if (Settings.UndoShortcut.Matches(e))
             {
                 undoRedoManager.Undo();
             }
-            else if (e.Control && e.Key == Keys.N)
+            else if (Settings.FileNewShortcut.Matches(e))
             {
                 NewProject();
             }
-            else if (e.Control && e.Key == Keys.S && !UndoRedoManager.HasTransactionInProgress)
-            {
-                SaveProjectAsync(e.Shift);
-            }
-            else if (e.Control && e.Key == Keys.E)
-            {
-                if (e.Shift)
-                    RepeatLastExport();
-                else
-                    Export();
-            }
-            else if (e.Control && e.Key == Keys.O)
+            else if (Settings.FileOpenShortcut.Matches(e))
             {
                 OpenProject();
             }
-            else if (e.Shift && e.Key == Keys.K)
+            else if (Settings.FileSaveShortcut.Matches(e) && !UndoRedoManager.HasTransactionInProgress)
+            {
+                SaveProjectAsync(false);
+            }
+            else if (Settings.FileSaveAsShortcut.Matches(e) && !UndoRedoManager.HasTransactionInProgress)
+            {
+                SaveProjectAsync(true);
+            }
+            else if (Settings.FileExportShortcut.Matches(e))
+            {
+                Export();
+            }
+            else if (Settings.FileExportRepeatShortcut.Matches(e))
+            {
+                RepeatLastExport();
+            }
+            else if (Settings.QwertyShortcut.Matches(e))
             {
                 ToggleQwertyPiano();
             }
@@ -1817,30 +1843,28 @@ namespace FamiStudio
                 if (TryClosing())
                     window.Quit();
             }
-        }
+            else if (!recordingMode)
+            {
+                for (int i = 0; i < Settings.ActiveChannelShortcuts.Length; i++)
+                {
+                    if (Settings.ActiveChannelShortcuts[i].Matches(e))
+                    {
+                        SelectedChannelIndex = i;
+                        Sequencer.MarkDirty();
+                        break;
+                    }
+                }
 
-        public void PlaySongFromBeginning()
-        {
-            if (IsPlaying)
-                StopSong();
-            SeekSong(0);
-            PlaySong();
-        }
-
-        public void PlaySongFromStartOfPattern()
-        {
-            if (IsPlaying)
-                StopSong();
-            SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition)));
-            PlaySong();
-        }
-
-        public void PlaySongFromLoopPoint()
-        {
-            if (IsPlaying)
-                StopSong();
-            SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartAbsoluteNoteIndex(song.LoopPoint) : 0);
-            PlaySong();
+                for (int i = 0; i < Settings.DisplayChannelShortcuts.Length; i++)
+                {
+                    if (Settings.ActiveChannelShortcuts[i].Matches(e))
+                    {
+                        ForceDisplayChannelMask ^= (1L << i);
+                        Sequencer.MarkDirty();
+                        break;
+                    }
+                }
+            }
         }
 
         public bool CanCopy       => PianoRoll.IsActiveControl && PianoRoll.CanCopy   || Sequencer.IsActiveControl && Sequencer.CanCopy;
@@ -1905,7 +1929,7 @@ namespace FamiStudio
             bool ctrl  = e.Control;
             bool shift = e.Shift;
 
-            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e.Scancode, false, e.IsRepeat))
+            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e, false, e.IsRepeat))
             {
                 if (recordingMode)
                     return;
@@ -1953,6 +1977,62 @@ namespace FamiStudio
                 songPlayer.ConnectOscilloscope(oscilloscope);
                 songPlayer.Play(song, songPlayer.PlayPosition, palPlayback);
             }
+        }
+        
+        public void PlaySongFromBeginning()
+        {
+            if (IsPlaying)
+                StopSong();
+            SeekSong(0);
+            PlaySong();
+        }
+
+        public void PlaySongFromStartOfPattern()
+        {
+            if (IsPlaying)
+                StopSong();
+            SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition)));
+            PlaySong();
+        }
+
+        public void PlaySongFromLoopPoint()
+        {
+            if (IsPlaying)
+                StopSong();
+            SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartAbsoluteNoteIndex(song.LoopPoint) : 0);
+            PlaySong();
+        }
+
+        public void TogglePlaySong()
+        {
+            if (IsPlaying)
+                PlaySong();
+            else
+                StopSong();
+        }
+
+        public void TogglePlaySongFromBeginning()
+        {
+            if (IsPlaying)
+                PlaySongFromBeginning();
+            else
+                StopSong();
+        }
+
+        public void TogglePlaySongFromStartOfPattern()
+        {
+            if (IsPlaying)
+                PlaySongFromStartOfPattern();
+            else
+                StopSong();
+        }
+
+        public void TogglePlaySongFromLoopPoint()
+        {
+            if (IsPlaying)
+                PlaySongFromLoopPoint();
+            else
+                StopSong();
         }
 
         public void StopSong()

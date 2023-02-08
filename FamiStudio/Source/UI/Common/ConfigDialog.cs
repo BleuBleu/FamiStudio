@@ -14,7 +14,7 @@ namespace FamiStudio
             Mixer,
             MIDI,
             FFmpeg,
-            QWERTY,
+            Keys,
             Mobile,
             Max
         };
@@ -28,7 +28,7 @@ namespace FamiStudio
             "Mixer",
             "MIDI",
             "FFmpeg",
-            "QWERTY",
+            "Keyboard",
             "Mobile",
             ""
         };
@@ -132,23 +132,21 @@ namespace FamiStudio
         // FFmpeg;
         private readonly string FFmpegPathTooltip               = "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below.";
 
-
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
-        private int[,] qwertyKeys; // We keep a copy here in case the user cancels.
+        private List<Shortcut> shortcuts; // We keep a copy here in case the user cancels.
         private Settings.ExpansionMix[] expansionMixer = new Settings.ExpansionMix[ExpansionType.Count];
 
-        private int quertyRowIndex;
-        private int quertyColIndex;
+        private int keysRowIndex;
+        private int keysColIndex;
 
         public unsafe ConfigDialog(FamiStudioWindow win)
         {
             dialog = new MultiPropertyDialog(win, "FamiStudio Configuration", 550);
             dialog.SetVerb("Apply", true);
 
-            // Keep a copy of QWERTY keys.
-            qwertyKeys = new int[37, 2];
-            Array.Copy(Settings.QwertyKeys, qwertyKeys, Settings.QwertyKeys.Length);
+            // Keep a copy of keyboart shortcuts
+            shortcuts = Shortcut.CloneList(Settings.AllShortcuts);
 
             // Keep a copy of mixer settings.
             Array.Copy(Settings.ExpansionMixerSettings, expansionMixer, Settings.ExpansionMixerSettings.Length);
@@ -163,7 +161,7 @@ namespace FamiStudio
             dialog.SetPageVisible((int)ConfigSection.Input,   Platform.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.MIDI,    Platform.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.FFmpeg,  Platform.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.QWERTY,  Platform.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.Keys,  Platform.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.Mobile,  Platform.IsMobile);
         }
 
@@ -300,14 +298,14 @@ namespace FamiStudio
                     page.AddLinkLabel(null, "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
                     page.PropertyClicked += FFmpegPage_PropertyClicked;
                     break;
-                case ConfigSection.QWERTY:
+                case ConfigSection.Keys:
                 {
                     page.AddLabel(null, "Double click in the 2 last columns to assign a key. Right click to clear a key.", true); // 0
-                    page.AddGrid(new[] { new ColumnDesc("Octave", 0.2f), new ColumnDesc("Note", 0.2f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetQwertyMappingStrings(), 14); // 1
+                    page.AddGrid(new[] { new ColumnDesc("Action", 0.4f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetKeyboardShortcutStrings(), 14); // 1
                     page.AddButton(null, "Reset to default");
-                    page.PropertyClicked += QwertyPage_PropertyClicked;
+                    page.PropertyClicked += KeyboardPage_PropertyClicked;
+                    page.PropertyCellEnabled += KeyboardPage_PropertyCellEnabled;
                     page.SetColumnEnabled(1, 0, false);
-                    page.SetColumnEnabled(1, 1, false);
                     break;
                 }
                 case ConfigSection.Mobile:
@@ -365,99 +363,100 @@ namespace FamiStudio
             }
         }
 
-        private void QwertyPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
+        private void KeyboardPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (propIdx == 1 && colIdx >= 2)
+            if (propIdx == 1 && colIdx >= 1)
             {
                 if (click == ClickType.Double)
                 {
-                    quertyRowIndex = rowIdx;
-                    quertyColIndex = colIdx;
+                    keysRowIndex = rowIdx;
+                    keysColIndex = colIdx;
 
                     var dlg = new PropertyDialog(dialog.ParentWindow, "", 300, false, true);
                     dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
                     dlg.Properties.Build();
-                    dlg.DialogKeyDown += Dlg_QwertyKeyDown;
+                    dlg.DialogKeyDown += Dlg_KeyboardKeyDown;
 
                     dlg.ShowDialogAsync((r) => { });
                 }
                 else if (click == ClickType.Right)
                 {
-                    qwertyKeys[rowIdx, colIdx - 2] = -1;
-                    pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
+                    shortcuts[rowIdx].Clear(colIdx - 1);
+                    pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
                 }
             }
             else if (propIdx == 2 && click == ClickType.Button)
             {
-                Array.Copy(Settings.DefaultQwertyScancodes, qwertyKeys, Settings.DefaultQwertyScancodes.Length);
-                pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
+                shortcuts = Shortcut.CloneList(Settings.DefaultShortcuts);
+                pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
             }
         }
 
-        private void Dlg_QwertyKeyDown(Dialog dlg, KeyEventArgs e)
+        private bool KeyboardPage_PropertyCellEnabled(PropertyPage props, int propIdx, int rowIdx, int colIdx)
+        {
+            return colIdx != 2 || shortcuts[rowIdx].AllowTwoShortcuts;
+        }
+
+        private void Dlg_KeyboardKeyDown(Dialog dlg, KeyEventArgs e)
         {
             if (e.Key == Keys.Escape)
             {
                 dlg.Close(DialogResult.Cancel);
             }
-            else
+            else if (
+                e.Key != Keys.LeftControl &&
+                e.Key != Keys.LeftAlt &&
+                e.Key != Keys.LeftShift &&
+                e.Key != Keys.LeftSuper &&
+                e.Key != Keys.RightControl &&
+                e.Key != Keys.RightAlt &&
+                e.Key != Keys.RightShift &&
+                e.Key != Keys.RightSuper)
             {
-                AssignQwertyKey(quertyRowIndex, quertyColIndex - 2, e.Scancode);
-                pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
+                AssignKeyboardKey(keysRowIndex, keysColIndex - 1, e);
+                pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
                 dlg.Close(DialogResult.OK);
             }
         }
 
-        private string[,] GetQwertyMappingStrings()
+        private string[,] GetKeyboardShortcutStrings()
         {
-            var data = new string[37, 4];
+            var data = new string[shortcuts.Count, 3];
 
             if (Platform.IsDesktop)
             {
-                // Stop note.
+                for (int i = 0; i < shortcuts.Count; i++)
                 {
-                    var k0 = qwertyKeys[0, 0];
-                    var k1 = qwertyKeys[0, 1];
+                    var s = shortcuts[i];
 
-                    data[0, 0] = "N/A";
-                    data[0, 1] = "Stop Note";
-                    data[0, 2] = k0 < 0 ? "" : Platform.ScancodeToString(k0);
-                    data[0, 3] = k1 < 0 ? "" : Platform.ScancodeToString(k1);
-                }
-
-                // Regular notes.
-                for (int idx = 1; idx < data.GetLength(0); idx++)
-                {
-                    var octave = (idx - 1) / 12;
-                    var note = (idx - 1) % 12;
-
-                    var k0 = qwertyKeys[idx, 0];
-                    var k1 = qwertyKeys[idx, 1];
-
-                    data[idx, 0] = octave.ToString();
-                    data[idx, 1] = Note.NoteNames[note];
-                    data[idx, 2] = k0 < 0 ? "" : Platform.ScancodeToString(k0);
-                    data[idx, 3] = k1 < 0 ? "" : Platform.ScancodeToString(k1);
+                    data[i, 0] = s.DisplayName;
+                    data[i, 1] = s.ToDisplayString(0);
+                    data[i, 2] = s.ToDisplayString(1);
                 }
             }
+
             return data;
         }
 
-        void AssignQwertyKey(int idx, int keyIndex, int scancode)
+        void AssignKeyboardKey(int idx, int keyIndex, KeyEventArgs e)
         {
             // Unbind this key from anything.
-            for (int i = 0; i < qwertyKeys.GetLength(0); i++)
+            for (int i = 0; i < shortcuts.Count; i++)
             {
-                for (int j = 0; j < qwertyKeys.GetLength(1); j++)
+                var s = shortcuts[i];
+
+                for (int j = 0; j < 2; j++)
                 {
-                    if (qwertyKeys[i, j] == scancode)
+                    if (s.Matches(e, j))
                     {
-                        qwertyKeys[i, j] = -1;
+                        s.Clear(j);
                     }
                 }
             }
 
-            qwertyKeys[idx, keyIndex] = scancode;
+            //shortcuts[idx].ScanCodes[keyIndex] = e.Scancode;
+            shortcuts[idx].KeyValues[keyIndex] = e.Key;
+            shortcuts[idx].Modifiers[keyIndex] = e.Modifiers;
         }
 
         private void MixerPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
@@ -563,9 +562,16 @@ namespace FamiStudio
                     // FFmpeg
                     Settings.FFmpegExecutablePath = pageFFmpeg.GetPropertyValue<string>(1);
 
-                    // QWERTY
-                    Array.Copy(qwertyKeys, Settings.QwertyKeys, Settings.QwertyKeys.Length);
-                    Settings.UpdateKeyCodeMaps();
+                    // Keys
+                    for (int i = 0; i < shortcuts.Count; i++)
+                    {
+                        //Settings.AllShortcuts[i].ScanCodes[0] = shortcuts[i].ScanCodes[0];
+                        //Settings.AllShortcuts[i].ScanCodes[1] = shortcuts[i].ScanCodes[1];
+                        Settings.AllShortcuts[i].KeyValues[0] = shortcuts[i].KeyValues[0];
+                        Settings.AllShortcuts[i].KeyValues[1] = shortcuts[i].KeyValues[1];
+                        Settings.AllShortcuts[i].Modifiers[0] = shortcuts[i].Modifiers[0];
+                        Settings.AllShortcuts[i].Modifiers[1] = shortcuts[i].Modifiers[1];
+                    }
 
                     // Mobile
                     Settings.AllowVibration = pageMobile.GetPropertyValue<bool>(0);
