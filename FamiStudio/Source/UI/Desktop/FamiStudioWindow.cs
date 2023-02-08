@@ -596,11 +596,11 @@ namespace FamiStudio
             mods = FixKeyboardMods(mods, key, action);
             modifiers.Set(mods);
 
-            Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode}, Action = {action}, Mods = {mods}");
+            Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode} ({Platform.ScancodeToString(scancode)}), Action = {action}, Mods = {mods}");
 
             var controls = container.GetControlsForKeyboard(out var mainFamistudioControl);
             var down = action == GLFW_PRESS || action == GLFW_REPEAT;
-            var e = new KeyEventArgs((Keys)key, mods, action == GLFW_REPEAT, scancode);
+            var e = new KeyEventArgs((Keys)key, modifiers, action == GLFW_REPEAT, scancode);
 
             if (mainFamistudioControl)
             {
@@ -616,10 +616,10 @@ namespace FamiStudio
 
         private void CharCallback(IntPtr window, uint codepoint)
         {
-            Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
+            //Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
 
             var controls = container.GetControlsForKeyboard(out _);
-            var e = new CharEventArgs((char)codepoint, modifiers.Modifiers);
+            var e = new CharEventArgs((char)codepoint, modifiers);
 
             foreach (var ctrl in controls)
                 ctrl.Char(e);
@@ -627,7 +627,7 @@ namespace FamiStudio
 
         private void CharModsCallback(IntPtr window, uint codepoint, int mods)
         {
-            Debug.WriteLine($"CHAR MODS! CodePoint = {codepoint}, Mods = {mods}");
+            //Debug.WriteLine($"CHAR MODS! CodePoint = {codepoint}, Mods = {mods}");
         }
 
         private unsafe void DropCallback(IntPtr window, int count, IntPtr paths)
