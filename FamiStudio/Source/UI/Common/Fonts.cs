@@ -64,9 +64,14 @@ namespace FamiStudio
             }
         }
 
-        public void ClearGlyphCache()
+        public void ClearGlyphCache(Graphics g)
         {
-            // FONTTODO : Implement this.
+            foreach (var font in fonts)
+            {
+                font.ClearCachedData();
+            }
+
+            g.ClearGlyphCache();
         }
 
         public void Dispose()

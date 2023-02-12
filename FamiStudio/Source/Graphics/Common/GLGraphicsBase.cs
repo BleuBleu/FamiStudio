@@ -24,6 +24,7 @@ namespace FamiStudio
         protected byte curDepthValue = 0x80; // -128
         protected byte maxDepthValue = 0x80; // -128
         protected Color clearColor;
+        protected int maxTextureSize;
 
         protected struct ClipRegion
         {
@@ -365,8 +366,9 @@ namespace FamiStudio
             const int BaseCacheSize = 512;
             const int NumNodes = 4096;
 
-            // FONTTODO: Clamp to GL max texture size!
-            var textureSize = Utils.NextPowerOfTwo(DpiScaling.ScaleForFont(BaseCacheSize));
+            Debug.Assert(maxTextureSize != 0);
+
+            var textureSize = Math.Min(maxTextureSize, Utils.NextPowerOfTwo(DpiScaling.ScaleForFont(BaseCacheSize)));
             var newCache = new GlyphCache(this, textureSize, NumNodes); 
             var allocated = newCache.Allocate(data, w, h, out u0, out v0, out u1, out v1);
             Debug.Assert(allocated);
@@ -374,6 +376,16 @@ namespace FamiStudio
             glyphCaches.Add(newCache);
 
             return newCache.TextureId;
+        }
+
+        public void ClearGlyphCache()
+        {
+            foreach (var cache in glyphCaches)
+            {
+                cache.Dispose();
+            }
+
+            glyphCaches.Clear();
         }
 
         public virtual void Dispose()
@@ -599,7 +611,6 @@ namespace FamiStudio
         [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
         extern static int StbFindGlyphIndex(IntPtr info, int codepoint);
 
-        // FONTTODO : Rename to GlyphInfo when done.
         public class CharInfo
         {
             public int width;
@@ -637,31 +648,16 @@ namespace FamiStudio
         private bool supersample;
 
         public int Size => size;
-        public int OffsetY => size - baseValue; // FONTTODO : Review this.
+        public int OffsetY => size - baseValue; 
         public int LineHeight => lineHeight;
-
-        // FONTTODO : Temporary!
-        public int Texture
-        {
-            get
-            {
-                foreach (var g in glyphInfos)
-                    return g.Value.texture;
-                return -1;
-            }
-        }
 
         public Font(GraphicsBase g, string name, int sz)
         {
             graphics = g;
             size = sz;
             font = GetSharedFontData(name);
-            //scale = StbScaleForPixelHeight(font.info, sz);
             scale = StbScaleForMappingEmToPixels(font.info, sz);
             StbGetFontVMetrics(font.info, out var ascent, out var descent, out var lineGap);
-
-            //StbGetFontBoundingBox(font.info, out var x0, out var y0, out var x1, out var y1);
-            //maxGlyphSize = (int)Math.Ceiling(Math.Max(x1 - x0, y1 - y0) * scale);
 
             baseValue = (int)(ascent * scale);
             lineHeight = (int)((ascent - descent + lineGap) * scale);
@@ -673,33 +669,6 @@ namespace FamiStudio
             //    baseValue  = (int)Math.Round(winAscent * scale);
             //    lineHeight = (int)Math.Round((winAscent + winDescent) * scale);
             //}
-
-            /*
-            // MATTT : Tests!
-            if (sz == 12)
-            {
-                var f = new List<string>();
-                for (int i = 32; i <= 126; i++)
-                {
-                    var info = GetCharInfo((char)i);
-                    var l = $"char id={i} x=0 y=0 width={info.width} height={info.height} xoffset={info.xoffset} yoffset={info.yoffset} xadvance={(int)MathF.Round(info.xadvance)}";
-                    //Debug.WriteLine(l);
-                    f.Add(l);
-                }
-
-                File.WriteAllLines("c:\\dump\\q12_stb.txt", f.ToArray());
-            }
-
-            if (sz == 28)
-            {
-                var glyph = RasterizeGlyph(GetGlyphIndex('A'), out var w, out var h, out _, out _);
-                DumpGlyph(glyph, w, h);
-            }
-
-            Debug.WriteLine($"{name} {sz} lineheight={lineHeight}");
-            */
-
-            //RasterizeGlyph(GetGlyphIndex('e'), out _, out _, out var ox2, out var oy2);
         }
 
     #if DEBUG
@@ -736,6 +705,13 @@ namespace FamiStudio
             }
 
             return 255.0f / maxValue;
+        }
+
+        public void ClearCachedData()
+        {
+            glyphIndices.Clear();
+            glyphInfos.Clear();
+            kerningPairs.Clear();
         }
 
         private static SharedFontData GetSharedFontData(string name)
@@ -932,7 +908,7 @@ namespace FamiStudio
             width  = x1 - x0;
             height = y1 - y0;
             offx   = x0;
-            offy   = baseValue + y0; // FONTTODO : Review + understand this!
+            offy   = baseValue + y0;
 
             if (width == 0 || height == 0)
             {
@@ -2867,8 +2843,6 @@ namespace FamiStudio
                         x += (int)advance;
                     }
                 }
-
-                draw.textureId = font.Texture; // FONTTODO! Change!
             }
 
             vtxArraySize = vtxIdx;

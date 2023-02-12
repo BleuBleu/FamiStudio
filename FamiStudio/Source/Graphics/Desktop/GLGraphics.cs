@@ -84,6 +84,8 @@ namespace FamiStudio
             dashedBitmap = CreateBitmapFromResource("FamiStudio.Resources.Misc.Dash");
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.Repeat);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.Repeat);
+
+            GL.GetInteger(GL.MaxTextureSize, ref maxTextureSize);
         }
 
         private int CompileShader(string resourceName, int type)
@@ -742,6 +744,7 @@ namespace FamiStudio
         public const int Fill                      = 0x1B02;
         public const int DepthComponent            = 0x1902;
         public const int UnpackAlignment           = 0x0CF5;
+        public const int MaxTextureSize            = 0x0D33;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void DebugCallback(int source, int type, int id, int severity, int length, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userParam);
@@ -815,6 +818,7 @@ namespace FamiStudio
         public delegate void PushDebugGroupDelegate(int source, int id, int length, [MarshalAs(UnmanagedType.LPStr)] string message);
         public delegate void PopDebugGroupDelegate();
         public delegate void PixelStoreDelegate(int name, int value);
+        public delegate void GetIntegerDelegate(int name, ref int data);
 
         public static ClearDelegate                Clear;
         public static ClearDepthDelegate           ClearDepth;
@@ -885,6 +889,7 @@ namespace FamiStudio
         public static PushDebugGroupDelegate       PushDebugGroupRaw;
         public static PopDebugGroupDelegate        PopDebugGroupRaw;
         public static PixelStoreDelegate           PixelStore;
+        public static GetIntegerDelegate           GetInteger;
 
         public static void StaticInitialize()
         {
@@ -953,6 +958,7 @@ namespace FamiStudio
             DepthMask               = Marshal.GetDelegateForFunctionPointer<DepthMaskDelegate>(glfwGetProcAddress("glDepthMask"));
             ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(glfwGetProcAddress("glColorMask"));
             PixelStore              = Marshal.GetDelegateForFunctionPointer<PixelStoreDelegate>(glfwGetProcAddress("glPixelStorei"));
+            GetInteger              = Marshal.GetDelegateForFunctionPointer<GetIntegerDelegate>(glfwGetProcAddress("glGetIntegerv"));
 
 #if DEBUG && !FAMISTUDIO_MACOS 
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));

@@ -81,6 +81,8 @@ namespace FamiStudio
             dashedBitmap = CreateBitmapFromResource("FamiStudio.Resources.Misc.Dash");
             GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureWrapS, GLES20.GlRepeat);
             GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureWrapT, GLES20.GlRepeat);
+
+            GLES20.GlGet(maxTextureSize); // FONTTODO : Get max texture size!
         }
 
         private int CompileShader(string resourceName, int type, out List<string> attributes)

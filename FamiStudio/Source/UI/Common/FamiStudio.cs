@@ -864,6 +864,12 @@ namespace FamiStudio
             MarkEverythingDirty();
             UpdateTitle();
             RefreshLayout();
+            ClearFontCaches();
+        }
+
+        private void ClearFontCaches()
+        {
+            Window.Fonts.ClearGlyphCache(Window.Graphics);
         }
 
         private void ResetEverything()
