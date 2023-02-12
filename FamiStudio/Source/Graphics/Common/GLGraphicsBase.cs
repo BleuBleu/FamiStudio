@@ -594,6 +594,9 @@ namespace FamiStudio
         extern static void StbMakeGlyphBitmap(IntPtr info, IntPtr output, int width, int height, int stride, int glyph, float scale);
 
         [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbMakeGlyphBitmapSubpixel(IntPtr info, IntPtr output, int width, int height, int stride, int glyph, float scale, float subx, float suby);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
         extern static void StbGetGlyphHMetrics(IntPtr info, int glyph, out int advanceWidth, out int leftSideBearing);
 
         [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
@@ -659,7 +662,7 @@ namespace FamiStudio
             scale = StbScaleForMappingEmToPixels(font.info, sz);
             StbGetFontVMetrics(font.info, out var ascent, out var descent, out var lineGap);
 
-            baseValue = (int)(ascent * scale);
+            baseValue  = (int)(ascent * scale);
             lineHeight = (int)((ascent - descent + lineGap) * scale);
             intensity  = CalculateGlyphIntensity();
 
@@ -692,19 +695,30 @@ namespace FamiStudio
 
         private float CalculateGlyphIntensity()
         {
+            var charsToTest = new[] { 'a', 'i', 'j' };
+            var minValue = 255;
+
             // At small sizes, Quicksand is very thin and tends to not cover
             // entire pixels. We'll renormalize the values so that brightest 
-            // pixels maps to full opacity.
-            var glyphIndex = GetGlyphIndex('a');
-            var glyphImage = RasterizeGlyph(glyphIndex, out var w, out var h, out _, out _);
-            var maxValue = 1;
-
-            for (int i = 0; i < glyphImage.Length; i++)
+            // pixels maps to full opacity. Of course if we had hinting, we 
+            // wouldnt need any of this.
+            foreach (var c in charsToTest)
             {
-                maxValue = Math.Max(glyphImage[i], maxValue);
+                var glyphIndex = GetGlyphIndex(c);
+                var glyphImage = RasterizeGlyph(glyphIndex, out var w, out var h, out _, out _);
+                var maxValue = 1;
+
+                for (int i = 0; i < glyphImage.Length; i++)
+                {
+                    maxValue = Math.Max(glyphImage[i], maxValue);
+                }
+
+                minValue = Math.Min(minValue, maxValue);
             }
 
-            return 255.0f / maxValue;
+            const float MaxIntensity = 1.5f;
+
+            return minValue == 0 ? 1.0f : Math.Min(MaxIntensity, 255.0f / minValue);
         }
 
         public void ClearCachedData()

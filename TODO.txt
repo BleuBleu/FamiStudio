@@ -23,8 +23,9 @@
 	- Each insturment will have a bank # which only has impact on engine export.
 	- In sound engine, add option for DPCM bank switching.
 	- When a sample plays, callback with bank #.
-	- For NSF export, 16x8KB (2 banks) export
-	- For ROM export, 16x8KB (1 bank) export. What about VRC6? 
+	- Sample table will be pretty large. 256 samples x 4?
+	- For NSF export, 16x8KB (2 banks) export, split automatically.
+	- For ROM export, 16x8KB (1 bank) export, split automatically. What about VRC6? 
 - Export DMC samples on Mobile.
 - Mark : Option to prevent android from going to sleep while playing.
 - Option to set snapping auto depending on last resize.
