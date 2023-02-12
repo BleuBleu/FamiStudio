@@ -28,7 +28,6 @@ namespace FamiStudio
             public int Size;
         };
 
-        // These are the bitmap fonts we have available in the resources, we also have 2x and 4x sizes.
         protected static readonly FontDefinition[] FontDefinitions = new FontDefinition[]
         {
             new FontDefinition() { Name = "Quicksand-Regular", Size =  9              }, // VerySmall

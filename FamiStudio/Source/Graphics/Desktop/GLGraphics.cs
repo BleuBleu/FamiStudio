@@ -211,6 +211,15 @@ namespace FamiStudio
             GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Rgba, GL.UnsignedByte, data);
         }
 
+        public override void UpdateTexture(int id, int x, int y, int width, int height, byte[] data)
+        {
+            // Only used by fonts, so red channel is assumed here.
+            GL.BindTexture(GL.Texture2D, id);
+            GL.PixelStore(GL.UnpackAlignment, 1);
+            GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Red, GL.UnsignedByte, data);
+            GL.PixelStore(GL.UnpackAlignment, 4);
+        }
+
         private int GetGLTextureFormat(TextureFormat format)
         {
             switch (format)
@@ -236,15 +245,6 @@ namespace FamiStudio
             GL.TexImage2D(GL.Texture2D, 0, GetGLTextureFormat(format), width, height, 0, GL.Rgba, GL.UnsignedByte, new int[width * height]);
 
             return id;
-        }
-
-        public override void UpdateTexture(int id, int x, int y, int width, int height, byte[] data)
-        {
-            // Only used by fonts, so red channel is assumed here.
-            GL.BindTexture(GL.Texture2D, id);
-            GL.PixelStore(GL.UnpackAlignment, 1);
-            GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Red, GL.UnsignedByte, data);
-            GL.PixelStore(GL.UnpackAlignment, 4);
         }
 
         protected unsafe override int CreateTexture(SimpleBitmap bmp, bool filter)

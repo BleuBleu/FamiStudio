@@ -175,6 +175,9 @@
     <AndroidNativeLibrary Include="libs\arm64-v8a\libGifDec.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libStb.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
@@ -184,13 +187,7 @@
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libGifDec.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\x86\libNesSndEmu.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\x86\libShineMp3.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\x86\libGifDec.so">
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libStb.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86_64\libNesSndEmu.so">
@@ -200,6 +197,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86_64\libGifDec.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86_64\libStb.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
   </ItemGroup>
@@ -684,6 +684,8 @@
     <EmbeddedResource Include="Resources\Shaders\Droid\LineSmooth.vert" />
     <EmbeddedResource Include="Resources\Shaders\Droid\Poly.frag" />
     <EmbeddedResource Include="Resources\Shaders\Droid\Poly.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Text.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Text.vert" />
   </ItemGroup>    
   <ItemGroup>
     <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />

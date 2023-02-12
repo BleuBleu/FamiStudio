@@ -30,6 +30,10 @@ namespace FamiStudio
         private int bmpScaleBiasUniform;
         private int bmpTextureUniform;
 
+        private int textProgram;
+        private int textScaleBiasUniform;
+        private int textTextureUniform;
+
         private int depthProgram;
         private int depthScaleBiasUniform;
 
@@ -199,6 +203,10 @@ namespace FamiStudio
             bmpScaleBiasUniform = GLES20.GlGetUniformLocation(bmpProgram, "screenScaleBias");
             bmpTextureUniform = GLES20.GlGetUniformLocation(bmpProgram, "tex");
 
+            textProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Text");
+            textScaleBiasUniform = GLES20.GlGetUniformLocation(textProgram, "screenScaleBias");
+            textTextureUniform = GLES20.GlGetUniformLocation(textProgram, "tex");
+
             depthProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Depth");
             depthScaleBiasUniform = GLES20.GlGetUniformLocation(depthProgram, "screenScaleBias");
         }
@@ -303,6 +311,18 @@ namespace FamiStudio
             GLES20.GlTexSubImage2D(GLES20.GlTexture2d, 0, x, y, width, height, GLES20.GlRgba, GLES20.GlUnsignedByte, buffer);
         }
 
+        public override void UpdateTexture(int id, int x, int y, int width, int height, byte[] data)
+        {
+            var buffer = ByteBuffer.AllocateDirect(width * height * sizeof(int)).Order(ByteOrder.NativeOrder());
+            buffer.Put(data);
+            buffer.Position(0);
+
+            GLES20.GlPixelStorei(GLES20.GlUnpackAlignment, 1);
+            GLES20.GlBindTexture(GLES20.GlTexture2d, id);
+            GLES20.GlTexSubImage2D(GLES20.GlTexture2d, 0, x, y, width, height, GLES20.GlLuminance, GLES20.GlUnsignedByte, buffer);
+            GLES20.GlPixelStorei(GLES20.GlUnpackAlignment, 4);
+        }
+
         private int GetGLESTextureFormat(TextureFormat format)
         {
             switch (format)
@@ -334,14 +354,6 @@ namespace FamiStudio
             GLES20.GlTexImage2D(GLES20.GlTexture2d, 0, texFormat, width, height, 0, texFormat, GLES20.GlUnsignedByte, buffer);
 
             return id[0];
-        }
-
-        public override void UpdateTexture(int id, int x, int y, int width, int height, byte[] data)
-        {
-            var buffer = ByteBuffer.Wrap(data);
-
-            GLES20.GlBindTexture(GLES20.GlTexture2d, id);
-            GLES20.GlTexSubImage2D(GLES20.GlTexture2d, 0, x, y, width, height, GLES20.GlLuminance, GLES20.GlUnsignedByte, buffer);
         }
 
         protected override int CreateTexture(SimpleBitmap bmp, bool filter)
@@ -695,11 +707,11 @@ namespace FamiStudio
                     }
                 }
 
-                if (list.HasAnyBitmaps)
+                if (list.HasAnyTexts)
                 {
                     var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, idxArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out var idxSize);
 
-                    GLES20.GlUseProgram(bmpProgram);
+                    GLES20.GlUseProgram(textProgram);
                     GLES20.GlUniform4fv(bmpScaleBiasUniform, 1, viewportScaleBias, 0);
                     GLES20.GlUniform1i(bmpTextureUniform, 0);
                     GLES20.GlActiveTexture(GLES20.GlTexture0 + 0);

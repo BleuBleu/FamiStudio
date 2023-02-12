@@ -109,7 +109,12 @@ void StbFreePackRect(stbrp_context* pack)
 
 int StbPackRects(stbrp_context* pack, const int* widths, const int* heights, int* x, int* y, int num)
 {
+	// FONTTODO: Im on a plane, no documentation. Figure out which header has alloca.
+#if defined(__clang__)
+	stbrp_rect* rects = (stbrp_rect*)__builtin_alloca(num * sizeof(stbrp_rect));
+#else
 	stbrp_rect* rects = (stbrp_rect*)_alloca(num * sizeof(stbrp_rect));
+#endif
 
 	for (int i = 0; i < num; i++)
 	{
