@@ -13,7 +13,8 @@ EXPORTS
 	StbGetGlyphKernAdvance         @11
 	StbGetFontVMetrics             @12
 	StbGetFontVMetricsOS2          @13
-	StbFindGlyphIndex              @14
-	StbInitPackRect                @15
-	StbFreePackRect                @16
-	StbPackRects                   @17
+	StbGetFontBoundingBox          @14
+	StbFindGlyphIndex              @15
+	StbInitPackRect                @16
+	StbFreePackRect                @17
+	StbPackRects                   @18

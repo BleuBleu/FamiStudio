@@ -67,6 +67,11 @@ int StbGetFontVMetricsOS2(const stbtt_fontinfo* info, int* typoAscent, int* typo
 	return stbtt_GetFontVMetricsOS2(info, typoAscent, typoDescent, typoLineGap, winAscent, winDescent);
 }
 
+void StbGetFontBoundingBox(const stbtt_fontinfo* info, int* x0, int* y0, int* x1, int* y1)
+{
+	stbtt_GetFontBoundingBox(info, x0, y0, x1, y1);
+}
+
 int StbFindGlyphIndex(const stbtt_fontinfo* info, int codepoint)
 {
 	return stbtt_FindGlyphIndex(info, codepoint);

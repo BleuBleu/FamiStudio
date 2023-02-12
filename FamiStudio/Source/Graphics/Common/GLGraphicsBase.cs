@@ -54,7 +54,7 @@ namespace FamiStudio
         protected List<int[]>   freeColorArrays  = new List<int[]>();
         protected List<short[]> freeIndexArrays  = new List<short[]>();
 
-        protected List<List<GlyphCache>> glyphCaches = new List<List<GlyphCache>>();
+        protected List<GlyphCache> glyphCaches = new List<GlyphCache>();
 
         public abstract int CreateEmptyTexture(int width, int height, TextureFormat format, bool filter);
         public abstract void DeleteTexture(int id);
@@ -350,39 +350,28 @@ namespace FamiStudio
             return new Font(this, name, size);
         }
 
-        public int CacheGlyph(int fontSize, byte[] data, int w, int h, out float u0, out float v0, out float u1, out float v1)
+        public int CacheGlyph(byte[] data, int w, int h, out float u0, out float v0, out float u1, out float v1)
         {
             Debug.Assert(data.Length == (w * h));
             
-            var sizePow2  = Utils.NextPowerOfTwo(fontSize + 1); // +1 to account for padding.
-            var sizeIndex = Utils.Log2Int(sizePow2);
-
-            while (glyphCaches.Count <= sizeIndex)
+            foreach (var cache in glyphCaches)
             {
-                glyphCaches.Add(new List<GlyphCache>());
-            }
-
-            var cacheList = glyphCaches[sizeIndex];
-
-            for (var i = 0; i < cacheList.Count; i++)
-            {
-                var cache = cacheList[i];
                 if (cache.Allocate(data, w, h, out u0, out v0, out u1, out v1))
                 {
                     return cache.TextureId;
                 }
             }
 
-            const int NumSlotsPerAxis = 64;
-            const int NumSlotsPerTexture = NumSlotsPerAxis * NumSlotsPerAxis;
+            const int BaseCacheSize = 512;
+            const int NumNodes = 4096;
 
             // FONTTODO: Clamp to GL max texture size!
-            var textureSize = NumSlotsPerAxis * sizePow2;
-            var newCache = new GlyphCache(this, textureSize, NumSlotsPerTexture * 2); 
+            var textureSize = Utils.NextPowerOfTwo(DpiScaling.ScaleForFont(BaseCacheSize));
+            var newCache = new GlyphCache(this, textureSize, NumNodes); 
             var allocated = newCache.Allocate(data, w, h, out u0, out v0, out u1, out v1);
             Debug.Assert(allocated);
 
-            cacheList.Add(newCache);
+            glyphCaches.Add(newCache);
 
             return newCache.TextureId;
         }
@@ -509,6 +498,7 @@ namespace FamiStudio
         private IntPtr pack;
         private int texture;
         private int textureSize;
+        private int numFailedAllocations;
         private GraphicsBase graphics;
 
         public int TextureId => texture;
@@ -525,16 +515,23 @@ namespace FamiStudio
         {
             Debug.Assert(data.Length == (w * h));
 
+            u0 = 0.0f;
+            v0 = 0.0f;
+            u1 = 0.0f;
+            v1 = 0.0f;
+
+            if (numFailedAllocations > 10)
+            {
+                return false;
+            }
+
             var x = 0;
             var y = 0;
             var allocated = StbPackRects(pack, ref w, ref h, ref x, ref y, 1);
 
             if (allocated == 0)
             {
-                u0 = 0.0f;
-                v0 = 0.0f;
-                u1 = 0.0f;
-                v1 = 0.0f;
+                numFailedAllocations++;
                 return false; 
             }
 
@@ -595,6 +592,9 @@ namespace FamiStudio
 
         [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
         extern static int StbGetFontVMetricsOS2(IntPtr info, out int typoAscent, out int typoDescent, out int typoLineGap, out int winAscent, out int winDescent);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbGetFontBoundingBox(IntPtr info, out int x0, out int y0, out int x1, out int y1);
 
         [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
         extern static int StbFindGlyphIndex(IntPtr info, int codepoint);
@@ -660,7 +660,10 @@ namespace FamiStudio
             scale = StbScaleForMappingEmToPixels(font.info, sz);
             StbGetFontVMetrics(font.info, out var ascent, out var descent, out var lineGap);
 
-            baseValue  = (int)(ascent * scale);
+            //StbGetFontBoundingBox(font.info, out var x0, out var y0, out var x1, out var y1);
+            //maxGlyphSize = (int)Math.Ceiling(Math.Max(x1 - x0, y1 - y0) * scale);
+
+            baseValue = (int)(ascent * scale);
             lineHeight = (int)((ascent - descent + lineGap) * scale);
             intensity  = CalculateGlyphIntensity();
 
@@ -809,7 +812,6 @@ namespace FamiStudio
                 {
                     glyphInfo.texture = 
                         graphics.CacheGlyph(
-                            size, // FONTTODO : Get max bounding box and use that!
                             glyphImage,
                             glyphInfo.width,
                             glyphInfo.height,
