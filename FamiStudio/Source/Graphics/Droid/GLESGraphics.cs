@@ -82,7 +82,9 @@ namespace FamiStudio
             GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureWrapS, GLES20.GlRepeat);
             GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureWrapT, GLES20.GlRepeat);
 
-            GLES20.GlGet(maxTextureSize); // FONTTODO : Get max texture size!
+            var temp = new int[1];
+            GLES20.GlGetIntegerv(GLES20.GlMaxTextureSize, temp, 0);
+            maxTextureSize = temp[0];
         }
 
         private int CompileShader(string resourceName, int type, out List<string> attributes)
@@ -301,7 +303,20 @@ namespace FamiStudio
             GLES20.GlTexSubImage2D(GLES20.GlTexture2d, 0, x, y, width, height, GLES20.GlRgba, GLES20.GlUnsignedByte, buffer);
         }
 
-        protected override int CreateEmptyTexture(int width, int height, bool alpha, bool filter)
+        private int GetGLESTextureFormat(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R: return GLES20.GlLuminance;
+                case TextureFormat.Rgb: return GLES20.GlRgb;
+                case TextureFormat.Rgba: return GLES20.GlRgba;
+                default:
+                    Debug.Assert(false);
+                    return GLES20.GlRgba;
+            }
+        }
+
+        public override int CreateEmptyTexture(int width, int height, TextureFormat format, bool filter)
         {
             var id = new int[1];
             GLES20.GlGenTextures(1, id, 0);
@@ -315,9 +330,18 @@ namespace FamiStudio
             buffer.Put(new int[width * height]);
             buffer.Position(0);
 
-            GLES20.GlTexImage2D(GLES20.GlTexture2d, 0, GLES20.GlRgba, width, height, 0, GLES20.GlRgba, GLES20.GlUnsignedByte, buffer);
+            var texFormat = GetGLESTextureFormat(format);
+            GLES20.GlTexImage2D(GLES20.GlTexture2d, 0, texFormat, width, height, 0, texFormat, GLES20.GlUnsignedByte, buffer);
 
             return id[0];
+        }
+
+        public override void UpdateTexture(int id, int x, int y, int width, int height, byte[] data)
+        {
+            var buffer = ByteBuffer.Wrap(data);
+
+            GLES20.GlBindTexture(GLES20.GlTexture2d, id);
+            GLES20.GlTexSubImage2D(GLES20.GlTexture2d, 0, x, y, width, height, GLES20.GlLuminance, GLES20.GlUnsignedByte, buffer);
         }
 
         protected override int CreateTexture(SimpleBitmap bmp, bool filter)
@@ -411,7 +435,7 @@ namespace FamiStudio
             atlasSizeX = Utils.NextPowerOfTwo(atlasSizeX);
             atlasSizeY = Utils.NextPowerOfTwo(atlasSizeY);
 
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, true, true);
+            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, TextureFormat.Rgba, true);
             GLES20.GlBindTexture(GLES20.GlTexture2d, textureId);
 
             Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
@@ -673,7 +697,7 @@ namespace FamiStudio
 
                 if (list.HasAnyBitmaps)
                 {
-                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out _);
+                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, idxArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out var idxSize);
 
                     GLES20.GlUseProgram(bmpProgram);
                     GLES20.GlUniform4fv(bmpScaleBiasUniform, 1, viewportScaleBias, 0);
@@ -685,11 +709,13 @@ namespace FamiStudio
                     BindAndUpdateVertexBuffer(2, texArray, texSize);
                     BindAndUpdateByteBuffer(3, depArray, depSize, true);
 
+                    var idxBuffer = CopyGetIdxBuffer(idxArray, idxSize);
+
                     foreach (var draw in drawData)
                     {
-                        quadIdxBuffer.Position(draw.start);
+                        idxBuffer.Position(draw.start);
                         GLES20.GlBindTexture(GLES20.GlTexture2d, draw.textureId);
-                        GLES20.GlDrawElements(GLES20.GlTriangles, draw.count, GLES20.GlUnsignedShort, quadIdxBuffer);
+                        GLES20.GlDrawElements(GLES20.GlTriangles, draw.count, GLES20.GlUnsignedShort, idxBuffer);
                     }
                 }
             }
@@ -714,7 +740,7 @@ namespace FamiStudio
 
             if (!allowReadback)
             {
-                texture = CreateEmptyTexture(imageSizeX, imageSizeY, true, false);
+                texture = CreateEmptyTexture(imageSizeX, imageSizeY, TextureFormat.Rgba, false);
 
                 var fbos = new int[1];
                 GLES11Ext.GlGenFramebuffersOES(1, fbos, 0);
