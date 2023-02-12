@@ -28,6 +28,11 @@ namespace FamiStudio
         private int bmpTextureUniform;
         private int bmpVao;
 
+        private int textProgram;
+        private int textScaleBiasUniform;
+        private int textTextureUniform;
+        private int textVao;
+
         private int depthProgram;
         private int depthScaleBiasUniform;
         private int depthVao;
@@ -59,6 +64,7 @@ namespace FamiStudio
             lineVao       = GL.GenVertexArray();
             lineSmoothVao = GL.GenVertexArray();
             bmpVao        = GL.GenVertexArray();
+            textVao       = GL.GenVertexArray();
             depthVao      = GL.GenVertexArray();
 
             vertexBuffer   = GL.GenBuffer();
@@ -167,6 +173,10 @@ namespace FamiStudio
             bmpScaleBiasUniform = GL.GetUniformLocation(bmpProgram, "screenScaleBias");
             bmpTextureUniform = GL.GetUniformLocation(bmpProgram, "tex");
 
+            textProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Text");
+            textScaleBiasUniform = GL.GetUniformLocation(textProgram, "screenScaleBias");
+            textTextureUniform = GL.GetUniformLocation(textProgram, "tex");
+
             depthProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Depth", false);
             depthScaleBiasUniform = GL.GetUniformLocation(depthProgram, "screenScaleBias");
         }
@@ -199,7 +209,20 @@ namespace FamiStudio
             GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Rgba, GL.UnsignedByte, data);
         }
 
-        protected override int CreateEmptyTexture(int width, int height, bool alpha, bool filter)
+        private int GetGLTextureFormat(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R: return GL.R8;
+                case TextureFormat.Rgb: return GL.Rgb8;
+                case TextureFormat.Rgba: return GL.Rgba8;
+                default:
+                    Debug.Assert(false);
+                    return GL.Rgba8;
+            }
+        }
+
+        public override int CreateEmptyTexture(int width, int height, TextureFormat format, bool filter)
         {
             int id = GL.GenTexture();
 
@@ -208,9 +231,18 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, filter ? GL.Linear : GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToEdge);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToEdge);
-            GL.TexImage2D(GL.Texture2D, 0, alpha ? GL.Rgba8 : GL.Rgb8, width, height, 0, GL.Rgba, GL.UnsignedByte, new int[width * height]);
+            GL.TexImage2D(GL.Texture2D, 0, GetGLTextureFormat(format), width, height, 0, GL.Rgba, GL.UnsignedByte, new int[width * height]);
 
             return id;
+        }
+
+        public override void UpdateTexture(int id, int x, int y, int width, int height, byte[] data)
+        {
+            // Only used by fonts, so red channel is assumed here.
+            GL.BindTexture(GL.Texture2D, id);
+            GL.PixelStore(GL.UnpackAlignment, 1);
+            GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Red, GL.UnsignedByte, data);
+            GL.PixelStore(GL.UnpackAlignment, 4);
         }
 
         protected unsafe override int CreateTexture(SimpleBitmap bmp, bool filter)
@@ -311,7 +343,7 @@ namespace FamiStudio
             atlasSizeX = Utils.NextPowerOfTwo(atlasSizeX);
             atlasSizeY = Utils.NextPowerOfTwo(atlasSizeY);
 
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, true, false);
+            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, TextureFormat.Rgba, false);
             GL.BindTexture(GL.Texture2D, textureId);
 
             Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
@@ -507,19 +539,19 @@ namespace FamiStudio
 
                 if (list.HasAnyTexts)
                 {
-                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out _);
+                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, idxArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out var idxSize);
 
-                    GL.UseProgram(bmpProgram);
-                    GL.BindVertexArray(bmpVao);
-                    GL.Uniform(bmpScaleBiasUniform, viewportScaleBias);
-                    GL.Uniform(bmpTextureUniform, 0);
+                    GL.UseProgram(textProgram);
+                    GL.BindVertexArray(textVao);
+                    GL.Uniform(textScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(textTextureUniform, 0);
                     GL.ActiveTexture(GL.Texture0 + 0);
 
                     BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxSize);
                     BindAndUpdateColorBuffer(1, colorBuffer, colArray, colSize);
                     BindAndUpdateVertexBuffer(2, texCoordBuffer, texArray, texSize);
                     BindAndUpdateByteBuffer(3, depthBuffer, depArray, depSize, true);
-                    GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
+                    BindAndUpdateIndexBuffer(indexBuffer, idxArray, idxSize);
 
                     foreach (var draw in drawData)
                     {
@@ -658,6 +690,8 @@ namespace FamiStudio
         public const int DepthTest                 = 0x0B71;
         public const int StencilTest               = 0x0B90;
         public const int ScissorTest               = 0x0C11;
+        public const int Red                       = 0x1903;
+        public const int R8                        = 0x8229;
         public const int Bgr                       = 0x80E0;
         public const int Bgra                      = 0x80E1;
         public const int Rgb                       = 0x1907;
@@ -707,6 +741,7 @@ namespace FamiStudio
         public const int FrontAndBack              = 0x0408;
         public const int Fill                      = 0x1B02;
         public const int DepthComponent            = 0x1902;
+        public const int UnpackAlignment           = 0x0CF5;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void DebugCallback(int source, int type, int id, int severity, int length, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userParam);
@@ -779,6 +814,7 @@ namespace FamiStudio
         public delegate void ColorMaskDelegate(byte red, byte green, byte blue, byte alpha);
         public delegate void PushDebugGroupDelegate(int source, int id, int length, [MarshalAs(UnmanagedType.LPStr)] string message);
         public delegate void PopDebugGroupDelegate();
+        public delegate void PixelStoreDelegate(int name, int value);
 
         public static ClearDelegate                Clear;
         public static ClearDepthDelegate           ClearDepth;
@@ -848,6 +884,7 @@ namespace FamiStudio
         public static ColorMaskDelegate            ColorMaskRaw;
         public static PushDebugGroupDelegate       PushDebugGroupRaw;
         public static PopDebugGroupDelegate        PopDebugGroupRaw;
+        public static PixelStoreDelegate           PixelStore;
 
         public static void StaticInitialize()
         {
@@ -915,6 +952,7 @@ namespace FamiStudio
             DepthFunc               = Marshal.GetDelegateForFunctionPointer<DepthFuncDelegate>(glfwGetProcAddress("glDepthFunc"));
             DepthMask               = Marshal.GetDelegateForFunctionPointer<DepthMaskDelegate>(glfwGetProcAddress("glDepthMask"));
             ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(glfwGetProcAddress("glColorMask"));
+            PixelStore              = Marshal.GetDelegateForFunctionPointer<PixelStoreDelegate>(glfwGetProcAddress("glPixelStorei"));
 
 #if DEBUG && !FAMISTUDIO_MACOS 
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));

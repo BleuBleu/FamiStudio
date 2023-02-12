@@ -31,16 +31,16 @@ namespace FamiStudio
         // These are the bitmap fonts we have available in the resources, we also have 2x and 4x sizes.
         protected static readonly FontDefinition[] FontDefinitions = new FontDefinition[]
         {
-            new FontDefinition() { Name = "QuickSand", Size =  8 }, // VerySmall
-            new FontDefinition() { Name = "QuickSand", Size =  8, Bold = true },
-            new FontDefinition() { Name = "QuickSand", Size = 10 }, // Small
-            new FontDefinition() { Name = "QuickSand", Size = 10, Bold = true },
-            new FontDefinition() { Name = "QuickSand", Size = 12 }, // Medium
-            new FontDefinition() { Name = "QuickSand", Size = 12, Bold = true },
-            new FontDefinition() { Name = "QuickSand", Size = 16 }, // Large
-            new FontDefinition() { Name = "QuickSand", Size = 20 }, // VeryLarge
-            new FontDefinition() { Name = "QuickSand", Size = 20, Bold = true },
-            new FontDefinition() { Name = "QuickSand", Size = 28 }  // Huge
+            new FontDefinition() { Name = "Quicksand-Regular", Size =  9              }, // VerySmall
+            new FontDefinition() { Name = "Quicksand-Bold",    Size =  9, Bold = true }, // VerySmall (Bold)
+            new FontDefinition() { Name = "Quicksand-Regular", Size = 11              }, // Small
+            new FontDefinition() { Name = "Quicksand-Bold",    Size = 11, Bold = true }, // Small (Bold)
+            new FontDefinition() { Name = "Quicksand-Regular", Size = 13              }, // Medium
+            new FontDefinition() { Name = "Quicksand-Bold",    Size = 13, Bold = true }, // Medium (Bold)
+            new FontDefinition() { Name = "Quicksand-Regular", Size = 16              }, // Large
+            new FontDefinition() { Name = "Quicksand-Regular", Size = 20              }, // VeryLarge
+            new FontDefinition() { Name = "Quicksand-Bold",    Size = 20, Bold = true }, // VeryLarge (Bold)
+            new FontDefinition() { Name = "Quicksand-Regular", Size = 28              }  // Huge
         };
 
         protected Font[] fonts = new Font[(int)RenderFontStyle.Max];
@@ -60,11 +60,13 @@ namespace FamiStudio
         {
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
-                fonts[i] = g.CreateFontFromResource(
-                    FontDefinitions[i].Name,
-                    FontDefinitions[i].Bold,
-                    DpiScaling.ScaleForFont(FontDefinitions[i].Size));
+                fonts[i] = g.CreateFontFromResource(FontDefinitions[i].Name, DpiScaling.ScaleForFont(FontDefinitions[i].Size));
             }
+        }
+
+        public void ClearGlyphCache()
+        {
+            // FONTTODO : Implement this.
         }
 
         public void Dispose()

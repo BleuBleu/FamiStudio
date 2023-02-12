@@ -298,7 +298,7 @@ namespace FamiStudio
 
             // Create new texture.
             var texture = new CacheTexture();
-            texture.bmp  = graphics.CreateEmptyBitmap(PatternCacheTextureSize, PatternCacheTextureSize, true, false);
+            texture.bmp  = graphics.CreateEmptyBitmap(PatternCacheTextureSize, PatternCacheTextureSize, TextureFormat.Rgba, false);
             InitCacheRows(texture);
             textureIdx = cacheTextures.Count;
             cacheTextures.Add(texture);

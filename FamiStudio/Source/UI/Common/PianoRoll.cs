@@ -1447,7 +1447,7 @@ namespace FamiStudio
                 }
 
                 if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping) && r.fonts.FontSmall.Size < noteSizeY)
-                    r.c.DrawText("C" + i, r.fonts.FontSmall, DpiScaling.Window, octaveBaseY - noteSizeY + 1, Theme.BlackColor, TextFlags.Middle, pianoSizeX - DpiScaling.Window * 2, noteSizeY - 1);
+                    r.c.DrawText("C" + i, r.fonts.FontSmall, DpiScaling.Window, octaveBaseY - noteSizeY + 1, Theme.BlackColor, TextFlags.Middle, pianoSizeX - DpiScaling.Window * 2, noteSizeY);
             }
 
             // Highlight play/hover note (black keys)
@@ -3020,7 +3020,7 @@ namespace FamiStudio
                 {
                     var label = note.FriendlyName;
                     if ((sx - noteTextPosX) > (label.Length + 1) * fontSmallCharSizeX)
-                        r.c.DrawText(note.FriendlyName, r.fonts.FontSmall, noteTextPosX, 1, Theme.BlackColor, TextFlags.Middle, 0, noteSizeY - 1);
+                        r.c.DrawText(note.FriendlyName, r.fonts.FontSmall, noteTextPosX, 1, Theme.BlackColor, TextFlags.Middle, 0, noteSizeY);
                 }
 
                 if (note.Arpeggio != null)
@@ -3490,6 +3490,22 @@ namespace FamiStudio
             }
 #endif
         }
+
+        private void RenderTextDebug(Graphics g)
+        {
+            var strings = new[]
+            {
+                "Noise",
+                "Triangle",
+                "DPCM",
+                "Square"
+            };
+
+            for (int i = 0; i < strings.Length; i++)
+            {
+                g.DefaultCommandList.DrawText(strings[i], Fonts.FontMedium, 20, 20 + i * Fonts.FontMedium.LineHeight, Color.White);
+            }
+        }
 #endif
 
         // GLTODO : Mostly ported, review lines separating controls, sorting, test scrollbars on/off.
@@ -3523,6 +3539,7 @@ namespace FamiStudio
             ConditionalUpdateNoteGeometries(g);
 
             //RenderLineDebug(g); return;
+            //RenderTextDebug(g); return;
 
             // Prepare command list.
             RenderHeader(r);

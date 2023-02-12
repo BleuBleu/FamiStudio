@@ -107,7 +107,7 @@ namespace FamiStudio
             gifSizeX = Gif.GetWidth(gif);
             gifSizeY = Gif.GetHeight(gif);
             gifBuffer = new byte[gifSizeX * gifSizeY * 3];
-            gifBmp = ParentWindow.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, false, DpiScaling.Window > 1.0f);
+            gifBmp = ParentWindow.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, TextureFormat.Rgb, DpiScaling.Window > 1.0f);
             imageBox.Image = gifBmp;
         }
 

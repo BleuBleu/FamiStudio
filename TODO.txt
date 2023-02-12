@@ -15,6 +15,27 @@
 =====
 - OpenGL upgrade/.NET 5.0/64bit
 	- Retest DPI scaling A LOT.
+- Dynamic font rasterizing
+	/ Figure out how to get similar position/kerning info as bmfont
+	- New font system	
+		- Need to be able to share the same TTF font with all sizes.
+		- Need to support multiple textures/atlases
+		- Multiple font sizes can share same glyph cache (go by powers of 2)
+		- 
+		- Need to be able to clear the glyph cache anytime (ex: opening new project)
+		- 
+		- Font
+			- Hold pointer to TTF data (which can be shared across many fonts)
+			- Has a size (ex: 12)
+			- Implements all Stb calls
+			- Points to a GlyphCache
+			- Remembers character data 
+				- x, y, advance, glyphcache, etc.
+			- Remembers kerning pairs
+		- GlyphCache 
+			- Basically just a pack rect + texture
+		- When drawing a string
+			 - 
 - NSF import issue TF74
 - DPCM 
 	- In app, you get up to 128KB of samples

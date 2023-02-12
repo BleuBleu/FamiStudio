@@ -45,6 +45,7 @@ namespace FamiStudio
         protected float[] texArray = new float[MaxVertexCount * 2];
         protected int[]   colArray = new int[MaxVertexCount];
         protected byte[]  depArray = new byte[MaxVertexCount];
+        protected short[] idxArray = new short[MaxIndexCount];
 
         protected short[] quadIdxArray = new short[MaxIndexCount];
 
@@ -53,14 +54,17 @@ namespace FamiStudio
         protected List<int[]>   freeColorArrays  = new List<int[]>();
         protected List<short[]> freeIndexArrays  = new List<short[]>();
 
-        protected abstract int CreateEmptyTexture(int width, int height, bool alpha, bool filter);
+        protected List<List<GlyphCache>> glyphCaches = new List<List<GlyphCache>>();
+
+        public abstract int CreateEmptyTexture(int width, int height, TextureFormat format, bool filter);
+        public abstract void DeleteTexture(int id);
+        public abstract void UpdateTexture(int id, int x, int y, int width, int height, byte[] data);
         protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
         protected abstract void Clear();
         protected abstract void DrawCommandList(CommandList list, bool depthTest);
         protected abstract void DrawDepthPrepass();
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
         protected abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
-        public abstract void DeleteTexture(int id);
 
         protected const string AtlasPrefix = "FamiStudio.Resources.Atlas.";
 
@@ -322,9 +326,9 @@ namespace FamiStudio
             return font.MeasureString(text, mono);
         }
 
-        public Bitmap CreateEmptyBitmap(int width, int height, bool alpha, bool filter)
+        public Bitmap CreateEmptyBitmap(int width, int height, TextureFormat format, bool filter)
         {
-            return new Bitmap(this, CreateEmptyTexture(width, height, alpha, filter), width, height, true, filter);
+            return new Bitmap(this, CreateEmptyTexture(width, height, format, filter), width, height, true, filter);
         }
 
         protected T ReadFontParam<T>(string[] values, string key)
@@ -341,84 +345,46 @@ namespace FamiStudio
             return default(T);
         }
 
-        public Font CreateScaledFont(Font source, int desiredHeight)
+        public Font CreateFontFromResource(string name, int size)
         {
-            return null;
+            return new Font(this, name, size);
         }
 
-        public Font CreateFontFromResource(string name, bool bold, int size)
+        public int CacheGlyph(int fontSize, byte[] data, int w, int h, out float u0, out float v0, out float u1, out float v1)
         {
-            var suffix = bold ? "Bold" : "";
-            var basename = $"{name}{size}{suffix}";
-            var fntfile = $"FamiStudio.Resources.Fonts.{basename}.fnt";
-            var imgfile = $"FamiStudio.Resources.Fonts.{basename}_0.tga";
+            Debug.Assert(data.Length == (w * h));
+            
+            var sizePow2  = Utils.NextPowerOfTwo(fontSize + 1); // +1 to account for padding.
+            var sizeIndex = Utils.Log2Int(sizePow2);
 
-            var str = "";
-            using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(fntfile))
-            using (StreamReader reader = new StreamReader(stream))
+            while (glyphCaches.Count <= sizeIndex)
             {
-                str = reader.ReadToEnd();
+                glyphCaches.Add(new List<GlyphCache>());
             }
 
-            var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var bmp = TgaFile.LoadFromResource(imgfile, true);
+            var cacheList = glyphCaches[sizeIndex];
 
-            var font = (Font)null;
-
-            int baseValue = 0;
-            int lineHeight = 0;
-            int texSizeX = 256;
-            int texSizeY = 256;
-
-            foreach (var line in lines)
+            for (var i = 0; i < cacheList.Count; i++)
             {
-                var splits = line.Split(new[] { ' ', '=', '\"' }, StringSplitOptions.RemoveEmptyEntries);
-
-                switch (splits[0])
+                var cache = cacheList[i];
+                if (cache.Allocate(data, w, h, out u0, out v0, out u1, out v1))
                 {
-                    case "common":
-                    {
-                        baseValue = ReadFontParam<int>(splits, "base");
-                        lineHeight = ReadFontParam<int>(splits, "lineHeight");
-                        texSizeX = ReadFontParam<int>(splits, "scaleW");
-                        texSizeY = ReadFontParam<int>(splits, "scaleH");
-                        font = new Font(this, CreateTexture(bmp, false), size, baseValue, lineHeight);
-                        break;
-                    }
-                    case "char":
-                    {
-                        var charInfo = new Font.CharInfo();
-
-                        int c = ReadFontParam<int>(splits, "id");
-                        int x = ReadFontParam<int>(splits, "x");
-                        int y = ReadFontParam<int>(splits, "y");
-
-                        charInfo.width = ReadFontParam<int>(splits, "width");
-                        charInfo.height = ReadFontParam<int>(splits, "height");
-                        charInfo.xoffset = ReadFontParam<int>(splits, "xoffset");
-                        charInfo.yoffset = ReadFontParam<int>(splits, "yoffset");
-                        charInfo.xadvance = ReadFontParam<int>(splits, "xadvance");
-                        charInfo.u0 = (x + 0.0f) / (float)texSizeX;
-                        charInfo.v0 = (y + 0.0f) / (float)texSizeY;
-                        charInfo.u1 = (x + 0.0f + charInfo.width) / (float)texSizeX;
-                        charInfo.v1 = (y + 0.0f + charInfo.height) / (float)texSizeY;
-
-                        font.AddChar((char)c, charInfo);
-
-                        break;
-                    }
-                    case "kerning":
-                    {
-                        int c0 = ReadFontParam<int>(splits, "first");
-                        int c1 = ReadFontParam<int>(splits, "second");
-                        int amount = ReadFontParam<int>(splits, "amount");
-                        font.AddKerningPair(c0, c1, amount);
-                        break;
-                    }
+                    return cache.TextureId;
                 }
             }
 
-            return font;
+            const int NumSlotsPerAxis = 64;
+            const int NumSlotsPerTexture = NumSlotsPerAxis * NumSlotsPerAxis;
+
+            // FONTTODO: Clamp to GL max texture size!
+            var textureSize = NumSlotsPerAxis * sizePow2;
+            var newCache = new GlyphCache(this, textureSize, NumSlotsPerTexture * 2); 
+            var allocated = newCache.Allocate(data, w, h, out u0, out v0, out u1, out v1);
+            Debug.Assert(allocated);
+
+            cacheList.Add(newCache);
+
+            return newCache.TextureId;
         }
 
         public virtual void Dispose()
@@ -511,6 +477,13 @@ namespace FamiStudio
         }
     };
 
+    public enum TextureFormat
+    {
+        R,
+        Rgb,
+        Rgba
+    };
+
     public enum GraphicsLayer
     {
         Background,
@@ -520,80 +493,336 @@ namespace FamiStudio
         Count
     };
 
+    public class GlyphCache : IDisposable
+    {
+        private const string StbDll = Platform.DllPrefix + "Stb" + Platform.DllExtension;
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static IntPtr StbInitPackRect(int width, int height, int numNodes);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbFreePackRect(IntPtr pack);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static unsafe int StbPackRects(IntPtr pack, ref int widths, ref int heights, ref int x, ref int y, int num);
+
+        private IntPtr pack;
+        private int texture;
+        private int textureSize;
+        private GraphicsBase graphics;
+
+        public int TextureId => texture;
+
+        public GlyphCache(GraphicsBase g, int size, int numSlots)
+        {
+            graphics = g;
+            texture = g.CreateEmptyTexture(size, size, TextureFormat.R, false);
+            textureSize = size;
+            pack = StbInitPackRect(size, size, numSlots);
+        }
+
+        public bool Allocate(byte[] data, int w, int h, out float u0, out float v0, out float u1, out float v1)
+        {
+            Debug.Assert(data.Length == (w * h));
+
+            var x = 0;
+            var y = 0;
+            var allocated = StbPackRects(pack, ref w, ref h, ref x, ref y, 1);
+
+            if (allocated == 0)
+            {
+                u0 = 0.0f;
+                v0 = 0.0f;
+                u1 = 0.0f;
+                v1 = 0.0f;
+                return false; 
+            }
+
+            graphics.UpdateTexture(texture, x, y, w, h, data);
+
+            u0 = ((x + 0) / (float)textureSize);
+            v0 = ((y + 0) / (float)textureSize);
+            u1 = ((x + w) / (float)textureSize);
+            v1 = ((y + h) / (float)textureSize);
+
+            return true;
+        }
+
+        public void Dispose()
+        {
+            graphics.DeleteTexture(texture);
+            texture = 0;
+            StbFreePackRect(pack);
+        }
+    }
+
     public class Font : IDisposable
     {
+        private const string StbDll = Platform.DllPrefix + "Stb" + Platform.DllExtension;
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbGetNumberOfFonts(IntPtr data);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbGetFontOffsetForIndex(IntPtr data, int index);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static IntPtr StbInitFont(IntPtr data, int offset);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbFreeFont(IntPtr font);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static float StbScaleForPixelHeight(IntPtr info, float pixels);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static float StbScaleForMappingEmToPixels(IntPtr info, float pixels);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbGetGlyphBitmapBox(IntPtr info, int glyph, float scale, out int x0, out int y0, out int x1, out int y1);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbMakeGlyphBitmap(IntPtr info, IntPtr output, int width, int height, int stride, int glyph, float scale);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbGetGlyphHMetrics(IntPtr info, int glyph, out int advanceWidth, out int leftSideBearing);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbGetGlyphKernAdvance(IntPtr info, int ch1, int ch2);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbGetFontVMetrics(IntPtr info, out int ascent, out int descent, out int lineGap);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbGetFontVMetricsOS2(IntPtr info, out int typoAscent, out int typoDescent, out int typoLineGap, out int winAscent, out int winDescent);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbFindGlyphIndex(IntPtr info, int codepoint);
+
+        // FONTTODO : Rename to GlyphInfo when done.
         public class CharInfo
         {
             public int width;
             public int height;
             public int xoffset;
             public int yoffset;
-            public int xadvance;
+            public float xadvance;
+            public int texture;
             public float u0;
             public float v0;
             public float u1;
             public float v1;
         }
 
-        Dictionary<char, CharInfo> charMap = new Dictionary<char, CharInfo>();
-        Dictionary<int, int> kerningPairs = new Dictionary<int, int>();
+        private Dictionary<char, int>     glyphIndices = new Dictionary<char, int>();     // Unicode -> Glyph index
+        private Dictionary<int, CharInfo> glyphInfos   = new Dictionary<int, CharInfo>(); // Key is glyph index.
+        private Dictionary<int, float>    kerningPairs = new Dictionary<int, float>();    // Key is a pair of glyph indices.
 
-        private int texture;
+        class SharedFontData
+        {
+            public GCHandle handle;
+            public IntPtr info;
+            public int refCount;
+        };
+
+        private static Dictionary<string, SharedFontData> sharedFontData = new Dictionary<string, SharedFontData>();
+
+        private GraphicsBase graphics;
+        private SharedFontData font;
+        private float scale;
+        private float intensity = 1.0f;
         private int size;
         private int baseValue;
         private int lineHeight;
-        private GraphicsBase graphics;
+        private bool supersample;
 
-        public int Texture => texture;
         public int Size => size;
+        public int OffsetY => size - baseValue; // FONTTODO : Review this.
         public int LineHeight => lineHeight;
-        public int OffsetY => size - baseValue;
 
-        public Font(GraphicsBase g, int tex, int sz, int b, int l)
+        // FONTTODO : Temporary!
+        public int Texture
+        {
+            get
+            {
+                foreach (var g in glyphInfos)
+                    return g.Value.texture;
+                return -1;
+            }
+        }
+
+        public Font(GraphicsBase g, string name, int sz)
         {
             graphics = g;
-            texture = tex;
             size = sz;
-            baseValue = b;
-            lineHeight = l;
+            font = GetSharedFontData(name);
+            //scale = StbScaleForPixelHeight(font.info, sz);
+            scale = StbScaleForMappingEmToPixels(font.info, sz);
+            StbGetFontVMetrics(font.info, out var ascent, out var descent, out var lineGap);
+
+            baseValue  = (int)(ascent * scale);
+            lineHeight = (int)((ascent - descent + lineGap) * scale);
+            intensity  = CalculateGlyphIntensity();
+
+            // If the font has a OS/2 table, use that since it matches the old behavior of bmfont.
+            //if (StbGetFontVMetricsOS2(font.info, out _, out _, out _, out var winAscent, out var winDescent) != 0)
+            //{
+            //    baseValue  = (int)Math.Round(winAscent * scale);
+            //    lineHeight = (int)Math.Round((winAscent + winDescent) * scale);
+            //}
+
+            /*
+            // MATTT : Tests!
+            if (sz == 12)
+            {
+                var f = new List<string>();
+                for (int i = 32; i <= 126; i++)
+                {
+                    var info = GetCharInfo((char)i);
+                    var l = $"char id={i} x=0 y=0 width={info.width} height={info.height} xoffset={info.xoffset} yoffset={info.yoffset} xadvance={(int)MathF.Round(info.xadvance)}";
+                    //Debug.WriteLine(l);
+                    f.Add(l);
+                }
+
+                File.WriteAllLines("c:\\dump\\q12_stb.txt", f.ToArray());
+            }
+
+            if (sz == 28)
+            {
+                var glyph = RasterizeGlyph(GetGlyphIndex('A'), out var w, out var h, out _, out _);
+                DumpGlyph(glyph, w, h);
+            }
+
+            Debug.WriteLine($"{name} {sz} lineheight={lineHeight}");
+            */
+
+            //RasterizeGlyph(GetGlyphIndex('e'), out _, out _, out var ox2, out var oy2);
         }
 
-        public void Dispose()
+    #if DEBUG
+        static void DumpGlyph(byte[] glyph, int w, int h)
         {
-            graphics.DeleteTexture(texture);
-            texture = -1;
+            var lines = new List<string>();
+
+            lines.Add("P2");
+            lines.Add($"{w} {h}");
+            lines.Add("255");
+
+            for (int y = 0; y < h; y++)
+            {
+                var pixels = new List<string>();
+                lines.Add(string.Join(' ', glyph.AsSpan(w * y, w).ToArray()));
+            }
+
+            File.WriteAllLines("C:\\Dump\\glyph.pgm", lines);
+        }
+    #endif
+
+        private float CalculateGlyphIntensity()
+        {
+            // At small sizes, Quicksand is very thin and tends to not cover
+            // entire pixels. We'll renormalize the values so that brightest 
+            // pixels maps to full opacity.
+            var glyphIndex = GetGlyphIndex('a');
+            var glyphImage = RasterizeGlyph(glyphIndex, out var w, out var h, out _, out _);
+            var maxValue = 1;
+
+            for (int i = 0; i < glyphImage.Length; i++)
+            {
+                maxValue = Math.Max(glyphImage[i], maxValue);
+            }
+
+            return 255.0f / maxValue;
         }
 
-        public void AddChar(char c, CharInfo info)
+        private static SharedFontData GetSharedFontData(string name)
         {
-            charMap[c] = info;
+            if (!sharedFontData.TryGetValue(name, out var data))
+            {
+                var stream = typeof(Program).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
+                var buffer = new byte[stream.Length];
+                stream.Read(buffer, 0, buffer.Length);
+
+                var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+
+                IntPtr pttf = handle.AddrOfPinnedObject();
+                var offset = StbGetFontOffsetForIndex(pttf, 0);
+
+                data = new SharedFontData();
+                data.handle = handle;
+                data.info = StbInitFont(pttf, offset);
+                data.refCount = 1;
+
+                sharedFontData[name] = data;
+            }
+            else
+            {
+                data.refCount++;
+            }
+
+            return data;
         }
 
-        public void AddKerningPair(int c0, int c1, int amount)
+        private static void ReleaseSharedFontData(SharedFontData data)
         {
-            kerningPairs[c0 | (c1 << 8)] = amount;
+            if (--data.refCount == 0)
+            {
+                StbFreeFont(data.info);
+
+                data.handle.Free();
+                data.info = IntPtr.Zero;
+
+                foreach (var kv in sharedFontData)
+                {
+                    if (kv.Value == data)
+                    {
+                        sharedFontData.Remove(kv.Key);
+                        break;
+                    }
+                }
+            }
         }
 
         public CharInfo GetCharInfo(char c, bool fallback = true)
         {
-            if (charMap.TryGetValue(c, out CharInfo info))
-            {
-                return info;
-            }
-            else if (fallback)
-            {
-                return charMap['?'];
-            }
-            else
-            {
-                return null;
-            }
-        }
+            var glyphIndex = GetGlyphIndex(c);
 
-        public int GetKerning(char c0, char c1)
-        {
-            int key = (int)c0 | ((int)c1 << 8);
-            return kerningPairs.TryGetValue(key, out int amount) ? amount : 0;
+            if (glyphInfos.TryGetValue(glyphIndex, out CharInfo glyphInfo))
+            {
+                return glyphInfo;
+            }
+            else 
+            {
+                glyphInfo = new CharInfo();
+
+                StbGetGlyphHMetrics(font.info, glyphIndex, out var advance, out var lsb);
+                glyphInfo.xadvance = advance * scale;
+
+                var glyphImage = RasterizeGlyph(
+                    glyphIndex, 
+                    out glyphInfo.width, 
+                    out glyphInfo.height,
+                    out glyphInfo.xoffset,
+                    out glyphInfo.yoffset);
+
+                if (glyphImage != null)
+                {
+                    glyphInfo.texture = 
+                        graphics.CacheGlyph(
+                            size, // FONTTODO : Get max bounding box and use that!
+                            glyphImage,
+                            glyphInfo.width,
+                            glyphInfo.height,
+                            out glyphInfo.u0,
+                            out glyphInfo.v0,
+                            out glyphInfo.u1,
+                            out glyphInfo.v1);
+                }
+
+                glyphInfos.Add(glyphIndex, glyphInfo);
+
+                return glyphInfo;
+            }
         }
 
         public bool TruncateString(ref string text, int maxSizeX)
@@ -614,12 +843,13 @@ namespace FamiStudio
                     return true;
                 }
 
-                x += info.xadvance;
+                var advance = info.xadvance;
                 if (i != text.Length - 1)
                 {
                     char c1 = text[i + 1];
-                    x += GetKerning(c0, c1);
+                    advance += GetKerning(c0, c1);
                 }
+                x += (int)advance;
             }
 
             return false;
@@ -648,17 +878,17 @@ namespace FamiStudio
                         return i;
                 }
 
-                x += info.xadvance;
+                var advance = info.xadvance;
                 if (i != text.Length - 1)
                 {
                     char c1 = text[i + 1];
-                    x += GetKerning(c0, c1);
+                    advance += GetKerning(c0, c1);
                 }
+                x += (int)advance;
             }
 
             return text.Length;
         }
-
 
         public int MeasureString(string text, bool mono)
         {
@@ -670,7 +900,7 @@ namespace FamiStudio
 
                 for (int i = 0; i < text.Length; i++)
                 {
-                    x += info.xadvance;
+                    x += (int)info.xadvance;
                 }
             }
             else
@@ -680,16 +910,116 @@ namespace FamiStudio
                     var c0 = text[i];
                     var info = GetCharInfo(c0);
 
-                    x += info.xadvance;
+                    var advance = info.xadvance;
                     if (i != text.Length - 1)
                     {
                         char c1 = text[i + 1];
-                        x += GetKerning(c0, c1);
+                        advance += GetKerning(c0, c1);
                     }
+                    x += (int)advance;
                 }
             }
 
             return x;
+        }
+
+        private unsafe byte[] RasterizeGlyph(int glyphIndex, out int width, out int height, out int offx, out int offy)
+        {
+            StbGetGlyphBitmapBox(font.info, glyphIndex, scale, out var x0, out var y0, out var x1, out var y1);
+
+            width  = x1 - x0;
+            height = y1 - y0;
+            offx   = x0;
+            offy   = baseValue + y0; // FONTTODO : Review + understand this!
+
+            if (width == 0 || height == 0)
+            {
+                return null;
+            }
+
+            var glyphImage = new byte[width * height];
+
+            if (supersample)
+            {
+                var superGlyphImage = new byte[width * height * 4];
+
+                fixed (byte* p = &superGlyphImage[0])
+                {
+                    StbMakeGlyphBitmap(font.info, (IntPtr)p, width * 2, height * 2, width * 2, glyphIndex, scale * 2.0f);
+                }
+
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        glyphImage[y * width + x] = (byte)((
+                            superGlyphImage[(width * 2 * (y * 2 + 0)) + (x * 2 + 0)] +
+                            superGlyphImage[(width * 2 * (y * 2 + 1)) + (x * 2 + 0)] +
+                            superGlyphImage[(width * 2 * (y * 2 + 0)) + (x * 2 + 1)] +
+                            superGlyphImage[(width * 2 * (y * 2 + 1)) + (x * 2 + 1)]) / 4); 
+                    }
+                }
+            }
+            else
+            {
+                fixed (byte* p = &glyphImage[0])
+                {
+                    StbMakeGlyphBitmap(font.info, (IntPtr)p, width, height, width, glyphIndex, scale);
+                }
+            }
+
+            if (intensity != 1.0f)
+            {
+                for (int i = 0; i < glyphImage.Length; i++)
+                {
+                    glyphImage[i] = (byte)(Math.Min(glyphImage[i] * intensity, 255.0f));
+                }
+            }
+
+            return glyphImage;
+        }
+
+        private int GetGlyphIndex(char c)
+        {
+            if (glyphIndices.TryGetValue(c, out var glyphIndex))
+            {
+                return glyphIndex;
+            }
+            else
+            {
+                glyphIndex = StbFindGlyphIndex(font.info, c);
+
+                if (glyphIndex == 0)
+                {
+                    return GetGlyphIndex('?');
+                }
+
+                glyphIndices.Add(c, glyphIndex);
+                return glyphIndex;
+            }
+        }
+
+        public float GetKerning(char c0, char c1)
+        {
+            var g0 = GetGlyphIndex(c0);
+            var g1 = GetGlyphIndex(c1);
+            var key = g0 | (g1 << 16);
+         
+            if (kerningPairs.TryGetValue(key, out float amount))
+            {
+                return amount; 
+            }
+            else
+            {
+                var kern = StbGetGlyphKernAdvance(font.info, c0, c1) * scale;
+                kerningPairs.Add(key, kern);
+                return kern; 
+            }
+        }
+
+        public void Dispose()
+        {
+            ReleaseSharedFontData(font);
         }
     }
 
@@ -944,6 +1274,7 @@ namespace FamiStudio
             public RectangleF layoutRect;
             public RectangleF clipRect;
             public TextFlags flags;
+            public Font font;
             public string text;
             public Color color;
             public byte depth;
@@ -1027,8 +1358,8 @@ namespace FamiStudio
         private PolyBatch polyBatch;
         private LineBatch lineBatch;
         private LineSmoothBatch lineSmoothBatch;
+        private List<TextInstance> texts;
 
-        private Dictionary<Font,   List<TextInstance>>   texts   = new Dictionary<Font,   List<TextInstance>>();
         private Dictionary<Bitmap, List<BitmapInstance>> bitmaps = new Dictionary<Bitmap, List<BitmapInstance>>();
 
         private GraphicsBase graphics;
@@ -1040,7 +1371,7 @@ namespace FamiStudio
         public bool HasAnyPolygons       => polyBatch != null;
         public bool HasAnyLines          => lineBatch != null;
         public bool HasAnySmoothLines    => lineSmoothBatch != null;
-        public bool HasAnyTexts          => texts.Count > 0;
+        public bool HasAnyTexts          => texts != null;
         public bool HasAnyBitmaps        => bitmaps.Count > 0;
         public bool HasAnything          => HasAnyPolygons || HasAnyLines || HasAnySmoothLines || HasAnyTexts || HasAnyBitmaps;
 
@@ -1118,6 +1449,7 @@ namespace FamiStudio
             polyBatch = null;
             lineBatch = null;
             lineSmoothBatch = null;
+            texts = null;
         }
 
         private PolyBatch GetPolygonBatch()
@@ -2031,10 +2363,9 @@ namespace FamiStudio
             Debug.Assert((flags & TextFlags.HorizontalAlignMask) != TextFlags.Center || width  > 0);
             Debug.Assert((flags & TextFlags.VerticalAlignMask)   == TextFlags.Top    || height > 0);
 
-            if (!texts.TryGetValue(font, out var list))
+            if (texts == null)
             {
-                list = new List<TextInstance>();
-                texts.Add(font, list);
+                texts = new List<TextInstance>();
             }
 
             xform.TransformPoint(ref x, ref y);
@@ -2043,6 +2374,7 @@ namespace FamiStudio
             inst.layoutRect = new RectangleF(x, y, width, height);
             inst.flags = flags;
             inst.text = text;
+            inst.font = font;
             inst.color = color;
             inst.depth = graphics.DepthValue;
 
@@ -2058,7 +2390,7 @@ namespace FamiStudio
                 inst.clipRect =  inst.layoutRect;
             }
 
-            list.Add(inst);
+            texts.Add(inst);
         }
 
         public void DrawBitmap(Bitmap bmp, float x, float y, float opacity = 1.0f, Color tint = new Color())
@@ -2213,94 +2545,94 @@ namespace FamiStudio
             return draw;
         }
 
-        // MATTT : Create an object that contains everything.
-        public List<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
+        public IReadOnlyCollection<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, short[] idxArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
         {
-            var drawData = new List<DrawData>();
+            var drawDatas = new Dictionary<int, DrawData>();
 
             var vtxIdx = 0;
             var texIdx = 0;
             var colIdx = 0;
             var depIdx = 0;
             var idxIdx = 0;
+            var draw = (DrawData)null;
 
-            foreach (var kv in texts)
+            foreach (var inst in texts)
             {
-                var font = kv.Key;
-                var list = kv.Value;
-                var draw = new DrawData();
+                var font = inst.font;
+                var alignmentOffsetX = 0;
+                var alignmentOffsetY = font.OffsetY;
+                var mono = inst.flags.HasFlag(TextFlags.Monospace);
 
-                draw.textureId = font.Texture;
-                draw.start = idxIdx;
-
-                foreach (var inst in list)
+                if (inst.flags.HasFlag(TextFlags.Ellipsis))
                 {
-                    var alignmentOffsetX = 0;
-                    var alignmentOffsetY = font.OffsetY;
-                    var mono = inst.flags.HasFlag(TextFlags.Monospace);
+                    var ellipsisSizeX = font.MeasureString("...", mono) * 2; // Leave some padding.
+                    if (font.TruncateString(ref inst.text, (int)(inst.layoutRect.Width - ellipsisSizeX)))
+                        inst.text += "...";
+                }
 
-                    if (inst.flags.HasFlag(TextFlags.Ellipsis))
+                var halign = inst.flags & TextFlags.HorizontalAlignMask;
+                var valign = inst.flags & TextFlags.VerticalAlignMask;
+
+                if (halign != TextFlags.Left)
+                {
+                    var minX = 0;
+                    var maxX = font.MeasureString(inst.text, mono);
+
+                    if (halign == TextFlags.Center)
                     {
-                        var ellipsisSizeX = font.MeasureString("...", mono) * 2; // Leave some padding.
-                        if (font.TruncateString(ref inst.text, (int)(inst.layoutRect.Width - ellipsisSizeX)))
-                            inst.text += "...";
+                        alignmentOffsetX -= minX;
+                        alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX) / 2;
                     }
-
-                    var halign = inst.flags & TextFlags.HorizontalAlignMask;
-                    var valign = inst.flags & TextFlags.VerticalAlignMask;
-
-                    if (halign != TextFlags.Left)
+                    else if (halign == TextFlags.Right)
                     {
-                        var minX = 0;
-                        var maxX = font.MeasureString(inst.text, mono);
-
-                        if (halign == TextFlags.Center)
-                        {
-                            alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX) / 2;
-                        }
-                        else if (halign == TextFlags.Right)
-                        {
-                            alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX);
-                        }
+                        alignmentOffsetX -= minX;
+                        alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX);
                     }
+                }
 
-                    if (valign != TextFlags.Top)
+                if (valign != TextFlags.Top)
+                {
+                    // Use a tall character with no descender as reference.
+                    var charA = font.GetCharInfo('A');
+
+                    // When aligning middle or center, ignore the y offset since it just
+                    // adds extra padding and messes up calculations.
+                    alignmentOffsetY = -charA.yoffset;
+
+                    if (valign == TextFlags.Middle)
                     {
-                        // Use a tall character with no descender as reference.
-                        var charA = font.GetCharInfo('A');
-
-                        // When aligning middle or center, ignore the y offset since it just
-                        // adds extra padding and messes up calculations.
-                        alignmentOffsetY = -charA.yoffset;
-
-                        if (valign == TextFlags.Middle)
-                        {
-                            alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
-                        }
-                        else if (valign == TextFlags.Bottom)
-                        {
-                            alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
-                        }
+                        alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
                     }
+                    else if (valign == TextFlags.Bottom)
+                    {
+                        alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
+                    }
+                }
 
-                    var packedColor = inst.color.ToAbgr();
-                    var numVertices = inst.text.Length * 4;
+                var packedColor = inst.color.ToAbgr();
+                var numVertices = inst.text.Length * 4;
 
-                    int x = (int)(inst.layoutRect.X + alignmentOffsetX);
-                    int y = (int)(inst.layoutRect.Y + alignmentOffsetY);
+                int x = (int)(inst.layoutRect.X + alignmentOffsetX);
+                int y = (int)(inst.layoutRect.Y + alignmentOffsetY);
                     
-                    if (mono)
+                if (mono)
+                {
+                    var infoMono = font.GetCharInfo('0');
+
+                    for (int i = 0; i < inst.text.Length; i++)
                     {
-                        var infoMono = font.GetCharInfo('0');
+                        var c0 = inst.text[i];
+                        var info = font.GetCharInfo(c0);
 
-                        for (int i = 0; i < inst.text.Length; i++)
+                        if (info.texture != 0)
                         {
-                            var c0 = inst.text[i];
-                            var info = font.GetCharInfo(c0);
+                            if ((draw == null || draw.textureId != info.texture) && !drawDatas.TryGetValue(info.texture, out draw))
+                            {
+                                draw = new DrawData() { textureId = info.texture };
+                                drawDatas.Add(info.texture, draw);
+                            }
 
-                            var monoAjustX = (infoMono.width  - info.width  + 1) / 2;
+                            var monoAjustX = (infoMono.width - info.width + 1) / 2;
                             var monoAjustY = (infoMono.height - info.height + 1) / 2;
 
                             var x0 = x + info.xoffset + monoAjustX;
@@ -2308,6 +2640,11 @@ namespace FamiStudio
                             var x1 = x0 + info.width;
                             var y1 = y0 + info.height;
 
+                            var i0 = (short)(vtxIdx / 2 + 0);
+                            var i1 = (short)(vtxIdx / 2 + 1);
+                            var i2 = (short)(vtxIdx / 2 + 2);
+                            var i3 = (short)(vtxIdx / 2 + 3);
+
                             vtxArray[vtxIdx++] = x0;
                             vtxArray[vtxIdx++] = y0;
                             vtxArray[vtxIdx++] = x1;
@@ -2336,21 +2673,36 @@ namespace FamiStudio
                             depArray[depIdx++] = inst.depth;
                             depArray[depIdx++] = inst.depth;
 
-                            x += infoMono.xadvance;
+                            idxArray[idxIdx++] = i0;
+                            idxArray[idxIdx++] = i1;
+                            idxArray[idxIdx++] = i2;
+                            idxArray[idxIdx++] = i0;
+                            idxArray[idxIdx++] = i2;
+                            idxArray[idxIdx++] = i3;
+
+                            draw.count += 6;
                         }
 
-                        idxIdx += inst.text.Length * 6;
-                        draw.count += inst.text.Length * 6;
+                        x += (int)infoMono.xadvance;
                     }
-                    else if (inst.flags.HasFlag(TextFlags.Clip)) // Slow path when there is clipping.
-                    {
-                        var clipMinX = (int)(inst.clipRect.X);
-                        var clipMaxX = (int)(inst.clipRect.X + inst.clipRect.Width);
+                }
+                else if (inst.flags.HasFlag(TextFlags.Clip)) // Slow path when there is clipping.
+                {
+                    var clipMinX = (int)(inst.clipRect.X);
+                    var clipMaxX = (int)(inst.clipRect.X + inst.clipRect.Width);
 
-                        for (int i = 0; i < inst.text.Length; i++)
+                    for (int i = 0; i < inst.text.Length; i++)
+                    {
+                        var c0 = inst.text[i];
+                        var info = font.GetCharInfo(c0);
+
+                        if (info.texture != 0)
                         {
-                            var c0 = inst.text[i];
-                            var info = font.GetCharInfo(c0);
+                            if ((draw == null || draw.textureId != info.texture) && !drawDatas.TryGetValue(info.texture, out draw))
+                            {
+                                draw = new DrawData() { textureId = info.texture };
+                                drawDatas.Add(info.texture, draw);
+                            }
 
                             var x0 = x + info.xoffset;
                             var y0 = y + info.yoffset;
@@ -2388,6 +2740,11 @@ namespace FamiStudio
                                 x0 = newx0;
                                 x1 = newx1;
 
+                                var i0 = (short)(vtxIdx / 2 + 0);
+                                var i1 = (short)(vtxIdx / 2 + 1);
+                                var i2 = (short)(vtxIdx / 2 + 2);
+                                var i3 = (short)(vtxIdx / 2 + 3);
+
                                 vtxArray[vtxIdx++] = x0;
                                 vtxArray[vtxIdx++] = y0;
                                 vtxArray[vtxIdx++] = x1;
@@ -2416,30 +2773,51 @@ namespace FamiStudio
                                 depArray[depIdx++] = inst.depth;
                                 depArray[depIdx++] = inst.depth;
 
-                                idxIdx += 6;
+                                idxArray[idxIdx++] = i0;
+                                idxArray[idxIdx++] = i1;
+                                idxArray[idxIdx++] = i2;
+                                idxArray[idxIdx++] = i0;
+                                idxArray[idxIdx++] = i2;
+                                idxArray[idxIdx++] = i3;
+
                                 draw.count += 6;
                             }
-
-                            x += info.xadvance;
-                            if (i != inst.text.Length - 1)
-                            {
-                                char c1 = inst.text[i + 1];
-                                x += font.GetKerning(c0, c1);
-                            }
                         }
-                    }
-                    else
-                    {
-                        for (int i = 0; i < inst.text.Length; i++)
+
+                        var advance = info.xadvance;
+                        if (i != inst.text.Length - 1)
                         {
-                            var c0 = inst.text[i];
-                            var info = font.GetCharInfo(c0);
+                            char c1 = inst.text[i + 1];
+                            advance += font.GetKerning(c0, c1);
+                        }
+                        x += (int)advance;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < inst.text.Length; i++)
+                    {
+                        var c0 = inst.text[i];
+                        var info = font.GetCharInfo(c0);
+
+                        if (info.texture != 0)
+                        {
+                            if ((draw == null || draw.textureId != info.texture) && !drawDatas.TryGetValue(info.texture, out draw))
+                            {
+                                draw = new DrawData() { textureId = info.texture };
+                                drawDatas.Add(info.texture, draw);
+                            }
 
                             var x0 = x + info.xoffset;
                             var y0 = y + info.yoffset;
                             var x1 = x0 + info.width;
                             var y1 = y0 + info.height;
 
+                            var i0 = (short)(vtxIdx / 2 + 0);
+                            var i1 = (short)(vtxIdx / 2 + 1);
+                            var i2 = (short)(vtxIdx / 2 + 2);
+                            var i3 = (short)(vtxIdx / 2 + 3);
+
                             vtxArray[vtxIdx++] = x0;
                             vtxArray[vtxIdx++] = y0;
                             vtxArray[vtxIdx++] = x1;
@@ -2468,20 +2846,27 @@ namespace FamiStudio
                             depArray[depIdx++] = inst.depth;
                             depArray[depIdx++] = inst.depth;
 
-                            x += info.xadvance;
-                            if (i != inst.text.Length - 1)
-                            {
-                                char c1 = inst.text[i + 1];
-                                x += font.GetKerning(c0, c1);
-                            }
+                            idxArray[idxIdx++] = i0;
+                            idxArray[idxIdx++] = i1;
+                            idxArray[idxIdx++] = i2;
+                            idxArray[idxIdx++] = i0;
+                            idxArray[idxIdx++] = i2;
+                            idxArray[idxIdx++] = i3;
+
+                            draw.count += 6;
                         }
 
-                        idxIdx += inst.text.Length * 6;
-                        draw.count += inst.text.Length * 6;
+                        var advance = info.xadvance;
+                        if (i != inst.text.Length - 1)
+                        {
+                            char c1 = inst.text[i + 1];
+                            advance += font.GetKerning(c0, c1);
+                        }
+                        x += (int)advance;
                     }
                 }
 
-                drawData.Add(draw);
+                draw.textureId = font.Texture; // FONTTODO! Change!
             }
 
             vtxArraySize = vtxIdx;
@@ -2490,7 +2875,16 @@ namespace FamiStudio
             depArraySize = depIdx;
             idxArraySize = idxIdx;
 
-            return drawData;
+            var finalDrawData = drawDatas.Values;
+            var start = 0;
+
+            foreach (var d in finalDrawData)
+            {
+                d.start = start;
+                start += d.count;
+            }
+
+            return finalDrawData;
         }
 
         public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
