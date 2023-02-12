@@ -37,10 +37,10 @@ namespace FamiStudio
             new FontDefinition() { Name = "Quicksand-Bold",    Size = 11, Bold = true }, // Small (Bold)
             new FontDefinition() { Name = "Quicksand-Regular", Size = 13              }, // Medium
             new FontDefinition() { Name = "Quicksand-Bold",    Size = 13, Bold = true }, // Medium (Bold)
-            new FontDefinition() { Name = "Quicksand-Regular", Size = 16              }, // Large
-            new FontDefinition() { Name = "Quicksand-Regular", Size = 20              }, // VeryLarge
-            new FontDefinition() { Name = "Quicksand-Bold",    Size = 20, Bold = true }, // VeryLarge (Bold)
-            new FontDefinition() { Name = "Quicksand-Regular", Size = 28              }  // Huge
+            new FontDefinition() { Name = "Quicksand-Regular", Size = 17              }, // Large
+            new FontDefinition() { Name = "Quicksand-Regular", Size = 21              }, // VeryLarge
+            new FontDefinition() { Name = "Quicksand-Bold",    Size = 21, Bold = true }, // VeryLarge (Bold)
+            new FontDefinition() { Name = "Quicksand-Regular", Size = 29              }  // Huge
         };
 
         protected Font[] fonts = new Font[(int)RenderFontStyle.Max];
@@ -60,7 +60,7 @@ namespace FamiStudio
         {
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
-                fonts[i] = g.CreateFontFromResource(FontDefinitions[i].Name, DpiScaling.ScaleForFont(FontDefinitions[i].Size));
+                fonts[i] = g.CreateFontFromResource(FontDefinitions[i].Name, (int)DpiScaling.ScaleForFontFloat(FontDefinitions[i].Size));
             }
         }
 
