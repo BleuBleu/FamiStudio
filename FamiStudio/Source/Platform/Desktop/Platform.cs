@@ -15,6 +15,8 @@ namespace FamiStudio
         public static string ApplicationVersion => version;
         public static bool IsCommandLine => !initializedGlfw;
 
+        public const bool ThreadOwnsGLContext = true;
+
         private static bool initializedGlfw;
         private static string version;
         private static Thread mainThread;

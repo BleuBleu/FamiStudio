@@ -24,6 +24,7 @@ namespace FamiStudio
         private static Toast    lastToast;
         private static DateTime lastToastTime = DateTime.MinValue;
         private static string   lastToastText;
+        private static int      glThreadId;
         
         private static byte[] internalClipboardData;
 
@@ -57,10 +58,12 @@ namespace FamiStudio
         public static string UserProjectsDirectory => Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
         public static string SettingsDirectory     => System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
         public static string ApplicationVersion    => Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        public static bool IsPortableMode          => false;
-
+        
         public const string DllPrefix = "lib";
         public const string DllExtension = ".so";
+
+        public const  bool IsPortableMode = false;
+        public static bool ThreadOwnsGLContext => glThreadId == Thread.CurrentThread.ManagedThreadId;
 
         public static int GetOutputAudioSampleSampleRate()
         {
@@ -277,6 +280,11 @@ namespace FamiStudio
 
         public static void ClearClipboardString()
         {
+        }
+
+        public static void SetGLThreadId(int id)
+        {
+            glThreadId = id;
         }
 
         public const bool IsMobile  = true;

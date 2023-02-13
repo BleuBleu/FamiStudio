@@ -390,6 +390,8 @@ namespace FamiStudio
         {
             lock (renderLock)
             {
+                Platform.SetGLThreadId(Thread.CurrentThread.ManagedThreadId);
+
                 var rect = new Rectangle(Point.Empty, Size);
                 var clearColor = global::FamiStudio.Theme.DarkGreyColor2;
 
@@ -403,7 +405,9 @@ namespace FamiStudio
         public void OnSurfaceChanged(IGL10 gl, int width, int height)
         {
             lock (renderLock)
-            { 
+            {
+                Platform.SetGLThreadId(Thread.CurrentThread.ManagedThreadId);
+
                 if (container != null)
                 { 
                     container.Resize(width, height);
@@ -416,6 +420,8 @@ namespace FamiStudio
         {
             lock (renderLock)
             {
+                Platform.SetGLThreadId(Thread.CurrentThread.ManagedThreadId);
+
                 graphics = new Graphics();
                 fonts = new Fonts(graphics);
 

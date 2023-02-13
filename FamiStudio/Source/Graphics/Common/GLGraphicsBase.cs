@@ -626,6 +626,7 @@ namespace FamiStudio
             public float v0;
             public float u1;
             public float v1;
+            public bool rasterized;
         }
 
         private Dictionary<char, int>     glyphIndices = new Dictionary<char, int>();     // Unicode -> Glyph index
@@ -648,7 +649,6 @@ namespace FamiStudio
         private int size;
         private int baseValue;
         private int lineHeight;
-        private bool supersample;
 
         public int Size => size;
         public int OffsetY => size - baseValue; 
@@ -705,7 +705,7 @@ namespace FamiStudio
             foreach (var c in charsToTest)
             {
                 var glyphIndex = GetGlyphIndex(c);
-                var glyphImage = RasterizeGlyph(glyphIndex, out var w, out var h, out _, out _);
+                var glyphImage = RasterizeGlyph(glyphIndex);
                 var maxValue = 1;
 
                 for (int i = 0; i < glyphImage.Length; i++)
@@ -776,44 +776,72 @@ namespace FamiStudio
             }
         }
 
-        public CharInfo GetCharInfo(char c, bool fallback = true)
+        public CharInfo GetCharInfo(char c)
         {
             var glyphIndex = GetGlyphIndex(c);
 
             if (glyphInfos.TryGetValue(glyphIndex, out CharInfo glyphInfo))
             {
+                if (!glyphInfo.rasterized && Platform.ThreadOwnsGLContext)
+                {
+                    RasterizeAndCacheGlyph(glyphIndex, glyphInfo);
+                    glyphInfo.rasterized = true;
+                }
+
                 return glyphInfo;
             }
             else 
             {
                 glyphInfo = new CharInfo();
 
-                StbGetGlyphHMetrics(font.info, glyphIndex, out var advance, out var lsb);
-                glyphInfo.xadvance = advance * scale;
+                SetupGlyphMetrics(glyphIndex, glyphInfo);
 
-                var glyphImage = RasterizeGlyph(
-                    glyphIndex, 
-                    out glyphInfo.width, 
-                    out glyphInfo.height,
-                    out glyphInfo.xoffset,
-                    out glyphInfo.yoffset);
-
-                if (glyphImage != null)
+                if (Platform.ThreadOwnsGLContext)
                 {
-                    glyphInfo.texture = 
-                        graphics.CacheGlyph(
-                            glyphImage,
-                            glyphInfo.width,
-                            glyphInfo.height,
-                            out glyphInfo.u0,
-                            out glyphInfo.v0,
-                            out glyphInfo.u1,
-                            out glyphInfo.v1);
+                    RasterizeAndCacheGlyph(glyphIndex, glyphInfo);
+                    glyphInfo.rasterized = true;
                 }
 
                 glyphInfos.Add(glyphIndex, glyphInfo);
 
                 return glyphInfo;
+            }
+        }
+
+        private void GetGlyphSize(int glyphIndex, out int width, out int height)
+        {
+            StbGetGlyphBitmapBox(font.info, glyphIndex, scale, out var x0, out var y0, out var x1, out var y1);
+            width  = x1 - x0;
+            height = y1 - y0;
+        }
+
+        private void SetupGlyphMetrics(int glyphIndex, CharInfo glyphInfo)
+        {
+            StbGetGlyphHMetrics(font.info, glyphIndex, out var advance, out _);
+            glyphInfo.xadvance = advance * scale;
+
+            StbGetGlyphBitmapBox(font.info, glyphIndex, scale, out var x0, out var y0, out var x1, out var y1);
+            glyphInfo.width   = x1 - x0;
+            glyphInfo.height  = y1 - y0;
+            glyphInfo.xoffset = x0;
+            glyphInfo.yoffset = baseValue + y0;
+        }
+
+        private void RasterizeAndCacheGlyph(int glyphIndex, CharInfo charInfo)
+        {
+            var glyphImage = RasterizeGlyph(glyphIndex, charInfo.width, charInfo.height);
+
+            if (glyphImage != null)
+            {
+                charInfo.texture =
+                    graphics.CacheGlyph(
+                        glyphImage,
+                        charInfo.width,
+                        charInfo.height,
+                        out charInfo.u0,
+                        out charInfo.v0,
+                        out charInfo.u1,
+                        out charInfo.v1);
             }
         }
 
@@ -915,14 +943,12 @@ namespace FamiStudio
             return x;
         }
 
-        private unsafe byte[] RasterizeGlyph(int glyphIndex, out int width, out int height, out int offx, out int offy)
+        private unsafe byte[] RasterizeGlyph(int glyphIndex, int width = -1, int height = -1)
         {
-            StbGetGlyphBitmapBox(font.info, glyphIndex, scale, out var x0, out var y0, out var x1, out var y1);
-
-            width  = x1 - x0;
-            height = y1 - y0;
-            offx   = x0;
-            offy   = baseValue + y0;
+            if (width < 0 || height < 0)
+            {
+                GetGlyphSize(glyphIndex, out width, out height);
+            }
 
             if (width == 0 || height == 0)
             {
@@ -931,33 +957,9 @@ namespace FamiStudio
 
             var glyphImage = new byte[width * height];
 
-            if (supersample)
+            fixed (byte* p = &glyphImage[0])
             {
-                var superGlyphImage = new byte[width * height * 4];
-
-                fixed (byte* p = &superGlyphImage[0])
-                {
-                    StbMakeGlyphBitmap(font.info, (IntPtr)p, width * 2, height * 2, width * 2, glyphIndex, scale * 2.0f);
-                }
-
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        glyphImage[y * width + x] = (byte)((
-                            superGlyphImage[(width * 2 * (y * 2 + 0)) + (x * 2 + 0)] +
-                            superGlyphImage[(width * 2 * (y * 2 + 1)) + (x * 2 + 0)] +
-                            superGlyphImage[(width * 2 * (y * 2 + 0)) + (x * 2 + 1)] +
-                            superGlyphImage[(width * 2 * (y * 2 + 1)) + (x * 2 + 1)]) / 4); 
-                    }
-                }
-            }
-            else
-            {
-                fixed (byte* p = &glyphImage[0])
-                {
-                    StbMakeGlyphBitmap(font.info, (IntPtr)p, width, height, width, glyphIndex, scale);
-                }
+                StbMakeGlyphBitmap(font.info, (IntPtr)p, width, height, width, glyphIndex, scale);
             }
 
             if (intensity != 1.0f)
