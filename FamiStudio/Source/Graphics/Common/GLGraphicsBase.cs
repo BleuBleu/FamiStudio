@@ -783,10 +783,7 @@ namespace FamiStudio
             if (glyphInfos.TryGetValue(glyphIndex, out CharInfo glyphInfo))
             {
                 if (!glyphInfo.rasterized && Platform.ThreadOwnsGLContext)
-                {
                     RasterizeAndCacheGlyph(glyphIndex, glyphInfo);
-                    glyphInfo.rasterized = true;
-                }
 
                 return glyphInfo;
             }
@@ -797,10 +794,7 @@ namespace FamiStudio
                 SetupGlyphMetrics(glyphIndex, glyphInfo);
 
                 if (Platform.ThreadOwnsGLContext)
-                {
                     RasterizeAndCacheGlyph(glyphIndex, glyphInfo);
-                    glyphInfo.rasterized = true;
-                }
 
                 glyphInfos.Add(glyphIndex, glyphInfo);
 
@@ -827,22 +821,26 @@ namespace FamiStudio
             glyphInfo.yoffset = baseValue + y0;
         }
 
-        private void RasterizeAndCacheGlyph(int glyphIndex, CharInfo charInfo)
+        private void RasterizeAndCacheGlyph(int glyphIndex, CharInfo glyphInfo)
         {
-            var glyphImage = RasterizeGlyph(glyphIndex, charInfo.width, charInfo.height);
+            Debug.Assert(!glyphInfo.rasterized);
+
+            var glyphImage = RasterizeGlyph(glyphIndex, glyphInfo.width, glyphInfo.height);
 
             if (glyphImage != null)
             {
-                charInfo.texture =
+                glyphInfo.texture =
                     graphics.CacheGlyph(
                         glyphImage,
-                        charInfo.width,
-                        charInfo.height,
-                        out charInfo.u0,
-                        out charInfo.v0,
-                        out charInfo.u1,
-                        out charInfo.v1);
+                        glyphInfo.width,
+                        glyphInfo.height,
+                        out glyphInfo.u0,
+                        out glyphInfo.v0,
+                        out glyphInfo.u1,
+                        out glyphInfo.v1);
             }
+
+            glyphInfo.rasterized = true;
         }
 
         public bool TruncateString(ref string text, int maxSizeX)
