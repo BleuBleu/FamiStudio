@@ -338,8 +338,10 @@ namespace FamiStudio
 
         public override int CreateEmptyTexture(int width, int height, TextureFormat format, bool filter)
         {
+            Debug.Assert(!Platform.IsInMainThread()); // Must be in GL thread.
             var id = new int[1];
             GLES20.GlGenTextures(1, id, 0);
+            Debug.Assert(id[0] > 0);
             GLES20.GlBindTexture(GLES20.GlTexture2d, id[0]);
             GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureMinFilter, filter ? GLES20.GlLinear : GLES20.GlNearest);
             GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureMagFilter, filter ? GLES20.GlLinear : GLES20.GlNearest);
@@ -709,7 +711,7 @@ namespace FamiStudio
 
                 if (list.HasAnyTexts)
                 {
-                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, idxArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out var idxSize);
+                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize);
 
                     GLES20.GlUseProgram(textProgram);
                     GLES20.GlUniform4fv(bmpScaleBiasUniform, 1, viewportScaleBias, 0);
@@ -721,13 +723,11 @@ namespace FamiStudio
                     BindAndUpdateVertexBuffer(2, texArray, texSize);
                     BindAndUpdateByteBuffer(3, depArray, depSize, true);
 
-                    var idxBuffer = CopyGetIdxBuffer(idxArray, idxSize);
-
                     foreach (var draw in drawData)
                     {
-                        idxBuffer.Position(draw.start);
+                        quadIdxBuffer.Position(draw.start);
                         GLES20.GlBindTexture(GLES20.GlTexture2d, draw.textureId);
-                        GLES20.GlDrawElements(GLES20.GlTriangles, draw.count, GLES20.GlUnsignedShort, idxBuffer);
+                        GLES20.GlDrawElements(GLES20.GlTriangles, draw.count, GLES20.GlUnsignedShort, quadIdxBuffer);
                     }
                 }
             }

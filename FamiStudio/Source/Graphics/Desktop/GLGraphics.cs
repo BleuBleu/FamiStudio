@@ -541,7 +541,7 @@ namespace FamiStudio
 
                 if (list.HasAnyTexts)
                 {
-                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, idxArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out var idxSize);
+                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize);
 
                     GL.UseProgram(textProgram);
                     GL.BindVertexArray(textVao);
@@ -553,7 +553,7 @@ namespace FamiStudio
                     BindAndUpdateColorBuffer(1, colorBuffer, colArray, colSize);
                     BindAndUpdateVertexBuffer(2, texCoordBuffer, texArray, texSize);
                     BindAndUpdateByteBuffer(3, depthBuffer, depArray, depSize, true);
-                    BindAndUpdateIndexBuffer(indexBuffer, idxArray, idxSize);
+                    GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
 
                     foreach (var draw in drawData)
                     {

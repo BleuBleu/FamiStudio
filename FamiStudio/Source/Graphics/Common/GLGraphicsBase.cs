@@ -2537,15 +2537,39 @@ namespace FamiStudio
             return draw;
         }
 
-        public IReadOnlyCollection<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, short[] idxArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
+        public IReadOnlyCollection<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize)
         {
             var drawDatas = new Dictionary<int, DrawData>();
 
-            var vtxIdx = 0;
-            var texIdx = 0;
-            var colIdx = 0;
-            var depIdx = 0;
-            var idxIdx = 0;
+            // First, count how many characters well need for each texture/drawdata.
+            foreach (var inst in texts)
+            {
+                foreach (var c in inst.text)
+                {
+                    var tex = inst.font.GetCharInfo(c).texture;
+                    if (tex != 0)
+                    {
+                        if (!drawDatas.TryGetValue(tex, out var d))
+                        {
+                            d = new DrawData() { textureId = tex };
+                            drawDatas.Add(tex, d);
+                        }
+                        d.count++;
+                    }
+                }
+            }
+
+            // Setup the offset for each draw call. Temporarely, start/count are in # of char, not indices.
+            var orderedDrawData = drawDatas.Values;
+            var start = 0;
+
+            foreach (var d in orderedDrawData)
+            {
+                d.start = start;
+                start += d.count;
+                d.count = 0; 
+            }
+
             var draw = (DrawData)null;
 
             foreach (var inst in texts)
@@ -2618,11 +2642,8 @@ namespace FamiStudio
 
                         if (info.texture != 0)
                         {
-                            if ((draw == null || draw.textureId != info.texture) && !drawDatas.TryGetValue(info.texture, out draw))
-                            {
-                                draw = new DrawData() { textureId = info.texture };
-                                drawDatas.Add(info.texture, draw);
-                            }
+                            if (draw == null || draw.textureId != info.texture)
+                                draw = drawDatas[info.texture];
 
                             var monoAjustX = (infoMono.width - info.width + 1) / 2;
                             var monoAjustY = (infoMono.height - info.height + 1) / 2;
@@ -2632,10 +2653,10 @@ namespace FamiStudio
                             var x1 = x0 + info.width;
                             var y1 = y0 + info.height;
 
-                            var i0 = (short)(vtxIdx / 2 + 0);
-                            var i1 = (short)(vtxIdx / 2 + 1);
-                            var i2 = (short)(vtxIdx / 2 + 2);
-                            var i3 = (short)(vtxIdx / 2 + 3);
+                            var vtxIdx = (draw.start + draw.count) * 8;
+                            var texIdx = (draw.start + draw.count) * 8;
+                            var colIdx = (draw.start + draw.count) * 4;
+                            var depIdx = (draw.start + draw.count) * 4;
 
                             vtxArray[vtxIdx++] = x0;
                             vtxArray[vtxIdx++] = y0;
@@ -2665,14 +2686,7 @@ namespace FamiStudio
                             depArray[depIdx++] = inst.depth;
                             depArray[depIdx++] = inst.depth;
 
-                            idxArray[idxIdx++] = i0;
-                            idxArray[idxIdx++] = i1;
-                            idxArray[idxIdx++] = i2;
-                            idxArray[idxIdx++] = i0;
-                            idxArray[idxIdx++] = i2;
-                            idxArray[idxIdx++] = i3;
-
-                            draw.count += 6;
+                            draw.count++;
                         }
 
                         x += (int)infoMono.xadvance;
@@ -2690,11 +2704,8 @@ namespace FamiStudio
 
                         if (info.texture != 0)
                         {
-                            if ((draw == null || draw.textureId != info.texture) && !drawDatas.TryGetValue(info.texture, out draw))
-                            {
-                                draw = new DrawData() { textureId = info.texture };
-                                drawDatas.Add(info.texture, draw);
-                            }
+                            if (draw == null || draw.textureId != info.texture)
+                                draw = drawDatas[info.texture];
 
                             var x0 = x + info.xoffset;
                             var y0 = y + info.yoffset;
@@ -2732,10 +2743,10 @@ namespace FamiStudio
                                 x0 = newx0;
                                 x1 = newx1;
 
-                                var i0 = (short)(vtxIdx / 2 + 0);
-                                var i1 = (short)(vtxIdx / 2 + 1);
-                                var i2 = (short)(vtxIdx / 2 + 2);
-                                var i3 = (short)(vtxIdx / 2 + 3);
+                                var vtxIdx = (draw.start + draw.count) * 8;
+                                var texIdx = (draw.start + draw.count) * 8;
+                                var colIdx = (draw.start + draw.count) * 4;
+                                var depIdx = (draw.start + draw.count) * 4;
 
                                 vtxArray[vtxIdx++] = x0;
                                 vtxArray[vtxIdx++] = y0;
@@ -2765,14 +2776,7 @@ namespace FamiStudio
                                 depArray[depIdx++] = inst.depth;
                                 depArray[depIdx++] = inst.depth;
 
-                                idxArray[idxIdx++] = i0;
-                                idxArray[idxIdx++] = i1;
-                                idxArray[idxIdx++] = i2;
-                                idxArray[idxIdx++] = i0;
-                                idxArray[idxIdx++] = i2;
-                                idxArray[idxIdx++] = i3;
-
-                                draw.count += 6;
+                                draw.count++;
                             }
                         }
 
@@ -2794,21 +2798,18 @@ namespace FamiStudio
 
                         if (info.texture != 0)
                         {
-                            if ((draw == null || draw.textureId != info.texture) && !drawDatas.TryGetValue(info.texture, out draw))
-                            {
-                                draw = new DrawData() { textureId = info.texture };
-                                drawDatas.Add(info.texture, draw);
-                            }
+                            if (draw == null || draw.textureId != info.texture)
+                                draw = drawDatas[info.texture];
 
                             var x0 = x + info.xoffset;
                             var y0 = y + info.yoffset;
                             var x1 = x0 + info.width;
                             var y1 = y0 + info.height;
 
-                            var i0 = (short)(vtxIdx / 2 + 0);
-                            var i1 = (short)(vtxIdx / 2 + 1);
-                            var i2 = (short)(vtxIdx / 2 + 2);
-                            var i3 = (short)(vtxIdx / 2 + 3);
+                            var vtxIdx = (draw.start + draw.count) * 8;
+                            var texIdx = (draw.start + draw.count) * 8;
+                            var colIdx = (draw.start + draw.count) * 4;
+                            var depIdx = (draw.start + draw.count) * 4;
 
                             vtxArray[vtxIdx++] = x0;
                             vtxArray[vtxIdx++] = y0;
@@ -2838,14 +2839,7 @@ namespace FamiStudio
                             depArray[depIdx++] = inst.depth;
                             depArray[depIdx++] = inst.depth;
 
-                            idxArray[idxIdx++] = i0;
-                            idxArray[idxIdx++] = i1;
-                            idxArray[idxIdx++] = i2;
-                            idxArray[idxIdx++] = i0;
-                            idxArray[idxIdx++] = i2;
-                            idxArray[idxIdx++] = i3;
-
-                            draw.count += 6;
+                            draw.count++;
                         }
 
                         var advance = info.xadvance;
@@ -2859,22 +2853,21 @@ namespace FamiStudio
                 }
             }
 
-            vtxArraySize = vtxIdx;
-            texArraySize = texIdx;
-            colArraySize = colIdx;
-            depArraySize = depIdx;
-            idxArraySize = idxIdx;
-
-            var finalDrawData = drawDatas.Values;
-            var start = 0;
-
-            foreach (var d in finalDrawData)
+            // # of chars -> # of indices
+            var totalCount = 0;
+            foreach (var d in orderedDrawData)
             {
-                d.start = start;
-                start += d.count;
+                totalCount += d.count;
+                d.count *= 6;
+                d.start *= 6;
             }
 
-            return finalDrawData;
+            vtxArraySize = totalCount * 8;
+            texArraySize = totalCount * 8;
+            colArraySize = totalCount * 4;
+            depArraySize = totalCount * 4;
+
+            return orderedDrawData;
         }
 
         public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
