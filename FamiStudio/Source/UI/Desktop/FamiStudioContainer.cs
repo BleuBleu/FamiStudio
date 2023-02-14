@@ -235,5 +235,10 @@ namespace FamiStudio
             toast.Initialize(text, longDuration, click);
             AddControl(toast);
         }
+
+        public void UpdateLayout()
+        {
+            // Only for mobile.
+        }
     }
 }

@@ -87,44 +87,45 @@ namespace FamiStudio
             UpdateLayout(false);
         }
 
-        private void UpdateLayout(bool activeControlOnly)
+        public void UpdateLayout(bool activeControlOnly = false)
         {
             var landscape          = IsLandscape;
             var quickAccessBarSize = quickAccessBar.LayoutSize;
-            var toolLayoutSize     = toolbar.LayoutSize;
+            var toolbarLayoutSize  = toolbar.LayoutSize;
+            var toolbarRenderSize  = toolbar.RenderSize;
             var pianoLayoutSize    = mobilePianoVisible ? mobilePiano.LayoutSize : 0;
 
             if (landscape)
             {
                 if (!activeControlOnly)
                 {
-                    toolbar.Move(0, 0, toolLayoutSize, height);
+                    toolbar.Move(0, 0, toolbarRenderSize, height);
                     quickAccessBar.Move(width - quickAccessBarSize, 0, quickAccessBarSize, height);
-                    mobilePiano.Move(toolLayoutSize, height - pianoLayoutSize, width - toolLayoutSize - quickAccessBarSize, pianoLayoutSize);
+                    mobilePiano.Move(toolbarLayoutSize, height - pianoLayoutSize, width - toolbarLayoutSize - quickAccessBarSize, pianoLayoutSize);
                 }
 
-                activeControl.Move(toolLayoutSize, 0, width - toolLayoutSize - quickAccessBarSize, height - pianoLayoutSize);
+                activeControl.Move(toolbarLayoutSize, 0, width - toolbarLayoutSize - quickAccessBarSize, height - pianoLayoutSize);
 
                 // Always update the piano roll since we draw the view range in the sequencer and 
                 // it requires valid size to do that.
                 if (activeControl != pianoRoll)
-                    pianoRoll.Move(toolLayoutSize, 0, width - toolLayoutSize - quickAccessBarSize, height - pianoLayoutSize);
+                    pianoRoll.Move(toolbarLayoutSize, 0, width - toolbarLayoutSize - quickAccessBarSize, height - pianoLayoutSize);
             }
             else
             {
                 if (!activeControlOnly)
                 {
-                    toolbar.Move(0, 0, width, toolLayoutSize);
+                    toolbar.Move(0, 0, width, toolbarRenderSize);
                     quickAccessBar.Move(0, height - quickAccessBarSize - pianoLayoutSize, width, quickAccessBarSize);
                     mobilePiano.Move(0, height - pianoLayoutSize, width, pianoLayoutSize);
                 }
 
-                activeControl.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize - pianoLayoutSize);
+                activeControl.Move(0, toolbarLayoutSize, width, height - toolbarLayoutSize - quickAccessBarSize - pianoLayoutSize);
 
                 // Always update the piano roll since we draw the view range in the sequencer and 
                 // it requires valid size to do that.
                 if (activeControl != pianoRoll)
-                    pianoRoll.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize - pianoLayoutSize);
+                    pianoRoll.Move(0, toolbarLayoutSize, width, height - toolbarLayoutSize - quickAccessBarSize - pianoLayoutSize);
             }
 
             sequencer.Visible = activeControl == sequencer;
@@ -151,17 +152,21 @@ namespace FamiStudio
             return base.CanInteractWithContainer(c);
         }
 
-        //public override Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
-        //{
-        //    if (!CanAcceptInput)
-        //    {
-        //        ctrlX = 0;
-        //        ctrlY = 0;
-        //        return null;
-        //    }
+        public override Control GetControlAt(Int32 winX, Int32 winY, out Int32 ctrlX, out Int32 ctrlY)
+        {
+            var ctrl = base.GetControlAt(winX, winY, out ctrlX, out ctrlY);
 
-        //    return base.GetControlAt(winX, winY, out ctrlX, out ctrlY);
-        //}
+            // HACK : When the toolbar is open, eat the input so we can close it.
+            if (toolbar.IsExpanded && !(ctrl == toolbar || ctrl.ParentContainer == toolbar))
+            {
+                var winPos = ctrl.WindowPosition;
+                ctrlX = winX - winPos.X;
+                ctrlY = winY - winPos.Y;
+                return toolbar;
+            }
+
+            return ctrl;
+        }
 
         private void RenderTransitionOverlay(Graphics g)
         {

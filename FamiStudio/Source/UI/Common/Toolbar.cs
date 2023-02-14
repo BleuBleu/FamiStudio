@@ -282,6 +282,7 @@ namespace FamiStudio
         private float expandRatio = 0.0f;
         private bool  expanding = false; 
         private bool  closing   = false; 
+        private bool  ticking   = false;
 
         public int   LayoutSize  => buttonSize * 2;
         public int   RenderSize  => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio) * 0.5f));
@@ -543,10 +544,13 @@ namespace FamiStudio
 
         protected override void OnResize(EventArgs e)
         {
-            expandRatio = 0.0f;
-            expanding = false;
-            closing = false;
-            UpdateButtonLayout();
+            if (!ticking)
+            {
+                expandRatio = 0.0f;
+                expanding = false;
+                closing = false;
+                UpdateButtonLayout();
+            }
         }
 
         public void LayoutChanged()
@@ -572,6 +576,7 @@ namespace FamiStudio
             {
                 var prevRatio = expandRatio;
 
+                ticking = true;
                 if (expanding)
                 {
                     delta *= 6.0f;
@@ -581,6 +586,7 @@ namespace FamiStudio
                     if (expandRatio == 1.0f)
                         expanding = false;
                     MarkDirty();
+                    ParentTopContainer.UpdateLayout();
                 }
                 else if (closing)
                 {
@@ -591,7 +597,9 @@ namespace FamiStudio
                     if (expandRatio == 0.0f)
                         closing = false;
                     MarkDirty();
+                    ParentTopContainer.UpdateLayout();
                 }
+                ticking = false;
             }
         }
 
@@ -1057,10 +1065,10 @@ namespace FamiStudio
         {
             if (Platform.IsMobile && IsExpanded)
             {
-                c.Transform.GetOrigin(out var ox, out var oy);
-                var fullscreenRect = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);
-                fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, Color.FromArgb(expandRatio * 0.6f, Color.Black));
+                if (IsLandscape)
+                    c.FillRectangle(width, 0, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
+                else
+                    c.FillRectangle(0, height, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
             }
         }
 
@@ -1090,8 +1098,9 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             var c = g.DefaultCommandList;
+            var o = g.OverlayCommandList;
 
-            RenderShadow(c);
+            RenderShadow(o);
             RenderBackground(c);
             RenderButtons(c);
             RenderTimecode(c, timecodePosX, timecodePosY, timecodeOscSizeX, timecodeOscSizeY);
@@ -1209,7 +1218,11 @@ namespace FamiStudio
 
             if (left)
             {
-                if (IsPointInTimeCode(e.X, e.Y))
+                if (Platform.IsMobile && !ClientRectangle.Contains(e.X, e.Y))
+                {
+                    StartClosing();
+                }
+                else if (IsPointInTimeCode(e.X, e.Y))
                 {
                     Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
                     MarkDirty();

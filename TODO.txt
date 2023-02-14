@@ -17,6 +17,7 @@
 	- Retest DPI scaling A LOT.
 / Dynamic font rasterizing
 	- Add more DPI scales for mobile, then pretty much 100% done.
+	- Is there any reason now to not allow changing DPI on MacOS??? 
 - NSF import issue TF74
 - DPCM 
 	- In app, you get up to 128KB of samples
