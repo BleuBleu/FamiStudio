@@ -1383,7 +1383,41 @@ famistudio_music_stop:
     bne .set_envelopes
 
     ldx #0
+	
+    .if FAMISTUDIO_EXP_S5B
+.set_envelopes_s5b:
 
+    lda #LOW(famistudio_dummy_envelope)
+    sta famistudio_chn_s5b_env_lo,x
+    lda #HIGH(famistudio_dummy_envelope)
+    sta famistudio_chn_s5b_env_hi,x
+    lda #0
+    sta famistudio_chn_s5b_env_repeat,x
+    sta famistudio_chn_s5b_env,x
+    sta famistudio_chn_s5b_env_ptr,x
+    inx
+    cpx #6
+    bne .set_envelopes_s5b
+
+    ldx #0
+    .endif
+    .if FAMISTUDIO_EXP_EPSM
+.set_envelopes_epsm:
+
+    lda #LOW(famistudio_dummy_envelope)
+    sta famistudio_chn_epsm_env_lo,x
+    lda #HIGH(famistudio_dummy_envelope)
+    sta famistudio_chn_epsm_env_hi,x
+    lda #0
+    sta famistudio_chn_epsm_env_repeat,x
+    sta famistudio_chn_epsm_env,x
+    sta famistudio_chn_epsm_env_ptr,x
+    inx
+    cpx #6
+    bne .set_envelopes_epsm
+
+    ldx #0
+    .endif
 .set_pitch_envelopes:
 
     lda #LOW(famistudio_dummy_pitch_envelope)
