@@ -4184,6 +4184,8 @@ famistudio_set_epsm_instrument:
 		dey
 		dey
 		dey
+		dey
+		dey
         ldx @chan_idx
         @mixer:
         lda (@ptr),y
