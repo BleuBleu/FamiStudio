@@ -4009,15 +4009,7 @@ famistudio_set_instrument:
 ; [in] a: instrument index.
 ;======================================================================================================================
 
-.macro famistudio_set_exp_instrument
-
-    .local @chan_idx
-    .local @tmp_ix
-    .local @ptr
-    .local @read_arpeggio_ptr
-    .local @init_envelopes
-    .local @pitch_env
-    .local @pitch_overriden
+famistudio_set_exp_instrument:
 
     @chan_idx = famistudio_r1
     @tmp_x    = famistudio_r2
@@ -4094,7 +4086,7 @@ famistudio_set_instrument:
 
 @pitch_overriden:
     ldx @chan_idx
-.endmacro
+    rts
 
 .endif
 
@@ -4115,7 +4107,7 @@ famistudio_set_vrc7_instrument:
     @ptr      = famistudio_ptr0
     @chan_idx = famistudio_r1
 
-    famistudio_set_exp_instrument
+    jsr famistudio_set_exp_instrument
 
     lda famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL,x
     beq @done
@@ -4161,7 +4153,7 @@ famistudio_set_s5b_instrument:
     @ptr        = famistudio_ptr0
     @chan_idx   = famistudio_r1
 
-    famistudio_set_exp_instrument
+    jsr famistudio_set_exp_instrument
 	ldx @chan_idx
 	@mixer:
 	lda (@ptr),y
@@ -4253,7 +4245,7 @@ famistudio_set_epsm_instrument:
     @reg_offset = famistudio_r0
     @chan_idx   = famistudio_r1
 
-    famistudio_set_exp_instrument
+    jsr famistudio_set_exp_instrument
 
     ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
 	; increase y and go past noise and mixer envelope indexes
@@ -4411,7 +4403,7 @@ famistudio_set_fds_instrument:
     @master_vol = famistudio_r1
     @tmp_y      = famistudio_r2
 
-    famistudio_set_exp_instrument
+    jsr famistudio_set_exp_instrument
 
     lda #0
     sta FAMISTUDIO_FDS_SWEEP_BIAS
@@ -4636,7 +4628,7 @@ famistudio_set_n163_instrument:
     @ptr      = famistudio_ptr0
     @chan_idx = famistudio_r1
 
-    famistudio_set_exp_instrument
+    jsr famistudio_set_exp_instrument
 
     ; Load the wave index envelope, x contains the channel index.
     lda famistudio_channel_env,x
@@ -5832,6 +5824,7 @@ famistudio_dummy_pitch_envelope:
 
 ; Note tables
 famistudio_note_table_lsb:
+famistudio_s5b_note_table_lsb:
     .if FAMISTUDIO_CFG_PAL_SUPPORT
         .byte $00
         .byte $68, $b6, $0e, $6f, $d9, $4b, $c6, $48, $d1, $60, $f6, $92 ; Octave 0
@@ -5856,6 +5849,7 @@ famistudio_note_table_lsb:
     .endif
 
 famistudio_note_table_msb:
+famistudio_s5b_note_table_msb:
     .if FAMISTUDIO_CFG_PAL_SUPPORT
         .byte $00
         .byte $0c, $0b, $0b, $0a, $09, $09, $08, $08, $07, $07, $06, $06 ; Octave 0
@@ -5927,31 +5921,6 @@ famistudio_vrc7_note_table_msb:
     .byte $15, $16, $18, $19, $1b, $1c, $1e, $20, $22, $24, $26, $28 ; Octave 5
     .byte $2b, $2d, $30, $33, $36, $39, $3d, $40, $44, $48, $4c, $51 ; Octave 6
     .byte $56, $5b, $61, $66, $6c, $73, $7a, $81, $89, $91, $99, $a3 ; Octave 7    
-.endif
-
-.if FAMISTUDIO_EXP_S5B
-;famistudio_exp_note_table_lsb: ; [MULTI] This doesnt apply here.
-famistudio_s5b_note_table_lsb:
-	.byte $00
-	.byte $5b, $9c, $e6, $3b, $9a, $01, $72, $ea, $6a, $f1, $7f, $13 ; Octave 0
-	.byte $ad, $4d, $f3, $9d, $4c, $00, $b8, $74, $34, $f8, $bf, $89 ; Octave 1
-	.byte $56, $26, $f9, $ce, $a6, $80, $5c, $3a, $1a, $fb, $df, $c4 ; Octave 2
-	.byte $ab, $93, $7c, $67, $52, $3f, $2d, $1c, $0c, $fd, $ef, $e1 ; Octave 3
-	.byte $d5, $c9, $bd, $b3, $a9, $9f, $96, $8e, $86, $7e, $77, $70 ; Octave 4
-	.byte $6a, $64, $5e, $59, $54, $4f, $4b, $46, $42, $3f, $3b, $38 ; Octave 5
-	.byte $34, $31, $2f, $2c, $29, $27, $25, $23, $21, $1f, $1d, $1b ; Octave 6
-	.byte $1a, $18, $17, $15, $14, $13, $12, $11, $10, $0f, $0e, $0d ; Octave 7
-;famistudio_exp_note_table_msb: ; [MULTI] This doesnt apply here.
-famistudio_s5b_note_table_msb:
-        .byte $00
-        .byte $0d, $0c, $0b, $0b, $0a, $0a, $09, $08, $08, $07, $07, $07 ; Octave 0
-        .byte $06, $06, $05, $05, $05, $05, $04, $04, $04, $03, $03, $03 ; Octave 1
-        .byte $03, $03, $02, $02, $02, $02, $02, $02, $02, $01, $01, $01 ; Octave 2
-        .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $00 ; Octave 3
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 4
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
 .endif
 
 .if FAMISTUDIO_EXP_EPSM
