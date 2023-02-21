@@ -278,17 +278,15 @@ namespace FamiStudio
             }
         }
 
+        public void StartEditDPCMMapping(Instrument instrument)
+        {
+            PianoRoll.StartEditDPCMMapping(instrument);
+            ConditionalSwitchToPianoRoll();
+        }
+
         public void StartEditInstrument(Instrument instrument, int envelope)
         {
-            if (instrument == null)
-            {
-                PianoRoll.StartEditDPCMMapping();
-            }
-            else
-            {
-                PianoRoll.StartEditInstrument(instrument, envelope);
-            }
-
+            PianoRoll.StartEditInstrument(instrument, envelope);
             ConditionalSwitchToPianoRoll();
         }
 
@@ -496,9 +494,9 @@ namespace FamiStudio
             ProjectExplorer.MarkDirty();
         }
 
-        public int GetDPCMSampleMappingNoteAtPos(Point pos)
+        public int GetDPCMSampleMappingNoteAtPos(Point pos, out Instrument instrument)
         {
-            return PianoRoll.GetDPCMSampleMappingNoteAtPos(PianoRoll.ScreenToControl(pos));
+            return PianoRoll.GetDPCMSampleMappingNoteAtPos(PianoRoll.ScreenToControl(pos), out instrument);
         }
 
         private void ProjectExplorer_DPCMSampleMapped(DPCMSample instrument, Point pos)

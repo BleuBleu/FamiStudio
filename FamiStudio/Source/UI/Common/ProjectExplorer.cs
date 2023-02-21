@@ -778,38 +778,35 @@ namespace FamiStudio
                     case ButtonType.Song:
                         return new[] { SubButtonType.Properties };
                     case ButtonType.Instrument:
-                        if (instrument == null)
-                        {
-                            var project = projectExplorer.App.Project;
-                            if (project != null && project.GetTotalMappedSampleSize() > Project.MaxMappedSampleSize)
-                                return new[] { SubButtonType.DPCM, SubButtonType.Overflow };
-                            else
-                                return new[] { SubButtonType.DPCM };
-                        }
-                        else
-                        {
-                            var expandButton = projectExplorer.ShowExpandButtons() && InstrumentParamProvider.HasParams(instrument);
-                            var numSubButtons = instrument.NumVisibleEnvelopes + (expandButton ? 1 : 0) + 1;
-                            var buttons = new SubButtonType[numSubButtons];
-                            buttons[0] = SubButtonType.Properties;
+                        var expandButton = projectExplorer.ShowExpandButtons() && InstrumentParamProvider.HasParams(instrument);
+                        var numSubButtons = instrument.NumVisibleEnvelopes + (expandButton ? 1 : 0) + (instrument.IsRegular ? 1 : 0) + 1;
+                        var buttons = new SubButtonType[numSubButtons];
+                        var j = 0;
 
-                            for (int i = 0, j = 1; i < EnvelopeDisplayOrder.Length; i++)
+                        buttons[j++] = SubButtonType.Properties;
+                        if (instrument.Expansion == ExpansionType.None)
+                        {
+                            if (!instrument.HasAnyMappedSamples)
+                                active &= ~(1 << j);
+                            buttons[j++] = SubButtonType.DPCM;
+                        }
+
+                        for (int i = 0; i < EnvelopeDisplayOrder.Length; i++)
+                        {
+                            int idx = EnvelopeDisplayOrder[i];
+                            if (instrument.Envelopes[idx] != null)
                             {
-                                int idx = EnvelopeDisplayOrder[i];
-                                if (instrument.Envelopes[idx] != null)
-                                {
-                                    buttons[j] = (SubButtonType)idx;
-                                    if (instrument.Envelopes[idx].IsEmpty(idx))
-                                        active &= ~(1 << j);
-                                    j++;
-                                }
+                                buttons[j] = (SubButtonType)idx;
+                                if (instrument.Envelopes[idx].IsEmpty(idx))
+                                    active &= ~(1 << j);
+                                j++;
                             }
-
-                            if (expandButton)
-                                buttons[numSubButtons - 1] = SubButtonType.Expand;
-
-                            return buttons;
                         }
+
+                        if (expandButton)
+                            buttons[numSubButtons - 1] = SubButtonType.Expand;
+
+                        return buttons;
                     case ButtonType.Arpeggio:
                         if (arpeggio != null)
                             return new[] { SubButtonType.Properties, SubButtonType.ArpeggioEnvelope };
@@ -850,17 +847,6 @@ namespace FamiStudio
                     if (text != null)
                     {
                         return text;
-                    }
-                    else if (type == ButtonType.Instrument && instrument == null)
-                    {
-                        var label = Project.DPCMInstrumentName;
-                        if (projectExplorer.App.Project != null)
-                        {
-                            var mappedSamplesSize = projectExplorer.App.Project.GetTotalMappedSampleSize();
-                            if (mappedSamplesSize > 0)
-                                label += $" ({mappedSamplesSize} Bytes)";
-                        }
-                        return label;
                     }
                     else if (type == ButtonType.Dpcm)
                     {
@@ -1124,7 +1110,6 @@ namespace FamiStudio
                     buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, bmp = bmpSong, textColor = Theme.BlackColor });
 
                 buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments" });
-                buttons.Add(new Button(this) { type = ButtonType.Instrument, color = Theme.LightGreyColor1, textColor = Theme.BlackColor, bmp = bmpExpansions[ExpansionType.None] });
 
                 foreach (var instrument in project.Instruments)
                 {
@@ -2059,14 +2044,13 @@ namespace FamiStudio
             {
                 if (final)
                 {
-                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(ControlToScreen(new Point(x, y)));
-                    if (App.Project.NoteSupportsDPCM(mappingNote))
+                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(ControlToScreen(new Point(x, y)), out var instrument);
+                    if (instrument != null)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
-                        App.Project.UnmapDPCMSample(mappingNote);
-                        App.Project.MapDPCMSample(mappingNote, draggedSample);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id, -1, TransactionFlags.StopAudio);
+                        instrument.UnmapDPCMSample(mappingNote);
+                        instrument.MapDPCMSample(mappingNote, draggedSample);
                         App.UndoRedoManager.EndTransaction();
-
                         DPCMSampleMapped?.Invoke(draggedSample, ControlToScreen(new Point(x, y)));
                     }
                 }
@@ -2628,17 +2612,8 @@ namespace FamiStudio
 
                         if (instrumentProject != null)
                         {
-                            var hasDpcmInstrument = false;
-
                             var instruments = new List<Instrument>();
                             var instrumentNames = new List<string>();
-
-                            if (instrumentProject.HasAnyMappedSamples)
-                            {
-                                hasDpcmInstrument = true;
-                                instruments.Add(null);
-                                instrumentNames.Add(Project.DPCMInstrumentName);
-                            }
 
                             foreach (var instrument in instrumentProject.Instruments)
                             {
@@ -2661,15 +2636,13 @@ namespace FamiStudio
                                     var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
                                     var instrumentsIdsToMerge = new List<int>();
 
-                                    for (int i = hasDpcmInstrument ? 1 : 0; i < selected.Length; i++)
+                                    for (int i = 0; i < selected.Length; i++)
                                     {
                                         if (selected[i])
                                             instrumentsIdsToMerge.Add(instruments[i].Id);
                                     }
 
                                     // Wipe everything but the instruments we want.
-                                    if (!hasDpcmInstrument || selected[0] == false)
-                                        instrumentProject.DeleteAllSamples();
                                     instrumentProject.DeleteAllSongs();
                                     instrumentProject.DeleteAllArpeggios();
                                     instrumentProject.DeleteAllInstrumentBut(instrumentsIdsToMerge.ToArray());
@@ -2783,7 +2756,6 @@ namespace FamiStudio
                                         samplesProject.DeleteAllArpeggios();
                                         samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
                                         samplesProject.DeleteAllInstruments();
-                                        samplesProject.DeleteAllMappings();
 
                                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
                                         bool success = App.Project.MergeProject(samplesProject);
@@ -3191,7 +3163,7 @@ namespace FamiStudio
                 }
                 else if (subButtonType == SubButtonType.DPCM)
                 {
-                    App.StartEditInstrument(button.instrument, EnvelopeType.Count);
+                    App.StartEditDPCMMapping(button.instrument);
                     return true;
                 }
                 else if (subButtonType == SubButtonType.Properties)

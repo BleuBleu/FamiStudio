@@ -597,11 +597,12 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void StartEditDPCMMapping()
+        public void StartEditDPCMMapping(Instrument instrument)
         {
             SaveChannelScroll();
 
             editMode = EditionMode.DPCMMapping;
+            editInstrument = instrument;
             showEffectsPanel = false;
             zoom = 1.0f;
             noteTooltip = "";
@@ -766,7 +767,13 @@ namespace FamiStudio
 
         private void CenterDPCMMappingScroll()
         {
-            scrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0) / 2;
+            var midIdx = Note.MusicalNoteC4;
+
+            if (editInstrument.GetMinMaxMappedSampleIndex(out var minIdx, out var maxIdx))
+                midIdx = (minIdx + maxIdx) / 2;
+
+            var noteY = virtualSizeY - midIdx * noteSizeY;
+            scrollY = noteY - (Height - headerAndEffectSizeY) / 2;
         }
 
         private int GetPixelForNote(int n, bool scroll = true)
@@ -1368,12 +1375,12 @@ namespace FamiStudio
 
         private bool GetDPCMKeyColor(int note, out Color color)
         {
-            if (editMode != EditionMode.VideoRecording && App.SelectedChannel.Type == ChannelType.Dpcm)
+            if (editMode != EditionMode.VideoRecording && App.SelectedChannel.Type == ChannelType.Dpcm && App.SelectedInstrument != null)
             {
-                var mapping = Song.Project.GetDPCMMapping(note);
+                var mapping = App.SelectedInstrument.GetDPCMMapping(note);
                 if (mapping != null)
                 {
-                    color = mapping.Sample.Color;
+                    color =  App.SelectedInstrument.Color; // Sample color or instrument color?
                     return true;
                 }
             }
@@ -1937,7 +1944,7 @@ namespace FamiStudio
 
         private void CopyNotes()
         {
-            ClipboardUtils.SaveNotes(App.Project, GetSelectedNotes(false), editChannel == ChannelType.Dpcm);
+            ClipboardUtils.SaveNotes(App.Project, GetSelectedNotes(false));
         }
 
         private void CutNotes()
@@ -1967,7 +1974,7 @@ namespace FamiStudio
 
                         if (note.IsMusical)
                         {
-                            note.Instrument = editChannel == ChannelType.Dpcm || !channel.SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
+                            note.Instrument = channel.SupportsInstrument(newNote.Instrument) ? newNote.Instrument : null;
                             note.SlideNoteTarget = channel.SupportsSlideNotes ? newNote.SlideNoteTarget : (byte)0;
                             note.Flags = newNote.Flags;
                             note.Duration = newNote.Duration;
@@ -2321,19 +2328,7 @@ namespace FamiStudio
 
         private Color GetNoteColor(Channel channel, int noteValue, Instrument instrument, float alphaDim = 1.0f)
         {
-            var color = Theme.LightGreyColor1;
-
-            if (channel.Type == ChannelType.Dpcm)
-            {
-                var mapping = channel.Song.Project.GetDPCMMapping(noteValue);
-                if (mapping != null)
-                    color = mapping.Sample.Color;
-            }
-            else if (instrument != null)
-            {
-                color = instrument.Color;
-            }
-
+            var color = instrument != null ? instrument.Color : Theme.LightGreyColor1;
             return Color.FromArgb(alphaDim, color);
         }
 
@@ -2624,19 +2619,14 @@ namespace FamiStudio
             }
             else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.
             {
-                // Draw 2 dark rectangle to show invalid range. 
-                r.b.PushTranslation(0, -scrollY);
-                r.b.FillRectangle(0, virtualSizeY, Width, virtualSizeY - Note.DPCMNoteMin * noteSizeY, invalidDpcmMappingColor);
-                r.b.FillRectangle(0, 0, Width, virtualSizeY - Note.DPCMNoteMax * noteSizeY, invalidDpcmMappingColor);
-                r.b.PopTransform();
-
-                for (int i = 0; i < Note.MusicalNoteMax; i++)
+                foreach (var kv in editInstrument.SamplesMapping)
                 {
-                    var mapping = App.Project.GetDPCMMapping(i);
-                    if (mapping != null)
+                    var note = kv.Key;
+                    var mapping = kv.Value;
+                    if (mapping != null && mapping.Sample != null)
                     {
-                        var y = virtualSizeY - i * noteSizeY - scrollY;
-                        var highlighted = i == highlightDPCMSample;
+                        var y = virtualSizeY - note * noteSizeY - scrollY;
+                        var highlighted = note == highlightDPCMSample;
 
                         r.c.PushTranslation(0, y);
                         r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, noteSizeY, highlighted ? 3 : 1, highlighted, highlighted);
@@ -2665,7 +2655,7 @@ namespace FamiStudio
                 {
                     var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
 
-                    if (GetNoteValueForCoord(pt.X, pt.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue))
+                    if (GetNoteValueForCoord(pt.X, pt.Y, out var noteValue))
                     {
                         var y = virtualSizeY - noteValue * noteSizeY - scrollY;
                         r.c.PushTranslation(0, y);
@@ -2679,7 +2669,7 @@ namespace FamiStudio
 
                     if (GetLocationForCoord(pt.X, pt.Y, out _, out var highlightNoteValue))
                     {
-                        var mapping = App.Project.GetDPCMMapping(highlightNoteValue);
+                        var mapping = editInstrument.GetDPCMMapping(highlightNoteValue);
                         if (mapping != null)
                         {
                             var y = virtualSizeY - highlightNoteValue * noteSizeY - scrollY;
@@ -2691,7 +2681,12 @@ namespace FamiStudio
                     }
                 }
 
-                r.f.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+                var textY = bigTextPosY;
+                r.f.DrawText($"Editing Instrument {editInstrument.Name} (DPCM Samples)", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+                textY += r.fonts.FontVeryLarge.LineHeight;
+                r.f.DrawText($"{editInstrument.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} bytes used by this instrument", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+                textY += r.fonts.FontMedium.LineHeight;
+                r.f.DrawText($"{App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} bytes used overall", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
             }
         }
 
@@ -3980,7 +3975,7 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                     mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
                     mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
                     mapping.OverrideDmcInitialValue = dlg.Properties.GetPropertyValue<bool>(2);
@@ -4035,7 +4030,7 @@ namespace FamiStudio
         {
             if (GetLocationForCoord(e.X, e.Y, out _, out var noteValue))
             {
-                var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
                 if (mapping != null)
                     ClearDPCMSampleMapping(noteValue);
                 return true;
@@ -4238,9 +4233,9 @@ namespace FamiStudio
         {
             if (draggedSample == null)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
-                draggedSample = App.Project.GetDPCMMapping(captureNoteValue);
-                App.Project.UnmapDPCMSample(captureNoteValue);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+                draggedSample = editInstrument.GetDPCMMapping(captureNoteValue);
+                editInstrument.UnmapDPCMSample(captureNoteValue);
             }
             else
             {
@@ -4253,13 +4248,13 @@ namespace FamiStudio
         {
             if (draggedSample != null)
             {
-                if (GetNoteValueForCoord(x, y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
+                if (GetNoteValueForCoord(x, y, out var noteValue) && noteValue != captureNoteValue && draggedSample != null)
                 {
                     var sample = draggedSample;
 
                     // Map the sample right away so that it renders correctly as the message box pops.
-                    App.Project.UnmapDPCMSample(noteValue);
-                    App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
+                    editInstrument.UnmapDPCMSample(noteValue);
+                    editInstrument.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
 
                     draggedSample = null;
 
@@ -4271,12 +4266,12 @@ namespace FamiStudio
                             // potentially in multiple songs.
                             App.UndoRedoManager.RestoreTransaction(false);
                             App.UndoRedoManager.AbortTransaction();
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
 
                             // Need to redo everything + transpose.
-                            App.Project.UnmapDPCMSample(captureNoteValue);
-                            App.Project.UnmapDPCMSample(noteValue);
-                            App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
+                            editInstrument.UnmapDPCMSample(captureNoteValue);
+                            editInstrument.UnmapDPCMSample(noteValue);
+                            editInstrument.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
                             App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
                         }
 
@@ -4972,13 +4967,15 @@ namespace FamiStudio
             UpdateCursor();
         }
 
-        public int GetDPCMSampleMappingNoteAtPos(Point pos)
+        public int GetDPCMSampleMappingNoteAtPos(Point pos, out Instrument instrument)
         {
             if (editMode == EditionMode.DPCMMapping && GetNoteValueForCoord(pos.X, pos.Y, out var noteValue))
             {
+                instrument = editInstrument;
                 return noteValue;
             }
 
+            instrument = null;
             return Note.NoteInvalid;
         }
 
@@ -5559,26 +5556,19 @@ namespace FamiStudio
         {
             if (e.Left && GetLocationForCoord(e.X, e.Y, out var location, out var noteValue))
             {
-                if (App.Project.NoteSupportsDPCM(noteValue))
-                {
-                    var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
 
-                    if (mapping == null)
-                    {
-                        MapDPCMSample(noteValue);
-                    }
-                    else if (ModifierKeys.IsShiftDown)
-                    {
-                        ClearDPCMSampleMapping(noteValue);
-                    }
-                    else
-                    {
-                        StartDragDPCMSampleMapping(e.X, e.Y, noteValue);
-                    }
+                if (mapping == null)
+                {
+                    MapDPCMSample(noteValue);
+                }
+                else if (ModifierKeys.IsShiftDown)
+                {
+                    ClearDPCMSampleMapping(noteValue);
                 }
                 else
                 {
-                    App.DisplayNotification("DPCM samples are only allowed between C1 and D6");
+                    StartDragDPCMSampleMapping(e.X, e.Y, noteValue);
                 }
 
                 return true;
@@ -5781,7 +5771,7 @@ namespace FamiStudio
             var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
             note.Value = noteValue;
             note.Duration = SnapEnabled ? Math.Max(1, SnapNote(abs, true) - abs) : Song.GetPatternBeatLength(location.PatternIndex);
-            note.Instrument = editChannel != ChannelType.Dpcm ? App.SelectedInstrument : null;
+            note.Instrument = App.SelectedInstrument;
             note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
 
             SetMobileHighlightedNote(abs);
@@ -6082,7 +6072,7 @@ namespace FamiStudio
         {
             if (GetLocationForCoord(x, y, out _, out var noteValue) && noteValue == highlightDPCMSample)
             {
-                var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
 
                 if (mapping != null)
                 {
@@ -6136,23 +6126,16 @@ namespace FamiStudio
         {
             if (GetLocationForCoord(x, y, out _, out var noteValue))
             {
-                if (App.Project.NoteSupportsDPCM(noteValue))
-                {
-                    var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
 
-                    if (mapping == null)
-                    {
-                        MapDPCMSample(noteValue);
-                        highlightDPCMSample = noteValue;
-                    }
-                    else
-                    {
-                        highlightDPCMSample = highlightDPCMSample == noteValue ? -1 : noteValue;
-                    }
+                if (mapping == null)
+                {
+                    MapDPCMSample(noteValue);
+                    highlightDPCMSample = noteValue;
                 }
                 else
                 {
-                    App.DisplayNotification("DPCM samples are only allowed between C1 and D6");
+                    highlightDPCMSample = highlightDPCMSample == noteValue ? -1 : noteValue;
                 }
 
                 return true;
@@ -6704,7 +6687,7 @@ namespace FamiStudio
         {
             if (GetLocationForCoord(x, y, out _, out var noteValue))
             {
-                var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
 
                 if (mapping != null)
                 {
@@ -7255,7 +7238,7 @@ namespace FamiStudio
                         note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
                         note.Value = noteValue;
                         note.Duration = (ushort)Song.BeatLength;
-                        note.Instrument = editChannel != ChannelType.Dpcm ? App.SelectedInstrument : null;
+                        note.Instrument = App.SelectedInstrument;
                         note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
                     }
                     else
@@ -7410,9 +7393,9 @@ namespace FamiStudio
                 {
                     if (r == DialogResult.OK)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id, -1, TransactionFlags.StopAudio);
                         var sampleName = dlg.Properties.GetPropertyValue<string>(1);
-                        var mapping = App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
+                        var mapping = editInstrument.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
                         mapping.Pitch = dlg.Properties.GetSelectedIndex(2);
                         mapping.Loop = dlg.Properties.GetPropertyValue<bool>(3);
                         App.UndoRedoManager.EndTransaction();
@@ -7430,8 +7413,8 @@ namespace FamiStudio
 
         private void ClearDPCMSampleMapping(byte noteValue)
         {
-            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
-            App.Project.UnmapDPCMSample(noteValue);
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id, -1, TransactionFlags.StopAudio);
+            editInstrument.UnmapDPCMSample(noteValue);
             if (noteValue == highlightDPCMSample)
                 highlightDPCMSample = -1;
             App.UndoRedoManager.EndTransaction();
@@ -7545,7 +7528,7 @@ namespace FamiStudio
 
         public void ReplaceSelectionInstrument(Instrument instrument, Point pos, bool forceInSelection = false)
         {
-            if (editMode == EditionMode.Channel && editChannel != ChannelType.Dpcm)
+            if (editMode == EditionMode.Channel)
             {
                 Debug.Assert(!forceInSelection || IsSelectionValid());
 
@@ -7943,25 +7926,20 @@ namespace FamiStudio
                 {
                     if (GetNoteValueForCoord(e.X, e.Y, out byte noteValue))
                     {
-                        if (App.Project.NoteSupportsDPCM(noteValue))
+                        newNoteTooltip = $"{Note.GetFriendlyName(noteValue)}";
+
+                        var mapping = editInstrument.GetDPCMMapping(noteValue);
+                        if (mapping == null)
                         {
-                            newNoteTooltip = $"{Note.GetFriendlyName(noteValue)}";
-
-                            var mapping = App.Project.GetDPCMMapping(noteValue);
-                            if (mapping == null)
-                            {
-                                tooltip = "<MouseLeft> Assign DPCM sample - <MouseWheel> Pan";
-                            }
-                            else
-                            {
-                                tooltip = "<MouseLeft><MouseLeft> Sample properties - <MouseWheel> Pan\n<MouseRight> More Options...";
-
-                                if (mapping.Sample != null)
-                                    newNoteTooltip += $" ({mapping.Sample.Name})";
-                            }
+                            tooltip = "<MouseLeft> Assign DPCM sample - <MouseWheel> Pan";
                         }
                         else
-                            tooltip = "Samples must be between C1 and D6";
+                        {
+                            tooltip = "<MouseLeft><MouseLeft> Sample properties - <MouseWheel> Pan\n<MouseRight> More Options...";
+
+                            if (mapping.Sample != null)
+                                newNoteTooltip += $" ({mapping.Sample.Name})";
+                        }
                     }
                 }
             }
@@ -8152,7 +8130,7 @@ namespace FamiStudio
             var note = pattern.GetOrCreateNoteAt(minLocation.NoteIndex);
 
             note.Value = (byte)captureNoteValue;
-            note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
+            note.Instrument = App.SelectedInstrument;
             note.Arpeggio = Song.Channels[editChannel].SupportsArpeggios ? App.SelectedArpeggio : null;
             note.Duration = Math.Max(1, maxAbsoluteNoteIndex) - minAbsoluteNoteIndex;
 
@@ -9104,7 +9082,7 @@ namespace FamiStudio
 
             // Allow to go outside the window when a capture is in progress.
             var captureInProgress = captureOperation != CaptureOperation.None;
-            return x > pianoSizeX && ((y > headerAndEffectSizeY && !captureInProgress) || (rawNoteValue >= 0 && captureInProgress));
+            return x > pianoSizeX && x < width && ((y > headerAndEffectSizeY && !captureInProgress) || (rawNoteValue >= 0 && captureInProgress));
         }
 
         private bool GetLocationForCoord(int x, int y, out NoteLocation location, out byte noteValue, bool allowSnap = false)
@@ -9117,7 +9095,7 @@ namespace FamiStudio
             location = Song.AbsoluteNoteIndexToNoteLocation(absoluteNoteIndex);
             noteValue = (byte)(NumNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, NumNotes));
 
-            return (x > pianoSizeX && y > headerAndEffectSizeY && location.PatternIndex < Song.Length);
+            return (x > pianoSizeX && x < width && y > headerAndEffectSizeY && location.PatternIndex < Song.Length);
         }
 
         private int GetVisualNoteDuration(NoteLocation location, Note note)

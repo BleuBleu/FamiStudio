@@ -11,36 +11,34 @@
 - Context menu to copy/paste EPSM/VRC7 register values as text.
 - Add confirmation for overwrite on mobile
 
+DPCM
+====
+
 4.1.0
 =====
-- OpenGL upgrade/.NET 5.0/64bit
-	- Retest DPI scaling A LOT.
-/ Dynamic font rasterizing
-	- Add more DPI scales for mobile, then pretty much 100% done.
-	- Is there any reason now to not allow changing DPI on MacOS??? 
-- NSF import issue TF74
-- DPCM 
-	- In app, you get up to 128KB of samples
-	- No more DPCM instruments, just DPCM button on regular instruments.
-		=> FT2 only supported 1 DPCM instrument. Apply same rule.
-	- Each instrument will have a bank # which only has impact on engine export.
-	- In sound engine, add option for DPCM bank switching.
-	- When a sample plays, callback with bank #.
-	- Export multiple .dmc files if it uses bankswitching
-	- Sample table will be pretty large. 256 samples x 4? Probably good enough for a first version.
-	- This mean the table will not be completely disconnected from notes. Merge all instruments, keep unique settings.
-		=> Except for FT2, old-school.
-	- For NSF export, 16x8KB (2 banks) export, split automatically.
-	- For ROM export, 16x8KB (1 bank) export, split automatically. What about VRC6? 
+- Way to convert instrument between expansions.
+- CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
+- Is there any reason now to not allow changing DPI on MacOS??? 
 - Export DMC samples on Mobile.
 - Mark : Option to prevent android from going to sleep while playing.
 - Option to set snapping auto depending on last resize.
-- Dual APU (VT02) support?
+- Dual APU (VT02) support? Does Mesen or NSFPlay support it?
 - Stereo export and NSF import on Android?
-- CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
 - Proportionnal volume adjust
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
+- BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
+
+Testing
+=======
+- All ROM exports, FDS too.
+- FT2 NSF
+- Run unit test for DPCM
+- Test DPCM w/ multi
+- Recompile/re-export sound engine demo roms. Bump version. (no DPCM bank switching here)
+- Retest DPI scaling A LOT.
+- Re-export all ROM songs at the end.
+- Re-export all ROM test (.bin) files at the end.
 
 4.1.0 Change Log
 ================
@@ -54,7 +52,9 @@
 - Configurable keyboard shortcuts
 - Text rendering changes, small text may look slightly blurrier. 
 - More UI scaling % options (TODO : Add a few more on mobile too)
-- 
+- DPCM improvements:
+	- No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
+	- Up to 256KB of samples using bank switching.
 
 Android SDK 12
 ==============
@@ -136,6 +136,7 @@ Discord
 
 Backlog: 
 =========
+- NSF import issue TF74
 - FDS oscilloscope can assert if you use modulation table to produce very low sound.
 - Fix "SeparateChannelsExportTndMode"
 - Can we pahse reset N163? Steo mentionned that in very low note, he notices that the waveform starts from the middle.
@@ -152,7 +153,6 @@ Backlog:
 - Improve expansion tooltips.
 - Idea from perkka "When an instrument is selected. Have the channels thats not supported by it slightly faded out, or the channel names that support it in bold or something"
 - Do a pass on tooltips for ParamProviders.
-- Way to convert instrument between expansions.
 - Left resize to preserve release position?
 - Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 - Display number of selected channels in grid for video export?

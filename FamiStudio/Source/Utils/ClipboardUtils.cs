@@ -169,12 +169,20 @@ namespace FamiStudio
                 inst.SerializeState(serializer);
         }
 
-        private static void SaveSampleList(ProjectSaveBuffer serializer, IDictionary<int, DPCMSampleMapping> mappings)
+        private static void SaveSampleList(ProjectSaveBuffer serializer, HashSet<Instrument> instruments)
         {
             var samples = new HashSet<DPCMSample>();
 
-            foreach (var kv in mappings)
-                samples.Add(kv.Value.Sample);
+            foreach (var inst in instruments)
+            {
+                if (inst.HasAnyMappedSamples)
+                {
+                    foreach (var kv in inst.SamplesMapping)
+                    {
+                        samples.Add(kv.Value.Sample);
+                    }
+                }
+            }
 
             int numSamples = samples.Count;
             serializer.Serialize(ref numSamples);
@@ -188,21 +196,6 @@ namespace FamiStudio
                 serializer.Serialize(ref sampleName);
 
                 sample.SerializeState(serializer);
-            }
-
-            int numMappings = mappings.Count;
-            serializer.Serialize(ref numMappings);
-
-            foreach (var kv in mappings)
-            {
-                var note       = kv.Key;
-                var mapping    = kv.Value;
-                var sampleName = mapping.Sample.Name;
-
-                serializer.Serialize(ref note);
-                serializer.Serialize(ref sampleName);
-
-                mapping.SerializeState(serializer);
             }
         }
 
@@ -243,36 +236,6 @@ namespace FamiStudio
                     {
                         serializer.RemapId(sampleId, -1);
                         dummySample.SerializeState(serializer); // Skip
-                    }
-                }
-            }
-
-            int numMappings = 0;
-            serializer.Serialize(ref numMappings);
-
-            for (int i = 0; i < numMappings; i++)
-            {
-                int note = 0;
-                string sampleName = "";
-
-                serializer.Serialize(ref note);
-                serializer.Serialize(ref sampleName);
-
-                var mapping = new DPCMSampleMapping();
-                mapping.SerializeState(serializer);
-
-                if (serializer.Project.GetDPCMMapping(note) == null)
-                {
-                    needMerge = true;
-
-                    if (!checkOnly && createMissing)
-                    {
-                        var sample = serializer.Project.GetSample(sampleName);
-
-                        if (sample != null)
-                        {
-                            serializer.Project.MapDPCMSample(note, sample, mapping.Pitch, mapping.Loop);
-                        }
                     }
                 }
             }
@@ -397,7 +360,7 @@ namespace FamiStudio
             return needMerge;
         }
 
-        public static void SaveNotes(Project project, Note[] notes, bool dpcm)
+        public static void SaveNotes(Project project, Note[] notes)
         {
             if (notes == null)
             {
@@ -410,33 +373,18 @@ namespace FamiStudio
             var arpeggios = new HashSet<Arpeggio>();
             var samples = new Dictionary<int, DPCMSampleMapping>();
 
-            if (dpcm)
+            foreach (var note in notes)
             {
-                foreach (var note in notes)
+                if (note != null)
                 {
-                    if (note != null)
-                    {
-                        var mapping = project.GetDPCMMapping(note.Value);
-                        if (mapping != null)
-                            samples[note.Value] = mapping;
-                    }
-                }
-            }
-            else
-            {
-                foreach (var note in notes)
-                {
-                    if (note != null)
-                    {
-                        if (note.Instrument != null)
-                            instruments.Add(note.Instrument);
-                        if (note.Arpeggio != null)
-                            arpeggios.Add(note.Arpeggio);
-                    }
+                    if (note.Instrument != null)
+                        instruments.Add(note.Instrument);
+                    if (note.Arpeggio != null)
+                        arpeggios.Add(note.Arpeggio);
                 }
             }
 
-            SaveSampleList(serializer, samples);
+            SaveSampleList(serializer, instruments);
             SaveArpeggioList(serializer, arpeggios);
             SaveInstrumentList(serializer, instruments);
 
@@ -550,7 +498,6 @@ namespace FamiStudio
             var uniqueInstruments = new HashSet<Instrument>();
             var uniqueArpeggios = new HashSet<Arpeggio>();
             var uniquePatterns = new HashSet<Pattern>();
-            var uniqueDPCMMappings = new Dictionary<int, DPCMSampleMapping>();
             var numPatterns = patterns.GetLength(0);
             var numChannels = patterns.GetLength(1);
 
@@ -564,24 +511,13 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         uniquePatterns.Add(pattern);
-                        if (pattern.ChannelType == ChannelType.Dpcm)
+
+                        foreach (var n in pattern.Notes.Values)
                         {
-                            foreach (var n in pattern.Notes.Values)
-                            {
-                                var mapping = project.GetDPCMMapping(n.Value);
-                                if (mapping != null)
-                                    uniqueDPCMMappings[n.Value] = mapping;
-                            }
-                        }
-                        else
-                        {
-                            foreach (var n in pattern.Notes.Values)
-                            {
-                                if (n.Instrument != null)
-                                    uniqueInstruments.Add(n.Instrument);
-                                if (n.Arpeggio != null)
-                                    uniqueArpeggios.Add(n.Arpeggio);
-                            }
+                            if (n.Instrument != null)
+                                uniqueInstruments.Add(n.Instrument);
+                            if (n.Arpeggio != null)
+                                uniqueArpeggios.Add(n.Arpeggio);
                         }
                     }
                 }
@@ -595,7 +531,7 @@ namespace FamiStudio
 
             var serializer = new ProjectSaveBuffer(null);
 
-            SaveSampleList(serializer, uniqueDPCMMappings);
+            SaveSampleList(serializer, uniqueInstruments);
             SaveArpeggioList(serializer, uniqueArpeggios);
             SaveInstrumentList(serializer, uniqueInstruments);
             SavePatternList(serializer, uniquePatterns);

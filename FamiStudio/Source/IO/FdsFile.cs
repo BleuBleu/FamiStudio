@@ -27,6 +27,8 @@ namespace FamiStudio
         const int FdsFirstFileIndex  = 6;
         const int FdsBlockHeaderSize = 17;
 
+        public const int FdsMaxSongs = 12;
+
         private int FindString(byte[] fdsData, string str)
         {
             var filenameAscii = Encoding.ASCII.GetBytes(str);
@@ -87,8 +89,8 @@ namespace FamiStudio
                 if (songIds.Length == 0)
                     return false;
 
-                if (songIds.Length > MaxSongs)
-                    Array.Resize(ref songIds, MaxSongs);
+                if (songIds.Length > FdsMaxSongs)
+                    Array.Resize(ref songIds, FdsMaxSongs);
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
@@ -142,13 +144,13 @@ namespace FamiStudio
 #endif
 
                 var projectInfo = BuildProjectInfo(songIds, name, author);
-                var songTable   = BuildSongTableOfContent(project);
+                var songTable   = BuildSongTableOfContent(project, FdsMaxSongs);
 
                 // Export each song as an individual file.
                 for (int i = 0; i < project.Songs.Count; i++)
                 {
                     var song = project.Songs[i];
-                    var songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, FdsSongDataAddr, FdsDpcmStart, MachineType.NTSC);
+                    var songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, FdsSongDataAddr, -1, FdsDpcmStart, MachineType.NTSC);
 
                     songTable[i].bank  = (byte)fileIndex;
                     songTable[i].flags = (byte)(song.UsesDpcm ? dpcmFileIndex : 0xff);
@@ -191,7 +193,7 @@ namespace FamiStudio
 
                 Marshal.Copy(new IntPtr(&projectInfo), tocBytes, 0, sizeof(RomProjectInfo));
 
-                for (int i = 0; i < MaxSongs; i++)
+                for (int i = 0; i < FdsMaxSongs; i++)
                 {
                     fixed (RomSongEntry* songEntry = &songTable[i])
                         Marshal.Copy(new IntPtr(songEntry), tocBytes, sizeof(RomProjectInfo) + i * sizeof(RomSongEntry), sizeof(RomSongEntry));

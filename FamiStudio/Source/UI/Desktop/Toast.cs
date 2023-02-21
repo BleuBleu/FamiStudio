@@ -19,7 +19,6 @@ namespace FamiStudio
         private int alpha;
         private Action action;
 
-        public bool IsVisible => alpha > 0;
         public bool IsClickable => alpha > 0 && action != null;
 
         public void Initialize(string text, bool longDuration, Action click = null)
@@ -29,6 +28,7 @@ namespace FamiStudio
             timer = duration;
             action = click;
             alpha = 0;
+            Visible = true;
 
             Reposition();
             MarkDirty();
@@ -77,7 +77,7 @@ namespace FamiStudio
                     lines = null;
                     action = null;
                     duration = 0.0f;
-                    ParentContainer.RemoveControl(this);
+                    Visible = false;
                 }
 
                 SetAndMarkDirty(ref alpha, CalculateAlpha());

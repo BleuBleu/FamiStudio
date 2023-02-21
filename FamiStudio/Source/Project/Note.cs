@@ -67,9 +67,7 @@ namespace FamiStudio
         public const int MusicalNoteMax  = 0x60;
         public const int MusicalNoteC4   = 0x31;
         public const int MusicalNoteC7   = 0x55;
-        public const int DPCMNoteMin     = 0x0c;
-        public const int DPCMNoteMax     = 0x4b;
-        
+
         public const int EffectVolume       =  0;
         public const int EffectVibratoSpeed =  1; // 4Xy
         public const int EffectVibratoDepth =  2; // 4xY

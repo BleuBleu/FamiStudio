@@ -616,10 +616,6 @@ namespace FamiStudio
         {
         }
 
-        public void InitializeArray<T>(ref T[] array, int count) where T : new()
-        {
-        }
-
         public Project Project => null;
         public bool IsReading => false;
         public bool IsWriting => true;

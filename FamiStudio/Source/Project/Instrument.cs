@@ -13,6 +13,7 @@ namespace FamiStudio
         private Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         private Color color;
         private Project project;
+        private Dictionary<int, DPCMSampleMapping> samplesMapping;
 
         // FDS
         private byte    fdsMasterVolume = FdsMasterVolumeType.Volume100;
@@ -55,6 +56,7 @@ namespace FamiStudio
         public int Expansion => expansion;
         public bool IsExpansionInstrument => expansion != ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
+        public Dictionary<int, DPCMSampleMapping> SamplesMapping => samplesMapping;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
         public byte[] EpsmPatchRegs => epsmPatchRegs;
         public bool CanRelease =>
@@ -117,6 +119,10 @@ namespace FamiStudio
             {
                 epsmPatch = EpsmInstrumentPatch.Default;
                 Array.Copy(EpsmInstrumentPatch.Infos[EpsmInstrumentPatch.Default].data, epsmPatchRegs, 31);
+            }
+            else if (expansion == ExpansionType.None)
+            {
+                samplesMapping = new Dictionary<int, DPCMSampleMapping>();
             }
         }
 
@@ -550,6 +556,139 @@ namespace FamiStudio
             return serializer.CRC;
         }
 
+        public DPCMSampleMapping MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
+        {
+            Debug.Assert(Note.IsMusicalNote(note));
+
+            if (sample != null)
+            {
+                var mapping = new DPCMSampleMapping();
+                mapping.Sample = sample;
+                mapping.Pitch = pitch;
+                mapping.Loop = loop;
+                samplesMapping.Add(note, mapping);
+                return mapping;
+            }
+
+            return null;
+        }
+
+        public void UnmapDPCMSample(int note)
+        {
+            samplesMapping.Remove(note);
+        }
+
+        public DPCMSampleMapping GetDPCMMapping(int note)
+        {
+            samplesMapping.TryGetValue(note, out var mapping);
+            return mapping;
+        }
+
+        public int FindDPCMSampleMapping(DPCMSample sample, int pitch, bool loop)
+        {
+            foreach (var kv in samplesMapping)
+            {
+                if (kv.Value.Sample == sample &&
+                    kv.Value.Pitch  == pitch &&
+                    kv.Value.Loop   == loop)
+                {
+                    return kv.Key;
+                }
+            }
+
+            return -1;
+        }
+
+        public bool GetMinMaxMappedSampleIndex(out int minIdx, out int maxIdx)
+        {
+            minIdx = 999;
+            maxIdx = -1;
+
+            foreach (var kv in samplesMapping)
+            {
+                minIdx = Math.Min(kv.Key, minIdx);
+                maxIdx = Math.Max(kv.Key, maxIdx);
+            }
+
+            return maxIdx != -1;
+        }
+
+        public int GetTotalMappedSampleSize(List<DPCMSample> visitedSamples = null)
+        {
+            var size = 0;
+
+            if (samplesMapping != null)
+            {
+                if (visitedSamples == null)
+                {
+                    visitedSamples = new List<DPCMSample>();
+                }
+
+                foreach (var kv in samplesMapping)
+                {
+                    if (kv.Value.Sample != null && !visitedSamples.Contains(kv.Value.Sample))
+                    {
+                        visitedSamples.Add(kv.Value.Sample);
+                        size += Utils.AlignSampleOffset(kv.Value.Sample.ProcessedData.Length);
+                    }
+                }
+            }
+
+            return size;
+        }
+
+        public bool HasAnyMappedSamples
+        {
+            get
+            {
+                return samplesMapping != null && samplesMapping.Count > 0;
+            }
+        }
+
+        public void ReplaceSampleInAllMappings(DPCMSample oldSample, DPCMSample newSample)
+        {
+            foreach (var kv in samplesMapping)
+            {
+                if (kv.Value.Sample == oldSample)
+                {
+                    kv.Value.Sample = newSample;
+                }
+            }
+            
+            if (newSample == null)
+            {
+                ClearMappingsWithNullSamples();
+            }
+        }
+
+        private void ClearMappingsWithNullSamples()
+        {
+            var toRemove = (List<int>)null;
+
+            foreach (var kv in samplesMapping)
+            {
+                if (kv.Value.Sample == null)
+                {
+                    if (toRemove == null)
+                        toRemove = new List<int>();
+                    toRemove.Add(kv.Key);
+                }
+            }
+
+            if (toRemove != null)
+            {
+                foreach (var k in toRemove)
+                {
+                    samplesMapping.Remove(k);
+                }
+            }
+        }
+
+        public void DeleteAllMappings()
+        {
+            samplesMapping.Clear();
+        }
+
         public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
 #if DEBUG
@@ -601,6 +740,20 @@ namespace FamiStudio
                 Debug.Assert(N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset));
             if (IsFds && fdsWavPreset != WavePresetType.Custom)
                 Debug.Assert(FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset));
+
+            Debug.Assert(
+                expansion != ExpansionType.None && samplesMapping == null ||
+                expansion == ExpansionType.None && samplesMapping != null);
+
+            if (samplesMapping != null)
+            {
+                foreach (var kv in samplesMapping)
+                {
+                    Debug.Assert(kv.Value != null); // Null sample is ok-ish, null mapping isnt.
+                    Debug.Assert(kv.Value.Sample == null || project.Samples.Contains(kv.Value.Sample));
+                    kv.Value.ValidateIntegrity(project, idMap);
+                }
+            }
 #endif
         }
 
@@ -746,6 +899,51 @@ namespace FamiStudio
             {
                 envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
                 envelopes[EnvelopeType.WaveformRepeat].Length = 1;
+            }
+
+            if (IsRegular)
+            {
+                if (buffer.IsReading)
+                    samplesMapping = new Dictionary<int, DPCMSampleMapping>();
+                else if (!buffer.IsForUndoRedo)
+                    ClearMappingsWithNullSamples();
+
+                // At version 15 (FamiStudio 4.1.0) we moved DPCM samples mapping to instruments, a-la Famitracker.
+                if (buffer.Version >= 15)
+                {
+                    var mappingCount = samplesMapping.Count;
+                    buffer.Serialize(ref mappingCount);
+
+                    // Ugly, we should look into adding support for dictionaries in the ProjectBuffer.
+                    if (buffer.IsReading)
+                    {
+                        var mappingNotes = new int[mappingCount];
+                        for (var i = 0; i < mappingCount; i++)
+                        {
+                            buffer.Serialize(ref mappingNotes[i]);
+                        }
+
+                        for (var i = 0; i < mappingCount; i++)
+                        {
+                            var mapping = new DPCMSampleMapping();
+                            mapping.SerializeState(buffer);
+                            samplesMapping.Add(mappingNotes[i], mapping);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var kv in samplesMapping)
+                        {
+                            var note = kv.Key;
+                            buffer.Serialize(ref note);
+                        }
+
+                        foreach (var kv in samplesMapping)
+                        {
+                            kv.Value.SerializeState(buffer);
+                        }
+                    }
+                }
             }
 
             // Revert back presets to "customs" if they no longer match what the code generates.

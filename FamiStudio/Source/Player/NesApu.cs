@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace FamiStudio
 {
@@ -245,6 +246,8 @@ namespace FamiStudio
         public const double FreqC0 = 16.3516;
         public const double FreqRegMin = 15.8862;  //The minimum frequency displayed in the registers tab, C0 - 49.9893 cents
 
+        // When playing back in the app, we always put samples at 0xc000. Completely arbitrary.
+        public const int DPCMSampleAddr = 0xc000;
 
         // Volume set in Nes_Apu::volume for the DMC channel. This is simply to 
         // make sure our preview of DPCM sample somewhat matches the volume of 
@@ -747,9 +750,16 @@ namespace FamiStudio
             return NesApu.MaximumPeriod11Bit;
         }
 
+        public static ThreadLocal<byte[]> CurrentSample = new ThreadLocal<byte[]>();
+
         public static int DmcReadCallback(IntPtr data, int addr)
         {
-            return FamiStudio.StaticProject.GetSampleForAddress(addr - 0xc000);
+            var sample = CurrentSample.Value;
+            var offset = addr - DPCMSampleAddr;
+            if (sample == null || offset < 0 || offset >= sample.Length)
+                return DACDefaultValue;
+            else
+                return sample[offset];
         }
 
         public static void InitAndReset(int apuIdx, int sampleRate, bool pal, int seperateTndMode, int expansions, int numNamcoChannels, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)

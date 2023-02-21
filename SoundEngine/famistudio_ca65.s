@@ -207,6 +207,15 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 ; More information at: (TODO)
 ; FAMISTUDIO_USE_DELTA_COUNTER     = 1
 
+; Must be enabled if your project uses more than 1 bank of DPCM samples.
+; When using this, you must implement the "famistudio_dpcm_bank_callback" callback 
+; and switch to the correct bank every time a sample is played.
+; FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1
+
+; Must be enabled if your project uses more than 63 unique DPCM mappings (a mapping is DPCM sample
+; assigned to a note, with a specific pitch/loop, etc.). Implied when using FAMISTUDIO_USE_DPCM_BANKSWITCHING.
+; FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1
+
 .endif
 
 ; Memory location of the DPCM samples. Must be between $c000 and $ffc0, and a multiple of 64.
@@ -347,6 +356,14 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
     FAMISTUDIO_USE_RELEASE_NOTES = 0    
 .endif
 
+.ifndef FAMISTUDIO_USE_DPCM_EXTENDED_RANGE
+    FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 0
+.endif
+
+.ifndef FAMISTUDIO_USE_DPCM_BANKSWITCHING
+    FAMISTUDIO_USE_DPCM_BANKSWITCHING = 0
+.endif
+
 .ifndef FAMISTUDIO_CFG_THREAD
     FAMISTUDIO_CFG_THREAD = 0
 .endif
@@ -386,6 +403,10 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 
 .if FAMISTUDIO_USE_DELTA_COUNTER && (FAMISTUDIO_CFG_DPCM_SUPPORT = 0)
     .error "Delta counter only makes sense if DPCM samples are enabled."
+.endif
+
+.if FAMISTUDIO_USE_DPCM_BANKSWITCHING && (FAMISTUDIO_CFG_DPCM_SUPPORT = 0)
+    .error "DPCM bankswitching only makes sense if DPCM samples are enabled."
 .endif
 
 ; This is the best way i found to test if a C-style macro is defined or not... 
@@ -903,6 +924,9 @@ famistudio_ptr1_hi = famistudio_ptr1+1
 .exportzp FAMISTUDIO_SFX_CH1
 .exportzp FAMISTUDIO_SFX_CH2
 .exportzp FAMISTUDIO_SFX_CH3
+.endif
+.if FAMISTUDIO_USE_DPCM_BANKSWITCHING
+.global famistudio_dpcm_bank_callback
 .endif
 
 .segment .string(FAMISTUDIO_CA65_CODE_SEGMENT)
@@ -2951,7 +2975,7 @@ famistudio_update_row:
         ldx #4
         bne @no_new_note
         @play_sample:
-            sbc #12 ; Carry already set. HACK : We always add 12 to all single-byte notes, undoing here.
+            sbc #12 ; Carry already set. HACK : Our "notes" for DPCM start at SingleByteNoteMin (12). Need to undo that here. See C# code.
             jsr famistudio_music_sample_play
             ldx #4
             jmp @new_note
@@ -5144,18 +5168,42 @@ famistudio_sfx_sample_play:
 sample_play:
 
     @tmp = famistudio_r0
+    @sample_index = famistudio_r0
     @sample_data_ptr = famistudio_ptr0
 
-    asl ; Sample number * 4, offset in the sample table
+.if FAMISTUDIO_USE_DPCM_BANKSWITCHING || FAMISTUDIO_USE_DPCM_EXTENDED_RANGE
+    ; famistudio_dpcm_list + sample number * (4 or 5)
+    sta @sample_index
+    ldy #0
+    sty @sample_data_ptr+1
+    asl
+    rol @sample_data_ptr+1
     asl 
-    
-    clc
+    rol @sample_data_ptr+1 ; Will clear carry
+.if FAMISTUDIO_USE_DPCM_BANKSWITCHING
+    ; Multiply by 5 instead of 4.
+    adc @sample_index
+    bcc @add_list_ptr
+        inc @sample_data_ptr+1 
+        clc
+    @add_list_ptr:
+.endif
+        adc famistudio_dpcm_list_lo
+        sta @sample_data_ptr+0
+        lda @sample_data_ptr+1
+        adc famistudio_dpcm_list_hi
+        sta @sample_data_ptr+1    
+.else
+    asl ; Sample number * 4, offset in the sample table
+    asl ; Carry should be clear now, we dont allow more than 63 sample mappings.
     adc famistudio_dpcm_list_lo
     sta @sample_data_ptr+0
     lda #0
     adc famistudio_dpcm_list_hi
     sta @sample_data_ptr+1
+.endif
 
+@stop_dpcm:
     lda #%00001111 ; Stop DPCM
     sta FAMISTUDIO_APU_SND_CHN
 
@@ -5182,6 +5230,12 @@ sample_play:
 
     lda (@sample_data_ptr),y ; Initial DMC counter
     sta FAMISTUDIO_APU_DMC_RAW
+
+.if FAMISTUDIO_USE_DPCM_BANKSWITCHING
+    iny
+    lda (@sample_data_ptr),y ; Bank number
+    jsr famistudio_dpcm_bank_callback
+.endif
 
 @start_dmc:
     lda #%00011111 ; Start DMC

@@ -12,6 +12,7 @@ namespace FamiStudio
         private int id;
         private string name;
         private Color color;
+        private int bank = 0;
 
         // Source data
         private string sourceFilename = "";
@@ -41,8 +42,9 @@ namespace FamiStudio
 
         // Properties.
         public int Id => id;
-        public string Name { get => name; set => name = value; }
+        public string Name { get => name;  set => name  = value; }
         public Color Color { get => color; set => color = value; }
+        public int Bank    { get => bank;  set => bank  = value; }
 
         public string SourceFilename => sourceFilename;
         public bool SourceDataIsWav { get => sourceData is DPCMSampleWavSourceData; }
@@ -345,6 +347,7 @@ namespace FamiStudio
 
             Debug.Assert(project.GetSample(id) == this);
             Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
+            Debug.Assert(bank >= 0 && bank < Project.MaxDPCMBanks);
 #endif
         }
 
@@ -426,6 +429,10 @@ namespace FamiStudio
 
                 sourceData.SerializeState(buffer);
                 buffer.Serialize(ref color);
+
+                // At version 15 (FamiStudio 4.1.0) we added DPCM bankswitching.
+                if (buffer.Version >= 15)
+                    buffer.Serialize(ref bank);
 
                 // Processing parameters.
                 buffer.Serialize(ref sampleRate);
@@ -510,6 +517,26 @@ namespace FamiStudio
                 Debug.Assert(project.GetSample(sample.Id) == sample);
                 Debug.Assert(project.Samples.Contains(sample));
             }
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = sample.Id;
+            hash = Utils.HashCombine(hash, loop ? 1 : 0);
+            hash = Utils.HashCombine(hash, pitch);
+            hash = Utils.HashCombine(hash, overrideDmcInitialValue ? dmcInitialValueDiv2 : 0);
+            return hash;
+        }
+
+        public override bool Equals(object obj)
+        {
+            DPCMSampleMapping other = obj as DPCMSampleMapping;
+            return
+                sample == other.sample &&
+                loop == other.loop &&
+                pitch == other.pitch &&
+                overrideDmcInitialValue == other.overrideDmcInitialValue &&
+                dmcInitialValueDiv2 == other.dmcInitialValueDiv2;
         }
     }
 

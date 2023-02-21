@@ -185,6 +185,11 @@ namespace FamiStudio
             }
 
             toast.Tick(delta);
+
+            if (!toast.Visible)
+            {
+                RemoveControl(toast);
+            }
         }
 
         protected override void OnRender(Graphics g)
@@ -232,8 +237,8 @@ namespace FamiStudio
 
         public void ShowToast(string text, bool longDuration = false, Action click = null)
         {
-            toast.Initialize(text, longDuration, click);
             AddControl(toast);
+            toast.Initialize(text, longDuration, click);
         }
 
         public void UpdateLayout()

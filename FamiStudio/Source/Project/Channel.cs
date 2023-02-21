@@ -66,12 +66,6 @@ namespace FamiStudio
 
         public bool SupportsInstrument(Instrument instrument)
         {
-            if (instrument == null)
-                return type == ChannelType.Dpcm;
-
-            if (type == ChannelType.Dpcm)
-                return instrument == null;
-
             if (instrument.Expansion == ExpansionType.None && (IsRegularChannel || IsMmc5Channel))
                 return true;
 

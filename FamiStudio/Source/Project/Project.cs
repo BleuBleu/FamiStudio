@@ -21,13 +21,12 @@ namespace FamiStudio
         // Version 12 = FamiStudio 3.2.0 (Multiple expansions, overclocking)
         // Version 13 = FamiStudio 3.3.0 (EPSM, Delta counter)
         // Version 14 = FamiStudio 4.0.0 (Unicode text).
-        public static int Version = 14;
-        public static int MaxMappedSampleSize = 0x4000;
-        public static int MaxSampleAddress = 255 * 64;
+        // Version 15 = FamiStudio 4.1.0 (DPCM bankswitching)
+        public const int Version = 15;
+        public const int MaxMappedSampleSize = 0x40000;
+        public const int MaxDPCMBanks = 16; // Arbitrary.
+        public const int MaxSampleAddress = 255 * 64;
 
-        public static readonly string DPCMInstrumentName = "DPCM Instrument";
-
-        private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
         private List<DPCMSample> samples = new List<DPCMSample>();
         private List<Instrument> instruments = new List<Instrument>();
         private List<Arpeggio> arpeggios = new List<Arpeggio>();
@@ -44,41 +43,40 @@ namespace FamiStudio
         // This flag has different meaning depending on the tempo mode:
         //  - In FamiStudio  mode, it means the source data is authored on PAL
         //  - In FamiTracker mode, it means the last playback mode was PAL
-        private bool pal = false; 
+        private bool pal = false;
 
-        public List<DPCMSample>    Samples        => samples;
-        public DPCMSampleMapping[] SamplesMapping => samplesMapping;
-        public List<Instrument>    Instruments    => instruments;
-        public List<Song>          Songs          => songs;
-        public List<Arpeggio>      Arpeggios      => arpeggios;
+        public List<DPCMSample> Samples => samples;
+        public List<Instrument> Instruments => instruments;
+        public List<Song> Songs => songs;
+        public List<Arpeggio> Arpeggios => arpeggios;
 
-        public bool UsesFamiStudioTempo  => tempoMode == TempoType.FamiStudio;
+        public bool UsesFamiStudioTempo => tempoMode == TempoType.FamiStudio;
         public bool UsesFamiTrackerTempo => tempoMode == TempoType.FamiTracker;
 
-        public int ExpansionAudioMask       => expansionMask;
+        public int ExpansionAudioMask => expansionMask;
         public int ExpansionNumN163Channels => expansionNumN163Channels;
-        
+
         public int N163WaveRAMSize => 128 - 8 * expansionNumN163Channels;
 
-        public bool UsesAnyExpansionAudio       => (expansionMask != ExpansionType.NoneMask);
-        public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
+        public bool UsesAnyExpansionAudio => (expansionMask != ExpansionType.NoneMask);
+        public bool UsesSingleExpansionAudio => (Utils.NumberOfSetBits(expansionMask) == 1);
         public bool UsesMultipleExpansionAudios => (Utils.NumberOfSetBits(expansionMask) > 1);
-        
-        public bool UsesFdsExpansion  => (expansionMask & ExpansionType.FdsMask)  != 0;
+
+        public bool UsesFdsExpansion => (expansionMask & ExpansionType.FdsMask) != 0;
         public bool UsesN163Expansion => (expansionMask & ExpansionType.N163Mask) != 0;
         public bool UsesVrc6Expansion => (expansionMask & ExpansionType.Vrc6Mask) != 0;
         public bool UsesVrc7Expansion => (expansionMask & ExpansionType.Vrc7Mask) != 0;
         public bool UsesMmc5Expansion => (expansionMask & ExpansionType.Mmc5Mask) != 0;
-        public bool UsesS5BExpansion  => (expansionMask & ExpansionType.S5BMask)  != 0;
+        public bool UsesS5BExpansion => (expansionMask & ExpansionType.S5BMask) != 0;
         public bool UsesEPSMExpansion => (expansionMask & ExpansionType.EPSMMask) != 0;
 
         public bool OutputsStereoAudio => UsesEPSMExpansion;
 
-        public string Filename    { get => filename;  set => filename  = value; }
-        public string Name        { get => name;      set => name      = value; }
-        public string Author      { get => author;    set => author    = value; }
-        public string Copyright   { get => copyright; set => copyright = value; }
-        
+        public string Filename { get => filename; set => filename = value; }
+        public string Name { get => name; set => name = value; }
+        public string Author { get => author; set => author = value; }
+        public string Copyright { get => copyright; set => copyright = value; }
+
         public Project(bool createSongAndInstrument = false)
         {
             if (createSongAndInstrument)
@@ -128,6 +126,20 @@ namespace FamiStudio
                 return true;
 
             return (expansionMask & ExpansionType.GetMaskFromValue(type)) != 0;
+        }
+
+        public bool UsesMultipleDPCMBanks
+        {
+            get
+            {
+                foreach (var s in samples)
+                {
+                    if (s.Bank != 0)
+                        return true;
+                }
+
+                return false;
+            }
         }
 
         public Song GetSong(int id)
@@ -251,36 +263,8 @@ namespace FamiStudio
             return sample;
         }
 
-        public bool NoteSupportsDPCM(int note)
-        {
-            return note > Note.DPCMNoteMin && note <= Note.DPCMNoteMax;
-        }
-
-        public DPCMSampleMapping MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
-        {
-            if (sample != null && NoteSupportsDPCM(note))
-            {
-                note -= Note.DPCMNoteMin;
-
-                if (samplesMapping[note] == null)
-                {
-                    samplesMapping[note] = new DPCMSampleMapping();
-                    samplesMapping[note].Sample = sample;
-                    samplesMapping[note].Pitch = pitch;
-                    samplesMapping[note].Loop = loop;
-
-                    return samplesMapping[note];
-                }
-            }
-
-            return null;
-        }
-
         public void TransposeDPCMMapping(int oldNote, int newNote)
         {
-            Debug.Assert(NoteSupportsDPCM(oldNote));
-            Debug.Assert(NoteSupportsDPCM(newNote));
-
             foreach (var song in songs)
             {
                 var channel = song.Channels[ChannelType.Dpcm];
@@ -300,64 +284,6 @@ namespace FamiStudio
                         pattern.InvalidateCumulativeCache();
                 }
             }
-        }
-
-        public void UnmapDPCMSample(int note)
-        {
-            if (NoteSupportsDPCM(note))
-            {
-                samplesMapping[note - Note.DPCMNoteMin] = null;
-            }
-        }
-
-        public DPCMSampleMapping GetDPCMMapping(int note)
-        {
-            if (NoteSupportsDPCM(note))
-                return samplesMapping[note - Note.DPCMNoteMin];
-            else
-                return null;
-        }
-
-        public int FindDPCMSampleMapping(DPCMSample sample, int pitch, bool loop)
-        {
-            for (int i = 0; i < samplesMapping.Length; i++)
-            {
-                if (samplesMapping[i] != null && 
-                    samplesMapping[i].Sample == sample &&
-                    samplesMapping[i].Pitch  == pitch &&
-                    samplesMapping[i].Loop   == loop)
-                { 
-                    return i + Note.DPCMNoteMin;
-                }
-            }
-            
-            return -1;
-        }
-
-        public bool GetMinMaxMappedSampleIndex(out int minIdx, out int maxIdx)
-        {
-            minIdx = -1;
-            maxIdx = -1;
-
-            for (int i = 1; i < samplesMapping.Length; i++)
-            {
-                if (samplesMapping[i] != null)
-                {
-                    minIdx = i;
-                    break;
-                }
-            }
-
-            for (int i = samplesMapping.Length - 1; i >= 1; i--)
-            {
-                if (samplesMapping[i] != null)
-                {
-                    maxIdx = i;
-                    break;
-                }
-            }
-
-            return minIdx > 0 && maxIdx > 0;
         }
 
         public DPCMSample FindMatchingSample(byte[] data)
@@ -567,13 +493,13 @@ namespace FamiStudio
             ReplaceArpeggio(arpeggio, null);
         }
 
-        public void ReplaceSample(DPCMSample oldSample, DPCMSample newSample)
+        public void ReplaceSampleInAllMappings(DPCMSample oldSample, DPCMSample newSample)
         {
-            foreach (var mapping in samplesMapping)
+            foreach (var inst in instruments)
             {
-                if (mapping != null && mapping.Sample == oldSample)
+                if (inst.HasAnyMappedSamples)
                 {
-                    mapping.Sample = newSample;
+                    inst.ReplaceSampleInAllMappings(oldSample, newSample);
                 }
             }
         }
@@ -581,18 +507,19 @@ namespace FamiStudio
         public void DeleteSample(DPCMSample sample)
         {
             samples.Remove(sample);
-
-            for (int i = 0; i < samplesMapping.Length; i++)
-            {
-                if (samplesMapping[i] != null && samplesMapping[i].Sample == sample)
-                    samplesMapping[i] = null;
-            }
+            ReplaceSampleInAllMappings(sample, null);
         }
 
         public void DeleteAllSamples()
         {
-            for (int i = 0; i < samplesMapping.Length; i++)
-                samplesMapping[i] = null;
+            foreach (var inst in instruments)
+            {
+                if (inst.HasAnyMappedSamples)
+                {
+                    inst.DeleteAllMappings();
+                }
+            }
+
             samples.Clear();
         }
 
@@ -615,6 +542,31 @@ namespace FamiStudio
         public void DeleteAllArpeggios()
         {
             arpeggios.Clear();
+        }
+
+        public bool IsInstrumentUsedByOtherChannelThanDPCM(Instrument instrument)
+        {
+            foreach (var song in songs)
+            {
+                foreach (var channel in song.Channels)
+                {
+                    if (!channel.IsDpcmChannel)
+                    {
+                        foreach (var pattern in channel.Patterns)
+                        {
+                            foreach (var note in pattern.Notes.Values)
+                            {
+                                if (note.Instrument == instrument)
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         public string GenerateUniqueSongName(string baseName = "Song")
@@ -676,8 +628,6 @@ namespace FamiStudio
         {
             if (instrument.Name == name)
                 return true;
-            if (name == DPCMInstrumentName)
-                return false;
             if (string.IsNullOrEmpty(name))
                 return false;
 
@@ -902,20 +852,6 @@ namespace FamiStudio
                 return false;
             }
         }
-
-        public bool HasAnyMappedSamples
-        {
-            get
-            {
-                foreach (var mapping in samplesMapping)
-                {
-                    if (mapping != null)
-                        return true;
-                }
-
-                return false;
-            }
-        }
         
         public bool UsesSamples
         {
@@ -963,13 +899,11 @@ namespace FamiStudio
 
         public void DeleteUnmappedSamples()
         {
-            var usedSamples = new HashSet<DPCMSample>();
-            foreach (var mapping in samplesMapping)
+            var usedSamples = new List<DPCMSample>();
+
+            foreach (var inst in instruments)
             {
-                if (mapping != null)
-                {
-                    usedSamples.Add(mapping.Sample);
-                }
+                inst.GetTotalMappedSampleSize(usedSamples);
             }
 
             samples.Clear();
@@ -987,77 +921,6 @@ namespace FamiStudio
             }
         }
 
-        public int GetSampleForAddress(int offset)
-        {
-            lock (DPCMSample.ProcessedDataLock)
-            {
-                var addr = 0;
-                var visitedSamples = new List<DPCMSample>(samples.Count);
-
-                foreach (var mapping in samplesMapping)
-                {
-                    if (mapping != null && !visitedSamples.Contains(mapping.Sample))
-                    {
-                        var addrEnd = addr + ((mapping.Sample.ProcessedData.Length + 63) & 0xffc0);
-
-                        if (offset >= addr && offset < addrEnd)
-                        {
-                            var idx = offset - addr;
-
-                            if (idx < mapping.Sample.ProcessedData.Length)
-                                return mapping.Sample.ProcessedData[idx];
-                            else
-                                return 0x55;
-                        }
-
-                        addr = addrEnd;
-                        if (addr >= MaxMappedSampleSize)
-                            break;
-
-                        visitedSamples.Add(mapping.Sample);
-                    }
-                }
-
-                return addr;
-            }
-        }
-
-        public int GetAddressForSample(DPCMSample sample, out int len, out int dmcInitialValue)
-        {
-            lock (DPCMSample.ProcessedDataLock)
-            {
-                var addr = 0;
-                var visitedSamples = new List<DPCMSample>(samples.Count);
-
-                foreach (var mapping in samplesMapping)
-                {
-                    if (mapping != null && !visitedSamples.Contains(mapping.Sample))
-                    {
-                        if (mapping.Sample == sample)
-                        {
-                            len = mapping.Sample.ProcessedData.Length;
-                            dmcInitialValue = mapping.Sample.DmcInitialValueDiv2 * 2;
-                            return addr;
-                        }
-                        addr += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
-
-                        if (addr >= MaxMappedSampleSize)
-                        {
-                            len = 0;
-                            dmcInitialValue = NesApu.DACDefaultValue;
-                            return -1;
-                        }
-
-                        visitedSamples.Add(mapping.Sample);
-                    }
-                }
-
-                len = 0;
-                dmcInitialValue = NesApu.DACDefaultValue;
-                return addr;
-            }
-        }
-
         public int GetTotalMappedSampleSize()
         {
             lock (DPCMSample.ProcessedDataLock)
@@ -1065,41 +928,125 @@ namespace FamiStudio
                 var size = 0;
                 var visitedSamples = new List<DPCMSample>(samples.Count);
 
-                foreach (var mapping in samplesMapping)
+                foreach (var inst in instruments)
                 {
-                    if (mapping != null && !visitedSamples.Contains(mapping.Sample))
-                    {
-                        size += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
-                        visitedSamples.Add(mapping.Sample);
-                    }
+                    size += inst.GetTotalMappedSampleSize(visitedSamples);
                 }
 
                 return size;
             }
         }
 
-        public byte[] GetPackedSampleData()
+        public int AutoAssignSamplesBanks(int bankSize, out bool overflow)
         {
-            var sampleData = new List<byte>(MaxMappedSampleSize);
-            var visitedSamples = new List<DPCMSample>(samples.Count);
+            // This is basically a bin-packing problem. 
+            var sortedSamples = new List<DPCMSample>();
+            sortedSamples.AddRange(samples);
+            sortedSamples.Sort((s1, s2) => s2.ProcessedData.Length.CompareTo(s1.ProcessedData.Length));
 
-            foreach (var mapping in samplesMapping)
+            foreach (var s in sortedSamples)
+                s.Bank = -1;
+
+            overflow = false;
+
+            var numBanks  = 0;
+            var bankSizes = new int[MaxDPCMBanks];
+
+            for (var i = 0; i < sortedSamples.Count; i++)
             {
-                if (mapping != null && !visitedSamples.Contains(mapping.Sample))
-                {
-                    sampleData.AddRange(mapping.Sample.ProcessedData);
-                    var paddedSize = ((sampleData.Count + 63) & 0xffc0) - sampleData.Count;
-                    for (int i = 0; i < paddedSize; i++)
-                        sampleData.Add(0x55);
-                    visitedSamples.Add(mapping.Sample);
+                var sample = sortedSamples[i];
+                var sampleSize = Utils.AlignSampleOffset(sample.ProcessedData.Length);
+                var foundBank = false;
 
-                    if (sampleData.Count >= MaxMappedSampleSize)
+                // Try to insert in existing bank.
+                for (var j = 0; j < numBanks; j++)
+                {
+                    var bankRemainingSize = bankSize - bankSizes[j];
+                    if (bankRemainingSize >= sampleSize)
+                    {
+                        sample.Bank = j;
+                        bankSizes[j] += sampleSize;
+                        foundBank = true;
                         break;
+                    }
+                }
+
+                // Start a new bank otherwise
+                if (!foundBank)
+                {
+                    if (numBanks == MaxDPCMBanks - 1)
+                    {
+                        // Can't pack within budget, assign to bank zero, will get truncated.
+                        Log.LogMessage(LogSeverity.Warning, $"Unable to pack DPCM samples to stay within {MaxMappedSampleSize} bytes limit. Some samples will not play correctly.");
+                        sample.Bank = 0;
+                        overflow = true;
+                    }
+                    else
+                    {
+                        sample.Bank = numBanks;
+                        bankSizes[numBanks] += sampleSize;
+                        numBanks++;
+                    }
                 }
             }
 
-            if (sampleData.Count > MaxMappedSampleSize)
-                sampleData.RemoveRange(MaxMappedSampleSize, sampleData.Count - MaxMappedSampleSize);
+            return numBanks;
+        }
+
+        public List<DPCMSample> GetUsedSamplesInBank(int bank)
+        {
+            var samplesInBank = new List<DPCMSample>(samples.Count);
+
+            foreach (var inst in instruments)
+            {
+                if (inst.HasAnyMappedSamples)
+                {
+                    foreach (var kv in inst.SamplesMapping)
+                    {
+                        var s = kv.Value.Sample;
+                        if (s != null && s.Bank == bank && !samplesInBank.Contains(s))
+                            samplesInBank.Add(s);
+                    }
+                }
+            }
+
+            // Keep things a bit more deterministic.
+            samplesInBank.Sort((s1, s2) => s1.Id.CompareTo(s2.Id));
+
+            return samplesInBank;
+        }
+
+        public int GetSampleBankOffset(DPCMSample sample)
+        {
+            var samplesInSameBank = GetUsedSamplesInBank(sample.Bank);
+            var offset = 0;
+            
+            for (int i = 0; i < samplesInSameBank.Count; i++)
+            {
+                var s = samplesInSameBank[i];
+                if (s == sample)
+                    return offset;
+                offset += Utils.AlignSampleOffset(s.ProcessedData.Length);
+            }
+
+            return -1; // Sample isnt used.
+        }
+
+        public byte[] GetPackedSampleData(int bank = 0, int maxBankSize = -1)
+        {
+            var samplesInBank = GetUsedSamplesInBank(bank);
+            var sampleData = new List<byte>();
+
+            foreach (var sample in samplesInBank)
+            {
+                sampleData.AddRange(sample.ProcessedData);
+                var paddedSize = Utils.AlignSampleOffset(sampleData.Count) - sampleData.Count;
+                for (int i = 0; i < paddedSize; i++)
+                    sampleData.Add(0x55);
+            }
+
+            if (maxBankSize > 0 && sampleData.Count > maxBankSize)
+                sampleData.RemoveRange(maxBankSize, sampleData.Count - maxBankSize);
 
             return sampleData.ToArray();
         }
@@ -1199,6 +1146,30 @@ namespace FamiStudio
                 otherProject.ValidateIntegrity();
             }
 
+            // Match existing samples by name.
+            if (otherProject.Samples.Count > 0)
+            {
+                for (int i = 0; i < otherProject.samples.Count; i++)
+                {
+                    var otherSample = otherProject.samples[i];
+                    var existingSample = GetSample(otherSample.Name);
+                    if (existingSample != null)
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Project already contains a DPCM sample named '{existingSample.Name}', assuming it is the same.");
+
+                        otherProject.ReplaceSampleInAllMappings(otherSample, existingSample);
+                        otherProject.samples.Insert(otherProject.samples.IndexOf(otherSample), existingSample); // To pass validation.
+                        otherProject.DeleteSample(otherSample);
+                    }
+                    else
+                    {
+                        samples.Add(otherSample);
+                    }
+                }
+
+                ValidateIntegrity();
+            }
+
             // Match existing instruments by name.
             if (otherProject.instruments.Count > 0)
             {
@@ -1273,54 +1244,6 @@ namespace FamiStudio
                     else
                     {
                         arpeggios.Add(otherArpeggio);
-                    }
-                }
-
-                ValidateIntegrity();
-            }
-
-            // Match existing samples by name.
-            if (otherProject.Samples.Count > 0)
-            {
-                for (int i = 0; i < otherProject.samples.Count; i++)
-                {
-                    var otherSample = otherProject.samples[i];
-                    var existingSample = GetSample(otherSample.Name);
-                    if (existingSample != null)
-                    {
-                        Log.LogMessage(LogSeverity.Warning, $"Project already contains a DPCM sample named '{existingSample.Name}', assuming it is the same.");
-
-                        otherProject.ReplaceSample(otherSample, existingSample);
-                        otherProject.samples.Insert(otherProject.samples.IndexOf(otherSample), existingSample); // To pass validation.
-                        otherProject.DeleteSample(otherSample);
-                    }
-                    else
-                    {
-                        samples.Add(otherSample);
-                    }
-                }
-
-                ValidateIntegrity();
-            }
-
-            // Merge sample mappings.
-            if (otherProject.HasAnyMappedSamples)
-            {
-                for (int i = 0; i < samplesMapping.Length; i++)
-                {
-                    var thisMapping = samplesMapping[i];
-                    var otherMapping = otherProject.samplesMapping[i];
-
-                    if (otherMapping != null)
-                    {
-                        if (thisMapping == null)
-                        {
-                            samplesMapping[i] = otherMapping;
-                        }
-                        else
-                        {
-                            Log.LogMessage(LogSeverity.Warning, $"Project already has a sample mapped at key {Note.GetFriendlyName(Note.DPCMNoteMin + i)}, ignoring.");
-                        }
                     }
                 }
 
@@ -1453,34 +1376,44 @@ namespace FamiStudio
 
         public void UnmapUnusedSamples()
         {
-            var usedMappingIndices = new HashSet<int>();
-
-            foreach (var song in songs)
+            foreach (var inst in instruments)
             {
-                var channel = song.Channels[ChannelType.Dpcm];
-
-                for (int p = 0; p < song.Length; p++)
+                if (inst.HasAnyMappedSamples)
                 {
-                    var pattern = channel.PatternInstances[p];
-                    if (pattern != null)
+                    var unusedNotes = new HashSet<int>();
+
+                    foreach (var kv in inst.SamplesMapping)
                     {
-                        foreach (var note in pattern.Notes.Values)
+                        unusedNotes.Add(kv.Key);
+                    }
+
+                    foreach (var song in songs)
+                    {
+                        var channel = song.Channels[ChannelType.Dpcm];
+                        for (int p = 0; p < song.Length; p++)
                         {
-                            var mapping = GetDPCMMapping(note.Value);
-                            if (mapping != null)
+                            var pattern = channel.PatternInstances[p];
+                            if (pattern != null)
                             {
-                                usedMappingIndices.Add(note.Value - Note.DPCMNoteMin);
+                                foreach (var note in pattern.Notes.Values)
+                                {
+                                    if (note.IsMusical)
+                                    {
+                                        var mapping = inst.GetDPCMMapping(note.Value);
+                                        if (mapping != null && unusedNotes.Contains(note.Value))
+                                        {
+                                            unusedNotes.Remove(note.Value);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
 
-            for (int i = 0; i < samplesMapping.Length; i++)
-            {
-                if (samplesMapping[i] != null && !usedMappingIndices.Contains(i))
-                {
-                    samplesMapping[i] = null;
+                    foreach (var note in unusedNotes)
+                    {
+                        inst.UnmapDPCMSample(note);
+                    }
                 }
             }
         }
@@ -1570,36 +1503,12 @@ namespace FamiStudio
             EnsureNextIdIsLargeEnough(FindLargestUniqueId());
         }
 
-        private void ClearMappingsWithNullSamples()
-        {
-            for (int i = 0; i < samplesMapping.Length; i++)
-            {
-                if (samplesMapping[i] != null && samplesMapping[i].Sample == null)
-                    samplesMapping[i] = null;
-            }
-        }
-
-        public void DeleteAllMappings()
-        {
-            for (int i = 0; i < samplesMapping.Length; i++)
-                samplesMapping[i] = null;
-        }
-
 #if DEBUG
         private void ValidateDPCMSamples(Dictionary<int, object> idMap)
         {
             foreach (var sample in samples)
             {
                 sample.ValidateIntegrity(this, idMap);
-            }
-
-            foreach (var mapping in samplesMapping)
-            {
-                if (mapping != null)
-                {
-                    Debug.Assert(mapping.Sample != null);
-                    mapping.ValidateIntegrity(this, idMap);
-                }
             }
         }
 
@@ -1653,39 +1562,74 @@ namespace FamiStudio
                 sample.SerializeState(buffer);
         }
 
-        public void SerializeDPCMSamplesMapping(ProjectBuffer buffer)
+        // This is only used for pre-4.1.0 files where we had just 1 global "DPCM instrument".
+        public void SerializeOldDPCMSamplesMapping(ProjectBuffer buffer, out Dictionary<int, DPCMSampleMapping> legacyMappings)
         {
-            // Mapping
             ulong mappingMask = 0;
-            for (int i = 0; i < 64; i++)
-            {
-                if (samplesMapping[i] != null)
-                    mappingMask |= (((ulong)1) << i);
-            }
             buffer.Serialize(ref mappingMask);
 
-            for (int i = 0; i < 64; i++)
+            if (mappingMask != 0)
             {
-                if ((mappingMask & (((ulong)1) << i)) != 0)
+                legacyMappings = new Dictionary<int, DPCMSampleMapping>();
+
+                for (int i = 0; i < 64; i++)
                 {
-                    if (buffer.IsReading)
-                        samplesMapping[i] = new DPCMSampleMapping();
-                    samplesMapping[i].SerializeState(buffer);
+                    if ((mappingMask & (((ulong)1) << i)) != 0)
+                    {
+                        const int OldDPCMNoteMin = 0x0c;
+
+                        var mapping = new DPCMSampleMapping();
+                        mapping.SerializeState(buffer);
+                        legacyMappings.Add(OldDPCMNoteMin + i, mapping);
+                    }
                 }
-                else
-                {
-                    samplesMapping[i] = null;
-                }
+            }
+            else
+            {
+                legacyMappings = null;
             }
         }
 
-        public void SerializeDPCMState(ProjectBuffer buffer)
+        public void SerializeDPCMState(ProjectBuffer buffer, out Dictionary<int, DPCMSampleMapping> legacyMappings)
         {
             SerializeDPCMSamples(buffer);
-            SerializeDPCMSamplesMapping(buffer);
 
-            if (!buffer.IsForUndoRedo)
-                ClearMappingsWithNullSamples();
+            // At version 15 (FamiStudio 4.1.0) we moved DPCM samples mapping to instruments, a-la Famitracker.
+            if (buffer.Version < 15)
+            {
+                SerializeOldDPCMSamplesMapping(buffer, out legacyMappings);
+            }
+            else
+            {
+                legacyMappings = null;
+            }
+        }
+
+        private void CreateLegacyDPCMInstrument(Dictionary<int, DPCMSampleMapping> legacyMappings)
+        {
+            if (legacyMappings != null)
+            {
+                // Create the old "DPCM Instrument".
+                var dpcmInstrumentName = GetInstrument("DPCM Instrument") == null ? "DPCM Instrument" : GenerateUniqueInstrumentName("DPCM Instrument");
+                var dpcmInstrument = CreateInstrument(ExpansionType.None, dpcmInstrumentName);
+
+                foreach (var kv in legacyMappings)
+                {
+                    dpcmInstrument.MapDPCMSample(kv.Key, kv.Value.Sample, kv.Value.Pitch, kv.Value.Loop);
+                }
+
+                // Assign this instrument to all the notes of the DPCM channel (which had a "null" instrument before)
+                foreach (var song in songs)
+                {
+                    foreach (var pattern in song.Channels[ChannelType.Dpcm].Patterns)
+                    {
+                        foreach (var note in pattern.Notes.Values)
+                        {
+                            note.Instrument = dpcmInstrument;
+                        }
+                    }
+                }
+            }
         }
 
         public void SerializeInstrumentState(ProjectBuffer buffer)
@@ -1755,9 +1699,10 @@ namespace FamiStudio
             }
 
             // DPCM samples
+            var legacyMappings = (Dictionary<int, DPCMSampleMapping>)null;
             if (includeSamples)
             {
-                SerializeDPCMState(buffer);
+                SerializeDPCMState(buffer, out legacyMappings);
             }
 
             // Instruments
@@ -1775,7 +1720,11 @@ namespace FamiStudio
             buffer.Serialize(ref songCount);
             buffer.InitializeList(ref songs, songCount);
             foreach (var song in songs)
+            {
                 song.SerializeState(buffer);
+            }
+
+            CreateLegacyDPCMInstrument(legacyMappings);
 
             if (buffer.IsReading && !buffer.IsForUndoRedo)
             {
@@ -1783,7 +1732,6 @@ namespace FamiStudio
 
                 // At version 10 (FamiStudio 3.0.0) we allow users to re-order songs.
                 SortEverything(buffer.Version < 10);
-
             }
         }
 

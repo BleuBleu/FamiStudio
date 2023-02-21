@@ -393,9 +393,9 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                if (exportSongIds.Length > RomFileBase.MaxSongs)
+                if (exportSongIds.Length > RomFile.RomMaxSongs)
                 {
-                    Console.WriteLine("There is currently a hard limit of 8 songs for NES ROM export.");
+                    Console.WriteLine($"There is currently a hard limit of {RomFile.RomMaxSongs} songs for NES ROM export.");
                     return;
                 }
 
@@ -430,9 +430,9 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                if (exportSongIds.Length > RomFileBase.MaxSongs)
+                if (exportSongIds.Length > FdsFile.FdsMaxSongs)
                 {
-                    Console.WriteLine("There is currently a hard limit of 8 songs for FDS disk export.");
+                    Console.WriteLine($"There is currently a hard limit of {FdsFile.FdsMaxSongs} songs for FDS disk export.");
                     return;
                 }
 
@@ -513,7 +513,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        f.Save(project, new int[] { songId }, format, true, songFilename, dpcmFilename, includeFilename, MachineType.Dual);
+                        f.Save(project, new int[] { songId }, format, -1, true, songFilename, dpcmFilename, includeFilename, MachineType.Dual); 
                     }
                 }
                 else
@@ -523,7 +523,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    f.Save(project, exportSongIds, format, false, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual); 
+                    f.Save(project, exportSongIds, format, -1, false, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
                 }
             }
         }

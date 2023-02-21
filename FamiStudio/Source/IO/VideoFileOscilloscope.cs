@@ -36,21 +36,9 @@ namespace FamiStudio
                         }
                         else if (colorMode != OscilloscopeColorType.None)
                         {
-                            if (channels[j].channel.Type == ChannelType.Dpcm)
+                            if (note.Instrument != null && colorMode == OscilloscopeColorType.Instruments)
                             {
-                                if (colorMode == OscilloscopeColorType.InstrumentsAndSamples)
-                                {
-                                    var mapping = channels[j].channel.Song.Project.GetDPCMMapping(note.Value);
-                                    if (mapping != null)
-                                        color = mapping.Sample.Color;
-                                }
-                            }
-                            else
-                            {
-                                if (note.Instrument != null && (colorMode == OscilloscopeColorType.Instruments || colorMode == OscilloscopeColorType.InstrumentsAndSamples))
-                                {
-                                    color = note.Instrument.Color;
-                                }
+                                color = note.Instrument.Color;
                             }
                         }
 
@@ -185,14 +173,12 @@ namespace FamiStudio
     {
         public const int None = 0;
         public const int Instruments = 1;
-        public const int InstrumentsAndSamples = 2;
-        public const int Channel = 3;
+        public const int Channel = 2;
 
         public static readonly string[] Names =
         {
             "None",
             "Instruments",
-            "Instruments and Samples",
             "Channel (First pattern color)"
         };
 

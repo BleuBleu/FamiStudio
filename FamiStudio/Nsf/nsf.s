@@ -2,19 +2,21 @@
 .ifdef FAMISTUDIO
 
     ; Enable all features.
-    FAMISTUDIO_CFG_EXTERNAL          = 1
-    FAMISTUDIO_CFG_SMOOTH_VIBRATO    = 1
-    FAMISTUDIO_CFG_DPCM_SUPPORT      = 1
-    FAMISTUDIO_USE_VOLUME_TRACK      = 1
-    FAMISTUDIO_USE_VOLUME_SLIDES     = 1
-    FAMISTUDIO_USE_PITCH_TRACK       = 1
-    FAMISTUDIO_USE_SLIDE_NOTES       = 1
-    FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1
-    FAMISTUDIO_USE_VIBRATO           = 1
-    FAMISTUDIO_USE_ARPEGGIO          = 1
-    FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
-    FAMISTUDIO_USE_DELTA_COUNTER     = 1
-    FAMISTUDIO_USE_RELEASE_NOTES     = 1
+    FAMISTUDIO_CFG_EXTERNAL            = 1
+    FAMISTUDIO_CFG_SMOOTH_VIBRATO      = 1
+    FAMISTUDIO_CFG_DPCM_SUPPORT        = 1
+    FAMISTUDIO_USE_VOLUME_TRACK        = 1
+    FAMISTUDIO_USE_VOLUME_SLIDES       = 1
+    FAMISTUDIO_USE_PITCH_TRACK         = 1
+    FAMISTUDIO_USE_SLIDE_NOTES         = 1
+    FAMISTUDIO_USE_NOISE_SLIDE_NOTES   = 1
+    FAMISTUDIO_USE_VIBRATO             = 1
+    FAMISTUDIO_USE_ARPEGGIO            = 1
+    FAMISTUDIO_USE_DUTYCYCLE_EFFECT    = 1
+    FAMISTUDIO_USE_DELTA_COUNTER       = 1
+    FAMISTUDIO_USE_RELEASE_NOTES       = 1
+    FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1
+    FAMISTUDIO_USE_DPCM_BANKSWITCHING  = 1
 
     .define FAMISTUDIO_CA65_ZP_SEGMENT   ZEROPAGE
     .define FAMISTUDIO_CA65_RAM_SEGMENT  RAM
@@ -83,8 +85,9 @@ nsf_mode: .res 1
     
     ldy nsf_song_table+0, x
 
+    ; First map the full 0x9000 - 0xf000 to song data. 
 .if .not(.defined(FAMISTUDIO_MULTI_EXPANSION) || .defined(FAMISTUDIO_USE_EPSM))
-    ; First map the full 0x9000 - 0xf000 to song data. The multi-expansion NSF driver takes 2 pages.
+    ; The multi-expansion NSF driver code (and EPSM apparently) take 2 pages
     sty $5ff9
     iny
 .endif    
@@ -98,32 +101,7 @@ nsf_mode: .res 1
     iny
     sty $5ffe
     iny
-    sty $5fff
-    
-    ; Then map the samples at the very end (if 1 page => start at 0xf000, if 2 pages => start at 0xe000, etc.)
-    ldy nsf_dpcm_page_start
-    lda nsf_dpcm_page_cnt
-    beq samples_none
-    
-    cmp #1
-    beq samples_1_pages
-    cmp #2
-    beq samples_2_pages
-    cmp #3
-    beq samples_3_pages
-
-    samples_4_pages:
-        sty $5ffc
-        iny
-    samples_3_pages:
-        sty $5ffd
-        iny
-    samples_2_pages:
-        sty $5ffe
-        iny
-    samples_1_pages:
-        sty $5fff
-    samples_none:
+    sty $5fff ; Will be switch by DPCM (if any).
 
     ; Load song data and play
     ldy nsf_song_table+2, x ; hi-byte
@@ -173,9 +151,7 @@ nsf_mode: .res 1
 .segment "SONG_DATA"
 
 nsf_dpcm_page_start: .res 1
-nsf_dpcm_page_cnt:   .res 1
 nsf_expansion_mask:  .res 1
-nsf_unused:          .res 1
 
 ; each entry in the song table is 4 bytes
 ;  - first page of the song (1 byte)
@@ -183,3 +159,14 @@ nsf_unused:          .res 1
 ;  - unused (1-byte)
 
 nsf_song_table:      .res 4
+
+.segment "CODE"
+
+.ifdef FAMISTUDIO
+.proc famistudio_dpcm_bank_callback
+    clc
+    adc nsf_dpcm_page_start
+    sta $5fff
+    rts
+.endproc
+.endif

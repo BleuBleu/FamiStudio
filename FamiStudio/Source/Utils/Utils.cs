@@ -149,6 +149,11 @@ namespace FamiStudio
             return x / y;
         }
 
+        public static int AlignSampleOffset(int s)
+        {
+            return (s + 63) & 0xffc0;
+        }
+
         public static int NumDecimalDigits(int n)
         {
             int digits = 1;
@@ -264,6 +269,20 @@ namespace FamiStudio
             var filenameNoExtension = filename.Substring(0, filename.Length - extension.Length);
 
             return filenameNoExtension + suffix + extension;
+        }
+
+        public static void PadToNextBank(List<byte> bytes, int bankSize)
+        {
+            var offsetInPage = (bytes.Count & (bankSize - 1));
+            if (offsetInPage != 0)
+                bytes.AddRange(new byte[bankSize - offsetInPage]);
+        }
+
+        public static void PadToNextBank(ref byte[] bytes, int bankSize)
+        {
+            var offsetInPage = (bytes.Length & (bankSize - 1));
+            if (offsetInPage != 0)
+                Array.Resize(ref bytes, bankSize);
         }
 
         public static float SmoothStep(float x)

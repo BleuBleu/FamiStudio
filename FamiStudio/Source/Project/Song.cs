@@ -556,9 +556,9 @@ namespace FamiStudio
                     {
                         foreach (var note in pattern.Notes.Values)
                         {
-                            if (note.IsValid && !note.IsStop)
+                            if (note.IsMusical && note.Instrument != null)
                             {
-                                var mapping = project.GetDPCMMapping(note.Value);
+                                var mapping = note.Instrument.GetDPCMMapping(note.Value);
 
                                 if (mapping != null)
                                 {

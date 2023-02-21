@@ -16,8 +16,8 @@ namespace FamiStudio
         //   0x8060: nsf_play
         //   0x8080: FamiTone kernel code (variable size depending on expansion)
         //   0x8???: song table of content, 4 bytes per song:
-        //      - first page of the song (1 byte)
-        //      - address of the start of the song in page starting at 0x9000 (2 byte)
+        //      - first bank of the song (1 byte)
+        //      - address of the start of the song in bank starting at 0x9000 (2 byte)
         //      - flags (1 = use DPCM)
         //   0x????: DPCM samples, if any.
         //   0x????: Song data.
@@ -26,10 +26,10 @@ namespace FamiStudio
         const int NsfInitAddr        = 0x8000; // Hardcoded in asm config.
         const int NsfPlayAddr        = 0x8060; // Hardcoded in asm config.
         const int NsfKernelAddr      = 0x8080; // Hardcoded in asm config.
-        const int NsfDpcmOffset      = 0xc000;
-        const int NsfPageSize        = 0x1000;
+        const int NsfDpcmOffset      = 0xf000;
+        const int NsfBankSize        = 0x1000;
 
-        const int NsfGlobalVarsSize     = 4;
+        const int NsfGlobalVarsSize     = 2;
         const int NsfSongTableEntrySize = 4;
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -196,7 +196,7 @@ namespace FamiStudio
                 nsfBinStream.Seek(128, SeekOrigin.Begin);
                 nsfBinStream.Read(nsfBinBuffer, 0, nsfBinBuffer.Length);
 
-                var driverSizeRounded = Utils.RoundUp(nsfBinBuffer.Length, NsfPageSize);
+                var driverSizeRounded = Utils.RoundUp(nsfBinBuffer.Length, NsfBankSize);
 
                 nsfBytes.AddRange(nsfBinBuffer);
 
@@ -211,66 +211,39 @@ namespace FamiStudio
 
                 var songDataIdx  = nsfBytes.Count;
                 var dpcmBaseAddr = NsfDpcmOffset;
-                var dpcmPadding  = 0;
+                var dpcmBankSize = NsfBankSize;
 
                 if (project.UsesSamples)
                 {
-                    var totalSampleSize = project.GetTotalSampleSize();
+                    var numDpcmBanks = project.AutoAssignSamplesBanks(dpcmBankSize, out var overflow);
 
-                    // Samples need to be 64-bytes aligned.
-                    var initPaddingSize = 64 - (nsfBytes.Count & 0x3f);
-                    nsfBytes.AddRange(new byte[initPaddingSize]);
+                    Utils.PadToNextBank(nsfBytes, dpcmBankSize);
+                    
+                    var dpcmBankStart = (nsfBytes.Count) / NsfBankSize;
 
-                    // We start putting the samples right after the code, so the first page is not a
-                    // full one. If we have near 16KB of samples, we might go over the 4 page limit.
-                    // In this case, we will introduce padding until the next page.
-                    if (nsfBytes.Count + totalSampleSize > Project.MaxMappedSampleSize)
+                    for (int i = 0; i < numDpcmBanks; i++)
                     {
-                        dpcmPadding = NsfPageSize - (nsfBytes.Count & (NsfPageSize - 1));
-                        nsfBytes.AddRange(new byte[dpcmPadding]);
+                        nsfBytes.AddRange(project.GetPackedSampleData(i, dpcmBankSize));
+                        Utils.PadToNextBank(nsfBytes, dpcmBankSize);
                     }
 
-                    var dpcmPageStart = (nsfBytes.Count) / NsfPageSize;
-                    var dpcmPageEnd   = (nsfBytes.Count + totalSampleSize - 1) / NsfPageSize;
-                    var dpcmPageCount = dpcmPageEnd - dpcmPageStart + 1;
-
-                    // Otherwise we will allocate at least a full page for the samples and use the following mapping:
-                    //    0KB -  4KB samples: starts at 0xf000
-                    //    4KB -  8KB samples: starts at 0xe000
-                    //    8KB - 12KB samples: starts at 0xd000
-                    //   12KB - 16KB samples: starts at 0xc000
-                    dpcmBaseAddr += (4 - dpcmPageCount) * NsfPageSize + (nsfBytes.Count & (NsfPageSize - 1));
-
-                    nsfBytes.AddRange(project.GetPackedSampleData());
-
-                    nsfBytes[songTableIdx + 0] = (byte)dpcmPageStart;
-                    nsfBytes[songTableIdx + 1] = (byte)dpcmPageCount;
-
-                    Log.LogMessage(LogSeverity.Info, $"DPCM samples size: {totalSampleSize} bytes.");
-                    Log.LogMessage(LogSeverity.Info, $"DPCM padding size: {initPaddingSize + dpcmPadding} bytes.");
+                    nsfBytes[songTableIdx + 0] = (byte)(dpcmBankStart);
                 }
 
                 // This is only used in multi-expansion.
-                nsfBytes[songTableIdx + 2] = (byte)project.ExpansionAudioMask;
+                nsfBytes[songTableIdx + 1] = (byte)project.ExpansionAudioMask;
 
                 // Export each song individually, build TOC at the same time.
                 for (int i = 0; i < project.Songs.Count; i++)
                 {
                     var song = project.Songs[i];
 
-                    // If we are in the same page as the driver, the song will start in a 0x8000 address (0x9000 for multi and epsm)
-                    // so we need to increment the page by one so that the NSF driver correctly maps the subsequent pages.
-                    var samePageAsDriver = nsfBytes.Count < NsfPageSize;
-                    int page = nsfBytes.Count / NsfPageSize + (samePageAsDriver ? 1 : 0);
-                    int addr = NsfMemoryStart + (samePageAsDriver ? 0 : driverSizeRounded ) + (nsfBytes.Count & (NsfPageSize - 1));
-                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, machine);
-
-                    // If we introduced padding for the samples, we can try to squeeze a song in there.
-                    if (songBytes.Length < dpcmPadding)
-                    {
-                        // TODO. We should start writing at [songDataIdx] until we run out of dpcmPadding.
-                    }
-
+                    // If we are in the same bank as the driver, the song will start in a 0x8000 address (0x9000 for multi and epsm)
+                    // so we need to increment the bank by one so that the NSF driver correctly maps the subsequent banks.
+                    var sameBankAsDriver = nsfBytes.Count < NsfBankSize;
+                    int bank = nsfBytes.Count / NsfBankSize + (sameBankAsDriver ? 1 : 0);
+                    int addr = NsfMemoryStart + (sameBankAsDriver ? 0 : driverSizeRounded ) + (nsfBytes.Count & (NsfBankSize - 1));
+                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, dpcmBaseAddr, machine);
                     var maxSongAddr = project.UsesSamples ? dpcmBaseAddr : 0x10000;
 
                     if (addr + songBytes.Length > maxSongAddr)
@@ -280,7 +253,7 @@ namespace FamiStudio
                     }
 
                     var idx = songTableIdx + NsfGlobalVarsSize + i * NsfSongTableEntrySize;
-                    nsfBytes[idx + 0] = (byte)(page);
+                    nsfBytes[idx + 0] = (byte)(bank);
                     nsfBytes[idx + 1] = (byte)((addr >> 0) & 0xff);
                     nsfBytes[idx + 2] = (byte)((addr >> 8) & 0xff);
                     nsfBytes[idx + 3] = (byte)0;
@@ -671,7 +644,27 @@ namespace FamiStudio
 
             return project.CreateInstrument(ExpansionType.S5B, "S5B");
         }
-        
+
+        private Instrument GetDPCMInstrument()
+        {
+            var inst = project.GetInstrument($"DPCM Instrument");
+
+            if (inst == null)
+                return project.CreateInstrument(ExpansionType.None, "DPCM Instrument");
+            if (inst.SamplesMapping.Count < (Note.MusicalNoteMax - Note.MusicalNoteMin + 1))
+                return inst;
+
+            for (int i = 1; ; i++)
+            {
+                inst = project.GetInstrument($"DPCM Instrument {i}");
+
+                if (inst == null)
+                    return project.CreateInstrument(ExpansionType.None, $"DPCM Instrument {i}");
+                if (inst.SamplesMapping.Count < (Note.MusicalNoteMax - Note.MusicalNoteMin + 1))
+                    return inst;
+            }
+        }
+
         private bool UpdateChannel(int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
@@ -704,25 +697,34 @@ namespace FamiStudio
 
                     var loop  = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMLOOP, 0) != 0;
                     var pitch = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMPITCH, 0);
+                    var noteValue = -1;
+                    var dpcmInst = (Instrument)null;
 
-                    var noteValue = project.FindDPCMSampleMapping(sample, pitch, loop);
-                    if (noteValue == -1)
+                    foreach (var inst in project.Instruments)
                     {
-                        for (int i = Note.DPCMNoteMin + 1; i <= Note.DPCMNoteMax; i++)
+                        if (inst.HasAnyMappedSamples)
                         {
-                            if (project.GetDPCMMapping(i) == null)
+                            noteValue = inst.FindDPCMSampleMapping(sample, pitch, loop);
+                            if (noteValue >= 0)
                             {
-                                noteValue = i;
-                                project.MapDPCMSample(i, sample, pitch, loop);
+                                dpcmInst = inst;
                                 break;
                             }
                         }
                     }
 
-                    if (noteValue != -1)
+                    if (noteValue < 0)
+                    {
+                        dpcmInst = GetDPCMInstrument();
+                        noteValue = dpcmInst.SamplesMapping.Count + 1;
+                        dpcmInst.MapDPCMSample(noteValue, sample, pitch, loop);
+                    }
+
+                    if (Note.IsMusicalNote(noteValue))
                     {
                         var note = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n);
                         note.Value = (byte)noteValue;
+                        note.Instrument = dpcmInst;
                         if (state.dmc != dmc)
                         {
                             note.DeltaCounter = (byte)dmc;
