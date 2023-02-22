@@ -2686,7 +2686,16 @@ namespace FamiStudio
                 textY += r.fonts.FontVeryLarge.LineHeight;
                 r.f.DrawText($"{editInstrument.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} bytes used by this instrument", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
                 textY += r.fonts.FontMedium.LineHeight;
-                r.f.DrawText($"{App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} bytes used overall", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+                
+                for (int i = 0; i < Project.MaxDPCMBanks; i++)
+                {
+                    var bankSize = App.Project.GetBankSize(i);
+                    if (bankSize > 0)
+                    {
+                        r.f.DrawText($"{bankSize} bytes used in bank {i}", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+                        textY += r.fonts.FontMedium.LineHeight;
+                    }
+                }
             }
         }
 

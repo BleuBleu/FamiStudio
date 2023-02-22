@@ -650,7 +650,7 @@ namespace FamiStudio
                 if (expComp != 0)
                     return expComp;
                 else
-                    return i1.Name.CompareTo(i2.Name);
+                    return AlphaNumericComparer.CompareStatic(i1.Name, i2.Name);
             });
         }
 
@@ -675,7 +675,7 @@ namespace FamiStudio
         {
             arpeggios.Sort((a1, a2) =>
             {
-                    return a1.Name.CompareTo(a2.Name);
+                return AlphaNumericComparer.CompareStatic(a1.Name, a2.Name);
             });
         }
 
@@ -698,7 +698,10 @@ namespace FamiStudio
 
         public void SortSamples()
         {
-            samples.Sort((s1, s2) => s1.Name.CompareTo(s2.Name) );
+            samples.Sort((s1, s2) =>
+            {
+                return AlphaNumericComparer.CompareStatic(s1.Name, s2.Name);
+            });
         }
 
         public bool RenameSong(Song song, string name)
@@ -719,7 +722,10 @@ namespace FamiStudio
 
         public void SortSongs()
         {
-            songs.Sort((s1, s2) => s1.Name.CompareTo(s2.Name));
+            songs.Sort((s1, s2) =>
+            {
+                return AlphaNumericComparer.CompareStatic(s1.Name, s2.Name);
+            });
         }
 
         public void MoveSong(Song song, Song songBefore)
@@ -1030,6 +1036,19 @@ namespace FamiStudio
             }
 
             return -1; // Sample isnt used.
+        }
+
+        public int GetBankSize(int bank)
+        {
+            var samplesInBank = GetUsedSamplesInBank(bank);
+            var size = 0;
+
+            for (int i = 0; i < samplesInBank.Count; i++)
+            {
+                size += Utils.AlignSampleOffset(samplesInBank[i].ProcessedData.Length);
+            }
+
+            return size;
         }
 
         public byte[] GetPackedSampleData(int bank = 0, int maxBankSize = -1)

@@ -175,6 +175,7 @@
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
     <Compile Include="Source\UI\Windows\Cursors.cs" />
     <Compile Include="Source\UI\Windows\FamiStudioWindow.cs" />
+    <Compile Include="Source\Utils\AlphaNumericSort.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
