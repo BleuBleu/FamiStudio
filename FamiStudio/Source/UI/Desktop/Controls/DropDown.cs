@@ -174,6 +174,18 @@ namespace FamiStudio
                     ListClosing?.Invoke(this);
                 listOpened = open;
                 listJustOpened = open;
+
+                if (open)
+                {
+                    GrabDialogFocus();
+                    height = rowHeight * numItemsInList;
+                }
+                else
+                {
+                    ClearDialogFocus();
+                    height = rowHeight;
+                }
+
                 MarkDirty();
             }
 
@@ -263,41 +275,41 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             var bmpSize = bmpArrow.ElementSize;
-            var cb = g.GetCommandList();
+            var c = g.DefaultCommandList;
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
             if (!transparent)
-                cb.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover && enabled ? Theme.DarkGreyColor3 : Theme.DarkGreyColor1, color);
+                c.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover && enabled ? Theme.DarkGreyColor3 : Theme.DarkGreyColor1, color);
             
-            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyColor2 : color);
+            c.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyColor2 : color);
 
             if (selectedIndex >= 0)
-                cb.DrawText(items[selectedIndex], Fonts.FontMedium, margin, 0, color, TextFlags.MiddleLeft, 0, rowHeight);
+                c.DrawText(items[selectedIndex], Fonts.FontMedium, margin, 0, color, TextFlags.MiddleLeft, 0, rowHeight);
 
             if (listOpened)
             {
-                var cf = g.GetCommandList(GraphicsLayer.Foreground);
+                var o = g.OverlayCommandList;
                 var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
                 var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
-                cf.PushTranslation(0, rowHeight);
-                cf.FillAndDrawRectangle(0, 0, width - 1, numItemsInList * rowHeight - 1, Theme.DarkGreyColor1, Theme.LightGreyColor1);
+                o.PushTranslation(0, rowHeight);
+                o.FillAndDrawRectangle(0, 0, width - 1, numItemsInList * rowHeight - 1, Theme.DarkGreyColor1, Theme.LightGreyColor1);
 
                 for (int i = 0; i < numItemsInList; i++)
                 {
                     var absItemIndex = i + listScroll;
                     if (absItemIndex == selectedIndex || absItemIndex == listHover)
-                        cf.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, absItemIndex == selectedIndex ? Theme.DarkGreyColor4 : Theme.DarkGreyColor3);
-                    cf.DrawText(items[absItemIndex], Fonts.FontMedium, margin, i * rowHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
+                        o.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, absItemIndex == selectedIndex ? Theme.DarkGreyColor4 : Theme.DarkGreyColor3);
+                    o.DrawText(items[absItemIndex], Fonts.FontMedium, margin, i * rowHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
                 }
 
                 if (hasScrollBar)
                 {
-                    cf.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, MaxItemsInList * rowHeight - 1, Theme.DarkGreyColor4, Theme.LightGreyColor1);
-                    cf.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize - 1, Theme.MediumGreyColor1, Theme.LightGreyColor1);
+                    o.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, MaxItemsInList * rowHeight - 1, Theme.DarkGreyColor4, Theme.LightGreyColor1);
+                    o.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize - 1, Theme.MediumGreyColor1, Theme.LightGreyColor1);
                 }
 
-                cf.PopTransform();
+                o.PopTransform();
             }
         }
     }

@@ -1,7 +1,8 @@
 Minor UI stuff:
 x Context menu to copy/paste EPSM/VRC7 register values as text.
-- Way to convert instrument between expansions.
 - Allow instrument re-ordering + button for alpha sort (+ option to always keep sorted).
+	=> Is there already a drag instrument thing?
+- Way to convert instrument between expansions.
 - Alphabetical ordering should be a bit smarter about numbers.
 - CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
 - Option to set snapping auto depending on last resize.
@@ -17,6 +18,7 @@ x Context menu to copy/paste EPSM/VRC7 register values as text.
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
 - BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
+	=> Overlay works, cant click when outside.
 - Full S5B support? Sync up with Perkka when im back.
 - Add temple raiders demo song (MMC5)
 - Add replace with current instrument on PC.

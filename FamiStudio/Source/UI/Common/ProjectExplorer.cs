@@ -3865,7 +3865,7 @@ namespace FamiStudio
                         }
                     }
 
-                    if (inst.IsVrc7 || inst.IsEpsm)
+                    if (Platform.IsDesktop && (inst.IsVrc7 || inst.IsEpsm))
                     {
                         // MATTT : Paste icon!
                         menu.Add(new ContextMenuOption("MenuCopy", "Copy Register Values as Text", () => { CopyRegisterValues(inst); }, ContextMenuSeparator.Before));
