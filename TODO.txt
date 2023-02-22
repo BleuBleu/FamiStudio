@@ -1,37 +1,35 @@
+Minor UI stuff:
+x Context menu to copy/paste EPSM/VRC7 register values as text.
+- Way to convert instrument between expansions.
+- Allow instrument re-ordering + button for alpha sort (+ option to always keep sorted).
+- Alphabetical ordering should be a bit smarter about numbers.
+- CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
+- Option to set snapping auto depending on last resize.
+- Volume/effect/envelope scaling, easy one we have context menus.
 
-4.0.7
+4.1.0
 =====
+- Is there any reason now to not allow changing DPI on MacOS??? 
+- Export DMC samples on Mobile.
+- Linux : new openal+ smarter detection. Need a way to try the OS one + my one if it fails.
+- Mark : Option to prevent android from going to sleep while playing.
+- Stereo export and NSF import on Android?
+- "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
+- BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
+- BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
+- Full S5B support? Sync up with Perkka when im back.
 - Add temple raiders demo song (MMC5)
 - Add replace with current instrument on PC.
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 - Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
 - Bug NSF vibrato github
 - N163 multiplex?
-- Numpad delete
-- Context menu to copy/paste EPSM/VRC7 register values as text.
+- Numpad delete (No sure GLFW can do it?)
 - Add confirmation for overwrite on mobile
-
-DPCM
-====
-
-4.1.0
-=====
-- Way to convert instrument between expansions.
-- CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
-- Is there any reason now to not allow changing DPI on MacOS??? 
-- Export DMC samples on Mobile.
-- Mark : Option to prevent android from going to sleep while playing.
-- Option to set snapping auto depending on last resize.
-- Dual APU (VT02) support? Does Mesen or NSFPlay support it?
-- Stereo export and NSF import on Android?
-- Proportionnal volume adjust
-- "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
-- BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
-- BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
 
 Testing
 =======
-- All ROM exports, FDS too.
+- All ROM exports, FDS too (make sure we give nice error msg for too much DPCM).
 - FT2 NSF
 - Run unit test for DPCM
 - Test DPCM w/ multi
@@ -140,23 +138,20 @@ Backlog:
 - FDS oscilloscope can assert if you use modulation table to produce very low sound.
 - Fix "SeparateChannelsExportTndMode"
 - Can we pahse reset N163? Steo mentionned that in very low note, he notices that the waveform starts from the middle.
+- Dual APU (VT02) support? Mesen doesnt support it, fuck it. 
 - S5B is 1 octave off. Periods are 12 bits, so technically can do lower, but we still bottom at A0???
 - Shy mode on mobile?
-- Linux : new openal+ smarter detection. Need a way to try the OS one + my one if it fails.
-- BUG : Quit menu doesnt nothing on MacOS
+- BUG : Quit menu does nothing on MacOS
 - Weird shift when using an external display with different scaling (ex: 100% vs 150%)
 - Add effect to select N163 wave. How does it react in FT.
 - Full range volume for expansions?
 - Different aspect ratios for video export?
 - Improve linux file dialog (Steo feedback)
 - Hold SHIFT+click for multiple delete.
-- Improve expansion tooltips.
 - Idea from perkka "When an instrument is selected. Have the channels thats not supported by it slightly faded out, or the channel names that support it in bold or something"
 - Do a pass on tooltips for ParamProviders.
 - Left resize to preserve release position?
-- Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 - Display number of selected channels in grid for video export?
-- Dark mode for open/save dialogs on MacOS? + title bar?
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
 - Reorder channels for video export.
@@ -165,11 +160,9 @@ Backlog:
 - Scales
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
-- Alphabetical ordering should be a bit smarter about numbers.
 - Sound output selection?
 - Give better names to auto saves
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
-- Volume/effect scaling, easy one we have context menus.
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Paste special, option to rename patterns.
 - ffmpeg path on Linux should work on path (Puna on CC discord).

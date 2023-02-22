@@ -3792,6 +3792,52 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        private void CopyRegisterValues(Instrument inst)
+        {
+            Debug.Assert(inst.IsVrc7 || inst.IsEpsm);
+
+            var regs = inst.IsVrc7 ? inst.Vrc7PatchRegs : inst.EpsmPatchRegs;            
+            var str = $"{regs[0]:x2}";
+            for (var i = 1; i < regs.Length; i++)
+                str += $" {regs[i]:x2}";
+
+            Platform.SetClipboardString(str);
+        }
+
+        private void PasteRegisterValues(Instrument inst)
+        {
+            var str = Platform.GetClipboardString();
+
+            if (string.IsNullOrEmpty(str))
+            {
+                App.DisplayNotification("No valid text found in the clipboard");
+                return;
+            }
+
+            var splits = str.Split(new[] { ' ' });
+            var regs = inst.IsVrc7 ? inst.Vrc7PatchRegs : inst.EpsmPatchRegs;
+
+            if (splits.Length != regs.Length)
+            {
+                App.DisplayNotification("Invalid number of registers");
+                return;
+            }
+
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
+
+            for (int i = 0; i < splits.Length; i++)
+            {
+                try { regs[i] = (byte)Convert.ToInt32(splits[i], 16); } catch { }
+            }
+
+            if (inst.IsVrc7)
+                inst.Vrc7Patch = 0;
+            else
+                inst.EpsmPatch = 0;
+
+            App.UndoRedoManager.EndTransaction();
+        }
+
         private bool HandleContextMenuInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
             var menu = new List<ContextMenuOption>();
@@ -3817,6 +3863,13 @@ namespace FamiStudio
                         {
                             menu.Add(new ContextMenuOption("MenuTrash", "Discard Resample Wav Data", () => { ClearN163FdsResampleWavData(inst); }));
                         }
+                    }
+
+                    if (inst.IsVrc7 || inst.IsEpsm)
+                    {
+                        // MATTT : Paste icon!
+                        menu.Add(new ContextMenuOption("MenuCopy", "Copy Register Values as Text", () => { CopyRegisterValues(inst); }, ContextMenuSeparator.Before));
+                        menu.Add(new ContextMenuOption("MenuCopy", "Paste Register Values from Text", () => { PasteRegisterValues(inst); }));
                     }
 
                     menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateInstrument(inst); }, ContextMenuSeparator.Before));
