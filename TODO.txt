@@ -51,7 +51,7 @@ Testing
 - Windows 7 is no longer supported.
 - Configurable keyboard shortcuts
 - Text rendering changes, small text may look slightly blurrier. 
-- More UI scaling % options (TODO : Add a few more on mobile too)
+- More UI scaling % options
 - DPCM improvements:
 	- No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
 	- Up to 256KB of samples using bank switching.
