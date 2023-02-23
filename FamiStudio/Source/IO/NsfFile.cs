@@ -10,27 +10,32 @@ namespace FamiStudio
 {
     public class NsfFile
     {
-        // NSF memory layout
-        //   0x8000: start of code
-        //   0x8000: nsf_init
-        //   0x8060: nsf_play
-        //   0x8080: FamiTone kernel code (variable size depending on expansion)
-        //   0x8???: song table of content, 4 bytes per song:
-        //      - first bank of the song (1 byte)
-        //      - address of the start of the song in bank starting at 0x9000 (2 byte)
-        //      - flags (1 = use DPCM)
-        //   0x????: DPCM samples, if any.
-        //   0x????: Song data.
+        // NSF memory layout (for 1-bank sized driver).
+        //   - 8000-cfff: Song data
+        //   - e000-efff: DPCM (if any)
+        //   - f000-ffff: Engine code + song table + vectors.
+        //     - f000: nsf_init
+        //     - f060: nsf_play
+        //     - f080: driver code
+        //     - ff00: Song table of content.
+        //     - fffa: Vectors
+        //
+        // We have drivers that are 1, 2 and 3 bank large. 
+        //   - 1 page : DPCM is a e000-efff and code is in f000-ffff (as above).
+        //   - 2 page : DPCM is a d000-dfff and code is in e000-ffff.
+        //   - 3 page : DPCM is a c000-cfff and code is in d000-ffff.
 
         const int NsfMemoryStart     = 0x8000;
-        const int NsfInitAddr        = 0x8000; // Hardcoded in asm config.
-        const int NsfPlayAddr        = 0x8060; // Hardcoded in asm config.
-        const int NsfKernelAddr      = 0x8080; // Hardcoded in asm config.
-        const int NsfDpcmOffset      = 0xf000;
+        const int NsfInitOffset      = 0x0000;
+        const int NsfPlayOffset      = 0x0060;
+        const int NsfKernelOffset    = 0x0080;
         const int NsfBankSize        = 0x1000;
 
-        const int NsfGlobalVarsSize     = 2;
+        const int NsfGlobalVarsSize     = 4;
         const int NsfSongTableEntrySize = 4;
+        const int NsfHeaderSize         = 128;
+        const int NsfSongTableSize      = 256;
+        const int NsfMaxSongs           = (NsfSongTableSize - NsfGlobalVarsSize - 6) / NsfSongTableEntrySize; // 6 is for vectors.
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         unsafe struct NsfHeader
@@ -192,36 +197,33 @@ namespace FamiStudio
 
                 // Code/sound engine
                 var nsfBinStream = typeof(NsfFile).Assembly.GetManifestResourceStream("FamiStudio.Nsf." + kernelBinary);
-                var nsfBinBuffer = new byte[nsfBinStream.Length - 128]; // Skip header.
-                nsfBinStream.Seek(128, SeekOrigin.Begin);
+                var nsfBinBuffer = new byte[nsfBinStream.Length - NsfHeaderSize]; // Skip header.
+                nsfBinStream.Seek(NsfHeaderSize, SeekOrigin.Begin);
                 nsfBinStream.Read(nsfBinBuffer, 0, nsfBinBuffer.Length);
 
                 var driverSizeRounded = Utils.RoundUp(nsfBinBuffer.Length, NsfBankSize);
+                var driverBankCount = driverSizeRounded / NsfBankSize;
 
                 nsfBytes.AddRange(nsfBinBuffer);
 
                 Log.LogMessage(LogSeverity.Info, $"Sound engine code size: {nsfBinBuffer.Length} bytes.");
 
-                var songTableIdx  = nsfBytes.Count;
-                var songTableSize = NsfGlobalVarsSize + project.Songs.Count * NsfSongTableEntrySize;
-
-                nsfBytes.AddRange(new byte[songTableSize]);
-
-                Log.LogMessage(LogSeverity.Info, $"Song table size: {songTableSize} bytes.");
-
+                var songTableIdx = nsfBytes.Count - NsfSongTableSize;
                 var songDataIdx  = nsfBytes.Count;
-                var dpcmBaseAddr = NsfDpcmOffset;
+                var codeBaseAddr = 0x10000 - driverSizeRounded;
+                var dpcmBaseAddr = codeBaseAddr - NsfBankSize;
                 var dpcmBankSize = NsfBankSize;
+                var dpcmNumBanks = 0;
 
                 if (project.UsesSamples)
                 {
-                    var numDpcmBanks = project.AutoAssignSamplesBanks(dpcmBankSize, out var overflow);
+                    dpcmNumBanks = project.AutoAssignSamplesBanks(dpcmBankSize, out var overflow);
 
                     Utils.PadToNextBank(nsfBytes, dpcmBankSize);
                     
                     var dpcmBankStart = (nsfBytes.Count) / NsfBankSize;
 
-                    for (int i = 0; i < numDpcmBanks; i++)
+                    for (int i = 0; i < dpcmNumBanks; i++)
                     {
                         nsfBytes.AddRange(project.GetPackedSampleData(i, dpcmBankSize));
                         Utils.PadToNextBank(nsfBytes, dpcmBankSize);
@@ -230,21 +232,19 @@ namespace FamiStudio
                     nsfBytes[songTableIdx + 0] = (byte)(dpcmBankStart);
                 }
 
-                // This is only used in multi-expansion.
-                nsfBytes[songTableIdx + 1] = (byte)project.ExpansionAudioMask;
+                nsfBytes[songTableIdx + 1] = (byte)((dpcmBaseAddr >> 12) - 8);
+                nsfBytes[songTableIdx + 2] = (byte)project.ExpansionAudioMask;
+                nsfBytes[songTableIdx + 3] = (byte)(8 - driverBankCount - dpcmNumBanks);
 
                 // Export each song individually, build TOC at the same time.
                 for (int i = 0; i < project.Songs.Count; i++)
                 {
                     var song = project.Songs[i];
 
-                    // If we are in the same bank as the driver, the song will start in a 0x8000 address (0x9000 for multi and epsm)
-                    // so we need to increment the bank by one so that the NSF driver correctly maps the subsequent banks.
-                    var sameBankAsDriver = nsfBytes.Count < NsfBankSize;
-                    int bank = nsfBytes.Count / NsfBankSize + (sameBankAsDriver ? 1 : 0);
-                    int addr = NsfMemoryStart + (sameBankAsDriver ? 0 : driverSizeRounded ) + (nsfBytes.Count & (NsfBankSize - 1));
+                    int bank = nsfBytes.Count / NsfBankSize;
+                    int addr = NsfMemoryStart + (nsfBytes.Count & (NsfBankSize - 1));
                     var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, dpcmBaseAddr, machine);
-                    var maxSongAddr = project.UsesSamples ? dpcmBaseAddr : 0x10000;
+                    var maxSongAddr = project.UsesSamples ? dpcmBaseAddr : codeBaseAddr;
 
                     if (addr + songBytes.Length > maxSongAddr)
                     {
@@ -288,9 +288,9 @@ namespace FamiStudio
                         p += sizeof(NsfeChunkHeader);
 
                         NsfeInfoChunk* infoChunk = (NsfeInfoChunk*)p;
-                        infoChunk->loadAddr = 0x8000;
-                        infoChunk->initAddr = NsfInitAddr;
-                        infoChunk->playAddr = NsfPlayAddr;
+                        infoChunk->loadAddr = (ushort)(codeBaseAddr);
+                        infoChunk->initAddr = (ushort)(codeBaseAddr + NsfInitOffset);
+                        infoChunk->playAddr = (ushort)(codeBaseAddr + NsfPlayOffset);
                         infoChunk->palNtscFlags = (byte)machine;
                         infoChunk->extensionFlags = GetNsfExtensionFlags(project.ExpansionAudioMask);
                         infoChunk->numSongs = (byte)project.Songs.Count;
@@ -302,14 +302,8 @@ namespace FamiStudio
                         bankHeader->SetId("BANK");
                         bankHeader->size = 8;
                         p += sizeof(NsfeChunkHeader);
-                        p[0] = 0;
-                        p[1] = 1;
-                        p[2] = 2;
-                        p[3] = 3;
-                        p[4] = 4;
-                        p[5] = 5;
-                        p[6] = 6;
-                        p[7] = 7;
+                        for (int i = 0, j = 0; i < 8; i++)
+                            p[i] = i >= 8 - driverBankCount ? (byte)(j++) : (byte)(i + driverBankCount);
                         p += 8;
 
                         // auth chunk.
@@ -405,21 +399,16 @@ namespace FamiStudio
                     header.version = 1;
                     header.numSongs = (byte)project.Songs.Count;
                     header.startingSong = 1;
-                    header.loadAddr = 0x8000;
-                    header.initAddr = NsfInitAddr;
-                    header.playAddr = NsfPlayAddr;
+                    header.loadAddr = (ushort)(codeBaseAddr);
+                    header.initAddr = (ushort)(codeBaseAddr + NsfInitOffset);
+                    header.playAddr = (ushort)(codeBaseAddr + NsfPlayOffset);
                     header.playSpeedNTSC = 16639;
                     header.playSpeedPAL = 19997;
                     header.palNtscFlags = (byte)machine;
                     header.extensionFlags = GetNsfExtensionFlags(project.ExpansionAudioMask);
-                    header.banks[0] = 0;
-                    header.banks[1] = 1;
-                    header.banks[2] = 2;
-                    header.banks[3] = 3;
-                    header.banks[4] = 4;
-                    header.banks[5] = 5;
-                    header.banks[6] = 6;
-                    header.banks[7] = 7;
+
+                    for (int i = 0, j = 0; i < 8; i++)
+                        header.banks[i] = i >= 8 - driverBankCount ? (byte)(j++) : (byte)(i + driverBankCount);
 
                     var nameBytes      = Encoding.ASCII.GetBytes(name);
                     var artistBytes    = Encoding.ASCII.GetBytes(author);

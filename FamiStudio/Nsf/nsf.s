@@ -65,15 +65,17 @@ header:   .res 128
 nsf_mode: .res 1
 .endif
 
+nsf_song_table_idx: .res 1
+
 .segment "CODE_INIT"
 
 ; [in] a = song index.
 .proc nsf_init
 
     ; Each table entry is 4-bytes:
-    ;   - start page (1-byte)
-    ;   - start addr in page starting at $9000 (2-byte)
-    ;   - flags (3 low bits = num dpcm pages)
+    ;   - start bank (1-byte)
+    ;   - start addr in bank (2-byte)
+    ;   - flags/unused (1-byte)
     
 .if .defined(NSF_NTSC_SUPPORT) && .defined(NSF_PAL_SUPPORT)
     stx nsf_mode
@@ -82,28 +84,23 @@ nsf_mode: .res 1
     asl
     asl
     tax
-    
+    stx nsf_song_table_idx
+
     ldy nsf_song_table+0, x
 
     ; First map the full 0x9000 - 0xf000 to song data. 
-.if .not(.defined(FAMISTUDIO_MULTI_EXPANSION) || .defined(FAMISTUDIO_USE_EPSM))
     ; The multi-expansion NSF driver code (and EPSM apparently) take 2 pages
-    sty $5ff9
-    iny
-.endif    
-    sty $5ffa
-    iny
-    sty $5ffb
-    iny
-    sty $5ffc
-    iny
-    sty $5ffd
-    iny
-    sty $5ffe
-    iny
-    sty $5fff ; Will be switch by DPCM (if any).
+    ldx #0
+    @bank_loop:
+        tya  
+        sta $5ff8, x
+        inx
+        iny
+        cpx nsf_num_song_banks
+        bne @bank_loop
 
     ; Load song data and play
+    ldx nsf_song_table_idx
     ldy nsf_song_table+2, x ; hi-byte
     lda nsf_song_table+1, x ; lo-byte
     tax
@@ -150,15 +147,18 @@ nsf_mode: .res 1
 
 .segment "SONG_DATA"
 
+; Global variables.
 nsf_dpcm_page_start: .res 1
+nsf_dpcm_page_reg:   .res 1
 nsf_expansion_mask:  .res 1
+nsf_num_song_banks:  .res 1
 
-; each entry in the song table is 4 bytes
+; Song table : each entry is 4 bytes
 ;  - first page of the song (1 byte)
 ;  - address of the start of the song in page starting at 0x9000 (2 byte)
 ;  - unused (1-byte)
 
-nsf_song_table:      .res 4
+nsf_song_table:      .res 252
 
 .segment "CODE"
 
@@ -166,7 +166,8 @@ nsf_song_table:      .res 4
 .proc famistudio_dpcm_bank_callback
     clc
     adc nsf_dpcm_page_start
-    sta $5fff
+    ldx nsf_dpcm_page_reg
+    sta $5ff8, x
     rts
 .endproc
 .endif

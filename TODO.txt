@@ -3,7 +3,7 @@ x Context menu to copy/paste EPSM/VRC7 register values as text.
 - Allow instrument re-ordering + button for alpha sort (+ option to always keep sorted).
 	=> Is there already a drag instrument thing?
 - Way to convert instrument between expansions.
-- Alphabetical ordering should be a bit smarter about numbers.
+x Alphabetical ordering should be a bit smarter about numbers.
 - CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
 - Option to set snapping auto depending on last resize.
 - Volume/effect/envelope scaling, easy one we have context menus.
@@ -28,6 +28,8 @@ x Context menu to copy/paste EPSM/VRC7 register values as text.
 - N163 multiplex?
 - Numpad delete (No sure GLFW can do it?)
 - Add confirmation for overwrite on mobile
+- Preset instruments
+- PWM stuff from how2.
 
 Testing
 =======
