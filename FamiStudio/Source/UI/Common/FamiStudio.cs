@@ -2010,33 +2010,33 @@ namespace FamiStudio
         public void TogglePlaySong()
         {
             if (IsPlaying)
-                PlaySong();
-            else
                 StopSong();
+            else
+                PlaySong();
         }
 
         public void TogglePlaySongFromBeginning()
         {
             if (IsPlaying)
-                PlaySongFromBeginning();
-            else
                 StopSong();
+            else
+                PlaySongFromBeginning();
         }
 
         public void TogglePlaySongFromStartOfPattern()
         {
             if (IsPlaying)
-                PlaySongFromStartOfPattern();
-            else
                 StopSong();
+            else
+                PlaySongFromStartOfPattern();
         }
 
         public void TogglePlaySongFromLoopPoint()
         {
             if (IsPlaying)
-                PlaySongFromLoopPoint();
-            else
                 StopSong();
+            else
+                PlaySongFromLoopPoint();
         }
 
         public void StopSong()
