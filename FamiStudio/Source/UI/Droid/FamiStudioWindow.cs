@@ -122,7 +122,7 @@ namespace FamiStudio
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
 
             EnableFullscreenMode(Window);
-            Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
+            ForceScreenOn(false);
 
         #if DEBUG
             Debug.Listeners.Add(new DebuggerBreakListener());
@@ -208,7 +208,7 @@ namespace FamiStudio
             intent.SetType(mimeType);
             intent.PutExtra(Intent.ExtraTitle, filename);
             StartActivityForResult(intent, activeDialog.RequestCode);
-            Window.AddFlags(WindowManagerFlags.KeepScreenOn);
+            ForceScreenOn(true);
         }
 
         public void StartPropertyDialogActivity(Action<DialogResult> callback, PropertyDialog dlg)
@@ -341,7 +341,15 @@ namespace FamiStudio
             Debug.Assert(saveInfo != null);
             pendingFinishDialog = null;
             saveInfo.Finish(commit, callback);
-            Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
+            ForceScreenOn(false);
+        }
+
+        public void ForceScreenOn(bool on)
+        {
+            if (on)
+                Window.AddFlags(WindowManagerFlags.KeepScreenOn);
+            else
+                Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
         }
 
         private void UpdateForceLandscape()

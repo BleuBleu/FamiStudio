@@ -7,18 +7,16 @@ Minor UI stuff:
 
 4.1.0
 =====
+- Bug NSF vibrato github
 - Is there any reason now to not allow changing DPI on MacOS??? 
 - Export DMC samples on Mobile.
 - Linux : new openal+ smarter detection. Need a way to try the OS one + my one if it fails.
-- Mark : Option to prevent android from going to sleep while playing.
 - Stereo export and NSF import on Android?
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
-	=> Overlay works, cant click when outside.
 - Full S5B support? Sync up with Perkka when im back.
 - Add temple raiders demo song (MMC5)
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 - Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
-- Bug NSF vibrato github
 - N163 multiplex?
 - Numpad delete (No sure GLFW can do it?)
 - Add confirmation for overwrite on mobile
@@ -53,6 +51,7 @@ Testing
 - Configurable keyboard shortcuts
 - Text rendering changes, small text may look slightly blurrier. 
 - More UI scaling % options
+- More context menus options throughout the app
 - DPCM improvements:
 	- No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
 	- Up to 256KB of samples using bank switching.

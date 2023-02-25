@@ -239,6 +239,10 @@ namespace FamiStudio
         {
         }
 
+        public static void ForceScreenOn(bool on)
+        {
+        }
+
         public static void ShowToast(FamiStudioWindow win, string text, bool longDuration = false, Action click = null)
         {
             win.ShowToast(text, longDuration, click);

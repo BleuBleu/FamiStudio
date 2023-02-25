@@ -1980,6 +1980,7 @@ namespace FamiStudio
                 instrumentPlayer.ConnectOscilloscope(null);
                 songPlayer.ConnectOscilloscope(oscilloscope);
                 songPlayer.Play(song, songPlayer.PlayPosition, palPlayback);
+                Platform.ForceScreenOn(true);
             }
         }
         
@@ -2061,6 +2062,7 @@ namespace FamiStudio
                     lastTickCurrentFrame = -1;
                 }
 
+                Platform.ForceScreenOn(false);
                 MarkEverythingDirty();
             }
         }

@@ -216,6 +216,11 @@ namespace FamiStudio
             }
         }
 
+        public static void ForceScreenOn(bool on)
+        {
+            FamiStudioWindow.Instance.ForceScreenOn(on);
+        }
+
         public static void ShowToast(FamiStudioWindow win, string message, bool longDuration = false, Action click = null)
         {
             MainThread.InvokeOnMainThreadAsync(() =>
