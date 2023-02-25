@@ -159,6 +159,11 @@ namespace FamiStudio
             return p;
         }
 
+        public virtual bool HitTest(int winX, int winY)
+        {
+            return WindowRectangle.Contains(winX, winY);
+        }
+
         public Point ScreenToControl(Point p) 
         {
             return WindowToControl(ParentWindow.ScreenToWindow(p));

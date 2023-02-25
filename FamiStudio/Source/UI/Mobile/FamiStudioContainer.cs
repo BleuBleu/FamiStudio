@@ -152,22 +152,6 @@ namespace FamiStudio
             return base.CanInteractWithContainer(c);
         }
 
-        public override Control GetControlAt(Int32 winX, Int32 winY, out Int32 ctrlX, out Int32 ctrlY)
-        {
-            var ctrl = base.GetControlAt(winX, winY, out ctrlX, out ctrlY);
-
-            // HACK : When the toolbar is open, eat the input so we can close it.
-            if (toolbar.IsExpanded && !(ctrl == toolbar || ctrl.ParentContainer == toolbar))
-            {
-                var winPos = ctrl.WindowPosition;
-                ctrlX = winX - winPos.X;
-                ctrlY = winY - winPos.Y;
-                return toolbar;
-            }
-
-            return ctrl;
-        }
-
         private void RenderTransitionOverlay(Graphics g)
         {
             if (transitionTimer > 0.0f)

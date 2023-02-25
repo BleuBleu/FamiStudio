@@ -206,6 +206,12 @@ namespace FamiStudio
             base.OnResize(e);
         }
 
+        public override bool HitTest(int winX, int winY)
+        {
+            // Eat all the input when expanded.
+            return IsExpanded || base.HitTest(winX, winY);
+        }
+
         private void TickFling(float delta)
         {
             if (flingVelY != 0.0f)
@@ -657,15 +663,6 @@ namespace FamiStudio
             var project = App.Project;
             var channel = App.SelectedChannel;
             var items = new List<ListItem>();
-
-            if (editingChannel && channel.SupportsInstrument(null))
-            {
-                var dpcmItem = new ListItem();
-                dpcmItem.Color = Theme.LightGreyColor1;
-                dpcmItem.Image = bmpExpansions[ExpansionType.None];
-                dpcmItem.Text = "DPCM";
-                items.Add(dpcmItem);
-            }
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {

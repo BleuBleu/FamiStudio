@@ -140,9 +140,9 @@ namespace FamiStudio
 
         private bool GetDPCMKeyColor(int note, out Color color)
         {
-            if (App.SelectedChannel.Type == ChannelType.Dpcm)
+            if (App.SelectedChannel.Type == ChannelType.Dpcm && App.SelectedInstrument != null && App.SelectedInstrument.HasAnyMappedSamples)
             {
-                var mapping = App.Project.GetDPCMMapping(note);
+                var mapping = App.SelectedInstrument.GetDPCMMapping(note);
                 if (mapping != null)
                 {
                     color = mapping.Sample.Color;

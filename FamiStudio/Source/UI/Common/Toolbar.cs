@@ -559,6 +559,12 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        public override bool HitTest(int winX, int winY)
+        {
+            // Eat all the input when expanded.
+            return Platform.IsMobile && IsExpanded || base.HitTest(winX, winY);
+        }
+
         public void SetToolTip(string msg, bool red = false)
         {
             if (tooltip != msg || red != redTooltip)
