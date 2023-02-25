@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -66,6 +66,7 @@ namespace FamiStudio
         public const int EXTSOUND_MMC5  = 0x08;
         public const int EXTSOUND_N163  = 0x10;
         public const int EXTSOUND_S5B   = 0x20;
+        public const int EXTSOUND_EPSM  = 0x80;
 
         public const int STATE_VOLUME             = 0;
         public const int STATE_PERIOD             = 1;
@@ -93,5 +94,6 @@ namespace FamiStudio
         public const int STATE_N163NUMCHANNELS    = 23;
         public const int STATE_S5BMIXER           = 24;
         public const int STATE_S5BNOISEFREQUENCY  = 25;
+        public const int STATE_STEREO             = 26;
     }
 }

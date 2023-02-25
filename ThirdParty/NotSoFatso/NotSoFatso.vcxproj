@@ -110,6 +110,7 @@
     <ClInclude Include="fmopl.h" />
     <ClInclude Include="NSF_Core.h" />
     <ClInclude Include="NSF_File.h" />
+    <ClInclude Include="Wave_EPSM.h" />
     <ClInclude Include="Wave_FDS.h" />
     <ClInclude Include="Wave_FME07.h" />
     <ClInclude Include="Wave_MMC5.h" />
