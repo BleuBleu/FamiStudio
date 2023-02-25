@@ -57,9 +57,9 @@ namespace FamiStudio
             AddControl(sequencer);
             AddControl(pianoRoll);
             AddControl(projectExplorer);
-            AddControl(toolbar);
             AddControl(mobilePiano);
-            AddControl(quickAccessBar); // Needs to be last, draws on top of everything.
+            AddControl(toolbar); // Toolbar + quickaccess need to be last, draws on top of everything.
+            AddControl(quickAccessBar);
         }
 
         // CTRLTODO : Show/hide controls as needed.

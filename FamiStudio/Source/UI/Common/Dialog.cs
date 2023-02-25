@@ -175,6 +175,11 @@ namespace FamiStudio
             return base.GetControlAt(winX, winY, out ctrlX, out ctrlY);
         }
 
+        public override bool HitTest(int winX, int winY)
+        {
+            return true; // The top dialog eats all the input.
+        }
+
         private List<string> SplitLongString(string str)
         {
             var splits = new List<string>();

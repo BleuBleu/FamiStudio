@@ -91,26 +91,6 @@ namespace FamiStudio
             return true;
         }
 
-        public override Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
-        {
-            if (IsDialogActive)
-            {
-                // A bit of a hack here. Give a change to the top dialog first. This
-                // handles cases where a drop down list (for example), extends outside
-                // of the rectangle of the dialog itself. 
-                var ctrl = TopDialog.GetControlAt(winX, winY, out ctrlX, out ctrlY);
-                if (ctrl != null)
-                {
-                    var winPos = ctrl.WindowPosition;
-                    ctrlX = winX - winPos.X;
-                    ctrlY = winY - winPos.Y;
-                    return ctrl;
-                }
-            }
-
-            return base.GetControlAt(winX, winY, out ctrlX, out ctrlY);
-        }
-
         public List<Control> GetControlsForKeyboard(out bool isMainFamistudioControls)
         {
             var keyControls = new List<Control>();
