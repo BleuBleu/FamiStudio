@@ -547,6 +547,8 @@
     <EmbeddedResource Include="Resources\Atlas\MenuFile@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuForceDisplay.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuForceDisplay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuInstance.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuInstance@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuLoopPoint.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuLoopPoint@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuMute.tga" />

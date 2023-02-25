@@ -623,14 +623,15 @@ namespace FamiStudio
                 var sx = GetPixelForNote(Song.GetPatternLength(i), false);
                 var color = i == hoverPattern ? Theme.MediumGreyColor1 : ((i & 1) == 0 ? Theme.DarkGreyColor4 : Theme.DarkGreyColor2);
                 b.FillRectangle(px, 0, px + sx, headerSizeY, color);
+            }
 
-                if (IsValidTimeOnlySelection())
-                {
-                    c.FillRectangle(
-                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), 0,
-                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), headerSizeY,
-                        IsActiveControl ? selectedPatternVisibleColor : selectedPatternInvisibleColor);
-                }
+            // Header selection
+            if (IsValidTimeOnlySelection())
+            {
+                c.FillRectangle(
+                    GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), 0,
+                    GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), headerSizeY,
+                    IsActiveControl ? selectedPatternVisibleColor : selectedPatternInvisibleColor);
             }
 
             // Header
@@ -690,8 +691,8 @@ namespace FamiStudio
                 if (GetMinMaxSelectedRow(out var minSelRow, out var maxSelRow))
                 {
                     c.FillRectangle(
-                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), channelSizeY * (minSelRow + 0) + headerSizeY - scrollY,
-                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), channelSizeY * (maxSelRow + 1) + headerSizeY - scrollY,
+                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), channelSizeY * (minSelRow + 0) - scrollY,
+                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), channelSizeY * (maxSelRow + 1) - scrollY,
                         IsActiveControl ? selectedPatternVisibleColor : selectedPatternInvisibleColor);
                 }
             }
@@ -1729,9 +1730,10 @@ namespace FamiStudio
                     menu.Add(new ContextMenuOption("MenuPiano", "Go To Piano Roll", () => { GotoPianoRoll(location); }));
                 }
 
-                if (Platform.IsMobile && IsSelectionValid() && !IsPatternSelected(location))
+                if (IsSelectionValid() && !IsPatternSelected(location))
                 {
-                    menu.Add(new ContextMenuOption("MenuExpandSelection", "Expand Selection", () => { EnsureSelectionInclude(location); }));
+                    if (Platform.IsMobile)
+                        menu.Add(new ContextMenuOption("MenuExpandSelection", "Expand Selection", () => { EnsureSelectionInclude(location); }));
                     if (selectionMin.ChannelIndex == location.ChannelIndex)
                         menu.Add(new ContextMenuOption("MenuInstance", "Instanciate Selection Here", () => { CopySelectionToCursor(false); }));
                     menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate Selection Here", () => { CopySelectionToCursor(true); }));

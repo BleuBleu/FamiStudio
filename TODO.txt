@@ -4,7 +4,7 @@ x Context menu to copy/paste EPSM/VRC7 register values as text.
 	=> Is there already a drag instrument thing?
 - Way to convert instrument between expansions.
 x Alphabetical ordering should be a bit smarter about numbers.
-- CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
+x CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
 - Option to set snapping auto depending on last resize.
 - Volume/effect/envelope scaling, easy one we have context menus.
 
@@ -31,6 +31,7 @@ x Alphabetical ordering should be a bit smarter about numbers.
 - Preset instruments
 - PWM stuff from how2.
 - BUG : Shovel Knight song has weird instrument names.
+- BUG : Android suspend/pause issues. Null project sometimes.
 
 Testing
 =======
