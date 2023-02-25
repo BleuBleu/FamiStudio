@@ -30,11 +30,13 @@ x Alphabetical ordering should be a bit smarter about numbers.
 - Add confirmation for overwrite on mobile
 - Preset instruments
 - PWM stuff from how2.
+- BUG : Shovel Knight song has weird instrument names.
 
 Testing
 =======
 - All ROM exports, FDS too (make sure we give nice error msg for too much DPCM).
 - FT2 NSF
+- Multiple songs in NSF with the new layout.
 - Run unit test for DPCM
 - Test DPCM w/ multi
 - Recompile/re-export sound engine demo roms. Bump version. (no DPCM bank switching here)

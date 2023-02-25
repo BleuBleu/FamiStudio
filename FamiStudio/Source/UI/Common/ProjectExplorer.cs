@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -2865,44 +2865,51 @@ namespace FamiStudio
 
             if (App.Project.NeedsExpansionInstruments)
             {
-                var activeExpansions = App.Project.GetActiveExpansions();
-                var expNames = new List<string>();
-
-                var dlg = new PropertyDialog(ParentWindow, "Add Instrument", new Point(left + x, top + y), 260, true);
-                dlg.Properties.AddLabel(null, "Select audio expansion:"); // 0
-
-                expNames.Add(ExpansionType.Names[ExpansionType.None]);
-                dlg.Properties.AddRadioButton(Platform.IsMobile ? "Select audio expansion" : null, expNames[0], true);
-
-                for (int i = 1; i < activeExpansions.Length; i++)
+                if (Platform.IsDesktop)
                 {
-                    if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
-                    {
-                        var expName = ExpansionType.Names[activeExpansions[i]];
-                        dlg.Properties.AddRadioButton(null, expName, false);
-                        expNames.Add(expName);
-                    }
+                    HandleContextMenuInstrumentHeaderButton(x, y, SubButtonType.Add);
                 }
-
-                dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
-                dlg.Properties.Build();
-
-                dlg.ShowDialogAsync((r) =>
+                else
                 {
-                    if (r == DialogResult.OK)
-                    {
-                        for (int i = 0; i < expNames.Count; i++)
-                        {
-                            if (dlg.Properties.GetPropertyValue<bool>(i + 1))
-                            {
-                                instrumentType = ExpansionType.GetValueForName(expNames[i]);
-                                break;
-                            }
-                        }
+                    var activeExpansions = App.Project.GetActiveExpansions();
+                    var expNames = new List<string>();
 
-                        AddInstrument(instrumentType);
+                    var dlg = new PropertyDialog(ParentWindow, "Add Instrument", new Point(left + x, top + y), 260, true);
+                    dlg.Properties.AddLabel(null, "Select audio expansion:"); // 0
+
+                    expNames.Add(ExpansionType.Names[ExpansionType.None]);
+                    dlg.Properties.AddRadioButton(Platform.IsMobile ? "Select audio expansion" : null, expNames[0], true);
+
+                    for (int i = 1; i < activeExpansions.Length; i++)
+                    {
+                        if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
+                        {
+                            var expName = ExpansionType.Names[activeExpansions[i]];
+                            dlg.Properties.AddRadioButton(null, expName, false);
+                            expNames.Add(expName);
+                        }
                     }
-                });
+
+                    dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
+                    dlg.Properties.Build();
+
+                    dlg.ShowDialogAsync((r) =>
+                    {
+                        if (r == DialogResult.OK)
+                        {
+                            for (int i = 0; i < expNames.Count; i++)
+                            {
+                                if (dlg.Properties.GetPropertyValue<bool>(i + 1))
+                                {
+                                    instrumentType = ExpansionType.GetValueForName(expNames[i]);
+                                    break;
+                                }
+                            }
+
+                            AddInstrument(instrumentType);
+                        }
+                    });
+                }
             }
             else
             {
@@ -3034,6 +3041,26 @@ namespace FamiStudio
                 if (filename != null)
                     File.WriteAllBytes(filename, sample.SourceDmcData.Data);
             }
+        }
+
+        private void AutoAssignSampleBanks()
+        {
+            var dlg = new PropertyDialog(ParentWindow, "Auto-Assign Banks", 250, true, true);
+            dlg.Properties.AddLabel(null, $"Select the target bank size:"); // 0
+            dlg.Properties.AddDropDownList(null, new[] { "4KB", "8KB", "16KB" }, "4KB", null); // 1
+            dlg.Properties.Build();
+
+            dlg.ShowDialogAsync((r) =>
+            {
+                if (r == DialogResult.OK)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                    var bankSize = Utils.ParseIntWithTrailingGarbage(dlg.Properties.GetPropertyValue<string>(1)) * 1024;
+                    App.Project.AutoAssignSamplesBanks(bankSize, out _);
+                    App.UndoRedoManager.EndTransaction();
+                    MarkDirty();
+                }
+            });
         }
 
         private void ToggleExpandDPCMSample(DPCMSample sample)
@@ -3885,7 +3912,7 @@ namespace FamiStudio
             return true;
         }
         
-        private bool HandleContextMenuInstrumentHeaderButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
+        private bool HandleContextMenuInstrumentHeaderButton(int x, int y, SubButtonType subButtonType)
         {
             if (App.Project.NeedsExpansionInstruments && subButtonType == SubButtonType.Add && Platform.IsDesktop)
             {
@@ -3999,6 +4026,8 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption("MenuTrash", "Discard Source WAV Data", "Permanently applies processing options, delete source WAV\n data and keeps the resulting DMC data. Reduces FMS file size.", () => { DeleteDpcmSourceWavData(button.sample); }));
             }
 
+            // MATTT : Proper icon for auto-bank assignment.
+            menu.Add(new ContextMenuOption("MenuProperties", "Auto-Assign Banks...", () => { AutoAssignSampleBanks(); }, ContextMenuSeparator.Before));
             menu.Add(new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(new Point(x, y), button.sample); }, ContextMenuSeparator.Before));
 
             App.ShowContextMenu(left + x, top + y, menu.ToArray());
@@ -4044,7 +4073,7 @@ namespace FamiStudio
                     case ButtonType.Instrument:
                         return HandleContextMenuInstrumentButton(x, y, button, subButtonType, buttonIdx);
                     case ButtonType.InstrumentHeader:
-                        return HandleContextMenuInstrumentHeaderButton(x, y, button, subButtonType, buttonIdx);
+                        return HandleContextMenuInstrumentHeaderButton(x, y, subButtonType);
                     case ButtonType.ParamSlider:
                     case ButtonType.ParamCheckbox:
                     case ButtonType.ParamList:

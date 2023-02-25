@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 
 namespace FamiStudio
@@ -283,6 +284,11 @@ namespace FamiStudio
             var offsetInPage = (bytes.Length & (bankSize - 1));
             if (offsetInPage != 0)
                 Array.Resize(ref bytes, bankSize);
+        }
+
+        public static bool ResourceExists(string name)
+        {
+            return Assembly.GetExecutingAssembly().GetManifestResourceInfo(name) != null;
         }
 
         public static float SmoothStep(float x)

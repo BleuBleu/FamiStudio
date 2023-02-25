@@ -687,7 +687,7 @@ namespace FamiStudio
 
         public void DisplayNotification(string msg, bool beep = true)
         {
-            Platform.ShowToast(window, msg);
+            Platform.ShowToast(window, msg, msg.Length > 60);
 
             if (beep)
                 Platform.Beep();

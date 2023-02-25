@@ -642,7 +642,11 @@ namespace FamiStudio
                 if (string.IsNullOrEmpty(imageName))
                     imageName = "MenuBlank";
 
-                var bmp = new BitmapDrawable(Resources, DroidUtils.LoadTgaBitmapFromResource($"FamiStudio.Resources.Mobile{imageName}.tga"));
+                var resName1 = $"FamiStudio.Resources.Mobile.Mobile{imageName}.tga";
+                var resName2 = $"FamiStudio.Resources.Atlas.{imageName}@4x.tga";
+                var resName = Utils.ResourceExists(resName1) ? resName1 : resName2;
+
+                var bmp = new BitmapDrawable(Resources, DroidUtils.LoadTgaBitmapFromResource(resName));
                 bmp.SetBounds(0, 0, imageSize, imageSize);
                 bmp.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
 
