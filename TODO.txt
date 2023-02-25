@@ -1,10 +1,7 @@
 Minor UI stuff:
-x Context menu to copy/paste EPSM/VRC7 register values as text.
 - Allow instrument re-ordering + button for alpha sort (+ option to always keep sorted).
 	=> Is there already a drag instrument thing?
 - Way to convert instrument between expansions.
-x Alphabetical ordering should be a bit smarter about numbers.
-x CTRL + Drag for pattern instance/copy is the last thing that requires keyboard input.
 - Option to set snapping auto depending on last resize.
 - Volume/effect/envelope scaling, easy one we have context menus.
 
@@ -16,12 +13,9 @@ x CTRL + Drag for pattern instance/copy is the last thing that requires keyboard
 - Mark : Option to prevent android from going to sleep while playing.
 - Stereo export and NSF import on Android?
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
-- BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
-- BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
 	=> Overlay works, cant click when outside.
 - Full S5B support? Sync up with Perkka when im back.
 - Add temple raiders demo song (MMC5)
-- Add replace with current instrument on PC.
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 - Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
 - Bug NSF vibrato github
@@ -32,6 +26,8 @@ x CTRL + Drag for pattern instance/copy is the last thing that requires keyboard
 - PWM stuff from how2.
 - BUG : Shovel Knight song has weird instrument names.
 - BUG : Android suspend/pause issues. Null project sometimes.
+- BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
+- BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
 
 Testing
 =======

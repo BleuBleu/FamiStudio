@@ -6405,10 +6405,11 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuToggleSlide", $"Toggle {(selection ? "Selection" : "")} Slide Note", () => { ToggleSlideNote(noteLocation, note); }));
                         if (channel.SupportsReleaseNotes)
                             menu.Add(new ContextMenuOption("MenuToggleRelease", $"Toggle {(selection ? "Selection" : "")} Release", () => { ToggleNoteRelease(noteLocation, note); }));
-                        if (channel.Type != ChannelType.Dpcm)
-                            menu.Add(new ContextMenuOption("MenuEyedropper", $"Make Instrument Current", () => { Eyedrop(note); }));
                         if (channel.SupportsStopNotes)
                             menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
+                        if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument))
+                            menu.Add(new ContextMenuOption("MenuReplaceSelection", $"Replace Instrument", () => { ReplaceSelectionInstrument(App.SelectedInstrument, Point.Empty, true); }));
+                        menu.Add(new ContextMenuOption("MenuEyedropper", $"Make Instrument Current", () => { Eyedrop(note); }));
 
                         var factor = GetBestSnapFactorForNote(noteLocation, note);
                         if (factor >= 0)

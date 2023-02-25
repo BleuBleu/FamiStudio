@@ -563,6 +563,8 @@
     <EmbeddedResource Include="Resources\Atlas\MenuRelease@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuReplace.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuReplace@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuReplaceSelection.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuReplaceSelection@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuReset.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuReset@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuSave.tga" />
