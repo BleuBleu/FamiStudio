@@ -96,6 +96,7 @@ struct NSF_ADVANCEDOPTIONS
 #define EXTSOUND_MMC5			0x08
 #define EXTSOUND_N106			0x10
 #define EXTSOUND_FME07			0x20
+#define EXTSOUND_EPSM			0x80
 
 #define CHANNEL_SQUARE1          0
 #define CHANNEL_SQUARE2          1
@@ -126,6 +127,21 @@ struct NSF_ADVANCEDOPTIONS
 #define S5B_SQUARE1              26
 #define S5B_SQUARE2              27
 #define S5B_SQUARE3              28
+#define EPSM_SQUARE1             29
+#define EPSM_SQUARE2             30
+#define EPSM_SQUARE3             31
+#define EPSM_FM1                 32
+#define EPSM_FM2                 33
+#define EPSM_FM3                 34
+#define EPSM_FM4                 35
+#define EPSM_FM5                 36
+#define EPSM_FM6                 37
+#define EPSM_RYTHM1              38
+#define EPSM_RYTHM2              39
+#define EPSM_RYTHM3              40
+#define EPSM_RYTHM4              41
+#define EPSM_RYTHM5              42
+#define EPSM_RYTHM6              43
 							     
 #define STATE_VOLUME             0
 #define STATE_PERIOD             1
@@ -142,14 +158,15 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_FDSMODULATIONSPEED 12
 #define STATE_FDSMASTERVOLUME    13
 #define STATE_VRC7PATCH          14
-#define STATE_VRC7PATCHREG       15
-#define STATE_VRC7OCTAVE         16
-#define STATE_VRC7TRIGGER        17
-#define STATE_VRC7SUSTAIN        18
+#define STATE_FMPATCHREG         15
+#define STATE_OCTAVE             16
+#define STATE_TRIGGER            17
+#define STATE_SUSTAIN            18
 #define STATE_N163WAVEPOS        19
 #define STATE_N163WAVESIZE       20
 #define STATE_N163WAVE           21
 #define STATE_N163NUMCHANNELS    22
+#define STATE_STEREO             23
 
 #include <math.h>
 
@@ -164,6 +181,7 @@ struct NSF_ADVANCEDOPTIONS
 #include "Wave_MMC5.h"
 #include "Wave_N106.h"
 #include "Wave_FME07.h"
+#include "Wave_EPSM.h"
 #include "Wave_FDS.h"
 
 class CNSFCore;
@@ -275,6 +293,7 @@ protected:
 	void FASTCALL		WriteMemory_N106(WORD a,BYTE v);
 	void FASTCALL		WriteMemory_VRC7(WORD a,BYTE v);
 	void FASTCALL		WriteMemory_FME07(WORD a,BYTE v);
+	void FASTCALL		WriteMemory_EPSM(WORD a, BYTE v);
 
 	/*
 	 *	Emulation
@@ -377,6 +396,9 @@ protected:
 	
 	BYTE			nFME07_Address;
 	CFME07Wave		mWave_FME07[3];			//FME-07's 3 pulse channels
+
+	BYTE			nEPSM_Address;
+	EPSMWave		mWave_EPSM[15];			//FME-07's 3 pulse channels
 
 	/*
 	 *	VRC7 stuffs

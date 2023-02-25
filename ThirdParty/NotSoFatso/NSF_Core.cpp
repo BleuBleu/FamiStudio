@@ -22,6 +22,7 @@
 //
 
 #include <stdio.h>
+#include <iostream>
 #include "NSF_Core.h"
 #include "NSF_File.h"
 
@@ -142,6 +143,11 @@ void FASTCALL CNSFCore::WriteMemory_pAPU(WORD a,BYTE v)
 
 	if (apuRegWriteCallback)
 		apuRegWriteCallback(a, v);
+
+
+	if ((a <= 0x401f) && (a >= 0x401c) && (nExternalSound & EXTSOUND_EPSM))
+		WriteMemory_EPSM(a, v);
+
 
 	switch(a)
 	{
@@ -744,6 +750,306 @@ void CNSFCore::WriteMemory_FME07(WORD a,BYTE v)
 	}
 }
 
+void CNSFCore::WriteMemory_EPSM(WORD a, BYTE v)
+{
+	/*if ((a < 0xD000) && (nExternalSound & EXTSOUND_FDS))
+		WriteMemory_FDSRAM(a, v);*/
+
+	if (a == 0x401c)
+		nEPSM_Address = v;
+	if (a == 0x401d)
+	{
+		switch (nEPSM_Address)
+		{
+		case 0x00:	mWave_EPSM[0].nFreqTimer.B.l = v;			break;
+		case 0x01:	mWave_EPSM[0].nFreqTimer.B.h = v & 0x0F;	break;
+		case 0x02:	mWave_EPSM[1].nFreqTimer.B.l = v;			break;
+		case 0x03:	mWave_EPSM[1].nFreqTimer.B.h = v & 0x0F;	break;
+		case 0x04:	mWave_EPSM[2].nFreqTimer.B.l = v;			break;
+		case 0x05:	mWave_EPSM[2].nFreqTimer.B.h = v & 0x0F;	break;
+		case 0x07:
+			mWave_EPSM[0].bChannelEnabled = !(v & 0x01);
+			mWave_EPSM[1].bChannelEnabled = !(v & 0x02);
+			mWave_EPSM[2].bChannelEnabled = !(v & 0x03);
+			break;
+		case 0x08:	mWave_EPSM[0].nVolume = v & 0x0F; break;
+		case 0x09:	mWave_EPSM[1].nVolume = v & 0x0F; break;
+		case 0x0A:	mWave_EPSM[2].nVolume = v & 0x0F; break;
+		case 0x10:
+			mWave_EPSM[9].bChannelEnabled =  (v & 0x01);
+			mWave_EPSM[10].bChannelEnabled = (v & 0x02);
+			mWave_EPSM[11].bChannelEnabled = (v & 0x04);
+			mWave_EPSM[12].bChannelEnabled = (v & 0x08);
+			mWave_EPSM[13].bChannelEnabled = (v & 0x10);
+			mWave_EPSM[14].bChannelEnabled = (v & 0x20);
+			//std::cout << "value " << std::hex << (int)v << std::endl;
+			break;
+		case 0x18:	mWave_EPSM[9].nVolume = v; break;
+		case 0x19:	mWave_EPSM[10].nVolume = v; break;
+		case 0x1A:	mWave_EPSM[11].nVolume = v; break;
+		case 0x1B:	mWave_EPSM[12].nVolume = v; break;
+		case 0x1C:	mWave_EPSM[13].nVolume = v; break;
+		case 0x1D:	mWave_EPSM[14].nVolume = v; break;
+		case 0x28:
+				if ((v & 0x7) == 0) {
+					if ((v & 0xf0) && !mWave_EPSM[3].bChannelEnabled)
+							mWave_EPSM[3].nTriggered = 1;
+					mWave_EPSM[3].bChannelEnabled = (v & 0xf0) ? 1 : 0;
+				}
+				if ((v & 0x7) == 1) {
+					if ((v & 0xf0) && !mWave_EPSM[4].bChannelEnabled)
+						mWave_EPSM[4].nTriggered = 1;
+					mWave_EPSM[4].bChannelEnabled = (v & 0xf0) ? 1 : 0;
+				}
+				if ((v & 0x7) == 2) {
+					if ((v & 0xf0) && !mWave_EPSM[5].bChannelEnabled)
+						mWave_EPSM[5].nTriggered = 1;
+					mWave_EPSM[5].bChannelEnabled = (v & 0xf0) ? 1 : 0;
+				}
+				if ((v & 0x7) == 4) {
+					if ((v & 0xf0) && !mWave_EPSM[6].bChannelEnabled)
+						mWave_EPSM[6].nTriggered = 1;
+					mWave_EPSM[6].bChannelEnabled = (v & 0xf0) ? 1 : 0;
+				}
+				if ((v & 0x7) == 5) {
+					if ((v & 0xf0) && !mWave_EPSM[7].bChannelEnabled)
+						mWave_EPSM[7].nTriggered = 1;
+					mWave_EPSM[7].bChannelEnabled = (v & 0xf0) ? 1 : 0;
+				}
+				if ((v & 0x7) == 6) {
+					if ((v & 0xf0) && !mWave_EPSM[8].bChannelEnabled)
+						mWave_EPSM[8].nTriggered = 1;
+					mWave_EPSM[8].bChannelEnabled = (v & 0xf0) ? 1 : 0;
+				}
+			//std::cout << "value " << std::hex << (int)v << std::endl;
+			break;
+		case 0xA0:	mWave_EPSM[3].nFreqTimer.B.l = v;			break;
+		case 0xA4:	mWave_EPSM[3].nFreqTimer.B.h = v & 0x3F;	break;
+		case 0xA1:	mWave_EPSM[4].nFreqTimer.B.l = v;			break;
+		case 0xA5:	mWave_EPSM[4].nFreqTimer.B.h = v & 0x3F;	break;
+		case 0xA2:	mWave_EPSM[5].nFreqTimer.B.l = v;			break;
+		case 0xA6:	mWave_EPSM[5].nFreqTimer.B.h = v & 0x3F;	break;
+		case 0x22:  
+			mWave_EPSM[3].nPatchReg[30] = v;
+			mWave_EPSM[4].nPatchReg[30] = v;
+			mWave_EPSM[5].nPatchReg[30] = v;
+			mWave_EPSM[6].nPatchReg[30] = v;
+			mWave_EPSM[7].nPatchReg[30] = v;
+			mWave_EPSM[8].nPatchReg[30] = v;
+			break;
+		case 0xB0:  mWave_EPSM[3].nPatchReg[0] = v;break;
+		case 0xB1:  mWave_EPSM[4].nPatchReg[0] = v;break;
+		case 0xB2:  mWave_EPSM[5].nPatchReg[0] = v;break;
+			break;
+		case 0xB4:	mWave_EPSM[3].nStereo = v & 0xc0;
+			mWave_EPSM[3].nPatchReg[1] = v;
+			break;
+		case 0xB5:	mWave_EPSM[4].nStereo = v & 0xc0;
+			mWave_EPSM[4].nPatchReg[1] = v;
+			break;
+		case 0xB6:	mWave_EPSM[5].nStereo = v & 0xc0;
+			mWave_EPSM[5].nPatchReg[1] = v;
+			break;
+		case 0x30:  mWave_EPSM[3].nPatchReg[2] = v;break;
+		case 0x31:  mWave_EPSM[4].nPatchReg[2] = v;break;
+		case 0x32:  mWave_EPSM[5].nPatchReg[2] = v;break;
+		case 0x40:  mWave_EPSM[3].nPatchReg[3] = v;break;
+		case 0x41:  mWave_EPSM[4].nPatchReg[3] = v;break;
+		case 0x42:  mWave_EPSM[5].nPatchReg[3] = v;break;
+		case 0x50:  mWave_EPSM[3].nPatchReg[4] = v;break;
+		case 0x51:  mWave_EPSM[4].nPatchReg[4] = v;break;
+		case 0x52:  mWave_EPSM[5].nPatchReg[4] = v;break;
+		case 0x60:  mWave_EPSM[3].nPatchReg[5] = v;break;
+		case 0x61:  mWave_EPSM[4].nPatchReg[5] = v;break;
+		case 0x62:  mWave_EPSM[5].nPatchReg[5] = v;break;
+		case 0x70:  mWave_EPSM[3].nPatchReg[6] = v;break;
+		case 0x71:  mWave_EPSM[4].nPatchReg[6] = v;break;
+		case 0x72:  mWave_EPSM[5].nPatchReg[6] = v;break;
+		case 0x80:  mWave_EPSM[3].nPatchReg[7] = v;break;
+		case 0x81:  mWave_EPSM[4].nPatchReg[7] = v;break;
+		case 0x82:  mWave_EPSM[5].nPatchReg[7] = v;break;
+		case 0x90:  mWave_EPSM[3].nPatchReg[8] = v;break;
+		case 0x91:  mWave_EPSM[4].nPatchReg[8] = v;break;
+		case 0x92:  mWave_EPSM[5].nPatchReg[8] = v;break;
+		case 0x38:  mWave_EPSM[3].nPatchReg[9] = v;break;
+		case 0x39:  mWave_EPSM[4].nPatchReg[9] = v;break;
+		case 0x3a:  mWave_EPSM[5].nPatchReg[9] = v;break;
+		case 0x48:  mWave_EPSM[3].nPatchReg[10] = v;break;
+		case 0x49:  mWave_EPSM[4].nPatchReg[10] = v;break;
+		case 0x4a:  mWave_EPSM[5].nPatchReg[10] = v;break;
+		case 0x58:  mWave_EPSM[3].nPatchReg[11] = v;break;
+		case 0x59:  mWave_EPSM[4].nPatchReg[11] = v;break;
+		case 0x5a:  mWave_EPSM[5].nPatchReg[11] = v;break;
+		case 0x68:  mWave_EPSM[3].nPatchReg[12] = v;break;
+		case 0x69:  mWave_EPSM[4].nPatchReg[12] = v;break;
+		case 0x6a:  mWave_EPSM[5].nPatchReg[12] = v;break;
+		case 0x78:  mWave_EPSM[3].nPatchReg[13] = v;break;
+		case 0x79:  mWave_EPSM[4].nPatchReg[13] = v;break;
+		case 0x7a:  mWave_EPSM[5].nPatchReg[13] = v;break;
+		case 0x88:  mWave_EPSM[3].nPatchReg[14] = v;break;
+		case 0x89:  mWave_EPSM[4].nPatchReg[14] = v;break;
+		case 0x8a:  mWave_EPSM[5].nPatchReg[14] = v;break;
+		case 0x98:  mWave_EPSM[3].nPatchReg[15] = v;break;
+		case 0x99:  mWave_EPSM[4].nPatchReg[15] = v;break;
+		case 0x9a:  mWave_EPSM[5].nPatchReg[15] = v;break;
+		case 0x34:  mWave_EPSM[3].nPatchReg[16] = v;break;
+		case 0x35:  mWave_EPSM[4].nPatchReg[16] = v;break;
+		case 0x36:  mWave_EPSM[5].nPatchReg[16] = v;break;
+		case 0x44:  mWave_EPSM[3].nPatchReg[17] = v;break;
+		case 0x45:  mWave_EPSM[4].nPatchReg[17] = v;break;
+		case 0x46:  mWave_EPSM[5].nPatchReg[17] = v;break;
+		case 0x54:  mWave_EPSM[3].nPatchReg[18] = v;break;
+		case 0x55:  mWave_EPSM[4].nPatchReg[18] = v;break;
+		case 0x56:  mWave_EPSM[5].nPatchReg[18] = v;break;
+		case 0x64:  mWave_EPSM[3].nPatchReg[19] = v;break;
+		case 0x65:  mWave_EPSM[4].nPatchReg[19] = v;break;
+		case 0x66:  mWave_EPSM[5].nPatchReg[19] = v;break;
+		case 0x74:  mWave_EPSM[3].nPatchReg[20] = v;break;
+		case 0x75:  mWave_EPSM[4].nPatchReg[20] = v;break;
+		case 0x76:  mWave_EPSM[5].nPatchReg[20] = v;break;
+		case 0x84:  mWave_EPSM[3].nPatchReg[21] = v;break;
+		case 0x85:  mWave_EPSM[4].nPatchReg[21] = v;break;
+		case 0x86:  mWave_EPSM[5].nPatchReg[21] = v;break;
+		case 0x94:  mWave_EPSM[3].nPatchReg[22] = v;break;
+		case 0x95:  mWave_EPSM[4].nPatchReg[22] = v;break;
+		case 0x96:  mWave_EPSM[5].nPatchReg[22] = v;break;
+		case 0x3c:  mWave_EPSM[3].nPatchReg[23] = v;break;
+		case 0x3d:  mWave_EPSM[4].nPatchReg[23] = v;break;
+		case 0x3e:  mWave_EPSM[5].nPatchReg[23] = v;break;
+		case 0x4c:  mWave_EPSM[3].nPatchReg[24] = v;break;
+		case 0x4d:  mWave_EPSM[4].nPatchReg[24] = v;break;
+		case 0x4e:  mWave_EPSM[5].nPatchReg[24] = v;break;
+		case 0x5c:  mWave_EPSM[3].nPatchReg[25] = v;break;
+		case 0x5d:  mWave_EPSM[4].nPatchReg[25] = v;break;
+		case 0x5e:  mWave_EPSM[5].nPatchReg[25] = v;break;
+		case 0x6c:  mWave_EPSM[3].nPatchReg[26] = v;break;
+		case 0x6d:  mWave_EPSM[4].nPatchReg[26] = v;break;
+		case 0x6e:  mWave_EPSM[5].nPatchReg[26] = v;break;
+		case 0x7c:  mWave_EPSM[3].nPatchReg[27] = v;break;
+		case 0x7d:  mWave_EPSM[4].nPatchReg[27] = v;break;
+		case 0x7e:  mWave_EPSM[5].nPatchReg[27] = v;break;
+		case 0x8c:  mWave_EPSM[3].nPatchReg[28] = v;break;
+		case 0x8d:  mWave_EPSM[4].nPatchReg[28] = v;break;
+		case 0x8e:  mWave_EPSM[5].nPatchReg[28] = v;break;
+		case 0x9c:  mWave_EPSM[3].nPatchReg[29] = v;break;
+		case 0x9d:  mWave_EPSM[4].nPatchReg[29] = v;break;
+		case 0x9e:  mWave_EPSM[5].nPatchReg[29] = v;break;
+		}
+	}
+	if (a == 0x401e)
+		nEPSM_Address = v;
+	if (a == 0x401f)
+	{
+		switch (nEPSM_Address)
+		{
+		case 0xA0:	mWave_EPSM[6].nFreqTimer.B.l = v;			break; //todo freq calc
+		case 0xA4:	mWave_EPSM[6].nFreqTimer.B.h = v & 0x3F;	break;
+		case 0xA1:	mWave_EPSM[7].nFreqTimer.B.l = v;			break;
+		case 0xA5:	mWave_EPSM[7].nFreqTimer.B.h = v & 0x3F;	break;
+		case 0xA2:	mWave_EPSM[8].nFreqTimer.B.l = v;			break;
+		case 0xA6:	mWave_EPSM[8].nFreqTimer.B.h = v & 0x3F;	break;
+		
+		case 0xB0:  mWave_EPSM[6].nPatchReg[0] = v;break;
+		case 0xB1:  mWave_EPSM[7].nPatchReg[0] = v;break;
+		case 0xB2:  mWave_EPSM[8].nPatchReg[0] = v;break;
+			break;
+		case 0xB4:	mWave_EPSM[6].nStereo = v & 0xc0;
+			mWave_EPSM[6].nPatchReg[1] = v;
+			break;
+		case 0xB5:	mWave_EPSM[7].nStereo = v & 0xc0;
+			mWave_EPSM[7].nPatchReg[1] = v;
+			break;
+		case 0xB6:	mWave_EPSM[8].nStereo = v & 0xc0;
+			mWave_EPSM[8].nPatchReg[1] = v;
+			break;
+		case 0x30:  mWave_EPSM[6].nPatchReg[2] = v;break;
+		case 0x31:  mWave_EPSM[7].nPatchReg[2] = v;break;
+		case 0x32:  mWave_EPSM[8].nPatchReg[2] = v;break;
+		case 0x40:  mWave_EPSM[6].nPatchReg[3] = v;break;
+		case 0x41:  mWave_EPSM[7].nPatchReg[3] = v;break;
+		case 0x42:  mWave_EPSM[8].nPatchReg[3] = v;break;
+		case 0x50:  mWave_EPSM[6].nPatchReg[4] = v;break;
+		case 0x51:  mWave_EPSM[7].nPatchReg[4] = v;break;
+		case 0x52:  mWave_EPSM[8].nPatchReg[4] = v;break;
+		case 0x60:  mWave_EPSM[6].nPatchReg[5] = v;break;
+		case 0x61:  mWave_EPSM[7].nPatchReg[5] = v;break;
+		case 0x62:  mWave_EPSM[8].nPatchReg[5] = v;break;
+		case 0x70:  mWave_EPSM[6].nPatchReg[6] = v;break;
+		case 0x71:  mWave_EPSM[7].nPatchReg[6] = v;break;
+		case 0x72:  mWave_EPSM[8].nPatchReg[6] = v;break;
+		case 0x80:  mWave_EPSM[6].nPatchReg[7] = v;break;
+		case 0x81:  mWave_EPSM[7].nPatchReg[7] = v;break;
+		case 0x82:  mWave_EPSM[8].nPatchReg[7] = v;break;
+		case 0x90:  mWave_EPSM[6].nPatchReg[8] = v;break;
+		case 0x91:  mWave_EPSM[7].nPatchReg[8] = v;break;
+		case 0x92:  mWave_EPSM[8].nPatchReg[8] = v;break;
+		case 0x38:  mWave_EPSM[6].nPatchReg[9] = v;break;
+		case 0x39:  mWave_EPSM[7].nPatchReg[9] = v;break;
+		case 0x3a:  mWave_EPSM[8].nPatchReg[9] = v;break;
+		case 0x48:  mWave_EPSM[6].nPatchReg[10] = v;break;
+		case 0x49:  mWave_EPSM[7].nPatchReg[10] = v;break;
+		case 0x4a:  mWave_EPSM[8].nPatchReg[10] = v;break;
+		case 0x58:  mWave_EPSM[6].nPatchReg[11] = v;break;
+		case 0x59:  mWave_EPSM[7].nPatchReg[11] = v;break;
+		case 0x5a:  mWave_EPSM[8].nPatchReg[11] = v;break;
+		case 0x68:  mWave_EPSM[6].nPatchReg[12] = v;break;
+		case 0x69:  mWave_EPSM[7].nPatchReg[12] = v;break;
+		case 0x6a:  mWave_EPSM[8].nPatchReg[12] = v;break;
+		case 0x78:  mWave_EPSM[6].nPatchReg[13] = v;break;
+		case 0x79:  mWave_EPSM[7].nPatchReg[13] = v;break;
+		case 0x7a:  mWave_EPSM[8].nPatchReg[13] = v;break;
+		case 0x88:  mWave_EPSM[6].nPatchReg[14] = v;break;
+		case 0x89:  mWave_EPSM[7].nPatchReg[14] = v;break;
+		case 0x8a:  mWave_EPSM[8].nPatchReg[14] = v;break;
+		case 0x98:  mWave_EPSM[6].nPatchReg[15] = v;break;
+		case 0x99:  mWave_EPSM[7].nPatchReg[15] = v;break;
+		case 0x9a:  mWave_EPSM[8].nPatchReg[15] = v;break;
+		case 0x34:  mWave_EPSM[6].nPatchReg[16] = v;break;
+		case 0x35:  mWave_EPSM[7].nPatchReg[16] = v;break;
+		case 0x36:  mWave_EPSM[8].nPatchReg[16] = v;break;
+		case 0x44:  mWave_EPSM[6].nPatchReg[17] = v;break;
+		case 0x45:  mWave_EPSM[7].nPatchReg[17] = v;break;
+		case 0x46:  mWave_EPSM[8].nPatchReg[17] = v;break;
+		case 0x54:  mWave_EPSM[6].nPatchReg[18] = v;break;
+		case 0x55:  mWave_EPSM[7].nPatchReg[18] = v;break;
+		case 0x56:  mWave_EPSM[8].nPatchReg[18] = v;break;
+		case 0x64:  mWave_EPSM[6].nPatchReg[19] = v;break;
+		case 0x65:  mWave_EPSM[7].nPatchReg[19] = v;break;
+		case 0x66:  mWave_EPSM[8].nPatchReg[19] = v;break;
+		case 0x74:  mWave_EPSM[6].nPatchReg[20] = v;break;
+		case 0x75:  mWave_EPSM[7].nPatchReg[20] = v;break;
+		case 0x76:  mWave_EPSM[8].nPatchReg[20] = v;break;
+		case 0x84:  mWave_EPSM[6].nPatchReg[21] = v;break;
+		case 0x85:  mWave_EPSM[7].nPatchReg[21] = v;break;
+		case 0x86:  mWave_EPSM[8].nPatchReg[21] = v;break;
+		case 0x94:  mWave_EPSM[6].nPatchReg[22] = v;break;
+		case 0x95:  mWave_EPSM[7].nPatchReg[22] = v;break;
+		case 0x96:  mWave_EPSM[8].nPatchReg[22] = v;break;
+		case 0x3c:  mWave_EPSM[6].nPatchReg[23] = v;break;
+		case 0x3d:  mWave_EPSM[7].nPatchReg[23] = v;break;
+		case 0x3e:  mWave_EPSM[8].nPatchReg[23] = v;break;
+		case 0x4c:  mWave_EPSM[6].nPatchReg[24] = v;break;
+		case 0x4d:  mWave_EPSM[7].nPatchReg[24] = v;break;
+		case 0x4e:  mWave_EPSM[8].nPatchReg[24] = v;break;
+		case 0x5c:  mWave_EPSM[6].nPatchReg[25] = v;break;
+		case 0x5d:  mWave_EPSM[7].nPatchReg[25] = v;break;
+		case 0x5e:  mWave_EPSM[8].nPatchReg[25] = v;break;
+		case 0x6c:  mWave_EPSM[6].nPatchReg[26] = v;break;
+		case 0x6d:  mWave_EPSM[7].nPatchReg[26] = v;break;
+		case 0x6e:  mWave_EPSM[8].nPatchReg[26] = v;break;
+		case 0x7c:  mWave_EPSM[6].nPatchReg[27] = v;break;
+		case 0x7d:  mWave_EPSM[7].nPatchReg[27] = v;break;
+		case 0x7e:  mWave_EPSM[8].nPatchReg[27] = v;break;
+		case 0x8c:  mWave_EPSM[6].nPatchReg[28] = v;break;
+		case 0x8d:  mWave_EPSM[7].nPatchReg[28] = v;break;
+		case 0x8e:  mWave_EPSM[8].nPatchReg[28] = v;break;
+		case 0x9c:  mWave_EPSM[6].nPatchReg[29] = v;break;
+		case 0x9d:  mWave_EPSM[7].nPatchReg[29] = v;break;
+		case 0x9e:  mWave_EPSM[8].nPatchReg[29] = v;break;
+		}
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -804,6 +1110,12 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 				mWave_FME07[0].DoTicks(tick,bChannelMix[20]);
 				mWave_FME07[1].DoTicks(tick,bChannelMix[21]);
 				mWave_FME07[2].DoTicks(tick,bChannelMix[22]);
+			}
+			if (nExternalSound & EXTSOUND_EPSM)
+			{
+				mWave_EPSM[0].DoTicks(tick, bChannelMix[20]);
+				mWave_EPSM[1].DoTicks(tick, bChannelMix[21]);
+				mWave_EPSM[2].DoTicks(tick, bChannelMix[22]);
 			}
 			if(nExternalSound & EXTSOUND_FDS)
 				mWave_FDS.DoTicks(tick,bChannelMix[23]);
@@ -882,6 +1194,12 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 						mWave_FME07[1].Mix_Mono(mixL,nDownsample);
 						mWave_FME07[2].Mix_Mono(mixL,nDownsample);
 					}
+					if (nExternalSound & EXTSOUND_EPSM)
+					{
+						mWave_EPSM[0].Mix_Mono(mixL, nDownsample);
+						mWave_EPSM[1].Mix_Mono(mixL, nDownsample);
+						mWave_EPSM[2].Mix_Mono(mixL, nDownsample);
+					}
 					if(nExternalSound & EXTSOUND_FDS)
 						mWave_FDS.Mix_Mono(mixL,nDownsample);
 				}
@@ -946,6 +1264,12 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 						mWave_FME07[0].Mix_Stereo(mixL,mixR,nDownsample);
 						mWave_FME07[1].Mix_Stereo(mixL,mixR,nDownsample);
 						mWave_FME07[2].Mix_Stereo(mixL,mixR,nDownsample);
+					}
+					if (nExternalSound & EXTSOUND_EPSM)
+					{
+						mWave_EPSM[0].Mix_Stereo(mixL, mixR, nDownsample);
+						mWave_EPSM[1].Mix_Stereo(mixL, mixR, nDownsample);
+						mWave_EPSM[2].Mix_Stereo(mixL, mixR, nDownsample);
 					}
 					if(nExternalSound & EXTSOUND_FDS)
 						mWave_FDS.Mix_Stereo(mixL,mixR,nDownsample);
@@ -1077,6 +1401,9 @@ CNSFCore::CNSFCore()
 	mWave_FME07[0].nInvertFreqCutoff = 0xFFFF;
 	mWave_FME07[1].nInvertFreqCutoff = 0xFFFF;
 	mWave_FME07[2].nInvertFreqCutoff = 0xFFFF;
+	mWave_EPSM[0].nInvertFreqCutoff = 0xFFFF;
+	mWave_EPSM[1].nInvertFreqCutoff = 0xFFFF;
+	mWave_EPSM[2].nInvertFreqCutoff = 0xFFFF;
 }
 
 /*
@@ -1329,6 +1656,18 @@ int CNSFCore::LoadNSF(const CNSFFile* fl)
 			WriteMemory[0x0C] = &CNSFCore::WriteMemory_FME07;
 			WriteMemory[0x0E] = &CNSFCore::WriteMemory_FME07;
 		}
+		//if (nExternalSound & EXTSOUND_EPSM)
+		//{
+		//	WriteMemory[0x07] = &CNSFCore::WriteMemory_EPSM;
+		//	WriteMemory[0x08] = &CNSFCore::WriteMemory_EPSM;
+		//	WriteMemory[0x09] = &CNSFCore::WriteMemory_EPSM;
+		//	WriteMemory[0x0a] = &CNSFCore::WriteMemory_EPSM;
+		//	WriteMemory[0x0b] = &CNSFCore::WriteMemory_EPSM;
+		//	WriteMemory[0x0c] = &CNSFCore::WriteMemory_EPSM;
+		//	WriteMemory[0x0d] = &CNSFCore::WriteMemory_EPSM;
+		//	WriteMemory[0x0E] = &CNSFCore::WriteMemory_EPSM;
+		//	WriteMemory[0x0f] = &CNSFCore::WriteMemory_EPSM;
+		//}
 	}
 	if(nExternalSound & EXTSOUND_MMC5)			//MMC5 still has a multiplication reg that needs to be available on PAL tunes
 		WriteMemory[0x05] = &CNSFCore::WriteMemory_MMC5;
@@ -1427,6 +1766,17 @@ void CNSFCore::SetTrack(BYTE track)
 	mWave_FME07[0].nVolume = 0;
 	mWave_FME07[1].nVolume = 0;
 	mWave_FME07[2].nVolume = 0;
+
+	/*	Reset EPSM	*/
+	mWave_EPSM[0].nVolume = 0;
+	mWave_EPSM[1].nVolume = 0;
+	mWave_EPSM[2].nVolume = 0;
+	mWave_EPSM[3].nVolume = 15;
+	mWave_EPSM[4].nVolume = 15;
+	mWave_EPSM[5].nVolume = 15;
+	mWave_EPSM[6].nVolume = 15;
+	mWave_EPSM[7].nVolume = 15;
+	mWave_EPSM[8].nVolume = 15;
 
 	/*	Clear FDS crap		*/
 	mWave_FDS.bEnvelopeEnable = 0;
@@ -1587,6 +1937,9 @@ void CNSFCore::SetChannelOptions(UINT chan,int mix,int vol,int pan,int inv)
 			case 26: mWave_FME07[1].bInvert = (BYTE)inv; break;
 			case 27: mWave_FME07[2].bInvert = (BYTE)inv; break;
 			case 28: mWave_FDS.bInvert = (BYTE)inv; break;
+			case 29: mWave_EPSM[0].bInvert = (BYTE)inv; break;
+			case 30: mWave_EPSM[1].bInvert = (BYTE)inv; break;
+			case 31: mWave_EPSM[2].bInvert = (BYTE)inv; break;
 			}
 		}
 	}
@@ -1690,6 +2043,8 @@ void CNSFCore::RecalculateInvertFreqs(int cutoff)
 			//FME-07 uses the normal formula, but is 32 steps instead of 16 (approx. same as tri)
 			mWave_FME07[0].nInvertFreqCutoff = mWave_FME07[1].nInvertFreqCutoff = 
 				mWave_FME07[2].nInvertFreqCutoff = mWave_TND.nInvertFreqCutoff_Tri;
+			mWave_EPSM[0].nInvertFreqCutoff = mWave_EPSM[1].nInvertFreqCutoff =
+				mWave_EPSM[2].nInvertFreqCutoff = mWave_TND.nInvertFreqCutoff_Tri;
 		}
 	}
 	else
@@ -1706,6 +2061,9 @@ void CNSFCore::RecalculateInvertFreqs(int cutoff)
 		mWave_FME07[0].nInvertFreqCutoff = 0xFFFF;
 		mWave_FME07[1].nInvertFreqCutoff = 0xFFFF;
 		mWave_FME07[2].nInvertFreqCutoff = 0xFFFF;
+		mWave_EPSM[0].nInvertFreqCutoff = 0xFFFF;
+		mWave_EPSM[1].nInvertFreqCutoff = 0xFFFF;
+		mWave_EPSM[2].nInvertFreqCutoff = 0xFFFF;
 	}
 	VRC7_ChangeInversionFreq();
 }
@@ -2463,10 +2821,10 @@ int CNSFCore::GetState(int channel, int state, int sub)
 				case STATE_PERIOD:       return ((VRC7Chan[1][idx] & 1) << 8) | (VRC7Chan[0][idx]);
 				case STATE_VOLUME:       return (VRC7Chan[2][idx] >> 0) & 0xF;
 				case STATE_VRC7PATCH:    return (VRC7Chan[2][idx] >> 4) & 0xF;
-				case STATE_VRC7PATCHREG: return (VRC7Instrument[0][sub]);
-				case STATE_VRC7OCTAVE:   return (VRC7Chan[1][idx] >> 1) & 0x07;
-				case STATE_VRC7TRIGGER:  return (VRC7Triggered[idx]);
-				case STATE_VRC7SUSTAIN:  return (VRC7Chan[1][idx] >> 5) & 0x01;
+				case STATE_FMPATCHREG: return (VRC7Instrument[0][sub]);
+				case STATE_OCTAVE:   return (VRC7Chan[1][idx] >> 1) & 0x07;
+				case STATE_TRIGGER:  return (VRC7Triggered[idx]);
+				case STATE_SUSTAIN:  return (VRC7Chan[1][idx] >> 5) & 0x01;
 			}
 		}
 		case MMC5_SQUARE1:
@@ -2511,6 +2869,60 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			{
 				case STATE_PERIOD: return mWave_FME07[idx].nFreqTimer.W;
 				case STATE_VOLUME: return mWave_FME07[idx].bChannelEnabled ? mWave_FME07[idx].nVolume : 0;
+			}
+			break;
+		}
+		
+		case EPSM_RYTHM1:
+		case EPSM_RYTHM2:
+		case EPSM_RYTHM3:
+		case EPSM_RYTHM4:
+		case EPSM_RYTHM5:
+		case EPSM_RYTHM6:
+		{
+			int idx = channel - EPSM_SQUARE1;
+			switch (state)
+			{
+			case STATE_STEREO: return (mWave_EPSM[idx].nVolume & 0xc0);
+			case STATE_PERIOD: return 0xc20;
+			case STATE_VOLUME: 
+				int returnval = mWave_EPSM[idx].bChannelEnabled ? ((mWave_EPSM[idx].nVolume & 0x0f) >> 1) : 0;
+				mWave_EPSM[idx].bChannelEnabled = 0;
+				return returnval;
+			}
+			break;
+		}
+		case EPSM_SQUARE1:
+		case EPSM_SQUARE2:
+		case EPSM_SQUARE3:
+		{
+			int idx = channel - EPSM_SQUARE1;
+			switch (state)
+			{
+			case STATE_PERIOD: return mWave_EPSM[idx].nFreqTimer.W;
+			case STATE_VOLUME: return mWave_EPSM[idx].bChannelEnabled ? mWave_EPSM[idx].nVolume : 0;
+			}
+			break;
+		}
+		case EPSM_FM1:
+		case EPSM_FM2:
+		case EPSM_FM3:
+		case EPSM_FM4:
+		case EPSM_FM5:
+		case EPSM_FM6:
+		{
+			int idx = channel - EPSM_SQUARE1;
+			switch (state)
+			{
+			case STATE_TRIGGER: {
+				int trigger = mWave_EPSM[idx].nTriggered;
+				mWave_EPSM[idx].nTriggered = 0;
+				return trigger;}
+			case STATE_OCTAVE: return (mWave_EPSM[idx].nFreqTimer.B.h >> 3) & 0x07;
+			case STATE_PERIOD: return (mWave_EPSM[idx].nFreqTimer.B.l + ((mWave_EPSM[idx].nFreqTimer.B.h & 7) << 8))/4;
+			case STATE_VOLUME: return (mWave_EPSM[idx].nStereo) ? 15 : 0;
+			case STATE_SUSTAIN: return mWave_EPSM[idx].bChannelEnabled ? 1 : 0;
+			case STATE_FMPATCHREG: return (mWave_EPSM[idx].nPatchReg[sub]);
 			}
 			break;
 		}
