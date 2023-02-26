@@ -1100,7 +1100,7 @@ namespace FamiStudio
 
                     if (!stop && !release && state.state != ChannelState.Stopped)
                     {
-                        if (channel.Type == ChannelType.Noise || (channel.Type >= ChannelType.EPSMrythm1 && channel.Type <= ChannelType.EPSMrythm6))
+                        if (channel.Type == ChannelType.Noise)
                             note = (period ^ 0x0f) + 32;
                         else
                             note = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
