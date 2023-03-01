@@ -517,6 +517,8 @@ namespace FamiStudio
             {
                 selectedInstrument = note.Instrument;
                 selectedArpeggio   = note.Arpeggio;
+
+                ProjectExplorer.BlinkButton(selectedInstrument);
             }
         }
 

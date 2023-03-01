@@ -12,7 +12,6 @@ Minor UI stuff:
 - Export DMC samples on Mobile.
 - Linux : new openal+ smarter detection. Need a way to try the OS one + my one if it fails.
 - Stereo export and NSF import on Android?
-- "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
 - Full S5B support? Sync up with Perkka when im back.
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 - Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
@@ -140,6 +139,7 @@ Discord
 
 Backlog: 
 =========
+- "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
 - NSF import issue TF74
 - FDS oscilloscope can assert if you use modulation table to produce very low sound.
 - Fix "SeparateChannelsExportTndMode"

@@ -680,6 +680,8 @@ namespace FamiStudio
         float flingVelY = 0.0f;
         float bitmapScale = 1.0f;
         float captureDuration = 0.0f;
+        float blinkTimer;
+        object blinkObject;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
         bool canFling = false;
@@ -850,7 +852,7 @@ namespace FamiStudio
                     }
                     else if (type == ButtonType.Dpcm)
                     {
-                        return $"{sample.Name} ({sample.ProcessedData.Length} Bytes)"; 
+                        return $"{sample.Name} ({sample.ProcessedData.Length} Bytes)";
                     }
                     else if (type == ButtonType.DpcmHeader)
                     {
@@ -873,18 +875,18 @@ namespace FamiStudio
             {
                 get
                 {
-                    if ((type == ButtonType.Song       && song       == projectExplorer.App.SelectedSong)       ||
+                    if ((type == ButtonType.Song && song == projectExplorer.App.SelectedSong) ||
                         (type == ButtonType.Instrument && instrument == projectExplorer.App.SelectedInstrument) ||
-                        (type == ButtonType.Arpeggio   && arpeggio   == projectExplorer.App.SelectedArpeggio))
+                        (type == ButtonType.Arpeggio && arpeggio == projectExplorer.App.SelectedArpeggio))
                     {
                         return projectExplorer.Fonts.FontMediumBold;
                     }
                     else if (
-                        type == ButtonType.ProjectSettings         ||
-                        type == ButtonType.SongHeader              ||
-                        type == ButtonType.InstrumentHeader        ||
-                        type == ButtonType.DpcmHeader              ||
-                        type == ButtonType.ArpeggioHeader          ||
+                        type == ButtonType.ProjectSettings ||
+                        type == ButtonType.SongHeader ||
+                        type == ButtonType.InstrumentHeader ||
+                        type == ButtonType.DpcmHeader ||
+                        type == ButtonType.ArpeggioHeader ||
                         type == ButtonType.RegisterExpansionHeader ||
                         type == ButtonType.RegisterChannelHeader)
                     {
@@ -915,6 +917,23 @@ namespace FamiStudio
                     }
                 }
             }
+
+            public object Object
+            {
+                get
+                {
+                    switch (type)
+                    {
+                        case ButtonType.Song: return song;
+                        case ButtonType.Instrument: return instrument;
+                        case ButtonType.Arpeggio: return arpeggio;
+                        case ButtonType.Dpcm: return sample;
+                    }
+
+                    return null;
+                }
+            }
+
 
             public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader || type == ButtonType.ProjectSettings ? Theme.LightGreyColor1 : Color.Black;
 
@@ -1230,6 +1249,12 @@ namespace FamiStudio
                 MarkDirty();
         }
 
+        public void BlinkButton(object obj)
+        {
+            blinkTimer = obj == null ? 0.0f : 2.0f;
+            blinkObject = obj;
+        }
+
         protected override void OnAddedToContainer()
         {
             var g = ParentWindow.Graphics;
@@ -1452,9 +1477,18 @@ namespace FamiStudio
                     if (drawBackground)
                     {
                         if (button.gradient)
-                            c.FillAndDrawRectangleGradient(0, 0, contentSizeX, groupSizeY, button.color, Color.FromArgb(200, button.color),Theme.BlackColor, true, groupSizeY, 1);
+                        {
+                            var bgColor = button.color;
+
+                            if (blinkTimer != 0.0f && button.Object == blinkObject)
+                                bgColor = Theme.Darken(bgColor, (int)(MathF.Sin(blinkTimer * MathF.PI * 4.0f) * 16 + 16));
+
+                            c.FillAndDrawRectangleGradient(0, 0, contentSizeX, groupSizeY, bgColor, Color.FromArgb(200, bgColor), Theme.BlackColor, true, groupSizeY, 1);
+                        }
                         else
+                        {
                             c.FillAndDrawRectangle(0, 0, contentSizeX, groupSizeY, button.color, Theme.BlackColor, 1);
+                        }
                     }
 
                     if (button.type == ButtonType.Instrument)
@@ -1503,7 +1537,7 @@ namespace FamiStudio
                     {
                         if (button.Text != null)
                         {
-                            c.DrawText(button.Text, button.Font, button.bmp == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textColor : this.disabledColor, button.TextAlignment | ellipsisFlag | TextFlags.Middle, contentSizeX - buttonTextPosX, buttonSizeY);
+                            c.DrawText(button.Text, button.Font, button.bmp == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textColor : disabledColor, button.TextAlignment | ellipsisFlag | TextFlags.Middle, contentSizeX - buttonTextPosX, buttonSizeY);
                         }
 
                         if (button.bmp != null)
@@ -2773,6 +2807,8 @@ namespace FamiStudio
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
 
+                            var importedSamples = new List<DPCMSample>();
+
                             foreach (var filename in filenames)
                             {
                                 var sampleName = Path.GetFileNameWithoutExtension(filename);
@@ -2792,7 +2828,8 @@ namespace FamiStudio
                                             Log.LogMessage(LogSeverity.Warning, "The maximum supported length for a WAV file is 2.0 seconds. Truncating.");
                                         }
 
-                                        App.Project.CreateDPCMSampleFromWavData(sampleName, wavData, sampleRate, filename);
+                                        var sample = App.Project.CreateDPCMSampleFromWavData(sampleName, wavData, sampleRate, filename);
+                                        importedSamples.Add(sample);
                                     }
                                 }
                                 else if (Path.GetExtension(filename).ToLower() == ".dmc")
@@ -2803,12 +2840,15 @@ namespace FamiStudio
                                         Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
                                         Log.LogMessage(LogSeverity.Warning, $"The maximum supported size for a DMC is {DPCMSample.MaxSampleSize} bytes. Truncating.");
                                     }
-                                    App.Project.CreateDPCMSampleFromDmcData(sampleName, dmcData, filename);
+                                    var sample = App.Project.CreateDPCMSampleFromDmcData(sampleName, dmcData, filename);
+                                    importedSamples.Add(sample);
                                 }
                             }
 
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
+                            if (importedSamples.Count != 0)
+                                BlinkButton(importedSamples[0]);
                         }
                         App.EndLogTask();
                     }
@@ -2832,6 +2872,7 @@ namespace FamiStudio
             App.SelectedSong = App.Project.CreateSong();
             App.UndoRedoManager.EndTransaction();
             RefreshButtons();
+            BlinkButton(App.SelectedSong);
         }
 
         private void AskDeleteSong(Song song)
@@ -2857,6 +2898,7 @@ namespace FamiStudio
             App.SelectedInstrument = App.Project.CreateInstrument(expansionType);
             App.UndoRedoManager.EndTransaction();
             RefreshButtons();
+            BlinkButton(App.SelectedInstrument);
         }
 
         private void AskAddInstrument(int x, int y)
@@ -2958,6 +3000,7 @@ namespace FamiStudio
             App.SelectedArpeggio = App.Project.CreateArpeggio();
             App.UndoRedoManager.EndTransaction();
             RefreshButtons();
+            BlinkButton(App.SelectedArpeggio);
         }
 
         private void AskDeleteArpeggio(Arpeggio arpeggio)
@@ -4316,9 +4359,21 @@ namespace FamiStudio
             }
         }
 
+        private void TickBlink(float delta)
+        {
+            if (blinkTimer != 0.0f)
+            {
+                blinkTimer = MathF.Max(0.0f, blinkTimer - delta);
+                if (blinkTimer == 0.0f)
+                    blinkObject = null;
+                MarkDirty();
+            }
+        }
+
         public override void Tick(float delta)
         {
             TickFling(delta);
+            TickBlink(delta);
             UpdateCaptureOperation(mouseLastX, mouseLastY, true, delta);
         }
         
@@ -4742,6 +4797,7 @@ namespace FamiStudio
 
                 ClampScroll();
                 RefreshButtons();
+                BlinkButton(null);
             }
         }
     }
