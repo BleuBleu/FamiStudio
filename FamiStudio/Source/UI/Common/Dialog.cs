@@ -163,7 +163,7 @@ namespace FamiStudio
         {
             // Focus control gets to check first. This is needed to handle drop downs
             // that extends beyond the bounding of a dialog, for example.
-            if (focusedControl != null && focusedControl.WindowRectangle.Contains(winX, winY))
+            if (focusedControl != null && focusedControl.HitTest(winX, winY))
             {
                 Debug.Assert(focusedControl.Visible);
                 var winPos = focusedControl.WindowPosition;
