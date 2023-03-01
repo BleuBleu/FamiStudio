@@ -38,6 +38,7 @@ public:
 	void write_register( cpu_time_t, int addr, int data );
 	void get_register_values(struct n163_register_values* regs);
 	int get_wave_pos(int chan);
+	void set_mix(bool m) { mix = m; }
 
 	void reset_triggers();
 	int  get_channel_trigger(int idx) const;
@@ -71,6 +72,7 @@ private:
 	int addr_reg;
 	int last_amp;
 	int active_osc;
+	bool mix;
 	long delay;
 	
 	enum { reg_count = 0x80 };

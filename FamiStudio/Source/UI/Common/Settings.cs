@@ -218,6 +218,7 @@ namespace FamiStudio
         public static int NumBufferedAudioFrames = DefaultNumBufferedAudioFrames;
         public static int InstrumentStopTime = 1;
         public static bool SquareSmoothVibrato = true;
+        public static bool N163Mix = true;
         public static bool ClampPeriods = true;
         public static bool NoDragSoungWhenPlaying = false;
         public static int MetronomeVolume = 50;
@@ -334,6 +335,7 @@ namespace FamiStudio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
+            N163Mix = ini.GetBool("Audio", "N163Mix", true);
             ClampPeriods = ini.GetBool("Audio", "ClampPeriods", true);
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
             MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
@@ -505,6 +507,7 @@ namespace FamiStudio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
+            ini.SetBool("Audio", "N163Mix", N163Mix);
             ini.SetBool("Audio", "ClampPeriods", ClampPeriods);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
             ini.SetInt("Audio", "MetronomeVolume", MetronomeVolume);

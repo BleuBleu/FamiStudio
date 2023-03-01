@@ -14,13 +14,10 @@ Minor UI stuff:
 - Stereo export and NSF import on Android?
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
 - Full S5B support? Sync up with Perkka when im back.
-- Add temple raiders demo song (MMC5)
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 - Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
-- N163 multiplex?
 - Numpad delete (No sure GLFW can do it?)
 - Add confirmation for overwrite on mobile
-- Preset instruments
 - PWM stuff from how2.
 - Phase resets?
 - BUG : Shovel Knight song has weird instrument names.
@@ -40,6 +37,11 @@ Testing
 - Re-export all ROM songs at the end.
 - Re-export all ROM test (.bin) files at the end.
 
+Packaging
+=========
+- Preset instruments
+- Add temple raiders demo song (MMC5)
+
 4.1.0 Change Log
 ================
 - Windows version is now 64-bit and targets .NET 5.0.
@@ -56,6 +58,7 @@ Testing
 - DPCM improvements:
 	- No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
 	- Up to 256KB of samples using bank switching.
+- Option to mix N163 or not
 
 Android SDK 12
 ==============

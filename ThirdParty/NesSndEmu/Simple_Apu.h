@@ -74,6 +74,7 @@ public:
 
 	int get_namco_wave_pos(int n163ChanIndex);
 	int get_fds_wave_pos();
+	void set_namco_mix(bool mix);
 
 	// Read from status register at 0x4015
 	int read_status();

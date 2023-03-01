@@ -52,6 +52,8 @@ namespace FamiStudio
         public extern static void ResetTriggers(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetChannelTrigger")]
         public extern static int GetChannelTrigger(int apuIdx, int exp, int idx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSetN163Mix")]
+        public extern static void SetN163Mix(int apuIdx, int mix);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
@@ -815,6 +817,7 @@ namespace FamiStudio
                                 // This is mainly because the instrument player might not update all the channels all the time.
                                 WriteRegister(apuIdx, N163_ADDR, N163_REG_VOLUME);
                                 WriteRegister(apuIdx, N163_DATA, (numNamcoChannels - 1) << 4);
+                                NesApu.SetN163Mix(apuIdx, Settings.N163Mix ? 1 : 0);
                                 break;
                             case APU_EXPANSION_SUNSOFT:
                                 WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);

@@ -111,6 +111,7 @@ namespace FamiStudio
         private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
         private readonly string StopInstrumentTooltip           = "Number of seconds to wait before stopping instruments that have a release part in their volume envelopes.";
         private readonly string PreventPoppingTooltip           = "When enabled, FamiStudio will use the sweep unit to prevent popping around certain notes on the 2 main square channels. Also known as 'Blargg's Smooth Vibrato' technique.";
+        private readonly string N163MixerTooltip                = "When enabled, FamiStudio will correctly mix the Namco 163 channels. Leave this OFF and set a very agressive low-pass filter to mimic real hardware.";
         private readonly string ClampPeriodsTooltip             = "When enabled, FamiStudio will clamp periods and note values to their valid hardware range. Note that the NSF/Sound Engine does not do that, so disabling this option will result in more hardware-accurate sound where periods and notes can sometimes wrap-around.";
         private readonly string NoDragSoundTooltip              = "When enabled, FamiStudio will not emit sounds when dragging notes in the Piano Roll if the song is playing.";
         private readonly string MetronomeVolumeTooltip          = "Volume of the metronome.";
@@ -254,9 +255,10 @@ namespace FamiStudio
                     page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16, NumBufferedFramesTooltip); // 0
                     page.AddNumericUpDown("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10, StopInstrumentTooltip); // 1
                     page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 2
-                    page.AddCheckBox("Clamp periods and notes:", Settings.ClampPeriods, ClampPeriodsTooltip); // 3
-                    page.AddCheckBox("Mute drag sounds during playback:", Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 4
-                    page.AddSlider("Metronome volume:", Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 5
+                    page.AddCheckBox("Mix Namco 163 channels:", Settings.N163Mix, N163MixerTooltip); // 3
+                    page.AddCheckBox("Clamp periods and notes:", Settings.ClampPeriods, ClampPeriodsTooltip); // 4
+                    page.AddCheckBox("Mute drag sounds during playback:", Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 5
+                    page.AddSlider("Metronome volume:", Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 6
                     break;
                 }
                 case ConfigSection.Mixer:
@@ -539,9 +541,10 @@ namespace FamiStudio
                     Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);
                     Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(1);
                     Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(2);
-                    Settings.ClampPeriods = pageSound.GetPropertyValue<bool>(3);
-                    Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(4);
-                    Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(5);
+                    Settings.N163Mix = pageSound.GetPropertyValue<bool>(3);
+                    Settings.ClampPeriods = pageSound.GetPropertyValue<bool>(4);
+                    Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(5);
+                    Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(6);
 
                     // Input
                     Settings.TrackPadControls = pageInput.GetPropertyValue<bool>(0);

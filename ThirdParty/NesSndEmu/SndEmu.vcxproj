@@ -59,6 +59,9 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <ModuleDefinitionFile>SndEmu.def</ModuleDefinitionFile>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>

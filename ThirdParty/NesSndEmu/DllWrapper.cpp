@@ -123,3 +123,8 @@ extern "C" int __stdcall NesApuGetChannelTrigger(int apuIdx, int exp, int idx)
 {
 	return apu[apuIdx].get_channel_trigger(exp, idx);
 }
+
+extern "C" void __stdcall NesApuSetN163Mix(int apuIdx, int mix)
+{
+	return apu[apuIdx].set_namco_mix(mix);
+}

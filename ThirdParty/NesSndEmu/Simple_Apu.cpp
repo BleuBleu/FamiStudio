@@ -293,6 +293,12 @@ int Simple_Apu::get_namco_wave_pos(int n163ChanIndex)
 	return namco.get_wave_pos(n163ChanIndex);
 }
 
+void Simple_Apu::set_namco_mix(bool mix)
+{
+	assert((expansions & expansion_mask_namco) != 0 && !seeking);
+	return namco.set_mix(mix);
+}
+
 int Simple_Apu::get_fds_wave_pos()
 {
 	assert((expansions & expansion_mask_fds) != 0 && !seeking);
