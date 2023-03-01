@@ -14,7 +14,7 @@ namespace PatchBin
             var file = File.ReadAllBytes(args[0]);
             var code = File.ReadAllBytes(args[1]);
 
-            Array.Copy(code, 128, file, 128, code.Length - 128);
+            Array.Copy(code, 128, file, 128, code.Length - 128 - 256); // 256 = leave song table untouched.
 
             File.WriteAllBytes(args[2], file);
         }

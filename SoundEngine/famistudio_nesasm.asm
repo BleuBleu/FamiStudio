@@ -3678,12 +3678,16 @@ famistudio_set_instrument:
     ; Pitch envelopes.
     ldx <.chan_idx
     .if FAMISTUDIO_USE_VIBRATO 
-    lda famistudio_chn_env_override,x ; Instrument pitch is overriden by vibrato, dont touch!
-    bmi .reset_pitch_env    
+    lda famistudio_chn_env_override,x 
+    asl a ; Bit-7 tells us if the pitch env is overriden, temporarely store in carry.
     .endif    
     lda famistudio_channel_to_pitch_env, x
     bmi .no_pitch
     tax
+    .if FAMISTUDIO_USE_VIBRATO 
+    ror a ; Bring back our bit-7 from above.
+    bmi .reset_pitch_env ; Instrument pitch is overriden by vibrato, dont touch!
+    .endif    
     lda #0
     sta famistudio_pitch_env_value_lo,x
     sta famistudio_pitch_env_value_hi,x

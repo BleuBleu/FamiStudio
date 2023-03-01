@@ -88,8 +88,9 @@ nsf_song_table_idx: .res 1
 
     ldy nsf_song_table+0, x
 
-    ; First map the full 0x9000 - 0xf000 to song data. 
-    ; The multi-expansion NSF driver code (and EPSM apparently) take 2 pages
+    ; Map 0x8000...[driver code] to song data. There may be a DPCM page between
+    ; the song data and the driver code. That will get bankswapped when the first
+    ; sample plays.
     ldx #0
     @bank_loop:
         tya  
