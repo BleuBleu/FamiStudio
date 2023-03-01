@@ -24,7 +24,7 @@ namespace FamiStudio
         // Version 15 = FamiStudio 4.1.0 (DPCM bankswitching)
         public const int Version = 15;
         public const int MaxMappedSampleSize = 0x40000;
-        public const int MaxDPCMBanks = 16; // Arbitrary.
+        public const int MaxDPCMBanks = 64; 
         public const int MaxSampleAddress = 255 * 64;
 
         private List<DPCMSample> samples = new List<DPCMSample>();
