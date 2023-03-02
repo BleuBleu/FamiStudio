@@ -11,6 +11,8 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
+            var periodHi = 0;
+
             if (note.IsStop)
             {
                 WriteRegister(NesApu.VRC6_SAW_VOL, 0x00);
@@ -21,6 +23,8 @@ namespace FamiStudio
                 var volume = GetVolume();
                 var sawMasterVolume = Vrc6SawMasterVolumeType.Full;
 
+                periodHi = ((period >> 8) & 0x0f);
+
                 if (note.Instrument != null)
                 {
                     Debug.Assert(note.Instrument.IsVrc6);
@@ -29,7 +33,14 @@ namespace FamiStudio
 
                 WriteRegister(NesApu.VRC6_SAW_VOL, (volume << (2 - sawMasterVolume))); 
                 WriteRegister(NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
-                WriteRegister(NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
+                WriteRegister(NesApu.VRC6_SAW_HI, periodHi | 0x80);
+            }
+
+            // Clear and set the hi-bit of B002 to reset phase.
+            if (resetPhase)
+            {
+                WriteRegister(NesApu.VRC6_SAW_HI, periodHi);
+                WriteRegister(NesApu.VRC6_SAW_HI, periodHi | 0x80);
             }
 
             base.UpdateAPU();

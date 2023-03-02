@@ -57,13 +57,15 @@ namespace FamiStudio
         private const byte OpcodeSlide                 = 0x4f;
         private const byte OpcodeVolumeSlide           = 0x50;
         private const byte OpcodeDeltaCounter          = 0x51;
-        private const byte OpcodeVrc6SawMasterVolume   = 0x52; // VRC6 only
-        private const byte OpcodeVrc7ReleaseNote       = 0x53; // VRC7 only
-        private const byte OpcodeFdsModSpeed           = 0x54; // FDS only
-        private const byte OpcodeFdsModDepth           = 0x55; // FDS only
-        private const byte OpcodeFdsReleaseNote        = 0x56; // FDS only
-        private const byte OpcodeN163ReleaseNote       = 0x57; // N163 only
-        private const byte OpcodeEpsmReleaseNote       = 0x58; // EPSM only
+        private const byte OpcodePhaseReset            = 0x52;
+        private const byte OpcodeVrc6SawMasterVolume   = 0x53; // VRC6 only
+        private const byte OpcodeVrc7ReleaseNote       = 0x54; // VRC7 only
+        private const byte OpcodeFdsModSpeed           = 0x55; // FDS only
+        private const byte OpcodeFdsModDepth           = 0x56; // FDS only
+        private const byte OpcodeFdsReleaseNote        = 0x57; // FDS only
+        private const byte OpcodeN163ReleaseNote       = 0x58; // N163 only
+        private const byte OpcodeN163PhaseReset        = 0x59; // N163 only
+        private const byte OpcodeEpsmReleaseNote       = 0x5a; // EPSM only
 
         private const byte OpcodeSetReferenceFT2       = 0xff; // FT2
         private const byte OpcodeLoopFT2               = 0xfd; // FT2
@@ -91,6 +93,7 @@ namespace FamiStudio
         private bool usesReleaseNotes = false;
         private bool usesMultipleDpcmBanks = false;
         private bool usesExtendedDpcmRange = false;
+        private bool usesPhaseReset = false;
 
         public FamitoneMusicFile(int kernel, bool outputLog)
         {
@@ -1110,6 +1113,15 @@ namespace FamiStudio
                             usesVibrato = true;
                         }
 
+                        if (note.HasPhaseReset)
+                        {
+                            if (channel.IsN163Channel)
+                                songData.Add($"${OpcodeN163PhaseReset:x2}+");
+                            else
+                                songData.Add($"${OpcodePhaseReset:x2}+");
+                            usesPhaseReset = true;
+                        }
+
                         if (note.IsMusical)
                         {
                             // Set/clear override when changing arpeggio
@@ -1343,6 +1355,7 @@ namespace FamiStudio
                                     note.HasNoteDelay    ||
                                     note.HasCutDelay     ||
                                     note.HasDeltaCounter ||
+                                    note.HasPhaseReset   ||
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
                                 {
                                     break;
@@ -1659,6 +1672,7 @@ namespace FamiStudio
                                 note.HasNoteDelay    = false;
                                 note.HasCutDelay     = false;
                                 note.HasDeltaCounter = false;
+                                note.HasPhaseReset   = false;
                                 note.Arpeggio        = null;
                             }
                             else
@@ -1886,6 +1900,8 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Duty Cycle effect is used, you must set FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1.");
                     if (usesDeltaCounter)
                         Log.LogMessage(LogSeverity.Info, "DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.");
+                    if (usesPhaseReset)
+                        Log.LogMessage(LogSeverity.Info, "Phase Reset effect is used, you must set FAMISTUDIO_USE_PHASE_RESET = 1.");
                     if (usesMultipleDpcmBanks)
                         Log.LogMessage(LogSeverity.Info, "Multiple DPCM banks are used, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
                     else if (usesExtendedDpcmRange)

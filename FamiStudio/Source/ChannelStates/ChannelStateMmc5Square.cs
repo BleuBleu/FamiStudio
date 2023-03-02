@@ -27,7 +27,6 @@ namespace FamiStudio
 
                 var periodHi = (period >> 8) & 0x07;
                 var periodLo = (period >> 0) & 0xff;
-                int deltaHi  = periodHi - prevPeriodHi;
 
                 if (periodHi != prevPeriodHi) // Avoid resetting the sequence.
                 {
@@ -37,6 +36,11 @@ namespace FamiStudio
 
                 WriteRegister(NesApu.MMC5_PL1_LO  + regOffset, periodLo);
                 WriteRegister(NesApu.MMC5_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
+            }
+
+            if (resetPhase)
+            {
+                WriteRegister(NesApu.MMC5_PL1_HI + regOffset, prevPeriodHi);
             }
 
             base.UpdateAPU();

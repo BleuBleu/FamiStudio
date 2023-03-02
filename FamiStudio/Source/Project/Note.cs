@@ -34,7 +34,8 @@ namespace FamiStudio
             "Note Delay",
             "Cut Delay",
             "Volume Slide",
-            "DAC"
+            "DAC",
+            "Phase Reset"
         };
 
         public static readonly string[] EffectIcons = new string[]
@@ -50,6 +51,7 @@ namespace FamiStudio
             "EffectNoteDelay",
             "EffectCutDelay",
             "EffectVolume",
+            "EffectDutyCycle",
             "EffectDutyCycle",
         };
 
@@ -80,7 +82,8 @@ namespace FamiStudio
         public const int EffectCutDelay     =  9; // Sxx
         public const int EffectVolumeSlide  = 10; // Axy
         public const int EffectDeltaCounter = 11; // Zxx
-        public const int EffectCount        = 12; 
+        public const int EffectPhaseReset   = 12; // =xx (is famitracker running out of letters? lol)
+        public const int EffectCount        = 13; 
 
         public const int EffectVolumeMask         = (1 << EffectVolume);
         public const int EffectVibratoMask        = (1 << EffectVibratoSpeed) | (1 << EffectVibratoDepth);
@@ -94,6 +97,7 @@ namespace FamiStudio
         public const int EffectVolumeSlideMask    = (1 << EffectVolumeSlide);
         public const int EffectVolumeAndSlideMask = (1 << EffectVolume) | (1 << EffectVolumeSlide);
         public const int EffectDeltaCounterMask   = (1 << EffectDeltaCounter);
+        public const int EffectPhaseResetMask     = (1 << EffectPhaseReset);
 
         public const int EffectAllMask = 0xfff; // Must be updated every time a new effect is added.
 
@@ -127,6 +131,7 @@ namespace FamiStudio
         private byte   noteDelay;
         private byte   cutDelay;
         private byte   dmcCounter;
+        private byte   phaseReset;
 
         // As of version 5 (FamiStudio 2.0.0), these are deprecated and are only kept around
         // for migration.
@@ -396,6 +401,12 @@ namespace FamiStudio
             set { dmcCounter = (byte)Utils.Clamp(value, 0, 127); HasDeltaCounter = true; }
         }
 
+        public byte PhaseReset
+        {
+            get { Debug.Assert(HasPhaseReset); return phaseReset; }
+            set { phaseReset = (byte)Utils.Clamp(value, 1, 1); HasPhaseReset = true; }
+        }
+
         public bool HasVolume
         {
             get { return (effectMask & EffectVolumeMask) != 0; }
@@ -460,6 +471,12 @@ namespace FamiStudio
         {
             get { return (effectMask & EffectDeltaCounterMask) != 0; }
             set { if (value) effectMask |= EffectDeltaCounterMask; else effectMask = (ushort)(effectMask & ~EffectDeltaCounterMask); }
+        }
+
+        public bool HasPhaseReset
+        {
+            get { return (effectMask & EffectPhaseResetMask) != 0; }
+            set { if (value) effectMask |= EffectPhaseResetMask; else effectMask = (ushort)(effectMask & ~EffectPhaseResetMask); }
         }
 
         public bool HasAttack
@@ -661,6 +678,7 @@ namespace FamiStudio
             if (buffer.Version >=  8 && (EffectMask & EffectCutDelayMask)  != 0) buffer.Serialize(ref cutDelay);
             if (buffer.Version >= 11 && (EffectMask & EffectVolumeAndSlideMask) == EffectVolumeAndSlideMask) buffer.Serialize(ref volumeSlide);
             if (buffer.Version >= 13 && (EffectMask & EffectDeltaCounterMask)   == EffectDeltaCounterMask)   buffer.Serialize(ref dmcCounter);
+            if (buffer.Version >= 15 && (EffectMask & EffectPhaseResetMask)     == EffectPhaseResetMask)     buffer.Serialize(ref phaseReset);
 
             // At version 7 (FamiStudio 2.2.0) we added support for arpeggios.
             if (buffer.Version >= 7)
@@ -683,6 +701,7 @@ namespace FamiStudio
                 case EffectNoteDelay    : return HasNoteDelay;
                 case EffectCutDelay     : return HasCutDelay;
                 case EffectDeltaCounter : return HasDeltaCounter;
+                case EffectPhaseReset   : return HasPhaseReset;
             }
 
             return false;
@@ -704,6 +723,7 @@ namespace FamiStudio
                 case EffectNoteDelay    : return NoteDelay;
                 case EffectCutDelay     : return CutDelay;
                 case EffectDeltaCounter : return DeltaCounter;
+                case EffectPhaseReset   : return PhaseReset;
             }
 
             return 0;
@@ -725,6 +745,7 @@ namespace FamiStudio
                 case EffectNoteDelay    : NoteDelay         = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
                 case EffectCutDelay     : CutDelay          = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
                 case EffectDeltaCounter : DeltaCounter      = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectPhaseReset   : PhaseReset        = (byte)Utils.Clamp(val, 1, 1); break;
             }
         }
         
@@ -744,6 +765,7 @@ namespace FamiStudio
                 case EffectNoteDelay    : HasNoteDelay    = false; break;
                 case EffectCutDelay     : HasCutDelay     = false; break;
                 case EffectDeltaCounter : HasDeltaCounter = false; break;
+                case EffectPhaseReset   : HasPhaseReset   = false; break;
             }
         }
 
@@ -763,10 +785,9 @@ namespace FamiStudio
         {
             switch (fx)
             {
-                case EffectFinePitch:
-                    return FinePitchMin;
-                case EffectSpeed:
-                    return 1;
+                case EffectFinePitch  : return FinePitchMin;
+                case EffectSpeed      : return 1;
+                case EffectPhaseReset : return 1;
             }
             return 0;
         }
@@ -787,6 +808,7 @@ namespace FamiStudio
                 case EffectNoteDelay    : return 31;
                 case EffectCutDelay     : return 31;
                 case EffectDeltaCounter : return 127;
+                case EffectPhaseReset   : return 1;
             }
 
             return 0;

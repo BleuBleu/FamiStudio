@@ -99,7 +99,7 @@ namespace FamiStudio
                                                   
         public static Shortcut PlayShortcut             = new Shortcut("Play",                 "Play",            Keys.Space);
         public static Shortcut PlayFromStartShortcut    = new Shortcut("Play From Start",      "PlayFromStart",   Keys.Space, ModifierKeys.Shift);
-        public static Shortcut PlayFromPatternShortcut  = new Shortcut("Play From Pattern",    "PlayFromPattern", Keys.Space, ModifierKeys.Shift);
+        public static Shortcut PlayFromPatternShortcut  = new Shortcut("Play From Pattern",    "PlayFromPattern", Keys.Space, ModifierKeys.Control);
         public static Shortcut PlayFromLoopShortcut     = new Shortcut("Play From Loop Point", "PlayFromLoop",    Keys.Space, ModifierKeys.ControlShift);
 
         public static Shortcut SeekStartShortcut        = new Shortcut("Seek to Start",            "SeekStart",        Keys.Home);

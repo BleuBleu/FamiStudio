@@ -115,6 +115,13 @@ namespace FamiStudio
                 WriteN163Register(NesApu.N163_REG_VOLUME   + regOffset, channelMask | volume);
             }
 
+            if (resetPhase)
+            {
+                WriteN163Register(NesApu.N163_REG_PHASE_LO  + regOffset, 0);
+                WriteN163Register(NesApu.N163_REG_PHASE_MID + regOffset, 0);
+                WriteN163Register(NesApu.N163_REG_PHASE_HI  + regOffset, 0);
+            }
+
             base.UpdateAPU();
         }
     }}

@@ -122,6 +122,13 @@ namespace FamiStudio
                 case Note.EffectNoteDelay: return song.UsesFamiTrackerTempo;
                 case Note.EffectCutDelay: return song.UsesFamiTrackerTempo;
                 case Note.EffectDeltaCounter: return type == ChannelType.Dpcm;
+                case Note.EffectPhaseReset: return 
+                    (type == ChannelType.Square1 || type == ChannelType.Square2) || 
+                    (type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2) ||
+                    (type == ChannelType.Vrc6Square1 || type == ChannelType.Vrc6Square2 || type == ChannelType.Vrc6Saw) ||
+                    (type == ChannelType.FdsWave) ||
+                    (type == ChannelType.S5BSquare1 || type == ChannelType.S5BSquare2 || type == ChannelType.S5BSquare1) ||
+                    (type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8);
             }
 
             return true;
