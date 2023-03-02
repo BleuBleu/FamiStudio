@@ -69,7 +69,7 @@ namespace FamiStudio
                 }
             }
 
-            width  = Math.Max(minSizeX, sizeX + textPosX) + iconPos; 
+            width  = Math.Max(minSizeX, sizeX + textPosX) + iconPos * 2; 
             height = sizeY;
         }
 

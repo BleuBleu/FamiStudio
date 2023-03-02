@@ -3744,16 +3744,18 @@ namespace FamiStudio
         private void DuplicateSong(Song s)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-            s.Project.DuplicateSong(s);
+            var newSong = s.Project.DuplicateSong(s);
             RefreshButtons();
+            BlinkButton(newSong);
             App.UndoRedoManager.EndTransaction();
         }
 
         private void DuplicateInstrument(Instrument inst)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-            App.Project.DuplicateInstrument(inst);
+            var newInst = App.Project.DuplicateInstrument(inst);
             RefreshButtons();
+            BlinkButton(newInst);
             App.UndoRedoManager.EndTransaction();
         }
 
@@ -3804,6 +3806,15 @@ namespace FamiStudio
                     }
                 });
             }
+        }
+
+        private void DuplicateConvertInstrument(Instrument instrument, int exp)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+            var newInstrument = App.Project.DuplicateConvertInstrument(instrument, exp);
+            App.UndoRedoManager.EndTransaction();
+            RefreshButtons();
+            BlinkButton(newInstrument);
         }
 
         private void LoadN163FdsResampleWavFile(Instrument inst)
@@ -3943,7 +3954,21 @@ namespace FamiStudio
                     }
 
                     menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateInstrument(inst); }, ContextMenuSeparator.Before));
-                    menu.Add(new ContextMenuOption("MenuReplace", "Replace With...", () => { AskReplaceInstrument(inst); }));
+                    menu.Add(new ContextMenuOption("MenuReplace", "Replace With...", () => { AskReplaceInstrument(inst); }, ContextMenuSeparator.After));
+
+                    if (App.Project.UsesAnyExpansionAudio)
+                    {
+                        var activeExpansions = App.Project.GetActiveExpansions();
+
+                        foreach (var exp in activeExpansions)
+                        {
+                            if (exp != inst.Expansion)
+                            {
+                                var e = exp;
+                                menu.Add(new ContextMenuOption(ExpansionType.Icons[exp], $"Duplicate and Convert to {ExpansionType.InstrumentShortNames[exp]}", () => { DuplicateConvertInstrument(inst, e); }));
+                            }
+                        }
+                    }
                 }
 
                 menu.Add(new ContextMenuOption("MenuProperties", "Instrument Properties...", () => { EditInstrumentProperties(new Point(x, y), inst); }, ContextMenuSeparator.Before));
@@ -3984,8 +4009,9 @@ namespace FamiStudio
         private void DuplicateArpeggio(Arpeggio arp)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-            App.Project.DuplicateArpeggio(arp);
+            var newArp = App.Project.DuplicateArpeggio(arp);
             RefreshButtons();
+            BlinkButton(newArp);
             App.UndoRedoManager.EndTransaction();
         }
 

@@ -1071,4 +1071,109 @@ namespace FamiStudio
             return Array.IndexOf(Names, str);
         }
     }
+
+    public static class InstrumentConverter
+    {
+        private delegate void ConvertDelegate(Instrument src, Instrument dst);
+        private static Dictionary<Tuple<int, int>, ConvertDelegate> ConvertMap = new Dictionary<Tuple<int, int>, ConvertDelegate>();
+
+        static InstrumentConverter()
+        {
+            // There are specialized conversion functions, well be adding more as we go.
+            ConvertMap.Add(new Tuple<int, int>(ExpansionType.Fds,  ExpansionType.N163), ConvertFdsToN163);
+            ConvertMap.Add(new Tuple<int, int>(ExpansionType.N163, ExpansionType.Fds),  ConvertN163ToFds);
+        }
+
+        private static void ConvertEnvelopeValues(Instrument srcInst, Instrument dstInst, int srcType, int dstType, Envelope srcEnv, Envelope dstEnv, int srcLen, int dstLen)
+        {
+            Envelope.GetMinMaxValueForType(srcInst, srcType, out var srcMin, out var srcMax);
+            Envelope.GetMinMaxValueForType(dstInst, dstType, out var dstMin, out var dstMax);
+
+            for (int di = 0; di < dstLen; di++)
+            {
+                var si = Utils.Clamp((int)Math.Floor(di * (srcLen / (float)dstLen)), 0, srcLen - 1);
+                var sv = srcEnv.Values[si];
+                var sr = (sv - srcMin) / (float)(srcMax - srcMin);
+                var dv = Utils.Clamp((int)Math.Floor(dstMin + sr * (dstMax - dstMin)), dstMin, dstMax);
+
+                dstEnv.Values[di] = (sbyte)dv;
+            }
+        }
+
+        private static void ConvertEnvelopeGeneric(Instrument srcInst, Instrument dstInst, int srcType, int dstType, Envelope srcEnv, Envelope dstEnv)
+        {
+            Debug.Assert(srcEnv.CanResize   == dstEnv.CanResize);
+            Debug.Assert(srcEnv.CanLoop     == dstEnv.CanLoop);
+            Debug.Assert(srcEnv.CanRelease  == dstEnv.CanRelease);
+            Debug.Assert(srcEnv.ChunkLength == 1); // Anything with chunks should have its own specialized version.
+            Debug.Assert(dstEnv.ChunkLength == 1);
+
+            if (dstEnv.CanResize)
+                dstEnv.Length = srcEnv.Length;
+            if (dstEnv.CanLoop)
+                dstEnv.Loop = srcEnv.Loop;
+            if (dstEnv.CanRelease)
+                dstEnv.Release = srcEnv.Release;
+
+            ConvertEnvelopeValues(srcInst, dstInst, srcType, dstType, srcEnv, dstEnv, srcEnv.Length, dstEnv.Length);
+        }
+
+        private static void ConvertGeneric(Instrument srcInst, Instrument dstInst)
+        {
+            for (var e = 0; e < EnvelopeType.Count; e++)
+            {
+                var srcEnv = srcInst.Envelopes[e];
+                var dstEnv = dstInst.Envelopes[e];
+
+                if (srcEnv != null && dstEnv != null)
+                {
+                    ConvertEnvelopeGeneric(srcInst, dstInst, e, e, srcEnv, dstEnv);
+                }
+            }
+        }
+
+        private static void ConvertFdsToN163(Instrument src, Instrument dst)
+        {
+            dst.N163WaveSize = (byte)Envelope.GetEnvelopeMaxLength(EnvelopeType.FdsWaveform);
+            dst.N163WavePreset = WavePresetType.Custom;
+
+            ConvertGeneric(src, dst);
+            ConvertEnvelopeValues(
+                src,
+                dst,
+                EnvelopeType.FdsWaveform,
+                EnvelopeType.N163Waveform,
+                src.FdsWaveformEnvelope,
+                dst.N163WaveformEnvelope,
+                src.FdsWaveformEnvelope.Length,
+                dst.N163WaveformEnvelope.Length);
+        }
+
+        private static void ConvertN163ToFds(Instrument src, Instrument dst)
+        {
+            dst.FdsWavePreset = WavePresetType.Custom;
+            ConvertGeneric(src, dst);
+            ConvertEnvelopeValues(
+                src,
+                dst,
+                EnvelopeType.N163Waveform,
+                EnvelopeType.FdsWaveform,
+                src.N163WaveformEnvelope,
+                dst.FdsWaveformEnvelope,
+                src.N163WaveformEnvelope.ChunkLength, // Only first wave.
+                dst.FdsWaveformEnvelope.Length);
+        }
+
+        public static void Convert(Instrument src, Instrument dst)
+        {
+            Debug.Assert(src.Expansion != dst.Expansion);
+
+            if (!ConvertMap.TryGetValue(new Tuple<int, int>(src.Expansion, dst.Expansion), out var convertFunction))
+            {
+                convertFunction = ConvertGeneric;
+            }
+
+            convertFunction(src, dst);
+        }
+    }
 }

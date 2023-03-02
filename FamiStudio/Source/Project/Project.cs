@@ -444,6 +444,17 @@ namespace FamiStudio
             return newInstrument;
         }
 
+        public Instrument DuplicateConvertInstrument(Instrument oldInst, int newExp)
+        {
+            var oldName = oldInst.Name;
+            var newName = GenerateUniqueInstrumentName(oldName.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
+            var newInst = CreateInstrument(newExp, newName);
+
+            InstrumentConverter.Convert(oldInst, newInst);
+
+            return newInst;
+        }
+
         public void DeleteAllInstruments()
         {
             foreach (var inst in instruments)
@@ -1800,6 +1811,18 @@ namespace FamiStudio
             "Nintendo MMC5",
             "Namco 163",
             "Sunsoft 5B",
+            "EPSM"
+        };
+
+        public static readonly string[] InstrumentShortNames =
+        {
+            "Regular",
+            "VRC6",
+            "VRC7",
+            "FDS",
+            "MMC5",
+            "N163",
+            "S5B",
             "EPSM"
         };
 
