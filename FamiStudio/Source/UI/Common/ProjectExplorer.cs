@@ -1287,6 +1287,22 @@ namespace FamiStudio
         {
             blinkTimer = obj == null ? 0.0f : 2.0f;
             blinkObject = obj;
+
+            if (obj != null)
+            {
+                // Scroll to that item.
+                for (int i = 0; i < buttons.Count; i++)
+                {
+                    if (buttons[i].Object == obj)
+                    {
+                        var buttonY = i * buttonSizeY;
+                        scrollY = buttonY - Height / 2;
+                        ClampScroll();
+                        MarkDirty();
+                        return;
+                    }
+                }
+            }
         }
 
         protected override void OnAddedToContainer()
@@ -1700,29 +1716,32 @@ namespace FamiStudio
                     captureOperation == CaptureOperation.DragArpeggio)
                 {
                     var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
-                    var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
+                    if (ClientRectangle.Contains(pt.X, pt.Y))
+                    { 
+                        var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
 
-                    if (buttonIdx >= 0)
-                    {
-                        var button = buttons[buttonIdx];
-
-                        if ((captureOperation == CaptureOperation.DragSong       && (button.type == ButtonType.Song       || button.type == ButtonType.SongHeader)) ||
-                            (captureOperation == CaptureOperation.DragInstrument && (button.type == ButtonType.Instrument || button.type == ButtonType.InstrumentHeader)) ||
-                            (captureOperation == CaptureOperation.DragSample     && (button.type == ButtonType.Dpcm       || button.type == ButtonType.DpcmHeader)) ||
-                            (captureOperation == CaptureOperation.DragArpeggio   && (button.type == ButtonType.Arpeggio))) // No header to account for "None" arp.
+                        if (buttonIdx >= 0)
                         {
-                            var lineY = (buttonIdx + 1) * buttonSizeY - scrollY;
-                            var lineColor = Color.Black;
+                            var button = buttons[buttonIdx];
 
-                            switch (captureOperation)
+                            if ((captureOperation == CaptureOperation.DragSong       && (button.type == ButtonType.Song       || button.type == ButtonType.SongHeader)) ||
+                                (captureOperation == CaptureOperation.DragInstrument && (button.type == ButtonType.Instrument || button.type == ButtonType.InstrumentHeader)) ||
+                                (captureOperation == CaptureOperation.DragSample     && (button.type == ButtonType.Dpcm       || button.type == ButtonType.DpcmHeader)) ||
+                                (captureOperation == CaptureOperation.DragArpeggio   && (button.type == ButtonType.Arpeggio))) // No header to account for "None" arp.
                             {
-                                case CaptureOperation.DragSong:       lineColor = draggedSong.Color;       break;
-                                case CaptureOperation.DragInstrument: lineColor = draggedInstrument.Color; break;
-                                case CaptureOperation.DragSample:     lineColor = draggedSample.Color;     break;
-                                case CaptureOperation.DragArpeggio:   lineColor = draggedArpeggio.Color;   break;
-                            }
+                                var lineY = (buttonIdx + 1) * buttonSizeY - scrollY;
+                                var lineColor = Color.Black;
 
-                            c.DrawLine(0, lineY, contentSizeX, lineY, lineColor, draggedLineSizeY);
+                                switch (captureOperation)
+                                {
+                                    case CaptureOperation.DragSong:       lineColor = draggedSong.Color;       break;
+                                    case CaptureOperation.DragInstrument: lineColor = draggedInstrument.Color; break;
+                                    case CaptureOperation.DragSample:     lineColor = draggedSample.Color;     break;
+                                    case CaptureOperation.DragArpeggio:   lineColor = draggedArpeggio.Color;   break;
+                                }
+
+                                c.DrawLine(0, lineY, contentSizeX, lineY, lineColor, draggedLineSizeY);
+                            }
                         }
                     }
                 }
@@ -2143,12 +2162,12 @@ namespace FamiStudio
             if (final)
             {
                 var buttonIdx = GetButtonAtCoord(x, y - buttonSizeY / 2, out _);
+                var button = buttonIdx >= 0 ? buttons[buttonIdx] : null;
+                var inside = ClientRectangle.Contains(x, y);
 
-                if (buttonIdx >= 0)
+                if (captureOperation == CaptureOperation.DragSong)
                 {
-                    var button = buttons[buttonIdx];
-
-                    if (captureOperation == CaptureOperation.DragSong && (button.type == ButtonType.Song || button.type == ButtonType.SongHeader))
+                    if (inside && button != null && (button.type == ButtonType.Song || button.type == ButtonType.SongHeader))
                     {
                         var songBefore = buttons[buttonIdx].song;
                         if (songBefore != draggedSong)
@@ -2159,7 +2178,10 @@ namespace FamiStudio
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
-                    else if (captureOperation == CaptureOperation.DragInstrument && (button.type == ButtonType.Instrument || button.type == ButtonType.InstrumentHeader))
+                }
+                else if (captureOperation == CaptureOperation.DragInstrument)
+                {
+                    if (inside && button != null && (button.type == ButtonType.Instrument || button.type == ButtonType.InstrumentHeader))
                     {
                         var instrumentBefore = buttons[buttonIdx].instrument;
                         if (instrumentBefore != draggedInstrument)
@@ -2170,7 +2192,14 @@ namespace FamiStudio
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
-                    else if (captureOperation == CaptureOperation.DragArpeggio && (button.type == ButtonType.Arpeggio))
+                    else if (Platform.IsDesktop && !inside)
+                    {
+                        InstrumentDroppedOutside(draggedInstrument, ControlToScreen(new Point(x, y)));
+                    }
+                }
+                else if (captureOperation == CaptureOperation.DragArpeggio)
+                {
+                    if (inside && button != null && button.type == ButtonType.Arpeggio)
                     {
                         var arpBefore = buttons[buttonIdx].arpeggio;
                         if (arpBefore != draggedArpeggio)
@@ -2181,34 +2210,39 @@ namespace FamiStudio
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
-                    else if (captureOperation == CaptureOperation.DragSample)
+                    else if (Platform.IsDesktop && !inside)
                     {
-                        if (!ClientRectangle.Contains(x, y))
+                        ArpeggioDroppedOutside(draggedArpeggio, ControlToScreen(new Point(x, y)));
+                    }
+                }
+                else if (captureOperation == CaptureOperation.DragSample)
+                {
+                    if (inside && button != null && (button.type == ButtonType.Dpcm || button.type == ButtonType.DpcmHeader))
+                    {
+                        var sampleBefore = buttons[buttonIdx].sample;
+                        if (sampleBefore != draggedSample)
                         {
-                            var mappingNote = App.GetDPCMSampleMappingNoteAtPos(ControlToScreen(new Point(x, y)), out var instrument);
-                            if (instrument != null)
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id, -1, TransactionFlags.StopAudio);
-                                instrument.UnmapDPCMSample(mappingNote);
-                                instrument.MapDPCMSample(mappingNote, draggedSample);
-                                App.UndoRedoManager.EndTransaction();
-                                DPCMSampleMapped?.Invoke(draggedSample, ControlToScreen(new Point(x, y)));
-                            }
-                        }
-                        else if (button.type == ButtonType.Dpcm || button.type == ButtonType.DpcmHeader)
-                        {
-                            var sampleBefore = buttons[buttonIdx].sample;
-                            if (sampleBefore != draggedSample)
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                                App.Project.MoveSample(draggedSample, sampleBefore);
-                                App.Project.AutoSortSamples = false;
-                                App.UndoRedoManager.EndTransaction();
-                            }
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.Project.MoveSample(draggedSample, sampleBefore);
+                            App.Project.AutoSortSamples = false;
+                            App.UndoRedoManager.EndTransaction();
                         }
                     }
-                    RefreshButtons();
+                    else if (Platform.IsDesktop && !inside)
+                    {
+                        var mappingNote = App.GetDPCMSampleMappingNoteAtPos(ControlToScreen(new Point(x, y)), out var instrument);
+                        if (instrument != null)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id, -1, TransactionFlags.StopAudio);
+                            instrument.UnmapDPCMSample(mappingNote);
+                            instrument.MapDPCMSample(mappingNote, draggedSample);
+                            App.UndoRedoManager.EndTransaction();
+                            DPCMSampleMapped?.Invoke(draggedSample, ControlToScreen(new Point(x, y)));
+                        }
+                    }
                 }
+
+                RefreshButtons();
             }
             else
             {
@@ -2273,10 +2307,6 @@ namespace FamiStudio
                         }
                     }
                 }
-                else if (Platform.IsDesktop)
-                {
-                    InstrumentDroppedOutside(draggedInstrument, ControlToScreen(new Point(x, y)));
-                }
             }
             else
             {
@@ -2312,10 +2342,6 @@ namespace FamiStudio
                             }
                         });
                     }
-                }
-                else if (Platform.IsDesktop)
-                {
-                    ArpeggioDroppedOutside?.Invoke(draggedArpeggio, ControlToScreen(new Point(x, y)));
                 }
             }
             else
