@@ -1750,6 +1750,13 @@ namespace FamiStudio
                     var env = EditEnvelope;
                     var rep = EditRepeatEnvelope;
 
+                    if (IsSelectionValid())
+                    {
+                        r.c.FillRectangle(
+                            GetPixelForNote(selectionMin + 0) + 1, 0,
+                            GetPixelForNote(selectionMax + 1), height, IsActiveControl ? selectionBgVisibleColor : selectionBgInvisibleColor);
+                    }
+
                     var highlightIndex = -1;
 
                     if ((Platform.IsMobile && highlightRepeatEnvelope) || captureOperation == CaptureOperation.ChangeEnvelopeRepeatValue)
@@ -1792,9 +1799,9 @@ namespace FamiStudio
 
                         // GLTODO : Was using "cz" here.
                         if (highlighted || selected)
-                            r.c.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 3, true);
+                            r.f.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, selected ? Theme.LightGreyColor1 : Theme.WhiteColor, 3, true, true);
                         else
-                            r.c.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, Theme.BlackColor);
+                            r.f.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, Theme.BlackColor);
 
                         var text = val.ToString();
                         if (text.Length * fontSmallCharSizeX + 2 < sizeX)
@@ -2280,17 +2287,30 @@ namespace FamiStudio
             return IsSelectionValid() && idx >= selectionMin && idx <= selectionMax;
         }
 
-        private bool IsEnvelopeRepeatValueSelected(int idx)
+        private bool GetRepeatEnvelopeSelectionMinMax(out int min, out int max)
         {
+            min = -1;
+            max = -1;
+
             var rep = EditRepeatEnvelope;
             var env = EditEnvelope;
 
             if (IsSelectionValid() && rep != null)
             {
-                var minIdx = (idx + 0) * env.ChunkLength;
-                var maxIdx = (idx + 1) * env.ChunkLength - 1;
+                min = selectionMin / env.ChunkLength;
+                max = selectionMax / env.ChunkLength;
 
-                return minIdx >= selectionMin && maxIdx <= selectionMax;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool IsEnvelopeRepeatValueSelected(int idx)
+        {
+            if (GetRepeatEnvelopeSelectionMinMax(out var min, out var max))
+            {
+                return idx >= min && idx <= max;
             }
 
             return false;
@@ -2804,7 +2824,6 @@ namespace FamiStudio
             }
             else
             {
-
                 for (int i = 0; i < env.Length; i++)
                 {
                     int val = env.Values[i];
@@ -3776,7 +3795,18 @@ namespace FamiStudio
                 delta = newValue - origValue;
             }
 
-            rep.Values[idx] = (sbyte)Utils.Clamp(rep.Values[idx] + delta, minRepeat, maxRepeat);
+            if (IsSelectionValid())
+            {
+                if (GetRepeatEnvelopeSelectionMinMax(out var min, out var max))
+                {
+                    for (int i = min; i <= max; i++)
+                        rep.Values[i] = (sbyte)Utils.Clamp(rep.Values[i] + delta, minRepeat, maxRepeat);
+                }
+            }
+            else
+            {
+                rep.Values[idx] = (sbyte)Utils.Clamp(rep.Values[idx] + delta, minRepeat, maxRepeat);
+            }
 
             MarkDirty();
         }
