@@ -1,7 +1,6 @@
 Minor UI stuff:
 - Allow instrument re-ordering + button for alpha sort (+ option to always keep sorted).
 	=> Do mobile (highlights buttons, test)
-- Folders in P.E.
 - Volume/effect/envelope scaling, easy one we have context menus.
 
 4.1.0
