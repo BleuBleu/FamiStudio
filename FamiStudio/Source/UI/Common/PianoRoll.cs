@@ -5266,7 +5266,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownEnvelopeSelection(MouseEventArgs e)
         {
-            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
+            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInEffectPanel(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
                 e.DelayRightClick(); // Need to wait and see if its a context menu click or not.
                 return true;
@@ -5735,7 +5735,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownDelayedEnvelopeSelection(MouseEventArgs e)
         {
-            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
+            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInEffectPanel(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
                 StartSelection(e.X, e.Y);
                 return true;
