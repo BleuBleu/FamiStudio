@@ -39,6 +39,10 @@ namespace FamiStudio
         private int tempoMode = TempoType.FamiStudio;
         private int expansionMask = ExpansionType.NoneMask;
         private int expansionNumN163Channels = 1; // For N163 only.
+        private bool sortSongs = true;
+        private bool sortInstruments = true;
+        private bool sortSamples = true;
+        private bool sortArpeggios = true;
 
         // This flag has different meaning depending on the tempo mode:
         //  - In FamiStudio  mode, it means the source data is authored on PAL
@@ -117,6 +121,46 @@ namespace FamiStudio
                 }
 
                 return -1;
+            }
+        }
+
+        public bool AutoSortSongs
+        {
+            get { return sortSongs; }
+            set
+            {
+                sortSongs = value;
+                ConditionalSortSongs();
+            }
+        }
+
+        public bool AutoSortInstruments
+        {
+            get { return sortInstruments; }
+            set
+            {
+                sortInstruments = value;
+                ConditionalSortInstruments();
+            }
+        }
+
+        public bool AutoSortSamples
+        {
+            get { return sortSamples; }
+            set
+            {
+                sortSamples = value;
+                ConditionalSortSamples();
+            }
+        }
+
+        public bool AutoSortArpeggios
+        {
+            get { return sortArpeggios; }
+            set
+            {
+                sortArpeggios = value;
+                ConditionalSortArpeggios();
             }
         }
 
@@ -232,8 +276,7 @@ namespace FamiStudio
 
             var sample = new DPCMSample(GenerateUniqueId(), name);
             samples.Add(sample);
-            SortSamples();
-
+            ConditionalSortSamples();
             return sample;
         }
 
@@ -331,7 +374,8 @@ namespace FamiStudio
 
             newSong.SerializeState(loadSerializer);
             newSong.Name = GenerateUniqueSongName(newSong.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
-            SortSongs();
+
+            ConditionalSortSongs();
             ValidateIntegrity();
             return newSong;
         }
@@ -353,7 +397,7 @@ namespace FamiStudio
 
             var instrument = new Instrument(this, GenerateUniqueId(), expansion, name);
             instruments.Add(instrument);
-            SortInstruments();
+            ConditionalSortInstruments();
             return instrument;
         }
 
@@ -366,7 +410,7 @@ namespace FamiStudio
 
             var arpeggio = new Arpeggio(GenerateUniqueId(), name);
             arpeggios.Add(arpeggio);
-            SortArpeggios();
+            ConditionalSortArpeggios();
             return arpeggio;
         }
 
@@ -379,7 +423,7 @@ namespace FamiStudio
             loadSerializer.RemapId(arpeggio.Id, newArpeggio.Id);
             newArpeggio.SerializeState(loadSerializer);
             newArpeggio.Name = GenerateUniqueArpeggioName(newArpeggio.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
-            SortArpeggios();
+            ConditionalSortArpeggios();
             ValidateIntegrity();
             return newArpeggio;
         }
@@ -439,7 +483,7 @@ namespace FamiStudio
             loadSerializer.RemapId(instrument.Id, newInstrument.Id);
             newInstrument.SerializeState(loadSerializer);
             newInstrument.Name = GenerateUniqueInstrumentName(newInstrument.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
-            SortInstruments();
+            ConditionalSortInstruments();
             ValidateIntegrity();
             return newInstrument;
         }
@@ -452,6 +496,8 @@ namespace FamiStudio
 
             InstrumentConverter.Convert(oldInst, newInst);
 
+            ConditionalSortInstruments();
+            ValidateIntegrity();
             return newInst;
         }
 
@@ -645,7 +691,7 @@ namespace FamiStudio
             if (instruments.Find(inst => inst.Name == name) == null)
             {
                 instrument.Name = name;
-                SortInstruments();
+                ConditionalSortInstruments();
                 return true;
             }
 
@@ -665,6 +711,23 @@ namespace FamiStudio
             });
         }
 
+        public void ConditionalSortInstruments()
+        {
+            if (sortInstruments)
+                SortInstruments();
+        }
+
+        public void MoveInstrument(Instrument inst, Instrument instBefore)
+        {
+            Debug.Assert(instruments.Contains(inst));
+            instruments.Remove(inst);
+
+            if (instBefore != null)
+                instruments.Insert(instruments.IndexOf(instBefore) + 1, inst);
+            else
+                instruments.Insert(0, inst);
+        }
+
         public bool RenameArpeggio(Arpeggio arpeggio, string name)
         {
             if (arpeggio.Name == name)
@@ -675,7 +738,7 @@ namespace FamiStudio
             if (arpeggios.Find(arp => arp.Name == name) == null)
             {
                 arpeggio.Name = name;
-                SortArpeggios();
+                ConditionalSortArpeggios();
                 return true;
             }
 
@@ -690,6 +753,23 @@ namespace FamiStudio
             });
         }
 
+        public void ConditionalSortArpeggios()
+        {
+            if (sortArpeggios)
+                SortArpeggios();
+        }
+
+        public void MoveArpeggio(Arpeggio arp, Arpeggio arpBefore)
+        {
+            Debug.Assert(arpeggios.Contains(arp));
+            arpeggios.Remove(arp);
+
+            if (arpBefore != null)
+                arpeggios.Insert(arpeggios.IndexOf(arpBefore) + 1, arp);
+            else
+                arpeggios.Insert(0, arp);
+        }
+
         public bool RenameSample(DPCMSample sample, string name)
         {
             if (sample.Name == name)
@@ -700,7 +780,7 @@ namespace FamiStudio
             if (samples.Find(s => s.Name == name) == null)
             {
                 sample.Name = name;
-                SortSamples();
+                ConditionalSortSamples();
                 return true;
             }
 
@@ -713,6 +793,23 @@ namespace FamiStudio
             {
                 return AlphaNumericComparer.CompareStatic(s1.Name, s2.Name);
             });
+        }
+
+        public void ConditionalSortSamples()
+        {
+            if (sortSamples)
+                SortSamples();
+        }
+
+        public void MoveSample(DPCMSample sample, DPCMSample sampleBefore)
+        {
+            Debug.Assert(samples.Contains(sample));
+            samples.Remove(sample);
+
+            if (sampleBefore != null)
+                samples.Insert(samples.IndexOf(sampleBefore) + 1, sample);
+            else
+                samples.Insert(0, sample);
         }
 
         public bool RenameSong(Song song, string name)
@@ -737,6 +834,12 @@ namespace FamiStudio
             {
                 return AlphaNumericComparer.CompareStatic(s1.Name, s2.Name);
             });
+        }
+
+        public void ConditionalSortSongs()
+        {
+            if (sortSongs)
+                SortSongs();
         }
 
         public void MoveSong(Song song, Song songBefore)
@@ -1287,19 +1390,27 @@ namespace FamiStudio
                 songs.Add(song);
             }
 
-            SortEverything(false);
+            ConditionalSortEverything();
             ValidateIntegrity();
 
             return true;
         }
 
-        public void SortEverything(bool songs)
+        private void SortEverything(bool songs)
         {
             SortInstruments();
             SortArpeggios();
             SortSamples();
             if (songs)
                 SortSongs();
+        }
+
+        public void ConditionalSortEverything()
+        {
+            ConditionalSortSongs();
+            ConditionalSortInstruments();
+            ConditionalSortSamples();
+            ConditionalSortArpeggios();
         }
 
         public void MergeIdenticalInstruments()
@@ -1401,7 +1512,7 @@ namespace FamiStudio
             }
 
             instruments = new List<Instrument>(usedInstruments);
-            SortInstruments();
+            ConditionalSortInstruments();
         }
 
         public void UnmapUnusedSamples()
@@ -1492,7 +1603,7 @@ namespace FamiStudio
             }
 
             arpeggios = new List<Arpeggio>(usedArpeggios);
-            SortArpeggios();
+            ConditionalSortArpeggios();
         }
 
         public int FindLargestUniqueId()
@@ -1688,6 +1799,19 @@ namespace FamiStudio
                 buffer.Serialize(ref nextUniqueId);
             }
 
+            if (buffer.Version >= 15)
+            {
+                buffer.Serialize(ref sortSongs);
+                buffer.Serialize(ref sortInstruments);
+                buffer.Serialize(ref sortSamples);
+                buffer.Serialize(ref sortArpeggios);
+            }
+            else if (buffer.Version >= 10)
+            {
+                // At version 10 (FamiStudio 3.0.0) we allowed song re-ordering, do not assume sorting.
+                sortSongs = false; 
+            }
+
             // At version 2 (FamiStudio 1.1.0) we added project properties
             if (buffer.Version >= 2)
             {
@@ -1761,7 +1885,11 @@ namespace FamiStudio
                 EnsureNextIdIsLargeEnough();
 
                 // At version 10 (FamiStudio 3.0.0) we allow users to re-order songs.
-                SortEverything(buffer.Version < 10);
+                // At version 15 (FamiStudio 4.1.0) we adding sorting options on everything.
+                if (buffer.Version < 15)
+                {
+                    SortEverything(buffer.Version < 10);
+                }
             }
         }
 

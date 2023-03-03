@@ -1014,11 +1014,11 @@ namespace FamiStudio
             }
         }
 
-        public void SetNoteDurationToMaximumLength()
+        public void SetNoteDurationToMaximumLength(NoteLocation start, NoteLocation end)
         {
             var maxNoteLengths = new Dictionary<Note, int>();
 
-            for (var it = GetSparseNoteIterator(Song.StartLocation, Song.EndLocation); !it.Done; it.Next())
+            for (var it = GetSparseNoteIterator(start, end); !it.Done; it.Next())
             {
                 if (it.Note.IsMusical)
                 {
@@ -1038,7 +1038,12 @@ namespace FamiStudio
 
             InvalidateCumulativePatternCache();
         }
-        
+
+        public void SetNoteDurationToMaximumLength()
+        {
+            SetNoteDurationToMaximumLength(Song.StartLocation, Song.EndLocation);
+        }
+
         public unsafe static int ChannelTypeToIndex(int type, int activeExpansions, int numN163Channels)
         {
             if (type < ChannelType.ExpansionAudioStart)

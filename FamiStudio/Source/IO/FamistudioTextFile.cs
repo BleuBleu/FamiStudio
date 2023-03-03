@@ -664,7 +664,8 @@ namespace FamiStudio
                     inst.PerformPostLoadActions();
                 }
 
-                project.SortEverything(false);
+                project.AutoSortSongs = false;
+                project.ConditionalSortEverything();
                 project.ValidateIntegrity();
 
                 ResetCulture();

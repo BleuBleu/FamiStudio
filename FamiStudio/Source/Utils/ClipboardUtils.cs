@@ -240,7 +240,7 @@ namespace FamiStudio
                 }
             }
 
-            serializer.Project.SortSamples();
+            serializer.Project.ConditionalSortSamples();
 
             return needMerge;
         }
@@ -301,7 +301,7 @@ namespace FamiStudio
                 }
             }
 
-            serializer.Project.SortInstruments();
+            serializer.Project.ConditionalSortInstruments();
 
             return needMerge;
         }
@@ -355,7 +355,7 @@ namespace FamiStudio
                 }
             }
 
-            serializer.Project.SortArpeggios();
+            serializer.Project.ConditionalSortArpeggios();
 
             return needMerge;
         }

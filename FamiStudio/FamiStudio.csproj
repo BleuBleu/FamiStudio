@@ -682,6 +682,8 @@
     <EmbeddedResource Include="Resources\Atlas\Snap@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SnapOff.tga" />
     <EmbeddedResource Include="Resources\Atlas\SnapOff@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Sort.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Sort@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Stop.tga" />
     <EmbeddedResource Include="Resources\Atlas\Stop@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Transform.tga" />

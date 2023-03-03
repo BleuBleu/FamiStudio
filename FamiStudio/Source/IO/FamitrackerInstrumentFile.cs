@@ -253,7 +253,7 @@ namespace FamiStudio
                 }
             }
 
-            project.SortInstruments();
+            project.ConditionalSortInstruments();
 
             return instrument;
         }

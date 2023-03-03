@@ -6318,6 +6318,10 @@ namespace FamiStudio
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
 
+            Song.Channels[editChannel].SetNoteDurationToMaximumLength(
+                NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin),
+                NoteLocation.FromAbsoluteNoteIndex(Song, selectionMax));
+
             note.Release = note.HasRelease ? 0 : Math.Max(1, note.Duration / 2);
 
             if (selected)

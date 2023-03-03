@@ -1263,10 +1263,10 @@ namespace FamiStudio
                 s.RemoveUnsupportedFeatures(); // Extra security.
             }
 
-
+            project.AutoSortSongs = false;
             project.ConvertToCompoundNotes();
             project.InvalidateCumulativePatternCache();
-            project.SortEverything(false);
+            project.ConditionalSortEverything();
             project.ValidateIntegrity();
 
             PrintAdditionalWarnings();
