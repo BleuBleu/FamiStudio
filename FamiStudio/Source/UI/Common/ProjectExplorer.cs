@@ -1962,7 +1962,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Sort)
                     {
-                        tooltip = App.Project.AutoSortSongs ? "Instrument auto-sorting is active, <MouseRight> to change" : "<MouseLeft> Sort intruments alphabetically\n<MouseRight> More Options...";
+                        tooltip = App.Project.AutoSortInstruments ? "Instrument auto-sorting is active, <MouseRight> to change" : "<MouseLeft> Sort intruments alphabetically\n<MouseRight> More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.ArpeggioHeader)
@@ -1973,7 +1973,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Sort)
                     {
-                        tooltip = App.Project.AutoSortSongs ? "Arpeggio auto-sorting is active, <MouseRight> to change" : "<MouseLeft> Sort arpeggios alphabetically\n<MouseRight> More Options...";
+                        tooltip = App.Project.AutoSortArpeggios ? "Arpeggio auto-sorting is active, <MouseRight> to change" : "<MouseLeft> Sort arpeggios alphabetically\n<MouseRight> More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.ProjectSettings)
@@ -2081,7 +2081,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Sort)
                     {
-                        tooltip = App.Project.AutoSortSongs ? "DPCM Sample auto-sorting is active, <MouseRight> to change" : "<MouseLeft> Sort samples alphabetically\n<MouseRight> More Options...";
+                        tooltip = App.Project.AutoSortSamples ? "DPCM Sample auto-sorting is active, <MouseRight> to change" : "<MouseLeft> Sort samples alphabetically\n<MouseRight> More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.Arpeggio)
