@@ -9,6 +9,8 @@ namespace FamiStudio
         private IntPtr cursor = Cursors.Default;
         protected Container container;
         protected FamiStudioWindow window; // Caching for efficiency.
+        protected Graphics graphics;
+        protected Fonts fonts;
         protected int left = 0;
         protected int top = 0;
         protected int width = 100;
@@ -124,8 +126,8 @@ namespace FamiStudio
         public FamiStudioWindow ParentWindow => window;
         public Container ParentContainer => container;
         public Dialog ParentDialog => container as Dialog;
-        public Graphics Graphics => ParentWindow?.Graphics;
-        public Fonts Fonts => ParentWindow?.Fonts;
+        public Graphics Graphics => graphics;
+        public Fonts Fonts => fonts;
         public Point WindowPosition => ControlToWindow(Point.Empty);
 
         public virtual Point ControlToWindow(Point p)
@@ -182,6 +184,8 @@ namespace FamiStudio
 
             container = c;
             window = c?.ParentWindow;
+            fonts = window?.Fonts;
+            graphics = window?.Graphics;
         }
 
         public void Move(int x, int y, bool fireResizeEvent = true)
@@ -230,6 +234,12 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        public void OverrideGraphics(Graphics g, Fonts f)
+        {
+            graphics = g;
+            fonts = f;
         }
     }
 

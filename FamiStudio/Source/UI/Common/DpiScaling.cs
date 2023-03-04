@@ -9,11 +9,13 @@ namespace FamiStudio
 
         private static float windowScaling = 1;
         private static float fontScaling   = 1;
+        private static bool forceUnitScale = false;
 
         public static bool IsInitialized => initialized;
 
-        public static float Window { get { Debug.Assert(initialized); return windowScaling; } }
-        public static float Font   { get { Debug.Assert(initialized); return fontScaling; } }
+        public static float Window { get { Debug.Assert(initialized); return forceUnitScale ? 1.0f : windowScaling; } }
+        public static float Font   { get { Debug.Assert(initialized); return forceUnitScale ? 1.0f : fontScaling; } }
+        public static bool ForceUnitScaling { get => forceUnitScale; set => forceUnitScale = value; }
 
         public static int ScaleCustom(float val, float scale)
         {
@@ -30,25 +32,25 @@ namespace FamiStudio
         public static int ScaleForWindow(float val)
         {
             Debug.Assert(initialized);
-            return (int)Math.Round(val * windowScaling);
+            return (int)Math.Round(val * Window);
         }
 
         public static float ScaleForWindowFloat(float val)
         {
             Debug.Assert(initialized);
-            return val * windowScaling;
+            return val * Window;
         }
 
         public static int ScaleForFont(float val)
         {
             Debug.Assert(initialized);
-            return (int)Math.Round(val * fontScaling);
+            return (int)Math.Round(val * Font);
         }
 
         public static float ScaleForFontFloat(float val)
         {
             Debug.Assert(initialized);
-            return val * fontScaling;
+            return val * Font;
         }
 
         public static int[] GetAvailableScalings()
@@ -109,8 +111,9 @@ namespace FamiStudio
                         windowScaling = 1.0f;
                 }
 
-                fontScaling   = (float)Math.Round(windowScaling * 3);
-                windowScaling = (float)Math.Round(windowScaling * 6);
+                fontScaling    = (float)Math.Round(windowScaling * 3);
+                windowScaling  = (float)Math.Round(windowScaling * 6);
+                forceUnitScale = false;
             }
             else
             {

@@ -61,7 +61,7 @@ namespace FamiStudio
 
         ShortBuffer quadIdxBuffer;
 
-        public Graphics()
+        public Graphics(bool offscreen = false) : base(offscreen)
         {
             for (int i = 0; i < NumBufferSizes; i++)
             {
@@ -382,15 +382,14 @@ namespace FamiStudio
         protected override string GetScaledFilename(string name, out bool needsScaling)
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var scaling = offscreen ? 1.0f : DpiScaling.Window;
 
             needsScaling = false;
 
-            if (scaling >= 4.0f && assembly.GetManifestResourceInfo($"{name}@4x.tga") != null)
+            if (DpiScaling.Window >= 4.0f && assembly.GetManifestResourceInfo($"{name}@4x.tga") != null)
             {
                 return $"{name}@4x.tga";
             }
-            else if (scaling >= 2.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
+            else if (DpiScaling.Window >= 2.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
             {
                 return $"{name}@2x.tga";
             }
@@ -747,7 +746,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback)
+        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(true)
         {
             resX = imageSizeX;
             resY = imageSizeY;
@@ -757,12 +756,12 @@ namespace FamiStudio
                 texture = CreateEmptyTexture(imageSizeX, imageSizeY, TextureFormat.Rgba, false);
 
                 var fbos = new int[1];
-                GLES11Ext.GlGenFramebuffersOES(1, fbos, 0);
+                GLES20.GlGenFramebuffers(1, fbos, 0);
                 fbo = fbos[0];
 
-                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, fbo);
-                GLES11Ext.GlFramebufferTexture2DOES(GLES11Ext.GlFramebufferOes, GLES11Ext.GlColorAttachment0Oes, GLES20.GlTexture2d, texture, 0);
-                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, 0);
+                GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, fbo);
+                GLES20.GlFramebufferTexture2D(GLES20.GlFramebuffer, GLES20.GlColorAttachment0, GLES20.GlTexture2d, texture, 0);
+                GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, 0);
             }
         }
 
@@ -772,10 +771,7 @@ namespace FamiStudio
             try
 #endif
             {
-                var extentions = GLES20.GlGetString(GLES20.GlExtensions);
-
-                if (extentions.ToUpper().Contains("GL_OES_FRAMEBUFFER_OBJECT"))
-                    return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
+                return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
             }
 #if !DEBUG
             catch
@@ -790,7 +786,7 @@ namespace FamiStudio
         public override void BeginDrawFrame(Rectangle rect, Color clear)
         {
             if (fbo > 0)
-                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, fbo);
+                GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, fbo);
 
             base.BeginDrawFrame(rect, clear);
         }
@@ -800,7 +796,7 @@ namespace FamiStudio
             base.EndDrawFrame(releaseLists);
 
             if (fbo > 0)
-                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, 0);
+                GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, 0);
         }
 
         public unsafe void GetBitmap(byte[] data)
@@ -811,7 +807,7 @@ namespace FamiStudio
         public override void Dispose()
         {
             if (texture != 0) GLES20.GlDeleteTextures(1, new[] { texture }, 0);
-            if (fbo     != 0) GLES11Ext.GlDeleteFramebuffersOES(1, new[] { fbo }, 0);
+            if (fbo     != 0) GLES20.GlDeleteFramebuffers(1, new[] { fbo }, 0);
 
             base.Dispose();
         }

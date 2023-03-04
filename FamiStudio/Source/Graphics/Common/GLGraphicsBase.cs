@@ -37,6 +37,7 @@ namespace FamiStudio
         public int DashTextureSize => dashedBitmap.Size.Width;
         public TransformStack Transform => transform;
         public RectangleF CurrentClipRegion => clipStack.Peek().rect;
+        public bool IsOffscreen => offscreen;
 
         protected const int MaxAtlasResolution = 1024;
         protected const int MaxVertexCount = 160 * 1024;

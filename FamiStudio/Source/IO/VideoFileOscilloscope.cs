@@ -108,8 +108,8 @@ namespace FamiStudio
             // Tweak some cosmetic stuff that depends on resolution.
             var smallChannelText = channelResY < 128;
             var font = lineThickness > 1 ?
-                (smallChannelText ? fontResources.FontMediumBold : fontResources.FontVeryLargeBold) : 
-                (smallChannelText ? fontResources.FontMedium     : fontResources.FontVeryLarge);
+                (smallChannelText ? fonts.FontMediumBold : fonts.FontVeryLargeBold) : 
+                (smallChannelText ? fonts.FontMedium     : fonts.FontVeryLarge);
             var textOffsetY = smallChannelText ? 1 : 4;
             var channelLineWidth = resY >= 720 ? 5 : 3;
 

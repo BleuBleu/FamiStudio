@@ -287,9 +287,9 @@ namespace FamiStudio
         {
         }
 
-        public static void SetGLThreadId(int id)
+        public static void AcquireGLContext()
         {
-            glThreadId = id;
+            glThreadId = Thread.CurrentThread.ManagedThreadId;
         }
 
         public const bool IsMobile  = true;

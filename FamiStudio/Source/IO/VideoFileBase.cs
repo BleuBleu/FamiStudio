@@ -33,7 +33,7 @@ namespace FamiStudio
         protected VideoEncoder videoEncoder;
         protected VideoChannelState[] channelStates;
         protected VideoFrameMetadata[] metadata;
-        protected Fonts fontResources;
+        protected Fonts fonts;
         protected Bitmap watermark;
 
         // TODO : This is is very similar to Oscilloscope.cs, unify eventually...
@@ -190,17 +190,22 @@ namespace FamiStudio
             for (int i = 0; i < channelStates.Length; i++)
                 channelStates[i].oscScale = maxAbsSamples[i] == 0 ? 1.0f : (float)MathF.Sqrt(globalMaxAbsSample / (float)maxAbsSamples[i]) * (32768.0f / globalMaxAbsSample);
 
+            // HACK : The scaling is not longer tied to the graphics, so we need to temporarely override it.
+            DpiScaling.ForceUnitScaling = true;
+            Platform.AcquireGLContext();
+
             // Create graphics resources.
             videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, true);
 
             if (videoGraphics == null)
             {
                 Log.LogMessage(LogSeverity.Error, "Error initializing off-screen graphics, aborting.");
+                DpiScaling.ForceUnitScaling = false;
                 return false;
             }
 
             // GLTODO : We dont need this anymore, unless for mobile maybe?
-            fontResources = new Fonts(videoGraphics);
+            fonts = new Fonts(videoGraphics);
             watermark = videoGraphics.CreateBitmapFromResource("FamiStudio.Resources.Misc.VideoWatermark");
 
             // Generate metadata
@@ -268,7 +273,7 @@ namespace FamiStudio
             finally
 #endif
             {
-                fontResources.Dispose();
+                fonts.Dispose();
                 watermark.Dispose();
                 videoGraphics.Dispose();
                 foreach (var c in channelStates)
@@ -277,6 +282,7 @@ namespace FamiStudio
                 cleanup?.Invoke();
                 channelStates = null;
                 metadata = null;
+                DpiScaling.ForceUnitScaling = false;
             }
 
             GC.Collect();

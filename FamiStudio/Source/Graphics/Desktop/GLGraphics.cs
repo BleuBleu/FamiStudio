@@ -271,16 +271,15 @@ namespace FamiStudio
         protected override string GetScaledFilename(string name, out bool needsScaling)
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var scaling = offscreen ? 1.0f : DpiScaling.Window;
 
-            if (scaling == 1.5f && assembly.GetManifestResourceInfo($"{name}@15x.tga") != null)
+            if (DpiScaling.Window == 1.5f && assembly.GetManifestResourceInfo($"{name}@15x.tga") != null)
             {
                 needsScaling = false;
                 return $"{name}@15x.tga";
             }
-            else if (scaling > 1.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
+            else if (DpiScaling.Window > 1.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
             {
-                needsScaling = scaling != 2.0f;
+                needsScaling = DpiScaling.Window != 2.0f;
                 return $"{name}@2x.tga";
             }
             else

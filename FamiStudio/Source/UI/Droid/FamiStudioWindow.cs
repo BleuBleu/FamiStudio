@@ -418,7 +418,7 @@ namespace FamiStudio
         {
             lock (renderLock)
             {
-                Platform.SetGLThreadId(Thread.CurrentThread.ManagedThreadId);
+                Platform.AcquireGLContext();
 
                 var rect = new Rectangle(Point.Empty, Size);
                 var clearColor = global::FamiStudio.Theme.DarkGreyColor2;
@@ -434,7 +434,7 @@ namespace FamiStudio
         {
             lock (renderLock)
             {
-                Platform.SetGLThreadId(Thread.CurrentThread.ManagedThreadId);
+                Platform.AcquireGLContext();
 
                 if (container != null)
                 { 
@@ -448,7 +448,7 @@ namespace FamiStudio
         {
             lock (renderLock)
             {
-                Platform.SetGLThreadId(Thread.CurrentThread.ManagedThreadId);
+                Platform.AcquireGLContext();
 
                 graphics = new Graphics();
                 fonts = new Fonts(graphics);

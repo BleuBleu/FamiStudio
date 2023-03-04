@@ -266,12 +266,12 @@ namespace FamiStudio
                 state.bitmap = videoGraphics.CreateBitmapFromOffscreenGraphics(state.graphics);
 
                 // Measure the longest text.
-                longestChannelName = Math.Max(longestChannelName, state.graphics.MeasureString(state.channelText, fontResources.FontVeryLarge));
+                longestChannelName = Math.Max(longestChannelName, state.graphics.MeasureString(state.channelText, fonts.FontVeryLarge));
             }
 
             // Tweak some cosmetic stuff that depends on resolution.
             var smallChannelText = longestChannelName + 32 + ChannelIconTextSpacing > channelResY * 0.8f;
-            var font = smallChannelText ? fontResources.FontMedium : fontResources.FontVeryLarge;
+            var font = smallChannelText ? fonts.FontMedium : fonts.FontVeryLarge;
             var textOffsetY = smallChannelText ? 1 : 4;
             var pianoRollScaleX = Utils.Clamp(resY / 1080.0f, 0.6f, 0.9f);
             var pianoRollScaleY = channelResY < VeryThinNoteThreshold ? 0.5f : (channelResY < ThinNoteThreshold ? 0.667f : 1.0f);
@@ -282,6 +282,7 @@ namespace FamiStudio
 
             // Setup piano roll and images.
             var pianoRoll = new PianoRoll();
+            pianoRoll.OverrideGraphics(videoGraphics, fonts);
             pianoRoll.Move(0, 0, channelResX, channelResY);
             pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
 
