@@ -3872,7 +3872,7 @@ namespace FamiStudio
                 }
                 else if (subButtonType == SubButtonType.DPCM)
                 {
-                    App.StartEditInstrument(button.instrument, EnvelopeType.Count);
+                    App.StartEditDPCMMapping(button.instrument);
                 }
                 else if (subButtonType < SubButtonType.EnvelopeMax)
                 {
