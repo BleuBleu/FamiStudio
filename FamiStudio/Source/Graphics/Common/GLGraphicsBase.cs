@@ -384,19 +384,22 @@ namespace FamiStudio
         public void ClearGlyphCache()
         {
             foreach (var cache in glyphCaches)
-            {
                 cache.Dispose();
-            }
-
             glyphCaches.Clear();
+        }
+
+        private void ClearAtlases()
+        {
+            foreach (var a in atlases.Values)
+                a.Dispose();
+            atlases.Clear();
         }
 
         public virtual void Dispose()
         {
-            foreach (var a in atlases.Values)
-                a.Dispose();
-
-            atlases.Clear();
+            ClearGlyphCache();
+            ClearAtlases();
+            Utils.DisposeAndNullify(ref dashedBitmap);
         }
 
         public float[] GetVertexArray()

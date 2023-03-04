@@ -18,7 +18,6 @@ Minor UI stuff:
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
 - BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
 - GLTODOs, DPCMTODOs, etc. Review all those.
-- Add Dispose to GL Graphics + Fonts, when expporting video we leak tons of stuff.
 
 Testing
 =======

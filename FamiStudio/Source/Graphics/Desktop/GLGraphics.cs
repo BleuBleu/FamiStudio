@@ -37,7 +37,6 @@ namespace FamiStudio
         private int depthScaleBiasUniform;
         private int depthVao;
 
-        // MATTT, more buffers? Compare performance.
         private int vertexBuffer;
         private int colorBuffer;
         private int centerBuffer;
@@ -86,6 +85,32 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.Repeat);
 
             GL.GetInteger(GL.MaxTextureSize, ref maxTextureSize);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            Utils.DisposeAndNullify(ref dashedBitmap);
+            GL.DeleteBuffer(quadIdxBuffer);
+            GL.DeleteBuffer(vertexBuffer);
+            GL.DeleteBuffer(colorBuffer);
+            GL.DeleteBuffer(centerBuffer);
+            GL.DeleteBuffer(texCoordBuffer);
+            GL.DeleteBuffer(lineDistBuffer);
+            GL.DeleteBuffer(indexBuffer);
+            GL.DeleteBuffer(depthBuffer);
+            GL.DeleteVertexArray(polyVao);
+            GL.DeleteVertexArray(lineVao);
+            GL.DeleteVertexArray(lineSmoothVao);
+            GL.DeleteVertexArray(bmpVao);
+            GL.DeleteVertexArray(textVao);
+            GL.DeleteVertexArray(depthVao);
+            GL.DeleteProgram(polyProgram);
+            GL.DeleteProgram(lineProgram);
+            GL.DeleteProgram(lineSmoothProgram);
+            GL.DeleteProgram(bmpProgram);
+            GL.DeleteProgram(textProgram);
+            GL.DeleteProgram(depthProgram);
         }
 
         private int CompileShader(string resourceName, int type)
@@ -576,8 +601,7 @@ namespace FamiStudio
             }
         }
 #endif
-    };
-
+    }
     public class OffscreenGraphics : Graphics
     {
         protected int fbo;
@@ -799,6 +823,7 @@ namespace FamiStudio
         public delegate void GetShaderIntDelegate(int shader, int param, IntPtr ints);
         public delegate void GetShaderInfoLogDelegate(int shader, int maxLength, ref int length, IntPtr infoLog);
         public delegate int  CreateProgramDelegate();
+        public delegate void DeleteProgramDelegate(int id);
         public delegate void AttachShaderDelegate(int program, int shader);
         public delegate void LinkProgramDelegate(int program);
         public delegate void GetProgramIntDelegate(int program, int param, IntPtr ints);
@@ -807,10 +832,12 @@ namespace FamiStudio
         public delegate int  GetUniformLocationDelegate(int program, [MarshalAs(UnmanagedType.LPStr)] string name);
         public delegate void VertexAttribPointerDelegate(int index, int size, int type, byte normalized, int stride, IntPtr pointer);
         public delegate void GenBuffersDelegate(int n, IntPtr buffers);
+        public delegate void DeleteBuffersDelegate(int n, IntPtr buffers);
         public delegate void BindBufferDelegate(int target, int buffer);
         public delegate void BufferDataDelegate(int target, IntPtr size, IntPtr data, int usage);
         public delegate void BufferSubDataDelegate(int target, IntPtr offset, IntPtr size, IntPtr data);
         public delegate void GenVertexArraysDelegate(int n, IntPtr arrays);
+        public delegate void DeleteVertexArraysDelegate(int n, IntPtr arrays);
         public delegate void BindVertexArrayDelegate(int vao);
         public delegate void EnableVertexAttribArrayDelegate(int index);
         public delegate void FlushDelegate();
@@ -870,6 +897,7 @@ namespace FamiStudio
         public static GetShaderIntDelegate         GetShaderIntRaw;
         public static GetShaderInfoLogDelegate     GetShaderInfoLogRaw;
         public static CreateProgramDelegate        CreateProgram;
+        public static DeleteProgramDelegate        DeleteProgram;
         public static AttachShaderDelegate         AttachShader;
         public static LinkProgramDelegate          LinkProgram;
         public static GetProgramIntDelegate        GetProgramIntRaw;
@@ -878,7 +906,9 @@ namespace FamiStudio
         public static GetUniformLocationDelegate   GetUniformLocation;
         public static VertexAttribPointerDelegate  VertexAttribPointerRaw;
         public static GenBuffersDelegate           GenBuffersRaw;
+        public static DeleteBuffersDelegate        DeleteBuffersRaw;
         public static GenVertexArraysDelegate      GenVertexArraysRaw;
+        public static DeleteVertexArraysDelegate   DeleteVertexArraysRaw;
         public static BindBufferDelegate           BindBuffer;
         public static BufferDataDelegate           BufferDataRaw;
         public static BufferSubDataDelegate        BufferSubDataRaw;
@@ -941,6 +971,7 @@ namespace FamiStudio
             GetShaderIntRaw         = Marshal.GetDelegateForFunctionPointer<GetShaderIntDelegate>(glfwGetProcAddress("glGetShaderiv"));
             GetShaderInfoLogRaw     = Marshal.GetDelegateForFunctionPointer<GetShaderInfoLogDelegate>(glfwGetProcAddress("glGetShaderInfoLog"));
             CreateProgram           = Marshal.GetDelegateForFunctionPointer<CreateProgramDelegate>(glfwGetProcAddress("glCreateProgram"));
+            DeleteProgram           = Marshal.GetDelegateForFunctionPointer<DeleteProgramDelegate>(glfwGetProcAddress("glDeleteProgram"));
             AttachShader            = Marshal.GetDelegateForFunctionPointer<AttachShaderDelegate>(glfwGetProcAddress("glAttachShader"));
             LinkProgram             = Marshal.GetDelegateForFunctionPointer<LinkProgramDelegate>(glfwGetProcAddress("glLinkProgram"));
             GetProgramIntRaw        = Marshal.GetDelegateForFunctionPointer<GetProgramIntDelegate>(glfwGetProcAddress("glGetProgramiv"));
@@ -949,10 +980,12 @@ namespace FamiStudio
             GetUniformLocation      = Marshal.GetDelegateForFunctionPointer<GetUniformLocationDelegate>(glfwGetProcAddress("glGetUniformLocation"));
             VertexAttribPointerRaw  = Marshal.GetDelegateForFunctionPointer<VertexAttribPointerDelegate>(glfwGetProcAddress("glVertexAttribPointer"));
             GenBuffersRaw           = Marshal.GetDelegateForFunctionPointer<GenBuffersDelegate>(glfwGetProcAddress("glGenBuffers"));
+            DeleteBuffersRaw        = Marshal.GetDelegateForFunctionPointer<DeleteBuffersDelegate>(glfwGetProcAddress("glDeleteBuffers"));
             BindBuffer              = Marshal.GetDelegateForFunctionPointer<BindBufferDelegate>(glfwGetProcAddress("glBindBuffer"));
             BufferDataRaw           = Marshal.GetDelegateForFunctionPointer<BufferDataDelegate>(glfwGetProcAddress("glBufferData"));
             BufferSubDataRaw        = Marshal.GetDelegateForFunctionPointer<BufferSubDataDelegate>(glfwGetProcAddress("glBufferSubData"));
             GenVertexArraysRaw      = Marshal.GetDelegateForFunctionPointer<GenVertexArraysDelegate>(glfwGetProcAddress("glGenVertexArrays"));
+            DeleteVertexArraysRaw   = Marshal.GetDelegateForFunctionPointer<DeleteVertexArraysDelegate>(glfwGetProcAddress("glDeleteVertexArrays"));
             BindVertexArray         = Marshal.GetDelegateForFunctionPointer<BindVertexArrayDelegate>(glfwGetProcAddress("glBindVertexArray"));
             EnableVertexAttribArray = Marshal.GetDelegateForFunctionPointer<EnableVertexAttribArrayDelegate>(glfwGetProcAddress("glEnableVertexAttribArray"));
             Flush                   = Marshal.GetDelegateForFunctionPointer<FlushDelegate>(glfwGetProcAddress("glFlush"));
@@ -1141,12 +1174,26 @@ namespace FamiStudio
             return tmp[0];
         }
 
+        public unsafe static void DeleteBuffer(int id)
+        {
+            var tmp = new int[1] { id };
+            fixed (int* p = &tmp[0])
+                DeleteBuffersRaw(1, new IntPtr(p));
+        }
+
         public unsafe static int GenVertexArray()
         {
             var tmp = new int[1];
             fixed (int* p = &tmp[0])
                 GenVertexArraysRaw(1, new IntPtr(p));
             return tmp[0];
+        }
+
+        public unsafe static void DeleteVertexArray(int id)
+        {
+            var tmp = new int[1] { id };
+            fixed (int* p = &tmp[0])
+                DeleteVertexArraysRaw(1, new IntPtr(p));
         }
 
         public unsafe static void BufferData(int target, float[] data, int len, int usage)

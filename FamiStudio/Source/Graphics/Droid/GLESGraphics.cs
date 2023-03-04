@@ -3,13 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Android.Opengl;
-using Android.Runtime;
 using Java.Nio;
-using Javax.Microedition.Khronos.Opengles;
-
-using Bitmap = Android.Graphics.Bitmap;
 
 namespace FamiStudio
 {
@@ -89,6 +84,34 @@ namespace FamiStudio
             var temp = new int[1];
             GLES20.GlGetIntegerv(GLES20.GlMaxTextureSize, temp, 0);
             maxTextureSize = temp[0];
+        }
+
+        private void FreeBuffers<T>(List<T>[] bufferLists) where T : IDisposable
+        {
+            foreach (var list in bufferLists)
+            {
+                foreach (var buffer in list)
+                {
+                    buffer.Dispose();
+                }
+
+                list.Clear();
+            }
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            FreeShaders();
+            FreeBuffers(freeVtxBuffers);
+            FreeBuffers(freeColBuffers);
+            FreeBuffers(freeBytBuffers);
+            FreeBuffers(freeIdxBuffers);
+            FreeBuffers(usedVtxBuffers);
+            FreeBuffers(usedColBuffers);
+            FreeBuffers(usedBytBuffers);
+            FreeBuffers(usedIdxBuffers);
+            Utils.DisposeAndNullify(ref quadIdxBuffer);
         }
 
         private int CompileShader(string resourceName, int type, out List<string> attributes)
@@ -209,6 +232,16 @@ namespace FamiStudio
 
             depthProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Depth");
             depthScaleBiasUniform = GLES20.GlGetUniformLocation(depthProgram, "screenScaleBias");
+        }
+
+        private void FreeShaders()
+        {
+            GLES20.GlDeleteProgram(polyProgram);
+            GLES20.GlDeleteProgram(lineProgram);
+            GLES20.GlDeleteProgram(lineSmoothProgram);
+            GLES20.GlDeleteProgram(bmpProgram);
+            GLES20.GlDeleteProgram(textProgram);
+            GLES20.GlDeleteProgram(depthProgram);
         }
 
         public override void BeginDrawFrame(Rectangle rect, Color clear)
