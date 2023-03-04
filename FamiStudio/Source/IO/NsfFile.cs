@@ -1056,10 +1056,11 @@ namespace FamiStudio
                 return null;
             }
 
-            if ((expansionMask & ExpansionType.EPSMMask) != 0)
+            var epsmMask = GetNsfExtensionFlags(ExpansionType.EPSMMask);
+            if ((expansionMask & epsmMask) != 0)
             {
                 Log.LogMessage(LogSeverity.Warning, "NSF seem to use EPSM, import is still not supported.");
-                expansionMask &= (~ExpansionType.EPSMMask);
+                expansionMask &= (~epsmMask);
             }
 
             var numN163Channels = (expansionMask & ExpansionType.N163Mask) != 0 ? GetNumNamcoChannels(filename, songIndex, numFrames) : 1;
