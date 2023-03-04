@@ -201,7 +201,7 @@ namespace FamiStudio
 
             // GLTODO : We dont need this anymore, unless for mobile maybe?
             fontResources = new Fonts(videoGraphics);
-            watermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
+            watermark = videoGraphics.CreateBitmapFromResource("FamiStudio.Resources.Misc.VideoWatermark");
 
             // Generate metadata
             Log.LogMessage(LogSeverity.Info, "Generating video metadata...");
@@ -289,7 +289,7 @@ namespace FamiStudio
             var suffix = large ? "@2x" : "";
 
             foreach (var s in channelStates)
-                s.icon = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[s.channel.Type] + suffix);
+                s.icon = videoGraphics.CreateBitmapFromResource($"FamiStudio.Resources.Atlas.{ChannelType.Icons[s.channel.Type]}{suffix}");
         }
 
         protected void ExtendSongForLooping(Song song, int loopCount)

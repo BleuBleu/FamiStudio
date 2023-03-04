@@ -11,6 +11,7 @@ namespace FamiStudio
     {
         protected bool builtAtlases;
         protected bool clearPrePassDone;
+        protected bool offscreen;
         protected int lineWidthBias;
         protected float[] viewportScaleBias = new float[4];
         protected Rectangle screenRect;
@@ -74,7 +75,7 @@ namespace FamiStudio
         public CommandList ForegroundCommandList => GetCommandList(GraphicsLayer.Foreground);
         public CommandList OverlayCommandList    => GetCommandList(GraphicsLayer.Overlay);
 
-        protected GraphicsBase()
+        protected GraphicsBase(bool offscreen)
         {
             // Quad index buffer.
             for (int i = 0, j = 0; i < MaxVertexCount; i += 4)
@@ -92,9 +93,10 @@ namespace FamiStudio
                 quadIdxArray[j++] = i3;
             }
 
-            // HACK : If we are on android with a scaling of 1.0, this mean we are
-            // rendering a video and we dont need any of the atlases.
-            if (!Platform.IsAndroid || DpiScaling.Window != 1.0f)
+            this.offscreen = offscreen;
+
+            // We dont need the atlases when rendering videos.
+            if (!offscreen)
                 BuildBitmapAtlases();
         }
 

@@ -31,7 +31,7 @@ namespace FamiStudio
 
         public bool BeginEncoding(int resX, int resY, int frameRateNumer, int frameRateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
         {
-            process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{outputFile}\"", true, false);
+            process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{outputFile}\"", true, false, true);
             stream = new BinaryWriter(process.StandardInput.BaseStream);
 
             if (Platform.IsWindows)
@@ -64,7 +64,7 @@ namespace FamiStudio
             }
         }
 
-        private static Process LaunchFFmpeg(string ffmpegExecutable, string commandLine, bool redirectStdIn, bool redirectStdOut)
+        private static Process LaunchFFmpeg(string ffmpegExecutable, string commandLine, bool redirectStdIn, bool redirectStdOut, bool boostPriority)
         {
             var psi = new ProcessStartInfo(ffmpegExecutable, commandLine);
 
@@ -84,7 +84,10 @@ namespace FamiStudio
             }
 
             var process = Process.Start(psi);
-            process.PriorityClass = ProcessPriorityClass.BelowNormal;
+
+            if (boostPriority)
+                process.PriorityClass = ProcessPriorityClass.BelowNormal;
+
             return process;
         }
 
@@ -92,7 +95,7 @@ namespace FamiStudio
         {
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true);
+                var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true, false);
                 var output = process.StandardOutput.ReadToEnd();
 
                 var ret = true;

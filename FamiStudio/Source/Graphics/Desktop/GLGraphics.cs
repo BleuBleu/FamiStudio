@@ -51,7 +51,7 @@ namespace FamiStudio
         private GL.DebugCallback debugCallback;
 #endif
 
-        public Graphics() 
+        public Graphics(bool offscreen = false) : base(offscreen) 
         {
             GL.StaticInitialize();
 
@@ -271,15 +271,16 @@ namespace FamiStudio
         protected override string GetScaledFilename(string name, out bool needsScaling)
         {
             var assembly = Assembly.GetExecutingAssembly();
+            var scaling = offscreen ? 1.0f : DpiScaling.Window;
 
-            if (DpiScaling.Window == 1.5f && assembly.GetManifestResourceInfo($"{name}@15x.tga") != null)
+            if (scaling == 1.5f && assembly.GetManifestResourceInfo($"{name}@15x.tga") != null)
             {
                 needsScaling = false;
                 return $"{name}@15x.tga";
             }
-            else if (DpiScaling.Window > 1.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
+            else if (scaling > 1.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
             {
-                needsScaling = DpiScaling.Window != 2.0f;
+                needsScaling = scaling != 2.0f;
                 return $"{name}@2x.tga";
             }
             else
@@ -589,7 +590,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base() 
+        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(true) 
         {
             resX = imageSizeX;
             resY = imageSizeY;
