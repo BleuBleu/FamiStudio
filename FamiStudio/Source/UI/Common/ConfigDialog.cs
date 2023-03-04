@@ -303,7 +303,7 @@ namespace FamiStudio
                 case ConfigSection.Keys:
                 {
                     page.AddLabel(null, "Double click in the 2 last columns to assign a key. Right click to clear a key.", true); // 0
-                    page.AddGrid(new[] { new ColumnDesc("Action", 0.4f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetKeyboardShortcutStrings(), 14); // 1
+                    page.AddGrid("Keys", new[] { new ColumnDesc("Action", 0.4f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetKeyboardShortcutStrings(), 14); // 1
                     page.AddButton(null, "Reset to default");
                     page.PropertyClicked += KeyboardPage_PropertyClicked;
                     page.PropertyCellEnabled += KeyboardPage_PropertyCellEnabled;

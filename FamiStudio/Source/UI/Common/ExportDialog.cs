@@ -153,7 +153,7 @@ namespace FamiStudio
             return channelActives;
         }
 
-        private object[,] GetDefaultChannelsGridData(bool video)
+        private object[,] GetDefaultChannelsGridData(bool triggers)
         {
             // Find all channels used by the project.
             var anyChannelActive = false;
@@ -172,13 +172,13 @@ namespace FamiStudio
             }
 
             var channelTypes = project.GetActiveChannelList();
-            var data = new object[channelTypes.Length, video ? 4 : 3];
+            var data = new object[channelTypes.Length, triggers ? 4 : 3];
             for (int i = 0; i < channelTypes.Length; i++)
             {
                 data[i, 0] = !anyChannelActive || channelActives[i];
                 data[i, 1] = ChannelType.GetNameWithExpansion(channelTypes[i]);
                 data[i, 2] = 50;
-                if (video)
+                if (triggers)
                     data[i, 3] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? "Emulation" : "Peak Speed";
             }
 
@@ -256,7 +256,6 @@ namespace FamiStudio
                 page.AddNumericUpDown("Loop Count :", 1, 1, 8, LoopCountTooltip); // 5
                 page.AddNumericUpDown("Audio Delay (ms) :", 0, 0, 500, DelayTooltip); // 6
                 page.AddNumericUpDown("Oscilloscope Window :", 2, 1, 4, OscWindowTooltip); // 7
-                page.SetPropertyVisible(6, Platform.IsDesktop); // No delay on mobile, sound bad without stereo.
                 return true;
             }
             else
@@ -284,16 +283,11 @@ namespace FamiStudio
                     page.AddCheckBox("Separate channel files", false, SeperateFilesTooltip); // 8
                     page.AddCheckBox("Separate intro file", false, SeperateIntroTooltip); // 9
                     page.AddCheckBox("Stereo", project.OutputsStereoAudio, StereoTooltip); // 10
-                    if (Platform.IsDesktop)
-                        page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(false), 7, ChannelGridTooltip); // 11
-                    else
-                        page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels(), ChannelListTooltip); // 11
+                    page.AddGrid("Channels", new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(false), 7, ChannelGridTooltip); // 11
                     page.SetPropertyEnabled( 3, false);
                     page.SetPropertyEnabled( 6, false);
-                    page.SetPropertyVisible( 7, Platform.IsDesktop); // No delay on mobile, sound bad without stereo.
                     page.SetPropertyVisible( 8, Platform.IsDesktop); // No separate files on mobile.
                     page.SetPropertyVisible( 9, Platform.IsDesktop); // No separate into on mobile.
-                    page.SetPropertyVisible(10, Platform.IsDesktop); // No stereo on mobile.
                     page.SetPropertyEnabled(10, !project.OutputsStereoAudio); // Force stereo for EPSM.
                     page.SetColumnEnabled(11, 2, project.OutputsStereoAudio);
                     page.PropertyChanged += WavMp3_PropertyChanged;
@@ -304,11 +298,10 @@ namespace FamiStudio
                     {
                         page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTootip); // 8
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio, StereoTooltip); // 9
-                        if (Platform.IsDesktop)
-                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc("Trigger", 0.1f, new [] { "Emulation", "Peak Speed" } ) }, GetDefaultChannelsGridData(true), 10, ChannelGridTooltipVid); // 10
-                        else
-                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels(), ChannelListTooltip); // 10
-                        page.SetPropertyVisible(9, Platform.IsDesktop); // Stereo on mobile.
+                        page.AddGrid("Channels",
+                            Platform.IsDesktop ?
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc("Trigger", 0.1f, new[] { "Emulation", "Peak Speed" }) } :
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop), 7, ChannelGridTooltipVid); // 10
                         page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
                         page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
@@ -321,11 +314,10 @@ namespace FamiStudio
                         page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 4, OscThicknessTooltip); // 9
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.Instruments]); // 10
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 11
-                        if (Platform.IsDesktop)
-                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc("Trigger", 0.1f, new[] { "Emulation", "Peak Speed" } ) }, GetDefaultChannelsGridData(true), 7, ChannelGridTooltipVid); // 12
-                        else
-                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels(), ChannelListTooltip); // 12
-                        page.SetPropertyVisible(11, Platform.IsDesktop); // Stereo on mobile.
+                        page.AddGrid("Channels", 
+                            Platform.IsDesktop ?
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc("Trigger", 0.1f, new[] { "Emulation", "Peak Speed" } ) } :
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop), 7, ChannelGridTooltipVid); // 12
                         page.SetPropertyEnabled(11, !project.OutputsStereoAudio); // Force stereo for EPSM.
                         page.SetColumnEnabled(12, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
@@ -366,7 +358,7 @@ namespace FamiStudio
                     page.AddCheckBox("Export slide notes as pitch wheel :", true, MidiPitchTooltip); // 2
                     page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24, MidiPitchRangeTooltip); // 3
                     page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0], MidiInstrumentTooltip); // 4
-                    page.AddGrid(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14, MidiInstGridTooltip); // 5
+                    page.AddGrid("Instruments", new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14, MidiInstGridTooltip); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:
@@ -519,28 +511,14 @@ namespace FamiStudio
 
                     var channelCount = project.GetActiveChannelCount();
                     var channelMask = 0L;
-                    var pan = (float[])null;
+                    var pan = new float[channelCount]; 
 
-                    if (Platform.IsDesktop)
+                    for (int i = 0; i < channelCount; i++)
                     {
-                        pan = new float[channelCount]; 
+                        if (props.GetPropertyValue<bool>(11, i, 0))
+                            channelMask |= (1L << i);
 
-                        for (int i = 0; i < channelCount; i++)
-                        {
-                            if (props.GetPropertyValue<bool>(11, i, 0))
-                                channelMask |= (1L << i);
-
-                            pan[i] = props.GetPropertyValue<int>(11, i, 2) / 100.0f;
-                        }
-                    }
-                    else
-                    {
-                        var selectedChannels = props.GetPropertyValue<bool[]>(11);
-                        for (int i = 0; i < channelCount; i++)
-                        {
-                            if (selectedChannels[i])
-                                channelMask |= (1L << i);
-                        }
+                        pan[i] = props.GetPropertyValue<int>(11, i, 2) / 100.0f;
                     }
 
                     AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, delay, Platform.IsMobile || project.UsesEPSMExpansion,
@@ -634,33 +612,18 @@ namespace FamiStudio
                     var song = project.GetSong(songName);
                     var channelCount = project.GetActiveChannelCount();
                     var channelMask = 0L;
-                    var pan = (float[])null;
-                    var triggers = (bool[])null;
+                    var pan = new float[channelCount];
+                    var triggers = new bool[channelCount];
 
-                    if (Platform.IsDesktop)
+                    for (int i = 0; i < channelCount; i++)
                     {
-                        pan = new float[channelCount];
-                        triggers = new bool[channelCount];
+                        if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
+                            channelMask |= (1L << i);
 
-                        for (int i = 0; i < channelCount; i++)
-                        {
-                            if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
-                                channelMask |= (1L << i);
-
-                            pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
-                            triggers[i] = props.GetPropertyValue<string>(channelsPropIdx, i, 3) == "Emulation";
-                        }
+                        pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
+                        triggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(channelsPropIdx, i, 3) == "Emulation" : true;
                     }
-                    else
-                    {
-                        var selectedChannels = props.GetPropertyValue<bool[]>(channelsPropIdx);
-                        for (int i = 0; i < channelCount; i++)
-                        {
-                            if (selectedChannels[i])
-                                channelMask |= (1L << i);
-                        }
-                    }
-
+                  
                     lastExportFilename = filename;
 
                     if (pianoRoll)

@@ -586,7 +586,7 @@ namespace FamiStudio
             grid.SetRowColor(rowIdx, color);
         }
 
-        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
+        public void AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
         {
             properties.Add(
                 new Property()
