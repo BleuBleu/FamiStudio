@@ -2659,56 +2659,58 @@ namespace FamiStudio
                 if (filename != null)
                 {
                     App.BeginLogTask();
-
-                    Project otherProject = App.OpenProjectFile(filename, false);
-
-                    if (otherProject != null)
+                    App.OpenProjectFileAsync(filename, false, (otherProject) =>
                     {
-                        var songNames = new List<string>();
-                        foreach (var song in otherProject.Songs)
-                            songNames.Add(song.Name);
-
-                        var dlg = new PropertyDialog(ParentWindow, "Import Songs", 300);
-                        dlg.Properties.AddLabel(null, "Select songs to import:"); // 0
-                        dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
-                        dlg.Properties.AddButton(null, "Select All"); // 2
-                        dlg.Properties.AddButton(null, "Select None"); // 3
-                        dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
-                        dlg.Properties.Build();
-
-                        dlg.ShowDialogAsync((r) =>
+                        if (otherProject != null)
                         {
-                            if (r == DialogResult.OK)
+                            var songNames = new List<string>();
+                            foreach (var song in otherProject.Songs)
+                                songNames.Add(song.Name);
+
+                            var dlg = new PropertyDialog(ParentWindow, "Import Songs", 300);
+                            dlg.Properties.AddLabel(null, "Select songs to import:"); // 0
+                            dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
+                            dlg.Properties.AddButton(null, "Select All"); // 2
+                            dlg.Properties.AddButton(null, "Select None"); // 3
+                            dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
+                            dlg.Properties.Build();
+
+                            dlg.ShowDialogAsync((r) =>
                             {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                                var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                                var songIds = new List<int>();
-
-                                for (int i = 0; i < selected.Length; i++)
+                                if (r == DialogResult.OK)
                                 {
-                                    if (selected[i])
-                                        songIds.Add(otherProject.Songs[i].Id);
-                                }
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
-                                bool success = false;
-                                if (songIds.Count > 0)
-                                {
-                                    otherProject.DeleteAllSongsBut(songIds.ToArray());
-                                    success = App.Project.MergeProject(otherProject);
-                                }
+                                    var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                    var songIds = new List<int>();
 
-                                App.UndoRedoManager.AbortOrEndTransaction(success);
-                                RefreshButtons();
+                                    for (int i = 0; i < selected.Length; i++)
+                                    {
+                                        if (selected[i])
+                                            songIds.Add(otherProject.Songs[i].Id);
+                                    }
 
-                                if (!success && Platform.IsMobile && Log.GetLastMessage(LogSeverity.Error) != null)
-                                {
-                                    Platform.DelayedMessageBoxAsync(Log.GetLastMessage(LogSeverity.Error), "Error");
+                                    bool success = false;
+                                    if (songIds.Count > 0)
+                                    {
+                                        otherProject.DeleteAllSongsBut(songIds.ToArray());
+                                        success = App.Project.MergeProject(otherProject);
+                                    }
+
+                                    App.UndoRedoManager.AbortOrEndTransaction(success);
+                                    RefreshButtons();
+
+                                    if (!success && Platform.IsMobile && Log.GetLastMessage(LogSeverity.Error) != null)
+                                    {
+                                        Platform.DelayedMessageBoxAsync(Log.GetLastMessage(LogSeverity.Error), "Error");
+                                    }
                                 }
-                            }
-                        });
-                    }
-                    App.EndLogTask();
+                            });
+                        }
+
+                        // NSFTODO : Test this!!!
+                        App.EndLogTask();
+                    });
                 }
             };
 
@@ -2771,72 +2773,79 @@ namespace FamiStudio
             {
                 if (filename != null)
                 {
-                    App.BeginLogTask();
                     if (filename.ToLower().EndsWith("fti"))
                     {
+                        App.BeginLogTask();
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                         var success = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
                         App.UndoRedoManager.AbortOrEndTransaction(success);
                         RefreshButtons();
+                        App.EndLogTask();
                     }
                     if (filename.ToLower().EndsWith("bti"))
                     {
+                        App.BeginLogTask();
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                         var success = new BambootrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
                         App.UndoRedoManager.AbortOrEndTransaction(success);
                         RefreshButtons();
+                        App.EndLogTask();
                     }
                     else
                     {
-                        Project instrumentProject = App.OpenProjectFile(filename, false);
-
-                        if (instrumentProject != null)
+                        App.BeginLogTask();
+                        App.OpenProjectFileAsync(filename, false, (instrumentProject) => 
                         {
-                            var instruments = new List<Instrument>();
-                            var instrumentNames = new List<string>();
-
-                            foreach (var instrument in instrumentProject.Instruments)
+                            if (instrumentProject != null)
                             {
-                                instruments.Add(instrument);
-                                instrumentNames.Add(instrument.NameWithExpansion);
+                                var instruments = new List<Instrument>();
+                                var instrumentNames = new List<string>();
+
+                                foreach (var instrument in instrumentProject.Instruments)
+                                {
+                                    instruments.Add(instrument);
+                                    instrumentNames.Add(instrument.NameWithExpansion);
+                                }
+
+                                var dlg = new PropertyDialog(ParentWindow, "Import Instruments", 300);
+                                dlg.Properties.AddLabel(null, "Select instruments to import:"); // 0
+                                dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null); // 1
+                                dlg.Properties.AddButton(null, "Select All"); // 2
+                                dlg.Properties.AddButton(null, "Select None"); // 3
+                                dlg.Properties.Build();
+                                dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
+
+                                dlg.ShowDialogAsync((r) =>
+                                {
+                                    if (r == DialogResult.OK)
+                                    {
+                                        var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                        var instrumentsIdsToMerge = new List<int>();
+
+                                        for (int i = 0; i < selected.Length; i++)
+                                        {
+                                            if (selected[i])
+                                                instrumentsIdsToMerge.Add(instruments[i].Id);
+                                        }
+
+                                        // Wipe everything but the instruments we want.
+                                        instrumentProject.DeleteAllSongs();
+                                        instrumentProject.DeleteAllArpeggios();
+                                        instrumentProject.DeleteAllInstrumentBut(instrumentsIdsToMerge.ToArray());
+                                        instrumentProject.DeleteUnmappedSamples();
+
+                                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                                        var success = App.Project.MergeProject(instrumentProject);
+                                        App.UndoRedoManager.AbortOrEndTransaction(success);
+                                        RefreshButtons();
+                                    }
+                                });
                             }
 
-                            var dlg = new PropertyDialog(ParentWindow, "Import Instruments", 300);
-                            dlg.Properties.AddLabel(null, "Select instruments to import:"); // 0
-                            dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null); // 1
-                            dlg.Properties.AddButton(null, "Select All"); // 2
-                            dlg.Properties.AddButton(null, "Select None"); // 3
-                            dlg.Properties.Build();
-                            dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
-
-                            dlg.ShowDialogAsync((r) =>
-                            {
-                                if (r == DialogResult.OK)
-                                {
-                                    var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                                    var instrumentsIdsToMerge = new List<int>();
-
-                                    for (int i = 0; i < selected.Length; i++)
-                                    {
-                                        if (selected[i])
-                                            instrumentsIdsToMerge.Add(instruments[i].Id);
-                                    }
-
-                                    // Wipe everything but the instruments we want.
-                                    instrumentProject.DeleteAllSongs();
-                                    instrumentProject.DeleteAllArpeggios();
-                                    instrumentProject.DeleteAllInstrumentBut(instrumentsIdsToMerge.ToArray());
-                                    instrumentProject.DeleteUnmappedSamples();
-
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                                    var success = App.Project.MergeProject(instrumentProject);
-                                    App.UndoRedoManager.AbortOrEndTransaction(success);
-                                    RefreshButtons();
-                                }
-                            });
-                        }
+                            // NSFTODO : Test this!!!
+                            App.EndLogTask();
+                        });
                     }
-                    App.EndLogTask();
                 }
             };
 
@@ -2918,59 +2927,60 @@ namespace FamiStudio
                     }
                     else if (numFamiStudioFiles == 1)
                     {
-                        Project samplesProject = App.OpenProjectFile(filenames[0], false);
-
-                        if (samplesProject != null)
+                        App.OpenProjectFileAsync(filenames[0], false, (samplesProject) => 
                         {
-                            if (samplesProject.Samples.Count == 0)
+                            if (samplesProject != null)
                             {
-                                Platform.MessageBox(ParentWindow, "The selected project does not contain any samples.", "Error", MessageBoxButtons.OK);
-                                return;
-                            }
-
-                            var samplesNames = new List<string>();
-
-                            foreach (var sample in samplesProject.Samples)
-                                samplesNames.Add(sample.Name);
-
-                            var dlg = new PropertyDialog(ParentWindow, "Import DPCM Samples", 300);
-                            dlg.Properties.AddLabel(null, "Select samples to import:"); // 0
-                            dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null); // 1
-                            dlg.Properties.AddButton(null, "Select All"); // 2
-                            dlg.Properties.AddButton(null, "Select None"); // 3
-                            dlg.Properties.Build();
-                            dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
-
-                            dlg.ShowDialogAsync((r) =>
-                            {
-                                if (r == DialogResult.OK)
+                                if (samplesProject.Samples.Count == 0)
                                 {
-                                    App.BeginLogTask();
-                                    {
-                                        var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                                        var sampleIdsToMerge = new List<int>();
-
-                                        for (int i = 0; i < selected.Length; i++)
-                                        {
-                                            if (selected[i])
-                                                sampleIdsToMerge.Add(samplesProject.Samples[i].Id);
-                                        }
-
-                                        // Wipe everything but the instruments we want.
-                                        samplesProject.DeleteAllSongs();
-                                        samplesProject.DeleteAllArpeggios();
-                                        samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
-                                        samplesProject.DeleteAllInstruments();
-
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                                        bool success = App.Project.MergeProject(samplesProject);
-                                        App.UndoRedoManager.AbortOrEndTransaction(success);
-                                    }
-                                    App.EndLogTask();
-                                    RefreshButtons();
+                                    Platform.MessageBox(ParentWindow, "The selected project does not contain any samples.", "Error", MessageBoxButtons.OK);
+                                    return;
                                 }
-                            });
-                        }
+
+                                var samplesNames = new List<string>();
+
+                                foreach (var sample in samplesProject.Samples)
+                                    samplesNames.Add(sample.Name);
+
+                                var dlg = new PropertyDialog(ParentWindow, "Import DPCM Samples", 300);
+                                dlg.Properties.AddLabel(null, "Select samples to import:"); // 0
+                                dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null); // 1
+                                dlg.Properties.AddButton(null, "Select All"); // 2
+                                dlg.Properties.AddButton(null, "Select None"); // 3
+                                dlg.Properties.Build();
+                                dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
+
+                                dlg.ShowDialogAsync((r) =>
+                                {
+                                    if (r == DialogResult.OK)
+                                    {
+                                        App.BeginLogTask();
+                                        {
+                                            var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                            var sampleIdsToMerge = new List<int>();
+
+                                            for (int i = 0; i < selected.Length; i++)
+                                            {
+                                                if (selected[i])
+                                                    sampleIdsToMerge.Add(samplesProject.Samples[i].Id);
+                                            }
+
+                                            // Wipe everything but the instruments we want.
+                                            samplesProject.DeleteAllSongs();
+                                            samplesProject.DeleteAllArpeggios();
+                                            samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
+                                            samplesProject.DeleteAllInstruments();
+
+                                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                                            bool success = App.Project.MergeProject(samplesProject);
+                                            App.UndoRedoManager.AbortOrEndTransaction(success);
+                                        }
+                                        App.EndLogTask();
+                                        RefreshButtons();
+                                    }
+                                });
+                            }
+                        });
                     }
                     else if (numSamplesFiles > 0)
                     {

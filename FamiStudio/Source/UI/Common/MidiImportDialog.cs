@@ -249,10 +249,8 @@ namespace FamiStudio
             dialog.Properties.UpdateGrid(6, gridData);
         }
 
-        public Project ShowDialog(FamiStudioWindow parent)
+        public void ShowDialogAsync(FamiStudioWindow parent, Action<Project> action)
         {
-            var project = (Project)null;
-
             if (dialog != null)
             {
                 // This is only ran in desktop and this isnt really async, so its ok.
@@ -266,12 +264,19 @@ namespace FamiStudio
                         var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(2);
                         var pal = expansionMask != ExpansionType.NoneMask ? false : dialog.Properties.GetPropertyValue<bool>(3);
 
-                        project = new MidiFileReader().Load(filename, expansionMask, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
+                        var project = new MidiFileReader().Load(filename, expansionMask, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
+                        action(project);
+                    }
+                    else
+                    {
+                        action(null);
                     }
                 });
             }
-
-            return project;
+            else
+            {
+                action(null);
+            }
         }
     }
 }

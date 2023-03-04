@@ -916,8 +916,9 @@ namespace FamiStudio
             StopEverything();
 
             BeginLogTask();
+            OpenProjectFileAsync(filename, true, (p) => 
             {
-                project = OpenProjectFile(filename);
+                project = p;
 
                 if (project != null)
                 {
@@ -929,8 +930,8 @@ namespace FamiStudio
                 }
 
                 window.Refresh();
-            }
-            EndLogTask();
+                EndLogTask();
+            });
         }
 
         public void OpenProject(string filename = null)
@@ -981,7 +982,7 @@ namespace FamiStudio
             }
         }
 
-        public Project OpenProjectFile(string filename, bool allowComplexFormats = true)
+        public void OpenProjectFileAsync(string filename, bool allowComplexFormats, Action<Project> action)
         {
             var extension = Path.GetExtension(filename.ToLower());
 
@@ -989,9 +990,9 @@ namespace FamiStudio
             var ftm = extension == ".ftm";
             var txt = extension == ".txt";
             var nsf = extension == ".nsf" || extension == ".nsfe";
-            var mid = extension == ".mid";
+            var mid = extension == ".mid" && Platform.IsDesktop;
 
-            var requiresDialog = Platform.IsDesktop && allowComplexFormats && (nsf || mid);
+            var requiresDialog = allowComplexFormats && (nsf || mid);
 
             var project = (Project)null;
 
@@ -1006,20 +1007,24 @@ namespace FamiStudio
                 this.song = this.project.Songs[0];
                 this.ResetEverything();
 
+                Action<Project> ClearTemporaryProjectAndInvokeAction = (p) =>
+                {
+                    // Undo the hack mentionned above.
+                    this.song = null;
+                    this.project = null;
+                    action(p);
+                };
+
                 if (mid)
                 {
                     var dlg = new MidiImportDialog(window, filename);
-                    project = dlg.ShowDialog(window);
+                    dlg.ShowDialogAsync(window, ClearTemporaryProjectAndInvokeAction);
                 }
                 else if (nsf)
                 {
                     var dlg = new NsfImportDialog(window, filename);
-                    project = dlg.ShowDialog(window);
+                    dlg.ShowDialogAsync(window, ClearTemporaryProjectAndInvokeAction);
                 }
-
-                // Undo the hack mentionned above.
-                this.song = null;
-                this.project = null;
             }
             else
             {
@@ -1044,6 +1049,9 @@ namespace FamiStudio
                         ConditionalShowFamiTrackerMobileWarning();
                     }
                 }
+
+                if (project != null)
+                    action(project);
             }
 
             if (Platform.IsDesktop && allowComplexFormats)
@@ -1051,8 +1059,6 @@ namespace FamiStudio
                 Settings.AddRecentFile(filename);
                 Settings.Save();
             }
-
-            return project;
         }
 
         public void SaveProjectAsync(bool forceSaveAs = false, Action callback = null)

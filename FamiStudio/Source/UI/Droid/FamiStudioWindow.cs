@@ -19,6 +19,7 @@ using Javax.Microedition.Khronos.Opengles;
 using Google.Android.Material.BottomSheet;
 
 using Debug = System.Diagnostics.Debug;
+using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -50,6 +51,7 @@ namespace FamiStudio
 
         private string delayedMessage = null;
         private string delayedMessageTitle = null;
+        private List<string> deferDeleteFiles = new List<string>();
 
         public static bool ActivityRunning => activityRunning;
         public static FamiStudioWindow Instance { get; private set; }
@@ -181,6 +183,14 @@ namespace FamiStudio
             }).Start();
         }
 
+        public void DeferDeleteFile(string file)
+        {
+            if (IsAsyncDialogInProgress)
+                deferDeleteFiles.Add(file);
+            else
+                File.Delete(file);
+        }
+
         public override void OnWindowFocusChanged(bool hasFocus)
         {
             base.OnWindowFocusChanged(hasFocus);
@@ -259,6 +269,15 @@ namespace FamiStudio
 
                 delayedMessage      = null;
                 delayedMessageTitle = null;
+            }
+        }
+
+        private void ConditionalProcessDeferDelete()
+        {
+            if (!IsAsyncDialogInProgress && deferDeleteFiles.Count > 0)
+            {
+                File.Delete(deferDeleteFiles[0]);
+                deferDeleteFiles.RemoveAt(0);
             }
         }
 
@@ -381,6 +400,7 @@ namespace FamiStudio
                 }
 
                 ConditionalShowDelayedMessageBox();
+                ConditionalProcessDeferDelete();
 
                 if (dirty)
                 { 
@@ -961,7 +981,7 @@ namespace FamiStudio
 
                     using (var streamIn = main.ContentResolver.OpenInputStream(data.Data))
                     {
-                        using (var streamOut = File.OpenWrite(tempFile))
+                        using (var streamOut = File.Open(tempFile, FileMode.Create))
                         {
                             while (true)
                             {
@@ -979,7 +999,10 @@ namespace FamiStudio
 
                     callback(tempFile);
 
-                    File.Delete(tempFile);
+                    // Some things like NSF import may open further dialogs which 
+                    // will open the file again. So we cant delete it until all the 
+                    // dialogs are closed.
+                    FamiStudioWindow.Instance.DeferDeleteFile(tempFile);
                 }
             }
         }

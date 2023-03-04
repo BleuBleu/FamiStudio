@@ -27,10 +27,8 @@ namespace FamiStudio
             }
         }
 
-        public Project ShowDialog(FamiStudioWindow parent)
+        public void ShowDialogAsync(FamiStudioWindow parent, Action<Project> action)
         {
-            var project = (Project)null;
-
             if (dialog != null)
             {
                 // This is only ran in desktop and this isnt really async, so its ok.
@@ -46,12 +44,19 @@ namespace FamiStudio
                         var reverseDpcmBits     = dialog.Properties.GetPropertyValue<bool>(5); 
                         var preserveDpcmPadding = dialog.Properties.GetPropertyValue<bool>(6);
 
-                        project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, removeIntro, reverseDpcmBits, preserveDpcmPadding);
+                        var project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, removeIntro, reverseDpcmBits, preserveDpcmPadding);
+                        action(project);
+                    }
+                    else
+                    {
+                        action(null);
                     }
                 });
             }
-
-            return project;
+            else
+            {
+                action(null);
+            }
         }
     }
 }

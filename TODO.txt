@@ -40,6 +40,7 @@ Packaging
 - Add temple raiders demo song (MMC5)
 - Recompile NesSndEmu android (n163 mixing change)
 - Recompile ROMs, re-export data, bump versions, etc.
+- Uncheck x86 in supported android platforms.
 
 4.1.0 Change Log
 ================

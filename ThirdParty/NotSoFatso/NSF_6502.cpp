@@ -87,7 +87,7 @@
 //  this macro handles the jump, and should only be called if the branch condition was true
 //  if the branch condition was false, the PC must be incrimented
 
-#define RelJmp(cond)	val = Rd(PC.W); PC.W++; final.W = PC.W + (char)(val);						\
+#define RelJmp(cond)	val = Rd(PC.W); PC.W++; final.W = (val & 0x80 ? PC.W - (255 - val + 1) : PC.W + val);						\
 						if(cond) { nCPUCycle += ((final.B.h != PC.B.h) ? 2 : 1); PC.W = final.W; }
 
 

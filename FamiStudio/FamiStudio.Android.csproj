@@ -45,6 +45,7 @@
     <BundleAssemblies>false</BundleAssemblies>
     <Debugger>Xamarin</Debugger>
     <NoWarn>CS0162,CS0414,CS0067</NoWarn>
+    <AndroidSupportedAbis>armeabi-v7a;x86_64;arm64-v8a</AndroidSupportedAbis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -427,9 +428,9 @@
     <EmbeddedResource Include="Resources\Mobile\MobileMenuToggleAttack.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuToggleRelease.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuToggleSlide.tga" />
-    <EmbeddedResource Include="Resources\Mobile\MobileMenuWave.tga" />  
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuWave.tga" />
   </ItemGroup>
-  <ItemGroup>    
+  <ItemGroup>
     <EmbeddedResource Include="Resources\Fonts\Quicksand-Regular.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Quicksand-Bold.ttf" />
   </ItemGroup>
@@ -449,7 +450,7 @@
     <EmbeddedResource Include="Resources\Tutorials\MobileTutorial10.gif" />
     <EmbeddedResource Include="Resources\Tutorials\MobileTutorial11.gif" />
     <EmbeddedResource Include="Resources\Tutorials\MobileTutorial12.gif" />
-  </ItemGroup>  
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Misc\Dash.tga" />
     <EmbeddedResource Include="Resources\Misc\Dash@4x.tga" />
@@ -639,6 +640,7 @@
     <EmbeddedResource Include="Resources\Atlas\Slide@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Snap@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SnapOff@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Sort@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Stop@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Transform@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Undo@2x.tga" />
@@ -696,7 +698,7 @@
     <EmbeddedResource Include="Resources\Shaders\Droid\Poly.vert" />
     <EmbeddedResource Include="Resources\Shaders\Droid\Text.frag" />
     <EmbeddedResource Include="Resources\Shaders\Droid\Text.vert" />
-  </ItemGroup>    
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Castlevania 2.fms" />
