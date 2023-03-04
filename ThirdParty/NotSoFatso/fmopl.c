@@ -51,6 +51,8 @@
 #ifndef INLINE
 #ifdef _MSC_VER
 	#define INLINE __forceinline
+#elif defined(__clang__)
+	#define INLINE 
 #else
 	#define INLINE inline
 #endif

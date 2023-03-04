@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GifDec.Android", "ThirdPart
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Stb.Android", "ThirdParty\Stb\Stb.Android.vcxproj", "{2E765863-C063-4E81-86CB-7192EAA508E8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NotSoFatso.Android", "ThirdParty\NotSoFatso\NotSoFatso.Android.vcxproj", "{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,6 +103,20 @@ Global
 		{2E765863-C063-4E81-86CB-7192EAA508E8}.Release|ARM64.Build.0 = Release|ARM64
 		{2E765863-C063-4E81-86CB-7192EAA508E8}.Release|x64.ActiveCfg = Release|x64
 		{2E765863-C063-4E81-86CB-7192EAA508E8}.Release|x64.Build.0 = Release|x64
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Debug|ARM.ActiveCfg = Debug|ARM
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Debug|ARM.Build.0 = Debug|ARM
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Debug|ARM64.Build.0 = Debug|ARM64
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Debug|x64.ActiveCfg = Debug|x64
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Debug|x64.Build.0 = Debug|x64
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Release|Any CPU.ActiveCfg = Release|x86
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Release|ARM.ActiveCfg = Release|ARM
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Release|ARM.Build.0 = Release|ARM
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Release|ARM64.ActiveCfg = Release|ARM64
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Release|ARM64.Build.0 = Release|ARM64
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Release|x64.ActiveCfg = Release|x64
+		{4F67CFEE-FC4A-44A0-8068-0E8CB313747C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
