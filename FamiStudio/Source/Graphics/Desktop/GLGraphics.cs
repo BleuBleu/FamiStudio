@@ -582,6 +582,7 @@ namespace FamiStudio
     {
         protected int fbo;
         protected int texture;
+        protected int depth;
         protected int resX;
         protected int resY;
 
@@ -602,9 +603,18 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
 
+            depth = GL.GenTexture();
+            GL.BindTexture(GL.Texture2D, depth);
+            GL.TexImage2D(GL.Texture2D, 0, GL.DepthComponent, imageSizeX, imageSizeY, 0, GL.DepthComponent, GL.Float, IntPtr.Zero);
+            GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Nearest);
+            GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Nearest);
+            GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
+            GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
+
             fbo = GL.GenFramebuffer();
             GL.BindFramebuffer(GL.Framebuffer, fbo);
             GL.FramebufferTexture2D(GL.Framebuffer, GL.ColorAttachment0, GL.Texture2D, texture, 0);
+            GL.FramebufferTexture2D(GL.Framebuffer, GL.DepthAttachment, GL.Texture2D, depth, 0);
             GL.BindFramebuffer(GL.Framebuffer, 0);
         }
 
@@ -664,6 +674,7 @@ namespace FamiStudio
         public override void Dispose()
         {
             if (texture != 0) GL.DeleteTexture(texture);
+            if (depth != 0)   GL.DeleteTexture(depth);
             if (fbo != 0)     GL.DeleteFramebuffer(fbo);
 
             base.Dispose();
@@ -718,6 +729,7 @@ namespace FamiStudio
         public const int UnsignedShort             = 0x1403;
         public const int Framebuffer               = 0x8D40;
         public const int ColorAttachment0          = 0x8CE0;
+        public const int DepthAttachment           = 0x8D00;
         public const int DrawFramebuffer           = 0x8CA9;
         public const int ReadFramebuffer           = 0x8CA8;
         public const int LineWidthRange            = 0x0B22;

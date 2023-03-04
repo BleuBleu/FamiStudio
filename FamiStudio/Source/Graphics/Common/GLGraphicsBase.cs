@@ -485,7 +485,8 @@ namespace FamiStudio
     {
         R,
         Rgb,
-        Rgba
+        Rgba,
+        Depth
     };
 
     public enum GraphicsLayer

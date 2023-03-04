@@ -330,6 +330,7 @@ namespace FamiStudio
                 case TextureFormat.R: return GLES20.GlLuminance;
                 case TextureFormat.Rgb: return GLES20.GlRgb;
                 case TextureFormat.Rgba: return GLES20.GlRgba;
+                case TextureFormat.Depth: return GLES20.GlDepthComponent;
                 default:
                     Debug.Assert(false);
                     return GLES20.GlRgba;
@@ -353,7 +354,7 @@ namespace FamiStudio
             buffer.Position(0);
 
             var texFormat = GetGLESTextureFormat(format);
-            GLES20.GlTexImage2D(GLES20.GlTexture2d, 0, texFormat, width, height, 0, texFormat, GLES20.GlUnsignedByte, buffer);
+            GLES20.GlTexImage2D(GLES20.GlTexture2d, 0, texFormat, width, height, 0, texFormat, format == TextureFormat.Depth ? GLES20.GlUnsignedShort : GLES20.GlUnsignedByte, format == TextureFormat.Depth ? null : buffer);
 
             return id[0];
         }
@@ -739,6 +740,7 @@ namespace FamiStudio
     {
         protected int fbo;
         protected int texture;
+        protected int depth;
         protected int resX;
         protected int resY;
 
@@ -753,7 +755,8 @@ namespace FamiStudio
 
             if (!allowReadback)
             {
-                texture = CreateEmptyTexture(imageSizeX, imageSizeY, TextureFormat.Rgba, false);
+                texture = CreateEmptyTexture(imageSizeX, imageSizeY, TextureFormat.Rgba,  false);
+                depth   = CreateEmptyTexture(imageSizeX, imageSizeY, TextureFormat.Depth, false);
 
                 var fbos = new int[1];
                 GLES20.GlGenFramebuffers(1, fbos, 0);
@@ -761,6 +764,7 @@ namespace FamiStudio
 
                 GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, fbo);
                 GLES20.GlFramebufferTexture2D(GLES20.GlFramebuffer, GLES20.GlColorAttachment0, GLES20.GlTexture2d, texture, 0);
+                GLES20.GlFramebufferTexture2D(GLES20.GlFramebuffer, GLES20.GlDepthAttachment, GLES20.GlTexture2d, depth, 0);
                 GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, 0);
             }
         }
@@ -806,7 +810,7 @@ namespace FamiStudio
 
         public override void Dispose()
         {
-            if (texture != 0) GLES20.GlDeleteTextures(1, new[] { texture }, 0);
+            if (texture != 0) GLES20.GlDeleteTextures(2, new[] { texture, depth }, 0);
             if (fbo     != 0) GLES20.GlDeleteFramebuffers(1, new[] { fbo }, 0);
 
             base.Dispose();

@@ -18,7 +18,7 @@ Minor UI stuff:
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
 - BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
 - GLTODOs, DPCMTODOs, etc. Review all those.
-- BUG : Video depth buffer + double check colors. Feels off.
+- Add Dispose to GL Graphics + Fonts, when expporting video we leak tons of stuff.
 
 Testing
 =======
@@ -33,6 +33,7 @@ Testing
 - Re-export all ROM test (.bin) files at the end.
 - Add phase reset to unit tests.
 - Sample, instrument and song import (all places where we switched to OpenProjectAsync)
+- Test videos a lot, compare colors. Cancel in middle w/ DPI scaling to see if everything continues OK. Got GL crash by cancelling once.
 
 Packaging
 =========
