@@ -1770,9 +1770,9 @@ namespace FamiStudio
                 Debug.Assert(kernel == FamiToneKernel.FamiStudio);
 
                 if (project.UsesEPSMExpansion)
-                    project.SetExpansionAudioMask(ExpansionType.AllMask, 8);
+                    project.SetExpansionAudioMask(ExpansionType.AllMask, project.ExpansionNumN163Channels);
                 else
-                    project.SetExpansionAudioMask(ExpansionType.AllMask & ~(ExpansionType.EPSMMask), 8);
+                    project.SetExpansionAudioMask(ExpansionType.AllMask & ~(ExpansionType.EPSMMask), project.ExpansionNumN163Channels);
             }
         }
 

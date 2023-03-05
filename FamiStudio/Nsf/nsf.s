@@ -33,10 +33,6 @@
         FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1
     .endif
 
-    .ifdef FAMISTUDIO_EXP_EPSM
-        FAMISTUDIO_USE_EPSM=1
-    .endif
-
     .ifdef FAMISTUDIO_MULTI_EXPANSION
         .include "../../SoundEngine/famistudio_multi_ca65.s"
     .else

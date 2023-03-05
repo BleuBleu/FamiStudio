@@ -451,9 +451,9 @@ FAMISTUDIO_EXP_EPSM_CHANNELS    = 15
 .else
 FAMISTUDIO_EXP_EPSM_CHANNELS    = 0
 .endif
-FAMISTUDIO_NUM_ENVELOPES        = (3+3+2+3)+(3+3+3)+(2+2+2+2+2+2)+(2)+(3+3)+(3+3+3+3+3+3+3+3)+(2+2+2)+(FAMISTUDIO_EXP_EPSM_CHANNELS*2)
-FAMISTUDIO_NUM_PITCH_ENVELOPES  = (3)+(3)+(6)+(1)+(2)+(1+1+1+1+1+1+1+1)+(3)+(FAMISTUDIO_EXP_EPSM_CHANNELS)
-FAMISTUDIO_NUM_CHANNELS         = (5)+(3)+(6)+(1)+(2)+(1+1+1+1+1+1+1+1)+(3)+(FAMISTUDIO_EXP_EPSM_CHANNELS)
+FAMISTUDIO_NUM_ENVELOPES        = (3+3+2+3)+(3+3+3)+(2+2+2+2+2+2)+(2)+(3+3)+(FAMISTUDIO_EXP_N163_CHN_CNT*3)+(2+2+2)+(FAMISTUDIO_EXP_EPSM_CHANNELS*2)
+FAMISTUDIO_NUM_PITCH_ENVELOPES  = (3)+(3)+(6)+(1)+(2)+(FAMISTUDIO_EXP_N163_CHN_CNT)+(3)+(FAMISTUDIO_EXP_EPSM_CHANNELS)
+FAMISTUDIO_NUM_CHANNELS         = (5)+(3)+(6)+(1)+(2)+(FAMISTUDIO_EXP_N163_CHN_CNT)+(3)+(FAMISTUDIO_EXP_EPSM_CHANNELS)
 FAMISTUDIO_NUM_DUTY_CYCLES      = (3)+(3)+(0)+(0)+(2)+(0)+(0)+(0)
 ; [MULTI] END
 
@@ -1318,6 +1318,10 @@ famistudio_init:
     sta FAMISTUDIO_S5B_ADDR
     lda #$38 ; No noise, just 3 tones for now.
     sta FAMISTUDIO_S5B_DATA
+    ; [MULTI] BEGIN : Select a dummy register to remove conflicts with N163.
+    lda #FAMISTUDIO_S5B_REG_IO_A
+    sta FAMISTUDIO_S5B_ADDR    
+    ; [MULTI] END
 .endif
 
     jmp famistudio_music_stop
@@ -2920,7 +2924,6 @@ famistudio_update_n163_channel_sound:
     rol @pitch_hi 
 
     ; Write pitch
-    ; [MULTI] TODO : The N163 ADDR register overlaps with there S5B data register. There is a potiential conflict. 
     lda famistudio_n163_freq_table_lo,y
     sta FAMISTUDIO_N163_ADDR
     lda @pitch+0
@@ -2951,7 +2954,6 @@ famistudio_update_n163_channel_sound:
 
 @update_volume:
     ; Write volume
-    ; [MULTI] TODO : The N163 ADDR register overlaps with there S5B data register. There is a potiential conflict. 
     lda famistudio_n163_vol_table,y
     sta FAMISTUDIO_N163_ADDR
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -3060,6 +3062,12 @@ famistudio_update_s5b_channel_sound:
     .else
         stx FAMISTUDIO_S5B_DATA
     .endif
+
+    ; [MULTI] BEGIN : Select a dummy register to remove conflicts with N163.
+    lda #FAMISTUDIO_S5B_REG_IO_A
+    sta FAMISTUDIO_S5B_ADDR    
+    ; [MULTI] END
+
     rts
 
 .endif

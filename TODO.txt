@@ -21,6 +21,8 @@ Minor UI stuff:
 - Lines too thin on android
 - Long press sorting PE doesnt work on mobile
 - Reduce PE icon sizes a bit on mobile.
+- Video export, when autoselecting channels, it only looks at 1st song.
+- BUG : NSF_export_bug.fms, buh.nsf how private DM.
 
 Testing
 =======
@@ -44,6 +46,7 @@ Packaging
 - Recompile NesSndEmu android (n163 mixing change)
 - Recompile ROMs, re-export data, bump versions, etc.
 - Uncheck x86 in supported android platforms.
+- MacOS install doesnt work if dotnet is missing? I thought that was fixed.
 
 4.1.0 Change Log
 ================

@@ -1532,7 +1532,7 @@ namespace FamiStudio
                             var bgColor = button.color;
 
                             if (blinkTimer != 0.0f && button.Object == blinkObject)
-                                bgColor = Theme.Darken(bgColor, (int)(MathF.Sin(blinkTimer * MathF.PI * 4.0f) * 16 + 16));
+                                bgColor = Theme.Darken(bgColor, (int)(MathF.Sin(blinkTimer * MathF.PI * 8.0f) * 16 + 16));
 
                             c.FillAndDrawRectangleGradient(0, 0, contentSizeX, groupSizeY, bgColor, Color.FromArgb(200, bgColor), Theme.BlackColor, true, groupSizeY, 1);
                         }

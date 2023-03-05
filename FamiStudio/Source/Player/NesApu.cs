@@ -817,11 +817,13 @@ namespace FamiStudio
                                 // This is mainly because the instrument player might not update all the channels all the time.
                                 WriteRegister(apuIdx, N163_ADDR, N163_REG_VOLUME);
                                 WriteRegister(apuIdx, N163_DATA, (numNamcoChannels - 1) << 4);
-                                NesApu.SetN163Mix(apuIdx, Settings.N163Mix ? 1 : 0);
+                                SetN163Mix(apuIdx, Settings.N163Mix ? 1 : 0);
                                 break;
                             case APU_EXPANSION_SUNSOFT:
                                 WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
                                 WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
+                                if ((expansions & APU_EXPANSION_MASK_NAMCO) != 0) // See comment in "ChannelStateS5B.cs".
+                                    WriteRegister(apuIdx, S5B_ADDR, S5B_REG_IO_A);
                                 break;
                             case APU_EXPANSION_EPSM:
                                 WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE); SkipCycles(apuIdx, EpsmCycleSkip);
