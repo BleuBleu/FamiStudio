@@ -150,25 +150,25 @@ namespace FamiStudio
             return Path.Combine(shareDir, filename);
         }
 
-        public static string ShowSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string[] ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
+        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string ShowBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
+        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;
