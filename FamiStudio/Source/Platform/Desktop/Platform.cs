@@ -120,7 +120,7 @@ namespace FamiStudio
             }
         }
 
-        public static string ShowBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
+        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
             if (Settings.UseOSDialogs)
             {
@@ -128,7 +128,7 @@ namespace FamiStudio
             }
             else
             {
-                var dlg = new FileDialog(win, FileDialog.Mode.Folder, title, defaultPath);
+                var dlg = new FileDialog(FamiStudioWindow.Instance, FileDialog.Mode.Folder, title, defaultPath);
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     defaultPath = dlg.SelectedPath;
