@@ -32,12 +32,13 @@ namespace FamiStudio
         const int NsfKernelOffset    = 0x0180;
         const int NsfBankSize        = 0x1000;
         const int NsfKernelLastBank  = 0xf000;
+        const int NsfVectorSize      = 6;
 
         const int NsfGlobalVarsSize     = 4;
         const int NsfSongTableEntrySize = 4;
         const int NsfHeaderSize         = 128;
         const int NsfSongTableSize      = 256;
-        const int NsfMaxSongs           = (NsfSongTableSize - NsfGlobalVarsSize - 6) / NsfSongTableEntrySize; // 6 is for vectors.
+        const int NsfMaxSongs           = (NsfSongTableSize - NsfGlobalVarsSize) / NsfSongTableEntrySize;
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         unsafe struct NsfHeader
@@ -232,7 +233,8 @@ namespace FamiStudio
                 var dpcmBankSize = NsfBankSize;
                 var dpcmNumBanks = 0;
                 var driverBankOffset = driverActualSize;
-                var driverBankLeft = driverSizePadded == driverActualSize ? 0 : NsfBankSize - (driverBankOffset & (NsfBankSize - 1));
+                var driverBankLeft = driverSizePadded == driverActualSize ? 0 : NsfBankSize - (driverBankOffset & (NsfBankSize - 1)) - NsfVectorSize;
+                Debug.Assert(driverBankLeft >= 0 && driverBankLeft < NsfBankSize);
 
                 if (project.UsesSamples)
                 {
@@ -264,7 +266,7 @@ namespace FamiStudio
 
                         dpcmBankStart = (nsfBytes.Count) / NsfBankSize;
 
-                        Log.LogMessage(LogSeverity.Info, $"Allocating {dpcmNumBanks} banks ({dpcmNumBanks * NsfBankSize} bytes) for DPCM samples.");
+                        Log.LogMessage(LogSeverity.Info, $"Allocating {dpcmNumBanks} bank(s) ({dpcmNumBanks * NsfBankSize} bytes) for DPCM samples.");
                     }
 
                     nsfBytes[songTableIdx + 0] = (byte)(dpcmBankStart);

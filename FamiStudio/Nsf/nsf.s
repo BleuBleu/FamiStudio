@@ -173,3 +173,7 @@ nsf_song_table:      .res 252
     rts
 .endproc
 .endif
+
+.segment "VECTORS"
+
+.res 6
