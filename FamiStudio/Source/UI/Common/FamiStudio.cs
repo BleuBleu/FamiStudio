@@ -2310,30 +2310,12 @@ namespace FamiStudio
 
             ProcessAudioDeviceChanges();
             ProcessQueuedMidiNotes();
-            TickControls(deltaTime);
             ConditionalMarkControlsDirty();
             ConditionalShowTutorial();
             ConditionalReconnectOscilloscope();
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
             CheckStopInstrumentNote(deltaTime);
-        }
-
-        public void TickDuringDialog(float deltaTime)
-        {
-            // Still tick the toolbar when a dialog is active since
-            // we may dislay notifications on there.
-            ToolBar.Tick(deltaTime);
-        }
-
-        private void TickControls(float deltaTime)
-        {
-            ToolBar.Tick(deltaTime);
-            PianoRoll.Tick(deltaTime);
-            Sequencer.Tick(deltaTime);
-            ProjectExplorer.Tick(deltaTime);
-            QuickAccessBar.Tick(deltaTime);
-            MobilePiano.Tick(deltaTime);
         }
 
         private void Sequencer_PatternClicked(int channelIdx, int patternIdx, bool setActive)

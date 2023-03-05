@@ -2130,8 +2130,8 @@ namespace FamiStudio
 
         private void UpdateSliderButtons(bool first, bool final)
         {
-            // Transition to auto increment after 250ms.
-            if (first || captureDuration >= 0.25f)
+            // Transition to auto increment after 350ms.
+            if (first || captureDuration >= 0.35f)
             {
                 var button = buttons[captureButtonIdx];
                 var val = button.param.GetValue();
@@ -2367,6 +2367,7 @@ namespace FamiStudio
             if (captureOperation != CaptureOperation.None && realTime)
             {
                 captureDuration += delta;
+                Debug.WriteLine($"Duration {captureDuration} {delta}");
             }
 
             if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
@@ -4128,7 +4129,6 @@ namespace FamiStudio
                 var filename = Platform.ShowOpenFileDialog("Open File", "Wav Files (*.wav)|*.wav", ref Settings.LastSampleFolder);
                 LoadWavFileAction(filename);
             }
-
         }
 
         private void ClearN163FdsResampleWavData(Instrument inst)

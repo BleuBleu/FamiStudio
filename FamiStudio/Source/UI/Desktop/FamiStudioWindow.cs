@@ -251,9 +251,7 @@ namespace FamiStudio
 
             var deltaTime = (float)Math.Min(0.25f, (float)(tickTime - lastTickTime));
 
-            if (IsAsyncDialogInProgress)
-                famistudio.TickDuringDialog(deltaTime);
-            else
+            if (!IsAsyncDialogInProgress)
                 famistudio.Tick(deltaTime);
 
             container.Tick(deltaTime);
