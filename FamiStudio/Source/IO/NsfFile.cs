@@ -234,18 +234,18 @@ namespace FamiStudio
                     var dpcmBankStart = 0;
                     var firstBankSampleData = project.GetPackedSampleData(0, dpcmBankSize);
 
-                // If there is just 1 bank, try to fit after the driver.
-                if (dpcmNumBanks == 1 && firstBankSampleData.Length <= driverBankLeft)
-                {
-                    for (int i = 0; i < firstBankSampleData.Length; i++)
-                        nsfBytes[driverBankOffset + i] = firstBankSampleData[i];
+                    // If there is just 1 bank, try to fit after the driver.
+                    if (dpcmNumBanks == 1 && firstBankSampleData.Length <= driverBankLeft)
+                    {
+                        for (int i = 0; i < firstBankSampleData.Length; i++)
+                            nsfBytes[driverBankOffset + i] = firstBankSampleData[i];
 
-                    driverBankOffset += firstBankSampleData.Length;
-                    driverBankLeft -= firstBankSampleData.Length;
-                    dpcmBankStart = driverBankCount - 1;
-                }
-                else
-                {
+                        driverBankOffset += firstBankSampleData.Length;
+                        driverBankLeft -= firstBankSampleData.Length;
+                        dpcmBankStart = driverBankCount - 1;
+                    }
+                    else
+                    {
                         for (int i = 0; i < dpcmNumBanks; i++)
                         {
                             nsfBytes.AddRange(project.GetPackedSampleData(i, dpcmBankSize));
