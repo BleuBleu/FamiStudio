@@ -14,10 +14,10 @@ namespace FamiStudio
         //   - 8000-cfff: Song data
         //   - e000-efff: DPCM (if any)
         //   - f000-ffff: Engine code + song table + vectors.
-        //     - f000: nsf_init
-        //     - f060: nsf_play
-        //     - f080: driver code
-        //     - ff00: Song table of content.
+        //     - f000: Song table of content.
+        //     - f100: nsf_init
+        //     - f160: nsf_play
+        //     - f180: driver code
         //     - fffa: Vectors
         //
         // We have drivers that are 1, 2 and 3 bank large. 
@@ -26,9 +26,9 @@ namespace FamiStudio
         //   - 3 page : DPCM is a c000-cfff and code is in d000-ffff.
 
         const int NsfMemoryStart     = 0x8000;
-        const int NsfInitOffset      = 0x0000;
-        const int NsfPlayOffset      = 0x0060;
-        const int NsfKernelOffset    = 0x0080;
+        const int NsfInitOffset      = 0x0100;
+        const int NsfPlayOffset      = 0x0160;
+        const int NsfKernelOffset    = 0x0180;
         const int NsfBankSize        = 0x1000;
 
         const int NsfGlobalVarsSize     = 4;
@@ -208,8 +208,7 @@ namespace FamiStudio
 
                 Log.LogMessage(LogSeverity.Info, $"Sound engine code size: {nsfBinBuffer.Length} bytes.");
 
-                var songTableIdx = nsfBytes.Count - NsfSongTableSize;
-                var songDataIdx  = nsfBytes.Count;
+                var songTableIdx = 0;
                 var codeBaseAddr = 0x10000 - driverSizeRounded;
                 var dpcmBaseAddr = codeBaseAddr - NsfBankSize;
                 var dpcmBankSize = NsfBankSize;

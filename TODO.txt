@@ -13,7 +13,6 @@ Minor UI stuff:
 - Numpad delete (No sure GLFW can do it?)
 - Add confirmation for overwrite on mobile
 - PWM stuff from how2.
-- Move song table at start of NSF.
 - BUG : Android suspend/pause issues. Null project sometimes.
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
 - BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
@@ -22,6 +21,7 @@ Minor UI stuff:
 - Weird rectangle in sequencer on android.
 - Long press sorting PE doesnt work on mobile
 - Reduce PE icon sizes a bit on mobile.
+
 
 Testing
 =======
