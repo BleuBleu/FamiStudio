@@ -9,6 +9,7 @@ namespace FamiStudio
 {
     public enum LogSeverity
     {
+        Debug,
         Info,
         Warning,
         Error,
@@ -26,10 +27,17 @@ namespace FamiStudio
     {
         private static readonly string[] SeverityStrings = new []
         {
+            "Debug: ",
             "Info: ",
             "Warning: ",
             "Error: "
         };
+
+        #if DEBUG
+            private const bool AllowDebugSeverity = true;
+        #else
+            private const bool AllowDebugSeverity = false;
+        #endif
 
         // HACK: See comment above. Mono compiler bug.
         public static ILogOutput LogOutput;
@@ -39,7 +47,7 @@ namespace FamiStudio
 
         public static void LogMessage(LogSeverity severity, string msg)
         {
-            if ((int)severity >= (int)MinSeverity && LogOutput != null)
+            if (((int)severity >= (int)MinSeverity || severity == LogSeverity.Debug && AllowDebugSeverity) && LogOutput != null)
                 LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
 
             Debug.WriteLine(SeverityStrings[(int)severity] + msg);

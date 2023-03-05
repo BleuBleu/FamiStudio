@@ -1593,6 +1593,8 @@ namespace FamiStudio
             // Get raw uncompressed song data.
             var songData = GetSongData(song, songIdx, speedChannel);
 
+            Log.LogMessage(LogSeverity.Debug, $"Uncompressed song data size {songData.Count} bytes.");
+
             // Try compression with various threshold for jump to ref.
             var bestSize = int.MaxValue;
             var bestMinNotesForJump = 0;
@@ -1600,9 +1602,8 @@ namespace FamiStudio
             for (int i = 8; i <= 40; i++)
             {
                 var size = CompressAndOutputSongData(songData, songIdx, i, false);
-#if DEBUG
-                Log.LogMessage(LogSeverity.Info, $"Compression with a match of {i} notes = {size} bytes.");
-#endif
+
+                Log.LogMessage(LogSeverity.Debug, $"Compression with a match of {i} notes = {size} bytes.");
 
                 // Equal is intentional here, if we find same size, but with larger matches, 
                 // it will likely waste less CPU doing a bunch of jumps.
