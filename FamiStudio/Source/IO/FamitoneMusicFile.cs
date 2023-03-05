@@ -1769,10 +1769,11 @@ namespace FamiStudio
             {
                 Debug.Assert(kernel == FamiToneKernel.FamiStudio);
 
+                // HACK : We always pretend to have 8 channels to keep the driver code simple.
                 if (project.UsesEPSMExpansion)
-                    project.SetExpansionAudioMask(ExpansionType.AllMask, project.ExpansionNumN163Channels);
+                    project.SetExpansionAudioMask(ExpansionType.AllMask, 8, false);
                 else
-                    project.SetExpansionAudioMask(ExpansionType.AllMask & ~(ExpansionType.EPSMMask), project.ExpansionNumN163Channels);
+                    project.SetExpansionAudioMask(ExpansionType.AllMask & ~(ExpansionType.EPSMMask), 8, false);
             }
         }
 

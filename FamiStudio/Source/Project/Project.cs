@@ -853,7 +853,7 @@ namespace FamiStudio
                 songs.Insert(0, song);
         }
 
-        public void SetExpansionAudioMask(int newExpansionMask, int numChannels = 1)
+        public void SetExpansionAudioMask(int newExpansionMask, int numChannels = 1, bool resizeN163RAM = true)
         {
             if ((newExpansionMask & ExpansionType.N163Mask) != 0 && numChannels == 0)
                 newExpansionMask &= ~ExpansionType.N163Mask;
@@ -879,7 +879,7 @@ namespace FamiStudio
                 }
             }
 
-            if (oldNumN163Channels != expansionNumN163Channels)
+            if (oldNumN163Channels != expansionNumN163Channels && resizeN163RAM)
             {
                 foreach (var inst in instruments)
                 {
