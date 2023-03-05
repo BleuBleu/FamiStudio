@@ -30,6 +30,7 @@ namespace FamiStudio
         const int NsfPlayOffset      = 0x0160;
         const int NsfKernelOffset    = 0x0180;
         const int NsfBankSize        = 0x1000;
+        const int NsfKernelLastBank  = 0xf000;
 
         const int NsfGlobalVarsSize     = 4;
         const int NsfSongTableEntrySize = 4;
@@ -203,6 +204,16 @@ namespace FamiStudio
 
                 var driverSizeRounded = Utils.RoundUp(nsfBinBuffer.Length, NsfBankSize);
                 var driverBankCount = driverSizeRounded / NsfBankSize;
+                var driverActualSize = driverSizeRounded;
+                
+                // Figure out actual code size, round up to next 256-byte page.
+                for (; driverActualSize >= 1; driverActualSize--)
+                {
+                    if (nsfBinBuffer[driverActualSize - 1] != 0)
+                        break;
+                }
+
+                driverActualSize = Utils.RoundUp(driverActualSize, 256); 
 
                 nsfBytes.AddRange(nsfBinBuffer);
 
@@ -213,19 +224,35 @@ namespace FamiStudio
                 var dpcmBaseAddr = codeBaseAddr - NsfBankSize;
                 var dpcmBankSize = NsfBankSize;
                 var dpcmNumBanks = 0;
+                var driverBankOffset = driverActualSize;
+                var driverBankLeft = NsfBankSize - (driverBankOffset & (NsfBankSize - 1));
 
                 if (project.UsesSamples)
                 {
                     dpcmNumBanks = project.AutoAssignSamplesBanks(dpcmBankSize, out var overflow);
 
-                    Utils.PadToNextBank(nsfBytes, dpcmBankSize);
-                    
-                    var dpcmBankStart = (nsfBytes.Count) / NsfBankSize;
+                    var dpcmBankStart = 0;
+                    var firstBankSampleData = project.GetPackedSampleData(0, dpcmBankSize);
 
-                    for (int i = 0; i < dpcmNumBanks; i++)
-                    {
-                        nsfBytes.AddRange(project.GetPackedSampleData(i, dpcmBankSize));
-                        Utils.PadToNextBank(nsfBytes, dpcmBankSize);
+                // If there is just 1 bank, try to fit after the driver.
+                if (dpcmNumBanks == 1 && firstBankSampleData.Length <= driverBankLeft)
+                {
+                    for (int i = 0; i < firstBankSampleData.Length; i++)
+                        nsfBytes[driverBankOffset + i] = firstBankSampleData[i];
+
+                    driverBankOffset += firstBankSampleData.Length;
+                    driverBankLeft -= firstBankSampleData.Length;
+                    dpcmBankStart = driverBankCount - 1;
+                }
+                else
+                {
+                        for (int i = 0; i < dpcmNumBanks; i++)
+                        {
+                            nsfBytes.AddRange(project.GetPackedSampleData(i, dpcmBankSize));
+                            Utils.PadToNextBank(nsfBytes, dpcmBankSize);
+                        }
+
+                        dpcmBankStart = (nsfBytes.Count) / NsfBankSize;
                     }
 
                     nsfBytes[songTableIdx + 0] = (byte)(dpcmBankStart);
@@ -240,8 +267,8 @@ namespace FamiStudio
                 {
                     var song = project.Songs[i];
 
-                    int bank = nsfBytes.Count / NsfBankSize;
-                    int addr = NsfMemoryStart + (nsfBytes.Count & (NsfBankSize - 1));
+                    var bank = nsfBytes.Count / NsfBankSize;
+                    var addr = NsfMemoryStart + (nsfBytes.Count & (NsfBankSize - 1));
                     var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, dpcmBaseAddr, machine);
                     var maxSongAddr = project.UsesSamples ? dpcmBaseAddr : codeBaseAddr;
 
@@ -250,6 +277,21 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Error, $"Song '{song.Name}' is too large ({songBytes.Length} bytes). Try reducing its size and/or the DPCM sample memory.");
                         return false;
                     }
+                
+                    // Is there enough room to fit in the same bank as the driver?
+                    if (songBytes.Length <= driverBankLeft)
+                    {
+                        addr = codeBaseAddr + driverBankOffset;
+                        songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, dpcmBaseAddr, machine);
+                        for (int j = 0; j < songBytes.Length; j++)
+                            nsfBytes[driverBankOffset + j] = songBytes[j];
+                        driverBankOffset += songBytes.Length;
+                        driverBankLeft -= songBytes.Length;
+                    }
+                    else
+                    {
+                        nsfBytes.AddRange(songBytes);
+                    }
 
                     var idx = songTableIdx + NsfGlobalVarsSize + i * NsfSongTableEntrySize;
                     nsfBytes[idx + 0] = (byte)(bank);
@@ -257,10 +299,10 @@ namespace FamiStudio
                     nsfBytes[idx + 2] = (byte)((addr >> 8) & 0xff);
                     nsfBytes[idx + 3] = (byte)0;
 
-                    nsfBytes.AddRange(songBytes);
-
                     Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
                 }
+
+                Debug.Assert(driverBankLeft >= 0);
 
                 if (nsfe)
                 {

@@ -15,13 +15,12 @@ Minor UI stuff:
 - PWM stuff from how2.
 - BUG : Android suspend/pause issues. Null project sometimes.
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
-- BUG : Drop downs are truncated to dialog (click to map a DPCM sample)
 - GLTODOs, DPCMTODOs, etc. Review all those.
 - Small gap bottom sequencer on android.
 - Weird rectangle in sequencer on android.
+- Lines too thin on android
 - Long press sorting PE doesnt work on mobile
 - Reduce PE icon sizes a bit on mobile.
-
 
 Testing
 =======
