@@ -351,7 +351,7 @@ namespace FamiStudio
                 {
                     var ffmpegExeFilter = Platform.IsWindows ? "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe" : "FFmpeg Executable (ffmpeg)|*.*";
                     var dummy = "";
-                    var filename = Platform.ShowOpenFileDialog(dialog.ParentWindow, "Please select FFmpeg executable", ffmpegExeFilter, ref dummy);
+                    var filename = Platform.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy);
 
                     if (filename != null)
                     {

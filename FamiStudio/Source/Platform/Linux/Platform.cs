@@ -44,19 +44,19 @@ namespace FamiStudio
             return new OpenALStream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
         }
 
-        public static unsafe string[] ShowPlatformOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
+        public static unsafe string[] ShowPlatformOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
         {
             Debug.Assert(false); // Linux has no common dialogs.
             return null;
         }
 
-        public static unsafe string ShowPlatformSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static unsafe string ShowPlatformSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false); // Linux has no common dialogs.
             return null;
         }
 
-        public static string ShowPlatformBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
+        public static string ShowPlatformBrowseFolderDialog(string title, ref string defaultPath)
         {
             Debug.Assert(false); // Linux has no common dialogs.
             return null;

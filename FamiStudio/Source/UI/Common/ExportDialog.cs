@@ -573,7 +573,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    filename = Platform.ShowSaveFileDialog(dialog.ParentWindow,
+                    filename = Platform.ShowSaveFileDialog(
                         $"Export {AudioFormatType.Names[format]} File",
                         $"{AudioFormatType.Names[format]} Audio File (*.{AudioFormatType.Extensions[format]})|*.{AudioFormatType.Extensions[format]}",
                         ref Settings.LastExportFolder);
@@ -674,7 +674,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
+                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
                 ExportVideoAction(filename);
                 ShowExportResultToast("Video");
             }
@@ -719,9 +719,12 @@ namespace FamiStudio
             }
             else
             {
-                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export NSF File", $"Nintendo Sound Files (*.{extension})|*.{extension}", ref Settings.LastExportFolder);
-                ExportNsfAction(filename);
-                ShowExportResultToast("NSF");
+                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog("Export NSF File", $"Nintendo Sound Files (*.{extension})|*.{extension}", ref Settings.LastExportFolder);
+                if (filename != null)
+                {
+                    ExportNsfAction(filename);
+                    ShowExportResultToast("NSF");
+                }
             }
         }
 
@@ -766,9 +769,12 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export ROM File", "NES ROM (*.nes)|*.nes", ref Settings.LastExportFolder);
-                    ExportRomAction(filename);
-                    ShowExportResultToast("NES ROM");
+                    var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes", ref Settings.LastExportFolder);
+                    if (filename != null)
+                    {
+                        ExportRomAction(filename);
+                        ShowExportResultToast("NES ROM");
+                    }
                 }
             }
             else
@@ -797,9 +803,12 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var filename = lastExportFilename != null ? null : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
-                    ExportFdsAction(filename);
-                    ShowExportResultToast("FDS Disk");
+                    var filename = lastExportFilename != null ? null : Platform.ShowSaveFileDialog("Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
+                    if (filename != null)
+                    {
+                        ExportFdsAction(filename);
+                        ShowExportResultToast("FDS Disk");
+                    }
                 }
             }
         }
@@ -883,7 +892,7 @@ namespace FamiStudio
 
         private void ExportMidi()
         {
-            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export MIDI File", "MIDI Files (*.mid)|*.mid", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog("Export MIDI File", "MIDI Files (*.mid)|*.mid", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
@@ -908,7 +917,7 @@ namespace FamiStudio
 
         private void ExportText()
         {
-            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export FamiStudio Text File", "FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog("Export FamiStudio Text File", "FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.Text);
@@ -932,7 +941,7 @@ namespace FamiStudio
                 exportText = "VGM";
             }
             var song = project.GetSong(songName);
-            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, $"Export {exportText}", $"{exportText} File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog($"Export {exportText}", $"{exportText} File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
             ShowExportResultToast(exportText);
             if (filename != null)
             {
@@ -948,7 +957,7 @@ namespace FamiStudio
 
             var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
 
-            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
@@ -1001,7 +1010,7 @@ namespace FamiStudio
             else
             {
                 var engineName = famiStudio ? "FamiStudio" : "FamiTone2";
-                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, $"Export {engineName} Assembly Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
+                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog($"Export {engineName} Assembly Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
                 if (filename != null)
                 {
                     var includeFilename = generateInclude ? Path.ChangeExtension(filename, null) + "_songlist.inc" : null;
@@ -1027,7 +1036,7 @@ namespace FamiStudio
             var generateInclude = props.GetPropertyValue<bool>(2);
             var songIds = GetSongIds(props.GetPropertyValue<bool[]>(3));
 
-            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, $"Export {engineName} Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog($"Export {engineName} Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 var includeFilename = generateInclude ? Path.ChangeExtension(filename, null) + "_sfxlist.inc" : null;

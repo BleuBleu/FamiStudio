@@ -90,7 +90,7 @@ namespace FamiStudio
         private const int OFN_PATHMUSTEXIST = 0x00000800;
         private const int OFN_FILEMUSTEXIST = 0x00001000;
 
-        public static unsafe string[] ShowPlatformOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
+        public static unsafe string[] ShowPlatformOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
         {
             OpenFileName ofn = new OpenFileName();
 
@@ -99,7 +99,7 @@ namespace FamiStudio
             fixed (char* p = &str[0])
             {
                 ofn.structSize = Marshal.SizeOf(ofn);
-                ofn.dlgOwner = win != null ? win.Handle : IntPtr.Zero;
+                ofn.dlgOwner = FamiStudioWindow.Instance.Handle;
                 ofn.filter = extensions.Replace('|', '\0') + "\0";
                 ofn.file = new IntPtr(p);
                 ofn.maxFile = str.Length;
@@ -141,7 +141,7 @@ namespace FamiStudio
             return null;
         }
 
-        public static unsafe string ShowPlatformSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static unsafe string ShowPlatformSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             OpenFileName ofn = new OpenFileName();
 
@@ -150,7 +150,7 @@ namespace FamiStudio
             fixed (char* p = &str[0])
             {
                 ofn.structSize = Marshal.SizeOf(ofn);
-                ofn.dlgOwner = win != null ? win.Handle : IntPtr.Zero;
+                ofn.dlgOwner = FamiStudioWindow.Instance.Handle;
                 ofn.filter = extensions.Replace('|', '\0') + "\0";
                 ofn.file = new IntPtr(p);
                 ofn.maxFile = str.Length;
@@ -211,13 +211,13 @@ namespace FamiStudio
             return 0;
         }
 
-        public static string ShowPlatformBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
+        public static string ShowPlatformBrowseFolderDialog(string title, ref string defaultPath)
         {
             var sb = new StringBuilder(4096);
             var pidl = IntPtr.Zero;
 
             BROWSEINFO bi;
-            bi.hwndOwner = Process.GetCurrentProcess().MainWindowHandle; ;
+            bi.hwndOwner = FamiStudioWindow.Instance.Handle;
             bi.pidlRoot = IntPtr.Zero;
             bi.pszDisplayName = null;
             bi.lpszTitle = title;

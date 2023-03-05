@@ -947,7 +947,7 @@ namespace FamiStudio
                 if (Platform.IsDesktop)
                 {
                     if (filename == null)
-                        filename = Platform.ShowOpenFileDialog(window, "Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
+                        filename = Platform.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
 
                     if (filename != null)
                         UnloadAndOpenAction(filename);
@@ -1069,7 +1069,7 @@ namespace FamiStudio
             {
                 if (Platform.IsDesktop)
                 {
-                    filename = Platform.ShowSaveFileDialog(window, "Save File", "FamiStudio Files (*.fms)|*.fms", ref Settings.LastFileFolder);
+                    filename = Platform.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms", ref Settings.LastFileFolder);
                     if (filename != null)
                     {
                         SaveProjectInternal(filename);

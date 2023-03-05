@@ -2721,7 +2721,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "All Song Files (*.fms;*.txt;*.ftm)|*.fms;*.txt;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+                var filename = Platform.ShowOpenFileDialog("Open File", "All Song Files (*.fms;*.txt;*.ftm)|*.fms;*.txt;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
                 ImportSongsAction(filename);
             }
         }
@@ -2856,7 +2856,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti)|*.fti;*.fms;*.txt;*.ftm;*.bti|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+                var filename = Platform.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti)|*.fti;*.fms;*.txt;*.ftm;*.bti|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
                 ImportInstrumentsAction(filename);
             }
         }
@@ -3042,7 +3042,7 @@ namespace FamiStudio
             }
             else
             {
-                var filenames = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "All Sample Files (*.wav;*.dmc;*.fms)|*.wav;*.dmc;*.fms|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc|FamiStudio Files (*.fms)|*.fms", ref Settings.LastSampleFolder, true);
+                var filenames = Platform.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc;*.fms)|*.wav;*.dmc;*.fms|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc|FamiStudio Files (*.fms)|*.fms", ref Settings.LastSampleFolder, true);
                 LoadDPCMSampleAction(filenames);
             }
         }
@@ -3271,7 +3271,7 @@ namespace FamiStudio
 
         private void ExportDPCMSampleProcessedData(DPCMSample sample)
         {
-            var filename = Platform.ShowSaveFileDialog(ParentWindow, "Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+            var filename = Platform.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
             if (filename != null)
                 File.WriteAllBytes(filename, sample.ProcessedData);
         }
@@ -3280,13 +3280,13 @@ namespace FamiStudio
         {
             if (sample.SourceDataIsWav)
             {
-                var filename = Platform.ShowSaveFileDialog(ParentWindow, "Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
+                var filename = Platform.ShowSaveFileDialog("Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
                 if (filename != null)
                     WaveFile.Save(sample.SourceWavData.Samples, filename, sample.SourceWavData.SampleRate, 1);
             }
             else
             {
-                var filename = Platform.ShowSaveFileDialog(ParentWindow, "Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+                var filename = Platform.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
                 if (filename != null)
                     File.WriteAllBytes(filename, sample.SourceDmcData.Data);
             }
@@ -4125,7 +4125,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "Wav Files (*.wav)|*.wav", ref Settings.LastSampleFolder);
+                var filename = Platform.ShowOpenFileDialog("Open File", "Wav Files (*.wav)|*.wav", ref Settings.LastSampleFolder);
                 LoadWavFileAction(filename);
             }
 

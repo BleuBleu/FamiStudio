@@ -29,6 +29,7 @@ namespace FamiStudio
         public Control ActiveControl => activeControl;
         public Graphics Graphics => graphics;
         public Fonts Fonts => fonts;
+        public static FamiStudioWindow Instance { get; private set; }
 
         public Size Size => GetWindowSizeInternal();
         public int Width => GetWindowSizeInternal().Width;
@@ -79,6 +80,7 @@ namespace FamiStudio
         {
             famistudio = app;
             window = glfwWindow;
+            Instance = this;
 
             PlatformWindowInitialize();
             InitializeGL();

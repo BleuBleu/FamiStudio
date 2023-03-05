@@ -84,15 +84,15 @@ namespace FamiStudio
             return 44100;
         }
 
-        public static unsafe string[] ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
+        public static unsafe string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
         {
             if (Settings.UseOSDialogs)
             {
-                return ShowPlatformOpenFileDialog(win, title, extensions, ref defaultPath, multiselect);
+                return ShowPlatformOpenFileDialog(title, extensions, ref defaultPath, multiselect);
             }
             else
             {
-                var dlg = new FileDialog(win, FileDialog.Mode.Open, title, defaultPath, extensions);
+                var dlg = new FileDialog(FamiStudioWindow.Instance, FileDialog.Mode.Open, title, defaultPath, extensions);
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     defaultPath = Path.GetDirectoryName(dlg.SelectedPath);
@@ -102,15 +102,15 @@ namespace FamiStudio
             }
         }
 
-        public static unsafe string ShowSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static unsafe string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             if (Settings.UseOSDialogs)
             {
-                return ShowPlatformSaveFileDialog(win, title, extensions, ref defaultPath);
+                return ShowPlatformSaveFileDialog(title, extensions, ref defaultPath);
             }
             else
             {
-                var dlg = new FileDialog(win, FileDialog.Mode.Save, title, defaultPath, extensions);
+                var dlg = new FileDialog(FamiStudioWindow.Instance, FileDialog.Mode.Save, title, defaultPath, extensions);
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     defaultPath = Path.GetDirectoryName(dlg.SelectedPath);
@@ -124,7 +124,7 @@ namespace FamiStudio
         {
             if (Settings.UseOSDialogs)
             {
-                return ShowPlatformBrowseFolderDialog(win, title, ref defaultPath);
+                return ShowPlatformBrowseFolderDialog(title, ref defaultPath);
             }
             else
             {
@@ -151,9 +151,9 @@ namespace FamiStudio
             }
         }
 
-        public static string ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
         {
-            var filenames = ShowOpenFileDialog(win, title, extensions, ref defaultPath, false);
+            var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false);
 
             if (filenames == null || filenames.Length == 0)
                 return null;
@@ -161,10 +161,10 @@ namespace FamiStudio
             return filenames[0];
         }
 
-        public static string ShowSaveFileDialog(FamiStudioWindow win, string title, string extensions)
+        public static string ShowSaveFileDialog(string title, string extensions)
         {
             string dummy = "";
-            return ShowSaveFileDialog(win, title, extensions, ref dummy);
+            return ShowSaveFileDialog(title, extensions, ref dummy);
         }
 
         public static void MessageBoxAsync(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
