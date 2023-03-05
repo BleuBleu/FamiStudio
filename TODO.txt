@@ -21,6 +21,7 @@ Minor UI stuff:
 - Lines too thin on android
 - Long press sorting PE doesnt work on mobile
 - Reduce PE icon sizes a bit on mobile.
+- BUG : Save as dialog can be behind the window??
 
 Testing
 =======
