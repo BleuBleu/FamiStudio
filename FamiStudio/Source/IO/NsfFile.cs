@@ -1006,15 +1006,20 @@ namespace FamiStudio
             return hasNote;
         }
 
-        public static string[] GetSongNames(string filename)
+        public static string[] GetSongNamesAndDurations(string filename, out int[] durations)
         {
             var nsf = NotSoFatso.NsfOpen(filename);
 
             if (nsf == IntPtr.Zero)
+            {
+                durations = null;
                 return null;
+            }
 
             var trackCount = NotSoFatso.NsfGetTrackCount(nsf);
             var trackNames = new string[trackCount];
+
+            durations = new int[trackCount];
 
             for (int i = 0; i < trackCount; i++)
             {
@@ -1027,6 +1032,8 @@ namespace FamiStudio
                 {
                     trackNames[i] = name;
                 }
+
+                durations[i] = Utils.DivideAndRoundUp(NotSoFatso.NsfGetTrackDuration(nsf, i), 1000);
             }
 
             NotSoFatso.NsfClose(nsf);

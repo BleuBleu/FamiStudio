@@ -6,16 +6,17 @@ namespace FamiStudio
     {
         private PropertyDialog dialog;
         private string[] songNames;
+        private int[]    songDurations;
         private string filename;
 
         public NsfImportDialog(FamiStudioWindow win, string file)
         {
             filename = file;
-            songNames = NsfFile.GetSongNames(filename);
+            songNames = NsfFile.GetSongNamesAndDurations(filename, out songDurations);
 
             if (songNames != null && songNames.Length > 0)
             {
-                dialog = new PropertyDialog(win, "NSF Import", 350);
+                dialog = new PropertyDialog(win, "NSF Import", 400);
                 dialog.Properties.AddDropDownList("Song:", songNames, songNames[0]); // 0
                 dialog.Properties.AddNumericUpDown("Duration (s):", 120, 1, 600);    // 1
                 dialog.Properties.AddNumericUpDown("Pattern Length:", 256, 4, Pattern.MaxLength);  // 2
@@ -23,7 +24,23 @@ namespace FamiStudio
                 dialog.Properties.AddCheckBox("Remove intro silence:", true);        // 4
                 dialog.Properties.AddCheckBox("Reverse DPCM bits:", false);          // 5
                 dialog.Properties.AddCheckBox("Preserve DPCM padding byte:", false); // 6
+                dialog.Properties.PropertyChanged += Properties_PropertyChanged;
                 dialog.Properties.Build();
+                UpdateSongDuration(0);
+            }
+        }
+
+        private void UpdateSongDuration(int idx)
+        {
+            dialog.Properties.SetPropertyValue(1, songDurations[idx] < 0 ? 120 : songDurations[idx]);
+        }
+
+        private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        {
+            if (propIdx == 0)
+            {
+                var idx = dialog.Properties.GetSelectedIndex(propIdx);
+                UpdateSongDuration(idx);
             }
         }
 

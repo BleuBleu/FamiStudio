@@ -14,4 +14,5 @@ EXPORTS
 	NsfGetState            @12
 	NsfGetClockSpeed       @13
 	NsfSetApuWriteCallback @14
+	NsfGetTrackDuration    @15
 

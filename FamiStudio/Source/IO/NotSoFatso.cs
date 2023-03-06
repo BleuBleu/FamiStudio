@@ -43,6 +43,9 @@ namespace FamiStudio
         public extern static IntPtr NsfGetTrackName(IntPtr nsf, int track);
 
         [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static int NsfGetTrackDuration(IntPtr nsf, int track);
+
+        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NsfClose(IntPtr nsf);
 
         [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
