@@ -517,6 +517,9 @@ namespace FamiStudio
             public int fdsModDepth = 0;
             public int fdsModSpeed = 0;
 
+            public bool vrc7Trigger = false;
+            public bool vrc7Sustain = false;
+
             public Instrument instrument = null;
         };
 
@@ -819,17 +822,19 @@ namespace FamiStudio
 
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
-                    var trigger = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7TRIGGER, 0);
+                    var trigger = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7TRIGGER, 0) != 0;
                     var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7SUSTAIN, 0) != 0;
 
                     var newState = state.state;
 
-                    if (trigger == 0)
-                        attack = false;
-                    else
-                        newState = trigger > 0 ? ChannelState.Triggered : (sustain ? ChannelState.Released : ChannelState.Stopped);
+                    if (!state.vrc7Trigger && trigger)
+                        newState = ChannelState.Triggered;
+                    else if (state.vrc7Trigger && !trigger && sustain)
+                        newState = ChannelState.Released;
+                    else if (!trigger && !sustain)
+                        newState = ChannelState.Stopped;
 
-                    if (newState != state.state || trigger > 0)
+                    if (newState != state.state)
                     {
                         stop    = newState == ChannelState.Stopped;
                         release = newState == ChannelState.Released;
@@ -838,6 +843,9 @@ namespace FamiStudio
                     }
 
                     octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7OCTAVE, 0);
+
+                    state.vrc7Trigger = trigger;
+                    state.vrc7Sustain = sustain;
                 }
                 else
                 {

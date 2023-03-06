@@ -2281,8 +2281,6 @@ int CNSFCore::RunOneFrame()
 	if (!bTrackSelected)
 		return 0;
 
-	ResetFrameState();
-
 	nCPUCycle = nAPUCycle = 0;
 	UINT tick;
 		
@@ -2337,12 +2335,6 @@ int IndexOf(const T* array, int arraySize, T val)
 }
 
 extern BYTE VRC7Instrument[16][8];
-
-void CNSFCore::ResetFrameState()
-{
-	for (int i = 0; i < 6; i++)
-		VRC7Triggered[i] = 0;
-}
 
 int CNSFCore::GetState(int channel, int state, int sub)
 {
@@ -2473,7 +2465,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 				case STATE_VRC7PATCH:    return (VRC7Chan[2][idx] >> 4) & 0xF;
 				case STATE_VRC7PATCHREG: return (VRC7Instrument[0][sub]);
 				case STATE_VRC7OCTAVE:   return (VRC7Chan[1][idx] >> 1) & 0x07;
-				case STATE_VRC7TRIGGER:  return (VRC7Triggered[idx]);
+				case STATE_VRC7TRIGGER:  return (VRC7Chan[1][idx] >> 4) & 0x01;
 				case STATE_VRC7SUSTAIN:  return (VRC7Chan[1][idx] >> 5) & 0x01;
 			}
 		}

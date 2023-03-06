@@ -203,7 +203,6 @@ public:
 	//
 	//  FamiStudio Stuff
 	//
-	void	ResetFrameState();
 	int		GetState(int channel, int state, int sub);
 	void	SetApuWriteCallback(ApuRegWriteCallback callback);
 
@@ -387,7 +386,6 @@ protected:
 	BYTE*		pVRC7Buffer;			//pointer to the position to write VRC7 samples
 	void*		pFMOPL;
 	BYTE		VRC7Chan[3][6];
-	char		VRC7Triggered[6];       // 0 = nothing, 1 = triggered, -1 = released.
 	BYTE		bVRC7_FadeChanged;
 	BYTE		bVRC7Inv[6];
 
