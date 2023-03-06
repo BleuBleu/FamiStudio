@@ -26,6 +26,9 @@ Minor UI stuff:
 - BUG : Convert VRC6 with duty 2 to regular, becomes 0.
 - Gimmick 8KB auto assignment sucks.
 - Copy pitch env abs/rel when converting between expansions.
+- BUG ANDROID : Sometimes the layout doesnt refresh or something and the row below the toolbar is not drawn.
+- BUG ANDROID (from spicy in #bug) : Changing N163 values sometimes changes multiple???
+- 
 
 Testing
 =======

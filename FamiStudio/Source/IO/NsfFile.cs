@@ -559,7 +559,7 @@ namespace FamiStudio
         private Instrument GetDutyInstrument(Channel channel, int duty)
         {
             var expansion = channel.Expansion;
-            var expPrefix = expansion == ExpansionType.None ? "" : ExpansionType.ShortNames[expansion] + " ";
+            var expPrefix = expansion == ExpansionType.None || expansion == ExpansionType.Mmc5 ? "" : ExpansionType.ShortNames[expansion] + " ";
             var name = $"{expPrefix}Duty {duty}";
 
             var instrument = project.GetInstrument(name);
