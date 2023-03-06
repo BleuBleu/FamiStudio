@@ -2953,7 +2953,11 @@ namespace FamiStudio
                 r.f.DrawText($"Editing Arpeggio {editArpeggio.Name}", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
 
                 if (App.SelectedArpeggio != editArpeggio)
-                    r.f.DrawText($"Warning : Arpeggio is currently not selected. Selected arpeggio '{App.SelectedArpeggio.Name}' will be heard when playing the piano.", r.fonts.FontMedium, bigTextPosX, bigTextPosY + r.fonts.FontVeryLarge.LineHeight, Theme.LightRedColor);
+                {
+                    r.f.DrawText(App.SelectedArpeggio == null ?
+                        $"Warning : Arpeggio is currently not selected." :
+                        $"Warning : Arpeggio is currently not selected. Selected arpeggio '{App.SelectedArpeggio.Name}' will be heard when playing the piano.", r.fonts.FontMedium, bigTextPosX, bigTextPosY + r.fonts.FontVeryLarge.LineHeight, Theme.LightRedColor);
+                }
             }
 
             var gizmos = GetEnvelopeGizmos();
