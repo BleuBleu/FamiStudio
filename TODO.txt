@@ -23,6 +23,8 @@ Minor UI stuff:
 - Reduce PE icon sizes a bit on mobile.
 - Video export, when autoselecting channels, it only looks at 1st song.
 - BUG : NSF_export_bug.fms, buh.nsf how private DM.
+- BUG : Convert VRC6 with duty 2 to regular, becomes 0.
+- Gimmick 8KB auto assignment sucks.
 
 Testing
 =======
