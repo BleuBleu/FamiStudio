@@ -1512,7 +1512,7 @@ namespace FamiStudio
             var channel = song.Channels[selectedChannelIndex];
 
             if (selectedInstrument != null && 
-                selectedInstrument.CanRelease &&
+                selectedInstrument.CanRelease(channel) &&
                 channel.SupportsInstrument(selectedInstrument))
             {
                 instrumentPlayer.ReleaseNote(selectedChannelIndex);

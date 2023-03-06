@@ -59,11 +59,6 @@ namespace FamiStudio
         public Dictionary<int, DPCMSampleMapping> SamplesMapping => samplesMapping;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
         public byte[] EpsmPatchRegs => epsmPatchRegs;
-        public bool CanRelease =>
-            VolumeEnvelope         != null && VolumeEnvelope.Release         >= 0 ||
-            WaveformRepeatEnvelope != null && WaveformRepeatEnvelope.Release >= 0 ||
-            expansion == ExpansionType.Vrc7 || 
-            expansion == ExpansionType.EPSM;
 
         public bool IsRegular => expansion == ExpansionType.None;
         public bool IsFds     => expansion == ExpansionType.Fds;
@@ -170,6 +165,15 @@ namespace FamiStudio
         public static bool EnvelopeHasRepeat(int envelopeType)
         {
             return envelopeType == EnvelopeType.N163Waveform;
+        }
+
+        public bool CanRelease(Channel channel)
+        { 
+            return 
+                VolumeEnvelope != null && VolumeEnvelope.Release >= 0 || 
+                WaveformRepeatEnvelope != null && WaveformRepeatEnvelope.Release >= 0 ||
+                expansion == ExpansionType.Vrc7 && channel.IsVrc7Channel ||
+                expansion == ExpansionType.EPSM && channel.IsEPSMFmChannel;
         }
 
         public int NumVisibleEnvelopes
