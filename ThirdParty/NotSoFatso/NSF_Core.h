@@ -203,6 +203,7 @@ public:
 	//
 	//  FamiStudio Stuff
 	//
+	void	ResetFrameState();
 	int		GetState(int channel, int state, int sub);
 	void	SetApuWriteCallback(ApuRegWriteCallback callback);
 

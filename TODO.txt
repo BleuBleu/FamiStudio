@@ -25,6 +25,7 @@ Minor UI stuff:
 - BUG : NSF_export_bug.fms, buh.nsf how private DM.
 - BUG : Convert VRC6 with duty 2 to regular, becomes 0.
 - Gimmick 8KB auto assignment sucks.
+- Copy pitch env abs/rel when converting between expansions.
 
 Testing
 =======
