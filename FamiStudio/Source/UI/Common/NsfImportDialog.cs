@@ -32,7 +32,7 @@ namespace FamiStudio
 
         private void UpdateSongDuration(int idx)
         {
-            dialog.Properties.SetPropertyValue(1, songDurations[idx] < 0 ? 120 : songDurations[idx]);
+            dialog.Properties.SetPropertyValue(1, songDurations[idx] <= 0 ? 120 : songDurations[idx]);
         }
 
         private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
