@@ -2940,7 +2940,7 @@ namespace FamiStudio
                         }
                         App.UndoRedoManager.EndTransaction();
                     }
-                    else if (App.SelectedChannel.RenamePattern(pattern, newName))
+                    else if (Song.Channels[selectionMax.ChannelIndex].RenamePattern(pattern, newName))
                     {
                         pattern.Color = newColor;
                         App.UndoRedoManager.EndTransaction();
