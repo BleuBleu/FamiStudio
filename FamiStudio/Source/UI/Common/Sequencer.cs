@@ -710,6 +710,81 @@ namespace FamiStudio
             for (int i = 0, y = 0; i < rowToChannel.Length; i++, y += channelSizeY)
                 c.DrawLine(0, y, width, y, Theme.BlackColor);
 
+            // TODO : This is really bad, since all the logic is in the rendering code. Make
+            // this more like any other capture op eventually.
+            if (captureOperation == CaptureOperation.DragSelection)
+            {
+                var pt = new Point(mouseLastX, mouseLastY);
+                var noteIdx = GetNoteForPixel(pt.X - channelNameSizeX);
+
+                if (noteIdx >= 0 && noteIdx < Song.GetPatternStartAbsoluteNoteIndex(Song.Length) && GetMinMaxSelectedRow(out var minSelRow, out var maxSelRow))
+                {
+                    var patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(noteIdx);
+                    var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
+
+                    var dragRowIdxStart = captureRowIdx;
+                    var dragRowIdxCurrent = GetRowIndexForCoord(pt.Y);
+                    var rowIdxDelta = dragRowIdxCurrent - dragRowIdxStart;
+
+                    for (int j = minSelRow + rowIdxDelta; j <= maxSelRow + rowIdxDelta; j++)
+                    {
+                        if (j < 0 || j >= rowToChannel.Length)
+                            continue;
+
+                        var y = j * channelSizeY;
+
+                        // Center.
+                        var patternSizeX = GetPixelForNote(Song.GetPatternLength(patternIdx), false);
+                        var anchorOffsetLeftX = (int)(patternSizeX * selectionDragAnchorPatternXFraction);
+                        var anchorOffsetRightX = (int)(patternSizeX * (1.0f - selectionDragAnchorPatternXFraction));
+
+                        var instance = ModifierKeys.IsControlDown;
+                        var duplicate = instance && ModifierKeys.IsShiftDown;
+
+                        var bmpCopy = (BitmapAtlasRef)null;
+                        var bmpSize = DpiScaling.ScaleCustom(bmpDuplicate.ElementSize.Width, bitmapScale);
+
+                        if (rowIdxDelta != 0)
+                            bmpCopy = (duplicate || instance) ? bmpDuplicate : bmpDuplicateMove;
+                        else
+                            bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstanciate : null);
+
+                        c.PushTranslation(pt.X - channelNameSizeX, y);
+                        c.FillAndDrawRectangle(-anchorOffsetLeftX, 0, -anchorOffsetLeftX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
+
+                        if (bmpCopy != null)
+                            c.DrawBitmapAtlas(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
+
+                        // Left side
+                        for (int p = patternIdx - 1; p >= selectionMin.PatternIndex + patternIdxDelta && p >= 0; p--)
+                        {
+                            patternSizeX = GetPixelForNote(Song.GetPatternLength(p), false);
+                            anchorOffsetLeftX += patternSizeX;
+
+                            c.FillAndDrawRectangle(-anchorOffsetLeftX, 0, -anchorOffsetLeftX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
+
+                            if (bmpCopy != null)
+                                c.DrawBitmapAtlas(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
+                        }
+
+                        // Right side
+                        for (int p = patternIdx + 1; p <= selectionMax.PatternIndex + patternIdxDelta && p < Song.Length; p++)
+                        {
+                            patternSizeX = GetPixelForNote(Song.GetPatternLength(p), false);
+
+                            c.FillAndDrawRectangle(anchorOffsetRightX, 0, anchorOffsetRightX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
+
+                            if (bmpCopy != null)
+                                c.DrawBitmapAtlas(bmpCopy, anchorOffsetRightX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
+
+                            anchorOffsetRightX += patternSizeX;
+                        }
+
+                        c.PopTransform();
+                    }
+                }
+            }
+
             // Patterns
             var patternCacheSizeY = channelSizeY - patternHeaderSizeY - 1;
             patternCache.Update(patternCacheSizeY);
@@ -758,84 +833,6 @@ namespace FamiStudio
 
                 c.PopTransform();
             }
-
-            // GLTODO : Bring this back.
-            /*
-            // TODO : This is really bad, since all the logic is in the rendering code. Make
-            // this more like any other capture op eventually.
-            if (captureOperation == CaptureOperation.DragSelection)
-            {
-                var pt = new Point(mouseLastX, mouseLastY);
-                var noteIdx = GetNoteForPixel(pt.X - channelNameSizeX);
-
-                if (noteIdx >= 0 && noteIdx < Song.GetPatternStartAbsoluteNoteIndex(Song.Length) && GetMinMaxSelectedRow(out var minSelRow, out var maxSelRow))
-                {
-                    var patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(noteIdx);
-                    var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
-
-                    var dragRowIdxStart   = captureRowIdx;
-                    var dragRowIdxCurrent = GetRowIndexForCoord(pt.Y);
-                    var rowIdxDelta       = dragRowIdxCurrent - dragRowIdxStart;
-
-                    for (int j = minSelRow + rowIdxDelta; j <= maxSelRow + rowIdxDelta; j++)
-                    {
-                        if (j < 0 || j >= rowToChannel.Length)
-                            continue;
-
-                        var y = j * channelSizeY;
-
-                        // Center.
-                        var patternSizeX = GetPixelForNote(Song.GetPatternLength(patternIdx), false);
-                        var anchorOffsetLeftX  = (int)(patternSizeX * selectionDragAnchorPatternXFraction);
-                        var anchorOffsetRightX = (int)(patternSizeX * (1.0f - selectionDragAnchorPatternXFraction));
-
-                        var instance  = ModifierKeys.Control;
-                        var duplicate = instance && ModifierKeys.Shift;
-
-                        var bmpCopy = (BitmapAtlasRef)null;
-                        var bmpSize = ScaleCustom(bmpDuplicate.ElementSize.Width, bitmapScale);
-
-                        if (rowIdxDelta != 0)
-                            bmpCopy = (duplicate || instance) ? bmpDuplicate : bmpDuplicateMove;
-                        else
-                            bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstanciate : null);
-
-                        cp.PushTranslation(pt.X - channelNameSizeX, y + headerSizeY);
-                        cp.FillAndDrawRectangle(- anchorOffsetLeftX, 0, - anchorOffsetLeftX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
-
-                        if (bmpCopy != null)
-                            cp.DrawBitmapAtlas(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
-
-                        // Left side
-                        for (int p = patternIdx - 1; p >= selectionMin.PatternIndex + patternIdxDelta && p >= 0; p--)
-                        {
-                            patternSizeX = GetPixelForNote(Song.GetPatternLength(p), false);
-                            anchorOffsetLeftX += patternSizeX;
-
-                            cp.FillAndDrawRectangle(-anchorOffsetLeftX, 0, -anchorOffsetLeftX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
-
-                            if (bmpCopy != null)
-                                cp.DrawBitmapAtlas(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
-                        }
-
-                        // Right side
-                        for (int p = patternIdx + 1; p <= selectionMax.PatternIndex + patternIdxDelta && p < Song.Length; p++)
-                        {
-                            patternSizeX = GetPixelForNote(Song.GetPatternLength(p), false);
-
-                            cp.FillAndDrawRectangle(anchorOffsetRightX, 0, anchorOffsetRightX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
-
-                            if (bmpCopy != null)
-                                cp.DrawBitmapAtlas(bmpCopy, anchorOffsetRightX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
-
-                            anchorOffsetRightX += patternSizeX;
-                        }
-
-                        cp.PopTransform();
-                    }
-                }
-            }
-            */
 
             // Piano roll view rect
             if (App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex) && channelToRow[pianoRollChannelIndex] >= 0)
