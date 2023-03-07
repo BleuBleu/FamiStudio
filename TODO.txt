@@ -28,6 +28,7 @@ Android stuff:
 Testing
 =======
 - All ROM exports, FDS too (make sure we give nice error msg for too much DPCM).
+- Test all widgets with and without scrollbars. With pink lines, check everything.
 - FT2 NSF
 - Multiple songs in NSF with the new layout.
 - Run unit test for DPCM

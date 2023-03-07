@@ -1677,11 +1677,11 @@ namespace FamiStudio
         
         public string GetRecordingKeyString(int noteValue)
         {
-            noteValue -= baseRecordingOctave * 12;
-            
+            noteValue = (noteValue - baseRecordingOctave * 12) - 1;
+
             var str = (string)null;
 
-            if (noteValue >= 1 && noteValue < Settings.QwertyNoteShortcuts.Length)
+            if (noteValue >= 0 && noteValue < Settings.QwertyNoteShortcuts.Length)
             {
                 var shortcut = Settings.QwertyNoteShortcuts[noteValue];
                 if (shortcut.IsShortcutValid(0))

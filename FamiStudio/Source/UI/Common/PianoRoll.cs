@@ -1474,24 +1474,28 @@ namespace FamiStudio
             // QWERTY key labels.
             if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled) && Platform.IsDesktop)
             {
-                // GLTODO : Use min/max visible octave
-                for (int i = 0; i < Note.MusicalNoteMax; i++)
+                for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
                 {
-                    var keyString = App.GetRecordingKeyString(i);
-                    
-                    if (keyString == null)
-                        continue;
+                    var octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
 
-                    int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12))) - scrollY;
-                    int y = octaveBaseY - (i % 12) * noteSizeY;
+                    for (int j = 0; j < 12; j++)
+                    {
+                        var noteIdx = i * 12 + j + 1;
+                        var keyString = App.GetRecordingKeyString(noteIdx);
 
-                    Color color;
-                    if (App.IsRecording)
-                        color = IsBlackKey(i % 12) ? Theme.LightRedColor : Theme.DarkRedColor;
-                    else
-                        color = IsBlackKey(i % 12) ? Theme.LightGreyColor2 : Theme.BlackColor;
+                        if (keyString == null)
+                            continue;
 
-                    r.c.DrawText(keyString, r.fonts.FontVerySmall, 0, y - recordingKeyOffsetY + 1, color, TextFlags.MiddleCenter, blackKeySizeX, noteSizeY - 1);
+                        int y = octaveBaseY - j * noteSizeY;
+
+                        Color color;
+                        if (App.IsRecording)
+                            color = IsBlackKey(j) ? Theme.LightRedColor : Theme.DarkRedColor;
+                        else
+                            color = IsBlackKey(j) ? Theme.LightGreyColor2 : Theme.BlackColor;
+
+                        r.c.DrawText(keyString, r.fonts.FontVerySmall, 0, y - recordingKeyOffsetY + 1, color, TextFlags.MiddleCenter, blackKeySizeX, noteSizeY - 1);
+                    }
                 }
             }
 
@@ -1699,7 +1703,6 @@ namespace FamiStudio
                             
                             r.c.FillRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, singleFrameSlides.Contains(location) ? volumeSlideBarFillColor : Theme.LightGreyColor1);
 
-                            // GLTODO : Was using "cz" here, whats that?
                             if (highlighted || selected)
                                 r.c.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 3, true, true);
                             else
@@ -1738,7 +1741,6 @@ namespace FamiStudio
                         {
                             var lineColor = IsGizmoHighlighted(g, headerSizeY) ? Color.White : Color.Black;
 
-                            // GLTODO : Was using "cz" here.
                             if (g.FillImage != null)
                                 r.c.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Theme.LightGreyColor1);
                             r.c.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
@@ -1797,11 +1799,10 @@ namespace FamiStudio
 
                         r.c.FillRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, editInstrument.Color);
 
-                        // GLTODO : Was using "cz" here.
                         if (highlighted || selected)
-                            r.f.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, selected ? Theme.LightGreyColor1 : Theme.WhiteColor, 3, true, true);
+                            r.c.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, selected ? Theme.LightGreyColor1 : Theme.WhiteColor, 3, true, true);
                         else
-                            r.f.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, Theme.BlackColor);
+                            r.c.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, Theme.BlackColor);
 
                         var text = val.ToString();
                         if (text.Length * fontSmallCharSizeX + 2 < sizeX)
@@ -1823,7 +1824,6 @@ namespace FamiStudio
                     {
                         foreach (var g in gizmos)
                         {
-                            // GLTODO : Was using "cz" here.
                             if (g.FillImage != null)
                                 r.c.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, EditInstrument.Color);
                             r.c.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Color.White);
