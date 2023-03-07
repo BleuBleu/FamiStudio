@@ -1,6 +1,7 @@
 4.1.0
 =====
 - Full S5B support? Sync up with Perkka when im back.
+- Missing top line when maximizing piano roll.
 - Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
 	=> Perkka says he has fix. May be in a PR.
 - NSF import, assign DPCM samples starting from like C2 and go up from there.

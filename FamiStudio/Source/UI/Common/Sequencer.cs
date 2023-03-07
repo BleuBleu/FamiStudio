@@ -642,7 +642,7 @@ namespace FamiStudio
             for (int i = Math.Max(1, minVisiblePattern); i <= maxVisiblePattern; i++)
             {
                 var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
-                c.DrawLine(px, 0, px, headerSizeY, Theme.BlackColor);
+                b.DrawLine(px, 0, px, headerSizeY, Theme.BlackColor);
             }
 
             // Pattern names.
@@ -667,7 +667,7 @@ namespace FamiStudio
 
             // Seek bar
             c.PushTranslation(seekX, 0);
-            b.FillAndDrawGeometry(seekGeometry, GetSeekBarColor(), Theme.BlackColor, 1, true);
+            c.FillAndDrawGeometry(seekGeometry, GetSeekBarColor(), Theme.BlackColor, 1, true);
             c.PopTransform();
 
             // Scrollable pattern area

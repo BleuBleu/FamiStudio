@@ -1126,22 +1126,22 @@ namespace FamiStudio
                 if (env.Loop >= 0)
                 {
                     r.c.PushTranslation(GetPixelForNote(env.Loop), 0);
-                    r.c.FillRectangle(0, 0, GetPixelForNote(((env.Release >= 0 ? env.Release : env.Length) - env.Loop), false), headerAndEffectSizeY, rep != null ? loopSectionColor : Theme.DarkGreyColor5);
-                    r.c.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
+                    r.b.FillRectangle(0, 0, GetPixelForNote(((env.Release >= 0 ? env.Release : env.Length) - env.Loop), false), headerAndEffectSizeY, rep != null ? loopSectionColor : Theme.DarkGreyColor5);
+                    r.b.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
                     r.c.DrawBitmapAtlas(bmpLoopSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
                     r.c.PopTransform();
                 }
                 if (env.Release >= 0)
                 {
                     r.c.PushTranslation(GetPixelForNote(env.Release), 0);
-                    r.c.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
+                    r.b.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
                     r.c.DrawBitmapAtlas(bmpReleaseSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
                     r.c.PopTransform();
                 }
                 if (env.Length > 0)
                 {
                     r.c.PushTranslation(GetPixelForNote(env.Length), 0);
-                    r.c.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
+                    r.b.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
                     r.c.PopTransform();
                 }
 
@@ -1171,7 +1171,7 @@ namespace FamiStudio
                     int x = GetPixelForNote(n);
                     if (x != 0)
                     {
-                        r.c.DrawLine(x, 0, x, headerSizeY / 2, Theme.BlackColor, env.ChunkLength > 1 && n % env.ChunkLength == 0 && n != env.Length ? 3 : 1);
+                        r.b.DrawLine(x, 0, x, headerSizeY / 2, Theme.BlackColor, env.ChunkLength > 1 && n % env.ChunkLength == 0 && n != env.Length ? 3 : 1);
                     }
                     if (n != env.Length)
                     {
@@ -2430,7 +2430,7 @@ namespace FamiStudio
                 if (editMode != EditionMode.VideoRecording)
                 {
                     int seekX = GetPixelForNote(GetSeekFrameToDraw());
-                    r.b.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
+                    r.c.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
                 }
 
                 // Highlight note under mouse.
@@ -2791,7 +2791,7 @@ namespace FamiStudio
                 if (seekFrame >= 0)
                 {
                     var seekX = GetPixelForNote(seekFrame);
-                    r.b.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
+                    r.c.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
                 }
             }
 
@@ -3391,7 +3391,7 @@ namespace FamiStudio
                 if (!App.PreviewDPCMIsSource)
                     playTime += editSample.ProcessedStartTime;
                 var seekX = GetPixelForWaveTime(playTime, scrollX);
-                r.b.DrawLine(seekX, 0, seekX, Height, App.PreviewDPCMIsSource ? Theme.LightGreyColor1 : editSample.Color, 3);
+                r.c.DrawLine(seekX, 0, seekX, Height, App.PreviewDPCMIsSource ? Theme.LightGreyColor1 : editSample.Color, 3);
             }
 
             // Title + source/processed info.
