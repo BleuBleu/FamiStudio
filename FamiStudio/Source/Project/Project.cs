@@ -1057,24 +1057,31 @@ namespace FamiStudio
             }
         }
 
-        public int AutoAssignSamplesBanks(int bankSize, out bool overflow)
+        private int AutoAssignSamplesBanksRandom(int seed, int bankSize, out bool overflow)
         {
-            // This is basically a bin-packing problem. 
-            var sortedSamples = new List<DPCMSample>();
-            sortedSamples.AddRange(samples);
-            sortedSamples.Sort((s1, s2) => s2.ProcessedData.Length.CompareTo(s1.ProcessedData.Length));
+            var rnd = new Random(seed);
+            var randomizedSamples = new List<DPCMSample>();
+            randomizedSamples.AddRange(samples);
 
-            foreach (var s in sortedSamples)
+            for (int i = 0; i < randomizedSamples.Count; i++)
+            {
+                var i0 = rnd.Next(randomizedSamples.Count);
+                var i1 = rnd.Next(randomizedSamples.Count);
+
+                Utils.Swap(randomizedSamples, i0, i1);
+            }
+
+            foreach (var s in randomizedSamples)
                 s.Bank = -1;
 
             overflow = false;
 
-            var numBanks  = 0;
+            var numBanks = 0;
             var bankSizes = new int[MaxDPCMBanks];
 
-            for (var i = 0; i < sortedSamples.Count; i++)
+            for (var i = 0; i < randomizedSamples.Count; i++)
             {
-                var sample = sortedSamples[i];
+                var sample = randomizedSamples[i];
                 var sampleSize = Utils.AlignSampleOffset(sample.ProcessedData.Length);
                 var foundBank = false;
 
@@ -1096,8 +1103,6 @@ namespace FamiStudio
                 {
                     if (numBanks == MaxDPCMBanks - 1)
                     {
-                        // Can't pack within budget, assign to bank zero, will get truncated.
-                        Log.LogMessage(LogSeverity.Warning, $"Unable to pack DPCM samples to stay within {MaxMappedSampleSize} bytes limit. Some samples will not play correctly.");
                         sample.Bank = 0;
                         overflow = true;
                     }
@@ -1108,6 +1113,55 @@ namespace FamiStudio
                         numBanks++;
                     }
                 }
+            }
+
+            return numBanks;
+        }
+
+        public int AutoAssignSamplesBanks(int bankSize, out bool overflow)
+        {
+            const int NumAttempts = 32;
+
+            var optimalNumberOfBanks = Utils.DivideAndRoundUp(GetTotalSampleSize(), bankSize);
+            var bestSeed = -1;
+            var bestNumBanks = MaxDPCMBanks + 1;
+            var bestSizeFirstBanks = 0;
+
+            // This is basically a bin-packing problem. Do a bunch of a attempts
+            // inserting samples in random order and keep the best packing.
+            for (int k = 0; k < NumAttempts; k++)
+            {
+                var seedNumBanks = AutoAssignSamplesBanksRandom(k, bankSize, out _);
+
+                if (seedNumBanks < bestNumBanks)
+                {
+                    bestNumBanks = seedNumBanks;
+                    bestSeed = k;
+                }
+                
+                if (seedNumBanks == optimalNumberOfBanks)
+                {
+                    // If optimal size, favor tries that put more samples in first banks.
+                    var sizeFirstBanks = 0;
+
+                    for (int i = 0; i < seedNumBanks - 1; i++)
+                        sizeFirstBanks += GetBankSize(i);
+                    
+                    if (sizeFirstBanks > bestSizeFirstBanks)
+                    {
+                        bestSizeFirstBanks = sizeFirstBanks;
+                        bestNumBanks = seedNumBanks;
+                        bestSeed = k;
+                    }
+                }
+            }
+
+            var numBanks = AutoAssignSamplesBanksRandom(bestSeed, bankSize, out overflow);
+
+            if (overflow)
+            {
+                // Can't pack within budget, assign to bank zero, will get truncated.
+                Log.LogMessage(LogSeverity.Warning, $"Unable to pack DPCM samples to stay within {MaxMappedSampleSize} bytes limit. Some samples will not play correctly.");
             }
 
             return numBanks;

@@ -173,6 +173,13 @@ namespace FamiStudio
             b = t;
         }
 
+        public static void Swap<T>(IList<T> list, int a, int b)
+        {
+            T t = list[a];
+            list[a] = list[b];
+            list[b] = t;
+        }
+
         public static int NextPowerOfTwo(int v)
         {
             v--;
