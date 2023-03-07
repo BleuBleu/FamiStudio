@@ -141,6 +141,7 @@
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
+    <Compile Include="Source\UI\Common\Settings.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Common\Theme.cs" />
     <Compile Include="Source\UI\Common\Fonts.cs" />
@@ -179,6 +180,7 @@
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
     <Compile Include="Source\UI\Linux\Cursors.cs" />
     <Compile Include="Source\UI\Linux\FamiStudioWindow.cs" />
+    <Compile Include="Source\Utils\AlphaNumericSort.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
@@ -189,7 +191,6 @@
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\RtMidi.cs" />
     <Compile Include="Source\Utils\OscilloscopeTriggers.cs" />
-    <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\SimpleBitmap.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
@@ -282,56 +283,8 @@
     <EmbeddedResource Include="Resources\Icons\FamiStudio_64.tga" />
   </ItemGroup>    
   <ItemGroup>    
-    <EmbeddedResource Include="Resources\Fonts\QuickSand10.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand10_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand10Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand10Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand12.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand12_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand12Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand12Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand15.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand15_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand15Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand15Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand16.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand16_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand16Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand16Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand18.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand18_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand18Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand18Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand20.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand20_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand20Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand20Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand24.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand24_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand24Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand24Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand28.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand28_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand30.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand30_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand30Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand30Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand32.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand32_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand40.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand40_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand40Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand40Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand42.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand42_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand56.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand56_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand56Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand56Bold_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand8.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand8_0.tga" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand8Bold.fnt" />
-    <EmbeddedResource Include="Resources\Fonts\QuickSand8Bold_0.tga" />
+    <EmbeddedResource Include="Resources\Fonts\Quicksand-Regular.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\Quicksand-Bold.ttf" />
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />
@@ -426,8 +379,8 @@
     <EmbeddedResource Include="Resources\Atlas\ConfigMixer@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigMobile.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigMobile@2x.tga" />
-    <EmbeddedResource Include="Resources\Atlas\ConfigQWERTY.tga" />
-    <EmbeddedResource Include="Resources\Atlas\ConfigQWERTY@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigKeys.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigKeys@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigSound.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigSound@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ConfigUserInterface.tga" />
@@ -600,6 +553,8 @@
     <EmbeddedResource Include="Resources\Atlas\MenuFile@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuForceDisplay.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuForceDisplay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuInstance.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuInstance@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuLoopPoint.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuLoopPoint@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuMute.tga" />
@@ -614,6 +569,8 @@
     <EmbeddedResource Include="Resources\Atlas\MenuRelease@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuReplace.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuReplace@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuReplaceSelection.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuReplaceSelection@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuReset.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuReset@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuSave.tga" />
@@ -731,6 +688,8 @@
     <EmbeddedResource Include="Resources\Atlas\Snap@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SnapOff.tga" />
     <EmbeddedResource Include="Resources\Atlas\SnapOff@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Sort.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Sort@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Stop.tga" />
     <EmbeddedResource Include="Resources\Atlas\Stop@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Transform.tga" />
@@ -798,6 +757,8 @@
     <EmbeddedResource Include="Resources\Shaders\Desktop\LineSmooth.vert" />
     <EmbeddedResource Include="Resources\Shaders\Desktop\Poly.frag" />
     <EmbeddedResource Include="Resources\Shaders\Desktop\Poly.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Desktop\Text.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Desktop\Text.vert" />
   </ItemGroup>  
   <ItemGroup>
     <Content Include="..\LICENSE"> <Link>LICENSE</Link> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
@@ -808,6 +769,7 @@
     <Content Include="libopenal32.so"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
     <Content Include="librtmidi.so"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
     <Content Include="libShineMp3.so"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
+    <Content Include="libStb.so"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
     <Content Include="libVorbis.so"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
   </ItemGroup>
   <ItemGroup>
