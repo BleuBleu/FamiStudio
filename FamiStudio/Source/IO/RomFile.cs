@@ -24,7 +24,7 @@ namespace FamiStudio
         const int RomTocOffset        = 0x1800; // Table of content is right after the code at F800
         const int RomChrSize          = 0x2000; // 8KB CHR data.
         const int MaxSongSize         = 0x4000; // 16KB max per song.
-        const int MinRomSizeInKB      = 32; // 32KB minimum.
+        const int MinRomSizeInKB      = 32;     // 32KB minimum.
         const int RomHeaderLength     = 16;     // INES header size.
         const int RomHeaderPrgOffset  = 4;      // Offset of the PRG bank count in INES header.
         const int RomDpcmStart        = 0xc000;
@@ -86,12 +86,18 @@ namespace FamiStudio
                 var projectInfo = BuildProjectInfo(songIds, name, author);
                 var songTable   = BuildSongTableOfContent(project, RomMaxSongs);
 
-                // Gathersong data.
+                // Gather song data.
                 var songBanks = new List<List<byte>>();
                 var songBankSize = project.UsesVrc6Expansion ? RomBankSizeVrc6 : RomBankSize;
                 var songBankSizeInKB = songBankSize / 1024;
                 var bankSize = RomBankSize;
                 var bankSizeInKB = RomBankSize / 1024;
+                var numDpcmBanks = 0;
+
+                if (project.UsesSamples)
+                {
+                    numDpcmBanks = project.AutoAssignSamplesBanks(bankSize, out _);
+                }
 
                 // Export each song individually, build TOC at the same time.
                 for (int i = 0; i < project.Songs.Count; i++)
@@ -168,13 +174,6 @@ namespace FamiStudio
                     songTable[i].flags   = (byte)(song.UsesDpcm ? 1 : 0);
 
                     Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
-                }
-
-                var numDpcmBanks = 0;
-
-                if (project.UsesSamples)
-                {
-                    numDpcmBanks = project.AutoAssignSamplesBanks(bankSize, out _);
                 }
 
                 var numCodeBanks = 1;
