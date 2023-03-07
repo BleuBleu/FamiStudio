@@ -28,7 +28,13 @@ namespace FamiStudio
             var decompressedSize = BitConverter.ToInt32(bytes, 0);
             DeflateStream compStream = new DeflateStream(inputStream, CompressionMode.Decompress);
             var buffer = new byte[decompressedSize];
-            compStream.Read(buffer, 0, buffer.Length);
+            var totalRead = 0;
+            while (totalRead < buffer.Length)
+            {
+                var read = compStream.Read(buffer, totalRead, buffer.Length - totalRead);
+                if (read == 0) break;
+                totalRead += read;
+            }
             compStream.Close();
             return buffer;
         }
