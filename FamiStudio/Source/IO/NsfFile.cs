@@ -257,14 +257,14 @@ namespace FamiStudio
                     }
                     else
                     {
+                        dpcmBankStart = (nsfBytes.Count) / NsfBankSize;
+
                         // TODO : The last bank may not be full, we could squeeze songs in there.
                         for (var i = 0; i < dpcmNumBanks; i++)
                         {
                             nsfBytes.AddRange(project.GetPackedSampleData(i, dpcmBankSize));
                             Utils.PadToNextBank(nsfBytes, dpcmBankSize);
                         }
-
-                        dpcmBankStart = (nsfBytes.Count) / NsfBankSize;
 
                         Log.LogMessage(LogSeverity.Info, $"Allocating {dpcmNumBanks} bank(s) ({dpcmNumBanks * NsfBankSize} bytes) for DPCM samples.");
                     }
