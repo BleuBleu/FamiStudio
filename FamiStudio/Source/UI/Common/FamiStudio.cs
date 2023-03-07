@@ -1050,8 +1050,7 @@ namespace FamiStudio
                     }
                 }
 
-                if (project != null)
-                    action(project);
+                action(project);
             }
 
             if (Platform.IsDesktop && allowComplexFormats)
