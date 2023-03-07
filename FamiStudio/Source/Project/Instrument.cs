@@ -1132,6 +1132,9 @@ namespace FamiStudio
                 var srcEnv = srcInst.Envelopes[e];
                 var dstEnv = dstInst.Envelopes[e];
 
+                if (e == EnvelopeType.Pitch)
+                    dstEnv.Relative = srcEnv.Relative;
+
                 if (srcEnv != null && dstEnv != null)
                 {
                     ConvertEnvelopeGeneric(srcInst, dstInst, e, e, srcEnv, dstEnv);
