@@ -1093,12 +1093,15 @@ namespace FamiStudio
             Envelope.GetMinMaxValueForType(srcInst, srcType, out var srcMin, out var srcMax);
             Envelope.GetMinMaxValueForType(dstInst, dstType, out var dstMin, out var dstMax);
 
+            var srcRange = srcMax - srcMin + 1;
+            var dstRange = dstMax - dstMin + 1;
+
             for (int di = 0; di < dstLen; di++)
             {
                 var si = Utils.Clamp((int)Math.Floor(di * (srcLen / (float)dstLen)), 0, srcLen - 1);
                 var sv = srcEnv.Values[si];
-                var sr = (sv - srcMin) / (float)(srcMax - srcMin);
-                var dv = Utils.Clamp((int)Math.Floor(dstMin + sr * (dstMax - dstMin)), dstMin, dstMax);
+                var sr = (sv - srcMin) / (float)srcRange;
+                var dv = Utils.Clamp((int)Math.Floor(dstMin + sr * dstRange), dstMin, dstMax);
 
                 dstEnv.Values[di] = (sbyte)dv;
             }

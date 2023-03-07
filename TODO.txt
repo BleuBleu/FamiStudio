@@ -22,8 +22,6 @@ Minor UI stuff:
 - Long press sorting PE doesnt work on mobile
 - Reduce PE icon sizes a bit on mobile.
 - Video export, when autoselecting channels, it only looks at 1st song.
-- BUG : NSF_export_bug.fms, buh.nsf how private DM.
-- BUG : Convert VRC6 with duty 2 to regular, becomes 0.
 - Gimmick 8KB auto assignment sucks.
 - Copy pitch env abs/rel when converting between expansions.
 - BUG ANDROID : Sometimes the layout doesnt refresh or something and the row below the toolbar is not drawn.
