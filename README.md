@@ -8,9 +8,6 @@ For any questions, you can reach me at [famistudio@outlook.com](mailto:famistudi
 ## Compiled versions
 All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section. If you are on Windows, simply download and run the .MSI installer and a shortcut to FamiStudio will be placed in your Start menu.
 
-#### PipeWire crashes
-On Linux, PipeWire might have issues. In order to fix that, the only known solution is to go into the dllmap(`FamiStudio.exe.config`) and remove the target property for libopenal. Make sure you have OpenAL installed on your system!
-
 ## Compiling
 FamiStudio is composed of a few projects:
 - The main FamiStudio application is written in C#. 
@@ -27,7 +24,7 @@ On MacOS, VS Code is used for development, but Visual Studio for Mac might work 
 On Linux, VS Code is used for development and we target .NET 6.0. Much like MacOS, a little shell script, "build_linux.sh" is provided to compile each of the C++ DLLs. No makefile is provided at the moment. [OpenAL Soft](https://openal-soft.org/) is provided as a precompiled AMD64 binary with ALSA support, if you recompile your own you will need to replace libopenal32.so or edit the [dllmap](https://www.mono-project.com/docs/advanced/pinvoke/dllmap/) (FamiStudio.exe.config) to point to the correct library. Same for [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) which is provided as librtmidi.so.
 
 ### Android
-On Android, Visual Studio 2019 is used, but we target Android SDK 12 using this procedure (https://github.com/xamarin/xamarin-android/wiki/JDK-11-Warning) and still use Mono here. We will migrate to .NET 6.0 when I am able to install Visual Studio 2022. The C++ DLLs needs to be compiled manually for all 4 architectures (x86, x64, ARM, ARM64) whenever there is a change. We target a minimum version of Android 8.0 (Oreo), so make sure to test features on all versions in between. 
+On Android, Visual Studio 2019 is used, but we target Android SDK 12 using this procedure (https://github.com/xamarin/xamarin-android/wiki/JDK-11-Warning) and still use Mono here. We will migrate to .NET 6.0 when I am able to install Visual Studio 2022. The C++ DLLs needs to be compiled manually for all 3 architectures (x64, ARM, ARM64) whenever there is a change. We target a minimum version of Android 8.0 (Oreo), so make sure to test features on all versions in between. 
 
 ## Contributing
 I'm hesitant to take unsolicited pull requests. If you want to contribute a feature, please get in touch with me first so we can come up with a plan. This will avoid wasting both your time and mine.
