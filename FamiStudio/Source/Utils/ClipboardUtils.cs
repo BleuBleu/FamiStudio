@@ -371,7 +371,6 @@ namespace FamiStudio
             var serializer = new ProjectSaveBuffer(null);
             var instruments = new HashSet<Instrument>();
             var arpeggios = new HashSet<Arpeggio>();
-            var samples = new Dictionary<int, DPCMSampleMapping>();
 
             foreach (var note in notes)
             {

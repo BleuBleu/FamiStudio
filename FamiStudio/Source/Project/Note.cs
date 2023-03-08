@@ -99,7 +99,7 @@ namespace FamiStudio
         public const int EffectDeltaCounterMask   = (1 << EffectDeltaCounter);
         public const int EffectPhaseResetMask     = (1 << EffectPhaseReset);
 
-        public const int EffectAllMask = 0xfff; // Must be updated every time a new effect is added.
+        public const int EffectAllMask = 0x1fff; // Must be updated every time a new effect is added.
 
         // As of FamiStudio 3.0.0, these are semi-deprecated and mostly used in parts of the
         // code that have not been migrated to compound notes (notes with release and duration) 
