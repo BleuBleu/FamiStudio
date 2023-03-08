@@ -1019,12 +1019,6 @@ namespace FamiStudio
             initialized = true;
         }
 
-        private static IntPtr GetExtProcAddress(string f, string suffix = "EXT")
-        {
-            var addr = glfwGetProcAddress(f + suffix);
-            return addr != IntPtr.Zero ? addr : glfwGetProcAddress(f);
-        }
-
         public static unsafe void GetFloat(int param, float[] floats)
         {
             fixed (float* p = &floats[0])
