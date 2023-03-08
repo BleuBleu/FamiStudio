@@ -629,7 +629,7 @@ namespace FamiStudio
 
             depth = GL.GenTexture();
             GL.BindTexture(GL.Texture2D, depth);
-            GL.TexImage2D(GL.Texture2D, 0, GL.DepthComponent, imageSizeX, imageSizeY, 0, GL.DepthComponent, GL.Float, IntPtr.Zero);
+            GL.TexImage2D(GL.Texture2D, 0, GL.DepthComponent, imageSizeX, imageSizeY, 0, GL.DepthComponent, GL.UnsignedShort, IntPtr.Zero);
             GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
