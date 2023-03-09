@@ -274,7 +274,7 @@ namespace FamiStudio
 
                 nsfBytes[songTableIdx + 1] = (byte)((dpcmBaseAddr >> 12) - 8);
                 nsfBytes[songTableIdx + 2] = (byte)project.ExpansionAudioMask;
-                nsfBytes[songTableIdx + 3] = (byte)(8 - driverBankCount - dpcmNumBanks);
+                nsfBytes[songTableIdx + 3] = (byte)(8 - driverBankCount - (dpcmNumBanks > 0 ? 1 : 0));
 
                 // Export each song individually, build TOC at the same time.
                 for (var i = 0; i < project.Songs.Count; i++)

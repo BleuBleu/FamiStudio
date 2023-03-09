@@ -9,6 +9,7 @@
 - PWM stuff from how2.
 - BUG : How2 "Massive-X.fms" + "brtet.fms" DPCM broken.
 - BUG : DPCM cuts are ignored in NSF? import issue apparently.
+- BUG : Bold lines missing in envelope editor.
 Mac:
 - Is there any reason now to not allow changing DPI on MacOS??? 
 - How2: Video export doesnt seem to work.
