@@ -841,7 +841,7 @@ namespace FamiStudio
                         {
                             var note = kv.Value;
 
-                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument) || channel.Type == ChannelType.Dpcm)
+                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument))
                                 note.Instrument = null;
                         }
                     }

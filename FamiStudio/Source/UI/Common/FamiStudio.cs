@@ -1457,9 +1457,7 @@ namespace FamiStudio
             var message = "Selected instrument is incompatible with channel!";
             if (channel != null)
             {
-                if (channel.Type == ChannelType.Dpcm)
-                    message += $"\nOnly the 'DPCM Instrument' can be used on the DPCM channel.";
-                else if (channel.IsExpansionChannel)
+                if (channel.IsExpansionChannel)
                     message += $"\nExpansion channels require using the correct instrument type.";
             }
             DisplayNotification(message, beep);
