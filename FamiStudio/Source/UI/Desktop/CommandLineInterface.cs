@@ -513,7 +513,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        f.Save(project, new int[] { songId }, format, -1, true, songFilename, dpcmFilename, includeFilename, MachineType.Dual); 
+                        f.Save(project, new int[] { songId }, format, -1, true, false, songFilename, dpcmFilename, includeFilename, MachineType.Dual); 
                     }
                 }
                 else
@@ -523,7 +523,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    f.Save(project, exportSongIds, format, -1, false, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
+                    f.Save(project, exportSongIds, format, -1, false, false, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
                 }
             }
         }

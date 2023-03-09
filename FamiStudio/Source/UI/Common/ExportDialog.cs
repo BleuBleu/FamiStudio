@@ -235,6 +235,7 @@ namespace FamiStudio
         const string FT2SepFilesTooltip    = "If enabled, each song will be exported to a separate file.";
         const string FT2SepFilesFmtTooltip = "When using separate files, the format to name each file.";
         const string FT2DmcFmtTooltip      = "The format of the name of the DMC file. A DMC file will only be generated if the project uses DPCM samples.";
+        const string FT2BankswitchTooltip  = "If enabled, the exported data will assume multiple DPCM banks are used, event if there are not enough samples in the current project to justify it.";
         const string FT2SongListTooltip    = "If enabled, will generate a .inc file containing information about each songs.";
         const string FT2SfxSongListTooltip = "If enabled, will generate a .inc file containing information about each sound effect.";
 
@@ -395,8 +396,9 @@ namespace FamiStudio
                         page.AddCheckBox("Separate Files :", false, FT2SepFilesTooltip); // 1
                         page.AddTextBox("Song Name Pattern :", "{project}_{song}", 0, FT2SepFilesFmtTooltip); // 2
                         page.AddTextBox("DMC Name Pattern :", "{project}", 0, FT2DmcFmtTooltip); // 3
-                        page.AddCheckBox("Generate song list include :", false, FT2SongListTooltip); // 4
-                        page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 5
+                        page.AddCheckBox("Force DPCM bank-switching:", false, FT2BankswitchTooltip); // 4
+                        page.AddCheckBox("Generate song list include :", false, FT2SongListTooltip); // 5
+                        page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 6
                         page.SetPropertyEnabled(2, false);
                         page.SetPropertyEnabled(3, false);
                         page.PropertyChanged += SoundEngine_PropertyChanged;
@@ -974,13 +976,14 @@ namespace FamiStudio
             var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioMusic : (int)ExportFormat.FamiTone2Music);
 
             var separate = props.GetPropertyValue<bool>(1);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(6));
             var kernel = famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2;
             var exportFormat = AssemblyFormat.GetValueForName(props.GetPropertyValue<string>(0));
             var ext = exportFormat == AssemblyFormat.CA65 ? "s" : "asm";
             var songNamePattern = props.GetPropertyValue<string>(2);
             var dpcmNamePattern = props.GetPropertyValue<string>(3);
-            var generateInclude = props.GetPropertyValue<bool>(4);
+            var forceBankswitching = props.GetPropertyValue<bool>(4);
+            var generateInclude = props.GetPropertyValue<bool>(5);
 
             if (separate)
             {
@@ -1000,7 +1003,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        f.Save(project, new int[] { songId }, exportFormat, -1, true, songFilename, dpcmFilename, includeFilename, MachineType.Dual);
+                        f.Save(project, new int[] { songId }, exportFormat, -1, true, forceBankswitching, songFilename, dpcmFilename, includeFilename, MachineType.Dual);
                     }
 
                     lastExportFilename = folder;
@@ -1018,7 +1021,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    f.Save(project, songIds, exportFormat, -1, false, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
+                    f.Save(project, songIds, exportFormat, -1, false, forceBankswitching, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
 
                     lastExportFilename = filename;
                     ShowExportResultToast("Assembly");

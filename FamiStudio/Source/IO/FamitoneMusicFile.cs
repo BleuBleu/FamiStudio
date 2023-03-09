@@ -826,11 +826,11 @@ namespace FamiStudio
 
             if (project.UsesSamples)
             {
-                usesMultipleDpcmBanks = project.UsesMultipleDPCMBanks;
+                usesMultipleDpcmBanks |= project.UsesMultipleDPCMBanks;
 
                 if (usesMultipleDpcmBanks)
                 {
-                    Log.LogMessage(LogSeverity.Info, "Project uses multiple DPCM banks, seperate DMC files will be generated for each banks.");
+                    Log.LogMessage(LogSeverity.Info, "Project uses multiple DPCM banks, separate DMC files will be generated for each banks.");
                 }
 
                 var maxBank = usesMultipleDpcmBanks ? Project.MaxDPCMBanks : 1;
@@ -1806,9 +1806,10 @@ namespace FamiStudio
             File.WriteAllLines(includeFilename, includeLines.ToArray());
         }
 
-        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, string filename, string dmcFilename, string includeFilename, int machine)
+        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, bool forceMultipleBanks, string filename, string dmcFilename, string includeFilename, int machine)
         {
             this.machine = machine;
+            this.usesMultipleDpcmBanks |= forceMultipleBanks;
 
             SetupProject(originalProject, songIds);
             SetupFormat(format);
@@ -2054,13 +2055,13 @@ namespace FamiStudio
         }
 
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
-        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmBankSize, int dpcmOffset, int machine)
+        public byte[] GetBytes(Project project, int[] songIds, int songOffset, bool forceMultipleBanks, int dpcmBankSize, int dpcmOffset, int machine)
         {
             var tempFolder = Utils.GetTemporaryDiretory();
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, tempAsmFilename, tempDmcFilename, null, machine);
+            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, forceMultipleBanks, tempAsmFilename, tempDmcFilename, null, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }
