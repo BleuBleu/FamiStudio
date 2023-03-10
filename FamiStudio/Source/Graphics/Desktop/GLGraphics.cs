@@ -219,7 +219,7 @@ namespace FamiStudio
             GL.DepthFunc(GL.Always);
             GL.Disable(GL.StencilTest);
             GL.Disable(GL.ScissorTest);
-
+            GL.ClearDepth(0.0f);
             GL.ClearColor(clearColor.R / 255.0f, clearColor.G / 255.0f, clearColor.B / 255.0f, clearColor.A / 255.0f);
             GL.Clear(GL.ColorBufferBit | GL.DepthBufferBit);
         }
@@ -619,6 +619,8 @@ namespace FamiStudio
             resX = imageSizeX;
             resY = imageSizeY;
 
+            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 1 {GL.GetError()}");
+
             texture = GL.GenTexture();
             GL.BindTexture(GL.Texture2D, texture);
             GL.TexImage2D(GL.Texture2D, 0, GL.Rgba, imageSizeX, imageSizeY, 0, GL.Rgba, GL.UnsignedByte, IntPtr.Zero);
@@ -627,19 +629,31 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
 
+            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 2 {GL.GetError()}");
+
             depth = GL.GenTexture();
             GL.BindTexture(GL.Texture2D, depth);
             GL.TexImage2D(GL.Texture2D, 0, GL.DepthComponent, imageSizeX, imageSizeY, 0, GL.DepthComponent, GL.UnsignedShort, IntPtr.Zero);
+            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 3 {GL.GetError()}");
             GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
 
+            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 4 {GL.GetError()}");
+
             fbo = GL.GenFramebuffer();
+            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 5 {GL.GetError()}");
             GL.BindFramebuffer(GL.Framebuffer, fbo);
+            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 6 {GL.GetError()}");
             GL.FramebufferTexture2D(GL.Framebuffer, GL.ColorAttachment0, GL.Texture2D, texture, 0);
+            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 7 {GL.GetError()}");
             GL.FramebufferTexture2D(GL.Framebuffer, GL.DepthAttachment, GL.Texture2D, depth, 0);
+            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 8 {GL.GetError()}");
+            var status = GL.CheckFramebufferStatus(GL.Framebuffer);
+            Log.LogMessage(LogSeverity.Info, $"FB STATUS {status}");
             GL.BindFramebuffer(GL.Framebuffer, 0);
+            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 9 {GL.GetError()}");
         }
 
         public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
@@ -647,7 +661,6 @@ namespace FamiStudio
             return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
         }
 
-        // MATTT : This is surely wrong, we do all the drawing at end of frame now.
         public override void BeginDrawFrame(Rectangle rect, Color clear)
         {
             GL.BindFramebuffer(GL.DrawFramebuffer, fbo);
@@ -858,80 +871,84 @@ namespace FamiStudio
         public delegate void PopDebugGroupDelegate();
         public delegate void PixelStoreDelegate(int name, int value);
         public delegate void GetIntegerDelegate(int name, ref int data);
+        public delegate int  GetErrorDelegate();
+        public delegate int  CheckFramebufferStatusDelegate(int target);
 
-        public static ClearDelegate                Clear;
-        public static ClearDepthDelegate           ClearDepth;
-        public static ClearColorDelegate           ClearColor;
-        public static ViewportDelegate             Viewport;
-        public static EnableDelegate               Enable;
-        public static DisableDelegate              Disable;
-        public static BlendFuncDelegate            BlendFunc;
-        public static PolygonModeDelegate          PolygonMode;
-        public static ScissorDelegate              Scissor;
-        public static EnableClientStateDelegate    EnableClientState;
-        public static DisableClientStateDelegate   DisableClientState;
-        public static TexParameterDelegate         TexParameter;
-        public static BindTextureDelegate          BindTexture;
-        public static ActiveTextureDelegate        ActiveTexture;
-        public static TexImage2DDelegate           TexImage2DRaw;
-        public static TexSubImage2DDelegate        TexSubImage2DRaw;
-        public static GenTexturesDelegate          GenTextures;
-        public static DeleteTexturesDelegate       DeleteTextures;
-        public static ColorPointerDelegate         ColorPointerRaw;
-        public static VertexPointerDelegate        VertexPointerRaw;
-        public static TexCoordPointerDelegate      TexCoordPointerRaw;
-        public static DrawArraysDelegate           DrawArrays;
-        public static DrawElementsDelegate         DrawElementsRaw;
-        public static LineWidthDelegate            LineWidth;
-        public static GenFramebuffersDelegate      GenFramebuffers;
-        public static BindFramebufferDelegate      BindFramebuffer;
-        public static DrawBufferDelegate           DrawBuffer;
-        public static FramebufferTexture2DDelegate FramebufferTexture2D;
-        public static ReadPixelsDelegate           ReadPixels;
-        public static DeleteFramebuffersDelegate   DeleteFramebuffers;
-        public static GetFloatDelegate             GetFloatRaw;
-        public static DebugMessageCallbackDelegate DebugMessageCallback;
-        public static CreateShaderDelegate         CreateShader;
-        public static ShaderSourceDelegate         ShaderSourceRaw;
-        public static CompileShaderDelegate        CompileShader;
-        public static GetShaderIntDelegate         GetShaderIntRaw;
-        public static GetShaderInfoLogDelegate     GetShaderInfoLogRaw;
-        public static CreateProgramDelegate        CreateProgram;
-        public static DeleteProgramDelegate        DeleteProgram;
-        public static AttachShaderDelegate         AttachShader;
-        public static LinkProgramDelegate          LinkProgram;
-        public static GetProgramIntDelegate        GetProgramIntRaw;
-        public static GetProgramInfoLogDelegate    GetProgramInfoLogRaw;
-        public static UseProgramDelegate           UseProgram;
-        public static GetUniformLocationDelegate   GetUniformLocation;
-        public static VertexAttribPointerDelegate  VertexAttribPointerRaw;
-        public static GenBuffersDelegate           GenBuffersRaw;
-        public static DeleteBuffersDelegate        DeleteBuffersRaw;
-        public static GenVertexArraysDelegate      GenVertexArraysRaw;
-        public static DeleteVertexArraysDelegate   DeleteVertexArraysRaw;
-        public static BindBufferDelegate           BindBuffer;
-        public static BufferDataDelegate           BufferDataRaw;
-        public static BufferSubDataDelegate        BufferSubDataRaw;
-        public static BindVertexArrayDelegate      BindVertexArray;
+        public static ClearDelegate                   Clear;
+        public static ClearDepthDelegate              ClearDepth;
+        public static ClearColorDelegate              ClearColor;
+        public static ViewportDelegate                Viewport;
+        public static EnableDelegate                  Enable;
+        public static DisableDelegate                 Disable;
+        public static BlendFuncDelegate               BlendFunc;
+        public static PolygonModeDelegate             PolygonMode;
+        public static ScissorDelegate                 Scissor;
+        public static EnableClientStateDelegate       EnableClientState;
+        public static DisableClientStateDelegate      DisableClientState;
+        public static TexParameterDelegate            TexParameter;
+        public static BindTextureDelegate             BindTexture;
+        public static ActiveTextureDelegate           ActiveTexture;
+        public static TexImage2DDelegate              TexImage2DRaw;
+        public static TexSubImage2DDelegate           TexSubImage2DRaw;
+        public static GenTexturesDelegate             GenTextures;
+        public static DeleteTexturesDelegate          DeleteTextures;
+        public static ColorPointerDelegate            ColorPointerRaw;
+        public static VertexPointerDelegate           VertexPointerRaw;
+        public static TexCoordPointerDelegate         TexCoordPointerRaw;
+        public static DrawArraysDelegate              DrawArrays;
+        public static DrawElementsDelegate            DrawElementsRaw;
+        public static LineWidthDelegate               LineWidth;
+        public static GenFramebuffersDelegate         GenFramebuffers;
+        public static BindFramebufferDelegate         BindFramebuffer;
+        public static DrawBufferDelegate              DrawBuffer;
+        public static FramebufferTexture2DDelegate    FramebufferTexture2D;
+        public static ReadPixelsDelegate              ReadPixels;
+        public static DeleteFramebuffersDelegate      DeleteFramebuffers;
+        public static GetFloatDelegate                GetFloatRaw;
+        public static DebugMessageCallbackDelegate    DebugMessageCallback;
+        public static CreateShaderDelegate            CreateShader;
+        public static ShaderSourceDelegate            ShaderSourceRaw;
+        public static CompileShaderDelegate           CompileShader;
+        public static GetShaderIntDelegate            GetShaderIntRaw;
+        public static GetShaderInfoLogDelegate        GetShaderInfoLogRaw;
+        public static CreateProgramDelegate           CreateProgram;
+        public static DeleteProgramDelegate           DeleteProgram;
+        public static AttachShaderDelegate            AttachShader;
+        public static LinkProgramDelegate             LinkProgram;
+        public static GetProgramIntDelegate           GetProgramIntRaw;
+        public static GetProgramInfoLogDelegate       GetProgramInfoLogRaw;
+        public static UseProgramDelegate              UseProgram;
+        public static GetUniformLocationDelegate      GetUniformLocation;
+        public static VertexAttribPointerDelegate     VertexAttribPointerRaw;
+        public static GenBuffersDelegate              GenBuffersRaw;
+        public static DeleteBuffersDelegate           DeleteBuffersRaw;
+        public static GenVertexArraysDelegate         GenVertexArraysRaw;
+        public static DeleteVertexArraysDelegate      DeleteVertexArraysRaw;
+        public static BindBufferDelegate              BindBuffer;
+        public static BufferDataDelegate              BufferDataRaw;
+        public static BufferSubDataDelegate           BufferSubDataRaw;
+        public static BindVertexArrayDelegate         BindVertexArray;
         public static EnableVertexAttribArrayDelegate EnableVertexAttribArray;
-        public static FlushDelegate                Flush;
-        public static Uniform1iDelegate            Uniform1iRaw;
-        public static Uniform1fDelegate            Uniform1fRaw;
-        public static Uniform2fDelegate            Uniform2fRaw;
-        public static Uniform3fDelegate            Uniform3fRaw;
-        public static Uniform4fDelegate            Uniform4fRaw;
-        public static Uniform1fvDelegate           Uniform1fvRaw;
-        public static Uniform2fvDelegate           Uniform2fvRaw;
-        public static Uniform3fvDelegate           Uniform3fvRaw;
-        public static Uniform4fvDelegate           Uniform4fvRaw;
-        public static HintDelegate                 Hint;
-        public static DepthFuncDelegate            DepthFunc;
-        public static DepthMaskDelegate            DepthMask;
-        public static ColorMaskDelegate            ColorMaskRaw;
-        public static PushDebugGroupDelegate       PushDebugGroupRaw;
-        public static PopDebugGroupDelegate        PopDebugGroupRaw;
-        public static PixelStoreDelegate           PixelStore;
-        public static GetIntegerDelegate           GetInteger;
+        public static FlushDelegate                   Flush;
+        public static Uniform1iDelegate               Uniform1iRaw;
+        public static Uniform1fDelegate               Uniform1fRaw;
+        public static Uniform2fDelegate               Uniform2fRaw;
+        public static Uniform3fDelegate               Uniform3fRaw;
+        public static Uniform4fDelegate               Uniform4fRaw;
+        public static Uniform1fvDelegate              Uniform1fvRaw;
+        public static Uniform2fvDelegate              Uniform2fvRaw;
+        public static Uniform3fvDelegate              Uniform3fvRaw;
+        public static Uniform4fvDelegate              Uniform4fvRaw;
+        public static HintDelegate                    Hint;
+        public static DepthFuncDelegate               DepthFunc;
+        public static DepthMaskDelegate               DepthMask;
+        public static ColorMaskDelegate               ColorMaskRaw;
+        public static PushDebugGroupDelegate          PushDebugGroupRaw;
+        public static PopDebugGroupDelegate           PopDebugGroupRaw;
+        public static PixelStoreDelegate              PixelStore;
+        public static GetIntegerDelegate              GetInteger;
+        public static GetErrorDelegate                GetError;
+        public static CheckFramebufferStatusDelegate  CheckFramebufferStatus;
 
         public static void StaticInitialize()
         {
@@ -1004,6 +1021,8 @@ namespace FamiStudio
             ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(glfwGetProcAddress("glColorMask"));
             PixelStore              = Marshal.GetDelegateForFunctionPointer<PixelStoreDelegate>(glfwGetProcAddress("glPixelStorei"));
             GetInteger              = Marshal.GetDelegateForFunctionPointer<GetIntegerDelegate>(glfwGetProcAddress("glGetIntegerv"));
+            GetError                = Marshal.GetDelegateForFunctionPointer<GetErrorDelegate>(glfwGetProcAddress("glGetError"));
+            CheckFramebufferStatus  = Marshal.GetDelegateForFunctionPointer<CheckFramebufferStatusDelegate>(glfwGetProcAddress("glCheckFramebufferStatus"));
 
 #if DEBUG && !FAMISTUDIO_MACOS 
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));
