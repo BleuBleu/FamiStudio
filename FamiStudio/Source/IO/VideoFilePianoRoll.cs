@@ -319,19 +319,22 @@ namespace FamiStudio
 
                 // Render the full screen overlay.
                 videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), Color.Black);
+                videoGraphics.PushClipRegion(0, 0, videoResX, videoResY);
 
-                var bg = videoGraphics.BackgroundCommandList;
-                var fg = videoGraphics.DefaultCommandList;
+                var c = videoGraphics.BackgroundCommandList;
+                var o = videoGraphics.DefaultCommandList;
 
                 // Composite the channel renders.
                 foreach (var s in channelStates)
                 {
                     int channelPosX0 = (int)Math.Round(s.videoChannelIndex * channelResXFloat);
-                    bg.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
+                    c.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
                 }
 
+                videoGraphics.PopClipRegion();
+
                 // Gradient
-                fg.FillRectangleGradient(0, 0, videoResX, gradientSizeY, Color.Black, Color.Transparent, true, gradientSizeY);
+                o.FillRectangleGradient(0, 0, videoResX, gradientSizeY, Color.Black, Color.Transparent, true, gradientSizeY);
 
                 // Channel names + oscilloscope
                 foreach (var s in channelStates)
@@ -342,21 +345,21 @@ namespace FamiStudio
                     var channelNameSizeX = (int)videoGraphics.MeasureString(s.channelText, font);
                     var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.icon.Size.Width + ChannelIconTextSpacing) / 2;
 
-                    fg.FillAndDrawRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.icon.Size.Width - 1, ChannelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
-                    fg.DrawBitmap(s.icon, channelIconPosX, ChannelIconPosY, 1, Theme.LightGreyColor1);
-                    fg.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, Theme.LightGreyColor1);
+                    o.FillAndDrawRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.icon.Size.Width - 1, ChannelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
+                    o.DrawBitmap(s.icon, channelIconPosX, ChannelIconPosY, 1, Theme.LightGreyColor1);
+                    o.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, Theme.LightGreyColor1);
 
                     if (s.videoChannelIndex > 0)
-                        fg.DrawLine(channelPosX0, 0, channelPosX0, videoResY, Theme.BlackColor, channelLineWidth);
+                        o.DrawLine(channelPosX0, 0, channelPosX0, videoResY, Theme.BlackColor, channelLineWidth);
 
                     var oscMinY = (int)(ChannelIconPosY + s.icon.Size.Height + 10);
                     var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
 
                     var oscilloscope = UpdateOscilloscope(s, f);
 
-                    fg.PushTransform(channelPosX0 + 10, (oscMinY + oscMaxY) / 2, channelPosX1 - channelPosX0 - 20, (oscMinY - oscMaxY) / 2);
-                    fg.DrawGeometry(oscilloscope, Theme.LightGreyColor1, 1, true, false);
-                    fg.PopTransform();
+                    o.PushTransform(channelPosX0 + 10, (oscMinY + oscMaxY) / 2, channelPosX1 - channelPosX0 - 20, (oscMinY - oscMaxY) / 2);
+                    o.DrawGeometry(oscilloscope, Theme.LightGreyColor1, 1, true, false);
+                    o.PopTransform();
 
                     videoGraphics.ConditionalFlushCommandLists();
                 }
