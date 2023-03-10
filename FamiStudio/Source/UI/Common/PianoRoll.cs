@@ -2742,14 +2742,11 @@ namespace FamiStudio
             var maxX = GetPixelForNote(env.Length);
             var maxi = (Platform.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue) + 1;
 
+            // Background rectangles + labels
             for (int i = 0; i <= maxi; i++)
             {
                 var value = Platform.IsMobile ? i + envTypeMinValue : i - midValue;
                 var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
-                
-                if (i != maxi)
-                    r.b.DrawLine(0, y, GetPixelForNote(env.Length), y, Theme.DarkGreyColor1, (value % spacing) == 0 ? 3 : 1);
-
                 var drawLabel = i == maxi - 1;
 
                 if ((value % spacing) == 0 || i == 0 || i == maxi)
@@ -2767,6 +2764,16 @@ namespace FamiStudio
 
                 if (drawLabel)
                     r.b.DrawText(value.ToString(), r.fonts.FontSmall, maxX + 4 * DpiScaling.Window, y - envelopeValueSizeY, Theme.LightGreyColor1, TextFlags.MiddleLeft, 0, envelopeValueSizeY);
+            }
+            
+            // Horizontal lines
+            for (int i = 0; i <= maxi; i++)
+            {
+                var value = Platform.IsMobile ? i + envTypeMinValue : i - midValue;
+                var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
+
+                if (i != maxi)
+                    r.b.DrawLine(0, y, GetPixelForNote(env.Length), y, Theme.DarkGreyColor1, (value % spacing) == 0 ? 3 : 1);
             }
 
             DrawSelectionRect(r.b, Height);

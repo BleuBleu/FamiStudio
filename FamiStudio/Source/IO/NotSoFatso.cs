@@ -76,19 +76,20 @@ namespace FamiStudio
         public const int STATE_DPCMLOOP           = 6;
         public const int STATE_DPCMPITCH          = 7;
         public const int STATE_DPCMCOUNTER        = 8;
-        public const int STATE_FDSWAVETABLE       = 9;
-        public const int STATE_FDSMODULATIONTABLE = 10;
-        public const int STATE_FDSMODULATIONDEPTH = 11;
-        public const int STATE_FDSMODULATIONSPEED = 12;
-        public const int STATE_FDSMASTERVOLUME    = 13;
-        public const int STATE_VRC7PATCH          = 14;
-        public const int STATE_VRC7PATCHREG       = 15;
-        public const int STATE_VRC7OCTAVE         = 16;
-        public const int STATE_VRC7TRIGGER        = 17;
-        public const int STATE_VRC7SUSTAIN        = 18;
-        public const int STATE_N163WAVEPOS        = 19;
-        public const int STATE_N163WAVESIZE       = 20;
-        public const int STATE_N163WAVE           = 21;
-        public const int STATE_N163NUMCHANNELS    = 22;
+        public const int STATE_DPCMACTIVE         = 9;
+        public const int STATE_FDSWAVETABLE       = 10;
+        public const int STATE_FDSMODULATIONTABLE = 11;
+        public const int STATE_FDSMODULATIONDEPTH = 12;
+        public const int STATE_FDSMODULATIONSPEED = 13;
+        public const int STATE_FDSMASTERVOLUME    = 14;
+        public const int STATE_VRC7PATCH          = 15;
+        public const int STATE_VRC7PATCHREG       = 16;
+        public const int STATE_VRC7OCTAVE         = 17;
+        public const int STATE_VRC7TRIGGER        = 18;
+        public const int STATE_VRC7SUSTAIN        = 19;
+        public const int STATE_N163WAVEPOS        = 20;
+        public const int STATE_N163WAVESIZE       = 21;
+        public const int STATE_N163WAVE           = 22;
+        public const int STATE_N163NUMCHANNELS    = 23;
     }
 }

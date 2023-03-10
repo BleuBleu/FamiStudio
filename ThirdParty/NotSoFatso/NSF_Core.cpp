@@ -2413,6 +2413,10 @@ int CNSFCore::GetState(int channel, int state, int sub)
 				{
 					return mWave_TND.bDMCLastDeltaWrite;
 				}
+				case STATE_DPCMACTIVE:
+				{
+					return mWave_TND.bDMCActive;
+				}
 			}
 			break;
 		}

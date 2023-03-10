@@ -87,7 +87,7 @@ namespace FamiStudio
         public static Shortcut CutShortcut           = new Shortcut("Cut",            "Cut",           Keys.X, ModifierKeys.Control);
         public static Shortcut PasteShortcut         = new Shortcut("Paste",          "Paste",         Keys.V, ModifierKeys.Control);
         public static Shortcut PasteSpecialShortcut  = new Shortcut("Paste Special",  "PasteSpecial",  Keys.V, ModifierKeys.ControlShift);
-        public static Shortcut DeleteShortcut        = new Shortcut("Delete",         "Delete",        Keys.Delete, ModifierKeys.Control);
+        public static Shortcut DeleteShortcut        = new Shortcut("Delete",         "Delete",        Keys.Delete);
         public static Shortcut DeleteSpecialShortcut = new Shortcut("Delete Special", "DeleteSpecial", Keys.Delete, ModifierKeys.ControlShift);
 
         public static Shortcut UndoShortcut       = new Shortcut("Undo", "Undo", Keys.Z, ModifierKeys.Control);

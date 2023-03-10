@@ -312,7 +312,7 @@ namespace FamiStudio
                     if (AddCommonVideoProperties(page, songNames)) // 0-7
                     {
                         page.AddNumericUpDown("Oscilloscope Columns :", 1, 1, 5, OscColumnsTooltip); // 8
-                        page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 4, OscThicknessTooltip); // 9
+                        page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 8, OscThicknessTooltip); // 9
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.Instruments]); // 10
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 11
                         page.AddGrid("Channels", 

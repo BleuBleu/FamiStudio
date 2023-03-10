@@ -584,8 +584,15 @@ namespace FamiStudio
 
         public DPCMSampleMapping GetDPCMMapping(int note)
         {
-            samplesMapping.TryGetValue(note, out var mapping);
-            return mapping;
+            if (samplesMapping != null)
+            { 
+                samplesMapping.TryGetValue(note, out var mapping);
+                return mapping;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public int FindDPCMSampleMapping(DPCMSample sample, int pitch, bool loop)
