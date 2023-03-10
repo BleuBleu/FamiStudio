@@ -1009,17 +1009,16 @@ namespace FamiStudio
             GetInteger              = Marshal.GetDelegateForFunctionPointer<GetIntegerDelegate>(glfwGetProcAddress("glGetIntegerv"));
             GetError                = Marshal.GetDelegateForFunctionPointer<GetErrorDelegate>(glfwGetProcAddress("glGetError"));
             CheckFramebufferStatus  = Marshal.GetDelegateForFunctionPointer<CheckFramebufferStatusDelegate>(glfwGetProcAddress("glCheckFramebufferStatus"));
+            GenFramebuffers         = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(glfwGetProcAddress("glGenFramebuffers"));
+            BindFramebuffer         = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(glfwGetProcAddress("glBindFramebuffer"));
+            FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(glfwGetProcAddress("glFramebufferTexture2D"));
+            DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(glfwGetProcAddress("glDeleteFramebuffers"));
 
 #if DEBUG && !FAMISTUDIO_MACOS 
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));
             PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(glfwGetProcAddress("glPopDebugGroupKHR"));
             DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(glfwGetProcAddress("glDebugMessageCallback"));
 #endif
-
-            GenFramebuffers         = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(glfwGetProcAddress("glGenFramebuffers"));
-            BindFramebuffer         = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(glfwGetProcAddress("glBindFramebuffer"));
-            FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(glfwGetProcAddress("glFramebufferTexture2D"));
-            DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(glfwGetProcAddress("glDeleteFramebuffers"));
 
             initialized = true;
         }
