@@ -31,6 +31,7 @@ namespace FamiStudio
         protected int mouseSelectionChar;
         protected int numberMin;
         protected int numberMax;
+        protected int numberInc;
         protected bool mouseSelecting;
         protected bool caretBlink = true;
         protected bool numeric;
@@ -61,13 +62,14 @@ namespace FamiStudio
             maxLength = maxLen;
         }
 
-        public TextBox(int value, int minVal, int maxVal)
+        public TextBox(int value, int minVal, int maxVal, int increment)
         {
             height = DpiScaling.ScaleForWindow(24);
             text = value.ToString(CultureInfo.InvariantCulture);
             numeric = true;
             numberMin = minVal;
             numberMax = maxVal;
+            numberInc = increment;
         }
 
         public string Text
@@ -96,7 +98,7 @@ namespace FamiStudio
             if (numeric)
             {
                 var val = Utils.ParseIntWithTrailingGarbage(text);
-                var clampedVal = Utils.Clamp(val, numberMin, numberMax);
+                var clampedVal = Utils.Clamp(Utils.RoundDown(val, numberInc), numberMin, numberMax);
                 if (clampedVal != val)
                 {
                     text = clampedVal.ToString(CultureInfo.InvariantCulture);

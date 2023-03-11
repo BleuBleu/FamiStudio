@@ -7,7 +7,6 @@
 - NSF import, assign DPCM samples starting from like C2 and go up from there.
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
 - PWM stuff from how2.
-- Oscilloscope lines look aweful.
 Mac:
 - Is there any reason now to not allow changing DPI on MacOS??? 
 - How2: Video export doesnt seem to work.
@@ -45,6 +44,7 @@ Testing
 - Add phase reset to unit tests.
 - Sample, instrument and song import (all places where we switched to OpenProjectAsync)
 - Test videos a lot, compare colors. Cancel in middle w/ DPI scaling to see if everything continues OK. Got GL crash by cancelling once.
+- Test numeric up/down on android with increment. 
 
 Packaging
 =========

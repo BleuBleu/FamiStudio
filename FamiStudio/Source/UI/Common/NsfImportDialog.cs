@@ -18,9 +18,9 @@ namespace FamiStudio
             {
                 dialog = new PropertyDialog(win, "NSF Import", 400);
                 dialog.Properties.AddDropDownList("Song:", songNames, songNames[0]); // 0
-                dialog.Properties.AddNumericUpDown("Duration (s):", 120, 1, 600);    // 1
-                dialog.Properties.AddNumericUpDown("Pattern Length:", 256, 4, Pattern.MaxLength);  // 2
-                dialog.Properties.AddNumericUpDown("Start frame:", 0, 0, 256);       // 3
+                dialog.Properties.AddNumericUpDown("Duration (s):", 120, 1, 600, 1);    // 1
+                dialog.Properties.AddNumericUpDown("Pattern Length:", 256, 4, Pattern.MaxLength, 1);  // 2
+                dialog.Properties.AddNumericUpDown("Start frame:", 0, 0, 256, 1);       // 3
                 dialog.Properties.AddCheckBox("Remove intro silence:", true);        // 4
                 dialog.Properties.AddCheckBox("Reverse DPCM bits:", false);          // 5
                 dialog.Properties.AddCheckBox("Preserve DPCM padding byte:", false); // 6

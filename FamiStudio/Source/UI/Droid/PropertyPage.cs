@@ -156,9 +156,9 @@ namespace FamiStudio
             }
         }
 
-        private HorizontalNumberPicker CreateNumberPicker(int value, int min, int max)
+        private HorizontalNumberPicker CreateNumberPicker(int value, int min, int max, int inc)
         {
-            var picker = new HorizontalNumberPicker(context, value, min, max);
+            var picker = new HorizontalNumberPicker(context, value, min, max, inc);
             picker.ValueChanged += Picker_ValueChanged;
             return picker;
         }
@@ -396,10 +396,10 @@ namespace FamiStudio
             return 0;
         }
 
-        public int AddNumericUpDown(string label, int value, int min, int max, string tooltip = null)
+        public int AddNumericUpDown(string label, int value, int min, int max, int inc, string tooltip = null)
         {
             var prop = new Property();
-            var picker = CreateNumberPicker(value, min, max);
+            var picker = CreateNumberPicker(value, min, max, inc);
 
             prop.type = PropertyType.NumericUpDown;
             prop.controls.Add(picker);
@@ -1123,9 +1123,10 @@ namespace FamiStudio
         private int value = 50;
         private int minimum = 0;
         private int maximum = 100;
+        private int increment = 1;
         private int fastScrollDir = 0;
 
-        public HorizontalNumberPicker(Context context, int val, int min, int max) : base(context)
+        public HorizontalNumberPicker(Context context, int val, int min, int max, int inc) : base(context)
         {
             var lp = new LinearLayout.LayoutParams(DroidUtils.DpToPixels(64), DroidUtils.DpToPixels(48));
             lp.Weight = 1;
@@ -1157,6 +1158,7 @@ namespace FamiStudio
 
             minimum = min;
             maximum = max;
+            increment = inc;
             value = val;
 
             UpdateValue(false);
@@ -1223,17 +1225,17 @@ namespace FamiStudio
 
         private void ButtonLess_Touch(object sender, TouchEventArgs e)
         {
-            UpdateValue(e.Event.Action, -1);
+            UpdateValue(e.Event.Action, -increment);
         }
 
         private void ButtonMore_Touch(object sender, TouchEventArgs e)
         {
-            UpdateValue(e.Event.Action, 1);
+            UpdateValue(e.Event.Action, increment);
         }
 
         private void UpdateValue(bool invokeEvent = true)
         {
-            value = Utils.Clamp(value, minimum, maximum);
+            value = Utils.Clamp(Utils.RoundDown(value, increment), minimum, maximum);
             if (invokeEvent)
                 ValueChanged?.Invoke(this, value);
             textView.Text = value.ToString();

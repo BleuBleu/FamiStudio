@@ -315,7 +315,7 @@ namespace FamiStudio
             dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
             dlg.Properties.AddColorPicker(Color.Pink);
             dlg.Properties.AddButton("Hey", "This is a button", "Button tooltip");
-            dlg.Properties.AddNumericUpDown("Integer", 10, 2, 50, "Integer Tooltip");
+            dlg.Properties.AddNumericUpDown("Integer", 10, 2, 50, 1, "Integer Tooltip");
             dlg.Properties.AddDropDownList("Hey", new[] { "Option1 QQQ", "Option2 QQQ", "Option3 QQQ", "Option4 QQQ" }, "Option3 QQQ", "Dropdown tooltip");
             dlg.Properties.AddRadioButton("This is a radio", "Radio 123", false);
             dlg.Properties.AddRadioButton("This is a radio", "Radio 435", true);

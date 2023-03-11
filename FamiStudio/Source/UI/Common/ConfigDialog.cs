@@ -196,7 +196,7 @@ namespace FamiStudio
                     page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 4
                     page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 5
                     page.AddTextBox("Pattern name prefix:", Settings.PatternNamePrefix, 64, PatternNamePrefixTooltip); // 6
-                    page.AddNumericUpDown("Pattern name digits:", Settings.PatternNameNumDigits, 1, 4, PatternNameNumDigitsTooltip); // 7
+                    page.AddNumericUpDown("Pattern name digits:", Settings.PatternNameNumDigits, 1, 4, 1, PatternNameNumDigitsTooltip); // 7
                     page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 8
                     page.PropertyClicked += GeneralPage_PropertyClicked;
                     page.SetPropertyVisible(0, Platform.IsDesktop);
@@ -252,8 +252,8 @@ namespace FamiStudio
                 }
                 case ConfigSection.Sound:
                 {
-                    page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16, NumBufferedFramesTooltip); // 0
-                    page.AddNumericUpDown("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10, StopInstrumentTooltip); // 1
+                    page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16, 1, NumBufferedFramesTooltip); // 0
+                    page.AddNumericUpDown("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 1
                     page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 2
                     page.AddCheckBox("Mix Namco 163 channels:", Settings.N163Mix, N163MixerTooltip); // 3
                     page.AddCheckBox("Clamp periods and notes:", Settings.ClampPeriods, ClampPeriodsTooltip); // 4

@@ -2090,7 +2090,7 @@ namespace FamiStudio
             var dialog = new PropertyDialog(ParentWindow, "Paste Special", 200);
             dialog.Properties.AddLabelCheckBox("Insert", false, 0, "When enabled, will move the existing patterns to the right to make room for new pasted patterns."); // 0
             dialog.Properties.AddLabelCheckBox("Extend song", false, 0, "When enabled, will extend the song to make room for the new pasted patterns."); // 1
-            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32, "Number of times to paste the patterns."); // 2
+            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32, 1, "Number of times to paste the patterns."); // 2
             dialog.Properties.SetPropertyEnabled(1, false);
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
             dialog.Properties.Build();

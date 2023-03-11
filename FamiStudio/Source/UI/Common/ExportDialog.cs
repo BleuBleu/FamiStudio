@@ -254,9 +254,9 @@ namespace FamiStudio
                 page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 2
                 page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 3
                 page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000", VideoBitRateTooltip); // 4
-                page.AddNumericUpDown("Loop Count :", 1, 1, 8, LoopCountTooltip); // 5
-                page.AddNumericUpDown("Audio Delay (ms) :", 0, 0, 500, DelayTooltip); // 6
-                page.AddNumericUpDown("Oscilloscope Window :", 2, 1, 4, OscWindowTooltip); // 7
+                page.AddNumericUpDown("Loop Count :", 1, 1, 8, 1, LoopCountTooltip); // 5
+                page.AddNumericUpDown("Audio Delay (ms) :", 0, 0, 500, 1, DelayTooltip); // 6
+                page.AddNumericUpDown("Oscilloscope Window :", 2, 1, 4, 1, OscWindowTooltip); // 7
                 return true;
             }
             else
@@ -278,9 +278,9 @@ namespace FamiStudio
                     page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100", SampleRateTooltip); // 2
                     page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "192", AudioBitRateTooltip); // 3
                     page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times", LoopModeTooltip); // 4
-                    page.AddNumericUpDown("Loop count:", 1, 1, 10, LoopCountTooltip); // 5
-                    page.AddNumericUpDown("Duration (sec):", 120, 1, 1000, DurationTooltip); // 6
-                    page.AddNumericUpDown("Delay (ms) :", 0, 0, 500, DelayTooltip); // 7
+                    page.AddNumericUpDown("Loop count:", 1, 1, 10, 1, LoopCountTooltip); // 5
+                    page.AddNumericUpDown("Duration (sec):", 120, 1, 1000, 1, DurationTooltip); // 6
+                    page.AddNumericUpDown("Delay (ms) :", 0, 0, 500, 1, DelayTooltip); // 7
                     page.AddCheckBox("Separate channel files", false, SeperateFilesTooltip); // 8
                     page.AddCheckBox("Separate intro file", false, SeperateIntroTooltip); // 9
                     page.AddCheckBox("Stereo", project.OutputsStereoAudio, StereoTooltip); // 10
@@ -311,8 +311,8 @@ namespace FamiStudio
                 case ExportFormat.VideoOscilloscope:
                     if (AddCommonVideoProperties(page, songNames)) // 0-7
                     {
-                        page.AddNumericUpDown("Oscilloscope Columns :", 1, 1, 5, OscColumnsTooltip); // 8
-                        page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 8, OscThicknessTooltip); // 9
+                        page.AddNumericUpDown("Oscilloscope Columns :", 1, 1, 5, 1, OscColumnsTooltip); // 8
+                        page.AddNumericUpDown("Oscilloscope Thickness :", 2, 2, 10, 2, OscThicknessTooltip); // 9
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.Instruments]); // 10
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 11
                         page.AddGrid("Channels", 
@@ -357,7 +357,7 @@ namespace FamiStudio
                     page.AddDropDownList("Song :", songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
                     page.AddCheckBox("Export volume as velocity :", true, MidiVelocityTooltip); // 1
                     page.AddCheckBox("Export slide notes as pitch wheel :", true, MidiPitchTooltip); // 2
-                    page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24, MidiPitchRangeTooltip); // 3
+                    page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24, 1, MidiPitchRangeTooltip); // 3
                     page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0], MidiInstrumentTooltip); // 4
                     page.AddGrid("Instruments", new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14, MidiInstGridTooltip); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
