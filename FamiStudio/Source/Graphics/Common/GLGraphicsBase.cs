@@ -50,10 +50,10 @@ namespace FamiStudio
         protected byte[]  depArray = new byte[MaxVertexCount];
         protected short[] idxArray = new short[MaxIndexCount];
 
-        protected short[] quadIdxArray = new short[MaxIndexCount];
+        protected static short[] quadIdxArray;
 
         protected List<float[]> freeVertexArrays = new List<float[]>();
-        protected List<byte[]>  freeByteArrays = new List<byte[]>();
+        protected List<byte[]>  freeByteArrays   = new List<byte[]>();
         protected List<int[]>   freeColorArrays  = new List<int[]>();
         protected List<short[]> freeIndexArrays  = new List<short[]>();
 
@@ -79,19 +79,24 @@ namespace FamiStudio
         protected GraphicsBase(bool offscreen)
         {
             // Quad index buffer.
-            for (int i = 0, j = 0; i < MaxVertexCount; i += 4)
+            if (quadIdxArray == null)
             {
-                var i0 = (short)(i + 0);
-                var i1 = (short)(i + 1);
-                var i2 = (short)(i + 2);
-                var i3 = (short)(i + 3);
+                quadIdxArray = new short[65536 * 6 / 4];
 
-                quadIdxArray[j++] = i0;
-                quadIdxArray[j++] = i1;
-                quadIdxArray[j++] = i2;
-                quadIdxArray[j++] = i0;
-                quadIdxArray[j++] = i2;
-                quadIdxArray[j++] = i3;
+                for (int i = 0, j = 0; i < 65536; i += 4)
+                {
+                    var i0 = (short)(i + 0);
+                    var i1 = (short)(i + 1);
+                    var i2 = (short)(i + 2);
+                    var i3 = (short)(i + 3);
+
+                    quadIdxArray[j++] = i0;
+                    quadIdxArray[j++] = i1;
+                    quadIdxArray[j++] = i2;
+                    quadIdxArray[j++] = i0;
+                    quadIdxArray[j++] = i2;
+                    quadIdxArray[j++] = i3;
+                }
             }
 
             this.offscreen = offscreen;
