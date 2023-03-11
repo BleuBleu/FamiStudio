@@ -619,8 +619,6 @@ namespace FamiStudio
             resX = imageSizeX;
             resY = imageSizeY;
 
-            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 1 {GL.GetError()}");
-
             texture = GL.GenTexture();
             GL.BindTexture(GL.Texture2D, texture);
             GL.TexImage2D(GL.Texture2D, 0, GL.Rgba, imageSizeX, imageSizeY, 0, GL.Rgba, GL.UnsignedByte, IntPtr.Zero);
@@ -629,31 +627,19 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
 
-            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 2 {GL.GetError()}");
-
             depth = GL.GenTexture();
             GL.BindTexture(GL.Texture2D, depth);
             GL.TexImage2D(GL.Texture2D, 0, GL.DepthComponent, imageSizeX, imageSizeY, 0, GL.DepthComponent, GL.UnsignedShort, IntPtr.Zero);
-            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 3 {GL.GetError()}");
             GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
 
-            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 4 {GL.GetError()}");
-
             fbo = GL.GenFramebuffer();
-            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 5 {GL.GetError()}");
             GL.BindFramebuffer(GL.Framebuffer, fbo);
-            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 6 {GL.GetError()}");
             GL.FramebufferTexture2D(GL.Framebuffer, GL.ColorAttachment0, GL.Texture2D, texture, 0);
-            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 7 {GL.GetError()}");
             GL.FramebufferTexture2D(GL.Framebuffer, GL.DepthAttachment, GL.Texture2D, depth, 0);
-            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 8 {GL.GetError()}");
-            var status = GL.CheckFramebufferStatus(GL.Framebuffer);
-            Log.LogMessage(LogSeverity.Info, $"FB STATUS {status}");
             GL.BindFramebuffer(GL.Framebuffer, 0);
-            Log.LogMessage(LogSeverity.Info, $"GL DEBUG 9 {GL.GetError()}");
         }
 
         public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
@@ -1023,17 +1009,16 @@ namespace FamiStudio
             GetInteger              = Marshal.GetDelegateForFunctionPointer<GetIntegerDelegate>(glfwGetProcAddress("glGetIntegerv"));
             GetError                = Marshal.GetDelegateForFunctionPointer<GetErrorDelegate>(glfwGetProcAddress("glGetError"));
             CheckFramebufferStatus  = Marshal.GetDelegateForFunctionPointer<CheckFramebufferStatusDelegate>(glfwGetProcAddress("glCheckFramebufferStatus"));
+            GenFramebuffers         = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(glfwGetProcAddress("glGenFramebuffers"));
+            BindFramebuffer         = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(glfwGetProcAddress("glBindFramebuffer"));
+            FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(glfwGetProcAddress("glFramebufferTexture2D"));
+            DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(glfwGetProcAddress("glDeleteFramebuffers"));
 
 #if DEBUG && !FAMISTUDIO_MACOS 
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));
             PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(glfwGetProcAddress("glPopDebugGroupKHR"));
             DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(glfwGetProcAddress("glDebugMessageCallback"));
 #endif
-
-            GenFramebuffers         = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(glfwGetProcAddress("glGenFramebuffers"));
-            BindFramebuffer         = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(glfwGetProcAddress("glBindFramebuffer"));
-            FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(glfwGetProcAddress("glFramebufferTexture2D"));
-            DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(glfwGetProcAddress("glDeleteFramebuffers"));
 
             initialized = true;
         }
