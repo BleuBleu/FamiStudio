@@ -1148,7 +1148,7 @@ namespace FamiStudio
                 float scaleY = sy / -2; // D3D is upside down compared to how we display waves typically.
 
                 c.PushTransform(x, y + sy / 2, scaleX, scaleY);
-                c.DrawGeometry(oscilloscopeGeometry, Theme.LightGreyColor2, 1, true, false);
+                c.DrawNiceSmoothLine(oscilloscopeGeometry, Theme.LightGreyColor2);
                 c.PopTransform();
             }
             else
