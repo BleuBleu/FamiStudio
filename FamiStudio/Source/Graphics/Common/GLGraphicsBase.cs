@@ -1472,11 +1472,6 @@ namespace FamiStudio
 
         private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, bool dash)
         {
-            //if (color == Color.Black)
-            //{
-            //    color = Color.Pink;
-            //}
-
             if (lineBatch == null)
             {
                 lineBatch = new LineBatch();
