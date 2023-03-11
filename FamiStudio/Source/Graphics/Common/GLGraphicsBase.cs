@@ -1908,6 +1908,202 @@ namespace FamiStudio
             }
         }
 
+        // Only used by oscilloscope video for now.
+        struct CornerInfo
+        {
+            public int pi;
+            public int ci;
+            public float x;
+            public float y;
+            public float cos;
+            public int side;
+        };
+
+        public unsafe void DrawNiceSmoothLine(Span<float> points, Color color, int width = 2)
+        {
+            // Only implemented for odd widths for now.
+            width = Utils.RoundUp(width, 2);
+
+            if (lineSmoothBatch == null)
+            {
+                lineSmoothBatch = new LineSmoothBatch();
+                lineSmoothBatch.vtxArray = graphics.GetVertexArray();
+                lineSmoothBatch.dstArray = graphics.GetByteArray();
+                lineSmoothBatch.colArray = graphics.GetColorArray();
+                lineSmoothBatch.idxArray = graphics.GetIndexArray();
+                lineSmoothBatch.depArray = graphics.GetByteArray();
+            }
+
+            var cornerCount = 0;
+            var cornerInfos = stackalloc CornerInfo[points.Length];
+
+            var close = false; // Supported, but not exposed.
+            var batch = lineSmoothBatch;
+            var depth = graphics.DepthValue;
+            var numVerts = points.Length / 2;
+            var numLines = numVerts - (close ? 0 : 1);
+            var startIndex = batch.vtxIdx / 2;
+
+            var px = close ? points[points.Length - 2] : 2 * points[0] - points[2];
+            var py = close ? points[points.Length - 1] : 2 * points[1] - points[3];
+            xform.TransformPoint(ref px, ref py);
+
+            var cx = points[0];
+            var cy = points[1];
+            xform.TransformPoint(ref cx, ref cy);
+
+            var dpx = cx - px;
+            var dpy = cy - py;
+            Utils.Normalize(ref dpx, ref dpy);
+
+            for (int i = 0; i < numLines; i++)
+            {
+                var ni = (i + 1) % numVerts;
+
+                var nx = points[ni * 2 + 0];
+                var ny = points[ni * 2 + 1];
+                xform.TransformPoint(ref nx, ref ny);
+
+                var dnx = nx - cx;
+                var dny = ny - cy;
+                Utils.Normalize(ref dnx, ref dny);
+
+                var sx = (width * 0.5f) * dnx;
+                var sy = (width * 0.5f) * dny;
+
+                // Main line body.
+                var i0 = (short)(batch.vtxIdx / 2);
+                var i1 = (short)(i0 + 1);
+                var i2 = (short)(i0 + 2);
+                var i3 = (short)(i0 + 3);
+                var i4 = (short)(i0 + 4);
+                var i5 = (short)(i0 + 5);
+
+                batch.idxArray[batch.idxIdx++] = i0;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i5;
+
+                batch.vtxArray[batch.vtxIdx++] = cx - sy;
+                batch.vtxArray[batch.vtxIdx++] = cy + sx;
+                batch.vtxArray[batch.vtxIdx++] = cx;
+                batch.vtxArray[batch.vtxIdx++] = cy;
+                batch.vtxArray[batch.vtxIdx++] = cx + sy;
+                batch.vtxArray[batch.vtxIdx++] = cy - sx;
+                batch.vtxArray[batch.vtxIdx++] = nx - sy;
+                batch.vtxArray[batch.vtxIdx++] = ny + sx;
+                batch.vtxArray[batch.vtxIdx++] = nx;
+                batch.vtxArray[batch.vtxIdx++] = ny;
+                batch.vtxArray[batch.vtxIdx++] = nx + sy;
+                batch.vtxArray[batch.vtxIdx++] = ny - sx;
+
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = (byte)width;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = (byte)width;
+                batch.dstArray[batch.dstIdx++] = 0;
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+
+                var cos = Utils.Dot(dnx, dny, -dpx, -dpy);
+
+                // Optional outer corner, will be processed after.
+                if (cos > -0.999999f)
+                {
+                    var dx = dnx - dpx;
+                    var dy = dny - dpy;
+                    Utils.Normalize(ref dx, ref dy);
+
+                    cornerInfos[cornerCount].pi = i == 0 ? numVerts - 1 : i - 1;
+                    cornerInfos[cornerCount].ci = i;
+                    cornerInfos[cornerCount].x = cx - dx * (width * 0.5f);
+                    cornerInfos[cornerCount].y = cy - dy * (width * 0.5f);
+                    cornerInfos[cornerCount].cos = cos;
+                    cornerInfos[cornerCount].side = Utils.Cross(dpx, dpy, dnx, dny) >= 0 ? 1 : -1;
+                    cornerCount++;
+                }
+
+                cx = nx;
+                cy = ny;
+                dpx = dnx;
+                dpy = dny;
+            }
+
+            for (int i = 0; i < cornerCount; i++)
+            {
+                var corner = cornerInfos[i];
+
+                if (corner.cos > 0)
+                {
+                    var i0 = (short)(batch.vtxIdx / 2);
+
+                    // Extra corner vertex.
+                    batch.vtxArray[batch.vtxIdx++] = corner.x;
+                    batch.vtxArray[batch.vtxIdx++] = corner.y;
+                    batch.colArray[batch.colIdx++] = color.ToAbgr();
+                    batch.dstArray[batch.dstIdx++] = 0;
+                    batch.depArray[batch.depIdx++] = depth;
+
+                    // 2 triangles if angle is large.
+                    if (corner.side > 0)
+                    { 
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 2);
+                        batch.idxArray[batch.idxIdx++] = (short)(i0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(i0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.pi * 6 + 5);
+                    }
+                    else
+                    {
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.pi * 6 + 3);
+                        batch.idxArray[batch.idxIdx++] = (short)(i0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(i0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 0);
+                    }
+                }
+                else
+                {
+                    // 1 triangle if angle is small
+                    if (corner.side > 0)
+                    { 
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 2);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.pi * 6 + 5);
+                    }
+                    else
+                    {
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.pi * 6 + 3);
+                    }
+                }
+            }
+        }
+
         public void DrawRectangle(Rectangle rect, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color, width, smooth);

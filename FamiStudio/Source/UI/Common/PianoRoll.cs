@@ -3489,7 +3489,7 @@ namespace FamiStudio
                 g.ForegroundCommandList.DrawRectangle(-50, 100, 50, 110, new Color(0, 255, 0), 1, false);
                 g.Transform.PopTransform();
             }
-#else
+#elif false
             releaseNoteGeometry[0][4] = 10.0f;
             releaseNoteGeometry[0][6] = 10.0f;
             for (int i = 1; i <= 8; i++)
@@ -3521,6 +3521,28 @@ namespace FamiStudio
                 g.Transform.PopTransform();
                 g.Transform.PopTransform();
                 g.Transform.PopTransform();
+            }
+#else
+
+            var rnd = new Random(1003);
+
+            for (int j = 0; j < 2; j++)
+            { 
+                var points = new float[50 * 2];
+                var x = 30;
+
+                for (int i = 0; i < points.Length / 2; i++)
+                {
+                    points[i * 2 + 0] = x;
+                    points[i * 2 + 1] = rnd.Next(100, 400) + j * 300;
+
+                    x += rnd.Next(10, 50);
+                }
+
+                //var points = new float [] { 100, 100, 200, 200, 200, 100 };
+
+                //g.OverlayCommandList.DrawGeometry(points, Color.Pink, 16, true, false);
+                g.OverlayCommandList.DrawNiceSmoothLine(points, Color.Pink, 6);
             }
 #endif
         }

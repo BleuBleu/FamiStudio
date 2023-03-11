@@ -488,6 +488,11 @@ namespace FamiStudio
             return x0 * x1 + y0 * y1;
         }
 
+        public static float Cross(float x0, float y0, float x1, float y1)
+        {
+            return x0 * y1 - y0 * x1;
+        }
+
         public static void Normalize(ref float x, ref float y)
         {
             var invLen = 1.0f / (float)MathF.Sqrt(x * x + y * y);

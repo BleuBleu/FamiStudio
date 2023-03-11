@@ -355,7 +355,7 @@ namespace FamiStudio
                     var oscilloscope = UpdateOscilloscope(s, f);
 
                     fg.PushTransform(channelPosX0 + 10, (oscMinY + oscMaxY) / 2, channelPosX1 - channelPosX0 - 20, (oscMinY - oscMaxY) / 2);
-                    fg.DrawGeometry(oscilloscope, Theme.LightGreyColor1, 1, true, false);
+                    fg.DrawNiceSmoothLine(oscilloscope, Theme.LightGreyColor1);
                     fg.PopTransform();
 
                     videoGraphics.ConditionalFlushCommandLists();
