@@ -40,7 +40,7 @@ namespace FamiStudio
         public bool IsOffscreen => offscreen;
 
         protected const int MaxAtlasResolution = 1024;
-        protected const int MaxVertexCount = 160 * 1024;
+        protected const int MaxVertexCount = 64 * 1024;
         protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
         // These are only used temporarily during text/bmp rendering.
@@ -81,9 +81,9 @@ namespace FamiStudio
             // Quad index buffer.
             if (quadIdxArray == null)
             {
-                quadIdxArray = new short[65536 * 6 / 4];
+                quadIdxArray = new short[MaxIndexCount];
 
-                for (int i = 0, j = 0; i < 65536; i += 4)
+                for (int i = 0, j = 0; i < MaxVertexCount; i += 4)
                 {
                     var i0 = (short)(i + 0);
                     var i1 = (short)(i + 1);
@@ -156,19 +156,6 @@ namespace FamiStudio
                     
                     if (releaseLists)
                         layerCommandLists[i] = null;
-                }
-            }
-        }
-
-        public void ConditionalFlushCommandLists()
-        {
-            for (int i = 0; i < layerCommandLists.Length; i++)
-            {
-                if (layerCommandLists[i] != null && 
-                    layerCommandLists[i].IsAlmostFull)
-                {
-                    EndDrawFrame(false);
-                    return;
                 }
             }
         }
@@ -463,7 +450,7 @@ namespace FamiStudio
             }
             else
             {
-                return new short[MaxVertexCount];
+                return new short[MaxIndexCount];
             }
         }
 
@@ -1359,9 +1346,9 @@ namespace FamiStudio
 
         private int lineWidthBias;
         private float invDashTextureSize;
-        private PolyBatch polyBatch;
         private LineBatch lineBatch;
-        private LineSmoothBatch lineSmoothBatch;
+        private List<PolyBatch> polyBatches;
+        private List<LineSmoothBatch> lineSmoothBatches;
         private List<TextInstance> texts;
 
         private Dictionary<Bitmap, List<BitmapInstance>> bitmaps = new Dictionary<Bitmap, List<BitmapInstance>>();
@@ -1372,23 +1359,12 @@ namespace FamiStudio
         public TransformStack Transform => xform;
         public GraphicsBase Graphics => graphics;
 
-        public bool HasAnyPolygons       => polyBatch != null;
+        public bool HasAnyPolygons       => polyBatches != null;
         public bool HasAnyLines          => lineBatch != null;
-        public bool HasAnySmoothLines    => lineSmoothBatch != null;
+        public bool HasAnySmoothLines    => lineSmoothBatches != null;
         public bool HasAnyTexts          => texts != null;
         public bool HasAnyBitmaps        => bitmaps.Count > 0;
         public bool HasAnything          => HasAnyPolygons || HasAnyLines || HasAnySmoothLines || HasAnyTexts || HasAnyBitmaps;
-
-        public bool IsAlmostFull
-        {
-            get
-            {
-                bool full = false;
-                full |= polyBatch != null && polyBatch.vtxIdx > (polyBatch.vtxArray.Length * 3 / 4);
-                full |= lineBatch != null && lineBatch.vtxIdx > (lineBatch.vtxArray.Length * 3 / 4);
-                return full;
-            }
-        }
 
         public CommandList(GraphicsBase g, int dashTextureSize, int lineBias = 0)
         {
@@ -1425,12 +1401,15 @@ namespace FamiStudio
 
         public void Release()
         {
-            if (polyBatch != null)
+            if (polyBatches != null)
             {
-                graphics.ReleaseVertexArray(polyBatch.vtxArray);
-                graphics.ReleaseColorArray(polyBatch.colArray);
-                graphics.ReleaseIndexArray(polyBatch.idxArray);
-                graphics.ReleaseByteArray(polyBatch.depArray);
+                foreach (var batch in polyBatches)
+                { 
+                    graphics.ReleaseVertexArray(batch.vtxArray);
+                    graphics.ReleaseColorArray(batch.colArray);
+                    graphics.ReleaseIndexArray(batch.idxArray);
+                    graphics.ReleaseByteArray(batch.depArray);
+                }
             }
 
             if (lineBatch != null)
@@ -1441,33 +1420,48 @@ namespace FamiStudio
                 graphics.ReleaseByteArray(lineBatch.depArray);
             }
 
-            if (lineSmoothBatch != null)
+            if (lineSmoothBatches != null)
             {
-                graphics.ReleaseVertexArray(lineSmoothBatch.vtxArray);
-                graphics.ReleaseByteArray(lineSmoothBatch.dstArray);
-                graphics.ReleaseColorArray(lineSmoothBatch.colArray);
-                graphics.ReleaseIndexArray(lineSmoothBatch.idxArray);
-                graphics.ReleaseByteArray(lineSmoothBatch.depArray);
+                foreach (var batch in lineSmoothBatches)
+                {
+                    graphics.ReleaseVertexArray(batch.vtxArray);
+                    graphics.ReleaseByteArray(batch.dstArray);
+                    graphics.ReleaseColorArray(batch.colArray);
+                    graphics.ReleaseIndexArray(batch.idxArray);
+                    graphics.ReleaseByteArray(batch.depArray);
+                }
             }
 
-            polyBatch = null;
+            polyBatches = null;
             lineBatch = null;
-            lineSmoothBatch = null;
+            lineSmoothBatches = null;
             texts = null;
         }
 
-        private PolyBatch GetPolygonBatch()
+        private PolyBatch GetPolygonBatch(int numVtxNeeded, int numIdxNeeded)
         {
-            if (polyBatch == null)
+            if (polyBatches == null)
             {
-                polyBatch = new PolyBatch();
-                polyBatch.vtxArray = graphics.GetVertexArray();
-                polyBatch.colArray = graphics.GetColorArray();
-                polyBatch.idxArray = graphics.GetIndexArray();
-                polyBatch.depArray = graphics.GetByteArray();
+                polyBatches = new List<PolyBatch>();
             }
 
-            return polyBatch;
+            var batch = polyBatches.Count > 0 ? polyBatches[polyBatches.Count - 1] : null;
+
+            if (batch == null ||
+                batch.vtxIdx + numVtxNeeded * 2 >= batch.vtxArray.Length || 
+                batch.colIdx + numVtxNeeded * 1 >= batch.colArray.Length || 
+                batch.depIdx + numVtxNeeded * 1 >= batch.depArray.Length ||
+                batch.idxIdx + numIdxNeeded * 1 >= batch.idxArray.Length)
+            {
+                batch = new PolyBatch();
+                batch.vtxArray = graphics.GetVertexArray();
+                batch.colArray = graphics.GetColorArray();
+                batch.idxArray = graphics.GetIndexArray();
+                batch.depArray = graphics.GetByteArray();
+                polyBatches.Add(batch);
+            }
+
+            return batch;
         }
 
         private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, bool dash)
@@ -1534,16 +1528,7 @@ namespace FamiStudio
                 y1 += 0.02f;
             }
 
-            if (polyBatch == null)
-            {
-                polyBatch = new PolyBatch();
-                polyBatch.vtxArray = graphics.GetVertexArray();
-                polyBatch.colArray = graphics.GetColorArray();
-                polyBatch.idxArray = graphics.GetIndexArray();
-                polyBatch.depArray = graphics.GetByteArray();
-            }
-
-            var batch = polyBatch;
+            var batch = GetPolygonBatch(4, 6);
             var depth = graphics.DepthValue;
 
             var dx = x1 - x0;
@@ -1592,6 +1577,34 @@ namespace FamiStudio
             batch.depArray[batch.depIdx++] = depth;
         }
 
+        private LineSmoothBatch GetLineSmoothBatch(int numVtxNeeded, int numIdxNeeded)
+        {
+            if (lineSmoothBatches == null)
+            {
+                lineSmoothBatches = new List<LineSmoothBatch>();
+            }
+
+            var batch = lineSmoothBatches.Count > 0 ? lineSmoothBatches[lineSmoothBatches.Count - 1] : null;
+
+            if (batch == null ||
+                batch.vtxIdx + numVtxNeeded * 2 >= batch.vtxArray.Length ||
+                batch.dstIdx + numVtxNeeded * 1 >= batch.dstArray.Length ||
+                batch.colIdx + numVtxNeeded * 1 >= batch.colArray.Length ||
+                batch.depIdx + numVtxNeeded * 1 >= batch.depArray.Length ||
+                batch.idxIdx + numIdxNeeded * 1 >= batch.idxArray.Length)
+            {
+                batch = new LineSmoothBatch();
+                batch.vtxArray = graphics.GetVertexArray();
+                batch.dstArray = graphics.GetByteArray();
+                batch.colArray = graphics.GetColorArray();
+                batch.idxArray = graphics.GetIndexArray();
+                batch.depArray = graphics.GetByteArray();
+                lineSmoothBatches.Add(batch);
+            }
+
+            return batch;
+        }
+
         private void DrawThickSmoothLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool miter)
         {
             Debug.Assert(width < 100);
@@ -1611,17 +1624,9 @@ namespace FamiStudio
                 miter = false;
             }
 
-            if (lineSmoothBatch == null)
-            {
-                lineSmoothBatch = new LineSmoothBatch();
-                lineSmoothBatch.vtxArray = graphics.GetVertexArray();
-                lineSmoothBatch.dstArray = graphics.GetByteArray();
-                lineSmoothBatch.colArray = graphics.GetColorArray();
-                lineSmoothBatch.idxArray = graphics.GetIndexArray();
-                lineSmoothBatch.depArray = graphics.GetByteArray();
-            }
-
-            var batch = lineSmoothBatch;
+            var numVtxNeeded = (width & 1) != 0 ?  8 :  6;
+            var numIdxNeeded = (width & 1) != 0 ? 18 : 12;
+            var batch = GetLineSmoothBatch(numVtxNeeded, numIdxNeeded);
             var depth = graphics.DepthValue;
 
             // Odd values require extra vertices to work well with rasterization rules.
@@ -1924,24 +1929,17 @@ namespace FamiStudio
             // Only implemented for odd widths for now.
             width = Utils.RoundUp(width, 2);
 
-            if (lineSmoothBatch == null)
-            {
-                lineSmoothBatch = new LineSmoothBatch();
-                lineSmoothBatch.vtxArray = graphics.GetVertexArray();
-                lineSmoothBatch.dstArray = graphics.GetByteArray();
-                lineSmoothBatch.colArray = graphics.GetColorArray();
-                lineSmoothBatch.idxArray = graphics.GetIndexArray();
-                lineSmoothBatch.depArray = graphics.GetByteArray();
-            }
-
             var cornerCount = 0;
             var cornerInfos = stackalloc CornerInfo[points.Length];
 
             var close = false; // Supported, but not exposed.
-            var batch = lineSmoothBatch;
             var depth = graphics.DepthValue;
             var numVerts = points.Length / 2;
             var numLines = numVerts - (close ? 0 : 1);
+
+            var numVtxNeeded = numVerts * 7;
+            var numIdxNeeded = numVerts * 18;
+            var batch = GetLineSmoothBatch(numVtxNeeded, numIdxNeeded);
             var startIndex = batch.vtxIdx / 2;
 
             var px = close ? points[points.Length - 2] : 2 * points[0] - points[2];
@@ -2164,7 +2162,7 @@ namespace FamiStudio
 		
         public void FillRectangle(float x0, float y0, float x1, float y1, Color color)
         {
-            var batch = GetPolygonBatch();
+            var batch = GetPolygonBatch(4, 6);
             var depth = graphics.DepthValue;
 
             xform.TransformPoint(ref x0, ref y0);
@@ -2206,7 +2204,6 @@ namespace FamiStudio
 
         public void FillRectangleGradient(float x0, float y0, float x1, float y1, Color color0, Color color1, bool vertical, float gradientSize)
         {
-            var batch = GetPolygonBatch();
             var depth = graphics.DepthValue;
 
             xform.TransformPoint(ref x0, ref y0);
@@ -2217,6 +2214,8 @@ namespace FamiStudio
 
             if (fullHorizontalGradient || fullVerticalGradient)
             {
+                var batch = GetPolygonBatch(4, 6);
+
                 var i0 = (short)(batch.vtxIdx / 2 + 0);
                 var i1 = (short)(batch.vtxIdx / 2 + 1);
                 var i2 = (short)(batch.vtxIdx / 2 + 2);
@@ -2257,9 +2256,13 @@ namespace FamiStudio
                 batch.depArray[batch.depIdx++] = depth;
                 batch.depArray[batch.depIdx++] = depth;
                 batch.depArray[batch.depIdx++] = depth;
+
+                Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
             }
             else
             {
+                var batch = GetPolygonBatch(8, 12);
+
                 var i0 = (short)(batch.vtxIdx / 2 + 0);
                 var i1 = (short)(batch.vtxIdx / 2 + 1);
                 var i2 = (short)(batch.vtxIdx / 2 + 2);
@@ -2342,9 +2345,9 @@ namespace FamiStudio
                 batch.depArray[batch.depIdx++] = depth;
                 batch.depArray[batch.depIdx++] = depth;
                 batch.depArray[batch.depIdx++] = depth;
-            }
 
-            Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
+                Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
+            }
         }
 
         public void FillClipRegion(Color color)
@@ -2401,10 +2404,10 @@ namespace FamiStudio
         private void FillGeometryInternal(Span<float> points, Color color0, Color color1, int gradientSize, bool smooth = false)
         {
             var gradient = gradientSize > 0;
-            var batch = GetPolygonBatch();
-            var i0 = (short)(batch.vtxIdx / 2);
             var numVerts = points.Length / 2;
+            var batch = GetPolygonBatch(numVerts * 2, (numVerts - 2) * 3 + (smooth ? (numVerts) * 6 : 0));
             var depth = graphics.DepthValue;
+            var i0 = (short)(batch.vtxIdx / 2);
 
             if (smooth)
             { 
@@ -2675,48 +2678,60 @@ namespace FamiStudio
             list.Add(inst);
         }
 
-        public PolyDrawData GetPolygonDrawData()
+        public List<PolyDrawData> GetPolygonDrawData()
         {
-            var draw = (PolyDrawData)null;
+            var draws = (List<PolyDrawData>)null;
 
-            if (polyBatch != null)
+            if (polyBatches != null)
             {
-                draw = new PolyDrawData();
-                draw.vtxArray = polyBatch.vtxArray;
-                draw.colArray = polyBatch.colArray;
-                draw.idxArray = polyBatch.idxArray;
-                draw.depArray = polyBatch.depArray;
-                draw.numIndices = polyBatch.idxIdx;
-                draw.vtxArraySize = polyBatch.vtxIdx;
-                draw.colArraySize = polyBatch.colIdx;
-                draw.idxArraySize = polyBatch.idxIdx;
-                draw.depArraySize = polyBatch.depIdx;
+                draws = new List<PolyDrawData>();
+
+                foreach (var batch in polyBatches)
+                {
+                    var draw = new PolyDrawData();
+                    draw.vtxArray = batch.vtxArray;
+                    draw.colArray = batch.colArray;
+                    draw.idxArray = batch.idxArray;
+                    draw.depArray = batch.depArray;
+                    draw.numIndices = batch.idxIdx;
+                    draw.vtxArraySize = batch.vtxIdx;
+                    draw.colArraySize = batch.colIdx;
+                    draw.idxArraySize = batch.idxIdx;
+                    draw.depArraySize = batch.depIdx;
+                    draws.Add(draw);
+                }
             }
 
-            return draw;
+            return draws;
         }
 
-        public LineSmoothDrawData GetSmoothLineDrawData()
+        public List<LineSmoothDrawData> GetSmoothLineDrawData()
         {
-            var draw = (LineSmoothDrawData)null;
+            var draws = (List<LineSmoothDrawData>)null;
 
-            if (lineSmoothBatch != null)
-            { 
-                draw = new LineSmoothDrawData();
-                draw.vtxArray = lineSmoothBatch.vtxArray;
-                draw.dstArray = lineSmoothBatch.dstArray;
-                draw.colArray = lineSmoothBatch.colArray;
-                draw.idxArray = lineSmoothBatch.idxArray;
-                draw.depArray = lineSmoothBatch.depArray;
-                draw.numIndices = lineSmoothBatch.idxIdx;
-                draw.vtxArraySize = lineSmoothBatch.vtxIdx;
-                draw.dstArraySize = lineSmoothBatch.dstIdx;
-                draw.colArraySize = lineSmoothBatch.colIdx;
-                draw.idxArraySize = lineSmoothBatch.idxIdx;
-                draw.depArraySize = lineSmoothBatch.depIdx;
+            if (lineSmoothBatches != null)
+            {
+                draws = new List<LineSmoothDrawData>();
+
+                foreach (var batch in lineSmoothBatches)
+                {
+                    var draw = new LineSmoothDrawData();
+                    draw.vtxArray = batch.vtxArray;
+                    draw.dstArray = batch.dstArray;
+                    draw.colArray = batch.colArray;
+                    draw.idxArray = batch.idxArray;
+                    draw.depArray = batch.depArray;
+                    draw.numIndices = batch.idxIdx;
+                    draw.vtxArraySize = batch.vtxIdx;
+                    draw.dstArraySize = batch.dstIdx;
+                    draw.colArraySize = batch.colIdx;
+                    draw.idxArraySize = batch.idxIdx;
+                    draw.depArraySize = batch.depIdx;
+                    draws.Add(draw);
+                }
             }
 
-            return draw;
+            return draws;
         }
 
         public LineDrawData GetLineDrawData()

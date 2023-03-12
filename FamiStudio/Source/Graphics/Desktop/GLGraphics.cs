@@ -490,18 +490,21 @@ namespace FamiStudio
 
                 if (list.HasAnyPolygons)
                 {
-                    var draw = list.GetPolygonDrawData();
+                    var draws = list.GetPolygonDrawData();
 
                     GL.UseProgram(polyProgram);
                     GL.BindVertexArray(polyVao);
                     GL.Uniform(polyScaleBiasUniform, viewportScaleBias);
 
-                    BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
-                    BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
-                    BindAndUpdateByteBuffer(2, depthBuffer, draw.depArray, draw.depArraySize, true);
-                    BindAndUpdateIndexBuffer(indexBuffer,  draw.idxArray, draw.idxArraySize);
+                    foreach (var draw in draws)
+                    { 
+                        BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
+                        BindAndUpdateByteBuffer(2, depthBuffer, draw.depArray, draw.depArraySize, true);
+                        BindAndUpdateIndexBuffer(indexBuffer,  draw.idxArray, draw.idxArraySize);
 
-                    GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, IntPtr.Zero);
+                        GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, IntPtr.Zero);
+                    }
                 }
 
                 if (list.HasAnyLines)
@@ -525,20 +528,22 @@ namespace FamiStudio
 
                 if (list.HasAnySmoothLines)
                 {
-                    var draw = list.GetSmoothLineDrawData();
+                    var draws = list.GetSmoothLineDrawData();
 
                     GL.UseProgram(lineSmoothProgram);
                     GL.BindVertexArray(lineSmoothVao);
                     GL.Uniform(lineSmoothScaleBiasUniform, viewportScaleBias);
                     GL.Uniform(lineSmoothWindowSizeUniform, screenRect.Width, screenRect.Height);
 
-                    BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
-                    BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
-                    BindAndUpdateByteBuffer(2, lineDistBuffer, draw.dstArray, draw.dstArraySize);
-                    BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
-                    BindAndUpdateIndexBuffer(indexBuffer, draw.idxArray, draw.idxArraySize);
-
-                    GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, IntPtr.Zero);
+                    foreach (var draw in draws)
+                    { 
+                        BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
+                        BindAndUpdateByteBuffer(2, lineDistBuffer, draw.dstArray, draw.dstArraySize);
+                        BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
+                        BindAndUpdateIndexBuffer(indexBuffer, draw.idxArray, draw.idxArraySize);
+                        GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, IntPtr.Zero);
+                    }
                 }
 
                 if (list.HasAnyBitmaps)

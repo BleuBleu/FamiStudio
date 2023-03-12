@@ -360,8 +360,6 @@ namespace FamiStudio
                     o.PushTransform(channelPosX0 + 10, (oscMinY + oscMaxY) / 2, channelPosX1 - channelPosX0 - 20, (oscMinY - oscMaxY) / 2);
                     o.DrawNiceSmoothLine(oscilloscope, Theme.LightGreyColor1);
                     o.PopTransform();
-
-                    videoGraphics.ConditionalFlushCommandLists();
                 }
             }, () =>
             {
