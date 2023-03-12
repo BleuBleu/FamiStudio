@@ -307,6 +307,8 @@ int Simple_Apu::get_fds_wave_pos()
 
 void Simple_Apu::end_frame()
 {
+	assert(time <= frame_length);
+
 	time = 0;
 	frame_length ^= 1;
 
