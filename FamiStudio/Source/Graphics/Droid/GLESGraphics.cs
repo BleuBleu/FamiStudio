@@ -675,16 +675,19 @@ namespace FamiStudio
 
                 if (list.HasAnyPolygons)
                 {
-                    var draw = list.GetPolygonDrawData();
+                    var draws = list.GetPolygonDrawData();
 
                     GLES20.GlUseProgram(polyProgram);
                     GLES20.GlUniform4fv(polyScaleBiasUniform, 1, viewportScaleBias, 0);
 
-                    BindAndUpdateVertexBuffer(0, draw.vtxArray, draw.vtxArraySize);
-                    BindAndUpdateColorBuffer(1, draw.colArray, draw.colArraySize);
-                    BindAndUpdateByteBuffer(2, draw.depArray, draw.depArraySize, true);
+                    foreach (var draw in draws)
+                    { 
+                        BindAndUpdateVertexBuffer(0, draw.vtxArray, draw.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, draw.colArray, draw.colArraySize);
+                        BindAndUpdateByteBuffer(2, draw.depArray, draw.depArraySize, true);
 
-                    GLES20.GlDrawElements(GLES20.GlTriangles, draw.numIndices, GLES20.GlUnsignedShort, CopyGetIdxBuffer(draw.idxArray, draw.idxArraySize));
+                        GLES20.GlDrawElements(GLES20.GlTriangles, draw.numIndices, GLES20.GlUnsignedShort, CopyGetIdxBuffer(draw.idxArray, draw.idxArraySize));
+                    }
                 }
 
                 if (list.HasAnyLines)
@@ -705,21 +708,23 @@ namespace FamiStudio
                     GLES20.GlDrawArrays(GLES20.GlLines, 0, draw.numVertices);
                 }
 
-                // MATTT : Smooth lines look like ass on Android.
                 if (list.HasAnySmoothLines)
                 {
-                    var draw = list.GetSmoothLineDrawData();
+                    var draws = list.GetSmoothLineDrawData();
 
                     GLES20.GlUseProgram(lineSmoothProgram);
                     GLES20.GlUniform4fv(lineSmoothScaleBiasUniform, 1, viewportScaleBias, 0);
                     GLES20.GlUniform2f(lineSmoothWindowSizeUniform, screenRect.Width, screenRect.Height);
 
-                    BindAndUpdateVertexBuffer(0, draw.vtxArray, draw.vtxArraySize);
-                    BindAndUpdateColorBuffer(1, draw.colArray, draw.colArraySize);
-                    BindAndUpdateByteBuffer(2, draw.dstArray, draw.dstArraySize);
-                    BindAndUpdateByteBuffer(3, draw.depArray, draw.depArraySize, true);
+                    foreach (var draw in draws)
+                    { 
+                        BindAndUpdateVertexBuffer(0, draw.vtxArray, draw.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, draw.colArray, draw.colArraySize);
+                        BindAndUpdateByteBuffer(2, draw.dstArray, draw.dstArraySize);
+                        BindAndUpdateByteBuffer(3, draw.depArray, draw.depArraySize, true);
 
-                    GLES20.GlDrawElements(GLES20.GlTriangles, draw.numIndices, GLES20.GlUnsignedShort, CopyGetIdxBuffer(draw.idxArray, draw.idxArraySize));
+                        GLES20.GlDrawElements(GLES20.GlTriangles, draw.numIndices, GLES20.GlUnsignedShort, CopyGetIdxBuffer(draw.idxArray, draw.idxArraySize));
+                    }
                 }
 
                 if (list.HasAnyBitmaps)

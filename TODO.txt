@@ -6,9 +6,6 @@
 	=> Perkka says he has fix. May be in a PR.
 - NSF import, assign DPCM samples starting from like C2 and go up from there.
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
-- BUG : We hit the max vertex limit quite fast.
-	=> Port to android
-- BUG : Assert in channel when exporting huge video file.
 - PWM stuff from how2.
 Mac:
 - Is there any reason now to not allow changing DPI on MacOS??? 
