@@ -189,7 +189,7 @@ namespace FamiStudio
 
         public virtual void PopClipRegion()
         {
-            var region = clipStack.Pop();
+            clipStack.Pop();
             curDepthValue = clipStack.Count > 0 ? clipStack.Peek().depthValue : (byte)0x80;
         }
 
@@ -1448,10 +1448,8 @@ namespace FamiStudio
             var batch = polyBatches.Count > 0 ? polyBatches[polyBatches.Count - 1] : null;
 
             if (batch == null ||
-                batch.vtxIdx + numVtxNeeded * 2 >= batch.vtxArray.Length || 
-                batch.colIdx + numVtxNeeded * 1 >= batch.colArray.Length || 
-                batch.depIdx + numVtxNeeded * 1 >= batch.depArray.Length ||
-                batch.idxIdx + numIdxNeeded * 1 >= batch.idxArray.Length)
+                batch.depIdx + numVtxNeeded >= batch.depArray.Length ||
+                batch.idxIdx + numIdxNeeded >= batch.idxArray.Length)
             {
                 batch = new PolyBatch();
                 batch.vtxArray = graphics.GetVertexArray();
@@ -1587,11 +1585,8 @@ namespace FamiStudio
             var batch = lineSmoothBatches.Count > 0 ? lineSmoothBatches[lineSmoothBatches.Count - 1] : null;
 
             if (batch == null ||
-                batch.vtxIdx + numVtxNeeded * 2 >= batch.vtxArray.Length ||
-                batch.dstIdx + numVtxNeeded * 1 >= batch.dstArray.Length ||
-                batch.colIdx + numVtxNeeded * 1 >= batch.colArray.Length ||
-                batch.depIdx + numVtxNeeded * 1 >= batch.depArray.Length ||
-                batch.idxIdx + numIdxNeeded * 1 >= batch.idxArray.Length)
+                batch.depIdx + numVtxNeeded >= batch.depArray.Length ||
+                batch.idxIdx + numIdxNeeded >= batch.idxArray.Length)
             {
                 batch = new LineSmoothBatch();
                 batch.vtxArray = graphics.GetVertexArray();
