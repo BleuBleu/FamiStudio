@@ -214,7 +214,7 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 			if (expansions & expansion_mask_mmc5) mmc5.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_namco) namco.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_sunsoft) sunsoft.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_epsm) epsm.write_register(clock(16), addr, data);
+			if (expansions & expansion_mask_epsm) epsm.write_register(clock(), addr, data);
 		}
 	}
 }

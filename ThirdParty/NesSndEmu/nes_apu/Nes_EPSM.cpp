@@ -28,6 +28,8 @@ void Nes_EPSM::reset(bool pal = false)
 	reset_opn2();
 	last_time = 0;
 	last_psg_amp = 0;
+	sample_left = 0;
+	sample_right = 0;
 	last_opn2_amp_left = 0;
 	last_opn2_amp_right = 0;
 	psg_delay = 0;
@@ -199,52 +201,50 @@ long Nes_EPSM::run_until(cpu_time_t end_time)
 		psg_time += psg_increment;
 	}
 
-	cpu_time_t opn2_increment = ((int64_t)(output_buffer_left->clock_rate() * 6 * 24) << epsm_time_precision) / epsm_clock;
+	cpu_time_t opn2_increment = ((int64_t)(output_buffer_left->clock_rate() * 6) << epsm_time_precision) / epsm_clock;
 	cpu_time_t opn2_time = last_time + opn2_delay;
 
 	while (opn2_time < end_time)
 	{
-		int sample_left  = 0;
-		int sample_right = 0;
+		int16_t samples[4];
+		OPN2_Clock(&opn2, samples, mask_fm, mask_rhythm, false);
+
+		sample_left  += (int)(samples[0] * 6);
+		sample_left  += (int)(samples[2] * 11 / 20);
+		sample_right += (int)(samples[1] * 6);
+		sample_right += (int)(samples[3] * 11 / 20);
 
 		// The chip does a full update in 24-steps. It outputs the value of 
 		// certain channels at each of those 24 steps. So for maximum audio 
-		// quality, we always run a full 24-cycles updates (which takes ~32.2159 
-		// NES cycles in NTSC) so we get even output from all the channels.
-		require(opn2.cycles == 0);
-
-		for (int i = 0; i < 24; i++)
+		// quality, we wait until the chip has done a full update (which takes 
+		// ~32.2159 NES cycles in NTSC) so we get even output from all the channels.
+		if (opn2.cycles == 0)
 		{
-			int16_t samples[4];
-			OPN2_Clock(&opn2, samples, mask_fm, mask_rhythm, false);
+			int delta_left  = sample_left  - last_opn2_amp_left;
+			int delta_right = sample_right - last_opn2_amp_right;
 
-			sample_left  += (int)(samples[0] * 6);
-			sample_left  += (int)(samples[2] * 11 / 20);
-			sample_right += (int)(samples[1] * 6);
-			sample_right += (int)(samples[3] * 11 / 20);
-		}
+			if (delta_left)
+			{
+				synth_left.offset(opn2_time >> epsm_time_precision, delta_left, output_buffer_left);
+				last_opn2_amp_left = sample_left;
+			}
 
-		int delta_left  = sample_left  - last_opn2_amp_left;
-		int delta_right = sample_right - last_opn2_amp_right;
+			if (delta_right)
+			{
+				synth_right.offset(opn2_time >> epsm_time_precision, delta_right, output_buffer_right);
+				last_opn2_amp_right = sample_right;
+			}
 
-		if (delta_left)
-		{
-			synth_left.offset(opn2_time >> epsm_time_precision, delta_left, output_buffer_left);
-			last_opn2_amp_left = sample_left;
-		}
+			for (int i = 0; i < 6; i++)
+			{
+				if (opn2.triggers[i] == 1)
+					update_trigger(output_buffer_left, opn2_time >> epsm_time_precision, triggers[i + 3]);
+				else if (opn2.triggers[i] == 2)
+					triggers[i + 3] = trigger_none;
+			}
 
-		if (delta_right)
-		{
-			synth_right.offset(opn2_time >> epsm_time_precision, delta_right, output_buffer_right);
-			last_opn2_amp_right = sample_right;
-		}
-
-		for (int i = 0; i < 6; i++)
-		{
-			if (opn2.triggers[i] == 1)
-				update_trigger(output_buffer_left, opn2_time >> epsm_time_precision, triggers[i + 3]);
-			else if (opn2.triggers[i] == 2)
-				triggers[i + 3] = trigger_none;
+			sample_left  = 0;
+			sample_right = 0;
 		}
 
 		opn2_time += opn2_increment;

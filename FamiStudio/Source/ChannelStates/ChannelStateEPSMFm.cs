@@ -14,13 +14,13 @@ namespace FamiStudio
         {
             if (!a1)
             {
-                WriteRegister(NesApu.EPSM_ADDR0, reg,  NesApu.EpsmCycleSkip);
-                WriteRegister(NesApu.EPSM_DATA0, data, NesApu.EpsmCycleSkip);
+                WriteRegister(NesApu.EPSM_ADDR0, reg,  NesApu.EpsmCycleAddrSkip);
+                WriteRegister(NesApu.EPSM_DATA0, data, NesApu.EpsmCycleDataSkip);
             }
             else
             {
-                WriteRegister(NesApu.EPSM_ADDR1, reg,  NesApu.EpsmCycleSkip);
-                WriteRegister(NesApu.EPSM_DATA1, data, NesApu.EpsmCycleSkip);
+                WriteRegister(NesApu.EPSM_ADDR1, reg,  NesApu.EpsmCycleAddrSkip);
+                WriteRegister(NesApu.EPSM_DATA1, data, NesApu.EpsmCycleDataSkip);
             }
         }
     }
