@@ -266,12 +266,12 @@ namespace FamiStudio
                 state.bitmap = videoGraphics.CreateBitmapFromOffscreenGraphics(state.graphics);
 
                 // Measure the longest text.
-                longestChannelName = Math.Max(longestChannelName, state.graphics.MeasureString(state.channelText, fontResources.FontVeryLarge));
+                longestChannelName = Math.Max(longestChannelName, state.graphics.MeasureString(state.channelText, fonts.FontVeryLarge));
             }
 
             // Tweak some cosmetic stuff that depends on resolution.
             var smallChannelText = longestChannelName + 32 + ChannelIconTextSpacing > channelResY * 0.8f;
-            var font = smallChannelText ? fontResources.FontMedium : fontResources.FontVeryLarge;
+            var font = smallChannelText ? fonts.FontMedium : fonts.FontVeryLarge;
             var textOffsetY = smallChannelText ? 1 : 4;
             var pianoRollScaleX = Utils.Clamp(resY / 1080.0f, 0.6f, 0.9f);
             var pianoRollScaleY = channelResY < VeryThinNoteThreshold ? 0.5f : (channelResY < ThinNoteThreshold ? 0.667f : 1.0f);
@@ -281,9 +281,9 @@ namespace FamiStudio
             LoadChannelIcons(!smallChannelText);
 
             // Setup piano roll and images.
-            var pianoRoll = new PianoRoll(null);
+            var pianoRoll = new PianoRoll();
+            pianoRoll.OverrideGraphics(videoGraphics, fonts);
             pianoRoll.Move(0, 0, channelResX, channelResY);
-            pianoRoll.SetFontRenderResource(fontResources);
             pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
 
             // Build the scrolling data.
@@ -309,46 +309,32 @@ namespace FamiStudio
 
                     if (note.IsMusical)
                     {
-                        if (s.channel.Type == ChannelType.Dpcm)
-                        {
-                            var mapping = project.GetDPCMMapping(note.Value);
-                            if (mapping != null)
-                                color = mapping.Sample.Color;
-                        }
-                        else
-                        {
-                            color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : Theme.LightGreyColor1);
-                        }
+                        color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : Theme.LightGreyColor1);
                     }
 
-                    s.graphics.BeginDrawFrame();
-                    s.graphics.BeginDrawControl(new Rectangle(0, 0, channelResX, channelResY), channelResY);
-
+                    s.graphics.BeginDrawFrame(new Rectangle(0, 0, channelResX, channelResY), Color.Black);
                     pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.channelData[s.songChannelIndex].scroll, note.Value, color);
-
-                    s.graphics.EndDrawControl();
                     s.graphics.EndDrawFrame();
                 }
 
                 // Render the full screen overlay.
-                videoGraphics.BeginDrawFrame();
-                videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
-                videoGraphics.Clear(Color.Black);
+                videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), Color.Black);
+                videoGraphics.PushClipRegion(0, 0, videoResX, videoResY);
 
-                var bg = videoGraphics.CreateCommandList();
-                var fg = videoGraphics.CreateCommandList();
+                var c = videoGraphics.BackgroundCommandList;
+                var o = videoGraphics.DefaultCommandList;
 
                 // Composite the channel renders.
                 foreach (var s in channelStates)
                 {
                     int channelPosX0 = (int)Math.Round(s.videoChannelIndex * channelResXFloat);
-                    bg.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
+                    c.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
                 }
 
-                videoGraphics.DrawCommandList(bg);
+                videoGraphics.PopClipRegion();
 
                 // Gradient
-                fg.FillRectangleGradient(0, 0, videoResX, gradientSizeY, Color.Black, Color.Transparent, true, gradientSizeY);
+                o.FillRectangleGradient(0, 0, videoResX, gradientSizeY, Color.Black, Color.Transparent, true, gradientSizeY);
 
                 // Channel names + oscilloscope
                 foreach (var s in channelStates)
@@ -359,26 +345,22 @@ namespace FamiStudio
                     var channelNameSizeX = (int)videoGraphics.MeasureString(s.channelText, font);
                     var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.icon.Size.Width + ChannelIconTextSpacing) / 2;
 
-                    fg.FillAndDrawRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.icon.Size.Width - 1, ChannelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
-                    fg.DrawBitmap(s.icon, channelIconPosX, ChannelIconPosY, 1, Theme.LightGreyColor1);
-                    fg.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, Theme.LightGreyColor1);
+                    o.FillAndDrawRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.icon.Size.Width - 1, ChannelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
+                    o.DrawBitmap(s.icon, channelIconPosX, ChannelIconPosY, 1, Theme.LightGreyColor1);
+                    o.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, Theme.LightGreyColor1);
 
                     if (s.videoChannelIndex > 0)
-                        fg.DrawLine(channelPosX0, 0, channelPosX0, videoResY, Theme.BlackColor, channelLineWidth);
+                        o.DrawLine(channelPosX0, 0, channelPosX0, videoResY, Theme.BlackColor, channelLineWidth);
 
                     var oscMinY = (int)(ChannelIconPosY + s.icon.Size.Height + 10);
                     var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
 
                     var oscilloscope = UpdateOscilloscope(s, f);
 
-                    fg.PushTransform(channelPosX0 + 10, (oscMinY + oscMaxY) / 2, channelPosX1 - channelPosX0 - 20, (oscMinY - oscMaxY) / 2);
-                    fg.DrawGeometry(oscilloscope, Theme.LightGreyColor1, 1, true);
-                    fg.PopTransform();
-
-                    ConditionalFlushCommandList(ref fg);
+                    o.PushTransform(channelPosX0 + 10, (oscMinY + oscMaxY) / 2, channelPosX1 - channelPosX0 - 20, (oscMinY - oscMaxY) / 2);
+                    o.DrawNiceSmoothLine(oscilloscope, Theme.LightGreyColor1);
+                    o.PopTransform();
                 }
-
-                videoGraphics.DrawCommandList(fg);
             }, () =>
             {
                 // Cleanup.

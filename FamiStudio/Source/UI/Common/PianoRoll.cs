@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace FamiStudio
 {
-    public class PianoRoll : Control
+    public class PianoRoll : Container
     {
         const float MinZoomFamiStudio       = 1.0f / 32.0f;
         const float MinZoomOther            = 1.0f / 8.0f;
@@ -55,7 +55,7 @@ namespace FamiStudio
         const int DefaultWaveDisplayPaddingY       = 8;
         const int DefaultScrollBarThickness1       = 10;
         const int DefaultScrollBarThickness2       = 16;
-        const int DefaultMinScrollBarLength        = 128;
+        const int DefaultMinScrollBarLength        = 64;
         const int DefaultNoteResizeMargin          = 8;
         const int DefaultBeatTextPosX              = 3;
         const int DefaultMinPixelDistForLines      = 5;
@@ -143,12 +143,12 @@ namespace FamiStudio
         BitmapAtlasRef bmpEffectFrame;
         BitmapAtlasRef bmpEffectRepeat;
         BitmapAtlasRef[] bmpEffects;
-        Geometry[] stopNoteGeometry        = new Geometry[2]; // [1] is used to draw arps.
-        Geometry[] stopReleaseNoteGeometry = new Geometry[2]; // [1] is used to draw arps.
-        Geometry[] releaseNoteGeometry     = new Geometry[2]; // [1] is used to draw arps.
-        Geometry   slideNoteGeometry;
-        Geometry   seekGeometry;
-        Geometry   sampleGeometry;
+        float[][] stopNoteGeometry        = new float[2][]; // [1] is used to draw arps.
+        float[][] stopReleaseNoteGeometry = new float[2][]; // [1] is used to draw arps.
+        float[][] releaseNoteGeometry     = new float[2][]; // [1] is used to draw arps.
+        float[]   slideNoteGeometry;
+        float[]   seekGeometry;
+        float[]   sampleGeometry;
 
         enum CaptureOperation
         {
@@ -438,11 +438,6 @@ namespace FamiStudio
         public event DPCMMappingDelegate DPCMSampleMapped;
         public event DPCMMappingDelegate DPCMSampleUnmapped;
 
-        public PianoRoll(FamiStudioWindow win) : base(win)
-        {
-            UpdateRenderCoords();
-        }
-
         private void UpdateRenderCoords()
         {
             var videoMode = editMode == EditionMode.VideoRecording;
@@ -454,46 +449,46 @@ namespace FamiStudio
             maxZoom = editMode == EditionMode.DPCM ? MaxWaveZoom : MaxZoom;
             zoom    = Utils.Clamp(zoom, minZoom, maxZoom);
 
-            headerSizeY               = ScaleForWindow(DefaultHeaderSizeY * headerScale);
-            effectButtonSizeY         = ScaleForWindow(DefaultEffectButtonSizeY * effectIconsScale);
-            noteSizeX                 = ScaleForWindowFloat(DefaultNoteSizeX * zoom);
-            noteSizeY                 = ScaleForWindow(DefaultNoteSizeY * zoomY);
-            noteAttackSizeX           = ScaleForWindow(DefaultNoteAttackSizeX);
-            releaseNoteSizeY          = ScaleForWindow(DefaultReleaseNoteSizeY * zoomY) & 0xfe; // Keep even
-            pianoSizeX                = ScaleForWindow((videoMode || Platform.IsDesktop ? DefaultPianoSizeX    : DefaultPianoSizeXMobile)    * pianoScaleX);
-            blackKeySizeX             = ScaleForWindow((videoMode || Platform.IsDesktop ? DefaultBlackKeySizeX : DefaultBlackKeySizeXMobile) * pianoScaleX);
-            whiteKeySizeY             = ScaleForWindow(DefaultWhiteKeySizeY * zoomY);
-            blackKeySizeY             = ScaleForWindow(DefaultBlackKeySizeY * zoomY);
-            effectIconPosX            = ScaleForWindow(DefaultEffectIconPosX * effectIconsScale);
-            effectIconPosY            = ScaleForWindow(DefaultEffectIconPosY * effectIconsScale);
-            headerIconsPosX           = ScaleForWindow(headerScale == 1 ? DefaultSnapIconDpcmPosX : DefaultSnapIconPosX);
-            headerIconsPosY           = ScaleForWindow(headerScale == 1 ? DefaultSnapIconDpcmPosY : DefaultSnapIconPosY);
-            effectNamePosX            = ScaleForWindow(DefaultEffectNamePosX * effectIconsScale);
-            beatTextPosX              = ScaleForWindow(DefaultBeatTextPosX);
-            effectValuePosTextOffsetY = ScaleForFont(DefaultEffectValuePosTextOffsetY);
-            effectValueNegTextOffsetY = ScaleForFont(DefaultEffectValueNegTextOffsetY);
-            bigTextPosX               = ScaleForFont(DefaultBigTextPosX);
-            bigTextPosY               = ScaleForFont(DefaultBigTextPosY);
-            tooltipTextPosX           = ScaleForFont(DefaultTooltipTextPosX);
-            tooltipTextPosY           = ScaleForFont(DefaultTooltipTextPosY);
-            dpcmTextPosX              = ScaleForFont(DefaultDPCMTextPosX);
-            recordingKeyOffsetY       = ScaleForWindow(DefaultRecordingKeyOffsetY);
-            attackIconPosX            = ScaleForWindow(DefaultAttackIconPosX);
-            waveGeometrySampleSize    = ScaleForWindow(DefaultWaveGeometrySampleSize);
-            waveDisplayPaddingY       = ScaleForWindow(DefaultWaveDisplayPaddingY);
-            scrollBarThickness        = ScaleForWindow(scrollBarSize);
-            minScrollBarLength        = ScaleForWindow(DefaultMinScrollBarLength);
-            noteResizeMargin          = ScaleForWindow(DefaultNoteResizeMargin);
-            minPixelDistForLines      = ScaleForWindow(DefaultMinPixelDistForLines);
-            envelopeValueSizeY        = ScaleForWindowFloat(DefaultEnvelopeSizeY * envelopeValueZoom);
-            gizmoSize                 = ScaleForWindow(DefaultGizmoSize);
+            headerSizeY               = DpiScaling.ScaleForWindow(DefaultHeaderSizeY * headerScale);
+            effectButtonSizeY         = DpiScaling.ScaleForWindow(DefaultEffectButtonSizeY * effectIconsScale);
+            noteSizeX                 = DpiScaling.ScaleForWindowFloat(DefaultNoteSizeX * zoom);
+            noteSizeY                 = DpiScaling.ScaleForWindow(DefaultNoteSizeY * zoomY);
+            noteAttackSizeX           = DpiScaling.ScaleForWindow(DefaultNoteAttackSizeX);
+            releaseNoteSizeY          = DpiScaling.ScaleForWindow(DefaultReleaseNoteSizeY * zoomY) & 0xfe; // Keep even
+            pianoSizeX                = DpiScaling.ScaleForWindow((videoMode || Platform.IsDesktop ? DefaultPianoSizeX    : DefaultPianoSizeXMobile)    * pianoScaleX);
+            blackKeySizeX             = DpiScaling.ScaleForWindow((videoMode || Platform.IsDesktop ? DefaultBlackKeySizeX : DefaultBlackKeySizeXMobile) * pianoScaleX);
+            whiteKeySizeY             = DpiScaling.ScaleForWindow(DefaultWhiteKeySizeY * zoomY);
+            blackKeySizeY             = DpiScaling.ScaleForWindow(DefaultBlackKeySizeY * zoomY);
+            effectIconPosX            = DpiScaling.ScaleForWindow(DefaultEffectIconPosX * effectIconsScale);
+            effectIconPosY            = DpiScaling.ScaleForWindow(DefaultEffectIconPosY * effectIconsScale);
+            headerIconsPosX           = DpiScaling.ScaleForWindow(headerScale == 1 ? DefaultSnapIconDpcmPosX : DefaultSnapIconPosX);
+            headerIconsPosY           = DpiScaling.ScaleForWindow(headerScale == 1 ? DefaultSnapIconDpcmPosY : DefaultSnapIconPosY);
+            effectNamePosX            = DpiScaling.ScaleForWindow(DefaultEffectNamePosX * effectIconsScale);
+            beatTextPosX              = DpiScaling.ScaleForWindow(DefaultBeatTextPosX);
+            effectValuePosTextOffsetY = DpiScaling.ScaleForFont(DefaultEffectValuePosTextOffsetY);
+            effectValueNegTextOffsetY = DpiScaling.ScaleForFont(DefaultEffectValueNegTextOffsetY);
+            bigTextPosX               = DpiScaling.ScaleForFont(DefaultBigTextPosX);
+            bigTextPosY               = DpiScaling.ScaleForFont(DefaultBigTextPosY);
+            tooltipTextPosX           = DpiScaling.ScaleForFont(DefaultTooltipTextPosX);
+            tooltipTextPosY           = DpiScaling.ScaleForFont(DefaultTooltipTextPosY);
+            dpcmTextPosX              = DpiScaling.ScaleForFont(DefaultDPCMTextPosX);
+            recordingKeyOffsetY       = DpiScaling.ScaleForWindow(DefaultRecordingKeyOffsetY);
+            attackIconPosX            = DpiScaling.ScaleForWindow(DefaultAttackIconPosX);
+            waveGeometrySampleSize    = DpiScaling.ScaleForWindow(DefaultWaveGeometrySampleSize);
+            waveDisplayPaddingY       = DpiScaling.ScaleForWindow(DefaultWaveDisplayPaddingY);
+            scrollBarThickness        = DpiScaling.ScaleForWindow(scrollBarSize);
+            minScrollBarLength        = DpiScaling.ScaleForWindow(DefaultMinScrollBarLength);
+            noteResizeMargin          = DpiScaling.ScaleForWindow(DefaultNoteResizeMargin);
+            minPixelDistForLines      = DpiScaling.ScaleForWindow(DefaultMinPixelDistForLines);
+            envelopeValueSizeY        = DpiScaling.ScaleForWindowFloat(DefaultEnvelopeSizeY * envelopeValueZoom);
+            gizmoSize                 = DpiScaling.ScaleForWindow(DefaultGizmoSize);
             scrollMargin              = (width - pianoSizeX) / 8;
 
             // Make sure the effect panel actually fit on screen on mobile.
             if (Platform.IsMobile && ParentWindow != null)
-                effectPanelSizeY = Math.Min(ParentWindowSize.Height / 2, ScaleForWindow(DefaultEffectPanelSizeY));
+                effectPanelSizeY = Math.Min(ParentWindowSize.Height / 2, DpiScaling.ScaleForWindow(DefaultEffectPanelSizeY));
             else
-                effectPanelSizeY = ScaleForWindow(DefaultEffectPanelSizeY);
+                effectPanelSizeY = DpiScaling.ScaleForWindow(DefaultEffectPanelSizeY);
 
             octaveSizeY = 12 * noteSizeY;
             headerAndEffectSizeY = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
@@ -602,11 +597,12 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void StartEditDPCMMapping()
+        public void StartEditDPCMMapping(Instrument instrument)
         {
             SaveChannelScroll();
 
             editMode = EditionMode.DPCMMapping;
+            editInstrument = instrument;
             showEffectsPanel = false;
             zoom = 1.0f;
             noteTooltip = "";
@@ -631,14 +627,13 @@ namespace FamiStudio
             zoomY = pianoRollScaleY;
 
             UpdateRenderCoords();
-            OnRenderInitialized(g);
+            // CTRLTODO : Needed? OnRenderInitialized(g);
 
             outNoteSizeY = noteSizeY;
         }
 
         public void EndVideoRecording()
         {
-            OnRenderTerminated();
         }
 
         public void ApplySettings()
@@ -731,7 +726,7 @@ namespace FamiStudio
 
         private void CenterEnvelopeScroll(Envelope envelope, int envelopeType, Instrument instrument = null)
         {
-            var baseNoteSizeX = ScaleForWindow(DefaultNoteSizeX);
+            var baseNoteSizeX = DpiScaling.ScaleForWindow(DefaultNoteSizeX);
             var envelopeLength = Math.Max(4, envelope.Length);
 
             zoom = minZoom;
@@ -772,7 +767,13 @@ namespace FamiStudio
 
         private void CenterDPCMMappingScroll()
         {
-            scrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0) / 2;
+            var midIdx = Note.MusicalNoteC4;
+
+            if (editInstrument.GetMinMaxMappedSampleIndex(out var minIdx, out var maxIdx))
+                midIdx = (minIdx + maxIdx) / 2;
+
+            var noteY = virtualSizeY - midIdx * noteSizeY;
+            scrollY = noteY - (Height - headerAndEffectSizeY) / 2;
         }
 
         private int GetPixelForNote(int n, bool scroll = true)
@@ -898,11 +899,12 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
             UpdateRenderCoords();
 
-            fontSmallCharSizeX = FontResources != null ? FontResources.FontSmall.MeasureString("0", false) : 1;
+            var g = ParentWindow.Graphics;
+            fontSmallCharSizeX = ParentWindow.Fonts.FontSmall.MeasureString("0", false);
             bmpLoopSmallFill = g.GetBitmapAtlasRef("LoopSmallFill");
             bmpReleaseSmallFill = g.GetBitmapAtlasRef("ReleaseSmallFill");
             bmpEnvResize = g.GetBitmapAtlasRef("EnvResize");
@@ -920,39 +922,26 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                bitmapScale = g.WindowScaling * 0.5f;
-                effectBitmapScale = g.WindowScaling * 0.25f;
+                bitmapScale = DpiScaling.ScaleForWindowFloat(0.5f);
+                effectBitmapScale = DpiScaling.ScaleForWindowFloat(0.25f);
             }
 
-            seekGeometry = g.CreateGeometry(new float[,]
+            seekGeometry = new float[]
             {
-                { -headerSizeY / 4, 1 },
-                { 0, headerSizeY / 2 - 2 },
-                { headerSizeY / 4, 1 }
-            });
+                -headerSizeY / 4, 1,
+                0, headerSizeY / 2 - 2,
+                headerSizeY / 4, 1
+            };
 
-            sampleGeometry = g.CreateGeometry(new float[,]
+            sampleGeometry = new float[]
             {
-                { -waveGeometrySampleSize, -waveGeometrySampleSize },
-                {  waveGeometrySampleSize, -waveGeometrySampleSize },
-                {  waveGeometrySampleSize,  waveGeometrySampleSize },
-                { -waveGeometrySampleSize,  waveGeometrySampleSize }
-            });
+                -waveGeometrySampleSize, -waveGeometrySampleSize,
+                 waveGeometrySampleSize, -waveGeometrySampleSize,
+                 waveGeometrySampleSize,  waveGeometrySampleSize,
+                -waveGeometrySampleSize,  waveGeometrySampleSize
+            };
 
             ConditionalUpdateNoteGeometries(g);
-        }
-
-        protected override void OnRenderTerminated()
-        {
-            Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref stopNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref releaseNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref releaseNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref slideNoteGeometry);
-            Utils.DisposeAndNullify(ref seekGeometry);
-            Utils.DisposeAndNullify(ref sampleGeometry);
         }
 
         private void ConditionalUpdateNoteGeometries(Graphics g)
@@ -962,64 +951,56 @@ namespace FamiStudio
 
             geometryNoteSizeY = noteSizeY;
 
-            Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref stopNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref releaseNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref releaseNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref slideNoteGeometry);
-            
-            stopNoteGeometry[0] = g.CreateGeometry(new float[,]
+            stopNoteGeometry[0] = new float[]
             {
-                { 0.0f, 0 },
-                { 0.0f, noteSizeY },
-                { 1.0f, noteSizeY / 2 }
-            });
+                0.0f, 0,
+                0.0f, noteSizeY,
+                1.0f, noteSizeY / 2
+            };
 
-            stopNoteGeometry[1] = g.CreateGeometry(new float[,]
+            stopNoteGeometry[1] = new float[]
             {
-                { 0.0f, 1 },
-                { 0.0f, noteSizeY },
-                { 1.0f, noteSizeY / 2 }
-            });
+                0.0f, 1,
+                0.0f, noteSizeY,
+                1.0f, noteSizeY / 2
+            };
 
-            releaseNoteGeometry[0] = g.CreateGeometry(new float[,]
+            releaseNoteGeometry[0] = new float[]
             {
-                { 0.0f, 0 },
-                { 0.0f, noteSizeY },
-                { 1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
-                { 1.0f, noteSizeY / 2 - releaseNoteSizeY / 2 }
-            });
+                0.0f, 0,
+                0.0f, noteSizeY,
+                1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2,
+                1.0f, noteSizeY / 2 - releaseNoteSizeY / 2
+            };
 
-            releaseNoteGeometry[1] = g.CreateGeometry(new float[,]
+            releaseNoteGeometry[1] = new float[]
             {
-                { 0.0f, 1 },
-                { 0.0f, noteSizeY },
-                { 1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
-                { 1.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 }
-            });
+                0.0f, 1,
+                0.0f, noteSizeY,
+                1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2,
+                1.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1
+            };
 
-            stopReleaseNoteGeometry[0] = g.CreateGeometry(new float[,]
+            stopReleaseNoteGeometry[0] = new float[]
             {
-                { 0.0f, noteSizeY / 2 - releaseNoteSizeY / 2 },
-                { 0.0f, noteSizeY / 2 + releaseNoteSizeY / 2 },
-                { 1.0f, noteSizeY / 2 }
-            });
+                0.0f, noteSizeY / 2 - releaseNoteSizeY / 2,
+                0.0f, noteSizeY / 2 + releaseNoteSizeY / 2,
+                1.0f, noteSizeY / 2
+            };
 
-            stopReleaseNoteGeometry[1] = g.CreateGeometry(new float[,]
+            stopReleaseNoteGeometry[1] = new float[]
             {
-                { 0.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 },
-                { 0.0f, noteSizeY / 2 + releaseNoteSizeY / 2 },
-                { 1.0f, noteSizeY / 2 }
-            });
+                0.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1,
+                0.0f, noteSizeY / 2 + releaseNoteSizeY / 2,
+                1.0f, noteSizeY / 2
+            };
 
-            slideNoteGeometry = g.CreateGeometry(new float[,]
+            slideNoteGeometry = new float[]
             {
-                { 0.0f, 0 },
-                { 1.0f, 0 },
-                { 1.0f, noteSizeY }
-            });
+                0.0f, 0,
+                1.0f, 0,
+                1.0f, noteSizeY
+            };
         }
 
         private bool IsBlackKey(int key)
@@ -1072,7 +1053,7 @@ namespace FamiStudio
 
         private void ForEachWaveTimecode(RenderInfo r, Action<float, float, int, int> function)
         {
-            var textSize  = r.g.MeasureString("99.999", FontResources.FontMedium);
+            var textSize  = r.g.MeasureString("99.999", r.fonts.FontMedium);
             var waveWidth = Width - pianoSizeX;
             var numLabels = Math.Floor(waveWidth / textSize);
 
@@ -1120,73 +1101,69 @@ namespace FamiStudio
             public float maxVisibleWaveTime;
 
             public Graphics g;
-            public CommandList cc; // Top left (corner, header list)
-            public CommandList ch; // Top right (header, effect panel)
-            public CommandList cz; // Top right (effect panel gizmos)
-            public CommandList cp; // Left side (piano area)
-            public CommandList cb; // Right side (note area) background
-            public CommandList cf; // Right side (note area) foreground
-            public CommandList cg; // Right side (note area) mobile gizmos.
-            public CommandList cs; // Scroll bars
-            public CommandList cd; // Debug
+            public Fonts fonts;
+            public CommandList b;
+            public CommandList c;
+            public CommandList f;
         }
 
         private void RenderHeader(RenderInfo r)
         {
-            r.ch.PushTranslation(pianoSizeX, 0);
+            r.c.PushTranslation(pianoSizeX, 0);
+            r.c.PushClipRegion(0, 0, width - pianoSizeX, headerSizeY);
 
             if ((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && EditEnvelope != null)
             {
                 var env = EditEnvelope;
                 var rep = EditRepeatEnvelope;
-                var iconPos = (headerSizeY / 2 - ScaleCustom(bmpLoopSmallFill.ElementSize.Width, bitmapScale)) / 2;
+                var iconPos = (headerSizeY / 2 - DpiScaling.ScaleCustom(bmpLoopSmallFill.ElementSize.Width, bitmapScale)) / 2;
 
-                r.ch.PushTranslation(0, headerSizeY / 2);
+                r.c.PushTranslation(0, headerSizeY / 2);
 
                 if (env.ChunkLength > 1)
-                    r.ch.FillRectangle(0, 0, GetPixelForNote(env.Length), headerSizeY / 2, editInstrument.Color);
+                    r.c.FillRectangle(0, 0, GetPixelForNote(env.Length), headerSizeY / 2, editInstrument.Color);
 
                 if (env.Loop >= 0)
                 {
-                    r.ch.PushTranslation(GetPixelForNote(env.Loop), 0);
-                    r.ch.FillRectangle(0, 0, GetPixelForNote(((env.Release >= 0 ? env.Release : env.Length) - env.Loop), false), headerAndEffectSizeY, rep != null ? loopSectionColor : Theme.DarkGreyColor5);
-                    r.ch.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
-                    r.ch.DrawBitmapAtlas(bmpLoopSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
-                    r.ch.PopTransform();
+                    r.c.PushTranslation(GetPixelForNote(env.Loop), 0);
+                    r.b.FillRectangle(0, 0, GetPixelForNote(((env.Release >= 0 ? env.Release : env.Length) - env.Loop), false), headerAndEffectSizeY, rep != null ? loopSectionColor : Theme.DarkGreyColor5);
+                    r.b.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
+                    r.c.DrawBitmapAtlas(bmpLoopSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
+                    r.c.PopTransform();
                 }
                 if (env.Release >= 0)
                 {
-                    r.ch.PushTranslation(GetPixelForNote(env.Release), 0);
-                    r.ch.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
-                    r.ch.DrawBitmapAtlas(bmpReleaseSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
-                    r.ch.PopTransform();
+                    r.c.PushTranslation(GetPixelForNote(env.Release), 0);
+                    r.b.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
+                    r.c.DrawBitmapAtlas(bmpReleaseSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
+                    r.c.PopTransform();
                 }
                 if (env.Length > 0)
                 {
-                    r.ch.PushTranslation(GetPixelForNote(env.Length), 0);
-                    r.ch.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
-                    r.ch.PopTransform();
+                    r.c.PushTranslation(GetPixelForNote(env.Length), 0);
+                    r.b.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
+                    r.c.PopTransform();
                 }
 
-                r.ch.PopTransform();
+                r.c.PopTransform();
 
                 if (env.CanResize)
                 {
-                    r.ch.PushTranslation(GetPixelForNote(env.Length), 0);
-                    r.ch.DrawBitmapAtlas(bmpEnvResize, iconPos + 1, iconPos, 1.0f, bitmapScale, Theme.LightGreyColor1);
-                    r.ch.PopTransform();
+                    r.c.PushTranslation(GetPixelForNote(env.Length), 0);
+                    r.c.DrawBitmapAtlas(bmpEnvResize, iconPos + 1, iconPos, 1.0f, bitmapScale, Theme.LightGreyColor1);
+                    r.c.PopTransform();
                 }
 
                 if (hoverNoteIndex >= 0 && hoverNoteIndex < env.Length)
                 {
                     var x0 = GetPixelForNote(hoverNoteIndex + 0);
                     var x1 = GetPixelForNote(hoverNoteIndex + 1);
-                    r.ch.PushTranslation(x0, 0);
-                    r.ch.FillRectangle(0, 0, x1 - x0, headerSizeY / 2, Theme.MediumGreyColor1);
-                    r.ch.PopTransform();
+                    r.c.PushTranslation(x0, 0);
+                    r.c.FillRectangle(0, 0, x1 - x0, headerSizeY / 2, Theme.MediumGreyColor1);
+                    r.c.PopTransform();
                 }
 
-                DrawSelectionRect(r.ch, headerSizeY);
+                DrawSelectionRect(r.c, headerSizeY);
 
                 // Draw the header bars
                 for (int n = 0; n <= env.Length; n++)
@@ -1194,26 +1171,26 @@ namespace FamiStudio
                     int x = GetPixelForNote(n);
                     if (x != 0)
                     {
-                        r.ch.DrawLine(x, 0, x, headerSizeY / 2, Theme.BlackColor, env.ChunkLength > 1 && n % env.ChunkLength == 0 && n != env.Length ? 3 : 1);
+                        r.b.DrawLine(x, 0, x, headerSizeY / 2, Theme.BlackColor, env.ChunkLength > 1 && n % env.ChunkLength == 0 && n != env.Length ? 3 : 1);
                     }
                     if (n != env.Length)
                     {
                         if (env.ChunkLength > 1 && n % env.ChunkLength == 0)
                         {
                             if (x != 0)
-                                r.ch.DrawLine(x, headerSizeY / 2, x, headerSizeY, Theme.BlackColor, 3);
+                                r.c.DrawLine(x, headerSizeY / 2, x, headerSizeY, Theme.BlackColor, 3);
                             int x1 = GetPixelForNote(n + env.ChunkLength);
-                            r.ch.DrawText((n / env.ChunkLength).ToString(), FontResources.FontMedium, x, headerSizeY / 2 - 1, Theme.BlackColor, TextFlags.MiddleCenter, x1 - x, headerSizeY / 2);
+                            r.c.DrawText((n / env.ChunkLength).ToString(), r.fonts.FontMedium, x, headerSizeY / 2 - 1, Theme.BlackColor, TextFlags.MiddleCenter, x1 - x, headerSizeY / 2);
                         }
 
                         var label = (editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos : 0) + (env.ChunkLength > 1 ? n % env.ChunkLength : n);
                         var labelString = label.ToString();
                         if (labelString.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                            r.ch.DrawText(labelString, FontResources.FontMedium, x, 0, Theme.LightGreyColor1, TextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
+                            r.c.DrawText(labelString, r.fonts.FontMedium, x, 0, Theme.LightGreyColor1, TextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
                     }
                 }
 
-                r.ch.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, Theme.BlackColor);
+                r.c.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, Theme.BlackColor);
             }
             else if (editMode == EditionMode.Channel)
             {
@@ -1225,7 +1202,7 @@ namespace FamiStudio
                     {
                         int sx = GetPixelForNote(Song.GetPatternLength(p), false);
                         int px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(p), true);
-                        r.ch.FillRectangle(px, headerSizeY / 2, px + sx, headerSizeY, pattern.Color);
+                        r.c.FillRectangle(px, headerSizeY / 2, px + sx, headerSizeY, pattern.Color);
                     }
                 }
 
@@ -1234,13 +1211,13 @@ namespace FamiStudio
                 {
                     int x0 = GetPixelForNote(hoverNoteIndex, true);
                     int x1 = GetPixelForNote(hoverNoteIndex + hoverNoteCount, true);
-                    r.ch.FillRectangle(x0, 0, x1, headerSizeY / 2 - 1, Theme.MediumGreyColor1);
+                    r.c.FillRectangle(x0, 0, x1, headerSizeY / 2 - 1, Theme.MediumGreyColor1);
                 }
 
                 // Selection
-                DrawSelectionRect(r.ch, headerSizeY);
+                DrawSelectionRect(r.c, headerSizeY);
 
-                var beatLabelSizeX = r.g.MeasureString("88.88", FontResources.FontMedium);
+                var beatLabelSizeX = r.g.MeasureString("88.88", r.fonts.FontMedium);
 
                 // Draw the header bars
                 for (int p = r.minVisiblePattern; p < r.maxVisiblePattern; p++)
@@ -1250,7 +1227,7 @@ namespace FamiStudio
                     var sx = GetPixelForNote(patternLen, false);
                     var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(p), true);
                     if (p != 0)
-                        r.ch.DrawLine(px, 0, px, headerSizeY, Theme.BlackColor, 3);
+                        r.c.DrawLine(px, 0, px, headerSizeY, Theme.BlackColor, 3);
 
                     var pattern = Song.Channels[editChannel].PatternInstances[p];
                     var beatLen = Song.GetPatternBeatLength(p);
@@ -1261,27 +1238,27 @@ namespace FamiStudio
                     {
                         var numBeats = (int)Math.Ceiling(patternLen / (float)beatLen);
                         for (int i = 0; i < numBeats; i++)
-                            r.ch.DrawText($"{p + 1}.{i + 1}", FontResources.FontMedium, px + beatTextPosX + beatSizeX * i, 0, Theme.LightGreyColor1, TextFlags.Middle, 0, headerSizeY / 2 - 1);
+                            r.c.DrawText($"{p + 1}.{i + 1}", r.fonts.FontMedium, px + beatTextPosX + beatSizeX * i, 0, Theme.LightGreyColor1, TextFlags.Middle, 0, headerSizeY / 2 - 1);
                     }
                     else
                     {
-                        r.ch.DrawText((p + 1).ToString(), FontResources.FontMedium, px, 0, Theme.LightGreyColor1, TextFlags.MiddleCenter, sx, headerSizeY / 2 - 1);
+                        r.c.DrawText((p + 1).ToString(), r.fonts.FontMedium, px, 0, Theme.LightGreyColor1, TextFlags.MiddleCenter, sx, headerSizeY / 2 - 1);
                     }
 
                     if (pattern != null)
-                        r.ch.DrawText(pattern.Name, FontResources.FontMedium, px, headerSizeY / 2, Theme.BlackColor, TextFlags.MiddleCenter | TextFlags.Clip, sx, headerSizeY / 2 - 1);
+                        r.c.DrawText(pattern.Name, r.fonts.FontMedium, px, headerSizeY / 2, Theme.BlackColor, TextFlags.MiddleCenter | TextFlags.Clip, sx, headerSizeY / 2 - 1);
                 }
 
                 int maxX = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern));
-                r.ch.DrawLine(maxX, 0, maxX, Height, Theme.BlackColor, 3);
-                r.ch.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, Theme.BlackColor);
+                r.c.DrawLine(maxX, 0, maxX, Height, Theme.BlackColor, 3);
+                r.c.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, Theme.BlackColor);
             }
             else if (editMode == EditionMode.DPCM)
             {
                 // Selection rectangle
                 if (IsSelectionValid())
                 {
-                    r.ch.FillRectangle(
+                    r.c.FillRectangle(
                         GetPixelForWaveTime(GetWaveTimeForSample(selectionMin, true),  scrollX), 0,
                         GetPixelForWaveTime(GetWaveTimeForSample(selectionMax, false), scrollX), headerSizeY, selectionBgVisibleColor);
                 }
@@ -1289,61 +1266,62 @@ namespace FamiStudio
                 ForEachWaveTimecode(r, (time, x, level, idx) =>
                 {
                     if (time != 0.0f)
-                        r.ch.DrawText(time.ToString($"F{level + 1}"), FontResources.FontMedium, x - 100, 0, Theme.LightGreyColor1, TextFlags.MiddleCenter, 200, headerSizeY - 1);
+                        r.c.DrawText(time.ToString($"F{level + 1}"), r.fonts.FontMedium, x - 100, 0, Theme.LightGreyColor1, TextFlags.MiddleCenter, 200, headerSizeY - 1);
                 });
 
                 // Processed Range
-                r.ch.FillRectangle(
+                r.c.FillRectangle(
                     GetPixelForWaveTime(editSample.ProcessedStartTime, scrollX), 0,
                     GetPixelForWaveTime(editSample.ProcessedEndTime,   scrollX), headerSizeY, Color.FromArgb(64, editSample.Color));
             }
 
-            r.ch.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, Theme.BlackColor);
+            r.c.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, Theme.BlackColor);
 
             if (((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && CanEnvelopeDisplayFrame()) || (editMode == EditionMode.Channel))
             {
                 var seekFrame = editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editArpeggio, editEnvelope, editMode == EditionMode.Arpeggio) : GetSeekFrameToDraw();
                 if (seekFrame >= 0)
                 {
-                    r.ch.PushTranslation(GetPixelForNote(seekFrame), 0);
-                    r.ch.FillAndDrawGeometry(seekGeometry, GetSeekBarColor(), Theme.BlackColor, 1, true);
-                    r.ch.DrawLine(0, headerSizeY / 2, 0, headerSizeY, GetSeekBarColor(), 3);
-                    r.ch.PopTransform();
+                    r.c.PushTranslation(GetPixelForNote(seekFrame), 0);
+                    r.c.FillAndDrawGeometry(seekGeometry, GetSeekBarColor(), Theme.BlackColor, 1, true);
+                    r.c.DrawLine(0, headerSizeY / 2, 0, headerSizeY, GetSeekBarColor(), 3);
+                    r.c.PopTransform();
                 }
             }
 
-            r.ch.PopTransform();
+            r.c.PopClipRegion();
+            r.c.PopTransform();
         }
 
         private void RenderEffectList(RenderInfo r)
         {
-            r.cc.FillRectangle(0, 0, pianoSizeX, headerAndEffectSizeY, Theme.DarkGreyColor4);
-            r.cc.DrawLine(pianoSizeX - 1, 0, pianoSizeX - 1, headerAndEffectSizeY, Theme.BlackColor);
+            r.c.FillRectangle(0, 0, pianoSizeX, headerAndEffectSizeY, Theme.DarkGreyColor4);
+            r.c.DrawLine(pianoSizeX - 1, 0, pianoSizeX - 1, headerAndEffectSizeY, Theme.BlackColor);
 
             if (!Platform.IsMobile && editMode != EditionMode.VideoRecording)
             {
                 var maxRect = GetMaximizeButtonRect();
-                r.cc.DrawBitmapAtlas(bmpMaximize, maxRect.X, maxRect.Y, (hoverTopLeftButton & 4) != 0 ? 0.75f : 1.0f, 1.0f, maximized ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
+                r.c.DrawBitmapAtlas(bmpMaximize, maxRect.X, maxRect.Y, (hoverTopLeftButton & 4) != 0 ? 0.75f : 1.0f, 1.0f, maximized ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
             }
 
             // Effect icons
             if (editMode == EditionMode.Channel)
             {
                 var toggleRect = GetToggleEffectPanelButtonRect();
-                r.cc.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, toggleRect.X, toggleRect.Y, (hoverTopLeftButton & 1) != 0 ? 0.75f : 1.0f, bitmapScale, Theme.LightGreyColor1);
+                r.c.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, toggleRect.X, toggleRect.Y, (hoverTopLeftButton & 1) != 0 ? 0.75f : 1.0f, bitmapScale, Theme.LightGreyColor1);
 
                 if (SnapAllowed && !Platform.IsMobile)
                 {
                     var snapBtnRect = GetSnapButtonRect();
                     var snapResRect = GetSnapResolutionRect();
 
-                    r.cc.DrawBitmapAtlas(SnapEnabled || App.IsRecording ? bmpSnap : bmpSnapOff, snapBtnRect.X, snapBtnRect.Y, (hoverTopLeftButton & 2) != 0 ? 0.75f : 1.0f, 1.0f, App.IsRecording ? Theme.DarkRedColor : (SnapEnabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1));
-                    r.cc.DrawText(SnapResolutionType.Names[snapResolution], FontResources.FontSmall, snapResRect.X, snapResRect.Y, App.IsRecording ? Theme.DarkRedColor : (SnapEnabled ? Theme.LightGreyColor2 : Theme.MediumGreyColor1), TextFlags.Right | TextFlags.Middle, snapResRect.Width, snapResRect.Height);
+                    r.c.DrawBitmapAtlas(SnapEnabled || App.IsRecording ? bmpSnap : bmpSnapOff, snapBtnRect.X, snapBtnRect.Y, (hoverTopLeftButton & 2) != 0 ? 0.75f : 1.0f, 1.0f, App.IsRecording ? Theme.DarkRedColor : (SnapEnabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1));
+                    r.c.DrawText(SnapResolutionType.Names[snapResolution], r.fonts.FontSmall, snapResRect.X, snapResRect.Y, App.IsRecording ? Theme.DarkRedColor : (SnapEnabled ? Theme.LightGreyColor2 : Theme.MediumGreyColor1), TextFlags.Right | TextFlags.Middle, snapResRect.Width, snapResRect.Height);
                 }
 
                 if (showEffectsPanel)
                 {
-                    r.cc.PushTranslation(0, headerSizeY);
+                    r.c.PushTranslation(0, headerSizeY);
 
                     int effectButtonY = 0;
 
@@ -1354,55 +1332,55 @@ namespace FamiStudio
                         if (Platform.IsMobile && effectIdx != selectedEffectIdx)
                             continue;
 
-                        r.cc.PushTranslation(0, effectButtonY);
+                        r.c.PushTranslation(0, effectButtonY);
                         if (hoverEffectIndex == i)
-                            r.cc.FillRectangle(0, 0, pianoSizeX, effectButtonSizeY, Theme.MediumGreyColor1);
-                        r.cc.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
-                        r.cc.DrawBitmapAtlas(bmpEffects[effectIdx], effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
-                        r.cc.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? FontResources.FontSmallBold : FontResources.FontSmall, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);
-                        r.cc.PopTransform();
+                            r.c.FillRectangle(0, 0, pianoSizeX, effectButtonSizeY, Theme.MediumGreyColor1);
+                        r.c.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
+                        r.c.DrawBitmapAtlas(bmpEffects[effectIdx], effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
+                        r.c.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? r.fonts.FontSmallBold : r.fonts.FontSmall, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);
+                        r.c.PopTransform();
 
                         effectButtonY += effectButtonSizeY;
                     }
 
-                    r.cc.PushTranslation(0, effectButtonY);
-                    r.cc.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
-                    r.cc.PopTransform();
-                    r.cc.PopTransform();
+                    r.c.PushTranslation(0, effectButtonY);
+                    r.c.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
+                    r.c.PopTransform();
+                    r.c.PopTransform();
                 }
             }
             else if (editMode == EditionMode.DPCM || editMode == EditionMode.Envelope && editInstrument.Envelopes[EnvelopeType.WaveformRepeat] != null)
             {
-                r.cc.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, 0, 0, 1.0f, bitmapScale, Theme.LightGreyColor1);
+                r.c.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, 0, 0, 1.0f, bitmapScale, Theme.LightGreyColor1);
 
                 if (showEffectsPanel)
                 {
-                    r.cc.PushTranslation(0, headerSizeY);
-                    r.cc.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
+                    r.c.PushTranslation(0, headerSizeY);
+                    r.c.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
 
                     var bmp  = editMode == EditionMode.DPCM ? bmpEffects[Note.EffectVolume] : bmpEffectRepeat;
                     var text = editMode == EditionMode.DPCM ? Note.EffectNames[Note.EffectVolume] : EnvelopeType.Names[EnvelopeType.WaveformRepeat];
 
-                    r.cc.DrawBitmapAtlas(bmp, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
-                    r.cc.DrawText(text, FontResources.FontSmallBold, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);
-                    r.cc.PushTranslation(0, effectButtonSizeY);
-                    r.cc.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
-                    r.cc.PopTransform();
-                    r.cc.PopTransform();
+                    r.c.DrawBitmapAtlas(bmp, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
+                    r.c.DrawText(text, r.fonts.FontSmallBold, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);
+                    r.c.PushTranslation(0, effectButtonSizeY);
+                    r.c.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
+                    r.c.PopTransform();
+                    r.c.PopTransform();
                 }
             }
 
-            r.cc.DrawLine(0, headerAndEffectSizeY - 1, pianoSizeX, headerAndEffectSizeY - 1, Theme.BlackColor);
+            r.c.DrawLine(0, headerAndEffectSizeY - 1, pianoSizeX, headerAndEffectSizeY - 1, Theme.BlackColor);
         }
 
         private bool GetDPCMKeyColor(int note, out Color color)
         {
-            if (editMode != EditionMode.VideoRecording && App.SelectedChannel.Type == ChannelType.Dpcm)
+            if (editMode != EditionMode.VideoRecording && App.SelectedChannel.Type == ChannelType.Dpcm && App.SelectedInstrument != null)
             {
-                var mapping = Song.Project.GetDPCMMapping(note);
+                var mapping = App.SelectedInstrument.GetDPCMMapping(note);
                 if (mapping != null)
                 {
-                    color = mapping.Sample.Color;
+                    color =  App.SelectedInstrument.Color; // Sample color or instrument color?
                     return true;
                 }
             }
@@ -1416,8 +1394,9 @@ namespace FamiStudio
             if (!pianoVisible)
                 return;
 
-            r.cp.PushTranslation(0, headerAndEffectSizeY);
-            r.cp.FillRectangleGradient(0, 0, pianoSizeX, Height, Theme.LightGreyColor1, Theme.LightGreyColor2, false, pianoSizeX);
+            r.c.PushTranslation(0, headerAndEffectSizeY);
+            r.c.PushClipRegion(0, 0, pianoSizeX, height - headerAndEffectSizeY - scrollBarThickness + 1);
+            r.c.FillRectangleGradient(0, 0, pianoSizeX, Height, Theme.LightGreyColor1, Theme.LightGreyColor2, false, pianoSizeX);
 
             var drawDpcmColorKeys = (editMode == EditionMode.Channel && Song.Channels[editChannel].Type == ChannelType.Dpcm) || editMode == EditionMode.DPCMMapping;
 
@@ -1429,7 +1408,7 @@ namespace FamiStudio
                     for (int j = 0; j < 12; j++)
                     {
                         if (!IsBlackKey(j) && GetDPCMKeyColor(i * 12 + j + 1, out var color))
-                            r.cp.FillRectangleGradient(GetKeyRectangle(i, j), Theme.Darken(color, 20), color, false, pianoSizeX);
+                            r.c.FillRectangleGradient(GetKeyRectangle(i, j), Theme.Darken(color, 20), color, false, pianoSizeX);
                     }
                 }
             }
@@ -1439,13 +1418,13 @@ namespace FamiStudio
             {
                 Note.GetOctaveAndNote(playHighlightNote, out var octave, out var octaveNote);
                 if (!IsBlackKey(octaveNote))
-                    r.cp.FillRectangle(GetKeyRectangle(octave, octaveNote), editMode == EditionMode.VideoRecording ? videoKeyColor : whiteKeyPressedColor);
+                    r.c.FillRectangle(GetKeyRectangle(octave, octaveNote), editMode == EditionMode.VideoRecording ? videoKeyColor : whiteKeyPressedColor);
             }
             else if (Note.IsMusicalNote(hoverPianoNote))
             {
                 Note.GetOctaveAndNote(hoverPianoNote, out var octave, out var octaveNote);
                 if (!IsBlackKey(octaveNote))
-                    r.cp.FillRectangle(GetKeyRectangle(octave, octaveNote), whiteKeyHoverColor);
+                    r.c.FillRectangle(GetKeyRectangle(octave, octaveNote), whiteKeyHoverColor);
             }
 
             // Draw the piano
@@ -1462,20 +1441,20 @@ namespace FamiStudio
                     if (IsBlackKey(j))
                     {
                         if (drawDpcmColorKeys && GetDPCMKeyColor(noteIdx + 1, out var color))
-                            r.cp.FillAndDrawRectangleGradient(GetKeyRectangle(i, j), Theme.Darken(color, 40), Theme.Darken(color, 20), Theme.BlackColor, false, blackKeySizeX);
+                            r.c.FillAndDrawRectangleGradient(GetKeyRectangle(i, j), Theme.Darken(color, 40), Theme.Darken(color, 20), Theme.BlackColor, false, blackKeySizeX);
                         else
-                            r.cp.FillRectangleGradient(GetKeyRectangle(i, j), Theme.DarkGreyColor4, Theme.DarkGreyColor5, false, blackKeySizeX);
+                            r.c.FillRectangleGradient(GetKeyRectangle(i, j), Theme.DarkGreyColor4, Theme.DarkGreyColor5, false, blackKeySizeX);
                     }
 
                     int y = octaveBaseY - j * noteSizeY;
                     if (j == 0)
-                        r.cp.DrawLine(0, y, pianoSizeX, y, Theme.BlackColor);
+                        r.c.DrawLine(0, y, pianoSizeX, y, Theme.BlackColor);
                     else if (j == 5)
-                        r.cp.DrawLine(0, y, pianoSizeX, y, Theme.BlackColor);
+                        r.c.DrawLine(0, y, pianoSizeX, y, Theme.BlackColor);
                 }
 
-                if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping) && FontResources.FontSmall.Size < noteSizeY)
-                    r.cp.DrawText("C" + i, FontResources.FontSmall, r.g.WindowScaling, octaveBaseY - noteSizeY + 1, Theme.BlackColor, TextFlags.Middle, pianoSizeX - r.g.WindowScaling * 2, noteSizeY - 1);
+                if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping) && r.fonts.FontSmall.Size < noteSizeY)
+                    r.c.DrawText("C" + i, r.fonts.FontSmall, DpiScaling.Window, octaveBaseY - noteSizeY + 1, Theme.BlackColor, TextFlags.Middle, pianoSizeX - DpiScaling.Window * 2, noteSizeY);
             }
 
             // Highlight play/hover note (black keys)
@@ -1483,61 +1462,55 @@ namespace FamiStudio
             {
                 Note.GetOctaveAndNote(playHighlightNote, out var octave, out var octaveNote);
                 if (IsBlackKey(octaveNote))
-                    r.cp.FillRectangle(GetKeyRectangle(octave, octaveNote), editMode == EditionMode.VideoRecording ? videoKeyColor : blackKeyPressedColor);
+                    r.c.FillRectangle(GetKeyRectangle(octave, octaveNote), editMode == EditionMode.VideoRecording ? videoKeyColor : blackKeyPressedColor);
             }
             else if (Note.IsMusicalNote(hoverPianoNote))
             {
                 Note.GetOctaveAndNote(hoverPianoNote, out var octave, out var octaveNote);
                 if (IsBlackKey(octaveNote))
-                    r.cp.FillRectangle(GetKeyRectangle(octave, octaveNote), blackKeyHoverColor);
+                    r.c.FillRectangle(GetKeyRectangle(octave, octaveNote), blackKeyHoverColor);
             }
 
             // QWERTY key labels.
             if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled) && Platform.IsDesktop)
             {
-                var keyStrings = new string[Note.MusicalNoteMax];
-
-                foreach (var kv in Settings.ScanCodeToNoteMap)
+                for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
                 {
-                    var i = kv.Value - 1;
-                    var k = kv.Key;
+                    var octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
 
-                    if (i < 0 || i >= keyStrings.Length)
-                        continue;
+                    for (int j = 0; j < 12; j++)
+                    {
+                        var noteIdx = i * 12 + j + 1;
+                        var keyString = App.GetRecordingKeyString(noteIdx);
 
-                    if (keyStrings[i] == null)
-                        keyStrings[i] = Platform.ScancodeToString(k);
-                    else
-                        keyStrings[i] += $"   {Platform.ScancodeToString(k)}";
-                }
+                        if (keyString == null)
+                            continue;
 
-                for (int i = 0; i < Note.MusicalNoteMax; i++)
-                {
-                    if (keyStrings[i] == null)
-                        continue;
+                        int y = octaveBaseY - j * noteSizeY;
 
-                    int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + App.BaseRecordingOctave)) - scrollY;
-                    int y = octaveBaseY - (i % 12) * noteSizeY;
+                        Color color;
+                        if (App.IsRecording)
+                            color = IsBlackKey(j) ? Theme.LightRedColor : Theme.DarkRedColor;
+                        else
+                            color = IsBlackKey(j) ? Theme.LightGreyColor2 : Theme.BlackColor;
 
-                    Color color;
-                    if (App.IsRecording)
-                        color = IsBlackKey(i % 12) ? Theme.LightRedColor : Theme.DarkRedColor;
-                    else
-                        color = IsBlackKey(i % 12) ? Theme.LightGreyColor2 : Theme.BlackColor;
-
-                    r.cp.DrawText(keyStrings[i], FontResources.FontVerySmall, 0, y - recordingKeyOffsetY + 1, color, TextFlags.MiddleCenter, blackKeySizeX, noteSizeY - 1);
+                        r.c.DrawText(keyString, r.fonts.FontVerySmall, 0, y - recordingKeyOffsetY + 1, color, TextFlags.MiddleCenter, blackKeySizeX, noteSizeY - 1);
+                    }
                 }
             }
 
-            r.cp.DrawLine(pianoSizeX - 1, 0, pianoSizeX - 1, Height, Theme.BlackColor);
-            r.cp.PopTransform();
+            r.c.DrawLine(pianoSizeX - 1, 0, pianoSizeX - 1, Height, Theme.BlackColor);
+            r.c.DrawLine(0, height - headerAndEffectSizeY - scrollBarThickness, pianoSizeX, height - headerAndEffectSizeY - scrollBarThickness, Theme.BlackColor);
+            r.c.PopClipRegion();
+            r.c.PopTransform();
         }
 
         private void RenderEffectPanel(RenderInfo r)
         {
             if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Envelope && HasRepeatEnvelope()) && showEffectsPanel)
             {
-                r.ch.PushTranslation(pianoSizeX, headerSizeY);
+                r.c.PushTranslation(pianoSizeX, headerSizeY);
+                r.c.PushClipRegion(0, 0, width - pianoSizeX - scrollBarThickness, effectPanelSizeY);
 
                 if (editMode == EditionMode.Channel)
                 {
@@ -1581,7 +1554,7 @@ namespace FamiStudio
 
                                 if (note.HasValidEffectValue(Note.EffectVolume))
                                 {
-                                    r.ch.PushTranslation(GetPixelForNote(location.ToAbsoluteNoteIndex(song)), 0);
+                                    r.c.PushTranslation(GetPixelForNote(location.ToAbsoluteNoteIndex(song)), 0);
 
                                     var frame = location.ToAbsoluteNoteIndex(song);
 
@@ -1592,26 +1565,26 @@ namespace FamiStudio
                                         var sizeY0 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastValue / (float)Note.VolumeMax * effectPanelSizeY);
                                         var sizeY1 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastSlide / (float)Note.VolumeMax * effectPanelSizeY);
 
-                                        var points = new float[4, 2]
+                                        var points = new float[4 * 2]
                                         {
-                                            { X0, effectPanelSizeY - sizeY0 },
-                                            { X0, effectPanelSizeY },
-                                            { X1, effectPanelSizeY },
-                                            { X1, effectPanelSizeY - sizeY1 }
+                                            X0, effectPanelSizeY - sizeY0,
+                                            X0, effectPanelSizeY,
+                                            X1, effectPanelSizeY,
+                                            X1, effectPanelSizeY - sizeY1
                                         };
 
-                                        r.ch.FillGeometry(points, Theme.DarkGreyColor5);
+                                        r.c.FillGeometry(points, Theme.DarkGreyColor5);
 
                                         if ((frame - lastFrame) == 1 && lastSlide < lastValue)
                                             singleFrameSlides.Add(NoteLocation.FromAbsoluteNoteIndex(song, lastFrame));
 
                                         if ((frame - lastFrame) > lastSlideDuration)
-                                            r.ch.FillRectangle(X1, effectPanelSizeY - sizeY1, 0, effectPanelSizeY, Theme.DarkGreyColor5);
+                                            r.c.FillRectangle(X1, effectPanelSizeY - sizeY1, 0, effectPanelSizeY, Theme.DarkGreyColor5);
                                     }
                                     else
                                     {
                                         var sizeY = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastValue / (float)Note.VolumeMax * effectPanelSizeY);
-                                        r.ch.FillRectangle(GetPixelForNote(lastFrame < 0 ? -1000000 : lastFrame - frame, false), effectPanelSizeY - sizeY, 0, effectPanelSizeY, Theme.DarkGreyColor5);
+                                        r.c.FillRectangle(GetPixelForNote(lastFrame < 0 ? -1000000 : lastFrame - frame, false), effectPanelSizeY - sizeY, 0, effectPanelSizeY, Theme.DarkGreyColor5);
                                     }
 
                                     lastSlide = note.HasVolumeSlide ? note.VolumeSlideTarget : -1;
@@ -1621,11 +1594,11 @@ namespace FamiStudio
                                     if (lastSlide >= 0)
                                         lastSlideDuration = channel.GetVolumeSlideDuration(location);
 
-                                    r.ch.PopTransform();
+                                    r.c.PopTransform();
                                 }
                             }
 
-                            r.ch.PushTranslation(GetPixelForNote(Math.Max(lastFrame, 0)), 0);
+                            r.c.PushTranslation(GetPixelForNote(Math.Max(lastFrame, 0)), 0);
 
                             if (lastSlide >= 0)
                             {
@@ -1636,15 +1609,15 @@ namespace FamiStudio
                                 var sizeY0 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastValue / (float)Note.VolumeMax * effectPanelSizeY);
                                 var sizeY1 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastSlide / (float)Note.VolumeMax * effectPanelSizeY);
 
-                                var points = new float[4, 2]
+                                var points = new float[4 * 2]
                                 {
-                                    { X0, effectPanelSizeY - sizeY0 },
-                                    { X0, effectPanelSizeY },
-                                    { X1, effectPanelSizeY },
-                                    { X1, effectPanelSizeY - sizeY1 }
+                                    X0, effectPanelSizeY - sizeY0,
+                                    X0, effectPanelSizeY,
+                                    X1, effectPanelSizeY,
+                                    X1, effectPanelSizeY - sizeY1
                                 };
 
-                                r.ch.FillGeometry(points, Theme.DarkGreyColor5);
+                                r.c.FillGeometry(points, Theme.DarkGreyColor5);
 
                                 if (lastSlideDuration == 1 && lastSlide < lastValue)
                                     singleFrameSlides.Add(location);
@@ -1654,16 +1627,16 @@ namespace FamiStudio
                                 {
                                     var lastNote = channel.GetNoteAt(endLocation);
                                     if (lastNote == null || !lastNote.HasVolume)
-                                        r.ch.FillRectangle(X1, effectPanelSizeY - sizeY1, GetPixelForNote(1000000, false), effectPanelSizeY, Theme.DarkGreyColor5);
+                                        r.c.FillRectangle(X1, effectPanelSizeY - sizeY1, GetPixelForNote(1000000, false), effectPanelSizeY, Theme.DarkGreyColor5);
                                 }
                             }
                             else
                             {
                                 var lastSizeY = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
-                                r.ch.FillRectangle(0, effectPanelSizeY - lastSizeY, GetPixelForNote(1000000, false), effectPanelSizeY, Theme.DarkGreyColor5);
+                                r.c.FillRectangle(0, effectPanelSizeY - lastSizeY, GetPixelForNote(1000000, false), effectPanelSizeY, Theme.DarkGreyColor5);
                             }
 
-                            r.ch.PopTransform();
+                            r.c.PopTransform();
                         }
                         else
                         {
@@ -1674,26 +1647,26 @@ namespace FamiStudio
 
                                 if (note.HasValidEffectValue(selectedEffectIdx))
                                 {
-                                    r.ch.PushTranslation(GetPixelForNote(location.ToAbsoluteNoteIndex(song)), 0);
+                                    r.c.PushTranslation(GetPixelForNote(location.ToAbsoluteNoteIndex(song)), 0);
 
                                     var frame = location.ToAbsoluteNoteIndex(song);
                                     var sizeY = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
-                                    r.ch.FillRectangle(GetPixelForNote(lastFrame < 0 ? -1000000 : lastFrame - frame, false), effectPanelSizeY - sizeY, 0, effectPanelSizeY, Theme.DarkGreyColor5);
+                                    r.c.FillRectangle(GetPixelForNote(lastFrame < 0 ? -1000000 : lastFrame - frame, false), effectPanelSizeY - sizeY, 0, effectPanelSizeY, Theme.DarkGreyColor5);
                                     lastValue = note.GetEffectValue(selectedEffectIdx);
                                     lastFrame = frame;
 
-                                    r.ch.PopTransform();
+                                    r.c.PopTransform();
                                 }
                             }
 
-                            r.ch.PushTranslation(Math.Max(0, GetPixelForNote(lastFrame)), 0);
+                            r.c.PushTranslation(Math.Max(0, GetPixelForNote(lastFrame)), 0);
                             var lastSizeY = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
-                            r.ch.FillRectangle(0, effectPanelSizeY - lastSizeY, Width, effectPanelSizeY, Theme.DarkGreyColor5);
-                            r.ch.PopTransform();
+                            r.c.FillRectangle(0, effectPanelSizeY - lastSizeY, Width, effectPanelSizeY, Theme.DarkGreyColor5);
+                            r.c.PopTransform();
                         }
                     }
 
-                    DrawSelectionRect(r.ch, effectPanelSizeY);
+                    DrawSelectionRect(r.c, effectPanelSizeY);
 
                     var highlightLocation = NoteLocation.Invalid;
 
@@ -1703,7 +1676,7 @@ namespace FamiStudio
                     }
                     else if (Platform.IsDesktop && captureOperation == CaptureOperation.None)
                     {
-                        var pt = PointToClient(CursorPosition);
+                        var pt = ScreenToControl(CursorPosition);
                         GetEffectNoteForCoord(pt.X, pt.Y, out highlightLocation);
                     }
 
@@ -1720,31 +1693,31 @@ namespace FamiStudio
                             var effectMaxValue = Note.GetEffectMaxValue(song, channel, selectedEffectIdx);
                             var sizeY = (effectMinValue == effectMaxValue) ? effectPanelSizeY : (float)Math.Floor((effectValue - effectMinValue) / (float)(effectMaxValue - effectMinValue) * effectPanelSizeY);
 
-                            r.ch.PushTranslation(GetPixelForNote(location.ToAbsoluteNoteIndex(song)), 0);
+                            r.c.PushTranslation(GetPixelForNote(location.ToAbsoluteNoteIndex(song)), 0);
 
                             if (!Note.EffectWantsPreviousValue(selectedEffectIdx))
-                                r.ch.FillRectangle(0, 0, noteSizeX, effectPanelSizeY, Theme.DarkGreyColor5);
+                                r.c.FillRectangle(0, 0, noteSizeX, effectPanelSizeY, Theme.DarkGreyColor5);
 
                             var highlighted = location == highlightLocation;
                             var selected = IsNoteSelected(location);
                             
-                            r.ch.FillRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, singleFrameSlides.Contains(location) ? volumeSlideBarFillColor : Theme.LightGreyColor1);
+                            r.c.FillRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, singleFrameSlides.Contains(location) ? volumeSlideBarFillColor : Theme.LightGreyColor1);
 
                             if (highlighted || selected)
-                                r.cz.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 2, true);
+                                r.c.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 3, true, true);
                             else
-                                r.ch.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, Theme.BlackColor);
+                                r.c.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, Theme.BlackColor);
 
                             var text = effectValue.ToString();
                             if (text.Length * fontSmallCharSizeX + 2 < noteSizeX)
                             {
                                 if (sizeY < effectPanelSizeY / 2)
-                                    r.ch.DrawText(text, FontResources.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, Theme.LightGreyColor1, TextFlags.Center, noteSizeX);
+                                    r.c.DrawText(text, r.fonts.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, Theme.LightGreyColor1, TextFlags.Center, noteSizeX);
                                 else
-                                    r.ch.DrawText(text, FontResources.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, Theme.BlackColor, TextFlags.Center, noteSizeX);
+                                    r.c.DrawText(text, r.fonts.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, Theme.BlackColor, TextFlags.Center, noteSizeX);
                             }
 
-                            r.ch.PopTransform();
+                            r.c.PopTransform();
                         }
                     }
 
@@ -1752,14 +1725,14 @@ namespace FamiStudio
                     for (int p = r.minVisiblePattern; p < r.maxVisiblePattern; p++)
                     {
                         int x = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(p));
-                        if (p != 0) r.ch.DrawLine(x, 0, x, Height, Theme.BlackColor, 3);
+                        if (p != 0) r.c.DrawLine(x, 0, x, Height, Theme.BlackColor, 3);
                     }
 
                     int maxX = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern));
-                    r.ch.DrawLine(maxX, 0, maxX, Height, Theme.BlackColor, 3);
+                    r.c.DrawLine(maxX, 0, maxX, Height, Theme.BlackColor, 3);
 
                     int seekX = GetPixelForNote(GetSeekFrameToDraw());
-                    r.ch.DrawLine(seekX, 0, seekX, effectPanelSizeY, GetSeekBarColor(), 3);
+                    r.c.DrawLine(seekX, 0, seekX, effectPanelSizeY, GetSeekBarColor(), 3);
 
                     var gizmos = GetEffectGizmos(out _, out _);
                     if (gizmos != null)
@@ -1769,8 +1742,8 @@ namespace FamiStudio
                             var lineColor = IsGizmoHighlighted(g, headerSizeY) ? Color.White : Color.Black;
 
                             if (g.FillImage != null)
-                                r.cz.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Theme.LightGreyColor1);
-                            r.cz.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
+                                r.c.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Theme.LightGreyColor1);
+                            r.c.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
                         }
                     }
                 }
@@ -1778,6 +1751,13 @@ namespace FamiStudio
                 {
                     var env = EditEnvelope;
                     var rep = EditRepeatEnvelope;
+
+                    if (IsSelectionValid())
+                    {
+                        r.c.FillRectangle(
+                            GetPixelForNote(selectionMin + 0) + 1, 0,
+                            GetPixelForNote(selectionMax + 1), height, IsActiveControl ? selectionBgVisibleColor : selectionBgInvisibleColor);
+                    }
 
                     var highlightIndex = -1;
 
@@ -1787,7 +1767,7 @@ namespace FamiStudio
                     }
                     else if (Platform.IsDesktop && captureOperation == CaptureOperation.None)
                     {
-                        var pt = PointToClient(CursorPosition);
+                        var pt = ScreenToControl(CursorPosition);
                         if (IsPointInEffectPanel(pt.X, pt.Y))
                         {
                             GetEnvelopeValueForCoord(pt.X, pt.Y, out highlightIndex, out _);
@@ -1812,31 +1792,31 @@ namespace FamiStudio
 
                         var sizeY = (float)Math.Floor((val - minRepeat) / (float)(maxRepeat - minRepeat) * effectPanelSizeY);
 
-                        r.ch.PushTranslation(x0, 0);
+                        r.c.PushTranslation(x0, 0);
 
                         var selected = IsEnvelopeRepeatValueSelected(i);
                         var highlighted = i == highlightIndex;
 
-                        r.ch.FillRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, editInstrument.Color);
+                        r.c.FillRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, editInstrument.Color);
 
                         if (highlighted || selected)
-                            r.cz.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, highlighted ? Theme.WhiteColor : Theme.BlackColor, 2, true);
+                            r.c.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, selected ? Theme.LightGreyColor1 : Theme.WhiteColor, 3, true, true);
                         else
-                            r.ch.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, Theme.BlackColor);
+                            r.c.DrawRectangle(0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY, Theme.BlackColor);
 
                         var text = val.ToString();
                         if (text.Length * fontSmallCharSizeX + 2 < sizeX)
                         {
                             if (sizeY < effectPanelSizeY / 2)
-                                r.ch.DrawText(text, FontResources.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, Theme.LightGreyColor1, TextFlags.Center, sizeX);
+                                r.c.DrawText(text, r.fonts.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, Theme.LightGreyColor1, TextFlags.Center, sizeX);
                             else
-                                r.ch.DrawText(text, FontResources.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, Theme.BlackColor, TextFlags.Center, sizeX);
+                                r.c.DrawText(text, r.fonts.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, Theme.BlackColor, TextFlags.Center, sizeX);
                         }
 
                         if (i != 0)
-                            r.ch.DrawLine(0, 0, 0, effectPanelSizeY, Theme.BlackColor, 3);
+                            r.c.DrawLine(0, 0, 0, effectPanelSizeY, Theme.BlackColor, 3);
 
-                        r.ch.PopTransform();
+                        r.c.PopTransform();
                     }
 
                     var gizmos = GetEnvelopeEffectsGizmos();
@@ -1845,8 +1825,8 @@ namespace FamiStudio
                         foreach (var g in gizmos)
                         {
                             if (g.FillImage != null)
-                                r.cz.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, EditInstrument.Color);
-                            r.cz.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Color.White);
+                                r.c.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, EditInstrument.Color);
+                            r.c.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Color.White);
                         }
                     }
 
@@ -1855,7 +1835,7 @@ namespace FamiStudio
                     if (seekFrame >= 0)
                     {
                         var seekX = GetPixelForNote(seekFrame);
-                        r.ch.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
+                        r.c.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
                     }
                 }
                 else if (editMode == EditionMode.DPCM)
@@ -1875,30 +1855,30 @@ namespace FamiStudio
                     // Filled part.
                     for (int i = 0; i < 3; i++)
                     {
-                        var points = new float[4, 2]
+                        var points = new float[4 * 2]
                         {
-                            { envelopePoints[i + 1].X, envelopePoints[i + 1].Y },
-                            { envelopePoints[i + 0].X, envelopePoints[i + 0].Y },
-                            { envelopePoints[i + 0].X, effectPanelSizeY },
-                            { envelopePoints[i + 1].X, effectPanelSizeY }
+                            envelopePoints[i + 1].X, envelopePoints[i + 1].Y,
+                            envelopePoints[i + 0].X, envelopePoints[i + 0].Y,
+                            envelopePoints[i + 0].X, effectPanelSizeY,
+                            envelopePoints[i + 1].X, effectPanelSizeY
                         };
 
-                        r.ch.FillGeometry(points, Theme.DarkGreyColor4);
+                        r.c.FillGeometry(points, Theme.DarkGreyColor4);
                     }
 
                     // Horizontal center line
-                    r.ch.DrawLine(0, halfPanelSizeY, Width, halfPanelSizeY, Theme.BlackColor);
+                    r.c.DrawLine(0, halfPanelSizeY, Width, halfPanelSizeY, Theme.BlackColor);
 
                     // Top/bottom dash lines (limits);
                     var topY    = waveDisplayPaddingY;
                     var bottomY = effectPanelSizeY - waveDisplayPaddingY;
-                    r.ch.DrawLine(0, topY,    Width, topY, Theme.DarkGreyColor1, 1, false, true); 
-                    r.ch.DrawLine(0, bottomY, Width, bottomY, Theme.DarkGreyColor1, 1, false, true);
+                    r.c.DrawLine(0, topY,    Width, topY, Theme.DarkGreyColor1, 1, false, true); 
+                    r.c.DrawLine(0, bottomY, Width, bottomY, Theme.DarkGreyColor1, 1, false, true);
 
                     // Envelope line
                     for (int i = 0; i < 3; i++)
                     {
-                        r.ch.DrawLine(
+                        r.c.DrawLine(
                             envelopePoints[i + 0].X, 
                             envelopePoints[i + 0].Y,
                             envelopePoints[i + 1].X, 
@@ -1909,25 +1889,26 @@ namespace FamiStudio
                     // Envelope vertices.
                     for (int i = 0; i < 4; i++)
                     {
-                        r.ch.PushTransform(
+                        r.c.PushTransform(
                             envelopePoints[i + 0].X,
                             envelopePoints[i + 0].Y, 
                             1.0f, 1.0f);
-                        r.ch.FillGeometry(sampleGeometry, Theme.LightGreyColor1);
-                        r.ch.PopTransform();
+                        r.c.FillGeometry(sampleGeometry, Theme.LightGreyColor1);
+                        r.c.PopTransform();
                     }
 
                     // Selection rectangle
                     if (IsSelectionValid())
                     {
-                        r.ch.FillRectangle(
+                        r.c.FillRectangle(
                             GetPixelForWaveTime(GetWaveTimeForSample(selectionMin, true),  scrollX), 0,
                             GetPixelForWaveTime(GetWaveTimeForSample(selectionMax, false), scrollX), Height, selectionBgVisibleColor);
                     }
                 }
 
-                r.ch.DrawLine(0, effectPanelSizeY - 1, Width, effectPanelSizeY - 1, Theme.BlackColor);
-                r.ch.PopTransform();
+                r.c.DrawLine(0, effectPanelSizeY - 1, Width, effectPanelSizeY - 1, Theme.BlackColor);
+                r.c.PopClipRegion();
+                r.c.PopTransform();
             }
         }
 
@@ -1970,7 +1951,7 @@ namespace FamiStudio
 
         private void CopyNotes()
         {
-            ClipboardUtils.SaveNotes(App.Project, GetSelectedNotes(false), editChannel == ChannelType.Dpcm);
+            ClipboardUtils.SaveNotes(App.Project, GetSelectedNotes(false));
         }
 
         private void CutNotes()
@@ -2000,7 +1981,7 @@ namespace FamiStudio
 
                         if (note.IsMusical)
                         {
-                            note.Instrument = editChannel == ChannelType.Dpcm || !channel.SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
+                            note.Instrument = channel.SupportsInstrument(newNote.Instrument) ? newNote.Instrument : null;
                             note.SlideNoteTarget = channel.SupportsSlideNotes ? newNote.SlideNoteTarget : (byte)0;
                             note.Flags = newNote.Flags;
                             note.Duration = newNote.Duration;
@@ -2206,6 +2187,16 @@ namespace FamiStudio
                 PasteEnvelopeValues();
         }
 
+        public void Delete()
+        {
+            if (editMode == EditionMode.Channel)
+                DeleteSelectedNotes();
+            else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
+                DeleteSelectedEnvelopeValues();
+            else if (editMode == EditionMode.DPCM)
+                DeleteSelectedWaveSection();
+        }
+
         public void PasteSpecial()
         {
             if (editMode == EditionMode.Channel)
@@ -2296,17 +2287,30 @@ namespace FamiStudio
             return IsSelectionValid() && idx >= selectionMin && idx <= selectionMax;
         }
 
-        private bool IsEnvelopeRepeatValueSelected(int idx)
+        private bool GetRepeatEnvelopeSelectionMinMax(out int min, out int max)
         {
+            min = -1;
+            max = -1;
+
             var rep = EditRepeatEnvelope;
             var env = EditEnvelope;
 
             if (IsSelectionValid() && rep != null)
             {
-                var minIdx = (idx + 0) * env.ChunkLength;
-                var maxIdx = (idx + 1) * env.ChunkLength - 1;
+                min = selectionMin / env.ChunkLength;
+                max = selectionMax / env.ChunkLength;
 
-                return minIdx >= selectionMin && maxIdx <= selectionMax;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool IsEnvelopeRepeatValueSelected(int idx)
+        {
+            if (GetRepeatEnvelopeSelectionMinMax(out var min, out var max))
+            {
+                return idx >= min && idx <= max;
             }
 
             return false;
@@ -2330,7 +2334,7 @@ namespace FamiStudio
             }
             else
             {
-                var pt = PointToClient(CursorPosition);
+                var pt = ScreenToControl(CursorPosition);
 
                 if (g.Rect.Contains(pt.X - pianoSizeX, pt.Y - offsetY))
                     return true;
@@ -2344,19 +2348,7 @@ namespace FamiStudio
 
         private Color GetNoteColor(Channel channel, int noteValue, Instrument instrument, float alphaDim = 1.0f)
         {
-            var color = Theme.LightGreyColor1;
-
-            if (channel.Type == ChannelType.Dpcm)
-            {
-                var mapping = channel.Song.Project.GetDPCMMapping(noteValue);
-                if (mapping != null)
-                    color = mapping.Sample.Color;
-            }
-            else if (instrument != null)
-            {
-                color = instrument.Color;
-            }
-
+            var color = instrument != null ? instrument.Color : Theme.LightGreyColor1;
             return Color.FromArgb(alphaDim, color);
         }
 
@@ -2382,13 +2374,13 @@ namespace FamiStudio
                 {
                     int y = octaveBaseY - j * noteSizeY;
                     if (!IsBlackKey(j))
-                        r.cb.FillRectangle(0, y - noteSizeY, maxX, y, Theme.DarkGreyColor4);
+                        r.b.FillRectangle(0, y - noteSizeY, maxX, y, Theme.DarkGreyColor4);
                     if (i * 12 + j != NumNotes)
-                        r.cb.DrawLine(0, y, maxX, y, Theme.BlackColor);
+                        r.b.DrawLine(0, y, maxX, y, Theme.BlackColor);
                 }
             }
 
-            DrawSelectionRect(r.cb, Height); 
+            DrawSelectionRect(r.b, Height); 
 
             if (editMode == EditionMode.Channel ||
                 editMode == EditionMode.VideoRecording)
@@ -2410,11 +2402,11 @@ namespace FamiStudio
                             int x = GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(p) + i);
 
                             if (i % beatLength == 0)
-                                r.cb.DrawLine(x, 0, x, Height, Theme.BlackColor, i == 0 ? 3 : 1);
+                                r.b.DrawLine(x, 0, x, Height, Theme.BlackColor, i == 0 ? 3 : 1);
                             else if (drawNotes && i % noteLength == 0)
-                                r.cb.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1);
+                                r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1);
                             else if (drawFrames && editMode != EditionMode.VideoRecording)
-                                r.cb.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1, 1, false, true);
+                                r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1, 1, false, true);
                         }
                     }
                     else
@@ -2426,19 +2418,19 @@ namespace FamiStudio
                             int x = GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(p) + i);
 
                             if (i % beatLength == 0)
-                                r.cb.DrawLine(x, 0, x, Height, Theme.BlackColor, i == 0 ? 3 : 1);
+                                r.b.DrawLine(x, 0, x, Height, Theme.BlackColor, i == 0 ? 3 : 1);
                             else if (drawNotes)
-                                r.cb.DrawLine(x, 0, x, Height, Theme.DarkGreyColor2);
+                                r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor2);
                         }
                     }
                 }
 
-                r.cb.DrawLine(maxX, 0, maxX, Height, Theme.BlackColor, 3);
+                r.b.DrawLine(maxX, 0, maxX, Height, Theme.BlackColor, 3);
 
                 if (editMode != EditionMode.VideoRecording)
                 {
                     int seekX = GetPixelForNote(GetSeekFrameToDraw());
-                    r.cb.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
+                    r.c.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
                 }
 
                 // Highlight note under mouse.
@@ -2467,7 +2459,7 @@ namespace FamiStudio
                         }
                         else if (captureOperation == CaptureOperation.None)
                         {
-                            var pt = PointToClient(CursorPosition);
+                            var pt = ScreenToControl(CursorPosition);
                             highlightNote = GetNoteForCoord(pt.X, pt.Y, out _, out highlightLocation, out _);
                         }
                     }
@@ -2570,7 +2562,7 @@ namespace FamiStudio
                 // Draw effect icons at the top.
                 if (editMode != EditionMode.VideoRecording)
                 {
-                    var effectIconSizeX = ScaleCustom(bmpEffects[0].ElementSize.Width, effectBitmapScale);
+                    var effectIconSizeX = DpiScaling.ScaleCustom(bmpEffects[0].ElementSize.Width, effectBitmapScale);
 
                     var channel = song.Channels[editChannel];
                     for (int p = r.minVisiblePattern; p < r.maxVisiblePattern; p++)
@@ -2604,8 +2596,8 @@ namespace FamiStudio
                                         var iconX = GetPixelForNote(channel.Song.GetPatternStartAbsoluteNoteIndex(p, time)) + (int)(noteSizeX / 2) - effectIconSizeX / 2;
                                         var iconY = effectPosY + effectIconPosY;
 
-                                        r.cf.DrawBitmapAtlas(bmpEffectFrame, iconX, iconY, 1.0f, effectBitmapScale, drawOpaque ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
-                                        r.cf.DrawBitmapAtlas(bmpEffects[fx], iconX, iconY, drawOpaque ? 1.0f : 0.4f, effectBitmapScale, Theme.LightGreyColor1);
+                                        r.f.DrawBitmapAtlas(bmpEffectFrame, iconX, iconY, 1.0f, effectBitmapScale, drawOpaque ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
+                                        r.f.DrawBitmapAtlas(bmpEffects[fx], iconX, iconY, drawOpaque ? 1.0f : 0.4f, effectBitmapScale, Theme.LightGreyColor1);
                                         effectPosY += effectIconSizeX + effectIconPosY + 1;
                                     }
                                 }
@@ -2628,11 +2620,11 @@ namespace FamiStudio
                             var lineColor = highlighted ? Color.White : Color.Black;
 
                             if (g.FillImage != null)
-                                r.cg.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, fillColor);
-                            r.cg.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, lineColor);
+                                r.f.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, fillColor); // GLTODO : Was "cg" (for gizmo)
+                            r.f.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, lineColor); // GLTODO : Was "cg" (for gizmo)
 
                             if (highlighted && !string.IsNullOrEmpty(g.GizmoText))
-                                r.cg.DrawText(g.GizmoText, FontResources.FontSmall, g.Rect.X - g.Rect.Width / 8, g.Rect.Y, Theme.WhiteColor, TextFlags.MiddleRight, 0, g.Rect.Height);
+                                r.f.DrawText(g.GizmoText, r.fonts.FontSmall, g.Rect.X - g.Rect.Width / 8, g.Rect.Y, Theme.WhiteColor, TextFlags.MiddleRight, 0, g.Rect.Height); // GLTODO : Was "cg" (for gizmo)
                         }
                     }
                 }
@@ -2642,34 +2634,29 @@ namespace FamiStudio
                     var channelType = song.Channels[editChannel].Type;
                     var channelName = song.Channels[editChannel].NameWithExpansion;
 
-                    r.cf.DrawText($"Editing {channelName} Channel", FontResources.FontVeryLarge, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, Theme.LightGreyColor1);
+                    r.f.DrawText($"Editing {channelName} Channel", r.fonts.FontVeryLarge, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, Theme.LightGreyColor1);
                 }
             }
             else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.
             {
-                // Draw 2 dark rectangle to show invalid range. 
-                r.cb.PushTranslation(0, -scrollY);
-                r.cb.FillRectangle(0, virtualSizeY, Width, virtualSizeY - Note.DPCMNoteMin * noteSizeY, invalidDpcmMappingColor);
-                r.cb.FillRectangle(0, 0, Width, virtualSizeY - Note.DPCMNoteMax * noteSizeY, invalidDpcmMappingColor);
-                r.cb.PopTransform();
-
-                for (int i = 0; i < Note.MusicalNoteMax; i++)
+                foreach (var kv in editInstrument.SamplesMapping)
                 {
-                    var mapping = App.Project.GetDPCMMapping(i);
-                    if (mapping != null)
+                    var note = kv.Key;
+                    var mapping = kv.Value;
+                    if (mapping != null && mapping.Sample != null)
                     {
-                        var y = virtualSizeY - i * noteSizeY - scrollY;
-                        var highlighted = i == highlightDPCMSample;
+                        var y = virtualSizeY - note * noteSizeY - scrollY;
+                        var highlighted = note == highlightDPCMSample;
 
-                        r.cf.PushTranslation(0, y);
-                        r.cf.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, noteSizeY, highlighted ? 2 : 1);
+                        r.c.PushTranslation(0, y);
+                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, noteSizeY, highlighted ? 3 : 1, highlighted, highlighted);
 
                         string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                         if (mapping.Loop) text += ", Looping";
                         if (mapping.OverrideDmcInitialValue) text += $" , DMC Initial value = {mapping.DmcInitialValueDiv2}";
 
-                        r.cf.DrawText(text, FontResources.FontSmall, dpcmTextPosX, 0, Theme.BlackColor, TextFlags.MiddleLeft, 0, noteSizeY);
-                        r.cf.PopTransform();
+                        r.c.DrawText(text, r.fonts.FontSmall, dpcmTextPosX, 0, Theme.BlackColor, TextFlags.MiddleLeft, 0, noteSizeY);
+                        r.c.PopTransform();
                     }
                 }
 
@@ -2686,35 +2673,49 @@ namespace FamiStudio
 
                 if (dragSample != null)
                 {
-                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
+                    var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
 
-                    if (GetNoteValueForCoord(pt.X, pt.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue))
+                    if (GetNoteValueForCoord(pt.X, pt.Y, out var noteValue))
                     {
                         var y = virtualSizeY - noteValue * noteSizeY - scrollY;
-                        r.cf.PushTranslation(0, y);
-                        r.cf.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, dragSample.Color, dragSample.Color.Scaled(0.8f), Theme.WhiteColor, true, noteSizeY, 2, true);
-                        r.cf.PopTransform();
+                        r.c.PushTranslation(0, y);
+                        r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, dragSample.Color, dragSample.Color.Scaled(0.8f), Theme.WhiteColor, true, noteSizeY, 3, true, true);
+                        r.c.PopTransform();
                     }
                 }
                 else if (Platform.IsDesktop && captureOperation == CaptureOperation.None)
                 {
-                    var pt = PointToClient(CursorPosition);
+                    var pt = ScreenToControl(CursorPosition);
 
                     if (GetLocationForCoord(pt.X, pt.Y, out _, out var highlightNoteValue))
                     {
-                        var mapping = App.Project.GetDPCMMapping(highlightNoteValue);
+                        var mapping = editInstrument.GetDPCMMapping(highlightNoteValue);
                         if (mapping != null)
                         {
                             var y = virtualSizeY - highlightNoteValue * noteSizeY - scrollY;
 
-                            r.cf.PushTranslation(0, y);
-                            r.cf.DrawRectangle(0, 0, Width - pianoSizeX, noteSizeY, Theme.WhiteColor, 2, true);
-                            r.cf.PopTransform();
+                            r.c.PushTranslation(0, y);
+                            r.c.DrawRectangle(0, 0, Width - pianoSizeX, noteSizeY, Theme.WhiteColor, 3, true, true);
+                            r.c.PopTransform();
                         }
                     }
                 }
 
-                r.cf.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", FontResources.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+                var textY = bigTextPosY;
+                r.f.DrawText($"Editing Instrument {editInstrument.Name} (DPCM Samples)", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+                textY += r.fonts.FontVeryLarge.LineHeight;
+                r.f.DrawText($"{editInstrument.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} bytes used by this instrument", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+                textY += r.fonts.FontMedium.LineHeight;
+                
+                for (int i = 0; i < Project.MaxDPCMBanks; i++)
+                {
+                    var bankSize = App.Project.GetBankSize(i);
+                    if (bankSize > 0)
+                    {
+                        r.f.DrawText($"{bankSize} bytes used in bank {i}", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+                        textY += r.fonts.FontMedium.LineHeight;
+                    }
+                }
             }
         }
 
@@ -2741,21 +2742,18 @@ namespace FamiStudio
             var maxX = GetPixelForNote(env.Length);
             var maxi = (Platform.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue) + 1;
 
+            // Background rectangles + labels
             for (int i = 0; i <= maxi; i++)
             {
                 var value = Platform.IsMobile ? i + envTypeMinValue : i - midValue;
                 var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
-                
-                if (i != maxi)
-                    r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, Theme.DarkGreyColor1, (value % spacing) == 0 ? 3 : 1);
-
                 var drawLabel = i == maxi - 1;
 
                 if ((value % spacing) == 0 || i == 0 || i == maxi)
                 {
                     if (lastRectangleValue >= envTypeMinValue && lastRectangleValue <= envTypeMaxValue)
                     {
-                        r.cb.FillRectangle(0, lastRectangleY, maxX, y, oddRectangle ? Theme.DarkGreyColor5 : Theme.DarkGreyColor4);
+                        r.b.FillRectangle(0, lastRectangleY, maxX, y, oddRectangle ? Theme.DarkGreyColor5 : Theme.DarkGreyColor4);
                         oddRectangle = !oddRectangle;
                     }
 
@@ -2765,24 +2763,34 @@ namespace FamiStudio
                 }
 
                 if (drawLabel)
-                    r.cb.DrawText(value.ToString(), FontResources.FontSmall, maxX + 4 * r.g.WindowScaling, y - envelopeValueSizeY, Theme.LightGreyColor1, TextFlags.MiddleLeft, 0, envelopeValueSizeY);
+                    r.b.DrawText(value.ToString(), r.fonts.FontSmall, maxX + 4 * DpiScaling.Window, y - envelopeValueSizeY, Theme.LightGreyColor1, TextFlags.MiddleLeft, 0, envelopeValueSizeY);
+            }
+            
+            // Horizontal lines
+            for (int i = 0; i <= maxi; i++)
+            {
+                var value = Platform.IsMobile ? i + envTypeMinValue : i - midValue;
+                var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
+
+                if (i != maxi)
+                    r.b.DrawLine(0, y, GetPixelForNote(env.Length), y, Theme.DarkGreyColor1, (value % spacing) == 0 ? 3 : 1);
             }
 
-            DrawSelectionRect(r.cb, Height);
+            DrawSelectionRect(r.b, Height);
 
             // Draw the vertical bars.
             for (int b = 0; b < env.Length; b++)
             {
                 int x = GetPixelForNote(b);
-                if (b != 0) r.cb.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1, env.ChunkLength > 1 && b % env.ChunkLength == 0 ? 3 : 1);
+                if (b != 0) r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1, env.ChunkLength > 1 && b % env.ChunkLength == 0 ? 3 : 1);
             }
 
             if (env.Loop >= 0)
-                r.cb.DrawLine(GetPixelForNote(env.Loop), 0, GetPixelForNote(env.Loop), Height, Theme.BlackColor);
+                r.b.DrawLine(GetPixelForNote(env.Loop), 0, GetPixelForNote(env.Loop), Height, Theme.BlackColor);
             if (env.Release >= 0)
-                r.cb.DrawLine(GetPixelForNote(env.Release), 0, GetPixelForNote(env.Release), Height, Theme.BlackColor);
+                r.b.DrawLine(GetPixelForNote(env.Release), 0, GetPixelForNote(env.Release), Height, Theme.BlackColor);
             if (env.Length > 0)
-                r.cb.DrawLine(GetPixelForNote(env.Length), 0, GetPixelForNote(env.Length), Height, Theme.BlackColor);
+                r.b.DrawLine(GetPixelForNote(env.Length), 0, GetPixelForNote(env.Length), Height, Theme.BlackColor);
 
             if ((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && CanEnvelopeDisplayFrame())
             {
@@ -2790,7 +2798,7 @@ namespace FamiStudio
                 if (seekFrame >= 0)
                 {
                     var seekX = GetPixelForNote(seekFrame);
-                    r.cb.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
+                    r.c.DrawLine(seekX, 0, seekX, Height, GetSeekBarColor(), 3);
                 }
             }
 
@@ -2809,21 +2817,20 @@ namespace FamiStudio
                     float x1 = GetPixelForNote(i + 1);
                     float y = (virtualSizeY - envelopeValueSizeY * (env.Values[i] + bias)) - scrollY;
 
-                    r.cf.FillRectangle(x0, y - envelopeValueSizeY, x1, y, brush);
+                    r.c.FillRectangle(x0, y - envelopeValueSizeY, x1, y, brush);
 
                     if (!highlighted)
-                        r.cf.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 2 : 1, selected);
+                        r.c.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 3 : 1, selected, selected);
                     else
                         highlightRect = new RectangleF(x0,y - envelopeValueSizeY, x1 - x0, envelopeValueSizeY);
 
                     var label = env.Values[i].ToString("+#;-#;0");
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                        r.cf.DrawText(label, FontResources.FontSmall, x0, y - envelopeValueSizeY - effectValuePosTextOffsetY, Theme.LightGreyColor1, TextFlags.Center, noteSizeX);
+                        r.f.DrawText(label, r.fonts.FontSmall, x0, y - envelopeValueSizeY - effectValuePosTextOffsetY, Theme.LightGreyColor1, TextFlags.Center, noteSizeX);
                 }
             }
             else
             {
-
                 for (int i = 0; i < env.Length; i++)
                 {
                     int val = env.Values[i];
@@ -2847,27 +2854,27 @@ namespace FamiStudio
                     var selected = IsEnvelopeValueSelected(i);
                     var highlighted = Platform.IsMobile && highlightNoteAbsIndex == i;
 
-                    r.cf.FillRectangle(x0, y0, x1, y1, brush);
+                    r.c.FillRectangle(x0, y0, x1, y1, brush);
 
                     if (!highlighted)
-                        r.cf.DrawRectangle(x0, y0, x1, y1, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 2 : 1, selected);
+                        r.c.DrawRectangle(x0, y0, x1, y1, selected ? Theme.LightGreyColor1 : Theme.BlackColor, selected ? 3 : 1, selected, selected);
                     else
                         highlightRect = new RectangleF(x0, y0, x1 - x0, y1 - y0);
 
                     var label = val.ToString();
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
                     {
-                        var drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * WindowScaling * 2);
+                        var drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * DpiScaling.Window * 2);
                         var textBrush = drawOutside ? Theme.LightGreyColor1 : Theme.BlackColor;
                         var offset = drawOutside != val < center ? -effectValuePosTextOffsetY : effectValueNegTextOffsetY;
 
-                        r.cf.DrawText(label, FontResources.FontSmall, x0, ty + offset, textBrush, TextFlags.Center, noteSizeX);
+                        r.f.DrawText(label, r.fonts.FontSmall, x0, ty + offset, textBrush, TextFlags.Center, noteSizeX);
                     }
                 }
             }
 
             if (!highlightRect.IsEmpty)
-                r.cf.DrawRectangle(highlightRect, Theme.WhiteColor, 2, true);
+                r.c.DrawRectangle(highlightRect, Theme.WhiteColor, 3, true, true);
 
             // Drawing the N163/FDS waveform on top. 
             if (resampled)
@@ -2931,7 +2938,7 @@ namespace FamiStudio
                     }
                 }
 
-                r.cf.DrawLine(line, Theme.LightGreyColor2, 1, true);
+                r.c.DrawLine(line, Theme.LightGreyColor2, 1, true);
             }
 
             if (editMode == EditionMode.Envelope)
@@ -2941,19 +2948,23 @@ namespace FamiStudio
                 if (editEnvelope == EnvelopeType.Pitch)
                     envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? "Relative " : "Absolute ") + envelopeString;
 
-                r.cf.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", FontResources.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+                r.f.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
 
                 if (App.SelectedInstrument != null && App.SelectedInstrument != editInstrument)
-                    r.cf.DrawText($"Warning : Instrument is currently not selected. Selected instrument '{App.SelectedInstrument.Name}' will be heard when playing the piano.", FontResources.FontMedium, bigTextPosX, bigTextPosY + FontResources.FontVeryLarge.LineHeight, Theme.LightRedColor);
+                    r.f.DrawText($"Warning : Instrument is currently not selected. Selected instrument '{App.SelectedInstrument.Name}' will be heard when playing the piano.", r.fonts.FontMedium, bigTextPosX, bigTextPosY + r.fonts.FontVeryLarge.LineHeight, Theme.LightRedColor);
                 else if (editEnvelope == EnvelopeType.Arpeggio && App.SelectedArpeggio != null)
-                    r.cf.DrawText($"Warning : Arpeggio envelope currently overridden by selected arpeggio '{App.SelectedArpeggio.Name}'", FontResources.FontMedium, bigTextPosX, bigTextPosY + FontResources.FontVeryLarge.LineHeight, Theme.LightRedColor);
+                    r.f.DrawText($"Warning : Arpeggio envelope currently overridden by selected arpeggio '{App.SelectedArpeggio.Name}'", r.fonts.FontMedium, bigTextPosX, bigTextPosY + r.fonts.FontVeryLarge.LineHeight, Theme.LightRedColor);
             }
             else
             {
-                r.cf.DrawText($"Editing Arpeggio {editArpeggio.Name}", FontResources.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+                r.f.DrawText($"Editing Arpeggio {editArpeggio.Name}", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
 
                 if (App.SelectedArpeggio != editArpeggio)
-                    r.cf.DrawText($"Warning : Arpeggio is currently not selected. Selected arpeggio '{App.SelectedArpeggio.Name}' will be heard when playing the piano.", FontResources.FontMedium, bigTextPosX, bigTextPosY + FontResources.FontVeryLarge.LineHeight, Theme.LightRedColor);
+                {
+                    r.f.DrawText(App.SelectedArpeggio == null ?
+                        $"Warning : Arpeggio is currently not selected." :
+                        $"Warning : Arpeggio is currently not selected. Selected arpeggio '{App.SelectedArpeggio.Name}' will be heard when playing the piano.", r.fonts.FontMedium, bigTextPosX, bigTextPosY + r.fonts.FontVeryLarge.LineHeight, Theme.LightRedColor);
+                }
             }
 
             var gizmos = GetEnvelopeGizmos();
@@ -2964,15 +2975,16 @@ namespace FamiStudio
                     var lineColor = IsGizmoHighlighted(g, 0) ? Color.White : Color.Black;
 
                     if (g.FillImage != null)
-                        r.cg.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, color);
-                    r.cg.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
+                        r.f.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, color); // GLTODO : Was "cg" for gizmo.
+                    r.f.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor); // GLTODO : Was "cg" for gizmo.
                 }
             }
         }
 
         private void RenderNoteArea(RenderInfo r)
         {
-            r.cb.PushTranslation(pianoSizeX, headerAndEffectSizeY);
+            r.c.PushTranslation(pianoSizeX, headerAndEffectSizeY);
+            r.c.PushClipRegion(0, 0, width - pianoSizeX - scrollBarThickness, height - headerAndEffectSizeY - scrollBarThickness);
 
             if (editMode == EditionMode.Channel ||
                 editMode == EditionMode.VideoRecording ||
@@ -2985,14 +2997,16 @@ namespace FamiStudio
                 RenderEnvelopeValues(r);
             }
 
-            r.cb.PopTransform();
+            r.c.PopTransform();
 
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
                 var textWidth = Width - tooltipTextPosX - scrollBarThickness;
                 if (textWidth > 0)
-                    r.cf.DrawText(noteTooltip, FontResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, Theme.LightGreyColor1, TextFlags.Right, textWidth);
+                    r.f.DrawText(noteTooltip, r.fonts.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, Theme.LightGreyColor1, TextFlags.Right, textWidth);
             }
+
+            r.c.PopClipRegion();
         }
 
         private void RenderNoteBody(RenderInfo r, Note note, Color color, int time, int noteLen, bool outline, bool selected, bool activeChannel, bool released, bool isFirstPart, int slideDuration = -1)
@@ -3009,38 +3023,38 @@ namespace FamiStudio
                 int slideSizeX = duration;
                 int slideSizeY = note.SlideNoteTarget - note.Value;
 
-                r.cf.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), GetPixelForNote(slideSizeX, false), -slideSizeY);
-                r.cf.FillGeometry(slideNoteGeometry, Color.FromArgb(50, color), true);
-                r.cf.PopTransform();
+                r.c.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), GetPixelForNote(slideSizeX, false), -slideSizeY);
+                r.c.FillGeometry(slideNoteGeometry, Color.FromArgb(50, color), true);
+                r.c.PopTransform();
             }
 
             if (released)
                 y += noteSizeY / 2 - releaseNoteSizeY / 2;
 
-            r.cf.PushTranslation(x, y);
+            r.c.PushTranslation(x, y);
 
             int sx = GetPixelForNote(noteLen, false);
             int noteTextPosX = attackIconPosX + 1;
 
             if (!outline)
-                r.cf.FillRectangleGradient(0, activeChannelInt, sx, sy, color, color.Scaled(0.8f), true, sy);
+                r.c.FillRectangleGradient(0, activeChannelInt, sx, sy, color, color.Scaled(0.8f), true, sy);
             
             if (activeChannel)
-                r.cf.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 2 : 1, selected || outline);
+                r.c.DrawRectangle(0, 0, sx, sy, outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), selected || outline ? 3 : 1, selected || outline, selected || outline);
 
             if (!outline)
             {
                 if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + attackIconPosX * 2 + 2)
                 {
-                    r.cf.FillRectangle(attackIconPosX + 1, attackIconPosX + 1, attackIconPosX + noteAttackSizeX + 1, sy - attackIconPosX, activeChannel ? attackColor : attackBrushForceDisplayColor);
+                    r.c.FillRectangle(attackIconPosX + 1, attackIconPosX + 1, attackIconPosX + noteAttackSizeX + 1, sy - attackIconPosX, activeChannel ? attackColor : attackBrushForceDisplayColor);
                     noteTextPosX += noteAttackSizeX + attackIconPosX + 2;
                 }
 
-                if (activeChannel && !released && editMode == EditionMode.Channel && note.IsMusical && FontResources.FontSmall.Size < noteSizeY)
+                if (activeChannel && !released && editMode == EditionMode.Channel && note.IsMusical && r.fonts.FontSmall.Size < noteSizeY)
                 {
                     var label = note.FriendlyName;
                     if ((sx - noteTextPosX) > (label.Length + 1) * fontSmallCharSizeX)
-                        r.cf.DrawText(note.FriendlyName, FontResources.FontSmall, noteTextPosX, 1, Theme.BlackColor, TextFlags.Middle, 0, noteSizeY - 1);
+                        r.c.DrawText(note.FriendlyName, r.fonts.FontSmall, noteTextPosX, 1, Theme.BlackColor, TextFlags.Middle, 0, noteSizeY);
                 }
 
                 if (note.Arpeggio != null)
@@ -3048,14 +3062,14 @@ namespace FamiStudio
                     var offsets = note.Arpeggio.GetChordOffsets();
                     foreach (var offset in offsets)
                     {
-                        r.cf.PushTranslation(0, offset * -noteSizeY);
-                        r.cf.FillRectangle(0, 1, sx, sy, Color.FromArgb(activeChannel ? 50 : 25, note.Arpeggio.Color));
-                        r.cf.PopTransform();
+                        r.c.PushTranslation(0, offset * -noteSizeY);
+                        r.c.FillRectangle(0, 1, sx, sy, Color.FromArgb(activeChannel ? 50 : 25, note.Arpeggio.Color));
+                        r.c.PopTransform();
                     }
                 }
             }
 
-            r.cf.PopTransform();
+            r.c.PopTransform();
         }
 
         private void RenderNoteReleaseOrStop(RenderInfo r, Note note, Color color, int time, int value, bool outline, bool selected, bool activeChannel, bool stop, bool released)
@@ -3065,25 +3079,25 @@ namespace FamiStudio
 
             var geo = stop ? (released ? stopReleaseNoteGeometry : stopNoteGeometry) : releaseNoteGeometry;
 
-            r.cf.PushTransform(x, y, noteSizeX, 1);
+            r.c.PushTransform(x, y, noteSizeX, 1);
             if (!outline)
-                r.cf.FillGeometryGradient(geo[activeChannel ? 0 : 1], color, color.Scaled(0.8f), noteSizeY);
+                r.c.FillGeometryGradient(geo[activeChannel ? 0 : 1], color, color.Scaled(0.8f), noteSizeY);
             if (activeChannel)
-                r.cf.DrawGeometry(geo[0], outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), outline || selected ? 2 : 1, true);
-            r.cf.PopTransform();
+                r.c.DrawGeometry(geo[0], outline ? Theme.WhiteColor : (selected ? Theme.LightGreyColor1 : Theme.BlackColor), outline || selected ? 3 : 1, true);
+            r.c.PopTransform();
 
-            r.cf.PushTranslation(x, y);
+            r.c.PushTranslation(x, y);
             if (!outline && note.Arpeggio != null)
             {
                 var offsets = note.Arpeggio.GetChordOffsets();
                 foreach (var offset in offsets)
                 {
-                    r.cf.PushTransform(0, offset * -noteSizeY, noteSizeX, 1);
-                    r.cf.FillGeometry(geo[1], Color.FromArgb(activeChannel ? 50 : 25, note.Arpeggio.Color), true);
-                    r.cf.PopTransform();
+                    r.c.PushTransform(0, offset * -noteSizeY, noteSizeX, 1);
+                    r.c.FillGeometry(geo[1], Color.FromArgb(activeChannel ? 50 : 25, note.Arpeggio.Color), true);
+                    r.c.PopTransform();
                 }
             }
-            r.cf.PopTransform();
+            r.c.PopTransform();
         }
 
         private void RenderNote(RenderInfo r, NoteLocation location, Note note, Song song, Channel channel, int distanceToNextNote, bool drawImplicityStopNotes, bool isActiveChannel, bool highlighted, bool released)
@@ -3182,19 +3196,19 @@ namespace FamiStudio
 
                 if (numVisibleSample > 0)
                 {
-                    var points = new float[numVisibleSample, 2];
+                    var points = new float[numVisibleSample * 2];
                     var indices = isSource && drawSamples ? new int[numVisibleSample] : null;
                     var scaleX = 1.0f / (rate * viewTime) * viewWidth;
                     var biasX = (float)-scrollX;
 
                     for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i += sampleSkip, j++)
                     {
-                        points[j, 0] = i * scaleX + biasX;
-                        points[j, 1] = halfHeight + data[i] / (float)short.MinValue * halfHeightPad;
+                        points[j * 2 + 0] = i * scaleX + biasX;
+                        points[j * 2 + 1] = halfHeight + data[i] / (float)short.MinValue * halfHeightPad;
                         if (indices != null) indices[j] = i;
                     }
 
-                    r.cf.DrawGeometry(points, color, 1, true);
+                    r.c.DrawGeometry(points, color, 1, true);
 
                     if (drawSamples)
                     {
@@ -3205,9 +3219,9 @@ namespace FamiStudio
                             var selected = isSource && selectionValid && indices[i] >= selectionMin && indices[i] <= selectionMax;
                             var sampleScale = selected ? 1.5f : 1.0f;
 
-                            r.cf.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
-                            r.cf.FillGeometry(sampleGeometry, selected ? Theme.WhiteColor : color);
-                            r.cf.PopTransform();
+                            r.c.PushTransform(points[i * 2 + 0], points[i * 2 + 1], sampleScale, sampleScale);
+                            r.c.FillGeometry(sampleGeometry, selected ? Theme.WhiteColor : color);
+                            r.c.PopTransform();
                         }
                     }
                 }
@@ -3243,7 +3257,7 @@ namespace FamiStudio
 
                 if (numVisibleSample > 0)
                 {
-                    var points = new float[numVisibleSample, 2];
+                    var points = new float[numVisibleSample * 2];
                     var indices = isSource && drawSamples ? new int[numVisibleSample] : null;
                     var scaleX = 1.0f / (rate * viewTime) * viewWidth;
                     var biasX = GetPixelForWaveTime(baseTime, scrollX);
@@ -3265,8 +3279,8 @@ namespace FamiStudio
                     {
                         if ((i & (sampleSkip - 1)) == 0)
                         {
-                            points[j, 0] = i * scaleX + biasX;
-                            points[j, 1] = (-(dpcmCounter - 32) / 64.0f) * 2.0f * halfHeightPad + halfHeight; // DPCMTODO : Is that centered correctly? Also negative value?
+                            points[j * 2 + 0] = i * scaleX + biasX;
+                            points[j * 2 + 1] = (-(dpcmCounter - 32) / 64.0f) * 2.0f * halfHeightPad + halfHeight; // DPCMTODO : Is that centered correctly? Also negative value?
                             if (indices != null) indices[j] = i - 1;
                             j++;
                         }
@@ -3283,20 +3297,20 @@ namespace FamiStudio
                         }
                     }
 
-                    r.cf.DrawGeometry(points, color, 1, true);
+                    r.c.DrawGeometry(points, color, 1, true, false);
 
                     if (drawSamples)
                     {
                         var selectionValid = IsSelectionValid();
 
-                        for (int i = 0; i < points.GetLength(0); i++)
+                        for (int i = 0; i < points.GetLength(0) / 2; i++)
                         {
                             var selected = isSource && selectionValid && indices[i] >= selectionMin && indices[i] <= selectionMax;
                             var sampleScale = selected ? 1.5f : 1.0f;
 
-                            r.cf.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
-                            r.cf.FillGeometry(sampleGeometry, selected ? Theme.WhiteColor : color);
-                            r.cf.PopTransform();
+                            r.c.PushTransform(points[i * 2 + 0], points[i * 2 + 1], sampleScale, sampleScale);
+                            r.c.FillGeometry(sampleGeometry, selected ? Theme.WhiteColor : color);
+                            r.c.PopTransform();
                         }
                     }
                 }
@@ -3308,10 +3322,11 @@ namespace FamiStudio
             if (editMode != EditionMode.DPCM || Width < pianoSizeX)
                 return;
 
-            r.cb.PushTranslation(pianoSizeX, headerAndEffectSizeY);
+            r.b.PushTranslation(pianoSizeX, headerAndEffectSizeY);
+            r.b.PushClipRegion(0, 0, width - pianoSizeX - scrollBarThickness, height - headerAndEffectSizeY - scrollBarThickness);
 
             // Source data range.
-            r.cb.FillRectangle(
+            r.b.FillRectangle(
                 GetPixelForWaveTime(0, scrollX), 0,
                 GetPixelForWaveTime(editSample.SourceDuration, scrollX), Height, Theme.DarkGreyColor4);
 
@@ -3319,13 +3334,13 @@ namespace FamiStudio
             var actualHeight = Height - scrollBarThickness;
             var sizeY        = actualHeight - headerAndEffectSizeY;
             var centerY      = sizeY * 0.5f;
-            r.cb.DrawLine(0, centerY, Width, centerY, Theme.BlackColor);
+            r.b.DrawLine(0, centerY, Width, centerY, Theme.BlackColor);
 
             // Top/bottom dash lines (limits);
             var topY    = waveDisplayPaddingY;
             var bottomY = (actualHeight - headerAndEffectSizeY) - waveDisplayPaddingY;
-            r.cb.DrawLine(0, topY,    Width, topY,    Theme.DarkGreyColor1, 1, false, true);
-            r.cb.DrawLine(0, bottomY, Width, bottomY, Theme.DarkGreyColor1, 1, false, true);
+            r.b.DrawLine(0, topY,    Width, topY,    Theme.DarkGreyColor1, 1, false, true);
+            r.b.DrawLine(0, bottomY, Width, bottomY, Theme.DarkGreyColor1, 1, false, true);
 
             // Vertical lines (1.0, 0.1, 0.01 seconds)
             ForEachWaveTimecode(r, (time, x, level, idx) =>
@@ -3347,13 +3362,13 @@ namespace FamiStudio
                     brush = Theme.DarkGreyColor1;
                 }
 
-                r.cb.DrawLine(x, 0, x, Height, brush, 1, false, dash);
+                r.b.DrawLine(x, 0, x, Height, brush, 1, false, dash);
             });
 
             // Selection rectangle
             if (IsSelectionValid())
             {
-                r.cb.FillRectangle(
+                r.b.FillRectangle(
                     GetPixelForWaveTime(GetWaveTimeForSample(selectionMin, true),  scrollX), 0, 
                     GetPixelForWaveTime(GetWaveTimeForSample(selectionMax, false), scrollX), Height, selectionBgVisibleColor);
             }
@@ -3383,25 +3398,27 @@ namespace FamiStudio
                 if (!App.PreviewDPCMIsSource)
                     playTime += editSample.ProcessedStartTime;
                 var seekX = GetPixelForWaveTime(playTime, scrollX);
-                r.cb.DrawLine(seekX, 0, seekX, Height, App.PreviewDPCMIsSource ? Theme.LightGreyColor1 : editSample.Color, 3);
+                r.c.DrawLine(seekX, 0, seekX, Height, App.PreviewDPCMIsSource ? Theme.LightGreyColor1 : editSample.Color, 3);
             }
 
             // Title + source/processed info.
             var textY = bigTextPosY;
-            r.cf.DrawText($"Editing DPCM Sample {editSample.Name}", FontResources.FontVeryLarge, bigTextPosX, textY, Theme.LightGreyColor1);
-            textY += FontResources.FontVeryLarge.LineHeight;
-            r.cf.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} ms", FontResources.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
-            textY += FontResources.FontMedium.LineHeight;
-            r.cf.DrawText($"Processed Data (DMC) : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate)}, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", FontResources.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
-            textY += FontResources.FontMedium.LineHeight;
-            r.cf.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", FontResources.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+            r.f.DrawText($"Editing DPCM Sample {editSample.Name}", r.fonts.FontVeryLarge, bigTextPosX, textY, Theme.LightGreyColor1);
+            textY += r.fonts.FontVeryLarge.LineHeight;
+            r.f.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} ms", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+            textY += r.fonts.FontMedium.LineHeight;
+            r.f.DrawText($"Processed Data (DMC) : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate)}, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+            textY += r.fonts.FontMedium.LineHeight;
+            r.f.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
 
-            r.cb.PopTransform();
+            r.b.PopTransform();
 
             if (!string.IsNullOrEmpty(noteTooltip))
             {
-                r.cf.DrawText(noteTooltip, FontResources.FontLarge, 0, actualHeight - tooltipTextPosY, Theme.LightGreyColor1, TextFlags.Right, Width - tooltipTextPosX);
+                r.f.DrawText(noteTooltip, r.fonts.FontLarge, 0, actualHeight - tooltipTextPosY, Theme.LightGreyColor1, TextFlags.Right, Width - tooltipTextPosX);
             }
+
+            r.b.PopClipRegion();
         }
 
         public void RenderVideoFrame(Graphics g, int channel, int patternIndex, float noteIndex, float centerNote, int highlightKey, Color highlightColor)
@@ -3423,31 +3440,20 @@ namespace FamiStudio
         {
             if (Settings.ScrollBars != Settings.ScrollBarsNone && editMode != EditionMode.VideoRecording)
             {
-                bool h = false;
-                bool v = false;
-
-                if (GetScrollBarParams(true, out var scrollBarPosX, out var scrollBarSizeX))
+                if (GetScrollBarParams(true, out var scrollBarThumbPosX, out var scrollBarThumbSizeX, out var scrollBarSizeX))
                 {
-                    r.cs.PushTranslation(pianoSizeX - 1, 0);
-                    r.cs.FillAndDrawRectangle(0, Height - scrollBarThickness, Width + 1, Height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
-                    r.cs.FillAndDrawRectangle(scrollBarPosX, Height - scrollBarThickness, scrollBarPosX + scrollBarSizeX + 1, Height - 1, Theme.MediumGreyColor1, Theme.BlackColor);
-                    r.cs.PopTransform();
-                    h = true;
+                    r.c.PushTranslation(pianoSizeX - 1, 0);
+                    r.c.FillAndDrawRectangle(0, Height - scrollBarThickness, scrollBarSizeX, Height, Theme.DarkGreyColor4, Theme.BlackColor);
+                    r.c.FillAndDrawRectangle(scrollBarThumbPosX, Height - scrollBarThickness, scrollBarThumbPosX + scrollBarThumbSizeX, Height, Theme.MediumGreyColor1, Theme.BlackColor);
+                    r.c.PopTransform();
                 }
 
-                if (GetScrollBarParams(false, out var scrollBarPosY, out var scrollBarSizeY))
+                if (GetScrollBarParams(false, out var scrollBarThumbPosY, out var scrollBarThumbSizeY, out var scrollBarSizeY))
                 {
-                    r.cs.PushTranslation(0, headerAndEffectSizeY - 1);
-                    r.cs.FillAndDrawRectangle(Width - scrollBarThickness + 1, 0, Width, Height, Theme.DarkGreyColor4, Theme.BlackColor);
-                    r.cs.FillAndDrawRectangle(Width - scrollBarThickness + 1, scrollBarPosY, Width, scrollBarPosY + scrollBarSizeY + 1, Theme.MediumGreyColor1, Theme.BlackColor);
-                    r.cs.PopTransform();
-                    v = true;
-                }
-
-                // Hide the glitchy area where both scroll bars intersect with a little square.
-                if (h && v)
-                {
-                    r.cs.FillAndDrawRectangle(Width - scrollBarThickness + 1, Height - scrollBarThickness, Width, Height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
+                    r.c.PushTranslation(0, headerAndEffectSizeY - 1);
+                    r.c.FillAndDrawRectangle(Width - scrollBarThickness, 0, Width, scrollBarSizeY, Theme.DarkGreyColor4, Theme.BlackColor);
+                    r.c.FillAndDrawRectangle(Width - scrollBarThickness, scrollBarThumbPosY, Width, scrollBarThumbPosY + scrollBarThumbSizeY, Theme.MediumGreyColor1, Theme.BlackColor);
+                    r.c.PopTransform();
                 }
             }
         }
@@ -3457,12 +3463,108 @@ namespace FamiStudio
 #if DEBUG
             if (Platform.IsMobile)
             {
-                r.cd = r.g.CreateCommandList();
-                r.cd.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
+                r.g.OverlayCommandList.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
             }
 #endif
         }
 
+#if DEBUG
+        // OpenGL line rasterization tests.
+        private void RenderLineDebug(Graphics g)
+        {
+#if false
+            for (int i = 1; i <= 8; i++)
+            {
+                g.Transform.PushTranslation(i * 110, 100);
+                for (int j = 0; j < 16; j++)
+                {
+                    var cos = (float)Math.Cos(j / 16.0 * Math.PI * 2.0);
+                    var sin = (float)Math.Sin(j / 16.0 * Math.PI * 2.0);
+
+                    g.DefaultCommandList.DrawLine(0, 0, cos * 50, sin * 50, new Color(255, 0, 255), i, true);
+                    g.ForegroundCommandList.DrawLine(0, 0, cos * 50, sin * 50, new Color(0, 255, 0), 1, false);
+                }
+
+                g.DefaultCommandList.DrawRectangle(-50, 100, 50, 110, new Color(255, 0, 255), i, true);
+                g.ForegroundCommandList.DrawRectangle(-50, 100, 50, 110, new Color(0, 255, 0), 1, false);
+                g.Transform.PopTransform();
+            }
+#elif false
+            releaseNoteGeometry[0][4] = 10.0f;
+            releaseNoteGeometry[0][6] = 10.0f;
+            for (int i = 1; i <= 8; i++)
+            {
+                g.Transform.PushTranslation(i * 200, 100);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 100, new Color(255, 0, 255), i, true);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 0, new Color(255, 0, 255), i, true);
+                g.OverlayCommandList.DrawLine(0, 0, 0, 100, new Color(255, 0, 255), i, true);
+                g.OverlayCommandList.FillAndDrawRectangle(0, 200, 100, 210, new Color(255, 0, 255), new Color(0, 255, 0), i, true, i > 1);
+                g.Transform.PushTranslation(0, 110);
+                g.OverlayCommandList.FillGeometry(releaseNoteGeometry[0], Color.Pink, true);
+                g.Transform.PushTranslation(0, 20);
+                g.OverlayCommandList.DrawGeometry(releaseNoteGeometry[0], Color.SpringGreen, i, true, true);
+                g.Transform.PopTransform();
+                g.Transform.PopTransform();
+                g.Transform.PopTransform();
+                g.Transform.PushTranslation(i * 200, 500);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 100, new Color(255, 0, 255), i, false);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 0, new Color(255, 0, 255), i, false);
+                g.OverlayCommandList.DrawLine(0, 0, 0, 100, new Color(255, 0, 255), i, false);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 100, new Color(0, 255, 0), 1, false);
+                g.OverlayCommandList.DrawLine(0, 0, 100, 0, new Color(0, 255, 0), 1, false);
+                g.OverlayCommandList.DrawLine(0, 0, 0, 100, new Color(0, 255, 0), 1, false);
+                g.OverlayCommandList.FillAndDrawRectangle(0, 200, 100, 210, new Color(255, 0, 255), new Color(0, 255, 0), i, false);
+                g.Transform.PushTranslation(0, 110);
+                g.OverlayCommandList.FillGeometry(releaseNoteGeometry[0], Color.Pink, false);
+                g.Transform.PushTranslation(0, 20);
+                g.OverlayCommandList.DrawGeometry(releaseNoteGeometry[0], Color.SpringGreen, i, false, true);
+                g.Transform.PopTransform();
+                g.Transform.PopTransform();
+                g.Transform.PopTransform();
+            }
+#else
+
+            var rnd = new Random(1003);
+
+            for (int j = 0; j < 2; j++)
+            { 
+                var points = new float[50 * 2];
+                var x = 30;
+
+                for (int i = 0; i < points.Length / 2; i++)
+                {
+                    points[i * 2 + 0] = x;
+                    points[i * 2 + 1] = rnd.Next(100, 400) + j * 300;
+
+                    x += rnd.Next(10, 50);
+                }
+
+                //var points = new float [] { 100, 100, 200, 200, 200, 100 };
+
+                //g.OverlayCommandList.DrawGeometry(points, Color.Pink, 16, true, false);
+                g.OverlayCommandList.DrawNiceSmoothLine(points, Color.Pink, 6);
+            }
+#endif
+        }
+
+        private void RenderTextDebug(Graphics g)
+        {
+            var strings = new[]
+            {
+                "Noise",
+                "Triangle",
+                "DPCM",
+                "Square"
+            };
+
+            for (int i = 0; i < strings.Length; i++)
+            {
+                g.DefaultCommandList.DrawText(strings[i], Fonts.FontMedium, 20, 20 + i * Fonts.FontMedium.LineHeight, Color.White);
+            }
+        }
+#endif
+
+        // GLTODO : Mostly ported, review lines separating controls, sorting, test scrollbars on/off.
         protected override void OnRender(Graphics g)
         {
             // Init
@@ -3472,16 +3574,10 @@ namespace FamiStudio
             var maxVisibleNoteIdx = Math.Min(GetAbsoluteNoteIndexForPixel(Width) + 1, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
 
             r.g = g;
-            r.cc = g.CreateCommandList();
-            r.ch = g.CreateCommandList();
-            r.cp = g.CreateCommandList();
-            r.cb = g.CreateCommandList();
-            r.cf = g.CreateCommandList();
-            r.cg = g.CreateCommandList();
-            r.cz = g.CreateCommandList();
-
-            if (Platform.IsDesktop)
-                r.cs = g.CreateCommandList();
+            r.fonts = Fonts;
+            r.b = g.BackgroundCommandList;
+            r.c = g.DefaultCommandList;
+            r.f = g.ForegroundCommandList;
 
             r.maxVisibleNote = NumNotes - Utils.Clamp((int)Math.Floor(scrollY / (float)noteSizeY), 0, NumNotes);
             r.minVisibleNote = NumNotes - Utils.Clamp((int)Math.Ceiling((scrollY + Height - headerAndEffectSizeY) / (float)noteSizeY), 0, NumNotes);
@@ -3498,6 +3594,9 @@ namespace FamiStudio
 
             ConditionalUpdateNoteGeometries(g);
 
+            //RenderLineDebug(g); return;
+            //RenderTextDebug(g); return;
+
             // Prepare command list.
             RenderHeader(r);
             RenderEffectList(r);
@@ -3507,29 +3606,13 @@ namespace FamiStudio
             RenderWaveform(r);
             RenderScrollBars(r);
             RenderDebug(r);
-
-            // Submit draw calls.
-            var cornerRect = new Rectangle(0, 0, pianoSizeX, headerAndEffectSizeY);
-            var headerRect = new Rectangle(pianoSizeX, 0, Width, headerAndEffectSizeY);
-            var pianoRect  = new Rectangle(0, headerAndEffectSizeY, pianoSizeX, Height);
-            var notesRect  = new Rectangle(pianoSizeX, headerAndEffectSizeY, Width, Height);
-
-            g.Clear(Theme.DarkGreyColor2);
-            g.DrawCommandList(r.cc, cornerRect);
-            g.DrawCommandList(r.ch, headerRect);
-            g.DrawCommandList(r.cz, headerRect);
-            g.DrawCommandList(r.cp, pianoRect);
-            g.DrawCommandList(r.cb, notesRect);
-            g.DrawCommandList(r.cf, notesRect);
-            g.DrawCommandList(r.cg, notesRect);
-            g.DrawCommandList(r.cs, notesRect);
-            g.DrawCommandList(r.cd);
         }
 
-        private bool GetScrollBarParams(bool horizontal, out int pos, out int size)
+        private bool GetScrollBarParams(bool horizontal, out int thumbPos, out int thumbSize, out int scrollSize)
         {
-            pos  = 0;
-            size = 0;
+            thumbPos   = 0;
+            thumbSize  = 0;
+            scrollSize = 0;
 
             if (scrollBarThickness > 0)
             {
@@ -3540,9 +3623,9 @@ namespace FamiStudio
                     if (minScrollX == maxScrollX)
                         return false;
 
-                    int scrollAreaSizeX = Width - pianoSizeX;
-                    size = Math.Max(minScrollBarLength, (int)Math.Round(scrollAreaSizeX * Math.Min(1.0f, scrollAreaSizeX / (float)(maxScrollX + scrollAreaSizeX))));
-                    pos  = (int)Math.Round((scrollAreaSizeX - size) * (scrollX / (float)maxScrollX));
+                    scrollSize = Width - pianoSizeX + 1;
+                    thumbSize = Math.Max(minScrollBarLength, (int)Math.Round(scrollSize * Math.Min(1.0f, scrollSize / (float)(maxScrollX + scrollSize))));
+                    thumbPos  = (int)Math.Round((scrollSize - thumbSize) * (scrollX / (float)maxScrollX));
                     return true;
                 }
                 else
@@ -3552,9 +3635,9 @@ namespace FamiStudio
                     if (minScrollY == maxScrollY)
                         return false;
 
-                    int scrollAreaSizeY = Height - headerAndEffectSizeY;
-                    size = Math.Max(minScrollBarLength, (int)Math.Round(scrollAreaSizeY * Math.Min(1.0f, scrollAreaSizeY / (float)(maxScrollY + scrollAreaSizeY))));
-                    pos  = (int)Math.Round((scrollAreaSizeY - size) * (scrollY / (float)maxScrollY));
+                    scrollSize = Height - headerAndEffectSizeY - scrollBarThickness + 1;
+                    thumbSize = Math.Max(minScrollBarLength, (int)Math.Round(scrollSize * Math.Min(1.0f, scrollSize / (float)(maxScrollY + scrollSize))));
+                    thumbPos  = (int)Math.Round((scrollSize - thumbSize) * (scrollY / (float)maxScrollY));
                     return true;
                 }
             }
@@ -3660,7 +3743,7 @@ namespace FamiStudio
 
             var delta = 0;
 
-            if (ModifierKeys.Control)
+            if (ModifierKeys.IsControlDown)
             {
                 delta = (captureMouseY - y) / 4;
             }
@@ -3745,7 +3828,18 @@ namespace FamiStudio
                 delta = newValue - origValue;
             }
 
-            rep.Values[idx] = (sbyte)Utils.Clamp(rep.Values[idx] + delta, minRepeat, maxRepeat);
+            if (IsSelectionValid())
+            {
+                if (GetRepeatEnvelopeSelectionMinMax(out var min, out var max))
+                {
+                    for (int i = min; i <= max; i++)
+                        rep.Values[i] = (sbyte)Utils.Clamp(rep.Values[i] + delta, minRepeat, maxRepeat);
+                }
+            }
+            else
+            {
+                rep.Values[idx] = (sbyte)Utils.Clamp(rep.Values[idx] + delta, minRepeat, maxRepeat);
+            }
 
             MarkDirty();
         }
@@ -3944,7 +4038,7 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
             dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
             dlg.Properties.AddCheckBox("Override DMC Initial Value :", mapping.OverrideDmcInitialValue); // 2
-            dlg.Properties.AddNumericUpDown("DMC Initial Value (÷2) :", mapping.DmcInitialValueDiv2, 0, 63); // 3
+            dlg.Properties.AddNumericUpDown("DMC Initial Value (÷2) :", mapping.DmcInitialValueDiv2, 0, 63, 1); // 3
             dlg.Properties.Build();
             dlg.Properties.SetPropertyEnabled(3, mapping.OverrideDmcInitialValue);
             dlg.Properties.PropertyChanged += DPCMSampleMapping_PropertyChanged;
@@ -3953,7 +4047,7 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                     mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
                     mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
                     mapping.OverrideDmcInitialValue = dlg.Properties.GetPropertyValue<bool>(2);
@@ -4008,7 +4102,7 @@ namespace FamiStudio
         {
             if (GetLocationForCoord(e.X, e.Y, out _, out var noteValue))
             {
-                var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
                 if (mapping != null)
                     ClearDPCMSampleMapping(noteValue);
                 return true;
@@ -4081,11 +4175,10 @@ namespace FamiStudio
 
         private void UpdateScrollBarX(int x, int y)
         {
-            GetScrollBarParams(true, out _, out var scrollBarSizeX);
+            GetScrollBarParams(true, out _, out var scrollBarThumbSizeX, out var scrollAreaSizeX);
             GetMinMaxScroll(out _, out _, out var maxScrollX, out _);
 
-            int scrollAreaSizeX = Width - pianoSizeX;
-            scrollX = (int)Math.Round(captureScrollX + ((x - captureMouseX) / (float)(scrollAreaSizeX - scrollBarSizeX) * maxScrollX));
+            scrollX = (int)Math.Round(captureScrollX + ((x - captureMouseX) / (float)(scrollAreaSizeX - scrollBarThumbSizeX) * maxScrollX));
 
             ClampScroll();
             MarkDirty();
@@ -4093,11 +4186,10 @@ namespace FamiStudio
 
         private void UpdateScrollBarY(int x, int y)
         {
-            GetScrollBarParams(false, out _, out var scrollBarSizeY);
+            GetScrollBarParams(false, out _, out var scrollBarThumbSizeY, out var scrollAreaSizeY);
             GetMinMaxScroll(out _, out _, out _, out var maxScrollY);
 
-            int scrollAreaSizeY = Height - headerAndEffectSizeY;
-            scrollY = (int)Math.Round(captureScrollY + ((y - captureMouseY) / (float)(scrollAreaSizeY - scrollBarSizeY) * maxScrollY));
+            scrollY = (int)Math.Round(captureScrollY + ((y - captureMouseY) / (float)(scrollAreaSizeY - scrollBarThumbSizeY) * maxScrollY));
 
             ClampScroll();
             MarkDirty();
@@ -4213,9 +4305,9 @@ namespace FamiStudio
         {
             if (draggedSample == null)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
-                draggedSample = App.Project.GetDPCMMapping(captureNoteValue);
-                App.Project.UnmapDPCMSample(captureNoteValue);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+                draggedSample = editInstrument.GetDPCMMapping(captureNoteValue);
+                editInstrument.UnmapDPCMSample(captureNoteValue);
             }
             else
             {
@@ -4228,13 +4320,13 @@ namespace FamiStudio
         {
             if (draggedSample != null)
             {
-                if (GetNoteValueForCoord(x, y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
+                if (GetNoteValueForCoord(x, y, out var noteValue) && noteValue != captureNoteValue && draggedSample != null)
                 {
                     var sample = draggedSample;
 
                     // Map the sample right away so that it renders correctly as the message box pops.
-                    App.Project.UnmapDPCMSample(noteValue);
-                    App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
+                    editInstrument.UnmapDPCMSample(noteValue);
+                    editInstrument.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
 
                     draggedSample = null;
 
@@ -4246,12 +4338,12 @@ namespace FamiStudio
                             // potentially in multiple songs.
                             App.UndoRedoManager.RestoreTransaction(false);
                             App.UndoRedoManager.AbortTransaction();
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
 
                             // Need to redo everything + transpose.
-                            App.Project.UnmapDPCMSample(captureNoteValue);
-                            App.Project.UnmapDPCMSample(noteValue);
-                            App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
+                            editInstrument.UnmapDPCMSample(captureNoteValue);
+                            editInstrument.UnmapDPCMSample(noteValue);
+                            editInstrument.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
                             App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
                         }
 
@@ -4597,7 +4689,7 @@ namespace FamiStudio
             }
             else
             {
-                var pt = PointToClient(CursorPosition);
+                var pt = ScreenToControl(CursorPosition);
                 if (!GetLocationForCoord(pt.X, pt.Y, out var mouseLocation, out byte noteValue) || !mouseLocation.IsInSong(Song))
                     return null;
                 location = mouseLocation;
@@ -4617,7 +4709,7 @@ namespace FamiStudio
             }
             else
             {
-                var pt = PointToClient(CursorPosition);
+                var pt = ScreenToControl(CursorPosition);
                 if (!GetEffectNoteForCoord(pt.X, pt.Y, out var mouseLocation) || !mouseLocation.IsInSong(Song))
                     return null;
                 location = mouseLocation;
@@ -4849,16 +4941,13 @@ namespace FamiStudio
             {
                 SelectAll();
             }
-            else if (e.Key == Keys.D1 && !e.Alt)
+            else if (Settings.EffectPanelShortcut.Matches(e))
             {
-                if (e.Control)
-                {
-                    ToggleEffectPanel();
-                }
-                else
-                {
-                    ToggleMaximize();
-                }
+                ToggleEffectPanel();
+            }
+            else if (Settings.MaximizePianoRollShortcut.Matches(e))
+            {
+                ToggleMaximize();
             }
             else if (e.Key >= Keys.D1 && e.Key <= Keys.D9 && e.Alt)
             {
@@ -4871,7 +4960,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (e.Key == Keys.S && e.Shift)
+            else if (Settings.SnapToggleShortcut.Matches(e))
             {
                 if (SnapAllowed)
                 {
@@ -4881,38 +4970,29 @@ namespace FamiStudio
             }
             else if (IsActiveControl && IsSelectionValid())
             {
-                if (e.Control)
+                if (Settings.CopyShortcut.Matches(e))
                 {
-                    if (e.Key == Keys.C)
-                        Copy();
-                    else if (e.Key == Keys.X)
-                        Cut();
-                    else if (e.Key == Keys.V)
-                    {
-                        if (e.Shift)
-                            PasteSpecial();
-                        else
-                            Paste();
-                    }
+                    Copy();
                 }
-
-                if (e.Key == Keys.Delete)
+                else if (Settings.CutShortcut.Matches(e))
                 {
-                    if (editMode == EditionMode.Channel)
-                    {
-                        if (e.Control && e.Shift)
-                            DeleteSpecial();
-                        else
-                            DeleteSelectedNotes();
-                    }
-                    else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
-                    {
-                        DeleteSelectedEnvelopeValues();
-                    }
-                    else if (editMode == EditionMode.DPCM)
-                    {
-                        DeleteSelectedWaveSection();
-                    }
+                    Cut();
+                }
+                else if (Settings.PasteShortcut.Matches(e))
+                {
+                    Paste();
+                }
+                else if (Settings.PasteSpecialShortcut.Matches(e))
+                {
+                    PasteSpecial();
+                }
+                else if (Settings.DeleteShortcut.Matches(e))
+                {
+                    Delete();
+                }
+                else if (Settings.DeleteSpecialShortcut.Matches(e))
+                {
+                    DeleteSpecial();
                 }
 
                 if (editMode == EditionMode.Channel)
@@ -4959,13 +5039,15 @@ namespace FamiStudio
             UpdateCursor();
         }
 
-        public int GetDPCMSampleMappingNoteAtPos(Point pos)
+        public int GetDPCMSampleMappingNoteAtPos(Point pos, out Instrument instrument)
         {
             if (editMode == EditionMode.DPCMMapping && GetNoteValueForCoord(pos.X, pos.Y, out var noteValue))
             {
+                instrument = editInstrument;
                 return noteValue;
             }
 
+            instrument = null;
             return Note.NoteInvalid;
         }
 
@@ -5107,7 +5189,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
+            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             if (middle && e.Y > headerSizeY && e.X > pianoSizeX)
             {
@@ -5123,43 +5205,43 @@ namespace FamiStudio
         {
             if (e.Left && scrollBarThickness > 0 && e.X > pianoSizeX && e.Y > headerAndEffectSizeY)
             {
-                if (e.Y >= (Height - scrollBarThickness) && GetScrollBarParams(true, out var scrollBarPosX, out var scrollBarSizeX))
+                if (e.Y >= (Height - scrollBarThickness) && GetScrollBarParams(true, out var scrollBarThumbPosX, out var scrollBarThumbSizeX, out _))
                 {
                     var x = e.X - pianoSizeX;
-                    if (x < scrollBarPosX)
+                    if (x < scrollBarThumbPosX)
                     {
                         scrollX -= (Width - pianoSizeX);
                         ClampScroll();
                         MarkDirty();
                     }
-                    else if (x > (scrollBarPosX + scrollBarSizeX))
+                    else if (x > (scrollBarThumbPosX + scrollBarThumbSizeX))
                     {
                         scrollX += (Width - pianoSizeX);
                         ClampScroll();
                         MarkDirty();
                     }
-                    else if (x >= scrollBarPosX && x <= (scrollBarPosX + scrollBarSizeX))
+                    else if (x >= scrollBarThumbPosX && x <= (scrollBarThumbPosX + scrollBarThumbSizeX))
                     {
                         StartCaptureOperation(e.X, e.Y, CaptureOperation.ScrollBarX);
                     }
                     return true;
                 }
-                if (e.X >= (Width - scrollBarThickness) && GetScrollBarParams(false, out var scrollBarPosY, out var scrollBarSizeY))
+                if (e.X >= (Width - scrollBarThickness) && GetScrollBarParams(false, out var scrollBarThumbPosY, out var scrollBarThumbSizeY, out _))
                 {
                     var y = e.Y - headerAndEffectSizeY;
-                    if (y < scrollBarPosY)
+                    if (y < scrollBarThumbPosY)
                     {
                         scrollY -= (Height - headerAndEffectSizeY);
                         ClampScroll();
                         MarkDirty();
                     }
-                    else if (y > (scrollBarPosY + scrollBarSizeY))
+                    else if (y > (scrollBarThumbPosY + scrollBarThumbSizeY))
                     {
                         scrollX += (Height - headerAndEffectSizeY);
                         ClampScroll();
                         MarkDirty();
                     }
-                    else if (y >= scrollBarPosY && y <= (scrollBarPosY + scrollBarSizeY))
+                    else if (y >= scrollBarThumbPosY && y <= (scrollBarThumbPosY + scrollBarThumbSizeY))
                     {
                         StartCaptureOperation(e.X, e.Y, CaptureOperation.ScrollBarY);
                     }
@@ -5217,7 +5299,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownEnvelopeSelection(MouseEventArgs e)
         {
-            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
+            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInEffectPanel(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
                 e.DelayRightClick(); // Need to wait and see if its a context menu click or not.
                 return true;
@@ -5258,7 +5340,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownAltZoom(MouseEventArgs e)
         {
-            if (e.Right && ModifierKeys.Alt && Settings.AltZoomAllowed)
+            if (e.Right && ModifierKeys.IsAltDown && Settings.AltZoomAllowed)
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.AltZoom);
                 return true;
@@ -5350,7 +5432,7 @@ namespace FamiStudio
                     {
                         StartDragVolumeSlide(e.X, e.Y, location);
                     }
-                    else if (ModifierKeys.Shift)
+                    else if (ModifierKeys.IsShiftDown)
                     {
                         ClearEffectValue(location);
                     }
@@ -5468,7 +5550,7 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    var delete  = ModifierKeys.Shift;
+                    var delete  = ModifierKeys.IsShiftDown;
                     var release = ParentWindow.IsKeyDown(Keys.R); 
                     var stop    = ParentWindow.IsKeyDown(Keys.T);
                     var slide   = ParentWindow.IsKeyDown(Keys.S);
@@ -5546,26 +5628,19 @@ namespace FamiStudio
         {
             if (e.Left && GetLocationForCoord(e.X, e.Y, out var location, out var noteValue))
             {
-                if (App.Project.NoteSupportsDPCM(noteValue))
-                {
-                    var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
 
-                    if (mapping == null)
-                    {
-                        MapDPCMSample(noteValue);
-                    }
-                    else if (ModifierKeys.Shift)
-                    {
-                        ClearDPCMSampleMapping(noteValue);
-                    }
-                    else
-                    {
-                        StartDragDPCMSampleMapping(e.X, e.Y, noteValue);
-                    }
+                if (mapping == null)
+                {
+                    MapDPCMSample(noteValue);
+                }
+                else if (ModifierKeys.IsShiftDown)
+                {
+                    ClearDPCMSampleMapping(noteValue);
                 }
                 else
                 {
-                    App.DisplayNotification("DPCM samples are only allowed between C1 and D6");
+                    StartDragDPCMSampleMapping(e.X, e.Y, noteValue);
                 }
 
                 return true;
@@ -5693,7 +5768,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownDelayedEnvelopeSelection(MouseEventArgs e)
         {
-            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
+            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInEffectPanel(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
                 StartSelection(e.X, e.Y);
                 return true;
@@ -5768,7 +5843,7 @@ namespace FamiStudio
             var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
             note.Value = noteValue;
             note.Duration = SnapEnabled ? Math.Max(1, SnapNote(abs, true) - abs) : Song.GetPatternBeatLength(location.PatternIndex);
-            note.Instrument = editChannel != ChannelType.Dpcm ? App.SelectedInstrument : null;
+            note.Instrument = App.SelectedInstrument;
             note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
 
             SetMobileHighlightedNote(abs);
@@ -6069,7 +6144,7 @@ namespace FamiStudio
         {
             if (GetLocationForCoord(x, y, out _, out var noteValue) && noteValue == highlightDPCMSample)
             {
-                var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
 
                 if (mapping != null)
                 {
@@ -6123,23 +6198,16 @@ namespace FamiStudio
         {
             if (GetLocationForCoord(x, y, out _, out var noteValue))
             {
-                if (App.Project.NoteSupportsDPCM(noteValue))
-                {
-                    var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
 
-                    if (mapping == null)
-                    {
-                        MapDPCMSample(noteValue);
-                        highlightDPCMSample = noteValue;
-                    }
-                    else
-                    {
-                        highlightDPCMSample = highlightDPCMSample == noteValue ? -1 : noteValue;
-                    }
+                if (mapping == null)
+                {
+                    MapDPCMSample(noteValue);
+                    highlightDPCMSample = noteValue;
                 }
                 else
                 {
-                    App.DisplayNotification("DPCM samples are only allowed between C1 and D6");
+                    highlightDPCMSample = highlightDPCMSample == noteValue ? -1 : noteValue;
                 }
 
                 return true;
@@ -6313,6 +6381,10 @@ namespace FamiStudio
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
 
+            Song.Channels[editChannel].SetNoteDurationToMaximumLength(
+                NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin),
+                NoteLocation.FromAbsoluteNoteIndex(Song, selectionMax));
+
             note.Release = note.HasRelease ? 0 : Math.Max(1, note.Duration / 2);
 
             if (selected)
@@ -6400,10 +6472,11 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuToggleSlide", $"Toggle {(selection ? "Selection" : "")} Slide Note", () => { ToggleSlideNote(noteLocation, note); }));
                         if (channel.SupportsReleaseNotes)
                             menu.Add(new ContextMenuOption("MenuToggleRelease", $"Toggle {(selection ? "Selection" : "")} Release", () => { ToggleNoteRelease(noteLocation, note); }));
-                        if (channel.Type != ChannelType.Dpcm)
-                            menu.Add(new ContextMenuOption("MenuEyedropper", $"Make Instrument Current", () => { Eyedrop(note); }));
                         if (channel.SupportsStopNotes)
                             menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
+                        if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument))
+                            menu.Add(new ContextMenuOption("MenuReplaceSelection", $"Replace Instrument", () => { ReplaceSelectionInstrument(App.SelectedInstrument, Point.Empty, true); }));
+                        menu.Add(new ContextMenuOption("MenuEyedropper", $"Make Instrument Current", () => { Eyedrop(note); }));
 
                         var factor = GetBestSnapFactorForNote(noteLocation, note);
                         if (factor >= 0)
@@ -6530,7 +6603,7 @@ namespace FamiStudio
             if (IsPointInNoteArea(x, y) && EditEnvelope.Length > 0)
             {
                 Platform.VibrateClick();
-                Platform.ShowToast(parentWindow, "Keep holding and move your finger to draw");
+                Platform.ShowToast(window, "Keep holding and move your finger to draw");
                 StartDrawEnvelope(x, y);
                 return true;
             }
@@ -6691,7 +6764,7 @@ namespace FamiStudio
         {
             if (GetLocationForCoord(x, y, out _, out var noteValue))
             {
-                var mapping = App.Project.GetDPCMMapping(noteValue);
+                var mapping = editInstrument.GetDPCMMapping(noteValue);
 
                 if (mapping != null)
                 {
@@ -7242,7 +7315,7 @@ namespace FamiStudio
                         note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
                         note.Value = noteValue;
                         note.Duration = (ushort)Song.BeatLength;
-                        note.Instrument = editChannel != ChannelType.Dpcm ? App.SelectedInstrument : null;
+                        note.Instrument = App.SelectedInstrument;
                         note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
                     }
                     else
@@ -7397,9 +7470,9 @@ namespace FamiStudio
                 {
                     if (r == DialogResult.OK)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id, -1, TransactionFlags.StopAudio);
                         var sampleName = dlg.Properties.GetPropertyValue<string>(1);
-                        var mapping = App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
+                        var mapping = editInstrument.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
                         mapping.Pitch = dlg.Properties.GetSelectedIndex(2);
                         mapping.Loop = dlg.Properties.GetPropertyValue<bool>(3);
                         App.UndoRedoManager.EndTransaction();
@@ -7417,8 +7490,8 @@ namespace FamiStudio
 
         private void ClearDPCMSampleMapping(byte noteValue)
         {
-            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
-            App.Project.UnmapDPCMSample(noteValue);
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id, -1, TransactionFlags.StopAudio);
+            editInstrument.UnmapDPCMSample(noteValue);
             if (noteValue == highlightDPCMSample)
                 highlightDPCMSample = -1;
             App.UndoRedoManager.EndTransaction();
@@ -7532,7 +7605,7 @@ namespace FamiStudio
 
         public void ReplaceSelectionInstrument(Instrument instrument, Point pos, bool forceInSelection = false)
         {
-            if (editMode == EditionMode.Channel && editChannel != ChannelType.Dpcm)
+            if (editMode == EditionMode.Channel)
             {
                 Debug.Assert(!forceInSelection || IsSelectionValid());
 
@@ -7620,7 +7693,7 @@ namespace FamiStudio
             var halfHeight    = effectPanelSizeY * 0.5f;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
 
-            var threshold = ScaleForWindow(Platform.IsDesktop ? 10 : 20);
+            var threshold = DpiScaling.ScaleForWindow(Platform.IsDesktop ? 10 : 20);
 
             x -= pianoSizeX;
             y -= headerSizeY;
@@ -7717,7 +7790,7 @@ namespace FamiStudio
         {
             var toggleRect = GetToggleEffectPanelButtonRect();
             var snapRect   = GetSnapButtonRect();
-            return new Rectangle(toggleRect.Right, toggleRect.Top + 1, snapRect.Left - toggleRect.Right - (int)WindowScaling, snapRect.Height);
+            return new Rectangle(toggleRect.Right, toggleRect.Top + 1, snapRect.Left - toggleRect.Right - (int)DpiScaling.Window, snapRect.Height);
         }
 
         private bool IsPointOnToggleEffectPanelButton(int x, int y)
@@ -7747,44 +7820,44 @@ namespace FamiStudio
 
             if (IsPointInHeader(e.X, e.Y) && editMode == EditionMode.Channel)
             {
-                tooltip = "{MouseLeft} Seek - {MouseRight}{Drag} Select - {MouseRight} More Options...";
+                tooltip = "<MouseLeft> Seek - <MouseRight><Drag> Select - <MouseRight> More Options...";
             }
             else if (IsPointInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio))
             {
                 if (IsPointWhereCanResizeEnvelope(e.X, e.Y))
-                    tooltip = "{MouseLeft} Resize envelope\n";
+                    tooltip = "<MouseLeft> Resize envelope\n";
                 else
-                    tooltip = "{MouseRight}{Drag} Select";
+                    tooltip = "<MouseRight><Drag> Select";
             }
             else if (IsPointInHeaderBottomPart(e.X, e.Y) && ((editMode == EditionMode.Envelope && EditEnvelope.CanLoop) || editMode == EditionMode.Arpeggio))
             {
-                tooltip = "{MouseLeft} Set loop point" + ((editMode != EditionMode.Arpeggio && EditEnvelope.CanRelease) ? "\n{MouseRight} Set release point (must have loop point)" : "");
+                tooltip = "<MouseLeft> Set loop point" + ((editMode != EditionMode.Arpeggio && EditEnvelope.CanRelease) ? "\n<MouseRight> Set release point (must have loop point)" : "");
             }
             else if (IsPointInPiano(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan";
+                tooltip = "<MouseLeft> Play piano - <MouseWheel> Pan";
             }
             else if (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Toggle snapping {Shift}{S} - {MouseWheel} Change snap precision\n{MouseRight} More Options...";
+                tooltip = $"<MouseLeft> Toggle snapping {Settings.SnapToggleShortcut.TooltipString} - <MouseWheel> Change snap precision\n<MouseRight> More Options...";
             }
             else if (IsPointOnMaximizeButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Maximize/Minimize piano roll {1}";
+                tooltip = $"<MouseLeft> Maximize/Minimize piano roll {Settings.MaximizePianoRollShortcut.TooltipString}";
             }
             else if (IsPointInTopLeftCorner(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Show/hide effect panel {Ctrl}{1}";
+                tooltip = $"<MouseLeft> Show/hide effect panel {Settings.EffectPanelShortcut.TooltipString}";
             }
             else if (IsPointInEffectList(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Select effect track to edit";
+                tooltip = "<MouseLeft> Select effect track to edit";
             }
             else if (IsPointInEffectPanel(e.X, e.Y))
             {
                 if (editMode == EditionMode.Channel)
                 {
-                    tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{Ctrl}{MouseLeft} Set effect value (fine) - {MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Clear effect value";
+                    tooltip = "<MouseLeft> Set effect value - <MouseWheel> Pan\n<Ctrl><MouseLeft> Set effect value (fine) - <MouseLeft><MouseLeft> or <Shift><MouseLeft> Clear effect value";
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
@@ -7792,21 +7865,21 @@ namespace FamiStudio
 
                     if (vertexIdx >= 0)
                     {
-                        tooltip = "{MouseLeft}{Drag} Move volume envelope vertex\n{MouseRight} More Options...%";
+                        tooltip = "<MouseLeft><Drag> Move volume envelope vertex\n<MouseRight> More Options...%";
                     }
                 }
                 else if (editMode == EditionMode.Envelope)
                 {
-                    tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{MouseRight} More Options...";
+                    tooltip = "<MouseLeft> Set effect value - <MouseWheel> Pan\n<MouseRight> More Options...";
                 }
             }
             else if ((IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)) && editMode == EditionMode.DPCM)
             {
-                tooltip = "{MouseLeft}{Drag} or {MouseRight}{Drag} Select samples from source data";
+                tooltip = "<MouseLeft><Drag> or <MouseRight><Drag> Select samples from source data";
 
                 if (IsSelectionValid())
                 {
-                    tooltip += "\n{Del} Delete selected samples.";
+                    tooltip += $"\n{Settings.DeleteShortcut.TooltipString} Delete selected samples.";
                     newNoteTooltip = $"{(selectionMax - selectionMin + 1)} sample" + ((selectionMax - selectionMin) == 0 ? "" : "s") + " selected";
                 }
             }
@@ -7839,40 +7912,40 @@ namespace FamiStudio
                             case CaptureOperation.ResizeSelectionNoteStart:
                             case CaptureOperation.ResizeNoteEnd:
                             case CaptureOperation.ResizeSelectionNoteEnd:
-                                tooltipList.Add("{MouseLeft}{Drag} Resize note(s)");
+                                tooltipList.Add("<MouseLeft><Drag> Resize note(s)");
                                 break;
                             case CaptureOperation.MoveNoteRelease:
-                                tooltipList.Add("{MouseLeft}{Drag} Move release point");
+                                tooltipList.Add("<MouseLeft><Drag> Move release point");
                                 break;
                             case CaptureOperation.DragNote:
                             case CaptureOperation.DragSelection:
-                                tooltipList.Add("{MouseLeft}{Drag} Move note(s)");
+                                tooltipList.Add("<MouseLeft><Drag> Move note(s)");
                                 break;
                             default:
-                                tooltipList.Add("{MouseLeft}{Drag} Create note");
+                                tooltipList.Add("<MouseLeft><Drag> Create note");
                                 break;
                         }
 
                         if (note != null)
                         {
                             if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease)
-                                tooltipList.Add("{R}{MouseLeft} Set release point");
+                                tooltipList.Add("<R><MouseLeft> Set release point");
                             if (channel.SupportsSlideNotes)
-                                tooltipList.Add("{S}{MouseLeft}{Drag} Slide note");
+                                tooltipList.Add("<S><MouseLeft><Drag> Slide note");
                             if (note.IsMusical)
                             {
-                                tooltipList.Add("{A}{MouseLeft} Toggle note attack");
-                                tooltipList.Add("{I}{MouseLeft} Instrument Eyedrop");
+                                tooltipList.Add("<A><MouseLeft> Toggle note attack");
+                                tooltipList.Add("<I><MouseLeft> Instrument Eyedrop");
                             }
-                            tooltipList.Add("{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete note");
+                            tooltipList.Add("<MouseLeft><MouseLeft> or <Shift><MouseLeft> Delete note");
                         }
                         else 
                         {
                             if (channel.SupportsStopNotes)
-                                tooltipList.Add("{T}{MouseLeft} Add stop note");
+                                tooltipList.Add("<T><MouseLeft> Add stop note");
                         }
 
-                        tooltipList.Add("{MouseWheel} Pan");
+                        tooltipList.Add("<MouseWheel> Pan");
 
                         if (tooltipList.Count >= 3)
                         {
@@ -7896,7 +7969,7 @@ namespace FamiStudio
                 }
                 else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 {
-                    tooltip = "{MouseLeft} Set envelope value - {MouseWheel} Pan\n{MouseRight} More Options...";
+                    tooltip = "<MouseLeft> Set envelope value - <MouseWheel> Pan\n<MouseRight> More Options...";
 
                     if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
                     {
@@ -7930,25 +8003,20 @@ namespace FamiStudio
                 {
                     if (GetNoteValueForCoord(e.X, e.Y, out byte noteValue))
                     {
-                        if (App.Project.NoteSupportsDPCM(noteValue))
+                        newNoteTooltip = $"{Note.GetFriendlyName(noteValue)}";
+
+                        var mapping = editInstrument.GetDPCMMapping(noteValue);
+                        if (mapping == null)
                         {
-                            newNoteTooltip = $"{Note.GetFriendlyName(noteValue)}";
-
-                            var mapping = App.Project.GetDPCMMapping(noteValue);
-                            if (mapping == null)
-                            {
-                                tooltip = "{MouseLeft} Assign DPCM sample - {MouseWheel} Pan";
-                            }
-                            else
-                            {
-                                tooltip = "{MouseLeft}{MouseLeft} Sample properties - {MouseWheel} Pan\n{MouseRight} More Options...";
-
-                                if (mapping.Sample != null)
-                                    newNoteTooltip += $" ({mapping.Sample.Name})";
-                            }
+                            tooltip = "<MouseLeft> Assign DPCM sample - <MouseWheel> Pan";
                         }
                         else
-                            tooltip = "Samples must be between C1 and D6";
+                        {
+                            tooltip = "<MouseLeft><MouseLeft> Sample properties - <MouseWheel> Pan\n<MouseRight> More Options...";
+
+                            if (mapping.Sample != null)
+                                newNoteTooltip += $" ({mapping.Sample.Name})";
+                        }
                     }
                 }
             }
@@ -7985,7 +8053,7 @@ namespace FamiStudio
 
         private int SnapNote(int absoluteNoteIndex, bool roundUp = false, bool forceSnap = false)
         {
-            var snapTemporaryDisabled = ModifierKeys.Alt && !Settings.AltLeftForMiddle;
+            var snapTemporaryDisabled = ModifierKeys.IsAltDown && !Settings.AltLeftForMiddle;
 
             if (SnapEnabled && !snapTemporaryDisabled || forceSnap)
             {
@@ -8139,7 +8207,7 @@ namespace FamiStudio
             var note = pattern.GetOrCreateNoteAt(minLocation.NoteIndex);
 
             note.Value = (byte)captureNoteValue;
-            note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
+            note.Instrument = App.SelectedInstrument;
             note.Arpeggio = Song.Channels[editChannel].SupportsArpeggios ? App.SelectedArpeggio : null;
             note.Duration = Math.Max(1, maxAbsoluteNoteIndex) - minAbsoluteNoteIndex;
 
@@ -8273,7 +8341,7 @@ namespace FamiStudio
                         PromoteTransaction(TransactionScope.Channel, Song.Id, editChannel);
                 }
 
-                var copy = ModifierKeys.Control;
+                var copy = ModifierKeys.IsControlDown;
                 var keepFx = captureOperation != CaptureOperation.DragSelection;
 
                 // If not copying, delete original notes.
@@ -8619,7 +8687,7 @@ namespace FamiStudio
 
         private void UpdateCursor()
         {
-            var pt = PointToClient(CursorPosition);
+            var pt = ScreenToControl(CursorPosition);
 
             if (EditEnvelope != null && EditEnvelope.CanResize && IsPointWhereCanResizeEnvelope(pt.X, pt.Y) && captureOperation != CaptureOperation.Select || captureOperation == CaptureOperation.ResizeEnvelope)
             {
@@ -8631,7 +8699,7 @@ namespace FamiStudio
             {
                 Cursor = Cursors.SizeNS;
             }
-            else if (ModifierKeys.Control && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
+            else if (ModifierKeys.IsControlDown && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
             {
                 Cursor = Cursors.CopyCursor;
             }
@@ -8705,7 +8773,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.Alt && Settings.AltLeftForMiddle);
+            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -8804,7 +8872,7 @@ namespace FamiStudio
             { 
                 var options = new ContextMenuOption[SnapResolutionType.Max - SnapResolutionType.Min + 3];
 
-                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping for notes in the piano roll {Shift}{S}", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
+                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping for notes in the piano roll <Shift><S>", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
                 options[1] = new ContextMenuOption("Snap Effect Values", "When snapping is enabled, also snap effect values", () => { snapEffects = !snapEffects; }, () => snapEffects ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked);
 
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
@@ -8816,7 +8884,7 @@ namespace FamiStudio
                     var tooltip = $"Sets the snap resolution to {name} {beats}";
 
                     if (SnapResolutionType.KeyboardShortcuts[i] != Keys.Unknown)
-                        tooltip += $" {{Alt}}{SnapResolutionType.KeyboardShortcuts[i] - Keys.D0}";
+                        tooltip += $" <Alt>{SnapResolutionType.KeyboardShortcuts[i] - Keys.D0}";
 
                     options[i + 2] = new ContextMenuOption(text, tooltip, () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0 ? ContextMenuSeparator.Before : ContextMenuSeparator.None);
                 }
@@ -8966,9 +9034,9 @@ namespace FamiStudio
         {
             if (e.X > pianoSizeX)
             {
-                if (Settings.TrackPadControls && !ModifierKeys.Control && !ModifierKeys.Alt)
+                if (Settings.TrackPadControls && !ModifierKeys.IsControlDown && !ModifierKeys.IsAltDown)
                 {
-                    if (ModifierKeys.Shift)
+                    if (ModifierKeys.IsShiftDown)
                         scrollX -= Utils.SignedCeil(e.ScrollY);
                     else
                         scrollY -= Utils.SignedCeil(e.ScrollY);
@@ -9091,7 +9159,7 @@ namespace FamiStudio
 
             // Allow to go outside the window when a capture is in progress.
             var captureInProgress = captureOperation != CaptureOperation.None;
-            return x > pianoSizeX && ((y > headerAndEffectSizeY && !captureInProgress) || (rawNoteValue >= 0 && captureInProgress));
+            return x > pianoSizeX && x < width && ((y > headerAndEffectSizeY && !captureInProgress) || (rawNoteValue >= 0 && captureInProgress));
         }
 
         private bool GetLocationForCoord(int x, int y, out NoteLocation location, out byte noteValue, bool allowSnap = false)
@@ -9104,7 +9172,7 @@ namespace FamiStudio
             location = Song.AbsoluteNoteIndexToNoteLocation(absoluteNoteIndex);
             noteValue = (byte)(NumNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, NumNotes));
 
-            return (x > pianoSizeX && y > headerAndEffectSizeY && location.PatternIndex < Song.Length);
+            return (x > pianoSizeX && x < width && y > headerAndEffectSizeY && location.PatternIndex < Song.Length);
         }
 
         private int GetVisualNoteDuration(NoteLocation location, Note note)
@@ -9268,7 +9336,5 @@ namespace FamiStudio
             Keys.Unknown,
             Keys.Unknown
         };
-
-
     }
 }

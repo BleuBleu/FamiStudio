@@ -3,97 +3,206 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace FamiStudio
 {
     public abstract class GraphicsBase : IDisposable
     {
-        protected float windowScaling = 1.0f;
-        protected float fontScaling = 1.0f;
         protected bool builtAtlases;
-        protected int windowSizeY;
+        protected bool clearPrePassDone;
+        protected bool offscreen;
         protected int lineWidthBias;
-        protected int maxSmoothLineWidth = int.MaxValue;
-        protected Rectangle controlRect;
-        protected Rectangle controlRectFlip;
+        protected float[] viewportScaleBias = new float[4];
+        protected Rectangle screenRect;
+        protected Rectangle screenRectFlip;
         protected TransformStack transform = new TransformStack();
         protected Bitmap dashedBitmap;
         protected Dictionary<int, BitmapAtlas> atlases = new Dictionary<int, BitmapAtlas>();
+        protected List<ClipRegion> clipRegions = new List<ClipRegion>();
+        protected Stack<ClipRegion> clipStack = new Stack<ClipRegion>();
+        protected CommandList[] layerCommandLists = new CommandList[(int)GraphicsLayer.Count];
+        protected byte curDepthValue = 0x80; // -128
+        protected byte maxDepthValue = 0x80; // -128
+        protected Color clearColor;
+        protected int maxTextureSize;
 
-        public float FontScaling => fontScaling;
-        public float WindowScaling => windowScaling;
+        protected struct ClipRegion
+        {
+            public RectangleF rect;
+            public byte depthValue;
+        }
+
+        public byte DepthValue => curDepthValue;
         public int DashTextureSize => dashedBitmap.Size.Width;
-        public int WindowSizeY => windowSizeY;
         public TransformStack Transform => transform;
+        public RectangleF CurrentClipRegion => clipStack.Peek().rect;
+        public bool IsOffscreen => offscreen;
 
         protected const int MaxAtlasResolution = 1024;
-        protected const int MaxVertexCount = 128 * 1024;
+        protected const int MaxVertexCount = 64 * 1024;
         protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
+        // These are only used temporarily during text/bmp rendering.
         protected float[] vtxArray = new float[MaxVertexCount * 2];
         protected float[] texArray = new float[MaxVertexCount * 2];
         protected int[]   colArray = new int[MaxVertexCount];
-        protected short[] quadIdxArray = new short[MaxIndexCount];
+        protected byte[]  depArray = new byte[MaxVertexCount];
+        protected short[] idxArray = new short[MaxIndexCount];
 
-        protected List<float[]> freeVtxArrays = new List<float[]>();
-        protected List<int[]>   freeColArrays = new List<int[]>();
-        protected List<short[]> freeIdxArrays = new List<short[]>();
+        protected static short[] quadIdxArray;
 
-        protected abstract int CreateEmptyTexture(int width, int height, bool alpha, bool filter);
-        protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
-        protected abstract string GetScaledFilename(string name, out bool needsScaling);
+        protected List<float[]> freeVertexArrays = new List<float[]>();
+        protected List<byte[]>  freeByteArrays   = new List<byte[]>();
+        protected List<int[]>   freeColorArrays  = new List<int[]>();
+        protected List<short[]> freeIndexArrays  = new List<short[]>();
+
+        protected List<GlyphCache> glyphCaches = new List<GlyphCache>();
+
+        public abstract int CreateEmptyTexture(int width, int height, TextureFormat format, bool filter);
         public abstract void DeleteTexture(int id);
-        public abstract void DrawCommandList(CommandList list, Rectangle scissor);
-        public abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
+        public abstract void UpdateTexture(int id, int x, int y, int width, int height, byte[] data);
+        protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
+        protected abstract void Clear();
+        protected abstract void DrawCommandList(CommandList list, bool depthTest);
+        protected abstract void DrawDepthPrepass();
+        protected abstract string GetScaledFilename(string name, out bool needsScaling);
+        protected abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
 
-        protected GraphicsBase(float mainScale, float fontScale)
+        protected const string AtlasPrefix = "FamiStudio.Resources.Atlas.";
+
+        public CommandList BackgroundCommandList => GetCommandList(GraphicsLayer.Background);
+        public CommandList DefaultCommandList    => GetCommandList(GraphicsLayer.Default);
+        public CommandList ForegroundCommandList => GetCommandList(GraphicsLayer.Foreground);
+        public CommandList OverlayCommandList    => GetCommandList(GraphicsLayer.Overlay);
+
+        protected GraphicsBase(bool offscreen)
         {
-            windowScaling = mainScale;
-            fontScaling = fontScale;
-
             // Quad index buffer.
-            // TODO : On PC, we have GL_QUADS, we could get rid of this.
-            for (int i = 0, j = 0; i < MaxVertexCount; i += 4)
+            if (quadIdxArray == null)
             {
-                var i0 = (short)(i + 0);
-                var i1 = (short)(i + 1);
-                var i2 = (short)(i + 2);
-                var i3 = (short)(i + 3);
+                quadIdxArray = new short[MaxIndexCount];
 
-                quadIdxArray[j++] = i0;
-                quadIdxArray[j++] = i1;
-                quadIdxArray[j++] = i2;
-                quadIdxArray[j++] = i0;
-                quadIdxArray[j++] = i2;
-                quadIdxArray[j++] = i3;
+                for (int i = 0, j = 0; i < MaxVertexCount; i += 4)
+                {
+                    var i0 = (short)(i + 0);
+                    var i1 = (short)(i + 1);
+                    var i2 = (short)(i + 2);
+                    var i3 = (short)(i + 3);
+
+                    quadIdxArray[j++] = i0;
+                    quadIdxArray[j++] = i1;
+                    quadIdxArray[j++] = i2;
+                    quadIdxArray[j++] = i0;
+                    quadIdxArray[j++] = i2;
+                    quadIdxArray[j++] = i3;
+                }
             }
 
-            // HACK : If we are on android with a scaling of 1.0, this mean we are
-            // rendering a video and we dont need any of the atlases.
-            if (!Platform.IsAndroid || mainScale != 1.0f)
+            this.offscreen = offscreen;
+
+            // We dont need the atlases when rendering videos.
+            if (!offscreen)
                 BuildBitmapAtlases();
         }
 
-        public virtual void BeginDrawFrame()
+        public virtual void BeginDrawFrame(Rectangle rect, Color clear)
         {
-        }
+            Debug.Assert(transform.IsEmpty);
+            Debug.Assert(clipStack.Count == 0);
 
-        public virtual void EndDrawFrame()
-        {
-        }
-
-        public virtual void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
-        {
-            this.windowSizeY = windowSizeY;
+            clearColor = clear;
+            clipRegions.Clear();
 
             lineWidthBias = 0;
-            controlRect = unflippedControlRect;
-            controlRectFlip = FlipRectangleY(unflippedControlRect);
+            screenRect = rect;
+            screenRectFlip = FlipRectangleY(rect, rect.Height); // MATTT Clean that up.
             transform.SetIdentity();
+            curDepthValue = 0x80;
+            maxDepthValue = 0x80;
+            clearPrePassDone = false;
+
+            viewportScaleBias[0] =  2.0f / screenRect.Width;
+            viewportScaleBias[1] = -2.0f / screenRect.Height;
+            viewportScaleBias[2] = -1.0f;
+            viewportScaleBias[3] =  1.0f;
         }
 
-        public virtual void EndDrawControl()
+        public virtual void EndDrawFrame(bool releaseLists = true)
         {
+            Debug.Assert(transform.IsEmpty);
+            Debug.Assert(clipStack.Count == 0);
+
+            if (!clearPrePassDone)
+            {
+                Clear();
+                DrawDepthPrepass();
+                clearPrePassDone = true;
+            }
+
+            for (int i = 0; i < layerCommandLists.Length; i++)
+            {
+                if (layerCommandLists[i] != null)
+                { 
+                    DrawCommandList(layerCommandLists[i], i != (int)GraphicsLayer.Overlay);
+                }
+            }
+
+            for (int i = 0; i < layerCommandLists.Length; i++)
+            {
+                if (layerCommandLists[i] != null)
+                {
+                    layerCommandLists[i].Release();
+                    
+                    if (releaseLists)
+                        layerCommandLists[i] = null;
+                }
+            }
+        }
+
+        public virtual void PushClipRegion(Point p, Size s, bool clipParents = true)
+        {
+            PushClipRegion(p.X, p.Y, s.Width, s.Height, clipParents);
+        }
+
+        public virtual void PushClipRegion(float x, float y, float width, float height, bool clipParents = true)
+        {
+            var ox = x;
+            var oy = y;
+
+            transform.TransformPoint(ref ox, ref oy);
+
+            maxDepthValue = (byte)((maxDepthValue + 1) & 0xff);
+            curDepthValue = maxDepthValue;
+
+            var clip = new ClipRegion();
+
+            clip.rect = new RectangleF(ox, oy, width, height);
+            clip.depthValue = curDepthValue;
+
+            if (clipParents && clipStack.Count > 0)
+                clip.rect = RectangleF.Intersect(clip.rect, clipStack.Peek().rect);
+
+            clipRegions.Add(clip);
+            clipStack.Push(clip);
+        }
+
+        public virtual void PopClipRegion()
+        {
+            clipStack.Pop();
+            curDepthValue = clipStack.Count > 0 ? clipStack.Peek().depthValue : (byte)0x80;
+        }
+
+        public CommandList GetCommandList(GraphicsLayer layer = GraphicsLayer.Default)
+        {
+            var idx = (int)layer;
+
+            if (layerCommandLists[idx] == null)
+            {
+                layerCommandLists[idx] = new CommandList(this, dashedBitmap.Size.Width);
+            }
+
+            return layerCommandLists[idx];
         }
 
         protected SimpleBitmap LoadBitmapFromResourceWithScaling(string name)
@@ -104,26 +213,13 @@ namespace FamiStudio
             // Pre-resize all images so we dont have to deal with scaling later.
             if (needsScaling)
             {
-                var newWidth  = Math.Max(1, (int)(bmp.Width  * (windowScaling / 2.0f)));
-                var newHeight = Math.Max(1, (int)(bmp.Height * (windowScaling / 2.0f)));
+                var newWidth  = Math.Max(1, (int)(bmp.Width  * (DpiScaling.Window / 2.0f)));
+                var newHeight = Math.Max(1, (int)(bmp.Height * (DpiScaling.Window / 2.0f)));
 
                 bmp = bmp.Resize(newWidth, newHeight);
             }
 
             return bmp;
-        }
-
-        private bool IsAtlasBitmap(string name)
-        {
-            // Ignore fonts and other things we load differently.
-            return
-                name.StartsWith("FamiStudio.Resources.") && 
-                name.EndsWith(".tga") && 
-                !name.Contains("Cursor") &&
-                !name.Contains("QuickSand") &&
-                !name.Contains("MobileMenu") && 
-                !name.Contains("FamiStudio_") &&
-                !name.Contains("VideoWatermark");
         }
 
         private void BuildBitmapAtlases()
@@ -136,27 +232,27 @@ namespace FamiStudio
 
             foreach (var res in resourceNames)
             {
-                if (IsAtlasBitmap(res))
+                if (res.StartsWith(AtlasPrefix))
                 {
                     // Remove any scaling from the name.
                     var at = res.IndexOf('@');
-                    var cleanedFilename = res.Substring(21, at >= 0 ? at - 21 : res.Length - 25);
+                    var cleanedFilename = res.Substring(AtlasPrefix.Length, at >= 0 ? at - AtlasPrefix.Length : res.Length - AtlasPrefix.Length - 4);
                     filteredImages.Add(cleanedFilename);
                 }
             }
 
             // Keep 1 atlas per power-of-two size. 
-            var minWidth = (int)(16 * windowScaling);
+            var minWidth = DpiScaling.ScaleForWindow(16);
 
             foreach (var res in filteredImages)
             {
-                var scaledFilename = GetScaledFilename(res, out var needsScaling);
+                var scaledFilename = GetScaledFilename(AtlasPrefix + res, out var needsScaling);
                 TgaFile.GetResourceImageSize(scaledFilename, out var width, out var height);
 
                 if (needsScaling)
                 {
-                    width  = Math.Max(1, (int)(width  * (windowScaling / 2.0f)));
-                    height = Math.Max(1, (int)(height * (windowScaling / 2.0f)));
+                    width  = Math.Max(1, (int)(width  * (DpiScaling.Window / 2.0f)));
+                    height = Math.Max(1, (int)(height * (DpiScaling.Window / 2.0f)));
                 }
 
                 width  = Math.Max(minWidth, width);
@@ -194,7 +290,7 @@ namespace FamiStudio
                     return new BitmapAtlasRef(a, idx);
             }
 
-            Debug.Assert(!builtAtlases); // On Android, when rendering videos, we ignore missing bitmaps.
+            Debug.Assert(false); // Not found!
             return null;
         }
 
@@ -211,19 +307,14 @@ namespace FamiStudio
             lineWidthBias = bias;
         }
 
-        public void DrawCommandList(CommandList list)
+        protected virtual CommandList CreateCommandList()
         {
-            DrawCommandList(list, Rectangle.Empty);
+            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias);
         }
 
-        public virtual CommandList CreateCommandList()
+        protected Rectangle FlipRectangleY(Rectangle rc, int sizeY)
         {
-            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias, true, maxSmoothLineWidth);
-        }
-
-        protected Rectangle FlipRectangleY(Rectangle rc)
-        {
-            return new Rectangle(rc.Left, windowSizeY - rc.Top - rc.Height, rc.Width, rc.Height);
+            return new Rectangle(rc.Left, sizeY - rc.Top - rc.Height, rc.Width, rc.Height);
         }
 
         public float MeasureString(string text, Font font, bool mono = false)
@@ -231,14 +322,9 @@ namespace FamiStudio
             return font.MeasureString(text, mono);
         }
 
-        public Geometry CreateGeometry(float[,] points, bool closed = true)
+        public Bitmap CreateEmptyBitmap(int width, int height, TextureFormat format, bool filter)
         {
-            return new Geometry(points, closed);
-        }
-
-        public Bitmap CreateEmptyBitmap(int width, int height, bool alpha, bool filter)
-        {
-            return new Bitmap(this, CreateEmptyTexture(width, height, alpha, filter), width, height, true, filter);
+            return new Bitmap(this, CreateEmptyTexture(width, height, format, filter), width, height, true, filter);
         }
 
         protected T ReadFontParam<T>(string[] values, string key)
@@ -255,101 +341,66 @@ namespace FamiStudio
             return default(T);
         }
 
-        public Font CreateScaledFont(Font source, int desiredHeight)
+        public Font CreateFontFromResource(string name, int size)
         {
-            return null;
+            return new Font(this, name, size);
         }
 
-        public Font CreateFontFromResource(string name, bool bold, int size)
+        public int CacheGlyph(byte[] data, int w, int h, out float u0, out float v0, out float u1, out float v1)
         {
-            var suffix = bold ? "Bold" : "";
-            var basename = $"{name}{size}{suffix}";
-            var fntfile = $"FamiStudio.Resources.{basename}.fnt";
-            var imgfile = $"FamiStudio.Resources.{basename}_0.tga";
-
-            var str = "";
-            using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(fntfile))
-            using (StreamReader reader = new StreamReader(stream))
+            Debug.Assert(data.Length == (w * h));
+            
+            foreach (var cache in glyphCaches)
             {
-                str = reader.ReadToEnd();
-            }
-
-            var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var bmp = TgaFile.LoadFromResource(imgfile, true);
-
-            var font = (Font)null;
-
-            int baseValue = 0;
-            int lineHeight = 0;
-            int texSizeX = 256;
-            int texSizeY = 256;
-
-            foreach (var line in lines)
-            {
-                var splits = line.Split(new[] { ' ', '=', '\"' }, StringSplitOptions.RemoveEmptyEntries);
-
-                switch (splits[0])
+                if (cache.Allocate(data, w, h, out u0, out v0, out u1, out v1))
                 {
-                    case "common":
-                    {
-                        baseValue = ReadFontParam<int>(splits, "base");
-                        lineHeight = ReadFontParam<int>(splits, "lineHeight");
-                        texSizeX = ReadFontParam<int>(splits, "scaleW");
-                        texSizeY = ReadFontParam<int>(splits, "scaleH");
-                        font = new Font(this, CreateTexture(bmp, false), size, baseValue, lineHeight);
-                        break;
-                    }
-                    case "char":
-                    {
-                        var charInfo = new Font.CharInfo();
-
-                        int c = ReadFontParam<int>(splits, "id");
-                        int x = ReadFontParam<int>(splits, "x");
-                        int y = ReadFontParam<int>(splits, "y");
-
-                        charInfo.width = ReadFontParam<int>(splits, "width");
-                        charInfo.height = ReadFontParam<int>(splits, "height");
-                        charInfo.xoffset = ReadFontParam<int>(splits, "xoffset");
-                        charInfo.yoffset = ReadFontParam<int>(splits, "yoffset");
-                        charInfo.xadvance = ReadFontParam<int>(splits, "xadvance");
-                        charInfo.u0 = (x + 0.0f) / (float)texSizeX;
-                        charInfo.v0 = (y + 0.0f) / (float)texSizeY;
-                        charInfo.u1 = (x + 0.0f + charInfo.width) / (float)texSizeX;
-                        charInfo.v1 = (y + 0.0f + charInfo.height) / (float)texSizeY;
-
-                        font.AddChar((char)c, charInfo);
-
-                        break;
-                    }
-                    case "kerning":
-                    {
-                        int c0 = ReadFontParam<int>(splits, "first");
-                        int c1 = ReadFontParam<int>(splits, "second");
-                        int amount = ReadFontParam<int>(splits, "amount");
-                        font.AddKerningPair(c0, c1, amount);
-                        break;
-                    }
+                    return cache.TextureId;
                 }
             }
 
-            return font;
+            const int BaseCacheSize = 512;
+            const int NumNodes = 4096;
+
+            Debug.Assert(maxTextureSize != 0);
+
+            var textureSize = Math.Min(maxTextureSize, Utils.NextPowerOfTwo(DpiScaling.ScaleForFont(BaseCacheSize)));
+            var newCache = new GlyphCache(this, textureSize, NumNodes); 
+            var allocated = newCache.Allocate(data, w, h, out u0, out v0, out u1, out v1);
+            Debug.Assert(allocated);
+
+            glyphCaches.Add(newCache);
+
+            return newCache.TextureId;
+        }
+
+        public void ClearGlyphCache()
+        {
+            foreach (var cache in glyphCaches)
+                cache.Dispose();
+            glyphCaches.Clear();
+        }
+
+        private void ClearAtlases()
+        {
+            foreach (var a in atlases.Values)
+                a.Dispose();
+            atlases.Clear();
         }
 
         public virtual void Dispose()
         {
-            foreach (var a in atlases.Values)
-                a.Dispose();
-
-            atlases.Clear();
+            ClearGlyphCache();
+            ClearAtlases();
+            Utils.DisposeAndNullify(ref dashedBitmap);
         }
 
         public float[] GetVertexArray()
         {
-            if (freeVtxArrays.Count > 0)
+            if (freeVertexArrays.Count > 0)
             {
-                var lastIdx = freeVtxArrays.Count - 1;
-                var arr = freeVtxArrays[lastIdx];
-                freeVtxArrays.RemoveAt(lastIdx);
+                var lastIdx = freeVertexArrays.Count - 1;
+                var arr = freeVertexArrays[lastIdx];
+                freeVertexArrays.RemoveAt(lastIdx);
                 return arr;
             }
             else
@@ -358,13 +409,28 @@ namespace FamiStudio
             }
         }
 
+        public byte[] GetByteArray()
+        {
+            if (freeByteArrays.Count > 0)
+            {
+                var lastIdx = freeByteArrays.Count - 1;
+                var arr = freeByteArrays[lastIdx];
+                freeByteArrays.RemoveAt(lastIdx);
+                return arr;
+            }
+            else
+            {
+                return new byte[MaxVertexCount];
+            }
+        }
+
         public int[] GetColorArray()
         {
-            if (freeColArrays.Count > 0)
+            if (freeColorArrays.Count > 0)
             {
-                var lastIdx = freeColArrays.Count - 1;
-                var arr = freeColArrays[lastIdx];
-                freeColArrays.RemoveAt(lastIdx);
+                var lastIdx = freeColorArrays.Count - 1;
+                var arr = freeColorArrays[lastIdx];
+                freeColorArrays.RemoveAt(lastIdx);
                 return arr;
             }
             else
@@ -375,109 +441,405 @@ namespace FamiStudio
 
         public short[] GetIndexArray()
         {
-            if (freeIdxArrays.Count > 0)
+            if (freeIndexArrays.Count > 0)
             {
-                var lastIdx = freeIdxArrays.Count - 1;
-                var arr = freeIdxArrays[lastIdx];
-                freeIdxArrays.RemoveAt(lastIdx);
+                var lastIdx = freeIndexArrays.Count - 1;
+                var arr = freeIndexArrays[lastIdx];
+                freeIndexArrays.RemoveAt(lastIdx);
                 return arr;
             }
             else
             {
-                return new short[MaxVertexCount];
+                return new short[MaxIndexCount];
             }
         }
 
         public void ReleaseVertexArray(float[] a)
         {
-            freeVtxArrays.Add(a);
+            freeVertexArrays.Add(a);
+        }
+
+
+        public void ReleaseByteArray(byte[] a)
+        {
+            freeByteArrays.Add(a);
         }
 
         public void ReleaseColorArray(int[] a)
         {
-            freeColArrays.Add(a);
+            freeColorArrays.Add(a);
         }
 
         public void ReleaseIndexArray(short[] a)
         {
-            freeIdxArrays.Add(a);
+            freeIndexArrays.Add(a);
         }
     };
 
+    public enum TextureFormat
+    {
+        R,
+        Rgb,
+        Rgba,
+        Depth
+    };
+
+    public enum GraphicsLayer
+    {
+        Background,
+        Default,
+        Foreground,
+        Overlay,
+        Count
+    };
+
+    public class GlyphCache : IDisposable
+    {
+        private const string StbDll = Platform.DllPrefix + "Stb" + Platform.DllExtension;
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static IntPtr StbInitPackRect(int width, int height, int numNodes);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbFreePackRect(IntPtr pack);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static unsafe int StbPackRects(IntPtr pack, ref int widths, ref int heights, ref int x, ref int y, int num);
+
+        private IntPtr pack;
+        private int texture;
+        private int textureSize;
+        private int numFailedAllocations;
+        private GraphicsBase graphics;
+
+        public int TextureId => texture;
+
+        public GlyphCache(GraphicsBase g, int size, int numSlots)
+        {
+            graphics = g;
+            texture = g.CreateEmptyTexture(size, size, TextureFormat.R, false);
+            textureSize = size;
+            pack = StbInitPackRect(size, size, numSlots);
+        }
+
+        public bool Allocate(byte[] data, int w, int h, out float u0, out float v0, out float u1, out float v1)
+        {
+            Debug.Assert(data.Length == (w * h));
+
+            u0 = 0.0f;
+            v0 = 0.0f;
+            u1 = 0.0f;
+            v1 = 0.0f;
+
+            if (numFailedAllocations > 10)
+            {
+                return false;
+            }
+
+            var x = 0;
+            var y = 0;
+            var allocated = StbPackRects(pack, ref w, ref h, ref x, ref y, 1);
+
+            if (allocated == 0)
+            {
+                numFailedAllocations++;
+                return false; 
+            }
+
+            graphics.UpdateTexture(texture, x, y, w, h, data);
+
+            u0 = ((x + 0) / (float)textureSize);
+            v0 = ((y + 0) / (float)textureSize);
+            u1 = ((x + w) / (float)textureSize);
+            v1 = ((y + h) / (float)textureSize);
+
+            return true;
+        }
+
+        public void Dispose()
+        {
+            graphics.DeleteTexture(texture);
+            texture = 0;
+            StbFreePackRect(pack);
+        }
+    }
+
     public class Font : IDisposable
     {
+        private const string StbDll = Platform.DllPrefix + "Stb" + Platform.DllExtension;
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbGetNumberOfFonts(IntPtr data);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbGetFontOffsetForIndex(IntPtr data, int index);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static IntPtr StbInitFont(IntPtr data, int offset);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbFreeFont(IntPtr font);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static float StbScaleForPixelHeight(IntPtr info, float pixels);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static float StbScaleForMappingEmToPixels(IntPtr info, float pixels);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbGetGlyphBitmapBox(IntPtr info, int glyph, float scale, out int x0, out int y0, out int x1, out int y1);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbMakeGlyphBitmap(IntPtr info, IntPtr output, int width, int height, int stride, int glyph, float scale);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbMakeGlyphBitmapSubpixel(IntPtr info, IntPtr output, int width, int height, int stride, int glyph, float scale, float subx, float suby);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbGetGlyphHMetrics(IntPtr info, int glyph, out int advanceWidth, out int leftSideBearing);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbGetGlyphKernAdvance(IntPtr info, int ch1, int ch2);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbGetFontVMetrics(IntPtr info, out int ascent, out int descent, out int lineGap);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbGetFontVMetricsOS2(IntPtr info, out int typoAscent, out int typoDescent, out int typoLineGap, out int winAscent, out int winDescent);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static void StbGetFontBoundingBox(IntPtr info, out int x0, out int y0, out int x1, out int y1);
+
+        [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
+        extern static int StbFindGlyphIndex(IntPtr info, int codepoint);
+
         public class CharInfo
         {
             public int width;
             public int height;
             public int xoffset;
             public int yoffset;
-            public int xadvance;
+            public float xadvance;
+            public int texture;
             public float u0;
             public float v0;
             public float u1;
             public float v1;
+            public bool rasterized;
         }
 
-        Dictionary<char, CharInfo> charMap = new Dictionary<char, CharInfo>();
-        Dictionary<int, int> kerningPairs = new Dictionary<int, int>();
+        private Dictionary<char, int>     glyphIndices = new Dictionary<char, int>();     // Unicode -> Glyph index
+        private Dictionary<int, CharInfo> glyphInfos   = new Dictionary<int, CharInfo>(); // Key is glyph index.
+        private Dictionary<int, float>    kerningPairs = new Dictionary<int, float>();    // Key is a pair of glyph indices.
 
-        private int texture;
+        class SharedFontData
+        {
+            public GCHandle handle;
+            public IntPtr info;
+            public int refCount;
+        };
+
+        private static Dictionary<string, SharedFontData> sharedFontData = new Dictionary<string, SharedFontData>();
+
+        private GraphicsBase graphics;
+        private SharedFontData font;
+        private float scale;
+        private float intensity = 1.0f;
         private int size;
         private int baseValue;
         private int lineHeight;
-        private GraphicsBase graphics;
 
-        public int Texture => texture;
         public int Size => size;
+        public int OffsetY => size - baseValue; 
         public int LineHeight => lineHeight;
-        public int OffsetY => size - baseValue;
 
-        public Font(GraphicsBase g, int tex, int sz, int b, int l)
+        public Font(GraphicsBase g, string name, int sz)
         {
             graphics = g;
-            texture = tex;
             size = sz;
-            baseValue = b;
-            lineHeight = l;
+            font = GetSharedFontData(name);
+            scale = StbScaleForMappingEmToPixels(font.info, sz);
+            StbGetFontVMetrics(font.info, out var ascent, out var descent, out var lineGap);
+
+            baseValue  = (int)(ascent * scale);
+            lineHeight = (int)((ascent - descent + lineGap) * scale);
+            intensity  = CalculateGlyphIntensity();
+
+            // If the font has a OS/2 table, use that since it matches the old behavior of bmfont.
+            //if (StbGetFontVMetricsOS2(font.info, out _, out _, out _, out var winAscent, out var winDescent) != 0)
+            //{
+            //    baseValue  = (int)Math.Round(winAscent * scale);
+            //    lineHeight = (int)Math.Round((winAscent + winDescent) * scale);
+            //}
         }
 
-        public void Dispose()
+    #if DEBUG
+        static void DumpGlyph(byte[] glyph, int w, int h)
         {
-            graphics.DeleteTexture(texture);
-            texture = -1;
-        }
+            var lines = new List<string>();
 
-        public void AddChar(char c, CharInfo info)
-        {
-            charMap[c] = info;
-        }
+            lines.Add("P2");
+            lines.Add($"{w} {h}");
+            lines.Add("255");
 
-        public void AddKerningPair(int c0, int c1, int amount)
-        {
-            kerningPairs[c0 | (c1 << 8)] = amount;
-        }
-
-        public CharInfo GetCharInfo(char c, bool fallback = true)
-        {
-            if (charMap.TryGetValue(c, out CharInfo info))
+            for (int y = 0; y < h; y++)
             {
-                return info;
+                var pixels = new List<string>();
+                lines.Add(string.Join(' ', glyph.AsSpan(w * y, w).ToArray()));
             }
-            else if (fallback)
+
+            File.WriteAllLines("C:\\Dump\\glyph.pgm", lines);
+        }
+    #endif
+
+        private float CalculateGlyphIntensity()
+        {
+            var charsToTest = new[] { 'a', 'i', 'j' };
+            var minValue = 255;
+
+            // At small sizes, Quicksand is very thin and tends to not cover
+            // entire pixels. We'll renormalize the values so that brightest 
+            // pixels maps to full opacity. Of course if we had hinting, we 
+            // wouldnt need any of this.
+            foreach (var c in charsToTest)
             {
-                return charMap['?'];
+                var glyphIndex = GetGlyphIndex(c);
+                var glyphImage = RasterizeGlyph(glyphIndex);
+                var maxValue = 1;
+
+                for (int i = 0; i < glyphImage.Length; i++)
+                {
+                    maxValue = Math.Max(glyphImage[i], maxValue);
+                }
+
+                minValue = Math.Min(minValue, maxValue);
+            }
+
+            const float MaxIntensity = 1.5f;
+
+            return minValue == 0 ? 1.0f : Math.Min(MaxIntensity, 255.0f / minValue);
+        }
+
+        public void ClearCachedData()
+        {
+            glyphIndices.Clear();
+            glyphInfos.Clear();
+            kerningPairs.Clear();
+        }
+
+        private static SharedFontData GetSharedFontData(string name)
+        {
+            if (!sharedFontData.TryGetValue(name, out var data))
+            {
+                var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
+                var buffer = new byte[stream.Length];
+                stream.Read(buffer, 0, buffer.Length);
+
+                var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+
+                IntPtr pttf = handle.AddrOfPinnedObject();
+                var offset = StbGetFontOffsetForIndex(pttf, 0);
+
+                data = new SharedFontData();
+                data.handle = handle;
+                data.info = StbInitFont(pttf, offset);
+                data.refCount = 1;
+
+                sharedFontData[name] = data;
             }
             else
             {
-                return null;
+                data.refCount++;
+            }
+
+            return data;
+        }
+
+        private static void ReleaseSharedFontData(SharedFontData data)
+        {
+            if (--data.refCount == 0)
+            {
+                StbFreeFont(data.info);
+
+                data.handle.Free();
+                data.info = IntPtr.Zero;
+
+                foreach (var kv in sharedFontData)
+                {
+                    if (kv.Value == data)
+                    {
+                        sharedFontData.Remove(kv.Key);
+                        break;
+                    }
+                }
             }
         }
 
-        public int GetKerning(char c0, char c1)
+        public CharInfo GetCharInfo(char c)
         {
-            int key = (int)c0 | ((int)c1 << 8);
-            return kerningPairs.TryGetValue(key, out int amount) ? amount : 0;
+            var glyphIndex = GetGlyphIndex(c);
+
+            if (glyphInfos.TryGetValue(glyphIndex, out CharInfo glyphInfo))
+            {
+                if (!glyphInfo.rasterized && Platform.ThreadOwnsGLContext)
+                    RasterizeAndCacheGlyph(glyphIndex, glyphInfo);
+
+                return glyphInfo;
+            }
+            else 
+            {
+                glyphInfo = new CharInfo();
+
+                SetupGlyphMetrics(glyphIndex, glyphInfo);
+
+                if (Platform.ThreadOwnsGLContext)
+                    RasterizeAndCacheGlyph(glyphIndex, glyphInfo);
+
+                glyphInfos.Add(glyphIndex, glyphInfo);
+
+                return glyphInfo;
+            }
+        }
+
+        private void GetGlyphSize(int glyphIndex, out int width, out int height)
+        {
+            StbGetGlyphBitmapBox(font.info, glyphIndex, scale, out var x0, out var y0, out var x1, out var y1);
+            width  = x1 - x0;
+            height = y1 - y0;
+        }
+
+        private void SetupGlyphMetrics(int glyphIndex, CharInfo glyphInfo)
+        {
+            StbGetGlyphHMetrics(font.info, glyphIndex, out var advance, out _);
+            glyphInfo.xadvance = advance * scale;
+
+            StbGetGlyphBitmapBox(font.info, glyphIndex, scale, out var x0, out var y0, out var x1, out var y1);
+            glyphInfo.width   = x1 - x0;
+            glyphInfo.height  = y1 - y0;
+            glyphInfo.xoffset = x0;
+            glyphInfo.yoffset = baseValue + y0;
+        }
+
+        private void RasterizeAndCacheGlyph(int glyphIndex, CharInfo glyphInfo)
+        {
+            Debug.Assert(!glyphInfo.rasterized);
+
+            var glyphImage = RasterizeGlyph(glyphIndex, glyphInfo.width, glyphInfo.height);
+
+            if (glyphImage != null)
+            {
+                glyphInfo.texture =
+                    graphics.CacheGlyph(
+                        glyphImage,
+                        glyphInfo.width,
+                        glyphInfo.height,
+                        out glyphInfo.u0,
+                        out glyphInfo.v0,
+                        out glyphInfo.u1,
+                        out glyphInfo.v1);
+            }
+
+            glyphInfo.rasterized = true;
         }
 
         public bool TruncateString(ref string text, int maxSizeX)
@@ -498,12 +860,13 @@ namespace FamiStudio
                     return true;
                 }
 
-                x += info.xadvance;
+                var advance = info.xadvance;
                 if (i != text.Length - 1)
                 {
                     char c1 = text[i + 1];
-                    x += GetKerning(c0, c1);
+                    advance += GetKerning(c0, c1);
                 }
+                x += (int)advance;
             }
 
             return false;
@@ -532,17 +895,17 @@ namespace FamiStudio
                         return i;
                 }
 
-                x += info.xadvance;
+                var advance = info.xadvance;
                 if (i != text.Length - 1)
                 {
                     char c1 = text[i + 1];
-                    x += GetKerning(c0, c1);
+                    advance += GetKerning(c0, c1);
                 }
+                x += (int)advance;
             }
 
             return text.Length;
         }
-
 
         public int MeasureString(string text, bool mono)
         {
@@ -554,7 +917,7 @@ namespace FamiStudio
 
                 for (int i = 0; i < text.Length; i++)
                 {
-                    x += info.xadvance;
+                    x += (int)info.xadvance;
                 }
             }
             else
@@ -564,73 +927,90 @@ namespace FamiStudio
                     var c0 = text[i];
                     var info = GetCharInfo(c0);
 
-                    x += info.xadvance;
+                    var advance = info.xadvance;
                     if (i != text.Length - 1)
                     {
                         char c1 = text[i + 1];
-                        x += GetKerning(c0, c1);
+                        advance += GetKerning(c0, c1);
                     }
+                    x += (int)advance;
                 }
             }
 
             return x;
         }
-    }
 
-    public class Geometry : IDisposable
-    {
-        public float[] Points { get; private set; }
-
-        public Dictionary<float, float[]> miterPoints = new Dictionary<float, float[]>();
-
-        public Geometry(float[,] points, bool closed)
+        private unsafe byte[] RasterizeGlyph(int glyphIndex, int width = -1, int height = -1)
         {
-            var numPoints = points.GetLength(0);
-            var closedPoints = new float[(numPoints + (closed ? 1 : 0)) * 2];
-
-            for (int i = 0; i < closedPoints.Length / 2; i++)
+            if (width < 0 || height < 0)
             {
-                closedPoints[i * 2 + 0] = points[i % points.GetLength(0), 0];
-                closedPoints[i * 2 + 1] = points[i % points.GetLength(0), 1];
+                GetGlyphSize(glyphIndex, out width, out height);
             }
 
-            Points = closedPoints;
+            if (width == 0 || height == 0)
+            {
+                return null;
+            }
+
+            var glyphImage = new byte[width * height];
+
+            fixed (byte* p = &glyphImage[0])
+            {
+                StbMakeGlyphBitmap(font.info, (IntPtr)p, width, height, width, glyphIndex, scale);
+            }
+
+            if (intensity != 1.0f)
+            {
+                for (int i = 0; i < glyphImage.Length; i++)
+                {
+                    glyphImage[i] = (byte)(Math.Min(glyphImage[i] * intensity, 255.0f));
+                }
+            }
+
+            return glyphImage;
         }
 
-        public float[] GetMiterPoints(float lineWidth)
+        private int GetGlyphIndex(char c)
         {
-            if (miterPoints.TryGetValue(lineWidth, out var points))
-                return points;
-
-            points = new float[Points.Length * 2];
-
-            for (int i = 0; i < Points.Length / 2 - 1; i++)
+            if (glyphIndices.TryGetValue(c, out var glyphIndex))
             {
-                var x0 = Points[(i + 0) * 2 + 0];
-                var x1 = Points[(i + 1) * 2 + 0];
-                var y0 = Points[(i + 0) * 2 + 1];
-                var y1 = Points[(i + 1) * 2 + 1];
-
-                var dx = x1 - x0;
-                var dy = y1 - y0;
-                var len = (float)Math.Sqrt(dx * dx + dy * dy);
-
-                var nx = dx / len * lineWidth * 0.5f;
-                var ny = dy / len * lineWidth * 0.5f;
-
-                points[(2 * i + 0) * 2 + 0] = x0 - nx;
-                points[(2 * i + 0) * 2 + 1] = y0 - ny;
-                points[(2 * i + 1) * 2 + 0] = x1 + nx;
-                points[(2 * i + 1) * 2 + 1] = y1 + ny;
+                return glyphIndex;
             }
+            else
+            {
+                glyphIndex = StbFindGlyphIndex(font.info, c);
 
-            miterPoints.Add(lineWidth, points);
+                if (glyphIndex == 0)
+                {
+                    return GetGlyphIndex('?');
+                }
 
-            return points;
+                glyphIndices.Add(c, glyphIndex);
+                return glyphIndex;
+            }
+        }
+
+        public float GetKerning(char c0, char c1)
+        {
+            var g0 = GetGlyphIndex(c0);
+            var g1 = GetGlyphIndex(c1);
+            var key = g0 | (g1 << 16);
+         
+            if (kerningPairs.TryGetValue(key, out float amount))
+            {
+                return amount; 
+            }
+            else
+            {
+                var kern = StbGetGlyphKernAdvance(font.info, c0, c1) * scale;
+                kerningPairs.Add(key, kern);
+                return kern; 
+            }
         }
 
         public void Dispose()
         {
+            ReleaseSharedFontData(font);
         }
     }
 
@@ -743,10 +1123,11 @@ namespace FamiStudio
 
     public class TransformStack
     {
-        private Transform transform = new Transform(); // xy = scale, zw = translation
+        private Transform transform = new Transform(1, 1, 0, 0); // xy = scale, zw = translation
         private Stack<Transform> transformStack = new Stack<Transform>();
 
         public bool HasScaling => transform.HasScaling;
+        public bool IsEmpty => transformStack.Count == 0;
 
         public void SetIdentity()
         {
@@ -782,6 +1163,12 @@ namespace FamiStudio
         {
             x = x * transform.ScaleX + transform.TranslationX;
             y = y * transform.ScaleY + transform.TranslationY;
+        }
+
+        public void ReverseTransformPoint(ref float x, ref float y)
+        {
+            x = (x - transform.TranslationX) / transform.ScaleX;
+            y = (y - transform.TranslationY) / transform.ScaleY;
         }
 
         public void ScaleSize(ref float width, ref float height)
@@ -832,29 +1219,45 @@ namespace FamiStudio
     // This is common to both OGL, it only does data packing, no GL calls.
     public class CommandList
     {
-        private class MeshBatch
+        private class PolyBatch
         {
             public float[] vtxArray;
             public int[]   colArray;
             public short[] idxArray;
+            public byte[]  depArray;
 
             public int vtxIdx = 0;
             public int colIdx = 0;
             public int idxIdx = 0;
+            public int depIdx = 0;
         };
 
         private class LineBatch
         {
-            public bool smooth;
-            public float lineWidth;
-
             public float[] vtxArray;
             public float[] texArray;
             public int[]   colArray;
+            public byte[]  depArray;
 
             public int vtxIdx = 0;
             public int texIdx = 0;
             public int colIdx = 0;
+            public int depIdx = 0;
+        };
+        
+        private class LineSmoothBatch
+        {
+            public float[] vtxArray;
+            public byte[]  dstArray;
+            public int[]   colArray;
+            public short[] idxArray;
+            public byte[]  depArray;
+
+            public int vtxIdx = 0;
+            public int dstIdx = 0;
+            public int colIdx = 0;
+            public int idxIdx = 0;
+            public int depIdx = 0;
         };
 
         private class TextInstance
@@ -862,8 +1265,10 @@ namespace FamiStudio
             public RectangleF layoutRect;
             public RectangleF clipRect;
             public TextFlags flags;
+            public Font font;
             public string text;
             public Color color;
+            public byte depth;
         };
 
         private class BitmapInstance
@@ -879,17 +1284,20 @@ namespace FamiStudio
             public float opacity;
             public Color tint;
             public bool rotated;
+            public byte depth;
         }
 
-        public class MeshDrawData
+        public class PolyDrawData
         {
             public float[] vtxArray;
             public int[]   colArray;
             public short[] idxArray;
+            public byte[]  depArray;
 
             public int vtxArraySize;
             public int colArraySize;
             public int idxArraySize;
+            public int depArraySize;
 
             public bool smooth;
             public int numIndices;
@@ -900,14 +1308,33 @@ namespace FamiStudio
             public float[] vtxArray;
             public float[] texArray;
             public int[]   colArray;
+            public byte[]  depArray;
 
             public int vtxArraySize;
             public int texArraySize;
             public int colArraySize;
+            public int depArraySize;
 
             public int numVertices;
             public bool smooth;
             public float lineWidth;
+        };
+
+        public class LineSmoothDrawData
+        {
+            public float[] vtxArray;
+            public byte[]  dstArray;
+            public int[]   colArray;
+            public short[] idxArray;
+            public byte[]  depArray;
+
+            public int vtxArraySize;
+            public int dstArraySize;
+            public int colArraySize;
+            public int idxArraySize;
+            public int depArraySize;
+
+            public int numIndices;
         };
 
         public class DrawData
@@ -917,18 +1344,13 @@ namespace FamiStudio
             public int count;
         };
 
-        private bool drawThickLineAsPolygon;
-        private MeshBatch thickLineBatch; // Linux only
-        public bool HasAnyTickLineMeshes => thickLineBatch != null;
-
-        private int maxSmoothLineWidth = int.MaxValue;
         private int lineWidthBias;
         private float invDashTextureSize;
-        private MeshBatch meshBatch;
-        private MeshBatch meshSmoothBatch;
-        private LineBatch currentLineBatch;
-        private List<LineBatch> lineBatches = new List<LineBatch>();
-        private Dictionary<Font,   List<TextInstance>>   texts   = new Dictionary<Font,   List<TextInstance>>();
+        private LineBatch lineBatch;
+        private List<PolyBatch> polyBatches;
+        private List<LineSmoothBatch> lineSmoothBatches;
+        private List<TextInstance> texts;
+
         private Dictionary<Bitmap, List<BitmapInstance>> bitmaps = new Dictionary<Bitmap, List<BitmapInstance>>();
 
         private GraphicsBase graphics;
@@ -937,20 +1359,19 @@ namespace FamiStudio
         public TransformStack Transform => xform;
         public GraphicsBase Graphics => graphics;
 
-        public bool HasAnyMeshes  => meshBatch != null || meshSmoothBatch != null;
-        public bool HasAnyLines   => lineBatches.Count > 0;
-        public bool HasAnyTexts   => texts.Count > 0;
-        public bool HasAnyBitmaps => bitmaps.Count > 0;
-        public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps || HasAnyTickLineMeshes;
+        public bool HasAnyPolygons       => polyBatches != null;
+        public bool HasAnyLines          => lineBatch != null;
+        public bool HasAnySmoothLines    => lineSmoothBatches != null;
+        public bool HasAnyTexts          => texts != null;
+        public bool HasAnyBitmaps        => bitmaps.Count > 0;
+        public bool HasAnything          => HasAnyPolygons || HasAnyLines || HasAnySmoothLines || HasAnyTexts || HasAnyBitmaps;
 
-        public CommandList(GraphicsBase g, int dashTextureSize, int lineBias = 0, bool supportsLineWidth = true, int maxSmoothWidth = int.MaxValue)
+        public CommandList(GraphicsBase g, int dashTextureSize, int lineBias = 0)
         {
             graphics = g;
             xform = g.Transform;
             invDashTextureSize = 1.0f / dashTextureSize;
             lineWidthBias = lineBias;
-            maxSmoothLineWidth = maxSmoothWidth;
-            drawThickLineAsPolygon = !supportsLineWidth;
         }
 
         public void PushTranslation(float x, float y)
@@ -968,109 +1389,92 @@ namespace FamiStudio
             xform.PopTransform();
         }
 
-        public void Release()
+        public void PushClipRegion(float x, float y, float width, float height, bool clipParents = true)
         {
-            if (meshBatch != null)
-            {
-                graphics.ReleaseVertexArray(meshBatch.vtxArray);
-                graphics.ReleaseColorArray(meshBatch.colArray);
-                graphics.ReleaseIndexArray(meshBatch.idxArray);
-            }
-
-            if (meshSmoothBatch != null)
-            {
-                graphics.ReleaseVertexArray(meshSmoothBatch.vtxArray);
-                graphics.ReleaseColorArray(meshSmoothBatch.colArray);
-                graphics.ReleaseIndexArray(meshSmoothBatch.idxArray);
-            }
-
-            foreach (var batch in lineBatches)
-            {
-                graphics.ReleaseVertexArray(batch.vtxArray);
-                graphics.ReleaseVertexArray(batch.texArray);
-                graphics.ReleaseColorArray(batch.colArray);
-            }
-
-            meshBatch = null;
-            meshSmoothBatch = null;
-            lineBatches.Clear();
+            graphics.PushClipRegion(x, y, width, height, clipParents);
         }
 
-        private MeshBatch GetMeshBatch(bool smooth)
+        public void PopClipRegion()
         {
-            MeshBatch batch;
+            graphics.PopClipRegion();
+        }
 
-            if (smooth)
+        public void Release()
+        {
+            if (polyBatches != null)
             {
-                if (meshSmoothBatch == null)
-                {
-                    meshSmoothBatch = new MeshBatch();
-                    meshSmoothBatch.vtxArray = graphics.GetVertexArray();
-                    meshSmoothBatch.colArray = graphics.GetColorArray();
-                    meshSmoothBatch.idxArray = graphics.GetIndexArray();
+                foreach (var batch in polyBatches)
+                { 
+                    graphics.ReleaseVertexArray(batch.vtxArray);
+                    graphics.ReleaseColorArray(batch.colArray);
+                    graphics.ReleaseIndexArray(batch.idxArray);
+                    graphics.ReleaseByteArray(batch.depArray);
                 }
-
-                batch = meshSmoothBatch;
             }
-            else
-            {
-                if (meshBatch == null)
-                {
-                    meshBatch = new MeshBatch();
-                    meshBatch.vtxArray = graphics.GetVertexArray();
-                    meshBatch.colArray = graphics.GetColorArray();
-                    meshBatch.idxArray = graphics.GetIndexArray();
-                }
 
-                batch = meshBatch;
+            if (lineBatch != null)
+            {
+                graphics.ReleaseVertexArray(lineBatch.vtxArray);
+                graphics.ReleaseVertexArray(lineBatch.texArray);
+                graphics.ReleaseColorArray(lineBatch.colArray);
+                graphics.ReleaseByteArray(lineBatch.depArray);
+            }
+
+            if (lineSmoothBatches != null)
+            {
+                foreach (var batch in lineSmoothBatches)
+                {
+                    graphics.ReleaseVertexArray(batch.vtxArray);
+                    graphics.ReleaseByteArray(batch.dstArray);
+                    graphics.ReleaseColorArray(batch.colArray);
+                    graphics.ReleaseIndexArray(batch.idxArray);
+                    graphics.ReleaseByteArray(batch.depArray);
+                }
+            }
+
+            polyBatches = null;
+            lineBatch = null;
+            lineSmoothBatches = null;
+            texts = null;
+        }
+
+        private PolyBatch GetPolygonBatch(int numVtxNeeded, int numIdxNeeded)
+        {
+            if (polyBatches == null)
+            {
+                polyBatches = new List<PolyBatch>();
+            }
+
+            var batch = polyBatches.Count > 0 ? polyBatches[polyBatches.Count - 1] : null;
+
+            if (batch == null ||
+                batch.depIdx + numVtxNeeded >= batch.depArray.Length ||
+                batch.idxIdx + numIdxNeeded >= batch.idxArray.Length)
+            {
+                batch = new PolyBatch();
+                batch.vtxArray = graphics.GetVertexArray();
+                batch.colArray = graphics.GetColorArray();
+                batch.idxArray = graphics.GetIndexArray();
+                batch.depArray = graphics.GetByteArray();
+                polyBatches.Add(batch);
             }
 
             return batch;
         }
 
-        private LineBatch GetLineBatch(float width, bool smooth)
+        private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, bool dash)
         {
-            if (currentLineBatch == null ||
-                currentLineBatch.lineWidth != width ||
-                currentLineBatch.smooth != smooth)
+            if (lineBatch == null)
             {
-                currentLineBatch = null;
-
-                foreach (var batch in lineBatches)
-                {
-                    if (batch.lineWidth == width && batch.smooth == smooth)
-                    {
-                        currentLineBatch = batch;
-                        break;
-                    }
-                }
-
-                if (currentLineBatch == null)
-                {
-                    currentLineBatch = new LineBatch();
-                    currentLineBatch.smooth = smooth;
-                    currentLineBatch.lineWidth = width;
-                    currentLineBatch.vtxArray = graphics.GetVertexArray();
-                    currentLineBatch.texArray = graphics.GetVertexArray();
-                    currentLineBatch.colArray = graphics.GetColorArray();
-                    lineBatches.Add(currentLineBatch);
-                }
-
-                return currentLineBatch;
+                lineBatch = new LineBatch();
+                lineBatch.vtxArray = graphics.GetVertexArray();
+                lineBatch.texArray = graphics.GetVertexArray();
+                lineBatch.colArray = graphics.GetColorArray();
+                lineBatch.depArray = graphics.GetByteArray();
             }
 
-            return currentLineBatch;
-        }
-
-        private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool smooth, bool dash)
-        {
-            if (width > 1.0f && drawThickLineAsPolygon)
-            {
-                DrawThickLineAsPolygonInternal(x0, y0, x1, y1, color, width);
-                return;
-            }
-
-            var batch = GetLineBatch(width, smooth);
+            var batch = lineBatch;
+            var depth = graphics.DepthValue;
 
             batch.vtxArray[batch.vtxIdx++] = x0;
             batch.vtxArray[batch.vtxIdx++] = y0;
@@ -1104,31 +1508,46 @@ namespace FamiStudio
 
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
         }
 
-        private void DrawThickLineAsPolygonInternal(float x0, float y0, float x1, float y1, Color color, float width)
+        private void DrawThickLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool miter)
         {
-            if (thickLineBatch == null)
+            Debug.Assert(width > 1 && width < 100);
+            
+            // This properly centers line, while keeping geometries symmetric and nice.
+            if ((width & 1) != 0)
             {
-                thickLineBatch = new MeshBatch();
-                thickLineBatch.vtxArray = graphics.GetVertexArray();
-                thickLineBatch.colArray = graphics.GetColorArray();
-                thickLineBatch.idxArray = graphics.GetIndexArray();
+                x0 += 0.02f;
+                y0 += 0.02f;
+                x1 += 0.02f;
+                y1 += 0.02f;
             }
 
-            var batch = thickLineBatch;
+            var batch = GetPolygonBatch(4, 6);
+            var depth = graphics.DepthValue;
 
             var dx = x1 - x0;
             var dy = y1 - y0;
-            var invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
+            var invHalfWidth = (width * 0.5f) / (float)MathF.Sqrt(dx * dx + dy * dy);
             dx *= invHalfWidth;
             dy *= invHalfWidth;
+
+            if (miter)
+            {
+                x0 -= dx;
+                y0 -= dy;
+                x1 += dx;
+                y1 += dy;
+            }
 
             var i0 = (short)(batch.vtxIdx / 2 + 0);
             var i1 = (short)(batch.vtxIdx / 2 + 1);
             var i2 = (short)(batch.vtxIdx / 2 + 2);
             var i3 = (short)(batch.vtxIdx / 2 + 3);
-
+ 
             batch.idxArray[batch.idxIdx++] = i0;
             batch.idxArray[batch.idxIdx++] = i1;
             batch.idxArray[batch.idxIdx++] = i2;
@@ -1136,19 +1555,251 @@ namespace FamiStudio
             batch.idxArray[batch.idxIdx++] = i2;
             batch.idxArray[batch.idxIdx++] = i3;
 
-            batch.vtxArray[batch.vtxIdx++] = x0 + dy;
-            batch.vtxArray[batch.vtxIdx++] = y0 + dx;
-            batch.vtxArray[batch.vtxIdx++] = x1 + dy;
-            batch.vtxArray[batch.vtxIdx++] = y1 + dx;
-            batch.vtxArray[batch.vtxIdx++] = x1 - dy;
-            batch.vtxArray[batch.vtxIdx++] = y1 - dx;
             batch.vtxArray[batch.vtxIdx++] = x0 - dy;
+            batch.vtxArray[batch.vtxIdx++] = y0 + dx;
+            batch.vtxArray[batch.vtxIdx++] = x1 - dy;
+            batch.vtxArray[batch.vtxIdx++] = y1 + dx;
+            batch.vtxArray[batch.vtxIdx++] = x1 + dy;
+            batch.vtxArray[batch.vtxIdx++] = y1 - dx;
+            batch.vtxArray[batch.vtxIdx++] = x0 + dy;
             batch.vtxArray[batch.vtxIdx++] = y0 - dx;
 
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+        }
+
+        private LineSmoothBatch GetLineSmoothBatch(int numVtxNeeded, int numIdxNeeded)
+        {
+            if (lineSmoothBatches == null)
+            {
+                lineSmoothBatches = new List<LineSmoothBatch>();
+            }
+
+            var batch = lineSmoothBatches.Count > 0 ? lineSmoothBatches[lineSmoothBatches.Count - 1] : null;
+
+            if (batch == null ||
+                batch.depIdx + numVtxNeeded >= batch.depArray.Length ||
+                batch.idxIdx + numIdxNeeded >= batch.idxArray.Length)
+            {
+                batch = new LineSmoothBatch();
+                batch.vtxArray = graphics.GetVertexArray();
+                batch.dstArray = graphics.GetByteArray();
+                batch.colArray = graphics.GetColorArray();
+                batch.idxArray = graphics.GetIndexArray();
+                batch.depArray = graphics.GetByteArray();
+                lineSmoothBatches.Add(batch);
+            }
+
+            return batch;
+        }
+
+        private void DrawThickSmoothLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool miter)
+        {
+            Debug.Assert(width < 100);
+
+            // Cant draw nice AA line that are 1 pixel wide.
+            if (width == 1)
+            {
+                width = 2;
+                x0 += 0.5f;
+                y0 += 0.5f;
+                x1 += 0.5f;
+                y1 += 0.5f;
+            }
+
+            if (miter && width < 4)
+            {
+                miter = false;
+            }
+
+            var numVtxNeeded = (width & 1) != 0 ?  8 :  6;
+            var numIdxNeeded = (width & 1) != 0 ? 18 : 12;
+            var batch = GetLineSmoothBatch(numVtxNeeded, numIdxNeeded);
+            var depth = graphics.DepthValue;
+
+            // Odd values require extra vertices to work well with rasterization rules.
+            if ((width & 1) != 0)
+            {
+                x0 += 0.49f;
+                y0 += 0.49f;
+                x1 += 0.49f;
+                y1 += 0.49f; 
+
+                if (y1 < y0)
+                {
+                    Utils.Swap(ref x0, ref x1);  
+                    Utils.Swap(ref y0, ref y1);
+                }
+
+                var dx = x1 - x0;
+                var dy = y1 - y0;
+                var il = 1.0f / MathF.Sqrt(dx * dx + dy * dy);
+                var ihw = 0.5f * il;
+                var ohw = width * 0.5f * il;
+                var idx = dx * ihw;
+                var idy = dy * ihw;
+                var odx = dx * ohw;
+                var ody = dy * ohw;
+
+                var miterAmount = miter ? ohw + 0.1f : 0.1f;
+
+                dx *= il;
+                dy *= il;
+                x0 -= dx * miterAmount;
+                y0 -= dy * miterAmount;
+                x1 += dx * miterAmount;  
+                y1 += dy * miterAmount;
+
+                var i0 = (short)(batch.vtxIdx / 2 + 0);
+                var i1 = (short)(i0 + 1);
+                var i2 = (short)(i0 + 2);
+                var i3 = (short)(i0 + 3);
+                var i4 = (short)(i0 + 4);
+                var i5 = (short)(i0 + 5);
+                var i6 = (short)(i0 + 6);
+                var i7 = (short)(i0 + 7);
+
+                batch.idxArray[batch.idxIdx++] = i0;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i5;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i5;
+                batch.idxArray[batch.idxIdx++] = i6;
+                batch.idxArray[batch.idxIdx++] = i5;
+                batch.idxArray[batch.idxIdx++] = i7;
+                batch.idxArray[batch.idxIdx++] = i6;
+
+                batch.vtxArray[batch.vtxIdx++] = x0 - ody;
+                batch.vtxArray[batch.vtxIdx++] = y0 + odx;
+                batch.vtxArray[batch.vtxIdx++] = x1 - ody;
+                batch.vtxArray[batch.vtxIdx++] = y1 + odx;
+                batch.vtxArray[batch.vtxIdx++] = x0 - idy;
+                batch.vtxArray[batch.vtxIdx++] = y0 + idx;
+                batch.vtxArray[batch.vtxIdx++] = x1 - idy;
+                batch.vtxArray[batch.vtxIdx++] = y1 + idx;
+                batch.vtxArray[batch.vtxIdx++] = x0 + idy;
+                batch.vtxArray[batch.vtxIdx++] = y0 - idx;
+                batch.vtxArray[batch.vtxIdx++] = x1 + idy;
+                batch.vtxArray[batch.vtxIdx++] = y1 - idx;
+                batch.vtxArray[batch.vtxIdx++] = x0 + ody;
+                batch.vtxArray[batch.vtxIdx++] = y0 - odx;
+                batch.vtxArray[batch.vtxIdx++] = x1 + ody;
+                batch.vtxArray[batch.vtxIdx++] = y1 - odx;
+
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = (byte)(width - 1); 
+                batch.dstArray[batch.dstIdx++] = (byte)(width - 1);
+                batch.dstArray[batch.dstIdx++] = (byte)(width - 1);
+                batch.dstArray[batch.dstIdx++] = (byte)(width - 1);
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+            }
+            else
+            {
+                var dx = x1 - x0;
+                var dy = y1 - y0;
+                var il = 1.0f / (float)MathF.Sqrt(dx * dx + dy * dy);
+                var hw = (width * 0.5f) * il;
+                dx *= hw;
+                dy *= hw;
+
+                if (miter)
+                {
+                    x0 -= dx * 0.49f;
+                    y0 -= dy * 0.49f;
+                    x1 += dx * 0.49f;
+                    y1 += dy * 0.49f;
+                }
+
+                var i0 = (short)(batch.vtxIdx / 2 + 0);
+                var i1 = (short)(i0 + 1);
+                var i2 = (short)(i0 + 2);
+                var i3 = (short)(i0 + 3);
+                var i4 = (short)(i0 + 4);
+                var i5 = (short)(i0 + 5);
+
+                batch.idxArray[batch.idxIdx++] = i0;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i5;
+                batch.idxArray[batch.idxIdx++] = i4;
+
+                batch.vtxArray[batch.vtxIdx++] = x0 - dy;
+                batch.vtxArray[batch.vtxIdx++] = y0 + dx;
+                batch.vtxArray[batch.vtxIdx++] = x1 - dy;
+                batch.vtxArray[batch.vtxIdx++] = y1 + dx;
+                batch.vtxArray[batch.vtxIdx++] = x0;
+                batch.vtxArray[batch.vtxIdx++] = y0;
+                batch.vtxArray[batch.vtxIdx++] = x1;
+                batch.vtxArray[batch.vtxIdx++] = y1;
+                batch.vtxArray[batch.vtxIdx++] = x1 + dy;
+                batch.vtxArray[batch.vtxIdx++] = y1 - dx;
+                batch.vtxArray[batch.vtxIdx++] = x0 + dy;
+                batch.vtxArray[batch.vtxIdx++] = y0 - dx;
+
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = (byte)width;
+                batch.dstArray[batch.dstIdx++] = (byte)width;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+            }
         }
 
         public void DrawLine(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool dash = false)
@@ -1158,151 +1809,356 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            DrawLineInternal(x0, y0, x1, y1, color, width, smooth, dash);
+            if (smooth)
+            { 
+                DrawThickSmoothLineInternal(x0, y0, x1, y1, color, width, false);
+            }
+            else if (width > 1)
+            {
+                DrawThickLineInternal(x0, y0, x1, y1, color, width, false);
+            }
+            else
+            {
+                DrawLineInternal(x0, y0, x1, y1, color, dash);
+            }
         }
 
-        public void DrawLine(IList<float> points, Color color, int width = 1, bool smooth = false)
+        public void DrawLine(List<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
-            if (points.Count == 0)
+        #if FAMISTUDIO_ANDROID
+            // NET6TODO : When we migrate to .NET 6 on Android, well remove this.
+            DrawLine(points.ToArray(), color, width, smooth, miter);
+        #else
+            DrawLine(CollectionsMarshal.AsSpan(points), color, width, smooth, miter);
+        #endif
+        }
+
+        public void DrawLine(Span<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)
+        {
+            Debug.Assert(width > 1.0f || !miter);
+
+            if (points.Length == 0)
                 return;
 
             width += lineWidthBias;
+            smooth |= width > 1.0f;
 
             var x0 = points[0];
             var y0 = points[1];
 
             xform.TransformPoint(ref x0, ref y0);
 
-            for (int i = 2; i < points.Count; i += 2)
+            for (int i = 2; i < points.Length; i += 2)
             {
                 var x1 = points[i + 0];
                 var y1 = points[i + 1];
                 
                 xform.TransformPoint(ref x1, ref y1);
-                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
+
+                if (smooth)
+                {
+                    DrawThickSmoothLineInternal(x0, y0, x1, y1, color, width, false);
+                }
+                else if (width > 1)
+                {
+                    DrawThickLineInternal(x0, y0, x1, y1, color, width, false);
+                }
+                else
+                {
+                    DrawLineInternal(x0, y0, x1, y1, color, false);
+                }
 
                 x0 = x1;
                 y0 = y1;
             }
         }
 
-        public void DrawLine(float[,] points, Color color, int width = 1, bool smooth = false)
+        public void DrawGeometry(Span<float> points, Color color, int width = 1, bool smooth = false, bool close = true, bool miter = false)
         {
             width += lineWidthBias;
-
-            var x0 = points[0, 0];
-            var y0 = points[0, 1];
-
+            
+            var x0 = points[0];
+            var y0 = points[1];
             xform.TransformPoint(ref x0, ref y0);
 
-            for (int i = 1; i < points.GetLength(0); i++)
-            {
-                var x1 = points[i, 0];
-                var y1 = points[i, 1];
+            var numVerts = points.Length / 2;
+            var numLines = numVerts - (close ? 0 : 1);
 
+            for (int i = 0; i < numLines; i++)
+            {
+                var x1 = points[((i + 1) % numVerts) * 2 + 0];
+                var y1 = points[((i + 1) % numVerts) * 2 + 1];
                 xform.TransformPoint(ref x1, ref y1);
-                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
+
+                if (smooth)
+                {
+                    DrawThickSmoothLineInternal(x0, y0, x1, y1, color, width, miter);
+                }
+                else if (width > 1)
+                {
+                    DrawThickLineInternal(x0, y0, x1, y1, color, width, miter);
+                }
+                else
+                {
+                    DrawLineInternal(x0, y0, x1, y1, color, false);
+                }
 
                 x0 = x1;
                 y0 = y1;
             }
         }
 
-        public void DrawGeometry(float[,] points, Color color, int width = 1, bool smooth = false)
+        // Only used by oscilloscope video for now.
+        struct CornerInfo
         {
-            width += lineWidthBias;
+            public int pi;
+            public int ci;
+            public float x;
+            public float y;
+            public float cos;
+            public int side;
+        };
 
-            var x0 = points[0, 0];
-            var y0 = points[0, 1];
+        public unsafe void DrawNiceSmoothLine(Span<float> points, Color color, int width = 2)
+        {
+            // Only implemented for odd widths for now.
+            width = Utils.RoundUp(width, 2);
 
-            xform.TransformPoint(ref x0, ref y0);
+            var cornerCount = 0;
+            var cornerInfos = stackalloc CornerInfo[points.Length];
 
-            for (int i = 1; i < points.GetLength(0); i++)
+            var close = false; // Supported, but not exposed.
+            var depth = graphics.DepthValue;
+            var numVerts = points.Length / 2;
+            var numLines = numVerts - (close ? 0 : 1);
+
+            var numVtxNeeded = numVerts * 7;
+            var numIdxNeeded = numVerts * 18;
+            var batch = GetLineSmoothBatch(numVtxNeeded, numIdxNeeded);
+            var startIndex = batch.vtxIdx / 2;
+
+            var px = close ? points[points.Length - 2] : 2 * points[0] - points[2];
+            var py = close ? points[points.Length - 1] : 2 * points[1] - points[3];
+            xform.TransformPoint(ref px, ref py);
+
+            var cx = points[0];
+            var cy = points[1];
+            xform.TransformPoint(ref cx, ref cy);
+
+            var dpx = cx - px;
+            var dpy = cy - py;
+            Utils.Normalize(ref dpx, ref dpy);
+
+            for (int i = 0; i < numLines; i++)
             {
-                var x1 = points[i, 0];
-                var y1 = points[i, 1];
+                var ni = (i + 1) % numVerts;
 
-                xform.TransformPoint(ref x1, ref y1);
-                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
+                var nx = points[ni * 2 + 0];
+                var ny = points[ni * 2 + 1];
+                xform.TransformPoint(ref nx, ref ny);
 
-                x0 = x1;
-                y0 = y1;
+                var dnx = nx - cx;
+                var dny = ny - cy;
+                Utils.Normalize(ref dnx, ref dny);
+
+                var sx = (width * 0.5f) * dnx;
+                var sy = (width * 0.5f) * dny;
+
+                // Main line body.
+                var i0 = (short)(batch.vtxIdx / 2);
+                var i1 = (short)(i0 + 1);
+                var i2 = (short)(i0 + 2);
+                var i3 = (short)(i0 + 3);
+                var i4 = (short)(i0 + 4);
+                var i5 = (short)(i0 + 5);
+
+                batch.idxArray[batch.idxIdx++] = i0;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i3;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i1;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i2;
+                batch.idxArray[batch.idxIdx++] = i4;
+                batch.idxArray[batch.idxIdx++] = i5;
+
+                batch.vtxArray[batch.vtxIdx++] = cx - sy;
+                batch.vtxArray[batch.vtxIdx++] = cy + sx;
+                batch.vtxArray[batch.vtxIdx++] = cx;
+                batch.vtxArray[batch.vtxIdx++] = cy;
+                batch.vtxArray[batch.vtxIdx++] = cx + sy;
+                batch.vtxArray[batch.vtxIdx++] = cy - sx;
+                batch.vtxArray[batch.vtxIdx++] = nx - sy;
+                batch.vtxArray[batch.vtxIdx++] = ny + sx;
+                batch.vtxArray[batch.vtxIdx++] = nx;
+                batch.vtxArray[batch.vtxIdx++] = ny;
+                batch.vtxArray[batch.vtxIdx++] = nx + sy;
+                batch.vtxArray[batch.vtxIdx++] = ny - sx;
+
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = (byte)width;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = 0;
+                batch.dstArray[batch.dstIdx++] = (byte)width;
+                batch.dstArray[batch.dstIdx++] = 0;
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+
+                var cos = Utils.Dot(dnx, dny, -dpx, -dpy);
+
+                // Optional outer corner, will be processed after.
+                if (cos > -0.999999f)
+                {
+                    var dx = dnx - dpx;
+                    var dy = dny - dpy;
+                    Utils.Normalize(ref dx, ref dy);
+
+                    cornerInfos[cornerCount].pi = i == 0 ? numVerts - 1 : i - 1;
+                    cornerInfos[cornerCount].ci = i;
+                    cornerInfos[cornerCount].x = cx - dx * (width * 0.5f);
+                    cornerInfos[cornerCount].y = cy - dy * (width * 0.5f);
+                    cornerInfos[cornerCount].cos = cos;
+                    cornerInfos[cornerCount].side = Utils.Cross(dpx, dpy, dnx, dny) >= 0 ? 1 : -1;
+                    cornerCount++;
+                }
+
+                cx = nx;
+                cy = ny;
+                dpx = dnx;
+                dpy = dny;
+            }
+
+            for (int i = 0; i < cornerCount; i++)
+            {
+                var corner = cornerInfos[i];
+
+                if (corner.cos > 0)
+                {
+                    var i0 = (short)(batch.vtxIdx / 2);
+
+                    // Extra corner vertex.
+                    batch.vtxArray[batch.vtxIdx++] = corner.x;
+                    batch.vtxArray[batch.vtxIdx++] = corner.y;
+                    batch.colArray[batch.colIdx++] = color.ToAbgr();
+                    batch.dstArray[batch.dstIdx++] = 0;
+                    batch.depArray[batch.depIdx++] = depth;
+
+                    // 2 triangles if angle is large.
+                    if (corner.side > 0)
+                    { 
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 2);
+                        batch.idxArray[batch.idxIdx++] = (short)(i0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(i0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.pi * 6 + 5);
+                    }
+                    else
+                    {
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.pi * 6 + 3);
+                        batch.idxArray[batch.idxIdx++] = (short)(i0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(i0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 0);
+                    }
+                }
+                else
+                {
+                    // 1 triangle if angle is small
+                    if (corner.side > 0)
+                    { 
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 2);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.pi * 6 + 5);
+                    }
+                    else
+                    {
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 1);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.ci * 6 + 0);
+                        batch.idxArray[batch.idxIdx++] = (short)(startIndex + corner.pi * 6 + 3);
+                    }
+                }
             }
         }
 
-        public void DrawRectangle(Rectangle rect, Color color, int width = 1, bool smooth = false)
+        public void DrawRectangle(Rectangle rect, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color, width, smooth);
         }
 
-        public void DrawRectangle(RectangleF rect, Color color, int width = 1, bool smooth = false)
+        public void DrawRectangle(RectangleF rect, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color, width, smooth);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
             width += lineWidthBias;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            var halfWidth = 0.0f;
-            var extraPixel = smooth ? 0 : 1;
-
-            if (Platform.IsAndroid && width > maxSmoothLineWidth)
+            if (smooth)
             {
-                smooth = false;
-                halfWidth = (float)Math.Floor(width * 0.5f);
-                extraPixel = 0;
+                var halfWidth = miter && width >= 4 ? width * 0.35f : 0.0f;
+                DrawThickSmoothLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
+                DrawThickSmoothLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
+                DrawThickSmoothLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
+                DrawThickSmoothLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, color, width, false);
             }
-
-            DrawLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, color, width, smooth, false);
-            DrawLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, color, width, smooth, false);
-            DrawLineInternal(x0 - halfWidth, y1, x1 + extraPixel + halfWidth, y1, color, width, smooth, false);
-            DrawLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, color, width, smooth, false);
+            else if (width > 1)
+            {
+                var halfWidth = miter ? width * 0.5f : 0.0f;
+                DrawThickLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
+                DrawThickLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
+                DrawThickLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
+                DrawThickLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, color, width, false);
+            }
+            else
+            {
+                // Line rasterization rules makes is so that the last pixel is missing. So +1.
+                DrawLineInternal(x0, y0, x1 + 1, y0, color, false);
+                DrawLineInternal(x1, y0, x1, y1 + 1, color, false);
+                DrawLineInternal(x0, y1, x1 + 1, y1, color, false);
+                DrawLineInternal(x0, y0, x0, y1 + 1, color, false);
+            }
         }
-
-        public void DrawGeometry(Geometry geo, Color color, int width, bool smooth = false, bool miter = false)
+        public void FillGeometry(Span<float> geo, Color color, bool smooth = false)
         {
-            width += lineWidthBias;
-
-            if (Platform.IsAndroid && width > maxSmoothLineWidth)
-            {
-                smooth = false;
-                miter = !xform.HasScaling; // Miter doesnt work with scaling atm.
-            }
-
-            var points = miter ? geo.GetMiterPoints(width) : geo.Points;
-
-            var x0 = points[0];
-            var y0 = points[1];
-
-            xform.TransformPoint(ref x0, ref y0);
-
-            for (int i = 0; i < points.Length / 2 - 1; i++)
-            {
-                var x1 = points[(i + 1) * 2 + 0];
-                var y1 = points[(i + 1) * 2 + 1];
-
-                xform.TransformPoint(ref x1, ref y1);
-
-                DrawLineInternal(x0, y0, x1, y1, color, width, smooth, false);
-
-                x0 = x1;
-                y0 = y1;
-            }
+            FillGeometryInternal(geo, color, color, 0, smooth);
         }
 
-        public void FillAndDrawGeometry(Geometry geo, Color fillColor, Color lineColor, int lineWidth = 1, bool smooth = false, bool miter = false)
+        public void FillGeometryGradient(Span<float> geo, Color color0, Color color1, int gradientSize, bool smooth = false)
         {
-            FillGeometry(geo, fillColor, smooth);
-            DrawGeometry(geo, lineColor, lineWidth, smooth, miter);
+            FillGeometryInternal(geo, color0, color1, gradientSize, smooth);
         }
-
+        
+        public void FillAndDrawGeometry(Span<float> geo, Color fillColor, Color lineColor, int lineWidth = 1, bool smooth = false)
+        {
+        	FillGeometry(geo, fillColor, smooth);
+			DrawGeometry(geo, lineColor, lineWidth, smooth, true);
+        }
+		
         public void FillRectangle(float x0, float y0, float x1, float y1, Color color)
         {
-            var batch = GetMeshBatch(false);
+            var batch = GetPolygonBatch(4, 6);
+            var depth = graphics.DepthValue;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
@@ -1333,21 +2189,28 @@ namespace FamiStudio
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
 
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+            batch.depArray[batch.depIdx++] = depth;
+
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
         public void FillRectangleGradient(float x0, float y0, float x1, float y1, Color color0, Color color1, bool vertical, float gradientSize)
         {
-            var batch = GetMeshBatch(false);
+            var depth = graphics.DepthValue;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
                 
-            bool fullHorizontalGradient = !vertical && Math.Abs(gradientSize) >= Math.Abs(x1 - x0);
-            bool fullVerticalGradient   =  vertical && Math.Abs(gradientSize) >= Math.Abs(y1 - y0);
+            bool fullHorizontalGradient = !vertical && MathF.Abs(gradientSize) >= MathF.Abs(x1 - x0);
+            bool fullVerticalGradient   =  vertical && MathF.Abs(gradientSize) >= MathF.Abs(y1 - y0);
 
             if (fullHorizontalGradient || fullVerticalGradient)
             {
+                var batch = GetPolygonBatch(4, 6);
+
                 var i0 = (short)(batch.vtxIdx / 2 + 0);
                 var i1 = (short)(batch.vtxIdx / 2 + 1);
                 var i2 = (short)(batch.vtxIdx / 2 + 2);
@@ -1383,9 +2246,18 @@ namespace FamiStudio
                     batch.colArray[batch.colIdx++] = color1.ToAbgr();
                     batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 }
+
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+
+                Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
             }
             else
             {
+                var batch = GetPolygonBatch(8, 12);
+
                 var i0 = (short)(batch.vtxIdx / 2 + 0);
                 var i1 = (short)(batch.vtxIdx / 2 + 1);
                 var i2 = (short)(batch.vtxIdx / 2 + 2);
@@ -1459,9 +2331,30 @@ namespace FamiStudio
                 batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 batch.colArray[batch.colIdx++] = color1.ToAbgr();
-            }
 
-            Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+                batch.depArray[batch.depIdx++] = depth;
+
+                Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
+            }
+        }
+
+        public void FillClipRegion(Color color)
+        {
+            Debug.Assert(!xform.HasScaling);
+
+            var clipRect = graphics.CurrentClipRegion;
+            var x = clipRect.X;
+            var y = clipRect.Y;
+            xform.ReverseTransformPoint(ref x, ref y);
+
+            FillRectangle(x, y, x + clipRect.Width, y + clipRect.Height, color);
         }
 
         public void FillRectangle(Rectangle rect, Color color)
@@ -1479,22 +2372,22 @@ namespace FamiStudio
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, color);
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, Color fillColor, Color lineColor, int width = 1, bool smooth = false)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, Color fillColor, Color lineColor, int width = 1, bool smooth = false, bool miter = false)
         {
             FillRectangle(x0, y0, x1, y1, fillColor);
-            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth);
+            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth, miter);
         }
 
-        public void FillAndDrawRectangleGradient(float x0, float y0, float x1, float y1, Color fillColor0, Color fillColor1, Color lineColor, bool vertical, int gradientSize, int width = 1, bool smooth = false)
+        public void FillAndDrawRectangleGradient(float x0, float y0, float x1, float y1, Color fillColor0, Color fillColor1, Color lineColor, bool vertical, int gradientSize, int width = 1, bool smooth = false, bool miter = false)
         {
             FillRectangleGradient(x0, y0, x1, y1, fillColor0, fillColor1, vertical, gradientSize);
-            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth);
+            DrawRectangle(x0, y0, x1, y1, lineColor, width, smooth, miter);
         }
 
-        public void FillAndDrawRectangle(Rectangle rect, Color fillColor, Color lineColor, int width = 1, bool smooth = false)
+        public void FillAndDrawRectangle(Rectangle rect, Color fillColor, Color lineColor, int width = 1, bool smooth = false, bool miter = false)
         {
             FillRectangle(rect, fillColor);
-            DrawRectangle(rect, lineColor, width, smooth);
+            DrawRectangle(rect, lineColor, width, smooth, miter);
         }
 
         public void FillAndDrawRectangleGradient(Rectangle rect, Color fillColor0, Color fillColor1, Color lineColor, bool vertical, int gradientSize, int width = 1, bool smooth = false)
@@ -1503,95 +2396,151 @@ namespace FamiStudio
             DrawRectangle(rect, lineColor, width, smooth);
         }
 
-        public void FillGeometry(Geometry geo, Color color, bool smooth = false)
+        private void FillGeometryInternal(Span<float> points, Color color0, Color color1, int gradientSize, bool smooth = false)
         {
-            var batch = GetMeshBatch(smooth);
+            var gradient = gradientSize > 0;
+            var numVerts = points.Length / 2;
+            var batch = GetPolygonBatch(numVerts * 2, (numVerts - 2) * 3 + (smooth ? (numVerts) * 6 : 0));
+            var depth = graphics.DepthValue;
             var i0 = (short)(batch.vtxIdx / 2);
 
-            // All our geometries are closed, so no need for the last vert.
-            for (int i = 0; i < geo.Points.Length - 2; i += 2)
-            {
-                float x = geo.Points[i + 0];
-                float y = geo.Points[i + 1];
+            if (smooth)
+            { 
+                var px = points[points.Length - 2];
+                var py = points[points.Length - 1];
+                xform.TransformPoint(ref px, ref py);
 
-                xform.TransformPoint(ref x, ref y);
+                float cx = points[0];
+                float cy = points[1];
+                xform.TransformPoint(ref cx, ref cy);
 
-                batch.vtxArray[batch.vtxIdx++] = x;
-                batch.vtxArray[batch.vtxIdx++] = y;
-                batch.colArray[batch.colIdx++] = color.ToAbgr();
+                var dpx = cx - px;
+                var dpy = cy - py;
+                Utils.Normalize(ref dpx, ref dpy);
+
+                for (int i = 0; i < numVerts; i++)
+                {
+                    var ni = (i + 1) % numVerts;
+
+                    float nx = points[ni * 2 + 0];
+                    float ny = points[ni * 2 + 1];
+
+                    Color gradientColor;
+
+                    if (gradient)
+                    {
+                        float lerp = ny / gradientSize;
+                        byte r = (byte)(color0.R * (1.0f - lerp) + (color1.R * lerp));
+                        byte g = (byte)(color0.G * (1.0f - lerp) + (color1.G * lerp));
+                        byte b = (byte)(color0.B * (1.0f - lerp) + (color1.B * lerp));
+                        byte a = (byte)(color0.A * (1.0f - lerp) + (color1.A * lerp));
+                        gradientColor = new Color(r, g, b, a);
+                    }
+                    else
+                    {
+                        gradientColor = color0;
+                    }
+
+                    xform.TransformPoint(ref nx, ref ny);
+
+                    var dnx = nx - cx;
+                    var dny = ny - cy;
+                    Utils.Normalize(ref dnx, ref dny);
+
+                    var dx = (dnx - dpx) * 0.5f;
+                    var dy = (dny - dpy) * 0.5f;
+                    Utils.Normalize(ref dx, ref dy);
+
+                    // Cos -> Csc
+                    var d = 0.7071f / MathF.Sqrt(1.0f - Utils.Saturate(Utils.Dot(dnx, dny, -dpx, -dpy)));
+                    var ix = cx + dx * d;
+                    var iy = cy + dy * d;
+                    var ox = cx - dx * d;
+                    var oy = cy - dy * d;
+
+                    batch.vtxArray[batch.vtxIdx++] = ix;
+                    batch.vtxArray[batch.vtxIdx++] = iy;
+                    batch.vtxArray[batch.vtxIdx++] = ox;
+                    batch.vtxArray[batch.vtxIdx++] = oy;
+
+                    batch.colArray[batch.colIdx++] = gradientColor.ToAbgr();
+                    batch.colArray[batch.colIdx++] = Color.FromArgb(0, gradientColor).ToAbgr();
+
+                    batch.depArray[batch.depIdx++] = depth;
+                    batch.depArray[batch.depIdx++] = depth;
+
+                    cx = nx;
+                    cy = ny;
+                    dpx = dnx;
+                    dpy = dny;
+                }
+
+                // Simple fan for the inside
+                for (int i = 0; i < numVerts - 2; i++)
+                {
+                    batch.idxArray[batch.idxIdx++] = i0;
+                    batch.idxArray[batch.idxIdx++] = (short)(i0 + i * 2 + 2);
+                    batch.idxArray[batch.idxIdx++] = (short)(i0 + i * 2 + 4);
+                }
+
+                // A few more quads for the anti-aliased section.
+                for (int i = 0; i < numVerts; i++)
+                {
+                    var ni = (i + 1) % numVerts;
+
+                    var qi0 = (short)(i0 + i  * 2 + 0);
+                    var qi1 = (short)(i0 + i  * 2 + 1);
+                    var qi2 = (short)(i0 + ni * 2 + 0);
+                    var qi3 = (short)(i0 + ni * 2 + 1);
+
+                    batch.idxArray[batch.idxIdx++] = qi0;
+                    batch.idxArray[batch.idxIdx++] = qi1;
+                    batch.idxArray[batch.idxIdx++] = qi2;
+                    batch.idxArray[batch.idxIdx++] = qi1;
+                    batch.idxArray[batch.idxIdx++] = qi3;
+                    batch.idxArray[batch.idxIdx++] = qi2;
+                }
             }
-
-            // Simple fan
-            var numVertices = geo.Points.Length / 2 - 1;
-            for (int i = 0; i < numVertices - 2; i++)
+            else
             {
-                batch.idxArray[batch.idxIdx++] = i0;
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
-            }
+                for (int i = 0; i < numVerts; i++)
+                {
+                    var ni = (i + 1) % numVerts;
 
-            Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
-        }
+                    float nx = points[ni * 2 + 0];
+                    float ny = points[ni * 2 + 1];
 
-        // Assumed to be a vertical gradient.
-        public void FillGeometryGradient(Geometry geo, Color color0, Color color1, int gradientSize, bool smooth = false)
-        {
-            var batch = GetMeshBatch(smooth);
-            var i0 = (short)(batch.vtxIdx / 2);
+                    Color gradientColor;
 
-            // All our geometries are closed, so no need for the last vert.
-            for (int i = 0; i < geo.Points.Length; i += 2)
-            {
-                float x = geo.Points[i + 0];
-                float y = geo.Points[i + 1];
+                    if (gradient)
+                    {
+                        float lerp = ny / gradientSize;
+                        byte r = (byte)(color0.R * (1.0f - lerp) + (color1.R * lerp));
+                        byte g = (byte)(color0.G * (1.0f - lerp) + (color1.G * lerp));
+                        byte b = (byte)(color0.B * (1.0f - lerp) + (color1.B * lerp));
+                        byte a = (byte)(color0.A * (1.0f - lerp) + (color1.A * lerp));
+                        gradientColor = new Color(r, g, b, a);
+                    }
+                    else
+                    {
+                        gradientColor = color0;
+                    }
 
-                float lerp = y / gradientSize;
-                byte r = (byte)(color0.R * (1.0f - lerp) + (color1.R * lerp));
-                byte g = (byte)(color0.G * (1.0f - lerp) + (color1.G * lerp));
-                byte b = (byte)(color0.B * (1.0f - lerp) + (color1.B * lerp));
-                byte a = (byte)(color0.A * (1.0f - lerp) + (color1.A * lerp));
+                    xform.TransformPoint(ref nx, ref ny);
 
-                xform.TransformPoint(ref x, ref y);
+                    batch.vtxArray[batch.vtxIdx++] = nx;
+                    batch.vtxArray[batch.vtxIdx++] = ny;
+                    batch.colArray[batch.colIdx++] = gradientColor.ToAbgr();
+                    batch.depArray[batch.depIdx++] = depth;
+                }
 
-                batch.vtxArray[batch.vtxIdx++] = x;
-                batch.vtxArray[batch.vtxIdx++] = y;
-                batch.colArray[batch.colIdx++] = new Color(r, g, b, a).ToAbgr();
-            }
-
-            // Simple fan
-            var numVertices = geo.Points.Length / 2 - 1;
-            for (int i = 0; i < numVertices - 2; i++)
-            {
-                batch.idxArray[batch.idxIdx++] = i0;
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
-            }
-        }
-
-        public void FillGeometry(float[,] points, Color color, bool smooth = false)
-        {
-            var batch = GetMeshBatch(smooth);
-            var i0 = (short)(batch.vtxIdx / 2);
-
-            for (int i = 0; i < points.GetLength(0); i++)
-            {
-                float x = points[i, 0];
-                float y = points[i, 1];
-
-                xform.TransformPoint(ref x, ref y);
-
-                batch.vtxArray[batch.vtxIdx++] = x;
-                batch.vtxArray[batch.vtxIdx++] = y;
-                batch.colArray[batch.colIdx++] = color.ToAbgr();
-            }
-
-            // Simple fan.
-            var numVertices = points.Length / 2;
-            for (int i = 0; i < numVertices - 2; i++)
-            {
-                batch.idxArray[batch.idxIdx++] = i0;
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
+                // Simple fan
+                for (int i = 0; i < numVerts - 2; i++)
+                {
+                    batch.idxArray[batch.idxIdx++] = i0;
+                    batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
+                    batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
+                }
             }
         }
 
@@ -1607,10 +2556,9 @@ namespace FamiStudio
             Debug.Assert((flags & TextFlags.HorizontalAlignMask) != TextFlags.Center || width  > 0);
             Debug.Assert((flags & TextFlags.VerticalAlignMask)   == TextFlags.Top    || height > 0);
 
-            if (!texts.TryGetValue(font, out var list))
+            if (texts == null)
             {
-                list = new List<TextInstance>();
-                texts.Add(font, list);
+                texts = new List<TextInstance>();
             }
 
             xform.TransformPoint(ref x, ref y);
@@ -1619,7 +2567,9 @@ namespace FamiStudio
             inst.layoutRect = new RectangleF(x, y, width, height);
             inst.flags = flags;
             inst.text = text;
+            inst.font = font;
             inst.color = color;
+            inst.depth = graphics.DepthValue;
 
             if (clipMaxX > clipMinX)
             {
@@ -1633,7 +2583,7 @@ namespace FamiStudio
                 inst.clipRect =  inst.layoutRect;
             }
 
-            list.Add(inst);
+            texts.Add(inst);
         }
 
         public void DrawBitmap(Bitmap bmp, float x, float y, float opacity = 1.0f, Color tint = new Color())
@@ -1696,6 +2646,7 @@ namespace FamiStudio
             inst.sx = width;
             inst.sy = height;
             inst.tint = tint;
+            inst.depth = graphics.DepthValue;
 
             if (bmp.IsAtlas && bmp.Filtering) 
             {
@@ -1722,169 +2673,192 @@ namespace FamiStudio
             list.Add(inst);
         }
 
-        public List<MeshDrawData> GetMeshDrawData()
+        public List<PolyDrawData> GetPolygonDrawData()
         {
-            var drawData = new List<MeshDrawData>();
+            var draws = (List<PolyDrawData>)null;
 
-            if (meshBatch != null)
+            if (polyBatches != null)
             {
-                var draw = new MeshDrawData();
-                draw.vtxArray = meshBatch.vtxArray;
-                draw.colArray = meshBatch.colArray;
-                draw.idxArray = meshBatch.idxArray;
-                draw.numIndices = meshBatch.idxIdx;
-                draw.vtxArraySize = meshBatch.vtxIdx;
-                draw.colArraySize = meshBatch.colIdx;
-                draw.idxArraySize = meshBatch.idxIdx;
-                drawData.Add(draw);
+                draws = new List<PolyDrawData>();
+
+                foreach (var batch in polyBatches)
+                {
+                    var draw = new PolyDrawData();
+                    draw.vtxArray = batch.vtxArray;
+                    draw.colArray = batch.colArray;
+                    draw.idxArray = batch.idxArray;
+                    draw.depArray = batch.depArray;
+                    draw.numIndices = batch.idxIdx;
+                    draw.vtxArraySize = batch.vtxIdx;
+                    draw.colArraySize = batch.colIdx;
+                    draw.idxArraySize = batch.idxIdx;
+                    draw.depArraySize = batch.depIdx;
+                    draws.Add(draw);
+                }
             }
 
-            if (meshSmoothBatch != null)
-            {
-                var draw = new MeshDrawData();
-                draw.smooth = true;
-                draw.vtxArray = meshSmoothBatch.vtxArray;
-                draw.colArray = meshSmoothBatch.colArray;
-                draw.idxArray = meshSmoothBatch.idxArray;
-                draw.numIndices = meshSmoothBatch.idxIdx;
-                draw.vtxArraySize = meshSmoothBatch.vtxIdx;
-                draw.colArraySize = meshSmoothBatch.colIdx;
-                draw.idxArraySize = meshSmoothBatch.idxIdx;
-                drawData.Add(draw);
-            }
-
-            return drawData;
+            return draws;
         }
 
-        public MeshDrawData GetThickLineAsPolygonDrawData()
+        public List<LineSmoothDrawData> GetSmoothLineDrawData()
         {
-            var draw = (MeshDrawData)null;
+            var draws = (List<LineSmoothDrawData>)null;
 
-            if (thickLineBatch != null)
+            if (lineSmoothBatches != null)
             {
-                draw = new MeshDrawData();
-                draw.vtxArray = thickLineBatch.vtxArray;
-                draw.colArray = thickLineBatch.colArray;
-                draw.idxArray = thickLineBatch.idxArray;
-                draw.numIndices = thickLineBatch.idxIdx;
-                draw.vtxArraySize = thickLineBatch.vtxIdx;
-                draw.colArraySize = thickLineBatch.colIdx;
-                draw.idxArraySize = thickLineBatch.idxIdx;
+                draws = new List<LineSmoothDrawData>();
+
+                foreach (var batch in lineSmoothBatches)
+                {
+                    var draw = new LineSmoothDrawData();
+                    draw.vtxArray = batch.vtxArray;
+                    draw.dstArray = batch.dstArray;
+                    draw.colArray = batch.colArray;
+                    draw.idxArray = batch.idxArray;
+                    draw.depArray = batch.depArray;
+                    draw.numIndices = batch.idxIdx;
+                    draw.vtxArraySize = batch.vtxIdx;
+                    draw.dstArraySize = batch.dstIdx;
+                    draw.colArraySize = batch.colIdx;
+                    draw.idxArraySize = batch.idxIdx;
+                    draw.depArraySize = batch.depIdx;
+                    draws.Add(draw);
+                }
+            }
+
+            return draws;
+        }
+
+        public LineDrawData GetLineDrawData()
+        {
+            var draw = (LineDrawData)null;
+
+            if (lineBatch != null)
+            {
+                draw = new LineDrawData();
+                draw.vtxArray = lineBatch.vtxArray;
+                draw.texArray = lineBatch.texArray;
+                draw.colArray = lineBatch.colArray;
+                draw.depArray = lineBatch.depArray;
+                draw.numVertices = lineBatch.vtxIdx / 2;
+                draw.vtxArraySize = lineBatch.vtxIdx;
+                draw.texArraySize = lineBatch.texIdx;
+                draw.colArraySize = lineBatch.colIdx;
+                draw.depArraySize = lineBatch.depIdx;
             }
 
             return draw;
         }
 
-        public List<LineDrawData> GetLineDrawData()
+        public IReadOnlyCollection<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize)
         {
-            var drawData = new List<LineDrawData>();
+            var drawDatas = new Dictionary<int, DrawData>();
 
-            foreach (var batch in lineBatches)
+            // First, count how many characters well need for each texture/drawdata.
+            foreach (var inst in texts)
             {
-                var draw = new LineDrawData();
-                draw.vtxArray = batch.vtxArray;
-                draw.texArray = batch.texArray;
-                draw.colArray = batch.colArray;
-                draw.numVertices = batch.vtxIdx / 2;
-                draw.smooth = batch.smooth;
-                draw.lineWidth = batch.lineWidth;
-                draw.vtxArraySize = batch.vtxIdx;
-                draw.texArraySize = batch.texIdx;
-                draw.colArraySize = batch.colIdx;
-                drawData.Add(draw);
+                foreach (var c in inst.text)
+                {
+                    var tex = inst.font.GetCharInfo(c).texture;
+                    if (tex != 0)
+                    {
+                        if (!drawDatas.TryGetValue(tex, out var d))
+                        {
+                            d = new DrawData() { textureId = tex };
+                            drawDatas.Add(tex, d);
+                        }
+                        d.count++;
+                    }
+                }
             }
 
-            drawData.Sort((d1, d2) => d1.lineWidth == d2.lineWidth ? d1.smooth.CompareTo(d2.smooth) : d1.lineWidth.CompareTo(d2.lineWidth));
+            // Setup the offset for each draw call. Temporarely, start/count are in # of char, not indices.
+            var orderedDrawData = drawDatas.Values;
+            var start = 0;
 
-            return drawData;
-        }
-
-        public List<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int idxArraySize)
-        {
-            var drawData = new List<DrawData>();
-
-            var vtxIdx = 0;
-            var texIdx = 0;
-            var colIdx = 0;
-            var idxIdx = 0;
-
-            foreach (var kv in texts)
+            foreach (var d in orderedDrawData)
             {
-                var font = kv.Key;
-                var list = kv.Value;
-                var draw = new DrawData();
+                d.start = start;
+                start += d.count;
+                d.count = 0; 
+            }
 
-                draw.textureId = font.Texture;
-                draw.start = idxIdx;
+            var draw = (DrawData)null;
 
-                foreach (var inst in list)
+            foreach (var inst in texts)
+            {
+                var font = inst.font;
+                var alignmentOffsetX = 0;
+                var alignmentOffsetY = font.OffsetY;
+                var mono = inst.flags.HasFlag(TextFlags.Monospace);
+
+                if (inst.flags.HasFlag(TextFlags.Ellipsis))
                 {
-                    var alignmentOffsetX = 0;
-                    var alignmentOffsetY = font.OffsetY;
-                    var mono = inst.flags.HasFlag(TextFlags.Monospace);
+                    var ellipsisSizeX = font.MeasureString("...", mono) * 2; // Leave some padding.
+                    if (font.TruncateString(ref inst.text, (int)(inst.layoutRect.Width - ellipsisSizeX)))
+                        inst.text += "...";
+                }
 
-                    if (inst.flags.HasFlag(TextFlags.Ellipsis))
+                var halign = inst.flags & TextFlags.HorizontalAlignMask;
+                var valign = inst.flags & TextFlags.VerticalAlignMask;
+
+                if (halign != TextFlags.Left)
+                {
+                    var minX = 0;
+                    var maxX = font.MeasureString(inst.text, mono);
+
+                    if (halign == TextFlags.Center)
                     {
-                        var ellipsisSizeX = font.MeasureString("...", mono) * 2; // Leave some padding.
-                        if (font.TruncateString(ref inst.text, (int)(inst.layoutRect.Width - ellipsisSizeX)))
-                            inst.text += "...";
+                        alignmentOffsetX -= minX;
+                        alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX) / 2;
                     }
-
-                    var halign = inst.flags & TextFlags.HorizontalAlignMask;
-                    var valign = inst.flags & TextFlags.VerticalAlignMask;
-
-                    if (halign != TextFlags.Left)
+                    else if (halign == TextFlags.Right)
                     {
-                        var minX = 0;
-                        var maxX = font.MeasureString(inst.text, mono);
-
-                        if (halign == TextFlags.Center)
-                        {
-                            alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX) / 2;
-                        }
-                        else if (halign == TextFlags.Right)
-                        {
-                            alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX);
-                        }
+                        alignmentOffsetX -= minX;
+                        alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX);
                     }
+                }
 
-                    if (valign != TextFlags.Top)
+                if (valign != TextFlags.Top)
+                {
+                    // Use a tall character with no descender as reference.
+                    var charA = font.GetCharInfo('A');
+
+                    // When aligning middle or center, ignore the y offset since it just
+                    // adds extra padding and messes up calculations.
+                    alignmentOffsetY = -charA.yoffset;
+
+                    if (valign == TextFlags.Middle)
                     {
-                        // Use a tall character with no descender as reference.
-                        var charA = font.GetCharInfo('A');
-
-                        // When aligning middle or center, ignore the y offset since it just
-                        // adds extra padding and messes up calculations.
-                        alignmentOffsetY = -charA.yoffset;
-
-                        if (valign == TextFlags.Middle)
-                        {
-                            alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
-                        }
-                        else if (valign == TextFlags.Bottom)
-                        {
-                            alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
-                        }
+                        alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
                     }
+                    else if (valign == TextFlags.Bottom)
+                    {
+                        alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
+                    }
+                }
 
-                    var packedColor = inst.color.ToAbgr();
-                    var numVertices = inst.text.Length * 4;
+                var packedColor = inst.color.ToAbgr();
+                var numVertices = inst.text.Length * 4;
 
-                    int x = (int)(inst.layoutRect.X + alignmentOffsetX);
-                    int y = (int)(inst.layoutRect.Y + alignmentOffsetY);
+                int x = (int)(inst.layoutRect.X + alignmentOffsetX);
+                int y = (int)(inst.layoutRect.Y + alignmentOffsetY);
                     
-                    if (mono)
+                if (mono)
+                {
+                    var infoMono = font.GetCharInfo('0');
+
+                    for (int i = 0; i < inst.text.Length; i++)
                     {
-                        var infoMono = font.GetCharInfo('0');
+                        var c0 = inst.text[i];
+                        var info = font.GetCharInfo(c0);
 
-                        for (int i = 0; i < inst.text.Length; i++)
+                        if (info.texture != 0)
                         {
-                            var c0 = inst.text[i];
-                            var info = font.GetCharInfo(c0);
+                            if (draw == null || draw.textureId != info.texture)
+                                draw = drawDatas[info.texture];
 
-                            var monoAjustX = (infoMono.width  - info.width  + 1) / 2;
+                            var monoAjustX = (infoMono.width - info.width + 1) / 2;
                             var monoAjustY = (infoMono.height - info.height + 1) / 2;
 
                             var x0 = x + info.xoffset + monoAjustX;
@@ -1892,6 +2866,11 @@ namespace FamiStudio
                             var x1 = x0 + info.width;
                             var y1 = y0 + info.height;
 
+                            var vtxIdx = (draw.start + draw.count) * 8;
+                            var texIdx = (draw.start + draw.count) * 8;
+                            var colIdx = (draw.start + draw.count) * 4;
+                            var depIdx = (draw.start + draw.count) * 4;
+
                             vtxArray[vtxIdx++] = x0;
                             vtxArray[vtxIdx++] = y0;
                             vtxArray[vtxIdx++] = x1;
@@ -1915,21 +2894,31 @@ namespace FamiStudio
                             colArray[colIdx++] = packedColor;
                             colArray[colIdx++] = packedColor;
 
-                            x += infoMono.xadvance;
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+
+                            draw.count++;
                         }
 
-                        idxIdx += inst.text.Length * 6;
-                        draw.count += inst.text.Length * 6;
+                        x += (int)infoMono.xadvance;
                     }
-                    else if (inst.flags.HasFlag(TextFlags.Clip)) // Slow path when there is clipping.
-                    {
-                        var clipMinX = (int)(inst.clipRect.X);
-                        var clipMaxX = (int)(inst.clipRect.X + inst.clipRect.Width);
+                }
+                else if (inst.flags.HasFlag(TextFlags.Clip)) // Slow path when there is clipping.
+                {
+                    var clipMinX = (int)(inst.clipRect.X);
+                    var clipMaxX = (int)(inst.clipRect.X + inst.clipRect.Width);
 
-                        for (int i = 0; i < inst.text.Length; i++)
+                    for (int i = 0; i < inst.text.Length; i++)
+                    {
+                        var c0 = inst.text[i];
+                        var info = font.GetCharInfo(c0);
+
+                        if (info.texture != 0)
                         {
-                            var c0 = inst.text[i];
-                            var info = font.GetCharInfo(c0);
+                            if (draw == null || draw.textureId != info.texture)
+                                draw = drawDatas[info.texture];
 
                             var x0 = x + info.xoffset;
                             var y0 = y + info.yoffset;
@@ -1967,6 +2956,11 @@ namespace FamiStudio
                                 x0 = newx0;
                                 x1 = newx1;
 
+                                var vtxIdx = (draw.start + draw.count) * 8;
+                                var texIdx = (draw.start + draw.count) * 8;
+                                var colIdx = (draw.start + draw.count) * 4;
+                                var depIdx = (draw.start + draw.count) * 4;
+
                                 vtxArray[vtxIdx++] = x0;
                                 vtxArray[vtxIdx++] = y0;
                                 vtxArray[vtxIdx++] = x1;
@@ -1990,30 +2984,46 @@ namespace FamiStudio
                                 colArray[colIdx++] = packedColor;
                                 colArray[colIdx++] = packedColor;
 
-                                idxIdx += 6;
-                                draw.count += 6;
-                            }
+                                depArray[depIdx++] = inst.depth;
+                                depArray[depIdx++] = inst.depth;
+                                depArray[depIdx++] = inst.depth;
+                                depArray[depIdx++] = inst.depth;
 
-                            x += info.xadvance;
-                            if (i != inst.text.Length - 1)
-                            {
-                                char c1 = inst.text[i + 1];
-                                x += font.GetKerning(c0, c1);
+                                draw.count++;
                             }
                         }
-                    }
-                    else
-                    {
-                        for (int i = 0; i < inst.text.Length; i++)
+
+                        var advance = info.xadvance;
+                        if (i != inst.text.Length - 1)
                         {
-                            var c0 = inst.text[i];
-                            var info = font.GetCharInfo(c0);
+                            char c1 = inst.text[i + 1];
+                            advance += font.GetKerning(c0, c1);
+                        }
+                        x += (int)advance;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < inst.text.Length; i++)
+                    {
+                        var c0 = inst.text[i];
+                        var info = font.GetCharInfo(c0);
+
+                        if (info.texture != 0)
+                        {
+                            if (draw == null || draw.textureId != info.texture)
+                                draw = drawDatas[info.texture];
 
                             var x0 = x + info.xoffset;
                             var y0 = y + info.yoffset;
                             var x1 = x0 + info.width;
                             var y1 = y0 + info.height;
 
+                            var vtxIdx = (draw.start + draw.count) * 8;
+                            var texIdx = (draw.start + draw.count) * 8;
+                            var colIdx = (draw.start + draw.count) * 4;
+                            var depIdx = (draw.start + draw.count) * 4;
+
                             vtxArray[vtxIdx++] = x0;
                             vtxArray[vtxIdx++] = y0;
                             vtxArray[vtxIdx++] = x1;
@@ -2037,37 +3047,50 @@ namespace FamiStudio
                             colArray[colIdx++] = packedColor;
                             colArray[colIdx++] = packedColor;
 
-                            x += info.xadvance;
-                            if (i != inst.text.Length - 1)
-                            {
-                                char c1 = inst.text[i + 1];
-                                x += font.GetKerning(c0, c1);
-                            }
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+                            depArray[depIdx++] = inst.depth;
+
+                            draw.count++;
                         }
 
-                        idxIdx += inst.text.Length * 6;
-                        draw.count += inst.text.Length * 6;
+                        var advance = info.xadvance;
+                        if (i != inst.text.Length - 1)
+                        {
+                            char c1 = inst.text[i + 1];
+                            advance += font.GetKerning(c0, c1);
+                        }
+                        x += (int)advance;
                     }
                 }
-
-                drawData.Add(draw);
             }
 
-            vtxArraySize = vtxIdx;
-            texArraySize = texIdx;
-            colArraySize = colIdx;
-            idxArraySize = idxIdx;
+            // # of chars -> # of indices
+            var totalCount = 0;
+            foreach (var d in orderedDrawData)
+            {
+                totalCount += d.count;
+                d.count *= 6;
+                d.start *= 6;
+            }
 
-            return drawData;
+            vtxArraySize = totalCount * 8;
+            texArraySize = totalCount * 8;
+            colArraySize = totalCount * 4;
+            depArraySize = totalCount * 4;
+
+            return orderedDrawData;
         }
 
-        public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int idxArraySize)
+        public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
         {
             var drawData = new List<DrawData>();
 
             var vtxIdx = 0;
             var texIdx = 0;
             var colIdx = 0;
+            var depIdx = 0;
             var idxIdx = 0;
 
             foreach (var kv in bitmaps)
@@ -2078,7 +3101,7 @@ namespace FamiStudio
 
                 draw.textureId = bmp.Id;
                 draw.start = idxIdx;
-
+                
                 foreach (var inst in list)
                 {
                     var x0 = inst.x;
@@ -2125,6 +3148,11 @@ namespace FamiStudio
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;
 
+                    depArray[depIdx++] = inst.depth;
+                    depArray[depIdx++] = inst.depth;
+                    depArray[depIdx++] = inst.depth;
+                    depArray[depIdx++] = inst.depth;
+
                     draw.count += 6;
                     idxIdx += 6;
                 }
@@ -2135,22 +3163,10 @@ namespace FamiStudio
             vtxArraySize = vtxIdx;
             texArraySize = texIdx;
             colArraySize = colIdx;
+            depArraySize = depIdx;
             idxArraySize = idxIdx;
 
             return drawData;
-        }
-
-        public bool IsAlmostFull()
-        {
-            foreach (var batch in lineBatches)
-            {
-                if (batch.vtxIdx > batch.vtxArray.Length * 3 / 4)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

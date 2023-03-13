@@ -83,6 +83,12 @@ extern "C" const char* __stdcall NsfGetTrackName(void* nsfPtr, int track)
 	return file.szTrackLabels == NULL ? "" : file.szTrackLabels[track];
 }
 
+extern "C" const int __stdcall NsfGetTrackDuration(void* nsfPtr, int track)
+{
+	CNSFFile& file = ((NsfCoreFile*)nsfPtr)->file;
+	return file.pTrackTime == NULL ? -1 : file.pTrackTime[track];
+}
+
 extern "C" void __stdcall NsfClose(void* nsfPtr)
 {
 	delete (NsfCoreFile*)nsfPtr;

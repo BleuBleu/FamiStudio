@@ -66,11 +66,12 @@ namespace FamiStudio
 
                         Debug.WriteLine($"PINCH ZOOM! {magnificationAccum} {pt.X} {pt.Y}");
 
-                        var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
+                        var ctrl = container.GetControlAt(pt.X, pt.Y, out int x, out int y);
 
-                        modifiers.SetForced(GLFW_MOD_CONTROL);
+                        var origModifiers = modifiers.Value;
+                        origModifiers |= GLFW_MOD_CONTROL;
                         ctrl.MouseWheel(new MouseEventArgs(0, pt.X, pt.Y, 0, magnificationAccum));
-                        modifiers.SetForced(0);
+                        modifiers.Set(origModifiers);
 
                         magnificationAccum = 0;
                     }

@@ -22,7 +22,7 @@ namespace FamiStudio
         public delegate bool EnabledDelegate();
         public delegate void SetValueDelegate(int value);
         public delegate string GetValueStringDelegate();
-        public delegate void CustomDrawDelegate(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2);
+        public delegate void CustomDrawDelegate(CommandList c, Fonts res, Rectangle rect, object userData1, object userData2);
 
         public EnabledDelegate IsEnabled;
         public GetValueDelegate GetValue;
@@ -275,7 +275,7 @@ namespace FamiStudio
             return paramInfos.Count == 0 ? null : paramInfos.ToArray();
         }
 
-        public static void CustomDrawAdsrGraph(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawAdsrGraph(CommandList c, Fonts res, Rectangle rect, object userData1, object userData2)
         {
             var g = c.Graphics;
             var instrument = userData1 as Instrument;
@@ -283,7 +283,7 @@ namespace FamiStudio
 
             var graphWidth  = rect.Width;
             var graphHeight = rect.Height;
-            var graphPaddingTop   = (int)(g.WindowScaling * 3);
+            var graphPaddingTop = DpiScaling.ScaleForWindow(3); 
             var graphPaddingCurve = rect.Height / 10;
             var graphHeightMinusPadding = graphHeight - graphPaddingTop - graphPaddingCurve;
 
@@ -379,11 +379,11 @@ namespace FamiStudio
             releaseStartY = graphHeight - releaseStartY;
             releaseEndY   = graphHeight - releaseEndY;
 
-            var attackGeo  = new float[4, 2] { { 0, graphHeight }, { decayStartX, graphHeight }, { decayStartX, decayStartY }, { 0, graphHeight } };
-            var decayGeo   = new float[4, 2] { { decayStartX, graphHeight }, { sustainStartX, graphHeight }, { sustainStartX, sustainStartY }, { decayStartX, decayStartY } }; 
-            var sustainGeo = new float[4, 2] { { sustainStartX, graphHeight }, { releaseStartX, graphHeight }, { releaseStartX, releaseStartY }, { sustainStartX, sustainStartY } }; 
-            var releaseGeo = new float[4, 2] { { releaseStartX, graphHeight }, { releaseEndX, graphHeight }, { releaseEndX, releaseEndY }, { releaseStartX, releaseStartY } }; 
-            var line       = new float[5, 2] { { 0, graphHeight }, { decayStartX, decayStartY }, { sustainStartX, sustainStartY }, { releaseStartX, releaseStartY }, { releaseEndX, releaseEndY } };
+            var attackGeo  = new float[4 * 2] { 0, graphHeight, decayStartX, graphHeight, decayStartX, decayStartY,  0, graphHeight };
+            var decayGeo   = new float[4 * 2] { decayStartX, graphHeight,  sustainStartX, graphHeight, sustainStartX, sustainStartY, decayStartX, decayStartY }; 
+            var sustainGeo = new float[4 * 2] { sustainStartX, graphHeight, releaseStartX, graphHeight, releaseStartX, releaseStartY, sustainStartX, sustainStartY }; 
+            var releaseGeo = new float[4 * 2] { releaseStartX, graphHeight, releaseEndX, graphHeight, releaseEndX, releaseEndY,  releaseStartX, releaseStartY }; 
+            var line       = new float[5 * 2] { 0, graphHeight,  decayStartX, decayStartY, sustainStartX, sustainStartY, releaseStartX, releaseStartY, releaseEndX, releaseEndY };
 
             var fillColor = Color.FromArgb(75, Color.Black);
             c.FillAndDrawRectangle(0, graphPaddingTop, graphWidth, graphHeight, fillColor, Theme.BlackColor);
@@ -394,7 +394,7 @@ namespace FamiStudio
             c.DrawLine(line, Theme.BlackColor, 1, true);
         }
 
-        public static void CustomDrawEpsmAlgorithm(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawEpsmAlgorithm(CommandList c, Fonts res, Rectangle rect, object userData1, object userData2)
         {
             var instrument = userData1 as Instrument;
             var algo = instrument.EpsmPatchRegs[0] & 0x07;
@@ -440,7 +440,9 @@ namespace FamiStudio
                 new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1, 0, "Trim parts of the source data that is considered too low to be audible")
                     { GetValue = () => { return sample.TrimZeroVolume ? 1 : 0; }, SetValue = (v) => { sample.TrimZeroVolume = v != 0; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Reverse Bits", 0, 1, 0, "For DMC source data only, reverse the bits to correct errors in some NES games")
-                    { GetValue = () => { return !sample.SourceDataIsWav && sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { if (!sample.SourceDataIsWav) { sample.ReverseBits = v != 0; sample.Process(); } }, IsEnabled = () => { return !sample.SourceDataIsWav; } }
+                    { GetValue = () => { return !sample.SourceDataIsWav && sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { if (!sample.SourceDataIsWav) { sample.ReverseBits = v != 0; sample.Process(); } }, IsEnabled = () => { return !sample.SourceDataIsWav; } },
+                new DPCMSampleParamInfo(sample, "Bank Number", 0, Project.MaxDPCMBanks - 1, 0, "Bank in which to put the sample\nOnly affects sound engine exports")
+                    { GetValue = () => { return sample.Bank; }, SetValue = (v) => { sample.Bank = v; } },
             };
         }
     }

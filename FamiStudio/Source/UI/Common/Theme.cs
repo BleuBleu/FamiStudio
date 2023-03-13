@@ -190,11 +190,11 @@ namespace FamiStudio
 
         public static float ColorDistance(Color c0, Color c1)
         {
-            float dr = Math.Abs(c0.R - c1.R);
-            float dg = Math.Abs(c0.G - c1.G);
-            float db = Math.Abs(c0.B - c1.B);
+            float dr = MathF.Abs(c0.R - c1.R);
+            float dg = MathF.Abs(c0.G - c1.G);
+            float db = MathF.Abs(c0.B - c1.B);
 
-            return (float)Math.Sqrt(dr * dr + dg * dg + db * db);
+            return (float)MathF.Sqrt(dr * dr + dg * dg + db * db);
         }
 
         public static void EnforceThemeColor(ref Color color)

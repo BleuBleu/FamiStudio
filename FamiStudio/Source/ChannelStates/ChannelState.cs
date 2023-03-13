@@ -26,6 +26,7 @@ namespace FamiStudio
         protected int[] envelopeValues = new int[EnvelopeType.Count];
         protected bool noteTriggered = false;
         protected bool noteReleased = false;
+        protected bool resetPhase = false;
         protected bool forceInstrumentReload = false;
         protected ushort[] noteTable = null;
         protected bool palPlayback = false;
@@ -321,6 +322,11 @@ namespace FamiStudio
             {
                 delayedCutCounter = note.CutDelay + 1;
             }
+
+            if (note.HasPhaseReset)
+            {
+                resetPhase = true;
+            }
         }
 
         private void UpdateDelayedNote()
@@ -561,6 +567,7 @@ namespace FamiStudio
         {
             noteTriggered = false;
             noteReleased = false;
+            resetPhase = false;
             NesApu.SkipCycles(apuIdx, CyclesBetweenChannels);
         }
 

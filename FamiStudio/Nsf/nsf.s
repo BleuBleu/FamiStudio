@@ -2,19 +2,22 @@
 .ifdef FAMISTUDIO
 
     ; Enable all features.
-    FAMISTUDIO_CFG_EXTERNAL          = 1
-    FAMISTUDIO_CFG_SMOOTH_VIBRATO    = 1
-    FAMISTUDIO_CFG_DPCM_SUPPORT      = 1
-    FAMISTUDIO_USE_VOLUME_TRACK      = 1
-    FAMISTUDIO_USE_VOLUME_SLIDES     = 1
-    FAMISTUDIO_USE_PITCH_TRACK       = 1
-    FAMISTUDIO_USE_SLIDE_NOTES       = 1
-    FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1
-    FAMISTUDIO_USE_VIBRATO           = 1
-    FAMISTUDIO_USE_ARPEGGIO          = 1
-    FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
-    FAMISTUDIO_USE_DELTA_COUNTER     = 1
-    FAMISTUDIO_USE_RELEASE_NOTES     = 1
+    FAMISTUDIO_CFG_EXTERNAL            = 1
+    FAMISTUDIO_CFG_SMOOTH_VIBRATO      = 1
+    FAMISTUDIO_CFG_DPCM_SUPPORT        = 1
+    FAMISTUDIO_USE_VOLUME_TRACK        = 1
+    FAMISTUDIO_USE_VOLUME_SLIDES       = 1
+    FAMISTUDIO_USE_PITCH_TRACK         = 1
+    FAMISTUDIO_USE_SLIDE_NOTES         = 1
+    FAMISTUDIO_USE_NOISE_SLIDE_NOTES   = 1
+    FAMISTUDIO_USE_VIBRATO             = 1
+    FAMISTUDIO_USE_ARPEGGIO            = 1
+    FAMISTUDIO_USE_DUTYCYCLE_EFFECT    = 1
+    FAMISTUDIO_USE_DELTA_COUNTER       = 1
+    FAMISTUDIO_USE_RELEASE_NOTES       = 1
+    FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1
+    FAMISTUDIO_USE_DPCM_BANKSWITCHING  = 1
+    FAMISTUDIO_USE_PHASE_RESET         = 1
 
     .define FAMISTUDIO_CA65_ZP_SEGMENT   ZEROPAGE
     .define FAMISTUDIO_CA65_RAM_SEGMENT  RAM
@@ -28,10 +31,6 @@
     .endif
     .ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
         FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1
-    .endif
-
-    .ifdef FAMISTUDIO_EXP_EPSM
-        FAMISTUDIO_USE_EPSM=1
     .endif
 
     .ifdef FAMISTUDIO_MULTI_EXPANSION
@@ -63,15 +62,17 @@ header:   .res 128
 nsf_mode: .res 1
 .endif
 
+nsf_song_table_idx: .res 1
+
 .segment "CODE_INIT"
 
 ; [in] a = song index.
 .proc nsf_init
 
     ; Each table entry is 4-bytes:
-    ;   - start page (1-byte)
-    ;   - start addr in page starting at $9000 (2-byte)
-    ;   - flags (3 low bits = num dpcm pages)
+    ;   - start bank (1-byte)
+    ;   - start addr in bank (2-byte)
+    ;   - flags/unused (1-byte)
     
 .if .defined(NSF_NTSC_SUPPORT) && .defined(NSF_PAL_SUPPORT)
     stx nsf_mode
@@ -80,52 +81,24 @@ nsf_mode: .res 1
     asl
     asl
     tax
-    
+    stx nsf_song_table_idx
+
     ldy nsf_song_table+0, x
 
-.if .not(.defined(FAMISTUDIO_MULTI_EXPANSION) || .defined(FAMISTUDIO_USE_EPSM))
-    ; First map the full 0x9000 - 0xf000 to song data. The multi-expansion NSF driver takes 2 pages.
-    sty $5ff9
-    iny
-.endif    
-    sty $5ffa
-    iny
-    sty $5ffb
-    iny
-    sty $5ffc
-    iny
-    sty $5ffd
-    iny
-    sty $5ffe
-    iny
-    sty $5fff
-    
-    ; Then map the samples at the very end (if 1 page => start at 0xf000, if 2 pages => start at 0xe000, etc.)
-    ldy nsf_dpcm_page_start
-    lda nsf_dpcm_page_cnt
-    beq samples_none
-    
-    cmp #1
-    beq samples_1_pages
-    cmp #2
-    beq samples_2_pages
-    cmp #3
-    beq samples_3_pages
-
-    samples_4_pages:
-        sty $5ffc
+    ; Map 0x8000...[driver code] to song data. There may be a DPCM page between
+    ; the song data and the driver code. That will get bankswapped when the first
+    ; sample plays.
+    ldx #0
+    @bank_loop:
+        tya  
+        sta $5ff8, x
+        inx
         iny
-    samples_3_pages:
-        sty $5ffd
-        iny
-    samples_2_pages:
-        sty $5ffe
-        iny
-    samples_1_pages:
-        sty $5fff
-    samples_none:
+        cpx nsf_num_song_banks
+        bne @bank_loop
 
     ; Load song data and play
+    ldx nsf_song_table_idx
     ldy nsf_song_table+2, x ; hi-byte
     lda nsf_song_table+1, x ; lo-byte
     tax
@@ -172,14 +145,31 @@ nsf_mode: .res 1
 
 .segment "SONG_DATA"
 
+; Global variables.
 nsf_dpcm_page_start: .res 1
-nsf_dpcm_page_cnt:   .res 1
+nsf_dpcm_page_reg:   .res 1
 nsf_expansion_mask:  .res 1
-nsf_unused:          .res 1
+nsf_num_song_banks:  .res 1
 
-; each entry in the song table is 4 bytes
+; Song table : each entry is 4 bytes
 ;  - first page of the song (1 byte)
 ;  - address of the start of the song in page starting at 0x9000 (2 byte)
 ;  - unused (1-byte)
 
-nsf_song_table:      .res 4
+nsf_song_table:      .res 252
+
+.segment "CODE"
+
+.ifdef FAMISTUDIO
+.proc famistudio_dpcm_bank_callback
+    clc
+    adc nsf_dpcm_page_start
+    ldx nsf_dpcm_page_reg
+    sta $5ff8, x
+    rts
+.endproc
+.endif
+
+.segment "VECTORS"
+
+.res 6

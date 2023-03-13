@@ -34,12 +34,12 @@ namespace FamiStudio
 
         private void Init()
         {
-            buttonYes = new Button(this, "Yes", null);
+            buttonYes = new Button("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.ToolTip = "Accept";
             buttonYes.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
 
-            buttonNo = new Button(this, "No", null);
+            buttonNo = new Button("No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.ToolTip = "Cancel";
             buttonNo.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
@@ -102,7 +102,7 @@ namespace FamiStudio
 
         private Button AddButton(string text, string image)
         {
-            var btn = new Button(this, image, text);
+            var btn = new Button(image, text);
             btn.Resize(tabsSizeX, tabsSizeY);
             btn.Click += Btn_Click;
             AddControl(btn);
@@ -137,13 +137,16 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+            if (!e.Handled)
             {
-                Close(DialogResult.OK);
-            }
-            else if (e.Key == Keys.Escape)
-            {
-                Close(DialogResult.Cancel);
+                if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+                {
+                    Close(DialogResult.OK);
+                }
+                else if (e.Key == Keys.Escape)
+                {
+                    Close(DialogResult.Cancel);
+                }
             }
         }
 

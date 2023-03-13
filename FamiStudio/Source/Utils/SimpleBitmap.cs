@@ -1,3 +1,5 @@
+using System;
+
 namespace FamiStudio
 {
     public class SimpleBitmap
@@ -19,7 +21,7 @@ namespace FamiStudio
 
         public int GetPixel(int x, int y)
         {
-            return data[y * width + x];
+            return data[Math.Min(y, height - 1) * width + Math.Min(x, width - 1)];
         }
 
         public void SetPixel(int x, int y, int value)

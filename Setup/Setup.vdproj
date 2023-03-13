@@ -15,12 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_10AC375DF6BF4B2E8414009FE67686F6"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -105,6 +99,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_9A9A290F02BD4DF9857CA1EFF73548B4"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_A921310E936F4789A6BF23608EE319CD"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -178,10 +178,10 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.5.0.x64"
                     {
-                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
-                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    "Name" = "8:.NET Desktop Runtime 5.0.17 (x64)"
+                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.5.0.x64"
                     }
                 }
             }
@@ -210,10 +210,10 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.5.0.x64"
                     {
-                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
-                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    "Name" = "8:.NET Desktop Runtime 5.0.17 (x64)"
+                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.5.0.x64"
                     }
                 }
             }
@@ -234,13 +234,15 @@
         {
             "LaunchCondition"
             {
-                "{A06ECF26-33A3-4562-8140-9B0E340D4F24}:_E7CCBAA4B3C34722A3163029E45320AE"
+                "{A06ECF26-33A3-4562-8140-9B0E340D4F24}:_3C3EC1614CE84C549663C1057B8E7166"
                 {
-                "Name" = "8:.NET Framework"
-                "Message" = "8:[VSDNETMSG]"
-                "FrameworkVersion" = "8:.NETFramework,Version=v4.6.1"
+                "Name" = "8:.NET Core"
+                "Message" = "8:[VSDNETCOREMSG]"
                 "AllowLaterVersions" = "11:FALSE"
-                "InstallUrl" = "8:http://go.microsoft.com/fwlink/?LinkId=671728"
+                "InstallUrl" = "8:https://dotnet.microsoft.com/en-us/download/dotnet/5.0"
+                "IsNETCore" = "11:TRUE"
+                "Architecture" = "2:0"
+                "Runtime" = "2:0"
                 }
             }
         }
@@ -695,11 +697,11 @@
             "Description" = "8:FamiStudio Project"
             "Extensions" = "8:fms"
             "MIME" = "8:"
-            "Icon" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+            "Icon" = "8:_9A9A290F02BD4DF9857CA1EFF73548B4"
             "IconIndex" = "3:32512"
                 "Command"
                 {
-                "Command" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+                "Command" = "8:_9A9A290F02BD4DF9857CA1EFF73548B4"
                 }
                 "Verbs"
                 {
@@ -717,7 +719,7 @@
         {
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_35E89725F8BA48E0AC14F44C8E513BED"
             {
-            "DefaultLocation" = "8:[ProgramFilesFolder][ProductName]"
+            "DefaultLocation" = "8:[ProgramFiles64Folder][ProductName]"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:FALSE"
             "Condition" = "8:"
@@ -787,15 +789,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
-        "ProductCode" = "8:{CF536749-47F3-454D-AA31-2BBFC6CF9DCB}"
-        "PackageCode" = "8:{7A284EEE-3957-486D-9B8D-CFA3645B80F0}"
+        "ProductCode" = "8:{2C30553C-3EFE-4E0D-81CC-DD8AB9A6E2AF}"
+        "PackageCode" = "8:{E3F735B3-8830-43E5-B817-CECDE9685904}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:4.0.6"
+        "ProductVersion" = "8:4.1.0"
         "Manufacturer" = "8:BleuBleu"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -809,7 +811,7 @@
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
-        "TargetPlatform" = "3:0"
+        "TargetPlatform" = "3:1"
         "PreBuildEvent" = "8:"
         "PostBuildEvent" = "8:"
         "RunPostBuildEvent" = "3:0"
@@ -919,7 +921,7 @@
             "Target" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Folder" = "8:_502895A100E348DAA0391738AD1300BB"
             "WorkingFolder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
-            "Icon" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+            "Icon" = "8:_9A9A290F02BD4DF9857CA1EFF73548B4"
             "Feature" = "8:"
             }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_6AE47143EBD24EA9A571B4734BD7D569"
@@ -930,10 +932,10 @@
             "ShowCmd" = "3:1"
             "IconIndex" = "3:32512"
             "Transitive" = "11:FALSE"
-            "Target" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+            "Target" = "8:_9A9A290F02BD4DF9857CA1EFF73548B4"
             "Folder" = "8:_502895A100E348DAA0391738AD1300BB"
             "WorkingFolder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
-            "Icon" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+            "Icon" = "8:_9A9A290F02BD4DF9857CA1EFF73548B4"
             "Feature" = "8:"
             }
         }
@@ -1335,34 +1337,6 @@
         }
         "ProjectOutput"
         {
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_02EAA2AD59C5483CB557FE728242DD43"
-            {
-            "SourcePath" = "8:..\\FamiStudio\\obj\\Debug\\FamiStudio.exe"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            "ProjectOutputGroupRegister" = "3:1"
-            "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Built"
-            "OutputProjectGuid" = "8:{20AC976F-95BC-42A4-B95C-85609728A36B}"
-            "ShowKeyOutput" = "11:TRUE"
-                "ExcludeFilters"
-                {
-                }
-            }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_5CDF651EA06F480DAD3E063396C4BD1B"
             {
             "SourcePath" = "8:"
@@ -1385,6 +1359,34 @@
             "ProjectOutputGroupRegister" = "3:1"
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:Symbols"
+            "OutputProjectGuid" = "8:{20AC976F-95BC-42A4-B95C-85609728A36B}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9A9A290F02BD4DF9857CA1EFF73548B4"
+            {
+            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\net5.0\\apphost.exe"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:PublishItems"
             "OutputProjectGuid" = "8:{20AC976F-95BC-42A4-B95C-85609728A36B}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"

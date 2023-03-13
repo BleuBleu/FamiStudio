@@ -203,6 +203,7 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 		else
 		{
 			osc.trigger = trigger_none;
+			osc.phase = 0;
 		}
 		
 		int volume = min(osc.volume_env, 0x20);

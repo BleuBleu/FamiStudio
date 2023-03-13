@@ -38,6 +38,7 @@ namespace FamiStudio
             public TextView value;
             public TextView tooltip;
             public List<View> controls = new List<View>();
+            public ColumnDesc[] columns;
             public string sliderFormat;
             public double sliderMin;
             public bool visible = true;
@@ -106,10 +107,10 @@ namespace FamiStudio
                 PropertyChanged?.Invoke(this, idx, -1, -1, e.IsChecked);
         }
 
-        private SeekBar CreateSeekBar(double value, double min, double max, double increment, int numDecimals, bool showLabel, string tooltip = null)
+        private SeekBar CreateSeekBar(double value, double min, double max, double increment, int numDecimals, int pad = 20, string tooltip = null)
         {
             var seek = new SeekBar(new ContextThemeWrapper(context, Resource.Style.LightGraySeekBar));
-            var padding = DroidUtils.DpToPixels(20);
+            var padding = DroidUtils.DpToPixels(pad);
 
             seek.SetPadding(padding, padding, padding, padding);
             seek.Min = (int)(min * 1000);
@@ -155,9 +156,9 @@ namespace FamiStudio
             }
         }
 
-        private HorizontalNumberPicker CreateNumberPicker(int value, int min, int max)
+        private HorizontalNumberPicker CreateNumberPicker(int value, int min, int max, int inc)
         {
-            var picker = new HorizontalNumberPicker(context, value, min, max);
+            var picker = new HorizontalNumberPicker(context, value, min, max, inc);
             picker.ValueChanged += Picker_ValueChanged;
             return picker;
         }
@@ -395,10 +396,10 @@ namespace FamiStudio
             return 0;
         }
 
-        public int AddNumericUpDown(string label, int value, int min, int max, string tooltip = null)
+        public int AddNumericUpDown(string label, int value, int min, int max, int inc, string tooltip = null)
         {
             var prop = new Property();
-            var picker = CreateNumberPicker(value, min, max);
+            var picker = CreateNumberPicker(value, min, max, inc);
 
             prop.type = PropertyType.NumericUpDown;
             prop.controls.Add(picker);
@@ -706,7 +707,7 @@ namespace FamiStudio
             // On older androids, the seekbar misbehave when using negative values. 
             // Make everything relative to zero and remap.
             var prop = new Property();
-            var seekBar = CreateSeekBar(value - min, 0, max - min, 0, 0, false);
+            var seekBar = CreateSeekBar(value - min, 0, max - min, 0, 0);
 
             prop.type = PropertyType.Slider;
             prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
@@ -741,23 +742,116 @@ namespace FamiStudio
 
         public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
         {
+            var prop = properties[propIdx];
+            Debug.Assert(prop.type == PropertyType.Grid);
+            for (int i = 0; i < prop.controls.Count; i++)
+            {
+                var r = i / prop.columns.Length;
+                var c = i % prop.columns.Length;
+
+                if (c == colIdx)
+                    prop.controls[i].Enabled = enabled;
+            }
         }
 
         public void SetRowColor(int propIdx, int rowIdx, Color color)
         {
         }
 
-        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null)
+        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null)
         {
-            properties.Add(new Property());
+            // We need initial data on mobile.
+            if (data != null)
+            {
+                var prop = new Property();
+                prop.type = PropertyType.Grid;
+                prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
+                prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
+                prop.layout = CreateLinearLayout(true, true, false, 10);
+                prop.layout.AddView(prop.label);
+                prop.columns = columnDescs;
+
+                if (prop.tooltip != null)
+                    prop.layout.AddView(prop.tooltip);
+
+                var gridLayout = new GridLayout(context);
+                gridLayout.ColumnCount = data.GetLength(1);
+                gridLayout.RowCount = data.GetLength(0);
+                gridLayout.LayoutParameters = CreateLinearLayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+
+                prop.layout.AddView(gridLayout);
+
+                var maxWidth = columnDescs[0].Width;
+                var maxColIdx = 0;
+                for (int c = 1; c < columnDescs.Length; c++)
+                {
+                    if (columnDescs[c].Width > maxWidth)
+                    {
+                        maxWidth = columnDescs[c].Width;
+                        maxColIdx = c;
+                    }
+                }
+
+                for (int r = 0; r < data.GetLength(0); r++)
+                {
+                    for (int c = 0; c < columnDescs.Length; c++)
+                    {
+                        var view = (View)null;
+                        var col = columnDescs[c];
+
+                        switch (col.Type)
+                        {
+                            case ColumnType.CheckBox:
+                                var checkBox = new CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
+                                checkBox.Checked = data == null || (bool)data[r, c];
+                                view = checkBox;
+                                break;
+                            case ColumnType.Label:
+                                var text = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
+                                text.Text = data == null ? "" : (string)data[r, c];
+                                view = text;
+                                break;
+                            case ColumnType.Slider:
+                                var seek = new SeekBar(new ContextThemeWrapper(context, Resource.Style.LightGraySeekBar));
+                                seek.Min = 0;
+                                seek.Max = 100;
+                                seek.Progress = data == null ? 50 : (int)data[r, c];
+                                view = seek;
+                                break;
+                            default:
+                                Debug.Assert(false);
+                                view = new View(context);
+                                break;
+                        }
+
+                        var gridLayoutParams = new GridLayout.LayoutParams(
+                                GridLayout.InvokeSpec(r, 1),
+                                GridLayout.InvokeSpec(c, 1, c == maxColIdx ? 1.0f : 0.0f));
+                        gridLayoutParams.SetGravity(GravityFlags.CenterVertical);
+                        gridLayout.AddView(view, gridLayoutParams);
+
+                        prop.controls.Add(view);
+                    }
+                }
+
+                properties.Add(prop);
+            }
+            else
+            {
+                properties.Add(new Property());
+            }
+
+            return properties.Count - 1;
         }
 
         public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
         {
+            Debug.Assert(false);
         }
 
         public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)
         {
+            Debug.Assert(false);
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)
@@ -842,8 +936,28 @@ namespace FamiStudio
 
         public T GetPropertyValue<T>(int idx, int rowIdx, int colIdx)
         {
-            Debug.Assert(false);
-            return default(T);
+            var prop = properties[idx];
+            Debug.Assert(prop.type == PropertyType.Grid);
+            var ctrlIdx = rowIdx * prop.columns.Length + colIdx;
+            var view = prop.controls[ctrlIdx];
+
+            if (view is CheckBox)
+            {
+                return (T)(object)(view as CheckBox).Checked;
+            }
+            else if (view is TextView)
+            {
+                return (T)(object)(view as TextView).Text;
+            }
+            else if (view is SeekBar)
+            {
+                return (T)(object)(view as SeekBar).Progress;
+            }
+            else
+            {
+                Debug.Assert(false);
+                return default(T);
+            }
         }
 
         public int GetSelectedIndex(int idx)
@@ -1009,9 +1123,10 @@ namespace FamiStudio
         private int value = 50;
         private int minimum = 0;
         private int maximum = 100;
+        private int increment = 1;
         private int fastScrollDir = 0;
 
-        public HorizontalNumberPicker(Context context, int val, int min, int max) : base(context)
+        public HorizontalNumberPicker(Context context, int val, int min, int max, int inc) : base(context)
         {
             var lp = new LinearLayout.LayoutParams(DroidUtils.DpToPixels(64), DroidUtils.DpToPixels(48));
             lp.Weight = 1;
@@ -1043,6 +1158,7 @@ namespace FamiStudio
 
             minimum = min;
             maximum = max;
+            increment = inc;
             value = val;
 
             UpdateValue(false);
@@ -1109,17 +1225,17 @@ namespace FamiStudio
 
         private void ButtonLess_Touch(object sender, TouchEventArgs e)
         {
-            UpdateValue(e.Event.Action, -1);
+            UpdateValue(e.Event.Action, -increment);
         }
 
         private void ButtonMore_Touch(object sender, TouchEventArgs e)
         {
-            UpdateValue(e.Event.Action, 1);
+            UpdateValue(e.Event.Action, increment);
         }
 
         private void UpdateValue(bool invokeEvent = true)
         {
-            value = Utils.Clamp(value, minimum, maximum);
+            value = Utils.Clamp(Utils.RoundDown(value, increment), minimum, maximum);
             if (invokeEvent)
                 ValueChanged?.Invoke(this, value);
             textView.Text = value.ToString();

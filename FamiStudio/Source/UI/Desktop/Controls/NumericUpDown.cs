@@ -11,6 +11,7 @@ namespace FamiStudio
         private int val;
         private int min;
         private int max = 10;
+        private int inc = 1;
         private BitmapAtlasRef[] bmp;
         private float captureDuration;
         private int   captureButton = -1;
@@ -18,11 +19,15 @@ namespace FamiStudio
 
         protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
-        public NumericUpDown(Dialog dlg, int value, int minVal, int maxVal) : base(dlg, value, minVal, maxVal)
+        public NumericUpDown(int value, int minVal, int maxVal, int increment) : base(value, minVal, maxVal, increment)
         {
             val = value;
             min = minVal;
             max = maxVal;
+            inc = increment;
+            Debug.Assert(val % increment == 0);
+            Debug.Assert(min % increment == 0);
+            Debug.Assert(max % increment == 0);
             height = DpiScaling.ScaleForWindow(24);
             SetTextBoxValue();
         }
@@ -31,12 +36,12 @@ namespace FamiStudio
         {
             get 
             {
-                Debug.Assert(val >= min && val <= max);
+                Debug.Assert(val >= min && val <= max && (val % inc) == 0);
                 return val; 
             }
             set 
             {
-                if (SetAndMarkDirty(ref val, Utils.Clamp(value, min, max)))
+                if (SetAndMarkDirty(ref val, Utils.Clamp(Utils.RoundDown(value, inc), min, max)))
                 {
                     SetTextBoxValue();
                     ValueChanged?.Invoke(this, val);
@@ -56,21 +61,19 @@ namespace FamiStudio
             set { max = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
         }
 
-        protected override void OnAddedToDialog()
+        protected override void OnAddedToContainer()
         {
             outerMargin = GetButtonRect(0).Width + textBoxMargin;
-            base.OnAddedToDialog();
-        }
 
-        protected override void OnRenderInitialized(Graphics g)
-        {
+            var g = ParentWindow.Graphics;
             bmp = new[]
             {
                 g.GetBitmapAtlasRef("UpDownMinus"),
                 g.GetBitmapAtlasRef("UpDownPlus")
             };
 
-            base.OnRenderInitialized(g);
+            // "outerMargin" needs to be set before calling this.
+            base.OnAddedToContainer();
         }
 
         private Rectangle GetButtonRect(int idx)
@@ -104,12 +107,12 @@ namespace FamiStudio
                 // Transition to auto increment after 250ms.
                 if (lastDuration < 0.5f && captureDuration >= 0.5f)
                 {
-                    Value += captureButton == 0 ? -1 : 1;
+                    Value += captureButton == 0 ? -inc : inc;
                 }
                 // Then increment every 50ms (in steps of 10 after a while).
                 else if (lastDuration > 0.5f && ((int)((lastDuration - 0.5f) * 20) != (int)((captureDuration - 0.5f) * 20)))
                 {
-                    Value += (captureButton == 0 ? -1 : 1) * (lastDuration >= 1.5f && (Value % 10) == 0 ? 10 : 1);
+                    Value += (captureButton == 0 ? -inc : inc) * (lastDuration >= 1.5f && (Value % (10 * inc)) == 0 ? 10 * inc : 1 * inc);
                 }
             }
 
@@ -124,7 +127,7 @@ namespace FamiStudio
                 GetValueFromTextBox();
                 captureButton = idx;
                 captureDuration = 0;
-                Value += captureButton == 0 ? -1 : 1;
+                Value += captureButton == 0 ? -inc : inc;
                 Capture = true;
             }
             else
@@ -208,7 +211,7 @@ namespace FamiStudio
         {
             base.OnRender(g);
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
             var rects = new []

@@ -215,20 +215,13 @@ namespace FamiStudio
                         var note = i * 12 + j + 1;
                         if (sample != null && sample.ProcessedData != null)
                         {
-                            if (project.NoteSupportsDPCM(note))
+                            if (instrument.IsRegular)
                             {
-                                if (project.GetDPCMMapping(note) == null)
-                                {
-                                    project.MapDPCMSample(note, sample, pitch & 0x0f, (pitch & 0x80) != 0);
-                                }
-                                else
-                                {
-                                    Log.LogMessage(LogSeverity.Warning, $"Multiple instruments assigning DPCM samples to key {Note.GetFriendlyName(note)}. Only the first one will be assigned, others will be loaded, but unassigned.");
-                                }
+                                instrument.MapDPCMSample(note, sample, pitch & 0x0f, (pitch & 0x80) != 0);
                             }
                             else
                             {
-                                Log.LogMessage(LogSeverity.Warning, $"DPCM sample assigned to key {Note.GetFriendlyName(note)}. FamiStudio only supports DPCM samples on keys {Note.GetFriendlyName(Note.DPCMNoteMin + 1)} to {Note.GetFriendlyName(Note.DPCMNoteMax)}.");
+                                Log.LogMessage(LogSeverity.Warning, $"Instrument {instrument.Name} has DPCM samples but is an expansion instrument. Ignoring.");
                             }
                         }
                     }

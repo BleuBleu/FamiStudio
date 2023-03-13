@@ -191,7 +191,7 @@ namespace FamiStudio
 
     public static class ALC
     {
-        private const string OpenAlcDll = "libopenal";
+        private const string OpenAlcDll = "libopenal32"; // NET5TODO
 
         public const int DeviceSpecifier = 0x1005;
 
@@ -221,7 +221,7 @@ namespace FamiStudio
 
     public unsafe static class AL
     {
-        private const string OpenAlDll = "libopenal";
+        private const string OpenAlDll = "libopenal32"; // NET5TODO
 
         public const int Buffer           = 0x1009;
         public const int Gain             = 0x100A;

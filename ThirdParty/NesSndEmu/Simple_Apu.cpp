@@ -214,7 +214,7 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 			if (expansions & expansion_mask_mmc5) mmc5.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_namco) namco.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_sunsoft) sunsoft.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_epsm) epsm.write_register(clock(16), addr, data);
+			if (expansions & expansion_mask_epsm) epsm.write_register(clock(), addr, data);
 		}
 	}
 }
@@ -293,6 +293,12 @@ int Simple_Apu::get_namco_wave_pos(int n163ChanIndex)
 	return namco.get_wave_pos(n163ChanIndex);
 }
 
+void Simple_Apu::set_namco_mix(bool mix)
+{
+	assert((expansions & expansion_mask_namco) != 0 && !seeking);
+	return namco.set_mix(mix);
+}
+
 int Simple_Apu::get_fds_wave_pos()
 {
 	assert((expansions & expansion_mask_fds) != 0 && !seeking);
@@ -301,6 +307,8 @@ int Simple_Apu::get_fds_wave_pos()
 
 void Simple_Apu::end_frame()
 {
+	assert(time <= frame_length);
+
 	time = 0;
 	frame_length ^= 1;
 

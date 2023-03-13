@@ -2676,6 +2676,19 @@ namespace GLFWDotNet
 			return _glfwRawMouseMotionSupported();
 		}
 
+		private static unsafe string PtrToStringUTF8(IntPtr ptr)
+        {
+			if (ptr == IntPtr.Zero)
+				return null;
+
+			var p = (byte*)ptr.ToPointer();
+			var n = 0;
+			for (; p[n] != 0; n++) ;
+
+			return System.Text.Encoding.UTF8.GetString(p, n);
+		}
+
+
 		/// <summary>
 		/// Returns the layout-specific name of the specified printable key.
 		/// </summary>
@@ -2694,10 +2707,9 @@ namespace GLFWDotNet
 		/// <returns>
 		/// The UTF-8 encoded, layout-specific name of the key, or `NULL`.
 		/// </returns>
-		public static string glfwGetKeyName(int key, int scancode)
+		public static unsafe string glfwGetKeyName(int key, int scancode)
 		{
-			var keyNameStr = _glfwGetKeyName(key, scancode);
-			return Marshal.PtrToStringAnsi(keyNameStr);
+			return PtrToStringUTF8(_glfwGetKeyName(key, scancode));
 		}
 
 		/// <summary>
@@ -3407,16 +3419,7 @@ namespace GLFWDotNet
 		/// </returns>
 		public static unsafe string glfwGetClipboardString(IntPtr window)
 		{
-			var ptr = _glfwGetClipboardString(window);
-
-			if (ptr == IntPtr.Zero)
-				return null;
-
-			var p = (byte*)ptr.ToPointer();
-			var n = 0;
-			for (; p[n] != 0; n++) ;
-
-			return System.Text.Encoding.UTF8.GetString(p, n);
+			return PtrToStringUTF8(_glfwGetClipboardString(window));
 		}
 
 		/// <summary>

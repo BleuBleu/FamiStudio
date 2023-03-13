@@ -357,6 +357,12 @@ namespace FamiStudio
                 else
                     str = Encoding.Unicode.GetString(buffer, idx, len);
 
+                // Some old project have weird \0 in the strings. Not sure where that came from.
+                if (str.Contains('\0'))
+                {
+                    str = str.Replace("\0", ""); 
+                }
+
                 idx += len;
             }
         }
@@ -613,10 +619,6 @@ namespace FamiStudio
         }
 
         public void InitializeList<T>(ref List<T> list, int count) where T : new()
-        {
-        }
-
-        public void InitializeArray<T>(ref T[] array, int count) where T : new()
         {
         }
 

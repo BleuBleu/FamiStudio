@@ -59,16 +59,16 @@ namespace FamiStudio
             {
                 if (patternIdx < 0)
                 {
-                    famitrackerTempoPropIdx = props.AddNumericUpDown("Tempo :", song.FamitrackerTempo, 32, 255, TempoTooltip); // 0
-                    famitrackerSpeedPropIdx = props.AddNumericUpDown("Speed :", song.FamitrackerSpeed, 1, 31, SpeedTooltip); // 1
+                    famitrackerTempoPropIdx = props.AddNumericUpDown("Tempo :", song.FamitrackerTempo, 32, 255, 1, TempoTooltip); // 0
+                    famitrackerSpeedPropIdx = props.AddNumericUpDown("Speed :", song.FamitrackerSpeed, 1, 31, 1, SpeedTooltip); // 1
                 }
                 
                 var notesPerBeat    = patternIdx < 0 ? song.BeatLength    : song.GetPatternBeatLength(patternIdx);
                 var notesPerPattern = patternIdx < 0 ? song.PatternLength : song.GetPatternLength(patternIdx);
                 var bpm = Song.ComputeFamiTrackerBPM(song.Project.PalMode, song.FamitrackerSpeed, song.FamitrackerTempo, notesPerBeat);
 
-                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern :", notesPerPattern, 1, Pattern.MaxLength, NotesPerPatternTooltip); // 3
-                notesPerBeatPropIdx = props.AddNumericUpDown("Notes per Beat :", notesPerBeat, 1, 256, NotesPerBeatTooltip); // 2
+                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern :", notesPerPattern, 1, Pattern.MaxLength, 1, NotesPerPatternTooltip); // 3
+                notesPerBeatPropIdx = props.AddNumericUpDown("Notes per Beat :", notesPerBeat, 1, 256, 1, NotesPerBeatTooltip); // 2
                 bpmLabelPropIdx = props.AddLabel("BPM :", bpm.ToString("n1"), false, BPMTooltip); // 4
 
                 props.ShowWarnings = true;
@@ -93,8 +93,8 @@ namespace FamiStudio
                 grooveStrings = grooveList.Select(g => string.Join("-", g)).ToArray();
 
                 famistudioBpmPropIdx   = props.AddDropDownList("BPM : ", tempoStrings, tempoStrings[tempoIndex], BPMTooltip); // 0
-                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern : ", notesPerPattern / noteLength, 1, Pattern.MaxLength / noteLength, NotesPerPatternTooltip); // 2
-                notesPerBeatPropIdx    = props.AddNumericUpDown("Notes per Beat : ", notesPerBeat / noteLength, 1, 256, NotesPerBeatTooltip); // 1
+                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern : ", notesPerPattern / noteLength, 1, Pattern.MaxLength / noteLength, 1, NotesPerPatternTooltip); // 2
+                notesPerBeatPropIdx    = props.AddNumericUpDown("Notes per Beat : ", notesPerBeat / noteLength, 1, 256, 1, NotesPerBeatTooltip); // 1
                 framesPerNotePropIdx   = props.AddLabel("Frames per Note :", noteLength.ToString(), false, FramesPerNoteTooltip); // 3
 
                 props.ShowWarnings = true;

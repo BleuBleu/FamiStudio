@@ -28,13 +28,16 @@ namespace GLFWDotNet
                 return retVal;
             }
 
-            [DllImport("libdl")]
+            // NET5TODO : "libdl" has issue on ubuntu 22.04 (on my laptop). 
+            const string DlLibName = FamiStudio.Platform.IsLinux ? "libdl.so.2" : "libdl";
+
+            [DllImport(DlLibName)]
             private static extern IntPtr dlopen(string fileName, int flags);
 
-            [DllImport("libdl")]
+            [DllImport(DlLibName)]
             public static extern IntPtr dlsym(IntPtr handle, string symbol);
 
-            [DllImport("libdl")]
+            [DllImport(DlLibName)]
             private static extern IntPtr dlerror();
         }
 

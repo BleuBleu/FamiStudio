@@ -172,6 +172,7 @@ namespace FamiStudio
         static IntPtr clsNSApplication;
         static IntPtr clsNSMenu;
         static IntPtr clsNSMenuItem;
+        static IntPtr clsNSSound;
 
         static IntPtr selAlloc = SelRegisterName("alloc");
         static IntPtr selLength = SelRegisterName("length");
@@ -217,6 +218,7 @@ namespace FamiStudio
         static IntPtr selSetSubmenu = SelRegisterName("setSubmenu:");
         static IntPtr selSetMainMenu = SelRegisterName("setMainMenu:");
         static IntPtr selDoubleClickInterval = SelRegisterName("doubleClickInterval");
+        static IntPtr selBeep = SelRegisterName("beep");
 
         static IntPtr famiStudioPasteboard;
         static float  doubleClickInterval = 0.25f;
@@ -242,6 +244,7 @@ namespace FamiStudio
             clsNSApplication = GetClass("NSApplication");
             clsNSMenu = GetClass("NSMenu");
             clsNSMenuItem = GetClass("NSMenuItem");
+            clsNSSound = GetClass("NSSound");
 
             nsApplication = SendIntPtr(clsNSApplication, selSharedApplication);
 
@@ -578,6 +581,11 @@ namespace FamiStudio
             {
                 return DialogResult.OK;
             }
+        }
+
+        public static void Beep()
+        {
+            NSBeep();
         }
 
         public static unsafe void SetPasteboardData(byte[] data)

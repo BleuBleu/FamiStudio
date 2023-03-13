@@ -31,7 +31,7 @@ namespace FamiStudio
             dialog.Properties.AddCheckBoxList(Platform.IsMobile ? "Effects to paste" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to paste."); // 3
             dialog.Properties.AddButton(Platform.IsMobile ? "Select All Effects" : null, "Select All"); // 4
             dialog.Properties.AddButton(Platform.IsMobile ? "De-select All Effects" : null, "Select None"); // 5
-            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32, "Number of times to repeat the paste"); // 6
+            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32, 1, "Number of times to repeat the paste"); // 6
             dialog.Properties.SetPropertyVisible(2, Platform.IsDesktop);
             dialog.Properties.Build();
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;

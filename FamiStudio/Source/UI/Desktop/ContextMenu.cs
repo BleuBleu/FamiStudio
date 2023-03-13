@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class ContextMenu : Control
+    public class ContextMenu : Container
     {
         const int DefaultItemSizeY    = 22;
         const int DefaultIconPos      = 3;
@@ -22,12 +22,14 @@ namespace FamiStudio
         BitmapAtlasRef bmpMenuRadio;
         ContextMenuOption[] menuOptions;
 
-        public ContextMenu(FamiStudioWindow win) : base(win)
+        public ContextMenu()
         {
+            visible = false;
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
+            var g = ParentWindow.Graphics;
             bmpMenuCheckOn  = g.GetBitmapAtlasRef("MenuCheckOn");
             bmpMenuCheckOff = g.GetBitmapAtlasRef("MenuCheckOff");
             bmpMenuRadio    = g.GetBitmapAtlasRef("MenuRadio");
@@ -35,13 +37,13 @@ namespace FamiStudio
 
         private void UpdateRenderCoords()
         {
-            itemSizeY = ScaleForWindow(DefaultItemSizeY);
-            iconPos   = ScaleForWindow(DefaultIconPos);
-            textPosX  = ScaleForWindow(DefaultTextPosX);
-            minSizeX  = ScaleForWindow(DefaultMenuMinSizeX);
+            itemSizeY = DpiScaling.ScaleForWindow(DefaultItemSizeY);
+            iconPos   = DpiScaling.ScaleForWindow(DefaultIconPos);
+            textPosX  = DpiScaling.ScaleForWindow(DefaultTextPosX);
+            minSizeX  = DpiScaling.ScaleForWindow(DefaultMenuMinSizeX);
         }
 
-        public void Initialize(Graphics g, ContextMenuOption[] options)
+        public void Initialize(ContextMenuOption[] options)
         {
             UpdateRenderCoords();
 
@@ -49,6 +51,7 @@ namespace FamiStudio
             bmpContextMenu = new BitmapAtlasRef[options.Length];
 
             // Measure size.
+            var g = ParentWindow.Graphics;
             var sizeX = 0;
             var sizeY = 0;
 
@@ -56,7 +59,7 @@ namespace FamiStudio
             {
                 ContextMenuOption option = menuOptions[i];
 
-                sizeX = Math.Max(sizeX, (int)g.MeasureString(option.Text, FontResources.FontMedium));
+                sizeX = Math.Max(sizeX, (int)ParentWindow.Graphics.MeasureString(option.Text, Fonts.FontMedium));
                 sizeY += itemSizeY;
 
                 if (!string.IsNullOrEmpty(option.Image))
@@ -66,7 +69,7 @@ namespace FamiStudio
                 }
             }
 
-            width  = Math.Max(minSizeX, sizeX + textPosX) + iconPos; 
+            width  = Math.Max(minSizeX, sizeX + textPosX) + iconPos * 2; 
             height = sizeY;
         }
 
@@ -107,7 +110,10 @@ namespace FamiStudio
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            SetHoveredItemIndex(-1);
+            if (ParentWindow != null && visible)
+            { 
+                SetHoveredItemIndex(-1);
+            }
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -158,10 +164,10 @@ namespace FamiStudio
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
-            var c = g.CreateCommandList();
-            c.DrawRectangle(0, 0, Width - 1, Height - 1, Theme.LightGreyColor1);
-
+            var c = g.DefaultCommandList;
             var prevWantedSeparator = false;
+
+            c.DrawRectangle(0, 0, Width - 1, Height - 1, Theme.LightGreyColor1);
 
             for (int i = 0, y = 0; i < menuOptions.Length; i++, y += itemSizeY)
             {
@@ -198,14 +204,11 @@ namespace FamiStudio
                     c.DrawBitmapAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
                 }
 
-                c.DrawText(option.Text, FontResources.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
+                c.DrawText(option.Text, Fonts.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
 
                 prevWantedSeparator = option.Separator.HasFlag(ContextMenuSeparator.After);
             }
-
-            g.Clear(Theme.DarkGreyColor4);
-            g.DrawCommandList(c);
         }
     }
 }

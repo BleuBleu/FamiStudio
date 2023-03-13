@@ -185,32 +185,17 @@ namespace FamiStudio
                     else if (line.StartsWith("KEYDPCM"))
                     {
                         var param    = line.Substring(7).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        int instIdx = int.Parse(param[0]);
+                        var inst     = instruments[int.Parse(param[0])];
                         int octave   = int.Parse(param[1]);
                         int semitone = int.Parse(param[2]);
                         int note     = octave * 12 + semitone + 1;
+                        int dpcm     = int.Parse(param[3]);
+                        int pitch    = int.Parse(param[4]);
+                        int loop     = int.Parse(param[5]);
 
-                        if (project.NoteSupportsDPCM(note))
+                        if (dpcms.TryGetValue(dpcm, out var foundSample))
                         {
-                            if (project.GetDPCMMapping(note) == null)
-                            {
-                                int dpcm = int.Parse(param[3]);
-                                int pitch = int.Parse(param[4]);
-                                int loop = int.Parse(param[5]);
-
-                                if (dpcms.TryGetValue(dpcm, out var foundSample))
-                                {
-                                    project.MapDPCMSample(note, foundSample, pitch, loop != 0);
-                                }
-                            }
-                            else
-                            {
-                                Log.LogMessage(LogSeverity.Warning, $"Multiple instruments assigning DPCM samples to key {Note.GetFriendlyName(note)}. Only the first one will be assigned, others will be loaded, but unassigned.");
-                            }
-                        }
-                        else
-                        {
-                            Log.LogMessage(LogSeverity.Warning, $"DPCM sample assigned to key {Note.GetFriendlyName(note)}. FamiStudio only supports DPCM samples on keys {Note.GetFriendlyName(Note.DPCMNoteMin + 1)} to {Note.GetFriendlyName(Note.DPCMNoteMax)}.");
+                            inst.MapDPCMSample(note, foundSample, pitch, loop != 0);
                         }
                     }
                     else if (line.StartsWith("INST2A03") || line.StartsWith("INSTVRC6") || line.StartsWith("INSTN163"))
@@ -857,6 +842,28 @@ namespace FamiStudio
                 if (instrument.IsRegular)
                 {
                     lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
+
+                    if (instrument.HasAnyMappedSamples)
+                    {
+                        foreach (var kv in instrument.SamplesMapping)
+                        {
+                            var note = kv.Key;
+                            var mapping = kv.Value;
+
+                            if (mapping != null)
+                            {
+                                var idx = project.Samples.IndexOf(mapping.Sample);
+                                if (idx >= 0)
+                                {
+                                    var octave   = (note - 1) / 12;
+                                    var semitone = (note - 1) % 12;
+                                    var loop     = mapping.Loop ? 1 : 0;
+
+                                    lines.Add($"KEYDPCM{i,4}{octave,4}{semitone,4}{idx,6}{mapping.Pitch,4}{loop,4}{0,6}{-1,4}");
+                                }
+                            }
+                        }
+                    }
                 }
                 else if (instrument.IsVrc6)
                 {
@@ -900,26 +907,6 @@ namespace FamiStudio
                 }
             }
 
-            if (project.UsesSamples)
-            {
-                lines.Add($"INST2A03{project.Instruments.Count,4}{-1,6}{-1,4}{-1,4}{-1,4}{-1,4} \"DPCM\"");
-
-                for (int i = 0; i < project.SamplesMapping.Length; i++)
-                {
-                    var mapping = project.SamplesMapping[i];
-
-                    if (mapping != null)
-                    {
-                        int note     = i + Note.DPCMNoteMin;
-                        var octave   = (note - 1) / 12 ;
-                        var semitone = (note - 1) % 12;
-                        var idx      = project.Samples.IndexOf(mapping.Sample);
-                        var loop     = mapping.Loop ? 1 : 0;
-
-                        lines.Add($"KEYDPCM{project.Instruments.Count,4}{octave,4}{semitone,4}{idx,6}{mapping.Pitch,4}{loop,4}{0,6}{-1,4}");
-                    }
-                }
-            }
             lines.Add("");
 
             lines.Add("# Tracks");

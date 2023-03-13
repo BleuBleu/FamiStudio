@@ -75,6 +75,8 @@ private:
 	int psg_delay;
 	int opn2_delay;
 	int last_psg_amp;
+	int sample_left;
+	int sample_right;
 	int last_opn2_amp_left;
 	int last_opn2_amp_right;
 	uint16_t opn2_mask;

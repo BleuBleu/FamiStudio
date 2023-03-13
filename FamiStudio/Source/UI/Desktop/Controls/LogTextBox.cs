@@ -18,7 +18,7 @@ namespace FamiStudio
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
         private int lineHeight     = DpiScaling.ScaleForWindow(16);
 
-        public LogTextBox(Dialog dlg, int lineCount) : base(dlg)
+        public LogTextBox(int lineCount) 
         {
             numLines = lineCount;
             height = lineCount* lineHeight;
@@ -123,7 +123,7 @@ namespace FamiStudio
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
             var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
@@ -131,7 +131,7 @@ namespace FamiStudio
 
             for (int i = 0, j = scroll; i < numLines && j < lines.Count; j++, i++)
             {
-                c.DrawText(lines[j], FontResources.FontMedium, margin, i * lineHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, lineHeight);
+                c.DrawText(lines[j], Fonts.FontMedium, margin, i * lineHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, lineHeight);
             }
 
             if (hasScrollBar)

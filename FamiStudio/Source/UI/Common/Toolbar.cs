@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class Toolbar : Control
+    public class Toolbar : Container
     {
         private enum ButtonType
         {
@@ -235,6 +235,7 @@ namespace FamiStudio
         };
 
         int lastButtonX = 500;
+        int helpButtonX = 500;
         bool redTooltip = false;
         new string tooltip = "";
         Font timeCodeFont;
@@ -281,6 +282,7 @@ namespace FamiStudio
         private float expandRatio = 0.0f;
         private bool  expanding = false; 
         private bool  closing   = false; 
+        private bool  ticking   = false;
 
         public int   LayoutSize  => buttonSize * 2;
         public int   RenderSize  => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio) * 0.5f));
@@ -291,17 +293,14 @@ namespace FamiStudio
 
         private float iconScaleFloat = 1.0f;
 
-        public Toolbar(FamiStudioWindow win) : base(win)
-        {
-        }
-
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
+            var g = ParentWindow.Graphics;
             bmpButtons = g.GetBitmapAtlasRefs(ButtonImageNames);
-            timeCodeFont = FontResources.FontHuge;
+            timeCodeFont = Fonts.FontHuge;
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
             buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = Platform.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
@@ -334,77 +333,56 @@ namespace FamiStudio
                 var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
                 var bitmapSize = bmpButtons[0].ElementSize;
 
-                buttonIconPosX = ScaleCustom(DefaultButtonIconPosX, scale);
-                buttonIconPosY = ScaleCustom(DefaultButtonIconPosY, scale);
-                buttonSize     = ScaleCustom(DefaultButtonSize, scale);
-                iconSize       = ScaleCustom(DefaultIconSize, scale);
+                buttonIconPosX = DpiScaling.ScaleCustom(DefaultButtonIconPosX, scale);
+                buttonIconPosY = DpiScaling.ScaleCustom(DefaultButtonIconPosY, scale);
+                buttonSize     = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
+                iconSize       = DpiScaling.ScaleCustom(DefaultIconSize, scale);
                 iconScaleFloat = iconSize / (float)(bitmapSize.Width);
             }
             else
             {
                 buttons[(int)ButtonType.Qwerty] = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
 
-                timecodePosY            = ScaleForWindow(DefaultTimecodePosY);
-                oscilloscopePosY        = ScaleForWindow(DefaultTimecodePosY);
-                timecodeOscSizeX        = ScaleForWindow(DefaultTimecodeSizeX);
-                tooltipSingleLinePosY   = ScaleForWindow(DefaultTooltipSingleLinePosY);
-                tooltipMultiLinePosY    = ScaleForWindow(DefaultTooltipMultiLinePosY);
-                tooltipLineSizeY        = ScaleForWindow(DefaultTooltipLineSizeY);
-                tooltipSpecialCharSizeX = ScaleForWindow(DefaultTooltipSpecialCharSizeX);
-                tooltipSpecialCharSizeY = ScaleForWindow(DefaultTooltipSpecialCharSizeY);
-                buttonIconPosX          = ScaleForWindow(DefaultButtonIconPosX);
-                buttonIconPosY          = ScaleForWindow(DefaultButtonIconPosY);
-                buttonSize              = ScaleForWindow(DefaultButtonSize);
+                timecodePosY            = DpiScaling.ScaleForWindow(DefaultTimecodePosY);
+                oscilloscopePosY        = DpiScaling.ScaleForWindow(DefaultTimecodePosY);
+                timecodeOscSizeX        = DpiScaling.ScaleForWindow(DefaultTimecodeSizeX);
+                tooltipSingleLinePosY   = DpiScaling.ScaleForWindow(DefaultTooltipSingleLinePosY);
+                tooltipMultiLinePosY    = DpiScaling.ScaleForWindow(DefaultTooltipMultiLinePosY);
+                tooltipLineSizeY        = DpiScaling.ScaleForWindow(DefaultTooltipLineSizeY);
+                tooltipSpecialCharSizeX = DpiScaling.ScaleForWindow(DefaultTooltipSpecialCharSizeX);
+                tooltipSpecialCharSizeY = DpiScaling.ScaleForWindow(DefaultTooltipSpecialCharSizeY);
+                buttonIconPosX          = DpiScaling.ScaleForWindow(DefaultButtonIconPosX);
+                buttonIconPosY          = DpiScaling.ScaleForWindow(DefaultButtonIconPosY);
+                buttonSize              = DpiScaling.ScaleForWindow(DefaultButtonSize);
 
                 bmpSpecialCharacters = g.GetBitmapAtlasRefs(SpecialCharImageNames);
 
-                buttons[(int)ButtonType.New].ToolTip       = "{MouseLeft} New Project {Ctrl}{N}";
-                buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl}{O}\n{MouseRight} Recent Files...";
-                buttons[(int)ButtonType.Save].ToolTip      = "{MouseLeft} Save Project {Ctrl}{S}\n{MouseRight} More Options...";
-                buttons[(int)ButtonType.Export].ToolTip    = "{MouseLeft} Export to various formats {Ctrl}{E}\n{MouseRight} More Options...";
-                buttons[(int)ButtonType.Copy].ToolTip      = "{MouseLeft} Copy selection {Ctrl}{C}";
-                buttons[(int)ButtonType.Cut].ToolTip       = "{MouseLeft} Cut selection {Ctrl}{X}";
-                buttons[(int)ButtonType.Paste].ToolTip     = "{MouseLeft} Paste {Ctrl}{V}\n{MouseRight} More Options...";
-                buttons[(int)ButtonType.Undo].ToolTip      = "{MouseLeft} Undo {Ctrl}{Z}";
-                buttons[(int)ButtonType.Redo].ToolTip      = "{MouseLeft} Redo {Ctrl}{Y}";
-                buttons[(int)ButtonType.Transform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
-                buttons[(int)ButtonType.Config].ToolTip    = "{MouseLeft} Edit Application Settings";
-                buttons[(int)ButtonType.Play].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseRight} More Options...";
-                buttons[(int)ButtonType.Rewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl}{Home}";
-                buttons[(int)ButtonType.Rec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
-                buttons[(int)ButtonType.Loop].ToolTip      = "{MouseLeft} Toggle Loop Mode (Song, Pattern/Selection)";
-                buttons[(int)ButtonType.Qwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift}{Q}";
-                buttons[(int)ButtonType.Metronome].ToolTip = "{MouseLeft} Toggle metronome while song is playing";
-                buttons[(int)ButtonType.Machine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
-                buttons[(int)ButtonType.Follow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift}{F}";
-                buttons[(int)ButtonType.Help].ToolTip      = "{MouseLeft} Online documentation";
-
-                specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(32) };
-                specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(38) };
-                specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = ScaleForWindow(38) };
-                specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = ScaleForWindow(28) };
-                specialCharacters["ForceCtrl"]  = new TooltipSpecialCharacter { Width = ScaleForWindow(28) };
-                specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["Tab"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(38) };
-                specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["F1"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F2"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F3"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F4"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F5"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F6"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F7"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F8"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F9"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
-                specialCharacters["F10"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["F11"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["F12"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
-                specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = ScaleForWindow(2) };
-                specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = ScaleForWindow(2) };
-                specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = ScaleForWindow(2) };
-                specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = ScaleForWindow(2) };
+                specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(32) };
+                specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
+                specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
+                specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(28) };
+                specialCharacters["ForceCtrl"]  = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(28) };
+                specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["Tab"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
+                specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["F1"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F2"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F3"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F4"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F5"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F6"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F7"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F8"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F9"]         = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(18) };
+                specialCharacters["F10"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["F11"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["F12"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
+                specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = DpiScaling.ScaleForWindow(2) };
+                specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = DpiScaling.ScaleForWindow(2) };
+                specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = DpiScaling.ScaleForWindow(2) };
+                specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = DpiScaling.ScaleForWindow(2) };
                 specialCharacters["Warning"]    = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Warning };
 
                 for (char i = 'A'; i <= 'Z'; i++)
@@ -420,26 +398,48 @@ namespace FamiStudio
                         c.Width = bmpSpecialCharacters[(int)c.BmpIndex].ElementSize.Width;
                     c.Height = tooltipSpecialCharSizeY;
                 }
+
+                // CTRLTODO : Add a Settings.Change event, update tooltip when settings changed.
+                UpdateTooltips();
             }
 
             UpdateButtonLayout();
         }
 
-        protected override void OnRenderTerminated()
+        private void UpdateTooltips()
         {
-            specialCharacters.Clear();
+            buttons[(int)ButtonType.New].ToolTip       = $"<MouseLeft> New Project {Settings.FileNewShortcut.TooltipString}";
+            buttons[(int)ButtonType.Open].ToolTip      = $"<MouseLeft> Open Project {Settings.FileOpenShortcut.TooltipString}\n<MouseRight> Recent Files...";
+            buttons[(int)ButtonType.Save].ToolTip      = $"<MouseLeft> Save Project {Settings.FileSaveShortcut.TooltipString}\n<MouseRight> More Options...";
+            buttons[(int)ButtonType.Export].ToolTip    = $"<MouseLeft> Export to various formats {Settings.FileExportShortcut.TooltipString}\n<MouseRight> More Options...";
+            buttons[(int)ButtonType.Copy].ToolTip      = $"<MouseLeft> Copy selection {Settings.CopyShortcut.TooltipString}";
+            buttons[(int)ButtonType.Cut].ToolTip       = $"<MouseLeft> Cut selection {Settings.CutShortcut.TooltipString}";
+            buttons[(int)ButtonType.Paste].ToolTip     = $"<MouseLeft> Paste {Settings.PasteShortcut.TooltipString}\n<MouseRight> More Options...";
+            buttons[(int)ButtonType.Undo].ToolTip      = $"<MouseLeft> Undo {Settings.UndoShortcut.TooltipString}";
+            buttons[(int)ButtonType.Redo].ToolTip      = $"<MouseLeft> Redo {Settings.RedoShortcut.TooltipString}";
+            buttons[(int)ButtonType.Transform].ToolTip = $"<MouseLeft> Perform cleanup and various operations";
+            buttons[(int)ButtonType.Config].ToolTip    = $"<MouseLeft> Edit Application Settings";
+            buttons[(int)ButtonType.Play].ToolTip      = $"<MouseLeft> Play/Pause {Settings.PlayShortcut.TooltipString} - <MouseRight> More Options...";
+            buttons[(int)ButtonType.Rewind].ToolTip    = $"<MouseLeft> Rewind {Settings.SeekStartShortcut.TooltipString}\nRewind to beginning of current pattern {Settings.SeekStartPatternShortcut.TooltipString}";
+            buttons[(int)ButtonType.Rec].ToolTip       = $"<MouseLeft> Toggles recording mode {Settings.RecordingShortcut.TooltipString}\nAbort recording <Esc>";
+            buttons[(int)ButtonType.Loop].ToolTip      = $"<MouseLeft> Toggle Loop Mode (Song, Pattern/Selection)";
+            buttons[(int)ButtonType.Qwerty].ToolTip    = $"<MouseLeft> Toggle QWERTY keyboard piano input {Settings.QwertyShortcut.TooltipString}";
+            buttons[(int)ButtonType.Metronome].ToolTip = $"<MouseLeft> Toggle metronome while song is playing";
+            buttons[(int)ButtonType.Machine].ToolTip   = $"<MouseLeft> Toggle between NTSC/PAL playback mode";
+            buttons[(int)ButtonType.Follow].ToolTip    = $"<MouseLeft> Toggle follow mode {Settings.FollowModeShortcut.TooltipString}";
+            buttons[(int)ButtonType.Help].ToolTip      = $"<MouseLeft> Online documentation";
         }
 
         private void UpdateButtonLayout()
         {
-            if (!IsRenderInitialized)
+            if (ParentContainer == null)
                 return;
 
             if (Platform.IsDesktop)
             {
                 // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
-                var hideLessImportantButtons = Width < 1420 * WindowScaling;
-                var hideOscilloscope         = Width < 1250 * WindowScaling;
+                var hideLessImportantButtons = Width < 1420 * DpiScaling.Window;
+                var hideOscilloscope         = Width < 1250 * DpiScaling.Window;
 
                 var x = 0;
 
@@ -453,6 +453,7 @@ namespace FamiStudio
                     if (i == (int)ButtonType.Help)
                     {
                         btn.Rect = new Rectangle(Width - buttonSize, 0, buttonSize, buttonSize);
+                        helpButtonX = btn.Rect.Left;
                     }
                     else
                     {
@@ -537,16 +538,19 @@ namespace FamiStudio
                 oscilloscopePosX = buttonIconPosX + oscCol * buttonSize;
                 oscilloscopePosY = buttonIconPosX + oscRow * buttonSize;
 
-                timeCodeFont = FontResources.GetBestMatchingFontByWidth("00:00:000", timecodeOscSizeX, false);
+                timeCodeFont = Fonts.GetBestMatchingFontByWidth("00:00:000", timecodeOscSizeX, false);
             }
         }
 
         protected override void OnResize(EventArgs e)
         {
-            expandRatio = 0.0f;
-            expanding = false;
-            closing = false;
-            UpdateButtonLayout();
+            if (!ticking)
+            {
+                expandRatio = 0.0f;
+                expanding = false;
+                closing = false;
+                UpdateButtonLayout();
+            }
         }
 
         public void LayoutChanged()
@@ -555,10 +559,17 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        public override bool HitTest(int winX, int winY)
+        {
+            // Eat all the input when expanded.
+            return Platform.IsMobile && IsExpanded || base.HitTest(winX, winY);
+        }
+
         public void SetToolTip(string msg, bool red = false)
         {
             if (tooltip != msg || red != redTooltip)
             {
+                Debug.Assert(msg == null || (!msg.Contains('{') && !msg.Contains('}'))); // Temporary until i migrated everything.
                 tooltip = msg;
                 redTooltip = red;
                 MarkDirty();
@@ -571,6 +582,7 @@ namespace FamiStudio
             {
                 var prevRatio = expandRatio;
 
+                ticking = true;
                 if (expanding)
                 {
                     delta *= 6.0f;
@@ -580,6 +592,7 @@ namespace FamiStudio
                     if (expandRatio == 1.0f)
                         expanding = false;
                     MarkDirty();
+                    ParentTopContainer.UpdateLayout();
                 }
                 else if (closing)
                 {
@@ -590,7 +603,9 @@ namespace FamiStudio
                     if (expandRatio == 0.0f)
                         closing = false;
                     MarkDirty();
+                    ParentTopContainer.UpdateLayout();
                 }
+                ticking = false;
             }
         }
 
@@ -635,7 +650,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuSave", "Save As...", "Save project to another file {Ctrl}{Shift}{S}", () => { App.SaveProjectAsync(true); }),
+                new ContextMenuOption("MenuSave", "Save As...", $"Save project to another file {Settings.FileSaveAsShortcut.TooltipString}", () => { App.SaveProjectAsync(true); }),
             });
         }
 
@@ -648,7 +663,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuExport", "Repeat Last Export", "Repeats the previous export {Ctrl}{Shift}{E}", () => { App.RepeatLastExport(); }),
+                new ContextMenuOption("MenuExport", "Repeat Last Export", $"Repeats the previous export {Settings.FileExportRepeatShortcut.TooltipString}", () => { App.RepeatLastExport(); }),
             });
         }
 
@@ -693,7 +708,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuStar", "Paste Special...", "Paste with advanced options {Ctrl}{Shift}{V}", () => { App.PasteSpecial(); }),
+                new ContextMenuOption("MenuStar", "Paste Special...", $"Paste with advanced options {Settings.PasteSpecialShortcut.TooltipString}", () => { App.PasteSpecial(); }),
             });
         }
 
@@ -762,12 +777,12 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuPlay", "Play From Beginning of Song", "Plays from the start of the song {Shift}{Space}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
-                new ContextMenuOption("MenuPlay", "Play From Beginning of Current Pattern", "Plays from the start of the current pattern {ForceCtrl}{Space}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
-                new ContextMenuOption("MenuPlay", "Play From Loop Point", "Plays from the loop point {Ctrl}{Shift}{Space}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
-                new ContextMenuOption("Regular Speed",  "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore ),
-                new ContextMenuOption("Half Speed",     "Sets the play rate to 50%",  () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
-                new ContextMenuOption("Quarter Speed",  "Sets the play rate to 25%",  () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                new ContextMenuOption("MenuPlay", "Play From Beginning of Song", $"Plays from the start of the song {Settings.PlayFromStartShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
+                new ContextMenuOption("MenuPlay", "Play From Beginning of Current Pattern", $"Plays from the start of the current pattern {Settings.PlayFromPatternShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
+                new ContextMenuOption("MenuPlay", "Play From Loop Point", $"Plays from the loop point {Settings.PlayFromLoopShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
+                new ContextMenuOption("Regular Speed", "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore ),
+                new ContextMenuOption("Half Speed",    "Sets the play rate to 50%",  () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                new ContextMenuOption("Quarter Speed", "Sets the play rate to 25%",  () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
             });
         }
 
@@ -1002,10 +1017,10 @@ namespace FamiStudio
 
         private void RenderWarningAndTooltip(CommandList c)
         {
-            var scaling = WindowScaling;
+            var scaling = DpiScaling.Window;
             var message = tooltip;
             var messageColor = redTooltip ? warningColor : Theme.LightGreyColor2;
-            var messageFont = FontResources.FontMedium;
+            var messageFont = Fonts.FontMedium;
 
             // Tooltip
             if (!string.IsNullOrEmpty(message))
@@ -1015,7 +1030,7 @@ namespace FamiStudio
 
                 for (int j = 0; j < lines.Length; j++)
                 {
-                    var splits = lines[j].Split(new char[] { '{', '}' }, StringSplitOptions.RemoveEmptyEntries);
+                    var splits = lines[j].Split(new char[] { '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
                     var posX = Width - 40 * scaling;
 
                     for (int i = splits.Length - 1; i >= 0; i--)
@@ -1033,7 +1048,6 @@ namespace FamiStudio
                             else
                             {
                                 if (Platform.IsMacOS && str == "Ctrl") str = "Cmd";
-                                if (str == "ForceCtrl") str = "Ctrl";
                                 
                                 posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                                 c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageColor);
@@ -1057,10 +1071,10 @@ namespace FamiStudio
         {
             if (Platform.IsMobile && IsExpanded)
             {
-                c.Transform.GetOrigin(out var ox, out var oy);
-                var fullscreenRect = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);
-                fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, Color.FromArgb(expandRatio * 0.6f, Color.Black));
+                if (IsLandscape)
+                    c.FillRectangle(width, 0, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
+                else
+                    c.FillRectangle(0, height, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
             }
         }
 
@@ -1089,21 +1103,21 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var c = g.CreateCommandList(); // Main
+            var c = g.DefaultCommandList;
+            var o = g.OverlayCommandList;
 
-            RenderShadow(c);
+            RenderShadow(o);
             RenderBackground(c);
             RenderButtons(c);
             RenderTimecode(c, timecodePosX, timecodePosY, timecodeOscSizeX, timecodeOscSizeY);
             RenderOscilloscope(c, oscilloscopePosX, oscilloscopePosY, timecodeOscSizeX, timecodeOscSizeY);
 
-            g.DrawCommandList(c);
-
             if (Platform.IsDesktop)
             {
-                var ct = g.CreateCommandList(); // Tooltip (clipped)
-                RenderWarningAndTooltip(ct);
-                g.DrawCommandList(ct, new Rectangle(lastButtonX, 0, Width, Height));
+                c.PushClipRegion(lastButtonX, 0, helpButtonX - lastButtonX, Height);
+                RenderBackground(c);
+                RenderWarningAndTooltip(c);
+                c.PopClipRegion();
             }
             else
             {
@@ -1134,7 +1148,7 @@ namespace FamiStudio
                 float scaleY = sy / -2; // D3D is upside down compared to how we display waves typically.
 
                 c.PushTransform(x, y + sy / 2, scaleX, scaleY);
-                c.DrawGeometry(oscilloscopeGeometry, Theme.LightGreyColor2, 1, true);
+                c.DrawNiceSmoothLine(oscilloscopeGeometry, Theme.LightGreyColor2);
                 c.PopTransform();
             }
             else
@@ -1149,7 +1163,7 @@ namespace FamiStudio
                 Utils.SplitVersionNumber(Platform.ApplicationVersion, out var betaNumber);
 
                 if (betaNumber > 0)
-                    c.DrawText($"BETA {betaNumber}", FontResources.FontSmall, x + 4, y + 4, Theme.LightRedColor);
+                    c.DrawText($"BETA {betaNumber}", Fonts.FontSmall, x + 4, y + 4, Theme.LightRedColor);
             }
 
             c.DrawRectangle(x, y, x + sx, y + sy, Theme.LightGreyColor2);
@@ -1210,7 +1224,11 @@ namespace FamiStudio
 
             if (left)
             {
-                if (IsPointInTimeCode(e.X, e.Y))
+                if (Platform.IsMobile && !ClientRectangle.Contains(e.X, e.Y))
+                {
+                    StartClosing();
+                }
+                else if (IsPointInTimeCode(e.X, e.Y))
                 {
                     Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
                     MarkDirty();

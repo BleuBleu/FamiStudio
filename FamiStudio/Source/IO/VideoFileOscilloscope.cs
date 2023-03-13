@@ -36,21 +36,9 @@ namespace FamiStudio
                         }
                         else if (colorMode != OscilloscopeColorType.None)
                         {
-                            if (channels[j].channel.Type == ChannelType.Dpcm)
+                            if (note.Instrument != null && colorMode == OscilloscopeColorType.Instruments)
                             {
-                                if (colorMode == OscilloscopeColorType.InstrumentsAndSamples)
-                                {
-                                    var mapping = channels[j].channel.Song.Project.GetDPCMMapping(note.Value);
-                                    if (mapping != null)
-                                        color = mapping.Sample.Color;
-                                }
-                            }
-                            else
-                            {
-                                if (note.Instrument != null && (colorMode == OscilloscopeColorType.Instruments || colorMode == OscilloscopeColorType.InstrumentsAndSamples))
-                                {
-                                    color = note.Instrument.Color;
-                                }
+                                color = note.Instrument.Color;
                             }
                         }
 
@@ -120,8 +108,8 @@ namespace FamiStudio
             // Tweak some cosmetic stuff that depends on resolution.
             var smallChannelText = channelResY < 128;
             var font = lineThickness > 1 ?
-                (smallChannelText ? fontResources.FontMediumBold : fontResources.FontVeryLargeBold) : 
-                (smallChannelText ? fontResources.FontMedium     : fontResources.FontVeryLarge);
+                (smallChannelText ? fonts.FontMediumBold : fonts.FontVeryLargeBold) : 
+                (smallChannelText ? fonts.FontMedium     : fonts.FontVeryLarge);
             var textOffsetY = smallChannelText ? 1 : 4;
             var channelLineWidth = resY >= 720 ? 5 : 3;
 
@@ -131,17 +119,16 @@ namespace FamiStudio
             return LaunchEncoderLoop((f) =>
             {
                 var frame = metadata[f];
+                var c = videoGraphics.DefaultCommandList;
 
-                videoGraphics.Clear(Theme.DarkGreyColor2);
-
-                var cmd = videoGraphics.CreateCommandList();
+                c.PushClipRegion(0, 0, videoResX, videoResY);
 
                 // Draw gradients.
                 for (int i = 0; i < numRows; i++)
                 {
-                    cmd.PushTranslation(0, i * channelResY);
-                    cmd.FillRectangleGradient(0, 0, videoResX, channelResY, Color.Black, Color.Transparent, true, channelResY / 2);
-                    cmd.PopTransform();
+                    c.PushTranslation(0, i * channelResY);
+                    c.FillRectangleGradient(0, 0, videoResX, channelResY, Color.Black, Color.Transparent, true, channelResY / 2);
+                    c.PopTransform();
                 }
 
                 // Channel names + oscilloscope
@@ -160,28 +147,26 @@ namespace FamiStudio
                     // Oscilloscope
                     var oscilloscope = UpdateOscilloscope(s, f);
 
-                    cmd.PushTransform(channelPosX0, channelPosY0 + channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
-                    cmd.DrawGeometry(oscilloscope, frame.channelData[i].color, lineThickness, true);
-                    cmd.PopTransform();
+                    c.PushTransform(channelPosX0, channelPosY0 + channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
+                    c.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, lineThickness);
+                    c.PopTransform();
 
                     // Icons + text
                     var channelIconPosX = channelPosX0 + s.icon.Size.Width / 2;
                     var channelIconPosY = channelPosY0 + s.icon.Size.Height / 2;
 
-                    cmd.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.icon.Size.Width - 1, channelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
-                    cmd.DrawBitmap(s.icon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
-                    cmd.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, Theme.LightGreyColor1);
-
-                    ConditionalFlushCommandList(ref cmd);
+                    c.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.icon.Size.Width - 1, channelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
+                    c.DrawBitmap(s.icon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
+                    c.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, Theme.LightGreyColor1);
                 }
 
                 // Grid lines
                 for (int i = 1; i < numRows; i++)
-                    cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
+                    c.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
                 for (int i = 1; i < numColumns; i++)
-                    cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
+                    c.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
 
-                videoGraphics.DrawCommandList(cmd);
+                c.PopClipRegion();
             });
         }
     }
@@ -190,14 +175,12 @@ namespace FamiStudio
     {
         public const int None = 0;
         public const int Instruments = 1;
-        public const int InstrumentsAndSamples = 2;
-        public const int Channel = 3;
+        public const int Channel = 2;
 
         public static readonly string[] Names =
         {
             "None",
             "Instruments",
-            "Instruments and Samples",
             "Channel (First pattern color)"
         };
 

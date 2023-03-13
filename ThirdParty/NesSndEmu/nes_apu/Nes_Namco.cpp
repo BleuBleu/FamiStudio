@@ -34,7 +34,8 @@ void Nes_Namco::reset()
 	delay = 0;
 	last_amp = 0;
 	last_time = 0;
-	
+	mix = true;
+
 	int i;
 	for ( i = 0; i < reg_count; i++ )
 	{
@@ -132,10 +133,19 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 			osc.trigger = trigger_none;
 		}
 
-		float sum = 0.0f;
-		for (int i = osc_count - active_oscs; i < osc_count; i++)
-			sum += oscs[i].sample;
-		int sample = (int)(sum / min(6, max(1, active_oscs)) + 0.5f); 
+		int sample;
+
+		if (mix)
+		{
+			float sum = 0.0f;
+			for (int i = osc_count - active_oscs; i < osc_count; i++)
+				sum += oscs[i].sample;
+			sample = (int)(sum / min(6, max(1, active_oscs)) + 0.5f); 
+		}
+		else
+		{
+			sample = osc.sample;
+		}
 
 		// output impulse if amplitude changed
 		int delta = sample - last_amp;

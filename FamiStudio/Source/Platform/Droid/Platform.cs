@@ -24,6 +24,7 @@ namespace FamiStudio
         private static Toast    lastToast;
         private static DateTime lastToastTime = DateTime.MinValue;
         private static string   lastToastText;
+        private static int      glThreadId;
         
         private static byte[] internalClipboardData;
 
@@ -57,10 +58,12 @@ namespace FamiStudio
         public static string UserProjectsDirectory => Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
         public static string SettingsDirectory     => System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
         public static string ApplicationVersion    => Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        public static bool IsPortableMode          => false;
-
+        
         public const string DllPrefix = "lib";
         public const string DllExtension = ".so";
+
+        public const  bool IsPortableMode = false;
+        public static bool ThreadOwnsGLContext => glThreadId == Thread.CurrentThread.ManagedThreadId;
 
         public static int GetOutputAudioSampleSampleRate()
         {
@@ -147,25 +150,25 @@ namespace FamiStudio
             return Path.Combine(shareDir, filename);
         }
 
-        public static string ShowSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string[] ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
+        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string ShowBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
+        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;
@@ -211,6 +214,11 @@ namespace FamiStudio
                     VibrationEffect.CreateOneShot(20, 128);
                 v.Vibrate(fx);
             }
+        }
+
+        public static void ForceScreenOn(bool on)
+        {
+            FamiStudioWindow.Instance.ForceScreenOn(on);
         }
 
         public static void ShowToast(FamiStudioWindow win, string message, bool longDuration = false, Action click = null)
@@ -277,6 +285,11 @@ namespace FamiStudio
 
         public static void ClearClipboardString()
         {
+        }
+
+        public static void AcquireGLContext()
+        {
+            glThreadId = Thread.CurrentThread.ManagedThreadId;
         }
 
         public const bool IsMobile  = true;

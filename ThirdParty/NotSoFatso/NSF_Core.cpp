@@ -2413,6 +2413,10 @@ int CNSFCore::GetState(int channel, int state, int sub)
 				{
 					return mWave_TND.bDMCLastDeltaWrite;
 				}
+				case STATE_DPCMACTIVE:
+				{
+					return mWave_TND.bDMCActive;
+				}
 			}
 			break;
 		}
@@ -2465,7 +2469,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 				case STATE_VRC7PATCH:    return (VRC7Chan[2][idx] >> 4) & 0xF;
 				case STATE_VRC7PATCHREG: return (VRC7Instrument[0][sub]);
 				case STATE_VRC7OCTAVE:   return (VRC7Chan[1][idx] >> 1) & 0x07;
-				case STATE_VRC7TRIGGER:  return (VRC7Triggered[idx]);
+				case STATE_VRC7TRIGGER:  return (VRC7Chan[1][idx] >> 4) & 0x01;
 				case STATE_VRC7SUSTAIN:  return (VRC7Chan[1][idx] >> 5) & 0x01;
 			}
 		}

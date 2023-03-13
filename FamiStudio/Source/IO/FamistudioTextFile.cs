@@ -82,22 +82,6 @@ namespace FamiStudio
                 lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
             }
 
-            // DPCM mappings
-            for (int i = 0; i < project.SamplesMapping.Length; i++)
-            {
-                var mapping = project.SamplesMapping[i];
-
-                if (mapping != null)
-                {
-                    var mappingStr = $"\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(i + Note.DPCMNoteMin))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}";
-
-                    if (mapping.OverrideDmcInitialValue)
-                        mappingStr += $"{GenerateAttribute("DmcInitialValue", mapping.DmcInitialValueDiv2)}";
-
-                    lines.Add(mappingStr);
-                }
-            }
-
             // Instruments
             foreach (var instrument in project.Instruments)
             {
@@ -112,7 +96,7 @@ namespace FamiStudio
                 var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}";
                 if (instrument.IsExpansionInstrument)
                 {
-                   instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[instrument.Expansion]);
+                    instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[instrument.Expansion]);
 
                     if (instrument.IsFds)
                     {
@@ -152,6 +136,24 @@ namespace FamiStudio
                         {
                             for (int i = 0; i < 31; i++)
                                 instrumentLine += GenerateAttribute($"EpsmReg{i}", instrument.EpsmPatchRegs[i]);
+                        }
+                    }
+                }
+                else if (instrument.HasAnyMappedSamples)
+                {
+                    foreach (var kv in instrument.SamplesMapping)
+                    {
+                        var note = kv.Key;
+                        var mapping = kv.Value;
+
+                        if (mapping != null && mapping.Sample != null)
+                        {
+                            var mappingStr = $"\t\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(kv.Key))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}";
+
+                            if (mapping.OverrideDmcInitialValue)
+                                mappingStr += $"{GenerateAttribute("DmcInitialValue", mapping.DmcInitialValueDiv2)}";
+
+                            lines.Add(mappingStr);
                         }
                     }
                 }
@@ -415,20 +417,6 @@ namespace FamiStudio
                             var sample = project.CreateDPCMSampleFromDmcData(parameters["Name"], data);
                             break;
                         }
-                        case "DPCMMapping":
-                        {
-                            var pitch = 15;
-                            var loop = false;
-                            if (parameters.TryGetValue("Pitch", out var pitchStr)) pitch = int.Parse(pitchStr);
-                            if (parameters.TryGetValue("Loop", out var loopStr)) loop = bool.Parse(loopStr);
-                            var mapping = project.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop);
-                            if (parameters.TryGetValue("DmcInitialValue", out var dmcInitialStr))
-                            {
-                                mapping.OverrideDmcInitialValue = true;
-                                mapping.DmcInitialValueDiv2 = byte.Parse(dmcInitialStr);
-                            }
-                            break;
-                        }
                         case "Instrument":
                         {
                             var instrumentExp = ExpansionType.None;
@@ -482,9 +470,31 @@ namespace FamiStudio
                                     }
                                 }
                             }
+                            else if (instrument.IsRegular)
+                            {
+
+                            }
 
                             break;
                         }
+                        case "DPCMMapping":
+                        {
+                            if (instrument != null && instrument.IsRegular)
+                            {
+                                var pitch = 15;
+                                var loop = false;
+                                if (parameters.TryGetValue("Pitch", out var pitchStr)) pitch = int.Parse(pitchStr);
+                                if (parameters.TryGetValue("Loop", out var loopStr)) loop = bool.Parse(loopStr);
+                                var mapping = instrument.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop);
+                                if (parameters.TryGetValue("DmcInitialValue", out var dmcInitialStr))
+                                {
+                                    mapping.OverrideDmcInitialValue = true;
+                                    mapping.DmcInitialValueDiv2 = byte.Parse(dmcInitialStr);
+                                }
+                            }
+                            break;
+                        }
+
                         case "Arpeggio":
                         {
                             arpeggio = project.CreateArpeggio(parameters["Name"]);
@@ -654,7 +664,8 @@ namespace FamiStudio
                     inst.PerformPostLoadActions();
                 }
 
-                project.SortEverything(false);
+                project.AutoSortSongs = false;
+                project.ConditionalSortEverything();
                 project.ValidateIntegrity();
 
                 ResetCulture();

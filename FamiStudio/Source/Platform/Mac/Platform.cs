@@ -53,7 +53,7 @@ namespace FamiStudio
             return extensions.Distinct().ToArray();
         }
 
-        public static unsafe string[] ShowPlatformOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
+        public static unsafe string[] ShowPlatformOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
         {
             var extensionList = GetExtensionList(extensions);
 
@@ -63,7 +63,7 @@ namespace FamiStudio
             return filenames;
         }
 
-        public static unsafe string ShowPlatformSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static unsafe string ShowPlatformSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             var extensionList = GetExtensionList(extensions);
 
@@ -73,7 +73,7 @@ namespace FamiStudio
             return filename;
         }
 
-        public static string ShowPlatformBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
+        public static string ShowPlatformBrowseFolderDialog(string title, ref string defaultPath)
         {
             var filename = MacUtils.ShowBrowseFolderDialog(title, ref defaultPath);
             if (!string.IsNullOrEmpty(filename))
@@ -103,7 +103,7 @@ namespace FamiStudio
 
         public static void Beep()
         {
-            SystemSounds.Beep.Play();
+            MacUtils.Beep();
         }
 
         public static int GetCursorSize(float scaling)

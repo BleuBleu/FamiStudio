@@ -136,20 +136,21 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_DPCMLOOP           6
 #define STATE_DPCMPITCH          7
 #define STATE_DPCMCOUNTER        8
-#define STATE_FDSWAVETABLE       9
-#define STATE_FDSMODULATIONTABLE 10
-#define STATE_FDSMODULATIONDEPTH 11
-#define STATE_FDSMODULATIONSPEED 12
-#define STATE_FDSMASTERVOLUME    13
-#define STATE_VRC7PATCH          14
-#define STATE_VRC7PATCHREG       15
-#define STATE_VRC7OCTAVE         16
-#define STATE_VRC7TRIGGER        17
-#define STATE_VRC7SUSTAIN        18
-#define STATE_N163WAVEPOS        19
-#define STATE_N163WAVESIZE       20
-#define STATE_N163WAVE           21
-#define STATE_N163NUMCHANNELS    22
+#define STATE_DPCMACTIVE         9
+#define STATE_FDSWAVETABLE       10
+#define STATE_FDSMODULATIONTABLE 11
+#define STATE_FDSMODULATIONDEPTH 12
+#define STATE_FDSMODULATIONSPEED 13
+#define STATE_FDSMASTERVOLUME    14
+#define STATE_VRC7PATCH          15
+#define STATE_VRC7PATCHREG       16
+#define STATE_VRC7OCTAVE         17
+#define STATE_VRC7TRIGGER        18
+#define STATE_VRC7SUSTAIN        19
+#define STATE_N163WAVEPOS        20
+#define STATE_N163WAVESIZE       21
+#define STATE_N163WAVE           22
+#define STATE_N163NUMCHANNELS    23
 
 #include <math.h>
 
@@ -386,7 +387,6 @@ protected:
 	BYTE*		pVRC7Buffer;			//pointer to the position to write VRC7 samples
 	void*		pFMOPL;
 	BYTE		VRC7Chan[3][6];
-	char		VRC7Triggered[6];       // 0 = nothing, 1 = triggered, -1 = released.
 	BYTE		bVRC7_FadeChanged;
 	BYTE		bVRC7Inv[6];
 

@@ -7,7 +7,7 @@ using Rectangle = System.Drawing.Rectangle;
 
 namespace FamiStudio
 {
-    public class QuickAccessBar : Control
+    public class QuickAccessBar : Container
     {
         // All of these were calibrated at 1080p and will scale up/down from there.
         const int DefaultNavButtonSize    = 120;
@@ -147,12 +147,9 @@ namespace FamiStudio
 
         public override bool WantsFullScreenViewport => true;
 
-        public QuickAccessBar(FamiStudioWindow win) : base(win)
+        protected override void OnAddedToContainer()
         {
-        }
-
-        protected override void OnRenderInitialized(Graphics g)
-        {
+            var g= ParentWindow.Graphics;
             bmpSequencer = g.GetBitmapAtlasRef("Sequencer");
             bmpPianoRoll = g.GetBitmapAtlasRef("PianoRoll");
             bmpProjectExplorer = g.GetBitmapAtlasRef("ProjectExplorer");
@@ -187,16 +184,16 @@ namespace FamiStudio
             var screenSize = Platform.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
-            buttonFont      = scale > 1.2f ? FontResources.FontSmall : FontResources.FontVerySmall;
-            buttonSize      = ScaleCustom(DefaultButtonSize, scale);
-            buttonSizeNav   = ScaleCustom(DefaultNavButtonSize, scale);
-            buttonIconPos1  = ScaleCustom(DefaultIconPos1, scale);
-            buttonIconPos2  = ScaleCustom(DefaultIconPos2, scale);
-            textPosTop      = ScaleCustom(DefaultTextPosTop, scale);
-            listItemSize    = ScaleCustom(DefaultListItemSize, scale);
-            listIconPos     = ScaleCustom(DefaultListIconPos, scale);
-            scrollBarSizeX  = ScaleCustom(DefaultScrollBarSizeX, scale);
-            iconScaleFloat  = ScaleCustomFloat(DefaultIconSize / (float)bmpSnapOn.ElementSize.Width, scale);
+            buttonFont      = scale > 1.2f ? Fonts.FontSmall : Fonts.FontVerySmall;
+            buttonSize      = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
+            buttonSizeNav   = DpiScaling.ScaleCustom(DefaultNavButtonSize, scale);
+            buttonIconPos1  = DpiScaling.ScaleCustom(DefaultIconPos1, scale);
+            buttonIconPos2  = DpiScaling.ScaleCustom(DefaultIconPos2, scale);
+            textPosTop      = DpiScaling.ScaleCustom(DefaultTextPosTop, scale);
+            listItemSize    = DpiScaling.ScaleCustom(DefaultListItemSize, scale);
+            listIconPos     = DpiScaling.ScaleCustom(DefaultListIconPos, scale);
+            scrollBarSizeX  = DpiScaling.ScaleCustom(DefaultScrollBarSizeX, scale);
+            iconScaleFloat  = DpiScaling.ScaleCustomFloat(DefaultIconSize / (float)bmpSnapOn.ElementSize.Width, scale);
         }
 
         protected override void OnResize(EventArgs e)
@@ -207,6 +204,12 @@ namespace FamiStudio
                 StartExpandingList(popupButtonIdx, listItems);
 
             base.OnResize(e);
+        }
+
+        public override bool HitTest(int winX, int winY)
+        {
+            // Eat all the input when expanded.
+            return IsExpanded || base.HitTest(winX, winY);
         }
 
         private void TickFling(float delta)
@@ -236,7 +239,7 @@ namespace FamiStudio
 
         private void UpdateVisibleButtons()
         {
-            if (!IsRenderInitialized)
+            if (ParentWindow == null)
                 return;
 
             var needsLayout = false;
@@ -314,7 +317,7 @@ namespace FamiStudio
 
         private void UpdateButtonLayout()
         {
-            if (!IsRenderInitialized)
+            if (ParentWindow == null)
                 return;
 
             var landscape = IsLandscape;
@@ -364,10 +367,10 @@ namespace FamiStudio
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
-                var size = textPosTop + FontResources.FontMediumBold.MeasureString(item.Text, false) * 5 / 4;
+                var size = textPosTop + Fonts.FontMediumBold.MeasureString(item.Text, false) * 5 / 4;
 
                 if (item.ExtraImage != null)
-                    size += ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
+                    size += DpiScaling.ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
 
                 popupRect.Width = Math.Max(popupRect.Width, size);
             }
@@ -414,7 +417,7 @@ namespace FamiStudio
 
                 if (item.ExtraImage != null)
                 {
-                    var extraIconSize = ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
+                    var extraIconSize = DpiScaling.ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
                     item.ExtraIconX = popupRect.Width - listIconPos - extraIconSize;
                     item.ExtraIconY = y + (listItemSize - extraIconSize) / 2;
                 }
@@ -660,15 +663,6 @@ namespace FamiStudio
             var project = App.Project;
             var channel = App.SelectedChannel;
             var items = new List<ListItem>();
-
-            if (editingChannel && channel.SupportsInstrument(null))
-            {
-                var dpcmItem = new ListItem();
-                dpcmItem.Color = Theme.LightGreyColor1;
-                dpcmItem.Image = bmpExpansions[ExpansionType.None];
-                dpcmItem.Text = "DPCM";
-                items.Add(dpcmItem);
-            }
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {
@@ -994,16 +988,34 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var c = g.CreateCommandList();
+            var c = g.DefaultCommandList;
+            var o = g.OverlayCommandList;
 
             c.Transform.GetOrigin(out var ox, out var oy);
+
+            var listRect = GetExpandedListRect();
+            var screenRect = new Rectangle(Point.Empty, ParentWindow.Size);
+            screenRect.Offset(-(int)ox, -(int)oy);
 
             // Background shadow.
             if (IsExpanded)
             {
-                var fullscreenRect = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);
-                fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, Color.FromArgb(popupRatio * 0.6f, Color.Black));
+                var shadowColor = Color.FromArgb(popupRatio * 0.6f, Color.Black);
+
+                if (IsLandscape)
+                {
+                    o.FillRectangle(screenRect.Left, screenRect.Top, listRect.Left, screenRect.Bottom, shadowColor);
+                    o.FillRectangle(listRect.Left, screenRect.Top, 0, listRect.Top, shadowColor);
+                    o.FillRectangle(listRect.Left, listRect.Bottom, 0, screenRect.Bottom, shadowColor);
+                    o.FillRectangle(0, 0, width, height, shadowColor);
+                }
+                else
+                {
+                    o.FillRectangle(screenRect.Left, screenRect.Top, screenRect.Right, listRect.Top, shadowColor);
+                    o.FillRectangle(screenRect.Left, listRect.Top, listRect.Left, 0, shadowColor);
+                    o.FillRectangle(listRect.Right, listRect.Top, screenRect.Right, 0, shadowColor);
+                    o.FillRectangle(0, 0, width, height, shadowColor);
+                }
             }
 
             // Clear BG.
@@ -1042,15 +1054,18 @@ namespace FamiStudio
             else
                 c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
-            g.DrawCommandList(c);
-
             // List items.
             if (popupButtonIdx >= 0)
-            {
-                c = g.CreateCommandList();
+            {              
+                if (IsLandscape)
+                    screenRect.Width -= width;
+                else
+                    screenRect.Height -= height;
 
-                var rect = GetExpandedListRect();
-                c.PushTranslation(rect.Left, rect.Top - scrollY);
+                screenRect = Rectangle.Intersect(screenRect, listRect);
+
+                c.PushClipRegion(screenRect.Left, screenRect.Top, screenRect.Width, screenRect.Height, false);
+                c.PushTranslation(listRect.Left, listRect.Top - scrollY);
 
                 for (int i = 0; i < listItems.Length; i++)
                 {
@@ -1070,7 +1085,7 @@ namespace FamiStudio
                         c.DrawBitmapAtlas(item.ExtraImage, item.ExtraIconX, item.ExtraIconY, extraOpacity, iconScaleFloat, Color.Black);
                     }
 
-                    c.DrawText(item.Text, i == popupSelectedIdx ? FontResources.FontMediumBold : FontResources.FontMedium, item.TextX, item.TextY, item.TextColor, TextFlags.Middle, 0, listItemSize);
+                    c.DrawText(item.Text, i == popupSelectedIdx ? Fonts.FontMediumBold : Fonts.FontMedium, item.TextX, item.TextY, item.TextColor, TextFlags.Middle, 0, listItemSize);
                 }
 
                 c.PopTransform();
@@ -1079,18 +1094,18 @@ namespace FamiStudio
 
                 if ((Math.Abs(flingVelY) > 0.0f || captureOperation == CaptureOperation.MobilePan) && !scrollBarRect.IsEmpty)
                 {
-                    c.PushTranslation(rect.Left, rect.Top);
+                    c.PushTranslation(listRect.Left, listRect.Top);
                     c.FillRectangle(GetScrollBarRect(), scrollBarColor);
                     c.PopTransform();
                 }
 
                 if (IsLandscape)
-                    rect.Width  = -rect.X;
+                    listRect.Width  = -listRect.X;
                 else
-                    rect.Height = -rect.Y;
+                    listRect.Height = -listRect.Y;
 
-                rect.Offset((int)Math.Round(ox), (int)Math.Round(oy));
-                g.DrawCommandList(c, rect);
+                listRect.Offset((int)Math.Round(ox), (int)Math.Round(oy));
+                c.PopClipRegion();
             }
         }
 

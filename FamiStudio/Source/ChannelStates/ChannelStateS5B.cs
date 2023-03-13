@@ -34,6 +34,20 @@ namespace FamiStudio
                 WriteRegister(NesApu.S5B_DATA, volume);
             }
 
+            // HACK : There are conflicts between N163 registers and S5B register, a N163 addr write
+            // can be interpreted as a S5B data write. To prevent this, we select a dummy register 
+            // for S5B so that these writes will be discarded.
+            //
+            // N163: 
+            //   f800-ffff (addr)
+            //   4800-4fff (data)
+            // S5B:
+            //   c000-e000 (addr)
+            //   f000-ffff (data)
+
+            if ((NesApu.GetAudioExpansions(apuIdx) & NesApu.APU_EXPANSION_MASK_NAMCO) != 0)
+                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_IO_A);
+
             base.UpdateAPU();
         }
     };

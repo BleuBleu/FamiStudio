@@ -249,14 +249,11 @@ namespace FamiStudio
                     byte pitch  = bytes[mappingOffset++];
                     byte delta  = bytes[mappingOffset++];
 
-                    if (project.NoteSupportsDPCM(idx + 1))
-                    {
-                        project.MapDPCMSample(idx + 1, sampleMap[sample - 1], pitch & 0x0f, (pitch & 0x80) != 0);
-                    }
+                    instrument.MapDPCMSample(idx + 1, sampleMap[sample - 1], pitch & 0x0f, (pitch & 0x80) != 0);
                 }
             }
 
-            project.SortInstruments();
+            project.ConditionalSortInstruments();
 
             return instrument;
         }

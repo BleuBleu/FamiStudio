@@ -46,6 +46,11 @@ namespace FamiStudio
             CreateControls(text, buttons);
         }
 
+        protected override void OnShowDialog()
+        {
+            Platform.Beep();
+        }
+
         private void CreateControls(string text, MessageBoxButtons btns)
         {
             var imageName = "MessageInfo";
@@ -63,15 +68,15 @@ namespace FamiStudio
                 tint = Theme.DarkRedColor;
             }
 
-            image = new ImageBox(this, imageName);
+            image = new ImageBox(imageName);
             image.Tint = tint;
             image.Move(margin, margin + titleBarSizeY, imageSize, imageSize);
             AddControl(image);
 
-            label = new Label(this, text);
+            label = new Label(text);
             label.Move(margin * 2 + image.Width, margin + titleBarSizeY, width - margin * 3 - image.Width, label.Height);
-            label.AutosizeWidth();
             AddControl(label);
+            label.AutosizeWidth();
 
             if (label.Width > maxTextSize)
             {
@@ -102,7 +107,7 @@ namespace FamiStudio
             for (int i = results.Length - 1; i >= 0; i--)
             {
                 var result = results[i];
-                var button = new Button(this, ButtonIcons[(int)result], ButtonLabels[(int)result]);
+                var button = new Button(ButtonIcons[(int)result], ButtonLabels[(int)result]);
                 buttons[i] = button;
                 AddControl(button);
 

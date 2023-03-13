@@ -311,7 +311,7 @@ namespace FamiStudio
 
                     var imageView = new ImageView(container.Context);
                     imageView.LayoutParameters = new LinearLayout.LayoutParams(dp36, dp36);
-                    imageView.SetImageBitmap(DroidUtils.LoadTgaBitmapFromResource($"FamiStudio.Resources.{tab.image}@2x.tga"));
+                    imageView.SetImageBitmap(DroidUtils.LoadTgaBitmapFromResource($"FamiStudio.Resources.Atlas.{tab.image}@2x.tga"));
                     imageView.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(container.Context, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
 
                     var textViewLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);

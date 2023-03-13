@@ -30,12 +30,12 @@ namespace FamiStudio
 
                 dialog = new PropertyDialog(win, "MIDI Import", 500);
                 dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 0
-                dialog.Properties.AddNumericUpDown("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 1
+                dialog.Properties.AddNumericUpDown("Measures per pattern:", 2, 1, 4, 1, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 1
                 dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 2
                 dialog.Properties.AddCheckBox("Create PAL project:", false); // 3
                 dialog.Properties.AddCheckBoxList("Expansions :", expNames, new bool[expNames.Length], null); // 4
                 dialog.Properties.AddLabel(null, "Channel mapping:"); // 5
-                dialog.Properties.AddGrid(new[] { new ColumnDesc("NES Channel", 0.25f), new ColumnDesc("MIDI Source", 0.45f, GetSourceNames()), new ColumnDesc("Channel 10 Keys", 0.3f, ColumnType.Button) }, null); // 6
+                dialog.Properties.AddGrid("Channels", new[] { new ColumnDesc("NES Channel", 0.25f), new ColumnDesc("MIDI Source", 0.45f, GetSourceNames()), new ColumnDesc("Channel 10 Keys", 0.3f, ColumnType.Button) }, null); // 6
                 dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, only blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
@@ -249,10 +249,8 @@ namespace FamiStudio
             dialog.Properties.UpdateGrid(6, gridData);
         }
 
-        public Project ShowDialog(FamiStudioWindow parent)
+        public void ShowDialogAsync(FamiStudioWindow parent, Action<Project> action)
         {
-            var project = (Project)null;
-
             if (dialog != null)
             {
                 // This is only ran in desktop and this isnt really async, so its ok.
@@ -266,12 +264,19 @@ namespace FamiStudio
                         var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(2);
                         var pal = expansionMask != ExpansionType.NoneMask ? false : dialog.Properties.GetPropertyValue<bool>(3);
 
-                        project = new MidiFileReader().Load(filename, expansionMask, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
+                        var project = new MidiFileReader().Load(filename, expansionMask, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
+                        action(project);
+                    }
+                    else
+                    {
+                        action(null);
                     }
                 });
             }
-
-            return project;
+            else
+            {
+                action(null);
+            }
         }
     }
 }
