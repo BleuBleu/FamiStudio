@@ -15,7 +15,7 @@ namespace FamiStudio
 
         static Localization()
         {
-            var culture = "fre";
+            var culture = "fre"; // This is a test. Should come from the OS.
 
             stringsEng = new IniFile();
             stringsEng.LoadFromResource("FamiStudio.Resources.Localization.FamiStudio.eng");
