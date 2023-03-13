@@ -27,24 +27,7 @@ namespace FamiStudio
             Max
         };
 
-        string[] ExportFormatNames =
-        {
-            Platform.IsDesktop ? "WAV / MP3 / OGG" : "WAV / MP3",
-            "Video (Piano Roll)",
-            "Video (Oscilloscope)",
-            "NSF",
-            "ROM / FDS",
-            "MIDI",
-            "VGM / Command Log",
-            "FamiStudio Text",
-            "FamiTracker Text",
-            "FamiStudio Music Code",
-            "FamiStudio SFX Code",
-            "FamiTone2 Music Code",
-            "FamiTone2 SFX Code",
-            "Share",
-            ""
-        };
+        LocalizedString[] ExportFormatNames = new LocalizedString[(int)ExportFormat.Max];
 
         string[] ExportIcons =
         {
@@ -195,7 +178,7 @@ namespace FamiStudio
         //const string SingleSongTooltip     = "Select the song to export.";
         //const string SongListTooltip = "Select the songs to export.";
         //const string MachineTooltip        = "The target hardware. PAL is not available when using any audio expansion.";
-                                           
+
         // WAV/MP3 tooltips.               
         const string WavFormatTooltip      = "Audio format to export to. WAV files are uncompressed and sound better, but are much larger.";
         const string SampleRateTooltip     = "The sample rate of the audio to export. Leave to 44100 to get the exact same sound as inside the app.";

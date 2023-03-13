@@ -2,4 +2,18 @@
 SingleSongTooltip=Select the song to export.
 SongListTooltip=Select the songs to export.
 MachineTooltip=The target hardware. PAL is not available when using any audio expansion.
-
+ExportFormatNames_0=WAV / MP3 / OGG
+ExportFormatNames_0_Mobile=WAV / MP3
+ExportFormatNames_1=Video (Piano Roll)
+ExportFormatNames_2=Video (Oscilloscope)
+ExportFormatNames_3=NSF
+ExportFormatNames_4=ROM / FDS
+ExportFormatNames_5=MIDI
+ExportFormatNames_6=VGM / Command Log
+ExportFormatNames_7=FamiStudio Text
+ExportFormatNames_8=FamiTracker Text
+ExportFormatNames_9=FamiStudio Music Code
+ExportFormatNames_10=FamiStudio SFX Code
+ExportFormatNames_11=FamiTone2 Music Code
+ExportFormatNames_12=FamiTone2 SFX Code
+ExportFormatNames_13=Share

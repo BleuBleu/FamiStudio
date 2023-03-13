@@ -29,12 +29,44 @@ namespace FamiStudio
                 if (field.FieldType == typeof(LocalizedString))
                 {
                     var fieldName = $"{char.ToUpper(field.Name[0])}{field.Name.Substring(1)}";
-                    var str = strings.GetString(typeName, fieldName, null);
-                    if (str == null)
-                        str = stringsEng.GetString(typeName, fieldName, "### MISSING ###");
-                    field.SetValue(o, new LocalizedString(str));
+                    field.SetValue(o, new LocalizedString(LocalizeStringWithPlatformOverride(typeName, fieldName)));
+                }
+                else if (field.FieldType == typeof(LocalizedString[]))
+                {
+                    var baseFieldName = $"{char.ToUpper(field.Name[0])}{field.Name.Substring(1)}";
+                    var array = field.GetValue(o) as LocalizedString[];
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        var fieldName = $"{baseFieldName}_{i}";
+                        array[i] = new LocalizedString(LocalizeStringWithPlatformOverride(typeName, fieldName));
+                    }
                 }
             }
+        }
+
+        private static string LocalizeString(string section, string key, bool missing = true)
+        {
+            var str = strings.GetString(section, key, null);
+            if (str == null)
+                str = stringsEng.GetString(section, key, missing ? "### MISSING ###" : null);
+            return str;
+        }
+
+        private static string LocalizeStringWithPlatformOverride(string section, string key)
+        {
+            string str = null;
+
+            if (Platform.IsMobile)
+            {
+                str = LocalizeString(section, key + "_Mobile", false);
+            }
+
+            if (str == null)
+            {
+                str = LocalizeString(section, key);
+            }
+
+            return str;
         }
     }
 

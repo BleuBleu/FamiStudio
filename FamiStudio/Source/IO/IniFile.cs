@@ -49,7 +49,15 @@ namespace FamiStudio
 
             foreach (string line in lines)
             {
-                if (line.StartsWith("["))
+                var trimmedLine = line.Trim();
+
+                // Comments.
+                if (trimmedLine.StartsWith("#") || trimmedLine.StartsWith(";"))
+                {
+                    continue;
+                }
+
+                if (trimmedLine.StartsWith("["))
                 {
                     if (sectionName != "")
                     {
@@ -58,14 +66,14 @@ namespace FamiStudio
                         sectionValues = new Dictionary<string, string>();
                     }
 
-                    sectionName = line.TrimStart('[').TrimEnd(']');
+                    sectionName = trimmedLine.TrimStart('[').TrimEnd(']');
                 }
                 else
                 {
-                    int eq = line.IndexOf('=');
+                    int eq = trimmedLine.IndexOf('=');
                     if (eq >= 0)
                     {
-                        sectionValues.Add(line.Substring(0, eq), line.Substring(eq + 1));
+                        sectionValues.Add(trimmedLine.Substring(0, eq), trimmedLine.Substring(eq + 1));
                     }
                 }
             }
