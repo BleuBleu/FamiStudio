@@ -186,6 +186,7 @@ namespace FamiStudio
             Console.WriteLine($"  -famistudio-asm-seperate-song-pattern:<pattern> : Name pattern to use when exporting songs to seperate files (default:{{project}}_{{song}}).");
             Console.WriteLine($"  -famistudio-asm-seperate-dmc-pattern:<pattern> : DMC filename pattern to use when exporting songs to seperate files (default:{{project}}).");
             Console.WriteLine($"  -famistudio-asm-generate-list : Generate song list include file along with music data (default:disabled).");
+            Console.WriteLine($"  -famistudio-asm-force-dpcm-bankswitch : Forces exporter to assume DPCM bankswitching is used. (default:disabled).");
             Console.WriteLine($"  -famistudio-asm-sfx-mode:<mode> : Target machine for SFX : ntsc, pal or dual (default:project mode).");
             Console.WriteLine($"  -famistudio-asm-sfx-generate-list : Generate sfx list include file along with SFX data (default:disabled).");
             Console.WriteLine($"");
@@ -473,10 +474,10 @@ namespace FamiStudio
             }
         }
 
-        private void FamiTone2MusicExport(string filename, bool famiStudio)
+        private void FamiTone2MusicExport(string filename, bool famistudio)
         {
-            var kernel = famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2;
-            var engineName = famiStudio ? "famistudio" : "famitone2";
+            var kernel = famistudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2;
+            var engineName = famistudio ? "famistudio" : "famitone2";
             var formatString = ParseOption($"{engineName}-asm-format", "nesasm");
 
             var format = AssemblyFormat.NESASM;
@@ -488,7 +489,8 @@ namespace FamiStudio
 
             var extension = format == AssemblyFormat.CA65 ? ".s" : ".asm";
             var seperate = HasOption($"{engineName}-asm-seperate-files");
-            var generateInclude = HasOption($"{engineName}-generate-list");
+            var generateInclude = HasOption($"{engineName}-asm-generate-list");
+            var forceDpcmBankswitch = famistudio && HasOption($"{engineName}-asm-force-dpcm-bankswitch");
 
             if (!seperate && !ValidateExtension(filename, extension))
                 return;
@@ -513,7 +515,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        f.Save(project, new int[] { songId }, format, -1, true, false, songFilename, dpcmFilename, includeFilename, MachineType.Dual); 
+                        f.Save(project, new int[] { songId }, format, -1, true, forceDpcmBankswitch, songFilename, dpcmFilename, includeFilename, MachineType.Dual); 
                     }
                 }
                 else
@@ -523,7 +525,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    f.Save(project, exportSongIds, format, -1, false, false, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
+                    f.Save(project, exportSongIds, format, -1, false, forceDpcmBankswitch, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
                 }
             }
         }
