@@ -175,61 +175,57 @@ namespace FamiStudio
         LocalizedString SongListTooltip;
         LocalizedString MachineTooltip;
 
-        //const string SingleSongTooltip     = "Select the song to export.";
-        //const string SongListTooltip = "Select the songs to export.";
-        //const string MachineTooltip        = "The target hardware. PAL is not available when using any audio expansion.";
-
         // WAV/MP3 tooltips.               
-        const string WavFormatTooltip      = "Audio format to export to. WAV files are uncompressed and sound better, but are much larger.";
-        const string SampleRateTooltip     = "The sample rate of the audio to export. Leave to 44100 to get the exact same sound as inside the app.";
-        const string AudioBitRateTooltip   = "Audio bit rate for compressed formats (MP3/OGG/AAC). Lower bit rates results in smaller files, at the cost of audio quality.";
-        const string LoopModeTooltip       = "Loop the song a certain number of times, or export a specific duration (in seconds).";
-        const string LoopCountTooltip      = "Number of times to loop the song.";
-        const string DurationTooltip       = "Duration to export, in seconds.";
-        const string DelayTooltip          = "Optional audio delay effect that will include an echo of the audio at the specified delay.\n\nHighly recommended to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side.\n\nA value of 15 ms. is a good place to start, set to 0 to turn off.";
-        const string SeperateFilesTooltip  = "If enabled, each channel will be exported to a separate file. Useful for offline mixing.";
-        const string SeperateIntroTooltip  = "If enabled, the intro (the part before the loop point), will be exported to a separate file. Useful if making games.";
-        const string StereoTooltip         = "If enabled, will export stereo audio and enable custom panning for each channel in the grid below.";
-        const string ChannelGridTooltip    = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.";
-        const string ChannelGridTooltipVid = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.\n\nTrigger is the type or algorithm used to align the oscilloscope. Emulation means it will try to use the frequency of the currently playing note. This may not work so well for very low frequency instruments or instruments that rapidly changes their frequencies. Peak Speed will simply look at the shape of the waveform and make an educated guess.";
-        const string ChannelListTooltip    = "Select the channels to export.";
-                                           
+        LocalizedString WavFormatTooltip;
+        LocalizedString SampleRateTooltip;
+        LocalizedString AudioBitRateTooltip;
+        LocalizedString LoopModeTooltip;
+        LocalizedString LoopCountTooltip;
+        LocalizedString DurationTooltip;
+        LocalizedString DelayTooltip;
+        LocalizedString SeperateFilesTooltip;
+        LocalizedString SeperateIntroTooltip;
+        LocalizedString StereoTooltip;
+        LocalizedString ChannelGridTooltip;
+        LocalizedString ChannelGridTooltipVid;
+        LocalizedString ChannelListTooltip;
+
         // Video tooltips.                 
-        const string VideoResTooltip       = "Resolution of the exported video. Higher resolution tend to take longer to render.";
-        const string FpsTooltip            = "Frame rate of the video to export. The first frame rate is for PAL, while the second is for NTSC.";
-        const string VideoBitRateTooltip   = "Video bit rate. Lower bit rates results in smaller files, at the cost of video quality.";
-        const string OscWindowTooltip      = "Number of frames to display in the oscilloscope.";
-        const string OscColumnsTooltip     = "Number of columns in the grid of oscilloscopes.";
-        const string OscThicknessTooltip   = "Thickness of the oscilloscope lines.";
-        const string PianoRollZoomTootip   = "Higher zoom values scrolls faster and shows less far ahead.";
-                                           
+        LocalizedString VideoResTooltip;
+        LocalizedString FpsTooltip;
+        LocalizedString VideoBitRateTooltip;
+        LocalizedString OscWindowTooltip;
+        LocalizedString OscColumnsTooltip;
+        LocalizedString OscThicknessTooltip;
+        LocalizedString PianoRollZoomTootip;
+
         // NSF tooltips                    
-        const string NsfFormatTooltip      = "The type of format to use. NSF is the more widely supported. NSFe adds supports for per-track name and duration.";
-                                           
+        LocalizedString NsfFormatTooltip;
+
         // ROM/FDS tooltips.               
-        const string RomFdsFormatTooltip   = "ROMs are better suited for the original NES or Famicom. FDS disks can be played on the Famicom Disk System.";
+        LocalizedString RomFdsFormatTooltip;
 
         // MIDI tooltips
-        const string MidiVelocityTooltip   = "If enabled, values in the volume track will be used as note velocities.";
-        const string MidiPitchTooltip      = "If enabled, slide notes will be exported as pitch wheel MIDI events.";
-        const string MidiPitchRangeTooltip = "The range of the pitch wheel. Larger range can support larger slide notes, but has less precision.";
-        const string MidiInstrumentTooltip = "How to assign MIDI instrument from the FamiStudio project. In 'Instrument' mode, You can map each FamiStudio instrument to a General MIDI instrument. In 'Channel' mode, you simply assign one MIDI instrument for each channel";
-        const string MidiInstGridTooltip   = "The MIDI instruments assignment.";
+        LocalizedString MidiVelocityTooltip;
+        LocalizedString MidiPitchTooltip;
+        LocalizedString MidiPitchRangeTooltip;
+        LocalizedString MidiInstrumentTooltip;
+        LocalizedString MidiInstGridTooltip;
 
         // FamiStudio text tooltips
-        const string DeleteUnusedTooltip   = "If enabled, will delete any unused data (instrument, arpeggio, DPCM sample, etc.) before the export.";
+        LocalizedString DeleteUnusedTooltip;
 
         // Famitone2/Famistudio sound engine tooltips
-        const string FT2AssemblyTooltip    = "The assembler that will be used to assemble/link the code. The 3 main ones are supported.";
-        const string FT2SepFilesTooltip    = "If enabled, each song will be exported to a separate file.";
-        const string FT2SepFilesFmtTooltip = "When using separate files, the format to name each file.";
-        const string FT2DmcFmtTooltip      = "The format of the name of the DMC file. A DMC file will only be generated if the project uses DPCM samples.";
-        const string FT2BankswitchTooltip  = "If enabled, the exported data will assume multiple DPCM banks are used, event if there are not enough samples in the current project to justify it.";
-        const string FT2SongListTooltip    = "If enabled, will generate a .inc file containing information about each songs.";
-        const string FT2SfxSongListTooltip = "If enabled, will generate a .inc file containing information about each sound effect.";
+        LocalizedString FT2AssemblyTooltip;
+        LocalizedString FT2SepFilesTooltip;
+        LocalizedString FT2SepFilesFmtTooltip;
+        LocalizedString FT2DmcFmtTooltip;
+        LocalizedString FT2BankswitchTooltip;
+        LocalizedString FT2SongListTooltip;
+        LocalizedString FT2SfxSongListTooltip;
 
         // Share tooltips.
-        const string ShareTooltip          = "Copy the FamiStudio project to your device's storage, or share it to another application.";
+        LocalizedString ShareTooltip;
 
         private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
         {
@@ -1071,11 +1067,6 @@ namespace FamiStudio
             return lastProjectCrc == ComputeProjectCrc(project);
         }
         
-        //public void DestroyControls()
-        //{
-        //    dialog.DestroyControls();
-        //}
-
         public void Export(bool repeatLast)
         {
             if (Platform.IsDesktop)

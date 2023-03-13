@@ -51,6 +51,9 @@ namespace FamiStudio
             {
                 var trimmedLine = line.Trim();
 
+                if (trimmedLine.Length == 0)
+                    continue;
+
                 // Comments.
                 if (trimmedLine.StartsWith("#") || trimmedLine.StartsWith(";"))
                 {
