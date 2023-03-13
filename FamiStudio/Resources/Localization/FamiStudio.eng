@@ -1,3 +1,7 @@
+[Localization]
+Font=Quicksand-Regular.ttf
+FontBold=Quicksand-Bold.ttf
+
 [ExportDialog]
 
 # General tooltips.

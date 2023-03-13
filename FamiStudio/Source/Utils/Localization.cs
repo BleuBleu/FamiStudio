@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -9,6 +10,9 @@ namespace FamiStudio
         private static IniFile stringsEng;
         private static IniFile strings;
 
+        public static string Font     { get; private set; }
+        public static string FontBold { get; private set; }
+
         static Localization()
         {
             var culture = "fre";
@@ -17,6 +21,11 @@ namespace FamiStudio
             stringsEng.LoadFromResource("FamiStudio.Resources.Localization.FamiStudio.eng");
             strings = new IniFile();
             strings.LoadFromResource($"FamiStudio.Resources.Localization.FamiStudio.{culture}");
+
+            Font     = LocalizeString("Localization", "Font",     false);
+            FontBold = LocalizeString("Localization", "FontBold", false);
+
+            Debug.Assert(Font != null && FontBold != null);
         }
 
         public static void Localize(object o)

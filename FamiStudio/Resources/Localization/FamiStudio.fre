@@ -1,3 +1,7 @@
+[Localization]
+Font=Quicksand-Regular
+FontBold=Quicksand-Bold
+
 [ExportDialog]
 SingleSongTooltip=Selectionnez la chanson a expoter.
 SongListTooltip=Selectionnez les chansons a expoter.
