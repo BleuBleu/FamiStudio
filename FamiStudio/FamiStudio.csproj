@@ -183,6 +183,7 @@
     <Compile Include="Source\Utils\DynamicJsonConverter.cs" />
     <Compile Include="Source\Utils\EpsmUnitTests.cs" />
     <Compile Include="Source\Utils\Gif.cs" />
+    <Compile Include="Source\Utils\Localization.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\Utils\OscilloscopeTriggers.cs" />
@@ -755,6 +756,10 @@
     <EmbeddedResource Include="Resources\Shaders\Desktop\Text.vert" />
   </ItemGroup>  
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Localization\FamiStudio.eng" />
+    <EmbeddedResource Include="Resources\Localization\FamiStudio.fre" />
+  </ItemGroup>  
+    <ItemGroup>
     <Content Include="glfw3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

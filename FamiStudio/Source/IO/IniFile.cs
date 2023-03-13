@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 
 namespace FamiStudio
 {
@@ -12,43 +13,66 @@ namespace FamiStudio
         {
             try
             {
-                var lines = System.IO.File.ReadAllLines(filename);
-                var sectionName = "";
-                var sectionValues = new Dictionary<string, string>();
-
-                foreach (string line in lines)
-                {
-                    if (line.StartsWith("["))
-                    {
-                        if (sectionName != "")
-                        {
-                            iniContent.Add(sectionName, sectionValues);
-                            sectionName = "";
-                            sectionValues = new Dictionary<string, string>();
-                        }
-
-                        sectionName = line.TrimStart('[').TrimEnd(']');
-                    }
-                    else
-                    {
-                        int eq = line.IndexOf('=');
-                        if (eq >= 0)
-                        {
-                            sectionValues.Add(line.Substring(0, eq), line.Substring(eq + 1));
-                        }
-                    }
-                }
-
-                if (sectionName != "")
-                {
-                    iniContent.Add(sectionName, sectionValues);
-                }
-
+                LoadInternal(File.ReadAllLines(filename));
                 return true;
             }
             catch
             {
                 return false;
+            }
+        }
+
+        public bool LoadFromResource(string filename)
+        {
+            try
+            {
+                var str = "";
+                using (Stream stream = typeof(IniFile).Assembly.GetManifestResourceStream(filename))
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    str = reader.ReadToEnd();
+                }
+
+                LoadInternal(str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void LoadInternal(string[] lines)
+        {
+            var sectionName = "";
+            var sectionValues = new Dictionary<string, string>();
+
+            foreach (string line in lines)
+            {
+                if (line.StartsWith("["))
+                {
+                    if (sectionName != "")
+                    {
+                        iniContent.Add(sectionName, sectionValues);
+                        sectionName = "";
+                        sectionValues = new Dictionary<string, string>();
+                    }
+
+                    sectionName = line.TrimStart('[').TrimEnd(']');
+                }
+                else
+                {
+                    int eq = line.IndexOf('=');
+                    if (eq >= 0)
+                    {
+                        sectionValues.Add(line.Substring(0, eq), line.Substring(eq + 1));
+                    }
+                }
+            }
+
+            if (sectionName != "")
+            {
+                iniContent.Add(sectionName, sectionValues);
             }
         }
 

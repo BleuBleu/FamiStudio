@@ -1,0 +1,5 @@
+[ExportDialog]
+SingleSongTooltip=Select the song to export.
+SongListTooltip=Select the songs to export.
+MachineTooltip=The target hardware. PAL is not available when using any audio expansion.
+

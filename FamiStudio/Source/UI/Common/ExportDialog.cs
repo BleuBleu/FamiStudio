@@ -81,6 +81,8 @@ namespace FamiStudio
 
         public unsafe ExportDialog(FamiStudioWindow win)
         {
+            Localization.Localize(this);
+
             dialog = new MultiPropertyDialog(win, "Export Songs", 600, 200);
             dialog.SetVerb("Export");
             //dialog.DestroyControlsOnClose = false;
@@ -186,9 +188,13 @@ namespace FamiStudio
         }
 
         // General tooltips.
-        const string SingleSongTooltip     = "Select the song to export.";
-        const string SongListTooltip       = "Select the songs to export.";
-        const string MachineTooltip        = "The target hardware. PAL is not available when using any audio expansion.";
+        LocalizedString SingleSongTooltip;
+        LocalizedString SongListTooltip;
+        LocalizedString MachineTooltip;
+
+        //const string SingleSongTooltip     = "Select the song to export.";
+        //const string SongListTooltip = "Select the songs to export.";
+        //const string MachineTooltip        = "The target hardware. PAL is not available when using any audio expansion.";
                                            
         // WAV/MP3 tooltips.               
         const string WavFormatTooltip      = "Audio format to export to. WAV files are uncompressed and sound better, but are much larger.";
