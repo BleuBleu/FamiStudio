@@ -18,6 +18,9 @@ namespace FamiStudio
 {
     public class PropertyDialog
     {
+        public delegate bool ValidateDelegate(PropertyPage props);
+        public event ValidateDelegate ValidateProperties;
+
         public delegate void KeyDownDelegate(Dialog dlg, KeyEventArgs e);
         public event KeyDownDelegate DialogKeyDown;
 
@@ -62,6 +65,11 @@ namespace FamiStudio
         public void ShowDialogAsync(Action<DialogResult> callback)
         {
             FamiStudioWindow.Instance.StartPropertyDialogActivity(callback, this);
+        }
+
+        public bool Validate()
+        {
+            return ValidateProperties == null || ValidateProperties.Invoke(Properties);
         }
     }
 
@@ -172,9 +180,12 @@ namespace FamiStudio
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
-            stoppedByUser = true;
-            SetResult(item != null && item.ItemId == ApplyMenuItemId ? Result.Ok : Result.Canceled);
-            Finish();
+            if (dlg.Validate())
+            {
+                stoppedByUser = true;
+                SetResult(item != null && item.ItemId == ApplyMenuItemId ? Result.Ok : Result.Canceled);
+                Finish();
+            }
 
             return base.OnOptionsItemSelected(item);
         }

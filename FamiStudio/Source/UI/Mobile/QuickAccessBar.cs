@@ -1014,7 +1014,7 @@ namespace FamiStudio
                     o.FillRectangle(screenRect.Left, screenRect.Top, screenRect.Right, listRect.Top, shadowColor);
                     o.FillRectangle(screenRect.Left, listRect.Top, listRect.Left, 0, shadowColor);
                     o.FillRectangle(listRect.Right, listRect.Top, screenRect.Right, 0, shadowColor);
-                    o.FillRectangle(0, 0, width, height, shadowColor);
+                    o.FillRectangle(0, 0, screenRect.Right, screenRect.Bottom, shadowColor);
                 }
             }
 
@@ -1060,7 +1060,7 @@ namespace FamiStudio
                 if (IsLandscape)
                     screenRect.Width -= width;
                 else
-                    screenRect.Height -= height;
+                    screenRect.Height -= (screenRect.Height - WindowRectangle.Top);
 
                 screenRect = Rectangle.Intersect(screenRect, listRect);
 
