@@ -6045,6 +6045,7 @@ namespace FamiStudio
                 env.Values[highlightNoteAbsIndex] = (sbyte)Utils.Clamp(env.Values[highlightNoteAbsIndex] + delta, min, max);
             }
 
+            editInstrument.NotifyEnvelopeChanged(editEnvelope, true);
             MarkDirty();
         }
 
