@@ -1,5 +1,4 @@
 Today:
-- Is there any reason now to not allow changing DPI on MacOS??? 
 - Android: Instrument re-ordering
 - Android: Long press sorting PE doesnt work on mobile
 
@@ -18,7 +17,7 @@ Linux:
 Android stuff:
 - Freeze if ask to save change and dont??
 - BUG : Android suspend/pause issues. Null project sometimes.
-- GLTODOs, DPCMTODOs, etc. Review all those.
+- GLTODO, CTRLTODO, NSFTODO, NET5TODO,  etc. Review all those.
 - Reduce PE icon sizes a bit on mobile, or add multi-line.
 
 Testing
