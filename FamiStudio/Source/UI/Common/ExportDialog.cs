@@ -83,7 +83,6 @@ namespace FamiStudio
         {
             dialog = new MultiPropertyDialog(win, "Export Songs", 600, 200);
             dialog.SetVerb("Export");
-            //dialog.DestroyControlsOnClose = false;
             app = win.FamiStudio;
             project = app.Project;
 
@@ -203,7 +202,6 @@ namespace FamiStudio
         const string StereoTooltip         = "If enabled, will export stereo audio and enable custom panning for each channel in the grid below.";
         const string ChannelGridTooltip    = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.";
         const string ChannelGridTooltipVid = "Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.\n\nTrigger is the type or algorithm used to align the oscilloscope. Emulation means it will try to use the frequency of the currently playing note. This may not work so well for very low frequency instruments or instruments that rapidly changes their frequencies. Peak Speed will simply look at the shape of the waveform and make an educated guess.";
-        const string ChannelListTooltip    = "Select the channels to export.";
                                            
         // Video tooltips.                 
         const string VideoResTooltip       = "Resolution of the exported video. Higher resolution tend to take longer to render.";
