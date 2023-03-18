@@ -75,7 +75,8 @@ namespace FamiStudio
         public CommandList BackgroundCommandList => GetCommandList(GraphicsLayer.Background);
         public CommandList DefaultCommandList    => GetCommandList(GraphicsLayer.Default);
         public CommandList ForegroundCommandList => GetCommandList(GraphicsLayer.Foreground);
-        public CommandList OverlayCommandList    => GetCommandList(GraphicsLayer.Overlay);
+        public CommandList OverlayCommandList    => GetCommandList(GraphicsLayer.Overlay1);
+        public CommandList Overlay2CommandList   => GetCommandList(GraphicsLayer.Overlay2);
 
         protected GraphicsBase(bool offscreen)
         {
@@ -144,7 +145,7 @@ namespace FamiStudio
             {
                 if (layerCommandLists[i] != null)
                 { 
-                    DrawCommandList(layerCommandLists[i], i != (int)GraphicsLayer.Overlay);
+                    DrawCommandList(layerCommandLists[i], i < (int)GraphicsLayer.Overlay1);
                 }
             }
 
@@ -484,7 +485,8 @@ namespace FamiStudio
         Background,
         Default,
         Foreground,
-        Overlay,
+        Overlay1, // No depth depth in overlays.
+        Overlay2,
         Count
     };
 

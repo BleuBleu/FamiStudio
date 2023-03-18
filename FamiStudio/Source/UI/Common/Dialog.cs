@@ -242,7 +242,7 @@ namespace FamiStudio
 
             if (ShouldDisplayTooltip())
             {
-                var o = g.OverlayCommandList;
+                var o = g.Overlay2CommandList;
                 var pt = ScreenToControl(CursorPosition);
                 var formPt = pt + new Size(left, top);
                 var ctrl = GetControlAt(left + pt.X, top + pt.Y, out _, out _);
