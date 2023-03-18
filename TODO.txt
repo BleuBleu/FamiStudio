@@ -21,9 +21,8 @@ Android stuff:
 - Weird rectangle in sequencer on android.
 - Lines too thin on android
 - Long press sorting PE doesnt work on mobile
-- Reduce PE icon sizes a bit on mobile.
+- Reduce PE icon sizes a bit on mobile, or multi-line instrument names.
 - Mobile piano just doesnt render.
-- Video export, when autoselecting channels, it only looks at 1st song.
 - BUG ANDROID : Sometimes the layout doesnt refresh or something and the row below the toolbar is not drawn.
 - BUG ANDROID (from spicy in #bug) : Changing N163 values sometimes changes multiple???
 
@@ -155,7 +154,7 @@ Discord
 
 Backlog: 
 =========
-- Volume/effect/envelope scaling, easy one we have context menus.
+- Volume/effect/envelope scaling, easy one we have context menus. https://discord.com/channels/@me/819772561940152321/1086080673137315961
 - Export DMC samples on Mobile.
 - Option to set snapping auto depending on last resize.
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
