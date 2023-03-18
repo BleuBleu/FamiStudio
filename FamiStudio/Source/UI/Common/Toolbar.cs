@@ -1072,9 +1072,9 @@ namespace FamiStudio
             if (Platform.IsMobile && IsExpanded)
             {
                 if (IsLandscape)
-                    c.FillRectangle(width, 0, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
+                    c.FillRectangle(RenderSize, 0, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
                 else
-                    c.FillRectangle(0, height, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
+                    c.FillRectangle(0, RenderSize, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
             }
         }
 
@@ -1106,6 +1106,14 @@ namespace FamiStudio
             var c = g.DefaultCommandList;
             var o = g.OverlayCommandList;
 
+            if (Platform.IsMobile)
+            {
+                if (IsLandscape)
+                    g.PushClipRegion(0, 0, RenderSize, height, false);
+                else
+                    g.PushClipRegion(0, 0, width, RenderSize, false);
+            }
+
             RenderShadow(o);
             RenderBackground(c);
             RenderButtons(c);
@@ -1122,9 +1130,11 @@ namespace FamiStudio
             else
             {
                 if (IsLandscape)
-                    c.DrawLine(Width - 1, 0, Width - 1, Height, Theme.BlackColor);
+                    c.DrawLine(RenderSize - 1, 0, RenderSize - 1, Height, Theme.BlackColor);
                 else
-                    c.DrawLine(0, Height - 1, Width, Height - 1, Theme.BlackColor);
+                    c.DrawLine(0, RenderSize - 1, Width, RenderSize - 1, Theme.BlackColor);
+
+                c.PopClipRegion();
             }
         }
 

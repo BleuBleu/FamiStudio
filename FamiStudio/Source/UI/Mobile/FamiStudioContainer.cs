@@ -92,14 +92,13 @@ namespace FamiStudio
             var landscape          = IsLandscape;
             var quickAccessBarSize = quickAccessBar.LayoutSize;
             var toolbarLayoutSize  = toolbar.LayoutSize;
-            var toolbarRenderSize  = toolbar.RenderSize;
             var pianoLayoutSize    = mobilePianoVisible ? mobilePiano.LayoutSize : 0;
 
             if (landscape)
             {
                 if (!activeControlOnly)
                 {
-                    toolbar.Move(0, 0, toolbarRenderSize, height);
+                    toolbar.Move(0, 0, toolbarLayoutSize, height);
                     quickAccessBar.Move(width - quickAccessBarSize, 0, quickAccessBarSize, height);
                     mobilePiano.Move(toolbarLayoutSize, height - pianoLayoutSize, width - toolbarLayoutSize - quickAccessBarSize, pianoLayoutSize);
                 }
@@ -115,7 +114,7 @@ namespace FamiStudio
             {
                 if (!activeControlOnly)
                 {
-                    toolbar.Move(0, 0, width, toolbarRenderSize);
+                    toolbar.Move(0, 0, width, toolbarLayoutSize);
                     quickAccessBar.Move(0, height - quickAccessBarSize - pianoLayoutSize, width, quickAccessBarSize);
                     mobilePiano.Move(0, height - pianoLayoutSize, width, pianoLayoutSize);
                 }
