@@ -821,10 +821,9 @@ namespace FamiStudio
                             c.PopTransform();
                         }
 
-                        // GLTODO : Test this! 
                         if (Platform.IsMobile && highlightLocation == location)
                         {
-                            c.DrawRectangle(px, py, sx, channelSizeY, Theme.WhiteColor, 3, true, true);
+                            c.DrawRectangle(0, py, sx, py + channelSizeY, Theme.WhiteColor, 3, true, true);
                         }
 
                         py += channelSizeY;
