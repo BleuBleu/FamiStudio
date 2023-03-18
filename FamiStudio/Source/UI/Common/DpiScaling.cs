@@ -55,10 +55,12 @@ namespace FamiStudio
 
         public static int[] GetAvailableScalings()
         {
-            if (Platform.IsDesktop)
+            if (Platform.IsWindows || Platform.IsLinux)
                 return new[] { 100, 125, 150, 175, 200, 225, 250 };
-            else
+            else if (Platform.IsAndroid)
                 return new[] { 66, 100, 133 };
+            else if (Platform.IsMacOS)
+                return new int[0]; // Intentional, we dont allow to manually set the scaling on MacOS.
 
             Debug.Assert(false);
             return new int[] { };
@@ -66,20 +68,27 @@ namespace FamiStudio
 
         private static float RoundScaling(float value)
         {
-            var scalings = GetAvailableScalings();
-            var minDiff  = 100.0f;
-            var minIndex = -1;
-
-            for (int i = 0; i < scalings.Length; i++)
+            if (Platform.IsMacOS)
             {
-                var diff = Math.Abs(scalings[i] / 100.0f - value);
-                if (diff < minDiff)
-                {
-                    minDiff = diff;
-                    minIndex = i;
-                }
+                return value;
             }
-            return scalings[minIndex] / 100.0f;
+            else
+            {
+                var scalings = GetAvailableScalings();
+                var minDiff  = 100.0f;
+                var minIndex = -1;
+
+                for (int i = 0; i < scalings.Length; i++)
+                {
+                    var diff = Math.Abs(scalings[i] / 100.0f - value);
+                    if (diff < minDiff)
+                    {
+                        minDiff = diff;
+                        minIndex = i;
+                    }
+                }
+                return scalings[minIndex] / 100.0f;
+            }
         }
 
         public static void Initialize(float scaling = -1.0f)
