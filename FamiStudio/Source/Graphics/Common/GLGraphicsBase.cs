@@ -35,6 +35,7 @@ namespace FamiStudio
 
         public byte DepthValue => curDepthValue;
         public int DashTextureSize => dashedBitmap.Size.Width;
+        public int LineWidthBias => lineWidthBias;
         public TransformStack Transform => transform;
         public RectangleF CurrentClipRegion => clipStack.Peek().rect;
         public bool IsOffscreen => offscreen;
@@ -114,7 +115,6 @@ namespace FamiStudio
             clearColor = clear;
             clipRegions.Clear();
 
-            lineWidthBias = 0;
             screenRect = rect;
             screenRectFlip = FlipRectangleY(rect, rect.Height); // MATTT Clean that up.
             transform.SetIdentity();
@@ -305,11 +305,6 @@ namespace FamiStudio
         public void SetLineBias(int bias)
         {
             lineWidthBias = bias;
-        }
-
-        protected virtual CommandList CreateCommandList()
-        {
-            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias);
         }
 
         protected Rectangle FlipRectangleY(Rectangle rc, int sizeY)
@@ -1344,7 +1339,6 @@ namespace FamiStudio
             public int count;
         };
 
-        private int lineWidthBias;
         private float invDashTextureSize;
         private LineBatch lineBatch;
         private List<PolyBatch> polyBatches;
@@ -1371,7 +1365,6 @@ namespace FamiStudio
             graphics = g;
             xform = g.Transform;
             invDashTextureSize = 1.0f / dashTextureSize;
-            lineWidthBias = lineBias;
         }
 
         public void PushTranslation(float x, float y)
@@ -1804,7 +1797,7 @@ namespace FamiStudio
 
         public void DrawLine(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool dash = false)
         {
-            width += lineWidthBias;
+            width += graphics.LineWidthBias;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
@@ -1840,7 +1833,7 @@ namespace FamiStudio
             if (points.Length == 0)
                 return;
 
-            width += lineWidthBias;
+            width += graphics.LineWidthBias;
             smooth |= width > 1.0f;
 
             var x0 = points[0];
@@ -1875,7 +1868,7 @@ namespace FamiStudio
 
         public void DrawGeometry(Span<float> points, Color color, int width = 1, bool smooth = false, bool close = true, bool miter = false)
         {
-            width += lineWidthBias;
+            width += graphics.LineWidthBias;
             
             var x0 = points[0];
             var y0 = points[1];
@@ -1922,7 +1915,7 @@ namespace FamiStudio
         public unsafe void DrawNiceSmoothLine(Span<float> points, Color color, int width = 2)
         {
             // Only implemented for odd widths for now.
-            width = Utils.RoundUp(width, 2);
+            width = Utils.RoundUp(width + graphics.LineWidthBias, 2);
 
             var cornerCount = 0;
             var cornerInfos = stackalloc CornerInfo[points.Length];
@@ -2109,7 +2102,7 @@ namespace FamiStudio
 
         public void DrawRectangle(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
-            width += lineWidthBias;
+            width += graphics.LineWidthBias;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);

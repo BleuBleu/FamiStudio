@@ -391,11 +391,6 @@ namespace FamiStudio
             return new BitmapAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects);
         }
 
-        protected override CommandList CreateCommandList()
-        {
-            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias);
-        }
-
         private void BindAndUpdateVertexBuffer(int attrib, int buffer, float[] array, int arraySize)
         {
             GL.BindBuffer(GL.ArrayBuffer, buffer);

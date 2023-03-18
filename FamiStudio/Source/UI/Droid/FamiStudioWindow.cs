@@ -451,6 +451,7 @@ namespace FamiStudio
                 Platform.AcquireGLContext();
 
                 graphics = new Graphics();
+                graphics.SetLineBias(2);
                 fonts = new Fonts(graphics);
 
                 if (container == null)
