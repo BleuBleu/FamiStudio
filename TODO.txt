@@ -1,5 +1,4 @@
 Today:
-- How2: Issue with kb shortcut.
 - Is there any reason now to not allow changing DPI on MacOS??? 
 - Android: Instrument re-ordering
 - Android: Long press sorting PE doesnt work on mobile
