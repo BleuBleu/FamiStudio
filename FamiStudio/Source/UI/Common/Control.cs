@@ -266,12 +266,25 @@ namespace FamiStudio
 
         public ModifierKeys(int val)
         {
-            value = val;
+            value = FixMods(val);
         }
 
         public void Set(int mods)
         {
-            value = mods;
+            value = FixMods(mods);
+        }
+
+        private static int FixMods(int val)
+        {
+            if (Platform.IsMacOS)
+            {
+                // On MacOS, we dont differentiate between command and control.
+                // Both need to be set to match shortcuts correctly.
+                if ((val & ControlMask) != 0)
+                    val |= ControlMask;
+            }
+
+            return val;
         }
 
         public override bool Equals(object obj)
