@@ -662,9 +662,9 @@ namespace FamiStudio
                     var checkState = opt.CheckState();
                     switch (checkState)
                     {
-                        case ContextMenuCheckState.Checked:   Debug.Assert(false); break; // Not used on Mobile at the moment.
-                        case ContextMenuCheckState.Unchecked: Debug.Assert(false); break; // Not used on Mobile at the moment.
-                        case ContextMenuCheckState.Radio:     imageName = "MenuRadio"; break;
+                        case ContextMenuCheckState.Checked:   imageName = "MenuCheckOn";  break;
+                        case ContextMenuCheckState.Unchecked: imageName = "MenuCheckOff"; break;
+                        case ContextMenuCheckState.Radio:     imageName = "MenuRadio";    break;
                     }
                 }
 

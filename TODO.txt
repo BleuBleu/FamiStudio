@@ -1,9 +1,6 @@
-Today:
-- Android: Instrument re-ordering
-- Android: Long press sorting PE doesnt work on mobile
-
 4.1.0
 =====
+- We should be able to drag/copy samples mappings between instruments.
 - Full S5B support? Sync up with Perkka when im back.
 - Missing top line when maximizing piano roll.
 - Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
