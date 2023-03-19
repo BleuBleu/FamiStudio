@@ -334,6 +334,24 @@ namespace FamiStudio
             GLES20.GlClear(GLES20.GlColorBufferBit);
         }
 
+        protected override void ClearAlpha()
+        {
+            // Normally we would simply use seperate alpha blending to keep the alpha
+            // to 1.0 all the time. But we are limiting ourselves to OpenGL 3.3 for now.
+            GLES20.GlColorMask(false, false, false, true);
+            GLES20.GlUseProgram(polyProgram);
+            GLES20.GlUniform4fv(polyScaleBiasUniform, 1, viewportScaleBias, 0);
+            GLES20.GlDepthFunc(GLES20.GlAlways);
+
+            MakeFullScreenTriangle();
+            BindAndUpdateVertexBuffer(0, vtxArray, 6);
+            BindAndUpdateColorBuffer(1, colArray, 3);
+            BindAndUpdateByteBuffer(2, depArray, 3, true);
+
+            GLES20.GlDrawElements(GLES20.GlTriangles, 3, GLES20.GlUnsignedShort, CopyGetIdxBuffer(idxArray, 3));
+            GLES20.GlColorMask(true, true, true, true);
+        }
+
         public void UpdateBitmap(Bitmap bmp, int x, int y, int width, int height, int[] data)
         {
             var buffer = ByteBuffer.AllocateDirect(width * height * sizeof(int)).Order(ByteOrder.NativeOrder()).AsIntBuffer();
@@ -833,9 +851,9 @@ namespace FamiStudio
             base.BeginDrawFrame(rect, clear);
         }
 
-        public override void EndDrawFrame(bool releaseLists = true)
+        public override void EndDrawFrame(bool clearAlpha = false)
         {
-            base.EndDrawFrame(releaseLists);
+            base.EndDrawFrame(clearAlpha);
 
             if (fbo > 0)
                 GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, 0);

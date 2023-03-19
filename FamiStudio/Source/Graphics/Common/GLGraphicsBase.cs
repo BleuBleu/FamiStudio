@@ -10,7 +10,6 @@ namespace FamiStudio
     public abstract class GraphicsBase : IDisposable
     {
         protected bool builtAtlases;
-        protected bool clearPrePassDone;
         protected bool offscreen;
         protected int lineWidthBias;
         protected float[] viewportScaleBias = new float[4];
@@ -69,6 +68,7 @@ namespace FamiStudio
         protected abstract void DrawDepthPrepass();
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
         protected abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
+        protected abstract void ClearAlpha();
 
         protected const string AtlasPrefix = "FamiStudio.Resources.Atlas.";
 
@@ -121,7 +121,6 @@ namespace FamiStudio
             transform.SetIdentity();
             curDepthValue = 0x80;
             maxDepthValue = 0x80;
-            clearPrePassDone = false;
 
             viewportScaleBias[0] =  2.0f / screenRect.Width;
             viewportScaleBias[1] = -2.0f / screenRect.Height;
@@ -129,17 +128,13 @@ namespace FamiStudio
             viewportScaleBias[3] =  1.0f;
         }
 
-        public virtual void EndDrawFrame(bool releaseLists = true)
+        public virtual void EndDrawFrame(bool clearAlpha = false)
         {
             Debug.Assert(transform.IsEmpty);
             Debug.Assert(clipStack.Count == 0);
 
-            if (!clearPrePassDone)
-            {
-                Clear();
-                DrawDepthPrepass();
-                clearPrePassDone = true;
-            }
+            Clear();
+            DrawDepthPrepass();
 
             for (int i = 0; i < layerCommandLists.Length; i++)
             {
@@ -154,11 +149,34 @@ namespace FamiStudio
                 if (layerCommandLists[i] != null)
                 {
                     layerCommandLists[i].Release();
-                    
-                    if (releaseLists)
-                        layerCommandLists[i] = null;
+                    layerCommandLists[i] = null;
                 }
             }
+
+            if (clearAlpha)
+            {
+                ClearAlpha();
+            }
+        }
+
+        protected void MakeFullScreenTriangle()
+        {
+            // Full screen triangle.
+            colArray[0] = -1;
+            colArray[1] = -1;
+            colArray[2] = -1;
+            depArray[0] = 0;
+            depArray[1] = 0;
+            depArray[2] = 0;
+            idxArray[0] = 0;
+            idxArray[1] = 1;
+            idxArray[2] = 2;
+            vtxArray[0] = -screenRect.Width;
+            vtxArray[1] = 0;
+            vtxArray[2] = screenRect.Width * 2;
+            vtxArray[3] = 0;
+            vtxArray[4] = screenRect.Width * 2;
+            vtxArray[5] = screenRect.Height * 3;
         }
 
         public virtual void PushClipRegion(Point p, Size s, bool clipParents = true)

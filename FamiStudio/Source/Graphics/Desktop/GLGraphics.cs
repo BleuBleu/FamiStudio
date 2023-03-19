@@ -224,6 +224,26 @@ namespace FamiStudio
             GL.Clear(GL.ColorBufferBit | GL.DepthBufferBit);
         }
 
+        protected override void ClearAlpha()
+        { 
+            // Normally we would simply use seperate alpha blending to keep the alpha
+            // to 1.0 all the time. But we are limiting ourselves to OpenGL 3.3 for now.
+            GL.ColorMask(false, false, false, true);
+            GL.UseProgram(polyProgram);
+            GL.BindVertexArray(polyVao);
+            GL.Uniform(polyScaleBiasUniform, viewportScaleBias);
+            GL.DepthFunc(GL.Always);
+
+            MakeFullScreenTriangle();
+            BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, 6);
+            BindAndUpdateColorBuffer(1, colorBuffer, colArray, 3);
+            BindAndUpdateByteBuffer(2, depthBuffer, depArray, 3, true);
+            BindAndUpdateIndexBuffer(indexBuffer, idxArray, 3);
+
+            GL.DrawElements(GL.Triangles, 3, GL.UnsignedShort, IntPtr.Zero);
+            GL.ColorMask(true, true, true, true);
+        }
+
         public void UpdateBitmap(Bitmap bmp, int x, int y, int width, int height, byte[] data)
         {
             GL.BindTexture(GL.Texture2D, bmp.Id);
@@ -655,9 +675,9 @@ namespace FamiStudio
             base.BeginDrawFrame(rect, clear);
         }
 
-        public override void EndDrawFrame(bool releaseLists = true)
+        public override void EndDrawFrame(bool clearAlpha = false)
         {
-            base.EndDrawFrame(releaseLists);
+            base.EndDrawFrame(clearAlpha);
 
             GL.BindFramebuffer(GL.DrawFramebuffer, 0);
         }

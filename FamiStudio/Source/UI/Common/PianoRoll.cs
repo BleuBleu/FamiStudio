@@ -3780,7 +3780,7 @@ namespace FamiStudio
 
             if (captureOperation == CaptureOperation.ChangeSelectionEffectValue)
             {
-                var scaling = (Utils.Clamp(valueAtNote + delta, minValue, maxValue) + minValue) / (float)(valueAtNote + minValue);
+                var scaling = (Utils.Clamp(valueAtNote + delta, minValue, maxValue) - minValue) / (float)(valueAtNote - minValue);
                 var minLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin);
                 var maxLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMax);
 
@@ -3790,7 +3790,7 @@ namespace FamiStudio
 
                     if (relativeEffectScaling)
                     {
-                        it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp((int)Math.Round((value + minValue) * scaling - minValue), minValue, maxValue));
+                        it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp((int)Math.Round((value - minValue) * scaling + minValue), minValue, maxValue));
                     }
                     else
                     {

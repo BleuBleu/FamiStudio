@@ -312,9 +312,9 @@ namespace FamiStudio
                         color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : Theme.LightGreyColor1);
                     }
 
-                    s.graphics.BeginDrawFrame(new Rectangle(0, 0, channelResX, channelResY), Color.Black);
+                    s.graphics.BeginDrawFrame(new Rectangle(0, 0, channelResX, channelResY), Theme.DarkGreyColor2);
                     pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.channelData[s.songChannelIndex].scroll, note.Value, color);
-                    s.graphics.EndDrawFrame();
+                    s.graphics.EndDrawFrame(true);
                 }
 
                 // Render the full screen overlay.
