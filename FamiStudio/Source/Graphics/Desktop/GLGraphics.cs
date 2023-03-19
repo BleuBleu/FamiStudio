@@ -225,9 +225,10 @@ namespace FamiStudio
         }
 
         protected override void ClearAlpha()
-        { 
+        {
             // Normally we would simply use seperate alpha blending to keep the alpha
             // to 1.0 all the time. But we are limiting ourselves to OpenGL 3.3 for now.
+            GL.PushDebugGroup("Clear Alpha");
             GL.ColorMask(false, false, false, true);
             GL.UseProgram(polyProgram);
             GL.BindVertexArray(polyVao);
@@ -242,6 +243,7 @@ namespace FamiStudio
 
             GL.DrawElements(GL.Triangles, 3, GL.UnsignedShort, IntPtr.Zero);
             GL.ColorMask(true, true, true, true);
+            GL.PopDebugGroup();
         }
 
         public void UpdateBitmap(Bitmap bmp, int x, int y, int width, int height, byte[] data)
