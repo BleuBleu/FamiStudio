@@ -264,8 +264,10 @@ namespace FamiStudio
         public const int DACDefaultValueDiv2 = DACDefaultValue / 2;
 
         // Number of cycles to skip at each EPSM register writes.
-        public const int EpsmCycleAddrSkip = 8;
-        public const int EpsmCycleDataSkip = 24;
+        public const int EpsmCycleAddrSkip = 4;
+        public const int EpsmCycleDataSkip = 20;
+        public const int EpsmCycleDataSkipShort = 10;
+        public const int EpsmCycleKeyOnSkip = 36;
 
         public static readonly ushort[]   NoteTableNTSC    = new ushort[97];
         public static readonly ushort[]   NoteTablePAL     = new ushort[97];
