@@ -48,6 +48,8 @@ namespace FamiStudio
         const int DefaultBigTextPosY               = 10;
         const int DefaultTooltipTextPosX           = 10;
         const int DefaultTooltipTextPosY           = 30;
+        const int DefaultEffectPanelTextPosX       = 10;
+        const int DefaultEffectPanelTextPosY       = 10;
         const int DefaultDPCMTextPosX              = 2;
         const int DefaultRecordingKeyOffsetY       = 12;
         const int DefaultAttackIconPosX            = 1;
@@ -82,6 +84,8 @@ namespace FamiStudio
         int bigTextPosY;
         int tooltipTextPosX;
         int tooltipTextPosY;
+        int effectPanelTextPosX;
+        int effectPanelTextPosY;
         int dpcmTextPosX;
         int recordingKeyOffsetY;
         int octaveSizeY;
@@ -308,6 +312,7 @@ namespace FamiStudio
         bool snapEffects = true;
         bool pianoVisible = true;
         bool canFling = false;
+        bool relativeEffectScaling = false;
         sbyte captureEnvelopeValue = 0;
         float flingVelX = 0.0f;
         float flingVelY = 0.0f;
@@ -471,6 +476,8 @@ namespace FamiStudio
             bigTextPosY               = DpiScaling.ScaleForFont(DefaultBigTextPosY);
             tooltipTextPosX           = DpiScaling.ScaleForFont(DefaultTooltipTextPosX);
             tooltipTextPosY           = DpiScaling.ScaleForFont(DefaultTooltipTextPosY);
+            effectPanelTextPosX       = DpiScaling.ScaleForFont(DefaultEffectPanelTextPosX);
+            effectPanelTextPosY       = DpiScaling.ScaleForFont(DefaultEffectPanelTextPosY);
             dpcmTextPosX              = DpiScaling.ScaleForFont(DefaultDPCMTextPosX);
             recordingKeyOffsetY       = DpiScaling.ScaleForWindow(DefaultRecordingKeyOffsetY);
             attackIconPosX            = DpiScaling.ScaleForWindow(DefaultAttackIconPosX);
@@ -1745,6 +1752,11 @@ namespace FamiStudio
                                 r.c.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Theme.LightGreyColor1);
                             r.c.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
                         }
+                    }
+
+                    if (relativeEffectScaling && IsSelectionValid())
+                    {
+                        r.c.DrawText($"Relative effect value scaling selected. {(Platform.IsDesktop ? "Right-click" : "Long-press")} to change.", fonts.FontSmall, effectPanelTextPosX, effectPanelTextPosY, Theme.LightRedColor);
                     }
                 }
                 else if (editMode == EditionMode.Envelope && HasRepeatEnvelope())
@@ -3742,6 +3754,7 @@ namespace FamiStudio
             var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
 
             var delta = 0;
+            var valueAtNote = note.GetEffectValue(selectedEffectIdx);
 
             if (ModifierKeys.IsControlDown)
             {
@@ -3767,13 +3780,22 @@ namespace FamiStudio
 
             if (captureOperation == CaptureOperation.ChangeSelectionEffectValue)
             {
+                var scaling = (Utils.Clamp(valueAtNote + delta, minValue, maxValue) + minValue) / (float)(valueAtNote + minValue);
                 var minLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin);
                 var maxLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMax);
 
                 for (var it = channel.GetSparseNoteIterator(minLocation, maxLocation, Note.GetFilterForEffect(selectedEffectIdx)); !it.Done; it.Next())
                 {
                     var value = it.Note.GetEffectValue(selectedEffectIdx);
-                    it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp(value + delta, minValue, maxValue));
+
+                    if (relativeEffectScaling)
+                    {
+                        it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp((int)Math.Round((value + minValue) * scaling - minValue), minValue, maxValue));
+                    }
+                    else
+                    {
+                        it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp(value + delta, minValue, maxValue));
+                    }
                 }
 
                 channel.InvalidateCumulativePatternCache(minLocation.PatternIndex, maxLocation.PatternIndex);
@@ -6537,6 +6559,17 @@ namespace FamiStudio
             return HandleContextMenuChannelHeader(x, y);
         }
 
+        private void SetRelativeEffectScaling(bool rel)
+        {
+            if (rel != relativeEffectScaling)
+            { 
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
+                relativeEffectScaling = rel;
+                App.UndoRedoManager.EndTransaction();
+                MarkDirty();
+            }
+        }
+
         private bool HandleContextMenuEffectPanel(int x, int y)
         {
             if (showEffectsPanel && selectedEffectIdx >= 0 && IsPointInEffectPanel(x, y) && GetEffectNoteForCoord(x, y, out var location))
@@ -6559,6 +6592,9 @@ namespace FamiStudio
                         menu.Add(new ContextMenuOption("MenuCopy", "Copy Effect Values as Text", () => { CopyEffectValues(true); }, ContextMenuSeparator.After));
                     }
                 }
+
+                menu.Add(new ContextMenuOption("Absolute Effect Scaling", "When multiple values are modified, applies the same change to all values.", () => { SetRelativeEffectScaling(false); }, () => !relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.Before));
+                menu.Add(new ContextMenuOption("Relative Effect Scaling", "When multiple values are modified, applies changes proportionally to their current values.", () => { SetRelativeEffectScaling(true); }, () => relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.After));
 
                 if (hasValue)
                 {
@@ -9265,6 +9301,7 @@ namespace FamiStudio
             buffer.Serialize(ref maximized);
             buffer.Serialize(ref selectionMin);
             buffer.Serialize(ref selectionMax);
+            buffer.Serialize(ref relativeEffectScaling);
 
             if (Platform.IsMobile)
             {
