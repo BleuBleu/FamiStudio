@@ -567,12 +567,6 @@ namespace FamiStudio
             return envelopeValues[EnvelopeType.DutyCycle];
         }
 
-        protected int GetYMMixerSettings()
-        {
-            var ymMixerSettings = (envelopeValues[EnvelopeType.YMMixerSettings] & 0x1) + ((envelopeValues[EnvelopeType.YMMixerSettings] & 0x2) << 2);
-            return ymMixerSettings;
-        }
-
         public virtual void UpdateAPU()
         {
             noteTriggered = false;

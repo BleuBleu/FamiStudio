@@ -6,10 +6,12 @@ namespace FamiStudio
     {
         int  channelIdx = 0;
         int toneReg = 0x38;
+        int mask = 0xff;
 
         public ChannelStateEPSMSquare(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
             channelIdx = channelType - ChannelType.EPSMSquare1;
+            mask = mask - (9 << channelIdx);
         }
 
         public override void UpdateYMMixerSettingsNotify(int ymMixerSettings)
@@ -31,17 +33,12 @@ namespace FamiStudio
 
                 var periodHi = (period >> 8) & 0x0f;
                 var periodLo = (period >> 0) & 0xff;
-                var ymMixerSettings = envelopeValues[EnvelopeType.YMMixerSettings];
                 var noiseFreq = envelopeValues[EnvelopeType.YMNoiseFreq];
-                int mask = 0xff;
-                mask = mask - (9 << channelIdx);
                 player.UpdateYMMixerSettings(
-                    ((toneReg & mask) + (GetYMMixerSettings() << channelIdx)),
+                    ((toneReg & mask) + ((((envelopeValues[EnvelopeType.YMMixerSettings] & 0x1) + ((envelopeValues[EnvelopeType.YMMixerSettings] & 0x2) << 2))) << channelIdx)),
                     (1L << ChannelType.EPSMSquare1) |
                     (1L << ChannelType.EPSMSquare2) |
                     (1L << ChannelType.EPSMSquare3));
-                //int noiseCheck = GetYMMixerSettings() & 0x2;
-                Console.Write(toneReg + "\n");
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_TONE);
                 WriteRegister(NesApu.EPSM_DATA0, toneReg);
                 if (noiseFreq > 0)

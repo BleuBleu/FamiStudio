@@ -107,11 +107,6 @@ namespace FamiStudio
             {
                 UpdateN163WaveEnvelope();
             }
-            else if (expansion == ExpansionType.S5B)
-            {
-                UpdateYMMixerSettingsEnvelope();
-                UpdateYMNoiseFreqEnvelope();
-            }
             else if (expansion == ExpansionType.Vrc7)
             {
                 vrc7Patch = Vrc7InstrumentPatch.Bell;
@@ -382,15 +377,6 @@ namespace FamiStudio
             fdsResampleWavPeriod = 128;
             if (fdsWavPreset == WavePresetType.Resample)
                 fdsWavPreset = WavePresetType.Custom;
-        }
-
-        public void UpdateYMMixerSettingsEnvelope()
-        {
-
-        }
-        public void UpdateYMNoiseFreqEnvelope()
-        {
-
         }
 
         public void UpdateN163WaveEnvelope()
@@ -883,7 +869,6 @@ namespace FamiStudio
             }
 
             ushort envelopeMask = 0;
-            byte envelopeMaskOld = 0;
             if (buffer.IsWriting)
             {
                 for (int i = 0; i < EnvelopeType.Count; i++)
@@ -893,39 +878,29 @@ namespace FamiStudio
                 }
             }
 
-            if (buffer.Version >= 15)
+            // At version 15 (FamiStudio 4.1.0) we expanded the envelope mask to 16bits.
+            if (buffer.Version < 15)
             {
-                buffer.Serialize(ref envelopeMask);
-                for (int i = 0; i < EnvelopeType.Count; i++)
-                {
-                    if ((envelopeMask & (1 << i)) != 0)
-                    {
-                        if (buffer.IsReading)
-                            envelopes[i] = new Envelope(i);
-                        envelopes[i].SerializeState(buffer, i);
-                    }
-                    else
-                    {
-                        envelopes[i] = null;
-                    }
-                }
+                byte envelopeMaskByte = 0;
+                buffer.Serialize(ref envelopeMaskByte);
+                envelopeMask = envelopeMaskByte;
             }
             else
             {
-                envelopeMaskOld = (byte)envelopeMask;
-                buffer.Serialize(ref envelopeMaskOld);
-                for (int i = 0; i < EnvelopeType.Count; i++)
+                buffer.Serialize(ref envelopeMask);
+            }
+
+            for (int i = 0; i < EnvelopeType.Count; i++)
+            {
+                if ((envelopeMask & (1 << i)) != 0)
                 {
-                    if ((envelopeMaskOld & (1 << i)) != 0)
-                    {
-                        if (buffer.IsReading)
-                            envelopes[i] = new Envelope(i);
-                        envelopes[i].SerializeState(buffer, i);
-                    }
-                    else
-                    {
-                        envelopes[i] = null;
-                    }
+                    if (buffer.IsReading)
+                        envelopes[i] = new Envelope(i);
+                    envelopes[i].SerializeState(buffer, i);
+                }
+                else
+                {
+                    envelopes[i] = null;
                 }
             }
 
