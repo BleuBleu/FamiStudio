@@ -451,7 +451,7 @@ FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
 .endif
 .if FAMISTUDIO_EXP_EPSM
     FAMISTUDIO_EXP_EPSM_CHANNELS    = 15
-    FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+(FAMISTUDIO_EXP_EPSM_CHANNELS*2)
+    FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+(FAMISTUDIO_EXP_EPSM_CHANNELS*2)+2+2+2
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 18
     FAMISTUDIO_NUM_CHANNELS         = 20
     FAMISTUDIO_NUM_DUTY_CYCLES      = 3
@@ -475,7 +475,7 @@ FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
     FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
 .endif
 .if FAMISTUDIO_EXP_S5B
-    FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2+2+2
+    FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+4+4+4
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 6
     FAMISTUDIO_NUM_CHANNELS         = 8
     FAMISTUDIO_NUM_DUTY_CYCLES      = 3
@@ -590,31 +590,33 @@ FAMISTUDIO_CH3_ENVS = 8
 .endif
 .if FAMISTUDIO_EXP_S5B
     FAMISTUDIO_S5B_CH0_ENVS = 11
-    FAMISTUDIO_S5B_CH1_ENVS = 13
-    FAMISTUDIO_S5B_CH2_ENVS = 15
+    FAMISTUDIO_S5B_CH1_ENVS = 15
+    FAMISTUDIO_S5B_CH2_ENVS = 19
 .endif
 .if FAMISTUDIO_EXP_EPSM
     FAMISTUDIO_EPSM_CH0_ENVS = 11
-    FAMISTUDIO_EPSM_CH1_ENVS = 13
-    FAMISTUDIO_EPSM_CH2_ENVS = 15
-    FAMISTUDIO_EPSM_CH3_ENVS = 17
-    FAMISTUDIO_EPSM_CH4_ENVS = 19
-    FAMISTUDIO_EPSM_CH5_ENVS = 21
-    FAMISTUDIO_EPSM_CH6_ENVS = 23
-    FAMISTUDIO_EPSM_CH7_ENVS = 25
-    FAMISTUDIO_EPSM_CH8_ENVS = 27
-    FAMISTUDIO_EPSM_CH9_ENVS = 29
-    FAMISTUDIO_EPSM_CH10_ENVS = 31
-    FAMISTUDIO_EPSM_CH11_ENVS = 33
-    FAMISTUDIO_EPSM_CH12_ENVS = 35
-    FAMISTUDIO_EPSM_CH13_ENVS = 37
-    FAMISTUDIO_EPSM_CH14_ENVS = 39
+    FAMISTUDIO_EPSM_CH1_ENVS = 15
+    FAMISTUDIO_EPSM_CH2_ENVS = 19
+    FAMISTUDIO_EPSM_CH3_ENVS = 21
+    FAMISTUDIO_EPSM_CH4_ENVS = 23
+    FAMISTUDIO_EPSM_CH5_ENVS = 25
+    FAMISTUDIO_EPSM_CH6_ENVS = 27
+    FAMISTUDIO_EPSM_CH7_ENVS = 29
+    FAMISTUDIO_EPSM_CH8_ENVS = 31
+    FAMISTUDIO_EPSM_CH9_ENVS = 33
+    FAMISTUDIO_EPSM_CH10_ENVS = 35
+    FAMISTUDIO_EPSM_CH11_ENVS = 37
+    FAMISTUDIO_EPSM_CH12_ENVS = 39
+    FAMISTUDIO_EPSM_CH13_ENVS = 41
+    FAMISTUDIO_EPSM_CH14_ENVS = 43
 .endif
 
 FAMISTUDIO_ENV_VOLUME_OFF        = 0
 FAMISTUDIO_ENV_NOTE_OFF          = 1
 FAMISTUDIO_ENV_DUTY_OFF          = 2
 FAMISTUDIO_ENV_N163_WAVE_IDX_OFF = 2
+FAMISTUDIO_ENV_MIXER_IDX_OFF     = 2
+FAMISTUDIO_ENV_NOISE_IDX_OFF     = 3
 
 .if FAMISTUDIO_EXP_VRC6
     FAMISTUDIO_VRC6_CH0_DUTY_IDX = 3
@@ -812,13 +814,6 @@ famistudio_chn_vrc7_prev_hi:      .res 6
 famistudio_chn_vrc7_patch:        .res 6
 famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 .endif
-.if FAMISTUDIO_EXP_S5B
-famistudio_chn_s5b_env:            .res 6
-famistudio_chn_s5b_env_lo:         .res 6
-famistudio_chn_s5b_env_hi:         .res 6
-famistudio_chn_s5b_env_repeat:     .res 6
-famistudio_chn_s5b_env_ptr:        .res 6
-.endif
 .if FAMISTUDIO_EXP_EPSM
 famistudio_chn_epsm_trigger:       .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:    .res 6
@@ -829,11 +824,6 @@ famistudio_chn_epsm_vol_op1:       .res 6
 famistudio_chn_epsm_vol_op2:       .res 6
 famistudio_chn_epsm_vol_op3:       .res 6
 famistudio_chn_epsm_vol_op4:       .res 6
-famistudio_chn_epsm_env:           .res 6
-famistudio_chn_epsm_env_lo:        .res 6
-famistudio_chn_epsm_env_hi:        .res 6
-famistudio_chn_epsm_env_repeat:    .res 6
-famistudio_chn_epsm_env_ptr:       .res 6
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_wave_index:   .res FAMISTUDIO_EXP_N163_CHN_CNT
@@ -1386,41 +1376,6 @@ ldx #0
     bne @set_envelopes
 
     ldx #0
-	
-.if FAMISTUDIO_EXP_S5B
-@set_envelopes_s5b:
-
-    lda #<famistudio_dummy_envelope
-    sta famistudio_chn_s5b_env_lo,x
-    lda #>famistudio_dummy_envelope
-    sta famistudio_chn_s5b_env_hi,x
-    lda #0
-    sta famistudio_chn_s5b_env_repeat,x
-    sta famistudio_chn_s5b_env,x
-    sta famistudio_chn_s5b_env_ptr,x
-    inx
-    cpx #6
-    bne @set_envelopes_s5b
-
-    ldx #0
-.endif
-.if FAMISTUDIO_EXP_EPSM
-@set_envelopes_epsm:
-
-    lda #<famistudio_dummy_envelope
-    sta famistudio_chn_epsm_env_lo,x
-    lda #>famistudio_dummy_envelope
-    sta famistudio_chn_epsm_env_hi,x
-    lda #0
-    sta famistudio_chn_epsm_env_repeat,x
-    sta famistudio_chn_epsm_env,x
-    sta famistudio_chn_epsm_env_ptr,x
-    inx
-    cpx #6
-    bne @set_envelopes_epsm
-
-    ldx #0
-.endif
 @set_pitch_envelopes:
 
     lda #<famistudio_dummy_pitch_envelope
@@ -2443,16 +2398,16 @@ famistudio_update_epsm_square_channel_sound:
     
 	lda #$07
     sta FAMISTUDIO_EPSM_ADDR
-    ldx famistudio_chn_epsm_env+2 ;load mixer envelope
+    ldx famistudio_env_value+FAMISTUDIO_EPSM_CH2_ENVS+2 ;load mixer envelope
     lda famistudio_epsm_mixer_table, x ;convert mixer envelope to mixer settings base
     sta @temp
     asl @temp
-    ldx famistudio_chn_epsm_env+1 ;load mixer envelope
+    ldx famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+2 ;load mixer envelope
     lda famistudio_epsm_mixer_table, x ;convert mixer envelope to mixer settings base
     ora @temp
     sta @temp
     asl @temp
-    ldx famistudio_chn_epsm_env ;load mixer envelope
+    ldx famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+2 ;load mixer envelope
     lda famistudio_epsm_mixer_table, x ;convert mixer envelope to mixer settings base
     ora @temp
     sta @temp
@@ -2460,11 +2415,13 @@ famistudio_update_epsm_square_channel_sound:
 
 
 
-	lda famistudio_chn_epsm_env+3,y
+    ldx famistudio_epsm_square_env_table,y
+    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
 	beq @nonoise
     lda #$06
     sta FAMISTUDIO_EPSM_ADDR
-	lda famistudio_chn_epsm_env+3,y
+    ldx famistudio_epsm_square_env_table,y
+    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
 	sta FAMISTUDIO_EPSM_DATA
 @nonoise:
 
@@ -3064,16 +3021,16 @@ famistudio_update_s5b_channel_sound:
 
 	lda #$07
     sta FAMISTUDIO_S5B_ADDR
-    ldx famistudio_chn_s5b_env+2 ;load mixer envelope
+    ldx famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+2 ;load mixer envelope
     lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
     sta @temp
     asl @temp
-    ldx famistudio_chn_s5b_env+1 ;load mixer envelope
+    ldx famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+2 ;load mixer envelope
     lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
     ora @temp
     sta @temp
     asl @temp
-    ldx famistudio_chn_s5b_env ;load mixer envelope
+    ldx famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+2 ;load mixer envelope
     lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
     ora @temp
     sta @temp
@@ -3081,11 +3038,13 @@ famistudio_update_s5b_channel_sound:
 
 
 
-	lda famistudio_chn_s5b_env+3,y
+    ldx famistudio_s5b_env_table,y
+    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
 	beq @nonoise
     lda #$06
     sta FAMISTUDIO_S5B_ADDR
-	lda famistudio_chn_s5b_env+3,y
+    ldx famistudio_s5b_env_table,y
+    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
 	sta FAMISTUDIO_S5B_DATA
 @nonoise:
 
@@ -3431,102 +3390,6 @@ famistudio_update:
     cpx #FAMISTUDIO_NUM_ENVELOPES
     bne @env_process
 
-;----------------------------------------------------------------------------------------------------------------------
-.if FAMISTUDIO_EXP_S5B
-@update_envelopes_s5b:
-    ldx #0
-
-@env_process_s5b:
-    lda famistudio_chn_s5b_env_repeat,x
-    beq @env_read_s5b  
-    dec famistudio_chn_s5b_env_repeat,x
-    bne @env_next_s5b
-
-@env_read_s5b:
-    lda famistudio_chn_s5b_env_lo,x
-    sta @env_ptr+0
-    lda famistudio_chn_s5b_env_hi,x
-    sta @env_ptr+1
-    ldy famistudio_chn_s5b_env_ptr,x
-
-@env_read_value_s5b:
-    lda (@env_ptr),y
-    bpl @env_special_s5b ; Values below 128 used as a special code, loop or repeat
-    clc              ; Values above 128 are output value+192 (output values are signed -63..64)
-    adc #256-192
-    sta famistudio_chn_s5b_env,x
-    iny
-    bne @env_next_store_ptr_s5b
-
-@env_special_s5b:
-    bne @env_set_repeat_s5b  ; Zero is the loop point, non-zero values used for the repeat counter
-    iny
-    lda (@env_ptr),y     ; Read loop position
-    tay
-    jmp @env_read_value_s5b
-
-@env_set_repeat_s5b:
-    iny
-    sta famistudio_chn_s5b_env_repeat,x ; Store the repeat counter value
-
-@env_next_store_ptr_s5b:
-    tya
-    sta famistudio_chn_s5b_env_ptr,x
-
-@env_next_s5b:
-    inx
-
-    cpx #6 ;s5b envelopes, 3 mixer + 3 noise frequency
-    bne @env_process_s5b
-.endif
-;----------------------------------------------------------------------------------------------------------------------
-.if FAMISTUDIO_EXP_EPSM
-@update_envelopes_epsm:
-    ldx #0
-
-@env_process_epsm:
-    lda famistudio_chn_epsm_env_repeat,x
-    beq @env_read_epsm  
-    dec famistudio_chn_epsm_env_repeat,x
-    bne @env_next_epsm
-
-@env_read_epsm:
-    lda famistudio_chn_epsm_env_lo,x
-    sta @env_ptr+0
-    lda famistudio_chn_epsm_env_hi,x
-    sta @env_ptr+1
-    ldy famistudio_chn_epsm_env_ptr,x
-
-@env_read_value_epsm:
-    lda (@env_ptr),y
-    bpl @env_special_epsm ; Values below 128 used as a special code, loop or repeat
-    clc              ; Values above 128 are output value+192 (output values are signed -63..64)
-    adc #256-192
-    sta famistudio_chn_epsm_env,x
-    iny
-    bne @env_next_store_ptr_epsm
-
-@env_special_epsm:
-    bne @env_set_repeat_epsm  ; Zero is the loop point, non-zero values used for the repeat counter
-    iny
-    lda (@env_ptr),y     ; Read loop position
-    tay
-    jmp @env_read_value_epsm
-
-@env_set_repeat_epsm:
-    iny
-    sta famistudio_chn_epsm_env_repeat,x ; Store the repeat counter value
-
-@env_next_store_ptr_epsm:
-    tya
-    sta famistudio_chn_epsm_env_ptr,x
-
-@env_next_epsm:
-    inx
-
-    cpx #6 ;epsm envelopes, 3 mixer + 3 noise frequency
-    bne @env_process_epsm
-.endif
 ;----------------------------------------------------------------------------------------------------------------------
 @update_pitch_envelopes:
     ldx #0
@@ -4219,30 +4082,32 @@ famistudio_set_s5b_instrument:
     @chan_idx   = famistudio_r1
 
     famistudio_set_exp_instrument
-	ldx @chan_idx
+
+    lda famistudio_channel_env,x
+    tax
+
 	@mixer:
 	lda (@ptr),y
-	sta famistudio_chn_s5b_env_lo-FAMISTUDIO_S5B_CH0_IDX,x
+	sta famistudio_env_addr_lo+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
 	iny
 	lda (@ptr),y
-	sta famistudio_chn_s5b_env_hi-FAMISTUDIO_S5B_CH0_IDX,x
+	sta famistudio_env_addr_hi+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
 	lda #0
-	sta famistudio_chn_s5b_env_repeat-FAMISTUDIO_S5B_CH0_IDX,x
-	sta famistudio_chn_s5b_env_ptr-FAMISTUDIO_S5B_CH0_IDX,x
-	sta famistudio_chn_s5b_env-FAMISTUDIO_S5B_CH0_IDX,x
+	sta famistudio_env_repeat+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+	sta famistudio_env_ptr+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+	sta famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
 	
 	@noise:
 	iny
 	lda (@ptr),y
-	sta famistudio_chn_s5b_env_lo+3-FAMISTUDIO_S5B_CH0_IDX,x
+	sta famistudio_env_addr_lo+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
 	iny
 	lda (@ptr),y
-	sta famistudio_chn_s5b_env_hi+3-FAMISTUDIO_S5B_CH0_IDX,x
+	sta famistudio_env_addr_hi+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
 	lda #0
-	sta famistudio_chn_s5b_env_repeat+3-FAMISTUDIO_S5B_CH0_IDX,x
-	sta famistudio_chn_s5b_env_ptr+3-FAMISTUDIO_S5B_CH0_IDX,x
-	sta famistudio_chn_s5b_env+3-FAMISTUDIO_S5B_CH0_IDX,x
-
+	sta famistudio_env_repeat+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+	sta famistudio_env_ptr+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+	sta famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
 
     ldx @chan_idx
     rts
@@ -4334,29 +4199,33 @@ famistudio_set_epsm_instrument:
 		dey
 		dey
 		dey
-        ldx @chan_idx
+        lda famistudio_channel_env,x
+        tax
+
         @mixer:
         lda (@ptr),y
-        sta famistudio_chn_epsm_env_lo-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_env_addr_lo+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
         iny
         lda (@ptr),y
-        sta famistudio_chn_epsm_env_hi-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_env_addr_hi+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
         lda #0
-        sta famistudio_chn_epsm_env_repeat-FAMISTUDIO_EPSM_CH0_IDX,x
-        sta famistudio_chn_epsm_env_ptr-FAMISTUDIO_EPSM_CH0_IDX,x
-        sta famistudio_chn_epsm_env-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_env_repeat+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+        sta famistudio_env_ptr+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+        sta famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
         
         @noise:
         iny
         lda (@ptr),y
-        sta famistudio_chn_epsm_env_lo+3-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_env_addr_lo+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
         iny
         lda (@ptr),y
-        sta famistudio_chn_epsm_env_hi+3-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_env_addr_hi+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
         lda #0
-        sta famistudio_chn_epsm_env_repeat+3-FAMISTUDIO_EPSM_CH0_IDX,x
-        sta famistudio_chn_epsm_env_ptr+3-FAMISTUDIO_EPSM_CH0_IDX,x
-        sta famistudio_chn_epsm_env+3-FAMISTUDIO_EPSM_CH0_IDX,x
+        sta famistudio_env_repeat+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+        sta famistudio_env_ptr+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+        sta famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+
+        ldx @chan_idx
         rts
     @not_square_channel:
 
