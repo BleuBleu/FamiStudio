@@ -249,6 +249,7 @@ namespace FamiStudio
                         for (var i = 0; i < firstBankSampleData.Length; i++)
                             nsfBytes[driverBankOffset + i] = firstBankSampleData[i];
 
+                        dpcmBaseAddr += driverBankOffset & (NsfBankSize - 1);
                         driverBankOffset += firstBankSampleData.Length;
                         driverBankLeft -= firstBankSampleData.Length;
                         dpcmBankStart = driverBankCount - 1;
