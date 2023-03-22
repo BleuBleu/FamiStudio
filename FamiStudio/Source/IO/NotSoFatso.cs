@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -84,10 +84,10 @@ namespace FamiStudio
         public const int STATE_FDSMODULATIONSPEED = 13;
         public const int STATE_FDSMASTERVOLUME    = 14;
         public const int STATE_VRC7PATCH          = 15;
-        public const int STATE_VRC7PATCHREG       = 16;
-        public const int STATE_VRC7OCTAVE         = 17;
-        public const int STATE_VRC7TRIGGER        = 18;
-        public const int STATE_VRC7SUSTAIN        = 19;
+        public const int STATE_PATCHREG           = 16;
+        public const int STATE_OCTAVE             = 17;
+        public const int STATE_FMTRIGGER          = 18;
+        public const int STATE_SUSTAIN            = 19;
         public const int STATE_N163WAVEPOS        = 20;
         public const int STATE_N163WAVESIZE       = 21;
         public const int STATE_N163WAVE           = 22;

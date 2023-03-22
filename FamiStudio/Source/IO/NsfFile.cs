@@ -518,7 +518,7 @@ namespace FamiStudio
             public int fdsModDepth = 0;
             public int fdsModSpeed = 0;
 
-            public bool vrc7Trigger = false;
+            public bool fmTrigger = false;
             public bool vrc7Sustain = false;
 
             public Instrument instrument = null;
@@ -924,14 +924,14 @@ namespace FamiStudio
 
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
-                    var trigger = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7TRIGGER, 0) != 0;
-                    var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7SUSTAIN, 0) != 0;
+                    var trigger = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMTRIGGER, 0) != 0;
+                    var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_SUSTAIN, 0) != 0;
 
                     var newState = state.state;
 
-                    if (!state.vrc7Trigger && trigger)
+                    if (!state.fmTrigger && trigger)
                         newState = ChannelState.Triggered;
-                    else if (state.vrc7Trigger && !trigger && sustain)
+                    else if (state.fmTrigger && !trigger && sustain)
                         newState = ChannelState.Released;
                     else if (!trigger && !sustain)
                         newState = ChannelState.Stopped;
@@ -944,22 +944,22 @@ namespace FamiStudio
                         force |= true;
                     }
 
-                    octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7OCTAVE, 0);
+                    octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_OCTAVE, 0);
                 }
                 if (channel.Type >= ChannelType.EPSMFm1 && channel.Type <= ChannelType.EPSMFm6)
                 {
-                    var trigger = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7TRIGGER, 0);
-                    var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7SUSTAIN, 0) > 0;
+                    var trigger = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMTRIGGER, 0) != 0;
+                    var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_SUSTAIN, 0) > 0;
                     var stopped = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VOLUME, 0) == 0;
 
                     var newState = state.state;
 
-                    if (trigger == 0)
+                    if (!trigger)
                         attack = false;
                     
                     newState = sustain ? ChannelState.Triggered : (stopped ? ChannelState.Stopped : ChannelState.Released);
 
-                    if (newState != state.state || trigger > 0)
+                    if (newState != state.state || trigger)
                     {
                         stop = newState == ChannelState.Stopped;
                         release = newState == ChannelState.Released;
@@ -967,9 +967,9 @@ namespace FamiStudio
                         force |= true;
                     }
 
-                    octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7OCTAVE, 0);
+                    octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_OCTAVE, 0);
 
-                    state.vrc7Trigger = trigger;
+                    state.fmTrigger = trigger;
                     state.vrc7Sustain = sustain;
                 }
                 else
@@ -1056,7 +1056,7 @@ namespace FamiStudio
                     if (patch == 0)
                     {
                         for (int i = 0; i < 8; i++)
-                            regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7PATCHREG, i);
+                            regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_PATCHREG, i);
                     }
 
                     instrument = GetVrc7Instrument(patch, regs);
@@ -1075,7 +1075,7 @@ namespace FamiStudio
                     if (channel.Type >= ChannelType.EPSMFm1 && channel.Type <= ChannelType.EPSMFm6)
                     {
                         for (int i = 0; i < 31; i++)
-                            regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7PATCHREG, i);
+                            regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_PATCHREG, i);
 
                         instrument = GetEPSMInstrument(1, regs);
                     }
@@ -1280,7 +1280,7 @@ namespace FamiStudio
             if ((expansionMask & epsmMask) != 0)
             {
                 Log.LogMessage(LogSeverity.Warning, "NSF seem to use EPSM, import is still not supported.");
-                expansionMask &= (~epsmMask);
+                expansionMask &= (~ExpansionType.EPSMMask);
             }*/
 
             var numN163Channels = (expansionMask & ExpansionType.N163Mask) != 0 ? GetNumNamcoChannels(filename, songIndex, numFrames) : 1;

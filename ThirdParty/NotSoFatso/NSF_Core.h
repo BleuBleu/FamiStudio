@@ -159,10 +159,10 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_FDSMODULATIONSPEED 13
 #define STATE_FDSMASTERVOLUME    14
 #define STATE_VRC7PATCH          15
-#define STATE_VRC7PATCHREG       16
-#define STATE_VRC7OCTAVE         17
-#define STATE_VRC7TRIGGER        18
-#define STATE_VRC7SUSTAIN        19
+#define STATE_FMPATCHREG         16
+#define STATE_OCTAVE             17
+#define STATE_TRIGGER            18
+#define STATE_SUSTAIN            19
 #define STATE_N163WAVEPOS        20
 #define STATE_N163WAVESIZE       21
 #define STATE_N163WAVE           22
