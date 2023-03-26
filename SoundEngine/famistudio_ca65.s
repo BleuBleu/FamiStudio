@@ -4087,27 +4087,25 @@ famistudio_set_s5b_instrument:
     tax
 
 	@mixer:
-	lda (@ptr),y
-	sta famistudio_env_addr_lo+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-	iny
-	lda (@ptr),y
-	sta famistudio_env_addr_hi+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-	lda #0
-	sta famistudio_env_repeat+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-	sta famistudio_env_ptr+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-	sta famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-	
-	@noise:
-	iny
-	lda (@ptr),y
-	sta famistudio_env_addr_lo+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-	iny
-	lda (@ptr),y
-	sta famistudio_env_addr_hi+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-	lda #0
-	sta famistudio_env_repeat+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-	sta famistudio_env_ptr+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-	sta famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+    sec
+
+    @loop:
+        lda (@ptr),y
+        sta famistudio_env_addr_lo+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+        iny
+        lda (@ptr),y
+        sta famistudio_env_addr_hi+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+        lda #0
+        sta famistudio_env_repeat+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+        sta famistudio_env_ptr+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+        sta famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+        bcc @done
+        clc
+        inx
+        iny
+        bcc @loop
+
+    @done:
 
     ldx @chan_idx
     rts
@@ -4202,7 +4200,10 @@ famistudio_set_epsm_instrument:
         lda famistudio_channel_env,x
         tax
 
-        @mixer:
+	    @noise:
+        sec
+
+        @loop:
         lda (@ptr),y
         sta famistudio_env_addr_lo+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
         iny
@@ -4212,18 +4213,13 @@ famistudio_set_epsm_instrument:
         sta famistudio_env_repeat+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
         sta famistudio_env_ptr+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
         sta famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-        
-        @noise:
+        bcc @noisedone
+        clc
+        inx
         iny
-        lda (@ptr),y
-        sta famistudio_env_addr_lo+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-        iny
-        lda (@ptr),y
-        sta famistudio_env_addr_hi+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-        lda #0
-        sta famistudio_env_repeat+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-        sta famistudio_env_ptr+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-        sta famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+        bcc @loop
+
+        @noisedone:
 
         ldx @chan_idx
         rts
