@@ -3021,16 +3021,16 @@ famistudio_update_s5b_channel_sound:
 
     lda #$07
     sta FAMISTUDIO_S5B_ADDR
-    ldx famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+2 ;load mixer envelope
+    ldx famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
     sta @temp
     asl @temp
-    ldx famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+2 ;load mixer envelope
+    ldx famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
     ora @temp
     sta @temp
     asl @temp
-    ldx famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+2 ;load mixer envelope
+    ldx famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
     ora @temp
     sta @temp
