@@ -1,6 +1,5 @@
 4.1.0
 =====
-- Edit-mode when envelope values are selected.
 - Full S5B support? Sync up with Perkka when im back.
 - Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
 	=> Perkka says he has fix. May be in a PR.

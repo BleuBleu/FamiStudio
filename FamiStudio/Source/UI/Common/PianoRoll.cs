@@ -1762,7 +1762,7 @@ namespace FamiStudio
 
                     if (relativeEffectScaling && IsSelectionValid())
                     {
-                        r.c.DrawText($"Relative effect value scaling selected. {(Platform.IsDesktop ? "Right-click" : "Long-press")} to change.", fonts.FontSmall, effectPanelTextPosX, effectPanelTextPosY, Theme.LightRedColor);
+                        r.c.DrawText("Relative effect value scaling selected.", fonts.FontSmall, effectPanelTextPosX, effectPanelTextPosY, Theme.LightRedColor);
                     }
                 }
                 else if (editMode == EditionMode.Envelope && HasRepeatEnvelope())
@@ -2968,10 +2968,23 @@ namespace FamiStudio
 
                 r.f.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
 
+                var textY = bigTextPosY + r.fonts.FontVeryLarge.LineHeight;
+
                 if (App.SelectedInstrument != null && App.SelectedInstrument != editInstrument)
-                    r.f.DrawText($"Warning : Instrument is currently not selected. Selected instrument '{App.SelectedInstrument.Name}' will be heard when playing the piano.", r.fonts.FontMedium, bigTextPosX, bigTextPosY + r.fonts.FontVeryLarge.LineHeight, Theme.LightRedColor);
+                { 
+                    r.f.DrawText($"Warning : Instrument is currently not selected. Selected instrument '{App.SelectedInstrument.Name}' will be heard when playing the piano.", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightRedColor);
+                    textY += r.fonts.FontMedium.LineHeight;
+                }
                 else if (editEnvelope == EnvelopeType.Arpeggio && App.SelectedArpeggio != null)
-                    r.f.DrawText($"Warning : Arpeggio envelope currently overridden by selected arpeggio '{App.SelectedArpeggio.Name}'", r.fonts.FontMedium, bigTextPosX, bigTextPosY + r.fonts.FontVeryLarge.LineHeight, Theme.LightRedColor);
+                { 
+                    r.f.DrawText($"Warning : Arpeggio envelope currently overridden by selected arpeggio '{App.SelectedArpeggio.Name}'", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightRedColor);
+                    textY += r.fonts.FontMedium.LineHeight;
+                }
+
+                if (relativeEffectScaling && IsSelectionValid())
+                { 
+                    r.c.DrawText("Relative effect value scaling selected.", fonts.FontMedium, bigTextPosX, textY, Theme.LightRedColor);
+                }
             }
             else
             {
@@ -3759,7 +3772,7 @@ namespace FamiStudio
             var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
 
             var delta = 0;
-            var valueAtNote = note.GetEffectValue(selectedEffectIdx);
+            var originalValue = note.GetEffectValue(selectedEffectIdx);
 
             if (ModifierKeys.IsControlDown)
             {
@@ -3770,7 +3783,6 @@ namespace FamiStudio
                 var ratio = (y - headerSizeY) / (float)effectPanelSizeY;
                 var newValue = (int)Math.Round(Utils.Lerp(maxValue, minValue, ratio));
 
-                var originalValue = note.GetEffectValue(selectedEffectIdx);
                 delta = newValue - originalValue;
             }
             else // On mobile we drag using gizmos
@@ -3785,7 +3797,7 @@ namespace FamiStudio
 
             if (captureOperation == CaptureOperation.ChangeSelectionEffectValue)
             {
-                var scaling = (Utils.Clamp(valueAtNote + delta, minValue, maxValue) - minValue) / (float)(valueAtNote - minValue);
+                var scaling = (Utils.Clamp(originalValue + delta, minValue, maxValue) - minValue) / (float)(originalValue - minValue);
                 var minLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin);
                 var maxLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMax);
 
@@ -5440,7 +5452,13 @@ namespace FamiStudio
         {
             if (e.Left && IsPointInNoteArea(e.X, e.Y) && EditEnvelope.Length > 0)
             {
-                StartDrawEnvelope(e.X, e.Y);
+                var noteIdx = GetAbsoluteNoteIndexForPixel(e.X - pianoSizeX);
+
+                if (IsNoteSelected(noteIdx))
+                    StartChangeEnvelopeValue(e.X, e.Y);
+                else
+                    StartDrawEnvelope(e.X, e.Y);
+
                 return true;
             }
 
@@ -6060,16 +6078,34 @@ namespace FamiStudio
             Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
 
             var env = EditEnvelope;
-            var delta = value - captureEnvelopeValue;
+            var idx = Platform.IsMobile ? highlightNoteAbsIndex : captureNoteAbsoluteIdx;
+            var originalValue = env.Values[idx];
+            var delta = 0;
 
-            if (IsEnvelopeValueSelected(highlightNoteAbsIndex))
+            if (Platform.IsDesktop)
             {
+                delta = value - originalValue;
+            }
+            else // On mobile we drag using gizmos
+            {
+                delta = value - captureEnvelopeValue;
+            }
+
+            if (IsEnvelopeValueSelected(idx))
+            {
+                var scaling = Utils.Clamp(originalValue + delta, min, max) / MathF.Abs(originalValue);
+
                 for (int i = selectionMin; i <= selectionMax; i++)
-                    env.Values[i] = (sbyte)Utils.Clamp(env.Values[i] + delta, min, max);
+                {
+                    if (relativeEffectScaling)
+                        env.Values[i] = (sbyte)Utils.Clamp((int)Math.Round(env.Values[i] * scaling), min, max);
+                    else
+                        env.Values[i] = (sbyte)Utils.Clamp(env.Values[i] + delta, min, max);
+                }
             }
             else
             {
-                env.Values[highlightNoteAbsIndex] = (sbyte)Utils.Clamp(env.Values[highlightNoteAbsIndex] + delta, min, max);
+                env.Values[idx] = (sbyte)Utils.Clamp(env.Values[idx] + delta, min, max);
             }
 
             editInstrument.NotifyEnvelopeChanged(editEnvelope, true);
@@ -6598,9 +6634,6 @@ namespace FamiStudio
                     }
                 }
 
-                menu.Add(new ContextMenuOption("Absolute Effect Scaling", "When multiple values are modified, applies the same change to all values.", () => { SetRelativeEffectScaling(false); }, () => !relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.Before));
-                menu.Add(new ContextMenuOption("Relative Effect Scaling", "When multiple values are modified, applies changes proportionally to their current values.", () => { SetRelativeEffectScaling(true); }, () => relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.After));
-
                 if (hasValue)
                 {
                     menu.Add(new ContextMenuOption("MenuDelete", "Clear Effect Value", () => { ClearEffectValue(location, false); }));
@@ -6625,6 +6658,9 @@ namespace FamiStudio
                 {
                     menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
                 }
+
+                menu.Add(new ContextMenuOption("Absolute Effect Scaling", "When multiple values are modified, applies the same change to all values.", () => { SetRelativeEffectScaling(false); }, () => !relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore));
+                menu.Add(new ContextMenuOption("Relative Effect Scaling", "When multiple values are modified, applies changes proportionally to their current values.", () => { SetRelativeEffectScaling(true); }, () => relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.After));
 
                 if (menu.Count > 0)
                     App.ShowContextMenu(left + x, top + y, menu.ToArray());
@@ -6741,6 +6777,9 @@ namespace FamiStudio
                 {
                     menu.Add(new ContextMenuOption("MenuCopy", "Copy Selected Values as Text", () => { CopyAsText(); }, ContextMenuSeparator.Before));
                 }
+
+                menu.Add(new ContextMenuOption("Absolute Value Scaling", "When multiple values are modified, applies the same change to all values.", () => { SetRelativeEffectScaling(false); }, () => !relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore));
+                menu.Add(new ContextMenuOption("Relative Value Scaling", "When multiple values are modified, applies changes proportionally to their current values.", () => { SetRelativeEffectScaling(true); }, () => relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None));
 
                 if (menu.Count > 0)
                     App.ShowContextMenu(left + x, top + y, menu.ToArray());
@@ -8730,6 +8769,7 @@ namespace FamiStudio
         private void UpdateCursor()
         {
             var pt = ScreenToControl(CursorPosition);
+            var noteIdx = GetAbsoluteNoteIndexForPixel(pt.X - pianoSizeX);
 
             if (EditEnvelope != null && EditEnvelope.CanResize && IsPointWhereCanResizeEnvelope(pt.X, pt.Y) && captureOperation != CaptureOperation.Select || captureOperation == CaptureOperation.ResizeEnvelope)
             {
@@ -8738,6 +8778,10 @@ namespace FamiStudio
             else if (captureOperation == CaptureOperation.ChangeEffectValue ||
                      captureOperation == CaptureOperation.ChangeEnvelopeRepeatValue ||
                      HasRepeatEnvelope() && IsPointInEffectPanel(pt.X, pt.Y))
+            {
+                Cursor = Cursors.SizeNS;
+            }
+            else if ((EditEnvelope != null && IsNoteSelected(noteIdx)) || captureOperation == CaptureOperation.ChangeEnvelopeValue)
             {
                 Cursor = Cursors.SizeNS;
             }
