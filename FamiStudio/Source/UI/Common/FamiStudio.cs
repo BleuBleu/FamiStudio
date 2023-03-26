@@ -1158,7 +1158,10 @@ namespace FamiStudio
 
         public void Suspend()
         {
-            if (!suspended)
+            // Null window means Initialized() was never call. This can happen when starting
+            // the app with the phone sleeping. It will resume and suspend on the same frame, 
+            // not leaving any time for the GL thread to start.
+            if (!suspended && window != null) 
             {
                 suspended = true;
                 StopEverything();

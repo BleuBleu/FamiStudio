@@ -1119,6 +1119,9 @@ namespace FamiStudio
             r.c.PushTranslation(pianoSizeX, 0);
             r.c.PushClipRegion(0, 0, width - pianoSizeX, headerSizeY);
 
+            if (Platform.IsDesktop && maximized)
+                r.c.DrawLine(0, 0, width - pianoSizeX, 0, Color.Black);
+
             if ((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && EditEnvelope != null)
             {
                 var env = EditEnvelope;
@@ -1304,6 +1307,9 @@ namespace FamiStudio
         {
             r.c.FillRectangle(0, 0, pianoSizeX, headerAndEffectSizeY, Theme.DarkGreyColor4);
             r.c.DrawLine(pianoSizeX - 1, 0, pianoSizeX - 1, headerAndEffectSizeY, Theme.BlackColor);
+
+            if (Platform.IsDesktop && maximized)
+                r.c.DrawLine(0, 0, pianoSizeX, 0, Color.Black);
 
             if (!Platform.IsMobile && editMode != EditionMode.VideoRecording)
             {

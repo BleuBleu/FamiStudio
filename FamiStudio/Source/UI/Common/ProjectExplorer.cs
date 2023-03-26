@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,7 +15,9 @@ namespace FamiStudio
         const int DefaultButtonIconPosY       = 3;
         const int DefaultButtonTextPosX       = 21;
         const int DefaultButtonTextNoIconPosX = 4;
-        const int DefaultSubButtonSpacingX    = Platform.IsMobile ? 17 : 18;
+        const int DefaultSubButtonSizeX       = 16;
+        const int DefaultSubButtonMarginX     = Platform.IsMobile ? 1 : 2;
+        const int DefaultSubButtonSpacingX    = Platform.IsMobile ? 0 : 2;
         const int DefaultSubButtonPosY        = 3;
         const int DefaultScrollBarThickness1  = 10;
         const int DefaultScrollBarThickness2  = 16;
@@ -39,6 +42,8 @@ namespace FamiStudio
         int expandButtonPosX;
         int expandButtonPosY;
         int subButtonSpacingX;
+        int subButtonMarginX;
+        int subButtonSizeX;
         int subButtonPosY;
         int buttonSizeY;
         int sliderPosX;
@@ -969,7 +974,7 @@ namespace FamiStudio
 
             public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader || type == ButtonType.ProjectSettings ? Theme.LightGreyColor1 : Color.Black;
 
-            public bool TextEllipsis => type == ButtonType.ProjectSettings;
+            public bool TextEllipsis => type == ButtonType.ProjectSettings || ((type == ButtonType.Song || type == ButtonType.Instrument || type == ButtonType.Dpcm || type == ButtonType.Arpeggio) && Platform.IsMobile);
             
             public BitmapAtlasRef GetIcon(SubButtonType sub)
             {
@@ -1057,7 +1062,9 @@ namespace FamiStudio
             buttonTextNoIconPosX = DpiScaling.ScaleForWindow(DefaultButtonTextNoIconPosX);
             expandButtonPosX     = DpiScaling.ScaleForWindow(DefaultExpandButtonPosX);
             expandButtonPosY     = DpiScaling.ScaleForWindow(DefaultExpandButtonPosY);
-            subButtonSpacingX    = DpiScaling.ScaleForWindow(DefaultSubButtonSpacingX);   
+            subButtonSpacingX    = DpiScaling.ScaleForWindow(DefaultSubButtonSpacingX);
+            subButtonMarginX     = DpiScaling.ScaleForWindow(DefaultSubButtonMarginX);
+            subButtonSizeX       = DpiScaling.ScaleForWindow(DefaultSubButtonSizeX);
             subButtonPosY        = DpiScaling.ScaleForWindow(DefaultSubButtonPosY);       
             buttonSizeY          = DpiScaling.ScaleForWindow(DefaultButtonSizeY);
             sliderPosX           = DpiScaling.ScaleForWindow(DefaultSliderPosX);
@@ -1495,6 +1502,8 @@ namespace FamiStudio
             for (int i = 0; i < buttons.Count; i++)
             {
                 var button = buttons[i];
+                var subButtons = button.GetSubButtons(out var activeMask);
+                var firstSubButtonX = subButtons != null ? contentSizeX - subButtonMarginX - (subButtonSpacingX + subButtonSizeX) * subButtons.Count(b => b != SubButtonType.Expand) : contentSizeX;
                 var hovered = i == hoverButtonIndex;
                 var highlighted = i == highlightedButtonIdx;
 
@@ -1570,6 +1579,7 @@ namespace FamiStudio
 
                     var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
                     var ellipsisFlag = button.TextEllipsis ? TextFlags.Ellipsis : TextFlags.None;
+                    var centered = button.TextAlignment.HasFlag(TextFlags.Center);
                     var player = App.ActivePlayer;
 
                     if (button.type == ButtonType.ParamCustomDraw)
@@ -1588,7 +1598,8 @@ namespace FamiStudio
                     {
                         if (button.Text != null)
                         {
-                            c.DrawText(button.Text, button.Font, button.bmp == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textColor : disabledColor, button.TextAlignment | ellipsisFlag | TextFlags.Middle, contentSizeX - buttonTextPosX, buttonSizeY);
+                            var textX = button.bmp == null ? buttonTextNoIconPosX : buttonTextPosX;
+                            c.DrawText(button.Text, button.Font, textX, 0, enabled ? button.textColor : disabledColor, button.TextAlignment | ellipsisFlag | TextFlags.Middle, (centered ? contentSizeX - textX * 2 : firstSubButtonX - buttonTextPosX - leftPadding), buttonSizeY);
                         }
 
                         if (button.bmp != null)
@@ -1673,12 +1684,11 @@ namespace FamiStudio
                     }
                     else
                     {
-                        var subButtons = button.GetSubButtons(out var activeMask);
                         var tint = button.SubButtonTint;
 
                         if (subButtons != null)
                         {
-                            for (int j = 0, x = contentSizeX - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
+                            for (int j = 0, x = contentSizeX - subButtonMarginX - subButtonSizeX; j < subButtons.Length; j++, x -= (subButtonSpacingX + subButtonSizeX))
                             {
                                 var sub = subButtons[j];
                                 var bmp = button.GetIcon(sub);
@@ -1883,7 +1893,7 @@ namespace FamiStudio
                         if (subButtons[i] == SubButtonType.Expand)
                             continue;
 
-                        int sx = contentSizeX - subButtonSpacingX * (i + 1);
+                        int sx = contentSizeX - subButtonMarginX - (subButtonSpacingX + subButtonSizeX) * (i + 1);
                         int sy = subButtonPosY;
                         int dx = x - sx;
                         int dy = y - sy;
