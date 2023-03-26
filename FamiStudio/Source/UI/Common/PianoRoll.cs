@@ -2638,11 +2638,11 @@ namespace FamiStudio
                             var lineColor = highlighted ? Color.White : Color.Black;
 
                             if (g.FillImage != null)
-                                r.f.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, fillColor); // GLTODO : Was "cg" (for gizmo)
-                            r.f.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, lineColor); // GLTODO : Was "cg" (for gizmo)
+                                r.f.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, fillColor);
+                            r.f.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, lineColor);
 
                             if (highlighted && !string.IsNullOrEmpty(g.GizmoText))
-                                r.f.DrawText(g.GizmoText, r.fonts.FontSmall, g.Rect.X - g.Rect.Width / 8, g.Rect.Y, Theme.WhiteColor, TextFlags.MiddleRight, 0, g.Rect.Height); // GLTODO : Was "cg" (for gizmo)
+                                r.f.DrawText(g.GizmoText, r.fonts.FontSmall, g.Rect.X - g.Rect.Width / 8, g.Rect.Y, Theme.WhiteColor, TextFlags.MiddleRight, 0, g.Rect.Height);
                         }
                     }
                 }
@@ -2993,8 +2993,8 @@ namespace FamiStudio
                     var lineColor = IsGizmoHighlighted(g, 0) ? Color.White : Color.Black;
 
                     if (g.FillImage != null)
-                        r.f.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, color); // GLTODO : Was "cg" for gizmo.
-                    r.f.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor); // GLTODO : Was "cg" for gizmo.
+                        r.f.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, color);
+                    r.f.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
                 }
             }
         }
@@ -3582,7 +3582,6 @@ namespace FamiStudio
         }
 #endif
 
-        // GLTODO : Mostly ported, review lines separating controls, sorting, test scrollbars on/off.
         protected override void OnRender(Graphics g)
         {
             // Init

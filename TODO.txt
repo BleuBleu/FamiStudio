@@ -6,8 +6,6 @@
 	=> Perkka says he has fix. May be in a PR.
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
 - PWM stuff from how2.
-Mac:
-- BUG : Crash if double-click to open a file.
 Linux:
 - new openal+ smarter detection. Need a way to try the OS one + my one if it fails.
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
