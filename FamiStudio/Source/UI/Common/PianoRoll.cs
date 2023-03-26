@@ -6093,7 +6093,7 @@ namespace FamiStudio
 
             if (IsEnvelopeValueSelected(idx))
             {
-                var scaling = Utils.Clamp(originalValue + delta, min, max) / MathF.Abs(originalValue);
+                var scaling = originalValue == 0 ? 0.0f : Utils.Clamp(originalValue + delta, min, max) / MathF.Abs(originalValue);
 
                 for (int i = selectionMin; i <= selectionMax; i++)
                 {
