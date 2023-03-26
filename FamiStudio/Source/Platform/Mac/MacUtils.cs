@@ -222,6 +222,7 @@ namespace FamiStudio
 
         static IntPtr famiStudioPasteboard;
         static float  doubleClickInterval = 0.25f;
+        static EventDelegate eventDelegate;
 
         public static IntPtr FoundationLibrary => foundationLib;
         public static IntPtr NSApplication => nsApplication;
@@ -252,7 +253,8 @@ namespace FamiStudio
             eventType.EventClass = EventClassAppleEvent;
             eventType.EventKind = EventOpenDocuments;
 
-            InstallEventHandler(GetApplicationEventTarget(), HandleOpenDocuments, 1, new CarbonEventTypeSpec[] { eventType }, IntPtr.Zero, out _);
+            eventDelegate = new EventDelegate(HandleOpenDocuments);
+            InstallEventHandler(GetApplicationEventTarget(), eventDelegate, 1, new CarbonEventTypeSpec[] { eventType }, IntPtr.Zero, out _);
 
             doubleClickInterval = (float)SendFloat(clsNSEvent, selDoubleClickInterval);
             famiStudioPasteboard = SendIntPtr(clsNSPasteboard, selPasteboardWithName, ToNSString("FamiStudio"));
