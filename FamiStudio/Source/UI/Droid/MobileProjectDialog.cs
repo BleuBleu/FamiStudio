@@ -30,6 +30,9 @@ namespace FamiStudio
             dialog = new PropertyDialog(famistudio.Window, title, 100);
             dialog.SetVerb(save ? "Save" : "Open");
 
+            if (save)
+                dialog.ValidateProperties += Dialog_ValidateProperties;
+
             // User files.
             var userProjectsDir = Platform.UserProjectsDirectory;
             Directory.CreateDirectory(userProjectsDir);
@@ -90,6 +93,30 @@ namespace FamiStudio
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;
             dialog.Properties.PropertyChanged += Properties_PropertyChanged;
             dialog.Properties.Build();
+        }
+
+        private bool Dialog_ValidateProperties(PropertyPage props)
+        {
+            var idx = dialog.Properties.GetSelectedIndex(0);
+            var newFile = idx == userProjects.Count - 1;
+            var filename = dialog.Properties.GetPropertyValue<string>(1);
+
+            if (newFile && string.IsNullOrEmpty(filename))
+            {
+                Platform.ShowToast(famistudio.Window, "Please enter a valid filename");
+                return false;
+            }
+            else if (!newFile)
+            {
+                Platform.MessageBoxAsync(famistudio.Window, "Overwrite project?", "Overwrite", MessageBoxButtons.YesNo, (r) =>
+                {
+                    if (r == DialogResult.Yes)
+                        dialog.CloseWithResult(DialogResult.OK);
+                });
+                return false;
+            }
+
+            return true;
         }
 
         private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -163,13 +190,8 @@ namespace FamiStudio
                     if (saveMode)
                     {
                         var userProjectIdx = dialog.Properties.GetSelectedIndex(0);
-                        var filename = "";
-
-                        // New file requested.
-                        if (userProjectIdx == userProjects.Count - 1)
-                            filename = dialog.Properties.GetPropertyValue<string>(1);
-                        else
-                            filename = userProjects[userProjectIdx];
+                        var newFile = userProjectIdx == userProjects.Count - 1;
+                        var filename = newFile ? dialog.Properties.GetPropertyValue<string>(1) : userProjects[userProjectIdx];
 
                         if (!string.IsNullOrEmpty(filename))
                         {

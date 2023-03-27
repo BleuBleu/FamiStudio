@@ -287,7 +287,6 @@ namespace FamiStudio
 
             if (!glThreadIsRunning)
             {
-                RefreshLayout();
                 MarkDirty();
                 glSurfaceView.OnResume();
                 glThreadIsRunning = true;
@@ -448,13 +447,18 @@ namespace FamiStudio
         {
             lock (renderLock)
             {
+                Console.WriteLine("OnSurfaceCreated");
+
                 Platform.AcquireGLContext();
 
                 graphics = new Graphics();
+                graphics.SetLineBias(2);
                 fonts = new Fonts(graphics);
 
                 if (container == null)
-                { 
+                {
+                    Console.WriteLine("OnSurfaceCreated : Creating container.");
+
                     container = new FamiStudioContainer(this);
                     container.Resize(glSurfaceView.Width, glSurfaceView.Height);
 
@@ -463,6 +467,8 @@ namespace FamiStudio
                         famistudio.SetWindow(this, true);
                     else
                         famistudio.Initialize(this, null);
+
+                    RefreshLayout();
                 }
             }
         }
@@ -546,7 +552,10 @@ namespace FamiStudio
 
         public void RefreshLayout()
         {
-            container.Resize(glSurfaceView.Width, glSurfaceView.Height);
+            lock (renderLock)
+            { 
+                container.Resize(glSurfaceView.Width, glSurfaceView.Height);
+            }
         }
 
         public void MarkDirty()
@@ -586,8 +595,12 @@ namespace FamiStudio
         {
             Debug.WriteLine("FamiStudioForm.OnDestroy");
 
-            // This will stop all audio and prevent issues.
-            famistudio.Suspend();
+            lock (renderLock)
+            {
+                // This will stop all audio and prevent issues.
+                famistudio.Suspend();
+            }
+
             base.OnDestroy();
         }
 
@@ -598,13 +611,16 @@ namespace FamiStudio
             Debug.Assert(activityRunning);
             activityRunning = false;
 
-            // If we are begin stopped, but not because we are opening a dialog,
-            // this likely mean the user is switching app. Let's suspend.
-            // The property dialogs will handle this themselves.
-            if (activeDialog == null || activeDialog.ShouldSuspend)
-                famistudio.Suspend();
-            else
-                famistudio.SaveWorkInProgress();
+            lock (renderLock)
+            { 
+                // If we are begin stopped, but not because we are opening a dialog,
+                // this likely mean the user is switching app. Let's suspend.
+                // The property dialogs will handle this themselves.
+                if (activeDialog == null || activeDialog.ShouldSuspend)
+                    famistudio.Suspend();
+                else
+                    famistudio.SaveWorkInProgress();
+            }
 
             PauseGLThread();
 
@@ -661,9 +677,9 @@ namespace FamiStudio
                     var checkState = opt.CheckState();
                     switch (checkState)
                     {
-                        case ContextMenuCheckState.Checked:   Debug.Assert(false); break; // Not used on Mobile at the moment.
-                        case ContextMenuCheckState.Unchecked: Debug.Assert(false); break; // Not used on Mobile at the moment.
-                        case ContextMenuCheckState.Radio:     imageName = "MenuRadio"; break;
+                        case ContextMenuCheckState.Checked:   imageName = "MenuCheckOn";  break;
+                        case ContextMenuCheckState.Unchecked: imageName = "MenuCheckOff"; break;
+                        case ContextMenuCheckState.Radio:     imageName = "MenuRadio";    break;
                     }
                 }
 

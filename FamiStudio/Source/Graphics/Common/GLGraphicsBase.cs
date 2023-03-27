@@ -10,7 +10,6 @@ namespace FamiStudio
     public abstract class GraphicsBase : IDisposable
     {
         protected bool builtAtlases;
-        protected bool clearPrePassDone;
         protected bool offscreen;
         protected int lineWidthBias;
         protected float[] viewportScaleBias = new float[4];
@@ -35,6 +34,7 @@ namespace FamiStudio
 
         public byte DepthValue => curDepthValue;
         public int DashTextureSize => dashedBitmap.Size.Width;
+        public int LineWidthBias => lineWidthBias;
         public TransformStack Transform => transform;
         public RectangleF CurrentClipRegion => clipStack.Peek().rect;
         public bool IsOffscreen => offscreen;
@@ -68,13 +68,15 @@ namespace FamiStudio
         protected abstract void DrawDepthPrepass();
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
         protected abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
+        protected abstract void ClearAlpha();
 
         protected const string AtlasPrefix = "FamiStudio.Resources.Atlas.";
 
         public CommandList BackgroundCommandList => GetCommandList(GraphicsLayer.Background);
         public CommandList DefaultCommandList    => GetCommandList(GraphicsLayer.Default);
         public CommandList ForegroundCommandList => GetCommandList(GraphicsLayer.Foreground);
-        public CommandList OverlayCommandList    => GetCommandList(GraphicsLayer.Overlay);
+        public CommandList OverlayCommandList    => GetCommandList(GraphicsLayer.Overlay1);
+        public CommandList Overlay2CommandList   => GetCommandList(GraphicsLayer.Overlay2);
 
         protected GraphicsBase(bool offscreen)
         {
@@ -114,13 +116,11 @@ namespace FamiStudio
             clearColor = clear;
             clipRegions.Clear();
 
-            lineWidthBias = 0;
             screenRect = rect;
             screenRectFlip = FlipRectangleY(rect, rect.Height); // MATTT Clean that up.
             transform.SetIdentity();
             curDepthValue = 0x80;
             maxDepthValue = 0x80;
-            clearPrePassDone = false;
 
             viewportScaleBias[0] =  2.0f / screenRect.Width;
             viewportScaleBias[1] = -2.0f / screenRect.Height;
@@ -128,23 +128,19 @@ namespace FamiStudio
             viewportScaleBias[3] =  1.0f;
         }
 
-        public virtual void EndDrawFrame(bool releaseLists = true)
+        public virtual void EndDrawFrame(bool clearAlpha = false)
         {
             Debug.Assert(transform.IsEmpty);
             Debug.Assert(clipStack.Count == 0);
 
-            if (!clearPrePassDone)
-            {
-                Clear();
-                DrawDepthPrepass();
-                clearPrePassDone = true;
-            }
+            Clear();
+            DrawDepthPrepass();
 
             for (int i = 0; i < layerCommandLists.Length; i++)
             {
                 if (layerCommandLists[i] != null)
                 { 
-                    DrawCommandList(layerCommandLists[i], i != (int)GraphicsLayer.Overlay);
+                    DrawCommandList(layerCommandLists[i], i < (int)GraphicsLayer.Overlay1);
                 }
             }
 
@@ -153,11 +149,34 @@ namespace FamiStudio
                 if (layerCommandLists[i] != null)
                 {
                     layerCommandLists[i].Release();
-                    
-                    if (releaseLists)
-                        layerCommandLists[i] = null;
+                    layerCommandLists[i] = null;
                 }
             }
+
+            if (clearAlpha)
+            {
+                ClearAlpha();
+            }
+        }
+
+        protected void MakeFullScreenTriangle()
+        {
+            // Full screen triangle.
+            colArray[0] = -1;
+            colArray[1] = -1;
+            colArray[2] = -1;
+            depArray[0] = 0;
+            depArray[1] = 0;
+            depArray[2] = 0;
+            idxArray[0] = 0;
+            idxArray[1] = 1;
+            idxArray[2] = 2;
+            vtxArray[0] = -screenRect.Width;
+            vtxArray[1] = 0;
+            vtxArray[2] = screenRect.Width * 2;
+            vtxArray[3] = 0;
+            vtxArray[4] = screenRect.Width * 2;
+            vtxArray[5] = screenRect.Height * 3;
         }
 
         public virtual void PushClipRegion(Point p, Size s, bool clipParents = true)
@@ -305,11 +324,6 @@ namespace FamiStudio
         public void SetLineBias(int bias)
         {
             lineWidthBias = bias;
-        }
-
-        protected virtual CommandList CreateCommandList()
-        {
-            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias);
         }
 
         protected Rectangle FlipRectangleY(Rectangle rc, int sizeY)
@@ -489,7 +503,8 @@ namespace FamiStudio
         Background,
         Default,
         Foreground,
-        Overlay,
+        Overlay1, // No depth depth in overlays.
+        Overlay2,
         Count
     };
 
@@ -1344,7 +1359,6 @@ namespace FamiStudio
             public int count;
         };
 
-        private int lineWidthBias;
         private float invDashTextureSize;
         private LineBatch lineBatch;
         private List<PolyBatch> polyBatches;
@@ -1371,7 +1385,6 @@ namespace FamiStudio
             graphics = g;
             xform = g.Transform;
             invDashTextureSize = 1.0f / dashTextureSize;
-            lineWidthBias = lineBias;
         }
 
         public void PushTranslation(float x, float y)
@@ -1804,7 +1817,7 @@ namespace FamiStudio
 
         public void DrawLine(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool dash = false)
         {
-            width += lineWidthBias;
+            width += graphics.LineWidthBias;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
@@ -1840,7 +1853,7 @@ namespace FamiStudio
             if (points.Length == 0)
                 return;
 
-            width += lineWidthBias;
+            width += graphics.LineWidthBias;
             smooth |= width > 1.0f;
 
             var x0 = points[0];
@@ -1875,7 +1888,7 @@ namespace FamiStudio
 
         public void DrawGeometry(Span<float> points, Color color, int width = 1, bool smooth = false, bool close = true, bool miter = false)
         {
-            width += lineWidthBias;
+            width += graphics.LineWidthBias;
             
             var x0 = points[0];
             var y0 = points[1];
@@ -1922,7 +1935,7 @@ namespace FamiStudio
         public unsafe void DrawNiceSmoothLine(Span<float> points, Color color, int width = 2)
         {
             // Only implemented for odd widths for now.
-            width = Utils.RoundUp(width, 2);
+            width = Utils.RoundUp(width + graphics.LineWidthBias, 2);
 
             var cornerCount = 0;
             var cornerInfos = stackalloc CornerInfo[points.Length];
@@ -2109,7 +2122,7 @@ namespace FamiStudio
 
         public void DrawRectangle(float x0, float y0, float x1, float y1, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
-            width += lineWidthBias;
+            width += graphics.LineWidthBias;
 
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);

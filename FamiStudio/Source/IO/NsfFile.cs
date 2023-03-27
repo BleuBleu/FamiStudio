@@ -249,6 +249,7 @@ namespace FamiStudio
                         for (var i = 0; i < firstBankSampleData.Length; i++)
                             nsfBytes[driverBankOffset + i] = firstBankSampleData[i];
 
+                        dpcmBaseAddr += driverBankOffset & (NsfBankSize - 1);
                         driverBankOffset += firstBankSampleData.Length;
                         driverBankLeft -= firstBankSampleData.Length;
                         dpcmBankStart = driverBankCount - 1;
@@ -523,11 +524,12 @@ namespace FamiStudio
             public Instrument instrument = null;
         };
 
-        IntPtr nsf;
-        Song song;
-        Project project;
-        ChannelState[] channelStates;
-        bool preserveDpcmPadding;
+        private IntPtr nsf;
+        private Song song;
+        private Project project;
+        private ChannelState[] channelStates;
+        private bool preserveDpcmPadding;
+        private readonly int[] DPCMOctaveOrder = new [] { 4, 5, 3, 6, 2, 7, 1, 0 };
 
         public int GetBestMatchingNote(int period, ushort[] noteTable, out int finePitch)
         {
@@ -767,7 +769,25 @@ namespace FamiStudio
                     if (noteValue < 0)
                     {
                         dpcmInst = GetDPCMInstrument();
-                        noteValue = dpcmInst.SamplesMapping.Count + 1;
+
+                        var found = false;
+                        foreach (var o in DPCMOctaveOrder)
+                        {
+                            for (var i = 0; i < 12; i++)
+                            {
+                                noteValue = o * 12 + i + 1;
+                                if (dpcmInst.GetDPCMMapping(noteValue) == null)
+                                {
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (found)
+                                break;
+                        }
+
+                        Debug.Assert(found);
                         dpcmInst.MapDPCMSample(noteValue, sample, pitch, loop);
                     }
 

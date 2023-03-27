@@ -42,6 +42,9 @@
     <AssemblyName>FamiStudio</AssemblyName>
     <RootNamespace>FamiStudio</RootNamespace>
   </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants Condition=" '$(ExtraDefineConstants)' != '' ">$(DefineConstants);$(ExtraDefineConstants)</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />

@@ -6,22 +6,20 @@ namespace FamiStudio
 {
     public class ChannelStateEPSMBase : ChannelState
     {
+        //protected bool longSkip = true;
+
         public ChannelStateEPSMBase(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
         }
 
-        protected void WriteEPSMRegister(int reg, int data, bool a1 = false)
+        protected void WriteEPSMRegister(int reg, int data, bool a1 = false, int extraCycles = 0)
         {
-            if (!a1)
-            {
-                WriteRegister(NesApu.EPSM_ADDR0, reg,  NesApu.EpsmCycleAddrSkip);
-                WriteRegister(NesApu.EPSM_DATA0, data, NesApu.EpsmCycleDataSkip);
-            }
-            else
-            {
-                WriteRegister(NesApu.EPSM_ADDR1, reg,  NesApu.EpsmCycleAddrSkip);
-                WriteRegister(NesApu.EPSM_DATA1, data, NesApu.EpsmCycleDataSkip);
-            }
+            // Registers starting in 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90 seem to 
+            // require a bit more cycles looking at the OPN2 code.
+            var dataSkipCycles = (reg & 0xf0) < 0x30 || (reg & 0xf0) > 0x90 ? NesApu.EpsmCycleDataSkipShort : NesApu.EpsmCycleDataSkip;
+
+            WriteRegister(a1 ? NesApu.EPSM_ADDR1 : NesApu.EPSM_ADDR0, reg,  NesApu.EpsmCycleAddrSkip);
+            WriteRegister(a1 ? NesApu.EPSM_DATA1 : NesApu.EPSM_DATA0, data, dataSkipCycles + extraCycles);
         }
     }
 
@@ -180,7 +178,7 @@ namespace FamiStudio
 
                 if (noteTriggered)
                 {
-                    WriteEPSMRegister(0x28, 0x00 + channelKey);
+                    WriteEPSMRegister(0x28, 0x00 + channelKey, false, NesApu.EpsmCycleKeyOnSkip);
                     WriteEPSMRegister(0x28, 0xF0 + channelKey);
                     WriteEPSMRegister(Registers[1] + channelIdxHigh, stereoFlags, a1);
                 }
@@ -194,3 +192,4 @@ namespace FamiStudio
         }
     };
 }
+

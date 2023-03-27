@@ -68,7 +68,6 @@ namespace FamiStudio
 
             dialog = new MultiPropertyDialog(win, "Export Songs", 600, 200);
             dialog.SetVerb("Export");
-            //dialog.DestroyControlsOnClose = false;
             app = win.FamiStudio;
             project = app.Project;
 
@@ -188,7 +187,6 @@ namespace FamiStudio
         LocalizedString StereoTooltip;
         LocalizedString ChannelGridTooltip;
         LocalizedString ChannelGridTooltipVid;
-        LocalizedString ChannelListTooltip;
 
         // Video tooltips.                 
         LocalizedString VideoResTooltip;

@@ -95,7 +95,7 @@ namespace FamiStudio
                 CloseGif();
             }
 
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{filename}"))
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Tutorials.{filename}"))
             {
                 gifData = new byte[stream.Length];
                 stream.Read(gifData, 0, (int)stream.Length);

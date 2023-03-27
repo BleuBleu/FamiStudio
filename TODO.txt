@@ -1,33 +1,16 @@
 4.1.0
 =====
 - Full S5B support? Sync up with Perkka when im back.
-- Missing top line when maximizing piano roll.
 - Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
 	=> Perkka says he has fix. May be in a PR.
-- NSF import, assign DPCM samples starting from like C2 and go up from there.
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
-- BUG : Tooltips with \n\n dont work anymore???
+- BUG : Osc BG color.
 - PWM stuff from how2.
-Mac:
-- Is there any reason now to not allow changing DPI on MacOS??? 
-- How2: Issue with kb shortcut.
 Linux:
 - new openal+ smarter detection. Need a way to try the OS one + my one if it fails.
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 Android stuff:
-- Instrument re-ordering
-- Add confirmation for overwrite on mobile
-- BUG : Android suspend/pause issues. Null project sometimes.
-- GLTODOs, DPCMTODOs, etc. Review all those.
-- Small gap bottom sequencer on android.
-- Weird rectangle in sequencer on android.
-- Lines too thin on android
-- Long press sorting PE doesnt work on mobile
-- Reduce PE icon sizes a bit on mobile.
-- Mobile piano just doesnt render.
-- Video export, when autoselecting channels, it only looks at 1st song.
-- BUG ANDROID : Sometimes the layout doesnt refresh or something and the row below the toolbar is not drawn.
-- BUG ANDROID (from spicy in #bug) : Changing N163 values sometimes changes multiple???
+- GLTODO, CTRLTODO, NSFTODO, NET5TODO,  etc. Review all those.
 
 Testing
 =======
@@ -133,6 +116,8 @@ Key Store
 - Pass : Usual x2
 - 30 Years
 - Only full name entered.
+Issues with device monitor not starting:
+- Remove new java (11, the one from Microsoft) from the path. Keep the old one (eclipse, 8).
 
 Desktop tutorial GIFs
 =====================
@@ -157,7 +142,9 @@ Discord
 
 Backlog: 
 =========
-- Volume/effect/envelope scaling, easy one we have context menus.
+- Going in settings unutes all channels.
+- Delete instruments resets play head.
+- We should be able to drag/copy samples mappings between instruments.
 - Export DMC samples on Mobile.
 - Option to set snapping auto depending on last resize.
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.

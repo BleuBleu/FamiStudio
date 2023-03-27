@@ -19,7 +19,6 @@
     <AndroidResgenClass>Resource</AndroidResgenClass>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-    <TargetFrameworkVersion>v12.0</TargetFrameworkVersion>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
@@ -391,6 +390,8 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Mobile\MobileMenuBlank.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuCheckOff.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuCheckOn.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuClearEnvelope.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuClearLoopPoint.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuClearRelease.tga" />

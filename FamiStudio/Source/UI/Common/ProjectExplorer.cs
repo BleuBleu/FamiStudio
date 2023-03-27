@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,7 +15,9 @@ namespace FamiStudio
         const int DefaultButtonIconPosY       = 3;
         const int DefaultButtonTextPosX       = 21;
         const int DefaultButtonTextNoIconPosX = 4;
-        const int DefaultSubButtonSpacingX    = Platform.IsMobile ? 17 : 18;
+        const int DefaultSubButtonSizeX       = 16;
+        const int DefaultSubButtonMarginX     = Platform.IsMobile ? 1 : 2;
+        const int DefaultSubButtonSpacingX    = Platform.IsMobile ? 0 : 2;
         const int DefaultSubButtonPosY        = 3;
         const int DefaultScrollBarThickness1  = 10;
         const int DefaultScrollBarThickness2  = 16;
@@ -39,6 +42,8 @@ namespace FamiStudio
         int expandButtonPosX;
         int expandButtonPosY;
         int subButtonSpacingX;
+        int subButtonMarginX;
+        int subButtonSizeX;
         int subButtonPosY;
         int buttonSizeY;
         int sliderPosX;
@@ -969,7 +974,7 @@ namespace FamiStudio
 
             public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader || type == ButtonType.ProjectSettings ? Theme.LightGreyColor1 : Color.Black;
 
-            public bool TextEllipsis => type == ButtonType.ProjectSettings;
+            public bool TextEllipsis => type == ButtonType.ProjectSettings || ((type == ButtonType.Song || type == ButtonType.Instrument || type == ButtonType.Dpcm || type == ButtonType.Arpeggio) && Platform.IsMobile);
             
             public BitmapAtlasRef GetIcon(SubButtonType sub)
             {
@@ -1057,7 +1062,9 @@ namespace FamiStudio
             buttonTextNoIconPosX = DpiScaling.ScaleForWindow(DefaultButtonTextNoIconPosX);
             expandButtonPosX     = DpiScaling.ScaleForWindow(DefaultExpandButtonPosX);
             expandButtonPosY     = DpiScaling.ScaleForWindow(DefaultExpandButtonPosY);
-            subButtonSpacingX    = DpiScaling.ScaleForWindow(DefaultSubButtonSpacingX);   
+            subButtonSpacingX    = DpiScaling.ScaleForWindow(DefaultSubButtonSpacingX);
+            subButtonMarginX     = DpiScaling.ScaleForWindow(DefaultSubButtonMarginX);
+            subButtonSizeX       = DpiScaling.ScaleForWindow(DefaultSubButtonSizeX);
             subButtonPosY        = DpiScaling.ScaleForWindow(DefaultSubButtonPosY);       
             buttonSizeY          = DpiScaling.ScaleForWindow(DefaultButtonSizeY);
             sliderPosX           = DpiScaling.ScaleForWindow(DefaultSliderPosX);
@@ -1495,6 +1502,8 @@ namespace FamiStudio
             for (int i = 0; i < buttons.Count; i++)
             {
                 var button = buttons[i];
+                var subButtons = button.GetSubButtons(out var activeMask);
+                var firstSubButtonX = subButtons != null ? contentSizeX - subButtonMarginX - (subButtonSpacingX + subButtonSizeX) * subButtons.Count(b => b != SubButtonType.Expand) : contentSizeX;
                 var hovered = i == hoverButtonIndex;
                 var highlighted = i == highlightedButtonIdx;
 
@@ -1570,6 +1579,7 @@ namespace FamiStudio
 
                     var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
                     var ellipsisFlag = button.TextEllipsis ? TextFlags.Ellipsis : TextFlags.None;
+                    var centered = button.TextAlignment.HasFlag(TextFlags.Center);
                     var player = App.ActivePlayer;
 
                     if (button.type == ButtonType.ParamCustomDraw)
@@ -1588,14 +1598,17 @@ namespace FamiStudio
                     {
                         if (button.Text != null)
                         {
-                            c.DrawText(button.Text, button.Font, button.bmp == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textColor : disabledColor, button.TextAlignment | ellipsisFlag | TextFlags.Middle, contentSizeX - buttonTextPosX, buttonSizeY);
+                            var textX = button.bmp == null ? buttonTextNoIconPosX : buttonTextPosX;
+                            c.DrawText(button.Text, button.Font, textX, 0, enabled ? button.textColor : disabledColor, button.TextAlignment | ellipsisFlag | TextFlags.Middle, (centered ? contentSizeX - textX * 2 : firstSubButtonX - buttonTextPosX - leftPadding), buttonSizeY);
                         }
 
                         if (button.bmp != null)
                         {
                             c.DrawBitmapAtlas(button.bmp, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, button.imageTint);
-                            if (highlighted && button.type == ButtonType.Song)
+                            if (highlighted && (button.type == ButtonType.Song || button.type == ButtonType.Instrument || button.type == ButtonType.Dpcm || button.type == ButtonType.Arpeggio))
+                            { 
                                 c.DrawRectangle(buttonIconPosX, buttonIconPosY, buttonIconPosX + iconSize - 4, buttonIconPosY + iconSize - 4, Theme.WhiteColor, 3, true, true);
+                            }
                         }
                     }
 
@@ -1671,12 +1684,11 @@ namespace FamiStudio
                     }
                     else
                     {
-                        var subButtons = button.GetSubButtons(out var activeMask);
                         var tint = button.SubButtonTint;
 
                         if (subButtons != null)
                         {
-                            for (int j = 0, x = contentSizeX - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
+                            for (int j = 0, x = contentSizeX - subButtonMarginX - subButtonSizeX; j < subButtons.Length; j++, x -= (subButtonSpacingX + subButtonSizeX))
                             {
                                 var sub = subButtons[j];
                                 var bmp = button.GetIcon(sub);
@@ -1881,7 +1893,7 @@ namespace FamiStudio
                         if (subButtons[i] == SubButtonType.Expand)
                             continue;
 
-                        int sx = contentSizeX - subButtonSpacingX * (i + 1);
+                        int sx = contentSizeX - subButtonMarginX - (subButtonSpacingX + subButtonSizeX) * (i + 1);
                         int sy = subButtonPosY;
                         int dx = x - sx;
                         int dy = y - sy;
@@ -2742,13 +2754,13 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption(App.Project.AutoSortSongs ? "MenuCheckOn" : "MenuCheckOff", "Auto-Sort Songs", () => 
+                new ContextMenuOption("Auto-Sort Songs", null, () => 
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
                     App.Project.AutoSortSongs = !App.Project.AutoSortSongs;
                     App.UndoRedoManager.EndTransaction();
                     RefreshButtons();
-                })
+                }, () => App.Project.AutoSortSongs ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked)
             });
         }
 
@@ -2893,13 +2905,13 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption(App.Project.AutoSortInstruments ? "MenuCheckOn" : "MenuCheckOff", "Auto-Sort Instruments", () =>
+                new ContextMenuOption("Auto-Sort Instruments", null, () =>
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
                     App.Project.AutoSortInstruments = !App.Project.AutoSortInstruments;
                     App.UndoRedoManager.EndTransaction();
                     RefreshButtons();
-                })
+                }, () => App.Project.AutoSortInstruments ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked)
             });
         }
 
@@ -3218,13 +3230,13 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption(App.Project.AutoSortArpeggios ? "MenuCheckOn" : "MenuCheckOff", "Auto-Sort Arpeggios", () =>
+                new ContextMenuOption("Auto-Sort Arpeggios", null, () =>
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
                     App.Project.AutoSortArpeggios = !App.Project.AutoSortArpeggios;
                     App.UndoRedoManager.EndTransaction();
                     RefreshButtons();
-                })
+                }, () => App.Project.AutoSortArpeggios ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked)
             });
         }
 
@@ -3308,13 +3320,13 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption(App.Project.AutoSortSamples ? "MenuCheckOn" : "MenuCheckOff", "Auto-Sort DPCM Samples", () =>
+                new ContextMenuOption("Auto-Sort DPCM Samples", null, () =>
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                     App.Project.AutoSortSamples = !App.Project.AutoSortSamples;
                     App.UndoRedoManager.EndTransaction();
                     RefreshButtons();
-                })
+                }, () => App.Project.AutoSortSamples ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked)
             });
         }
 
@@ -3825,6 +3837,8 @@ namespace FamiStudio
                 AddSong();
             else if (subButtonType == SubButtonType.Load)
                 ImportSongs();
+            else if (subButtonType == SubButtonType.Sort)
+                SortSongs();
 
             return true;
         }
@@ -3833,8 +3847,10 @@ namespace FamiStudio
         {
             if (subButtonType == SubButtonType.Add)
                 AskAddInstrument(x, y);
-            if (subButtonType == SubButtonType.Load)
+            else if (subButtonType == SubButtonType.Load)
                 ImportInstruments();
+            else if (subButtonType == SubButtonType.Sort)
+                SortInstruments();
 
             return true;
         }
@@ -3857,6 +3873,9 @@ namespace FamiStudio
 
         private bool HandleTouchClickInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
+            if (subButtonType == SubButtonType.Max)
+                highlightedButtonIdx = highlightedButtonIdx == buttonIdx ? -1 : buttonIdx;
+
             if (subButtonType == SubButtonType.Properties)
             {
                 if (button.instrument != null)
@@ -3865,7 +3884,6 @@ namespace FamiStudio
             else
             {
                 App.SelectedInstrument = button.instrument;
-                highlightedButtonIdx = highlightedButtonIdx == buttonIdx || button.instrument == null ? -1 : buttonIdx;
 
                 if (subButtonType == SubButtonType.Expand)
                 {
@@ -3888,11 +3906,17 @@ namespace FamiStudio
         {
             if (subButtonType == SubButtonType.Add)
                 AddArpeggio();
+            else if (subButtonType == SubButtonType.Sort)
+                SortArpeggios();
+
             return true;
         }
 
         private bool HandleTouchClickArpeggioButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
+            if (subButtonType == SubButtonType.Max)
+                highlightedButtonIdx = highlightedButtonIdx == buttonIdx ? -1 : buttonIdx;
+
             if (subButtonType == SubButtonType.Properties)
             {
                 EditArpeggioProperties(new Point(x, y), button.arpeggio);
@@ -3911,22 +3935,28 @@ namespace FamiStudio
         {
             if (subButtonType == SubButtonType.Load)
                 LoadDPCMSample();
+            else if (subButtonType == SubButtonType.Sort)
+                SortSamples();
+
             return true;
         }
 
         private bool HandleTouchClickDpcmButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
-            if (subButtonType == SubButtonType.EditWave)
+            if (subButtonType == SubButtonType.Max)
+                highlightedButtonIdx = highlightedButtonIdx == buttonIdx ? -1 : buttonIdx;
+
+            if (subButtonType == SubButtonType.Properties)
+            {
+                EditDPCMSampleProperties(new Point(x, y), button.sample);
+            }
+            else if (subButtonType == SubButtonType.EditWave)
             {
                 App.StartEditDPCMSample(button.sample);
             }
             else if (subButtonType == SubButtonType.Play)
             {
                 App.PreviewDPCMSample(button.sample, false);
-            }
-            else if (subButtonType == SubButtonType.Properties)
-            {
-                EditDPCMSampleProperties(new Point(x, y), button.sample);
             }
             else if (subButtonType == SubButtonType.Expand)
             {
@@ -4040,6 +4070,39 @@ namespace FamiStudio
             menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(new Point(x, y), button.song); }, ContextMenuSeparator.Before));
             App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
+        }
+
+        private bool HandleContextMenuSongHeaderButton(int x, int y, Button button, SubButtonType subButtonType)
+        {
+            if (subButtonType == SubButtonType.Sort)
+            { 
+                HandleContextMenuSortSongs(x, y);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleContextMenuSampleHeaderButton(int x, int y, Button button, SubButtonType subButtonType)
+        {
+            if (subButtonType == SubButtonType.Sort)
+            {
+                HandleContextMenuSortSamples(x, y);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleContextMenuArpeggioHeaderButton(int x, int y, Button button, SubButtonType subButtonType)
+        {
+            if (subButtonType == SubButtonType.Sort)
+            {
+                HandleContextMenuSortArpeggios(x, y);
+                return true;
+            }
+
+            return false;
         }
 
         private void AskReplaceInstrument(Instrument inst)
@@ -4273,6 +4336,11 @@ namespace FamiStudio
                 App.ShowContextMenu(left + x, top + y, options.ToArray());
                 return true;
             }
+            else if (Platform.IsMobile && subButtonType == SubButtonType.Sort)
+            {
+                HandleContextMenuSortInstruments(x, y);
+                return true;
+            }
 
             return false;
         }
@@ -4410,6 +4478,8 @@ namespace FamiStudio
                         return HandleContextMenuProjectSettings(x, y);
                     case ButtonType.Song:
                         return HandleContextMenuSongButton(x, y, button);
+                    case ButtonType.SongHeader:
+                        return HandleContextMenuSongHeaderButton(x, y, button, subButtonType);
                     case ButtonType.Instrument:
                         return HandleContextMenuInstrumentButton(x, y, button, subButtonType, buttonIdx);
                     case ButtonType.InstrumentHeader:
@@ -4420,8 +4490,12 @@ namespace FamiStudio
                         return HandleContextMenuParamButton(x, y, button);
                     case ButtonType.Arpeggio:
                         return HandleContextMenuArpeggioButton(x, y, button);
+                    case ButtonType.ArpeggioHeader:
+                        return HandleContextMenuArpeggioHeaderButton(x, y, button, subButtonType);
                     case ButtonType.Dpcm:
                         return HandleContextMenuDpcmButton(x, y, button, subButtonType, buttonIdx);
+                    case ButtonType.DpcmHeader:
+                        return HandleContextMenuSampleHeaderButton(x, y, button, subButtonType);
                 }
 
                 return true;
@@ -4492,11 +4566,21 @@ namespace FamiStudio
             if (buttonIdx >= 0)
             {
                 var button = buttons[buttonIdx];
-                if (button.instrument != null && buttonIdx == highlightedButtonIdx && subButtonType < SubButtonType.EnvelopeMax)
+                if (button.instrument != null && buttonIdx == highlightedButtonIdx)
                 {
-                    envelopeDragIdx = (int)subButtonType;
                     draggedInstrument = button.instrument;
-                    StartCaptureOperation(x, y, CaptureOperation.DragInstrumentEnvelope, buttonIdx, buttonRelX, buttonRelY);
+
+                    if (subButtonType < SubButtonType.EnvelopeMax)
+                    {
+                        envelopeDragIdx = (int)subButtonType;
+                        StartCaptureOperation(x, y, CaptureOperation.DragInstrumentEnvelope, buttonIdx, buttonRelX, buttonRelY);
+                    }
+                    else
+                    {
+                        envelopeDragIdx = -1;
+                        StartCaptureOperation(x, y, CaptureOperation.DragInstrument, buttonIdx);
+                    }
+
                     return true;
                 }
             }
@@ -4523,6 +4607,42 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchDownDragDPCMSample(int x, int y)
+        {
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
+
+            if (buttonIdx >= 0)
+            {
+                var button = buttons[buttonIdx];
+                if (button.sample != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonRelX, buttonRelY))
+                {
+                    StartCaptureOperation(x, y, CaptureOperation.DragSample, buttonIdx);
+                    draggedSample = button.sample;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchDownDragDPCMArpeggio(int x, int y)
+        {
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
+
+            if (buttonIdx >= 0)
+            {
+                var button = buttons[buttonIdx];
+                if (button.arpeggio != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonRelX, buttonRelY))
+                {
+                    StartCaptureOperation(x, y, CaptureOperation.DragArpeggio, buttonIdx);
+                    draggedArpeggio = button.arpeggio;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private bool HandleTouchDownPan(int x, int y)
         {
             StartCaptureOperation(x, y, CaptureOperation.MobilePan);
@@ -4535,8 +4655,10 @@ namespace FamiStudio
 
             if (HandleTouchDownParamSliderButton(x, y)) goto Handled;
             if (HandleTouchDownParamListButton(x, y)) goto Handled;
-            if (HandleTouchDownDragInstrument(x, y)) goto Handled;
             if (HandleTouchDownDragSong(x, y)) goto Handled;
+            if (HandleTouchDownDragInstrument(x, y)) goto Handled;
+            if (HandleTouchDownDragDPCMSample(x, y)) goto Handled;
+            if (HandleTouchDownDragDPCMArpeggio(x, y)) goto Handled;
             if (HandleTouchDownPan(x, y)) goto Handled;
             return;
 

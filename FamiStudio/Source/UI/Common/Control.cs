@@ -266,12 +266,25 @@ namespace FamiStudio
 
         public ModifierKeys(int val)
         {
-            value = val;
+            value = FixMods(val);
         }
 
         public void Set(int mods)
         {
-            value = mods;
+            value = FixMods(mods);
+        }
+
+        private static int FixMods(int val)
+        {
+            if (Platform.IsMacOS)
+            {
+                // On MacOS, we dont differentiate between command and control.
+                // Both need to be set to match shortcuts correctly.
+                if ((val & ControlMask) != 0)
+                    val |= ControlMask;
+            }
+
+            return val;
         }
 
         public override bool Equals(object obj)
@@ -686,24 +699,27 @@ namespace FamiStudio
             {
                 var str = "";
 
-                // CTRLTODO : Some stuff like "Redo" have 2 shortcuts AND tooltips.
-                if (IsShortcutValid(0))
+                if (Platform.IsDesktop)
                 {
-                    if (Modifiers[0].Value != 0)
-                        str = $"{Modifiers[0].ToTooltipString()}";
-                    str += $"<{GetShortcutKeyString(0)}>";
-                }
-
-                // HACK : 'Ctrl' gets converted to 'Cmd' in the tooltip, but for some
-                // commands on MacOS we will really want to display Ctrl since they
-                // conflict with some built-in OS shortcuts.
-                if (Platform.IsMacOS)
-                {
-                    switch (str)
+                    // CTRLTODO : Some stuff like "Redo" have 2 shortcuts AND tooltips.
+                    if (IsShortcutValid(0))
                     {
-                        case "<Ctrl>+<Space>": 
-                            str = "<ForceCtrl>+<Space>"; 
-                            break;
+                        if (Modifiers[0].Value != 0)
+                            str = $"{Modifiers[0].ToTooltipString()}";
+                        str += $"<{GetShortcutKeyString(0)}>";
+                    }
+
+                    // HACK : 'Ctrl' gets converted to 'Cmd' in the tooltip, but for some
+                    // commands on MacOS we will really want to display Ctrl since they
+                    // conflict with some built-in OS shortcuts.
+                    if (Platform.IsMacOS)
+                    {
+                        switch (str)
+                        {
+                            case "<Ctrl>+<Space>":
+                                str = "<ForceCtrl>+<Space>";
+                                break;
+                        }
                     }
                 }
 
