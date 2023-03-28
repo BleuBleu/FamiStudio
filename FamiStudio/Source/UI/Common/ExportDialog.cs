@@ -163,18 +163,24 @@ namespace FamiStudio
                 data[i, 1] = ChannelType.GetNameWithExpansion(channelTypes[i]);
                 data[i, 2] = 50;
                 if (triggers)
-                    data[i, 3] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? "Emulation" : "Peak Speed";
+                    data[i, 3] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? EmulationOption.Value : PeakSpeedOption.Value;
             }
 
             return data;
         }
 
-        // General tooltips.
+        #region Localization
+
+        // General tooltips
         LocalizedString SingleSongTooltip;
         LocalizedString SongListTooltip;
         LocalizedString MachineTooltip;
 
-        // WAV/MP3 tooltips.               
+        // General labels
+        LocalizedString SongLabel;
+        LocalizedString SongsLabel;
+
+        // WAV/MP3 tooltips           
         LocalizedString WavFormatTooltip;
         LocalizedString SampleRateTooltip;
         LocalizedString AudioBitRateTooltip;
@@ -188,7 +194,20 @@ namespace FamiStudio
         LocalizedString ChannelGridTooltip;
         LocalizedString ChannelGridTooltipVid;
 
-        // Video tooltips.                 
+        // WAV/MP3 labels
+        LocalizedString FormatLabel;
+        LocalizedString SampleRateLabel;
+        LocalizedString BitRateLabel;
+        LocalizedString ModeLabel;
+        LocalizedString DurationSecLabel;
+        LocalizedString SeparateChannelFilesLabel;
+        LocalizedString SeparateIntroFileLabel;
+        LocalizedString StereoLabel;
+        LocalizedString ChannelsLabel;
+        LocalizedString LoopNTimesOption;
+        LocalizedString DurationOption;
+
+        // Video tooltips          
         LocalizedString VideoResTooltip;
         LocalizedString FpsTooltip;
         LocalizedString VideoBitRateTooltip;
@@ -196,12 +215,44 @@ namespace FamiStudio
         LocalizedString OscColumnsTooltip;
         LocalizedString OscThicknessTooltip;
         LocalizedString PianoRollZoomTootip;
+        LocalizedString MobileExportVideoMessage;
+
+        // Video labels
+        LocalizedString ResolutionLabel;
+        LocalizedString FrameRateLabel;
+        LocalizedString AudioBitRateLabel;
+        LocalizedString VideoBitRateLabel;
+        LocalizedString LoopCountLabel;
+        LocalizedString AudioDelayMsLabel;
+        LocalizedString OscilloscopeWindowLabel;
+        LocalizedString RequireFFMpegLabel;
+        LocalizedString PianoRollZoomLabel;
+        LocalizedString OscColumnsLabel;
+        LocalizedString OscThicknessLabel;
+        LocalizedString OscColorLabel;
+        LocalizedString ExportingVideoLabel;
+
+        // Video grid
+        LocalizedString ChannelColumn;
+        LocalizedString PanColumn;
+        LocalizedString TriggerColumn;
+        LocalizedString EmulationOption;
+        LocalizedString PeakSpeedOption;
 
         // NSF tooltips                    
         LocalizedString NsfFormatTooltip;
 
-        // ROM/FDS tooltips.               
+        // NSF labels
+        LocalizedString NameLabel;
+        LocalizedString ArtistLabel;
+        LocalizedString CopyrightLabel;
+
+        // ROM/FDS tooltips           
         LocalizedString RomFdsFormatTooltip;
+
+        // ROM/FDS labels
+        LocalizedString TypeLabel;
+        LocalizedString RomMultipleExpansionsLabel;
 
         // MIDI tooltips
         LocalizedString MidiVelocityTooltip;
@@ -210,10 +261,20 @@ namespace FamiStudio
         LocalizedString MidiInstrumentTooltip;
         LocalizedString MidiInstGridTooltip;
 
-        // FamiStudio text tooltips
+        // MIDI labels
+        LocalizedString ExportVolumeAsVelocityLabel;
+        LocalizedString ExportSlideAsPitchWheelLabel;
+        LocalizedString PitchWheelRangeLabel;
+        LocalizedString InstrumentModeLabel;
+        LocalizedString InstrumentsLabels;
+
+        // FamiStudio Text tooltips
         LocalizedString DeleteUnusedTooltip;
 
-        // Famitone2/Famistudio sound engine tooltips
+        // FamiStudio Text labels
+        LocalizedString DeleteUnusedDataLabel;
+
+        // Music ASM tooltips
         LocalizedString FT2AssemblyTooltip;
         LocalizedString FT2SepFilesTooltip;
         LocalizedString FT2SepFilesFmtTooltip;
@@ -222,8 +283,33 @@ namespace FamiStudio
         LocalizedString FT2SongListTooltip;
         LocalizedString FT2SfxSongListTooltip;
 
-        // Share tooltips.
+        // Music ASM labels
+        LocalizedString FamiTone2ExpLabel;
+        LocalizedString SoundEngineMultExpLabel;
+        LocalizedString SeparateFilesLabel;
+        LocalizedString SongNamePatternLabel;
+        LocalizedString DmcNamePatternLabel;
+        LocalizedString ForceDpcmBankSwitchingLabel;
+        LocalizedString GenerateSongListIncludeLabel;
+
+        // Share tooltips
         LocalizedString ShareTooltip;
+
+        // Share labels
+        LocalizedString SharingModeLabel;
+        LocalizedString CopyToStorageOption;
+        LocalizedString ShareOption;
+
+        // FamiTracker Text labels
+        LocalizedString FamiTrackerMultipleExpLabel;
+
+        // SFX ASM labels
+        LocalizedString GenerateSfxInclude;
+
+        // VGM/Command Log labels
+        LocalizedString FileTypeLabel;
+
+        #endregion
 
         private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
         {
@@ -232,19 +318,19 @@ namespace FamiStudio
 
             if (canExportToVideo)
             {
-                page.AddDropDownList("Song :", songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
-                page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0], VideoResTooltip); // 1
-                page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 2
-                page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 3
-                page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000", VideoBitRateTooltip); // 4
-                page.AddNumericUpDown("Loop Count :", 1, 1, 8, 1, LoopCountTooltip); // 5
-                page.AddNumericUpDown("Audio Delay (ms) :", 0, 0, 500, 1, DelayTooltip); // 6
-                page.AddNumericUpDown("Oscilloscope Window :", 2, 1, 4, 1, OscWindowTooltip); // 7
+                page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
+                page.AddDropDownList(ResolutionLabel.Colon, VideoResolution.Names, VideoResolution.Names[0], VideoResTooltip); // 1
+                page.AddDropDownList(FrameRateLabel.Colon, new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 2
+                page.AddDropDownList(AudioBitRateLabel.Colon, new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 3
+                page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000", VideoBitRateTooltip); // 4
+                page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 5
+                page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 6
+                page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 7
                 return true;
             }
             else
             {
-                page.AddLabel(null, "Video export requires FFmpeg. Please go in the application settings and look for the 'FFmpeg' section.", true);
+                page.AddLabel(null, RequireFFMpegLabel, true);
                 return false;
             }
         }
@@ -256,18 +342,18 @@ namespace FamiStudio
             switch (format)
             {
                 case ExportFormat.WavMp3:
-                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
-                    page.AddDropDownList("Format :", AudioFormatType.Names, AudioFormatType.Names[0], WavFormatTooltip); // 1
-                    page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100", SampleRateTooltip); // 2
-                    page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "192", AudioBitRateTooltip); // 3
-                    page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times", LoopModeTooltip); // 4
-                    page.AddNumericUpDown("Loop count:", 1, 1, 10, 1, LoopCountTooltip); // 5
-                    page.AddNumericUpDown("Duration (sec):", 120, 1, 1000, 1, DurationTooltip); // 6
-                    page.AddNumericUpDown("Delay (ms) :", 0, 0, 500, 1, DelayTooltip); // 7
-                    page.AddCheckBox("Separate channel files", false, SeperateFilesTooltip); // 8
-                    page.AddCheckBox("Separate intro file", false, SeperateIntroTooltip); // 9
-                    page.AddCheckBox("Stereo", project.OutputsStereoAudio, StereoTooltip); // 10
-                    page.AddGrid("Channels", new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(false), 7, ChannelGridTooltip); // 11
+                    page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
+                    page.AddDropDownList(FormatLabel.Colon, AudioFormatType.Names, AudioFormatType.Names[0], WavFormatTooltip); // 1
+                    page.AddDropDownList(SampleRateLabel.Colon, new[] { "11025", "22050", "44100", "48000" }, "44100", SampleRateTooltip); // 2
+                    page.AddDropDownList(BitRateLabel.Colon, new[] { "96", "112", "128", "160", "192", "224", "256" }, "192", AudioBitRateTooltip); // 3
+                    page.AddDropDownList(ModeLabel.Colon, new string[] { LoopNTimesOption, DurationOption }, LoopNTimesOption, LoopModeTooltip); // 4
+                    page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 10, 1, LoopCountTooltip); // 5
+                    page.AddNumericUpDown(DurationSecLabel.Colon, 120, 1, 1000, 1, DurationTooltip); // 6
+                    page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 7
+                    page.AddCheckBox(SeparateChannelFilesLabel.Colon, false, SeperateFilesTooltip); // 8
+                    page.AddCheckBox(SeparateIntroFileLabel.Colon, false, SeperateIntroTooltip); // 9
+                    page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 10
+                    page.AddGrid(ChannelsLabel, new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.4f), new ColumnDesc(PanColumn, 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(false), 7, ChannelGridTooltip); // 11
                     page.SetPropertyEnabled( 3, false);
                     page.SetPropertyEnabled( 6, false);
                     page.SetPropertyVisible( 8, Platform.IsDesktop); // No separate files on mobile.
@@ -280,12 +366,12 @@ namespace FamiStudio
                 case ExportFormat.VideoPianoRoll:
                     if (AddCommonVideoProperties(page, songNames)) // 0-7
                     {
-                        page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTootip); // 8
-                        page.AddCheckBox("Stereo", project.OutputsStereoAudio, StereoTooltip); // 9
-                        page.AddGrid("Channels",
+                        page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTootip); // 8
+                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 9
+                        page.AddGrid(ChannelsLabel,
                             Platform.IsDesktop ?
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc("Trigger", 0.1f, new[] { "Emulation", "Peak Speed" }) } :
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop), 7, ChannelGridTooltipVid); // 10
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption }) } :
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop), 7, ChannelGridTooltipVid); // 10
                         page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
                         page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
@@ -294,26 +380,26 @@ namespace FamiStudio
                 case ExportFormat.VideoOscilloscope:
                     if (AddCommonVideoProperties(page, songNames)) // 0-7
                     {
-                        page.AddNumericUpDown("Oscilloscope Columns :", 1, 1, 5, 1, OscColumnsTooltip); // 8
-                        page.AddNumericUpDown("Oscilloscope Thickness :", 2, 2, 10, 2, OscThicknessTooltip); // 9
-                        page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.Instruments]); // 10
-                        page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 11
-                        page.AddGrid("Channels", 
+                        page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 8
+                        page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 9
+                        page.AddDropDownList(OscColorLabel.Colon, OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.Instruments]); // 10
+                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 11
+                        page.AddGrid(ChannelsLabel, 
                             Platform.IsDesktop ?
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc("Trigger", 0.1f, new[] { "Emulation", "Peak Speed" } ) } :
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.3f), new ColumnDesc("Pan (% L/R)", 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop), 7, ChannelGridTooltipVid); // 12
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption } ) } :
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop), 7, ChannelGridTooltipVid); // 12
                         page.SetPropertyEnabled(11, !project.OutputsStereoAudio); // Force stereo for EPSM.
                         page.SetColumnEnabled(12, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
                 case ExportFormat.Nsf:
-                    page.AddTextBox("Name :", project.Name, 31); // 0
-                    page.AddTextBox("Artist :", project.Author, 31); // 1
-                    page.AddTextBox("Copyright :", project.Copyright, 31); // 2
-                    page.AddDropDownList("Format :", new[] { "NSF", "NSFe" }, "NSF", NsfFormatTooltip); // 3
-                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 4
-                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null, SongListTooltip, 12); // 5
+                    page.AddTextBox(NameLabel.Colon, project.Name, 31); // 0
+                    page.AddTextBox(ArtistLabel.Colon, project.Author, 31); // 1
+                    page.AddTextBox(CopyrightLabel.Colon, project.Copyright, 31); // 2
+                    page.AddDropDownList(FormatLabel.Colon, new[] { "NSF", "NSFe" }, "NSF", NsfFormatTooltip); // 3
+                    page.AddDropDownList(ModeLabel.Colon, MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 4
+                    page.AddCheckBoxList(Platform.IsDesktop ? null : SongsLabel, songNames, null, SongListTooltip, 12); // 5
 #if DEBUG
                     page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 6
 #endif
@@ -322,32 +408,32 @@ namespace FamiStudio
                 case ExportFormat.Rom:
                     if (!project.UsesMultipleExpansionAudios)
                     {
-                        page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM", RomFdsFormatTooltip); // 0
-                        page.AddTextBox("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
-                        page.AddTextBox("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
-                        page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC", MachineTooltip); // 3
-                        page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null, SongListTooltip, 12); // 4
+                        page.AddDropDownList(TypeLabel.Colon, new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM", RomFdsFormatTooltip); // 0
+                        page.AddTextBox(NameLabel.Colon, project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
+                        page.AddTextBox(ArtistLabel.Colon, project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
+                        page.AddDropDownList(ModeLabel.Colon, new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC", MachineTooltip); // 3
+                        page.AddCheckBoxList(Platform.IsDesktop ? null : SongsLabel, songNames, null, SongListTooltip, 12); // 4
                         page.SetPropertyEnabled(0, project.UsesFdsExpansion);
                         page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     }
                     else
                     {
-                        page.AddLabel(null, "ROM export does not support multiple audio expansions. Limit yourself to a single expansion to enable export.", true);
+                        page.AddLabel(null, RomMultipleExpansionsLabel, true);
                         canExportToRom = false;
                     }
                     break;
                 case ExportFormat.Midi:
-                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
-                    page.AddCheckBox("Export volume as velocity :", true, MidiVelocityTooltip); // 1
-                    page.AddCheckBox("Export slide notes as pitch wheel :", true, MidiPitchTooltip); // 2
-                    page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24, 1, MidiPitchRangeTooltip); // 3
-                    page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0], MidiInstrumentTooltip); // 4
-                    page.AddGrid("Instruments", new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14, MidiInstGridTooltip); // 5
+                    page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
+                    page.AddCheckBox(ExportVolumeAsVelocityLabel.Colon, true, MidiVelocityTooltip); // 1
+                    page.AddCheckBox(ExportSlideAsPitchWheelLabel.Colon, true, MidiPitchTooltip); // 2
+                    page.AddNumericUpDown(PitchWheelRangeLabel.Colon, 24, 1, 24, 1, MidiPitchRangeTooltip); // 3
+                    page.AddDropDownList(InstrumentModeLabel.Colon, MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0], MidiInstrumentTooltip); // 4
+                    page.AddGrid(InstrumentsLabels, new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14, MidiInstGridTooltip); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:
                     page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 0
-                    page.AddCheckBox("Delete unused data :", false, DeleteUnusedTooltip); // 1
+                    page.AddCheckBox(DeleteUnusedDataLabel.Colon, false, DeleteUnusedTooltip); // 1
                     break;
                 case ExportFormat.FamiTracker:
                     if (!project.UsesMultipleExpansionAudios)
@@ -357,7 +443,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        page.AddLabel(null, "The original FamiTracker does not support multiple audio expansions. Limit yourself to a single expansion to enable export.", true);
+                        page.AddLabel(null, FamiTrackerMultipleExpLabel, true);
                         canExportToFamiTracker = false;
                     }
                     break;
@@ -365,22 +451,22 @@ namespace FamiStudio
                 case ExportFormat.FamiStudioMusic:
                     if (format == ExportFormat.FamiTone2Music && project.UsesAnyExpansionAudio)
                     {
-                        page.AddLabel(null, "FamiTone2 does not support audio expansions.", true);
+                        page.AddLabel(null, FamiTone2ExpLabel, true);
                         canExportToFamiTone2 = false;
                     }
                     else if (format == ExportFormat.FamiStudioMusic && project.UsesMultipleExpansionAudios)
                     {
-                        page.AddLabel(null, "The FamiStudio Sound Engine only supports a single expansion at a time. Limit yourself to a single expansion to enable export.", true);
+                        page.AddLabel(null, SoundEngineMultExpLabel, true);
                         canExportToSoundEngine = false;
                     }
                     else
                     {
-                        page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
-                        page.AddCheckBox("Separate Files :", false, FT2SepFilesTooltip); // 1
-                        page.AddTextBox("Song Name Pattern :", "{project}_{song}", 0, FT2SepFilesFmtTooltip); // 2
-                        page.AddTextBox("DMC Name Pattern :", "{project}", 0, FT2DmcFmtTooltip); // 3
-                        page.AddCheckBox("Force DPCM bank-switching:", false, FT2BankswitchTooltip); // 4
-                        page.AddCheckBox("Generate song list include :", false, FT2SongListTooltip); // 5
+                        page.AddDropDownList(FormatLabel.Colon, AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
+                        page.AddCheckBox(SeparateFilesLabel.Colon, false, FT2SepFilesTooltip); // 1
+                        page.AddTextBox(SongNamePatternLabel.Colon, "{project}_{song}", 0, FT2SepFilesFmtTooltip); // 2
+                        page.AddTextBox(DmcNamePatternLabel.Colon, "{project}", 0, FT2DmcFmtTooltip); // 3
+                        page.AddCheckBox(ForceDpcmBankSwitchingLabel.Colon, false, FT2BankswitchTooltip); // 4
+                        page.AddCheckBox(GenerateSongListIncludeLabel.Colon, false, FT2SongListTooltip); // 5
                         page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 6
                         page.SetPropertyEnabled(2, false);
                         page.SetPropertyEnabled(3, false);
@@ -389,17 +475,17 @@ namespace FamiStudio
                     break;
                 case ExportFormat.FamiTone2Sfx:
                 case ExportFormat.FamiStudioSfx:
-                    page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
-                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 1
-                    page.AddCheckBox("Generate SFX list include :", false, FT2SfxSongListTooltip); // 2
+                    page.AddDropDownList(FormatLabel.Colon, AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
+                    page.AddDropDownList(ModeLabel.Colon, MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 1
+                    page.AddCheckBox(GenerateSfxInclude.Colon, false, FT2SfxSongListTooltip); // 2
                     page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 3
                     break;
                 case ExportFormat.CommandLog:
-                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name, SongListTooltip); // 0
-                    page.AddDropDownList("Filetype :", new[] { "Command Log", "VGM"}, "VGM"); // 1
+                    page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SongListTooltip); // 0
+                    page.AddDropDownList(FileTypeLabel.Colon, new[] { "Command Log", "VGM"}, "VGM"); // 1
                     break;
                 case ExportFormat.Share:
-                    page.AddRadioButtonList("Sharing mode", new[] { "Copy to Storage", "Share" }, 0, ShareTooltip);
+                    page.AddRadioButtonList(SharingModeLabel.Colon, new string[] { CopyToStorageOption, ShareOption }, 0, ShareTooltip);
                     break;
             }
 
@@ -424,8 +510,8 @@ namespace FamiStudio
             }
             else if (propIdx == 4)
             {
-                props.SetPropertyEnabled(5, (string)value != "Duration");
-                props.SetPropertyEnabled(6, (string)value == "Duration");
+                props.SetPropertyEnabled(5, (string)value != DurationOption);
+                props.SetPropertyEnabled(6, (string)value == DurationOption);
             }
             else if (propIdx == 8)
             {
@@ -486,8 +572,8 @@ namespace FamiStudio
                     var songName = props.GetPropertyValue<string>(0);
                     var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2), CultureInfo.InvariantCulture);
                     var bitrate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
-                    var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
-                    var duration = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
+                    var loopCount = props.GetPropertyValue<string>(4) != DurationOption ? props.GetPropertyValue<int>(5) : -1;
+                    var duration = props.GetPropertyValue<string>(4) == DurationOption ? props.GetPropertyValue<int>(6) : -1;
                     var delay = props.GetPropertyValue<int>(7);
                     var separateFiles = props.GetPropertyValue<bool>(8);
                     var separateIntro = props.GetPropertyValue<bool>(9);
@@ -606,7 +692,7 @@ namespace FamiStudio
                             channelMask |= (1L << i);
 
                         pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
-                        triggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(channelsPropIdx, i, 3) == "Emulation" : true;
+                        triggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(channelsPropIdx, i, 3) == EmulationOption : true;
                     }
                   
                     lastExportFilename = filename;

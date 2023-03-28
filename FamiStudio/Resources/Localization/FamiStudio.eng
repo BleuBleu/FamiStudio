@@ -4,62 +4,7 @@ FontBold=Quicksand-Bold.ttf
 
 [ExportDialog]
 
-# General tooltips.
-SingleSongTooltip=Select the song to export.
-SongListTooltip=Select the songs to export.
-MachineTooltip=The target hardware. PAL is not available when using any audio expansion.
-
-# WAV/MP3 tooltips. 
-WavFormatTooltip=Audio format to export to. WAV files are uncompressed and sound better, but are much larger.
-SampleRateTooltip=The sample rate of the audio to export. Leave to 44100 to get the exact same sound as inside the app.
-LoopModeTooltip=Loop the song a certain number of times, or export a specific duration (in seconds).
-LoopCountTooltip=Number of times to loop the song.
-DurationTooltip=Duration to export, in seconds.
-DelayTooltip=Optional audio delay effect that will include an echo of the audio at the specified delay.\n\nHighly recommended to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side.\n\nA value of 15 ms. is a good place to start, set to 0 to turn off.
-SeperateFilesTooltip=If enabled, each channel will be exported to a separate file. Useful for offline mixing.
-SeperateIntroTooltip=If enabled, the intro (the part before the loop point), will be exported to a separate file. Useful if making games.
-StereoTooltip=If enabled, will export stereo audio and enable custom panning for each channel in the grid below.
-ChannelGridTooltip=Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.
-ChannelGridTooltipVid=Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.\n\nTrigger is the type or algorithm used to align the oscilloscope. Emulation means it will try to use the frequency of the currently playing note. This may not work so well for very low frequency instruments or instruments that rapidly changes their frequencies. Peak Speed will simply look at the shape of the waveform and make an educated guess.
-ChannelListTooltip=Select the channels to export.
-
-# Video tooltips. 
-VideoResTooltip=Resolution of the exported video. Higher resolution tend to take longer to render.
-FpsTooltip=Frame rate of the video to export. The first frame rate is for PAL, while the second is for NTSC.
-VideoBitRateTooltip=Video bit rate. Lower bit rates results in smaller files, at the cost of video quality.
-OscWindowTooltip=Number of frames to display in the oscilloscope.
-OscColumnsTooltip=Number of columns in the grid of oscilloscopes.
-OscThicknessTooltip=Thickness of the oscilloscope lines.
-PianoRollZoomTootip=Higher zoom values scrolls faster and shows less far ahead.
- 
-# NSF tooltips 
-NsfFormatTooltip=The type of format to use. NSF is the more widely supported. NSFe adds supports for per-track name and duration.
- 
-# ROM/FDS tooltips. 
-RomFdsFormatTooltip=ROMs are better suited for the original NES or Famicom. FDS disks can be played on the Famicom Disk System.
-
-# MIDI tooltips
-MidiVelocityTooltip=If enabled, values in the volume track will be used as note velocities.
-MidiPitchTooltip=If enabled, slide notes will be exported as pitch wheel MIDI events.
-MidiPitchRangeTooltip=The range of the pitch wheel. Larger range can support larger slide notes, but has less precision.
-MidiInstrumentTooltip=How to assign MIDI instrument from the FamiStudio project. In 'Instrument' mode, You can map each FamiStudio instrument to a General MIDI instrument. In 'Channel' mode, you simply assign one MIDI instrument for each channel
-MidiInstGridTooltip=The MIDI instruments assignment.
-
-# FamiStudio text tooltips
-DeleteUnusedTooltip=If enabled, will delete any unused data (instrument, arpeggio, DPCM sample, etc.) before the export.
-
-# Famitone2/Famistudio sound engine tooltips
-FT2AssemblyTooltip=The assembler that will be used to assemble/link the code. The 3 main ones are supported.
-FT2SepFilesTooltip=If enabled, each song will be exported to a separate file.
-FT2SepFilesFmtTooltip=When using separate files, the format to name each file.
-FT2DmcFmtTooltip=The format of the name of the DMC file. A DMC file will only be generated if the project uses DPCM samples.
-FT2BankswitchTooltip=If enabled, the exported data will assume multiple DPCM banks are used, event if there are not enough samples in the current project to justify it.
-FT2SongListTooltip=If enabled, will generate a .inc file containing information about each songs.
-FT2SfxSongListTooltip=If enabled, will generate a .inc file containing information about each sound effect.
-
-# Share tooltips.
-ShareTooltip=Copy the FamiStudio project to your device's storage, or share it to another application.
-
+# Export formats
 ExportFormatNames_0=WAV / MP3 / OGG
 ExportFormatNames_0_Mobile=WAV / MP3
 ExportFormatNames_1=Video (Piano Roll)
@@ -75,3 +20,141 @@ ExportFormatNames_10=FamiStudio SFX Code
 ExportFormatNames_11=FamiTone2 Music Code
 ExportFormatNames_12=FamiTone2 SFX Code
 ExportFormatNames_13=Share
+
+# General tooltips
+SingleSongTooltip=Select the song to export.
+SongListTooltip=Select the songs to export.
+MachineTooltip=The target hardware. PAL is not available when using any audio expansion.
+
+# General labels
+SongLabel=Song
+SongsLabel=Songs
+
+# WAV/MP3 tooltips
+WavFormatTooltip=Audio format to export to. WAV files are uncompressed and sound better, but are much larger.
+SampleRateTooltip=The sample rate of the audio to export. Leave to 44100 to get the exact same sound as inside the app.
+LoopModeTooltip=Loop the song a certain number of times, or export a specific duration (in seconds).
+LoopCountTooltip=Number of times to loop the song.
+DurationTooltip=Duration to export, in seconds.
+DelayTooltip=Optional audio delay effect that will include an echo of the audio at the specified delay.\n\nHighly recommended to use with Stereo and heavy L/R panning (ex: set channels entirely on one side) as the echo effect will be on the opposite side.\n\nA value of 15 ms. is a good place to start, set to 0 to turn off.
+SeperateFilesTooltip=If enabled, each channel will be exported to a separate file. Useful for offline mixing.
+SeperateIntroTooltip=If enabled, the intro (the part before the loop point), will be exported to a separate file. Useful if making games.
+StereoTooltip=If enabled, will export stereo audio and enable custom panning for each channel in the grid below.
+ChannelGridTooltip=Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.
+ChannelGridTooltipVid=Select the channels to export. If stereo is enabled, you will be able to set the panning for each channel.\n\nTrigger is the type or algorithm used to align the oscilloscope. Emulation means it will try to use the frequency of the currently playing note. This may not work so well for very low frequency instruments or instruments that rapidly changes their frequencies. Peak Speed will simply look at the shape of the waveform and make an educated guess.
+ChannelListTooltip=Select the channels to export.
+
+# WAV/MP3 labels
+FormatLabel=Format
+SampleRateLabel=Sample Rate
+BitRateLabel=Bit Rate
+ModeLabel=Mode
+DurationSecLabel=Duration (sec)
+SeparateChannelFilesLabel=Separate channel files
+SeparateIntroFileLabel=Separate intro file
+StereoLabel=Stereo
+ChannelsLabel=Channels
+LoopNTimesOption=Loop N times
+DurationOption=Duration
+
+# Video tooltips
+VideoResTooltip=Resolution of the exported video. Higher resolution tend to take longer to render.
+FpsTooltip=Frame rate of the video to export. The first frame rate is for PAL, while the second is for NTSC.
+VideoBitRateTooltip=Video bit rate. Lower bit rates results in smaller files, at the cost of video quality.
+OscWindowTooltip=Number of frames to display in the oscilloscope.
+OscColumnsTooltip=Number of columns in the grid of oscilloscopes.
+OscThicknessTooltip=Thickness of the oscilloscope lines.
+PianoRollZoomTootip=Higher zoom values scrolls faster and shows less far ahead.
+MobileExportVideoMessage=Exporting videos may take a very long time, especially at high resolutions. Make sure FamiStudio remains open, clicking BACK or closing this window will abort the operation. FamiStudio is currently preventing the screen from going to sleep.\n\nAlso please note that for reasons outside of our control, the video encoding quality on mobile is inferior to the desktop version of FamiStudio.
+                            
+# Video labels
+ResolutionLabel=Resolution
+FrameRateLabel=Frame Rate
+AudioBitRateLabel=Audio Bit Rate (Kb/s) 
+VideoBitRateLabel=Video Bit Rate (Kb/s)
+LoopCountLabel=Loop Count
+AudioDelayMsLabel=Audio Delay (ms)
+OscilloscopeWindowLabel=Audio Delay (ms)
+RequireFFMpegLabel=Oscilloscope Window
+PianoRollZoomLabel=Piano Roll Zoom
+OscColumnsLabel=Oscilloscope Columns
+OscThicknessLabel=Oscilloscope Thickness
+OscColorLabel=Oscilloscope Color
+ExportingVideoLabel=Exporting Video
+
+# Video grid
+ChannelColumn=Channel
+PanColumn=Pan (% L/R
+TriggerColumn=Trigger
+EmulationOption=Emulation
+PeakSpeedOption=Peak Speed
+
+# NSF tooltips 
+NsfFormatTooltip=The type of format to use. NSF is the more widely supported. NSFe adds supports for per-track name and duration.
+ 
+# NSF labels
+NameLabel=Name
+ArtistLabel=Artist
+CopyrightLabel=Copyright
+
+# ROM/FDS tooltips
+RomFdsFormatTooltip=ROMs are better suited for the original NES or Famicom. FDS disks can be played on the Famicom Disk System.
+
+# ROM/FDS labels
+TypeLabel=Type
+RomMultipleExpansionsLabel=ROM export does not support multiple audio expansions. Limit yourself to a single expansion to enable export.
+
+# MIDI tooltips
+MidiVelocityTooltip=If enabled, values in the volume track will be used as note velocities.
+MidiPitchTooltip=If enabled, slide notes will be exported as pitch wheel MIDI events.
+MidiPitchRangeTooltip=The range of the pitch wheel. Larger range can support larger slide notes, but has less precision.
+MidiInstrumentTooltip=How to assign MIDI instrument from the FamiStudio project. In 'Instrument' mode, You can map each FamiStudio instrument to a General MIDI instrument. In 'Channel' mode, you simply assign one MIDI instrument for each channel
+MidiInstGridTooltip=The MIDI instruments assignment.
+
+# MIDI labels
+ExportVolumeAsVelocityLabel=Export volume as velocity
+ExportSlideAsPitchWheelLabel=Export slide notes as pitch wheel
+PitchWheelRangeLabel=Pitch wheel range
+InstrumentModeLabel=Instrument Mode
+InstrumentsLabels=Instruments
+
+# FamiStudio Text tooltips
+DeleteUnusedTooltip=If enabled, will delete any unused data (instrument, arpeggio, DPCM sample, etc.) before the export.
+
+# FamiStudio Text labels
+DeleteUnusedDataLabel=Delete unused data
+
+# Music ASM tooltips
+FT2AssemblyTooltip=The assembler that will be used to assemble/link the code. The 3 main ones are supported.
+FT2SepFilesTooltip=If enabled, each song will be exported to a separate file.
+FT2SepFilesFmtTooltip=When using separate files, the format to name each file.
+FT2DmcFmtTooltip=The format of the name of the DMC file. A DMC file will only be generated if the project uses DPCM samples.
+FT2BankswitchTooltip=If enabled, the exported data will assume multiple DPCM banks are used, event if there are not enough samples in the current project to justify it.
+FT2SongListTooltip=If enabled, will generate a .inc file containing information about each songs.
+FT2SfxSongListTooltip=If enabled, will generate a .inc file containing information about each sound effect.
+
+# Music ASM labels
+FamiTone2ExpLabel=FamiTone2 does not support audio expansions.
+SoundEngineMultExpLabel=The FamiStudio Sound Engine only supports a single expansion at a time. Limit yourself to a single expansion to enable export.
+SeparateFilesLabel=Separate Files
+SongNamePatternLabel=Song Name Pattern
+DmcNamePatternLabel=DMC Name Pattern
+ForceDpcmBankSwitchingLabel=Force DPCM bank-switching
+GenerateSongListIncludeLabel=Generate song list include
+
+# Share tooltips.
+ShareTooltip=Copy the FamiStudio project to your device's storage, or share it to another application.
+
+# Share labels
+SharingModeLabel=Sharing mode
+CopyToStorageOption=Copy to Storage
+ShareOption=Share
+
+# FamiTracker Text labels
+FamiTrackerMultipleExpLabel=The original FamiTracker does not support multiple audio expansions. Limit yourself to a single expansion to enable export.
+
+# SFX ASM labels
+GenerateSfxInclude=Generate SFX list include
+
+# VGM/Command Log labels
+FileTypeLabel=File Type

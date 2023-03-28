@@ -58,6 +58,8 @@ namespace FamiStudio
             var str = strings.GetString(section, key, null);
             if (str == null)
                 str = stringsEng.GetString(section, key, missing ? "### MISSING ###" : null);
+            if (str != null && str.Contains('\\'))
+                str = str.Replace("\\n", "\n");
             return str;
         }
 
@@ -83,7 +85,10 @@ namespace FamiStudio
     {
         public string Value;
         public LocalizedString(string s) { Value = s; }
-        public static implicit operator string(LocalizedString s) => s.Value;
+        public static implicit operator string(LocalizedString s) => s?.Value;
+        public string this[string pad] => Value+pad;
+        public string Colon => Value + ":";
+        public string Period => Value + ".";
         public override string ToString() { return Value; }
     }
 }
