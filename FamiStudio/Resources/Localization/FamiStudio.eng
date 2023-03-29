@@ -379,3 +379,42 @@ ForceLandscapeTooltip=When enabled, The app orientation will be forced to landsc
 # Mobile labels
 AllowVibrationLabel=Allow vibration
 ForceLandscapeLabel=Force Landscape
+
+[TransformDialog]
+
+ConfigSectionNames_0=Song Cleanup
+ConfigSectionNames_1=Project Cleanup
+
+# Title
+Title=Transform Songs
+Verb=Apply
+
+# Song tooltips
+MergePatternsTooltip=Patterns that are exactly identical and on the same channel will be merged and replaced by instanced on a single pattern.
+DeleteEmptyPatternsTooltip=Patterns with no musical notes or effects will be deleted.
+AdjustMaximumNoteLengthsTooltip=Notes that are long, but interrupted by another note on the same channel will have their durations adjusted to match the visual duration.
+SongsTooltip=Select the songs to cleanup.";
+  
+# Song labels
+MergePatternsLabel=Merge identical patterns
+DeleteEmptyPatternsLabel=Delete empty patterns
+AdjustMaximumNoteLengthsLabel=Adjust maximum note lengths
+SongsLabel=Songs to process
+
+# Project tooltips
+DeleteUnusedInstrumentsTooltip=Delete any instrument that is not used throughout the entire project.
+MergeIdenticalInstrumentsTooltip=If two or more instruments are exactly identical, the redundant ones will be deleted and replaced by a single one.
+UnassignUnusedSamplesTooltip=Remove any samples from the 'DPCM Instrument' that are not used in any song. Does not deleted the actual samples from the project.
+DeleteUnassignedSamplesTooltip=Delete any DPCM samples that is not assigned to any keys of the 'DPCM Instrument'.
+PermanentlyApplyProcessingTooltip=For any DPCM sample that use processing (volume adjustment, etc.), will permanently apply those to the DMC data and makes this the source data. Only do this when you are completely done adjusting. For samples using WAV files as source data, this can make your project file much smaller.
+DiscardN163FdsResampleWavTooltip=Discards any source data for FDS/N163 instrument that are resampled from a wav file. You can do this to reduce the size of your project when you are done adjusting the resampling parameters.
+DeleteUnusedArpeggiosTooltip=Delete any arpeggio that is not used throughout the entire project.
+
+# Project labels
+DeleteUnusedInstrumentsLabel=Delete unused instruments
+MergeIdenticalInstrumentsLabel=Merge identical instruments
+UnassignUnusedSamplesLabel=Unassign unused DPCM instrument keys
+DeleteUnassignedSamplesLabel=Delete unassigned samples
+PermanentlyApplyProcessingLabel=Permanently apply all DPCM samples processing
+DiscardN163FdsResampleWavLabel=Discard resampled wav data for NSF/N163
+DeleteUnusedArpeggiosLabel=Delete unused arpeggios
