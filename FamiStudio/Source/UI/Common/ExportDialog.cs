@@ -62,114 +62,11 @@ namespace FamiStudio
         public delegate void EmptyDelegate();
         public event EmptyDelegate Exporting;
 
-        public unsafe ExportDialog(FamiStudioWindow win)
-        {
-            Localization.Localize(this);
-
-            dialog = new MultiPropertyDialog(win, "Export Songs", 600, 200);
-            dialog.SetVerb("Export");
-            app = win.FamiStudio;
-            project = app.Project;
-
-            for (int i = 0; i < (int)ExportFormat.Max; i++)
-            {
-                var format = (ExportFormat)i;
-                var page = dialog.AddPropertyPage(ExportFormatNames[i], ExportIcons[i]);
-                CreatePropertyPage(page, format);
-            }
-
-            // Hide a few formats we don't care about on mobile.
-            dialog.SetPageVisible((int)ExportFormat.Midi,            Platform.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.Text,            Platform.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiTracker,     Platform.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, Platform.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiStudioSfx,   Platform.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiTone2Music,  Platform.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx,    Platform.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.Share,           Platform.IsMobile);
-
-            if (Platform.IsDesktop)
-                UpdateMidiInstrumentMapping();
-        }
-
-        private string[] GetSongNames()
-        {
-            var names = new string[project.Songs.Count];
-            for (var i = 0; i < project.Songs.Count; i++)
-                names[i] = project.Songs[i].Name;
-            return names;
-        }
-
-        private string[] GetChannelNames()
-        {
-            var channelTypes = project.GetActiveChannelList();
-            var channelNames = new string[channelTypes.Length];
-            for (int i = 0; i < channelTypes.Length; i++)
-            {
-                channelNames[i] = ChannelType.GetNameWithExpansion(channelTypes[i]);
-            }
-
-            return channelNames;
-        }
-
-        private bool[] GetDefaultActiveChannels()
-        {
-            // Find all channels used by the project.
-            var anyChannelActive = false;
-            var channelActives = new bool[project.GetActiveChannelCount()];
-
-            foreach (var song in project.Songs)
-            {
-                for (int i = 0; i < song.Channels.Length; i++)
-                {
-                    var channel = song.Channels[i];
-                    if (channel.Patterns.Count > 0)
-                    {
-                        anyChannelActive = true;
-                        channelActives[i] = true;
-                    }
-                }
-            }
-
-            if (!anyChannelActive)
-                return null;
-
-            return channelActives;
-        }
-
-        private object[,] GetDefaultChannelsGridData(bool triggers)
-        {
-            // Find all channels used by the project.
-            var anyChannelActive = false;
-            var channelActives = new bool[project.GetActiveChannelCount()];
-            foreach (var song in project.Songs)
-            {
-                for (int i = 0; i < song.Channels.Length; i++)
-                {
-                    var channel = song.Channels[i];
-                    if (channel.Patterns.Count > 0)
-                    {
-                        anyChannelActive = true;
-                        channelActives[i] = true;
-                    }
-                }
-            }
-
-            var channelTypes = project.GetActiveChannelList();
-            var data = new object[channelTypes.Length, triggers ? 4 : 3];
-            for (int i = 0; i < channelTypes.Length; i++)
-            {
-                data[i, 0] = !anyChannelActive || channelActives[i];
-                data[i, 1] = ChannelType.GetNameWithExpansion(channelTypes[i]);
-                data[i, 2] = 50;
-                if (triggers)
-                    data[i, 3] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? EmulationOption.Value : PeakSpeedOption.Value;
-            }
-
-            return data;
-        }
-
         #region Localization
+
+        // Title
+        LocalizedString Title;
+        LocalizedString Verb;
 
         // General tooltips
         LocalizedString SingleSongTooltip;
@@ -310,6 +207,113 @@ namespace FamiStudio
         LocalizedString FileTypeLabel;
 
         #endregion
+
+        public unsafe ExportDialog(FamiStudioWindow win)
+        {
+            Localization.Localize(this);
+
+            dialog = new MultiPropertyDialog(win, Title, 600, 200);
+            dialog.SetVerb(Verb);
+            app = win.FamiStudio;
+            project = app.Project;
+
+            for (int i = 0; i < (int)ExportFormat.Max; i++)
+            {
+                var format = (ExportFormat)i;
+                var page = dialog.AddPropertyPage(ExportFormatNames[i], ExportIcons[i]);
+                CreatePropertyPage(page, format);
+            }
+
+            // Hide a few formats we don't care about on mobile.
+            dialog.SetPageVisible((int)ExportFormat.Midi, Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.Text, Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTracker, Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiStudioSfx, Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTone2Music, Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx, Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.Share, Platform.IsMobile);
+
+            if (Platform.IsDesktop)
+                UpdateMidiInstrumentMapping();
+        }
+
+        private string[] GetSongNames()
+        {
+            var names = new string[project.Songs.Count];
+            for (var i = 0; i < project.Songs.Count; i++)
+                names[i] = project.Songs[i].Name;
+            return names;
+        }
+
+        private string[] GetChannelNames()
+        {
+            var channelTypes = project.GetActiveChannelList();
+            var channelNames = new string[channelTypes.Length];
+            for (int i = 0; i < channelTypes.Length; i++)
+            {
+                channelNames[i] = ChannelType.GetNameWithExpansion(channelTypes[i]);
+            }
+
+            return channelNames;
+        }
+
+        private bool[] GetDefaultActiveChannels()
+        {
+            // Find all channels used by the project.
+            var anyChannelActive = false;
+            var channelActives = new bool[project.GetActiveChannelCount()];
+
+            foreach (var song in project.Songs)
+            {
+                for (int i = 0; i < song.Channels.Length; i++)
+                {
+                    var channel = song.Channels[i];
+                    if (channel.Patterns.Count > 0)
+                    {
+                        anyChannelActive = true;
+                        channelActives[i] = true;
+                    }
+                }
+            }
+
+            if (!anyChannelActive)
+                return null;
+
+            return channelActives;
+        }
+
+        private object[,] GetDefaultChannelsGridData(bool triggers)
+        {
+            // Find all channels used by the project.
+            var anyChannelActive = false;
+            var channelActives = new bool[project.GetActiveChannelCount()];
+            foreach (var song in project.Songs)
+            {
+                for (int i = 0; i < song.Channels.Length; i++)
+                {
+                    var channel = song.Channels[i];
+                    if (channel.Patterns.Count > 0)
+                    {
+                        anyChannelActive = true;
+                        channelActives[i] = true;
+                    }
+                }
+            }
+
+            var channelTypes = project.GetActiveChannelList();
+            var data = new object[channelTypes.Length, triggers ? 4 : 3];
+            for (int i = 0; i < channelTypes.Length; i++)
+            {
+                data[i, 0] = !anyChannelActive || channelActives[i];
+                data[i, 1] = ChannelType.GetNameWithExpansion(channelTypes[i]);
+                data[i, 2] = 50;
+                if (triggers)
+                    data[i, 3] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? EmulationOption.Value : PeakSpeedOption.Value;
+            }
+
+            return data;
+        }
 
         private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
         {

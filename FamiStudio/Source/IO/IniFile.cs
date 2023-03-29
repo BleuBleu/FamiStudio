@@ -56,9 +56,11 @@ namespace FamiStudio
 
                 // Comments.
                 if (trimmedLine.StartsWith("#") || trimmedLine.StartsWith(";"))
-                {
                     continue;
-                }
+
+                var idx = trimmedLine.IndexOfAny(new[] { '#', ';' });
+                if (idx >= 0)
+                    trimmedLine = trimmedLine.Substring(0, idx).Trim();
 
                 if (trimmedLine.StartsWith("["))
                 {
@@ -76,7 +78,13 @@ namespace FamiStudio
                     int eq = trimmedLine.IndexOf('=');
                     if (eq >= 0)
                     {
-                        sectionValues.Add(trimmedLine.Substring(0, eq), trimmedLine.Substring(eq + 1));
+                        var key   = trimmedLine.Substring(0, eq);
+                        var value = trimmedLine.Substring(eq + 1);
+
+                        if (!sectionValues.ContainsKey(key))
+                        {
+                            sectionValues.Add(key, value);
+                        }
                     }
                 }
             }
@@ -91,48 +99,65 @@ namespace FamiStudio
         {
             try
             {
-                return int.Parse(iniContent[section][key]);
+                if (TryGetString(section, key, out var value))
+                {
+                    return int.Parse(value);
+                }
             }
-            catch
-            {
-                return defaultValue;
-            }
+            catch { }
+
+            return defaultValue;
         }
 
         public float GetFloat(string section, string key, float defaultValue)
         {
             try
-            {
-                return float.Parse(iniContent[section][key], CultureInfo.InvariantCulture);
+            {   
+                if (TryGetString(section, key, out var value))
+                {
+                    return float.Parse(value, CultureInfo.InvariantCulture);
+                }
             }
-            catch
-            {
-                return defaultValue;
-            }
+            catch { }
+
+            return defaultValue;
         }
 
         public bool GetBool(string section, string key, bool defaultValue)
         {
             try
             {
-                return bool.Parse(iniContent[section][key]);
+                if (TryGetString(section, key, out var value))
+                {
+                    return bool.Parse(value);
+                }
             }
-            catch
+            catch { }
+
+            return defaultValue;
+        }
+
+        public string GetString(string section, string key, string defaultValue)
+        {
+            if (TryGetString(section, key, out var value))
+            {
+                return value;
+            }
+            else
             {
                 return defaultValue;
             }
         }
 
-        public string GetString(string section, string key, string defaultValue)
+        private bool TryGetString(string section, string key, out string value)
         {
-            try
+            if (iniContent.TryGetValue(section, out var values))
             {
-                return iniContent[section][key];
+                return values.TryGetValue(key, out value);
             }
-            catch
-            {
-                return defaultValue;
-            }
+
+            value = null;
+            return false;
         }
 
         public bool HasKey(string section, string key)

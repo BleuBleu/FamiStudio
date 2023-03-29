@@ -2,7 +2,67 @@
 Font=Quicksand-Regular.ttf
 FontBold=Quicksand-Bold.ttf
 
+[ExpansionType]
+LocalizedNames_0=None
+LocalizedNames_1=Konami VRC6
+LocalizedNames_2=Konami VRC7
+LocalizedNames_3=Famicom Disk System
+LocalizedNames_4=Nintendo MMC5
+LocalizedNames_5=Namco 163
+LocalizedNames_6=Sunsoft 5B
+LocalizedNames_7=EPSM
+
+[ChannelType]
+LocalizedNames_0=Square 1
+LocalizedNames_1=Square 2
+LocalizedNames_2=Triangle
+LocalizedNames_3=Noise
+LocalizedNames_4=DPCM
+LocalizedNames_5=Square 1 # VRC6
+LocalizedNames_6=Square 2 # VRC6
+LocalizedNames_7=Saw # VRC6
+LocalizedNames_8=FM 1 # VRC7
+LocalizedNames_9=FM 2 # VRC7
+LocalizedNames_10=FM 3 # VRC7
+LocalizedNames_11=FM 4 # VRC7
+LocalizedNames_12=FM 5 # VRC7
+LocalizedNames_13=FM 6 # VRC7
+LocalizedNames_14=FDS # FDS
+LocalizedNames_15=Square 1 # MMC5
+LocalizedNames_16=Square 2 # MMC5
+LocalizedNames_17=DPCM # MMC5
+LocalizedNames_18=Wave 1 # N163
+LocalizedNames_19=Wave 2 # N163
+LocalizedNames_20=Wave 3 # N163
+LocalizedNames_21=Wave 4 # N163
+LocalizedNames_22=Wave 5 # N163
+LocalizedNames_23=Wave 6 # N163
+LocalizedNames_24=Wave 7 # N163
+LocalizedNames_25=Wave 8 # N163
+LocalizedNames_26=Square 1 # S5B
+LocalizedNames_27=Square 2 # S5B
+LocalizedNames_28=Square 3 # S5B
+LocalizedNames_29=Square 1 # EPSM
+LocalizedNames_30=Square 2 # EPSM
+LocalizedNames_31=Square 3 # EPSM
+LocalizedNames_32=FM 1 # EPSM
+LocalizedNames_33=FM 2 # EPSM
+LocalizedNames_34=FM 3 # EPSM
+LocalizedNames_35=FM 4 # EPSM
+LocalizedNames_36=FM 5 # EPSM
+LocalizedNames_37=FM 6 # EPSM
+LocalizedNames_38=Kick # EPSM
+LocalizedNames_39=Snare # EPSM
+LocalizedNames_40=Cymbal # EPSM
+LocalizedNames_41=Hi-hat # EPSM
+LocalizedNames_42=Tom # EPSM
+LocalizedNames_43=Rimshot # EPSM
+
 [ExportDialog]
+
+# Title
+Title=Export Songs
+Verb=Export
 
 # Export formats
 ExportFormatNames_0=WAV / MP3 / OGG
@@ -158,3 +218,164 @@ GenerateSfxInclude=Generate SFX list include
 
 # VGM/Command Log labels
 FileTypeLabel=File Type
+
+[ConfigDialog]
+
+# Title
+Title=FamiStudio Configuration
+Verb=Apply
+
+# Sections
+ConfigSectionNames_0=General
+ConfigSectionNames_1=Interface
+ConfigSectionNames_2=Input
+ConfigSectionNames_3=Sound
+ConfigSectionNames_4=Mixer
+ConfigSectionNames_5=MIDI
+ConfigSectionNames_6=FFmpeg
+ConfigSectionNames_7=Keyboard
+ConfigSectionNames_8=Mobile
+
+# Time format
+TimeFormatStrings_0=Pattern:Frame
+TimeFormatStrings_1=MM:SS:mmm
+
+# Follow mode
+FollowModeStrings_0=Jump
+FollowModeStrings_1=Continuous
+
+# Follow sync
+FollowSyncStrings_0=Sequencer
+FollowSyncStrings_1=Piano Roll
+FollowSyncStrings_2=Both
+
+# Scroll bars
+ScrollBarsStrings_0=None
+ScrollBarsStrings_1=Thin
+ScrollBarsStrings_2=Thick
+
+# General tooltips
+CheckUpdatesTooltip=When enabled, FamiStudio will check for updates every time you start the app.
+ShowTutorialTooltip=When enabled, the first time tutorial will be displayed next time the app is started.
+ClearUndoRedoTooltip=When enabled, the undo/redo stack will be cleared every time you save. Disabling this can help keep the memory usage down.
+ReviewAfterPlayTooltip=When enabled, FamiStudio will seek back to the previous play position after stopping the song.
+OpenLastTooltip=When enabled, FamiStudio will open the last project you were working on when you last closed the app.
+AutosaveTooltip=When enabled, a copy of your project will be save approximately every 2 minutes. This can prevent loosing data when a crash occurs.
+PatternNamePrefixTooltip=Prefix to add to automatically generated pattern names.
+PatternNameNumDigitsTooltip=Minimum number of digits to have in automatically generated pattern names.
+AutosaveFolderTooltip=Click to open the auto save folder.
+
+# General labels
+CheckForUpdatesLabel=Check for updates
+ShowTutorialLabel=Show Tutorial at Startup
+ClearUndoLabel=Clear Undo/Redo on save
+RewindAfterPlayLabel=Rewind after play
+OpenLastProjectLabel=Open last project on start
+AutosaveLabel=Autosave a copy every 2 minutes
+PatternPrefixLabel=Pattern name prefix
+PatternDigitsLabel=Pattern name digits
+OpenAutosaveFolderLabel=Open Autosave folder
+
+# UI tooltips
+ScalingTooltip=Overall scaling of the main FamiStudio window. Leave it to 'System' if you want FamiStudio to automatically detect it based on the system configuration.
+TimeFormatTooltip=Affects how time is displayed in the toolbar.
+FollowModeTooltip=Scrolling behavior when enabling follow mode in the toolbar.
+FollowingViewsTooltip=Affects which views will scroll when enabling follow mode in the toolbar.
+ScrollBarsTooltip=Affects the visibility and size of the scroll bars in the app.
+ShowFamitrackerStopNotesTooltip=When enabled, partially transparent stop notes will be displayed whenever a note ends, when using FamiTracker tempo mode. This can help you to visually align note delays with stop notes.
+IdealSequencerHeightTooltip=The size of the sequencer, in % of the height of the window. This size maybe not be achievable if there are too many channels.
+AllowSequencerScrollTooltip=When enabled and the ideal sequencer height cannot be achieved, the sequencer will allow vertical scrolling.
+ShowRegisterViewerTooltip=When enabled, the 'Register' tab will be visible in the Project Explorer.
+UseOSDialogsTooltip=When enabled, FamiStudio will try to use the built-in operating system dialog to open/save files and display error messages.
+
+# UI labels
+ScalingLabel=Scaling (Requires restart)
+TimeFormatLabel=Time Format
+FollowModeLabel=Follow Mode
+FollowViewsLabel=Following Views
+ScrollBarsLabel=Scroll Bars
+IdealSeqHeightLabel=Ideal Sequencer Height
+AllowSeqVertScrollLabel=Allow Sequencer Vertical Scrolling
+ShowFamitrackerStopLabel=Show FamiTracker Stop Notes
+ShowRegisterViewerLabel=Show Register Viewer Tab
+UseOSDialogsLabel=Use Operating System Dialogs
+SystemScalingOption=System
+
+# Input tooltips
+TrackpadControlsTooltip=When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that pinch-to-zoom is not supported on Linux, you will have to hold CTRL or ALT and scroll up/down to zoom.
+AltLeftForMiddleTooltip=When enabled, Alt + left-click will be interpreted as a middle mouse click. Useful if your mouse does not have a middle button.\n\nNote that this will disable some functionalities that requires Alt, such as the ability to temporarily disable snapping.
+AltZoomAllowedTooltip=When enabled, Alt + right-click + panning up/down will zoom in/out. Useful if your mouse does not have a middle button.\n\nNote that this may disable some functionalities that requires Alt, such as the ability to temporarily disable snapping.
+
+# Input labels
+TrackpadControlsLabel=Trackpad controls
+ReverseTrackpadXLabel=Reverse trackpad scroll X
+ReverseTrackpadYLabel=Reverse trackpad scroll Y
+TrackpadSensitivityLabel=Trackpad scroll sensitivity
+TrackpadZoomSensitivityLabel=Trackpad zoom sensitivity
+AltLeftEmulatesMiddle=ALT+Left emulates Middle
+AltRightZoomsInOut=ALT+Right zooms in/out
+
+# Sound tooltips
+NumBufferedFramesTooltip=Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.
+StopInstrumentTooltip=Number of seconds to wait before stopping instruments that have a release part in their volume envelopes.
+PreventPoppingTooltip=When enabled, FamiStudio will use the sweep unit to prevent popping around certain notes on the 2 main square channels. Also known as 'Blargg's Smooth Vibrato' technique.
+N163MixerTooltip=When enabled, FamiStudio will correctly mix the Namco 163 channels. Leave this OFF and set a very agressive low-pass filter to mimic real hardware.
+ClampPeriodsTooltip=When enabled, FamiStudio will clamp periods and note values to their valid hardware range. Note that the NSF/Sound Engine does not do that, so disabling this option will result in more hardware-accurate sound where periods and notes can sometimes wrap-around.
+NoDragSoundTooltip=When enabled, FamiStudio will not emit sounds when dragging notes in the Piano Roll if the song is playing.
+MetronomeVolumeTooltip=Volume of the metronome.
+
+# Sound labels
+NumBufferFramesLabel=Number of buffered frames
+StopInstrumentAfterLabel=Stop instruments after (sec)
+PreventPoppingLabel=Prevent popping on square channels
+MixN163Label=Mix Namco 163 channels
+ClampPeriodsLabel=Clamp periods and notes
+MuteDragSoundsLabel=Mute drag sounds during playback
+MetronomeVolumeLabel=Metronome volume
+
+# Mixer tooltips
+GlobalVolumeTooltip=Global volume applied to all audio emulation, in db. When using multiple audio expansions, the volume can get very loud. You can use this to lower the overall volume and prevent clipping.
+ExpansionTooltip=Select the audio expansion for which you want to adjust the audio.
+ExpansionVolumeTooltip=Volume adjustment for the selected expansion, in db.
+ExpansionTrebleTooltip=Treble adjustment for the selected expansion, in db.
+ExpansionResetTooltip=Resets this expansion to the default settings.
+
+# Mixer labels
+GlobalVolumeLabel=Global Volume
+ExpansionLabel=Expansion
+ExpansionVolumeLabel=Expansion Volume
+ExpansionTrebleLabel=Expansion Treble
+ResetLabel=Reset
+ResetButtonLabel=Reset expansion to default
+NoteLabel=Note
+NoteMessageLabel=Note : These will have no effect on NSF, ROM, FDS and sound engine exports.
+
+# MIDI tooltips
+MidiDeviceTooltip=The MIDI device that will be used to input notes.
+
+# MIDI labels
+DeviceLabel=Device
+
+# FFmpeg tooltips
+FFmpegPathTooltip=Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below.
+
+# FFmpeg labels
+FFmpegRequiredLabel=Video export requires FFmpeg. If you already have it, set the path to the ffmpeg executable by clicking the button below, otherwise follow the download link.
+FFmpegDownloadLabel=Download FFmpeg here
+FFmpegSelectExeTitle=Please select the FFmpeg executable
+
+# Keys labels
+DoubleClickLabel=Double click in the 2 last columns to assign a key. Right click to clear a key.
+ResetDefaultLabel=Reset to default
+PressKeyOrCancel=Press the new key or ESC to cancel.
+ActionColumn=Action
+KeyColumn=Key
+KeyAltColumn=Key (alt)
+
+# Mobile tooltips
+AllowVibrationTooltip=When enabled, the phone will vibrate on long pressed, piano keys, etc.
+ForceLandscapeTooltip=When enabled, The app orientation will be forced to landscape.
+
+# Mobile labels
+AllowVibrationLabel=Allow vibration
+ForceLandscapeLabel=Force Landscape

@@ -2033,6 +2033,13 @@ namespace FamiStudio
             "InstrumentEPSM"
         };
 
+        static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+
+        static ExpansionType()
+        {
+            Localization.LocalizeStatic(typeof(ExpansionType));
+        }
+
         public static bool NeedsExpansionInstrument(int value)
         {
             return value == Fds || value == N163 || value == Vrc6 || value == Vrc7 || value == S5B || value == EPSM;

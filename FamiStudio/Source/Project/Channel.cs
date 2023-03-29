@@ -1635,6 +1635,7 @@ namespace FamiStudio
             "Rimshot", // EPSM
         };
 
+        // LOCTODO : We shouldnt use those for messages. We do at the moment.
         public static readonly string[] ShortNames =
         {
             "Square1",
@@ -1827,6 +1828,13 @@ namespace FamiStudio
             13, // EPSM
             14 // EPSM
         };
+
+        static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+
+        static ChannelType()
+        {
+            Localization.LocalizeStatic(typeof(ChannelType));
+        }
 
         public static string GetNameWithExpansion(int type)
         {

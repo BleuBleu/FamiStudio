@@ -30,8 +30,18 @@ namespace FamiStudio
 
         public static void Localize(object o)
         {
-            var typeName = o.GetType().Name;
-            var fields = o.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            LocalizeInternal(o.GetType(), o);
+        }
+
+        public static void LocalizeStatic(Type type)
+        {
+            LocalizeInternal(type);
+        }
+
+        private static void LocalizeInternal(Type type, Object o = null)
+        {
+            var typeName = type.Name;
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
             foreach (var field in fields)
             {
@@ -79,6 +89,14 @@ namespace FamiStudio
 
             return str;
         }
+
+        public static string[] ToStringArray(LocalizedString[] locStrings)
+        {
+            var strings = new string[locStrings.Length];
+            for (int i = 0; i < strings.Length; i++)
+                strings[i] = locStrings[i];
+            return strings;
+        }
     }
 
     public class LocalizedString
@@ -87,7 +105,7 @@ namespace FamiStudio
         public LocalizedString(string s) { Value = s; }
         public static implicit operator string(LocalizedString s) => s?.Value;
         public string this[string pad] => Value+pad;
-        public string Colon => Value + ":";
+        public string Colon => Platform.IsMobile ? Value : Value + ":";
         public string Period => Value + ".";
         public override string ToString() { return Value; }
     }
