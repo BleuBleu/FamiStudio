@@ -1349,6 +1349,23 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleMouseDownPatternProperties(MouseEventArgs e)
+        {
+            bool changeProperties = ParentWindow.IsKeyDown(Keys.P);
+            bool inPatternZone = GetPatternForCoord(e.X, e.Y, out var location);
+
+            if (changeProperties && inPatternZone)
+            {
+                var pattern = Song.GetPatternInstance(location);
+                if (pattern != null) {
+                    EditPatternProperties(new Point(e.X, e.Y), pattern, location, false);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private bool HandleMouseDownSeekBar(MouseEventArgs e)
         {
             if (IsMouseInHeader(e) && e.Left)
@@ -1460,6 +1477,7 @@ namespace FamiStudio
             if (HandleMouseDownChannelName(e)) goto Handled;
             if (HandleMouseDownShy(e)) goto Handled;
             if (HandleMouseDownSetLoopPoint(e)) goto Handled;
+            if (HandleMouseDownPatternProperties(e)) goto Handled;
             if (HandleMouseDownSeekBar(e)) goto Handled;
             if (HandleMouseDownHeaderSelection(e)) goto Handled;
             if (HandleMouseDownChannelChange(e)) goto Handled;
@@ -2658,6 +2676,7 @@ namespace FamiStudio
                 if (pattern != null)
                 {
                     tooltipList.Add("<MouseLeft><MouseLeft> or <Shift><MouseLeft> Delete Pattern");
+                    tooltipList.Add("<P><MouseLeft> Pattern Properties...");
                     tooltipList.Add("<MouseRight> More Options...");
                 }
 
