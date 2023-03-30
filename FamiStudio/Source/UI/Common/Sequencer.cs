@@ -103,7 +103,7 @@ namespace FamiStudio
         BitmapAtlasRef[] bmpChannels;
         BitmapAtlasRef bmpForceDisplay;
         BitmapAtlasRef bmpLoopPoint;
-        BitmapAtlasRef bmpInstanciate;
+        BitmapAtlasRef bmpInstantiate;
         BitmapAtlasRef bmpDuplicate;
         BitmapAtlasRef bmpDuplicateMove;
         BitmapAtlasRef bmpShyOn;
@@ -445,7 +445,7 @@ namespace FamiStudio
             bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
             bmpForceDisplay = g.GetBitmapAtlasRef("GhostSmall");
             bmpLoopPoint = g.GetBitmapAtlasRef("LoopSmallFill");
-            bmpInstanciate = g.GetBitmapAtlasRef("Instance");
+            bmpInstantiate = g.GetBitmapAtlasRef("Instance");
             bmpDuplicate = g.GetBitmapAtlasRef("Duplicate");
             bmpDuplicateMove = g.GetBitmapAtlasRef("DuplicateMove");
 
@@ -747,7 +747,7 @@ namespace FamiStudio
                         if (rowIdxDelta != 0)
                             bmpCopy = (duplicate || instance) ? bmpDuplicate : bmpDuplicateMove;
                         else
-                            bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstanciate : null);
+                            bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstantiate : null);
 
                         c.PushTranslation(pt.X - channelNameSizeX, y);
                         c.FillAndDrawRectangle(-anchorOffsetLeftX, 0, -anchorOffsetLeftX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
@@ -1731,7 +1731,7 @@ namespace FamiStudio
                     if (Platform.IsMobile)
                         menu.Add(new ContextMenuOption("MenuExpandSelection", "Expand Selection", () => { EnsureSelectionInclude(location); }));
                     if (selectionMin.ChannelIndex == location.ChannelIndex)
-                        menu.Add(new ContextMenuOption("MenuInstance", "Instanciate Selection Here", () => { CopySelectionToCursor(false); }));
+                        menu.Add(new ContextMenuOption("MenuInstance", "Instantiate Selection Here", () => { CopySelectionToCursor(false); }));
                     menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate Selection Here", () => { CopySelectionToCursor(true); }));
                 }
 
