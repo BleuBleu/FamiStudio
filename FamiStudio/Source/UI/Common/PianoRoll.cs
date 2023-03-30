@@ -14,7 +14,6 @@ namespace FamiStudio
         const float MaxZoomY                = 4.0f;
         const float MaxWaveZoom             = 256.0f;
         const float DefaultChannelZoom      = MinZoomOther;
-        const float ContinuousFollowPercent = 0.75f;
         const float DefaultZoomWaveTime     = 0.25f;
         const float ScrollSpeedFactor       = Platform.IsMobile ? 2.0f : 1.0f;
 
@@ -5090,8 +5089,11 @@ namespace FamiStudio
             return Note.NoteInvalid;
         }
 
-        private bool EnsureSeekBarVisible(float percent = ContinuousFollowPercent)
+        private bool EnsureSeekBarVisible(float percent = float.MinValue)
         {
+            if (percent == float.MinValue)
+                percent = Settings.FollowPercent;
+
             var seekX = GetPixelForNote(App.CurrentFrame);
             var minX = 0;
             var maxX = (int)((Width * percent) - pianoSizeX);
@@ -9069,7 +9071,7 @@ namespace FamiStudio
 
             // When continuously following, zoom at the seek bar location.
             if (continuouslyFollowing)
-                x = (int)(Width * ContinuousFollowPercent);
+                x = (int)(Width * Settings.FollowPercent);
 
             Debug.Assert(Platform.IsMobile || scale == 0.5f || scale == 2.0f);
 
