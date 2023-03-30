@@ -569,3 +569,21 @@ CustomPatternTooltip=Enable to use different length or tempo parameter for this 
 # Pattern properties dialog
 PatternPropertiesTitle=Pattern Properties
 ErrorRenamingPattern=Error renaming pattern!
+
+[FamiStudio]
+SaveChangesDialog=Save changes?
+ConfirmTitle=Confirm
+DesktopOpenProjectTitle=Open File
+DesktopSaveProjectTitle=Save File
+MobileOpenProjectTitle=Open FamiStudio Project
+MobileSaveProjectTitle=Save FamiStudio Project
+MobileFamiTrackerImportWarning=Warnings or errors were generated during the import of this FamiTracker module. The songs will likely not sound correct. Please open with the desktop version of FamiStudio for the full list of warnings and check out the documention for the full list of supported effects.
+WarningTitle=Warning
+ProjectSaveSuccess=Project Saved!
+ProjectSaveError=Error Saving Project!
+NoLastExportWarning=No last export to repeat
+ProjectChangedExportWarning=Project has changed too much to repeat last export.
+NewVersionToast=A new version ({0}) is available. Click here to download it!
+NewProjectTitle=New Project
+IncompatibleInstrumentError=Selected instrument is incompatible with channel!
+IncompatibleExpRequiredError=Expansion channels require using the correct instrument type.
