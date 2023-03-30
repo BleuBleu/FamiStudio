@@ -234,6 +234,17 @@ namespace FamiStudio
             return size;
         }
 
+        private Envelope ProcessMixerEnvelope(Envelope env)
+        {
+            Envelope ymenv = env;
+            for (int j = 0; j < ymenv.Length; j++)
+            {
+                ymenv.Values[j] = (sbyte)((((byte)ymenv.Values[j] & 0x1)) | (((byte)ymenv.Values[j] & 0x2) << 2));
+            }
+
+            return ymenv;
+        }
+
         private byte[] ProcessEnvelope(Envelope env, bool allowReleases, bool newPitchEnvelope)
         {
             // HACK : Pass dummy type here, volume envelopes have been taken care of already.
@@ -406,6 +417,9 @@ namespace FamiStudio
                             break;
                         case EnvelopeType.FdsWaveform:
                             processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
+                            break;
+                        case EnvelopeType.YMMixerSettings:
+                            processed = ProcessEnvelope(ProcessMixerEnvelope(env), false, false);
                             break;
                         default:
                             processed = ProcessEnvelope(env,

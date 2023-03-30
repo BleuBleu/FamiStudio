@@ -2370,8 +2370,6 @@ famistudio_epsm_square_vol_table:
     .byte FAMISTUDIO_EPSM_REG_VOL_A, FAMISTUDIO_EPSM_REG_VOL_B, FAMISTUDIO_EPSM_REG_VOL_C
 famistudio_epsm_square_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS, FAMISTUDIO_EPSM_CH1_ENVS, FAMISTUDIO_EPSM_CH2_ENVS
-famistudio_epsm_mixer_table:
-    .byte %00000000,  %00000001,  %00001000 
     
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_SQUARE_CHANNEL_SOUND (internal)
@@ -2398,17 +2396,14 @@ famistudio_update_epsm_square_channel_sound:
     
     lda #$07
     sta FAMISTUDIO_EPSM_ADDR
-    ldx famistudio_env_value+FAMISTUDIO_EPSM_CH2_ENVS+2 ;load mixer envelope
-    lda famistudio_epsm_mixer_table, x ;convert mixer envelope to mixer settings base
+    lda famistudio_env_value+FAMISTUDIO_EPSM_CH2_ENVS+2 ;load mixer envelope
     sta @temp
     asl @temp
-    ldx famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+2 ;load mixer envelope
-    lda famistudio_epsm_mixer_table, x ;convert mixer envelope to mixer settings base
+    lda famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+2 ;load mixer envelope
     ora @temp
     sta @temp
     asl @temp
-    ldx famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+2 ;load mixer envelope
-    lda famistudio_epsm_mixer_table, x ;convert mixer envelope to mixer settings base
+    lda famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+2 ;load mixer envelope
     ora @temp
     sta @temp
     sta FAMISTUDIO_EPSM_DATA
@@ -2988,8 +2983,6 @@ famistudio_s5b_vol_table:
     .byte FAMISTUDIO_S5B_REG_VOL_A, FAMISTUDIO_S5B_REG_VOL_B, FAMISTUDIO_S5B_REG_VOL_C
 famistudio_s5b_env_table:
     .byte FAMISTUDIO_S5B_CH0_ENVS, FAMISTUDIO_S5B_CH1_ENVS, FAMISTUDIO_S5B_CH2_ENVS
-famistudio_s5b_mixer_table:
-    .byte %00000000,  %00000001,  %00001000 
 
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_S5B_CHANNEL_SOUND (internal)
@@ -3015,17 +3008,14 @@ famistudio_update_s5b_channel_sound:
 
     lda #$07
     sta FAMISTUDIO_S5B_ADDR
-    ldx famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
+    lda famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     sta @temp
     asl @temp
-    ldx famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
+    lda famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     ora @temp
     sta @temp
     asl @temp
-    ldx famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    lda famistudio_s5b_mixer_table, x ;convert mixer envelope to mixer settings base
+    lda famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     ora @temp
     sta @temp
     sta FAMISTUDIO_S5B_DATA
