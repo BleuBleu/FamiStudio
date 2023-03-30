@@ -459,3 +459,52 @@ ConvertMobileLabel=You changed the BPM enough so that the number of frames in a 
 ConvertResizeNotes=Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.
 ConvertLeaveNotes=Leave the notes exactly where they are, just move the grid lines around the notes. This option is useful if you want to change how the notes are grouped.
 
+[Toolbar]
+
+# Tooltips
+NewProjectTooltip=New Project
+OpenProjectTooltip=Open Project
+RecentFilesTooltip=Recent Files...
+SaveProjectTooltip=Save Project
+MoreOptionsTooltip=More Options...
+ExportTooltip=Export to various formats
+CopySelectionTooltip=Copy selection
+CutSelectionTooltip=Cut selection
+PasteTooltip=Paste
+UndoTooltip=Undo
+RedoTooltip=Redo
+CleanupTooltip=Perform cleanup and various operations
+SettingsTooltip=Edit Application Settings
+PlayPauseTooltip=Play/Pause
+RewindTooltip=Rewind
+RewindPatternTooltip=Rewind to beginning of current pattern
+ToggleRecordingTooltip=Toggles recording mode
+AbortRecordingTooltip=Abort recording
+ToggleLoopModeTooltip=Toggle Loop Mode (Song, Pattern/Selection)
+ToggleQWERTYTooltip=Toggle QWERTY keyboard piano input
+ToggleMetronomeTooltip=Toggle metronome while song is playing
+TogglePALTooltip=Toggle between NTSC/PAL playback mode
+ToggleFollowModeTooltip=Toggle follow mode
+DocumentationTooltip=Online documentation
+
+# Context menus
+SaveAsLabel=Save As...
+SaveAsTooltip=Save project to another file
+RepeatExportLabel=Repeat Last Export
+RepeatExportTooltip=Repeats the previous export
+PasteSpecialLabel=Paste Special...
+PasteSpecialTooltip=Paste with advanced options
+DeleteSpecialLabel=Delete Special...
+PlayBeginSongLabel=Play From Beginning of Song
+PlayBeginSongTooltip=Plays from the start of the song
+PlayBeginPatternLabel=Play From Beginning of Current Pattern
+PlayBeginPatternTooltip=Plays from the start of the current pattern
+PlayLoopPointLabel=Play From Loop Point
+PlayLoopPointTooltip=Plays from the loop point
+RegularSpeedLabel=Regular Speed
+RegularSpeedTooltip=Sets the play rate to 100%
+HalfSpeedLabel=Half Speed
+HalfSpeedTooltip=Sets the play rate to 50%
+QuarterSpeedLabel=Quarter Speed
+QuarterSpeedTooltip=Sets the play rate to 25%
+

@@ -108,5 +108,6 @@ namespace FamiStudio
         public string Colon => Platform.IsMobile ? Value : Value + ":";
         public string Period => Value + ".";
         public override string ToString() { return Value; }
+        public string Format(params object[] args) => string.Format(ToString(), args);
     }
 }

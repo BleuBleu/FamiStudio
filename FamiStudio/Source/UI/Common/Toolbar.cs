@@ -293,6 +293,62 @@ namespace FamiStudio
 
         private float iconScaleFloat = 1.0f;
 
+        #region Localization
+
+        // Tooltips
+        private LocalizedString NewProjectTooltip;
+        private LocalizedString OpenProjectTooltip;
+        private LocalizedString RecentFilesTooltip;
+        private LocalizedString SaveProjectTooltip;
+        private LocalizedString MoreOptionsTooltip;
+        private LocalizedString ExportTooltip;
+        private LocalizedString CopySelectionTooltip;
+        private LocalizedString CutSelectionTooltip;
+        private LocalizedString PasteTooltip;
+        private LocalizedString UndoTooltip;
+        private LocalizedString RedoTooltip;
+        private LocalizedString CleanupTooltip;
+        private LocalizedString SettingsTooltip;
+        private LocalizedString PlayPauseTooltip;
+        private LocalizedString RewindTooltip;
+        private LocalizedString RewindPatternTooltip;
+        private LocalizedString ToggleRecordingTooltip;
+        private LocalizedString AbortRecordingTooltip;
+        private LocalizedString ToggleLoopModeTooltip;
+        private LocalizedString ToggleQWERTYTooltip;
+        private LocalizedString ToggleMetronomeTooltip;
+        private LocalizedString TogglePALTooltip;
+        private LocalizedString ToggleFollowModeTooltip;
+        private LocalizedString DocumentationTooltip;
+
+        // Context menus
+        private LocalizedString SaveAsLabel;
+        private LocalizedString SaveAsTooltip;
+        private LocalizedString RepeatExportLabel;
+        private LocalizedString RepeatExportTooltip;
+        private LocalizedString PasteSpecialLabel;
+        private LocalizedString PasteSpecialTooltip;
+        private LocalizedString DeleteSpecialLabel;
+        private LocalizedString PlayBeginSongLabel;
+        private LocalizedString PlayBeginSongTooltip;
+        private LocalizedString PlayBeginPatternLabel;
+        private LocalizedString PlayBeginPatternTooltip;
+        private LocalizedString PlayLoopPointLabel;
+        private LocalizedString PlayLoopPointTooltip;
+        private LocalizedString RegularSpeedLabel;
+        private LocalizedString RegularSpeedTooltip;
+        private LocalizedString HalfSpeedLabel;
+        private LocalizedString HalfSpeedTooltip;
+        private LocalizedString QuarterSpeedLabel;
+        private LocalizedString QuarterSpeedTooltip;
+
+        #endregion
+
+        public Toolbar()
+        {
+            Localization.Localize(this);
+        }
+
         protected override void OnAddedToContainer()
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
@@ -408,26 +464,26 @@ namespace FamiStudio
 
         private void UpdateTooltips()
         {
-            buttons[(int)ButtonType.New].ToolTip       = $"<MouseLeft> New Project {Settings.FileNewShortcut.TooltipString}";
-            buttons[(int)ButtonType.Open].ToolTip      = $"<MouseLeft> Open Project {Settings.FileOpenShortcut.TooltipString}\n<MouseRight> Recent Files...";
-            buttons[(int)ButtonType.Save].ToolTip      = $"<MouseLeft> Save Project {Settings.FileSaveShortcut.TooltipString}\n<MouseRight> More Options...";
-            buttons[(int)ButtonType.Export].ToolTip    = $"<MouseLeft> Export to various formats {Settings.FileExportShortcut.TooltipString}\n<MouseRight> More Options...";
-            buttons[(int)ButtonType.Copy].ToolTip      = $"<MouseLeft> Copy selection {Settings.CopyShortcut.TooltipString}";
-            buttons[(int)ButtonType.Cut].ToolTip       = $"<MouseLeft> Cut selection {Settings.CutShortcut.TooltipString}";
-            buttons[(int)ButtonType.Paste].ToolTip     = $"<MouseLeft> Paste {Settings.PasteShortcut.TooltipString}\n<MouseRight> More Options...";
-            buttons[(int)ButtonType.Undo].ToolTip      = $"<MouseLeft> Undo {Settings.UndoShortcut.TooltipString}";
-            buttons[(int)ButtonType.Redo].ToolTip      = $"<MouseLeft> Redo {Settings.RedoShortcut.TooltipString}";
-            buttons[(int)ButtonType.Transform].ToolTip = $"<MouseLeft> Perform cleanup and various operations";
-            buttons[(int)ButtonType.Config].ToolTip    = $"<MouseLeft> Edit Application Settings";
-            buttons[(int)ButtonType.Play].ToolTip      = $"<MouseLeft> Play/Pause {Settings.PlayShortcut.TooltipString} - <MouseRight> More Options...";
-            buttons[(int)ButtonType.Rewind].ToolTip    = $"<MouseLeft> Rewind {Settings.SeekStartShortcut.TooltipString}\nRewind to beginning of current pattern {Settings.SeekStartPatternShortcut.TooltipString}";
-            buttons[(int)ButtonType.Rec].ToolTip       = $"<MouseLeft> Toggles recording mode {Settings.RecordingShortcut.TooltipString}\nAbort recording <Esc>";
-            buttons[(int)ButtonType.Loop].ToolTip      = $"<MouseLeft> Toggle Loop Mode (Song, Pattern/Selection)";
-            buttons[(int)ButtonType.Qwerty].ToolTip    = $"<MouseLeft> Toggle QWERTY keyboard piano input {Settings.QwertyShortcut.TooltipString}";
-            buttons[(int)ButtonType.Metronome].ToolTip = $"<MouseLeft> Toggle metronome while song is playing";
-            buttons[(int)ButtonType.Machine].ToolTip   = $"<MouseLeft> Toggle between NTSC/PAL playback mode";
-            buttons[(int)ButtonType.Follow].ToolTip    = $"<MouseLeft> Toggle follow mode {Settings.FollowModeShortcut.TooltipString}";
-            buttons[(int)ButtonType.Help].ToolTip      = $"<MouseLeft> Online documentation";
+            buttons[(int)ButtonType.New].ToolTip       = $"<MouseLeft> {NewProjectTooltip} {Settings.FileNewShortcut.TooltipString}";
+            buttons[(int)ButtonType.Open].ToolTip      = $"<MouseLeft> {OpenProjectTooltip} {Settings.FileOpenShortcut.TooltipString}\n<MouseRight> {RecentFilesTooltip}";
+            buttons[(int)ButtonType.Save].ToolTip      = $"<MouseLeft> {SaveProjectTooltip} {Settings.FileSaveShortcut.TooltipString}\n<MouseRight> {MoreOptionsTooltip}";
+            buttons[(int)ButtonType.Export].ToolTip    = $"<MouseLeft> {ExportTooltip} {Settings.FileExportShortcut.TooltipString}\n<MouseRight> {MoreOptionsTooltip}";
+            buttons[(int)ButtonType.Copy].ToolTip      = $"<MouseLeft> {CopySelectionTooltip} {Settings.CopyShortcut.TooltipString}";
+            buttons[(int)ButtonType.Cut].ToolTip       = $"<MouseLeft> {CutSelectionTooltip} {Settings.CutShortcut.TooltipString}";
+            buttons[(int)ButtonType.Paste].ToolTip     = $"<MouseLeft> {PasteTooltip} {Settings.PasteShortcut.TooltipString}\n<MouseRight> {MoreOptionsTooltip}";
+            buttons[(int)ButtonType.Undo].ToolTip      = $"<MouseLeft> {UndoTooltip} {Settings.UndoShortcut.TooltipString}";
+            buttons[(int)ButtonType.Redo].ToolTip      = $"<MouseLeft> {RedoTooltip} {Settings.RedoShortcut.TooltipString}";
+            buttons[(int)ButtonType.Transform].ToolTip = $"<MouseLeft> {CleanupTooltip}";
+            buttons[(int)ButtonType.Config].ToolTip    = $"<MouseLeft> {SettingsTooltip}";
+            buttons[(int)ButtonType.Play].ToolTip      = $"<MouseLeft> {PlayPauseTooltip} {Settings.PlayShortcut.TooltipString} - <MouseRight> {MoreOptionsTooltip}";
+            buttons[(int)ButtonType.Rewind].ToolTip    = $"<MouseLeft> {RewindTooltip} {Settings.SeekStartShortcut.TooltipString}\n{RewindPatternTooltip} {Settings.SeekStartPatternShortcut.TooltipString}";
+            buttons[(int)ButtonType.Rec].ToolTip       = $"<MouseLeft> {ToggleRecordingTooltip} {Settings.RecordingShortcut.TooltipString}\n{AbortRecordingTooltip} <Esc>";
+            buttons[(int)ButtonType.Loop].ToolTip      = $"<MouseLeft> {ToggleLoopModeTooltip}";
+            buttons[(int)ButtonType.Qwerty].ToolTip    = $"<MouseLeft> {ToggleQWERTYTooltip} {Settings.QwertyShortcut.TooltipString}";
+            buttons[(int)ButtonType.Metronome].ToolTip = $"<MouseLeft> {ToggleMetronomeTooltip}";
+            buttons[(int)ButtonType.Machine].ToolTip   = $"<MouseLeft> {TogglePALTooltip}";
+            buttons[(int)ButtonType.Follow].ToolTip    = $"<MouseLeft> {ToggleFollowModeTooltip} {Settings.FollowModeShortcut.TooltipString}";
+            buttons[(int)ButtonType.Help].ToolTip      = $"<MouseLeft> {DocumentationTooltip}";
         }
 
         private void UpdateButtonLayout()
@@ -650,7 +706,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuSave", "Save As...", $"Save project to another file {Settings.FileSaveAsShortcut.TooltipString}", () => { App.SaveProjectAsync(true); }),
+                new ContextMenuOption("MenuSave", SaveAsLabel, $"{SaveAsTooltip} {Settings.FileSaveAsShortcut.TooltipString}", () => { App.SaveProjectAsync(true); }),
             });
         }
 
@@ -663,7 +719,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuExport", "Repeat Last Export", $"Repeats the previous export {Settings.FileExportRepeatShortcut.TooltipString}", () => { App.RepeatLastExport(); }),
+                new ContextMenuOption("MenuExport", RepeatExportLabel, $"{RepeatExportTooltip} {Settings.FileExportRepeatShortcut.TooltipString}", () => { App.RepeatLastExport(); }),
             });
         }
 
@@ -708,7 +764,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuStar", "Paste Special...", $"Paste with advanced options {Settings.PasteSpecialShortcut.TooltipString}", () => { App.PasteSpecial(); }),
+                new ContextMenuOption("MenuStar", PasteSpecialLabel, $"{PasteSpecialTooltip} {Settings.PasteSpecialShortcut.TooltipString}", () => { App.PasteSpecial(); }),
             });
         }
 
@@ -726,7 +782,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuStar", "Delete Special...", () => { App.DeleteSpecial(); }),
+                new ContextMenuOption("MenuStar", DeleteSpecialLabel, () => { App.DeleteSpecial(); }),
             });
         }
 
@@ -777,12 +833,12 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuPlay", "Play From Beginning of Song", $"Plays from the start of the song {Settings.PlayFromStartShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
-                new ContextMenuOption("MenuPlay", "Play From Beginning of Current Pattern", $"Plays from the start of the current pattern {Settings.PlayFromPatternShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
-                new ContextMenuOption("MenuPlay", "Play From Loop Point", $"Plays from the loop point {Settings.PlayFromLoopShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
-                new ContextMenuOption("Regular Speed", "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore ),
-                new ContextMenuOption("Half Speed",    "Sets the play rate to 50%",  () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
-                new ContextMenuOption("Quarter Speed", "Sets the play rate to 25%",  () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                new ContextMenuOption("MenuPlay", PlayBeginSongLabel, $"{PlayBeginSongTooltip} {Settings.PlayFromStartShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
+                new ContextMenuOption("MenuPlay", PlayBeginPatternLabel, $"{PlayBeginPatternTooltip} {Settings.PlayFromPatternShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
+                new ContextMenuOption("MenuPlay", PlayLoopPointLabel, $"{PlayLoopPointTooltip} {Settings.PlayFromLoopShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
+                new ContextMenuOption(RegularSpeedLabel, RegularSpeedTooltip, () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore ),
+                new ContextMenuOption(HalfSpeedLabel,    HalfSpeedTooltip,    () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                new ContextMenuOption(QuarterSpeedLabel, QuarterSpeedTooltip, () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
             });
         }
 
