@@ -56,6 +56,7 @@ namespace FamiStudio
         public static int TimeFormat = 1;
         public static int FollowMode = 0;
         public static int FollowSync = 0;
+        public static float FollowPercent = 0.75f;
         public static int  ScrollBars = ScrollBarsNone;
         public static int  IdealSequencerSize = 25;
         public static bool AllowSequencerVerticalScroll = false;
@@ -311,6 +312,7 @@ namespace FamiStudio
             TimeFormat = ini.GetInt("UI", "TimeFormat", 0);
             FollowMode = ini.GetInt("UI", "FollowMode", FollowModeContinuous);
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
+            FollowPercent = ini.GetFloat("UI", "FollowPercent", 0.75f);
             ScrollBars = Version < 3 ? (ini.GetBool("UI", "ShowScrollBars", false) ? ScrollBarsThin : ScrollBarsNone) : ini.GetInt("UI", "ScrollBars", ScrollBarsNone);
             IdealSequencerSize = ini.GetInt("UI", "IdealSequencerSize", 25);
             AllowSequencerVerticalScroll = ini.GetBool("UI", "AllowSequencerVerticalScroll", false);
@@ -487,6 +489,7 @@ namespace FamiStudio
             ini.SetInt("UI", "TimeFormat", TimeFormat);
             ini.SetInt("UI", "FollowMode", FollowMode);
             ini.SetInt("UI", "FollowSync", FollowSync);
+            ini.SetFloat("UI", "FollowPercent", FollowPercent);
             ini.SetInt("UI", "ScrollBars", ScrollBars);
             ini.SetInt("UI", "IdealSequencerSize", IdealSequencerSize);
             ini.SetBool("UI", "AllowSequencerVerticalScroll", AllowSequencerVerticalScroll);
