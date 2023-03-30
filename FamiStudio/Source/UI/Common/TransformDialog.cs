@@ -88,19 +88,19 @@ namespace FamiStudio
             switch (section)
             {
                 case TransformOperation.SongCleanup:
-                    page.AddCheckBox(MergePatternsLabel.Colon, true, MergePatternsTooltip);                                        // 0
-                    page.AddCheckBox(DeleteEmptyPatternsLabel.Colon, true, DeleteEmptyPatternsTooltip);                                     // 1
-                    page.AddCheckBox(AdjustMaximumNoteLengthsLabel.Colon, true, AdjustMaximumNoteLengthsTooltip);                          // 2
+                    page.AddCheckBox(MergePatternsLabel.Colon, true, MergePatternsTooltip); // 0
+                    page.AddCheckBox(DeleteEmptyPatternsLabel.Colon, true, DeleteEmptyPatternsTooltip); // 1
+                    page.AddCheckBox(AdjustMaximumNoteLengthsLabel.Colon, true, AdjustMaximumNoteLengthsTooltip); // 2
                     page.AddCheckBoxList(Platform.IsMobile ? SongsLabel.Colon : null , GetSongNames(), null, SongsTooltip) ; // 3
                     break;
                 case TransformOperation.ProjectCleanup:
-                    page.AddCheckBox(DeleteUnusedInstrumentsLabel.Colon, true, DeleteUnusedInstrumentsTooltip);                             // 0
-                    page.AddCheckBox(MergeIdenticalInstrumentsLabel.Colon, true, MergeIdenticalInstrumentsTooltip);                         // 1
-                    page.AddCheckBox(UnassignUnusedSamplesLabel.Colon, true, UnassignUnusedSamplesTooltip);                    // 2
-                    page.AddCheckBox(DeleteUnassignedSamplesLabel.Colon, true, DeleteUnassignedSamplesTooltip);                             // 3
-                    page.AddCheckBox(PermanentlyApplyProcessingLabel.Colon, false, PermanentlyApplyProcessingTooltip);     // 4
-                    page.AddCheckBox(DiscardN163FdsResampleWavLabel.Colon, false, DiscardN163FdsResampleWavTooltip);             // 5
-                    page.AddCheckBox(DeleteUnusedArpeggiosLabel.Colon, true, DeleteUnusedArpeggiosTooltip);                                 // 6
+                    page.AddCheckBox(DeleteUnusedInstrumentsLabel.Colon, true, DeleteUnusedInstrumentsTooltip); // 0
+                    page.AddCheckBox(MergeIdenticalInstrumentsLabel.Colon, true, MergeIdenticalInstrumentsTooltip); // 1
+                    page.AddCheckBox(UnassignUnusedSamplesLabel.Colon, true, UnassignUnusedSamplesTooltip); // 2
+                    page.AddCheckBox(DeleteUnassignedSamplesLabel.Colon, true, DeleteUnassignedSamplesTooltip); // 3
+                    page.AddCheckBox(PermanentlyApplyProcessingLabel.Colon, false, PermanentlyApplyProcessingTooltip); // 4
+                    page.AddCheckBox(DiscardN163FdsResampleWavLabel.Colon, false, DiscardN163FdsResampleWavTooltip); // 5
+                    page.AddCheckBox(DeleteUnusedArpeggiosLabel.Colon, true, DeleteUnusedArpeggiosTooltip); // 6
                     break;
             }
 
