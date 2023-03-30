@@ -16,7 +16,8 @@ namespace FamiStudio
 
         public int Type => type;
         public string Name => ChannelType.Names[type];
-        public string ShortName => ChannelType.ShortNames[(int)type];
+        public string LocalizedName => ChannelType.LocalizedNames[type];
+        public string ShortName => ChannelType.ShortNames[type];
         public string NameWithExpansion => ChannelType.GetNameWithExpansion(type);
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
@@ -1829,7 +1830,7 @@ namespace FamiStudio
             14 // EPSM
         };
 
-        static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
         static ChannelType()
         {

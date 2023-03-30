@@ -161,6 +161,75 @@ namespace FamiStudio
         public event EmptyDelegate SelectionChanged;
         public event EmptyDelegate ShyChanged;
 
+        #region Localization
+
+        // Tooltips
+        LocalizedString AddPatternTooltip;
+        LocalizedString SetLoopPointTooltip;
+        LocalizedString PanTooltip;
+        LocalizedString SelectRectangleTooltip;
+        LocalizedString OrTooltip;
+        LocalizedString DeletePatternTooltip;
+        LocalizedString MoreOptionsTooltip;
+        LocalizedString MovePatternTooltip;
+        LocalizedString ClonePatternTooltip;
+        LocalizedString ShyModeTooltip;
+        LocalizedString SeekTooptip;
+        LocalizedString SelectColumnTooltip;
+        LocalizedString MuteChannelTooltip;
+        LocalizedString SoloChannelTooltip;
+        LocalizedString ForceDisplayTooltip;
+        LocalizedString ForceDisplayAllChannelsTooltip;
+        LocalizedString MakeActiveTooltip;
+
+        // Context menus
+        LocalizedString ToggleMuteLabel;
+        LocalizedString ToggleSoloLabel;
+        LocalizedString ForceDisplayLabel;
+        LocalizedString ClearLoopPointLabel;
+        LocalizedString SetLoopPointLabel;
+        LocalizedString CustomPatternSettingsLabel;
+        LocalizedString GoToPianoRollLabel;
+        LocalizedString ExpandSelectionLabel;
+        LocalizedString InstanciateHereLabel;
+        LocalizedString DuplicateHereLabel;
+        LocalizedString ClearSelectionLabel;
+        LocalizedString DeleteSelectionLabel;
+        LocalizedString SelectedPatternPropertiesLabel;
+        LocalizedString PatternPropertiesLabel;
+        LocalizedString DeletePatternLabel;
+
+        // Dialogs
+        LocalizedString PasteTitle;
+        LocalizedString PasteMissingInstrumentsLabel;
+        LocalizedString PasteMissingArpeggiosLabels;
+        LocalizedString PasteMissingSamplesLabel;
+
+        // Paste special dialog
+        LocalizedString PasteSpecialTitle;
+        LocalizedString InsertLabel;
+        LocalizedString InsertTooltip;
+        LocalizedString ExtendSongLabel;
+        LocalizedString ExtendSongTooltip;
+        LocalizedString RepeatLabel;
+        LocalizedString RepeatTooltip;
+
+        //Custom pattern settings dialog
+        LocalizedString CustomPatternLabel;
+        LocalizedString CustomPatternTitle;
+        LocalizedString CustomPatternTooltip;
+
+        // Pattern properties dialog
+        LocalizedString PatternPropertiesTitle;
+        LocalizedString ErrorRenamingPattern;
+
+        #endregion
+
+        public Sequencer()
+        {
+            Localization.Localize(this);
+        }
+
         private Song Song
         {
             get { return App?.SelectedSong; }
@@ -580,7 +649,7 @@ namespace FamiStudio
                     // Name
                     var font = i == selectedChannelIndex ? Fonts.FontMediumBold : Fonts.FontMedium;
                     var iconHeight = bmpChannels[0].ElementSize.Height * channelBitmapScale;
-                    c.DrawText(Song.Channels[i].Name, font, channelNamePosX, y + channelIconPosY, Theme.LightGreyColor2, TextFlags.MiddleLeft, 0, iconHeight);
+                    c.DrawText(Song.Channels[i].LocalizedName, font, channelNamePosX, y + channelIconPosY, Theme.LightGreyColor2, TextFlags.MiddleLeft, 0, iconHeight);
 
                     // Force display icon.
                     var ghostHoverOpacity = isHoverRow && (hoverIconMask & 2) != 0 ? 0.75f : 1.0f;
@@ -1652,9 +1721,9 @@ namespace FamiStudio
                
                 App.ShowContextMenu(left + x, top + y, new[]
                 {
-                    new ContextMenuOption("MenuMute", "Toggle Mute Channel", () => { App.ToggleChannelActive(channelIdx); }),
-                    new ContextMenuOption("MenuSolo", "Toggle Solo Channel", () => { App.ToggleChannelSolo(channelIdx); }),
-                    new ContextMenuOption("MenuForceDisplay", "Force Display Channel in Piano Roll", () => { App.ToggleChannelForceDisplay(channelIdx); })
+                    new ContextMenuOption("MenuMute", ToggleMuteLabel, () => { App.ToggleChannelActive(channelIdx); }),
+                    new ContextMenuOption("MenuSolo", ToggleSoloLabel, () => { App.ToggleChannelSolo(channelIdx); }),
+                    new ContextMenuOption("MenuForceDisplay", ForceDisplayLabel, () => { App.ToggleChannelForceDisplay(channelIdx); })
                 });
 
                 return true;
@@ -1680,8 +1749,8 @@ namespace FamiStudio
 
                     App.ShowContextMenu(left + x, top + y, new[]
                     {
-                        new ContextMenuOption(isLoopPoint ? "MenuClearLoopPoint" :  "MenuLoopPoint", isLoopPoint ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
-                        new ContextMenuOption("MenuCustomPatternSettings", "Custom Pattern Settings...", () => { EditPatternCustomSettings(new Point(x, y), patternIdx); } )
+                        new ContextMenuOption(isLoopPoint ? "MenuClearLoopPoint" :  "MenuLoopPoint", isLoopPoint ?  ClearLoopPointLabel : SetLoopPointLabel, () => { SetLoopPoint(patternIdx); } ),
+                        new ContextMenuOption("MenuCustomPatternSettings", CustomPatternSettingsLabel, () => { EditPatternCustomSettings(new Point(x, y), patternIdx); } )
                     }); ;
                 }
 
@@ -1723,39 +1792,39 @@ namespace FamiStudio
 
                 if (Platform.IsMobile)
                 {
-                    menu.Add(new ContextMenuOption("MenuPiano", "Go To Piano Roll", () => { GotoPianoRoll(location); }));
+                    menu.Add(new ContextMenuOption("MenuPiano", GoToPianoRollLabel, () => { GotoPianoRoll(location); }));
                 }
 
                 if (IsSelectionValid() && !IsPatternSelected(location))
                 {
                     if (Platform.IsMobile)
-                        menu.Add(new ContextMenuOption("MenuExpandSelection", "Expand Selection", () => { EnsureSelectionInclude(location); }));
+                        menu.Add(new ContextMenuOption("MenuExpandSelection", ExpandSelectionLabel, () => { EnsureSelectionInclude(location); }));
                     if (selectionMin.ChannelIndex == location.ChannelIndex)
-                        menu.Add(new ContextMenuOption("MenuInstance", "Instanciate Selection Here", () => { CopySelectionToCursor(false); }));
-                    menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate Selection Here", () => { CopySelectionToCursor(true); }));
+                        menu.Add(new ContextMenuOption("MenuInstance", InstanciateHereLabel, () => { CopySelectionToCursor(false); }));
+                    menu.Add(new ContextMenuOption("MenuDuplicate", DuplicateHereLabel, () => { CopySelectionToCursor(true); }));
                 }
 
                 if (IsSelectionValid())
                 {
-                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedPatern(); }, ContextMenuSeparator.Before));
+                    menu.Add(new ContextMenuOption("MenuClearSelection", ClearSelectionLabel, () => { ClearSelection(); ClearHighlightedPatern(); }, ContextMenuSeparator.Before));
                 }
 
                 if (pattern != null)
                 {
                     if (IsPatternSelected(location) && SelectionContainsMultiplePatterns())
                     {
-                        menu.Insert(0, new ContextMenuOption("MenuDeleteSelection", "Delete Selected Patterns", () => { DeleteSelection(true); }));
-                        menu.Add(new ContextMenuOption("MenuProperties", "Selected Patterns Properties...", () => { EditPatternProperties(new Point(x, y), pattern, location, true); }, ContextMenuSeparator.Before));
+                        menu.Insert(0, new ContextMenuOption("MenuDeleteSelection", DeleteSelectionLabel, () => { DeleteSelection(true); }));
+                        menu.Add(new ContextMenuOption("MenuProperties", SelectedPatternPropertiesLabel, () => { EditPatternProperties(new Point(x, y), pattern, location, true); }, ContextMenuSeparator.Before));
                     }
                     else
                     {
                         if (Platform.IsDesktop)
                             SetSelection(location, location);
 
-                        menu.Add(new ContextMenuOption("MenuProperties", "Pattern Properties...", () => { EditPatternProperties(new Point(x, y), pattern, location, false); }, ContextMenuSeparator.Before));
+                        menu.Add(new ContextMenuOption("MenuProperties", PatternPropertiesLabel, () => { EditPatternProperties(new Point(x, y), pattern, location, false); }, ContextMenuSeparator.Before));
                     }
 
-                    menu.Insert(0, new ContextMenuOption("MenuDelete", "Delete Pattern", () => { DeletePattern(location); }));
+                    menu.Insert(0, new ContextMenuOption("MenuDelete", DeletePatternLabel, () => { DeletePattern(location); }));
                 }
 
                 if (menu.Count > 0)
@@ -1952,15 +2021,15 @@ namespace FamiStudio
 
             bool createMissingInstrument = false;
             if (missingInstruments)
-                createMissingInstrument = Platform.MessageBox(ParentWindow, $"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingInstrument = Platform.MessageBox(ParentWindow, PasteMissingInstrumentsLabel, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             bool createMissingArpeggios = false;
             if (missingArpeggios)
-                createMissingArpeggios = Platform.MessageBox(ParentWindow, $"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingArpeggios = Platform.MessageBox(ParentWindow, PasteMissingArpeggiosLabels, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             bool createMissingSamples = false;
             if (missingSamples)
-                createMissingSamples = Platform.MessageBox(ParentWindow, $"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingSamples = Platform.MessageBox(ParentWindow, PasteMissingSamplesLabel, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 
@@ -2086,10 +2155,10 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var dialog = new PropertyDialog(ParentWindow, "Paste Special", 200);
-            dialog.Properties.AddLabelCheckBox("Insert", false, 0, "When enabled, will move the existing patterns to the right to make room for new pasted patterns."); // 0
-            dialog.Properties.AddLabelCheckBox("Extend song", false, 0, "When enabled, will extend the song to make room for the new pasted patterns."); // 1
-            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32, 1, "Number of times to paste the patterns."); // 2
+            var dialog = new PropertyDialog(ParentWindow, PasteSpecialTitle, 200);
+            dialog.Properties.AddLabelCheckBox(InsertLabel, false, 0, InsertTooltip); // 0
+            dialog.Properties.AddLabelCheckBox(ExtendSongLabel, false, 0, ExtendSongTooltip); // 1
+            dialog.Properties.AddNumericUpDown(RepeatLabel.Colon, 1, 1, 32, 1, RepeatTooltip); // 2
             dialog.Properties.SetPropertyEnabled(1, false);
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
             dialog.Properties.Build();
@@ -2649,22 +2718,22 @@ namespace FamiStudio
                 var tooltipList = new List<string>();
 
                 if (pattern == null)
-                    tooltipList.Add("<MouseLeft> Add Pattern");
+                    tooltipList.Add($"<MouseLeft> {AddPatternTooltip}");
 
-                tooltipList.Add("<L><MouseLeft> Set Loop Point");
-                tooltipList.Add("<MouseWheel><Drag> Pan");
-                tooltipList.Add("<MouseRight><Drag> Select Rectangle");
+                tooltipList.Add($"<L><MouseLeft> {SetLoopPointTooltip}");
+                tooltipList.Add($"<MouseWheel><Drag> {PanTooltip}");
+                tooltipList.Add($"<MouseRight><Drag> {SelectRectangleTooltip}");
 
                 if (pattern != null)
                 {
-                    tooltipList.Add("<MouseLeft><MouseLeft> or <Shift><MouseLeft> Delete Pattern");
-                    tooltipList.Add("<MouseRight> More Options...");
+                    tooltipList.Add($"<MouseLeft><MouseLeft> {OrTooltip} <Shift><MouseLeft> {DeletePatternTooltip}");
+                    tooltipList.Add($"<MouseRight> {MoreOptionsTooltip}");
                 }
 
                 if (IsPatternSelected(location))
                 {
-                    tooltipList.Add("<Drag> Move Pattern");
-                    tooltipList.Add("<Ctrl><Drag> Clone pattern");
+                    tooltipList.Add($"<Drag> {MovePatternTooltip}");
+                    tooltipList.Add($"<Ctrl><Drag> {ClonePatternTooltip}");
                 }
 
                 if (tooltipList.Count >= 3)
@@ -2680,34 +2749,34 @@ namespace FamiStudio
             }
             else if (IsPointInShyButton(e.X, e.Y))
             {
-                tooltip = "<MouseLeft> Toggle Hide Unused Channels (shy mode)";
+                tooltip = $"<MouseLeft> {ShyModeTooltip}";
             }
             else if (IsMouseInHeader(e))
             {
-                tooltip = "<MouseLeft> Seek - <MouseRight> More Options... - <MouseRight><Drag> Select Column\n<L><MouseLeft> Set Loop Point - <MouseWheel><Drag> Pan";
+                tooltip = $"<MouseLeft> {SeekTooptip} - <MouseRight> {MoreOptionsTooltip} - <MouseRight><Drag> {SelectColumnTooltip}\n<L><MouseLeft> {SetLoopPointTooltip} - <MouseWheel><Drag> {PanTooltip}";
             }
             else if (IsMouseInTrackName(e))
             {
                 if (GetChannelIndexFromIconPos(e) >= 0)
                 {
-                    tooltip = "<MouseLeft> Mute Channel - <MouseLeft><MouseLeft> Solo Channel";
+                    tooltip = $"<MouseLeft> {MuteChannelTooltip} - <MouseLeft><MouseLeft> {SoloChannelTooltip}";
                 }
                 else if (GetChannelIndexFromGhostIconPos(e) >= 0)
                 {
-                    tooltip = "<MouseLeft> Toggle channel force display in Piano Roll\n<MouseLeft><MouseLeft> Toggle all channel force display";
+                    tooltip = $"<MouseLeft> {ForceDisplayTooltip}\n<MouseLeft><MouseLeft> {ForceDisplayAllChannelsTooltip}";
                     int idx = GetChannelIndexForCoord(e.Y);
                     if (idx >= 0 && idx < Settings.DisplayChannelShortcuts.Length)
                         tooltip += $" {Settings.DisplayChannelShortcuts[idx].TooltipString}";
                 }
                 else
                 {
-                    tooltip = "<MouseLeft> Make channel active";
+                    tooltip = $"<MouseLeft> {MakeActiveTooltip}";
                     int idx = GetChannelIndexForCoord(e.Y);
                     if (idx >= 0 && idx < Settings.ActiveChannelShortcuts.Length)
                         tooltip += $" {Settings.ActiveChannelShortcuts[idx].TooltipString}";
                 }
 
-                tooltip += " - <MouseRight> More Options...";
+                tooltip += $" - <MouseRight> {MoreOptionsTooltip}";
             }
 
             App.SetToolTip(tooltip);
@@ -2850,11 +2919,9 @@ namespace FamiStudio
         }
 
         // Custom pattern.
-        private readonly string CustomPatternTooltip = "Enable to use different length or tempo parameter for this pattern.";
-
         private void EditPatternCustomSettings(Point pt, int patternIdx)
         {
-            var dlg = new PropertyDialog(ParentWindow, "Pattern Custom Settings", new Point(left + pt.X, top + pt.Y), 300);
+            var dlg = new PropertyDialog(ParentWindow, CustomPatternTitle, new Point(left + pt.X, top + pt.Y), 300);
             var song = Song;
             var enabled = song.PatternHasCustomSettings(patternIdx);
 
@@ -2869,7 +2936,7 @@ namespace FamiStudio
 
             var tempoProperties = new TempoProperties(dlg.Properties, song, patternIdx, minPattern, maxPattern);
 
-            dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CustomPatternTooltip); // 0
+            dlg.Properties.AddCheckBox(CustomPatternLabel.Colon, song.PatternHasCustomSettings(patternIdx), CustomPatternTooltip); // 0
             tempoProperties.AddProperties();
             tempoProperties.EnableProperties(enabled);
             dlg.Properties.PropertyChanged += PatternCustomSettings_PropertyChanged;
@@ -2905,7 +2972,7 @@ namespace FamiStudio
             bool multipleChannelsSelected = selection && IsSelectionValid() && (selectionMax.ChannelIndex != selectionMin.ChannelIndex);
             bool multiplePatternsSelected = selection && IsSelectionValid() && ((selectionMax.ChannelIndex != selectionMin.ChannelIndex) || (selectionMin.PatternIndex != selectionMax.PatternIndex));
 
-            var dlg = new PropertyDialog(ParentWindow, "Pattern Properties", new Point(left + pt.X, top + pt.Y), 240);
+            var dlg = new PropertyDialog(ParentWindow, PatternPropertiesTitle, new Point(left + pt.X, top + pt.Y), 240);
             dlg.Properties.AddColoredTextBox(multiplePatternsSelected ? "" : pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternsSelected);
             dlg.Properties.AddColorPicker(pattern.Color);
@@ -2944,7 +3011,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        App.DisplayNotification("Error renaming pattern!", true);
+                        App.DisplayNotification(ErrorRenamingPattern, true);
                     }
 
                     MarkDirty();

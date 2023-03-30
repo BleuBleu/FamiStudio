@@ -508,3 +508,64 @@ HalfSpeedTooltip=Sets the play rate to 50%
 QuarterSpeedLabel=Quarter Speed
 QuarterSpeedTooltip=Sets the play rate to 25%
 
+[Sequencer]
+
+# Tooltips
+AddPatternTooltip=Add Pattern
+SetLoopPointTooltip=Set Loop Point
+PanTooltip=Pan
+SelectRectangleTooltip=Select Rectangle
+OrTooltip=or
+DeletePatternTooltip=Delete Pattern
+MoreOptionsTooltip=More Options...
+MovePatternTooltip=Move Pattern
+ClonePatternTooltip=Clone pattern
+ShyModeTooltip=Toggle Hide Unused Channels (shy mode)
+SeekTooptip=Seek
+SelectColumnTooltip=Select Column
+MuteChannelTooltip=Mute Channel
+SoloChannelTooltip=Solo Channel
+ForceDisplayTooltip=Toggle channel force display in Piano Roll
+ForceDisplayAllChannelsTooltip=Toggle all channel force display
+MakeActiveTooltip=Make channel active
+
+# Context menus
+ToggleMuteLabel=Toggle Mute Channel
+ToggleSoloLabel=Toggle Solo Channel
+ForceDisplayLabel=Force Display Channel in Piano Roll
+ClearLoopPointLabel=Clear Loop Point
+SetLoopPointLabel=Set Loop Point
+CustomPatternSettingsLabel=Custom Pattern Settings...
+GoToPianoRollLabel=Go To Piano Roll
+ExpandSelectionLabel=Expand Selection
+InstanciateHereLabel=Instanciate Selection Here
+DuplicateHereLabel=Duplicate Selection Here
+ClearSelectionLabel=Clear Selection
+DeleteSelectionLabel=Delete Selected Patterns
+SelectedPatternPropertiesLabel=Selected Patterns Properties...
+PatternPropertiesLabel=Pattern Properties...
+DeletePatternLabel=Delete Pattern
+
+# Dialogs
+PasteTitle=Paste
+PasteMissingInstrumentsLabel=You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?
+PasteMissingArpeggiosLabels=You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?
+PasteMissingSamplesLabel=You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?
+
+# Paste special dialog
+PasteSpecialTitle=Paste Special
+InsertLabel=Insert
+InsertTooltip=When enabled, will move the existing patterns to the right to make room for new pasted patterns.
+ExtendSongLabel=Extend song
+ExtendSongTooltip=When enabled, will extend the song to make room for the new pasted patterns.
+RepeatLabel=Repeat
+RepeatTooltip=Number of times to paste the patterns.
+
+# Custom pattern settings dialog
+CustomPatternLabel=Custom Pattern
+CustomPatternTitle=Pattern Custom Settings
+CustomPatternTooltip=Enable to use different length or tempo parameter for this pattern.
+
+# Pattern properties dialog
+PatternPropertiesTitle=Pattern Properties
+ErrorRenamingPattern=Error renaming pattern!
