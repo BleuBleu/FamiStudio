@@ -2396,14 +2396,14 @@ famistudio_update_epsm_square_channel_sound:
     
     lda #$07
     sta FAMISTUDIO_EPSM_ADDR
-    lda famistudio_env_value+FAMISTUDIO_EPSM_CH2_ENVS+2 ;load mixer envelope
+    lda famistudio_env_value+FAMISTUDIO_EPSM_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     sta @temp
     asl @temp
-    lda famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+2 ;load mixer envelope
+    lda famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     ora @temp
     sta @temp
     asl @temp
-    lda famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+2 ;load mixer envelope
+    lda famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     ora @temp
     sta @temp
     sta FAMISTUDIO_EPSM_DATA
