@@ -1,0 +1,53 @@
+# FamiStudio Localization Guide
+If you want to help localize FamiStudio, great, but please take a minute to read this guide.
+
+# File format
+All localization information is stored in the `FamiStudio\Resources\Localization` folder. There is 1 file per language. The format is basically a INI files, with UTF-8 encoding. 
+The strings are stored in sections which are between brackets (ex: `[PianoRoll]`), which map to classes in the C# code.
+In each section, you will find series of keys and values. You are only allowed to change the values, do not touch the keys.
+Comments can be added with `#` or `;`. Everything to the right of these characters will be ignored.
+
+```
+[ConfigDialog]
+
+# Title
+Title=FamiStudio Configuration
+Verb=Apply
+
+# Sections
+ConfigSectionNames_0=General
+ConfigSectionNames_1=Interface
+ConfigSectionNames_2=Input
+ConfigSectionNames_3=Sound
+ConfigSectionNames_4=Mixer
+ConfigSectionNames_5=MIDI
+ConfigSectionNames_6=FFmpeg
+ConfigSectionNames_7=Keyboard
+ConfigSectionNames_8=Mobile
+
+```
+
+# General guidelines
+Please follow these guidelines *exactly*. Any PR/contribution that does not follow these will be rejected.
+
+## Be Consistent
+Multiple people may work on the same localization. It is important to be consistent to avoid confusing users. See what terms are already been used in other portions of the app and use those instead of coming up with new onces. For example, if the original author used the term "Square channel" instead of "Pulse channel", use that everywhere.
+
+## Keep files aligned
+Keep every all localization files perfectly aligned. This will make it easier to manage as the app changes. 
+In other words:
+- Do not reorder/add/delete strings
+- Do not add/edit/remove whitespace
+- Do not add/edit/remove comments
+- Usage of a diff tool is strongly encouraged as it will make your life much easier.
+![image](DiffTool.png)
+
+## Test your stuff
+Do not blindly translate without testing. In some cases, the UI doesnt adjust to the size of labels, so you will need to be sure they are not truncated. 
+Be especially mindful of mobile, where space is limited.
+
+## Hotfix/updates will remove strings
+- What's the workflow here?
+
+## Dont change the font unless you have to
+The main font in FamiStudio is [Quicksand](https://fonts.google.com/specimen/Quicksand/glyphs). Do not change font unless you are not in the list of supported languages. If you need to change the font because it does not support glyph that are needed, check with me so we can pick one that matches as closely as possible.
