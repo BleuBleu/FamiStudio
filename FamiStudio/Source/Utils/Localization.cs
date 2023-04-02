@@ -18,9 +18,9 @@ namespace FamiStudio
             var culture = "fre"; // This is a test. Should come from the OS.
 
             stringsEng = new IniFile();
-            stringsEng.LoadFromResource("FamiStudio.Resources.Localization.FamiStudio.eng");
+            stringsEng.LoadFromResource("FamiStudio.Resources.Localization.FamiStudio.eng.ini");
             strings = new IniFile();
-            strings.LoadFromResource($"FamiStudio.Resources.Localization.FamiStudio.{culture}");
+            strings.LoadFromResource($"FamiStudio.Resources.Localization.FamiStudio.{culture}.ini");
 
             Font     = LocalizeString("Localization", "Font",     false);
             FontBold = LocalizeString("Localization", "FontBold", false);
