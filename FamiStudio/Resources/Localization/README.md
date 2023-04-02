@@ -2,7 +2,7 @@
 If you want to help localize FamiStudio, great, but please take a minute to read this guide.
 
 # File format
-All localization information is stored in the `FamiStudio\Resources\Localization` folder. There is 1 file per language. The format is basically a INI files, with UTF-8 encoding. 
+All localization information is stored in this folder. There is 1 file per language. The format is basically a INI file, with UTF-8 encoding. 
 
 The strings are stored in sections which are between brackets (ex: `[PianoRoll]`), which map to classes in the C# code.
 
