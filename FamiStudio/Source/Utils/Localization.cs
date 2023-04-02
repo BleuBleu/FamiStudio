@@ -33,6 +33,12 @@ namespace FamiStudio
             LocalizeInternal(o.GetType(), o);
         }
 
+        public static void LocalizeType(object o, Type type)
+        {
+            Debug.Assert(o.GetType().IsSubclassOf(type));
+            LocalizeInternal(type, o);
+        }
+
         public static void LocalizeStatic(Type type)
         {
             LocalizeInternal(type);

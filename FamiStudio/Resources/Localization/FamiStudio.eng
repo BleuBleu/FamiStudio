@@ -144,7 +144,7 @@ ExportingVideoLabel=Exporting Video
 
 # Video grid
 ChannelColumn=Channel
-PanColumn=Pan (% L/R
+PanColumn=Pan (%) L/R
 TriggerColumn=Trigger
 EmulationOption=Emulation
 PeakSpeedOption=Peak Speed
@@ -587,3 +587,197 @@ NewVersionToast=A new version ({0}) is available. Click here to download it!
 NewProjectTitle=New Project
 IncompatibleInstrumentError=Selected instrument is incompatible with channel!
 IncompatibleExpRequiredError=Expansion channels require using the correct instrument type.
+
+[ProjectExplorer]
+TabNames_0=Project
+TabNames_1=Registers
+
+# Buttons
+SongsHeaderLabel=Songs
+InstrumentHeaderLabel=Instruments
+SamplesHeaderLabel=DPCM Samples
+ArpeggiosHeaderLabel=Arpeggios
+ArpeggioNoneLabel=None
+RegistersExpansionHeader={0} Registers
+
+# Tooltips
+AddNewArpeggioTooltip=Add new arpeggio
+AddNewInstrumentTooltip=Add new instrument
+AddNewSongTooltip=Add new song
+AutoSortArpeggioActiveTooltip=Arpeggio auto-sorting is active, {0} to change
+AutoSortInstrumentActiveTooltip=Instrument auto-sorting is active, {0} to change
+AutoSortSampleActiveTooltip=DPCM Sample auto-sorting is active, {0} to change
+AutoSortSongActiveTooltip=Song auto-sorting is active, {0} to change
+ChangeValueFineTooltip=Change value (fine)
+ChangeValueTooltip=Change value
+CopyEnvelopeTooltip=Copy envelope
+CopyReplaceInstrumentTooltip=Copy/Replace instrument
+EditEnvelopeTooltip=Edit {0} envelope
+EditSamplesTooltip=Edit DPCM samples
+EditWaveformTooltip=Edit waveform
+ImportInstrumentsTooltip=Import/merge instrument(s) from another project
+ImportSamplesTooltip=Load DPCM sample from WAV or DMC file
+ImportSongsTooltip=Import/merge song(s) from another project
+MakeSongCurrentTooltip=Make song current
+MoreOptionsTooltip=More Options...
+PlaySourceSampleTooltip=Play source sample
+PreviewProcessedSampleTooltip=Preview processed DPCM sample
+PropertiesArpeggioTooltip=Arpeggio properties
+PropertiesInstrumentTooltip=Instrument properties
+PropertiesProjectTooltip=Project properties
+PropertiesSongTooltip=Song/Tempo properties
+ReloadSourceDataTooltip=Reload source data (if available)\nOnly possible when data was loaded from a DMC/WAV file
+ReorderSongsTooltip=Re-order song
+ReplaceArpeggioTooltip=Replace arpeggio
+SelectArpeggioTooltip=Select arpeggio
+SelectInstrumentTooltip=Select instrument
+SortArpeggiosTooltip=Sort arpeggios alphabetically
+SortInstrumentsTooltip=Sort instruments alphabetically
+SortSamplesTooltip=Sort samples alphabetically
+SortSongTooltip=Sort songs alphabetically
+ToggleValueTooltip=Toggle value
+
+# Messages
+CopyArpeggioMessage=Are you sure you want to copy the arpeggio values from '{0}' to '{1}'?
+CopyArpeggioTitle=Copy Arpeggio
+ErrorTitle=Error
+MaxWavFileWarning=The maximum supported length for a WAV file is {0} seconds. Truncating.
+MaxDmcSizeWarning=The maximum supported size for a DMC is {0} bytes. Truncating.
+MaxWavN163Duration=Wave file duration exceeds the {0} samples limit. Truncating.
+AskDeleteSongMessage=Are you sure you want to delete '{0}'?
+AskDeleteSongTitle=Delete song
+AskDeleteInstrumentMessage=Are you sure you want to delete '{0}' ? All notes using this instrument will be deleted.
+AskDeleteInstrumentTitle=Delete instrument
+AskDeleteArpeggioMessage=Are you sure you want to delete '{0}' ? All notes using this arpeggio will be no longer be arpeggiated.
+AskDeleteArpeggioTitle=Delete arpeggio
+AskDeleteSampleMessage=Are you sure you want to delete DPCM Sample '{0}' ? It will be removed from the DPCM Instrument and every note using it will be silent.
+AskDeleteSampleTitle=Delete DPCM Sample
+AskReplaceInstrumentMessage=Select the instrument to replace with. All notes using '{0}' will be replaced by the selected one.
+AskReplaceInstrumentTitle=Replace Instrument
+AskReplaceArpeggioMessage=Select the arpeggio to replace with. All notes using '0' will be replaced by the selected one.
+AskReplaceArpeggioTitle=Replace Arpeggio
+ClipboardNoValidTextError=No valid text found in the clipboard
+ClipboardInvalidNumberRegisters=Invalid number of registers
+CantFindSourceFileError=Cannot find source file '{0}'!
+AddInstrumentTitle=Add Instrument
+SelectAudioExpansionLabel=Select audio expansion
+
+# Import songs dialog
+ImportSongsTitle=Import Songs
+ImportSongsLabel=Select songs to import
+SelectAllLabel=Select All
+SelectNoneLabel=Select None
+
+# Import instruments dialog
+ImportInstrumentsTitle=Import Instruments
+ImportInstrumentsLabel=Select instruments to import
+
+# Import DPCM Samples dialog
+ImportSamplesTitle=Import DPCM Samples
+ImportSamplesLabel=Select samples to import
+
+# Auto-assign banks dialog
+AutoAssignBanksTitle=Auto-Assign Banks
+TargetBankSizeLabel="Select the target bank size
+
+# Project properties dialog
+ProjectPropertiesTitle=Project Properties
+ProjectTitleLabel=Title
+ProjectAuthorLabel=Author
+ProjectCopyrightLabel=Copyright
+ProjectTempoModeLabel=Tempo Mode
+ProjectMachineLabel=Authoring Machine
+ProjectN163ChannelsLabel=N163 Channels
+ProjectExpansionLabel=Expansion Audio
+ProjectChangeTempoModeTitle=Change tempo mode
+ProjectConvertToFamiTrackerMessage=Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.
+ProjectConvertToFamiStudioMessage=Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.
+ProjectExpansionRemovedMessage=All channels and instruments related to the removed expansion(s) were deleted.
+ProjectChangedN163ChannelMessage=Changing the number of N163 channels may have changed the wave position of N163 instruments.
+ProjectMultipleExpansionsROMWarning=Using multiple expansions will prevent you from exporting to FamiTracker or as an NES ROM.
+ProjectExpansionAudioTooltip=Expansion audio chip(s) to use. This will add extra audio channels and disable any PAL support.
+ProjectExpansionNumChannelsTooltip=Namco 163 audio supports between 1 and 8 channels. As you add more channels the audio quality will deteriorate. Only available when the 'Namco 163' expansion is enabled.
+ProjectTempoModeTooltip=FamiStudio tempo gives you precise control to every frame, has good PAL/NTSC conversion support and is the recommended way to use FamiStudio. FamiTracker tempo behaves like FamiTracker with speed/tempo settings. Use only if you have very specific compatibility needs as support is limited and it will not yield the best FamiStudio experience.
+ProjectAuthoringMachineTooltip=For use with FamiStudio tempo. Defines the machine on which the music is edited. Playback to the other space will be approximate, but still good.
+
+# Song properties dialog
+SongPropertiesTitle=Song Properties
+SongLengthLabel=Song Length
+SongLengthTooltip=Number of patterns in the song.
+RenameSongError=Error renaming song!
+
+# Instrument properties dialog
+InstrumentPropertiesTitle=Instrument Properties
+RenameInstrumentError=Error renaming instrument!
+
+# Arpeggio properties dialog
+ArpeggioPropertiesTitle=Arpeggio Properties
+RenameArpeggioError=Error renaming arpeggio!
+
+# DPCM sample properties dialog
+SamplePropertiesTitle=DPCM Sample Properties
+RenameSampleError=Error renaming sample!
+
+# Context menus
+AddExpInstrumentContext=Add New {0} Instrument
+AddRegularInstrumentContext=Add New Regular Instrument
+AutoAssignBanksContext=Auto-Assign Banks...
+AutoSortArpeggiosContext=Auto-Sort Arpeggios
+AutoSortInstrumentsContext=Auto-Sort Instruments
+AutoSortSamplesContext=Auto-Sort DPCM Samples
+AutoSortSongsContext=Auto-Sort Songs
+ClearEnvelopeContext=Clear Envelope
+CopyRegisterValueContext=Copy Register Values as Text
+DeleteArpeggioContext=Delete Arpeggio
+DeleteInstrumentContext=Delete Instrument
+DeleteSampleContext=Delete DPCM Sample
+DeleteSongContext=Delete Song
+DiscardSourceWavDataContext=Discard Source WAV Data
+DiscardSourceWavDataTooltip=Permanently applies processing options, delete source WAV\n data and keeps the resulting DMC data. Reduces FMS file size.
+DiscardWavDataContext=Discard Resample Wav Data
+DuplicateContext=Duplicate
+DuplicateConvertContext=Duplicate and Convert to {0}
+ExportProcessedDmcDataContext=Export Processed DMC Data...
+ExportSourceDataContext=Export Source Data...
+PasteRegisterValueContext=Paste Register Values as Text
+PropertiesArpeggioContext=Arpeggio Properties...
+PropertiesInstrumentContext=Instrument Properties...
+PropertiesProjectContext=Project Properties...
+PropertiesSamplesContext=DPCM Sample Properties...
+PropertiesSongContext=Song Properties...
+ReplaceWithContext=Replace With...
+ResampleWavContext=Resample Wav File...
+ResetDefaultValueContext=Reset Default Value
+
+[ExpansionRegisterViewer]
+# Shared across most chips
+PitchLabel=Pitch
+VolumeLabel=Volume
+DutyLabel=Duty
+
+[ApuRegisterViewer]
+ModeLabel=Mode
+FrequencyLabel=Frequency
+LoopLabel=Loop
+LoopOption=Loop
+OnceOption=Once
+SizeLabel=Size
+BytesLeftLabel=Bytes Left
+DACLabel=DAC
+
+[Vrc7RegisterViewer]
+PatchLabel=Patch
+
+[FdsRegisterViewer]
+ModSpeedLabel=Mod Speed;
+ModDepthLabel=Mod Depth
+WaveLabel=Wave
+ModLabel=Mod
+
+[EpsmRegisterViewer]
+StereoLabel=Stereo
+VolOP1Label=Vol OP1
+VolOP2Label=Vol OP2
+VolOP3Label=Vol OP3
+VolOP4Label=Vol OP4
+
