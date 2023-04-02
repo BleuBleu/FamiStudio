@@ -6,7 +6,7 @@ All localization information is stored in the `FamiStudio\Resources\Localization
 
 The strings are stored in sections which are between brackets (ex: `[PianoRoll]`), which map to classes in the C# code.
 
-In each section, you will find series of keys and values. You are only allowed to change the values, do not touch the keys.
+In each section, you will find series of keys and values, separated by an equal (`=`) sign. You are only allowed to change the values, do not touch the keys.
 Comments can be added with `#` or `;`. Everything to the right of these characters will be ignored.
 
 ```
@@ -26,13 +26,12 @@ ConfigSectionNames_5=MIDI
 ConfigSectionNames_6=FFmpeg
 ConfigSectionNames_7=Keyboard
 ConfigSectionNames_8=Mobile
-
 ```
 
 # General guidelines
 Please follow these guidelines *exactly*. Any PR/contribution that does not follow these will be rejected.
 
-## Be Consistent
+## Be consistent
 Multiple people may work on the same localization. It is important to be consistent to avoid confusing users. See what terms are already been used in other portions of the app and use those instead of coming up with new onces. For example, if the original author used the term "Square channel" instead of "Pulse channel", use that everywhere.
 
 ## Keep files aligned
