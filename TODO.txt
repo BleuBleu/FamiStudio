@@ -8,6 +8,7 @@
 - BUG : The tempo conversion dialog is missing multi-line.
 - BUG : Toasts can appear very fast (select instrument incompatible with channel), was it like that in 4.0.6.
 - BUG : Preview DPCM affects volume triangle
+- Duplicate instruments always all to end?
 - Crash open dialog linux?
 - Toolbar tooltip character text is a bit low.
 - PWM stuff from how2.
