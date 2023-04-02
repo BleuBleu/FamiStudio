@@ -9,6 +9,8 @@ The strings are stored in sections which are between brackets (ex: `[PianoRoll]`
 In each section, you will find series of keys and values, separated by an equal (`=`) sign. You are only allowed to change the values, do not touch the keys.
 Comments can be added with `#` or `;`. Everything to the right of these characters will be ignored.
 
+If a string is missing or commented out in a particular language, it will always default to english.
+
 ```
 [ConfigDialog]
 
