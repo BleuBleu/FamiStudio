@@ -30,6 +30,12 @@ ConfigSectionNames_7=Keyboard
 ConfigSectionNames_8=Mobile
 ```
 
+Some strings may have parameters that will be inserted at run-time. Refer to the english version to see what they mean and place the parameters (`{0}`, `{1}`, etc.) where it makes sense gramatically.
+
+```
+EditEnvelopeTooltip=Edit {0} envelope
+```
+
 # General guidelines
 Please follow these guidelines *exactly*. Any PR/contribution that does not follow these will be rejected.
 
