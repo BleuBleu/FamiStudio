@@ -93,6 +93,7 @@ SongsLabel=Songs
 # WAV/MP3 tooltips
 WavFormatTooltip=Audio format to export to. WAV files are uncompressed and sound better, but are much larger.
 SampleRateTooltip=The sample rate of the audio to export. Leave to 44100 to get the exact same sound as inside the app.
+AudioBitRateTooltip=Audio bit rate for compressed formats (MP3/OGG/AAC). Lower bit rates results in smaller files, at the cost of audio quality.
 LoopModeTooltip=Loop the song a certain number of times, or export a specific duration (in seconds).
 LoopCountTooltip=Number of times to loop the song.
 DurationTooltip=Duration to export, in seconds.
@@ -598,7 +599,7 @@ InstrumentHeaderLabel=Instruments
 SamplesHeaderLabel=DPCM Samples
 ArpeggiosHeaderLabel=Arpeggios
 ArpeggioNoneLabel=None
-RegistersExpansionHeader={0} Registers
+RegistersExpansionHeaderLabel={0} Registers
 
 # Tooltips
 AddNewArpeggioTooltip=Add new arpeggio
@@ -769,7 +770,7 @@ DACLabel=DAC
 PatchLabel=Patch
 
 [FdsRegisterViewer]
-ModSpeedLabel=Mod Speed;
+ModSpeedLabel=Mod Speed
 ModDepthLabel=Mod Depth
 WaveLabel=Wave
 ModLabel=Mod
@@ -781,3 +782,4 @@ VolOP2Label=Vol OP2
 VolOP3Label=Vol OP3
 VolOP4Label=Vol OP4
 
+[PianoRoll]

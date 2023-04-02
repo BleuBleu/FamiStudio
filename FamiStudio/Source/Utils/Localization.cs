@@ -46,7 +46,6 @@ namespace FamiStudio
 
         private static void LocalizeInternal(Type type, Object o = null)
         {
-            var typeName = type.Name;
             var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
             foreach (var field in fields)
@@ -54,11 +53,13 @@ namespace FamiStudio
                 if (field.FieldType == typeof(LocalizedString))
                 {
                     var fieldName = $"{char.ToUpper(field.Name[0])}{field.Name.Substring(1)}";
+                    var typeName = field.DeclaringType.Name;
                     field.SetValue(o, new LocalizedString(LocalizeStringWithPlatformOverride(typeName, fieldName)));
                 }
                 else if (field.FieldType == typeof(LocalizedString[]))
                 {
                     var baseFieldName = $"{char.ToUpper(field.Name[0])}{field.Name.Substring(1)}";
+                    var typeName = field.DeclaringType.Name;
                     var array = field.GetValue(o) as LocalizedString[];
                     for (int i = 0; i < array.Length; i++)
                     {
@@ -73,9 +74,16 @@ namespace FamiStudio
         {
             var str = strings.GetString(section, key, null);
             if (str == null)
-                str = stringsEng.GetString(section, key, missing ? "### MISSING ###" : null);
+            { 
+                str = stringsEng.GetString(section, key, null);
+                Debug.Assert(str != null);
+                if (str == null)
+                    str = "### MISSING ###";
+            }
             if (str != null && str.Contains('\\'))
+            { 
                 str = str.Replace("\\n", "\n");
+            }
             return str;
         }
 

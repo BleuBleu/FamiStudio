@@ -1091,6 +1091,7 @@ namespace FamiStudio
                 {
                     var includeFilename = generateInclude ? Path.ChangeExtension(filename, null) + "_songlist.inc" : null;
 
+                    // LOCTODO : Still some strings to localize 
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);

@@ -443,6 +443,17 @@ namespace FamiStudio
         public event DPCMMappingDelegate DPCMSampleMapped;
         public event DPCMMappingDelegate DPCMSampleUnmapped;
 
+        #region Localization
+
+
+
+        #endregion
+
+        public PianoRoll()
+        {
+            Localization.Localize(this);
+        }
+
         private void UpdateRenderCoords()
         {
             var videoMode = editMode == EditionMode.VideoRecording;
