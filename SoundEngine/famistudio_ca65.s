@@ -597,18 +597,18 @@ FAMISTUDIO_CH3_ENVS = 8
     FAMISTUDIO_EPSM_CH0_ENVS = 11
     FAMISTUDIO_EPSM_CH1_ENVS = 15
     FAMISTUDIO_EPSM_CH2_ENVS = 19
-    FAMISTUDIO_EPSM_CH3_ENVS = 21
-    FAMISTUDIO_EPSM_CH4_ENVS = 23
-    FAMISTUDIO_EPSM_CH5_ENVS = 25
-    FAMISTUDIO_EPSM_CH6_ENVS = 27
-    FAMISTUDIO_EPSM_CH7_ENVS = 29
-    FAMISTUDIO_EPSM_CH8_ENVS = 31
-    FAMISTUDIO_EPSM_CH9_ENVS = 33
-    FAMISTUDIO_EPSM_CH10_ENVS = 35
-    FAMISTUDIO_EPSM_CH11_ENVS = 37
-    FAMISTUDIO_EPSM_CH12_ENVS = 39
-    FAMISTUDIO_EPSM_CH13_ENVS = 41
-    FAMISTUDIO_EPSM_CH14_ENVS = 43
+    FAMISTUDIO_EPSM_CH3_ENVS = 23
+    FAMISTUDIO_EPSM_CH4_ENVS = 25
+    FAMISTUDIO_EPSM_CH5_ENVS = 27
+    FAMISTUDIO_EPSM_CH6_ENVS = 28
+    FAMISTUDIO_EPSM_CH7_ENVS = 31
+    FAMISTUDIO_EPSM_CH8_ENVS = 33
+    FAMISTUDIO_EPSM_CH9_ENVS = 35
+    FAMISTUDIO_EPSM_CH10_ENVS = 37
+    FAMISTUDIO_EPSM_CH11_ENVS = 39
+    FAMISTUDIO_EPSM_CH12_ENVS = 41
+    FAMISTUDIO_EPSM_CH13_ENVS = 43
+    FAMISTUDIO_EPSM_CH14_ENVS = 45
 .endif
 
 FAMISTUDIO_ENV_VOLUME_OFF        = 0
@@ -2382,7 +2382,6 @@ famistudio_epsm_square_env_table:
 famistudio_update_epsm_square_channel_sound:
     
     @pitch = famistudio_ptr1
-    @temp  = famistudio_r0
 
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CH0_IDX,y
     bne @nocut
@@ -2397,15 +2396,10 @@ famistudio_update_epsm_square_channel_sound:
     lda #$07
     sta FAMISTUDIO_EPSM_ADDR
     lda famistudio_env_value+FAMISTUDIO_EPSM_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    sta @temp
-    asl @temp
-    lda famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    ora @temp
-    sta @temp
-    asl @temp
-    lda famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    ora @temp
-    sta @temp
+    asl
+    ora famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
+    asl
+    ora famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     sta FAMISTUDIO_EPSM_DATA
 
 
@@ -2995,7 +2989,6 @@ famistudio_s5b_env_table:
 famistudio_update_s5b_channel_sound:
     
     @pitch = famistudio_ptr1
-    @temp  = famistudio_r0
     
     lda famistudio_chn_note+FAMISTUDIO_S5B_CH0_IDX,y
     bne @nocut
@@ -3009,15 +3002,10 @@ famistudio_update_s5b_channel_sound:
     lda #$07
     sta FAMISTUDIO_S5B_ADDR
     lda famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    sta @temp
-    asl @temp
-    lda famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    ora @temp
-    sta @temp
-    asl @temp
-    lda famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    ora @temp
-    sta @temp
+    asl
+    ora famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
+    asl
+    ora famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
     sta FAMISTUDIO_S5B_DATA
 
 
