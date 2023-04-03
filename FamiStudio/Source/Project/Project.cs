@@ -2033,7 +2033,7 @@ namespace FamiStudio
             "InstrumentEPSM"
         };
 
-        static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
         static ExpansionType()
         {
