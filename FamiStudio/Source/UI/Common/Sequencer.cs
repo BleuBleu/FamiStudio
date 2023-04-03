@@ -201,9 +201,9 @@ namespace FamiStudio
 
         // Dialogs
         LocalizedString PasteTitle;
-        LocalizedString PasteMissingInstrumentsLabel;
-        LocalizedString PasteMissingArpeggiosLabels;
-        LocalizedString PasteMissingSamplesLabel;
+        LocalizedString PasteMissingInstrumentsMessage;
+        LocalizedString PasteMissingArpeggiosMessage;
+        LocalizedString PasteMissingSamplesMessage;
 
         // Paste special dialog
         LocalizedString PasteSpecialTitle;
@@ -2021,15 +2021,15 @@ namespace FamiStudio
 
             bool createMissingInstrument = false;
             if (missingInstruments)
-                createMissingInstrument = Platform.MessageBox(ParentWindow, PasteMissingInstrumentsLabel, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingInstrument = Platform.MessageBox(ParentWindow, PasteMissingInstrumentsMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             bool createMissingArpeggios = false;
             if (missingArpeggios)
-                createMissingArpeggios = Platform.MessageBox(ParentWindow, PasteMissingArpeggiosLabels, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingArpeggios = Platform.MessageBox(ParentWindow, PasteMissingArpeggiosMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             bool createMissingSamples = false;
             if (missingSamples)
-                createMissingSamples = Platform.MessageBox(ParentWindow, PasteMissingSamplesLabel, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingSamples = Platform.MessageBox(ParentWindow, PasteMissingSamplesMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 

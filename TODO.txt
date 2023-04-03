@@ -38,6 +38,7 @@ Testing
 
 Packaging
 =========
+- Add "description" HTML metadata to famistudio doc.
 - Preset instruments
 - Add temple raiders demo song (MMC5)
 - Recompile NesSndEmu android (n163 mixing change)

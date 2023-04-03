@@ -445,7 +445,141 @@ namespace FamiStudio
 
         #region Localization
 
+        // Piano Roll
+        LocalizedString EditingDPCMSampleLabel;
+        LocalizedString EditingArpeggioLabel;
+        LocalizedString EditingInstrumentEnvelopeLabel;
+        LocalizedString EditingInstrumentDPCMLabel;
+        LocalizedString DPCMSourceDataLabel;
+        LocalizedString DPCMProcessedDataLabel;
+        LocalizedString DPCMPreviewPlaybackLabel;
+        LocalizedString DPCMInstrumentUsageLabel;
+        LocalizedString InstrumentNotSelectedLabel;
+        LocalizedString ArpeggioOverriddenLabel;
+        LocalizedString ArpeggioNotSelectedLabel;
+        LocalizedString SelectedArpeggioWillBeHeardLabel;
+        LocalizedString DPCMBankUsageLabel;
+        LocalizedString RelativeEffectScalingLabel;
+        LocalizedString EnvelopeRelativeLabel;
+        LocalizedString EnvelopeAbsoluteLabel;
+        LocalizedString HoldFingersToDrawMessage;
 
+        // DPCM mapping editor
+        LocalizedString PitchLabel;
+        LocalizedString LoopingLabel;
+        LocalizedString DMCInitialValueLabel;
+        LocalizedString TransposeSampleMessage;
+        LocalizedString TransposeSampleTitle;
+        LocalizedString NoDPCMSampleMessage;
+        LocalizedString NoDPCMSampleTitle;
+
+        // DPCM mapping assignment
+        LocalizedString AssignDPCMSampleTitle;
+        LocalizedString SelectSampleToAssignLabel;
+        LocalizedString LoopLabel;
+
+        // DPCM mapping properties
+        LocalizedString SampleMappingTitle;
+        LocalizedString OverrideDMCInitialValueLabel;
+        LocalizedString DMCInitialValueDiv2Label;
+
+        // Paste messages
+        LocalizedString PasteTitle;
+        LocalizedString PasteMissingInstrumentsMessage;
+        LocalizedString PasteMissingArpeggiosMessage;
+        LocalizedString PasteMissingSamplesMessage;
+
+        // Context menus
+        LocalizedString DeleteSelectedNotesContext;
+        LocalizedString DeleteNoteContext;
+        LocalizedString ToggleNoteAttackContext;
+        LocalizedString ToggleSelectedNoteAttackContext;
+        LocalizedString ToggleSlideNoteContext;
+        LocalizedString ToggleSelectedSlideNoteContext;
+        LocalizedString ToggleReleaseContext;
+        LocalizedString ToggleSelectedReleaseContext;
+        LocalizedString MakeStopNoteContext;
+        LocalizedString ReplaceInstrumentContext;
+        LocalizedString MakeInstrumentCurrentContext;
+        LocalizedString SetSnapContext;
+        LocalizedString SelectNoteRangeContext;
+        LocalizedString ClearSelectionContext;
+        LocalizedString SelectPatternContext;
+        LocalizedString SelectAllContext;
+        LocalizedString CopyEffectValuesAsEnvValuesContext;
+        LocalizedString CopyEffectValuesAsTextContext;
+        LocalizedString ClearEffectValueContext;
+        LocalizedString ClearSelectEffectValuesContext;
+        LocalizedString ToggleVolumeSlideContext;
+        LocalizedString AbsoluteEffectScalingContext;
+        LocalizedString RelativeEffectScalingContext;
+        LocalizedString AbsoluteValueScalingContext;
+        LocalizedString AbsoluteValueScalingContextTooltip;
+        LocalizedString RelativeValueScalingContext;
+        LocalizedString RelativeValueScalingContextTooltip;
+        LocalizedString SetLoopPointContext;
+        LocalizedString ClearLoopPointContext;
+        LocalizedString SetReleasePointContext;
+        LocalizedString ClearReleasePointContext;
+        LocalizedString FlattenSelectionContext;
+        LocalizedString CopySelectedValuesAsTextContext;
+        LocalizedString ResetVertexContext;
+        LocalizedString ResetVolumeEnvelopeContext;
+        LocalizedString DeleteSelectedSamplesContext;
+        LocalizedString RemoveDPCMSampleContext;
+        LocalizedString DPCMSamplePropertiesContext;
+        LocalizedString SnapEnableContext;
+        LocalizedString SnapEnableContextTooltip;
+        LocalizedString SnapEffectsContext;
+        LocalizedString SnapEffectsContextTooltip;
+        LocalizedString SnapToBeatContext;
+        LocalizedString SnapToBeatsContext;
+        LocalizedString SnapToBeatContextTooltip;
+        LocalizedString SnapToBeatsContextTooltip;
+
+        // tooltips
+        LocalizedString SeekTooltip;
+        LocalizedString SelectTooltip;
+        LocalizedString MoreOptionsTooltip;
+        LocalizedString ResizeEnvelopeTooltip;
+        LocalizedString SetLoopPointTooltip;
+        LocalizedString SetReleasePointTooltip;
+        LocalizedString MustHaveLoopPointTooltip;
+        LocalizedString PlayPianoTooltip;
+        LocalizedString PanTooltip;
+        LocalizedString ToggleSnappingTooltip;
+        LocalizedString ChangeSnapPrecisionTooltip;
+        LocalizedString MaximizePianoRollTooltip;
+        LocalizedString ShowHideEffectPanelTooltip;
+        LocalizedString SelectEffectToEditTooltip;
+        LocalizedString SetEffectValueTooltip;
+        LocalizedString SetEffectValueFineTooltip;
+        LocalizedString ClearEffectValueTooltip;
+        LocalizedString OrTooltip;
+        LocalizedString MoveVolEnvVertexTooltip;
+        LocalizedString SelectSamplesFromSourceTooltip;
+        LocalizedString DeleteSelectedSampleTooltip;
+        LocalizedString ResizeNotesTooltip;
+        LocalizedString MoveReleasePointTooltip;
+        LocalizedString MoveNotesTooltip;
+        LocalizedString CreateNoteTooltip;
+        LocalizedString SlideNoteTooltip;
+        LocalizedString ToggleAttackTooltip;
+        LocalizedString InstrumentEyedropTooltip;
+        LocalizedString DeleteNoteTooltip;
+        LocalizedString AddStopNoteTooltip;
+        LocalizedString SetEnvelopeValueTooltip;
+        LocalizedString AssignDPCMSampleTooltip;
+        LocalizedString SamplePropertiesTooltip;
+
+        // Bottom-right tooltips
+        LocalizedString SampleSelectedTooltip;
+        LocalizedString SamplesSelectedTooltip;
+        LocalizedString ValueSelectedTooltip;
+        LocalizedString ValuesSelectedTooltip;
+        LocalizedString FrameSelectedTooltip;
+        LocalizedString FramesSelectedTooltip;
+        LocalizedString ArpeggioTooltip;
 
         #endregion
 
@@ -1773,7 +1907,7 @@ namespace FamiStudio
 
                     if (relativeEffectScaling && IsSelectionValid())
                     {
-                        r.c.DrawText("Relative effect value scaling selected.", fonts.FontSmall, effectPanelTextPosX, effectPanelTextPosY, Theme.LightRedColor);
+                        r.c.DrawText(RelativeEffectScalingLabel, fonts.FontSmall, effectPanelTextPosX, effectPanelTextPosY, Theme.LightRedColor);
                     }
                 }
                 else if (editMode == EditionMode.Envelope && HasRepeatEnvelope())
@@ -2060,13 +2194,13 @@ namespace FamiStudio
                 var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, true, out var missingArpeggios, out var missingSamples);
 
                 if (missingInstruments)
-                    createMissingInstrument = Platform.MessageBox(ParentWindow, $"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                    createMissingInstrument = Platform.MessageBox(ParentWindow, PasteMissingInstrumentsMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
 
                 if (missingArpeggios)
-                    createMissingArpeggios = Platform.MessageBox(ParentWindow, $"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                    createMissingArpeggios = Platform.MessageBox(ParentWindow, PasteMissingArpeggiosMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
 
                 if (missingSamples && editChannel == ChannelType.Dpcm)
-                    createMissingSamples = Platform.MessageBox(ParentWindow, $"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                    createMissingSamples = Platform.MessageBox(ParentWindow, PasteMissingSamplesMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
             }
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
@@ -2680,9 +2814,9 @@ namespace FamiStudio
                         r.c.PushTranslation(0, y);
                         r.c.FillAndDrawRectangleGradient(0, 0, Width - pianoSizeX, noteSizeY, mapping.Sample.Color, mapping.Sample.Color.Scaled(0.8f), highlighted ? Theme.WhiteColor : Theme.BlackColor, true, noteSizeY, highlighted ? 3 : 1, highlighted, highlighted);
 
-                        string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
-                        if (mapping.Loop) text += ", Looping";
-                        if (mapping.OverrideDmcInitialValue) text += $" , DMC Initial value = {mapping.DmcInitialValueDiv2}";
+                        string text = $"{mapping.Sample.Name} - {PitchLabel}: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
+                        if (mapping.Loop) text += $", {LoopingLabel}";
+                        if (mapping.OverrideDmcInitialValue) text += $" , {DMCInitialValueLabel} = {mapping.DmcInitialValueDiv2}";
 
                         r.c.DrawText(text, r.fonts.FontSmall, dpcmTextPosX, 0, Theme.BlackColor, TextFlags.MiddleLeft, 0, noteSizeY);
                         r.c.PopTransform();
@@ -2731,9 +2865,9 @@ namespace FamiStudio
                 }
 
                 var textY = bigTextPosY;
-                r.f.DrawText($"Editing Instrument {editInstrument.Name} (DPCM Samples)", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+                r.f.DrawText(EditingInstrumentDPCMLabel.Format(editInstrument.Name), r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
                 textY += r.fonts.FontVeryLarge.LineHeight;
-                r.f.DrawText($"{editInstrument.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} bytes used by this instrument", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+                r.f.DrawText(DPCMInstrumentUsageLabel.Format(editInstrument.GetTotalMappedSampleSize(), Project.MaxMappedSampleSize), r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
                 textY += r.fonts.FontMedium.LineHeight;
                 
                 for (int i = 0; i < Project.MaxDPCMBanks; i++)
@@ -2741,7 +2875,7 @@ namespace FamiStudio
                     var bankSize = App.Project.GetBankSize(i);
                     if (bankSize > 0)
                     {
-                        r.f.DrawText($"{bankSize} bytes used in bank {i}", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+                        r.f.DrawText(DPCMBankUsageLabel.Format(bankSize, i), r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
                         textY += r.fonts.FontMedium.LineHeight;
                     }
                 }
@@ -2975,37 +3109,37 @@ namespace FamiStudio
                 var envelopeString = EnvelopeType.Names[editEnvelope];
 
                 if (editEnvelope == EnvelopeType.Pitch)
-                    envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? "Relative " : "Absolute ") + envelopeString;
+                    envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? EnvelopeRelativeLabel : EnvelopeAbsoluteLabel) + " " + envelopeString;
 
-                r.f.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+                r.f.DrawText(EditingInstrumentEnvelopeLabel.Format(editInstrument.Name, envelopeString), r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
 
                 var textY = bigTextPosY + r.fonts.FontVeryLarge.LineHeight;
 
                 if (App.SelectedInstrument != null && App.SelectedInstrument != editInstrument)
                 { 
-                    r.f.DrawText($"Warning : Instrument is currently not selected. Selected instrument '{App.SelectedInstrument.Name}' will be heard when playing the piano.", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightRedColor);
+                    r.f.DrawText(InstrumentNotSelectedLabel.Format(App.SelectedInstrument.Name), r.fonts.FontMedium, bigTextPosX, textY, Theme.LightRedColor);
                     textY += r.fonts.FontMedium.LineHeight;
                 }
                 else if (editEnvelope == EnvelopeType.Arpeggio && App.SelectedArpeggio != null)
                 { 
-                    r.f.DrawText($"Warning : Arpeggio envelope currently overridden by selected arpeggio '{App.SelectedArpeggio.Name}'", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightRedColor);
+                    r.f.DrawText(ArpeggioOverriddenLabel.Format(App.SelectedArpeggio.Name), r.fonts.FontMedium, bigTextPosX, textY, Theme.LightRedColor);
                     textY += r.fonts.FontMedium.LineHeight;
                 }
 
                 if (relativeEffectScaling && IsSelectionValid())
                 { 
-                    r.c.DrawText("Relative effect value scaling selected.", fonts.FontMedium, bigTextPosX, textY, Theme.LightRedColor);
+                    r.c.DrawText(RelativeEffectScalingLabel, fonts.FontMedium, bigTextPosX, textY, Theme.LightRedColor);
                 }
             }
             else
             {
-                r.f.DrawText($"Editing Arpeggio {editArpeggio.Name}", r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
+                r.f.DrawText(EditingArpeggioLabel.Format(editArpeggio.Name), r.fonts.FontVeryLarge, bigTextPosX, bigTextPosY, Theme.LightGreyColor1);
 
                 if (App.SelectedArpeggio != editArpeggio)
                 {
                     r.f.DrawText(App.SelectedArpeggio == null ?
-                        $"Warning : Arpeggio is currently not selected." :
-                        $"Warning : Arpeggio is currently not selected. Selected arpeggio '{App.SelectedArpeggio.Name}' will be heard when playing the piano.", r.fonts.FontMedium, bigTextPosX, bigTextPosY + r.fonts.FontVeryLarge.LineHeight, Theme.LightRedColor);
+                        $"{ArpeggioNotSelectedLabel}" :
+                        $"{ArpeggioNotSelectedLabel} {SelectedArpeggioWillBeHeardLabel.Format(App.SelectedArpeggio.Name)}", r.fonts.FontMedium, bigTextPosX, bigTextPosY + r.fonts.FontVeryLarge.LineHeight, Theme.LightRedColor);
                 }
             }
 
@@ -3445,13 +3579,13 @@ namespace FamiStudio
 
             // Title + source/processed info.
             var textY = bigTextPosY;
-            r.f.DrawText($"Editing DPCM Sample {editSample.Name}", r.fonts.FontVeryLarge, bigTextPosX, textY, Theme.LightGreyColor1);
+            r.f.DrawText(EditingDPCMSampleLabel.Format(editSample.Name), r.fonts.FontVeryLarge, bigTextPosX, textY, Theme.LightGreyColor1);
             textY += r.fonts.FontVeryLarge.LineHeight;
-            r.f.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} ms", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+            r.f.DrawText(DPCMSourceDataLabel.Format(editSample.SourceDataIsWav ? "WAV" : "DMC", editSample.SourceSampleRate, editSample.SourceDataSize, (int)(editSample.SourceDuration * 1000)), r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
             textY += r.fonts.FontMedium.LineHeight;
-            r.f.DrawText($"Processed Data (DMC) : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate)}, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+            r.f.DrawText(DPCMProcessedDataLabel.Format(DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate), editSample.ProcessedData.Length, (int)(editSample.ProcessedDuration * 1000)), r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
             textY += r.fonts.FontMedium.LineHeight;
-            r.f.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);
+            r.f.DrawText(DPCMPreviewPlaybackLabel.Format(DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate), (int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)), r.fonts.FontMedium, bigTextPosX, textY, Theme.LightGreyColor1);;
 
             r.b.PopTransform();
 
@@ -4084,11 +4218,11 @@ namespace FamiStudio
         {
             var strings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
 
-            var dlg = new PropertyDialog(ParentWindow, "DPCM Key Properties", new Point(left + pt.X, top + pt.Y), 400, false, pt.Y > Height / 2);
-            dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
-            dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
-            dlg.Properties.AddCheckBox("Override DMC Initial Value :", mapping.OverrideDmcInitialValue); // 2
-            dlg.Properties.AddNumericUpDown("DMC Initial Value (÷2) :", mapping.DmcInitialValueDiv2, 0, 63, 1); // 3
+            var dlg = new PropertyDialog(ParentWindow, SampleMappingTitle, new Point(left + pt.X, top + pt.Y), 400, false, pt.Y > Height / 2);
+            dlg.Properties.AddDropDownList(PitchLabel.Colon, strings, strings[mapping.Pitch]); // 0
+            dlg.Properties.AddCheckBox(LoopLabel.Colon, mapping.Loop); // 1
+            dlg.Properties.AddCheckBox(OverrideDMCInitialValueLabel.Colon, mapping.OverrideDmcInitialValue); // 2
+            dlg.Properties.AddNumericUpDown(DMCInitialValueDiv2Label.Colon, mapping.DmcInitialValueDiv2, 0, 63, 1); // 3
             dlg.Properties.Build();
             dlg.Properties.SetPropertyEnabled(3, mapping.OverrideDmcInitialValue);
             dlg.Properties.PropertyChanged += DPCMSampleMapping_PropertyChanged;
@@ -4380,7 +4514,7 @@ namespace FamiStudio
 
                     draggedSample = null;
 
-                    Platform.MessageBoxAsync(ParentWindow, $"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo, (r) =>
+                    Platform.MessageBoxAsync(ParentWindow, TransposeSampleMessage, TransposeSampleTitle, MessageBoxButtons.YesNo, (r) =>
                     {
                         if (r == DialogResult.Yes)
                         {
@@ -6532,45 +6666,45 @@ namespace FamiStudio
 
                 if (IsNoteSelected(mouseLocation))
                 {
-                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Notes", () => { DeleteSelectedNotes(); }));
+                    menu.Add(new ContextMenuOption("MenuDeleteSelection", DeleteSelectedNotesContext, () => { DeleteSelectedNotes(); }));
                 }
 
                 if (note != null)
                 {
-                    menu.Insert(0, new ContextMenuOption("MenuDelete", "Delete Note", () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
+                    menu.Insert(0, new ContextMenuOption("MenuDelete", DeleteNoteContext, () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
 
                     if (note.IsMusical)
                     {
                         if (channel.SupportsNoAttackNotes)
-                            menu.Add(new ContextMenuOption("MenuToggleAttack", $"Toggle {(selection ? "Selection" : "")} Note Attack", () => { ToggleNoteAttack(noteLocation, note); }, ContextMenuSeparator.Before));
+                            menu.Add(new ContextMenuOption("MenuToggleAttack", selection ? ToggleSelectedNoteAttackContext : ToggleNoteAttackContext, () => { ToggleNoteAttack(noteLocation, note); }, ContextMenuSeparator.Before));
                         if (channel.SupportsSlideNotes)
-                            menu.Add(new ContextMenuOption("MenuToggleSlide", $"Toggle {(selection ? "Selection" : "")} Slide Note", () => { ToggleSlideNote(noteLocation, note); }));
+                            menu.Add(new ContextMenuOption("MenuToggleSlide", selection ? ToggleSelectedSlideNoteContext : ToggleSlideNoteContext, () => { ToggleSlideNote(noteLocation, note); }));
                         if (channel.SupportsReleaseNotes)
-                            menu.Add(new ContextMenuOption("MenuToggleRelease", $"Toggle {(selection ? "Selection" : "")} Release", () => { ToggleNoteRelease(noteLocation, note); }));
+                            menu.Add(new ContextMenuOption("MenuToggleRelease", selection ? ToggleSelectedReleaseContext : ToggleReleaseContext, () => { ToggleNoteRelease(noteLocation, note); }));
                         if (channel.SupportsStopNotes)
-                            menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
+                            menu.Add(new ContextMenuOption("MenuStopNote", MakeStopNoteContext, () => { ConvertToStopNote(noteLocation, note); }));
                         if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument))
-                            menu.Add(new ContextMenuOption("MenuReplaceSelection", $"Replace Instrument", () => { ReplaceSelectionInstrument(App.SelectedInstrument, Point.Empty, true); }));
-                        menu.Add(new ContextMenuOption("MenuEyedropper", $"Make Instrument Current", () => { Eyedrop(note); }));
+                            menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceInstrumentContext, () => { ReplaceSelectionInstrument(App.SelectedInstrument, Point.Empty, true); }));
+                        menu.Add(new ContextMenuOption("MenuEyedropper", MakeInstrumentCurrentContext, () => { Eyedrop(note); }));
 
                         var factor = GetBestSnapFactorForNote(noteLocation, note);
                         if (factor >= 0)
-                            menu.Add(new ContextMenuOption("MenuSnap", $"Set Snap To {SnapResolutionType.Names[factor]}  {(SnapResolutionType.Factors[factor] > 1.0 ? "Beats" : "Beat")}", () => { snapResolution = factor; snap = true; MarkDirty(); }));
+                            menu.Add(new ContextMenuOption("MenuSnap", SetSnapContext.Format(SnapResolutionType.Names[factor]), () => { snapResolution = factor; snap = true; MarkDirty(); }));
                     }
 
-                    menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }, ContextMenuSeparator.Before));
+                    menu.Add(new ContextMenuOption("MenuSelectNote", SelectNoteRangeContext, () => { SelectSingleNote(noteLocation, mouseLocation, note); }, ContextMenuSeparator.Before));
                 }
                 else
                 {
                     note = channel.FindMusicalNoteAtLocation(ref noteLocation, -1);
 
                     if (note != null)
-                        menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }, ContextMenuSeparator.Before));
+                        menu.Add(new ContextMenuOption("MenuSelectNote", SelectNoteRangeContext, () => { SelectSingleNote(noteLocation, mouseLocation, note); }, ContextMenuSeparator.Before));
                 }
 
                 if (IsSelectionValid())
                 {
-                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }));
+                    menu.Add(new ContextMenuOption("MenuClearSelection", ClearSelectionContext, () => { ClearSelection(); ClearHighlightedNote(); }));
                 }
 
                 if (menu.Count > 0)
@@ -6597,8 +6731,8 @@ namespace FamiStudio
                 {
                     App.ShowContextMenu(left + x, top + y, new[]
                     {
-                        new ContextMenuOption("MenuSelectPattern", "Select Pattern", () => { SelectPattern(location.PatternIndex); }),
-                        new ContextMenuOption("MenuSelectAll", "Select All", () => { SelectAll(); }),
+                        new ContextMenuOption("MenuSelectPattern", SelectPatternContext, () => { SelectPattern(location.PatternIndex); }),
+                        new ContextMenuOption("MenuSelectAll", SelectAllContext, () => { SelectAll(); }),
                     });
                 }
             }
@@ -6637,41 +6771,41 @@ namespace FamiStudio
 
                 if (IsSelectionValid())
                 {
-                    menu.Add(new ContextMenuOption("MenuCopy", "Copy Effect Values as Envelope Values", () => { CopyEffectValues(false); }));
+                    menu.Add(new ContextMenuOption("MenuCopy", CopyEffectValuesAsEnvValuesContext, () => { CopyEffectValues(false); }));
 
                     if (Platform.IsDesktop)
                     { 
-                        menu.Add(new ContextMenuOption("MenuCopy", "Copy Effect Values as Text", () => { CopyEffectValues(true); }, ContextMenuSeparator.After));
+                        menu.Add(new ContextMenuOption("MenuCopy", CopyEffectValuesAsTextContext, () => { CopyEffectValues(true); }, ContextMenuSeparator.After));
                     }
                 }
 
                 if (hasValue)
                 {
-                    menu.Add(new ContextMenuOption("MenuDelete", "Clear Effect Value", () => { ClearEffectValue(location, false); }));
+                    menu.Add(new ContextMenuOption("MenuDelete", ClearEffectValueContext, () => { ClearEffectValue(location, false); }));
                 }
 
                 if (IsNoteSelected(location))
                 {
-                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Clear Selection Effect Values", () => { ClearEffectValue(location, true); }));
+                    menu.Add(new ContextMenuOption("MenuDeleteSelection", ClearSelectEffectValuesContext, () => { ClearEffectValue(location, true); }));
                 }
 
                 if (hasValue && selectedEffectIdx == Note.EffectVolume && channel.SupportsEffect(Note.EffectVolumeSlide))
                 {
-                    menu.Add(new ContextMenuOption("MenuToggleSlide", "Toggle Volume Slide", () => { ToggleVolumeSlide(location, note); }));
+                    menu.Add(new ContextMenuOption("MenuToggleSlide", ToggleVolumeSlideContext, () => { ToggleVolumeSlide(location, note); }));
                 }
 
                 if (IsNoteSelected(location))
                 {
-                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Notes", () => { DeleteSelectedNotes(); }));
+                    menu.Add(new ContextMenuOption("MenuDeleteSelection", DeleteSelectedNotesContext, () => { DeleteSelectedNotes(); }));
                 }
 
                 if (IsSelectionValid())
                 {
-                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
+                    menu.Add(new ContextMenuOption("MenuClearSelection", ClearSelectionContext, () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
                 }
 
-                menu.Add(new ContextMenuOption("Absolute Effect Scaling", "When multiple values are modified, applies the same change to all values.", () => { SetRelativeEffectScaling(false); }, () => !relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore));
-                menu.Add(new ContextMenuOption("Relative Effect Scaling", "When multiple values are modified, applies changes proportionally to their current values.", () => { SetRelativeEffectScaling(true); }, () => relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.After));
+                menu.Add(new ContextMenuOption(AbsoluteEffectScalingContext, AbsoluteValueScalingContextTooltip, () => { SetRelativeEffectScaling(false); }, () => !relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore));
+                menu.Add(new ContextMenuOption(RelativeEffectScalingContext, RelativeValueScalingContextTooltip, () => { SetRelativeEffectScaling(true); },  () =>  relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.After));
 
                 if (menu.Count > 0)
                     App.ShowContextMenu(left + x, top + y, menu.ToArray());
@@ -6692,7 +6826,7 @@ namespace FamiStudio
             if (IsPointInNoteArea(x, y) && EditEnvelope.Length > 0)
             {
                 Platform.VibrateClick();
-                Platform.ShowToast(window, "Keep holding and move your finger to draw");
+                Platform.ShowToast(window, HoldFingersToDrawMessage);
                 StartDrawEnvelope(x, y);
                 return true;
             }
@@ -6763,34 +6897,34 @@ namespace FamiStudio
                 {
                     if (env.CanLoop || (rep != null && rep.CanLoop))
                     {
-                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }));
+                        menu.Add(new ContextMenuOption("MenuLoopPoint", SetLoopPointContext, () => { SetEnvelopeLoopRelease(x, y, false); }));
                         if (env.Loop >= 0)
-                            menu.Add(new ContextMenuOption("MenuClearLoopPoint", "Clear Loop Point", () => { ClearEnvelopeLoopRelease(false); }));
+                            menu.Add(new ContextMenuOption("MenuClearLoopPoint", ClearLoopPointContext, () => { ClearEnvelopeLoopRelease(false); }));
                     }
                     if (env.CanRelease || (rep != null && rep.CanRelease))
                     {
                         if (absIdx > 0)
-                            menu.Add(new ContextMenuOption("MenuRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
+                            menu.Add(new ContextMenuOption("MenuRelease", SetReleasePointContext, () => { SetEnvelopeLoopRelease(x, y, true); }));
                         if (env.Release >= 0)
-                            menu.Add(new ContextMenuOption("MenuClearRelease", "Clear Release Point", () => { ClearEnvelopeLoopRelease(true); }));
+                            menu.Add(new ContextMenuOption("MenuClearRelease", ClearLoopPointContext, () => { ClearEnvelopeLoopRelease(true); }));
                     }
                 }
 
                 if (IsSelectionValid())
                 {
                     if (GetEnvelopeValueForCoord(x, y, out int idx, out _) && idx < EditEnvelope.Length)
-                        menu.Insert(0, new ContextMenuOption("MenuClearEnvelope", "Flatten Selection", () => { FlattenEnvelopeValues(idx); }, ContextMenuSeparator.After));
+                        menu.Insert(0, new ContextMenuOption("MenuClearEnvelope", FlattenSelectionContext, () => { FlattenEnvelopeValues(idx); }, ContextMenuSeparator.After));
 
-                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
+                    menu.Add(new ContextMenuOption("MenuClearSelection", ClearSelectionContext, () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
                 }
 
                 if (Platform.IsDesktop && IsSelectionValid())
                 {
-                    menu.Add(new ContextMenuOption("MenuCopy", "Copy Selected Values as Text", () => { CopyAsText(); }, ContextMenuSeparator.Before));
+                    menu.Add(new ContextMenuOption("MenuCopy", CopySelectedValuesAsTextContext, () => { CopyAsText(); }, ContextMenuSeparator.Before));
                 }
 
-                menu.Add(new ContextMenuOption("Absolute Value Scaling", "When multiple values are modified, applies the same change to all values.", () => { SetRelativeEffectScaling(false); }, () => !relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore));
-                menu.Add(new ContextMenuOption("Relative Value Scaling", "When multiple values are modified, applies changes proportionally to their current values.", () => { SetRelativeEffectScaling(true); }, () => relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None));
+                menu.Add(new ContextMenuOption(AbsoluteValueScalingContext, AbsoluteValueScalingContextTooltip, () => { SetRelativeEffectScaling(false); }, () => !relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore));
+                menu.Add(new ContextMenuOption(RelativeValueScalingContext, RelativeValueScalingContextTooltip, () => { SetRelativeEffectScaling(true); }, () => relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None));
 
                 if (menu.Count > 0)
                     App.ShowContextMenu(left + x, top + y, menu.ToArray());
@@ -6831,14 +6965,14 @@ namespace FamiStudio
             {
                 var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(x, y);
                 if (vertexIdx >= 0)
-                    menu.Add(new ContextMenuOption("MenuClearEnvelope", "Reset Vertex", () => { ResetDPCMVolumeEnvelopeVertex(vertexIdx); }));
-                menu.Add(new ContextMenuOption("MenuClearEnvelope", "Reset Volume Envelope", () => { ResetVolumeEnvelope(); }));
+                    menu.Add(new ContextMenuOption("MenuClearEnvelope", ResetVertexContext, () => { ResetDPCMVolumeEnvelopeVertex(vertexIdx); }));
+                menu.Add(new ContextMenuOption("MenuClearEnvelope", ResetVolumeEnvelopeContext, () => { ResetVolumeEnvelope(); }));
             }
 
             if (IsPointInNoteArea(x, y) && IsSelectionValid())
             {
-                menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Samples", () => { DeleteSelectedWaveSection(); }, ContextMenuSeparator.Before));
-                menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
+                menu.Add(new ContextMenuOption("MenuDeleteSelection", DeleteSelectedSamplesContext, () => { DeleteSelectedWaveSection(); }, ContextMenuSeparator.Before));
+                menu.Add(new ContextMenuOption("MenuClearSelection", ClearSelectionContext, () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
             }
 
             if (menu.Count > 0)
@@ -6865,8 +6999,8 @@ namespace FamiStudio
 
                     App.ShowContextMenu(left + x, top + y, new[]
                     {
-                        new ContextMenuOption("MenuDelete", "Remove DPCM Sample", () => { ClearDPCMSampleMapping(noteValue); }),
-                        new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleMappingProperties(new Point(x, y), mapping); }),
+                        new ContextMenuOption("MenuDelete", RemoveDPCMSampleContext, () => { ClearDPCMSampleMapping(noteValue); }),
+                        new ContextMenuOption("MenuProperties", DPCMSamplePropertiesContext, () => { EditDPCMSampleMappingProperties(new Point(x, y), mapping); }),
                     });
 
                     return true;
@@ -7540,7 +7674,7 @@ namespace FamiStudio
         {
             if (App.Project.Samples.Count == 0)
             {
-                Platform.MessageBoxAsync(ParentWindow, "Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons.OK);
+                Platform.MessageBoxAsync(ParentWindow, NoDPCMSampleMessage, NoDPCMSampleTitle, MessageBoxButtons.OK);
             }
             else
             {
@@ -7550,11 +7684,11 @@ namespace FamiStudio
 
                 var pitchStrings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
 
-                var dlg = new PropertyDialog(ParentWindow, "Assign DPCM Sample", 300);
-                dlg.Properties.AddLabel(null, "Select sample to assign:"); // 0
-                dlg.Properties.AddDropDownList(Platform.IsMobile ? "Select the sample to assign" : null, sampleNames.ToArray(), sampleNames[0]); // 1
-                dlg.Properties.AddDropDownList("Pitch :", pitchStrings, pitchStrings[pitchStrings.Length - 1]); // 2
-                dlg.Properties.AddCheckBox("Loop :", false); // 3
+                var dlg = new PropertyDialog(ParentWindow, AssignDPCMSampleTitle, 300);
+                dlg.Properties.AddLabel(null, SelectSampleToAssignLabel.Colon); // 0
+                dlg.Properties.AddDropDownList(Platform.IsMobile ? SelectSampleToAssignLabel : null, sampleNames.ToArray(), sampleNames[0]); // 1
+                dlg.Properties.AddDropDownList(PitchLabel.Colon, pitchStrings, pitchStrings[pitchStrings.Length - 1]); // 2
+                dlg.Properties.AddCheckBox(LoopLabel.Colon, false); // 3
                 dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 dlg.Properties.Build();
 
@@ -7912,67 +8046,65 @@ namespace FamiStudio
 
             if (IsPointInHeader(e.X, e.Y) && editMode == EditionMode.Channel)
             {
-                tooltip = "<MouseLeft> Seek - <MouseRight><Drag> Select - <MouseRight> More Options...";
+                tooltip = $"<MouseLeft> {SeekTooltip} - <MouseRight><Drag> {SelectTooltip} - <MouseRight> {MoreOptionsTooltip}";
             }
             else if (IsPointInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio))
             {
                 if (IsPointWhereCanResizeEnvelope(e.X, e.Y))
-                    tooltip = "<MouseLeft> Resize envelope\n";
+                    tooltip = $"<MouseLeft> {ResizeEnvelopeTooltip}\n";
                 else
-                    tooltip = "<MouseRight><Drag> Select";
+                    tooltip = $"<MouseRight><Drag> {SelectTooltip}";
             }
             else if (IsPointInHeaderBottomPart(e.X, e.Y) && ((editMode == EditionMode.Envelope && EditEnvelope.CanLoop) || editMode == EditionMode.Arpeggio))
             {
-                tooltip = "<MouseLeft> Set loop point" + ((editMode != EditionMode.Arpeggio && EditEnvelope.CanRelease) ? "\n<MouseRight> Set release point (must have loop point)" : "");
+                tooltip = $"<MouseLeft> {SetLoopPointTooltip}" + ((editMode != EditionMode.Arpeggio && EditEnvelope.CanRelease) ? $"\n<MouseRight> {SetReleasePointTooltip} {MustHaveLoopPointTooltip}" : "");
             }
             else if (IsPointInPiano(e.X, e.Y))
             {
-                tooltip = "<MouseLeft> Play piano - <MouseWheel> Pan";
+                tooltip = $"<MouseLeft> {PlayPianoTooltip} - <MouseWheel> {PanTooltip}";
             }
             else if (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
             {
-                tooltip = $"<MouseLeft> Toggle snapping {Settings.SnapToggleShortcut.TooltipString} - <MouseWheel> Change snap precision\n<MouseRight> More Options...";
+                tooltip = $"<MouseLeft> {ToggleSnappingTooltip} {Settings.SnapToggleShortcut.TooltipString} - <MouseWheel> {ChangeSnapPrecisionTooltip}\n<MouseRight> {MoreOptionsTooltip}";
             }
             else if (IsPointOnMaximizeButton(e.X, e.Y))
             {
-                tooltip = $"<MouseLeft> Maximize/Minimize piano roll {Settings.MaximizePianoRollShortcut.TooltipString}";
+                tooltip = $"<MouseLeft> {MaximizePianoRollTooltip} {Settings.MaximizePianoRollShortcut.TooltipString}";
             }
             else if (IsPointInTopLeftCorner(e.X, e.Y))
             {
-                tooltip = $"<MouseLeft> Show/hide effect panel {Settings.EffectPanelShortcut.TooltipString}";
+                tooltip = $"<MouseLeft> {ShowHideEffectPanelTooltip} {Settings.EffectPanelShortcut.TooltipString}";
             }
             else if (IsPointInEffectList(e.X, e.Y))
             {
-                tooltip = "<MouseLeft> Select effect track to edit";
+                tooltip = $"<MouseLeft> {SelectEffectToEditTooltip}";
             }
             else if (IsPointInEffectPanel(e.X, e.Y))
             {
                 if (editMode == EditionMode.Channel)
                 {
-                    tooltip = "<MouseLeft> Set effect value - <MouseWheel> Pan\n<Ctrl><MouseLeft> Set effect value (fine) - <MouseLeft><MouseLeft> or <Shift><MouseLeft> Clear effect value";
+                    tooltip = $"<MouseLeft> {SetEffectValueTooltip} - <MouseWheel> {PanTooltip}\n<Ctrl><MouseLeft> {SetEffectValueFineTooltip} - <MouseLeft><MouseLeft> {OrTooltip} <Shift><MouseLeft> {ClearEffectValueTooltip}";
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
-                    var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e.X, e.Y);
-
-                    if (vertexIdx >= 0)
+                    if (GetWaveVolumeEnvelopeVertexIndex(e.X, e.Y) >= 0)
                     {
-                        tooltip = "<MouseLeft><Drag> Move volume envelope vertex\n<MouseRight> More Options...%";
+                        tooltip = $"<MouseLeft><Drag> {MoveVolEnvVertexTooltip}\n<MouseRight> {MoreOptionsTooltip}";
                     }
                 }
                 else if (editMode == EditionMode.Envelope)
                 {
-                    tooltip = "<MouseLeft> Set effect value - <MouseWheel> Pan\n<MouseRight> More Options...";
+                    tooltip = $"<MouseLeft> {SetEffectValueTooltip} - <MouseWheel> {PanTooltip}\n<MouseRight> {MoreOptionsTooltip}";
                 }
             }
             else if ((IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)) && editMode == EditionMode.DPCM)
             {
-                tooltip = "<MouseLeft><Drag> or <MouseRight><Drag> Select samples from source data";
+                tooltip = $"<MouseLeft><Drag> {OrTooltip} <MouseRight><Drag> {SelectSamplesFromSourceTooltip}";
 
                 if (IsSelectionValid())
                 {
-                    tooltip += $"\n{Settings.DeleteShortcut.TooltipString} Delete selected samples.";
-                    newNoteTooltip = $"{(selectionMax - selectionMin + 1)} sample" + ((selectionMax - selectionMin) == 0 ? "" : "s") + " selected";
+                    tooltip += $"\n{Settings.DeleteShortcut.TooltipString} {DeleteSelectedSampleTooltip}";
+                    newNoteTooltip = (selectionMax == selectionMin ? SampleSelectedTooltip : SamplesSelectedTooltip).Format(selectionMax - selectionMin + 1);
                 }
             }
             else if (IsPointInNoteArea(e.X, e.Y))
@@ -7991,7 +8123,7 @@ namespace FamiStudio
                             if (note.Instrument != null)
                                 newNoteTooltip += $" ({note.Instrument.Name})";
                             if (note.IsArpeggio)
-                                newNoteTooltip += $" (Arpeggio: {note.Arpeggio.Name})";
+                                newNoteTooltip += $" ({ArpeggioTooltip}: {note.Arpeggio.Name})";
                         }
 
                         // Main click action.
@@ -8004,40 +8136,40 @@ namespace FamiStudio
                             case CaptureOperation.ResizeSelectionNoteStart:
                             case CaptureOperation.ResizeNoteEnd:
                             case CaptureOperation.ResizeSelectionNoteEnd:
-                                tooltipList.Add("<MouseLeft><Drag> Resize note(s)");
+                                tooltipList.Add($"<MouseLeft><Drag> {ResizeNotesTooltip}");
                                 break;
                             case CaptureOperation.MoveNoteRelease:
-                                tooltipList.Add("<MouseLeft><Drag> Move release point");
+                                tooltipList.Add($"<MouseLeft><Drag> {MoveReleasePointTooltip}");
                                 break;
                             case CaptureOperation.DragNote:
                             case CaptureOperation.DragSelection:
-                                tooltipList.Add("<MouseLeft><Drag> Move note(s)");
+                                tooltipList.Add($"<MouseLeft><Drag> {MoveNotesTooltip}");
                                 break;
                             default:
-                                tooltipList.Add("<MouseLeft><Drag> Create note");
+                                tooltipList.Add($"<MouseLeft><Drag> {CreateNoteTooltip}");
                                 break;
                         }
 
                         if (note != null)
                         {
                             if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease)
-                                tooltipList.Add("<R><MouseLeft> Set release point");
+                                tooltipList.Add($"<R><MouseLeft> {SetReleasePointTooltip}");
                             if (channel.SupportsSlideNotes)
-                                tooltipList.Add("<S><MouseLeft><Drag> Slide note");
+                                tooltipList.Add($"<S><MouseLeft><Drag> {SlideNoteTooltip}");
                             if (note.IsMusical)
                             {
-                                tooltipList.Add("<A><MouseLeft> Toggle note attack");
-                                tooltipList.Add("<I><MouseLeft> Instrument Eyedrop");
+                                tooltipList.Add($"<A><MouseLeft> {ToggleAttackTooltip}");
+                                tooltipList.Add($"<I><MouseLeft> {InstrumentEyedropTooltip}");
                             }
-                            tooltipList.Add("<MouseLeft><MouseLeft> or <Shift><MouseLeft> Delete note");
+                            tooltipList.Add($"<MouseLeft><MouseLeft> {OrTooltip} <Shift><MouseLeft> {DeleteNoteTooltip}");
                         }
                         else 
                         {
                             if (channel.SupportsStopNotes)
-                                tooltipList.Add("<T><MouseLeft> Add stop note");
+                                tooltipList.Add($"<T><MouseLeft> {AddStopNoteTooltip}");
                         }
 
-                        tooltipList.Add("<MouseWheel> Pan");
+                        tooltipList.Add($"<MouseWheel> {PanTooltip}");
 
                         if (tooltipList.Count >= 3)
                         {
@@ -8061,7 +8193,7 @@ namespace FamiStudio
                 }
                 else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 {
-                    tooltip = "<MouseLeft> Set envelope value - <MouseWheel> Pan\n<MouseRight> More Options...";
+                    tooltip = $"<MouseLeft> {SetEnvelopeValueTooltip} - <MouseWheel> {PanTooltip}\n<MouseRight> {MoreOptionsTooltip}";
 
                     if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
                     {
@@ -8069,24 +8201,23 @@ namespace FamiStudio
 
                         if (IsSelectionValid())
                         {
-                            newNoteTooltip += $" ({selectionMax - selectionMin + 1} ";
+                            var numValuesSelected = selectionMax - selectionMin + 1;
+                            var plural = numValuesSelected > 1;
+
                             switch (editEnvelope)
                             {
                                 case EnvelopeType.FdsWaveform:
-                                    newNoteTooltip += "sample" + ((selectionMax - selectionMin) == 0 ? "" : "s");
-                                    break;
                                 case EnvelopeType.N163Waveform:
-                                    newNoteTooltip += "sample" + ((selectionMax - selectionMin) == 0 ? "" : "s");
+                                    newNoteTooltip += (plural ? SamplesSelectedTooltip : SampleSelectedTooltip).Format(numValuesSelected);
                                     break;
                                 case EnvelopeType.FdsModulation:
-                                    newNoteTooltip += "entr" + ((selectionMax - selectionMin) == 0 ? "y" : "ies");
+                                    newNoteTooltip += (plural ? ValuesSelectedTooltip : ValueSelectedTooltip).Format(numValuesSelected);
                                     break;
                                 default:
-                                    newNoteTooltip += "frame" + ((selectionMax - selectionMin) == 0 ? "" : "s");
+                                    newNoteTooltip += (plural ? FramesSelectedTooltip : FrameSelectedTooltip).Format(numValuesSelected);
                                     break;
 
                             }
-                            newNoteTooltip += " selected)";
                         }
                     }
                 }
@@ -8100,11 +8231,11 @@ namespace FamiStudio
                         var mapping = editInstrument.GetDPCMMapping(noteValue);
                         if (mapping == null)
                         {
-                            tooltip = "<MouseLeft> Assign DPCM sample - <MouseWheel> Pan";
+                            tooltip = $"<MouseLeft> {AssignDPCMSampleTooltip} - <MouseWheel> {PanTooltip}";
                         }
                         else
                         {
-                            tooltip = "<MouseLeft><MouseLeft> Sample properties - <MouseWheel> Pan\n<MouseRight> More Options...";
+                            tooltip = $"<MouseLeft><MouseLeft> {SamplePropertiesTooltip} - <MouseWheel> {PanTooltip}\n<MouseRight> {MoreOptionsTooltip}";
 
                             if (mapping.Sample != null)
                                 newNoteTooltip += $" ({mapping.Sample.Name})";
@@ -8969,16 +9100,16 @@ namespace FamiStudio
             { 
                 var options = new ContextMenuOption[SnapResolutionType.Max - SnapResolutionType.Min + 3];
 
-                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping for notes in the piano roll <Shift><S>", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
-                options[1] = new ContextMenuOption("Snap Effect Values", "When snapping is enabled, also snap effect values", () => { snapEffects = !snapEffects; }, () => snapEffects ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked);
+                options[0] = new ContextMenuOption(SnapEnableContext, $"{SnapEnableContextTooltip} <Shift><S>", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
+                options[1] = new ContextMenuOption(SnapEffectsContext, SnapEffectsContextTooltip, () => { snapEffects = !snapEffects; }, () => snapEffects ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked);
 
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
                 {
                     var j = i; // Important, copy for lamdba.
                     var name = SnapResolutionType.Names[i];
-                    var beats = SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat";
-                    var text = $"Snap To {name} {beats}";
-                    var tooltip = $"Sets the snap resolution to {name} {beats}";
+                    var plural = SnapResolutionType.Factors[i] > 1.0;
+                    var text = (plural ? SnapToBeatsContext : SnapToBeatContext).Format(name);
+                    var tooltip = (plural ? SnapToBeatsContextTooltip : SnapToBeatContextTooltip).Format(name);
 
                     if (SnapResolutionType.KeyboardShortcuts[i] != Keys.Unknown)
                         tooltip += $" <Alt>{SnapResolutionType.KeyboardShortcuts[i] - Keys.D0}";
