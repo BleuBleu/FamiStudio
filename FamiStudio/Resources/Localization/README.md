@@ -39,6 +39,9 @@ EditEnvelopeTooltip=Edit {0} envelope
 # General guidelines
 Please follow these guidelines *exactly*. Any PR/contribution that does not follow these will be rejected.
 
+## Translate the whole app or don't do it at all
+If you want to translate the app to a new language, I will require that you do a FULL translation, not just the feature you happen to use. You will need to go through every single string, dialog box, error message, etc. Make sure you have a grasp on every feature FamiStudio has and how to activate them.
+
 ## Be consistent
 Multiple people may work on the same localization. It is important to be consistent to avoid confusing users. See what terms are already been used in other portions of the app and use those instead of coming up with new onces. For example, if the original author used the term "Square channel" instead of "Pulse channel", use that everywhere.
 
@@ -57,8 +60,6 @@ The main font in FamiStudio is [Quicksand](https://fonts.google.com/specimen/Qui
 ## Test your stuff
 Do not blindly translate without testing. In some cases, the UI doesnt adjust to the size of labels, so you will need to be sure they are not truncated. 
 Be especially mindful of mobile, where space is limited. 
-
-As you are translating, you will need to go through every single string, dialog box, error message, etc. Make sure you have a grasp on every feature FamiStudio has and how to activate them.
 
 ## Hotfix/updates will remove strings
 - What's the workflow here?
