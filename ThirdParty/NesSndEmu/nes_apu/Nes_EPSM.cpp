@@ -118,51 +118,44 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 
 void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 {
-	bool psg_reg = false;
-
-	if (addr >= reg_select && addr < (reg_select + reg_range)) 
+	switch (addr)
 	{
-		reg = data;
-	}
-	else if (addr >= reg_write && addr < (reg_write + reg_range)) 
-	{
-		if ((addr == 0x401d) && (reg < 0x10))
+	case reg_select:
+	case reg_write:
+	case reg_select2:
+	case reg_write2:
+		bool psg_reg = false;
+		switch (addr)
 		{
-			PSG_writeReg(psg, reg, data);
-			psg_reg = true;
-		}
-	}
-
-	switch(addr) 
-	{
-		case 0x401c:
-		case 0x401e:
+		case reg_select:
+			reg = data;
+		case reg_select2:
 			current_register = data;
 			break;
-		case 0x401d:
-		case 0x401f:
-			break;
-	}
-
-	int a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
-	int a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
-
-	switch (addr) 
-	{
-		case 0x401d:
+		case reg_write:
+			if (reg < 0x10)
+			{
+				PSG_writeReg(psg, reg, data);
+				psg_reg = true;
+			}
 			regs_a0[current_register] = data;
 			ages_a0[current_register] = 0;
 			break;
-		case 0x401f:
+		case reg_write2:
 			regs_a1[current_register] = data;
 			ages_a1[current_register] = 0;
 			break;
+		}
+
+		int a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
+		int a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
+
+		if (!psg_reg)
+			OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
+
+		run_until(time);
+		break;
 	}
-
-	if (!psg_reg) 
-		OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
-
-	run_until(time);
 }
 
 long Nes_EPSM::run_until(cpu_time_t end_time)

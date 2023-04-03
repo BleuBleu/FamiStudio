@@ -21,7 +21,6 @@ namespace FamiStudio
         const int DefaultScrollBarThickness1 = 10;
         const int DefaultScrollBarThickness2 = 16;
         const int DefaultMinScrollBarLength  = 64;
-        const float ContinuousFollowPercent  = 0.75f;
         const float ScrollSpeedFactor        = Platform.IsMobile ? 2.0f : 1.0f;
         const float DefaultZoom              = Platform.IsMobile ? 0.5f : 2.0f;
 
@@ -103,7 +102,7 @@ namespace FamiStudio
         BitmapAtlasRef[] bmpChannels;
         BitmapAtlasRef bmpForceDisplay;
         BitmapAtlasRef bmpLoopPoint;
-        BitmapAtlasRef bmpInstanciate;
+        BitmapAtlasRef bmpInstantiate;
         BitmapAtlasRef bmpDuplicate;
         BitmapAtlasRef bmpDuplicateMove;
         BitmapAtlasRef bmpShyOn;
@@ -445,7 +444,7 @@ namespace FamiStudio
             bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
             bmpForceDisplay = g.GetBitmapAtlasRef("GhostSmall");
             bmpLoopPoint = g.GetBitmapAtlasRef("LoopSmallFill");
-            bmpInstanciate = g.GetBitmapAtlasRef("Instance");
+            bmpInstantiate = g.GetBitmapAtlasRef("Instance");
             bmpDuplicate = g.GetBitmapAtlasRef("Duplicate");
             bmpDuplicateMove = g.GetBitmapAtlasRef("DuplicateMove");
 
@@ -747,7 +746,7 @@ namespace FamiStudio
                         if (rowIdxDelta != 0)
                             bmpCopy = (duplicate || instance) ? bmpDuplicate : bmpDuplicateMove;
                         else
-                            bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstanciate : null);
+                            bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstantiate : null);
 
                         c.PushTranslation(pt.X - channelNameSizeX, y);
                         c.FillAndDrawRectangle(-anchorOffsetLeftX, 0, -anchorOffsetLeftX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
@@ -1731,7 +1730,7 @@ namespace FamiStudio
                     if (Platform.IsMobile)
                         menu.Add(new ContextMenuOption("MenuExpandSelection", "Expand Selection", () => { EnsureSelectionInclude(location); }));
                     if (selectionMin.ChannelIndex == location.ChannelIndex)
-                        menu.Add(new ContextMenuOption("MenuInstance", "Instanciate Selection Here", () => { CopySelectionToCursor(false); }));
+                        menu.Add(new ContextMenuOption("MenuInstance", "Instantiate Selection Here", () => { CopySelectionToCursor(false); }));
                     menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate Selection Here", () => { CopySelectionToCursor(true); }));
                 }
 
@@ -3006,7 +3005,7 @@ namespace FamiStudio
 
             // When continuously following, zoom at the seek bar location.
             if (continuouslyFollowing)
-                x = (int)(width * ContinuousFollowPercent);
+                x = (int)(Width * Settings.FollowPercent);
 
             Debug.Assert(Platform.IsMobile || scale == 0.5f || scale == 2.0f);
 
@@ -3052,8 +3051,11 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected bool EnsureSeekBarVisible(float percent = ContinuousFollowPercent)
+        protected bool EnsureSeekBarVisible(float percent = float.MinValue)
         {
+            if (percent == float.MinValue)
+                percent = Settings.FollowPercent;
+
             var seekX = GetPixelForNote(App.CurrentFrame);
             var minX = 0;
             var maxX = (int)((width * percent) - channelNameSizeX);
