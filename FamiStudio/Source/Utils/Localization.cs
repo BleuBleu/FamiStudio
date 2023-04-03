@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -16,13 +17,23 @@ namespace FamiStudio
         static Localization()
         {
             var culture = "fre"; // This is a test. Should come from the OS.
+            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
+            // LOCTODO : On MacOS, we'll probably want to embed those in the bundle itself.
+            // LOCTODO : On mobile, we probably want those as embedded resources?
+            stringsEng = new IniFile();
+            stringsEng.Load(Path.Combine(appPath, "Localization/FamiStudio.eng.ini"));
+            strings = new IniFile();
+            strings.Load(Path.Combine(appPath, $"Localization/FamiStudio.{culture}.ini"));
+
+            /*
             stringsEng = new IniFile();
             stringsEng.LoadFromResource("FamiStudio.Resources.Localization.FamiStudio.eng.ini");
             strings = new IniFile();
             strings.LoadFromResource($"FamiStudio.Resources.Localization.FamiStudio.{culture}.ini");
+            */
 
-            Font     = LocalizeString("Localization", "Font",     false);
+            Font = LocalizeString("Localization", "Font",     false);
             FontBold = LocalizeString("Localization", "FontBold", false);
 
             Debug.Assert(Font != null && FontBold != null);

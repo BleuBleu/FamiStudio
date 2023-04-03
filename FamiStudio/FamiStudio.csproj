@@ -756,8 +756,12 @@
     <EmbeddedResource Include="Resources\Shaders\Desktop\Text.vert" />
   </ItemGroup>  
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Localization\FamiStudio.eng.ini" />
-    <EmbeddedResource Include="Resources\Localization\FamiStudio.fre.ini" />
+    <Content Include="Localization\FamiStudio.eng.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    
+    <Content Include="Localization\FamiStudio.fre.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    
   </ItemGroup>  
     <ItemGroup>
     <Content Include="glfw3.dll">
