@@ -35,7 +35,7 @@ namespace FamiStudio
             values = new sbyte[maxLength];
             canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
             canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
-            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.YMNoiseFreq || type == EnvelopeType.YMMixerSettings;
             chunkLength = type == EnvelopeType.N163Waveform ? 16 : 1;
 
             if (canResize)
@@ -487,7 +487,15 @@ namespace FamiStudio
 
         public static sbyte GetEnvelopeZeroValue(int type)
         {
-            return type == EnvelopeType.Volume ? (sbyte)15: (sbyte)0;
+            switch (type)
+            {
+                case EnvelopeType.Volume:
+                    return (sbyte)15;
+                case EnvelopeType.YMMixerSettings:
+                    return (sbyte)2;
+                default:
+                    return (sbyte)0;
+            }
         }
 
         public static int GetEnvelopeMaxLength(int type)
@@ -517,6 +525,8 @@ namespace FamiStudio
                     return 1;
                 case EnvelopeType.FdsWaveform:
                     return 32;
+                case EnvelopeType.YMMixerSettings:
+                    return 2;
                 default:
                     return 0;
             }
@@ -587,6 +597,16 @@ namespace FamiStudio
                 min = 1;
                 max = 15; // Arbitrary.
             }
+            else if (type == EnvelopeType.YMMixerSettings)
+            {
+                min = 0;
+                max = 2;
+            }
+            else if (type == EnvelopeType.YMNoiseFreq)
+            {
+                min = 0;
+                max = 31;
+            }
             else
             {
                 min = -64;
@@ -649,7 +669,9 @@ namespace FamiStudio
         public const int FdsModulation  = 5;
         public const int N163Waveform   = 6;
         public const int WaveformRepeat = 7;
-        public const int Count          = 8;
+        public const int YMMixerSettings= 8;
+        public const int YMNoiseFreq    = 9;
+        public const int Count          = 10;
 
         public static readonly string[] Names =
         {
@@ -661,6 +683,8 @@ namespace FamiStudio
             "FDS Modulation Table",
             "N163 Waveform",
             "Repeat",
+            "Mixer Settings",
+            "Noise Frequency",
         };
 
         public static readonly string[] ShortNames =
@@ -672,7 +696,9 @@ namespace FamiStudio
             "FDSWave",
             "FDSMod",
             "N163Wave",
-            "Repeat"
+            "Repeat",
+            "MixerSettings",
+            "NoiseFreq",
         };
 
         public static readonly string[] Icons = new string[]
@@ -684,7 +710,9 @@ namespace FamiStudio
             "EnvelopeWave",
             "EnvelopeMod",
             "EnvelopeWave",
-            "EnvelopeWave", // Never actually displayed
+            "EnvelopeWave",// Never actually displayed
+            "ConfigMixer",
+            "ChannelNoise", 
         };
 
         public static int GetValueForName(string str)

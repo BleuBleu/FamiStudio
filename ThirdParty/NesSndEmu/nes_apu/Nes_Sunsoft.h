@@ -21,7 +21,7 @@ public:
 	void end_frame( cpu_time_t );
 	void mix_samples(blip_sample_t* sample_buffer, long sample_cnt);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
-	//void get_register_values(struct s5b_register_values* regs);
+	void get_register_values(struct sunsoft5b_register_values* regs);
 
 	enum { psg_clock  = 1789773 };
 	enum { reg_select = 0xc000  };
@@ -32,6 +32,9 @@ public:
 	void start_seeking();
 	void stop_seeking(blip_time_t& clock);
 	void write_shadow_register(int addr, int data);
+
+	void reset_triggers();
+	int  get_channel_trigger(int idx) const;
 
 private:
 	// noncopyable
@@ -49,17 +52,18 @@ private:
 	int delay;
 	int last_amp;
 	Blip_Synth<blip_med_quality, 15420> synth;
+	int triggers[3];
 
 	short shadow_internal_regs[shadow_internal_regs_count];
 };
 
 //// Must match the definition in NesApu.cs.
-//struct s5b_register_values
-//{
-//	// e000 (Internal registers 0 to f).
-//	unsigned char regs[16];
-//	unsigned char ages[16];
-//};
+struct sunsoft5b_register_values
+{
+	// e000 (Internal registers 0 to f).
+	unsigned char regs[16];
+	unsigned char ages[16];
+};
 
 #endif
 

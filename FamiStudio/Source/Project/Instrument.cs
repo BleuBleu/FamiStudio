@@ -68,13 +68,15 @@ namespace FamiStudio
         public bool IsS5B     => expansion == ExpansionType.S5B;
         public bool IsEpsm    => expansion == ExpansionType.EPSM;
 
-        public Envelope VolumeEnvelope         => envelopes[EnvelopeType.Volume];
-        public Envelope PitchEnvelope          => envelopes[EnvelopeType.Pitch];
-        public Envelope ArpeggioEnvelope       => envelopes[EnvelopeType.Arpeggio];
-        public Envelope N163WaveformEnvelope   => envelopes[EnvelopeType.N163Waveform];
-        public Envelope FdsWaveformEnvelope    => envelopes[EnvelopeType.FdsWaveform];
-        public Envelope FdsModulationEnvelope  => envelopes[EnvelopeType.FdsModulation];
-        public Envelope WaveformRepeatEnvelope => envelopes[EnvelopeType.WaveformRepeat];
+        public Envelope VolumeEnvelope          => envelopes[EnvelopeType.Volume];
+        public Envelope PitchEnvelope           => envelopes[EnvelopeType.Pitch];
+        public Envelope ArpeggioEnvelope        => envelopes[EnvelopeType.Arpeggio];
+        public Envelope N163WaveformEnvelope    => envelopes[EnvelopeType.N163Waveform];
+        public Envelope FdsWaveformEnvelope     => envelopes[EnvelopeType.FdsWaveform];
+        public Envelope FdsModulationEnvelope   => envelopes[EnvelopeType.FdsModulation];
+        public Envelope WaveformRepeatEnvelope  => envelopes[EnvelopeType.WaveformRepeat];
+        public Envelope YMMixerSettingsEnvelope => envelopes[EnvelopeType.YMMixerSettings];
+        public Envelope YMNoiseFreqEnvelope     => envelopes[EnvelopeType.YMNoiseFreq];
 
         public const int MaxResampleWavSamples = 12000;
 
@@ -147,6 +149,12 @@ namespace FamiStudio
             else if (envelopeType == EnvelopeType.WaveformRepeat)
             {
                 return expansion == ExpansionType.N163;
+            }
+            else if (envelopeType == EnvelopeType.YMNoiseFreq ||
+                     envelopeType == EnvelopeType.YMMixerSettings)
+            {
+                return expansion == ExpansionType.S5B ||
+                       expansion == ExpansionType.EPSM;
             }
 
             return false;
@@ -860,16 +868,27 @@ namespace FamiStudio
                 }
             }
 
-            byte envelopeMask = 0;
+            ushort envelopeMask = 0;
             if (buffer.IsWriting)
             {
                 for (int i = 0; i < EnvelopeType.Count; i++)
                 {
                     if (envelopes[i] != null)
-                        envelopeMask = (byte)(envelopeMask | (1 << i));
+                        envelopeMask = (ushort)(envelopeMask | (1 << i));
                 }
             }
-            buffer.Serialize(ref envelopeMask);
+
+            // At version 15 (FamiStudio 4.1.0) we expanded the envelope mask to 16bits.
+            if (buffer.Version < 15)
+            {
+                byte envelopeMaskByte = 0;
+                buffer.Serialize(ref envelopeMaskByte);
+                envelopeMask = envelopeMaskByte;
+            }
+            else
+            {
+                buffer.Serialize(ref envelopeMask);
+            }
 
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
@@ -955,6 +974,12 @@ namespace FamiStudio
                         }
                     }
                 }
+            }
+
+            if (buffer.Version < 15 && (IsS5B || IsEpsm))
+            {
+                envelopes[EnvelopeType.YMMixerSettings] = new Envelope(EnvelopeType.YMMixerSettings);
+                envelopes[EnvelopeType.YMNoiseFreq] = new Envelope(EnvelopeType.YMNoiseFreq);
             }
 
             // Revert back presets to "customs" if they no longer match what the code generates.

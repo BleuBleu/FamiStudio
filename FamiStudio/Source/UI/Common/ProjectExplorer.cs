@@ -596,14 +596,16 @@ namespace FamiStudio
         enum SubButtonType
         {
             // Let's keep this enum and Envelope.XXX values in sync for convenience.
-            VolumeEnvelope        = EnvelopeType.Volume,
-            ArpeggioEnvelope      = EnvelopeType.Arpeggio,
-            PitchEnvelope         = EnvelopeType.Pitch,
-            DutyCycle             = EnvelopeType.DutyCycle,
-            FdsWaveformEnvelope   = EnvelopeType.FdsWaveform,
-            FdsModulationEnvelope = EnvelopeType.FdsModulation,
-            N163WaveformEnvelope  = EnvelopeType.N163Waveform,
-            EnvelopeMax           = EnvelopeType.Count,
+            VolumeEnvelope          = EnvelopeType.Volume,
+            ArpeggioEnvelope        = EnvelopeType.Arpeggio,
+            PitchEnvelope           = EnvelopeType.Pitch,
+            DutyCycle               = EnvelopeType.DutyCycle,
+            FdsWaveformEnvelope     = EnvelopeType.FdsWaveform,
+            FdsModulationEnvelope   = EnvelopeType.FdsModulation,
+            N163WaveformEnvelope    = EnvelopeType.N163Waveform,
+            YMMixerSettingsEnvelope = EnvelopeType.YMMixerSettings,
+            YMNoiseFreqEnvelope     = EnvelopeType.YMNoiseFreq,
+            EnvelopeMax             = EnvelopeType.Count,
 
             // Other buttons
             Add = EnvelopeType.Count,
@@ -629,7 +631,9 @@ namespace FamiStudio
             EnvelopeType.DutyCycle,
             EnvelopeType.FdsModulation,
             EnvelopeType.FdsWaveform,
-            EnvelopeType.N163Waveform
+            EnvelopeType.N163Waveform,
+            EnvelopeType.YMMixerSettings,
+            EnvelopeType.YMNoiseFreq
         };
 
         enum CaptureOperation

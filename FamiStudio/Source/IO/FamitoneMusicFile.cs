@@ -181,7 +181,7 @@ namespace FamiStudio
             lines.Add($"\t{db} {project.Songs.Count}");
             lines.Add($"\t{dw} {ll}instruments");
 
-            if (project.UsesFdsExpansion || project.UsesN163Expansion || project.UsesVrc7Expansion || project.UsesEPSMExpansion)
+            if (project.UsesFdsExpansion || project.UsesN163Expansion || project.UsesVrc7Expansion || project.UsesEPSMExpansion || project.UsesS5BExpansion)
             {
                 lines.Add($"\t{dw} {ll}instruments_exp");
                 size += 2;
@@ -232,6 +232,17 @@ namespace FamiStudio
             }
 
             return size;
+        }
+
+        private Envelope ProcessMixerEnvelope(Envelope env)
+        {
+            Envelope ymenv = env;
+            for (int j = 0; j < ymenv.Length; j++)
+            {
+                ymenv.Values[j] = (sbyte)((((byte)ymenv.Values[j] & 0x1)) | (((byte)ymenv.Values[j] & 0x2) << 2));
+            }
+
+            return ymenv;
         }
 
         private byte[] ProcessEnvelope(Envelope env, bool allowReleases, bool newPitchEnvelope)
@@ -407,6 +418,9 @@ namespace FamiStudio
                         case EnvelopeType.FdsWaveform:
                             processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
                             break;
+                        case EnvelopeType.YMMixerSettings:
+                            processed = ProcessEnvelope(ProcessMixerEnvelope(env), false, false);
+                            break;
                         default:
                             processed = ProcessEnvelope(env,
                                 i == EnvelopeType.Volume && kernel == FamiToneKernel.FamiStudio,
@@ -535,6 +549,7 @@ namespace FamiStudio
                 if (!instrument.IsFds  && 
                     !instrument.IsN163 &&
                     !instrument.IsVrc7 &&
+                    !instrument.IsS5B &&
                     !instrument.IsEpsm)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
@@ -572,6 +587,7 @@ namespace FamiStudio
             if (project.UsesFdsExpansion  || 
                 project.UsesN163Expansion || 
                 project.UsesVrc7Expansion ||
+                project.UsesS5BExpansion  ||
                 project.UsesEPSMExpansion)
             {
                 lines.Add($"{ll}instruments_exp:");
@@ -585,6 +601,7 @@ namespace FamiStudio
                     if (instrument.IsFds  || 
                         instrument.IsVrc7 ||
                         instrument.IsN163 ||
+                        instrument.IsS5B  ||
                         instrument.IsEpsm)
                     {
                         var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
@@ -611,6 +628,14 @@ namespace FamiStudio
                             lines.Add($"\t{dw} {ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves");
                             lines.Add($"\t{db} $00, $00, $00, $00");
                         }
+                        else if (instrument.IsS5B)
+                        {
+                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMNoiseFreq]]);
+                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMMixerSettings]]);
+
+                            lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
+                            lines.Add($"\t{db} $00, $00, $00, $00, $00, $00");
+                        }
                         else if (instrument.IsVrc7)
                         {
                             lines.Add($"\t{db} ${(instrument.Vrc7Patch << 4):x2}, $00");
@@ -618,9 +643,13 @@ namespace FamiStudio
                         }
                         else if (instrument.IsEpsm)
                         {
+                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMNoiseFreq]]);
+                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMMixerSettings]]);
+
+                            lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
                             lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
-                            // we can fit the first 8 bytes of data here to avoid needing to add padding
-                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Take(8).Select(r => $"${r:x2}"))}");
+                            // we can fit the first 4 bytes of data here to avoid needing to add padding
+                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Take(4).Select(r => $"${r:x2}"))}");
                         }
 
                         size += 16;
@@ -644,8 +673,8 @@ namespace FamiStudio
                     if (instrument.IsEpsm)
                     {
                         lines.Add($"{ll}instrument_epsm_extra_patch{i}:");
-                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(8).Select(r => $"${r:x2}"))}");
-                        size += 23;
+                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(4).Select(r => $"${r:x2}"))}");
+                        size += 27;
                     }
                 }
                 lines.Add("");
