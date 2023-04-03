@@ -1009,7 +1009,7 @@ void CNSFCore::WriteMemory_EPSM(WORD a, BYTE v)
 		case 0x99:  mWave_EPSM[7].nPatchReg[15] = v;break;
 		case 0x9a:  mWave_EPSM[8].nPatchReg[15] = v;break;
 		case 0x34:  mWave_EPSM[6].nPatchReg[16] = (v & 0x7f);break;
-		case 0x35:  mWave_EPSM[7].nPatchReg[16] = 0x1f;break;
+		case 0x35:  mWave_EPSM[7].nPatchReg[16] = (v & 0x7f);break;
 		case 0x36:  mWave_EPSM[8].nPatchReg[16] = (v & 0x7f);break;
 		case 0x44:  mWave_EPSM[6].nPatchReg[17] = (v & 0x7f);break;
 		case 0x45:  mWave_EPSM[7].nPatchReg[17] = (v & 0x7f);break;
