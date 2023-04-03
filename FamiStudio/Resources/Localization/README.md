@@ -51,12 +51,15 @@ In other words:
 - Usage of a diff tool is strongly encouraged as it will make your life much easier.
 ![image](DiffTool.png)
 
+## Dont change the font unless you have to
+The main font in FamiStudio is [Quicksand](https://fonts.google.com/specimen/Quicksand/glyphs). Do not change font unless you are not in the list of supported languages. If you need to change the font because it does not support glyph that are needed, check with me so we can pick one that matches as closely as possible.
+
 ## Test your stuff
 Do not blindly translate without testing. In some cases, the UI doesnt adjust to the size of labels, so you will need to be sure they are not truncated. 
-Be especially mindful of mobile, where space is limited.
+Be especially mindful of mobile, where space is limited. 
+
+As you are translating, you will need to go through every single string, dialog box, error message, etc. Make sure you have a grasp on every feature FamiStudio has and how to activate them.
 
 ## Hotfix/updates will remove strings
 - What's the workflow here?
 
-## Dont change the font unless you have to
-The main font in FamiStudio is [Quicksand](https://fonts.google.com/specimen/Quicksand/glyphs). Do not change font unless you are not in the list of supported languages. If you need to change the font because it does not support glyph that are needed, check with me so we can pick one that matches as closely as possible.
