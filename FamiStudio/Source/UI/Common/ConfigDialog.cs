@@ -78,7 +78,7 @@ namespace FamiStudio
         LocalizedString TimeFormatTooltip;
         LocalizedString FollowModeTooltip;
         LocalizedString FollowingViewsTooltip;
-		LocalizedString FollowPercentTooltip;
+        LocalizedString FollowRangeTooltip;
         LocalizedString ScrollBarsTooltip;
         LocalizedString ShowFamitrackerStopNotesTooltip;
         LocalizedString IdealSequencerHeightTooltip;
@@ -92,6 +92,7 @@ namespace FamiStudio
         LocalizedString TimeFormatLabel;
         LocalizedString FollowModeLabel;
         LocalizedString FollowViewsLabel;
+        LocalizedString FollowRangeLabel;
         LocalizedString ScrollBarsLabel;
         LocalizedString IdealSeqHeightLabel;
         LocalizedString AllowSeqVertScrollLabel;
@@ -267,7 +268,7 @@ namespace FamiStudio
                     page.AddDropDownList(TimeFormatLabel.Colon, Localization.ToStringArray(TimeFormatStrings), TimeFormatStrings[timeFormatIndex], TimeFormatTooltip); // 1
                     page.AddDropDownList(FollowModeLabel.Colon, Localization.ToStringArray(FollowModeStrings), FollowModeStrings[followModeIndex], FollowModeTooltip);  // 2
                     page.AddDropDownList(FollowViewsLabel.Colon, Localization.ToStringArray(FollowSyncStrings), FollowSyncStrings[followSyncIndex], FollowingViewsTooltip); // 3
-					page.AddSlider("Continuous Follow Range Limit:", Settings.FollowPercent, 0.0, 1.0, 0.01f, 2, "{0:P0}", FollowPercentTooltip); // 4
+                    page.AddSlider(FollowRangeLabel.Colon, Settings.FollowPercent, 0.05, 0.95, 0.01f, 2, "{0:P0}", FollowRangeTooltip); // 4
                     page.AddDropDownList(ScrollBarsLabel.Colon, Localization.ToStringArray(ScrollBarsStrings), ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 5
                     page.AddDropDownList(IdealSeqHeightLabel.Colon, IdealSequencerHeightStrings, IdealSequencerHeightStrings[GetSequencerSizeIndex(Settings.IdealSequencerSize)], IdealSequencerHeightTooltip); // 6
                     page.AddCheckBox(AllowSeqVertScrollLabel.Colon, Settings.AllowSequencerVerticalScroll, AllowSequencerScrollTooltip); // 7

@@ -8,12 +8,31 @@ namespace FamiStudio
         private PropertyDialog dialog;
         private List<int> checkToEffect = new List<int>();
 
+        #region Localization
+
+        LocalizedString PasteSpecialTitle;
+        LocalizedString MixWithExistingLabel;
+        LocalizedString MixWithExistingTooltip;
+        LocalizedString PasteNotesLabel;
+        LocalizedString PasteNotesTooltip;
+        LocalizedString EffectsToPasteLabel;
+        LocalizedString MobileSelectAllLabel;
+        LocalizedString SelectAllLabel;
+        LocalizedString MobileSelectNoneLabel;
+        LocalizedString SelectNoneLabel;
+        LocalizedString RepeatLabel;
+        LocalizedString RepeatTooltip;
+
+        #endregion
+
         public unsafe PasteSpecialDialog(FamiStudioWindow win, Channel channel, bool mix = false, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            dialog = new PropertyDialog(win, "Paste Special", 260);
-            dialog.Properties.AddLabelCheckBox("Mix With Existing Notes", mix, 0, "When enabled, will preserve the existing note/effects and only paste if there was nothing already there."); // 0
-            dialog.Properties.AddLabelCheckBox("Paste Notes", notes, 0, "When enabled, will paste the musical notes."); // 1
-            dialog.Properties.AddLabel(null, "Effects to paste:"); // 2
+            Localization.Localize(this);
+
+            dialog = new PropertyDialog(win, PasteSpecialTitle, 260);
+            dialog.Properties.AddLabelCheckBox(MixWithExistingLabel.Colon, mix, 0, MixWithExistingTooltip); // 0
+            dialog.Properties.AddLabelCheckBox(PasteNotesLabel.Colon, notes, 0, PasteNotesTooltip); // 1
+            dialog.Properties.AddLabel(null, EffectsToPasteLabel.Colon); // 2
 
             var effectList  = new List<string>();
             var checkedList = new List<bool>();
@@ -28,10 +47,10 @@ namespace FamiStudio
                 }
             }
 
-            dialog.Properties.AddCheckBoxList(Platform.IsMobile ? "Effects to paste" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to paste."); // 3
-            dialog.Properties.AddButton(Platform.IsMobile ? "Select All Effects" : null, "Select All"); // 4
-            dialog.Properties.AddButton(Platform.IsMobile ? "De-select All Effects" : null, "Select None"); // 5
-            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32, 1, "Number of times to repeat the paste"); // 6
+            dialog.Properties.AddCheckBoxList(Platform.IsMobile ? EffectsToPasteLabel : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to paste."); // 3
+            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectAllLabel  : null, SelectAllLabel); // 4
+            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectNoneLabel : null, SelectNoneLabel); // 5
+            dialog.Properties.AddNumericUpDown(RepeatLabel.Colon, 1, 1, 32, 1, RepeatTooltip); // 6
             dialog.Properties.SetPropertyVisible(2, Platform.IsDesktop);
             dialog.Properties.Build();
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;
