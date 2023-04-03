@@ -151,9 +151,7 @@ namespace FamiStudio
 
         // Labels
         LocalizedString SnapToBeatLabel;
-        LocalizedString Beat
         LocalizedString SnapToBeatsLabel;
-        LocalizedString Beats
         LocalizedString SnapEnabledLabel;
         LocalizedString SnapEffectValuesLabel;
         LocalizedString NoneLabel;

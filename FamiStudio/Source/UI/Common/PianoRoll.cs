@@ -6908,7 +6908,7 @@ namespace FamiStudio
                         if (absIdx > 0)
                             menu.Add(new ContextMenuOption("MenuRelease", SetReleasePointContext, () => { SetEnvelopeLoopRelease(x, y, true); }));
                         if (env.Release >= 0)
-                            menu.Add(new ContextMenuOption("MenuClearRelease", ClearLoopPointContext, () => { ClearEnvelopeLoopRelease(true); }));
+                            menu.Add(new ContextMenuOption("MenuClearRelease", ClearReleasePointContext, () => { ClearEnvelopeLoopRelease(true); }));
                     }
                 }
 

@@ -701,6 +701,9 @@
     <EmbeddedResource Include="Resources\Shaders\Droid\Text.vert" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Localization\FamiStudio.eng.ini" />
+  </ItemGroup>  
+  <ItemGroup>
     <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Castlevania 2.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Dedrecil.fms" />

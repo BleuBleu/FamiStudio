@@ -17,6 +17,10 @@ cp ../FamiStudio/bin/Release/net6.0/*.json ./FamiStudio.app/Contents/MacOS/
 cp ../FamiStudio/bin/Release/net6.0/*.dylib ./FamiStudio.app/Contents/MacOS/
 cp ../FamiStudio/bin/Release/net6.0/FamiStudio.pdb ./FamiStudio.app/Contents/MacOS/
 
+# Localization
+rm ./FamiStudio.app/Contents/MacOS/Localization/*.ini
+cp ../FamiStudio/Localization/*.ini ./FamiStudio.app/Contents/MacOS/Localization/
+
 version=`cat Version.txt`
 filename=FamiStudio$version-MacOS.zip
 

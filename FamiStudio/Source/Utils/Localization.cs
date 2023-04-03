@@ -8,30 +8,27 @@ namespace FamiStudio
 {
     public static class Localization
     {
-        private static IniFile stringsEng;
-        private static IniFile strings;
+        private static IniFile stringsEng = new IniFile();
+        private static IniFile strings    = new IniFile();
 
         public static string Font     { get; private set; }
         public static string FontBold { get; private set; }
 
         static Localization()
         {
-            var culture = "fre"; // This is a test. Should come from the OS.
-            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var culture = "eng"; // This is a test. Should come from the OS.
 
-            // LOCTODO : On MacOS, we'll probably want to embed those in the bundle itself.
-            // LOCTODO : On mobile, we probably want those as embedded resources?
-            stringsEng = new IniFile();
-            stringsEng.Load(Path.Combine(appPath, "Localization/FamiStudio.eng.ini"));
-            strings = new IniFile();
-            strings.Load(Path.Combine(appPath, $"Localization/FamiStudio.{culture}.ini"));
-
-            /*
-            stringsEng = new IniFile();
-            stringsEng.LoadFromResource("FamiStudio.Resources.Localization.FamiStudio.eng.ini");
-            strings = new IniFile();
-            strings.LoadFromResource($"FamiStudio.Resources.Localization.FamiStudio.{culture}.ini");
-            */
+            if (Platform.IsDesktop)
+            {
+                var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                stringsEng.Load(Path.Combine(appPath, "Localization/FamiStudio.eng.ini"));
+                strings.Load(Path.Combine(appPath, $"Localization/FamiStudio.{culture}.ini"));
+            }
+            else
+            {
+                stringsEng.LoadFromResource("FamiStudio.Localization.FamiStudio.eng.ini");
+                strings.LoadFromResource($"FamiStudio.Localization.FamiStudio.{culture}.ini");
+            }
 
             Font = LocalizeString("Localization", "Font",     false);
             FontBold = LocalizeString("Localization", "FontBold", false);
