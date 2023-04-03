@@ -78,6 +78,7 @@ namespace FamiStudio
         LocalizedString TimeFormatTooltip;
         LocalizedString FollowModeTooltip;
         LocalizedString FollowingViewsTooltip;
+		LocalizedString FollowPercentTooltip;
         LocalizedString ScrollBarsTooltip;
         LocalizedString ShowFamitrackerStopNotesTooltip;
         LocalizedString IdealSequencerHeightTooltip;
@@ -266,19 +267,20 @@ namespace FamiStudio
                     page.AddDropDownList(TimeFormatLabel.Colon, Localization.ToStringArray(TimeFormatStrings), TimeFormatStrings[timeFormatIndex], TimeFormatTooltip); // 1
                     page.AddDropDownList(FollowModeLabel.Colon, Localization.ToStringArray(FollowModeStrings), FollowModeStrings[followModeIndex], FollowModeTooltip);  // 2
                     page.AddDropDownList(FollowViewsLabel.Colon, Localization.ToStringArray(FollowSyncStrings), FollowSyncStrings[followSyncIndex], FollowingViewsTooltip); // 3
-                    page.AddDropDownList(ScrollBarsLabel.Colon, Localization.ToStringArray(ScrollBarsStrings), ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 4
-                    page.AddDropDownList(IdealSeqHeightLabel.Colon, IdealSequencerHeightStrings, IdealSequencerHeightStrings[GetSequencerSizeIndex(Settings.IdealSequencerSize)], IdealSequencerHeightTooltip); // 5
-                    page.AddCheckBox(AllowSeqVertScrollLabel.Colon, Settings.AllowSequencerVerticalScroll, AllowSequencerScrollTooltip); // 6
-                    page.AddCheckBox(ShowFamitrackerStopLabel.Colon, Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 7
-                    page.AddCheckBox(ShowRegisterViewerLabel.Colon, Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 8
-                    page.AddCheckBox(UseOSDialogsLabel.Colon, Settings.UseOSDialogs, UseOSDialogsTooltip); // 9
+					page.AddSlider("Continuous Follow Range Limit:", Settings.FollowPercent, 0.0, 1.0, 0.01f, 2, "{0:P0}", FollowPercentTooltip); // 4
+                    page.AddDropDownList(ScrollBarsLabel.Colon, Localization.ToStringArray(ScrollBarsStrings), ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 5
+                    page.AddDropDownList(IdealSeqHeightLabel.Colon, IdealSequencerHeightStrings, IdealSequencerHeightStrings[GetSequencerSizeIndex(Settings.IdealSequencerSize)], IdealSequencerHeightTooltip); // 6
+                    page.AddCheckBox(AllowSeqVertScrollLabel.Colon, Settings.AllowSequencerVerticalScroll, AllowSequencerScrollTooltip); // 7
+                    page.AddCheckBox(ShowFamitrackerStopLabel.Colon, Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 8
+                    page.AddCheckBox(ShowRegisterViewerLabel.Colon, Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 9
+                    page.AddCheckBox(UseOSDialogsLabel.Colon, Settings.UseOSDialogs, UseOSDialogsTooltip); // 10
                         
                     page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. 
                     page.SetPropertyVisible(3, Platform.IsDesktop);
-                    page.SetPropertyVisible(4, Platform.IsDesktop);
                     page.SetPropertyVisible(5, Platform.IsDesktop);
                     page.SetPropertyVisible(6, Platform.IsDesktop);
-                    page.SetPropertyVisible(9, Platform.IsDesktop && Platform.IsWindows); // Linux always has it disabled, MacOS always enabled, Windows can choose.
+                    page.SetPropertyVisible(7, Platform.IsDesktop);
+                    page.SetPropertyVisible(10, Platform.IsDesktop && Platform.IsWindows); // Linux always has it disabled, MacOS always enabled, Windows can choose.
                     break;
                 }
                 case ConfigSection.Input:
@@ -578,12 +580,13 @@ namespace FamiStudio
                     Settings.TimeFormat = pageUI.GetSelectedIndex(1);
                     Settings.FollowMode = pageUI.GetSelectedIndex(2);
                     Settings.FollowSync = pageUI.GetSelectedIndex(3);
-                    Settings.ScrollBars = pageUI.GetSelectedIndex(4);
-                    Settings.IdealSequencerSize = Utils.ParseIntWithTrailingGarbage(pageUI.GetPropertyValue<string>(5));
-                    Settings.AllowSequencerVerticalScroll = pageUI.GetPropertyValue<bool>(6);
-                    Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(7);
-                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(8);
-                    Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(9);
+                    Settings.FollowPercent = (float)pageUI.GetPropertyValue<double>(4);
+                    Settings.ScrollBars = pageUI.GetSelectedIndex(5);
+                    Settings.IdealSequencerSize = Utils.ParseIntWithTrailingGarbage(pageUI.GetPropertyValue<string>(6));
+                    Settings.AllowSequencerVerticalScroll = pageUI.GetPropertyValue<bool>(7);
+                    Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(8);
+                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(9);
+                    Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(10);
 
                     // Sound
                     Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);
