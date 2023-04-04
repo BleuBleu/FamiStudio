@@ -14,6 +14,9 @@ namespace FamiStudio
         public static string Font     { get; private set; }
         public static string FontBold { get; private set; }
 
+        public static int FontOffsetY     { get; private set; }
+        public static int FontBoldOffsetY { get; private set; }
+
         static Localization()
         {
             var culture = "eng"; // This is a test. Should come from the OS.
@@ -30,8 +33,12 @@ namespace FamiStudio
                 strings.LoadFromResource($"FamiStudio.Localization.FamiStudio.{culture}.ini");
             }
 
-            Font = LocalizeString("Localization", "Font",     false);
-            FontBold = LocalizeString("Localization", "FontBold", false);
+            Font     = strings.GetString("Localization", "Font",     "FontNotFound");
+            FontBold = strings.GetString("Localization", "FontBold", "FontNotFound");
+
+            // HACK : We seem to have slight font calculation errors. Add a param until I debug this.
+            FontOffsetY     = strings.GetInt("Localization", "FontOffsetY",     -1);
+            FontBoldOffsetY = strings.GetInt("Localization", "FontBoldOffsetY", -1);
 
             Debug.Assert(Font != null && FontBold != null);
         }

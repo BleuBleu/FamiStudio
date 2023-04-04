@@ -209,7 +209,7 @@ namespace FamiStudio
         const int DefaultTooltipMultiLinePosY    = 4;
         const int DefaultTooltipLineSizeY        = 17;
         const int DefaultTooltipSpecialCharSizeX = 16;
-        const int DefaultTooltipSpecialCharSizeY = 14;
+        const int DefaultTooltipSpecialCharSizeY = 15;
         const int DefaultButtonIconPosX          = Platform.IsMobile ?  12 : 2;
         const int DefaultButtonIconPosY          = Platform.IsMobile ?  12 : 4;
         const int DefaultButtonSize              = Platform.IsMobile ? 120 : 36;
@@ -1105,10 +1105,8 @@ namespace FamiStudio
                             {
                                 if (Platform.IsMacOS && str == "Ctrl") str = "Cmd";
                                 
-                                posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
-                                c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageColor);
+                                c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width - (int)scaling, posY + specialCharacter.Height + specialCharacter.OffsetY, messageColor);
                                 c.DrawText(str, messageFont, posX, posY, messageColor, TextFlags.Center, specialCharacter.Width);
-                                posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                             }
                         }
                         else

@@ -281,6 +281,8 @@
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Fonts\Quicksand-Regular.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Quicksand-Bold.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NanumSquareRoundR.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NanumSquareRoundEB.ttf" />
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />

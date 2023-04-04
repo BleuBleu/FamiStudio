@@ -355,9 +355,9 @@ namespace FamiStudio
             return default(T);
         }
 
-        public Font CreateFontFromResource(string name, int size)
+        public Font CreateFontFromResource(string name, int size, int offsetY)
         {
-            return new Font(this, name, size);
+            return new Font(this, name, size, offsetY);
         }
 
         public int CacheGlyph(byte[] data, int w, int h, out float u0, out float v0, out float u1, out float v1)
@@ -663,15 +663,17 @@ namespace FamiStudio
         private int size;
         private int baseValue;
         private int lineHeight;
+        private int globalOffsetY;
 
         public int Size => size;
         public int OffsetY => size - baseValue; 
         public int LineHeight => lineHeight;
 
-        public Font(GraphicsBase g, string name, int sz)
+        public Font(GraphicsBase g, string name, int sz, int offsetY)
         {
             graphics = g;
             size = sz;
+            globalOffsetY = offsetY;
             font = GetSharedFontData(name);
             scale = StbScaleForMappingEmToPixels(font.info, sz);
             StbGetFontVMetrics(font.info, out var ascent, out var descent, out var lineGap);
@@ -832,7 +834,7 @@ namespace FamiStudio
             glyphInfo.width   = x1 - x0;
             glyphInfo.height  = y1 - y0;
             glyphInfo.xoffset = x0;
-            glyphInfo.yoffset = baseValue + y0;
+            glyphInfo.yoffset = baseValue + y0 + globalOffsetY;
         }
 
         private void RasterizeAndCacheGlyph(int glyphIndex, CharInfo glyphInfo)

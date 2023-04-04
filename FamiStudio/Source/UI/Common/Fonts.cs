@@ -58,7 +58,14 @@ namespace FamiStudio
         {
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
-                fonts[i] = g.CreateFontFromResource( FontDefinitions[i].Bold ? Localization.FontBold : Localization.Font, (int)DpiScaling.ScaleForFontFloat(FontDefinitions[i].Size));
+                var bold = FontDefinitions[i].Bold;
+
+                var font    = bold ? Localization.FontBold        : Localization.Font;
+                var offsetY = bold ? Localization.FontBoldOffsetY : Localization.FontOffsetY;
+
+                fonts[i] = g.CreateFontFromResource(font,
+                    (int)DpiScaling.ScaleForFontFloat(FontDefinitions[i].Size),
+                    (int)DpiScaling.ScaleForFontFloat(offsetY));
             }
         }
 
