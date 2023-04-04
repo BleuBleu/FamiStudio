@@ -5,7 +5,7 @@ namespace FamiStudio
     public class ChannelStateMmc5Square : ChannelState
     {
         int regOffset = 0;
-        int prevPeriodHi = 1000;
+        int prevPeriodHi = 0x80;
 
         public ChannelStateMmc5Square(IPlayerInterface player, int apuIdx, int channelType) : base(player, apuIdx, channelType, false)
         {
