@@ -19,52 +19,12 @@ namespace FamiStudio
             Max
         };
 
-        readonly string[] ConfigSectionNames =
-        {
-            "General",
-            "Interface",
-            "Input",
-            "Sound",
-            "Mixer",
-            "MIDI",
-            "FFmpeg",
-            "Keyboard",
-            "Mobile",
-            ""
-        };
-
         public enum TimeFormat
         {
             PatternFrame,
             MinuteSecondsMilliseconds,
             Max
         }
-
-        readonly string[] TimeFormatStrings =
-        {
-            "Pattern:Frame",
-            "MM:SS:mmm"
-        };
-
-        public string[] FollowModeStrings =
-        {
-            "Jump",
-            "Continuous"
-        };
-
-        public string[] FollowSyncStrings =
-        {
-            "Sequencer",
-            "Piano Roll",
-            "Both"
-        };
-
-        public string[] ScrollBarsStrings =
-        {
-            "None",
-            "Thin",
-            "Thick"
-        };
 
         public string[] IdealSequencerHeightStrings =
         {
@@ -79,60 +39,147 @@ namespace FamiStudio
             "50%",
         };
 
-        // General
-        private readonly string CheckUpdatesTooltip             = "When enabled, FamiStudio will check for updates every time you start the app.";
-        private readonly string ShowTutorialTooltip             = "When enabled, the first time tutorial will be displayed next time the app is started.";
-        private readonly string ClearUndoRedoTooltip            = "When enabled, the undo/redo stack will be cleared every time you save. Disabling this can help keep the memory usage down.";
-        private readonly string ReviewAfterPlayTooltip          = "When enabled, FamiStudio will seek back to the previous play position after stopping the song.";
-        private readonly string OpenLastTooltip                 = "When enabled, FamiStudio will open the last project you were working on when you last closed the app.";
-        private readonly string AutosaveTooltip                 = "When enabled, a copy of your project will be save approximately every 2 minutes. This can prevent loosing data when a crash occurs.";
-        private readonly string PatternNamePrefixTooltip        = "Prefix to add to automatically generated pattern names.";
-        private readonly string PatternNameNumDigitsTooltip     = "Minimum number of digits to have in automatically generated pattern names.";
-        private readonly string AutosaveFolderTooltip           = "Click to open the auto save folder.";
+        #region Localization
 
-        // Input
-        private readonly string TrackpadControlsTooltip         = "When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that pinch-to-zoom is not supported on Linux, you will have to hold CTRL or ALT and scroll up/down to zoom.";
-        private readonly string AltLeftForMiddleTooltip         = "When enabled, Alt + left-click will be interpreted as a middle mouse click. Useful if your mouse does not have a middle button.\n\nNote that this will disable some functionalities that requires Alt, such as the ability to temporarily disable snapping.";
-        private readonly string AltZoomAllowedTooltip           = "When enabled, Alt + right-click + panning up/down will zoom in/out. Useful if your mouse does not have a middle button.\n\nNote that this may disable some functionalities that requires Alt, such as the ability to temporarily disable snapping.";
+        LocalizedString[] TimeFormatStrings  = new LocalizedString[(int)TimeFormat.Max];
+        LocalizedString[] FollowModeStrings  = new LocalizedString[2];
+        LocalizedString[] FollowSyncStrings  = new LocalizedString[3];
+        LocalizedString[] ScrollBarsStrings  = new LocalizedString[3];
+        LocalizedString[] ConfigSectionNames = new LocalizedString[(int)ConfigSection.Max];
 
-        // UI
-        private readonly string ScalingTooltip                  = "Overall scaling of the main FamiStudio window. Leave it to 'System' if you want FamiStudio to automatically detect it based on the system configuration.";
-        private readonly string TimeFormatTooltip               = "Affects how time is displayed in the toolbar.";
-        private readonly string FollowModeTooltip               = "Scrolling behavior when enabling follow mode in the toolbar.";
-        private readonly string FollowingViewsTooltip           = "Affects which views will scroll when enabling follow mode in the toolbar.";
-        private readonly string FollowPercentTooltip            = "Sets the right edge of the area the seek bar will be constrained to in 'continuous' follow mode. This applies during recording as well.";
-        private readonly string ScrollBarsTooltip               = "Affects the visibility and size of the scroll bars in the app.";
-        private readonly string ShowFamitrackerStopNotesTooltip = "When enabled, partially transparent stop notes will be displayed whenever a note ends, when using FamiTracker tempo mode. This can help you to visually align note delays with stop notes.";
-        private readonly string IdealSequencerHeightTooltip     = "The size of the sequencer, in % of the height of the window. This size maybe not be achievable if there are too many channels.";
-        private readonly string AllowSequencerScrollTooltip     = "When enabled and the ideal sequencer height cannot be achieved, the sequencer will allow vertical scrolling.";
-        private readonly string ShowRegisterViewerTooltip       = "When enabled, the 'Register' tab will be visible in the Project Explorer.";
-        private readonly string UseOSDialogsTooltip             = "When enabled, FamiStudio will try to use the built-in operating system dialog to open/save files and display error messages.";
+        // Title
+        LocalizedString Title;
+        LocalizedString Verb;
 
-        // Sound
-        private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
-        private readonly string StopInstrumentTooltip           = "Number of seconds to wait before stopping instruments that have a release part in their volume envelopes.";
-        private readonly string PreventPoppingTooltip           = "When enabled, FamiStudio will use the sweep unit to prevent popping around certain notes on the 2 main square channels. Also known as 'Blargg's Smooth Vibrato' technique.";
-        private readonly string N163MixerTooltip                = "When enabled, FamiStudio will correctly mix the Namco 163 channels. Leave this OFF and set a very agressive low-pass filter to mimic real hardware.";
-        private readonly string ClampPeriodsTooltip             = "When enabled, FamiStudio will clamp periods and note values to their valid hardware range. Note that the NSF/Sound Engine does not do that, so disabling this option will result in more hardware-accurate sound where periods and notes can sometimes wrap-around.";
-        private readonly string NoDragSoundTooltip              = "When enabled, FamiStudio will not emit sounds when dragging notes in the Piano Roll if the song is playing.";
-        private readonly string MetronomeVolumeTooltip          = "Volume of the metronome.";
+        // General tooltips
+        LocalizedString CheckUpdatesTooltip;
+        LocalizedString ShowTutorialTooltip;
+        LocalizedString ClearUndoRedoTooltip;
+        LocalizedString ReviewAfterPlayTooltip;
+        LocalizedString OpenLastTooltip;
+        LocalizedString AutosaveTooltip;
+        LocalizedString PatternNamePrefixTooltip;
+        LocalizedString PatternNameNumDigitsTooltip;
+        LocalizedString AutosaveFolderTooltip;
 
-        // Mixer
-        private readonly string GlobalVolumeTooltip             = "Global volume applied to all audio emulation, in db. When using multiple audio expansions, the volume can get very loud. You can use this to lower the overall volume and prevent clipping.";
-        private readonly string ExpansionTooltip                = "Select the audio expansion for which you want to adjust the audio.";
-        private readonly string ExpansionVolumeTooltip          = "Volume adjustment for the selected expansion, in db.";
-        private readonly string ExpansionTrebleTooltip          = "Treble adjustment for the selected expansion, in db.";
-        private readonly string ExpansionResetTooltip           = "Resets this expansion to the default settings.";
+        // General labels
+        LocalizedString CheckForUpdatesLabel;
+        LocalizedString ShowTutorialLabel;
+        LocalizedString ClearUndoLabel;
+        LocalizedString RewindAfterPlayLabel;
+        LocalizedString OpenLastProjectLabel;
+        LocalizedString AutosaveLabel;
+        LocalizedString PatternPrefixLabel;
+        LocalizedString PatternDigitsLabel;
+        LocalizedString OpenAutosaveFolderLabel;
 
-        // MIDI
-        private readonly string MidiDeviceTooltip               = "The MIDI device that will be used to input notes.";
+        // UI tooltips
+        LocalizedString ScalingTooltip;
+        LocalizedString TimeFormatTooltip;
+        LocalizedString FollowModeTooltip;
+        LocalizedString FollowingViewsTooltip;
+        LocalizedString FollowRangeTooltip;
+        LocalizedString ScrollBarsTooltip;
+        LocalizedString ShowFamitrackerStopNotesTooltip;
+        LocalizedString IdealSequencerHeightTooltip;
+        LocalizedString AllowSequencerScrollTooltip;
+        LocalizedString ShowRegisterViewerTooltip;
+        LocalizedString UseOSDialogsTooltip;
+        LocalizedString SystemScalingOption;
 
-        // Mobile
-        private readonly string AllowVibrationTooltip           = "When enabled, the phone will vibrate on long pressed, piano keys, etc.";
-        private readonly string ForceLandscapeTooltip           = "When enabled, The app orientation will be forced to landscape.";
+        // UI labels
+        LocalizedString ScalingLabel;
+        LocalizedString TimeFormatLabel;
+        LocalizedString FollowModeLabel;
+        LocalizedString FollowViewsLabel;
+        LocalizedString FollowRangeLabel;
+        LocalizedString ScrollBarsLabel;
+        LocalizedString IdealSeqHeightLabel;
+        LocalizedString AllowSeqVertScrollLabel;
+        LocalizedString ShowFamitrackerStopLabel;
+        LocalizedString ShowRegisterViewerLabel;
+        LocalizedString UseOSDialogsLabel;
 
-        // FFmpeg;
-        private readonly string FFmpegPathTooltip               = "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below.";
+        // Input tooltips
+        LocalizedString TrackpadControlsTooltip;
+        LocalizedString AltLeftForMiddleTooltip;
+        LocalizedString AltZoomAllowedTooltip;
+
+        // Input labels
+        LocalizedString TrackpadControlsLabel;
+        LocalizedString ReverseTrackpadXLabel;
+        LocalizedString ReverseTrackpadYLabel;
+        LocalizedString TrackpadSensitivityLabel;
+        LocalizedString TrackpadZoomSensitivityLabel;
+        LocalizedString AltLeftEmulatesMiddle;
+        LocalizedString AltRightZoomsInOut;
+
+        // Sound tooltips
+        LocalizedString NumBufferedFramesTooltip;
+        LocalizedString StopInstrumentTooltip;
+        LocalizedString PreventPoppingTooltip;
+        LocalizedString N163MixerTooltip;
+        LocalizedString ClampPeriodsTooltip;
+        LocalizedString NoDragSoundTooltip;
+        LocalizedString MetronomeVolumeTooltip;
+
+        // Sound labels
+        LocalizedString NumBufferFramesLabel;
+        LocalizedString StopInstrumentAfterLabel;
+        LocalizedString PreventPoppingLabel;
+        LocalizedString MixN163Label;
+        LocalizedString ClampPeriodsLabel;
+        LocalizedString MuteDragSoundsLabel;
+        LocalizedString MetronomeVolumeLabel;
+
+        // Mixer tooltips
+        LocalizedString GlobalVolumeTooltip;
+        LocalizedString ExpansionTooltip;
+        LocalizedString ExpansionVolumeTooltip;
+        LocalizedString ExpansionTrebleTooltip;
+        LocalizedString ExpansionResetTooltip;
+
+        // Mixer labels
+        LocalizedString GlobalVolumeLabel;
+        LocalizedString ExpansionLabel;
+        LocalizedString ExpansionVolumeLabel;
+        LocalizedString ExpansionTrebleLabel;
+        LocalizedString ResetLabel;
+        LocalizedString ResetButtonLabel;
+        LocalizedString NoteLabel;
+        LocalizedString NoteMessageLabel;
+
+        // MIDI tooltips
+        LocalizedString MidiDeviceTooltip;
+
+        // MIDI labels
+        LocalizedString DeviceLabel;
+
+        // FFmpeg tooltips
+        LocalizedString FFmpegPathTooltip;
+
+        // FFmpeg labels
+        LocalizedString FFmpegRequiredLabel;
+        LocalizedString FFmpegDownloadLabel;
+        LocalizedString FFmpegSelectExeTitle;
+
+        // Keys labels
+        LocalizedString DoubleClickLabel;
+        LocalizedString ResetDefaultLabel;
+        LocalizedString PressKeyOrCancel;
+        LocalizedString ActionColumn;
+        LocalizedString KeyColumn;
+        LocalizedString KeyAltColumn;
+
+        // Mobile tooltips
+        LocalizedString AllowVibrationTooltip;
+        LocalizedString ForceLandscapeTooltip;
+
+        // Mobile labels
+        LocalizedString AllowVibrationLabel;
+        LocalizedString ForceLandscapeLabel;
+
+        #endregion
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
@@ -144,8 +191,10 @@ namespace FamiStudio
 
         public unsafe ConfigDialog(FamiStudioWindow win)
         {
-            dialog = new MultiPropertyDialog(win, "FamiStudio Configuration", 550);
-            dialog.SetVerb("Apply", true);
+            Localization.Localize(this);
+
+            dialog = new MultiPropertyDialog(win, Title, 550);
+            dialog.SetVerb(Verb, true);
 
             // Keep a copy of keyboart shortcuts
             shortcuts = Shortcut.CloneList(Settings.AllShortcuts);
@@ -163,7 +212,7 @@ namespace FamiStudio
             dialog.SetPageVisible((int)ConfigSection.Input,   Platform.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.MIDI,    Platform.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.FFmpeg,  Platform.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.Keys,  Platform.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.Keys,    Platform.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.Mobile,  Platform.IsMobile);
         }
 
@@ -172,7 +221,7 @@ namespace FamiStudio
             var scalings = DpiScaling.GetAvailableScalings();
             var list = new string[scalings.Length + 1];
 
-            list[0] = "System";
+            list[0] = SystemScalingOption;
             for (int i = 0; i < scalings.Length; i++)
                 list[i + 1] = $"{scalings[i]}%";
 
@@ -190,15 +239,15 @@ namespace FamiStudio
             {
                 case ConfigSection.General:
                 {
-                    page.AddCheckBox("Check for updates:", Settings.CheckUpdates, CheckUpdatesTooltip); // 0
-                    page.AddCheckBox("Show Tutorial at Startup:", Settings.ShowTutorial, ShowTutorialTooltip); // 1
-                    page.AddCheckBox("Clear Undo/Redo on save:", Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 2
-                    page.AddCheckBox("Rewind after play:", Settings.RewindAfterPlay, ReviewAfterPlayTooltip); // 3
-                    page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 4
-                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 5
-                    page.AddTextBox("Pattern name prefix:", Settings.PatternNamePrefix, 64, PatternNamePrefixTooltip); // 6
-                    page.AddNumericUpDown("Pattern name digits:", Settings.PatternNameNumDigits, 1, 4, 1, PatternNameNumDigitsTooltip); // 7
-                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 8
+                    page.AddCheckBox(CheckForUpdatesLabel.Colon, Settings.CheckUpdates, CheckUpdatesTooltip); // 0
+                    page.AddCheckBox(ShowTutorialLabel.Colon, Settings.ShowTutorial, ShowTutorialTooltip); // 1
+                    page.AddCheckBox(ClearUndoLabel.Colon, Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 2
+                    page.AddCheckBox(RewindAfterPlayLabel.Colon, Settings.RewindAfterPlay, ReviewAfterPlayTooltip); // 3
+                    page.AddCheckBox(OpenLastProjectLabel.Colon, Settings.OpenLastProjectOnStart, OpenLastTooltip); // 4
+                    page.AddCheckBox(AutosaveLabel.Colon, Settings.AutoSaveCopy, AutosaveTooltip); // 5
+                    page.AddTextBox(PatternPrefixLabel.Colon, Settings.PatternNamePrefix, 64, PatternNamePrefixTooltip); // 6
+                    page.AddNumericUpDown(PatternDigitsLabel.Colon, Settings.PatternNameNumDigits, 1, 4, 1, PatternNameNumDigitsTooltip); // 7
+                    page.AddButton(null, OpenAutosaveFolderLabel.Colon, AutosaveFolderTooltip); // 8
                     page.PropertyClicked += GeneralPage_PropertyClicked;
                     page.SetPropertyVisible(0, Platform.IsDesktop);
                     page.SetPropertyVisible(2, Platform.IsDesktop);
@@ -215,35 +264,35 @@ namespace FamiStudio
                     var followModeIndex = Settings.FollowMode <= 0 ? 0 : Settings.FollowMode % FollowModeStrings.Length;
                     var followSyncIndex = Settings.FollowSync <= 0 ? 0 : Settings.FollowSync % FollowSyncStrings.Length;
 
-                    page.AddDropDownList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex], ScalingTooltip); // 0
-                    page.AddDropDownList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex], TimeFormatTooltip); // 1
-                    page.AddDropDownList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex], FollowModeTooltip);  // 2
-                    page.AddDropDownList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex], FollowingViewsTooltip); // 3
-                    page.AddSlider("Continuous Follow Range Limit:", Settings.FollowPercent, 0.0, 1.0, 0.01f, 2, "{0:P0}", FollowPercentTooltip); // 4
-                    page.AddDropDownList("Scroll Bars:", ScrollBarsStrings, ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 5
-                    page.AddDropDownList("Ideal Sequencer Height:", IdealSequencerHeightStrings, IdealSequencerHeightStrings[GetSequencerSizeIndex(Settings.IdealSequencerSize)], IdealSequencerHeightTooltip); // 6
-                    page.AddCheckBox("Allow Sequencer Vertical Scrolling: ", Settings.AllowSequencerVerticalScroll, AllowSequencerScrollTooltip); // 7
-                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 8
-                    page.AddCheckBox("Show Register Viewer Tab:", Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 9
-                    page.AddCheckBox("Use Operating System Dialogs:", Settings.UseOSDialogs, UseOSDialogsTooltip); // 10
+                    page.AddDropDownList(ScalingLabel.Colon, scalingValues, scalingValues[scalingIndex], ScalingTooltip); // 0
+                    page.AddDropDownList(TimeFormatLabel.Colon, Localization.ToStringArray(TimeFormatStrings), TimeFormatStrings[timeFormatIndex], TimeFormatTooltip); // 1
+                    page.AddDropDownList(FollowModeLabel.Colon, Localization.ToStringArray(FollowModeStrings), FollowModeStrings[followModeIndex], FollowModeTooltip);  // 2
+                    page.AddDropDownList(FollowViewsLabel.Colon, Localization.ToStringArray(FollowSyncStrings), FollowSyncStrings[followSyncIndex], FollowingViewsTooltip); // 3
+                    page.AddSlider(FollowRangeLabel.Colon, Settings.FollowPercent, 0.05, 0.95, 0.01f, 2, "{0:P0}", FollowRangeTooltip); // 4
+                    page.AddDropDownList(ScrollBarsLabel.Colon, Localization.ToStringArray(ScrollBarsStrings), ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 5
+                    page.AddDropDownList(IdealSeqHeightLabel.Colon, IdealSequencerHeightStrings, IdealSequencerHeightStrings[GetSequencerSizeIndex(Settings.IdealSequencerSize)], IdealSequencerHeightTooltip); // 6
+                    page.AddCheckBox(AllowSeqVertScrollLabel.Colon, Settings.AllowSequencerVerticalScroll, AllowSequencerScrollTooltip); // 7
+                    page.AddCheckBox(ShowFamitrackerStopLabel.Colon, Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 8
+                    page.AddCheckBox(ShowRegisterViewerLabel.Colon, Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 9
+                    page.AddCheckBox(UseOSDialogsLabel.Colon, Settings.UseOSDialogs, UseOSDialogsTooltip); // 10
                         
                     page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. 
                     page.SetPropertyVisible(3, Platform.IsDesktop);
-                    page.SetPropertyVisible(4, Platform.IsDesktop);
                     page.SetPropertyVisible(5, Platform.IsDesktop);
                     page.SetPropertyVisible(6, Platform.IsDesktop);
-                    page.SetPropertyVisible(9, Platform.IsDesktop && Platform.IsWindows); // Linux always has it disabled, MacOS always enabled, Windows can choose.
+                    page.SetPropertyVisible(7, Platform.IsDesktop);
+                    page.SetPropertyVisible(10, Platform.IsDesktop && Platform.IsWindows); // Linux always has it disabled, MacOS always enabled, Windows can choose.
                     break;
                 }
                 case ConfigSection.Input:
                 { 
-                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls, TrackpadControlsTooltip); // 0
-                    page.AddCheckBox("Reverse trackpad scroll X:", Settings.ReverseTrackPadX); // 1
-                    page.AddCheckBox("Reverse trackpad scroll Y:", Settings.ReverseTrackPadY); // 2
-                    page.AddSlider("Trackpad scroll sensitivity:", Settings.TrackPadMoveSensitity, 1.0, 20.0, 1.0f, 1, "{0:0.0}"); // 3
-                    page.AddSlider("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1.0, 20.0, 1.0, 1, "{0:0.0}"); // 4
-                    page.AddCheckBox("ALT+Left emulates Middle:", Settings.AltLeftForMiddle, AltLeftForMiddleTooltip); // 5
-                    page.AddCheckBox("ALT+Right zooms in/out:", Settings.AltZoomAllowed, AltZoomAllowedTooltip); // 6
+                    page.AddCheckBox(TrackpadControlsLabel.Colon, Settings.TrackPadControls, TrackpadControlsTooltip); // 0
+                    page.AddCheckBox(ReverseTrackpadXLabel.Colon, Settings.ReverseTrackPadX); // 1
+                    page.AddCheckBox(ReverseTrackpadYLabel.Colon, Settings.ReverseTrackPadY); // 2
+                    page.AddSlider(TrackpadSensitivityLabel.Colon, Settings.TrackPadMoveSensitity, 1.0, 20.0, 1.0f, 1, "{0:0.0}"); // 3
+                    page.AddSlider(TrackpadZoomSensitivityLabel.Colon, Settings.TrackPadZoomSensitity, 1.0, 20.0, 1.0, 1, "{0:0.0}"); // 4
+                    page.AddCheckBox(AltLeftEmulatesMiddle.Colon, Settings.AltLeftForMiddle, AltLeftForMiddleTooltip); // 5
+                    page.AddCheckBox(AltRightZoomsInOut.Colon, Settings.AltZoomAllowed, AltZoomAllowedTooltip); // 6
                     page.SetPropertyEnabled(1, Settings.TrackPadControls);
                     page.SetPropertyEnabled(2, Settings.TrackPadControls);
                     page.SetPropertyEnabled(3, Settings.TrackPadControls);
@@ -254,23 +303,23 @@ namespace FamiStudio
                 }
                 case ConfigSection.Sound:
                 {
-                    page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16, 1, NumBufferedFramesTooltip); // 0
-                    page.AddNumericUpDown("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 1
-                    page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 2
-                    page.AddCheckBox("Mix Namco 163 channels:", Settings.N163Mix, N163MixerTooltip); // 3
-                    page.AddCheckBox("Clamp periods and notes:", Settings.ClampPeriods, ClampPeriodsTooltip); // 4
-                    page.AddCheckBox("Mute drag sounds during playback:", Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 5
-                    page.AddSlider("Metronome volume:", Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 6
+                    page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedAudioFrames, 2, 16, 1, NumBufferedFramesTooltip); // 0
+                    page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 1
+                    page.AddCheckBox(PreventPoppingLabel.Colon, Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 2
+                    page.AddCheckBox(MixN163Label.Colon, Settings.N163Mix, N163MixerTooltip); // 3
+                    page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 4
+                    page.AddCheckBox(MuteDragSoundsLabel.Colon, Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 5
+                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 6
                     break;
                 }
                 case ConfigSection.Mixer:
                 {
-                    page.AddSlider("Global Volume:", Settings.GlobalVolume, -10.0, 3.0, 0.1, 1, "{0:+0.0;-0.0} dB", GlobalVolumeTooltip); // 0
-                    page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 1
-                    page.AddSlider("Expansion Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 2
-                    page.AddSlider("Expansion Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 3
-                    page.AddButton(Platform.IsDesktop ? null : "Reset", "Reset expansion to default", ExpansionResetTooltip); // 4
-                    page.AddLabel(Platform.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 5
+                    page.AddSlider(GlobalVolumeLabel.Colon, Settings.GlobalVolume, -10.0, 3.0, 0.1, 1, "{0:+0.0;-0.0} dB", GlobalVolumeTooltip); // 0
+                    page.AddDropDownList(ExpansionLabel.Colon, ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 1
+                    page.AddSlider(ExpansionVolumeLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 2
+                    page.AddSlider(ExpansionTrebleLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 3
+                    page.AddButton(Platform.IsDesktop ? null : ResetLabel, ResetButtonLabel, ExpansionResetTooltip); // 4
+                    page.AddLabel(Platform.IsDesktop ? null : NoteLabel, NoteMessageLabel, true); // 5
                     page.PropertyChanged += MixerPage_PropertyChanged;
                     page.PropertyClicked += MixerPage_PropertyClicked;
                     break;
@@ -293,20 +342,20 @@ namespace FamiStudio
                     else if (midiDevices.Count > 0)
                         midiDevice = midiDevices[0];
 
-                    page.AddDropDownList("Device :", midiDevices.ToArray(), midiDevice, MidiDeviceTooltip); // 0
+                    page.AddDropDownList(DeviceLabel.Colon, midiDevices.ToArray(), midiDevice, MidiDeviceTooltip); // 0
                     break;
                 }
                 case ConfigSection.FFmpeg:
-                    page.AddLabel(null, "Video export requires FFmpeg. If you already have it, set the path to the ffmpeg executable by clicking the button below, otherwise follow the download link.", true); // 0
+                    page.AddLabel(null, FFmpegRequiredLabel, true); // 0
                     page.AddButton(null, Settings.FFmpegExecutablePath, FFmpegPathTooltip); // 1
-                    page.AddLinkLabel(null, "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
+                    page.AddLinkLabel(null, FFmpegDownloadLabel, "https://famistudio.org/doc/ffmpeg/"); // 3
                     page.PropertyClicked += FFmpegPage_PropertyClicked;
                     break;
                 case ConfigSection.Keys:
                 {
-                    page.AddLabel(null, "Double click in the 2 last columns to assign a key. Right click to clear a key.", true); // 0
-                    page.AddGrid("Keys", new[] { new ColumnDesc("Action", 0.4f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetKeyboardShortcutStrings(), 14); // 1
-                    page.AddButton(null, "Reset to default");
+                    page.AddLabel(null, DoubleClickLabel, true); // 0
+                    page.AddGrid("Keys", new[] { new ColumnDesc(ActionColumn, 0.4f), new ColumnDesc(KeyColumn, 0.3f), new ColumnDesc(KeyAltColumn, 0.3f) }, GetKeyboardShortcutStrings(), 14); // 1
+                    page.AddButton(null, ResetDefaultLabel);
                     page.PropertyClicked += KeyboardPage_PropertyClicked;
                     page.PropertyCellEnabled += KeyboardPage_PropertyCellEnabled;
                     page.SetColumnEnabled(1, 0, false);
@@ -314,8 +363,8 @@ namespace FamiStudio
                 }
                 case ConfigSection.Mobile:
                 { 
-                    page.AddCheckBox("Allow vibration:", Settings.AllowVibration, AllowVibrationTooltip); // 0
-                    page.AddCheckBox("Force Landscape:", Settings.ForceLandscape, ForceLandscapeTooltip); // 1
+                    page.AddCheckBox(AllowVibrationLabel.Colon, Settings.AllowVibration, AllowVibrationTooltip); // 0
+                    page.AddCheckBox(ForceLandscapeLabel.Colon, Settings.ForceLandscape, ForceLandscapeTooltip); // 1
                     break;
                 }
             }
@@ -353,7 +402,7 @@ namespace FamiStudio
                 {
                     var ffmpegExeFilter = Platform.IsWindows ? "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe" : "FFmpeg Executable (ffmpeg)|*.*";
                     var dummy = "";
-                    var filename = Platform.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy);
+                    var filename = Platform.ShowOpenFileDialog(FFmpegSelectExeTitle, ffmpegExeFilter, ref dummy);
 
                     if (filename != null)
                     {
@@ -377,7 +426,7 @@ namespace FamiStudio
                     keysColIndex = colIdx;
 
                     var dlg = new PropertyDialog(dialog.ParentWindow, "", 300, false, true);
-                    dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
+                    dlg.Properties.AddLabel(null, PressKeyOrCancel);
                     dlg.Properties.Build();
                     dlg.DialogKeyDown += Dlg_KeyboardKeyDown;
 
@@ -528,7 +577,7 @@ namespace FamiStudio
                     // UI
                     var scalingString = pageUI.GetPropertyValue<string>(0);
                     
-                    Settings.DpiScaling = scalingString == "System" ? 0 : Utils.ParseIntWithTrailingGarbage(scalingString);
+                    Settings.DpiScaling = scalingString == SystemScalingOption ? 0 : Utils.ParseIntWithTrailingGarbage(scalingString);
                     Settings.TimeFormat = pageUI.GetSelectedIndex(1);
                     Settings.FollowMode = pageUI.GetSelectedIndex(2);
                     Settings.FollowSync = pageUI.GetSelectedIndex(3);

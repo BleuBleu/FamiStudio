@@ -12,25 +12,45 @@ namespace FamiStudio
             Max
         };
 
-        readonly string[] ConfigSectionNames =
-        {
-            "Song Cleanup",
-            "Project Cleanup",
-            ""
-        };
-        
-        private readonly string MergePatternsTooltip              = "Patterns that are exactly identical and on the same channel will be merged and replaced by instanced on a single pattern.";
-        private readonly string DeleteEmptyPatternsTooltip        = "Patterns with no musical notes or effects will be deleted.";
-        private readonly string AdjustMaximumNoteLengthsTooltip   = "Notes that are long, but interrupted by another note on the same channel will have their durations adjusted to match the visual duration.";
-        private readonly string SongsTooltips                     = "Select the songs to cleanup.";
-                                                                  
-        private readonly string DeleteUnusedInstrumentsTooltip    = "Delete any instrument that is not used throughout the entire project.";
-        private readonly string MergeIdenticalInstrumentsTooltip  = "If two or more instruments are exactly identical, the redundant ones will be deleted and replaced by a single one.";
-        private readonly string UnassignUnusedSamplesTooltip      = "Remove any samples from the 'DPCM Instrument' that are not used in any song. Does not deleted the actual samples from the project.";
-        private readonly string DeleteUnassignedSamplesTooltip    = "Delete any DPCM samples that is not assigned to any keys of the 'DPCM Instrument'.";
-        private readonly string PermanentlyApplyProcessingTooltip = "For any DPCM sample that use processing (volume adjustment, etc.), will permanently apply those to the DMC data and makes this the source data. Only do this when you are completely done adjusting. For samples using WAV files as source data, this can make your project file much smaller.";
-        private readonly string DiscardN163FdsResampleWavTooltip  = "Discards any source data for FDS/N163 instrument that are resampled from a wav file. You can do this to reduce the size of your project when you are done adjusting the resampling parameters.";
-        private readonly string DeleteUnusedArpeggiosTooltip      = "Delete any arpeggio that is not used throughout the entire project.";
+        #region Localization
+
+        LocalizedString[] ConfigSectionNames = new LocalizedString[(int)TransformOperation.Max];
+
+        // Title
+        LocalizedString Title;
+        LocalizedString Verb;
+
+        // Song tooltips
+        LocalizedString MergePatternsTooltip;
+        LocalizedString DeleteEmptyPatternsTooltip;
+        LocalizedString AdjustMaximumNoteLengthsTooltip;
+        LocalizedString SongsTooltip;
+
+        // Song labels
+        LocalizedString MergePatternsLabel;
+        LocalizedString DeleteEmptyPatternsLabel;
+        LocalizedString AdjustMaximumNoteLengthsLabel;
+        LocalizedString SongsLabel;
+
+        // Project tooltips
+        LocalizedString DeleteUnusedInstrumentsTooltip;
+        LocalizedString MergeIdenticalInstrumentsTooltip;
+        LocalizedString UnassignUnusedSamplesTooltip;
+        LocalizedString DeleteUnassignedSamplesTooltip;
+        LocalizedString PermanentlyApplyProcessingTooltip;
+        LocalizedString DiscardN163FdsResampleWavTooltip;
+        LocalizedString DeleteUnusedArpeggiosTooltip;
+
+        // Project labels
+        LocalizedString DeleteUnusedInstrumentsLabel;
+        LocalizedString MergeIdenticalInstrumentsLabel;
+        LocalizedString UnassignUnusedSamplesLabel;
+        LocalizedString DeleteUnassignedSamplesLabel;
+        LocalizedString PermanentlyApplyProcessingLabel;
+        LocalizedString DiscardN163FdsResampleWavLabel;
+        LocalizedString DeleteUnusedArpeggiosLabel;
+
+        #endregion
 
         public delegate void EmptyDelegate();
         public event EmptyDelegate CleaningUp;
@@ -41,8 +61,11 @@ namespace FamiStudio
 
         public unsafe TransformDialog(FamiStudioWindow win)
         {
+            Localization.Localize(this);
+
             app = win.FamiStudio;
-            dialog = new MultiPropertyDialog(win, "Transform Songs", 550);
+            dialog = new MultiPropertyDialog(win, Title, 550);
+            dialog.SetVerb(Verb);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
@@ -65,19 +88,19 @@ namespace FamiStudio
             switch (section)
             {
                 case TransformOperation.SongCleanup:
-                    page.AddCheckBox("Merge identical patterns:", true, MergePatternsTooltip);                                        // 0
-                    page.AddCheckBox("Delete empty patterns:", true, DeleteEmptyPatternsTooltip);                                     // 1
-                    page.AddCheckBox("Adjust maximum note lengths:", true, AdjustMaximumNoteLengthsTooltip);                          // 2
-                    page.AddCheckBoxList(Platform.IsMobile ? "Songs to process:" : null , GetSongNames(), null, SongsTooltips) ; // 3
+                    page.AddCheckBox(MergePatternsLabel.Colon, true, MergePatternsTooltip); // 0
+                    page.AddCheckBox(DeleteEmptyPatternsLabel.Colon, true, DeleteEmptyPatternsTooltip); // 1
+                    page.AddCheckBox(AdjustMaximumNoteLengthsLabel.Colon, true, AdjustMaximumNoteLengthsTooltip); // 2
+                    page.AddCheckBoxList(Platform.IsMobile ? SongsLabel.Colon : null , GetSongNames(), null, SongsTooltip) ; // 3
                     break;
                 case TransformOperation.ProjectCleanup:
-                    page.AddCheckBox("Delete unused instruments:", true, DeleteUnusedInstrumentsTooltip);                             // 0
-                    page.AddCheckBox("Merge identical instruments:", true, MergeIdenticalInstrumentsTooltip);                         // 1
-                    page.AddCheckBox("Unassign unused DPCM instrument keys:", true, UnassignUnusedSamplesTooltip);                    // 2
-                    page.AddCheckBox("Delete unassigned samples:", true, DeleteUnassignedSamplesTooltip);                             // 3
-                    page.AddCheckBox("Permanently apply all DPCM samples processing:", false, PermanentlyApplyProcessingTooltip);     // 4
-                    page.AddCheckBox("Discard resampled wav data for NSF/N163:", false, DiscardN163FdsResampleWavTooltip);             // 5
-                    page.AddCheckBox("Delete unused arpeggios:", true, DeleteUnusedArpeggiosTooltip);                                 // 6
+                    page.AddCheckBox(DeleteUnusedInstrumentsLabel.Colon, true, DeleteUnusedInstrumentsTooltip); // 0
+                    page.AddCheckBox(MergeIdenticalInstrumentsLabel.Colon, true, MergeIdenticalInstrumentsTooltip); // 1
+                    page.AddCheckBox(UnassignUnusedSamplesLabel.Colon, true, UnassignUnusedSamplesTooltip); // 2
+                    page.AddCheckBox(DeleteUnassignedSamplesLabel.Colon, true, DeleteUnassignedSamplesTooltip); // 3
+                    page.AddCheckBox(PermanentlyApplyProcessingLabel.Colon, false, PermanentlyApplyProcessingTooltip); // 4
+                    page.AddCheckBox(DiscardN163FdsResampleWavLabel.Colon, false, DiscardN163FdsResampleWavTooltip); // 5
+                    page.AddCheckBox(DeleteUnusedArpeggiosLabel.Colon, true, DeleteUnusedArpeggiosTooltip); // 6
                     break;
             }
 

@@ -1621,16 +1621,13 @@ namespace FamiStudio
     {
         public const int UseNewNote  = 0;
         public const int KeepOldNote = 1;
+        public const int Count       = 2;
 
-        public static readonly string[] Names =
-        {
-            "Favor most recent note",
-            "Favor currently playing note"
-        };
+        public static readonly LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
-        public static int GetValueForName(string str)
+        static MidiPolyphonyBehavior()
         {
-            return Array.IndexOf(Names, str);
+            Localization.LocalizeStatic(typeof(MidiPolyphonyBehavior));
         }
     }
 
@@ -1638,16 +1635,13 @@ namespace FamiStudio
     {
         public const int Instrument = 0;
         public const int Channel    = 1;
+        public const int Count      = 2;
 
-        public static readonly string[] Names =
-        {
-            "Instrument",
-            "Channel"
-        };
+        public static readonly LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
-        public static int GetValueForName(string str)
+        static MidiExportInstrumentMode()
         {
-            return Array.IndexOf(Names, str);
+            Localization.LocalizeStatic(typeof(MidiExportInstrumentMode));
         }
     }
 }

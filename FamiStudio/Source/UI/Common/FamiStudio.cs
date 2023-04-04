@@ -118,8 +118,31 @@ namespace FamiStudio
         public static Project    StaticProject  { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
 
+        #region Localization
+
+        LocalizedString SaveChangesDialog;
+        LocalizedString ConfirmTitle;
+        LocalizedString DesktopOpenProjectTitle;
+        LocalizedString DesktopSaveProjectTitle;
+        LocalizedString MobileOpenProjectTitle;
+        LocalizedString MobileSaveProjectTitle;
+        LocalizedString MobileFamiTrackerImportWarning;
+        LocalizedString WarningTitle;
+        LocalizedString ProjectSaveSuccess;
+        LocalizedString ProjectSaveError;
+        LocalizedString NoLastExportWarning;
+        LocalizedString ProjectChangedExportWarning;
+        LocalizedString NewVersionToast;
+        LocalizedString NewProjectTitle;
+        LocalizedString IncompatibleInstrumentError;
+        LocalizedString IncompatibleExpRequiredError;
+
+        #endregion
+
         public void Initialize(FamiStudioWindow form, string filename)
         {
+            Localization.Localize(this);
+
             StaticInstance = this;
 
             SetWindow(form);
@@ -767,7 +790,7 @@ namespace FamiStudio
         {
             if (undoRedoManager != null && undoRedoManager.NeedsSaving)
             {
-                Platform.MessageBoxAsync(window, "Save changes?", "Confirm", MessageBoxButtons.YesNoCancel, (r) =>
+                Platform.MessageBoxAsync(window, SaveChangesDialog, ConfirmTitle, MessageBoxButtons.YesNoCancel, (r) =>
                 {
                     if (r == DialogResult.No)
                         callback();
@@ -947,14 +970,14 @@ namespace FamiStudio
                 if (Platform.IsDesktop)
                 {
                     if (filename == null)
-                        filename = Platform.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
+                        filename = Platform.ShowOpenFileDialog(DesktopOpenProjectTitle, "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
 
                     if (filename != null)
                         UnloadAndOpenAction(filename);
                 }
                 else
                 {
-                    var dlg = new MobileProjectDialog(this, "Open FamiStudio Project", false);
+                    var dlg = new MobileProjectDialog(this, MobileOpenProjectTitle, false);
                     dlg.ShowDialogAsync((f) =>
                     {
                         // HACK : We don't support nested activities right now, so return
@@ -974,11 +997,7 @@ namespace FamiStudio
                 (Log.GetLastMessage(LogSeverity.Warning) != null ||
                  Log.GetLastMessage(LogSeverity.Error)   != null))
             {
-                Platform.DelayedMessageBoxAsync(
-                    "Warnings or errors were generated during the import of this FamiTracker module. " + 
-                    "The songs will likely not sound correct. Please open with the desktop version of " +
-                    "FamiStudio for the full list of warnings and check out the documention for the " +
-                    "full list of supported effects.", "Warning");
+                Platform.DelayedMessageBoxAsync(MobileFamiTrackerImportWarning, WarningTitle);
             }
         }
 
@@ -1068,7 +1087,7 @@ namespace FamiStudio
             {
                 if (Platform.IsDesktop)
                 {
-                    filename = Platform.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms", ref Settings.LastFileFolder);
+                    filename = Platform.ShowSaveFileDialog(DesktopSaveProjectTitle, "FamiStudio Files (*.fms)|*.fms", ref Settings.LastFileFolder);
                     if (filename != null)
                     {
                         SaveProjectInternal(filename);
@@ -1077,7 +1096,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var dlg = new MobileProjectDialog(this, "Save FamiStudio Project", true);
+                    var dlg = new MobileProjectDialog(this, MobileSaveProjectTitle, true);
                     dlg.ShowDialogAsync((f) =>
                     {
                         SaveProjectInternal(f);
@@ -1106,11 +1125,11 @@ namespace FamiStudio
                     undoRedoManager.Clear();
 
                 undoRedoManager.NotifySaved();
-                DisplayNotification("Project Saved!", false);
+                DisplayNotification(ProjectSaveSuccess, false);
             }
             else
             {
-                Platform.ShowToast(window, "Error Saving Project!");
+                Platform.ShowToast(window, ProjectSaveError);
             }
 
             MarkEverythingDirty();
@@ -1130,11 +1149,11 @@ namespace FamiStudio
         {
             if (exportDialog == null || !exportDialog.HasAnyPreviousExport)
             {
-                DisplayNotification("No last export to repeat");
+                DisplayNotification(NoLastExportWarning);
             }
             else if (!exportDialog.IsProjectStillCompatible(project))
             {
-                DisplayNotification("Project has changed too much to repeat last export.");
+                DisplayNotification(ProjectChangedExportWarning);
                 FreeExportDialog();
             }
             else
@@ -1413,7 +1432,7 @@ namespace FamiStudio
             if (newReleaseAvailable)
             {
                 newReleaseAvailable = false;
-                Platform.ShowToast(window, $"A new version ({newReleaseString}) is available. Click here to download it!", true, () => Platform.OpenUrl("http://www.famistudio.org"));
+                Platform.ShowToast(window, NewVersionToast.Format(newReleaseString), true, () => Platform.OpenUrl("http://www.famistudio.org"));
             }
         }
 
@@ -1441,7 +1460,7 @@ namespace FamiStudio
 
         private void UpdateTitle()
         {
-            string projectFile = "New Project";
+            string projectFile = NewProjectTitle;
 
             if (!string.IsNullOrEmpty(project.Filename))
                 projectFile = System.IO.Path.GetFileName(project.Filename);
@@ -1457,11 +1476,11 @@ namespace FamiStudio
 
         public void ShowInstrumentError(Channel channel, bool beep)
         {
-            var message = "Selected instrument is incompatible with channel!";
+            var message = IncompatibleInstrumentError.Value;
             if (channel != null)
             {
                 if (channel.IsExpansionChannel)
-                    message += $"\nExpansion channels require using the correct instrument type.";
+                    message += $"\n{IncompatibleExpRequiredError}";
             }
             DisplayNotification(message, beep);
         }

@@ -9,21 +9,36 @@ namespace FamiStudio
         private int[]    songDurations;
         private string filename;
 
+        #region Localization
+
+        LocalizedString NsfImportTitle;
+        LocalizedString SongLabel;
+        LocalizedString DurationLabel;
+        LocalizedString PatternLength;
+        LocalizedString StartFrameLabel;
+        LocalizedString RemoveIntroSilenceLabel;
+        LocalizedString ReverseDPCMBitsLabel;
+        LocalizedString PreserveDPCMPaddingByte;
+
+        #endregion
+
         public NsfImportDialog(FamiStudioWindow win, string file)
         {
+            Localization.Localize(this);
+
             filename = file;
             songNames = NsfFile.GetSongNamesAndDurations(filename, out songDurations);
 
             if (songNames != null && songNames.Length > 0)
             {
-                dialog = new PropertyDialog(win, "NSF Import", 400);
-                dialog.Properties.AddDropDownList("Song:", songNames, songNames[0]); // 0
-                dialog.Properties.AddNumericUpDown("Duration (s):", 120, 1, 600, 1);    // 1
-                dialog.Properties.AddNumericUpDown("Pattern Length:", 256, 4, Pattern.MaxLength, 1);  // 2
-                dialog.Properties.AddNumericUpDown("Start frame:", 0, 0, 256, 1);       // 3
-                dialog.Properties.AddCheckBox("Remove intro silence:", true);        // 4
-                dialog.Properties.AddCheckBox("Reverse DPCM bits:", false);          // 5
-                dialog.Properties.AddCheckBox("Preserve DPCM padding byte:", false); // 6
+                dialog = new PropertyDialog(win, NsfImportTitle, 400);
+                dialog.Properties.AddDropDownList(SongLabel.Colon, songNames, songNames[0]); // 0
+                dialog.Properties.AddNumericUpDown(DurationLabel.Colon, 120, 1, 600, 1);    // 1
+                dialog.Properties.AddNumericUpDown(PatternLength.Colon, 256, 4, Pattern.MaxLength, 1);  // 2
+                dialog.Properties.AddNumericUpDown(StartFrameLabel.Colon, 0, 0, 256, 1);       // 3
+                dialog.Properties.AddCheckBox(RemoveIntroSilenceLabel.Colon, true);        // 4
+                dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);          // 5
+                dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false); // 6
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
                 dialog.Properties.Build();
                 UpdateSongDuration(0);

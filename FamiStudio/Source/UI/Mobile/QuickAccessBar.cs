@@ -147,6 +147,34 @@ namespace FamiStudio
 
         public override bool WantsFullScreenViewport => true;
 
+        #region localization
+
+        // Labels
+        LocalizedString SnapToBeatLabel;
+        LocalizedString SnapToBeatsLabel;
+        LocalizedString SnapEnabledLabel;
+        LocalizedString SnapEffectValuesLabel;
+        LocalizedString NoneLabel;
+        LocalizedString RepeatLabel;
+        LocalizedString VolumeLabel;
+        LocalizedString RepeatEnvelopeLabel;
+        LocalizedString VolumeEnvelopeLabel;
+        LocalizedString SnapOffLabel;
+
+        // Context menus
+        LocalizedString ReplaceSelectionInstContext;
+        LocalizedString ReplaceSelectionArpContext;
+        LocalizedString ToggleMuteContext;
+        LocalizedString ToggleSoloContext;
+        LocalizedString ToggleForceDisplayContext;
+
+        #endregion
+
+        public QuickAccessBar()
+        {
+            Localization.Localize(this);        
+        }
+
         protected override void OnAddedToContainer()
         {
             var g= ParentWindow.Graphics;
@@ -502,7 +530,7 @@ namespace FamiStudio
                 var item = new ListItem();
                 item.Color = Theme.LightGreyColor1;
                 item.Image = App.SnapResolution == i ? bmpRadio : null;
-                item.Text = $"Snap to {SnapResolutionType.Names[i]} Beat{(SnapResolutionType.Factors[i] > 1.0 ? "s" : "")}";
+                item.Text = (SnapResolutionType.Factors[i] > 1.0 ? SnapToBeatsLabel : SnapToBeatLabel).Format(SnapResolutionType.Names[i]));
                 item.TextColor = App.SnapEnabled ? Theme.BlackColor : disabledColor;
                 item.GetImageOpacity = (l) => { return l.TextColor.A / 255.0f; };
                 items[i] = item;
@@ -511,7 +539,7 @@ namespace FamiStudio
             var snapEffectsItem = new ListItem();
             snapEffectsItem.Color = Theme.LightGreyColor1;
             snapEffectsItem.Image = App.SnapEffectEnabled ? bmpCheckOn : bmpCheckOff;
-            snapEffectsItem.Text = $"Snap Effect Values";
+            snapEffectsItem.Text = SnapEffectValuesLabel;
             snapEffectsItem.TextColor = App.SnapEnabled ? Theme.BlackColor : disabledColor;
             snapEffectsItem.GetImageOpacity = (l) => { return l.TextColor.A / 255.0f; }; 
             items[items.Length - 2] = snapEffectsItem;
@@ -519,7 +547,7 @@ namespace FamiStudio
             var snapEnableItem = new ListItem();
             snapEnableItem.Color = Theme.LightGreyColor1;
             snapEnableItem.Image = App.SnapEnabled ? bmpCheckOn : bmpCheckOff;
-            snapEnableItem.Text = $"Snap Enabled";
+            snapEnableItem.Text = SnapEnabledLabel;
             items[items.Length - 1] = snapEnableItem;
 
             popupSelectedIdx = App.SnapResolution;
@@ -586,12 +614,12 @@ namespace FamiStudio
             items[0] = new ListItem();
             items[0].Color = Theme.LightGreyColor1;
             items[0].Image = bmpEffectNone;
-            items[0].Text = "None";
+            items[0].Text = NoneLabel;
 
             items[1] = new ListItem();
             items[1].Color = Theme.LightGreyColor1;
             items[1].Image = bmpEffects[Note.EffectVolume];
-            items[1].Text = "Volume Envelope";
+            items[1].Text = VolumeEnvelopeLabel;
 
             StartExpandingList((int)ButtonType.DPCMEffect, items);
         }
@@ -618,12 +646,12 @@ namespace FamiStudio
             items[0] = new ListItem();
             items[0].Color = Theme.LightGreyColor1;
             items[0].Image = bmpEffectNone;
-            items[0].Text = "None";
+            items[0].Text = NoneLabel;
 
             items[1] = new ListItem();
             items[1].Color = Theme.LightGreyColor1;
             items[1].Image = bmpEffectRepeat;
-            items[1].Text = "Repeat Envelope";
+            items[1].Text = RepeatEnvelopeLabel;
 
             StartExpandingList((int)ButtonType.WaveformEffect, items);
         }
@@ -690,7 +718,7 @@ namespace FamiStudio
             {
                 App.ShowContextMenu(new[]
                 {
-                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Instrument", () => { App.ReplacePianoRollSelectionInstrument(App.SelectedInstrument); MarkDirty(); })
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(App.SelectedInstrument); MarkDirty(); })
                 });
             }
         }
@@ -746,7 +774,7 @@ namespace FamiStudio
                 var arpNoneItem = new ListItem();
                 arpNoneItem.Color = Theme.LightGreyColor1;
                 arpNoneItem.Image = bmpArpeggio;
-                arpNoneItem.Text = "None";
+                arpNoneItem.Text = NoneLabel;
                 items.Add(arpNoneItem);
             }
 
@@ -772,7 +800,7 @@ namespace FamiStudio
             {
                 App.ShowContextMenu(new[]
                 {
-                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Arpeggio", () => { App.ReplacePianoRollSelectionArpeggio(App.SelectedArpeggio); MarkDirty(); }) 
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(App.SelectedArpeggio); MarkDirty(); }) 
                 });
             }
         }
@@ -801,7 +829,7 @@ namespace FamiStudio
         private BitmapAtlasRef GetSnapRenderInfo(out string text, out Color tint)
         {
             var snapEnabled = App.SnapEnabled;
-            text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] + (App.SnapEffectEnabled ? " (FX)" : "") : "Off";
+            text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] + (App.SnapEffectEnabled ? " (FX)" : "") : SnapOffLabel;
             tint = App.IsRecording ? Theme.DarkRedColor : Theme.LightGreyColor1;
             return snapEnabled ? bmpSnapOn : bmpSnapOff;
         }
@@ -810,14 +838,14 @@ namespace FamiStudio
         {
             var validEffect = App.SelectedEffect >= 0 && App.EffectPanelExpanded;
 
-            text = validEffect ? Note.EffectNames[App.SelectedEffect] : "None";
+            text = validEffect ? Note.EffectNames[App.SelectedEffect] : NoneLabel;
             tint = Theme.LightGreyColor1;
             return validEffect ? bmpEffects[App.SelectedEffect] : bmpEffectNone;
         }
 
         private BitmapAtlasRef GetDPCMEffectRenderInfo(out string text, out Color tint)
         {
-            text = App.EffectPanelExpanded ? "Volume" : "None";
+            text = App.EffectPanelExpanded ? VolumeLabel : NoneLabel;
             tint = Theme.LightGreyColor1;
             return App.EffectPanelExpanded ? bmpEffects[Note.EffectVolume] : bmpEffectNone;
         }
@@ -831,7 +859,7 @@ namespace FamiStudio
 
         private BitmapAtlasRef GetWaveformEffectRenderInfo(out string text, out Color tint)
         {
-            text = App.EffectPanelExpanded ? "Repeat" : "None";
+            text = App.EffectPanelExpanded ? RepeatLabel : NoneLabel;
             tint = Theme.LightGreyColor1;
             return App.EffectPanelExpanded ? bmpEffectRepeat : bmpEffectNone;
         }
@@ -846,8 +874,8 @@ namespace FamiStudio
         private BitmapAtlasRef GetInstrumentRenderingInfo(out string text, out Color tint)
         {
             var inst = App.SelectedInstrument;
-            text = inst != null ? inst.Name  : "DPCM";
-            tint = inst != null ? inst.Color : Theme.LightGreyColor1;
+            text = inst.Name;
+            tint = inst.Color;
             var exp = inst != null ? inst.Expansion : ExpansionType.None;
             return bmpExpansions[exp];
         }
@@ -864,7 +892,7 @@ namespace FamiStudio
         private BitmapAtlasRef GetArpeggioRenderInfo(out string text, out Color tint)
         {
             var arp = App.SelectedArpeggio;
-            text = arp != null ? arp.Name  : "None";
+            text = arp != null ? arp.Name  : NoneLabel;
             tint = arp != null ? arp.Color : Theme.LightGreyColor1;
             return bmpArpeggio;
         }
@@ -936,9 +964,9 @@ namespace FamiStudio
         {
             App.ShowContextMenu(new[]
             {
-                new ContextMenuOption("MenuMute", "Toggle Mute Channel", () => { App.ToggleChannelActive(idx); MarkDirty(); }),
-                new ContextMenuOption("MenuSolo", "Toggle Solo Channel", () => { App.ToggleChannelSolo(idx); MarkDirty(); }),
-                new ContextMenuOption("MenuForceDisplay", "Force Display Channel in Piano Roll", () => { App.ToggleChannelForceDisplay(idx); MarkDirty(); })
+                new ContextMenuOption("MenuMute", ToggleMuteContext, () => { App.ToggleChannelActive(idx); MarkDirty(); }),
+                new ContextMenuOption("MenuSolo", ToggleSoloContext, () => { App.ToggleChannelSolo(idx); MarkDirty(); }),
+                new ContextMenuOption("MenuForceDisplay", ToggleForceDisplayContext, () => { App.ToggleChannelForceDisplay(idx); MarkDirty(); })
             });
         }
 
@@ -950,7 +978,7 @@ namespace FamiStudio
             {
                 App.ShowContextMenu(new[]
                 {
-                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Instrument", () => { App.ReplacePianoRollSelectionInstrument(inst); MarkDirty(); })
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(inst); MarkDirty(); })
                 });
             }
         }
@@ -963,7 +991,7 @@ namespace FamiStudio
             {
                 App.ShowContextMenu(new[]
                 {
-                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Arpeggio", () => { App.ReplacePianoRollSelectionArpeggio(arp); MarkDirty(); })
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(arp); MarkDirty(); })
                 });
             }
         }

@@ -183,6 +183,7 @@
     <Compile Include="Source\Utils\DynamicJsonConverter.cs" />
     <Compile Include="Source\Utils\EpsmUnitTests.cs" />
     <Compile Include="Source\Utils\Gif.cs" />
+    <Compile Include="Source\Utils\Localization.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\Utils\OscilloscopeTriggers.cs" />
@@ -280,6 +281,8 @@
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Fonts\Quicksand-Regular.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Quicksand-Bold.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NanumSquareRoundR.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NanumSquareRoundEB.ttf" />
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />
@@ -753,6 +756,11 @@
     <EmbeddedResource Include="Resources\Shaders\Desktop\Poly.vert" />
     <EmbeddedResource Include="Resources\Shaders\Desktop\Text.frag" />
     <EmbeddedResource Include="Resources\Shaders\Desktop\Text.vert" />
+  </ItemGroup>  
+  <ItemGroup>
+    <Content Include="Localization\FamiStudio.eng.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    
   </ItemGroup>  
   <ItemGroup>
     <Content Include="glfw3.dll">

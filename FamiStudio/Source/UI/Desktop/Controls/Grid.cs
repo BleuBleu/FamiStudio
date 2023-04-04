@@ -162,12 +162,18 @@ namespace FamiStudio
 
         public void UpdateData(int row, int col, object val)
         {
+            Debug.Assert(val == null || val.GetType() != typeof(LocalizedString));
             data[row, col] = val;
             MarkDirty();
         }
 
         public void UpdateData(object[,] newData)
         {
+#if DEBUG
+            foreach (var o in newData)
+                Debug.Assert(o == null || o.GetType() != typeof(LocalizedString));
+#endif
+
             data = newData;
             Debug.Assert(data.GetLength(1) == columns.Length);
 

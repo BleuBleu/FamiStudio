@@ -16,7 +16,8 @@ namespace FamiStudio
 
         public int Type => type;
         public string Name => ChannelType.Names[type];
-        public string ShortName => ChannelType.ShortNames[(int)type];
+        public string LocalizedName => ChannelType.LocalizedNames[type];
+        public string ShortName => ChannelType.ShortNames[type];
         public string NameWithExpansion => ChannelType.GetNameWithExpansion(type);
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
@@ -1635,6 +1636,7 @@ namespace FamiStudio
             "Rimshot", // EPSM
         };
 
+        // LOCTODO : We shouldnt use those for messages. We do at the moment.
         public static readonly string[] ShortNames =
         {
             "Square1",
@@ -1827,6 +1829,13 @@ namespace FamiStudio
             13, // EPSM
             14 // EPSM
         };
+
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+
+        static ChannelType()
+        {
+            Localization.LocalizeStatic(typeof(ChannelType));
+        }
 
         public static string GetNameWithExpansion(int type)
         {

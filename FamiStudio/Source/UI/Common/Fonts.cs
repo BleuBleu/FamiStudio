@@ -23,23 +23,22 @@ namespace FamiStudio
 
         protected struct FontDefinition
         {
-            public string Name;
             public bool Bold;
             public int Size;
         };
 
         protected static readonly FontDefinition[] FontDefinitions = new FontDefinition[]
         {
-            new FontDefinition() { Name = "Quicksand-Regular", Size =  9              }, // VerySmall
-            new FontDefinition() { Name = "Quicksand-Bold",    Size =  9, Bold = true }, // VerySmall (Bold)
-            new FontDefinition() { Name = "Quicksand-Regular", Size = 11              }, // Small
-            new FontDefinition() { Name = "Quicksand-Bold",    Size = 11, Bold = true }, // Small (Bold)
-            new FontDefinition() { Name = "Quicksand-Regular", Size = 13              }, // Medium
-            new FontDefinition() { Name = "Quicksand-Bold",    Size = 13, Bold = true }, // Medium (Bold)
-            new FontDefinition() { Name = "Quicksand-Regular", Size = 17              }, // Large
-            new FontDefinition() { Name = "Quicksand-Regular", Size = 21              }, // VeryLarge
-            new FontDefinition() { Name = "Quicksand-Bold",    Size = 21, Bold = true }, // VeryLarge (Bold)
-            new FontDefinition() { Name = "Quicksand-Regular", Size = 29              }  // Huge
+            new FontDefinition() { Size =  9              }, // VerySmall
+            new FontDefinition() { Size =  9, Bold = true }, // VerySmall (Bold)
+            new FontDefinition() { Size = 11              }, // Small
+            new FontDefinition() { Size = 11, Bold = true }, // Small (Bold)
+            new FontDefinition() { Size = 13              }, // Medium
+            new FontDefinition() { Size = 13, Bold = true }, // Medium (Bold)
+            new FontDefinition() { Size = 17              }, // Large
+            new FontDefinition() { Size = 21              }, // VeryLarge
+            new FontDefinition() { Size = 21, Bold = true }, // VeryLarge (Bold)
+            new FontDefinition() { Size = 29              }  // Huge
         };
 
         protected Font[] fonts = new Font[(int)RenderFontStyle.Max];
@@ -59,7 +58,14 @@ namespace FamiStudio
         {
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
-                fonts[i] = g.CreateFontFromResource(FontDefinitions[i].Name, (int)DpiScaling.ScaleForFontFloat(FontDefinitions[i].Size));
+                var bold = FontDefinitions[i].Bold;
+
+                var font    = bold ? Localization.FontBold        : Localization.Font;
+                var offsetY = bold ? Localization.FontBoldOffsetY : Localization.FontOffsetY;
+
+                fonts[i] = g.CreateFontFromResource(font,
+                    (int)DpiScaling.ScaleForFontFloat(FontDefinitions[i].Size),
+                    (int)DpiScaling.ScaleForFontFloat(offsetY));
             }
         }
 
