@@ -66,6 +66,7 @@ namespace FamiStudio
         public const int EXTSOUND_MMC5  = 0x08;
         public const int EXTSOUND_N163  = 0x10;
         public const int EXTSOUND_S5B   = 0x20;
+        public const int EXTSOUND_EPSM  = 0x80;
 
         public const int STATE_VOLUME             = 0;
         public const int STATE_PERIOD             = 1;
@@ -83,15 +84,16 @@ namespace FamiStudio
         public const int STATE_FDSMODULATIONSPEED = 13;
         public const int STATE_FDSMASTERVOLUME    = 14;
         public const int STATE_VRC7PATCH          = 15;
-        public const int STATE_VRC7PATCHREG       = 16;
-        public const int STATE_VRC7OCTAVE         = 17;
-        public const int STATE_VRC7TRIGGER        = 18;
-        public const int STATE_VRC7SUSTAIN        = 19;
+        public const int STATE_PATCHREG           = 16;
+        public const int STATE_OCTAVE             = 17;
+        public const int STATE_FMTRIGGER          = 18;
+        public const int STATE_SUSTAIN            = 19;
         public const int STATE_N163WAVEPOS        = 20;
         public const int STATE_N163WAVESIZE       = 21;
         public const int STATE_N163WAVE           = 22;
         public const int STATE_N163NUMCHANNELS    = 23;
         public const int STATE_S5BMIXER           = 24;
         public const int STATE_S5BNOISEFREQUENCY  = 25;
+        public const int STATE_STEREO             = 26;
     }
 }

@@ -600,7 +600,7 @@ FAMISTUDIO_CH3_ENVS = 8
     FAMISTUDIO_EPSM_CH3_ENVS = 23
     FAMISTUDIO_EPSM_CH4_ENVS = 25
     FAMISTUDIO_EPSM_CH5_ENVS = 27
-    FAMISTUDIO_EPSM_CH6_ENVS = 28
+    FAMISTUDIO_EPSM_CH6_ENVS = 29
     FAMISTUDIO_EPSM_CH7_ENVS = 31
     FAMISTUDIO_EPSM_CH8_ENVS = 33
     FAMISTUDIO_EPSM_CH9_ENVS = 35
@@ -4270,13 +4270,13 @@ famistudio_set_epsm_instrument:
         lda @chan_idx    
         sbc #(FAMISTUDIO_EPSM_CHAN_FM_START - 1) ; Carry is not set, so - 1.
         tax
-        ldy #2
+        ldy #6
         lda (@ex_patch),y
         sta famistudio_chn_epsm_vol_op2,x
-        ldy #9
+        ldy #13
         lda (@ex_patch),y
         sta famistudio_chn_epsm_vol_op3,x
-        ldy #16 
+        ldy #20 
         lda (@ex_patch),y
         sta famistudio_chn_epsm_vol_op4,x
     @done:        

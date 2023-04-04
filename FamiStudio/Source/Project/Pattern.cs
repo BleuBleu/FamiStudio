@@ -388,7 +388,9 @@ namespace FamiStudio
                 {
                     if (note != null && note.HasValidEffectValue(i))
                     {
-                        Debug.Assert(channel.SupportsEffect(i));
+                        if(!channel.SupportsEffect(i))
+                            Debug.Assert(channel.SupportsEffect(i));
+
                         var val = note.GetEffectValue(i);
                         var min = Note.GetEffectMinValue(song, channel, i);
                         var max = Note.GetEffectMaxValue(song, channel, i);
