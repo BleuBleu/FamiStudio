@@ -1,16 +1,9 @@
 4.1.0
 =====
-- Loc:
-	- Param provider
-- Full S5B support? Sync up with Perkka when im back.
-- Bug FDS influences EPSM??? https://discord.com/channels/747649221879922840/747649222354010173/1060544346098770011
-	=> Perkka says he has fix. May be in a PR.
-- BUG : Phase reset not working??? question_mark.fms from how2.
 - BUG : Import "Tewfdsvwgr.txt" from how2, DPCM instruments are confused.
 - BUG : ROM export seems to stop at 16? Look at how2's big EPSM project.
 - BUG : Undo doesnt stop song???
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
-- BUG : Osc BG color.
 - BUG : The tempo conversion dialog is missing multi-line.
 - BUG : Toasts can appear very fast (select instrument incompatible with channel), was it like that in 4.0.6.
 - BUG : Preview DPCM affects volume triangle
@@ -70,7 +63,6 @@ Packaging
 	- No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
 	- Up to 256KB of samples using bank switching.
 - Option to mix N163 or not
-- Phase reset support
 - Project explorer sorting improvements
 - NSF import support on Android
 - Stereo and delay export support on Android.
@@ -157,6 +149,7 @@ Discord
 
 Backlog: 
 =========
+- Finish phase reset support
 - Going in settings unutes all channels.
 - Delete instruments resets play head.
 - We should be able to drag/copy samples mappings between instruments.

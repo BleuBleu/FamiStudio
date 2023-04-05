@@ -1201,7 +1201,8 @@ namespace FamiStudio
         {
             if (!oscilloscopeVisible)
                 return;
-            
+
+            c.PushClipRegion(x + 1, y + 1, sx - 1, sy - 1);
             c.FillRectangle(x, y, x + sx, y + sy, Theme.BlackColor);
 
             var oscilloscopeGeometry = App.GetOscilloscopeGeometry(out lastOscilloscopeHadNonZeroSample);
@@ -1211,11 +1212,9 @@ namespace FamiStudio
                 float scaleX = sx;
                 float scaleY = sy / -2; // D3D is upside down compared to how we display waves typically.
 
-                c.PushClipRegion(x + 1, y + 1, sx - 1, sy - 1);
                 c.PushTransform(x, y + sy / 2, scaleX, scaleY);
                 c.DrawNiceSmoothLine(oscilloscopeGeometry, Theme.LightGreyColor2);
                 c.PopTransform();
-                c.PopClipRegion();
             }
             else
             {
@@ -1223,6 +1222,8 @@ namespace FamiStudio
                 c.DrawLine(0, 0, sx, 0, Theme.LightGreyColor2);
                 c.PopTransform();
             }
+
+            c.PopClipRegion();
 
             if (Platform.IsMobile)
             {
