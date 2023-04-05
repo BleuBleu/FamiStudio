@@ -2867,7 +2867,7 @@ namespace FamiStudio
                             {
                                 if (r == DialogResult.OK)
                                 {
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project, TransactionFlags.StopAudio);
 
                                     var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
                                     var songIds = new List<int>();
