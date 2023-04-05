@@ -192,6 +192,7 @@
     <Compile Include="Source\Utils\DynamicJsonConverter.cs" />
     <Compile Include="Source\Utils\EpsmUnitTests.cs" />
     <Compile Include="Source\Utils\Gif.cs" />
+    <Compile Include="Source\Utils\Localization.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\RtMidi.cs" />
     <Compile Include="Source\Utils\OscilloscopeTriggers.cs" />
