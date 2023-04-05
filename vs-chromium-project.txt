@@ -11,3 +11,4 @@
 
 [SearchableFiles.ignore]
 obj/
+bin/

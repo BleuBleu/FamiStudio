@@ -41,6 +41,7 @@ namespace FamiStudio
 
         // General section.
         public static int Version = SettingsVersion;
+        public static string LanguageCode = "";
         public static bool CheckUpdates = true;
         public static bool ShowTutorial = true;
         public static bool ClearUndoRedoOnSave = true;
@@ -297,6 +298,7 @@ namespace FamiStudio
             Version = ini.GetInt("General", "Version", 0);
 
             // General
+            LanguageCode = ini.GetString("General", "Language", "");
             CheckUpdates = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates", true ); // At version 2 (FamiStudio 3.0.0, changed section)
             ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial", true ); // At version 2 (FamiStudio 3.0.0, changed section)
             ClearUndoRedoOnSave = ini.GetBool("General", "ClearUndoRedoOnSave", true);
@@ -406,6 +408,8 @@ namespace FamiStudio
                 LastSampleFolder = "";
             if (!Directory.Exists(LastExportFolder))
                 LastExportFolder = "";
+            if ( Localization.GetIndexForLanguageCode(LanguageCode) < 0)
+                LanguageCode = ""; // Empty = system
 
             // Try to point to the demo songs initially.
             if (string.IsNullOrEmpty(LastFileFolder) || !Directory.Exists(LastFileFolder))
@@ -463,6 +467,13 @@ namespace FamiStudio
             Version = SettingsVersion;
         }
 
+        public static string LoadLanguageCodeOnly()
+        {
+            var ini = new IniFile();
+            ini.Load(GetConfigFileName());
+            return ini.GetString("General", "Language", "");
+        }
+
         public static void Save()
         {
             // Never same settings in command line, we dont have the proper
@@ -474,6 +485,7 @@ namespace FamiStudio
 
             // General
             ini.SetInt("General", "Version", SettingsVersion);
+            ini.SetString("General", "Language", LanguageCode);
             ini.SetBool("General", "CheckUpdates", CheckUpdates);
             ini.SetBool("General", "ShowTutorial", ShowTutorial);
             ini.SetBool("General", "ClearUndoRedoOnSave", ClearUndoRedoOnSave);

@@ -52,6 +52,7 @@ namespace FamiStudio
         LocalizedString Verb;
 
         // General tooltips
+        LocalizedString LanguageTooltip;
         LocalizedString CheckUpdatesTooltip;
         LocalizedString ShowTutorialTooltip;
         LocalizedString ClearUndoRedoTooltip;
@@ -63,6 +64,7 @@ namespace FamiStudio
         LocalizedString AutosaveFolderTooltip;
 
         // General labels
+        LocalizedString LanguageLabel;
         LocalizedString CheckForUpdatesLabel;
         LocalizedString ShowTutorialLabel;
         LocalizedString ClearUndoLabel;
@@ -228,6 +230,18 @@ namespace FamiStudio
             return list;
         }
 
+        private string[] BuildLanguageList()
+        {
+            var languages = Localization.ToStringArray(LanguageType.LocalizedNames);
+            var list = new string[languages.Length + 1];
+
+            list[0] = SystemScalingOption;
+            for (int i = 0; i < languages.Length; i++)
+                list[i + 1] = languages[i];
+
+            return list;
+        }
+
         private int GetSequencerSizeIndex(int s)
         {
             return Utils.Clamp((s - 10) / 5, 0, IdealSequencerHeightStrings.Length - 1);
@@ -239,21 +253,25 @@ namespace FamiStudio
             {
                 case ConfigSection.General:
                 {
-                    page.AddCheckBox(CheckForUpdatesLabel.Colon, Settings.CheckUpdates, CheckUpdatesTooltip); // 0
-                    page.AddCheckBox(ShowTutorialLabel.Colon, Settings.ShowTutorial, ShowTutorialTooltip); // 1
-                    page.AddCheckBox(ClearUndoLabel.Colon, Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 2
-                    page.AddCheckBox(RewindAfterPlayLabel.Colon, Settings.RewindAfterPlay, ReviewAfterPlayTooltip); // 3
-                    page.AddCheckBox(OpenLastProjectLabel.Colon, Settings.OpenLastProjectOnStart, OpenLastTooltip); // 4
-                    page.AddCheckBox(AutosaveLabel.Colon, Settings.AutoSaveCopy, AutosaveTooltip); // 5
-                    page.AddTextBox(PatternPrefixLabel.Colon, Settings.PatternNamePrefix, 64, PatternNamePrefixTooltip); // 6
-                    page.AddNumericUpDown(PatternDigitsLabel.Colon, Settings.PatternNameNumDigits, 1, 4, 1, PatternNameNumDigitsTooltip); // 7
-                    page.AddButton(null, OpenAutosaveFolderLabel.Colon, AutosaveFolderTooltip); // 8
+                    var languageValues = BuildLanguageList();
+                    var languageIndex  = Localization.GetIndexForLanguageCode(Settings.LanguageCode) + 1;
+
+                    page.AddDropDownList(LanguageLabel.Colon, languageValues, languageValues[languageIndex], LanguageTooltip); // 0
+                    page.AddCheckBox(CheckForUpdatesLabel.Colon, Settings.CheckUpdates, CheckUpdatesTooltip); // 1
+                    page.AddCheckBox(ShowTutorialLabel.Colon, Settings.ShowTutorial, ShowTutorialTooltip); // 2
+                    page.AddCheckBox(ClearUndoLabel.Colon, Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 3
+                    page.AddCheckBox(RewindAfterPlayLabel.Colon, Settings.RewindAfterPlay, ReviewAfterPlayTooltip); // 4
+                    page.AddCheckBox(OpenLastProjectLabel.Colon, Settings.OpenLastProjectOnStart, OpenLastTooltip); // 5
+                    page.AddCheckBox(AutosaveLabel.Colon, Settings.AutoSaveCopy, AutosaveTooltip); // 6
+                    page.AddTextBox(PatternPrefixLabel.Colon, Settings.PatternNamePrefix, 64, PatternNamePrefixTooltip); // 7
+                    page.AddNumericUpDown(PatternDigitsLabel.Colon, Settings.PatternNameNumDigits, 1, 4, 1, PatternNameNumDigitsTooltip); // 8
+                    page.AddButton(null, OpenAutosaveFolderLabel, AutosaveFolderTooltip); // 9
                     page.PropertyClicked += GeneralPage_PropertyClicked;
-                    page.SetPropertyVisible(0, Platform.IsDesktop);
-                    page.SetPropertyVisible(2, Platform.IsDesktop);
-                    page.SetPropertyVisible(4, Platform.IsDesktop);
+                    page.SetPropertyVisible(1, Platform.IsDesktop);
+                    page.SetPropertyVisible(3, Platform.IsDesktop);
                     page.SetPropertyVisible(5, Platform.IsDesktop);
-                    page.SetPropertyVisible(8, Platform.IsDesktop);
+                    page.SetPropertyVisible(6, Platform.IsDesktop);
+                    page.SetPropertyVisible(9, Platform.IsDesktop);
                     break;
                 }
                 case ConfigSection.UserInterface:

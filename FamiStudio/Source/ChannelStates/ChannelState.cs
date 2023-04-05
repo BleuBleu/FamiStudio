@@ -520,7 +520,7 @@ namespace FamiStudio
         {
         }
 
-        public virtual void UpdateYMMixerSettingsNotify(int ymMixerSettings)
+        public virtual void YMMixerSettingsChangedNotify(int ymMixerSettings)
         {
         }
 
