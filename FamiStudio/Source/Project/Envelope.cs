@@ -719,19 +719,7 @@ namespace FamiStudio
         public const int YMNoiseFreq    = 9;
         public const int Count          = 10;
 
-        public static readonly string[] Names =
-        {
-            "Volume",
-            "Arpeggio",
-            "Pitch",
-            "Duty Cycle",
-            "FDS Waveform",
-            "FDS Modulation Table",
-            "N163 Waveform",
-            "Repeat",
-            "Mixer Settings",
-            "Noise Frequency",
-        };
+        public static readonly LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
         public static readonly string[] ShortNames =
         {
@@ -756,14 +744,19 @@ namespace FamiStudio
             "EnvelopeWave",
             "EnvelopeMod",
             "EnvelopeWave",
-            "EnvelopeWave",// Never actually displayed
-            "ConfigMixer",
-            "ChannelNoise", 
+            "EnvelopeWave", // Never actually displayed
+            "EnvelopeMixer",
+            "EnvelopeNoise", 
         };
+
+        static EnvelopeType()
+        {
+            Localization.LocalizeStatic(typeof(EnvelopeType));
+        }
 
         public static int GetValueForName(string str)
         {
-            return Array.IndexOf(Names, str);
+            return Array.IndexOf(LocalizedNames, str);
         }
 
         public static int GetValueForShortName(string str)

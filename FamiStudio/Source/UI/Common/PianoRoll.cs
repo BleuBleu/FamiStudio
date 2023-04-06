@@ -1516,7 +1516,7 @@ namespace FamiStudio
                     r.c.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
 
                     var bmp  = editMode == EditionMode.DPCM ? bmpEffects[Note.EffectVolume] : bmpEffectRepeat;
-                    var text = editMode == EditionMode.DPCM ? Note.EffectNames[Note.EffectVolume] : EnvelopeType.Names[EnvelopeType.WaveformRepeat];
+                    var text = editMode == EditionMode.DPCM ? Note.EffectNames[Note.EffectVolume] : EnvelopeType.LocalizedNames[EnvelopeType.WaveformRepeat];
 
                     r.c.DrawBitmapAtlas(bmp, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
                     r.c.DrawText(text, r.fonts.FontSmallBold, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);
@@ -3105,7 +3105,7 @@ namespace FamiStudio
 
             if (editMode == EditionMode.Envelope)
             {
-                var envelopeString = EnvelopeType.Names[editEnvelope];
+                string envelopeString = EnvelopeType.LocalizedNames[editEnvelope];
 
                 if (editEnvelope == EnvelopeType.Pitch)
                     envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? EnvelopeRelativeLabel : EnvelopeAbsoluteLabel) + " " + envelopeString;

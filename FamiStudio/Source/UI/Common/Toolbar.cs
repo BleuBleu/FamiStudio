@@ -1020,7 +1020,6 @@ namespace FamiStudio
             var zeroSizeX  = c.Graphics.MeasureString("0", timeCodeFont);
             var colonSizeX = c.Graphics.MeasureString(":", timeCodeFont);
 
-            var timeCodeSizeY = Height - timecodePosY * 2;
             var textColor = App.IsRecording ? Theme.DarkRedColor : Theme.LightGreyColor2;
 
             c.PushTranslation(x, y);

@@ -483,7 +483,7 @@ namespace FamiStudio
                     env.Length = seqCount;
 
                     if (env.Length < seqCount)
-                        Log.LogMessage(LogSeverity.Warning, $"{EnvelopeType.Names[envType]} envelope {indices[i]} is longer ({seqCount}) than what FamiStudio supports ({env.Length}). Truncating.");
+                        Log.LogMessage(LogSeverity.Warning, $"{EnvelopeType.LocalizedNames[envType]} envelope {indices[i]} is longer ({seqCount}) than what FamiStudio supports ({env.Length}). Truncating.");
                 }
                
                 if (releasePoint >= 0 && !env.CanRelease)

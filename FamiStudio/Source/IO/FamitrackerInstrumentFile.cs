@@ -72,7 +72,7 @@ namespace FamiStudio
                 env.Release = releasePoint;
 
                 if (env.Length < itemCount)
-                    Log.LogMessage(LogSeverity.Warning, $"{EnvelopeType.Names[envType]} envelope is longer ({itemCount}) than what FamiStudio supports ({env.Length}). Truncating.");
+                    Log.LogMessage(LogSeverity.Warning, $"{EnvelopeType.LocalizedNames[envType]} envelope is longer ({itemCount}) than what FamiStudio supports ({env.Length}). Truncating.");
 
                 Array.Copy(seq, 0, env.Values, 0, env.Length);
             }

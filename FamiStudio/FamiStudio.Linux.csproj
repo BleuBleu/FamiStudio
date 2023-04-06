@@ -424,8 +424,13 @@
     <EmbeddedResource Include="Resources\Atlas\EnvelopeArpeggio@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EnvelopeDuty.tga" />
     <EmbeddedResource Include="Resources\Atlas\EnvelopeDuty@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeMixer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeMixer@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EnvelopeMod.tga" />
     <EmbeddedResource Include="Resources\Atlas\EnvelopeMod@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeNoise.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeNoise@15x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeNoise@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EnvelopePitch.tga" />
     <EmbeddedResource Include="Resources\Atlas\EnvelopePitch@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EnvelopeVolume.tga" />

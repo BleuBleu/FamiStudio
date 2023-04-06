@@ -2229,7 +2229,7 @@ namespace FamiStudio
                         }
                         else if (subButtonType < SubButtonType.EnvelopeMax)
                         {
-                            tooltip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.Names[(int)subButtonType].ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
+                            tooltip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[(int)subButtonType].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
                         }
                         else if (subButtonType == SubButtonType.Properties)
                         {
@@ -2458,7 +2458,7 @@ namespace FamiStudio
                     {
                         if (instrumentSrc.Expansion == instrumentDst.Expansion)
                         {
-                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
+                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the {EnvelopeType.LocalizedNames[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
                             {
                                 if (r == DialogResult.Yes)
                                 {
