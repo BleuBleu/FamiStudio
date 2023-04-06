@@ -32,7 +32,8 @@ namespace FamiStudio
 
         static Localization()
         {
-            var code = Settings.LoadLanguageCodeOnly();
+            // Always english in command-line mode.
+            var code = Platform.IsCommandLine ? LanguageCodes[0] : Settings.LoadLanguageCodeOnly();
             var idx = GetIndexForLanguageCode(code);
 
             if (idx < 0)
