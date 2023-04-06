@@ -625,6 +625,33 @@ namespace FamiStudio
                     case 2: return "T";
                 }
             }
+            else if (type == EnvelopeType.DutyCycle)
+            {
+                if (instrument.IsVrc6)
+                {
+                    switch (value)
+                    {
+                        case 0: return "6.25%";
+                        case 1: return "12.5%";
+                        case 2: return "18.75%";
+                        case 3: return "25%";
+                        case 4: return "31.25%";
+                        case 5: return "37.5%";
+                        case 6: return "43.75%";
+                        case 7: return "50%";
+                    }
+                }
+                else
+                {
+                    switch (value)
+                    {
+                        case 0: return "12.5%";
+                        case 1: return "25%";
+                        case 2: return "50%";
+                        case 3: return "-25%";
+                    }
+                }
+            }
             else if (type == EnvelopeType.Arpeggio)
             {
                 return value.ToString("+#;-#;0");
