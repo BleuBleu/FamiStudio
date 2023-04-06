@@ -1005,6 +1005,15 @@ namespace FamiStudio
                 pattern.DeleteEmptyNotes();
         }
 
+        public void RemoveDpcmNotesWithoutMapping()
+        {
+            if (IsDpcmChannel)
+            {
+                foreach (var pattern in patterns)
+                    pattern.RemoveDpcmNotesWithoutMapping();
+            }
+        }
+
         public bool HasAnyPatternInstances
         {
             get
@@ -1419,7 +1428,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            Log.LogMessage(LogSeverity.Warning, $"Duplicating pattern {pattern.Name} in song {song.Name} since it has inconsistent previous notes.");
+                            Log.LogMessage(LogSeverity.Debug, $"Duplicating pattern {pattern.Name} in song {song.Name} since it has inconsistent previous notes.");
                             patternInstances[i] = pattern.ShallowClone();
                             patternStopReleaseMap.Add(key, patternInstances[i]);
                         }

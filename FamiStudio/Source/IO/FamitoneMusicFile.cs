@@ -1788,6 +1788,9 @@ namespace FamiStudio
             RemoveUnsupportedFeatures();
             project.DeleteUnusedInstruments();
 
+            foreach (var song in project.Songs)
+                song.RemoveDpcmNotesWithoutMapping();
+
             if (project.UsesFamiStudioTempo)
             {
                 foreach (var song in project.Songs)

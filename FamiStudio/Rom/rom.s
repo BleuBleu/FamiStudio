@@ -259,7 +259,7 @@ project_author:  .res 28   ; Project author
 .if FAMISTUDIO_EXP_FDS
 MAX_SONGS = 12 ; 12 * 32 bytes song header + 64 bytes header = 448 bytes.
 .else
-MAX_SONGS = 60 ; 60 * 32 bytes song header + 64 bytes header = 1984 bytes.
+MAX_SONGS = 48 ; 48 * 32 bytes song header + 64 bytes header = 1600 bytes.
 .endif
 
 ; Will be overwritten by FamiStudio.
@@ -934,16 +934,17 @@ version_text: ;
     text_ptr = p0
 
     ; each song table entry is 32-bytes.
+    ldy #0
+    sty song_ptr+1
     asl
+    asl ; Less than 64 max song, first 2 shift cant overflow
     asl
+    rol song_ptr+1
     asl
+    rol song_ptr+1
     asl
-    asl
-    tay
+    rol song_ptr+1
     sta song_ptr+0
-    lda #0
-    adc #0
-    sta song_ptr+1
 
     lda #<song_table
     adc song_ptr+0

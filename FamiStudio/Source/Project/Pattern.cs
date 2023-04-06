@@ -309,6 +309,25 @@ namespace FamiStudio
             }
         }
 
+        public void RemoveDpcmNotesWithoutMapping()
+        {
+            Debug.Assert(Channel.IsDpcmChannel);
+
+            var keys = notes.Keys;
+            var vals = notes.Values;
+
+            for (int i = vals.Count - 1; i >= 0; i--)
+            {
+                var note = vals[i];
+                if (note != null && note.IsMusical && (note.Instrument == null || note.Instrument.GetDPCMMapping(note.Value) == null))
+                { 
+                    note.Clear(true);
+                    if (note.IsEmpty)
+                        notes.Remove(keys[i]);
+                }
+            }
+        }
+
         public int BinarySearchList(IList<int> list, int value, bool roundUp = false)
         {
             if (list.Count == 0)
@@ -374,7 +393,7 @@ namespace FamiStudio
                 Debug.Assert(time >= 0);
                 Debug.Assert(time < MaxLength);
                 Debug.Assert(note != null);
-                Debug.Assert(!note.IsEmpty);
+                //Debug.Assert(!note.IsEmpty);
 
                 // Not used since FamiStudio 3.0.0
                 Debug.Assert(!note.IsRelease);

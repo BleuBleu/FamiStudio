@@ -393,6 +393,11 @@ namespace FamiStudio
                 channel.DeleteEmptyNotes();
         }
 
+        public void RemoveDpcmNotesWithoutMapping()
+        {
+            channels[ChannelType.Dpcm].RemoveDpcmNotesWithoutMapping();
+        }
+
         public void DeleteNotesPastMaxInstanceLength()
         {
             foreach (var channel in channels)

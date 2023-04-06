@@ -29,7 +29,7 @@ namespace FamiStudio
         const int RomHeaderPrgOffset  = 4;      // Offset of the PRG bank count in INES header.
         const int RomDpcmStart        = 0xc000;
         
-        public const int RomMaxSongs  = 60;
+        public const int RomMaxSongs  = 48;
 
         public unsafe bool Save(Project originalProject, string filename, int[] songIds, string name, string author, bool pal)
         {
