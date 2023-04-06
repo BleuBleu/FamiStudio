@@ -701,7 +701,12 @@
     <EmbeddedResource Include="Resources\Shaders\Droid\Text.vert" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Localization\FamiStudio.eng.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.deu.ini" />  
+    <EmbeddedResource Include="Localization\FamiStudio.eng.ini" />  
+    <EmbeddedResource Include="Localization\FamiStudio.kor.ini" />  
+    <EmbeddedResource Include="Localization\FamiStudio.por.ini" />  
+    <EmbeddedResource Include="Localization\FamiStudio.rus.ini" />  
+    <EmbeddedResource Include="Localization\FamiStudio.spa.ini" />
   </ItemGroup>  
   <ItemGroup>
     <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />

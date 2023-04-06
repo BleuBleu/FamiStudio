@@ -765,9 +765,24 @@
     <EmbeddedResource Include="Resources\Shaders\Desktop\Text.vert" />
   </ItemGroup>  
   <ItemGroup>
+    <Content Include="Localization\FamiStudio.deu.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Localization\FamiStudio.eng.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>    
+    <Content Include="Localization\FamiStudio.kor.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    
+    <Content Include="Localization\FamiStudio.por.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    
+    <Content Include="Localization\FamiStudio.rus.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    
+    <Content Include="Localization\FamiStudio.spa.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>                            
   </ItemGroup>  
   <ItemGroup>
     <Content Include="libglfw.dylib"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>

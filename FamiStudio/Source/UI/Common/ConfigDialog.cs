@@ -87,7 +87,7 @@ namespace FamiStudio
         LocalizedString AllowSequencerScrollTooltip;
         LocalizedString ShowRegisterViewerTooltip;
         LocalizedString UseOSDialogsTooltip;
-        LocalizedString SystemScalingOption;
+        LocalizedString SystemOption;
 
         // UI labels
         LocalizedString ScalingLabel;
@@ -223,7 +223,7 @@ namespace FamiStudio
             var scalings = DpiScaling.GetAvailableScalings();
             var list = new string[scalings.Length + 1];
 
-            list[0] = SystemScalingOption;
+            list[0] = SystemOption;
             for (int i = 0; i < scalings.Length; i++)
                 list[i + 1] = $"{scalings[i]}%";
 
@@ -235,7 +235,7 @@ namespace FamiStudio
             var languages = Localization.ToStringArray(LanguageType.LocalizedNames);
             var list = new string[languages.Length + 1];
 
-            list[0] = SystemScalingOption;
+            list[0] = SystemOption;
             for (int i = 0; i < languages.Length; i++)
                 list[i + 1] = languages[i];
 
@@ -596,7 +596,7 @@ namespace FamiStudio
                     // UI
                     var scalingString = pageUI.GetPropertyValue<string>(0);
                     
-                    Settings.DpiScaling = scalingString == SystemScalingOption ? 0 : Utils.ParseIntWithTrailingGarbage(scalingString);
+                    Settings.DpiScaling = scalingString == SystemOption ? 0 : Utils.ParseIntWithTrailingGarbage(scalingString);
                     Settings.TimeFormat = pageUI.GetSelectedIndex(1);
                     Settings.FollowMode = pageUI.GetSelectedIndex(2);
                     Settings.FollowSync = pageUI.GetSelectedIndex(3);

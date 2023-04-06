@@ -56,8 +56,10 @@ namespace FamiStudio
                 strings.LoadFromResource($"FamiStudio.Localization.FamiStudio.{code}.ini");
             }
 
-            Font     = strings.GetString("Localization", "Font",     "FontNotFound");
-            FontBold = strings.GetString("Localization", "FontBold", "FontNotFound");
+            Font     = strings.GetString("Localization", "Font",     "");
+            FontBold = strings.GetString("Localization", "FontBold", "");
+
+            Debug.Assert(!string.IsNullOrEmpty(Font) && !string.IsNullOrEmpty(FontBold));
 
             // HACK : We seem to have slight font calculation errors. Add a param until I debug this.
             FontOffsetY     = strings.GetInt("Localization", "FontOffsetY",     -1);

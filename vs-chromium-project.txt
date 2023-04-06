@@ -12,3 +12,4 @@
 [SearchableFiles.ignore]
 obj/
 bin/
+FamiStudio.app/
