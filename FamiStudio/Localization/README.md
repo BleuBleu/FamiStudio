@@ -37,7 +37,7 @@ EditEnvelopeTooltip=Edit {0} envelope
 ```
 
 # General guidelines
-Please follow these guidelines *exactly*. Any PR/contribution that does not follow these will be rejected.
+Please follow these guidelines. Any PR/contribution that does not follow these will be rejected.
 
 ## Translate the whole app or don't do it at all
 If you want to translate the app to a new language, I will require that you do a FULL translation, not just the feature you happen to use. You will need to go through every single string, dialog box, error message, etc. Make sure you have a grasp on every feature FamiStudio has and how to activate them.
@@ -53,9 +53,6 @@ In other words:
 - Do not add/edit/remove comments
 - Usage of a diff tool is strongly encouraged as it will make your life much easier.
 ![image](DiffTool.png)
-
-## Dont change the font unless you have to
-The main font in FamiStudio is [Quicksand](https://fonts.google.com/specimen/Quicksand/glyphs). Do not change font unless you are not in the list of supported languages. If you need to change the font because it does not support glyph that are needed, check with me so we can pick one that matches as closely as possible.
 
 ## Test your stuff
 Do not blindly translate without testing. In some cases, the UI doesnt adjust to the size of labels, so you will need to be sure they are not truncated. 
