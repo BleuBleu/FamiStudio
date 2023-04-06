@@ -35,7 +35,7 @@ namespace FamiStudio
                 var periodLo = (period >> 0) & 0xff;
                 var noiseFreq = envelopeValues[EnvelopeType.YMNoiseFreq];
                 player.NotifyYMMixerSettingsChanged(
-                    ((toneReg & mask) + ((((envelopeValues[EnvelopeType.YMMixerSettings] & 0x1) + ((envelopeValues[EnvelopeType.YMMixerSettings] & 0x2) << 2))) << channelIdx)),
+                    ((toneReg & mask) | ((((envelopeValues[EnvelopeType.YMMixerSettings] & 0x1) | ((envelopeValues[EnvelopeType.YMMixerSettings] & 0x2) << 2))) << channelIdx)),
                     (1L << ChannelType.EPSMSquare1) |
                     (1L << ChannelType.EPSMSquare2) |
                     (1L << ChannelType.EPSMSquare3));
