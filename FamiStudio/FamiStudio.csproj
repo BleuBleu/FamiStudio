@@ -281,8 +281,8 @@
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Fonts\Quicksand-Regular.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Quicksand-Bold.ttf" />
-    <EmbeddedResource Include="Resources\Fonts\NanumSquareRoundR.ttf" />
-    <EmbeddedResource Include="Resources\Fonts\NanumSquareRoundEB.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Rg.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Bd.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Light.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Bold.ttf" />
   </ItemGroup>    
