@@ -2986,7 +2986,7 @@ namespace FamiStudio
                     else
                         highlightRect = new RectangleF(x0,y - envelopeValueSizeY, x1 - x0, envelopeValueSizeY);
 
-                    var label = env.Values[i].ToString("+#;-#;0");
+                    var label = Envelope.GetDisplayValue(editInstrument, editEnvelope, env.Values[i]);
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
                         r.f.DrawText(label, r.fonts.FontSmall, x0, y - envelopeValueSizeY - effectValuePosTextOffsetY, Theme.LightGreyColor1, TextFlags.Center, noteSizeX);
                 }
@@ -3023,7 +3023,7 @@ namespace FamiStudio
                     else
                         highlightRect = new RectangleF(x0, y0, x1 - x0, y1 - y0);
 
-                    var label = val.ToString();
+                    var label = Envelope.GetDisplayValue(editInstrument, editEnvelope, val);
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
                     {
                         var drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * DpiScaling.Window * 2);

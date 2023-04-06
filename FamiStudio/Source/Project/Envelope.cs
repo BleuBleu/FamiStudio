@@ -614,6 +614,25 @@ namespace FamiStudio
             }
         }
 
+        public static string GetDisplayValue(Instrument instrument, int type, int value)
+        {
+            if (type == EnvelopeType.YMMixerSettings)
+            {
+                switch (value)
+                {
+                    case 0: return "N+T";
+                    case 1: return "N";
+                    case 2: return "T";
+                }
+            }
+            else if (type == EnvelopeType.Arpeggio)
+            {
+                return value.ToString("+#;-#;0");
+            }
+
+            return value.ToString();
+        }
+
         public bool ValuesInValidRange(Instrument instrument, int type)
         {
             GetMinMaxValueForType(instrument, type, out var min, out var max);
