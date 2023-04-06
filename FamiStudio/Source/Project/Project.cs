@@ -375,6 +375,7 @@ namespace FamiStudio
             newSong.SerializeState(loadSerializer);
             newSong.Name = GenerateUniqueSongName(newSong.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
 
+            MoveSong(newSong, song);
             ConditionalSortSongs();
             ValidateIntegrity();
             return newSong;
@@ -423,6 +424,7 @@ namespace FamiStudio
             loadSerializer.RemapId(arpeggio.Id, newArpeggio.Id);
             newArpeggio.SerializeState(loadSerializer);
             newArpeggio.Name = GenerateUniqueArpeggioName(newArpeggio.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
+            MoveArpeggio(newArpeggio, arpeggio);
             ConditionalSortArpeggios();
             ValidateIntegrity();
             return newArpeggio;
@@ -483,6 +485,7 @@ namespace FamiStudio
             loadSerializer.RemapId(instrument.Id, newInstrument.Id);
             newInstrument.SerializeState(loadSerializer);
             newInstrument.Name = GenerateUniqueInstrumentName(newInstrument.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
+            MoveInstrument(newInstrument, instrument);
             ConditionalSortInstruments();
             ValidateIntegrity();
             return newInstrument;
