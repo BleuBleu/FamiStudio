@@ -583,14 +583,15 @@ namespace FamiStudio
                     var pageMobile = pages[(int)ConfigSection.Mobile];
 
                     // General
-                    Settings.CheckUpdates = pageGeneral.GetPropertyValue<bool>(0);
-                    Settings.ShowTutorial = pageGeneral.GetPropertyValue<bool>(1);
-                    Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(2);
-                    Settings.RewindAfterPlay = pageGeneral.GetPropertyValue<bool>(3);
-                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(4);
-                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(5);
-                    Settings.PatternNamePrefix = pageGeneral.GetPropertyValue<string>(6);
-                    Settings.PatternNameNumDigits = pageGeneral.GetPropertyValue<int>(7);
+                    Settings.LanguageCode = pageGeneral.GetSelectedIndex(0) == 0 ? "" : Localization.LanguageCodes[pageGeneral.GetSelectedIndex(0) - 1];
+                    Settings.CheckUpdates = pageGeneral.GetPropertyValue<bool>(1);
+                    Settings.ShowTutorial = pageGeneral.GetPropertyValue<bool>(2);
+                    Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(3);
+                    Settings.RewindAfterPlay = pageGeneral.GetPropertyValue<bool>(4);
+                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(5);
+                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(6);
+                    Settings.PatternNamePrefix = pageGeneral.GetPropertyValue<string>(7);
+                    Settings.PatternNameNumDigits = pageGeneral.GetPropertyValue<int>(8);
 
                     // UI
                     var scalingString = pageUI.GetPropertyValue<string>(0);
