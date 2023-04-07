@@ -1495,27 +1495,21 @@ namespace FamiStudio
 
             int channel = selectedChannelIndex;
 
-            // Non-recorded notes are the ones that are playing when creating/dragging notes.
-            // We dont want to assume DPCM channel when getting a null intrument.
-            if (instrument == null && allowRecording) 
+            if (instrument == null)
+                return;
+
+            if (song.Channels[channel].SupportsInstrument(instrument))
             {
-                channel = ChannelType.Dpcm;
+                note.Instrument = instrument;
+
+                if (song.Channels[channel].SupportsArpeggios && arpeggio != null)
+                    note.Arpeggio = arpeggio;
             }
             else
             {
-                if (song.Channels[channel].SupportsInstrument(instrument))
-                {
-                    note.Instrument = instrument;
-
-                    if (song.Channels[channel].SupportsArpeggios && arpeggio != null)
-                        note.Arpeggio = arpeggio;
-                }
-                else
-                {
-                    if (showWarning)
-                        ShowInstrumentError(song.Channels[channel], false);
-                    return;
-                }
+                if (showWarning)
+                    ShowInstrumentError(song.Channels[channel], false);
+                return;
             }
 
             instrumentPlayer.PlayNote(channel, note);
