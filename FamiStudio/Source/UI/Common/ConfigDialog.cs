@@ -488,6 +488,8 @@ namespace FamiStudio
                 pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
                 dlg.Close(DialogResult.OK);
             }
+
+            e.Handled = true;
         }
 
         private string[,] GetKeyboardShortcutStrings()

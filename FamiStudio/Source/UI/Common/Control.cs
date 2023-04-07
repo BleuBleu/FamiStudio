@@ -576,7 +576,7 @@ namespace FamiStudio
     {
         public string DisplayName { get; private set; }
         public string ConfigName  { get; private set; }
-        public bool AllowTwoShortcuts { get; private set; }
+        public readonly bool AllowTwoShortcuts = true; // Always allow... { get; private set; }
 
         //public int[] ScanCodes = new int[2];
         public Keys[] KeyValues         { get; private set; } = new Keys[2];
@@ -606,7 +606,7 @@ namespace FamiStudio
             KeyValues[0] = k1;
             ////ScanCodes[1] = Platform.GetKeyScancode(k2);
             KeyValues[1] = k2;
-            AllowTwoShortcuts = true;
+            //AllowTwoShortcuts = true;
             Settings.AllShortcuts.Add(this);
         }
 
@@ -620,7 +620,7 @@ namespace FamiStudio
             //ScanCodes[1] = Platform.GetKeyScancode(k2);
             Modifiers[1] = m2;
             KeyValues[1] = k2;
-            AllowTwoShortcuts = true;
+            //AllowTwoShortcuts = true;
             Settings.AllShortcuts.Add(this);
         }
 
@@ -629,7 +629,7 @@ namespace FamiStudio
             var clone = new Shortcut();
             clone.DisplayName = DisplayName;
             clone.ConfigName = ConfigName;
-            clone.AllowTwoShortcuts = AllowTwoShortcuts;
+            //clone.AllowTwoShortcuts = AllowTwoShortcuts;
             //clone.ScanCodes = ScanCodes.Clone() as int[];
             clone.KeyValues = KeyValues.Clone() as Keys[];
             clone.Modifiers = Modifiers.Clone() as ModifierKeys[];
@@ -771,7 +771,7 @@ namespace FamiStudio
             var str = DisplayName + " " + ToDisplayString(0);
             if (AllowTwoShortcuts)
                 str += " " + ToDisplayString(1);
-            return str;
+            return str.Trim();
         }
     }
 
