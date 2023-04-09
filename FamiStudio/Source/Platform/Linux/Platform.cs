@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Media;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -24,6 +25,9 @@ namespace FamiStudio
 
         public static bool Initialize(bool commandLine)
         {
+            // Must be set before GLFW dll tries to load.
+            NativeLibrary.SetDllImportResolver(typeof(Platform).Assembly, DllImportResolver);
+
             if (!InitializeDesktop(commandLine))
                 return false;
 
@@ -37,6 +41,32 @@ namespace FamiStudio
         public static void Shutdown()
         {
             ShutdownDesktop();
+        }
+        
+        private static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+        {
+            var handle = IntPtr.Zero;
+
+            if (libraryName.Contains("libopenal"))
+            {
+                // Try to use the OpenAL that is on the system first.
+                if (NativeLibrary.TryLoad("libopenal.so.1", assembly, DllImportSearchPath.System32, out handle))
+                {
+                    return handle;
+                }
+            }
+            else if (libraryName.Contains("libdl"))
+            {
+                // I've seen some distros with various names here. 
+                if (NativeLibrary.TryLoad("libdl.so.2", assembly, DllImportSearchPath.System32, out handle))
+                {
+                    return handle;
+                }
+            }
+
+            NativeLibrary.TryLoad(libraryName, assembly, DllImportSearchPath.ApplicationDirectory, out handle);
+            
+            return handle;
         }
 
         public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
