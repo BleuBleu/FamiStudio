@@ -22,7 +22,6 @@
 //
 
 #include <stdio.h>
-#include <iostream>
 #include "NSF_Core.h"
 #include "NSF_File.h"
 
@@ -2643,6 +2642,8 @@ int CNSFCore::RunOneFrame()
 	if (!bTrackSelected)
 		return 0;
 
+	ResetFrameState();
+
 	nCPUCycle = nAPUCycle = 0;
 	UINT tick;
 		
@@ -2697,6 +2698,12 @@ int IndexOf(const T* array, int arraySize, T val)
 }
 
 extern BYTE VRC7Instrument[16][8];
+
+void CNSFCore::ResetFrameState()
+{
+	for (int i = 0; i < 6; i++)
+		VRC7Triggered[i] = 0;
+}
 
 int CNSFCore::GetState(int channel, int state, int sub)
 {
@@ -2826,13 +2833,14 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			int idx = channel - CHANNEL_VRC7FM1;
 			switch (state)
 			{
-				case STATE_PERIOD:       return ((VRC7Chan[1][idx] & 1) << 8) | (VRC7Chan[0][idx]);
-				case STATE_VOLUME:       return (VRC7Chan[2][idx] >> 0) & 0xF;
-				case STATE_VRC7PATCH:    return (VRC7Chan[2][idx] >> 4) & 0xF;
-				case STATE_FMPATCHREG:   return (VRC7Instrument[0][sub]);
-				case STATE_OCTAVE:       return (VRC7Chan[1][idx] >> 1) & 0x07;
-				case STATE_TRIGGER:      return (VRC7Chan[1][idx] >> 4) & 0x01;
-				case STATE_SUSTAIN:      return (VRC7Chan[1][idx] >> 5) & 0x01;
+				case STATE_PERIOD:          return ((VRC7Chan[1][idx] & 1) << 8) | (VRC7Chan[0][idx]);
+				case STATE_VOLUME:          return (VRC7Chan[2][idx] >> 0) & 0xF;
+				case STATE_VRC7PATCH:       return (VRC7Chan[2][idx] >> 4) & 0xF;
+				case STATE_FMPATCHREG:      return (VRC7Instrument[0][sub]);
+				case STATE_FMOCTAVE:        return (VRC7Chan[1][idx] >> 1) & 0x07;
+				case STATE_FMTRIGGER:       return (VRC7Chan[1][idx] >> 4) & 0x01;
+				case STATE_FMTRIGGERCHANGE: return (VRC7Triggered[idx]);
+				case STATE_FMSUSTAIN:       return (VRC7Chan[1][idx] >> 5) & 0x01;
 			}
 		}
 		case MMC5_SQUARE1:
@@ -2924,14 +2932,14 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			int idx = channel - EPSM_SQUARE1;
 			switch (state)
 			{
-			case STATE_TRIGGER: {
+			case STATE_FMTRIGGER: {
 				int trigger = mWave_EPSM[idx].nTriggered;
 				mWave_EPSM[idx].nTriggered = 0;
 				return trigger;}
-			case STATE_OCTAVE: return (mWave_EPSM[idx].nFreqTimer.B.h >> 3) & 0x07;
+			case STATE_FMOCTAVE: return (mWave_EPSM[idx].nFreqTimer.B.h >> 3) & 0x07;
 			case STATE_PERIOD: return (mWave_EPSM[idx].nFreqTimer.B.l + ((mWave_EPSM[idx].nFreqTimer.B.h & 7) << 8))/4;
 			case STATE_VOLUME: return (mWave_EPSM[idx].nStereo) ? 15 : 0;
-			case STATE_SUSTAIN: return mWave_EPSM[idx].bChannelEnabled ? 1 : 0;
+			case STATE_FMSUSTAIN: return mWave_EPSM[idx].bChannelEnabled ? 1 : 0;
 			case STATE_FMPATCHREG: return (mWave_EPSM[idx].nPatchReg[sub]);
 			}
 			break;

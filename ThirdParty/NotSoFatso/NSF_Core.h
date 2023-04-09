@@ -160,16 +160,17 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_FDSMASTERVOLUME    14
 #define STATE_VRC7PATCH          15
 #define STATE_FMPATCHREG         16
-#define STATE_OCTAVE             17
-#define STATE_TRIGGER            18
-#define STATE_SUSTAIN            19
-#define STATE_N163WAVEPOS        20
-#define STATE_N163WAVESIZE       21
-#define STATE_N163WAVE           22
-#define STATE_N163NUMCHANNELS    23
-#define STATE_S5BMIXER           24
-#define STATE_S5BNOISEFREQUENCY  25
-#define STATE_STEREO             26
+#define STATE_FMOCTAVE           17
+#define STATE_FMTRIGGER          18
+#define STATE_FMTRIGGERCHANGE    19
+#define STATE_FMSUSTAIN          20
+#define STATE_N163WAVEPOS        21
+#define STATE_N163WAVESIZE       22
+#define STATE_N163WAVE           23
+#define STATE_N163NUMCHANNELS    24
+#define STATE_S5BMIXER           25
+#define STATE_S5BNOISEFREQUENCY  26
+#define STATE_STEREO             27
 
 #include <math.h>
 
@@ -225,6 +226,7 @@ public:
 	//  FamiStudio Stuff
 	//
 	int		GetState(int channel, int state, int sub);
+	void	ResetFrameState();
 	void	SetApuWriteCallback(ApuRegWriteCallback callback);
 
 	//
@@ -411,6 +413,7 @@ protected:
 	BYTE*		pVRC7Buffer;			//pointer to the position to write VRC7 samples
 	void*		pFMOPL;
 	BYTE		VRC7Chan[3][6];
+	char		VRC7Triggered[6];       // 0 = nothing, 1 = triggered, -1 = released.
 	BYTE		bVRC7_FadeChanged;
 	BYTE		bVRC7Inv[6];
 

@@ -9,11 +9,11 @@ namespace FamiStudio
     {
         Dictionary<string, Dictionary<string, string>> iniContent = new Dictionary<string, Dictionary<string, string>>();
 
-        public bool Load(string filename)
+        public bool Load(string filename, bool trim = true)
         {
             try
             {
-                LoadInternal(File.ReadAllLines(filename));
+                LoadInternal(File.ReadAllLines(filename), trim);
                 return true;
             }
             catch
@@ -22,7 +22,7 @@ namespace FamiStudio
             }
         }
 
-        public bool LoadFromResource(string filename)
+        public bool LoadFromResource(string filename, bool trim = true)
         {
             try
             {
@@ -33,7 +33,7 @@ namespace FamiStudio
                     str = reader.ReadToEnd();
                 }
 
-                LoadInternal(str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
+                LoadInternal(str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries), trim);
                 return true;
             }
             catch
@@ -42,14 +42,14 @@ namespace FamiStudio
             }
         }
 
-        private void LoadInternal(string[] lines)
+        private void LoadInternal(string[] lines, bool trim)
         {
             var sectionName = "";
             var sectionValues = new Dictionary<string, string>();
 
             foreach (string line in lines)
             {
-                var trimmedLine = line.Trim();
+                var trimmedLine = trim ? line.Trim() : line;
 
                 if (trimmedLine.Length == 0)
                     continue;

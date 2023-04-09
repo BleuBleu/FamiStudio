@@ -84,16 +84,17 @@ namespace FamiStudio
         public const int STATE_FDSMODULATIONSPEED = 13;
         public const int STATE_FDSMASTERVOLUME    = 14;
         public const int STATE_VRC7PATCH          = 15;
-        public const int STATE_PATCHREG           = 16;
-        public const int STATE_OCTAVE             = 17;
+        public const int STATE_FMPATCHREG         = 16;
+        public const int STATE_FMOCTAVE           = 17;
         public const int STATE_FMTRIGGER          = 18;
-        public const int STATE_SUSTAIN            = 19;
-        public const int STATE_N163WAVEPOS        = 20;
-        public const int STATE_N163WAVESIZE       = 21;
-        public const int STATE_N163WAVE           = 22;
-        public const int STATE_N163NUMCHANNELS    = 23;
-        public const int STATE_S5BMIXER           = 24;
-        public const int STATE_S5BNOISEFREQUENCY  = 25;
-        public const int STATE_STEREO             = 26;
+        public const int STATE_FMTRIGGERCHANGE    = 19;
+        public const int STATE_FMSUSTAIN          = 20;
+        public const int STATE_N163WAVEPOS        = 21;
+        public const int STATE_N163WAVESIZE       = 22;
+        public const int STATE_N163WAVE           = 23;
+        public const int STATE_N163NUMCHANNELS    = 24;
+        public const int STATE_S5BMIXER           = 25;
+        public const int STATE_S5BNOISEFREQUENCY  = 26;
+        public const int STATE_STEREO             = 27;
     }
 }

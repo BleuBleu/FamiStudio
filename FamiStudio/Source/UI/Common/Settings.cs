@@ -296,7 +296,7 @@ namespace FamiStudio
         public static void Load()
         {
             var ini = new IniFile();
-            ini.Load(GetConfigFileName());
+            ini.Load(GetConfigFileName(), false);
 
             Version = ini.GetInt("General", "Version", 0);
 
@@ -473,7 +473,7 @@ namespace FamiStudio
         public static string LoadLanguageCodeOnly()
         {
             var ini = new IniFile();
-            ini.Load(GetConfigFileName());
+            ini.Load(GetConfigFileName(), false);
             return ini.GetString("General", "Language", "");
         }
 

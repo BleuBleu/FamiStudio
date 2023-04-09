@@ -519,7 +519,7 @@ namespace FamiStudio
             public int fdsModSpeed = 0;
 
             public bool fmTrigger = false;
-            public bool vrc7Sustain = false;
+            public bool fmSustain = false;
 
             public Instrument instrument = null;
         };
@@ -925,7 +925,8 @@ namespace FamiStudio
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
                     var trigger = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMTRIGGER, 0) != 0;
-                    var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_SUSTAIN, 0) != 0;
+                    var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMSUSTAIN, 0) != 0;
+                    var triggerChange = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMTRIGGERCHANGE, 0);
 
                     var newState = state.state;
 
@@ -936,20 +937,27 @@ namespace FamiStudio
                     else if (!trigger && !sustain)
                         newState = ChannelState.Stopped;
 
-                    if (newState != state.state)
+                    if (newState != state.state || triggerChange > 0)
                     {
                         stop    = newState == ChannelState.Stopped;
                         release = newState == ChannelState.Released;
                         state.state = newState;
                         force |= true;
                     }
+                    else
+                    {
+                        attack = false;
+                    }
 
-                    octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_OCTAVE, 0);
+                    octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMOCTAVE, 0);
+
+                    state.fmTrigger = trigger;
+                    state.fmSustain = sustain;
                 }
-                if (channel.Type >= ChannelType.EPSMFm1 && channel.Type <= ChannelType.EPSMFm6)
+                else if (channel.Type >= ChannelType.EPSMFm1 && channel.Type <= ChannelType.EPSMFm6)
                 {
                     var trigger = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMTRIGGER, 0) != 0;
-                    var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_SUSTAIN, 0) > 0;
+                    var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMSUSTAIN, 0) > 0;
                     var stopped = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VOLUME, 0) == 0;
 
                     var newState = state.state;
@@ -967,10 +975,10 @@ namespace FamiStudio
                         force |= true;
                     }
 
-                    octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_OCTAVE, 0);
+                    octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMOCTAVE, 0);
 
                     state.fmTrigger = trigger;
-                    state.vrc7Sustain = sustain;
+                    state.fmSustain = sustain;
                 }
                 else
                 {
@@ -1056,7 +1064,7 @@ namespace FamiStudio
                     if (patch == 0)
                     {
                         for (int i = 0; i < 8; i++)
-                            regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_PATCHREG, i);
+                            regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMPATCHREG, i);
                     }
 
                     instrument = GetVrc7Instrument(patch, regs);
@@ -1075,7 +1083,7 @@ namespace FamiStudio
                     if (channel.Type >= ChannelType.EPSMFm1 && channel.Type <= ChannelType.EPSMFm6)
                     {
                         for (int i = 0; i < 31; i++)
-                            regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_PATCHREG, i);
+                            regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMPATCHREG, i);
 
                         instrument = GetEPSMInstrument(1, regs);
                     }
