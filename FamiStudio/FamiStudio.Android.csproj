@@ -43,7 +43,7 @@
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <BundleAssemblies>false</BundleAssemblies>
     <Debugger>Xamarin</Debugger>
-    <NoWarn>CS0162,CS0414,CS0067</NoWarn>
+    <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <AndroidSupportedAbis>armeabi-v7a;x86_64;arm64-v8a</AndroidSupportedAbis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -325,6 +325,7 @@
     <Compile Include="Source\Utils\CRC32.cs" />
     <Compile Include="Source\Utils\Drawing.cs" />
     <Compile Include="Source\Utils\Gif.cs" />
+    <Compile Include="Source\Utils\Localization.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\OscilloscopeTriggers.cs" />
     <Compile Include="Source\Utils\SimpleBitmap.cs" />
@@ -438,8 +439,8 @@
     <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Bd.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Light.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Bold.ttf" />
-  </ItemGroup>    
-  <ItemGroup>    
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />
   </ItemGroup>
   <ItemGroup>
@@ -707,13 +708,13 @@
     <EmbeddedResource Include="Resources\Shaders\Droid\Text.vert" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Localization\FamiStudio.deu.ini" />  
-    <EmbeddedResource Include="Localization\FamiStudio.eng.ini" />  
-    <EmbeddedResource Include="Localization\FamiStudio.kor.ini" />  
-    <EmbeddedResource Include="Localization\FamiStudio.por.ini" />  
-    <EmbeddedResource Include="Localization\FamiStudio.rus.ini" />  
+    <EmbeddedResource Include="Localization\FamiStudio.deu.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.eng.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.kor.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.por.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.rus.ini" />
     <EmbeddedResource Include="Localization\FamiStudio.spa.ini" />
-  </ItemGroup>  
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Castlevania 2.fms" />

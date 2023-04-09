@@ -120,15 +120,17 @@ namespace FamiStudio
             }
         }
 
-        private static string LocalizeString(string section, string key, bool missing = true)
+        private static string LocalizeString(string section, string key, bool fallback = true)
         {
             var str = strings.GetString(section, key, null);
             if (str == null)
             { 
                 str = stringsEng.GetString(section, key, null);
-                Debug.Assert(str != null);
-                if (str == null)
+                if (str == null && fallback)
+                {
+                    Debug.Assert(false);
                     str = "### MISSING ###";
+                }
             }
             if (str != null && str.Contains('\\'))
             { 

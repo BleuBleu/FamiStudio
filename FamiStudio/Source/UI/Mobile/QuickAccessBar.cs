@@ -530,7 +530,7 @@ namespace FamiStudio
                 var item = new ListItem();
                 item.Color = Theme.LightGreyColor1;
                 item.Image = App.SnapResolution == i ? bmpRadio : null;
-                item.Text = (SnapResolutionType.Factors[i] > 1.0 ? SnapToBeatsLabel : SnapToBeatLabel).Format(SnapResolutionType.Names[i]));
+                item.Text = (SnapResolutionType.Factors[i] > 1.0 ? SnapToBeatsLabel : SnapToBeatLabel).Format(SnapResolutionType.Names[i]);
                 item.TextColor = App.SnapEnabled ? Theme.BlackColor : disabledColor;
                 item.GetImageOpacity = (l) => { return l.TextColor.A / 255.0f; };
                 items[i] = item;
@@ -672,7 +672,7 @@ namespace FamiStudio
                 item.GetImageOpacity = (l) => { return App.IsChannelActive((int)l.Data) ? 1.0f : 0.2f; };
                 item.ExtraImage = bmpGhostSmall;
                 item.GetExtraImageOpacity = (l) => { return App.IsChannelForceDisplay((int)l.Data) ? 1.0f : 0.2f; };
-                item.Text = ChannelType.GetNameWithExpansion(channelTypes[i]);
+                item.Text = ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]);
                 item.Data = i;
                 items[i] = item;
             }
@@ -747,7 +747,7 @@ namespace FamiStudio
                     item.Color = Theme.LightGreyColor1;
                     item.Image = bmpEnvelopes[i];
                     item.GetImageOpacity = (l) => { return env.IsEmpty(i) ? 0.2f : 1.0f; };
-                    item.Text = EnvelopeType.Names[i];
+                    item.Text = EnvelopeType.LocalizedNames[i];
                     item.Data = i;
                     items[j] = item;
 
@@ -884,7 +884,7 @@ namespace FamiStudio
         {
             var envType = App.EditEnvelopeType;
             var inst = App.SelectedInstrument;
-            text = EnvelopeType.ShortNames[envType];
+            text = EnvelopeType.LocalizedNames[envType];
             tint = inst != null ? inst.Color : Theme.LightGreyColor1;
             return bmpEnvelopes[envType];
         }
