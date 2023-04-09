@@ -63,6 +63,14 @@ namespace FamiStudio
                     return handle;
                 }
             }
+            else if (libraryName.Contains("libX11"))
+            {
+                // Ubuntu 22.04 (on my laptop) seem to want the full name.
+                if (NativeLibrary.TryLoad("libX11.so.6", assembly, DllImportSearchPath.System32, out handle))
+                {
+                    return handle;
+                }
+            }
 
             NativeLibrary.TryLoad(libraryName, assembly, DllImportSearchPath.ApplicationDirectory, out handle);
             

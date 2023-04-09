@@ -8,8 +8,7 @@ namespace FamiStudio
     {
         private const int XC_fleur = 52;
 
-        // NET5TODO : Ubuntu 22.04 (on my laptop) needs the full name.
-        [DllImport("libX11.so.6")]
+        [DllImport("libX11")]
         private extern static uint XCreateFontCursor(IntPtr display, uint shape);
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
