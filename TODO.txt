@@ -2,12 +2,11 @@
 =====
 - BUG : play -> pause and i hear something strange
 	=> Cant repro. Mac only? Nope
-- Better autosave names?
 Linux:
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 	=> NO REPRO
 Android stuff:
-- GLTODO, CTRLTODO, NSFTODO, NET5TODO, MATTT, etc. Review all those.
+- GLTODO, CTRLTODO, NSFTODO, etc. Review all those.
 
 Testing
 =======
@@ -137,6 +136,7 @@ Discord
 
 Backlog: 
 =========
+- Better autosave names?
 - Finish phase reset support
 - Going in settings unutes all channels.
 - Delete instruments resets play head.
