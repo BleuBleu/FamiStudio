@@ -390,6 +390,7 @@
     <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuBankAssign.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuBlank.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuCheckOff.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuCheckOn.tga" />
@@ -408,6 +409,7 @@
     <EmbeddedResource Include="Resources\Mobile\MobileMenuInstance.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuLoopPoint.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuMute.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuPaste.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuPiano.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuPlay.tga" />
     <EmbeddedResource Include="Resources\Mobile\MobileMenuPlayHalf.tga" />

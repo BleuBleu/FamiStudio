@@ -310,7 +310,7 @@ namespace FamiStudio
             }
 
             GLES20.GlUseProgram(depthProgram);
-            GLES20.GlUniform4fv(depthScaleBiasUniform, 1, viewportScaleBias, 0); // MATTT : Wrong, needs full screen!
+            GLES20.GlUniform4fv(depthScaleBiasUniform, 1, viewportScaleBias, 0);
 
             BindAndUpdateVertexBuffer(0, vtxArray, vtxIdx);
             BindAndUpdateByteBuffer(1, depArray, depIdx, true);
@@ -620,7 +620,7 @@ namespace FamiStudio
             return buffer;
         }
 
-        // MATTT : Review this whole thing with ES 2.0. Might be different.
+        // TODO : Review this whole thing with ES 2.0. Might be different.
         private FloatBuffer CopyGetVtxBuffer(float[] array, int size)
         {
             var newArray = new float[size];
@@ -842,7 +842,6 @@ namespace FamiStudio
             return null;
         }
 
-        // MATTT : This is surely wrong, we do all the drawing at end of frame now.
         public override void BeginDrawFrame(Rectangle rect, Color clear)
         {
             if (fbo > 0)

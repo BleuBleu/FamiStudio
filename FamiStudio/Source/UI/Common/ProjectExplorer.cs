@@ -4457,9 +4457,8 @@ namespace FamiStudio
 
                     if (Platform.IsDesktop && (inst.IsVrc7 || inst.IsEpsm))
                     {
-                        // MATTT : Paste icon!
-                        menu.Add(new ContextMenuOption("MenuCopy", CopyRegisterValueContext, () => { CopyRegisterValues(inst); }, ContextMenuSeparator.Before));
-                        menu.Add(new ContextMenuOption("MenuCopy", PasteRegisterValueContext, () => { PasteRegisterValues(inst); }));
+                        menu.Add(new ContextMenuOption("MenuCopy",  CopyRegisterValueContext, () => { CopyRegisterValues(inst); }, ContextMenuSeparator.Before));
+                        menu.Add(new ContextMenuOption("MenuPaste", PasteRegisterValueContext, () => { PasteRegisterValues(inst); }));
                     }
 
                     menu.Add(new ContextMenuOption("MenuDuplicate", DuplicateContext, () => { DuplicateInstrument(inst); }, ContextMenuSeparator.Before));
@@ -4609,8 +4608,7 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption("MenuTrash", DiscardSourceWavDataContext, DiscardSourceWavDataTooltip, () => { DeleteDpcmSourceWavData(button.sample); }));
             }
 
-            // MATTT : Proper icon for auto-bank assignment.
-            menu.Add(new ContextMenuOption("MenuProperties", AutoAssignBanksContext, () => { AutoAssignSampleBanks(); }, ContextMenuSeparator.Before));
+            menu.Add(new ContextMenuOption("MenuBankAssign", AutoAssignBanksContext, () => { AutoAssignSampleBanks(); }, ContextMenuSeparator.Before));
             menu.Add(new ContextMenuOption("MenuProperties", PropertiesSamplesContext, () => { EditDPCMSampleProperties(new Point(x, y), button.sample); }, ContextMenuSeparator.Before));
 
             App.ShowContextMenu(left + x, top + y, menu.ToArray());
@@ -5331,7 +5329,7 @@ namespace FamiStudio
 
                 switch (button.type)
                 {
-                    // MATTT : Figure out the delete thing.
+                    // TODO : Figure out the delete thing.
                     //case ButtonType.Song:
                     //    return HandleMouseDoubleClickSong(e, button);
                     //case ButtonType.Instrument:

@@ -61,7 +61,7 @@ namespace FamiStudio
             AddControl(quickAccessBar);
         }
 
-        // CTRLTODO : Show/hide controls as needed.
+        // CTRLTODO : Show/hide controls as needed. (SEEMS TO BE OK, JUST NEED TO TEST!)
         public void SetActiveControl(Control ctrl, bool animate = true)
         {
             if (activeControl != ctrl)
@@ -131,7 +131,6 @@ namespace FamiStudio
             projectExplorer.Visible = activeControl == projectExplorer;
         }
 
-        // CTRLTODO : Change!
         public bool CanAcceptInput
         {
             get

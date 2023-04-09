@@ -117,7 +117,7 @@ namespace FamiStudio
             clipRegions.Clear();
 
             screenRect = rect;
-            screenRectFlip = FlipRectangleY(rect, rect.Height); // MATTT Clean that up.
+            screenRectFlip = FlipRectangleY(rect, rect.Height);
             transform.SetIdentity();
             curDepthValue = 0x80;
             maxDepthValue = 0x80;

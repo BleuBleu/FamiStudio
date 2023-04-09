@@ -482,7 +482,7 @@ namespace FamiStudio
 
             GL.UseProgram(depthProgram);
             GL.BindVertexArray(depthVao);
-            GL.Uniform(depthScaleBiasUniform, viewportScaleBias); // MATTT : Wrong, needs full screen!
+            GL.Uniform(depthScaleBiasUniform, viewportScaleBias);
 
             BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxIdx);
             BindAndUpdateByteBuffer(1, depthBuffer, depArray, depIdx, true);

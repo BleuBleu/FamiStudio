@@ -698,7 +698,7 @@ namespace FamiStudio
 
                 if (Platform.IsDesktop)
                 {
-                    // CTRLTODO : Some stuff like "Redo" have 2 shortcuts AND tooltips.
+                    // TODO : Some stuff like "Redo" have 2 shortcuts AND tooltips.
                     if (IsShortcutValid(0))
                     {
                         if (Modifiers[0].Value != 0)

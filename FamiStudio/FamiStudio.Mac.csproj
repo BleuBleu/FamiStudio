@@ -536,6 +536,7 @@
     <EmbeddedResource Include="Resources\Atlas\LoopSmallFill@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Maximize.tga" />
     <EmbeddedResource Include="Resources\Atlas\Maximize@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuBankAssign.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuCheckOff.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuCheckOff@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuCheckOn.tga" />
@@ -572,6 +573,8 @@
     <EmbeddedResource Include="Resources\Atlas\MenuLoopPoint@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuMute.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuMute@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuPaste.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuPaste@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuPlay.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuPlay@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuProperties.tga" />
