@@ -415,7 +415,7 @@ namespace FamiStudio
 
         private string GetPatternString(Pattern pattern, int n)
         {
-            return $"(Song={pattern.Song.Name}, Channel={ChannelType.Names[pattern.ChannelType]}, Location={pattern.Name}:{n:X2})";
+            return $"(Song={pattern.Song.Name}, Channel={ChannelType.InternalNames[pattern.ChannelType]}, Location={pattern.Name}:{n:X2})";
         }
 
         private bool IsVolumeSlideEffect(RowFxData fx)

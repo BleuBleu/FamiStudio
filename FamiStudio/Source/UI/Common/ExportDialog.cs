@@ -269,7 +269,7 @@ namespace FamiStudio
             var channelNames = new string[channelTypes.Length];
             for (int i = 0; i < channelTypes.Length; i++)
             {
-                channelNames[i] = ChannelType.GetNameWithExpansion(channelTypes[i]);
+                channelNames[i] = ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]);
             }
 
             return channelNames;
@@ -323,7 +323,7 @@ namespace FamiStudio
             for (int i = 0; i < channelTypes.Length; i++)
             {
                 data[i, 0] = !anyChannelActive || channelActives[i];
-                data[i, 1] = ChannelType.GetNameWithExpansion(channelTypes[i]);
+                data[i, 1] = ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]);
                 data[i, 2] = 50;
                 if (triggers)
                     data[i, 3] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? EmulationOption.Value : PeakSpeedOption.Value;

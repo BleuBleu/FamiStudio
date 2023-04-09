@@ -187,9 +187,9 @@ namespace FamiStudio
                     paramInfos.Add(new InstrumentParamInfo(instrument, MasterVolumeLabel, 0, 3, 0, null, true)
                         { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.CountNoPWM - 1, WavePresetType.Sine, null, true)
-                        { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
+                        { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModPresetLabel, 0, WavePresetType.CountNoResample - 1, WavePresetType.Flat, null, true )
-                        { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
+                        { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModSpeedLabel, 0, 4095, 0)
                         { GetValue = () => { return instrument.FdsModSpeed; }, SetValue = (v) => { instrument.FdsModSpeed = (ushort)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModDepthLabel, 0, 63, 0)
@@ -206,7 +206,7 @@ namespace FamiStudio
 
                 case ExpansionType.N163:
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
-                        { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
+                        { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.InternalNames[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePositionLabel, 0, 0, 0, null, false, 4)
                         { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWavePos; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WaveSizeLabel, 4, 4, 16, null, false, 4)

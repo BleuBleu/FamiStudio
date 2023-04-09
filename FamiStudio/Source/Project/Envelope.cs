@@ -446,6 +446,14 @@ namespace FamiStudio
                         for (int i = 0; i < localChunkLength; i++)
                             values[chunkOffset + i] = (sbyte)(i >= (localChunkLength / 2) + Math.Abs(localChunkLength / 2 - (1 + ((j + 1) * (localChunkLength - 2) / localChunkCount))) ? max : min);
                         break;
+                    case WavePresetType.PWM2:
+                        for (int i = 0; i < localChunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= (localChunkLength / 2) + (((j + 1) * (localChunkLength - 2) / localChunkCount) / 2) ? max : min);
+                        break;
+                    case WavePresetType.PWM3:
+                        for (int i = 0; i < localChunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= (localChunkLength / 2) + (localChunkLength / 2 - (1 + ((j + 1) * (localChunkLength - 2) / localChunkCount) / 2)) ? max : min);
+                        break;
                 }
             }
         }
@@ -719,9 +727,11 @@ namespace FamiStudio
         public const int YMNoiseFreq    = 9;
         public const int Count          = 10;
 
+        // Use these to display to user
         public static readonly LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
-        public static readonly string[] ShortNames =
+        // Use these to save in files, etc.
+        public static readonly string[] InternalNames =
         {
             "Volume",
             "Arpeggio",
@@ -754,14 +764,9 @@ namespace FamiStudio
             Localization.LocalizeStatic(typeof(EnvelopeType));
         }
 
-        public static int GetValueForName(string str)
+        public static int GetValueForInternalName(string str)
         {
-            return Array.IndexOf(LocalizedNames, str);
-        }
-
-        public static int GetValueForShortName(string str)
-        {
-            return Array.IndexOf(ShortNames, str);
+            return Array.IndexOf(InternalNames, str);
         }
     }
 
@@ -777,25 +782,38 @@ namespace FamiStudio
         public const int CountNoResample = 7;
         public const int Resample        = 7;
         public const int CountNoPWM      = 8;
-        public const int PWM             = 8;  
-        public const int Count           = 9;
+        public const int PWM             = 8; 
+        public const int PWM2            = 9; 
+        public const int PWM3            = 10;
+        public const int Count           = 11;
 
-        public static readonly string[] Names =
+        // Use these to display to user
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+
+        // Use these to save in files, etc.
+        public static readonly string[] InternalNames =
         {
             "Sine",
             "Triangle",
             "Sawtooth",
-            "Square 50%",
-            "Square 25%",
+            "Square50%",
+            "Square25%",
             "Flat",
             "Custom",
             "Resample",
-            "PWM"
+            "PWM",
+            "PWM2",
+            "PWM3"
         };
 
-        public static int GetValueForName(string str)
+        static WavePresetType()
         {
-            return Array.IndexOf(Names, str);
+            Localization.Localize(typeof(WavePresetType));
+        }
+
+        public static int GetValueForInternalName(string str)
+        {
+            return Array.IndexOf(InternalNames, str);
         }
     }
 }

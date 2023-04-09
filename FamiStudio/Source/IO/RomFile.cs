@@ -67,7 +67,7 @@ namespace FamiStudio
 
                 // Load ROM header (16 bytes) + code/tiles (12KB).
                 var romName = "FamiStudio.Rom.rom";
-                var expSuffix = project.UsesAnyExpansionAudio ? $"_{ExpansionType.ShortNames[project.SingleExpansion].ToLower()}{(project.UsesN163Expansion ? $"_{project.ExpansionNumN163Channels}ch" : "")}" : "";
+                var expSuffix = project.UsesAnyExpansionAudio ? $"_{ExpansionType.InternalNames[project.SingleExpansion].ToLower()}{(project.UsesN163Expansion ? $"_{project.ExpansionNumN163Channels}ch" : "")}" : "";
 
                 romName += expSuffix;
                 romName += pal ? "_pal" : "_ntsc";

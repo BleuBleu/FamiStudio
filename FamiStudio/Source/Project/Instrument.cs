@@ -51,7 +51,7 @@ namespace FamiStudio
         // For N163/FDS wav presets.
         public int Id => id;
         public string Name { get => name; set => name = value; }
-        public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.ShortNames[expansion]})");
+        public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.InternalNames[expansion]})");
         public Color Color { get => color; set => color = value; }
         public int Expansion => expansion;
         public bool IsExpansionInstrument => expansion != ExpansionType.None;

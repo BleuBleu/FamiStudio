@@ -1438,7 +1438,7 @@ namespace FamiStudio
 
                     if (expRegs != null)
                     {
-                        var expName = e == ExpansionType.None ? "2A03" : ExpansionType.Names[e];
+                        var expName = ExpansionType.GetLocalizedName(e, ExpansionType.LocalizationMode.ChipName);
                         buttons.Add(new Button(this) { type = ButtonType.RegisterExpansionHeader, text = RegistersExpansionHeaderLabel.Format(expName), bmp = bmpExpansions[e], imageTint = Theme.LightGreyColor2 });
                         buttons.Add(new Button(this) { type = ButtonType.ExpansionRegistersFirst + e, height = GetHeightForRegisterRows(expRegs.ExpansionRows), regs = expRegs.ExpansionRows, gradient = false });
 
@@ -1452,7 +1452,7 @@ namespace FamiStudio
 
                             if (chanRegs != null && chanRegs.Length > 0)
                             {
-                                buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = ChannelType.Names[c], bmp = bmpChannels[c], imageTint = Theme.LightGreyColor2 });
+                                buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = ChannelType.LocalizedNames[c], bmp = bmpChannels[c], imageTint = Theme.LightGreyColor2 });
                                 buttons.Add(new Button(this) { type = ButtonType.ChannelStateFirst + c, height = GetHeightForRegisterRows(chanRegs), regs = chanRegs, gradient = false });
                             }
                         }
@@ -3288,14 +3288,14 @@ namespace FamiStudio
                     var dlg = new PropertyDialog(ParentWindow, AddInstrumentTitle, new Point(left + x, top + y), 260, true);
                     dlg.Properties.AddLabel(null, SelectAudioExpansionLabel.Colon); // 0
 
-                    expNames.Add(ExpansionType.Names[ExpansionType.None]);
+                    expNames.Add(ExpansionType.GetLocalizedName(ExpansionType.None, ExpansionType.LocalizationMode.Instrument));
                     dlg.Properties.AddRadioButton(Platform.IsMobile ? SelectAudioExpansionLabel : null, expNames[0], true);
 
                     for (int i = 1; i < activeExpansions.Length; i++)
                     {
                         if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
                         {
-                            var expName = ExpansionType.Names[activeExpansions[i]];
+                            var expName = ExpansionType.GetLocalizedName(activeExpansions[i], ExpansionType.LocalizationMode.Instrument);
                             dlg.Properties.AddRadioButton(null, expName, false);
                             expNames.Add(expName);
                         }
@@ -3312,7 +3312,7 @@ namespace FamiStudio
                             {
                                 if (dlg.Properties.GetPropertyValue<bool>(i + 1))
                                 {
-                                    instrumentType = ExpansionType.GetValueForName(expNames[i]);
+                                    instrumentType = ExpansionType.GetValueForLocalizedName(expNames[i]);
                                     break;
                                 }
                             }
@@ -4474,7 +4474,7 @@ namespace FamiStudio
                             if (exp != inst.Expansion)
                             {
                                 var e = exp;
-                                menu.Add(new ContextMenuOption(ExpansionType.Icons[exp], DuplicateConvertContext.Format(ExpansionType.InstrumentShortNames[exp]), () => { DuplicateConvertInstrument(inst, e); }));
+                                menu.Add(new ContextMenuOption(ExpansionType.Icons[exp], DuplicateConvertContext.Format(ExpansionType.GetLocalizedName(exp, ExpansionType.LocalizationMode.Instrument)), () => { DuplicateConvertInstrument(inst, e); }));
                             }
                         }
                     }
@@ -4503,7 +4503,7 @@ namespace FamiStudio
                     if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
                     {
                         var j = i; // Important, copy for lambda.
-                        var expName = ExpansionType.Names[activeExpansions[i]];
+                        var expName = ExpansionType.GetLocalizedName(activeExpansions[i], ExpansionType.LocalizationMode.Instrument);
                         options.Add(new ContextMenuOption(ExpansionType.Icons[activeExpansions[i]], AddExpInstrumentContext.Format(expName), () => { AddInstrument(activeExpansions[j]); }));
                     }
                 }
@@ -4980,7 +4980,7 @@ namespace FamiStudio
             var expBools = new bool[numExpansions];
             for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
             {
-                expNames[i - ExpansionType.Start] = ExpansionType.Names[i];
+                expNames[i - ExpansionType.Start] = ExpansionType.GetLocalizedName(i);
                 expBools[i - ExpansionType.Start] = project.UsesExpansionAudio(i);
             }
 

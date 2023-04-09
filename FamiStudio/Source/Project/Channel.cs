@@ -15,10 +15,10 @@ namespace FamiStudio
         private int type;
 
         public int Type => type;
-        public string Name => ChannelType.Names[type];
+        public string Name => ChannelType.InternalNames[type];
         public string LocalizedName => ChannelType.LocalizedNames[type];
-        public string ShortName => ChannelType.ShortNames[type];
-        public string NameWithExpansion => ChannelType.GetNameWithExpansion(type);
+        public string ShortName => ChannelType.InternalNames[type];
+        public string NameWithExpansion => ChannelType.GetLocalizedNameWithExpansion(type);
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
@@ -1601,56 +1601,11 @@ namespace FamiStudio
         public const int EPSMrythm6 = 43;
         public const int Count = 44;
 
-        public static readonly string[] Names =
-        {
-            "Square 1",
-            "Square 2",
-            "Triangle",
-            "Noise",
-            "DPCM",
-            "Square 1", // VRC6
-            "Square 2", // VRC6
-            "Saw", // VRC6
-            "FM 1", // VRC7
-            "FM 2", // VRC7
-            "FM 3", // VRC7
-            "FM 4", // VRC7
-            "FM 5", // VRC7
-            "FM 6", // VRC7
-            "FDS", // FDS
-            "Square 1", // MMC5
-            "Square 2", // MMC5
-            "DPCM", // MMC5
-            "Wave 1", // N163
-            "Wave 2", // N163
-            "Wave 3", // N163
-            "Wave 4", // N163
-            "Wave 5", // N163
-            "Wave 6", // N163
-            "Wave 7", // N163
-            "Wave 8", // N163
-            "Square 1", // S5B
-            "Square 2", // S5B
-            "Square 3", // S5B
-            "Square 1", // EPSM
-            "Square 2", // EPSM
-            "Square 3", // EPSM
-            "FM 1", // EPSM
-            "FM 2", // EPSM
-            "FM 3", // EPSM
-            "FM 4", // EPSM
-            "FM 5", // EPSM
-            "FM 6", // EPSM
-            "Kick", // EPSM
-            "Snare", // EPSM
-            "Cymbal", // EPSM
-            "Hi-hat", // EPSM
-            "Tom", // EPSM
-            "Rimshot", // EPSM
-        };
+        // Use these to display to user
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
-        // LOCTODO : We shouldnt use those for messages. We do at the moment.
-        public static readonly string[] ShortNames =
+        // Use these to save in files, etc.
+        public static readonly string[] InternalNames =
         {
             "Square1",
             "Square2",
@@ -1843,18 +1798,16 @@ namespace FamiStudio
             14 // EPSM
         };
 
-        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
-
         static ChannelType()
         {
             Localization.LocalizeStatic(typeof(ChannelType));
         }
 
-        public static string GetNameWithExpansion(int type)
+        public static string GetLocalizedNameWithExpansion(int type)
         {
-            var str = Names[type];
+            var str = LocalizedNames[type].Value;
             if (ExpansionTypes[type] != ExpansionType.None)
-                str += $" ({ExpansionType.ShortNames[ExpansionTypes[type]]})" ;
+                str += $" ({ExpansionType.LocalizedNames[ExpansionTypes[type]]})" ;
             return str;
         }
 
@@ -1868,14 +1821,14 @@ namespace FamiStudio
             return ExpansionChannelIndex[type];
         }
 
-        public static int GetValueForName(string str)
+        public static int GetValueForLocalizedName(string str)
         {
-            return Array.IndexOf(Names, str);
+            return Array.FindIndex(LocalizedNames, n => n.Value == str);
         }
 
-        public static int GetValueForShortName(string str)
+        public static int GetValueForInternalName(string str)
         {
-            return Array.IndexOf(ShortNames, str);
+            return Array.IndexOf(InternalNames, str);
         }
     }
 

@@ -103,7 +103,7 @@ namespace FamiStudio
 
                 if (ChanIdLookup[chanType] != channelList[i])
                 {
-                    Log.LogMessage(LogSeverity.Warning, $"Channel type mismatch, expected {ChannelType.ShortNames[channelList[i]]}, got {ChannelType.ShortNames[ChanIdLookup[chanType]]}. Import may fail.");
+                    Log.LogMessage(LogSeverity.Warning, $"Channel type mismatch, expected {ChannelType.InternalNames[channelList[i]]}, got {ChannelType.InternalNames[ChanIdLookup[chanType]]}. Import may fail.");
                 }
 
                 for (int j = 0; j < numSongs; j++)

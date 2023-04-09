@@ -1987,31 +1987,11 @@ namespace FamiStudio
 
         public const int AllMask  = Vrc6Mask | Vrc7Mask | FdsMask | Mmc5Mask | N163Mask | S5BMask | EPSMMask;
 
-        public static readonly string[] Names =
-        {
-            "None",
-            "Konami VRC6",
-            "Konami VRC7",
-            "Famicom Disk System",
-            "Nintendo MMC5",
-            "Namco 163",
-            "Sunsoft 5B",
-            "EPSM"
-        };
+        // Use these to display to user
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
-        public static readonly string[] InstrumentShortNames =
-        {
-            "Regular",
-            "VRC6",
-            "VRC7",
-            "FDS",
-            "MMC5",
-            "N163",
-            "S5B",
-            "EPSM"
-        };
-
-        public static readonly string[] ShortNames =
+        // Use these to save in files, etc.
+        public static readonly string[] InternalNames =
         {
             "",
             "VRC6",
@@ -2036,7 +2016,8 @@ namespace FamiStudio
             "InstrumentEPSM"
         };
 
-        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+        public static LocalizedString NoneName;
+        public static LocalizedString NoneInstrumentName;
 
         static ExpansionType()
         {
@@ -2081,17 +2062,34 @@ namespace FamiStudio
             return exp == None ? NoneMask : 1 << (exp - 1);
         }
 
-        public static int GetValueForName(string str)
+        public enum LocalizationMode
         {
-            return Array.IndexOf(Names, str);
+            Default,
+            Instrument,
+            ChipName
+        };
+
+        public static string GetLocalizedName(int idx, LocalizationMode mode = LocalizationMode.Default)
+        {
+            if (idx == 0 && mode == LocalizationMode.Instrument)
+                return NoneInstrumentName;
+            else if (idx == 0 && mode == LocalizationMode.ChipName)
+                return NoneName;
+            else 
+                return LocalizedNames[idx];
         }
 
-        public static int GetValueForShortName(string str)
+        public static int GetValueForInternalName(string str)
         {
-            return Array.IndexOf(ShortNames, str);
+            return Array.IndexOf(InternalNames, str);
         }
 
-        public static string GetStringForMask(int mask, bool shortNames = false)
+        public static int GetValueForLocalizedName(string str)
+        {
+            return Array.FindIndex(LocalizedNames, n => n.Value == str);
+        }
+
+        public static string GetStringForMask(int mask, bool internalNames = false)
         {
             var names = new List<string>();
 
@@ -2099,7 +2097,7 @@ namespace FamiStudio
             {
                 var bit = GetMaskFromValue(i);
                 if ((bit & mask) != 0)
-                    names.Add(shortNames ? ShortNames[i] : Names[i]);
+                    names.Add(internalNames ? InternalNames[i] : LocalizedNames[i].Value);
             }
 
             return string.Join(", ", names);

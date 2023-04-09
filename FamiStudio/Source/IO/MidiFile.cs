@@ -736,7 +736,7 @@ namespace FamiStudio
                     if (project.UsesExpansionAudio(i))
                     {
                         instrumentMap[i] = new Dictionary<int, Instrument>();
-                        instrumentMap[i][0] = project.CreateInstrument(i, MidiInstrumentNames[0] + $" {ExpansionType.ShortNames[i]}");
+                        instrumentMap[i][0] = project.CreateInstrument(i, MidiInstrumentNames[0] + $" {ExpansionType.InternalNames[i]}");
                     }
                 }
             }
@@ -752,7 +752,7 @@ namespace FamiStudio
                         for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
                         {
                             if (project.UsesExpansionAudio(i))
-                                instrumentMap[i][prgChange.prg] = project.CreateInstrument(i, MidiInstrumentNames[prgChange.prg] + $" {ExpansionType.ShortNames[i]}");
+                                instrumentMap[i][prgChange.prg] = project.CreateInstrument(i, MidiInstrumentNames[prgChange.prg] + $" {ExpansionType.InternalNames[i]}");
                         }
                     }
                 }

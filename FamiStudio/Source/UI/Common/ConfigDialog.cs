@@ -333,7 +333,7 @@ namespace FamiStudio
                 case ConfigSection.Mixer:
                 {
                     page.AddSlider(GlobalVolumeLabel.Colon, Settings.GlobalVolume, -10.0, 3.0, 0.1, 1, "{0:+0.0;-0.0} dB", GlobalVolumeTooltip); // 0
-                    page.AddDropDownList(ExpansionLabel.Colon, ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 1
+                    page.AddDropDownList(ExpansionLabel.Colon, Localization.ToStringArray(ExpansionType.LocalizedNames), ExpansionType.LocalizedNames[0], ExpansionTooltip); // 1
                     page.AddSlider(ExpansionVolumeLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 2
                     page.AddSlider(ExpansionTrebleLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 3
                     page.AddButton(Platform.IsDesktop ? null : ResetLabel, ResetButtonLabel, ExpansionResetTooltip); // 4

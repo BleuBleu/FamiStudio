@@ -1,6 +1,5 @@
 4.1.0
 =====
-- Preset types are not localized
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
 - BUG : Toasts can appear very fast (select instrument incompatible with channel), was it like that in 4.0.6.
 - BUG : Preview DPCM affects volume triangle
@@ -12,7 +11,7 @@ Linux:
 - new openal+ smarter detection. Need a way to try the OS one + my one if it fails.
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 Android stuff:
-- GLTODO, CTRLTODO, NSFTODO, NET5TODO,  etc. Review all those.
+- GLTODO, CTRLTODO, NSFTODO, NET5TODO, MATTT, etc. Review all those.
 
 Testing
 =======

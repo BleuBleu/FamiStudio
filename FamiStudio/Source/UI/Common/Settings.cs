@@ -372,7 +372,7 @@ namespace FamiStudio
 
             for (int i = 0; i < ExpansionType.Count; i++)
             {
-                var section = "Mixer" + ExpansionType.ShortNames[i];
+                var section = "Mixer" + ExpansionType.InternalNames[i];
                 ExpansionMixerSettings[i].volume = ini.GetFloat(section, "Volume", DefaultExpansionMixerSettings[i].volume);
                 ExpansionMixerSettings[i].treble = ini.GetFloat(section, "Treble", DefaultExpansionMixerSettings[i].treble);
             }
@@ -533,7 +533,7 @@ namespace FamiStudio
 
             for (int i = 0; i < ExpansionType.Count; i++)
             {
-                var section = "Mixer" + ExpansionType.ShortNames[i];
+                var section = "Mixer" + ExpansionType.InternalNames[i];
                 ini.SetFloat(section, "Volume", ExpansionMixerSettings[i].volume);
                 ini.SetFloat(section, "Treble", ExpansionMixerSettings[i].treble);
             }

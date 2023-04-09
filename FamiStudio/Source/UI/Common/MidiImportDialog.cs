@@ -258,7 +258,7 @@ namespace FamiStudio
                 gridData[i, 2] = NotApplicableValue.Value;
 
                 if (i >= ChannelType.ExpansionAudioStart)
-                    gridData[i, 0] += $" ({ExpansionType.ShortNames[ChannelType.GetExpansionTypeForChannelType(channels[i])]})";
+                    gridData[i, 0] += $" ({ExpansionType.InternalNames[ChannelType.GetExpansionTypeForChannelType(channels[i])]})";
 
                 if (src.type == MidiSourceType.Track)
                 {
