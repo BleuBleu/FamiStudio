@@ -1,7 +1,6 @@
 4.1.0
 =====
 - BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
-- BUG : Toasts can appear very fast (select instrument incompatible with channel), was it like that in 4.0.6.
 - BUG : Preview DPCM affects volume triangle
 - BUG : play -> pause and i hear something strange
 	=> Cant repro. Mac only?
@@ -24,7 +23,6 @@ Testing
 - Retest DPI scaling A LOT.
 - Re-export all ROM songs at the end.
 - Re-export all ROM test (.bin) files at the end.
-- Add phase reset to unit tests.
 - Sample, instrument and song import (all places where we switched to OpenProjectAsync)
 - Test videos a lot, compare colors. Cancel in middle w/ DPI scaling to see if everything continues OK.
 - Test numeric up/down on android with increment. 
@@ -34,7 +32,6 @@ Packaging
 - Add "description" HTML metadata to famistudio doc.
 - Preset instruments
 - Add temple raiders demo song (MMC5)
-- Recompile NesSndEmu android (n163 mixing change)
 - Recompile ROMs, re-export data, bump versions, etc.
 - Uncheck x86 in supported android platforms.
 - MacOS install doesnt work if dotnet is missing? I thought that was fixed.
