@@ -142,6 +142,17 @@ namespace FamiStudio
                             if (lastNote.note.IsMusical)
                                 channelStates[activeChannel].ForceInstrumentReload();
 
+                            // HACK : If we played a DPCM sample before, the DAC value
+                            // may not be the default and this will affect the volume
+                            // of the triangle/noise channel. Reset it to the default.
+                            if (activeChannel == ChannelType.Triangle || 
+                                activeChannel == ChannelType.Noise)
+                            {
+                                var dacNote = new Note();
+                                dacNote.DeltaCounter = NesApu.DACDefaultValue;
+                                channelStates[ChannelType.Dpcm].PlayNote(dacNote);
+                            }
+
                             channelStates[activeChannel].PlayNote(lastNote.note);
 
                             if (lastNote.note.IsRelease)
