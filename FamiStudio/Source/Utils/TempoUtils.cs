@@ -28,12 +28,16 @@ namespace FamiStudio
 
         // This essentially build a table very similar to this:
         // http://famitracker.com/wiki/index.php?title=Common_tempo_values
-        public static TempoInfo[] GetAvailableTempos(bool pal, int notesPerBeat = 4)
+        public static TempoInfo[] GetAvailableTempos(bool pal, int notesPerBeat)
         {
-            List<TempoInfo> tempos = new List<TempoInfo>();
+            List<TempoInfo>[] tempos = new List<TempoInfo>[2] { new List<TempoInfo>(), new List<TempoInfo>() };
 
-            // Add last one.
-            tempos.Add(new TempoInfo(new int[] { MaxNoteLength }, pal, notesPerBeat));
+            // We build both NTSC/PAL in parallel since we need to make sure that all grooves
+            // present in one is in the other as well, since use may convert their project
+            // from/to NTSC/PAL at run-time. A groove missing in one or the other will lead to
+            // a crash.
+            tempos[0].Add(new TempoInfo(new int[] { MaxNoteLength }, false, notesPerBeat));
+            tempos[1].Add(new TempoInfo(new int[] { MaxNoteLength }, true,  notesPerBeat));
 
             foreach (var pattern in GroovePatterns)
             {
@@ -51,41 +55,52 @@ namespace FamiStudio
                     if (groove.Length > 2)
                     {
                         // Compute BPM with 4 notes per beat so we get the same grooves for all note lengths.
-                        float bpm = ComputeBpmForGroove(pal, groove, 4);
-
-                        foreach (var tempo in tempos)
+                        var bpms = new float[] 
                         {
-                            var delta = Math.Abs(tempo.bpm - bpm);
-                            if (delta < BpmThreshold)
-                            {
-                                foundSimilar = true;
-                                break;
-                            }
+                            ComputeBpmForGroove(false, groove, 4),
+                            ComputeBpmForGroove(true,  groove, 4) 
+                        };
+
+                        if (MathF.Abs(50.3f - bpms[0]) < 0.1f)
+                        {
+                            Debug.WriteLine("");
+                        }
+
+                        var idx0 = tempos[0].FindIndex(t => Math.Abs(t.bpm - bpms[0]) < BpmThreshold);
+                        var idx1 = tempos[1].FindIndex(t => Math.Abs(t.bpm - bpms[1]) < BpmThreshold);
+                        
+                        if (idx0 >= 0 && idx1 >= 0)
+                        {
+                            foundSimilar = true;
                         }
                     }
 
                     if (!foundSimilar)
                     {
-                        tempos.Add(new TempoInfo(groove, pal, 4));
+                        tempos[0].Add(new TempoInfo(groove, false, 4));
+                        tempos[1].Add(new TempoInfo(groove, true,  4));
                     }
                 }
             }
 
+            var finalList = pal ? tempos[1] : tempos[0];
+
             // Recompute correct BPM.
-            foreach (var tempo in tempos)
+            foreach (var tempo in finalList)
                 tempo.bpm = ComputeBpmForGroove(pal, tempo.groove, notesPerBeat);
 
             // Sort.
-            tempos.Sort((t1, t2) => t1.bpm.CompareTo(t2.bpm));
+            finalList.Sort((t1, t2) => t1.bpm.CompareTo(t2.bpm));
 
-            //foreach (var tempo in tempos)
-            //{
-            //    Debug.WriteLine($"{tempo.bpm.ToString("n1")} = {string.Join("-", tempo.groove)}");
-            //}
+            Debug.WriteLine($"{(pal ? "PAL" : "NTSC")} tempo list ({finalList.Count} entries):");
+            foreach (var tempo in finalList)
+            {
+                Debug.WriteLine($"  * {tempo.bpm.ToString("n1")} = {string.Join("-", tempo.groove)}");
+            }
 
-            return tempos.ToArray();
+            return finalList.ToArray();
         }
-
+        
         public static int FindTempoFromGroove(TempoInfo[] tempoList, int[] groove)
         {
             var sortedGroove = groove.Clone() as int[];

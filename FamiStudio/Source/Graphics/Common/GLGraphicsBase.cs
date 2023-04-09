@@ -2631,8 +2631,8 @@ namespace FamiStudio
 
         public void DrawBitmapAtlasCentered(BitmapAtlasRef bmp, float x, float y, float width, float height, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
-            x += (width  - bmp.ElementSize.Width)  / 2;
-            y += (height - bmp.ElementSize.Height) / 2;
+            x += MathF.Floor((width  - bmp.ElementSize.Width)  * 0.5f);
+            y += MathF.Floor((height - bmp.ElementSize.Height) * 0.5f);
             DrawBitmapAtlas(bmp, x, y, opacity, scale, tint);
         }
 
