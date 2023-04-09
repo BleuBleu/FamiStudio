@@ -778,7 +778,6 @@ namespace FamiStudio
             zoomY = pianoRollScaleY;
 
             UpdateRenderCoords();
-            // CTRLTODO : Needed? OnRenderInitialized(g);
 
             outNoteSizeY = noteSizeY;
         }
@@ -1054,7 +1053,7 @@ namespace FamiStudio
         {
             UpdateRenderCoords();
 
-            var g = ParentWindow.Graphics;
+            var g = graphics;
             fontSmallCharSizeX = ParentWindow.Fonts.FontSmall.MeasureString("0", false);
             bmpLoopSmallFill = g.GetBitmapAtlasRef("LoopSmallFill");
             bmpReleaseSmallFill = g.GetBitmapAtlasRef("ReleaseSmallFill");

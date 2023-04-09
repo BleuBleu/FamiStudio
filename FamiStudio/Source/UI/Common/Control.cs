@@ -670,9 +670,6 @@ namespace FamiStudio
 
         private string GetShortcutKeyString(int idx)
         {
-            // CTRLTODO : Test this with exotic keyboard layouts.
-            // CTRLTODO : Look at GLFW doc about printable keys.
-
             //var str = Platform.ScancodeToString(ScanCodes[idx]);
             //if (string.IsNullOrEmpty(str))
             //    str = Platform.KeyToString(KeyValues[idx]);

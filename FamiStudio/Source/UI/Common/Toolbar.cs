@@ -347,6 +347,7 @@ namespace FamiStudio
         public Toolbar()
         {
             Localization.Localize(this);
+            Settings.KeyboardShortcutsChanged += Settings_KeyboardShortcutsChanged;
         }
 
         protected override void OnAddedToContainer()
@@ -455,11 +456,15 @@ namespace FamiStudio
                     c.Height = tooltipSpecialCharSizeY;
                 }
 
-                // CTRLTODO : Add a Settings.Change event, update tooltip when settings changed.
                 UpdateTooltips();
             }
 
             UpdateButtonLayout();
+        }
+
+        private void Settings_KeyboardShortcutsChanged()
+        {
+            UpdateTooltips();
         }
 
         private void UpdateTooltips()

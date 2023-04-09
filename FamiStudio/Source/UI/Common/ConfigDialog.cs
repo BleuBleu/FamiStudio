@@ -654,6 +654,7 @@ namespace FamiStudio
                     Settings.ForceLandscape = pageMobile.GetPropertyValue<bool>(1);
 
                     Settings.Save();
+                    Settings.NotifyKeyboardShortcutsChanged();
                 }
 
                 callback(r);

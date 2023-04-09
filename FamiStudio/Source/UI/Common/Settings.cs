@@ -278,6 +278,9 @@ namespace FamiStudio
         public static bool SnapEnabled = true;
         public static bool SnapEffects = false;
 
+        public delegate void EmptyDelegate();
+        public static event EmptyDelegate KeyboardShortcutsChanged;
+
         public static void Initialize()
         {
             InitShortcuts();
@@ -605,6 +608,11 @@ namespace FamiStudio
         private static string GetConfigFileName()
         {
             return Path.Combine(GetConfigFilePath(), "FamiStudio.ini");
+        }
+
+        public static void NotifyKeyboardShortcutsChanged()
+        {
+            KeyboardShortcutsChanged?.Invoke();
         }
     }
 }
