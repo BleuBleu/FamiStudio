@@ -3129,6 +3129,7 @@ namespace FamiStudio
                     }
                     else if (numFamiStudioFiles == 1)
                     {
+                        App.BeginLogTask();
                         App.OpenProjectFileAsync(filenames[0], false, (samplesProject) => 
                         {
                             if (samplesProject != null)
@@ -3156,31 +3157,37 @@ namespace FamiStudio
                                 {
                                     if (r == DialogResult.OK)
                                     {
-                                        App.BeginLogTask();
+                                        var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                        var sampleIdsToMerge = new List<int>();
+
+                                        for (int i = 0; i < selected.Length; i++)
                                         {
-                                            var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                                            var sampleIdsToMerge = new List<int>();
-
-                                            for (int i = 0; i < selected.Length; i++)
-                                            {
-                                                if (selected[i])
-                                                    sampleIdsToMerge.Add(samplesProject.Samples[i].Id);
-                                            }
-
-                                            // Wipe everything but the instruments we want.
-                                            samplesProject.DeleteAllSongs();
-                                            samplesProject.DeleteAllArpeggios();
-                                            samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
-                                            samplesProject.DeleteAllInstruments();
-
-                                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                                            bool success = App.Project.MergeProject(samplesProject);
-                                            App.UndoRedoManager.AbortOrEndTransaction(success);
+                                            if (selected[i])
+                                                sampleIdsToMerge.Add(samplesProject.Samples[i].Id);
                                         }
-                                        App.EndLogTask();
+
+                                        // Wipe everything but the instruments we want.
+                                        samplesProject.DeleteAllSongs();
+                                        samplesProject.DeleteAllArpeggios();
+                                        samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
+                                        samplesProject.DeleteAllInstruments();
+
+                                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                                        bool success = App.Project.MergeProject(samplesProject);
+                                        App.UndoRedoManager.AbortOrEndTransaction(success);
+
                                         RefreshButtons();
+                                        App.EndLogTask();
+                                    }
+                                    else
+                                    {
+                                        App.AbortLogTask();
                                     }
                                 });
+                            }
+                            else
+                            {
+                                App.AbortLogTask();
                             }
                         });
                     }
