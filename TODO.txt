@@ -1,6 +1,5 @@
 4.1.0
 =====
-- BUG : DPCM wave noteTooltip "123 samples selected" is clipped when scrollbars are enabled.
 - BUG : play -> pause and i hear something strange
 	=> Cant repro. Mac only? Nope
 - Better autosave names?

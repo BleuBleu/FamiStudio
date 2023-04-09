@@ -3498,7 +3498,7 @@ namespace FamiStudio
                 return;
 
             r.b.PushTranslation(pianoSizeX, headerAndEffectSizeY);
-            r.b.PushClipRegion(0, 0, width - pianoSizeX - scrollBarThickness, height - headerAndEffectSizeY - scrollBarThickness);
+            r.b.PushClipRegion(0, 0, width - pianoSizeX, height - headerAndEffectSizeY - scrollBarThickness);
 
             // Source data range.
             r.b.FillRectangle(
