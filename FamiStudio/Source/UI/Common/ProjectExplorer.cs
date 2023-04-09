@@ -2892,12 +2892,19 @@ namespace FamiStudio
                                     {
                                         Platform.DelayedMessageBoxAsync(Log.GetLastMessage(LogSeverity.Error), ErrorTitle);
                                     }
+
+                                    App.EndLogTask();
+                                }
+                                else
+                                {
+                                    App.AbortLogTask();
                                 }
                             });
                         }
-
-                        // NSFTODO : Test this!!!
-                        App.EndLogTask();
+                        else
+                        {
+                            App.AbortLogTask();
+                        }
                     });
                 }
             };
@@ -3026,12 +3033,19 @@ namespace FamiStudio
                                         var success = App.Project.MergeProject(instrumentProject);
                                         App.UndoRedoManager.AbortOrEndTransaction(success);
                                         RefreshButtons();
+
+                                        App.EndLogTask();
+                                    }
+                                    else
+                                    {
+                                        App.AbortLogTask();
                                     }
                                 });
                             }
-
-                            // NSFTODO : Test this!!!
-                            App.EndLogTask();
+                            else
+                            {
+                                App.AbortLogTask();
+                            }
                         });
                     }
                 }

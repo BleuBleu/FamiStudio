@@ -467,6 +467,12 @@ namespace FamiStudio
             }
         }
 
+        public void AbortLogTask()
+        {
+            logDialog = null;
+            Log.ClearLogOutput();
+        }
+
         public void EndLogTask()
         {
             if (progressLogDialog != null)

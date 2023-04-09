@@ -5,8 +5,6 @@
 Linux:
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 	=> NO REPRO
-Android stuff:
-- GLTODO, CTRLTODO, NSFTODO, etc. Review all those.
 
 Testing
 =======

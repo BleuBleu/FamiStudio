@@ -934,13 +934,6 @@ namespace FamiStudio
                 c.FillAndDrawRectangle(width - scrollBarThickness, scrollBarThumbPosY, width, scrollBarThumbPosY + scrollBarThumbSizeY, Theme.MediumGreyColor1, Theme.BlackColor);
                 c.PopTransform();
             }
-
-            // GLTODO! Test that
-            // Line seperating with the quick access bar.
-            if (Platform.IsMobile && IsLandscape)
-            {
-                c.DrawLine(width - 1, 0, width - 1, height, Theme.BlackColor);
-            }
         }
 
         protected void RenderDebug(Graphics g)
@@ -953,10 +946,6 @@ namespace FamiStudio
 #endif
         }
 
-        // GLTODO : Mostly ported over, look attentively for missing little lines between
-        // cells, test with and without scrollbars.
-        // GLTODO : When scrollbars ON but vertical scrolling OFF, we still leave room for
-        // scroll bars on the right.
         protected override void OnRender(Graphics g)
         {
             // Happens when piano roll is maximized.
@@ -1066,7 +1055,7 @@ namespace FamiStudio
                 {
                     GetMinMaxScroll(out _, out var maxScrollX, out _, out _);
 
-                    scrollSize = width - channelNameSizeX;
+                    scrollSize = width - channelNameSizeX + 1;
                     thumbSize = Math.Max(minScrollBarLength, (int)Math.Round(scrollSize * Math.Min(1.0f, scrollSize / (float)(maxScrollX + scrollSize))));
                     thumbPos = (int)Math.Round((scrollSize - thumbSize) * (scrollX / (float)maxScrollX));
                     return true;
