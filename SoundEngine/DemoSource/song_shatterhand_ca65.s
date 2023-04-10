@@ -24,8 +24,6 @@ music_data_shatterhand:
 	.word @env2,@env6,@env11,@env4 ; 06 : Lead-Duty2
 	.word @env13,@env8,@env9,@env0 ; 07 : Snare
 
-@samples:
-
 @env0:
 	.byte $00,$c0,$7f,$00,$02
 @env1:
@@ -56,6 +54,8 @@ music_data_shatterhand:
 	.byte $00,$ca,$c6,$c3,$c0,$00,$04
 @env14:
 	.byte $00,$cb,$cb,$c5,$03,$c4,$03,$c3,$03,$c2,$00,$09
+
+@samples:
 
 @tempo_env_1_mid:
 	.byte $03,$05,$80
