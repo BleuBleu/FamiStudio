@@ -4769,7 +4769,7 @@ namespace FamiStudio
                         envelopeDragIdx = (int)subButtonType;
                         StartCaptureOperation(x, y, CaptureOperation.DragInstrumentEnvelope, buttonIdx, buttonRelX, buttonRelY);
                     }
-                    else
+                    else if (subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonRelX, buttonRelY))
                     {
                         envelopeDragIdx = -1;
                         StartCaptureOperation(x, y, CaptureOperation.DragInstrument, buttonIdx);

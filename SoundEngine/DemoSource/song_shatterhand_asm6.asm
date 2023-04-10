@@ -17,8 +17,6 @@ music_data_shatterhand:
 	dw @env2,@env6,@env11,@env4 ; 06 : Lead-Duty2
 	dw @env13,@env8,@env9,@env0 ; 07 : Snare
 
-@samples:
-
 @env0:
 	db $00,$c0,$7f,$00,$02
 @env1:
@@ -49,6 +47,8 @@ music_data_shatterhand:
 	db $00,$ca,$c6,$c3,$c0,$00,$04
 @env14:
 	db $00,$cb,$cb,$c5,$03,$c4,$03,$c3,$03,$c2,$00,$09
+
+@samples:
 
 @tempo_env_1_mid:
 	db $03,$05,$80

@@ -393,7 +393,7 @@ namespace FamiStudio
                 Debug.Assert(time >= 0);
                 Debug.Assert(time < MaxLength);
                 Debug.Assert(note != null);
-                //Debug.Assert(!note.IsEmpty);
+                Debug.Assert(!note.IsEmpty);
 
                 // Not used since FamiStudio 3.0.0
                 Debug.Assert(!note.IsRelease);
