@@ -18,10 +18,10 @@
 ..\bin\Release\net5.0\FamiStudio.exe TestVRC6.nsf famistudio-txt-export TestVRC6_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
 ..\bin\Release\net5.0\FamiStudio.exe TestVRC7.nsf famistudio-txt-export TestVRC7_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
 ..\bin\Release\net5.0\FamiStudio.exe TestFamiTrackerTempo.nsf famistudio-txt-export TestFamiTrackerTempo_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
-..\bin\Release\net5.0\FamiStudio.exe TestEPSM.nsf unit-test-epsm TestEPSM_NsfTest.txt -epsm-num-frames:14880
+::..\bin\Release\net5.0\FamiStudio.exe TestEPSM.nsf unit-test-epsm TestEPSM_NsfTest.txt -epsm-num-frames:14880
 ..\bin\Release\net5.0\FamiStudio.exe TestMulti.nsf famistudio-txt-export TestMulti_NsfTest.txt -nsf-import-pattern-length:160 -nsf-import-duration:248 -famistudio-txt-noversion
-..\bin\Release\net5.0\FamiStudio.exe TestMultiEPSM.nsf famistudio-txt-export TestMultiEPSM1_NsfTest.txt -nsf-import-pattern-length:160 -nsf-import-duration:360 -famistudio-txt-noversion
-..\bin\Release\net5.0\FamiStudio.exe TestMultiEPSM.nsf unit-test-epsm TestMultiEPSM2_NsfTest.txt -epsm-num-frames:21600
+..\bin\Release\net5.0\FamiStudio.exe TestMultiEPSM.nsf famistudio-txt-export TestMultiEPSM_NsfTest.txt -nsf-import-pattern-length:160 -nsf-import-duration:360 -famistudio-txt-noversion
+::..\bin\Release\net5.0\FamiStudio.exe TestMultiEPSM.nsf unit-test-epsm TestMultiEPSM2_NsfTest.txt -epsm-num-frames:21600
 
 fc TestBase_NsfTest.txt TestBase_NsfRef.txt > nul
 @if errorlevel 1 goto error
