@@ -11,11 +11,6 @@ Linux:
 
 Testing
 =======
-- Run unit test for DPCM
-	=> NSF test multi has some weird S5B stuff, mising volumes?
-	=> EPSM multi 1 broken
-	=> EPSM multi 2 minor register changes
-	=> S5B unit test are missing
 - Test DPCM w/ multi
 - Re-export all ROM test (.bin) files at the end.
 - Sample, instrument and song import (all places where we switched to OpenProjectAsync)
