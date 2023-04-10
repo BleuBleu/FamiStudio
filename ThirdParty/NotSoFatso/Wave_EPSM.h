@@ -33,6 +33,11 @@ public:
 	/////////////////////////////
 	// Channel Disabling
 	BYTE		bChannelEnabled;
+	BYTE		bChannelMixer;
+
+	/////////////////////////////
+	// Noise
+	BYTE		bNoiseFrequency;
 
 	/////////////////////////////
 	// Fm Stuff
