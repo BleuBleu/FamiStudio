@@ -957,7 +957,7 @@ namespace FamiStudio
             if (kernel != FamiToneKernel.FamiStudio)
             {
                 // 0 = stop, 1 = C-1 ... 63 = D-6
-                if (value != 0 && channel != ChannelType.Noise) value = Math.Max(1, value - 12); 
+                if (value != 0 && channel != ChannelType.Noise && channel != ChannelType.Dpcm) value = Math.Max(1, value - 12); 
                 return (byte)(((value & 63) << 1) | numNotes);
             }
             else

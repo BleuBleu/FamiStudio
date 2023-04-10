@@ -14,8 +14,6 @@ Testing
 	=> EPSM multi 2 minor register changes
 	=> S5B unit test are missing
 - All ROM exports, FDS too (make sure we give nice error msg for too much DPCM).
-- FT2 NSF
-- Multiple songs in NSF with the new layout.
 - Test DPCM w/ multi
 - Retest DPI scaling A LOT.
 - Re-export all ROM test (.bin) files at the end.
