@@ -17,13 +17,10 @@ Testing
 - FT2 NSF
 - Multiple songs in NSF with the new layout.
 - Test DPCM w/ multi
-x Recompile/re-export sound engine demo roms. Bump version. (no DPCM bank switching here)
 - Retest DPI scaling A LOT.
-x Re-export all ROM songs at the end.
 - Re-export all ROM test (.bin) files at the end.
 - Sample, instrument and song import (all places where we switched to OpenProjectAsync)
 - Test videos a lot, compare colors. Cancel in middle w/ DPI scaling to see if everything continues OK.
-- Test numeric up/down on android with increment. 
 
 Packaging
 =========
