@@ -926,9 +926,9 @@ namespace FamiStudio
                     volume = 15 - volume;
                 }
 
-                var hasOctave  = channel.IsVrc7Channel || channel.Type == ChannelType.EPSMFm1 || channel.Type == ChannelType.EPSMFm2 || channel.Type == ChannelType.EPSMFm3 || channel.Type == ChannelType.EPSMFm4 || channel.Type == ChannelType.EPSMFm5 || channel.Type == ChannelType.EPSMFm6;
+                var hasOctave  = channel.IsVrc7Channel || channel.IsEPSMFmChannel;
                 var hasVolume  = channel.Type != ChannelType.Triangle;
-                var hasPitch   = channel.Type != ChannelType.Noise && channel.Type != ChannelType.EPSMrythm1 && channel.Type != ChannelType.EPSMrythm2 && channel.Type != ChannelType.EPSMrythm3 && channel.Type != ChannelType.EPSMrythm4 && channel.Type != ChannelType.EPSMrythm5 && channel.Type != ChannelType.EPSMrythm6;
+                var hasPitch   = channel.Type != ChannelType.Noise && !channel.IsEPSMRythmChannel;
                 var hasDuty    = channel.Type == ChannelType.Square1 || channel.Type == ChannelType.Square2 || channel.Type == ChannelType.Noise || channel.Type == ChannelType.Vrc6Square1 || channel.Type == ChannelType.Vrc6Square2 || channel.Type == ChannelType.Mmc5Square1 || channel.Type == ChannelType.Mmc5Square2;
                 var hasTrigger = channel.IsVrc7Channel;
 
