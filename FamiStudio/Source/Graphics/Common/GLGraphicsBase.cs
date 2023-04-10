@@ -2139,7 +2139,7 @@ namespace FamiStudio
             }
             else if (width > 1)
             {
-                var halfWidth = miter ? width * 0.5f : 0.0f;
+                var halfWidth = width * 0.5f : 0.0f;
                 DrawThickLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
                 DrawThickLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
                 DrawThickLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
