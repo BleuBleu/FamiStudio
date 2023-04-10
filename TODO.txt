@@ -1,5 +1,8 @@
 4.1.0
 =====
+- Try no attack?
+- BUG : Convert ot MMC5 instrument
+- BUG : Seek bar in cut when using vertical scrolling in sequencer.
 - BUG : play -> pause and i hear something strange
 	=> Cant repro. Mac only? Nope
 Linux:
