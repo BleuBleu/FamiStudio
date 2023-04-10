@@ -1807,7 +1807,7 @@ namespace FamiStudio
         {
             var str = LocalizedNames[type].Value;
             if (ExpansionTypes[type] != ExpansionType.None)
-                str += $" ({ExpansionType.LocalizedNames[ExpansionTypes[type]]})" ;
+                str += $" ({ExpansionType.InternalNames[ExpansionTypes[type]]})"; // Here we use the internal name to keep things short.
             return str;
         }
 

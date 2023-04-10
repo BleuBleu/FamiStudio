@@ -49,6 +49,7 @@ Packaging
 - Project explorer sorting improvements
 - NSF import support on Android
 - Stereo and delay export support on Android.
+- Sunsoft 5B noise support
 
 Android SDK 12
 ==============
