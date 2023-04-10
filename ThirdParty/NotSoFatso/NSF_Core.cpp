@@ -770,10 +770,14 @@ void CNSFCore::WriteMemory_EPSM(WORD a, BYTE v)
 		case 0x03:	mWave_EPSM[1].nFreqTimer.B.h = v & 0x0F;	break;
 		case 0x04:	mWave_EPSM[2].nFreqTimer.B.l = v;			break;
 		case 0x05:	mWave_EPSM[2].nFreqTimer.B.h = v & 0x0F;	break;
+		case 0x06:	mWave_EPSM[0].bNoiseFrequency = v;	        break;
 		case 0x07:
-			mWave_EPSM[0].bChannelEnabled = !(v & 0x01);
-			mWave_EPSM[1].bChannelEnabled = !(v & 0x02);
-			mWave_EPSM[2].bChannelEnabled = !(v & 0x03);
+			mWave_EPSM[0].bChannelEnabled = (v & 0x09) == 0x09 ? 0 : 1;
+			mWave_EPSM[1].bChannelEnabled = (v & 0x12) == 0x12 ? 0 : 1;
+			mWave_EPSM[2].bChannelEnabled = (v & 0x24) == 0x24 ? 0 : 1;
+			mWave_EPSM[0].bChannelMixer = (v & 0x09);
+			mWave_EPSM[1].bChannelMixer = (v & 0x12) >> 1;
+			mWave_EPSM[2].bChannelMixer = (v & 0x24) >> 2;
 			break;
 		case 0x08:	mWave_EPSM[0].nVolume = v & 0x0F; break;
 		case 0x09:	mWave_EPSM[1].nVolume = v & 0x0F; break;
@@ -2883,10 +2887,10 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			int idx = channel - S5B_SQUARE1;
 			switch (state)
 			{
-				case STATE_PERIOD:             return mWave_FME07[idx].nFreqTimer.W;
-				case STATE_VOLUME:             return mWave_FME07[idx].bChannelEnabled ? mWave_FME07[idx].nVolume : 0;
-				case STATE_S5BMIXER:           return mWave_FME07[idx].bChannelMixer;
-				case STATE_S5BNOISEFREQUENCY:  return mWave_FME07[0].bNoiseFrequency;
+				case STATE_PERIOD:				return mWave_FME07[idx].nFreqTimer.W;
+				case STATE_VOLUME:				return mWave_FME07[idx].bChannelEnabled ? mWave_FME07[idx].nVolume : 0;
+				case STATE_YMMIXER:				return mWave_FME07[idx].bChannelMixer;
+				case STATE_YMNOISEFREQUENCY:	return mWave_FME07[0].bNoiseFrequency;
 			}
 			break;
 		}
@@ -2917,8 +2921,10 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			int idx = channel - EPSM_SQUARE1;
 			switch (state)
 			{
-			case STATE_PERIOD: return mWave_EPSM[idx].nFreqTimer.W;
-			case STATE_VOLUME: return mWave_EPSM[idx].bChannelEnabled ? mWave_EPSM[idx].nVolume : 0;
+			case STATE_PERIOD:				return mWave_EPSM[idx].nFreqTimer.W;
+			case STATE_VOLUME:				return mWave_EPSM[idx].bChannelEnabled ? mWave_EPSM[idx].nVolume : 0;
+			case STATE_YMMIXER:				return mWave_EPSM[idx].bChannelMixer;
+			case STATE_YMNOISEFREQUENCY:	return mWave_EPSM[0].bNoiseFrequency;
 			}
 			break;
 		}

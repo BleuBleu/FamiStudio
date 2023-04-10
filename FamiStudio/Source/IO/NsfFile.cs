@@ -728,7 +728,7 @@ namespace FamiStudio
             }
         }
 
-        private Instrument GetEPSMInstrument(byte chanType, byte[] patchRegs)
+        private Instrument GetEPSMInstrument(byte chanType, byte[] patchRegs, int noise, int mixer)
         {            
             var name = $"EPSM {Instrument.GetEpsmPatchName(1)}";
             var instrument = project.GetInstrument(name);
@@ -740,11 +740,21 @@ namespace FamiStudio
 
             if (chanType == 0)
             {
+                if (mixer != 2 && noise == 0)
+                    noise = 1;
+                if (mixer != 2)
+                    name = $"EPSM Noise {noise} M {mixer}";
+
+                instrument = project.GetInstrument(name);
                 if (instrument == null)
                 {
                     instrument = project.CreateInstrument(ExpansionType.EPSM, name);
 
                     instrument.EpsmPatch = 1;
+                    instrument.Envelopes[EnvelopeType.YMNoiseFreq].Length = 1;
+                    instrument.Envelopes[EnvelopeType.YMNoiseFreq].Values[0] = (sbyte)noise;
+                    instrument.Envelopes[EnvelopeType.YMMixerSettings].Length = 1;
+                    instrument.Envelopes[EnvelopeType.YMMixerSettings].Values[0] = (sbyte)mixer;
                 }
                 return instrument;
             }
@@ -1071,8 +1081,8 @@ namespace FamiStudio
                 }
                 else if (channel.Type >= ChannelType.S5BSquare1 && channel.Type <= ChannelType.S5BSquare3)
                 {
-                    var noise = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0);
-                    var mixer = (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BMIXER, 0);
+                    var noise = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0);
+                    var mixer = (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_YMMIXER, 0);
                     mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
                     instrument = GetS5BInstrument(noise,mixer);
                 }
@@ -1085,14 +1095,20 @@ namespace FamiStudio
                         for (int i = 0; i < 31; i++)
                             regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMPATCHREG, i);
 
-                        instrument = GetEPSMInstrument(1, regs);
+                        instrument = GetEPSMInstrument(1, regs,0,0);
                     }
                     else if (channel.Type >= ChannelType.EPSMrythm1 && channel.Type <= ChannelType.EPSMrythm6)
                     {
                         regs[1] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_STEREO, 0);
-                        instrument = GetEPSMInstrument(2, regs); 
+                        instrument = GetEPSMInstrument(2, regs,0,0); 
                     }
-                    else  { instrument = GetEPSMInstrument(0, regs); }
+                    else
+                    {
+                        var noise = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0);
+                        var mixer = (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_YMMIXER, 0);
+                        mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
+                        instrument = GetEPSMInstrument(0, regs, noise, mixer); 
+                    }
 
                 }
                 else 
