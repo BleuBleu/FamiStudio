@@ -42,8 +42,6 @@ music_data_silver_surfer_c_stephen_ruddy:
 	.dw .env57,.env28,.env35,.env0 ; 1f : TriBassDrum
 	.dw .env61,.env58,.env35,.env0 ; 20 : TriSnare
 
-.samples:
-
 .env0:
 	.db $00,$c0,$7f,$00,$02
 .env1:
@@ -170,6 +168,8 @@ music_data_silver_surfer_c_stephen_ruddy:
 	.db $00,$cf,$cf,$c0,$00,$03
 .env62:
 	.db $00,$bf,$c0,$00,$02
+
+.samples:
 
 .tempo_env_1_mid:
 	.db $03,$05,$80
