@@ -13,12 +13,9 @@ Testing
 	=> EPSM multi 1 broken
 	=> EPSM multi 2 minor register changes
 	=> S5B unit test are missing
-- All ROM exports, FDS too (make sure we give nice error msg for too much DPCM).
 - Test DPCM w/ multi
-- Retest DPI scaling A LOT.
 - Re-export all ROM test (.bin) files at the end.
 - Sample, instrument and song import (all places where we switched to OpenProjectAsync)
-- Test videos a lot, compare colors. Cancel in middle w/ DPI scaling to see if everything continues OK.
 
 Packaging
 =========
