@@ -1,9 +1,13 @@
 4.1.0
 =====
 - Try no attack? Do it at airport/plane.
-Linux:
-- Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
-	=> NO REPRO
+	=> instrument change:
+		* optional : disable attack
+		* optional : change the instrument, for FM instrument, will look if attack is disabled and not rebind envelopes if disabled.
+		* play a note (if attack, reset envelopes)
+	=> problems:
+		* what about the delayed cut thing? 
+		* will likely need a couple more zp variables.
 
 Testing
 =======
