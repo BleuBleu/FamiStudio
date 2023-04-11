@@ -87,42 +87,94 @@ namespace FamiStudio
                 header.Vgm[1] = (byte)'g';
                 header.Vgm[2] = (byte)'m';
                 header.Vgm[3] = (byte)' ';
-                header.version = 0x00000170;
-                if (project.UsesVrc7Expansion) { header.ym2413clock = 3579545 + 0x80000000; }
-                    
-                if (project.UsesEPSMExpansion) { header.YM2608clock = 8000000; }
-                if (project.UsesFdsExpansion) { header.NESAPUclock = 1789772 + 0x80000000; }
-                else { header.NESAPUclock = 1789772; }
-                if (project.UsesS5BExpansion) {
-                    header.AY8910clock = 1789772;
-                    header.AY8910ChipType = 0x10;
+                header.version = 0x170;
+                uint NESClock;
+                byte waitCommand;
+                int samplesPerFrame;
+
+
+                string systemName;  //For Gd3
+                if (project.PalMode)
+                {
+                    header.rate = 50;
+                    NESClock = 1662607;
+                    waitCommand = 0x63;
+                    samplesPerFrame = 882;
+                    systemName = "PAL NES";     //PAL Famicom? WTF would that be
                 }
-                header.vgmDataOffset = 0x8C+29;
-                header.totalSamples = lastWrite.FrameNumber*735;
-                header.rate = 60;
-                header.ExtraHeaderOffset = 0x4;
-                
+                else
+                {
+                    header.rate = 60;
+                    NESClock = 1789772;
+                    waitCommand = 0x62;
+                    samplesPerFrame = 735;
+                    systemName = "NTSC NES / Famicom";
+                }
+                header.totalSamples = (lastWrite.FrameNumber + 1) * samplesPerFrame;
+                // The clock values are purely theoretical for expansions in PAL.
+                if (project.UsesVrc7Expansion)
+                {
+                    header.ym2413clock = 3579545 | 0x80000000;
+                    systemName += " + Konami VRC7";
+                }
+
+                if (project.UsesFdsExpansion)
+                {
+                    header.NESAPUclock = NESClock | 0x80000000;
+                    systemName += " + Famicom Disk System";
+                }
+                else { header.NESAPUclock = NESClock; }
+
+
+                if (project.UsesS5BExpansion)
+                {
+                    header.AY8910clock = (int)NESClock / 2;    //Divided by 2 because the SEL pin's pulled low
+                    header.AY8910ChipType = 0x10;           // = YM2149
+                    systemName += " + Sunsoft 5B";
+                }
+
+                if (project.UsesEPSMExpansion)
+                {
+                    header.YM2608clock = 8000000;
+                    systemName += " + EPSM";
+                }
+
+
+
+
+                int extraHeaderSize = (project.UsesVrc7Expansion | project.UsesS5BExpansion | project.UsesEPSMExpansion ? 13 : 0) +
+                    (project.UsesVrc7Expansion ? 4 : 0) +
+                    (project.UsesS5BExpansion ? 4 : 0) +
+                    (project.UsesEPSMExpansion ? 8 : 0);
+
+                int initSize = 24 + (project.UsesEPSMExpansion ? 9 : 0);
+
+                header.vgmDataOffset = 0x8C + extraHeaderSize;
+                header.ExtraHeaderOffset = extraHeaderSize != 0 ? 4 : 0;
+
                 string gd3 = "Gd3 ";
-                string songName = song.Name + "\0";
-                string gameName = song.Project.Name + "\0";
-                string systemName = "NES/Famicom FamiStudio Export\0";
-                string author = song.Project.Author + "\0";
-                int gd3Lenght = gd3.Length + (songName.Length * 2) + (gameName.Length * 2) + (systemName.Length * 2) + (author.Length * 2) + 2 + 2 + 2 + 2 + 2 + 4 + 4 + 4;
-
+                string gd3Data = song.Name + "\0\0";  //Track Name, Skip Track name (in original (non-English) game language characters)
+                gd3Data += song.Project.Name + "\0\0"; //Game Name, Skip Game name (in original (non-English) game language characters)
+                gd3Data += systemName + "\0\0"; //System Name, Skip System name (in original (non-English) game language characters)
+                gd3Data += song.Project.Author + "\0\0\0";//Author Name, Skip Name of Original Track Author (in original (non-English) game characters), Date of game's release
+                gd3Data += "FamiStudio Export\0";   //VGM Convert Person
+                gd3Data += song.Project.Copyright + "\0";   //Notes
+                int gd3Length = (gd3Data.Length * 2);
+                int loopPointFrame = song.LoopPoint;
                 var sampleData = project.GetPackedSampleData();
-
-
-
                 if (filetype == 1)
                 {
-                    var fileLenght = sizeof(VgmHeader) + 39 - 4 +29 + 1; //headerbytes + init bytes (39)  - offset (4bytes)  + extraheader (29bytes) + audio stop 1byte
+                    var writer = new BinaryWriter(file);
+                    var fileLength = sizeof(VgmHeader) + initSize + extraHeaderSize + 1 - 4 + sampleData.Length + 9; //headerbytes + init bytes - offset (4bytes)  + Extra header + audio stop 1byte
                     int frameNumber = 0;
+                    if (frameNumber == 0) { header.loopOffset = fileLength - 25; }  // Relative pointer difference is 24, and the 1 is the data stop command at the end
                     foreach (var reg in writes)
                     {
                         while (frameNumber < reg.FrameNumber)
                         {
                             frameNumber++;
-                            fileLenght++;
+                            fileLength++;
+                            if (frameNumber == loopPointFrame) { header.loopOffset = fileLength - 25; }  // Relative pointer difference is 24, and the 1 is the data stop command at the end
                         }
                         switch (reg.Register)
                         {
@@ -131,194 +183,152 @@ namespace FamiStudio
                             case 0x9030:
                             case 0xE000:
                             case int expression when (reg.Register < 0x401c) || (reg.Register < 0x409f && reg.Register > 0x401F):
-                                fileLenght = fileLenght + 3;
+                                fileLength += 3;
                                 break;
                         }
                     }
-                    fileLenght = fileLenght + sampleData.Length + 9;
-                    header.gd3Offset = fileLenght - 16;
-                    fileLenght = fileLenght + gd3Lenght;
-                    header.eofOffset = fileLenght; 
+                    header.loopBase = 0;
+                    if (loopPointFrame != -1)
+                    {
+                        header.loopModifier = 0x10;
+                        header.loopSamples = (lastWrite.FrameNumber - loopPointFrame + 1) * samplesPerFrame;
+                    }
+                    else
+                    {
+                        header.loopSamples = 0;
+                        header.loopOffset = 0;
+                        header.loopModifier = 0;
+                    }
+                    header.gd3Offset = fileLength - 16;
+                    fileLength = fileLength + gd3Length;
+                    header.eofOffset = fileLength;
                     var headerBytes = new byte[sizeof(VgmHeader)];
 
-
                     Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);
-                    file.Write(headerBytes, 0, headerBytes.Length);
+                    writer.Write(headerBytes);
 
-                    //ExtraHeader
-                    file.Write(BitConverter.GetBytes(0x0000000c), 0, 4); //extra header size 12bit
-                    file.Write(BitConverter.GetBytes(0x00000000), 0, 4); //extra clock offset
-                    file.Write(BitConverter.GetBytes(0x00000004), 0, 4); //extra volume offset
-                    file.Write(BitConverter.GetBytes(0x04), 0, 1); //chip amount
+                    //Extra header
+                    if (project.UsesVrc7Expansion | project.UsesS5BExpansion | project.UsesEPSMExpansion)
+                    {
+                        writer.Write(12); //extra header size 12 bytes
+                        writer.Write(0); //extra clock offset (0 because there are no extra clocks)
+                        writer.Write(4); //extra volume offset
 
-                    file.Write(BitConverter.GetBytes(0x01), 0, 1); //chip id ym2314
-                    file.Write(BitConverter.GetBytes(0x80), 0, 1); // flags VRC7
-                    file.Write(BitConverter.GetBytes(0x0800), 0, 2); //volume bit 7 for absolute 8.8 fixed point
+                        writer.Write((byte)((project.UsesVrc7Expansion ? 1 : 0) + (project.UsesS5BExpansion ? 1 : 0) + (project.UsesEPSMExpansion ? 2 : 0)));
+                        //Chip amount for volume list
 
-                    file.Write(BitConverter.GetBytes(0x12), 0, 1); //chip id ym2149
-                    file.Write(BitConverter.GetBytes(0x00), 0, 1); // flags
-                    file.Write(BitConverter.GetBytes(0x8200), 0, 2); //volume bit 7 for absolute 8.8 fixed point
+                        if (project.UsesVrc7Expansion)
+                        {
+                            writer.Write(new byte[] { 0x01, 0x80 }); //chip id YM2413, flags VRC7
+                            writer.Write((ushort)0x0800); //volume bit 7 for absolute 8.8 fixed point
+                        }
+                        if (project.UsesS5BExpansion)
+                        {
+                            writer.Write(new byte[] { 0x12, 0x00 }); //chip id YM2149, flags
+                            writer.Write((ushort)0x8200); //volume bit 7 for absolute 8.8 fixed point
+                        }
 
-                    file.Write(BitConverter.GetBytes(0x07), 0, 1); //chip id ym2608
-                    file.Write(BitConverter.GetBytes(0x00), 0, 1); // flags
-                    file.Write(BitConverter.GetBytes(0x0140), 0, 2); //volume bit 7 for absolute 8.8 fixed point
+                        if (project.UsesEPSMExpansion)
+                        {
+                            writer.Write(new byte[] { 0x07, 0x00 }); //chip id YM2608, flags
+                            writer.Write((ushort)0x0140); //volume bit 7 for absolute 8.8 fixed point
+                            writer.Write(new byte[] { 0x87, 0x00 }); //chip id YM2608 SSG, flags
+                            writer.Write((ushort)0x8140); //volume bit 7 for absolute 8.8 fixed point
+                        }
+                    }
 
-                    file.Write(BitConverter.GetBytes(0x87), 0, 1); //chip id ym2608ssg
-                    file.Write(BitConverter.GetBytes(0x00), 0, 1); // flags
-                    file.Write(BitConverter.GetBytes(0x8140), 0, 2); //volume bit 7 for absolute 8.8 fixed point
-
-
-                    //sampledata
-                    file.Write(BitConverter.GetBytes(0x67), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x66), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0xC2), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(sampleData.Length+2), 0, sizeof(int));
-                    file.Write(BitConverter.GetBytes(0xc000), 0, sizeof(short));
-                    file.Write(sampleData, 0, sampleData.Length);
+                    //Sample data
+                    writer.Write(new byte[] { 0x67, 0x66, 0xC2 });  //Data block, compat command for older players, type - NES APU RAM Write
+                    writer.Write(sampleData.Length + 2);  //Length of sample data + address
+                    writer.Write((ushort)0xc000);   //Address $C000 - the minimum for DPCM data
+                    writer.Write(sampleData);   //Write the sample data
 
 
                     var sr = new StreamWriter(file);
-                    // So lame.
-                    int chipData = 0;
+                    // Not as lame now
+                    byte addressEPSMA0 = 0;
+                    byte addressEPSMA1 = 0;
+                    byte addressVRC7 = 0;
+                    byte address5B = 0;
+
                     frameNumber = 0;
                     //Inits
-                    //2a03
-                    file.Write(BitConverter.GetBytes(0xB4), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x15), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x0f), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0xB4), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x08), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x80), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0xB4), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x0f), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x00), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0xB4), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x00), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x30), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0xB4), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x04), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x30), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0xB4), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x0c), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x30), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0xB4), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x01), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x08), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0xB4), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x05), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x08), 0, sizeof(byte));
-                    //s5b
-                    file.Write(BitConverter.GetBytes(0xA0), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x07), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x38), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
-                    //epsm
-                    file.Write(BitConverter.GetBytes(0x07), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x38), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x29), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x80), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x27), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x00), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x11), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x37), 0, sizeof(byte));
+                    //2A03
+
+                    writer.Write(new byte[]
+                       {0xB4, 0x15, 0x0F,   //Enable everything but DPCM
+                        0xB4, 0x08, 0x80,   //Halt triangle length counter (aka silence triangle)
+                        0xB4, 0x0F, 0x00,   //Load noise counter with 0 (aka silence noise)
+                        0xB4, 0x00, 0x30,   //Halt pulse 1, pulse 2 and noise length counter and disable hardware envelopes
+                        0xB4, 0x04, 0x30,
+                        0xB4, 0x0C, 0x30,
+                        0xB4, 0x01, 0x08,   //Disable pulse 1 and 2 sweep units 
+                        0xB4, 0x05, 0x08});
+
+                    //EPSM
+                    if (project.UsesEPSMExpansion)
+                    {
+                        writer.Write(new byte[]{
+                             0x56, 0x29, 0x80,  //Disable IRQs, bit 7???
+                             0x56, 0x27, 0x00,  //Disable timers, use 6 channel mode
+                             0x56, 0x11, 0x37});//Max rhythm total volume
+                    }
                     foreach (var reg in writes)
                     {
                         while (frameNumber < reg.FrameNumber)
                         {
                             frameNumber++;
-                            file.Write(BitConverter.GetBytes(0x62), 0, sizeof(byte));
+                            writer.Write(waitCommand);
                         }
-                        if (reg.Register == 0x401c)
+                        if (reg.Register == 0x401c)         //EPSM A0 Address
                         {
-                            chipData = reg.Value;
+                            addressEPSMA0 = (byte)reg.Value;
                         }
-                        else if (reg.Register == 0x401e)
+                        else if (reg.Register == 0x401e)    //EPSM A1 Address
                         {
-                            chipData = reg.Value;
+                            addressEPSMA1 = (byte)reg.Value;
                         }
-                        else if (reg.Register == 0x9010)
+                        else if (reg.Register == 0x9010)    //VRC7 Address
                         {
-                            chipData = reg.Value;
+                            addressVRC7 = (byte)reg.Value;
                         }
-                        else if (reg.Register == 0xC000)
+                        else if (reg.Register == 0xC000)    //5B Address
                         {
-                            chipData = reg.Value;
+                            address5B = (byte)reg.Value;
                         }
-                        else if (reg.Register == 0x401d)
+                        else if (reg.Register == 0x401d)    //EPSM A0 Data
                         {
-                            file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
-                            file.Write(BitConverter.GetBytes(chipData), 0, sizeof(byte));
-                            file.Write(BitConverter.GetBytes(reg.Value), 0, sizeof(byte));
+                            writer.Write(new byte[] { 0x56, addressEPSMA0, (byte)reg.Value });
                         }
-                        else if (reg.Register == 0x401f)
+                        else if (reg.Register == 0x401f)    //EPSM A1 Data
                         {
-                            file.Write(BitConverter.GetBytes(0x57), 0, sizeof(byte));
-                            file.Write(BitConverter.GetBytes(chipData), 0, sizeof(byte));
-                            file.Write(BitConverter.GetBytes(reg.Value), 0, sizeof(byte));
+                            writer.Write(new byte[] { 0x57, addressEPSMA1, (byte)reg.Value });
                         }
-                        else if (reg.Register == 0x9030)
+                        else if (reg.Register == 0x9030)    //VRC7 Data
                         {
-                            file.Write(BitConverter.GetBytes(0x51), 0, sizeof(byte));
-                            file.Write(BitConverter.GetBytes(chipData), 0, sizeof(byte));
-                            file.Write(BitConverter.GetBytes(reg.Value), 0, sizeof(byte));
+                            writer.Write(new byte[] { 0x51, addressVRC7, (byte)reg.Value });
                         }
-                        else if (reg.Register == 0xE000)
+                        else if (reg.Register == 0xE000)    //5B Data
                         {
-                            file.Write(BitConverter.GetBytes(0xA0), 0, sizeof(byte));
-                            file.Write(BitConverter.GetBytes(chipData), 0, sizeof(byte));
-                            file.Write(BitConverter.GetBytes(reg.Value), 0, sizeof(byte));
+                            writer.Write(new byte[] { 0xA0, address5B, (byte)reg.Value });
                         }
-                        else if ((reg.Register < 0x401c) || (reg.Register < 0x409f && reg.Register > 0x401F))
+                        else if ((reg.Register < 0x401c) || (reg.Register < 0x409f && reg.Register > 0x401F))   //2A03 & FDS
                         {
-                            file.Write(BitConverter.GetBytes(0xb4), 0, sizeof(byte));
+                            writer.Write((byte)0xb4);
                             if ((reg.Register <= 0x401F) || (reg.Register <= 0x407f && reg.Register >= 0x4040))
-                                file.Write(BitConverter.GetBytes(reg.Register & 0xFF), 0, sizeof(byte));
+                                writer.Write((byte)(reg.Register & 0xFF));
                             else if (reg.Register >= 0x4080)
-                                file.Write(BitConverter.GetBytes((reg.Register - 0x60) & 0xFF), 0, sizeof(byte));
+                                writer.Write((byte)((reg.Register - 0x60) & 0xFF));
                             else if (reg.Register == 0x4023)
-                                file.Write(BitConverter.GetBytes(0x3F), 0, sizeof(byte));
-                            file.Write(BitConverter.GetBytes(reg.Value), 0, sizeof(byte));
+                                writer.Write((byte)0x3F);
+                            writer.Write((byte)reg.Value);
                         }
                     }
-                    file.Write(BitConverter.GetBytes(0x66), 0, sizeof(byte));
-
-                    for (int i = 0; i < gd3.Length; i++)
-                    {
-                        file.Write(BitConverter.GetBytes(gd3[i]), 0, sizeof(byte));
-                    }
-                    file.Write(BitConverter.GetBytes(0x00000100), 0, sizeof(uint)); //version
-
-                    file.Write(BitConverter.GetBytes(gd3Lenght), 0, sizeof(uint)); //gd3Lenght
-                    for (int i = 0; i < songName.Length; i++)
-                    {
-                        file.Write(BitConverter.GetBytes(songName[i]), 0, sizeof(byte));
-                        file.Write(BitConverter.GetBytes(0), 0, sizeof(byte));
-                    }
-                    file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
-                    for (int i = 0; i < gameName.Length; i++)
-                    {
-                        file.Write(BitConverter.GetBytes(gameName[i]), 0, sizeof(byte));
-                        file.Write(BitConverter.GetBytes(0), 0, sizeof(byte));
-                    }
-                    file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
-                    for (int i = 0; i < systemName.Length; i++)
-                    {
-                        file.Write(BitConverter.GetBytes(systemName[i]), 0, sizeof(byte));
-                        file.Write(BitConverter.GetBytes(0), 0, sizeof(byte));
-                    }
-                    file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
-                    for (int i = 0; i < author.Length; i++)
-                    {
-                        file.Write(BitConverter.GetBytes(author[i]), 0, sizeof(byte));
-                        file.Write(BitConverter.GetBytes(0), 0, sizeof(byte));
-                    }
-                    file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
-                    file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
-                    file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
-                    file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
+                    writer.Write((byte)0x66);   //End data
+                    writer.Write(gd3.ToCharArray());
+                    writer.Write(0x100); //version
+                    writer.Write(gd3Length); //gd3Length
+                    writer.Write(Encoding.Unicode.GetBytes(gd3Data));
                     sr.Flush();
                     sr.Close();
                 }
@@ -378,7 +388,7 @@ namespace FamiStudio
                             }
                             else
                             {
-                                if(lastReg!=0)
+                                if (lastReg != 0)
                                     sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte EPSM_A0_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
@@ -494,7 +504,7 @@ namespace FamiStudio
                     sr.WriteLine($" .segment \"DPCM\"");
                     var i = 0;
                     string dpcmData = "";
-                    foreach(var sample in sampleData)
+                    foreach (var sample in sampleData)
                     {
                         i++;
                         dpcmData = dpcmData + " $" + $"{sample:X2}";
