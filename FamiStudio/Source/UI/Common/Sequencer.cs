@@ -910,7 +910,7 @@ namespace FamiStudio
             }
 
             // Seek bar
-            b.DrawLine(seekX, 0, seekX, actualSizeY, GetSeekBarColor(), 3);
+            b.DrawLine(seekX, 0, seekX, virtualSizeY, GetSeekBarColor(), 3);
 
             c.PopTransform();
             c.PopClipRegion();

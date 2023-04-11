@@ -1,18 +1,12 @@
 4.1.0
 =====
-- BUG : play -> pause and i hear something strange
-	=> Cant repro. Mac only? Nope
+- Try no attack? Do it at airport/plane.
 Linux:
 - Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
 	=> NO REPRO
 
 Testing
 =======
-- Run unit test for DPCM
-	=> NSF test multi has some weird S5B stuff, mising volumes?
-	=> EPSM multi 1 broken
-	=> EPSM multi 2 minor register changes
-	=> S5B unit test are missing
 - Test DPCM w/ multi
 - Re-export all ROM test (.bin) files at the end.
 - Sample, instrument and song import (all places where we switched to OpenProjectAsync)
