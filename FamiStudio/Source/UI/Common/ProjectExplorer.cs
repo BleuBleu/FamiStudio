@@ -4491,7 +4491,7 @@ namespace FamiStudio
 
                         foreach (var exp in activeExpansions)
                         {
-                            if (exp != inst.Expansion)
+                            if (exp != inst.Expansion && (exp == ExpansionType.None || ExpansionType.NeedsExpansionInstrument(exp)))
                             {
                                 var e = exp;
                                 menu.Add(new ContextMenuOption(ExpansionType.Icons[exp], DuplicateConvertContext.Format(ExpansionType.GetLocalizedName(exp, ExpansionType.LocalizationMode.Instrument)), () => { DuplicateConvertInstrument(inst, e); }));
