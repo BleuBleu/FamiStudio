@@ -1,7 +1,5 @@
 4.1.0
 =====
-- BUG : Gimmick NSF song 8 imports a zero byte sample?
-
 - Try no attack? Do it at airport/plane.
 	=> instrument change:
 		* optional : disable attack
