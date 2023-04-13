@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -78,6 +77,10 @@ namespace FamiStudio
             var project = song.Project;
             var regPlayer = new RegisterPlayer(song.Project.OutputsStereoAudio);
             var writes = regPlayer.GetRegisterValues(song, project.PalMode);
+            Console.WriteLine("Writes got, length: " + writes.Length);
+            var regOptimizer = new RegisterWriteOptimizer(song.Project);
+            writes = regOptimizer.OptimizeRegisterWrites(writes);
+            Console.WriteLine("Writes optimized, length: " + writes.Length);
             var lastWrite = writes.Last();
 
             using (var file = new FileStream(filename, FileMode.Create))
@@ -139,9 +142,6 @@ namespace FamiStudio
                     systemName += " + EPSM";
                 }
 
-
-
-
                 int extraHeaderSize = (project.UsesVrc7Expansion | project.UsesS5BExpansion | project.UsesEPSMExpansion ? 13 : 0) +
                     (project.UsesVrc7Expansion ? 4 : 0) +
                     (project.UsesS5BExpansion ? 4 : 0) +
@@ -171,6 +171,7 @@ namespace FamiStudio
                     foreach (var reg in writes)
                     {
                         while (frameNumber < reg.FrameNumber)
+                        //TODO: for 3+ frames only increment file length by 3
                         {
                             frameNumber++;
                             fileLength++;
@@ -178,11 +179,11 @@ namespace FamiStudio
                         }
                         switch (reg.Register)
                         {
-                            case 0x401d:
-                            case 0x401f:
-                            case 0x9030:
-                            case 0xE000:
-                            case int expression when (reg.Register < 0x401c) || (reg.Register < 0x409f && reg.Register > 0x401F):
+                            case NesApu.EPSM_DATA0: case NesApu.EPSM_DATA1:
+                            case NesApu.VRC7_REG_WRITE:
+                            case NesApu.S5B_DATA:
+                            case (>= NesApu.APU_PL1_VOL and < NesApu.EPSM_ADDR0):  //2A03/7 registers
+                            case (>= 0x4020 and < 0x409f):  //FDS registers
                                 fileLength += 3;
                                 break;
                         }
@@ -240,11 +241,9 @@ namespace FamiStudio
                     //Sample data
                     writer.Write(new byte[] { 0x67, 0x66, 0xC2 });  //Data block, compat command for older players, type - NES APU RAM Write
                     writer.Write(sampleData.Length + 2);  //Length of sample data + address
-                    writer.Write((ushort)0xc000);   //Address $C000 - the minimum for DPCM data
+                    writer.Write((ushort)0xC000);   //Address $C000 - the minimum for DPCM data
                     writer.Write(sampleData);   //Write the sample data
 
-
-                    var sr = new StreamWriter(file);
                     // Not as lame now
                     byte addressEPSMA0 = 0;
                     byte addressEPSMA1 = 0;
@@ -269,7 +268,7 @@ namespace FamiStudio
                     if (project.UsesEPSMExpansion)
                     {
                         writer.Write(new byte[]{
-                             0x56, 0x29, 0x80,  //Disable IRQs, bit 7???
+                             0x56, 0x29, 0x80,  //Disable IRQs, bit 7 ???
                              0x56, 0x27, 0x00,  //Disable timers, use 6 channel mode
                              0x56, 0x11, 0x37});//Max rhythm total volume
                     }
@@ -280,35 +279,35 @@ namespace FamiStudio
                             frameNumber++;
                             writer.Write(waitCommand);
                         }
-                        if (reg.Register == 0x401c)         //EPSM A0 Address
+                        if (reg.Register == NesApu.EPSM_ADDR0)          //EPSM A0 Address
                         {
                             addressEPSMA0 = (byte)reg.Value;
                         }
-                        else if (reg.Register == 0x401e)    //EPSM A1 Address
+                        else if (reg.Register == NesApu.EPSM_ADDR1)     //EPSM A1 Address
                         {
                             addressEPSMA1 = (byte)reg.Value;
                         }
-                        else if (reg.Register == 0x9010)    //VRC7 Address
+                        else if (reg.Register == NesApu.VRC7_REG_SEL)   //VRC7 Address
                         {
                             addressVRC7 = (byte)reg.Value;
                         }
-                        else if (reg.Register == 0xC000)    //5B Address
+                        else if (reg.Register == NesApu.S5B_ADDR)       //5B Address
                         {
                             address5B = (byte)reg.Value;
                         }
-                        else if (reg.Register == 0x401d)    //EPSM A0 Data
+                        else if (reg.Register == NesApu.EPSM_DATA0)     //EPSM A0 Data
                         {
                             writer.Write(new byte[] { 0x56, addressEPSMA0, (byte)reg.Value });
                         }
-                        else if (reg.Register == 0x401f)    //EPSM A1 Data
+                        else if (reg.Register == NesApu.EPSM_DATA1)     //EPSM A1 Data
                         {
                             writer.Write(new byte[] { 0x57, addressEPSMA1, (byte)reg.Value });
                         }
-                        else if (reg.Register == 0x9030)    //VRC7 Data
+                        else if (reg.Register == NesApu.VRC7_REG_WRITE) //VRC7 Data
                         {
                             writer.Write(new byte[] { 0x51, addressVRC7, (byte)reg.Value });
                         }
-                        else if (reg.Register == 0xE000)    //5B Data
+                        else if (reg.Register == NesApu.S5B_DATA)       //5B Data
                         {
                             writer.Write(new byte[] { 0xA0, address5B, (byte)reg.Value });
                         }
@@ -329,8 +328,8 @@ namespace FamiStudio
                     writer.Write(0x100); //version
                     writer.Write(gd3Length); //gd3Length
                     writer.Write(Encoding.Unicode.GetBytes(gd3Data));
-                    sr.Flush();
-                    sr.Close();
+                    writer.Flush();
+                    writer.Close();
                 }
                 else
                 {

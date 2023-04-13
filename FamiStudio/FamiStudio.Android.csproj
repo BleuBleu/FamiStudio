@@ -266,6 +266,7 @@
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\RegisterWriteOptimizer.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
