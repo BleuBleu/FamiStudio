@@ -8153,21 +8153,23 @@ namespace FamiStudio
 
                         if (note != null)
                         {
-                            if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease)
-                                tooltipList.Add($"<R><MouseLeft> {SetReleasePointTooltip}");
-                            if (channel.SupportsSlideNotes)
-                                tooltipList.Add($"<S><MouseLeft><Drag> {SlideNoteTooltip}");
+                            if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease && Settings.ReleaseNoteShortcut.IsShortcutValid(0))
+                                tooltipList.Add($"{Settings.ReleaseNoteShortcut.TooltipString}<MouseLeft> {SetReleasePointTooltip}");
+                            if (channel.SupportsSlideNotes && Settings.SlideNoteShortcut.IsShortcutValid(0))
+                                tooltipList.Add($"{Settings.SlideNoteShortcut.TooltipString}<MouseLeft><Drag> {SlideNoteTooltip}");
                             if (note.IsMusical)
                             {
-                                tooltipList.Add($"<A><MouseLeft> {ToggleAttackTooltip}");
-                                tooltipList.Add($"<I><MouseLeft> {InstrumentEyedropTooltip}");
+                                if (Settings.AttackShortcut.IsShortcutValid(0))
+                                    tooltipList.Add($"{Settings.AttackShortcut.TooltipString}<MouseLeft> {ToggleAttackTooltip}");
+                                if (Settings.EyeDropNoteShortcut.IsShortcutValid(0))
+                                    tooltipList.Add($"{Settings.EyeDropNoteShortcut.TooltipString}<MouseLeft> {InstrumentEyedropTooltip}");
                             }
                             tooltipList.Add($"<MouseLeft><MouseLeft> {OrTooltip} <Shift><MouseLeft> {DeleteNoteTooltip}");
                         }
                         else 
                         {
-                            if (channel.SupportsStopNotes)
-                                tooltipList.Add($"<T><MouseLeft> {AddStopNoteTooltip}");
+                            if (channel.SupportsStopNotes && Settings.StopNoteShortcut.IsShortcutValid(0))
+                                tooltipList.Add($"{Settings.StopNoteShortcut.TooltipString}<MouseLeft> {AddStopNoteTooltip}");
                         }
 
                         tooltipList.Add($"<MouseWheel> {PanTooltip}");

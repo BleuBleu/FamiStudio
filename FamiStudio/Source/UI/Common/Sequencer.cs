@@ -2709,7 +2709,9 @@ namespace FamiStudio
                 if (pattern == null)
                     tooltipList.Add($"<MouseLeft> {AddPatternTooltip}");
 
-                tooltipList.Add($"<L><MouseLeft> {SetLoopPointTooltip}");
+                if (Settings.SetLoopPointShortcut.IsShortcutValid(0))
+                    tooltipList.Add($"{Settings.SetLoopPointShortcut.TooltipString}<MouseLeft> {SetLoopPointTooltip}");
+
                 tooltipList.Add($"<MouseWheel><Drag> {PanTooltip}");
                 tooltipList.Add($"<MouseRight><Drag> {SelectRectangleTooltip}");
 

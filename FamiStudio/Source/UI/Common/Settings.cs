@@ -78,150 +78,111 @@ namespace FamiStudio
         public static List<Shortcut> AllShortcuts = new List<Shortcut>();
         public static List<Shortcut> DefaultShortcuts;
 
-        public static Shortcut FileNewShortcut          = new Shortcut("New Project",        "FileNew",          Keys.N, ModifierKeys.Control);
-        public static Shortcut FileOpenShortcut         = new Shortcut("Open Project",       "FileOpen",         Keys.O, ModifierKeys.Control);
-        public static Shortcut FileSaveShortcut         = new Shortcut("Save Project",       "FileSave",         Keys.S, ModifierKeys.Control);
-        public static Shortcut FileSaveAsShortcut       = new Shortcut("Save Project As",    "FileSaveAs",       Keys.S, ModifierKeys.ControlShift);
-        public static Shortcut FileExportShortcut       = new Shortcut("Export",             "FileExport",       Keys.E, ModifierKeys.Control);
-        public static Shortcut FileExportRepeatShortcut = new Shortcut("Repeat Last Export", "FileExportRepeat", Keys.E, ModifierKeys.ControlShift);
+        #region Localization
 
-        public static Shortcut CopyShortcut          = new Shortcut("Copy",           "Copy",          Keys.C, ModifierKeys.Control);
-        public static Shortcut CutShortcut           = new Shortcut("Cut",            "Cut",           Keys.X, ModifierKeys.Control);
-        public static Shortcut PasteShortcut         = new Shortcut("Paste",          "Paste",         Keys.V, ModifierKeys.Control);
-        public static Shortcut PasteSpecialShortcut  = new Shortcut("Paste Special",  "PasteSpecial",  Keys.V, ModifierKeys.ControlShift);
-        public static Shortcut DeleteShortcut        = new Shortcut("Delete",         "Delete",        Keys.Delete);
-        public static Shortcut DeleteSpecialShortcut = new Shortcut("Delete Special", "DeleteSpecial", Keys.Delete, ModifierKeys.ControlShift);
+        private static LocalizedString FileNewName;
+        private static LocalizedString FileOpenName;
+        private static LocalizedString FileSaveName;
+        private static LocalizedString FileSaveAsName;
+        private static LocalizedString FileExportName;
+        private static LocalizedString FileExportRepeatName;
 
-        public static Shortcut UndoShortcut       = new Shortcut("Undo", "Undo", Keys.Z, ModifierKeys.Control);
-        public static Shortcut RedoShortcut       = new Shortcut("Redo", "Redo", Keys.Y, ModifierKeys.Control, Keys.Z, ModifierKeys.ControlShift);
+        private static LocalizedString CopyName;
+        private static LocalizedString CutName;
+        private static LocalizedString PasteName;
+        private static LocalizedString PasteSpecialName;
+        private static LocalizedString DeleteName;
+        private static LocalizedString DeleteSpecialName;
+        private static LocalizedString SelectAllName;
 
-        public static Shortcut QwertyShortcut     = new Shortcut("Toggle QWERTY Input",   "Qwerty",     Keys.Q, ModifierKeys.Shift);
-        public static Shortcut RecordingShortcut  = new Shortcut("Toggle Recording Mode", "Recording",  Keys.Enter);
-        public static Shortcut FollowModeShortcut = new Shortcut("Toggle Follow Mode",    "FollowMode", Keys.F, ModifierKeys.Shift);
-                                                  
-        public static Shortcut PlayShortcut             = new Shortcut("Play",                 "Play",            Keys.Space);
-        public static Shortcut PlayFromStartShortcut    = new Shortcut("Play From Start",      "PlayFromStart",   Keys.Space, ModifierKeys.Shift);
-        public static Shortcut PlayFromPatternShortcut  = new Shortcut("Play From Pattern",    "PlayFromPattern", Keys.Space, ModifierKeys.Control);
-        public static Shortcut PlayFromLoopShortcut     = new Shortcut("Play From Loop Point", "PlayFromLoop",    Keys.Space, ModifierKeys.ControlShift);
+        private static LocalizedString UndoName;
+        private static LocalizedString RedoName;
 
-        public static Shortcut SeekStartShortcut        = new Shortcut("Seek to Start",            "SeekStart",        Keys.Home);
-        public static Shortcut SeekStartPatternShortcut = new Shortcut("Seek to Start of Pattern", "SeekStartPattenr", Keys.Home, ModifierKeys.Control);
+        private static LocalizedString ToggleQwertyName;
+        private static LocalizedString ToggleRecordingName;
+        private static LocalizedString ToggleFollowModeName;
 
-        public static Shortcut QwertySkipShortcut       = new Shortcut("QWERTY Skip",        "QwertySkip",       Keys.Tab);
-        public static Shortcut QwertyBackShortcut       = new Shortcut("QWERTY Delete",      "QwertyBack",       Keys.Backspace);
-        public static Shortcut QwertyStopShortcut       = new Shortcut("QWERTY Stop Note",   "QwertyStop",       Keys.D1);
-        public static Shortcut QwertyOctaveUpShortcut   = new Shortcut("QWERTY Octave Up",   "QwertyOctaveUp",   Keys.PageUp);
-        public static Shortcut QwertyOctaveDownShortcut = new Shortcut("QWERTY Octave Down", "QwertyOctaveDown", Keys.PageDown);
+        private static LocalizedString PlayName;
+        private static LocalizedString PlayFromStartName;
+        private static LocalizedString PlayFromPatternName;
+        private static LocalizedString PlayFromLoopName;
 
-        public static Shortcut SnapToggleShortcut        = new Shortcut("Toggle Snapping",     "SnapToggle",        Keys.S, ModifierKeys.Shift);
-        public static Shortcut EffectPanelShortcut       = new Shortcut("Toggle Effect Panel", "EffectPanel",       Keys.D1);
-        public static Shortcut MaximizePianoRollShortcut = new Shortcut("Maximize Piano Roll", "MaximizePianoRoll", Keys.D1, ModifierKeys.Control);
+        private static LocalizedString SeekStartName;
+        private static LocalizedString SeekStartPatternName;
 
-        public static Shortcut SelectAllShortcut         = new Shortcut("Select All",                  "SelectAll",    Keys.A, ModifierKeys.Control);
-        public static Shortcut ReleaseNoteShortcut       = new Shortcut("Release Note (+Click)",       "ReleaseNote",  Keys.R, false);
-        public static Shortcut StopNoteShortcut          = new Shortcut("Slide Note (+Click)",         "StopNote",     Keys.T, false);
-        public static Shortcut SlideNoteShortcut         = new Shortcut("Toggle Note (+Click)",        "SlideNote",    Keys.S, false);
-        public static Shortcut AttackShortcut            = new Shortcut("Slide Note (+Click)",         "ToggleAttack", Keys.A, false);
-        public static Shortcut EyeDropNoteShortcut       = new Shortcut("Instrument Eyedrop (+Click)", "EyeDrop",      Keys.I, false);
-        public static Shortcut SetLoopPointShortcut      = new Shortcut("Set Loop Point (+Click)",     "LoopPoint", Keys.L, false);
+        private static LocalizedString QwertySkipName;
+        private static LocalizedString QwertyBackName;
+        private static LocalizedString QwertyStopName;
+        private static LocalizedString QwertyOctaveUpName;
+        private static LocalizedString QwertyOctaveDownName;
 
-        public static Shortcut[] QwertyNoteShortcuts = new Shortcut[]
-        {
-            new Shortcut("QWERTY C0",  "Qwerty00", Keys.Z, Keys.Unknown),
-            new Shortcut("QWERTY C#0", "Qwerty01", Keys.S, Keys.Unknown),
-            new Shortcut("QWERTY D0",  "Qwerty02", Keys.X, Keys.Unknown),
-            new Shortcut("QWERTY D#0", "Qwerty03", Keys.D, Keys.Unknown),
-            new Shortcut("QWERTY E0",  "Qwerty04", Keys.C, Keys.Unknown),
-            new Shortcut("QWERTY F0",  "Qwerty05", Keys.V, Keys.Unknown),
-            new Shortcut("QWERTY F#0", "Qwerty06", Keys.G, Keys.Unknown),
-            new Shortcut("QWERTY G0",  "Qwerty07", Keys.B, Keys.Unknown),
-            new Shortcut("QWERTY G#0", "Qwerty08", Keys.H, Keys.Unknown),
-            new Shortcut("QWERTY A0",  "Qwerty09", Keys.N, Keys.Unknown),
-            new Shortcut("QWERTY A#0", "Qwerty10", Keys.J, Keys.Unknown),
-            new Shortcut("QWERTY B0",  "Qwerty11", Keys.M, Keys.Unknown),
+        private static LocalizedString SnapToggleName;
+        private static LocalizedString EffectPanelName;
+        private static LocalizedString MaximizePianoRollName;
 
-            new Shortcut("QWERTY C1",  "Qwerty12", Keys.Q,  Keys.Comma),
-            new Shortcut("QWERTY C#1", "Qwerty13", Keys.D2, Keys.L),
-            new Shortcut("QWERTY D1",  "Qwerty14", Keys.W,  Keys.Period),
-            new Shortcut("QWERTY D#1", "Qwerty15", Keys.D3, Keys.SemiColon),
-            new Shortcut("QWERTY E1",  "Qwerty16", Keys.E,  Keys.Slash),
-            new Shortcut("QWERTY F1",  "Qwerty17", Keys.R,  Keys.Unknown),
-            new Shortcut("QWERTY F#1", "Qwerty18", Keys.D5, Keys.Unknown),
-            new Shortcut("QWERTY G1",  "Qwerty19", Keys.T,  Keys.Unknown),
-            new Shortcut("QWERTY G#1", "Qwerty20", Keys.D6, Keys.Unknown),
-            new Shortcut("QWERTY A1",  "Qwerty21", Keys.Y,  Keys.Unknown),
-            new Shortcut("QWERTY A#1", "Qwerty22", Keys.D7, Keys.Unknown),
-            new Shortcut("QWERTY B1",  "Qwerty23", Keys.U,  Keys.Unknown),
+        private static LocalizedString ReleaseNoteName;
+        private static LocalizedString StopNoteName;
+        private static LocalizedString SlideNoteName;
+        private static LocalizedString AttackName;
+        private static LocalizedString EyeDropNoteName;
+        private static LocalizedString SetLoopPointName;
 
-            new Shortcut("QWERTY C2",  "Qwerty24", Keys.I,            Keys.Unknown),
-            new Shortcut("QWERTY C#2", "Qwerty25", Keys.D9,           Keys.Unknown),
-            new Shortcut("QWERTY D2",  "Qwerty26", Keys.O,            Keys.Unknown),
-            new Shortcut("QWERTY D#2", "Qwerty27", Keys.D0,           Keys.Unknown),
-            new Shortcut("QWERTY E2",  "Qwerty28", Keys.P,            Keys.Unknown),
-            new Shortcut("QWERTY F2",  "Qwerty29", Keys.LeftBracket,  Keys.Unknown),
-            new Shortcut("QWERTY F#2", "Qwerty30", Keys.Equal,        Keys.Unknown),
-            new Shortcut("QWERTY G2",  "Qwerty31", Keys.RightBracket, Keys.Unknown),
-            new Shortcut("QWERTY G#2", "Qwerty32", Keys.Unknown,      Keys.Unknown),
-            new Shortcut("QWERTY A2",  "Qwerty33", Keys.Unknown,      Keys.Unknown),
-            new Shortcut("QWERTY A#2", "Qwerty34", Keys.Unknown,      Keys.Unknown),
-            new Shortcut("QWERTY B2",  "Qwerty35", Keys.Unknown,      Keys.Unknown)
-        };
+        private static LocalizedString QwertyPrefix;
+        private static LocalizedString SetActiveChannelPrefix;
+        private static LocalizedString ForceDisplayPrefix;
 
-        public static Shortcut[] ActiveChannelShortcuts = new Shortcut[]
-        {
-            new Shortcut("Set Active Channel 1",  "Channel01", Keys.F1),
-            new Shortcut("Set Active Channel 2",  "Channel02", Keys.F2),
-            new Shortcut("Set Active Channel 3",  "Channel03", Keys.F3),
-            new Shortcut("Set Active Channel 4",  "Channel04", Keys.F4),
-            new Shortcut("Set Active Channel 5",  "Channel05", Keys.F5),
-            new Shortcut("Set Active Channel 6",  "Channel06", Keys.F6),
-            new Shortcut("Set Active Channel 7",  "Channel07", Keys.F7),
-            new Shortcut("Set Active Channel 8",  "Channel08", Keys.F8),
-            new Shortcut("Set Active Channel 9",  "Channel09", Keys.F9),
-            new Shortcut("Set Active Channel 10", "Channel10", Keys.F10),
-            new Shortcut("Set Active Channel 11", "Channel11", Keys.F11),
-            new Shortcut("Set Active Channel 12", "Channel12", Keys.F12),
-            new Shortcut("Set Active Channel 13", "Channel13", Keys.F13),
-            new Shortcut("Set Active Channel 14", "Channel14", Keys.F14),
-            new Shortcut("Set Active Channel 15", "Channel15", Keys.F15),
-            new Shortcut("Set Active Channel 16", "Channel16", Keys.F16),
-            new Shortcut("Set Active Channel 17", "Channel17", Keys.F17),
-            new Shortcut("Set Active Channel 18", "Channel18", Keys.F18),
-            new Shortcut("Set Active Channel 19", "Channel19", Keys.F19),
-            new Shortcut("Set Active Channel 20", "Channel20", Keys.F20),
-            new Shortcut("Set Active Channel 21", "Channel21", Keys.F21),
-            new Shortcut("Set Active Channel 22", "Channel22", Keys.F22),
-            new Shortcut("Set Active Channel 23", "Channel23", Keys.F23),
-            new Shortcut("Set Active Channel 24", "Channel24", Keys.F24),
-        };
+        #endregion
 
-        public static Shortcut[] DisplayChannelShortcuts = new Shortcut[]
-        {
-            new Shortcut("Force Display Channel 1",  "DisplayChannel01", Keys.F1,  ModifierKeys.Control),
-            new Shortcut("Force Display Channel 2",  "DisplayChannel02", Keys.F2,  ModifierKeys.Control),
-            new Shortcut("Force Display Channel 3",  "DisplayChannel03", Keys.F3,  ModifierKeys.Control),
-            new Shortcut("Force Display Channel 4",  "DisplayChannel04", Keys.F4,  ModifierKeys.Control),
-            new Shortcut("Force Display Channel 5",  "DisplayChannel05", Keys.F5,  ModifierKeys.Control),
-            new Shortcut("Force Display Channel 6",  "DisplayChannel06", Keys.F6,  ModifierKeys.Control),
-            new Shortcut("Force Display Channel 7",  "DisplayChannel07", Keys.F7,  ModifierKeys.Control),
-            new Shortcut("Force Display Channel 8",  "DisplayChannel08", Keys.F8,  ModifierKeys.Control),
-            new Shortcut("Force Display Channel 9",  "DisplayChannel09", Keys.F9,  ModifierKeys.Control),
-            new Shortcut("Force Display Channel 10", "DisplayChannel10", Keys.F10, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 11", "DisplayChannel11", Keys.F11, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 12", "DisplayChannel12", Keys.F12, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 13", "DisplayChannel13", Keys.F13, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 14", "DisplayChannel14", Keys.F14, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 15", "DisplayChannel15", Keys.F15, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 16", "DisplayChannel16", Keys.F16, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 17", "DisplayChannel17", Keys.F17, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 18", "DisplayChannel18", Keys.F18, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 19", "DisplayChannel19", Keys.F19, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 20", "DisplayChannel20", Keys.F20, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 21", "DisplayChannel21", Keys.F21, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 22", "DisplayChannel22", Keys.F22, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 23", "DisplayChannel23", Keys.F23, ModifierKeys.Control),
-            new Shortcut("Force Display Channel 24", "DisplayChannel24", Keys.F24, ModifierKeys.Control),
-        };
+        public static Shortcut FileNewShortcut;
+        public static Shortcut FileOpenShortcut;
+        public static Shortcut FileSaveShortcut;
+        public static Shortcut FileSaveAsShortcut;
+        public static Shortcut FileExportShortcut;
+        public static Shortcut FileExportRepeatShortcut;
+
+        public static Shortcut CopyShortcut;
+        public static Shortcut CutShortcut;
+        public static Shortcut PasteShortcut;
+        public static Shortcut PasteSpecialShortcut;
+        public static Shortcut DeleteShortcut;
+        public static Shortcut DeleteSpecialShortcut;
+        public static Shortcut SelectAllShortcut;
+
+        public static Shortcut UndoShortcut;
+        public static Shortcut RedoShortcut;
+
+        public static Shortcut QwertyShortcut;
+        public static Shortcut RecordingShortcut;
+        public static Shortcut FollowModeShortcut;
+
+        public static Shortcut PlayShortcut;
+        public static Shortcut PlayFromStartShortcut;
+        public static Shortcut PlayFromPatternShortcut;
+        public static Shortcut PlayFromLoopShortcut;
+
+        public static Shortcut SeekStartShortcut;
+        public static Shortcut SeekStartPatternShortcut;
+
+        public static Shortcut QwertySkipShortcut;
+        public static Shortcut QwertyBackShortcut;
+        public static Shortcut QwertyStopShortcut;
+        public static Shortcut QwertyOctaveUpShortcut;
+        public static Shortcut QwertyOctaveDownShortcut;
+
+        public static Shortcut SnapToggleShortcut;
+        public static Shortcut EffectPanelShortcut;
+        public static Shortcut MaximizePianoRollShortcut;
+
+        public static Shortcut ReleaseNoteShortcut;
+        public static Shortcut StopNoteShortcut;
+        public static Shortcut SlideNoteShortcut;
+        public static Shortcut AttackShortcut;
+        public static Shortcut EyeDropNoteShortcut;
+        public static Shortcut SetLoopPointShortcut;
+
+        public static Shortcut[] QwertyNoteShortcuts;
+        public static Shortcut[] ActiveChannelShortcuts;
+        public static Shortcut[] DisplayChannelShortcuts;
 
         // Audio section
         const int DefaultNumBufferedAudioFrames = Platform.IsLinux ? 4 : Platform.IsAndroid ? 2 : 3;
@@ -291,12 +252,159 @@ namespace FamiStudio
 
         public static void Initialize()
         {
+            Localization.LocalizeStatic(typeof(Settings));
+
             InitShortcuts();
             Load();
         }
 
         private static void InitShortcuts()
         {
+            FileNewShortcut          = new Shortcut(FileNewName,          "FileNew",          Keys.N, ModifierKeys.Control);
+            FileOpenShortcut         = new Shortcut(FileOpenName,         "FileOpen",         Keys.O, ModifierKeys.Control);
+            FileSaveShortcut         = new Shortcut(FileSaveName,         "FileSave",         Keys.S, ModifierKeys.Control);
+            FileSaveAsShortcut       = new Shortcut(FileSaveAsName,       "FileSaveAs",       Keys.S, ModifierKeys.ControlShift);
+            FileExportShortcut       = new Shortcut(FileExportName,       "FileExport",       Keys.E, ModifierKeys.Control);
+            FileExportRepeatShortcut = new Shortcut(FileExportRepeatName, "FileExportRepeat", Keys.E, ModifierKeys.ControlShift);
+
+            CopyShortcut          = new Shortcut(CopyName,          "Copy",          Keys.C, ModifierKeys.Control);
+            CutShortcut           = new Shortcut(CutName,           "Cut",           Keys.X, ModifierKeys.Control);
+            PasteShortcut         = new Shortcut(PasteName,         "Paste",         Keys.V, ModifierKeys.Control);
+            PasteSpecialShortcut  = new Shortcut(PasteSpecialName,  "PasteSpecial",  Keys.V, ModifierKeys.ControlShift);
+            DeleteShortcut        = new Shortcut(DeleteName,        "Delete",        Keys.Delete);
+            DeleteSpecialShortcut = new Shortcut(DeleteSpecialName, "DeleteSpecial", Keys.Delete, ModifierKeys.ControlShift);
+            SelectAllShortcut     = new Shortcut(SelectAllName,     "SelectAll", Keys.A, ModifierKeys.Control);
+
+            UndoShortcut = new Shortcut(UndoName, "Undo", Keys.Z, ModifierKeys.Control);
+            RedoShortcut = new Shortcut(RedoName, "Redo", Keys.Y, ModifierKeys.Control, Keys.Z, ModifierKeys.ControlShift);
+
+            QwertyShortcut     = new Shortcut(ToggleQwertyName,     "Qwerty",     Keys.Q, ModifierKeys.Shift);
+            RecordingShortcut  = new Shortcut(ToggleRecordingName,  "Recording",  Keys.Enter);
+            FollowModeShortcut = new Shortcut(ToggleFollowModeName, "FollowMode", Keys.F, ModifierKeys.Shift);
+
+            PlayShortcut             = new Shortcut(PlayName,            "Play",            Keys.Space);
+            PlayFromStartShortcut    = new Shortcut(PlayFromStartName,   "PlayFromStart",   Keys.Space, ModifierKeys.Shift);
+            PlayFromPatternShortcut  = new Shortcut(PlayFromPatternName, "PlayFromPattern", Keys.Space, ModifierKeys.Control);
+            PlayFromLoopShortcut     = new Shortcut(PlayFromLoopName,    "PlayFromLoop",    Keys.Space, ModifierKeys.ControlShift);
+
+            SeekStartShortcut        = new Shortcut(SeekStartName,        "SeekStart",        Keys.Home);
+            SeekStartPatternShortcut = new Shortcut(SeekStartPatternName, "SeekStartPattenr", Keys.Home, ModifierKeys.Control);
+
+            QwertySkipShortcut       = new Shortcut(QwertySkipName,       "QwertySkip",       Keys.Tab);
+            QwertyBackShortcut       = new Shortcut(QwertyBackName,       "QwertyBack",       Keys.Backspace);
+            QwertyStopShortcut       = new Shortcut(QwertyStopName,       "QwertyStop",       Keys.D1);
+            QwertyOctaveUpShortcut   = new Shortcut(QwertyOctaveUpName,   "QwertyOctaveUp",   Keys.PageUp);
+            QwertyOctaveDownShortcut = new Shortcut(QwertyOctaveDownName, "QwertyOctaveDown", Keys.PageDown);
+
+            SnapToggleShortcut        = new Shortcut(SnapToggleName,        "SnapToggle",        Keys.S, ModifierKeys.Shift);
+            EffectPanelShortcut       = new Shortcut(EffectPanelName,       "EffectPanel",       Keys.D1);
+            MaximizePianoRollShortcut = new Shortcut(MaximizePianoRollName, "MaximizePianoRoll", Keys.D1, ModifierKeys.Control);
+
+            ReleaseNoteShortcut       = new Shortcut(ReleaseNoteName,  "ReleaseNote",  Keys.R, false);
+            StopNoteShortcut          = new Shortcut(StopNoteName,     "StopNote",     Keys.T, false);
+            SlideNoteShortcut         = new Shortcut(SlideNoteName,    "SlideNote",    Keys.S, false);
+            AttackShortcut            = new Shortcut(AttackName,       "ToggleAttack", Keys.A, false);
+            EyeDropNoteShortcut       = new Shortcut(EyeDropNoteName,  "EyeDrop",      Keys.I, false);
+            SetLoopPointShortcut      = new Shortcut(SetLoopPointName, "LoopPoint",    Keys.L, false);
+
+            QwertyNoteShortcuts = new Shortcut[]
+            {
+                new Shortcut(QwertyPrefix.Format("C0"),  "Qwerty00", Keys.Z, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("C#0"), "Qwerty01", Keys.S, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("D0"),  "Qwerty02", Keys.X, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("D#0"), "Qwerty03", Keys.D, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("E0"),  "Qwerty04", Keys.C, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("F0"),  "Qwerty05", Keys.V, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("F#0"), "Qwerty06", Keys.G, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("G0"),  "Qwerty07", Keys.B, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("G#0"), "Qwerty08", Keys.H, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("A0"),  "Qwerty09", Keys.N, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("A#0"), "Qwerty10", Keys.J, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("B0"),  "Qwerty11", Keys.M, Keys.Unknown),
+
+                new Shortcut(QwertyPrefix.Format("C1"),  "Qwerty12", Keys.Q,  Keys.Comma),
+                new Shortcut(QwertyPrefix.Format("C#1"), "Qwerty13", Keys.D2, Keys.L),
+                new Shortcut(QwertyPrefix.Format("D1"),  "Qwerty14", Keys.W,  Keys.Period),
+                new Shortcut(QwertyPrefix.Format("D#1"), "Qwerty15", Keys.D3, Keys.SemiColon),
+                new Shortcut(QwertyPrefix.Format("E1"),  "Qwerty16", Keys.E,  Keys.Slash),
+                new Shortcut(QwertyPrefix.Format("F1"),  "Qwerty17", Keys.R,  Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("F#1"), "Qwerty18", Keys.D5, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("G1"),  "Qwerty19", Keys.T,  Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("G#1"), "Qwerty20", Keys.D6, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("A1"),  "Qwerty21", Keys.Y,  Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("A#1"), "Qwerty22", Keys.D7, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("B1"),  "Qwerty23", Keys.U,  Keys.Unknown),
+
+                new Shortcut(QwertyPrefix.Format("C2"),  "Qwerty24", Keys.I,            Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("C#2"), "Qwerty25", Keys.D9,           Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("D2"),  "Qwerty26", Keys.O,            Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("D#2"), "Qwerty27", Keys.D0,           Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("E2"),  "Qwerty28", Keys.P,            Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("F2"),  "Qwerty29", Keys.LeftBracket,  Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("F#2"), "Qwerty30", Keys.Equal,        Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("G2"),  "Qwerty31", Keys.RightBracket, Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("G#2"), "Qwerty32", Keys.Unknown,      Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("A2"),  "Qwerty33", Keys.Unknown,      Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("A#2"), "Qwerty34", Keys.Unknown,      Keys.Unknown),
+                new Shortcut(QwertyPrefix.Format("B2"),  "Qwerty35", Keys.Unknown,      Keys.Unknown)
+            };
+
+            ActiveChannelShortcuts = new Shortcut[]
+            {
+                new Shortcut(SetActiveChannelPrefix.Format("1"),  "Channel01", Keys.F1),
+                new Shortcut(SetActiveChannelPrefix.Format("2"),  "Channel02", Keys.F2),
+                new Shortcut(SetActiveChannelPrefix.Format("3"),  "Channel03", Keys.F3),
+                new Shortcut(SetActiveChannelPrefix.Format("4"),  "Channel04", Keys.F4),
+                new Shortcut(SetActiveChannelPrefix.Format("5"),  "Channel05", Keys.F5),
+                new Shortcut(SetActiveChannelPrefix.Format("6"),  "Channel06", Keys.F6),
+                new Shortcut(SetActiveChannelPrefix.Format("7"),  "Channel07", Keys.F7),
+                new Shortcut(SetActiveChannelPrefix.Format("8"),  "Channel08", Keys.F8),
+                new Shortcut(SetActiveChannelPrefix.Format("9"),  "Channel09", Keys.F9),
+                new Shortcut(SetActiveChannelPrefix.Format("10"), "Channel10", Keys.F10),
+                new Shortcut(SetActiveChannelPrefix.Format("11"), "Channel11", Keys.F11),
+                new Shortcut(SetActiveChannelPrefix.Format("12"), "Channel12", Keys.F12),
+                new Shortcut(SetActiveChannelPrefix.Format("13"), "Channel13", Keys.F13),
+                new Shortcut(SetActiveChannelPrefix.Format("14"), "Channel14", Keys.F14),
+                new Shortcut(SetActiveChannelPrefix.Format("15"), "Channel15", Keys.F15),
+                new Shortcut(SetActiveChannelPrefix.Format("16"), "Channel16", Keys.F16),
+                new Shortcut(SetActiveChannelPrefix.Format("17"), "Channel17", Keys.F17),
+                new Shortcut(SetActiveChannelPrefix.Format("18"), "Channel18", Keys.F18),
+                new Shortcut(SetActiveChannelPrefix.Format("19"), "Channel19", Keys.F19),
+                new Shortcut(SetActiveChannelPrefix.Format("20"), "Channel20", Keys.F20),
+                new Shortcut(SetActiveChannelPrefix.Format("21"), "Channel21", Keys.F21),
+                new Shortcut(SetActiveChannelPrefix.Format("22"), "Channel22", Keys.F22),
+                new Shortcut(SetActiveChannelPrefix.Format("23"), "Channel23", Keys.F23),
+                new Shortcut(SetActiveChannelPrefix.Format("24"), "Channel24", Keys.F24),
+            };
+
+            DisplayChannelShortcuts = new Shortcut[]
+            {
+                new Shortcut(ForceDisplayPrefix.Format("1"),  "DisplayChannel01", Keys.F1,  ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("2"),  "DisplayChannel02", Keys.F2,  ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("3"),  "DisplayChannel03", Keys.F3,  ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("4"),  "DisplayChannel04", Keys.F4,  ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("5"),  "DisplayChannel05", Keys.F5,  ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("6"),  "DisplayChannel06", Keys.F6,  ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("7"),  "DisplayChannel07", Keys.F7,  ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("8"),  "DisplayChannel08", Keys.F8,  ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("9"),  "DisplayChannel09", Keys.F9,  ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("10"), "DisplayChannel10", Keys.F10, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("11"), "DisplayChannel11", Keys.F11, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("12"), "DisplayChannel12", Keys.F12, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("13"), "DisplayChannel13", Keys.F13, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("14"), "DisplayChannel14", Keys.F14, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("15"), "DisplayChannel15", Keys.F15, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("16"), "DisplayChannel16", Keys.F16, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("17"), "DisplayChannel17", Keys.F17, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("18"), "DisplayChannel18", Keys.F18, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("19"), "DisplayChannel19", Keys.F19, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("20"), "DisplayChannel20", Keys.F20, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("21"), "DisplayChannel21", Keys.F21, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("22"), "DisplayChannel22", Keys.F22, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("23"), "DisplayChannel23", Keys.F23, ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("24"), "DisplayChannel24", Keys.F24, ModifierKeys.Control),
+            };
+
             AllShortcuts.Sort((c1, c2) => c1.ConfigName.CompareTo(c2.ConfigName));
             DefaultShortcuts = Shortcut.CloneList(AllShortcuts);
         }
