@@ -811,8 +811,9 @@ namespace FamiStudio
                 var dmc = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMCOUNTER, 0);
                 var len = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMSAMPLELENGTH, 0);
                 var dmcActive = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMACTIVE, 0);
+                var minSampleLen = preserveDpcmPadding ? 1 : 2;
 
-                if (len > 0) 
+                if (len >= minSampleLen) 
                 {
                     // Subtracting one here is not correct. But it is a fact that a lot of games
                     // seemed to favor tight sample packing and did not care about playing one
