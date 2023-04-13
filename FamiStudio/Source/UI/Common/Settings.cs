@@ -117,6 +117,14 @@ namespace FamiStudio
         public static Shortcut EffectPanelShortcut       = new Shortcut("Toggle Effect Panel", "EffectPanel",       Keys.D1);
         public static Shortcut MaximizePianoRollShortcut = new Shortcut("Maximize Piano Roll", "MaximizePianoRoll", Keys.D1, ModifierKeys.Control);
 
+        public static Shortcut SelectAllShortcut         = new Shortcut("Select All",                  "SelectAll",    Keys.A, ModifierKeys.Control);
+        public static Shortcut ReleaseNoteShortcut       = new Shortcut("Release Note (+Click)",       "ReleaseNote",  Keys.R, false);
+        public static Shortcut StopNoteShortcut          = new Shortcut("Slide Note (+Click)",         "StopNote",     Keys.T, false);
+        public static Shortcut SlideNoteShortcut         = new Shortcut("Toggle Note (+Click)",        "SlideNote",    Keys.S, false);
+        public static Shortcut AttackShortcut            = new Shortcut("Slide Note (+Click)",         "ToggleAttack", Keys.A, false);
+        public static Shortcut EyeDropNoteShortcut       = new Shortcut("Instrument Eyedrop (+Click)", "EyeDrop",      Keys.I, false);
+        public static Shortcut SetLoopPointShortcut      = new Shortcut("Set Loop Point (+Click)",     "LoopPoint", Keys.L, false);
+
         public static Shortcut[] QwertyNoteShortcuts = new Shortcut[]
         {
             new Shortcut("QWERTY C0",  "Qwerty00", Keys.Z, Keys.Unknown),

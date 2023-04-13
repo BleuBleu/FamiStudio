@@ -484,6 +484,9 @@ namespace FamiStudio
                 e.Key != Keys.RightShift &&
                 e.Key != Keys.RightSuper)
             {
+                if (!shortcuts[keysRowIndex].AllowModifiers)
+                    e = new KeyEventArgs(e.Key, new ModifierKeys(0), false, 0);
+
                 AssignKeyboardKey(keysRowIndex, keysColIndex - 1, e);
                 pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
                 dlg.Close(DialogResult.OK);

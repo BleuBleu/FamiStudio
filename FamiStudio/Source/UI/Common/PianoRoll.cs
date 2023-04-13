@@ -5119,7 +5119,7 @@ namespace FamiStudio
                 ClearSelection();
                 MarkDirty();
             }
-            else if (e.Key == Keys.A && e.Control && IsActiveControl)
+            else if (IsActiveControl && Settings.SelectAllShortcut.Matches(e))
             {
                 SelectAll();
             }
@@ -5617,7 +5617,7 @@ namespace FamiStudio
             {
                 if (e.Left)
                 {
-                    var slide = ParentWindow.IsKeyDown(Keys.S);
+                    var slide = Settings.SlideNoteShortcut.IsKeyDown(ParentWindow);
 
                     if (slide && selectedEffectIdx == Note.EffectVolume)
                     {
@@ -5742,11 +5742,11 @@ namespace FamiStudio
                 if (left)
                 {
                     var delete  = ModifierKeys.IsShiftDown;
-                    var release = ParentWindow.IsKeyDown(Keys.R); 
-                    var stop    = ParentWindow.IsKeyDown(Keys.T);
-                    var slide   = ParentWindow.IsKeyDown(Keys.S);
-                    var attack  = ParentWindow.IsKeyDown(Keys.A);
-                    var eyedrop = ParentWindow.IsKeyDown(Keys.I);
+                    var release = Settings.ReleaseNoteShortcut.IsKeyDown(ParentWindow);
+                    var stop    = Settings.StopNoteShortcut.IsKeyDown(ParentWindow);
+                    var slide   = Settings.SlideNoteShortcut.IsKeyDown(ParentWindow);
+                    var attack  = Settings.AttackShortcut.IsKeyDown(ParentWindow);
+                    var eyedrop = Settings.EyeDropNoteShortcut.IsKeyDown(ParentWindow);
 
                     if (delete && note != null)
                     {
@@ -8932,7 +8932,7 @@ namespace FamiStudio
             {
                 Cursor = Cursors.CopyCursor;
             }
-            else if (editMode == EditionMode.Channel && ParentWindow.IsKeyDown(Keys.I))
+            else if (editMode == EditionMode.Channel && Settings.EyeDropNoteShortcut.IsKeyDown(ParentWindow))
             {
                 Cursor = Cursors.Eyedrop;
             }

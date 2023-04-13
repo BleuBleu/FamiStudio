@@ -1,9 +1,5 @@
 4.1.0
 =====
-- BUG : Keyboard shortcuts on linux ignore layout.
-	- It works, it just uses physical keys location. 
-	- Can we have a keyboard shortcut option that says "the letter, not the physical key location"?
-	- Add a bit more configurable keys to pianoroll/sequencer to make everyone happy.
 - BUG : Gimmick NSF song 8 imports a zero byte sample?
 
 - Try no attack? Do it at airport/plane.
@@ -183,4 +179,3 @@ Backlog:
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
-- Wayland support on Linux (GLFW supports it). Standard file dialogs.
