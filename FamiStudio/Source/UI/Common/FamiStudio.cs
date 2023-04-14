@@ -976,7 +976,7 @@ namespace FamiStudio
                 if (Platform.IsDesktop)
                 {
                     if (filename == null)
-                        filename = Platform.ShowOpenFileDialog(DesktopOpenProjectTitle, "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
+                        filename = Platform.ShowOpenFileDialog(DesktopOpenProjectTitle, "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid|VGM files (*.vgm)|*.vgm", ref Settings.LastFileFolder);
 
                     if (filename != null)
                         UnloadAndOpenAction(filename);
@@ -1014,10 +1014,11 @@ namespace FamiStudio
             var fms = extension == ".fms";
             var ftm = extension == ".ftm";
             var txt = extension == ".txt";
+            var vgm = extension == ".vgm";
             var nsf = extension == ".nsf" || extension == ".nsfe";
             var mid = extension == ".mid" && Platform.IsDesktop;
 
-            var requiresDialog = allowComplexFormats && (nsf || mid);
+            var requiresDialog = allowComplexFormats && (nsf || mid || vgm);
 
             var project = (Project)null;
 
@@ -1049,6 +1050,11 @@ namespace FamiStudio
                 {
                     var dlg = new NsfImportDialog(window, filename);
                     dlg.ShowDialogAsync(window, ClearTemporaryProjectAndInvokeAction);
+                }
+                else if (vgm)
+                {
+                    var dlg = new VgmImportDialog(window, filename, ClearTemporaryProjectAndInvokeAction);
+                    //dlg.ShowDialogAsync(window, ClearTemporaryProjectAndInvokeAction);
                 }
             }
             else
