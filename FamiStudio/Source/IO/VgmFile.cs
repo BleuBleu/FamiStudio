@@ -177,16 +177,10 @@ namespace FamiStudio
                             fileLength++;
                             if (frameNumber == loopPointFrame) { header.loopOffset = fileLength - 25; }  // Relative pointer difference is 24, and the 1 is the data stop command at the end
                         }
-                        switch (reg.Register)
-                        {
-                            case NesApu.EPSM_DATA0: case NesApu.EPSM_DATA1:
-                            case NesApu.VRC7_REG_WRITE:
-                            case NesApu.S5B_DATA:
-                            case (>= NesApu.APU_PL1_VOL and < NesApu.EPSM_ADDR0):  //2A03/7 registers
-                            case (>= 0x4020 and < 0x409f):  //FDS registers
-                                fileLength += 3;
-                                break;
-                        }
+                        if (reg.Register == NesApu.VRC7_REG_WRITE ||               //If VRC7 write, or
+                        reg.Register == NesApu.S5B_DATA ||                         //S5B write, or
+                        reg.Register >= NesApu.APU_PL1_VOL && reg.Register < 0x409F &&//2A03/FDS/EPSM write,
+                        (reg.Register & 0xFD) != 0x1C) fileLength += 3;        //but not EPSM address
                     }
                     header.loopBase = 0;
                     if (loopPointFrame != -1)
@@ -201,7 +195,7 @@ namespace FamiStudio
                         header.loopModifier = 0;
                     }
                     header.gd3Offset = fileLength - 16;
-                    fileLength = fileLength + gd3Length;
+                    fileLength += gd3Length + 12;   //12 bytes for Gd3 header, version and length
                     header.eofOffset = fileLength;
                     var headerBytes = new byte[sizeof(VgmHeader)];
 
@@ -268,8 +262,8 @@ namespace FamiStudio
                     if (project.UsesEPSMExpansion)
                     {
                         writer.Write(new byte[]{
-                             0x56, 0x29, 0x80,  //Disable IRQs, bit 7 ???
-                             0x56, 0x27, 0x00,  //Disable timers, use 6 channel mode
+                             0x56, 0x29, 0x80,  //Disable IRQs, use 6 channel mode
+                             0x56, 0x27, 0x00,  //Disable timers, normal channel 3 mode
                              0x56, 0x11, 0x37});//Max rhythm total volume
                     }
                     foreach (var reg in writes)
