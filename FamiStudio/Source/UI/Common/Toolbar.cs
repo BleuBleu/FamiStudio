@@ -1227,8 +1227,6 @@ namespace FamiStudio
                 c.PopTransform();
             }
 
-            c.PopClipRegion();
-
             if (Platform.IsMobile)
             {
                 Utils.SplitVersionNumber(Platform.ApplicationVersion, out var betaNumber);
@@ -1236,6 +1234,8 @@ namespace FamiStudio
                 if (betaNumber > 0)
                     c.DrawText($"BETA {betaNumber}", Fonts.FontSmall, x + 4, y + 4, Theme.LightRedColor);
             }
+
+            c.PopClipRegion();
 
             c.DrawRectangle(x, y, x + sx, y + sy, Theme.LightGreyColor2);
         }
