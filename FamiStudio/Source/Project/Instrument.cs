@@ -982,6 +982,11 @@ namespace FamiStudio
                 envelopes[EnvelopeType.YMNoiseFreq] = new Envelope(EnvelopeType.YMNoiseFreq);
             }
 
+            if (buffer.IsReading)
+            {
+                PerformPostLoadActions();
+            }
+
             // Revert back presets to "customs" if they no longer match what the code generates.
             // This is in case we change the code that generates the preset.
             if (buffer.IsReading && !buffer.IsForUndoRedo)
@@ -992,11 +997,6 @@ namespace FamiStudio
                     fdsWavPreset = WavePresetType.Custom;
                 if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsModPreset))
                     fdsModPreset = WavePresetType.Custom;
-            }
-
-            if (buffer.IsReading)
-            {
-                PerformPostLoadActions();
             }
         }
     }
