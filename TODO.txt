@@ -11,11 +11,6 @@
 
 Packaging
 =========
-- Preset instruments + localizations.
-	x Add to windows installer
-	x Add to windows portable
-	- Linux
-	- MacOS
 - Add "description" HTML metadata to famistudio doc.
 - Recompile ROMs, re-export data, bump versions, etc.
 - MacOS install doesnt work if dotnet is missing? I thought that was fixed.
@@ -41,7 +36,8 @@ Packaging
 - Project explorer sorting improvements
 - NSF import support on Android
 - Stereo and delay export support on Android.
-- Sunsoft 5B noise support
+- Sunsoft 5B noise support (Perkka contribution)
+- Experimental spanish translation
 
 Android SDK 12
 ==============
