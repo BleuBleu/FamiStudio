@@ -528,10 +528,15 @@ namespace FamiStudio
             if ( Localization.GetIndexForLanguageCode(LanguageCode) < 0)
                 LanguageCode = ""; // Empty = system
 
+            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+            // Need to get out of the package on MacOS. (TODO : Move to Platform).
+            if (Platform.IsMacOS)
+                Path.Combine(appPath, "../../..");
+
             // Try to point to the demo songs initially.
             if (string.IsNullOrEmpty(LastFileFolder) || !Directory.Exists(LastFileFolder))
             {
-                var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 var demoSongsPath = Path.Combine(appPath, "Demo Songs");
                 LastFileFolder = Directory.Exists(demoSongsPath) ? demoSongsPath : "";
             }
@@ -539,7 +544,6 @@ namespace FamiStudio
             // Try to point to the demo instruments initially.
             if (string.IsNullOrEmpty(LastInstrumentFolder) || !Directory.Exists(LastInstrumentFolder))
             {
-                var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 var demoInstPath = Path.Combine(appPath, "Demo Instruments");
                 LastInstrumentFolder = Directory.Exists(demoInstPath) ? demoInstPath : "";
             }
