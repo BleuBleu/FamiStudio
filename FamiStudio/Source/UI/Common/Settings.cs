@@ -532,7 +532,7 @@ namespace FamiStudio
 
             // Need to get out of the package on MacOS. (TODO : Move to Platform).
             if (Platform.IsMacOS)
-                Path.Combine(appPath, "../../..");
+                appPath = Path.Combine(appPath, "../../..");
 
             // Try to point to the demo songs initially.
             if (string.IsNullOrEmpty(LastFileFolder) || !Directory.Exists(LastFileFolder))
