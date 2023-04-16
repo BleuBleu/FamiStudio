@@ -37,7 +37,7 @@ Packaging
 - NSF import support on Android
 - Stereo and delay export support on Android.
 - Sunsoft 5B noise support (Perkka contribution)
-- Experimental spanish translation
+- Experimental translations (spanish being the most complete)
 
 Android SDK 12
 ==============
