@@ -264,14 +264,25 @@ namespace FamiStudio
             return regs.GetMergedSubRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_LO_A + i * 2, NesApu.S5B_REG_HI_A + i * 2, 0xf);
         }
 
-        public double GetFrequency(int i)
+        public double GetToneFrequency(int i)
         {
             return NesPeriodToFreq(GetPeriod(i), 32);
         }
-
+        public int GetNoiseFrequency()
+        {
+            return regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_NOISE_FREQ) & 0x1f;
+        }
         public int GetVolume(int i)
         {
             return regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_VOL_A + i) & 0xf;
+        }
+        public bool GetMixerSetting(int channel)  // channel 0-2 - tone for channels ABC; 3-5 - noise 
+        {
+            return (regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_MIXER_SETTING) & (0x01 << channel)) == 0;
+        }
+        public bool GetEnvelopeEnabled(int channel)  // channel 0-2 for channels ABC 
+        {
+            return (regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_VOL_A+channel) & 0x10) != 0;
         }
     }
 
@@ -327,6 +338,15 @@ namespace FamiStudio
                 return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA1, 0x40 + (i-6) + op * 4) & 0x7f;
             else
                 return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0x18 + i-9) & 0x1f;
+        }
+
+        public bool GetMixerSetting(int channel)  // channel 0-2 - tone for channels ABC; 3-5 - noise 
+        {
+            return (regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_MIXER_SETTING) & (0x01 << channel)) == 0;
+        }
+        public bool GetEnvelopeEnabled(int channel)  // channel 0-2 for channels ABC 
+        {
+            return (regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_VOL_A + channel) & 0x10) != 0;
         }
 
         public string GetStereo(int i)
