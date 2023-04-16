@@ -28,6 +28,8 @@ void Nes_EPSM::reset(bool pal = false)
 	reset_opn2();
 	last_time = 0;
 	last_psg_amp = 0;
+	sample_left = 0;
+	sample_right = 0;
 	last_opn2_amp_left = 0;
 	last_opn2_amp_right = 0;
 	psg_delay = 0;
@@ -116,51 +118,44 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 
 void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 {
-	bool psg_reg = false;
-
-	if (addr >= reg_select && addr < (reg_select + reg_range)) 
+	switch (addr)
 	{
-		reg = data;
-	}
-	else if (addr >= reg_write && addr < (reg_write + reg_range)) 
-	{
-		if ((addr == 0x401d) && (reg < 0x10))
+	case reg_select:
+	case reg_write:
+	case reg_select2:
+	case reg_write2:
+		bool psg_reg = false;
+		switch (addr)
 		{
-			PSG_writeReg(psg, reg, data);
-			psg_reg = true;
-		}
-	}
-
-	switch(addr) 
-	{
-		case 0x401c:
-		case 0x401e:
+		case reg_select:
+			reg = data;
+		case reg_select2:
 			current_register = data;
 			break;
-		case 0x401d:
-		case 0x401f:
-			break;
-	}
-
-	int a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
-	int a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
-
-	switch (addr) 
-	{
-		case 0x401d:
+		case reg_write:
+			if (reg < 0x10)
+			{
+				PSG_writeReg(psg, reg, data);
+				psg_reg = true;
+			}
 			regs_a0[current_register] = data;
 			ages_a0[current_register] = 0;
 			break;
-		case 0x401f:
+		case reg_write2:
 			regs_a1[current_register] = data;
 			ages_a1[current_register] = 0;
 			break;
+		}
+
+		int a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
+		int a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
+
+		if (!psg_reg)
+			OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
+
+		run_until(time);
+		break;
 	}
-
-	if (!psg_reg) 
-		OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
-
-	run_until(time);
 }
 
 long Nes_EPSM::run_until(cpu_time_t end_time)
@@ -199,52 +194,50 @@ long Nes_EPSM::run_until(cpu_time_t end_time)
 		psg_time += psg_increment;
 	}
 
-	cpu_time_t opn2_increment = ((int64_t)(output_buffer_left->clock_rate() * 6 * 24) << epsm_time_precision) / epsm_clock;
+	cpu_time_t opn2_increment = ((int64_t)(output_buffer_left->clock_rate() * 6) << epsm_time_precision) / epsm_clock;
 	cpu_time_t opn2_time = last_time + opn2_delay;
 
 	while (opn2_time < end_time)
 	{
-		int sample_left  = 0;
-		int sample_right = 0;
+		int16_t samples[4];
+		OPN2_Clock(&opn2, samples, mask_fm, mask_rhythm, false);
+
+		sample_left  += (int)(samples[0] * 6);
+		sample_left  += (int)(samples[2] * 11 / 20);
+		sample_right += (int)(samples[1] * 6);
+		sample_right += (int)(samples[3] * 11 / 20);
 
 		// The chip does a full update in 24-steps. It outputs the value of 
 		// certain channels at each of those 24 steps. So for maximum audio 
-		// quality, we always run a full 24-cycles updates (which takes ~32.2159 
-		// NES cycles in NTSC) so we get even output from all the channels.
-		require(opn2.cycles == 0);
-
-		for (int i = 0; i < 24; i++)
+		// quality, we wait until the chip has done a full update (which takes 
+		// ~32.2159 NES cycles in NTSC) so we get even output from all the channels.
+		if (opn2.cycles == 0)
 		{
-			int16_t samples[4];
-			OPN2_Clock(&opn2, samples, mask_fm, mask_rhythm, false);
+			int delta_left  = sample_left  - last_opn2_amp_left;
+			int delta_right = sample_right - last_opn2_amp_right;
 
-			sample_left  += (int)(samples[0] * 6);
-			sample_left  += (int)(samples[2] * 11 / 20);
-			sample_right += (int)(samples[1] * 6);
-			sample_right += (int)(samples[3] * 11 / 20);
-		}
+			if (delta_left)
+			{
+				synth_left.offset(opn2_time >> epsm_time_precision, delta_left, output_buffer_left);
+				last_opn2_amp_left = sample_left;
+			}
 
-		int delta_left  = sample_left  - last_opn2_amp_left;
-		int delta_right = sample_right - last_opn2_amp_right;
+			if (delta_right)
+			{
+				synth_right.offset(opn2_time >> epsm_time_precision, delta_right, output_buffer_right);
+				last_opn2_amp_right = sample_right;
+			}
 
-		if (delta_left)
-		{
-			synth_left.offset(opn2_time >> epsm_time_precision, delta_left, output_buffer_left);
-			last_opn2_amp_left = sample_left;
-		}
+			for (int i = 0; i < 6; i++)
+			{
+				if (opn2.triggers[i] == 1)
+					update_trigger(output_buffer_left, opn2_time >> epsm_time_precision, triggers[i + 3]);
+				else if (opn2.triggers[i] == 2)
+					triggers[i + 3] = trigger_none;
+			}
 
-		if (delta_right)
-		{
-			synth_right.offset(opn2_time >> epsm_time_precision, delta_right, output_buffer_right);
-			last_opn2_amp_right = sample_right;
-		}
-
-		for (int i = 0; i < 6; i++)
-		{
-			if (opn2.triggers[i] == 1)
-				update_trigger(output_buffer_left, opn2_time >> epsm_time_precision, triggers[i + 3]);
-			else if (opn2.triggers[i] == 2)
-				triggers[i + 3] = trigger_none;
+			sample_left  = 0;
+			sample_right = 0;
 		}
 
 		opn2_time += opn2_increment;
@@ -281,13 +274,13 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 		{
 			if (i >= 0xC0)
 			{
-				write_register(clock += reg_cycle_skip, reg_select, 0x28);
-				write_register(clock += reg_cycle_skip, reg_write, shadow_internal_regs[i]);
+				write_register(clock += reg_addr_cycle_skip, reg_select, 0x28);
+				write_register(clock += reg_data_cycle_skip, reg_write, shadow_internal_regs[i]);
             }
 			else
 			{
-				write_register(clock += reg_cycle_skip, reg_select, i);
-				write_register(clock += reg_cycle_skip, reg_write, shadow_internal_regs[i]);
+				write_register(clock += reg_addr_cycle_skip, reg_select, i);
+				write_register(clock += reg_data_cycle_skip, reg_write, shadow_internal_regs[i]);
 			}
 		}
 	}
@@ -296,8 +289,8 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 	{
 		if (shadow_internal_regs2[i] >= 0)
 		{
-			write_register(clock += reg_cycle_skip, reg_select2, i);
-			write_register(clock += reg_cycle_skip, reg_write2, shadow_internal_regs2[i]);
+			write_register(clock += reg_addr_cycle_skip, reg_select2, i);
+			write_register(clock += reg_data_cycle_skip, reg_write2, shadow_internal_regs2[i]);
 		}
 	}
 }
@@ -312,7 +305,7 @@ void Nes_EPSM::write_shadow_register(int addr, int data)
 	{
 		if(reg == 0x28)
 			shadow_internal_regs[0xC0+(0xF & data)] = data;
-		else
+		else if(reg != 0x10)
 			shadow_internal_regs[reg] = data;
 	}
 	if (addr >= reg_select2 && addr < (reg_select2 + reg_range)) 

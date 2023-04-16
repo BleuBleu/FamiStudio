@@ -20,7 +20,7 @@ namespace FamiStudio
         private readonly string UserProjectSaveTooltip = "These are your projects. Select one to overwrite it. The save to a new project file, select the last option and enter a name.";
         private readonly string UserProjectLoadTooltip = "These are your projects. Select one to load it.";
         private readonly string DemoProjectLoadTooltip = "These are demo projects provided with FamiStudio. They are great resources for learning.";
-        private readonly string StorageTooltip         = "This will prompt you to open a file from your device's storage. You can open FamiStudio .FMS files, as well as other file formats such as FamiTracker FTM or TXT files.";
+        private readonly string StorageTooltip         = "This will prompt you to open a file from your device's storage. You can open FamiStudio .FMS files, as well as other file formats such as NSF, FamiTracker FTM or TXT files.";
 
         public MobileProjectDialog(FamiStudio fami, string title, bool save, bool allowStorage = true)
         {
@@ -29,6 +29,9 @@ namespace FamiStudio
 
             dialog = new PropertyDialog(famistudio.Window, title, 100);
             dialog.SetVerb(save ? "Save" : "Open");
+
+            if (save)
+                dialog.ValidateProperties += Dialog_ValidateProperties;
 
             // User files.
             var userProjectsDir = Platform.UserProjectsDirectory;
@@ -90,6 +93,30 @@ namespace FamiStudio
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;
             dialog.Properties.PropertyChanged += Properties_PropertyChanged;
             dialog.Properties.Build();
+        }
+
+        private bool Dialog_ValidateProperties(PropertyPage props)
+        {
+            var idx = dialog.Properties.GetSelectedIndex(0);
+            var newFile = idx == userProjects.Count - 1;
+            var filename = dialog.Properties.GetPropertyValue<string>(1);
+
+            if (newFile && string.IsNullOrEmpty(filename))
+            {
+                Platform.ShowToast(famistudio.Window, "Please enter a valid filename");
+                return false;
+            }
+            else if (!newFile)
+            {
+                Platform.MessageBoxAsync(famistudio.Window, "Overwrite project?", "Overwrite", MessageBoxButtons.YesNo, (r) =>
+                {
+                    if (r == DialogResult.Yes)
+                        dialog.CloseWithResult(DialogResult.OK);
+                });
+                return false;
+            }
+
+            return true;
         }
 
         private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -163,13 +190,8 @@ namespace FamiStudio
                     if (saveMode)
                     {
                         var userProjectIdx = dialog.Properties.GetSelectedIndex(0);
-                        var filename = "";
-
-                        // New file requested.
-                        if (userProjectIdx == userProjects.Count - 1)
-                            filename = dialog.Properties.GetPropertyValue<string>(1);
-                        else
-                            filename = userProjects[userProjectIdx];
+                        var newFile = userProjectIdx == userProjects.Count - 1;
+                        var filename = newFile ? dialog.Properties.GetPropertyValue<string>(1) : userProjects[userProjectIdx];
 
                         if (!string.IsNullOrEmpty(filename))
                         {

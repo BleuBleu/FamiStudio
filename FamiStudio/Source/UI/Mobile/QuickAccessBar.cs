@@ -7,7 +7,7 @@ using Rectangle = System.Drawing.Rectangle;
 
 namespace FamiStudio
 {
-    public class QuickAccessBar : Control
+    public class QuickAccessBar : Container
     {
         // All of these were calibrated at 1080p and will scale up/down from there.
         const int DefaultNavButtonSize    = 120;
@@ -147,12 +147,37 @@ namespace FamiStudio
 
         public override bool WantsFullScreenViewport => true;
 
-        public QuickAccessBar(FamiStudioWindow win) : base(win)
+        #region localization
+
+        // Labels
+        LocalizedString SnapToBeatLabel;
+        LocalizedString SnapToBeatsLabel;
+        LocalizedString SnapEnabledLabel;
+        LocalizedString SnapEffectValuesLabel;
+        LocalizedString NoneLabel;
+        LocalizedString RepeatLabel;
+        LocalizedString VolumeLabel;
+        LocalizedString RepeatEnvelopeLabel;
+        LocalizedString VolumeEnvelopeLabel;
+        LocalizedString SnapOffLabel;
+
+        // Context menus
+        LocalizedString ReplaceSelectionInstContext;
+        LocalizedString ReplaceSelectionArpContext;
+        LocalizedString ToggleMuteContext;
+        LocalizedString ToggleSoloContext;
+        LocalizedString ToggleForceDisplayContext;
+
+        #endregion
+
+        public QuickAccessBar()
         {
+            Localization.Localize(this);        
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
+            var g= ParentWindow.Graphics;
             bmpSequencer = g.GetBitmapAtlasRef("Sequencer");
             bmpPianoRoll = g.GetBitmapAtlasRef("PianoRoll");
             bmpProjectExplorer = g.GetBitmapAtlasRef("ProjectExplorer");
@@ -187,16 +212,16 @@ namespace FamiStudio
             var screenSize = Platform.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
-            buttonFont      = scale > 1.2f ? FontResources.FontSmall : FontResources.FontVerySmall;
-            buttonSize      = ScaleCustom(DefaultButtonSize, scale);
-            buttonSizeNav   = ScaleCustom(DefaultNavButtonSize, scale);
-            buttonIconPos1  = ScaleCustom(DefaultIconPos1, scale);
-            buttonIconPos2  = ScaleCustom(DefaultIconPos2, scale);
-            textPosTop      = ScaleCustom(DefaultTextPosTop, scale);
-            listItemSize    = ScaleCustom(DefaultListItemSize, scale);
-            listIconPos     = ScaleCustom(DefaultListIconPos, scale);
-            scrollBarSizeX  = ScaleCustom(DefaultScrollBarSizeX, scale);
-            iconScaleFloat  = ScaleCustomFloat(DefaultIconSize / (float)bmpSnapOn.ElementSize.Width, scale);
+            buttonFont      = scale > 1.2f ? Fonts.FontSmall : Fonts.FontVerySmall;
+            buttonSize      = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
+            buttonSizeNav   = DpiScaling.ScaleCustom(DefaultNavButtonSize, scale);
+            buttonIconPos1  = DpiScaling.ScaleCustom(DefaultIconPos1, scale);
+            buttonIconPos2  = DpiScaling.ScaleCustom(DefaultIconPos2, scale);
+            textPosTop      = DpiScaling.ScaleCustom(DefaultTextPosTop, scale);
+            listItemSize    = DpiScaling.ScaleCustom(DefaultListItemSize, scale);
+            listIconPos     = DpiScaling.ScaleCustom(DefaultListIconPos, scale);
+            scrollBarSizeX  = DpiScaling.ScaleCustom(DefaultScrollBarSizeX, scale);
+            iconScaleFloat  = DpiScaling.ScaleCustomFloat(DefaultIconSize / (float)bmpSnapOn.ElementSize.Width, scale);
         }
 
         protected override void OnResize(EventArgs e)
@@ -207,6 +232,12 @@ namespace FamiStudio
                 StartExpandingList(popupButtonIdx, listItems);
 
             base.OnResize(e);
+        }
+
+        public override bool HitTest(int winX, int winY)
+        {
+            // Eat all the input when expanded.
+            return IsExpanded || base.HitTest(winX, winY);
         }
 
         private void TickFling(float delta)
@@ -236,7 +267,7 @@ namespace FamiStudio
 
         private void UpdateVisibleButtons()
         {
-            if (!IsRenderInitialized)
+            if (ParentWindow == null)
                 return;
 
             var needsLayout = false;
@@ -314,7 +345,7 @@ namespace FamiStudio
 
         private void UpdateButtonLayout()
         {
-            if (!IsRenderInitialized)
+            if (ParentWindow == null)
                 return;
 
             var landscape = IsLandscape;
@@ -364,10 +395,10 @@ namespace FamiStudio
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
-                var size = textPosTop + FontResources.FontMediumBold.MeasureString(item.Text, false) * 5 / 4;
+                var size = textPosTop + Fonts.FontMediumBold.MeasureString(item.Text, false) * 5 / 4;
 
                 if (item.ExtraImage != null)
-                    size += ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
+                    size += DpiScaling.ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
 
                 popupRect.Width = Math.Max(popupRect.Width, size);
             }
@@ -414,7 +445,7 @@ namespace FamiStudio
 
                 if (item.ExtraImage != null)
                 {
-                    var extraIconSize = ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
+                    var extraIconSize = DpiScaling.ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
                     item.ExtraIconX = popupRect.Width - listIconPos - extraIconSize;
                     item.ExtraIconY = y + (listItemSize - extraIconSize) / 2;
                 }
@@ -499,7 +530,7 @@ namespace FamiStudio
                 var item = new ListItem();
                 item.Color = Theme.LightGreyColor1;
                 item.Image = App.SnapResolution == i ? bmpRadio : null;
-                item.Text = $"Snap to {SnapResolutionType.Names[i]} Beat{(SnapResolutionType.Factors[i] > 1.0 ? "s" : "")}";
+                item.Text = (SnapResolutionType.Factors[i] > 1.0 ? SnapToBeatsLabel : SnapToBeatLabel).Format(SnapResolutionType.Names[i]);
                 item.TextColor = App.SnapEnabled ? Theme.BlackColor : disabledColor;
                 item.GetImageOpacity = (l) => { return l.TextColor.A / 255.0f; };
                 items[i] = item;
@@ -508,7 +539,7 @@ namespace FamiStudio
             var snapEffectsItem = new ListItem();
             snapEffectsItem.Color = Theme.LightGreyColor1;
             snapEffectsItem.Image = App.SnapEffectEnabled ? bmpCheckOn : bmpCheckOff;
-            snapEffectsItem.Text = $"Snap Effect Values";
+            snapEffectsItem.Text = SnapEffectValuesLabel;
             snapEffectsItem.TextColor = App.SnapEnabled ? Theme.BlackColor : disabledColor;
             snapEffectsItem.GetImageOpacity = (l) => { return l.TextColor.A / 255.0f; }; 
             items[items.Length - 2] = snapEffectsItem;
@@ -516,7 +547,7 @@ namespace FamiStudio
             var snapEnableItem = new ListItem();
             snapEnableItem.Color = Theme.LightGreyColor1;
             snapEnableItem.Image = App.SnapEnabled ? bmpCheckOn : bmpCheckOff;
-            snapEnableItem.Text = $"Snap Enabled";
+            snapEnableItem.Text = SnapEnabledLabel;
             items[items.Length - 1] = snapEnableItem;
 
             popupSelectedIdx = App.SnapResolution;
@@ -583,12 +614,12 @@ namespace FamiStudio
             items[0] = new ListItem();
             items[0].Color = Theme.LightGreyColor1;
             items[0].Image = bmpEffectNone;
-            items[0].Text = "None";
+            items[0].Text = NoneLabel;
 
             items[1] = new ListItem();
             items[1].Color = Theme.LightGreyColor1;
             items[1].Image = bmpEffects[Note.EffectVolume];
-            items[1].Text = "Volume Envelope";
+            items[1].Text = VolumeEnvelopeLabel;
 
             StartExpandingList((int)ButtonType.DPCMEffect, items);
         }
@@ -615,12 +646,12 @@ namespace FamiStudio
             items[0] = new ListItem();
             items[0].Color = Theme.LightGreyColor1;
             items[0].Image = bmpEffectNone;
-            items[0].Text = "None";
+            items[0].Text = NoneLabel;
 
             items[1] = new ListItem();
             items[1].Color = Theme.LightGreyColor1;
             items[1].Image = bmpEffectRepeat;
-            items[1].Text = "Repeat Envelope";
+            items[1].Text = RepeatEnvelopeLabel;
 
             StartExpandingList((int)ButtonType.WaveformEffect, items);
         }
@@ -641,7 +672,7 @@ namespace FamiStudio
                 item.GetImageOpacity = (l) => { return App.IsChannelActive((int)l.Data) ? 1.0f : 0.2f; };
                 item.ExtraImage = bmpGhostSmall;
                 item.GetExtraImageOpacity = (l) => { return App.IsChannelForceDisplay((int)l.Data) ? 1.0f : 0.2f; };
-                item.Text = ChannelType.GetNameWithExpansion(channelTypes[i]);
+                item.Text = ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]);
                 item.Data = i;
                 items[i] = item;
             }
@@ -660,15 +691,6 @@ namespace FamiStudio
             var project = App.Project;
             var channel = App.SelectedChannel;
             var items = new List<ListItem>();
-
-            if (editingChannel && channel.SupportsInstrument(null))
-            {
-                var dpcmItem = new ListItem();
-                dpcmItem.Color = Theme.LightGreyColor1;
-                dpcmItem.Image = bmpExpansions[ExpansionType.None];
-                dpcmItem.Text = "DPCM";
-                items.Add(dpcmItem);
-            }
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {
@@ -696,7 +718,7 @@ namespace FamiStudio
             {
                 App.ShowContextMenu(new[]
                 {
-                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Instrument", () => { App.ReplacePianoRollSelectionInstrument(App.SelectedInstrument); MarkDirty(); })
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(App.SelectedInstrument); MarkDirty(); })
                 });
             }
         }
@@ -725,7 +747,7 @@ namespace FamiStudio
                     item.Color = Theme.LightGreyColor1;
                     item.Image = bmpEnvelopes[i];
                     item.GetImageOpacity = (l) => { return env.IsEmpty(i) ? 0.2f : 1.0f; };
-                    item.Text = EnvelopeType.Names[i];
+                    item.Text = EnvelopeType.LocalizedNames[i];
                     item.Data = i;
                     items[j] = item;
 
@@ -752,7 +774,7 @@ namespace FamiStudio
                 var arpNoneItem = new ListItem();
                 arpNoneItem.Color = Theme.LightGreyColor1;
                 arpNoneItem.Image = bmpArpeggio;
-                arpNoneItem.Text = "None";
+                arpNoneItem.Text = NoneLabel;
                 items.Add(arpNoneItem);
             }
 
@@ -778,7 +800,7 @@ namespace FamiStudio
             {
                 App.ShowContextMenu(new[]
                 {
-                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Arpeggio", () => { App.ReplacePianoRollSelectionArpeggio(App.SelectedArpeggio); MarkDirty(); }) 
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(App.SelectedArpeggio); MarkDirty(); }) 
                 });
             }
         }
@@ -807,7 +829,7 @@ namespace FamiStudio
         private BitmapAtlasRef GetSnapRenderInfo(out string text, out Color tint)
         {
             var snapEnabled = App.SnapEnabled;
-            text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] + (App.SnapEffectEnabled ? " (FX)" : "") : "Off";
+            text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] + (App.SnapEffectEnabled ? " (FX)" : "") : SnapOffLabel;
             tint = App.IsRecording ? Theme.DarkRedColor : Theme.LightGreyColor1;
             return snapEnabled ? bmpSnapOn : bmpSnapOff;
         }
@@ -816,14 +838,14 @@ namespace FamiStudio
         {
             var validEffect = App.SelectedEffect >= 0 && App.EffectPanelExpanded;
 
-            text = validEffect ? Note.EffectNames[App.SelectedEffect] : "None";
+            text = validEffect ? Note.EffectNames[App.SelectedEffect] : NoneLabel;
             tint = Theme.LightGreyColor1;
             return validEffect ? bmpEffects[App.SelectedEffect] : bmpEffectNone;
         }
 
         private BitmapAtlasRef GetDPCMEffectRenderInfo(out string text, out Color tint)
         {
-            text = App.EffectPanelExpanded ? "Volume" : "None";
+            text = App.EffectPanelExpanded ? VolumeLabel : NoneLabel;
             tint = Theme.LightGreyColor1;
             return App.EffectPanelExpanded ? bmpEffects[Note.EffectVolume] : bmpEffectNone;
         }
@@ -837,7 +859,7 @@ namespace FamiStudio
 
         private BitmapAtlasRef GetWaveformEffectRenderInfo(out string text, out Color tint)
         {
-            text = App.EffectPanelExpanded ? "Repeat" : "None";
+            text = App.EffectPanelExpanded ? RepeatLabel : NoneLabel;
             tint = Theme.LightGreyColor1;
             return App.EffectPanelExpanded ? bmpEffectRepeat : bmpEffectNone;
         }
@@ -852,8 +874,8 @@ namespace FamiStudio
         private BitmapAtlasRef GetInstrumentRenderingInfo(out string text, out Color tint)
         {
             var inst = App.SelectedInstrument;
-            text = inst != null ? inst.Name  : "DPCM";
-            tint = inst != null ? inst.Color : Theme.LightGreyColor1;
+            text = inst.Name;
+            tint = inst.Color;
             var exp = inst != null ? inst.Expansion : ExpansionType.None;
             return bmpExpansions[exp];
         }
@@ -862,7 +884,7 @@ namespace FamiStudio
         {
             var envType = App.EditEnvelopeType;
             var inst = App.SelectedInstrument;
-            text = EnvelopeType.ShortNames[envType];
+            text = EnvelopeType.LocalizedNames[envType];
             tint = inst != null ? inst.Color : Theme.LightGreyColor1;
             return bmpEnvelopes[envType];
         }
@@ -870,7 +892,7 @@ namespace FamiStudio
         private BitmapAtlasRef GetArpeggioRenderInfo(out string text, out Color tint)
         {
             var arp = App.SelectedArpeggio;
-            text = arp != null ? arp.Name  : "None";
+            text = arp != null ? arp.Name  : NoneLabel;
             tint = arp != null ? arp.Color : Theme.LightGreyColor1;
             return bmpArpeggio;
         }
@@ -942,9 +964,9 @@ namespace FamiStudio
         {
             App.ShowContextMenu(new[]
             {
-                new ContextMenuOption("MenuMute", "Toggle Mute Channel", () => { App.ToggleChannelActive(idx); MarkDirty(); }),
-                new ContextMenuOption("MenuSolo", "Toggle Solo Channel", () => { App.ToggleChannelSolo(idx); MarkDirty(); }),
-                new ContextMenuOption("MenuForceDisplay", "Force Display Channel in Piano Roll", () => { App.ToggleChannelForceDisplay(idx); MarkDirty(); })
+                new ContextMenuOption("MenuMute", ToggleMuteContext, () => { App.ToggleChannelActive(idx); MarkDirty(); }),
+                new ContextMenuOption("MenuSolo", ToggleSoloContext, () => { App.ToggleChannelSolo(idx); MarkDirty(); }),
+                new ContextMenuOption("MenuForceDisplay", ToggleForceDisplayContext, () => { App.ToggleChannelForceDisplay(idx); MarkDirty(); })
             });
         }
 
@@ -956,7 +978,7 @@ namespace FamiStudio
             {
                 App.ShowContextMenu(new[]
                 {
-                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Instrument", () => { App.ReplacePianoRollSelectionInstrument(inst); MarkDirty(); })
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(inst); MarkDirty(); })
                 });
             }
         }
@@ -969,7 +991,7 @@ namespace FamiStudio
             {
                 App.ShowContextMenu(new[]
                 {
-                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Arpeggio", () => { App.ReplacePianoRollSelectionArpeggio(arp); MarkDirty(); })
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(arp); MarkDirty(); })
                 });
             }
         }
@@ -994,16 +1016,34 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var c = g.CreateCommandList();
+            var c = g.DefaultCommandList;
+            var o = g.OverlayCommandList;
 
             c.Transform.GetOrigin(out var ox, out var oy);
+
+            var listRect = GetExpandedListRect();
+            var screenRect = new Rectangle(Point.Empty, ParentWindow.Size);
+            screenRect.Offset(-(int)ox, -(int)oy);
 
             // Background shadow.
             if (IsExpanded)
             {
-                var fullscreenRect = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);
-                fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, Color.FromArgb(popupRatio * 0.6f, Color.Black));
+                var shadowColor = Color.FromArgb(popupRatio * 0.6f, Color.Black);
+
+                if (IsLandscape)
+                {
+                    o.FillRectangle(screenRect.Left, screenRect.Top, listRect.Left, screenRect.Bottom, shadowColor);
+                    o.FillRectangle(listRect.Left, screenRect.Top, 0, listRect.Top, shadowColor);
+                    o.FillRectangle(listRect.Left, listRect.Bottom, 0, screenRect.Bottom, shadowColor);
+                    o.FillRectangle(0, 0, width, height, shadowColor);
+                }
+                else
+                {
+                    o.FillRectangle(screenRect.Left, screenRect.Top, screenRect.Right, listRect.Top, shadowColor);
+                    o.FillRectangle(screenRect.Left, listRect.Top, listRect.Left, 0, shadowColor);
+                    o.FillRectangle(listRect.Right, listRect.Top, screenRect.Right, 0, shadowColor);
+                    o.FillRectangle(0, 0, screenRect.Right, screenRect.Bottom, shadowColor);
+                }
             }
 
             // Clear BG.
@@ -1042,15 +1082,18 @@ namespace FamiStudio
             else
                 c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
-            g.DrawCommandList(c);
-
             // List items.
             if (popupButtonIdx >= 0)
-            {
-                c = g.CreateCommandList();
+            {              
+                if (IsLandscape)
+                    screenRect.Width -= width;
+                else
+                    screenRect.Height -= (screenRect.Height - WindowRectangle.Top);
 
-                var rect = GetExpandedListRect();
-                c.PushTranslation(rect.Left, rect.Top - scrollY);
+                screenRect = Rectangle.Intersect(screenRect, listRect);
+
+                c.PushClipRegion(screenRect.Left, screenRect.Top, screenRect.Width, screenRect.Height, false);
+                c.PushTranslation(listRect.Left, listRect.Top - scrollY);
 
                 for (int i = 0; i < listItems.Length; i++)
                 {
@@ -1070,7 +1113,7 @@ namespace FamiStudio
                         c.DrawBitmapAtlas(item.ExtraImage, item.ExtraIconX, item.ExtraIconY, extraOpacity, iconScaleFloat, Color.Black);
                     }
 
-                    c.DrawText(item.Text, i == popupSelectedIdx ? FontResources.FontMediumBold : FontResources.FontMedium, item.TextX, item.TextY, item.TextColor, TextFlags.Middle, 0, listItemSize);
+                    c.DrawText(item.Text, i == popupSelectedIdx ? Fonts.FontMediumBold : Fonts.FontMedium, item.TextX, item.TextY, item.TextColor, TextFlags.Middle, 0, listItemSize);
                 }
 
                 c.PopTransform();
@@ -1079,18 +1122,18 @@ namespace FamiStudio
 
                 if ((Math.Abs(flingVelY) > 0.0f || captureOperation == CaptureOperation.MobilePan) && !scrollBarRect.IsEmpty)
                 {
-                    c.PushTranslation(rect.Left, rect.Top);
+                    c.PushTranslation(listRect.Left, listRect.Top);
                     c.FillRectangle(GetScrollBarRect(), scrollBarColor);
                     c.PopTransform();
                 }
 
                 if (IsLandscape)
-                    rect.Width  = -rect.X;
+                    listRect.Width  = -listRect.X;
                 else
-                    rect.Height = -rect.Y;
+                    listRect.Height = -listRect.Y;
 
-                rect.Offset((int)Math.Round(ox), (int)Math.Round(oy));
-                g.DrawCommandList(c, rect);
+                listRect.Offset((int)Math.Round(ox), (int)Math.Round(oy));
+                c.PopClipRegion();
             }
         }
 

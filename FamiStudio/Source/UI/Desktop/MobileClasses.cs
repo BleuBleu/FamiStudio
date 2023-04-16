@@ -2,30 +2,15 @@ using System;
 
 namespace FamiStudio
 {
-    public class MobilePiano : Control
+    public class MobilePiano : Container
     {
-        public MobilePiano(FamiStudioWindow win) : base(win)
-        {
-        }
-
-        public override void Tick(float deltaTime)
-        {
-        }
-
         public void HighlightPianoNote(int note)
         {
         }
     }
 
-    public class QuickAccessBar : Control
+    public class QuickAccessBar : Container
     {
-        public QuickAccessBar(FamiStudioWindow win) : base(win)
-        {
-        }
-
-        public override void Tick(float deltaTime)
-        {
-        }
     }
 
     public class MobileProjectDialog

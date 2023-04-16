@@ -7,20 +7,7 @@ namespace FamiStudio
 {
     public class TutorialDialog : Dialog
     {
-        public static readonly string[] TutorialMessages = new[]
-        {
-            @"(1/11) Welcome to FamiStudio! Let's take a few seconds to review some of the basic controls to make sure you use the app to its fullest.",
-            @"(2/11) CONTROLS HAVE CHANGED!!! If you have used FamiStudio in the past, please pay extra attention since the basic mouse controls have changed.",
-            @"(3/11) To PAN around the piano roll or the sequencer, simply PRESS and HOLD the MIDDLE MOUSE BUTTON and DRAG around to smoothly move the viewport. Yes, that wheel on your mouse is also a button! Optionally, you can enable SCROLL BARS in the settings.",
-            @"(4/11) To ZOOM in and out in the piano roll or the sequencer, simply rotate the MOUSE WHEEL.",
-            @"(5/11) If you are on a TRACKPAD or a LAPTOP, simply enable TRACKPAD CONTROLS in the settings. This will allow you to SWIPE to PAN and PINCH-TO-ZOOM (this gesture is not supported on Linux).",
-            @"(6/11) To ADD things like patterns and notes, simply CLICK with the LEFT MOUSE BUTTON.",
-            @"(7/11) To DELETE things like patterns and notes, simply DOUBLE-CLICK with the LEFT MOUSE BUTTON. Alternatively you can SHIFT-CLICK to delete pattern and notes.",
-            @"(8/11) RIGHT-CLICKING on things will usually open a CONTEXT MENU containing more options. Right-click on everything you see to discover what the app can do!",
-            @"(9/11) SNAPPING is ON by default and is expressed in BEATS. With the default settings, it will snap to 1/4 notes. You can change the snapping precision or disable it completely to create notes of different lengths! You can also temporarily disable snapping by holding the ALT key during a move or a resize.",
-            @"(10/11) Always keep an eye on the TOOLTIPS! They change constantly as you move the mouse and they will teach you how to use the app! For the complete DOCUMENTATION and over 1 hour of VIDEO TUTORIAL, please click on the big QUESTION MARK.",
-            @"(11/11) Join us on DISCORD to meet other FamiStudio users and share your songs with them! Link in the documentation (question mark icon in the toolbar)",
-        };
+        public LocalizedString[] TutorialMessages = new LocalizedString[11];
 
         private int pageIndex = 0;
         private Button buttonRight;
@@ -47,6 +34,8 @@ namespace FamiStudio
 
         public TutorialDialog(FamiStudioWindow win) : base(win, "Welcome!")
         {
+            Localization.Localize(this);
+
             Move(0, 0, 
                 imageSizeX + margin * 2, 
                 imageSizeY + margin * 4 + buttonSize + labelSizeY + titleBarSizeY);
@@ -56,26 +45,26 @@ namespace FamiStudio
 
         private void Init()
         {
-            buttonLeft = new Button(this, "ArrowLeft", null);
+            buttonLeft = new Button("ArrowLeft", null);
             buttonLeft.Click += ButtonLeft_Click;
             buttonLeft.Resize(buttonSize, buttonSize);
             buttonLeft.ToolTip = "Previous";
             buttonLeft.Move(width - buttonSize * 2 - margin * 2, height - buttonSize - margin);
 
-            buttonRight = new Button(this, "ArrowRight", null);
+            buttonRight = new Button("ArrowRight", null);
             buttonRight.Click += ButtonRight_Click;
             buttonRight.Resize(buttonSize, buttonSize);
             buttonRight.ToolTip = "Next";
             buttonRight.Move(width - buttonSize - margin, height - buttonSize - margin);
 
-            label = new Label(this, "This is a nice label", true);
+            label = new Label("This is a nice label", true);
             label.Move(margin, margin + titleBarSizeY, width - margin, labelSizeY);
 
-            imageBox = new ImageBox(this, (Bitmap)null);
+            imageBox = new ImageBox((Bitmap)null);
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
             imageBox.ScaleImage = DpiScaling.Window > 1;
 
-            checkBoxDontShow = new CheckBox(this, false, "Do not show again");
+            checkBoxDontShow = new CheckBox(false, "Do not show again");
             checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY + titleBarSizeY, width - buttonSize * 3, checkSizeY);
 
             AddControl(buttonLeft);
@@ -95,7 +84,7 @@ namespace FamiStudio
                 CloseGif();
             }
 
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{filename}"))
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Tutorials.{filename}"))
             {
                 gifData = new byte[stream.Length];
                 stream.Read(gifData, 0, (int)stream.Length);
@@ -107,7 +96,7 @@ namespace FamiStudio
             gifSizeX = Gif.GetWidth(gif);
             gifSizeY = Gif.GetHeight(gif);
             gifBuffer = new byte[gifSizeX * gifSizeY * 3];
-            gifBmp = ParentWindow.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, false, windowScaling > 1.0f);
+            gifBmp = ParentWindow.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, TextureFormat.Rgb, DpiScaling.Window > 1.0f);
             imageBox.Image = gifBmp;
         }
 

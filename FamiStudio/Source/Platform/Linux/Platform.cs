@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Media;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -12,6 +13,8 @@ namespace FamiStudio
     public static partial class Platform
     {
         private static byte[] internalClipboardData;
+
+        private static short[] beep;
 
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
         public static string UserProjectsDirectory => null;
@@ -22,10 +25,15 @@ namespace FamiStudio
 
         public static bool Initialize(bool commandLine)
         {
+            // Must be set before GLFW dll tries to load.
+            NativeLibrary.SetDllImportResolver(typeof(Platform).Assembly, DllImportResolver);
+
             if (!InitializeDesktop(commandLine))
                 return false;
 
             SetProcessName("FamiStudio");
+
+            beep = WaveFile.LoadFromResource("FamiStudio.Resources.Sounds.LinuxBeep.wav", out _);
 
             return true;
         }
@@ -34,25 +42,59 @@ namespace FamiStudio
         {
             ShutdownDesktop();
         }
+        
+        private static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+        {
+            var handle = IntPtr.Zero;
+
+            if (libraryName.Contains("libopenal"))
+            {
+                // Try to use the OpenAL that is on the system first.
+                if (NativeLibrary.TryLoad("libopenal.so.1", assembly, DllImportSearchPath.System32, out handle))
+                {
+                    return handle;
+                }
+            }
+            else if (libraryName.Contains("libdl"))
+            {
+                // I've seen some distros with various names here. 
+                if (NativeLibrary.TryLoad("libdl.so.2", assembly, DllImportSearchPath.System32, out handle))
+                {
+                    return handle;
+                }
+            }
+            else if (libraryName.Contains("libX11"))
+            {
+                // Ubuntu 22.04 (on my laptop) seem to want the full name.
+                if (NativeLibrary.TryLoad("libX11.so.6", assembly, DllImportSearchPath.System32, out handle))
+                {
+                    return handle;
+                }
+            }
+
+            NativeLibrary.TryLoad(libraryName, assembly, DllImportSearchPath.ApplicationDirectory, out handle);
+            
+            return handle;
+        }
 
         public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             return new OpenALStream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
         }
 
-        public static unsafe string[] ShowPlatformOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
+        public static unsafe string[] ShowPlatformOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
         {
             Debug.Assert(false); // Linux has no common dialogs.
             return null;
         }
 
-        public static unsafe string ShowPlatformSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        public static unsafe string ShowPlatformSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false); // Linux has no common dialogs.
             return null;
         }
 
-        public static string ShowPlatformBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
+        public static string ShowPlatformBrowseFolderDialog(string title, ref string defaultPath)
         {
             Debug.Assert(false); // Linux has no common dialogs.
             return null;
@@ -77,7 +119,7 @@ namespace FamiStudio
 
         public static void Beep()
         {
-            SystemSounds.Beep.Play();
+            FamiStudio.StaticInstance.PlayRawPcmSample(beep, 44100);
         }
 
         [DllImport("libc")]

@@ -6,22 +6,20 @@ namespace FamiStudio
 {
     public class ChannelStateEPSMBase : ChannelState
     {
+        //protected bool longSkip = true;
+
         public ChannelStateEPSMBase(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
         }
 
-        protected void WriteEPSMRegister(int reg, int data, bool a1 = false)
+        protected void WriteEPSMRegister(int reg, int data, bool a1 = false, int extraCycles = 0)
         {
-            if (!a1)
-            {
-                WriteRegister(NesApu.EPSM_ADDR0, reg,  NesApu.EpsmCycleSkip);
-                WriteRegister(NesApu.EPSM_DATA0, data, NesApu.EpsmCycleSkip);
-            }
-            else
-            {
-                WriteRegister(NesApu.EPSM_ADDR1, reg,  NesApu.EpsmCycleSkip);
-                WriteRegister(NesApu.EPSM_DATA1, data, NesApu.EpsmCycleSkip);
-            }
+            // Registers starting in 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90 seem to 
+            // require a bit more cycles looking at the OPN2 code.
+            var dataSkipCycles = (reg & 0xf0) < 0x30 || (reg & 0xf0) > 0x90 ? NesApu.EpsmCycleDataSkipShort : NesApu.EpsmCycleDataSkip;
+
+            WriteRegister(a1 ? NesApu.EPSM_ADDR1 : NesApu.EPSM_ADDR0, reg,  NesApu.EpsmCycleAddrSkip);
+            WriteRegister(a1 ? NesApu.EPSM_DATA1 : NesApu.EPSM_DATA0, data, dataSkipCycles + extraCycles);
         }
     }
 
@@ -39,7 +37,6 @@ namespace FamiStudio
         private readonly int[] ChannelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
 
         private int    stereoFlags = 0;
-        private bool   release = false;
         private bool   stop = false;
         private int    lastVolume = 0;
         private byte[] patchRegs = null; // Only set when a new instrument is loaded.
@@ -98,11 +95,9 @@ namespace FamiStudio
                 WriteEPSMRegister(0x28, 0x00 + channelKey);
                 WriteEPSMRegister(0xb4 + channelIdxHigh, 0x00, a1); //volume 0
                 stop = true;
-                release = false;
             }
             else if (note.IsMusical)
             {
-                release = false;
                 stop = false;
 
                 var period = GetPeriod();
@@ -183,7 +178,7 @@ namespace FamiStudio
 
                 if (noteTriggered)
                 {
-                    WriteEPSMRegister(0x28, 0x00 + channelKey);
+                    WriteEPSMRegister(0x28, 0x00 + channelKey, false, NesApu.EpsmCycleKeyOnSkip);
                     WriteEPSMRegister(0x28, 0xF0 + channelKey);
                     WriteEPSMRegister(Registers[1] + channelIdxHigh, stereoFlags, a1);
                 }
@@ -197,3 +192,4 @@ namespace FamiStudio
         }
     };
 }
+

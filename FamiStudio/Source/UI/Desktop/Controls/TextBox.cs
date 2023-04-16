@@ -31,6 +31,7 @@ namespace FamiStudio
         protected int mouseSelectionChar;
         protected int numberMin;
         protected int numberMax;
+        protected int numberInc;
         protected bool mouseSelecting;
         protected bool caretBlink = true;
         protected bool numeric;
@@ -54,20 +55,21 @@ namespace FamiStudio
         public Color BackColor      { get => backColor;     set { backColor     = value; MarkDirty(); } }
         public Color SelectionColor { get => selColor;      set { selColor      = value; MarkDirty(); } }
 
-        public TextBox(Dialog dlg, string txt, int maxLen = 0) : base(dlg)
+        public TextBox(string txt, int maxLen = 0)
         {
             height = DpiScaling.ScaleForWindow(24);
             text = txt;
             maxLength = maxLen;
         }
 
-        public TextBox(Dialog dlg, int value, int minVal, int maxVal) : base(dlg)
+        public TextBox(int value, int minVal, int maxVal, int increment)
         {
             height = DpiScaling.ScaleForWindow(24);
             text = value.ToString(CultureInfo.InvariantCulture);
             numeric = true;
             numberMin = minVal;
             numberMax = maxVal;
+            numberInc = increment;
         }
 
         public string Text
@@ -96,7 +98,7 @@ namespace FamiStudio
             if (numeric)
             {
                 var val = Utils.ParseIntWithTrailingGarbage(text);
-                var clampedVal = Utils.Clamp(val, numberMin, numberMax);
+                var clampedVal = Utils.Clamp(Utils.RoundDown(val, numberInc), numberMin, numberMax);
                 if (clampedVal != val)
                 {
                     text = clampedVal.ToString(CultureInfo.InvariantCulture);
@@ -114,7 +116,7 @@ namespace FamiStudio
 
         protected void UpdateScrollParams()
         {
-            maxScrollX = Math.Max(0, FontResources.FontMedium.MeasureString(text, false) - (textAreaWidth - innerMargin * 2));
+            maxScrollX = Math.Max(0, Fonts.FontMedium.MeasureString(text, false) - (textAreaWidth - innerMargin * 2));
             scrollX = Utils.Clamp(scrollX, 0, maxScrollX);
         }
 
@@ -331,7 +333,7 @@ namespace FamiStudio
             // This is super hacky, we dont have any proper focus management,
             // so we just look for the next text box in the list. Also, we 
             // assume controls are in an order that makes sense.
-            var ctrls = parentDialog.Controls.ToArray();
+            var ctrls = container.Controls.ToArray();
             var idx = Array.IndexOf(ctrls, this);
             var nextIdx = -1;
 
@@ -348,7 +350,7 @@ namespace FamiStudio
 
             if (nextIdx >= 0)
             {
-                parentDialog.FocusedControl = ctrls[nextIdx];
+                ParentDialog.FocusedControl = ctrls[nextIdx];
             }
             else
             {
@@ -417,14 +419,14 @@ namespace FamiStudio
 
         protected int PixelToChar(int x, bool margin = true)
         {
-            return FontResources.FontMedium.GetNumCharactersForSize(text, x - (margin ? innerMargin : 0) + scrollX, true);
+            return Fonts.FontMedium.GetNumCharactersForSize(text, x - (margin ? innerMargin : 0) + scrollX, true);
         }
 
         protected int CharToPixel(int c, bool margin = true)
         {
             var px = (margin ? innerMargin : 0) - scrollX;
             if (c > 0)
-                px += FontResources.FontMedium.MeasureString(text.Substring(0, c), false);
+                px += Fonts.FontMedium.MeasureString(text.Substring(0, c), false);
             return px;
         }
 
@@ -517,7 +519,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnAddedToDialog()
+        protected override void OnAddedToContainer()
         {
             textAreaWidth = width - outerMargin * 2;
             textAreaWidthNoMargin = textAreaWidth - innerMargin * 2;
@@ -526,7 +528,7 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
 
             c.PushTranslation(outerMargin, 0);
             c.FillAndDrawRectangle(0, 0, textAreaWidth - 1, height - 1, backColor, enabled ? foreColor : disabledColor);
@@ -540,13 +542,14 @@ namespace FamiStudio
                     c.FillRectangle(sx0, topMargin, sx1, height - topMargin, selColor);
             }
 
-            c.DrawText(text, FontResources.FontMedium, innerMargin - scrollX, 0, enabled ? foreColor : disabledColor, TextFlags.MiddleLeft | TextFlags.Clip, 0, height, innerMargin, textAreaWidth - innerMargin);
+            c.DrawText(text, Fonts.FontMedium, innerMargin - scrollX, 0, enabled ? foreColor : disabledColor, TextFlags.MiddleLeft | TextFlags.Clip, 0, height, innerMargin, textAreaWidth - innerMargin);
 
             if (caretBlink && HasDialogFocus && enabled)
             {
                 var cx = CharToPixel(caretIndex);
                 c.DrawLine(cx, topMargin, cx, height - topMargin, foreColor);
             }
+
             c.PopTransform();
         }
     }

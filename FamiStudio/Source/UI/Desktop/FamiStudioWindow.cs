@@ -13,25 +13,30 @@ namespace FamiStudio
         private IntPtr window; // GLFW window.
 
         private FamiStudio famistudio;
-        private FamiStudioControls controls;
+        private FamiStudioContainer container;
+        private Graphics graphics;
+        private Fonts fonts;
+        private bool dirty = true;
 
         public FamiStudio FamiStudio => famistudio;
-        public Toolbar ToolBar => controls.ToolBar;
-        public Sequencer Sequencer => controls.Sequencer;
-        public PianoRoll PianoRoll => controls.PianoRoll;
-        public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
-        public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
-        public MobilePiano MobilePiano => controls.MobilePiano;
-        public ContextMenu ContextMenu => controls.ContextMenu;
+        public Toolbar ToolBar => container.ToolBar;
+        public Sequencer Sequencer => container.Sequencer;
+        public PianoRoll PianoRoll => container.PianoRoll;
+        public ProjectExplorer ProjectExplorer => container.ProjectExplorer;
+        public QuickAccessBar QuickAccessBar => container.QuickAccessBar;
+        public MobilePiano MobilePiano => container.MobilePiano;
+        public ContextMenu ContextMenu => container.ContextMenu;
         public Control ActiveControl => activeControl;
-        public Graphics Graphics => controls.Graphics;
+        public Graphics Graphics => graphics;
+        public Fonts Fonts => fonts;
+        public static FamiStudioWindow Instance { get; private set; }
 
         public Size Size => GetWindowSizeInternal();
         public int Width => GetWindowSizeInternal().Width;
         public int Height => GetWindowSizeInternal().Height;
         public string Text { set => glfwSetWindowTitle(window, value); }
         public bool IsLandscape => true;
-        public bool IsAsyncDialogInProgress => controls.IsDialogActive;
+        public bool IsAsyncDialogInProgress => container.IsDialogActive;
         public bool MobilePianoVisible { get => false; set => value = false; }
         public IntPtr Handle => glfwGetNativeWindow(window);
 
@@ -75,16 +80,17 @@ namespace FamiStudio
         {
             famistudio = app;
             window = glfwWindow;
-            controls = new FamiStudioControls(this);
-            activeControl = controls.PianoRoll;
+            Instance = this;
 
             PlatformWindowInitialize();
             InitializeGL();
-            BindGLFWCallbacks();
             SetWindowIcon();
             InitialFrameBufferClear();
-            controls.InitializeGL();
-            RefreshLayout();
+            CreateGraphics();
+            BindGLFWCallbacks();
+
+            container = new FamiStudioContainer(this);
+            activeControl = PianoRoll;
         }
 
         private void BindGLFWCallbacks()
@@ -139,16 +145,36 @@ namespace FamiStudio
             DpiScaling.Initialize(scaling);
         }
 
+        private void CreateGraphics()
+        {
+            graphics = new Graphics();
+            fonts = new Fonts(graphics);
+        }
+
+        private void DestroyGraphics()
+        {
+            Utils.DisposeAndNullify(ref fonts);
+            Utils.DisposeAndNullify(ref graphics);
+        }
+
         public static unsafe FamiStudioWindow CreateWindow(FamiStudio fs)
         {
             glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             glfwWindowHint(GLFW_MAXIMIZED, 1);
+            glfwWindowHint(GLFW_RESIZABLE, 1);
             glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
             glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, 1);
-            glfwWindowHint(GLFW_DEPTH_BITS, 0);
+            glfwWindowHint(GLFW_DEPTH_BITS, 16);
             glfwWindowHint(GLFW_STENCIL_BITS, 0);
+        #if FAMISTUDIO_MACOS
+            glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, 1);
+        #endif            
+        #if DEBUG
+            glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
+        #endif
 
             var window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
             if (window == IntPtr.Zero)
@@ -165,7 +191,7 @@ namespace FamiStudio
 
         private void DestroyWindow()
         {
-            controls.ShutdownGL();
+            DestroyGraphics();
             glfwDestroyWindow(window);
         }
 
@@ -185,10 +211,10 @@ namespace FamiStudio
 
         private unsafe void SetWindowIcon()
         {
-            var icon16 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_16.tga", true);
-            var icon24 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_24.tga", true);
-            var icon32 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_32.tga", true);
-            var icon64 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_64.tga", true);
+            var icon16 = TgaFile.LoadFromResource($"FamiStudio.Resources.Icons.FamiStudio_16.tga", true);
+            var icon24 = TgaFile.LoadFromResource($"FamiStudio.Resources.Icons.FamiStudio_24.tga", true);
+            var icon32 = TgaFile.LoadFromResource($"FamiStudio.Resources.Icons.FamiStudio_32.tga", true);
+            var icon64 = TgaFile.LoadFromResource($"FamiStudio.Resources.Icons.FamiStudio_64.tga", true);
             var images = new GLFWimage[4];
 
             fixed (int* p16 = &icon16.Data[0], 
@@ -225,12 +251,10 @@ namespace FamiStudio
 
             var deltaTime = (float)Math.Min(0.25f, (float)(tickTime - lastTickTime));
 
-            if (IsAsyncDialogInProgress)
-                famistudio.TickDuringDialog(deltaTime);
-            else
+            if (!IsAsyncDialogInProgress)
                 famistudio.Tick(deltaTime);
 
-            controls.Tick(deltaTime);
+            container.Tick(deltaTime);
 
             lastTickTime = tickTime;
         }
@@ -242,14 +266,24 @@ namespace FamiStudio
 
         protected void RenderFrameAndSwapBuffer(bool force = false)
         {
-            if (force)
-                controls.MarkDirty();
-
-            if (controls.AnyControlNeedsRedraw() && famistudio.Project != null)
+            if (dirty || force)
             {
-                controls.Redraw();
+                var rect = new Rectangle(Point.Empty, Size);
+                var clearColor = Theme.DarkGreyColor2;
+
+                graphics.BeginDrawFrame(rect, clearColor);
+                container.Render(graphics);
+                graphics.EndDrawFrame();
+
                 glfwSwapBuffers(window);
+
+                dirty = false;
             }
+        }
+
+        public void MarkDirty()
+        {
+            dirty = true;
         }
 
         public void CaptureMouse(Control ctrl)
@@ -271,28 +305,16 @@ namespace FamiStudio
             }
         }
 
-        public Point PointToClient(Point p)
+        public Point ScreenToWindow(Point p)
         {
             glfwGetWindowPos(window, out var px, out var py);
             return new Point(p.X - px, p.Y - py);
         }
 
-        public Point PointToScreen(Point p)
+        public Point WindowToScreen(Point p)
         {
             glfwGetWindowPos(window, out var px, out var py);
             return new Point(p.X + px, p.Y + py);
-        }
-
-        public Point PointToClient(Control ctrl, Point p)
-        {
-            p = PointToClient(p);
-            return new Point(p.X - ctrl.WindowLeft, p.Y - ctrl.WindowTop);
-        }
-
-        public Point PointToScreen(Control ctrl, Point p)
-        {
-            p = new Point(p.X + ctrl.WindowLeft, p.Y + ctrl.WindowTop);
-            return PointToScreen(p);
         }
 
         // https://github.com/glfw/glfw/issues/1630
@@ -391,8 +413,9 @@ namespace FamiStudio
                 if (captureControl != null)
                     return;
 
-                var ctrl = controls.GetControlAtCoord(lastCursorX, lastCursorY, out int cx, out int cy);
-                
+                var ctrl = container.GetControlAt(lastCursorX, lastCursorY, out int cx, out int cy);
+                container.ConditionalHideContextMenu(ctrl);
+
                 lastButtonPress = button; 
 
                 // Double click emulation.
@@ -421,10 +444,6 @@ namespace FamiStudio
                 {
                     SetActiveControl(ctrl);
 
-                    // Ignore the first click.
-                    if (ctrl != ContextMenu)
-                        controls.HideContextMenu();
-
                     if (doubleClick)
                     {
                         Debug.WriteLine($"DOUBLE CLICK!");
@@ -445,17 +464,17 @@ namespace FamiStudio
             {
                 int cx;
                 int cy;
-                Control ctrl = null;
+                Control ctrl;
 
                 if (captureControl != null)
                 {
                     ctrl = captureControl;
-                    cx = lastCursorX - ctrl.WindowLeft;
-                    cy = lastCursorY - ctrl.WindowTop;
+                    cx = lastCursorX - ctrl.WindowPosition.X;
+                    cy = lastCursorY - ctrl.WindowPosition.Y;
                 }
                 else
                 {
-                    ctrl = controls.GetControlAtCoord(lastCursorX, lastCursorY, out cx, out cy);
+                    ctrl = container.GetControlAt(lastCursorX, lastCursorY, out cx, out cy);
                 }
 
                 if (button == captureButton)
@@ -466,9 +485,7 @@ namespace FamiStudio
                     if (button == GLFW_MOUSE_BUTTON_RIGHT)
                         ConditionalEmitDelayedRightClick(true, true, ctrl);
 
-                    if (ctrl != ContextMenu)
-                        controls.HideContextMenu();
-
+                    container.ConditionalHideContextMenu(ctrl);
                     ctrl.MouseUp(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
                 }
             }
@@ -488,13 +505,13 @@ namespace FamiStudio
             if (captureControl != null)
             {
                 ctrl = captureControl;
-                cx = lastCursorX - ctrl.WindowLeft;
-                cy = lastCursorY - ctrl.WindowTop;
-                hover = controls.GetControlAtCoord(lastCursorX, lastCursorY, out _, out _);
+                cx = lastCursorX - ctrl.WindowPosition.X;
+                cy = lastCursorY - ctrl.WindowPosition.Y;
+                hover = container.GetControlAt(lastCursorX, lastCursorY, out _, out _);
             }
             else
             {
-                ctrl = controls.GetControlAtCoord(lastCursorX, lastCursorY, out cx, out cy);
+                ctrl = container.GetControlAt(lastCursorX, lastCursorY, out cx, out cy);
                 hover = ctrl;
             }
 
@@ -507,7 +524,7 @@ namespace FamiStudio
             ConditionalEmitDelayedRightClick(false, true, ctrl);
 
             // Dont forward move mouse when a context menu is active.
-            if (ctrl != null && (!controls.IsContextMenuActive || ctrl == ContextMenu))
+            if (ctrl != null && (!container.IsContextMenuActive || ctrl == ContextMenu))
             {
                 ctrl.MouseMove(e);
                 RefreshCursor(ctrl);
@@ -515,7 +532,7 @@ namespace FamiStudio
 
             if (hover != hoverControl)
             {
-                if (hoverControl != null && (!controls.IsContextMenuActive || hoverControl == ContextMenu))
+                if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
                     hoverControl.MouseLeave(EventArgs.Empty);
                 hoverControl = hover;
             }
@@ -527,7 +544,7 @@ namespace FamiStudio
 
             if (entered == 0)
             {
-                if (hoverControl != null && (!controls.IsContextMenuActive || hoverControl == ContextMenu))
+                if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
                 {
                     hoverControl.MouseLeave(EventArgs.Empty);
                     hoverControl = null;
@@ -541,11 +558,11 @@ namespace FamiStudio
 
             ConditionalUpdateLastCursorPosition();
 
-            var ctrl = controls.GetControlAtCoord(lastCursorX, lastCursorY, out int cx, out int cy);
+            var ctrl = container.GetControlAt(lastCursorX, lastCursorY, out int cx, out int cy);
             if (ctrl != null)
             {
-                if (ctrl != ContextMenu)
-                    controls.HideContextMenu();
+                SetActiveControl(ctrl);
+                container.ConditionalHideContextMenu(ctrl);
 
                 const float Multiplier = Platform.IsWindows ? 10.0f : 2.0f;
 
@@ -577,62 +594,40 @@ namespace FamiStudio
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
             mods = FixKeyboardMods(mods, key, action);
-
-            Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode}, Action = {action}, Mods = {mods}");
-
             modifiers.Set(mods);
 
+            Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode} ({Platform.ScancodeToString(scancode)}), Action = {action}, Mods = {mods}");
+
+            var controls = container.GetControlsForKeyboard(out var mainFamistudioControl);
             var down = action == GLFW_PRESS || action == GLFW_REPEAT;
-            var e = new KeyEventArgs((Keys)key, mods, action == GLFW_REPEAT, scancode);
-            
-            if (controls.IsContextMenuActive)
-            {
-                SendKeyUpOrDown(controls.ContextMenu, e, down);
-            }
-            else if (controls.IsDialogActive)
-            {
-                SendKeyUpOrDown(controls.TopDialog, e, down);
-            }
-            else
+            var e = new KeyEventArgs((Keys)key, modifiers, action == GLFW_REPEAT, scancode);
+
+            if (mainFamistudioControl)
             {
                 if (down)
                     famistudio.KeyDown(e);
                 else
                     famistudio.KeyUp(e);
-
-                // FamiStudio can decide to quit.
-                if (!quit && controls.CanInteractWithControls())
-                {
-                    foreach (var ctrl in controls.Controls)
-                        SendKeyUpOrDown(ctrl, e, down);
-                }
             }
+
+            foreach (var ctrl in controls)
+                SendKeyUpOrDown(ctrl, e, down);
         }
 
         private void CharCallback(IntPtr window, uint codepoint)
         {
-            Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
+            //Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
 
-            var e = new CharEventArgs((char)codepoint, modifiers.Modifiers);
+            var controls = container.GetControlsForKeyboard(out _);
+            var e = new CharEventArgs((char)codepoint, modifiers);
 
-            if (controls.IsContextMenuActive)
-            {
-                controls.ContextMenu.Char(e);
-            }
-            else if (controls.IsDialogActive)
-            {
-                controls.TopDialog.Char(e);
-            }
-            else if (controls.CanInteractWithControls())
-            {
-                foreach (var ctrl in controls.Controls)
-                    ctrl.Char(e);
-            }
+            foreach (var ctrl in controls)
+                ctrl.Char(e);
         }
 
         private void CharModsCallback(IntPtr window, uint codepoint, int mods)
         {
-            Debug.WriteLine($"CHAR MODS! CodePoint = {codepoint}, Mods = {mods}");
+            //Debug.WriteLine($"CHAR MODS! CodePoint = {codepoint}, Mods = {mods}");
         }
 
         private unsafe void DropCallback(IntPtr window, int count, IntPtr paths)
@@ -670,7 +665,7 @@ namespace FamiStudio
 
         private Point GetScreenCursorPosInternal()
         {
-            return PointToScreen(GetClientCursorPosInternal());
+            return WindowToScreen(GetClientCursorPosInternal());
         }
 
         private int MakeButtonFlags(int button)
@@ -759,13 +754,8 @@ namespace FamiStudio
         public void RefreshLayout()
         {
             var size = GetWindowSizeInternal();
-            controls.Resize(size.Width, size.Height);
-            controls.MarkDirty();
-        }
-
-        public void MarkDirty()
-        {
-            controls.MarkDirty();
+            container.Resize(size.Width, size.Height);
+            MarkDirty();
         }
 
         public ModifierKeys GetModifierKeys()
@@ -776,13 +766,13 @@ namespace FamiStudio
         public Point GetCursorPosition()
         {
             // Pretend the mouse is fixed when a context menu is active.
-            return controls.IsContextMenuActive ? contextMenuPoint : GetScreenCursorPosInternal();
+            return container.IsContextMenuActive ? contextMenuPoint : GetScreenCursorPosInternal();
         }
 
         public void RefreshCursor()
         {
             var pt = GetClientCursorPosInternal();
-            RefreshCursor(controls.GetControlAtCoord(pt.X, pt.Y, out _, out _));
+            RefreshCursor(container.GetControlAt(pt.X, pt.Y, out _, out _));
         }
 
         private void RefreshCursor(Control ctrl)
@@ -805,34 +795,34 @@ namespace FamiStudio
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
-            contextMenuPoint = PointToScreen(new Point(x, y));
-            controls.ShowContextMenu(x, y, options);
-            RefreshCursor(controls.ContextMenu);
+            contextMenuPoint = WindowToScreen(new Point(x, y));
+            container.ShowContextMenu(x, y, options);
+            RefreshCursor(container.ContextMenu);
         }
 
         public void HideContextMenu()
         {
-            controls.HideContextMenu();
+            container.HideContextMenu();
         }
 
         public void InitDialog(Dialog dialog)
         {
-            controls.InitDialog(dialog);
+			container.InitDialog(dialog);
         }
 
         public void PushDialog(Dialog dialog)
-        {
-            controls.PushDialog(dialog);
+		{
+            container.PushDialog(dialog);
         }
 
         public void PopDialog(Dialog dialog)
         {
-            controls.PopDialog(dialog);
+			container.PopDialog(dialog);
         }
 
         public void ShowToast(string text, bool longDuration = false, Action click = null)
         {
-            controls.ShowToast(text, longDuration, click);
+            container.ShowToast(text, longDuration, click);
         }
 
         public bool IsKeyDown(Keys k)
@@ -849,15 +839,19 @@ namespace FamiStudio
         {
             ProcessPlatformEvents();
             ProcessEvents();
-            Tick();
-            RenderFrameAndSwapBuffer();
-            ConditionalEmitDelayedRightClick();
 
-            if (allowSleep)
-            {
-                // Always sleep a bit, even if we rendered something. This handles cases where people
-                // turn off vsync and we end up eating 100% CPU. 
-                System.Threading.Thread.Sleep(4);
+            if (!quit)
+            { 
+                Tick();
+                RenderFrameAndSwapBuffer();
+                ConditionalEmitDelayedRightClick();
+
+                if (allowSleep)
+                {
+                    // Always sleep a bit, even if we rendered something. This handles cases where people
+                    // turn off vsync and we end up eating 100% CPU. 
+                    System.Threading.Thread.Sleep(4);
+                }
             }
         }
 

@@ -1,40 +1,44 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace FamiStudio
 {
     public class Control
     {
-        private FontRenderResources fontRes;
         private IntPtr cursor = Cursors.Default;
-        protected FamiStudioWindow parentWindow;
-        protected Dialog parentDialog;
+        protected Container container;
+        protected FamiStudioWindow window; // Caching for efficiency.
+        protected Graphics graphics;
+        protected Fonts fonts;
         protected int left = 0;
         protected int top = 0;
         protected int width = 100;
         protected int height = 100;
-        protected float windowScaling = 1.0f;
-        protected float fontScaling = 1.0f;
-        protected bool dirty = true;
         protected bool visible = true;
         protected bool enabled = true;
         protected string tooltip;
 
-        protected Control(FamiStudioWindow win)
+        protected Control()
         {
-            parentWindow = win;
         }
 
-        protected Control(Dialog dlg) 
+        protected FamiStudioContainer ParentTopContainer 
         {
-            parentDialog = dlg;
-            parentWindow = dlg.parentWindow;
-            parentDialog.InitControl(this);
+            get
+            {
+                if (this is FamiStudioContainer a)
+                    return a;
+
+                Container c = container;
+                while (c.container != null)
+                    c = c.container;
+
+                return c as FamiStudioContainer;
+            }
         }
 
-        protected virtual void OnRenderInitialized(Graphics g) { }
-        protected virtual void OnRenderTerminated() { }
-        protected virtual void OnRender(Graphics g) { }
+        protected virtual void OnRender(Graphics g) { } 
         protected virtual void OnMouseDown(MouseEventArgs e) { }
         protected virtual void OnMouseDownDelayed(MouseEventArgs e) { }
         protected virtual void OnMouseUp(MouseEventArgs e) { }
@@ -60,14 +64,12 @@ namespace FamiStudio
         protected virtual void OnLostDialogFocus() { }
         protected virtual void OnAcquiredDialogFocus() { }
         protected virtual void OnVisibleChanged() { }
-        protected virtual void OnAddedToDialog() { }
+        protected virtual void OnAddedToContainer() { }
 
         public virtual bool WantsFullScreenViewport => false;
         public virtual void Tick(float delta) { }
 
-        public void RenderInitialized(Graphics g) { OnRenderInitialized(g); }
-        public void RenderTerminated() { OnRenderTerminated(); }
-        public void Render(Graphics g) { OnRender(g); }
+        public virtual void Render(Graphics g) { OnRender(g); }
         public void MouseDown(MouseEventArgs e) { OnMouseDown(e); DialogMouseDownNotify(e); }
         public void MouseDownDelayed(MouseEventArgs e) { OnMouseDownDelayed(e); }
         public void MouseUp(MouseEventArgs e) { OnMouseUp(e); }
@@ -91,57 +93,100 @@ namespace FamiStudio
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void LostDialogFocus() { OnLostDialogFocus(); }
         public void AcquiredDialogFocus() { OnAcquiredDialogFocus(); }
-        public void AddedToDialog() { OnAddedToDialog(); }
-        public void DialogMouseDownNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
-        public void DialogMouseMoveNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }
+        public void AddedToContainer() { OnAddedToContainer(); }
+        
+		public void DialogMouseDownNotify(MouseEventArgs e) { ParentDialog?.DialogMouseDownNotify(this, e); }
+        public void DialogMouseMoveNotify(MouseEventArgs e) { ParentDialog?.DialogMouseMoveNotify(this, e); }
 
-        public Point PointToClient(Point p) { return parentWindow.PointToClient(this, p); }
-        public Point PointToScreen(Point p) { return parentWindow.PointToScreen(this, p); }
         public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
-        public Rectangle WindowRectangle => new Rectangle(WindowLeft, WindowTop, Width, Height);
-        public Size ParentWindowSize => parentWindow.Size;
-        public bool IsLandscape => parentWindow.IsLandscape;
+        public Rectangle WindowRectangle => new Rectangle(WindowPosition, Size);
+        public Size ParentWindowSize => ParentWindow.Size;
+        public bool IsLandscape => ParentWindow.IsLandscape;
         public int Left => left;
         public int Top => top;
         public int Right => left + width;
         public int Bottom => top + height;
-        public int WindowLeft => parentDialog != null ? left + parentDialog.left : left;
-        public int WindowTop => parentDialog != null ? top + parentDialog.top : top;
-        public int WindowRight => WindowLeft + width;
-        public int WindowBottom => WindowTop + height;
         public int Width => width;
         public int Height => height;
-        public bool Capture { set { if (value) parentWindow.CaptureMouse(this); else parentWindow.ReleaseMouse(); } }
-        public bool NeedsRedraw => dirty;
-        public bool IsRenderInitialized => fontRes != null;
-        public bool HasDialogFocus => parentDialog != null && parentDialog.FocusedControl == this;
-        public void GrabDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = this; }
-        public void ClearDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = null; }
+        public Size Size => new Size(width, height);
+        public bool Capture { set { if (value) ParentWindow.CaptureMouse(this); else ParentWindow.ReleaseMouse(); } }
+        public bool HasDialogFocus => ParentDialog?.FocusedControl == this;
+        public void GrabDialogFocus()  { if (ParentDialog != null) ParentDialog.FocusedControl = this; }
+        public void ClearDialogFocus() { if (ParentDialog != null) ParentDialog.FocusedControl = null; }
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
         public bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
-        public float WindowScaling => windowScaling;
-        public float FontScaling => fontScaling;
-        public FontRenderResources FontResources => fontRes;
-        public void MarkDirty() { dirty = true; if (parentDialog != null) parentDialog.MarkDirty(); }
-        public void ClearDirtyFlag() { dirty = false; }
-        public void SetDpiScales(float main, float font) { windowScaling = main; fontScaling = font; }
-        public void SetFontRenderResource(FontRenderResources res) { fontRes = res; }
+        public void MarkDirty() { window?.MarkDirty(); }
 
-        public Point CursorPosition => parentWindow.GetCursorPosition();
-        public ModifierKeys ModifierKeys => parentWindow.GetModifierKeys();
-        public FamiStudio App => parentWindow?.FamiStudio;
-        public IntPtr Cursor { get => cursor; set { cursor = value; parentWindow.RefreshCursor(); } }
-        public FamiStudioWindow ParentWindow => parentWindow; 
-        public Dialog ParentDialog => parentDialog; 
+        public bool HasParent => container != null;
+        public Point CursorPosition => ParentWindow.GetCursorPosition();
+        public ModifierKeys ModifierKeys => ParentWindow.GetModifierKeys();
+        public FamiStudio App => ParentWindow?.FamiStudio;
+        public IntPtr Cursor { get => cursor; set { cursor = value; ParentWindow.RefreshCursor(); } }
+        public FamiStudioWindow ParentWindow => window;
+        public Container ParentContainer => container;
+        public Dialog ParentDialog => container as Dialog;
+        public Graphics Graphics => graphics;
+        public Fonts Fonts => fonts;
+        public Point WindowPosition => ControlToWindow(Point.Empty);
 
-        public int ScaleForWindow(float val) { return (int)Math.Round(val * windowScaling); }
-        public float ScaleForWindowFloat(float val) { return (val * windowScaling); }
-        public int ScaleForFont(float val) { return (int)Math.Round(val * fontScaling); }
-        public float ScaleForFontFloat(float val) { return (val * fontScaling); }
-        public int ScaleCustom(float val, float scale) { return (int)Math.Round(val * scale); }
-        public float ScaleCustomFloat(float val, float scale) { return (val * scale); }
-        public int ScaleLineForWindow(int width) { return width == 1 ? 1 : (int)Math.Round(width * windowScaling) | 1; }
+        public virtual Point ControlToWindow(Point p)
+        {
+            Container c = container;
+
+            p.X += left;
+            p.Y += top;
+
+            while (c != null)
+            {
+                p.X += c.Left;
+                p.Y += c.Top;
+                c = c.ParentContainer;
+            }
+
+            return p;
+        }
+
+        public virtual Point WindowToControl(Point p)
+        {
+            Container c = container;
+
+            while (c != null)
+            {
+                p.X -= c.Left;
+                p.Y -= c.Top;
+                c = c.ParentContainer;
+            }
+
+            return p;
+        }
+
+        public virtual bool HitTest(int winX, int winY)
+        {
+            return WindowRectangle.Contains(winX, winY);
+        }
+
+        public Point ScreenToControl(Point p) 
+        {
+            return WindowToControl(ParentWindow.ScreenToWindow(p));
+        }
+
+        public Point ControlToScreen(Point p) 
+        {
+            return ControlToWindow(ParentWindow.WindowToScreen(p)); 
+        }
+
+        public void SetParentContainer(Container c)
+        {
+            Debug.Assert((container == null) != (c == null));
+            Debug.Assert(c == null || c.ParentTopContainer != null);
+            Debug.Assert(c == null || c.ParentWindow != null);
+
+            container = c;
+            window = c?.ParentWindow;
+            fonts = window?.Fonts;
+            graphics = window?.Graphics;
+        }
 
         public void Move(int x, int y, bool fireResizeEvent = true)
         {
@@ -165,7 +210,7 @@ namespace FamiStudio
 
         public void Resize(int w, int h, bool fireResizeEvent = true)
         {
-            width = Math.Max(1, w);
+            width  = Math.Max(1, w);
             height = Math.Max(1, h);
 
             if (fireResizeEvent)
@@ -174,8 +219,8 @@ namespace FamiStudio
 
         public void CenterToWindow()
         {
-            Move((parentWindow.Width  - width) / 2,
-                 (parentWindow.Height - height) / 2,
+            Move((ParentWindow.Width  - width) / 2,
+                 (ParentWindow.Height - height) / 2,
                  width, height);
         }
 
@@ -190,33 +235,129 @@ namespace FamiStudio
 
             return false;
         }
+
+        public void OverrideGraphics(Graphics g, Fonts f)
+        {
+            graphics = g;
+            fonts = f;
+        }
     }
 
-    public class ModifierKeys
+    public struct ModifierKeys
     { 
         // Matches GLFW
-        private const int ModifierShift   = 1;
-        private const int ModifierControl = Platform.IsMacOS ? 10 : 2;
-        private const int ModifierAlt     = 4;
-        private const int ModifierSuper   = 8;
+        private const int ShiftMask   = 1;
+        private const int ControlMask = Platform.IsMacOS ? 10 : 2;
+        private const int AltMask     = 4;
+        private const int SuperMask   = 8;
 
-        private int modifiers;
-        private int forcedModifiers;
+        private int value;
 
-        public bool Shift     => (Modifiers & ModifierShift)   != 0;
-        public bool Control   => (Modifiers & ModifierControl) != 0;
-        public bool Alt       => (Modifiers & ModifierAlt)     != 0;
-        public bool Super     => (Modifiers & ModifierSuper)   != 0;
-        public int  Modifiers => (modifiers | forcedModifiers);
+        public bool IsShiftDown   => (value & ShiftMask)   != 0;
+        public bool IsControlDown => (value & ControlMask) != 0;
+        public bool IsAltDown     => (value & AltMask)     != 0;
+        public bool IsSuperDown   => (value & SuperMask)   != 0;
+        public int  Value         => value;
+
+        public static readonly ModifierKeys Control      = new ModifierKeys(ControlMask);
+        public static readonly ModifierKeys Shift        = new ModifierKeys(ShiftMask);
+        public static readonly ModifierKeys Alt          = new ModifierKeys(AltMask);
+        public static readonly ModifierKeys ControlShift = new ModifierKeys(ControlMask | ShiftMask);
+
+        public ModifierKeys(int val)
+        {
+            value = FixMods(val);
+        }
 
         public void Set(int mods)
         {
-            modifiers = mods;
+            value = FixMods(mods);
         }
 
-        public void SetForced(int mods)
+        private static int FixMods(int val)
         {
-            forcedModifiers = mods;
+            if (Platform.IsMacOS)
+            {
+                // On MacOS, we dont differentiate between command and control.
+                // Both need to be set to match shortcuts correctly.
+                if ((val & ControlMask) != 0)
+                    val |= ControlMask;
+            }
+
+            return val;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = (ModifierKeys)obj;
+            return value == other.value;
+        }
+
+        public override int GetHashCode()
+        {
+            return value;
+        }
+
+        public static ModifierKeys operator |(ModifierKeys m0, ModifierKeys m1)
+        {
+            return new ModifierKeys(m0.value | m1.Value);
+        }
+
+        public static bool operator ==(ModifierKeys m0, ModifierKeys m1)
+        {
+            return m0.value == m1.value;
+        }
+
+        public static bool operator !=(ModifierKeys m0, ModifierKeys m1)
+        {
+            return m0.value != m1.value;
+        }
+
+        public string ToTooltipString()
+        {
+            var str = "";
+            if (IsControlDown) str += "<Ctrl>";
+            if (IsShiftDown)   str += "<Shift>";
+            if (IsAltDown)     str += "<Alt>";
+            return str;
+        }
+
+        public string ToDisplayString()
+        {
+            var str = "";
+            if (IsControlDown) str += "Ctrl+";
+            if (IsShiftDown)   str += "Shift+";
+            if (IsAltDown)     str += "Alt+";
+            return str;
+        }
+
+        public void FromConfigString(Span<string> splits)
+        {
+            value = 0;
+
+            foreach (var s in splits)
+            {
+                switch (s)
+                {
+                    case "Ctrl"  : value |= ControlMask; break;
+                    case "Shift" : value |= ShiftMask;   break;
+                    case "Alt"   : value |= AltMask;     break;
+                }
+            }
+        }
+
+        public string ToConfigString()
+        {
+            var str = "";
+            if (IsControlDown) str += "Ctrl+";
+            if (IsShiftDown)   str += "Shift+";
+            if (IsAltDown)     str += "Alt+";
+            return str;
+        }
+
+        public override string ToString()
+        {
+            return ToDisplayString();
         }
     }
 
@@ -262,28 +403,24 @@ namespace FamiStudio
 
     public class KeyEventArgs
     {   
-        // Matches GLFW
-        private const int ModifierShift   = 1;
-        private const int ModifierControl = Platform.IsMacOS ? 10 : 2;
-        private const int ModifierAlt     = 4;
-        private const int ModifierSuper   = 8;
-
         private Keys key;
-        private int  modifiers;
+        private ModifierKeys modifiers;
         private int  scancode;
         private bool repeat;
         private bool handled;
 
-        public Keys Key      => key;
-        public int  Scancode => scancode;
-        public bool Shift    => (modifiers & ModifierShift)   != 0;
-        public bool Control  => (modifiers & ModifierControl) != 0;
-        public bool Alt      => (modifiers & ModifierAlt)     != 0;
-        public bool Super    => (modifiers & ModifierSuper)   != 0;
-        public bool IsRepeat => repeat;
+        public Keys Key => key;
+        public ModifierKeys Modifiers => modifiers;
+        
+        public int  Scancode  => scancode;
+        public bool Shift     => modifiers.IsShiftDown;
+        public bool Control   => modifiers.IsControlDown;
+        public bool Alt       => modifiers.IsAltDown;
+        public bool Super     => modifiers.IsSuperDown;
+        public bool IsRepeat  => repeat;
         public bool Handled { get => handled; set => handled = value; }
 
-        public KeyEventArgs(Keys k, int mods, bool rep, int scan)
+        public KeyEventArgs(Keys k, ModifierKeys mods, bool rep, int scan)
         {
             key = k;
             modifiers = mods;
@@ -294,22 +431,18 @@ namespace FamiStudio
 
     public class CharEventArgs
     {
-        // Matches GLFW
-        private const int ModifierShift   = 1;
-        private const int ModifierControl = Platform.IsMacOS ? 10 : 2;
-        private const int ModifierAlt     = 4;
-        private const int ModifierSuper   = 8;
-
         private char chr;
-        private int  modifiers;
+        private ModifierKeys modifiers;
 
-        public char Char    => chr;
-        public bool Shift   => (modifiers & ModifierShift)   != 0;
-        public bool Control => (modifiers & ModifierControl) != 0;
-        public bool Alt     => (modifiers & ModifierAlt)     != 0;
-        public bool Super   => (modifiers & ModifierSuper)   != 0;
+        public char Char      => chr;
+        public bool Shift     => modifiers.IsShiftDown;
+        public bool Control   => modifiers.IsControlDown;
+        public bool Alt       => modifiers.IsAltDown;
+        public bool Super     => modifiers.IsSuperDown;
 
-        public CharEventArgs(char c, int mods)
+        public ModifierKeys Modifiers => modifiers;
+
+        public CharEventArgs(char c, ModifierKeys mods)
         {
             chr = c;
             modifiers = mods;
@@ -438,6 +571,212 @@ namespace FamiStudio
         RightSuper = 347,
         Menu = 348
     };
+
+    public class Shortcut
+    {
+        public string DisplayName    { get; private set; }
+        public string ConfigName     { get; private set; }
+        public bool   AllowModifiers { get; private set; } = true;
+        public readonly bool AllowTwoShortcuts = true; // Always allow... { get; private set; }
+
+        //public int[] ScanCodes = new int[2];
+        public Keys[] KeyValues         { get; private set; } = new Keys[2];
+        public ModifierKeys[] Modifiers { get; private set; } = new ModifierKeys[2];
+
+        private Shortcut()
+        {
+        }
+
+        public Shortcut(string displayName, string configName, Keys k, bool allowModifiers)
+        {
+            DisplayName = displayName;
+            ConfigName = configName;
+            AllowModifiers = allowModifiers;
+            KeyValues[0] = k;
+            KeyValues[1] = Keys.Unknown;
+            Settings.AllShortcuts.Add(this);
+        }
+
+        public Shortcut(string displayName, string configName, Keys k, ModifierKeys m = default(ModifierKeys))
+        {
+            DisplayName = displayName;
+            ConfigName = configName;
+            Modifiers[0] = m;
+            KeyValues[0] = k;
+            KeyValues[1] = Keys.Unknown;
+            Settings.AllShortcuts.Add(this);
+        }
+
+        public Shortcut(string displayName, string configName, Keys k1, Keys k2)
+        {
+            DisplayName = displayName;
+            ConfigName = configName;
+            KeyValues[0] = k1;
+            KeyValues[1] = k2;
+            //AllowTwoShortcuts = true;
+            Settings.AllShortcuts.Add(this);
+        }
+
+        public Shortcut(string displayName, string configName, Keys k1, ModifierKeys m1, Keys k2, ModifierKeys m2)
+        {
+            DisplayName = displayName;
+            ConfigName = configName;
+            Modifiers[0] = m1;
+            KeyValues[0] = k1;
+            Modifiers[1] = m2;
+            KeyValues[1] = k2;
+            //AllowTwoShortcuts = true;
+            Settings.AllShortcuts.Add(this);
+        }
+
+        private Shortcut Clone()
+        {
+            var clone = new Shortcut();
+            clone.DisplayName = DisplayName;
+            clone.ConfigName = ConfigName;
+            //clone.AllowTwoShortcuts = AllowTwoShortcuts;
+            clone.AllowModifiers = AllowModifiers;
+            clone.KeyValues = KeyValues.Clone() as Keys[];
+            clone.Modifiers = Modifiers.Clone() as ModifierKeys[];
+            return clone;
+        }
+
+        public static List<Shortcut> CloneList(List<Shortcut> list)
+        {
+            var clone = new List<Shortcut>();
+            foreach (var c in list)
+                clone.Add(c.Clone());
+            return clone;
+        }
+
+        public void Clear(int idx)
+        {
+            KeyValues[idx] = Keys.Unknown;
+            Modifiers[idx].Set(0);
+        }
+
+        public bool IsShortcutValid(int idx)
+        {
+            return KeyValues[idx] != Keys.Unknown;
+        }
+
+        public bool Matches(KeyEventArgs e, int idx)
+        {
+            return IsShortcutValid(idx) && e.Modifiers == Modifiers[idx] && e.Key == KeyValues[idx];
+        }
+
+        public bool Matches(KeyEventArgs e)
+        {
+            return Matches(e, 0) || Matches(e, 1);
+        }
+
+        public bool IsKeyDown(FamiStudioWindow win, int idx)
+        {
+            Debug.Assert(!AllowModifiers);
+            return IsShortcutValid(idx) && win.IsKeyDown(KeyValues[idx]);
+        }
+
+        public bool IsKeyDown(FamiStudioWindow win)
+        {
+            return IsKeyDown(win, 0) || IsKeyDown(win, 1);
+        }
+
+        private string GetShortcutKeyString(int idx)
+        {
+            var str = Platform.KeyToString(KeyValues[idx]);
+            if (string.IsNullOrEmpty(str))
+                str = KeyValues[idx].ToString();
+            else
+                str = str.ToUpper();
+
+            // Fixup a few edge cases.
+            switch (str)
+            {
+                case "\t": str = "Tab";   break;
+                case "\r": str = "Enter"; break;
+                case null: str = "???";   break;
+            }
+
+            return str;
+        }
+
+        public string TooltipString
+        {
+            get
+            {
+                var str = "";
+
+                if (Platform.IsDesktop)
+                {
+                    // TODO : Some stuff like "Redo" have 2 shortcuts AND tooltips.
+                    if (IsShortcutValid(0))
+                    {
+                        if (Modifiers[0].Value != 0)
+                            str = $"{Modifiers[0].ToTooltipString()}";
+                        str += $"<{GetShortcutKeyString(0)}>";
+                    }
+
+                    // HACK : 'Ctrl' gets converted to 'Cmd' in the tooltip, but for some
+                    // commands on MacOS we will really want to display Ctrl since they
+                    // conflict with some built-in OS shortcuts.
+                    if (Platform.IsMacOS)
+                    {
+                        switch (str)
+                        {
+                            case "<Ctrl>+<Space>":
+                                str = "<ForceCtrl>+<Space>";
+                                break;
+                        }
+                    }
+                }
+
+                return str;
+            }
+        }
+
+        public void FromConfigString(string s, int idx)
+        {
+            var splits = s.Split('+', StringSplitOptions.RemoveEmptyEntries);
+            
+            if (splits.Length > 0)
+            {
+                Modifiers[idx].FromConfigString(splits.AsSpan(0, splits.Length - 1));
+                KeyValues[idx] = (Keys)Enum.Parse(typeof(Keys), splits[splits.Length - 1]);
+            }
+            else
+            {
+                KeyValues[idx] = Keys.Unknown;
+            }
+        }
+
+        public string ToConfigString(int idx)
+        {
+            Debug.Assert(idx == 0 || AllowTwoShortcuts);
+            return Modifiers[idx].ToConfigString() + KeyValues[idx].ToString();
+        }
+
+        public string ToDisplayString(int idx)
+        {
+            var str = "";
+
+            if (IsShortcutValid(idx))
+            {
+                if (Modifiers[idx].Value != 0)
+                    str += $"{Modifiers[idx]}";
+                str += (GetShortcutKeyString(idx) ?? "Unknown");
+            }
+
+            return str;
+        }
+
+        public override string ToString()
+        {
+            var str = DisplayName + " " + ToDisplayString(0);
+            if (AllowTwoShortcuts)
+                str += " " + ToDisplayString(1);
+            return str.Trim();
+        }
+    }
 
     // Matches Windows Forms
     public enum DialogResult

@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class Dialog : Control
+    public class Dialog : Container
     {
         public delegate void KeyDownDelegate(Dialog dlg, KeyEventArgs e);
         public event KeyDownDelegate DialogKeyDown;
@@ -12,13 +12,10 @@ namespace FamiStudio
         const float ToolTipDelay = 0.2f;
         const int   ToolTipMaxCharsPerLine = 64;
 
-        private List<Control> controls = new List<Control>();
-        private List<Control> initControls = new List<Control>();
-        private Control focusedControl;
         private DialogResult result = DialogResult.None;
         private float tooltipTimer;
         private string title;
-        private bool destroyControlsOnClose = true;
+        private Control focusedControl;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForWindow(2);
         private int tooltipSideMargin = DpiScaling.ScaleForWindow(4);
@@ -27,15 +24,7 @@ namespace FamiStudio
         protected int titleBarMargin = DpiScaling.ScaleForWindow(8);
         protected int titleBarSizeY;
 
-        private CommandList commandList;
-        private CommandList commandListForeground;
-
-        public CommandList CommandList => commandList;
-        public CommandList CommandListForeground => commandListForeground;
         public DialogResult DialogResult => result;
-        public bool DestroyControlsOnClose { get => destroyControlsOnClose; set => destroyControlsOnClose = value; }
-
-        public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
         public Control FocusedControl
         {
@@ -57,12 +46,12 @@ namespace FamiStudio
             }
         }
 
-        public Dialog(FamiStudioWindow win, string t = "") : base(win)
+        public Dialog(FamiStudioWindow win, string t = "")
         {
             visible = false;
             title = t;
             titleBarSizeY = string.IsNullOrEmpty(t) ? 0 : DpiScaling.ScaleForWindow(24);
-            parentWindow.InitDialog(this);
+            win.InitDialog(this);
         }
 
         private void ShowDialogInternal()
@@ -70,7 +59,7 @@ namespace FamiStudio
             result = DialogResult.None;
             visible = true;
             OnShowDialog();
-            parentWindow.PushDialog(this);
+            window.PushDialog(this);
         }
 
         public void ShowDialogNonModal()
@@ -97,66 +86,18 @@ namespace FamiStudio
         public void Close(DialogResult res)
         {
             FocusedControl = null;
-
-            if (destroyControlsOnClose)
-                DestroyControls();
-
-            parentWindow.PopDialog(this);
+            window.PopDialog(this);
             result = res;
             visible = false;
-        }
-
-        public void DestroyControls()
-        {
-            foreach (var ctrl in initControls)
-            {
-                ctrl.RenderTerminated();
-                ctrl.SetFontRenderResource(null);
-            }
         }
 
         protected virtual void OnShowDialog()
         {
         }
 
-        public void InitControl(Control ctrl)
-        {
-            Debug.Assert(ctrl.ParentDialog == this);
-
-            ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-            ctrl.SetFontRenderResource(FontResources);
-            ctrl.RenderInitialized(ParentWindow.Graphics);
-
-            Debug.Assert(!initControls.Contains(ctrl));
-            initControls.Add(ctrl);
-        }
-
-        public void AddControl(Control ctrl)
-        {
-            if (!controls.Contains(ctrl))
-            {
-                controls.Add(ctrl);
-                ctrl.AddedToDialog();
-            }
-        }
-
-        public void RemoveControl(Control ctrl)
-        {
-            if (ctrl != null)
-            {
-                controls.Remove(ctrl);
-            }
-        }
-
         public override void Tick(float delta)
         {
-            foreach (var ctrl in controls)
-            {
-                if (ctrl.Visible)
-                {
-                    ctrl.Tick(delta);
-                }
-            }
+            base.Tick(delta);
 
             var v1 = ShouldDisplayTooltip();
             tooltipTimer += delta;
@@ -169,42 +110,6 @@ namespace FamiStudio
         private bool ShouldDisplayTooltip()
         {
             return tooltipTimer > ToolTipDelay;
-        }
-
-        public Control GetControlAtInternal(bool focused, int formX, int formY, out int ctrlX, out int ctrlY)
-        {
-            ctrlX = 0;
-            ctrlY = 0;
-
-            foreach (var ctrl in controls)
-            {
-                if (ctrl.Visible && ctrl.HasDialogFocus == focused)
-                {
-                    var dlgX = ctrl.WindowLeft - WindowLeft;
-                    var dlgY = ctrl.WindowTop - WindowTop;
-
-                    if (ctrl.WindowRectangle.Contains(formX, formY))
-                    {
-                        ctrlX = formX - ctrl.WindowLeft;
-                        ctrlY = formY - ctrl.WindowTop;
-
-                        return ctrl;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        public Control GetControlAt(int formX, int formY, out int ctrlX, out int ctrlY)
-        {
-            var ctrl = GetControlAtInternal(true, formX, formY, out ctrlX, out ctrlY);
-            if (ctrl != null)
-                return ctrl;
-            ctrl = GetControlAtInternal(false, formX, formY, out ctrlX, out ctrlY);
-            if (ctrl != null)
-                return ctrl;
-            return this;
         }
 
         public void DialogMouseDownNotify(Control control, MouseEventArgs e) 
@@ -235,9 +140,7 @@ namespace FamiStudio
             DialogKeyDown?.Invoke(this, e);
 
             if (focusedControl != null && focusedControl.Visible)
-            {
-                focusedControl.KeyDown(e);
-            }
+               focusedControl.KeyDown(e);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
@@ -254,6 +157,27 @@ namespace FamiStudio
             {
                 focusedControl.Char(e);
             }
+        }
+
+        public override Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
+        {
+            // Focus control gets to check first. This is needed to handle drop downs
+            // that extends beyond the bounding of a dialog, for example.
+            if (focusedControl != null && focusedControl.HitTest(winX, winY))
+            {
+                Debug.Assert(focusedControl.Visible);
+                var winPos = focusedControl.WindowPosition;
+                ctrlX = winX - winPos.X;
+                ctrlY = winY - winPos.Y;
+                return focusedControl;
+            }
+
+            return base.GetControlAt(winX, winY, out ctrlX, out ctrlY);
+        }
+
+        public override bool HitTest(int winX, int winY)
+        {
+            return true; // The top dialog eats all the input.
         }
 
         private List<string> SplitLongString(string str)
@@ -304,38 +228,22 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            commandList = g.CreateCommandList();
-            commandListForeground = g.CreateCommandList();
+            var c = g.DefaultCommandList;
+            var fonts = Fonts;
 
             // Fill + Border
-            commandList.FillAndDrawRectangle(0, 0, width - 1, height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
+            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, Theme.DarkGreyColor4, Theme.BlackColor);
 
             if (titleBarSizeY > 0)
             {
-                commandList.FillAndDrawRectangle(0, 0, width, titleBarSizeY, Theme.DarkGreyColor1, Theme.BlackColor);
-                commandList.DrawText(title, FontResources.FontMediumBold, titleBarMargin, 0, Theme.LightGreyColor1, TextFlags.MiddleLeft, 0, titleBarSizeY);
+                c.FillAndDrawRectangle(0, 0, width, titleBarSizeY, Theme.DarkGreyColor1, Theme.BlackColor);
+                c.DrawText(title, fonts.FontMediumBold, titleBarMargin, 0, Theme.LightGreyColor1, TextFlags.MiddleLeft, 0, titleBarSizeY);
             }
-
-            // Render child controls
-            foreach (var ctrl in controls)
-            {
-                if (ctrl.Visible)
-                {
-                    g.Transform.PushTranslation(ctrl.Left, ctrl.Top);
-                    ctrl.Render(g);
-                    g.Transform.PopTransform();
-                }
-            }
-
-            g.DrawCommandList(commandList, WindowRectangle);
-            g.DrawCommandList(commandListForeground);
-
-            commandList = null;
-            commandListForeground = null;
 
             if (ShouldDisplayTooltip())
             {
-                var pt = PointToClient(CursorPosition);
+                var o = g.Overlay2CommandList;
+                var pt = ScreenToControl(CursorPosition);
                 var formPt = pt + new Size(left, top);
                 var ctrl = GetControlAt(left + pt.X, top + pt.Y, out _, out _);
 
@@ -343,25 +251,25 @@ namespace FamiStudio
                 {
                     var splits = SplitLongTooltip(ctrl.ToolTip);
                     var sizeX = 0;
-                    var sizeY = FontResources.FontMedium.LineHeight * splits.Count + tooltipTopMargin;
+                    var sizeY = fonts.FontMedium.LineHeight * splits.Count + tooltipTopMargin * 2;
 
                     for (int i = 0; i < splits.Count; i++)
-                        sizeX = Math.Max(sizeX, FontResources.FontMedium.MeasureString(splits[i], false));
+                        sizeX = Math.Max(sizeX, fonts.FontMedium.MeasureString(splits[i], false));
 
                     var totalSizeX = sizeX + tooltipSideMargin * 2;
                     var rightAlign = formPt.X + totalSizeX > ParentWindow.Width;
 
-                    var c = g.CreateCommandList();
                     g.Transform.PushTranslation(pt.X - (rightAlign ? totalSizeX : 0), pt.Y + tooltipOffsetY);
 
                     for (int i = 0; i < splits.Count; i++)
-                        c.DrawText(splits[i], FontResources.FontMedium, tooltipSideMargin, i * FontResources.FontMedium.LineHeight + tooltipTopMargin, Theme.LightGreyColor1);
+                        o.DrawText(splits[i], Fonts.FontMedium, tooltipSideMargin, i * fonts.FontMedium.LineHeight + tooltipTopMargin, Theme.LightGreyColor1);
 
-                    c.FillAndDrawRectangle(0, 0, totalSizeX, sizeY, Theme.DarkGreyColor1, Theme.LightGreyColor1);
+                    o.FillAndDrawRectangle(0, 0, totalSizeX, sizeY, Theme.DarkGreyColor1, Theme.LightGreyColor1);
                     g.Transform.PopTransform();
-                    g.DrawCommandList(c);
                 }
             }
+
+            base.OnRender(g);
         }
     }
 }

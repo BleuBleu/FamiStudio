@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 
 namespace FamiStudio
@@ -56,22 +57,22 @@ namespace FamiStudio
 
         public static bool IsNearlyEqual(float a, float b, float delta = 1e-5f)
         {
-            return Math.Abs(a - b) < delta;
+            return MathF.Abs(a - b) < delta;
         }
 
         public static bool IsNearlyEqual(int a, int b, int delta = 10)
         {
-            return Math.Abs(a - b) < delta;
+            return MathF.Abs(a - b) < delta;
         }
 
         public static int SignedCeil(float x)
         {
-            return (x > 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
+            return (x > 0) ? (int)MathF.Ceiling(x) : (int)MathF.Floor(x);
         }
 
         public static int SignedFloor(float x)
         {
-            return (x < 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
+            return (x < 0) ? (int)MathF.Ceiling(x) : (int)MathF.Floor(x);
         }
 
         public static float Frac(float x)
@@ -144,6 +145,16 @@ namespace FamiStudio
             return (x + y - 1) / y;
         }
 
+        public static int DivideAndRoundDown(int x, int y)
+        {
+            return x / y;
+        }
+
+        public static int AlignSampleOffset(int s)
+        {
+            return (s + 63) & 0xffc0;
+        }
+
         public static int NumDecimalDigits(int n)
         {
             int digits = 1;
@@ -160,6 +171,13 @@ namespace FamiStudio
             T t = a;
             a = b;
             b = t;
+        }
+
+        public static void Swap<T>(IList<T> list, int a, int b)
+        {
+            T t = list[a];
+            list[a] = list[b];
+            list[b] = t;
         }
 
         public static int NextPowerOfTwo(int v)
@@ -261,6 +279,25 @@ namespace FamiStudio
             return filenameNoExtension + suffix + extension;
         }
 
+        public static void PadToNextBank(List<byte> bytes, int bankSize)
+        {
+            var offsetInPage = (bytes.Count & (bankSize - 1));
+            if (offsetInPage != 0)
+                bytes.AddRange(new byte[bankSize - offsetInPage]);
+        }
+
+        public static void PadToNextBank(ref byte[] bytes, int bankSize)
+        {
+            var offsetInPage = (bytes.Length & (bankSize - 1));
+            if (offsetInPage != 0)
+                Array.Resize(ref bytes, bankSize);
+        }
+
+        public static bool ResourceExists(string name)
+        {
+            return Assembly.GetExecutingAssembly().GetManifestResourceInfo(name) != null;
+        }
+
         public static float SmoothStep(float x)
         {
             return x * x * (3 - 2 * x);
@@ -287,7 +324,7 @@ namespace FamiStudio
 
         public static float DbToAmplitude(float db)
         {
-            return (float)Math.Pow(10.0f, db / 20.0f);
+            return (float)MathF.Pow(10.0f, db / 20.0f);
         }
 
         public static int Min(int[] array)
@@ -338,7 +375,7 @@ namespace FamiStudio
 
         public static bool CompareFloats(float f1, float f2, float tolerance = 0.001f)
         {
-            return Math.Abs(f1 - f2) < tolerance;
+            return MathF.Abs(f1 - f2) < tolerance;
         }
 
         public static int CompareArrays(byte[] a1, byte[] a2)
@@ -444,6 +481,23 @@ namespace FamiStudio
                     
                 }).Start();
             }
+        }
+
+        public static float Dot(float x0, float y0, float x1, float y1)
+        {
+            return x0 * x1 + y0 * y1;
+        }
+
+        public static float Cross(float x0, float y0, float x1, float y1)
+        {
+            return x0 * y1 - y0 * x1;
+        }
+
+        public static void Normalize(ref float x, ref float y)
+        {
+            var invLen = 1.0f / (float)MathF.Sqrt(x * x + y * y);
+            x *= invLen;
+            y *= invLen;
         }
     }
 

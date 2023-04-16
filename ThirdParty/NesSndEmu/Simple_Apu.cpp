@@ -113,7 +113,7 @@ void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 			case expansion_fds: fds.output(enable ? &buf : NULL); break;
 			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
 			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_sunsoft: sunsoft.enable_channel(idx, enable ? &buf : NULL); break;
 			case expansion_epsm: epsm.enable_channel(idx, enable); break;
 		}
 	}
@@ -214,7 +214,7 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 			if (expansions & expansion_mask_mmc5) mmc5.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_namco) namco.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_sunsoft) sunsoft.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_epsm) epsm.write_register(clock(16), addr, data);
+			if (expansions & expansion_mask_epsm) epsm.write_register(clock(), addr, data);
 		}
 	}
 }
@@ -231,7 +231,7 @@ void Simple_Apu::get_register_values(int exp, void* regs)
 		case expansion_fds: fds.get_register_values((fds_register_values*)regs); break;
 		case expansion_mmc5: mmc5.get_register_values((mmc5_register_values*)regs); break;
 		case expansion_namco: namco.get_register_values((n163_register_values*)regs); break;
-		case expansion_sunsoft: sunsoft.get_register_values((s5b_register_values*)regs); break;
+		case expansion_sunsoft: sunsoft.get_register_values((sunsoft5b_register_values*)regs); break;
 		case expansion_epsm: epsm.get_register_values((epsm_register_values*)regs); break;
 	}
 }
@@ -293,6 +293,12 @@ int Simple_Apu::get_namco_wave_pos(int n163ChanIndex)
 	return namco.get_wave_pos(n163ChanIndex);
 }
 
+void Simple_Apu::set_namco_mix(bool mix)
+{
+	assert((expansions & expansion_mask_namco) != 0 && !seeking);
+	return namco.set_mix(mix);
+}
+
 int Simple_Apu::get_fds_wave_pos()
 {
 	assert((expansions & expansion_mask_fds) != 0 && !seeking);
@@ -301,6 +307,8 @@ int Simple_Apu::get_fds_wave_pos()
 
 void Simple_Apu::end_frame()
 {
+	assert(time <= frame_length);
+
 	time = 0;
 	frame_length ^= 1;
 

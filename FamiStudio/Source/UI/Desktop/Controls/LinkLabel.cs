@@ -9,7 +9,7 @@ namespace FamiStudio
         private bool hover;
         private int lineOffset = DpiScaling.ScaleForWindow(4);
 
-        public LinkLabel(Dialog dlg, string txt, string link) : base(dlg)
+        public LinkLabel(string txt, string link)
         {
             text = txt;
             url = link;
@@ -31,7 +31,7 @@ namespace FamiStudio
 
         private int MeasureString()
         {
-            return FontResources.FontMedium.MeasureString(text, false);
+            return Fonts.FontMedium.MeasureString(text, false);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -44,11 +44,11 @@ namespace FamiStudio
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             var sx = MeasureString();
             var brush = hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1;
 
-            c.DrawText(text, FontResources.FontMedium, 0, 0, brush, TextFlags.MiddleLeft, 0, height);
+            c.DrawText(text, Fonts.FontMedium, 0, 0, brush, TextFlags.MiddleLeft, 0, height);
             c.DrawLine(0, height  - lineOffset, sx, height - lineOffset, brush);
         }
     }

@@ -10,7 +10,7 @@ namespace FamiStudio
         private BitmapAtlasRef bmpRadioOff;
         private BitmapAtlasRef bmpRadioOn;
 
-        public RadioButton(Dialog dlg, string txt, bool chk, bool multi = false) : base(dlg, txt, multi)
+        public RadioButton(string txt, bool chk, bool multi = false) : base(txt, multi)
         {
             check = chk;
         }
@@ -21,11 +21,13 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref check, value); }
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
+            var g = ParentWindow.Graphics;
             bmpRadioOff = g.GetBitmapAtlasRef("RadioButtonOff");
             bmpRadioOn  = g.GetBitmapAtlasRef("RadioButtonOn");
-            labelOffsetX = bmpRadioOff.ElementSize.Width + ScaleForWindow(8);
+            labelOffsetX = bmpRadioOff.ElementSize.Width + DpiScaling.ScaleForWindow(8);
+            base.OnAddedToContainer();
         }
 
         private Rectangle GetRadioRectangle()
@@ -49,7 +51,7 @@ namespace FamiStudio
             {
                 Checked = true;
 
-                foreach (var ctrl in parentDialog.Controls)
+                foreach (var ctrl in container.Controls)
                 {
                     if (ctrl != this && ctrl is RadioButton radio)
                         radio.Checked = false;
@@ -63,7 +65,7 @@ namespace FamiStudio
 
             base.OnRender(g);
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             c.DrawBitmapAtlasCentered(check ? bmpRadioOn : bmpRadioOff, 0, 0, bmpRadioOn.ElementSize.Width, height, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
         }
     }

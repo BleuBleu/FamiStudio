@@ -8,11 +8,26 @@ namespace FamiStudio
         private PropertyDialog dialog;
         private List<int> checkToEffect = new List<int>();
 
+        #region Localization
+
+        LocalizedString DeleteSpecialTitle;
+        LocalizedString DeleteNotesLabel;
+        LocalizedString DeleteNotesTooltip;
+        LocalizedString EffectsToDeleteLabel;
+        LocalizedString MobileSelectAllLabel;
+        LocalizedString SelectAllLabel;
+        LocalizedString MobileSelectNoneLabel;
+        LocalizedString SelectNoneLabel;
+
+        #endregion
+
         public unsafe DeleteSpecialDialog(FamiStudioWindow win, Channel channel, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            dialog = new PropertyDialog(win, "Delete Special", 260);
-            dialog.Properties.AddLabelCheckBox("Delete Notes", notes, 0, "When enabled, will delete the musical notes."); // 0
-            dialog.Properties.AddLabel(null, "Effects to delete:"); // 1
+            Localization.Localize(this);
+
+            dialog = new PropertyDialog(win, DeleteSpecialTitle, 260);
+            dialog.Properties.AddLabelCheckBox(DeleteNotesLabel, notes, 0, DeleteNotesTooltip); // 0
+            dialog.Properties.AddLabel(null, EffectsToDeleteLabel.Colon); // 1
 
             var effectList  = new List<string>();
             var checkedList = new List<bool>();
@@ -28,9 +43,9 @@ namespace FamiStudio
             }
 
 
-            dialog.Properties.AddCheckBoxList(Platform.IsMobile ? "Effects to delete" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete."); // 2
-            dialog.Properties.AddButton(Platform.IsMobile ? "Select All Effects" : null, "Select All"); // 3
-            dialog.Properties.AddButton(Platform.IsMobile ? "De-select All Effects" : null, "Select None"); // 4
+            dialog.Properties.AddCheckBoxList(Platform.IsMobile ? EffectsToDeleteLabel : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete."); // 2
+            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectAllLabel  : null, SelectAllLabel); // 3
+            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectNoneLabel : null, SelectNoneLabel); // 4
             dialog.Properties.SetPropertyVisible(1, Platform.IsDesktop);
             dialog.Properties.Build();
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;

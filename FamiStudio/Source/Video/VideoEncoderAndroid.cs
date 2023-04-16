@@ -243,6 +243,7 @@ namespace FamiStudio
                 EGL14.EglGreenSize, 8,
                 EGL14.EglBlueSize, 8,
                 EGL14.EglAlphaSize, 8,
+                EGL14.EglDepthSize, 16,
                 EGL14.EglRenderableType, EGL14.EglOpenglEsBit,
                 EGL_RECORDABLE_ANDROID, 1,
                 EGL14.EglNone
@@ -255,7 +256,7 @@ namespace FamiStudio
             // Configure context for OpenGL ES 2.0.
             int[] attrib_list = 
             {
-                EGL14.EglContextClientVersion, 1,
+                EGL14.EglContextClientVersion, 2,
                 EGL14.EglNone
             };
             eglContext = EGL14.EglCreateContext(eglDisplay, configs[0], EGL14.EglNoContext, attrib_list, 0);

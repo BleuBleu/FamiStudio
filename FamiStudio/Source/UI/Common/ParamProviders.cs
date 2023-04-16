@@ -22,7 +22,7 @@ namespace FamiStudio
         public delegate bool EnabledDelegate();
         public delegate void SetValueDelegate(int value);
         public delegate string GetValueStringDelegate();
-        public delegate void CustomDrawDelegate(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2);
+        public delegate void CustomDrawDelegate(CommandList c, Fonts res, Rectangle rect, object userData1, object userData2);
 
         public EnabledDelegate IsEnabled;
         public GetValueDelegate GetValue;
@@ -70,6 +70,75 @@ namespace FamiStudio
 
     public static class InstrumentParamProvider
     {
+        #region Localization
+
+        // Common labels
+        static LocalizedString PitchEnvelopeLabel;
+
+        // FDS/N163
+        static LocalizedString MasterVolumeLabel;
+        static LocalizedString WavePresetLabel;
+        static LocalizedString WavePositionLabel;
+        static LocalizedString WaveSizeLabel;
+        static LocalizedString WaveCountLabel;
+        static LocalizedString ModPresetLabel;
+        static LocalizedString ModSpeedLabel;
+        static LocalizedString ModDepthLabel;
+        static LocalizedString ModDelayLabel;
+        static LocalizedString ResamplePeriodLabel;
+        static LocalizedString ResampleOffsetLabel;
+        static LocalizedString ResampleNormalize;
+
+        // VRC6 labels
+        static LocalizedString SawMasterVolumeLabel;
+
+        // VRC7 labels
+        static LocalizedString PatchLabel;
+        static LocalizedString TremoloLabel;
+        static LocalizedString VibratoLabel;
+        static LocalizedString SustainedLabel;
+        static LocalizedString WaveRectifiedLabel;
+        static LocalizedString KeyScalingRateLabel;
+        static LocalizedString KeyScalingLevelLabel;
+        static LocalizedString FreqMultiplierLabel;
+        static LocalizedString AttackLabel;
+        static LocalizedString DecayLabel;
+        static LocalizedString SustainLabel;
+        static LocalizedString ReleaseLabel;
+        static LocalizedString LevelLabel;
+        static LocalizedString FeedbackLabel;
+
+        // EPSM Labels
+        static LocalizedString AlgorithmLabel;
+        static LocalizedString LeftLabel;
+        static LocalizedString RightLabel;
+        static LocalizedString AMSLabel;
+        static LocalizedString PMSLabel;
+        static LocalizedString OscillatorEnLabel;
+        static LocalizedString OscillatorLabel;
+        static LocalizedString DetuneLabel;
+        static LocalizedString FrequencyRatioLabel;
+        static LocalizedString VolumeLabel;
+        static LocalizedString KeyScaleLabel;
+        static LocalizedString AttackRateLabel;
+        static LocalizedString AmplitudeModulationLabel;
+        static LocalizedString DecayRateLabel;
+        static LocalizedString SustainRateLabel;
+        static LocalizedString SustainLevelLabel;
+        static LocalizedString ReleaseRateLabel;
+        static LocalizedString SsgEnvEnLabel;
+        static LocalizedString SsgEnvLabel;
+
+        // Common tooltips
+        static LocalizedString PitchEnvelopeTooltip;
+
+        #endregion
+
+        static InstrumentParamProvider()
+        {
+            Localization.LocalizeStatic(typeof(InstrumentParamProvider));
+        }
+
         static public bool HasParams(Instrument instrument)
         {
             return
@@ -87,7 +156,7 @@ namespace FamiStudio
 
             if (instrument.IsEnvelopeActive(EnvelopeType.Pitch))
             {
-                paramInfos.Add(new InstrumentParamInfo(instrument, "Pitch Envelope", 0, 1, 0, "Absolute envelopes display the real pitch for a given time\nRelative envelopes adds the pitch to a running sum (FamiTracker-style)", true)
+                paramInfos.Add(new InstrumentParamInfo(instrument, PitchEnvelopeLabel, 0, 1, 0, PitchEnvelopeTooltip, true)
                 {
                     GetValue = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? 1 : 0; },
                     GetValueString = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? "Relative" : "Absolute"; },
@@ -115,125 +184,125 @@ namespace FamiStudio
             switch (instrument.Expansion)
             {
                 case ExpansionType.Fds:
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Master Volume", 0, 3, 0, null, true)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, MasterVolumeLabel, 0, 3, 0, null, true)
                         { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.CountNoPWM - 1, WavePresetType.Sine, null, true)
-                        { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.CountNoResample - 1, WavePresetType.Flat, null, true )
-                        { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Speed", 0, 4095, 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.CountNoPWM - 1, WavePresetType.Sine, null, true)
+                        { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ModPresetLabel, 0, WavePresetType.CountNoResample - 1, WavePresetType.Flat, null, true )
+                        { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ModSpeedLabel, 0, 4095, 0)
                         { GetValue = () => { return instrument.FdsModSpeed; }, SetValue = (v) => { instrument.FdsModSpeed = (ushort)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Depth", 0, 63, 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ModDepthLabel, 0, 63, 0)
                         { GetValue = () => { return instrument.FdsModDepth; }, SetValue = (v) => { instrument.FdsModDepth = (byte)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Delay", 0, 255, 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ModDelayLabel, 0, 255, 0)
                         { GetValue = () => { return instrument.FdsModDelay; }, SetValue = (v) => { instrument.FdsModDelay = (byte)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Period", 2, 1024, 128)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ResamplePeriodLabel, 2, 1024, 128)
                         { GetValue = () => { return instrument.FdsResampleWavePeriod; }, SetValue = (v) => { instrument.FdsResampleWavePeriod = v; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Offset", 0, 0, 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ResampleOffsetLabel, 0, 0, 0)
                         { GetValue = () => { return instrument.FdsResampleWaveOffset; }, SetValue = (v) => { instrument.FdsResampleWaveOffset = v; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; }, GetMaxValue = () => { return instrument.FdsResampleWaveData != null ? instrument.FdsResampleWaveData.Length - 1 : 100; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Normalize", 0, 1, 1)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ResampleNormalize, 0, 1, 1)
                         { GetValue = () => { return instrument.FdsResampleWavNormalize ? 1 : 0; }, SetValue = (v) => { instrument.FdsResampleWavNormalize = v != 0; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; } });
                     break;
 
                 case ExpansionType.N163:
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
-                        { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Position", 0, 0, 0, null, false, 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
+                        { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.InternalNames[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WavePositionLabel, 0, 0, 0, null, false, 4)
                         { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWavePos; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Size", 4, 4, 16, null, false, 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WaveSizeLabel, 4, 4, 16, null, false, 4)
                         { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveSize; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Count", 1, 1, 1) 
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WaveCountLabel, 1, 1, 1) 
                         { GetValue = () => { return instrument.N163WaveCount; }, SetValue = (v) => { instrument.N163WaveCount = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveCount; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Period", 1, 1024, 128) 
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ResamplePeriodLabel, 1, 1024, 128) 
                         { GetValue = () => { return instrument.N163ResampleWavePeriod; }, SetValue = (v) => { instrument.N163ResampleWavePeriod = v;}, IsEnabled = () => { return instrument.N163ResampleWaveData != null && instrument.N163WavePreset == WavePresetType.Resample; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Offset", 0, 0, 0) 
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ResampleOffsetLabel, 0, 0, 0) 
                         { GetValue = () => { return instrument.N163ResampleWaveOffset; }, SetValue = (v) => { instrument.N163ResampleWaveOffset = v;}, IsEnabled = () => { return instrument.N163ResampleWaveData != null && instrument.N163WavePreset == WavePresetType.Resample; }, GetMaxValue = () => { return instrument.N163ResampleWaveData != null ? instrument.N163ResampleWaveData.Length - 1 : 100; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Normalize", 0, 1, 1) 
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ResampleNormalize, 0, 1, 1) 
                         { GetValue = () => { return instrument.N163ResampleWavNormalize ? 1 : 0; }, SetValue = (v) => { instrument.N163ResampleWavNormalize = v != 0;}, IsEnabled = () => { return instrument.N163ResampleWaveData != null && instrument.N163WavePreset == WavePresetType.Resample; } });
                     break;
 
                 case ExpansionType.Vrc6:
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Saw Master Volume", 0, 2, 0, null, true)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, SawMasterVolumeLabel, 0, 2, 0, null, true)
                         { GetValue = ()  => { return instrument.Vrc6SawMasterVolume; }, GetValueString = () => { return Vrc6SawMasterVolumeType.Names[instrument.Vrc6SawMasterVolume]; }, SetValue = (v) => { instrument.Vrc6SawMasterVolume = (byte)v; } });
                     break;
 
                 case ExpansionType.Vrc7:
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 15, 1, null, true)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, PatchLabel, 0, 15, 1, null, true)
                         { GetValue = () => { return instrument.Vrc7Patch; }, GetValueString = () => { return Instrument.GetVrc7PatchName(instrument.Vrc7Patch); }, SetValue = (v) => { instrument.Vrc7Patch = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
                         { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument, CustomUserData2 = 1, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Tremolo", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, TremoloLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Vibrato", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x40) >> 6)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, VibratoLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x40) >> 6)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x40) >> 6; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x40)) | ((v << 6) & 0x40)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Sustained", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x20) >> 5)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, SustainedLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x20) >> 5)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x20) >> 5; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x20)) | ((v << 5) & 0x20)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Rectified", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x10) >> 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WaveRectifiedLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x10) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[3] & 0x10) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[3] = (byte)((instrument.Vrc7PatchRegs[3] & (~0x10)) | ((v << 4) & 0x10)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Key Scaling Rate", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x10) >> 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, KeyScalingRateLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x10) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x10) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x10)) | ((v << 4) & 0x10)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Key Scaling Level", 0, 3, (Vrc7InstrumentPatch.Infos[1].data[3] & 0xc0) >> 6)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, KeyScalingLevelLabel, 0, 3, (Vrc7InstrumentPatch.Infos[1].data[3] & 0xc0) >> 6)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[3] & 0xc0) >> 6; }, SetValue = (v) => { instrument.Vrc7PatchRegs[3] = (byte)((instrument.Vrc7PatchRegs[3] & (~0xc0)) | ((v << 6) & 0xc0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "FreqMultiplier", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x0f) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, FreqMultiplierLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Attack", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[5] & 0xf0) >> 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, AttackLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[5] & 0xf0) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[5] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[5] = (byte)((instrument.Vrc7PatchRegs[5] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Decay", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[5] & 0x0f) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, DecayLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[5] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[5] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[5] = (byte)((instrument.Vrc7PatchRegs[5] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Sustain", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0xf0) >> 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, SustainLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0xf0) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Release", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0x0f) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ReleaseLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
                         { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument, CustomUserData2 = 0, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Tremolo", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x80) >> 7)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, TremoloLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Vibrato", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x40) >> 6)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, VibratoLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x40) >> 6)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x40) >> 6; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x40)) | ((v << 6) & 0x40)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Sustained", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x20) >> 5)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, SustainedLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x20) >> 5)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x20) >> 5; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x20)) | ((v << 5) & 0x20)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Rectified", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x08) >> 3)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WaveRectifiedLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x08) >> 3)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[3] & 0x08) >> 3; }, SetValue = (v) => { instrument.Vrc7PatchRegs[3] = (byte)((instrument.Vrc7PatchRegs[3] & (~0x08)) | ((v << 3) & 0x08)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Key Scaling Rate", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x10) >> 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, KeyScalingRateLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x10) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x10) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x10)) | ((v << 4) & 0x10)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Key Scaling Level", 0, 3, (Vrc7InstrumentPatch.Infos[1].data[2] & 0xc0) >> 6)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, KeyScalingLevelLabel, 0, 3, (Vrc7InstrumentPatch.Infos[1].data[2] & 0xc0) >> 6)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[2] & 0xc0) >> 6; }, SetValue = (v) => { instrument.Vrc7PatchRegs[2] = (byte)((instrument.Vrc7PatchRegs[2] & (~0xc0)) | ((v << 6) & 0xc0)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "FreqMultiplier", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x0f) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, FreqMultiplierLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Attack", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[4] & 0xf0) >> 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, AttackLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[4] & 0xf0) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[4] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[4] = (byte)((instrument.Vrc7PatchRegs[4] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Decay", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[4] & 0x0f) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, DecayLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[4] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[4] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[4] = (byte)((instrument.Vrc7PatchRegs[4] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Sustain", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[6] & 0xf0) >> 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, SustainLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[6] & 0xf0) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[6] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[6] = (byte)((instrument.Vrc7PatchRegs[6] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Release", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[6] & 0x0f) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ReleaseLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[6] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[6] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[6] = (byte)((instrument.Vrc7PatchRegs[6] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Level", 0, 63, (Vrc7InstrumentPatch.Infos[1].data[2] & 0x3f) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, LevelLabel, 0, 63, (Vrc7InstrumentPatch.Infos[1].data[2] & 0x3f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[2] & 0x3f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[2] = (byte)((instrument.Vrc7PatchRegs[2] & (~0x3f)) | ((v << 0) & 0x3f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Feedback", 0, 7, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x07) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, FeedbackLabel, 0, 7, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x07) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[3] & 0x07) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[3] = (byte)((instrument.Vrc7PatchRegs[3] & (~0x07)) | ((v << 0) & 0x07)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
                     break;
 
                 case ExpansionType.EPSM:
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 1, 1, null, true)//set number of patches
+                    paramInfos.Add(new InstrumentParamInfo(instrument, PatchLabel, 0, 1, 1, null, true)//set number of patches
                         { GetValue = () => { return instrument.EpsmPatch; }, GetValueString = () => { return Instrument.GetEpsmPatchName(instrument.EpsmPatch); }, SetValue = (v) => { instrument.EpsmPatch = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
                         { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawEpsmAlgorithm, CustomHeight = 4, CustomUserData1 = instrument });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Algorithm", 0, 7, (EpsmInstrumentPatch.Infos[1].data[0] & 0x07) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, AlgorithmLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[0] & 0x07) >> 0)
                         { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[0] = (byte)((instrument.EpsmPatchRegs[0] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Feedback", 0, 7, (EpsmInstrumentPatch.Infos[1].data[0] & 0x38) >> 3)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, FeedbackLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[0] & 0x38) >> 3)
                         { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x38) >> 3; }, SetValue = (v) => { instrument.EpsmPatchRegs[0] = (byte)((instrument.EpsmPatchRegs[0] & (~0x38)) | ((v << 3) & 0x38)); instrument.EpsmPatch = 0; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Left", 0, 1, (EpsmInstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, LeftLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.EpsmPatchRegs[1] & 0x80) >> 7; }, SetValue = (v) => { instrument.EpsmPatchRegs[1] = (byte)((instrument.EpsmPatchRegs[1] & (~0x80)) | ((v << 7) & 0x80)); instrument.EpsmPatch = 0; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Right", 0, 1, (EpsmInstrumentPatch.Infos[1].data[1] & 0x40) >> 6)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, RightLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[1] & 0x40) >> 6)
                         { GetValue = () => { return (instrument.EpsmPatchRegs[1] & 0x40) >> 6; }, SetValue = (v) => { instrument.EpsmPatchRegs[1] = (byte)((instrument.EpsmPatchRegs[1] & (~0x40)) | ((v << 6) & 0x40)); instrument.EpsmPatch = 0; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "AMS", 0, 3, (EpsmInstrumentPatch.Infos[1].data[1] & 0x30) >> 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, AMSLabel, 0, 3, (EpsmInstrumentPatch.Infos[1].data[1] & 0x30) >> 4)
                         { GetValue = () => { return (instrument.EpsmPatchRegs[1] & 0x30) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[1] = (byte)((instrument.EpsmPatchRegs[1] & (~0x30)) | ((v << 4) & 0x30)); instrument.EpsmPatch = 0; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "PMS", 0, 7, (EpsmInstrumentPatch.Infos[1].data[1] & 0x07) >> 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, PMSLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[1] & 0x07) >> 0)
                         { GetValue = () => { return (instrument.EpsmPatchRegs[1] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[1] = (byte)((instrument.EpsmPatchRegs[1] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, " LF Oscillator EN", 0, 1, (EpsmInstrumentPatch.Infos[1].data[30] & 0x08) >> 3, "Low Frequency Oscillator (Vibrato)\nThis setting applies to all channels, Last channel instrument to load dictates the setting")
+                    paramInfos.Add(new InstrumentParamInfo(instrument, " " + OscillatorEnLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[30] & 0x08) >> 3, "Low Frequency Oscillator (Vibrato)\nThis setting applies to all channels, Last channel instrument to load dictates the setting")
                         { GetValue = () => { return (instrument.EpsmPatchRegs[30] & 0x08) >> 3; }, SetValue = (v) => { instrument.EpsmPatchRegs[30] = (byte)((instrument.EpsmPatchRegs[30] & (~0x08)) | ((v << 3) & 0x08)); instrument.EpsmPatch = 0; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, " LF Oscillator", 0, 7, (EpsmInstrumentPatch.Infos[1].data[30] & 0x07) >> 0, "freq(Hz) 3.98 5.56 6.02 6.37 6.88 9.63 48.1 72.2")
+                    paramInfos.Add(new InstrumentParamInfo(instrument, " " + OscillatorLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[30] & 0x07) >> 0, "freq(Hz) 3.98 5.56 6.02 6.37 6.88 9.63 48.1 72.2")
                         { GetValue = () => { return (instrument.EpsmPatchRegs[30] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[30] = (byte)((instrument.EpsmPatchRegs[30] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
 
                     for (int i = 0; i < 4; i++)
@@ -243,29 +312,29 @@ namespace FamiStudio
 
                         paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
                             { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument, CustomUserData2 = i, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Detune", 0, 7, (EpsmInstrumentPatch.Infos[1].data[2 + 6 * i] & 0x70) >> 4)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, DetuneLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[2 + 6 * i] & 0x70) >> 4)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x70) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x70)) | ((v << 4) & 0x70)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Frequency Ratio", 0, 15, (EpsmInstrumentPatch.Infos[1].data[(2 + i2)] & 0x0f) >> 0)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, FrequencyRatioLabel, 0, 15, (EpsmInstrumentPatch.Infos[1].data[(2 + i2)] & 0x0f) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x0f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Volume", 0, 127, (EpsmInstrumentPatch.Infos[1].data[(3 + i2)] & 0x7f) >> 0)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, VolumeLabel, 0, 127, (EpsmInstrumentPatch.Infos[1].data[(3 + i2)] & 0x7f) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(3 + i2)] & 0x7f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(3 + i2)] = (byte)((instrument.EpsmPatchRegs[(3 + i2)] & (~0x7f)) | ((v << 0) & 0x7f)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Key Scale", 0, 3, (EpsmInstrumentPatch.Infos[1].data[(4 + i2)] & 0xc0) >> 6)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, KeyScaleLabel, 0, 3, (EpsmInstrumentPatch.Infos[1].data[(4 + i2)] & 0xc0) >> 6)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(4 + i2)] & 0xc0) >> 6; }, SetValue = (v) => { instrument.EpsmPatchRegs[(4 + i2)] = (byte)((instrument.EpsmPatchRegs[(4 + i2)] & (~0xc0)) | ((v << 6) & 0xc0)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Attack Rate", 0, 31, (EpsmInstrumentPatch.Infos[1].data[(4 + i2)] & 0x1f) >> 0)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, AttackRateLabel, 0, 31, (EpsmInstrumentPatch.Infos[1].data[(4 + i2)] & 0x1f) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(4 + i2)] & 0x1f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(4 + i2)] = (byte)((instrument.EpsmPatchRegs[(4 + i2)] & (~0x1f)) | ((v << 0) & 0x1f)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Amplitude Modulation", 0, 1, (EpsmInstrumentPatch.Infos[1].data[(5 + i2)] & 0x80) >> 7)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, AmplitudeModulationLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[(5 + i2)] & 0x80) >> 7)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(5 + i2)] & 0x80) >> 7; }, SetValue = (v) => { instrument.EpsmPatchRegs[(5 + i2)] = (byte)((instrument.EpsmPatchRegs[(5 + i2)] & (~0x80)) | ((v << 7) & 0x80)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Decay Rate", 0, 31, (EpsmInstrumentPatch.Infos[1].data[(5 + i2)] & 0x1f) >> 0)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, DecayRateLabel, 0, 31, (EpsmInstrumentPatch.Infos[1].data[(5 + i2)] & 0x1f) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(5 + i2)] & 0x1f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(5 + i2)] = (byte)((instrument.EpsmPatchRegs[(5 + i2)] & (~0x1f)) | ((v << 0) & 0x1f)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Sustain Rate", 0, 31, (EpsmInstrumentPatch.Infos[1].data[(6 + i2)] & 0x1f) >> 0)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, SustainRateLabel, 0, 31, (EpsmInstrumentPatch.Infos[1].data[(6 + i2)] & 0x1f) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(6 + i2)] & 0x1f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(6 + i2)] = (byte)((instrument.EpsmPatchRegs[(6 + i2)] & (~0x1f)) | ((v << 0) & 0x1f)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Sustain Level", 0, 15, (EpsmInstrumentPatch.Infos[1].data[(7 + i2)] & 0xf0) >> 4)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, SustainLevelLabel, 0, 15, (EpsmInstrumentPatch.Infos[1].data[(7 + i2)] & 0xf0) >> 4)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(7 + i2)] & 0xf0) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[(7 + i2)] = (byte)((instrument.EpsmPatchRegs[(7 + i2)] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "Release Rate", 0, 15, (EpsmInstrumentPatch.Infos[1].data[(7 + i2)] & 0x0f) >> 0)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, ReleaseRateLabel, 0, 15, (EpsmInstrumentPatch.Infos[1].data[(7 + i2)] & 0x0f) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(7 + i2)] & 0x0f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(7 + i2)] = (byte)((instrument.EpsmPatchRegs[(7 + i2)] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "SSG-Envelope EN", 0, 1, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x08) >> 3)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvEnLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x08) >> 3)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x08) >> 3; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x08)) | ((v << 3) & 0x08)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, "SSG-Envelope", 0, 7, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x07) >> 0)
+                        paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x07) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; }, TabName = tabName });
                     }
 
@@ -275,7 +344,7 @@ namespace FamiStudio
             return paramInfos.Count == 0 ? null : paramInfos.ToArray();
         }
 
-        public static void CustomDrawAdsrGraph(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawAdsrGraph(CommandList c, Fonts res, Rectangle rect, object userData1, object userData2)
         {
             var g = c.Graphics;
             var instrument = userData1 as Instrument;
@@ -283,7 +352,7 @@ namespace FamiStudio
 
             var graphWidth  = rect.Width;
             var graphHeight = rect.Height;
-            var graphPaddingTop   = (int)(g.WindowScaling * 3);
+            var graphPaddingTop = DpiScaling.ScaleForWindow(3); 
             var graphPaddingCurve = rect.Height / 10;
             var graphHeightMinusPadding = graphHeight - graphPaddingTop - graphPaddingCurve;
 
@@ -379,11 +448,11 @@ namespace FamiStudio
             releaseStartY = graphHeight - releaseStartY;
             releaseEndY   = graphHeight - releaseEndY;
 
-            var attackGeo  = new float[4, 2] { { 0, graphHeight }, { decayStartX, graphHeight }, { decayStartX, decayStartY }, { 0, graphHeight } };
-            var decayGeo   = new float[4, 2] { { decayStartX, graphHeight }, { sustainStartX, graphHeight }, { sustainStartX, sustainStartY }, { decayStartX, decayStartY } }; 
-            var sustainGeo = new float[4, 2] { { sustainStartX, graphHeight }, { releaseStartX, graphHeight }, { releaseStartX, releaseStartY }, { sustainStartX, sustainStartY } }; 
-            var releaseGeo = new float[4, 2] { { releaseStartX, graphHeight }, { releaseEndX, graphHeight }, { releaseEndX, releaseEndY }, { releaseStartX, releaseStartY } }; 
-            var line       = new float[5, 2] { { 0, graphHeight }, { decayStartX, decayStartY }, { sustainStartX, sustainStartY }, { releaseStartX, releaseStartY }, { releaseEndX, releaseEndY } };
+            var attackGeo  = new float[4 * 2] { 0, graphHeight, decayStartX, graphHeight, decayStartX, decayStartY,  0, graphHeight };
+            var decayGeo   = new float[4 * 2] { decayStartX, graphHeight,  sustainStartX, graphHeight, sustainStartX, sustainStartY, decayStartX, decayStartY }; 
+            var sustainGeo = new float[4 * 2] { sustainStartX, graphHeight, releaseStartX, graphHeight, releaseStartX, releaseStartY, sustainStartX, sustainStartY }; 
+            var releaseGeo = new float[4 * 2] { releaseStartX, graphHeight, releaseEndX, graphHeight, releaseEndX, releaseEndY,  releaseStartX, releaseStartY }; 
+            var line       = new float[5 * 2] { 0, graphHeight,  decayStartX, decayStartY, sustainStartX, sustainStartY, releaseStartX, releaseStartY, releaseEndX, releaseEndY };
 
             var fillColor = Color.FromArgb(75, Color.Black);
             c.FillAndDrawRectangle(0, graphPaddingTop, graphWidth, graphHeight, fillColor, Theme.BlackColor);
@@ -394,7 +463,7 @@ namespace FamiStudio
             c.DrawLine(line, Theme.BlackColor, 1, true);
         }
 
-        public static void CustomDrawEpsmAlgorithm(CommandList c, FontRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawEpsmAlgorithm(CommandList c, Fonts res, Rectangle rect, object userData1, object userData2)
         {
             var instrument = userData1 as Instrument;
             var algo = instrument.EpsmPatchRegs[0] & 0x07;
@@ -419,28 +488,63 @@ namespace FamiStudio
 
     public static class DPCMSampleParamProvider
     {
+        #region Localization
+
+        // Labels
+        static LocalizedString PreviewRateLabel;
+        static LocalizedString SampleRateLabel;
+        static LocalizedString PaddingModeLabel;
+        static LocalizedString DmcInitialValueDiv2Label;
+        static LocalizedString VolumeAdjustLabel;
+        static LocalizedString FineTuningLabel;
+        static LocalizedString ProcessPalLabel;
+        static LocalizedString TrimZeroVolumeLabel;
+        static LocalizedString ReverseBitsLabel;
+        static LocalizedString BankNumberLabel;
+
+        // tooltips
+        static LocalizedString PreviewRateTooltip;
+        static LocalizedString SampleRateTooltip;
+        static LocalizedString PaddingModeTooltip;
+        static LocalizedString DmcInitialValueDiv2Tooltip;
+        static LocalizedString VolumeAdjustTooltip;
+        static LocalizedString FineTuningTooltip;
+        static LocalizedString ProcessPalTooltip;
+        static LocalizedString TrimZeroVolumeTooltip;
+        static LocalizedString ReverseBitsTooltip;
+        static LocalizedString BankNumberTooltip;
+
+        #endregion
+
+        static DPCMSampleParamProvider()
+        {
+            Localization.LocalizeStatic(typeof(DPCMSampleParamProvider));
+        }
+
         static public ParamInfo[] GetParams(DPCMSample sample)
         {
             return new[]
             {
-                new DPCMSampleParamInfo(sample, "Preview Rate", 0, 15, 15, "Rate to use when previewing the processed\nDMC data with the play button above", true)
+                new DPCMSampleParamInfo(sample, PreviewRateLabel, 0, 15, 15, PreviewRateTooltip, true)
                     { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.PreviewRate); }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
-                new DPCMSampleParamInfo(sample, "Sample Rate", 0, 15, 15, "Rate at which to resample the source data at", true)
+                new DPCMSampleParamInfo(sample, SampleRateLabel, 0, 15, 15, SampleRateTooltip, true)
                     { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.SampleRate); }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Padding Mode", 0, 4, DPCMPaddingType.PadTo16Bytes, "Padding method for the processed DMC data", true)
+                new DPCMSampleParamInfo(sample, PaddingModeLabel, 0, 4, DPCMPaddingType.PadTo16Bytes, PaddingModeTooltip, true)
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "DMC Initial Value (÷2)", 0, 63, NesApu.DACDefaultValueDiv2, "Initial value of the DMC counter before any volume adjustment.\nThis is actually half of the value used in hardware.")
+                new DPCMSampleParamInfo(sample, DmcInitialValueDiv2Label, 0, 63, NesApu.DACDefaultValueDiv2, DmcInitialValueDiv2Tooltip)
                     { GetValue = () => { return sample.DmcInitialValueDiv2; }, SetValue = (v) => { sample.DmcInitialValueDiv2 = v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200, 100, "Volume adjustment (%)")
+                new DPCMSampleParamInfo(sample, VolumeAdjustLabel, 0, 200, 100, VolumeAdjustTooltip)
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Fine Tuning", 0, 200, 100, "Very fine pitch adjustment to help tune notes")
+                new DPCMSampleParamInfo(sample, FineTuningLabel, 0, 200, 100, FineTuningTooltip)
                     { GetValue = () => { return (int)Math.Round((sample.FinePitch - 0.95f) * 2000); }, SetValue = (v) => { sample.FinePitch = (v / 2000.0f) + 0.95f; sample.Process(); }, GetValueString = () => { return (sample.FinePitch * 100.0f).ToString("N2") + "%"; } },
-                new DPCMSampleParamInfo(sample, "Process as PAL", 0, 1, 0, "Use PAL sample rates for all processing\nFor DMC source data, assumes PAL sample rate")
+                new DPCMSampleParamInfo(sample, ProcessPalLabel, 0, 1, 0, ProcessPalTooltip)
                     { GetValue = () => { return  sample.PalProcessing ? 1 : 0; }, SetValue = (v) => { sample.PalProcessing = v != 0; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1, 0, "Trim parts of the source data that is considered too low to be audible")
+                new DPCMSampleParamInfo(sample, TrimZeroVolumeLabel, 0, 1, 0, TrimZeroVolumeTooltip)
                     { GetValue = () => { return sample.TrimZeroVolume ? 1 : 0; }, SetValue = (v) => { sample.TrimZeroVolume = v != 0; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Reverse Bits", 0, 1, 0, "For DMC source data only, reverse the bits to correct errors in some NES games")
-                    { GetValue = () => { return !sample.SourceDataIsWav && sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { if (!sample.SourceDataIsWav) { sample.ReverseBits = v != 0; sample.Process(); } }, IsEnabled = () => { return !sample.SourceDataIsWav; } }
+                new DPCMSampleParamInfo(sample, ReverseBitsLabel, 0, 1, 0, ReverseBitsTooltip)
+                    { GetValue = () => { return !sample.SourceDataIsWav && sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { if (!sample.SourceDataIsWav) { sample.ReverseBits = v != 0; sample.Process(); } }, IsEnabled = () => { return !sample.SourceDataIsWav; } },
+                new DPCMSampleParamInfo(sample, BankNumberLabel, 0, Project.MaxDPCMBanks - 1, 0, BankNumberTooltip)
+                    { GetValue = () => { return sample.Bank; }, SetValue = (v) => { sample.Bank = v; } },
             };
         }
     }

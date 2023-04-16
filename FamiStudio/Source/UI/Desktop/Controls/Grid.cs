@@ -11,12 +11,14 @@ namespace FamiStudio
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
+        public delegate bool CellEnabledDelegate(Control sender, int rowIndex, int colIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
         public event HeaderCellClickedDelegate HeaderCellClicked;
+        public event CellEnabledDelegate CellEnabled;
 
         private int scroll;
         private int maxScroll;
@@ -31,9 +33,10 @@ namespace FamiStudio
         private object[,] data;
         private int[] columnWidths;
         private int[] columnOffsets;
-        private bool[] columnEnabled;
+        private byte columnEnabledMask;
         private bool hasAnyDropDowns;
         private bool fullRowSelect;
+        private bool isClosingList;
         private ColumnDesc[] columns;
         private Color[] rowColors;
         private Color foreColor = Theme.LightGreyColor1;
@@ -61,8 +64,10 @@ namespace FamiStudio
         public int ItemCount => data.GetLength(0);
         public bool FullRowSelect { get => fullRowSelect; set => fullRowSelect = value; }
 
-        public Grid(Dialog dlg, ColumnDesc[] columnDescs, int rows, bool hasHeader = true) : base(dlg) 
+        public Grid(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
         {
+            Debug.Assert(columnDescs.Length <= 8); // We use a byte for masks.
+
             columns = columnDescs;
             numRows = rows;
             numItemRows = hasHeader ? numRows - 1 : numRows;
@@ -80,8 +85,8 @@ namespace FamiStudio
 
             if (hasAnyDropDowns)
             {
-                dropDownInactive = new DropDown(dlg, new[] { "" }, 0, true);
-                dropDownActive = new DropDown(dlg, new[] { "" }, 0);
+                dropDownInactive = new DropDown(new[] { "" }, 0, true);
+                dropDownActive = new DropDown(new[] { "" }, 0);
                 dropDownInactive.SetRowHeight(rowHeight);
                 dropDownActive.SetRowHeight(rowHeight);
                 dropDownInactive.Visible = false;
@@ -92,18 +97,32 @@ namespace FamiStudio
                 dropDownActive.SelectedIndexChanged += DropDownActive_SelectedIndexChanged;
             }
 
-            columnEnabled = new bool[columns.Length];
-            for (int i = 0; i < columnEnabled.Length; i++)
-                columnEnabled[i] = true;
+            columnEnabledMask = 0xff;
         }
 
         public void SetColumnEnabled(int col, bool enabled)
         {
-            // This is the only one that I added support to disabled state right now.
-            //Debug.Assert(columns[col].Type == ColumnType.Slider);
+            if (enabled)
+                columnEnabledMask = (byte)(columnEnabledMask |  (1 << col));
+            else
+                columnEnabledMask = (byte)(columnEnabledMask & ~(1 << col));
 
-            columnEnabled[col] = enabled;
             MarkDirty();
+        }
+
+        public bool IsColumnEnabled(int col)
+        {
+            return (columnEnabledMask & (1 << col)) != 0;
+        }
+
+        public bool IsCellEnabled(int row, int col)
+        {
+            return CellEnabled == null || CellEnabled.Invoke(this, row, col);
+        }
+
+        public bool IsCellOrColumnEnabled(int row, int col)
+        {
+            return IsColumnEnabled(col) && IsCellEnabled(row, col);
         }
 
         public void SetRowColor(int row, Color color)
@@ -127,25 +146,38 @@ namespace FamiStudio
 
         private void DropDownActive_ListClosing(Control sender)
         {
+            // Prevent recursion when clearing focus.
+            if (isClosingList)
+                return;
+
             Debug.Assert(dropDownActive.Visible);
+            isClosingList = true;
             dropDownActive.Visible = false;
             dropDownRow = -1;
             dropDownCol = -1;
+            GrabDialogFocus();
             MarkDirty();
+            isClosingList = false;
         }
 
         public void UpdateData(int row, int col, object val)
         {
+            Debug.Assert(val == null || val.GetType() != typeof(LocalizedString));
             data[row, col] = val;
             MarkDirty();
         }
 
         public void UpdateData(object[,] newData)
         {
+#if DEBUG
+            foreach (var o in newData)
+                Debug.Assert(o == null || o.GetType() != typeof(LocalizedString));
+#endif
+
             data = newData;
             Debug.Assert(data.GetLength(1) == columns.Length);
 
-            if (parentDialog != null)
+            if (window != null)
                 UpdateLayout();
             MarkDirty();
         }
@@ -208,22 +240,20 @@ namespace FamiStudio
             SetAndMarkDirty(ref scroll, 0);
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
+            var g = Graphics;
             bmpCheckOn  = g.GetBitmapAtlasRef("CheckBoxYes");
             bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
             bmpRadioOn  = g.GetBitmapAtlasRef("RadioButtonOn");
             bmpRadioOff = g.GetBitmapAtlasRef("RadioButtonOff");
-        }
 
-        protected override void OnAddedToDialog()
-        {
             UpdateLayout();
 
             if (hasAnyDropDowns)
             {
-                parentDialog.AddControl(dropDownInactive);
-                parentDialog.AddControl(dropDownActive);
+                ParentContainer.AddControl(dropDownInactive);
+                ParentContainer.AddControl(dropDownActive);
             }
         }
 
@@ -246,17 +276,26 @@ namespace FamiStudio
                 }
             }
 
-            if (!columnEnabled[col])
+            // Row -1 will mean header.
+            row = y / rowHeight - numHeaderRows;
+
+            if (row < 0)
+            {
+                return false;
+            }
+
+            row += scroll;
+
+            Debug.Assert(col >= 0);
+            if (row >= 0 && row < data.GetLength(0))
+            {
+                return IsCellOrColumnEnabled(row, col);
+            }
+            else
             {
                 col = -1;
                 return false;
             }
-
-            // Row -1 will mean header.
-            row = y / rowHeight - numHeaderRows + scroll;
-
-            Debug.Assert(col >= 0);
-            return row >= 0 && row < data.GetLength(0);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -296,7 +335,6 @@ namespace FamiStudio
                         if (valid)
                         { 
                             var colDesc = columns[col];
-                            var colEnabled = columnEnabled[col];
 
                             switch (colDesc.Type)
                             {
@@ -331,6 +369,8 @@ namespace FamiStudio
                                 }
                                 case ColumnType.DropDown:
                                 {
+                                                    Debug.WriteLine("LIST OPENING");
+
                                     dropDownActive.Visible = true;
                                     dropDownActive.Move(left + columnOffsets[col], top + (row + numHeaderRows - scroll) * rowHeight, columnWidths[col], rowHeight);
                                     dropDownActive.SetItems(colDesc.DropDownValues);
@@ -360,7 +400,7 @@ namespace FamiStudio
 
         private bool IsPointInButton(int x, int row, int col)
         {
-            if (row < 0 || col < 0 || !columnEnabled[col])
+            if (row < 0 || col < 0 || !IsCellOrColumnEnabled(row, col))
                 return false;
             var cellX = x - columnOffsets[col];
             var buttonX = cellX - columnWidths[col] + rowHeight;
@@ -470,7 +510,7 @@ namespace FamiStudio
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
             var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
             var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
@@ -502,7 +542,7 @@ namespace FamiStudio
             {
                 c.FillRectangle(0, 0, width, rowHeight, Theme.DarkGreyColor3);
                 for (var j = 0; j < columns.Length; j++) 
-                    c.DrawText(columns[j].Name, FontResources.FontMedium, columnOffsets[j] + margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
+                    c.DrawText(columns[j].Name, Fonts.FontMedium, columnOffsets[j] + margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
             }
 
             // Data
@@ -527,7 +567,7 @@ namespace FamiStudio
                     {
                         var col = columns[j];
                         var colWidth = columnWidths[j];
-                        var colEnabled = columnEnabled[j];
+                        var cellEnabled = IsCellOrColumnEnabled(k, j);
                         var x = columnOffsets[j];
                         var val = data[k, j];
 
@@ -550,29 +590,29 @@ namespace FamiStudio
                             case ColumnType.Button:
                             {
                                 var buttonBaseX = colWidth - rowHeight;
-                                c.DrawText((string)val, FontResources.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
+                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
                                 c.PushTranslation(buttonBaseX, 0);
                                 c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight, hoverRow == k && hoverCol == j && hoverButton ? Theme.MediumGreyColor1 : Theme.DarkGreyColor3, foreColor);
-                                c.DrawText("...", FontResources.FontMediumBold, 0, 0, foreColor, TextFlags.MiddleCenter, rowHeight, rowHeight);
+                                c.DrawText("...", Fonts.FontMediumBold, 0, 0, foreColor, TextFlags.MiddleCenter, rowHeight, rowHeight);
                                 c.PopTransform();
                                 break;
                             }
                             case ColumnType.Slider:
                             {
-                                if (colEnabled)
+                                if (cellEnabled)
                                 {
                                     c.FillRectangle(0, 0, (int)Math.Round((int)val / 100.0f * colWidth), rowHeight, Theme.DarkGreyColor6);
-                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), FontResources.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), Fonts.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
-                                    c.DrawText("N/A", FontResources.FontMedium, 0, 0, Theme.MediumGreyColor1, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText("N/A", Fonts.FontMedium, 0, 0, Theme.MediumGreyColor1, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 break;
                             }
                             case ColumnType.Label:
                             {
-                                c.DrawText((string)val, FontResources.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
+                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
                                 break;
                             }
                             case ColumnType.Radio:

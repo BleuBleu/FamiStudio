@@ -15,9 +15,10 @@ namespace FamiStudio
         private int type;
 
         public int Type => type;
-        public string Name => ChannelType.Names[type];
-        public string ShortName => ChannelType.ShortNames[(int)type];
-        public string NameWithExpansion => ChannelType.GetNameWithExpansion(type);
+        public string Name => ChannelType.InternalNames[type];
+        public string LocalizedName => ChannelType.LocalizedNames[type];
+        public string ShortName => ChannelType.InternalNames[type];
+        public string NameWithExpansion => ChannelType.GetLocalizedNameWithExpansion(type);
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
@@ -66,12 +67,6 @@ namespace FamiStudio
 
         public bool SupportsInstrument(Instrument instrument)
         {
-            if (instrument == null)
-                return type == ChannelType.Dpcm;
-
-            if (type == ChannelType.Dpcm)
-                return instrument == null;
-
             if (instrument.Expansion == ExpansionType.None && (IsRegularChannel || IsMmc5Channel))
                 return true;
 
@@ -128,6 +123,17 @@ namespace FamiStudio
                 case Note.EffectNoteDelay: return song.UsesFamiTrackerTempo;
                 case Note.EffectCutDelay: return song.UsesFamiTrackerTempo;
                 case Note.EffectDeltaCounter: return type == ChannelType.Dpcm;
+                case Note.EffectPhaseReset: return false;
+                    // Disabled. The NES emulation code will require some work to support this. It currently can render "ahead" of
+                    // the current time whichs alter the moment where the "reset" happens.
+                    /*
+                    (type == ChannelType.Square1 || type == ChannelType.Square2) || 
+                    (type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2) ||
+                    (type == ChannelType.Vrc6Square1 || type == ChannelType.Vrc6Square2 || type == ChannelType.Vrc6Saw) ||
+                    (type == ChannelType.FdsWave) ||
+                    (type == ChannelType.S5BSquare1 || type == ChannelType.S5BSquare2 || type == ChannelType.S5BSquare1) ||
+                    (type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8);
+                    */
             }
 
             return true;
@@ -999,6 +1005,15 @@ namespace FamiStudio
                 pattern.DeleteEmptyNotes();
         }
 
+        public void RemoveDpcmNotesWithoutMapping()
+        {
+            if (IsDpcmChannel)
+            {
+                foreach (var pattern in patterns)
+                    pattern.RemoveDpcmNotesWithoutMapping();
+            }
+        }
+
         public bool HasAnyPatternInstances
         {
             get
@@ -1013,11 +1028,11 @@ namespace FamiStudio
             }
         }
 
-        public void SetNoteDurationToMaximumLength()
+        public void SetNoteDurationToMaximumLength(NoteLocation start, NoteLocation end)
         {
             var maxNoteLengths = new Dictionary<Note, int>();
 
-            for (var it = GetSparseNoteIterator(Song.StartLocation, Song.EndLocation); !it.Done; it.Next())
+            for (var it = GetSparseNoteIterator(start, end); !it.Done; it.Next())
             {
                 if (it.Note.IsMusical)
                 {
@@ -1037,7 +1052,12 @@ namespace FamiStudio
 
             InvalidateCumulativePatternCache();
         }
-        
+
+        public void SetNoteDurationToMaximumLength()
+        {
+            SetNoteDurationToMaximumLength(Song.StartLocation, Song.EndLocation);
+        }
+
         public unsafe static int ChannelTypeToIndex(int type, int activeExpansions, int numN163Channels)
         {
             if (type < ChannelType.ExpansionAudioStart)
@@ -1408,7 +1428,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            Log.LogMessage(LogSeverity.Warning, $"Duplicating pattern {pattern.Name} in song {song.Name} since it has inconsistent previous notes.");
+                            Log.LogMessage(LogSeverity.Debug, $"Duplicating pattern {pattern.Name} in song {song.Name} since it has inconsistent previous notes.");
                             patternInstances[i] = pattern.ShallowClone();
                             patternStopReleaseMap.Add(key, patternInstances[i]);
                         }
@@ -1581,55 +1601,11 @@ namespace FamiStudio
         public const int EPSMrythm6 = 43;
         public const int Count = 44;
 
-        public static readonly string[] Names =
-        {
-            "Square 1",
-            "Square 2",
-            "Triangle",
-            "Noise",
-            "DPCM",
-            "Square 1", // VRC6
-            "Square 2", // VRC6
-            "Saw", // VRC6
-            "FM 1", // VRC7
-            "FM 2", // VRC7
-            "FM 3", // VRC7
-            "FM 4", // VRC7
-            "FM 5", // VRC7
-            "FM 6", // VRC7
-            "FDS", // FDS
-            "Square 1", // MMC5
-            "Square 2", // MMC5
-            "DPCM", // MMC5
-            "Wave 1", // N163
-            "Wave 2", // N163
-            "Wave 3", // N163
-            "Wave 4", // N163
-            "Wave 5", // N163
-            "Wave 6", // N163
-            "Wave 7", // N163
-            "Wave 8", // N163
-            "Square 1", // S5B
-            "Square 2", // S5B
-            "Square 3", // S5B
-            "Square 1", // EPSM
-            "Square 2", // EPSM
-            "Square 3", // EPSM
-            "FM 1", // EPSM
-            "FM 2", // EPSM
-            "FM 3", // EPSM
-            "FM 4", // EPSM
-            "FM 5", // EPSM
-            "FM 6", // EPSM
-            "Kick", // EPSM
-            "Snare", // EPSM
-            "Cymbal", // EPSM
-            "Hi-hat", // EPSM
-            "Tom", // EPSM
-            "Rimshot", // EPSM
-        };
+        // Use these to display to user
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
-        public static readonly string[] ShortNames =
+        // Use these to save in files, etc.
+        public static readonly string[] InternalNames =
         {
             "Square1",
             "Square2",
@@ -1822,11 +1798,16 @@ namespace FamiStudio
             14 // EPSM
         };
 
-        public static string GetNameWithExpansion(int type)
+        static ChannelType()
         {
-            var str = Names[type];
+            Localization.LocalizeStatic(typeof(ChannelType));
+        }
+
+        public static string GetLocalizedNameWithExpansion(int type)
+        {
+            var str = LocalizedNames[type].Value;
             if (ExpansionTypes[type] != ExpansionType.None)
-                str += $" ({ExpansionType.ShortNames[ExpansionTypes[type]]})" ;
+                str += $" ({ExpansionType.InternalNames[ExpansionTypes[type]]})"; // Here we use the internal name to keep things short.
             return str;
         }
 
@@ -1840,14 +1821,14 @@ namespace FamiStudio
             return ExpansionChannelIndex[type];
         }
 
-        public static int GetValueForName(string str)
+        public static int GetValueForLocalizedName(string str)
         {
-            return Array.IndexOf(Names, str);
+            return Array.FindIndex(LocalizedNames, n => n.Value == str);
         }
 
-        public static int GetValueForShortName(string str)
+        public static int GetValueForInternalName(string str)
         {
-            return Array.IndexOf(ShortNames, str);
+            return Array.IndexOf(InternalNames, str);
         }
     }
 

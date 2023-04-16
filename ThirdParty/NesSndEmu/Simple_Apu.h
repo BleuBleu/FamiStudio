@@ -74,6 +74,7 @@ public:
 
 	int get_namco_wave_pos(int n163ChanIndex);
 	int get_fds_wave_pos();
+	void set_namco_mix(bool mix);
 
 	// Read from status register at 0x4015
 	int read_status();
@@ -129,8 +130,8 @@ private:
 	Nes_Fds fds;
 	Nes_Mmc5 mmc5;
 	Nes_Namco namco;
-	//Nes_Sunsoft sunsoft; // My version, based on emu2149
-	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
+	Nes_Sunsoft sunsoft; // My version, based on emu2149
+	//Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
 	Nes_EPSM epsm;
 	Blip_Buffer buf;
 	Blip_Buffer tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.

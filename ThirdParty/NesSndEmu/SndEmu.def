@@ -21,3 +21,4 @@ EXPORTS
 	NesApuGetFdsWavePos      @19
 	NesApuResetTriggers      @20
 	NesApuGetChannelTrigger  @21
+	NesApuSetN163Mix         @22

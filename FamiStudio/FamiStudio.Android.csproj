@@ -19,7 +19,6 @@
     <AndroidResgenClass>Resource</AndroidResgenClass>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-    <TargetFrameworkVersion>v12.0</TargetFrameworkVersion>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
@@ -44,7 +43,8 @@
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <BundleAssemblies>false</BundleAssemblies>
     <Debugger>Xamarin</Debugger>
-    <NoWarn>CS0162,CS0414,CS0067</NoWarn>
+    <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
+    <AndroidSupportedAbis>armeabi-v7a;x86_64;arm64-v8a</AndroidSupportedAbis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -169,13 +169,22 @@
     <AndroidNativeLibrary Include="libs\arm64-v8a\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libNotSoFatso.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\arm64-v8a\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\arm64-v8a\libGifDec.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libStb.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libNesSndEmu.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libNotSoFatso.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libShineMp3.so">
@@ -184,22 +193,22 @@
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libGifDec.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\x86\libNesSndEmu.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\x86\libShineMp3.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\x86\libGifDec.so">
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libStb.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86_64\libNesSndEmu.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86_64\libNotSoFatso.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86_64\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86_64\libGifDec.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86_64\libStb.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
   </ItemGroup>
@@ -272,6 +281,7 @@
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
+    <Compile Include="Source\UI\Common\Container.cs" />
     <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\Cursors.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
@@ -290,9 +300,10 @@
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
+    <Compile Include="Source\UI\Common\Settings.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Common\Theme.cs" />
-    <Compile Include="Source\UI\Common\FontRenderResources.cs" />
+    <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
     <Compile Include="Source\UI\Droid\DroidUtils.cs" />
@@ -303,19 +314,20 @@
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
     <Compile Include="Source\UI\Droid\Resources\Resource.designer.cs" />
     <Compile Include="Source\UI\Droid\TutorialDialog.cs" />
-    <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Mobile\FamiStudioContainer.cs" />
     <Compile Include="Source\UI\Mobile\LogDialog.cs" />
     <Compile Include="Source\UI\Mobile\MobilePiano.cs" />
     <Compile Include="Source\UI\Mobile\QuickAccessBar.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
+    <Compile Include="Source\Utils\AlphaNumericSort.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
     <Compile Include="Source\Utils\Drawing.cs" />
     <Compile Include="Source\Utils\Gif.cs" />
+    <Compile Include="Source\Utils\Localization.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\OscilloscopeTriggers.cs" />
-    <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\SimpleBitmap.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
@@ -376,317 +388,280 @@
     <EmbeddedResource Include="Nsf\nsf_famitone2_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
-    <EmbeddedResource Include="Resources\Add@4x.tga" />
-    <EmbeddedResource Include="Resources\Algorithm0@4x.tga" />
-    <EmbeddedResource Include="Resources\Algorithm1@4x.tga" />
-    <EmbeddedResource Include="Resources\Algorithm2@4x.tga" />
-    <EmbeddedResource Include="Resources\Algorithm3@4x.tga" />
-    <EmbeddedResource Include="Resources\Algorithm4@4x.tga" />
-    <EmbeddedResource Include="Resources\Algorithm5@4x.tga" />
-    <EmbeddedResource Include="Resources\Algorithm6@4x.tga" />
-    <EmbeddedResource Include="Resources\Algorithm7@4x.tga" />
-    <EmbeddedResource Include="Resources\ArrowLeft@2x.tga" />
-    <EmbeddedResource Include="Resources\ArrowRight@2x.tga" />
-    <EmbeddedResource Include="Resources\ButtonLeft@4x.tga" />
-    <EmbeddedResource Include="Resources\ButtonMinus@4x.tga" />
-    <EmbeddedResource Include="Resources\ButtonPlus@4x.tga" />
-    <EmbeddedResource Include="Resources\ButtonRight@4x.tga" />
-    <EmbeddedResource Include="Resources\ChannelDPCM.tga" />
-    <EmbeddedResource Include="Resources\ChannelDPCM@2x.tga" />
-    <EmbeddedResource Include="Resources\ChannelDPCM@4x.tga" />
-    <EmbeddedResource Include="Resources\ChannelFM.tga" />
-    <EmbeddedResource Include="Resources\ChannelFM@2x.tga" />
-    <EmbeddedResource Include="Resources\ChannelFM@4x.tga" />
-    <EmbeddedResource Include="Resources\ChannelNoise.tga" />
-    <EmbeddedResource Include="Resources\ChannelNoise@2x.tga" />
-    <EmbeddedResource Include="Resources\ChannelNoise@4x.tga" />
-    <EmbeddedResource Include="Resources\ChannelRythm.tga" />
-    <EmbeddedResource Include="Resources\ChannelRythm@2x.tga" />
-    <EmbeddedResource Include="Resources\ChannelRythm@4x.tga" />
-    <EmbeddedResource Include="Resources\ChannelSaw.tga" />
-    <EmbeddedResource Include="Resources\ChannelSaw@2x.tga" />
-    <EmbeddedResource Include="Resources\ChannelSaw@4x.tga" />
-    <EmbeddedResource Include="Resources\ChannelSquare.tga" />
-    <EmbeddedResource Include="Resources\ChannelSquare@2x.tga" />
-    <EmbeddedResource Include="Resources\ChannelSquare@4x.tga" />
-    <EmbeddedResource Include="Resources\ChannelTriangle.tga" />
-    <EmbeddedResource Include="Resources\ChannelTriangle@2x.tga" />
-    <EmbeddedResource Include="Resources\ChannelTriangle@4x.tga" />
-    <EmbeddedResource Include="Resources\ChannelWaveTable.tga" />
-    <EmbeddedResource Include="Resources\ChannelWaveTable@2x.tga" />
-    <EmbeddedResource Include="Resources\ChannelWaveTable@4x.tga" />
-    <EmbeddedResource Include="Resources\Check.tga" />
-    <EmbeddedResource Include="Resources\CheckBoxNo.tga" />
-    <EmbeddedResource Include="Resources\CheckBoxNo@2x.tga" />
-    <EmbeddedResource Include="Resources\CheckBoxNo@4x.tga" />
-    <EmbeddedResource Include="Resources\CheckBoxYes.tga" />
-    <EmbeddedResource Include="Resources\CheckBoxYes@2x.tga" />
-    <EmbeddedResource Include="Resources\CheckBoxYes@4x.tga" />
-    <EmbeddedResource Include="Resources\Clean.tga" />
-    <EmbeddedResource Include="Resources\Clean@2x.tga" />
-    <EmbeddedResource Include="Resources\CollapsedSmall@2x.tga" />
-    <EmbeddedResource Include="Resources\Config@2x.tga" />
-    <EmbeddedResource Include="Resources\ConfigFFmpeg@2x.tga" />
-    <EmbeddedResource Include="Resources\ConfigGeneral@2x.tga" />
-    <EmbeddedResource Include="Resources\ConfigMIDI@2x.tga" />
-    <EmbeddedResource Include="Resources\ConfigMixer@2x.tga" />
-    <EmbeddedResource Include="Resources\ConfigMobile@2x.tga" />
-    <EmbeddedResource Include="Resources\ConfigQWERTY@2x.tga" />
-    <EmbeddedResource Include="Resources\ConfigSound@2x.tga" />
-    <EmbeddedResource Include="Resources\ConfigUserInterface@2x.tga" />
-    <EmbeddedResource Include="Resources\Copy@2x.tga" />
-    <EmbeddedResource Include="Resources\Cut@2x.tga" />
-    <EmbeddedResource Include="Resources\Dash.tga" />
-    <EmbeddedResource Include="Resources\Dash@4x.tga" />
-    <EmbeddedResource Include="Resources\Delete@2x.tga" />
-    <EmbeddedResource Include="Resources\Drag@2x.tga" />
-    <EmbeddedResource Include="Resources\Duplicate@2x.tga" />
-    <EmbeddedResource Include="Resources\DuplicateMove@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectCutDelay@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectDutyCycle@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectFrame@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectMod@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectNoteDelay@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectPitch@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectRepeat@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectSpeed@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectVibrato@2x.tga" />
-    <EmbeddedResource Include="Resources\EffectVolume@2x.tga" />
-    <EmbeddedResource Include="Resources\EnvelopeArpeggio@4x.tga" />
-    <EmbeddedResource Include="Resources\EnvelopeDuty@4x.tga" />
-    <EmbeddedResource Include="Resources\EnvelopeMod@4x.tga" />
-    <EmbeddedResource Include="Resources\EnvelopePitch@4x.tga" />
-    <EmbeddedResource Include="Resources\EnvelopeVolume@4x.tga" />
-    <EmbeddedResource Include="Resources\EnvelopeWave@4x.tga" />
-    <EmbeddedResource Include="Resources\EnvResize.tga" />
-    <EmbeddedResource Include="Resources\EnvResize@2x.tga" />
-    <EmbeddedResource Include="Resources\ExpandedSmall@2x.tga" />
-    <EmbeddedResource Include="Resources\Export@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportFamiStudioEngine@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportFamiTone2@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportFamiTracker@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportMIDI@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportNsf@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportRom@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportShare@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportText@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportVGM@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportVideo@2x.tga" />
-    <EmbeddedResource Include="Resources\ExportWav@2x.tga" />
-    <EmbeddedResource Include="Resources\File@2x.tga" />
-    <EmbeddedResource Include="Resources\Follow@2x.tga" />
-    <EmbeddedResource Include="Resources\GhostSmall@2x.tga" />
-    <EmbeddedResource Include="Resources\GizmoResizeFill@4x.tga" />
-    <EmbeddedResource Include="Resources\GizmoResizeLeftRight@4x.tga" />
-    <EmbeddedResource Include="Resources\GizmoResizeUpDown@4x.tga" />
-    <EmbeddedResource Include="Resources\Help@2x.tga" />
-    <EmbeddedResource Include="Resources\Instance@2x.tga" />
-    <EmbeddedResource Include="Resources\Instrument@2x.tga" />
-    <EmbeddedResource Include="Resources\Instrument@4x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentEPSM.tga" />
-    <EmbeddedResource Include="Resources\InstrumentEPSM@2x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentEPSM@4x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentExpand@4x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentExpanded@4x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentFds@2x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentFds@4x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentNamco@2x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentNamco@4x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentOpen@4x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentSunsoft@2x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentSunsoft@4x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentVRC6@2x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentVRC6@4x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentVRC7@2x.tga" />
-    <EmbeddedResource Include="Resources\InstrumentVRC7@4x.tga" />
-    <EmbeddedResource Include="Resources\Loop@2x.tga" />
-    <EmbeddedResource Include="Resources\LoopNone@2x.tga" />
-    <EmbeddedResource Include="Resources\LoopPattern@2x.tga" />
-    <EmbeddedResource Include="Resources\LoopSelection@2x.tga" />
-    <EmbeddedResource Include="Resources\LoopSmallFill@2x.tga" />
-    <EmbeddedResource Include="Resources\Maximize@2x.tga" />
-    <EmbeddedResource Include="Resources\Metronome.wav" />
-    <EmbeddedResource Include="Resources\Metronome@2x.tga" />
-    <EmbeddedResource Include="Resources\MinusSmall@2x.tga" />
-    <EmbeddedResource Include="Resources\MobileArpeggio.tga" />
-    <EmbeddedResource Include="Resources\MobileCheckOff.tga" />
-    <EmbeddedResource Include="Resources\MobileCheckOn.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectCutDelay.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectDutyCycle.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectMod.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectNone.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectNoteDelay.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectPitch.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectRepeat.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectSpeed.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectVibrato.tga" />
-    <EmbeddedResource Include="Resources\MobileEffectVolume.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuBlank.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuClearEnvelope.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuClearLoopPoint.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuClearRelease.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuClearSelection.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuCopy.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuCustomPatternSettings.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuDelete.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuDeleteSelection.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuDuplicate.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuExpandSelection.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuEyedropper.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuForceDisplay.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuInstance.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuLoopPoint.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuMute.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuPiano.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuPlay.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuPlayHalf.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuPlayQuarter.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuProperties.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuRadio.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuRelease.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuReplace.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuReplaceSelection.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuReset.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuSave.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuSelectAll.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuSelectNote.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuSelectPattern.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuSnap.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuSolo.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuStar.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuStopNote.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuTrash.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuToggleAttack.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuToggleRelease.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuToggleSlide.tga" />
-    <EmbeddedResource Include="Resources\MobileMenuWave.tga" />
-    <EmbeddedResource Include="Resources\MobilePianoDrag.tga" />
-    <EmbeddedResource Include="Resources\MobilePianoRest.tga" />
-    <EmbeddedResource Include="Resources\MobileRadio.tga" />
-    <EmbeddedResource Include="Resources\MobileSnapOff.tga" />
-    <EmbeddedResource Include="Resources\MobileSnapOn.tga" />
-    <EmbeddedResource Include="Resources\MobileTutorial1.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial2.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial3.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial4.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial5.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial6.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial7.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial8.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial9.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial10.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial11.gif" />
-    <EmbeddedResource Include="Resources\MobileTutorial12.gif" />
-    <EmbeddedResource Include="Resources\More@2x.tga" />
-    <EmbeddedResource Include="Resources\MouseLeft@2x.tga" />
-    <EmbeddedResource Include="Resources\MouseRight@2x.tga" />
-    <EmbeddedResource Include="Resources\MouseWheel@2x.tga" />
-    <EmbeddedResource Include="Resources\Music@4x.tga" />
-    <EmbeddedResource Include="Resources\No@2x.tga" />
-    <EmbeddedResource Include="Resources\NTSC@2x.tga" />
-    <EmbeddedResource Include="Resources\NTSCToPAL@2x.tga" />
-    <EmbeddedResource Include="Resources\Open@2x.tga" />
-    <EmbeddedResource Include="Resources\PAL@2x.tga" />
-    <EmbeddedResource Include="Resources\PALToNTSC@2x.tga" />
-    <EmbeddedResource Include="Resources\Paste@2x.tga" />
-    <EmbeddedResource Include="Resources\Pause@2x.tga" />
-    <EmbeddedResource Include="Resources\Piano@2x.tga" />
-    <EmbeddedResource Include="Resources\PianoRoll@2x.tga" />
-    <EmbeddedResource Include="Resources\Play@2x.tga" />
-    <EmbeddedResource Include="Resources\PlayHalf@2x.tga" />
-    <EmbeddedResource Include="Resources\PlayQuarter@2x.tga" />
-    <EmbeddedResource Include="Resources\PlaySource@4x.tga" />
-    <EmbeddedResource Include="Resources\PlusSmall@2x.tga" />
-    <EmbeddedResource Include="Resources\ProjectExplorer.tga" />
-    <EmbeddedResource Include="Resources\ProjectExplorer@2x.tga" />
-    <EmbeddedResource Include="Resources\Properties.tga" />
-    <EmbeddedResource Include="Resources\Properties@4x.tga" />
-    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand10_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand112.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand112_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand16.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand16_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand16Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand16Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand24.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand24_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand24Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand24Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand28_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand30.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand30_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand30Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand30Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand32.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand32_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand32Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand32Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand36.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand36_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand36Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand36Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand40.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand40_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand40Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand40Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand48.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand48_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand48Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand48Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand56.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand56_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand56Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand60.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand60_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand60Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand60Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand64.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand64_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand8.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand80.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand80_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand80Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand80Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand84.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand84_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand8_0.tga" />
-    <EmbeddedResource Include="Resources\QuickSand8Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand8Bold_0.tga" />
-    <EmbeddedResource Include="Resources\QwertyPiano@2x.tga" />
-    <EmbeddedResource Include="Resources\Rec@2x.tga" />
-    <EmbeddedResource Include="Resources\Redo@2x.tga" />
-    <EmbeddedResource Include="Resources\ReleaseSmallFill@2x.tga" />
-    <EmbeddedResource Include="Resources\Reload@4x.tga" />
-    <EmbeddedResource Include="Resources\Rewind@2x.tga" />
-    <EmbeddedResource Include="Resources\Save@2x.tga" />
-    <EmbeddedResource Include="Resources\SaveSmall@4x.tga" />
-    <EmbeddedResource Include="Resources\Sequencer@2x.tga" />
-    <EmbeddedResource Include="Resources\Slide@2x.tga" />
-    <EmbeddedResource Include="Resources\Snap@2x.tga" />
-    <EmbeddedResource Include="Resources\SnapOff@2x.tga" />
-    <EmbeddedResource Include="Resources\Stop@2x.tga" />
-    <EmbeddedResource Include="Resources\Transform@2x.tga" />
-    <EmbeddedResource Include="Resources\Undo@2x.tga" />
-    <EmbeddedResource Include="Resources\VideoWatermark.tga" />
-    <EmbeddedResource Include="Resources\Warning@4x.tga" />
-    <EmbeddedResource Include="Resources\WarningGood@2x.tga" />
-    <EmbeddedResource Include="Resources\WarningYellow@2x.tga" />
-    <EmbeddedResource Include="Resources\WaveEdit@4x.tga" />
-    <EmbeddedResource Include="Resources\YellowChecker.tga" />
-    <EmbeddedResource Include="Resources\Yes@2x.tga" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuBankAssign.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuBlank.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuCheckOff.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuCheckOn.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuClearEnvelope.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuClearLoopPoint.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuClearRelease.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuClearSelection.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuCopy.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuCustomPatternSettings.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuDelete.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuDeleteSelection.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuDuplicate.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuExpandSelection.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuEyedropper.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuForceDisplay.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuInstance.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuLoopPoint.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuMute.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuPaste.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuPiano.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuPlay.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuPlayHalf.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuPlayQuarter.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuProperties.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuRadio.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuRelease.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuReplace.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuReplaceSelection.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuReset.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuSave.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuSelectAll.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuSelectNote.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuSelectPattern.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuSnap.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuSolo.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuStar.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuStopNote.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuTrash.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuToggleAttack.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuToggleRelease.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuToggleSlide.tga" />
+    <EmbeddedResource Include="Resources\Mobile\MobileMenuWave.tga" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Fonts\Quicksand-Regular.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\Quicksand-Bold.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Rg.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Bd.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\Mulish-Light.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\Mulish-Bold.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial1.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial2.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial3.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial4.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial5.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial6.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial7.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial8.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial9.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial10.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial11.gif" />
+    <EmbeddedResource Include="Resources\Tutorials\MobileTutorial12.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Misc\Dash.tga" />
+    <EmbeddedResource Include="Resources\Misc\Dash@4x.tga" />
+    <EmbeddedResource Include="Resources\Misc\VideoWatermark.tga" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Atlas\Add@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Algorithm0@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Algorithm1@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Algorithm2@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Algorithm3@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Algorithm4@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Algorithm5@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Algorithm6@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Algorithm7@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ArrowLeft@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ArrowRight@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ButtonLeft@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ButtonMinus@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ButtonPlus@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ButtonRight@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelDPCM.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelDPCM@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelDPCM@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelFM.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelFM@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelFM@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelNoise.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelNoise@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelNoise@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelRythm.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelRythm@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelRythm@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelSaw.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelSaw@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelSaw@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelSquare.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelSquare@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelSquare@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelTriangle.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelTriangle@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelTriangle@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelWaveTable.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelWaveTable@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ChannelWaveTable@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Check.tga" />
+    <EmbeddedResource Include="Resources\Atlas\CheckBoxNo.tga" />
+    <EmbeddedResource Include="Resources\Atlas\CheckBoxNo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\CheckBoxNo@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\CheckBoxYes.tga" />
+    <EmbeddedResource Include="Resources\Atlas\CheckBoxYes@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\CheckBoxYes@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Clean.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Clean@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\CollapsedSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Config@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigFFmpeg@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigGeneral@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigMIDI@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigMixer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigMobile@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigKeys@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigSound@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ConfigUserInterface@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Copy@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Cut@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Delete@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Drag@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Duplicate@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\DuplicateMove@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectCutDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectDutyCycle@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectFrame@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectMod@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectNoteDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectPitch@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectRepeat@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectSpeed@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectVibrato@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectVolume@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeArpeggio@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeDuty@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeMixer@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeMod@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeNoise@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopePitch@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeVolume@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvelopeWave@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvResize.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EnvResize@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExpandedSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Export@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportFamiStudioEngine@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportFamiTone2@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportFamiTracker@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportMIDI@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportNsf@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportRom@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportShare@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportText@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportVGM@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportVideo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ExportWav@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\File@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Follow@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\GhostSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\GizmoResizeFill@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\GizmoResizeLeftRight@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\GizmoResizeUpDown@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Help@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Instance@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Instrument@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Instrument@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentEPSM.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentEPSM@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentEPSM@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentExpand@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentExpanded@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentFds@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentFds@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentNamco@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentNamco@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentOpen@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentSunsoft@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentSunsoft@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentVRC6@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentVRC6@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentVRC7@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentVRC7@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Loop@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\LoopNone@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\LoopPattern@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\LoopSelection@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\LoopSmallFill@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Maximize@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Metronome@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MinusSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileArpeggio.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileCheckOff.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileCheckOn.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectCutDelay.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectDutyCycle.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectMod.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectNone.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectNoteDelay.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectPitch.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectRepeat.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectSpeed.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectVibrato.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectVolume.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobilePianoDrag.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobilePianoRest.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileRadio.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileSnapOff.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileSnapOn.tga" />
+    <EmbeddedResource Include="Resources\Atlas\More@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MouseLeft@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MouseRight@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MouseWheel@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Music@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\No@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\NTSC@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\NTSCToPAL@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Open@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\PAL@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\PALToNTSC@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Paste@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Pause@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Piano@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\PianoRoll@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Play@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\PlayHalf@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\PlayQuarter@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\PlaySource@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\PlusSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectExplorer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectExplorer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Properties.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Properties@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\QwertyPiano@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Rec@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Redo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ReleaseSmallFill@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Reload@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Rewind@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Save@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\SaveSmall@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Sequencer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Slide@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Snap@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\SnapOff@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Sort@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Stop@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Transform@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Undo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Warning@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\WarningGood@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\WarningYellow@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\WaveEdit@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\YellowChecker.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Yes@2x.tga" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Rom\fds.fds" />
     <EmbeddedResource Include="Rom\fds_famitracker.fds" />
     <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />
@@ -719,6 +694,28 @@
     <EmbeddedResource Include="Rom\rom_vrc6_ntsc_famitracker.nes" />
     <EmbeddedResource Include="Rom\rom_vrc7_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_vrc7_ntsc_famitracker.nes" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Shaders\Droid\Bitmap.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Bitmap.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Depth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Depth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Line.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Line.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\LineSmooth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\LineSmooth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Poly.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Poly.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Text.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Droid\Text.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Localization\FamiStudio.deu.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.eng.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.kor.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.por.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.rus.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.spa.ini" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />

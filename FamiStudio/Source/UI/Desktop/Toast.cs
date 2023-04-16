@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace FamiStudio
 {
-    public class Toast : Control
+    public class Toast : Container
     {
         private const int   DefaultPad = 8;
         private const int   DefaultPositionFromBottom = 32;
@@ -19,12 +19,7 @@ namespace FamiStudio
         private int alpha;
         private Action action;
 
-        public bool IsVisible => alpha > 0;
         public bool IsClickable => alpha > 0 && action != null;
-
-        public Toast(FamiStudioWindow win) : base(win)
-        {
-        }
 
         public void Initialize(string text, bool longDuration, Action click = null)
         {
@@ -33,6 +28,7 @@ namespace FamiStudio
             timer = duration;
             action = click;
             alpha = 0;
+            Visible = true;
 
             Reposition();
             MarkDirty();
@@ -42,7 +38,7 @@ namespace FamiStudio
         {
             if (lines != null)
             {
-                var font = FontResources.FontMedium;
+                var font = ParentWindow.Fonts.FontMedium;
                 var sizeX = lines.Max(l => font.MeasureString(l, false)) + pad * 2;
                 var sizeY = font.LineHeight * lines.Length + pad * 2;
                 var posX = (ParentWindowSize.Width - sizeX) / 2;
@@ -52,10 +48,10 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnRenderInitialized(Graphics g)
+        protected override void OnAddedToContainer()
         {
-            pad = ScaleForWindow(DefaultPad);
-            posFromBottom = ScaleForWindow(DefaultPositionFromBottom);
+            pad = DpiScaling.ScaleForWindow(DefaultPad);
+            posFromBottom = DpiScaling.ScaleForWindow(DefaultPositionFromBottom);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -81,6 +77,7 @@ namespace FamiStudio
                     lines = null;
                     action = null;
                     duration = 0.0f;
+                    Visible = false;
                 }
 
                 SetAndMarkDirty(ref alpha, CalculateAlpha());
@@ -89,16 +86,13 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var c = g.CreateCommandList();
+            var c = g.DefaultCommandList;
+            var font = Fonts.FontMedium;
 
             c.FillAndDrawRectangle(0, 0, width - 1, height - 1, Color.FromArgb(alpha, Theme.DarkGreyColor1), Color.FromArgb(alpha, Theme.BlackColor));
 
-            var font = FontResources.FontMedium;
-
             for (int i = 0; i < lines.Length; i++)
                 c.DrawText(lines[i], font, 0, pad + i * font.LineHeight, Color.FromArgb(alpha, Theme.LightGreyColor1), TextFlags.MiddleCenter, width, font.LineHeight);
-
-            g.DrawCommandList(c);
         }
     }
 }

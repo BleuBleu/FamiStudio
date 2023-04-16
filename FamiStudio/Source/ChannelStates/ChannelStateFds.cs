@@ -56,6 +56,8 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
+            var periodHi = 0;
+
             if (note.IsStop)
             {
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80); // Zero volume
@@ -66,7 +68,9 @@ namespace FamiStudio
                 var period = GetPeriod();
                 var volume = GetVolume();
 
-                WriteRegister(NesApu.FDS_FREQ_HI, (period >> 8) & 0x0f);
+                periodHi = (period >> 8) & 0x0f;
+
+                WriteRegister(NesApu.FDS_FREQ_HI, periodHi);
                 WriteRegister(NesApu.FDS_FREQ_LO, (period >> 0) & 0xff);
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80 | (volume << 1));
 
@@ -101,6 +105,12 @@ namespace FamiStudio
             {
                 WriteRegister(NesApu.FDS_MOD_HI, 0x80);
                 modDelayCounter--;
+            }
+
+            if (resetPhase)
+            {
+                WriteRegister(NesApu.FDS_FREQ_HI, periodHi | 0x80);
+                WriteRegister(NesApu.FDS_FREQ_HI, periodHi);
             }
 
             base.UpdateAPU();

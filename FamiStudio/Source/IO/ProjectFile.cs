@@ -39,7 +39,19 @@ namespace FamiStudio
 
                     var project = new Project();
                     var serializer = new ProjectLoadBuffer(project, buffer, loadVersion);
-                    project.SerializeState(serializer);
+#if !DEBUG
+                    try
+#endif
+                    {
+                        project.SerializeState(serializer);
+                    }
+#if !DEBUG
+                    catch
+                    {
+                        Log.LogMessage(LogSeverity.Error, $"Project file appears to be corrupted. Files created in development versions or forks are not compatible.");
+                        return null;
+                    }
+#endif
                     project.Filename = filename;
                     project.ValidateIntegrity();
                     return project;

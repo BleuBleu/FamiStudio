@@ -28,13 +28,15 @@ namespace GLFWDotNet
                 return retVal;
             }
 
-            [DllImport("libdl")]
+            const string DlLibName = "libdl";
+
+            [DllImport(DlLibName)]
             private static extern IntPtr dlopen(string fileName, int flags);
 
-            [DllImport("libdl")]
+            [DllImport(DlLibName)]
             public static extern IntPtr dlsym(IntPtr handle, string symbol);
 
-            [DllImport("libdl")]
+            [DllImport(DlLibName)]
             private static extern IntPtr dlerror();
         }
 

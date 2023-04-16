@@ -13,6 +13,7 @@ namespace FamiStudio
         private Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         private Color color;
         private Project project;
+        private Dictionary<int, DPCMSampleMapping> samplesMapping;
 
         // FDS
         private byte    fdsMasterVolume = FdsMasterVolumeType.Volume100;
@@ -50,18 +51,14 @@ namespace FamiStudio
         // For N163/FDS wav presets.
         public int Id => id;
         public string Name { get => name; set => name = value; }
-        public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.ShortNames[expansion]})");
+        public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.InternalNames[expansion]})");
         public Color Color { get => color; set => color = value; }
         public int Expansion => expansion;
         public bool IsExpansionInstrument => expansion != ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
+        public Dictionary<int, DPCMSampleMapping> SamplesMapping => samplesMapping;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
         public byte[] EpsmPatchRegs => epsmPatchRegs;
-        public bool CanRelease =>
-            VolumeEnvelope         != null && VolumeEnvelope.Release         >= 0 ||
-            WaveformRepeatEnvelope != null && WaveformRepeatEnvelope.Release >= 0 ||
-            expansion == ExpansionType.Vrc7 || 
-            expansion == ExpansionType.EPSM;
 
         public bool IsRegular => expansion == ExpansionType.None;
         public bool IsFds     => expansion == ExpansionType.Fds;
@@ -71,13 +68,15 @@ namespace FamiStudio
         public bool IsS5B     => expansion == ExpansionType.S5B;
         public bool IsEpsm    => expansion == ExpansionType.EPSM;
 
-        public Envelope VolumeEnvelope         => envelopes[EnvelopeType.Volume];
-        public Envelope PitchEnvelope          => envelopes[EnvelopeType.Pitch];
-        public Envelope ArpeggioEnvelope       => envelopes[EnvelopeType.Arpeggio];
-        public Envelope N163WaveformEnvelope   => envelopes[EnvelopeType.N163Waveform];
-        public Envelope FdsWaveformEnvelope    => envelopes[EnvelopeType.FdsWaveform];
-        public Envelope FdsModulationEnvelope  => envelopes[EnvelopeType.FdsModulation];
-        public Envelope WaveformRepeatEnvelope => envelopes[EnvelopeType.WaveformRepeat];
+        public Envelope VolumeEnvelope          => envelopes[EnvelopeType.Volume];
+        public Envelope PitchEnvelope           => envelopes[EnvelopeType.Pitch];
+        public Envelope ArpeggioEnvelope        => envelopes[EnvelopeType.Arpeggio];
+        public Envelope N163WaveformEnvelope    => envelopes[EnvelopeType.N163Waveform];
+        public Envelope FdsWaveformEnvelope     => envelopes[EnvelopeType.FdsWaveform];
+        public Envelope FdsModulationEnvelope   => envelopes[EnvelopeType.FdsModulation];
+        public Envelope WaveformRepeatEnvelope  => envelopes[EnvelopeType.WaveformRepeat];
+        public Envelope YMMixerSettingsEnvelope => envelopes[EnvelopeType.YMMixerSettings];
+        public Envelope YMNoiseFreqEnvelope     => envelopes[EnvelopeType.YMNoiseFreq];
 
         public const int MaxResampleWavSamples = 12000;
 
@@ -118,6 +117,10 @@ namespace FamiStudio
                 epsmPatch = EpsmInstrumentPatch.Default;
                 Array.Copy(EpsmInstrumentPatch.Infos[EpsmInstrumentPatch.Default].data, epsmPatchRegs, 31);
             }
+            else if (expansion == ExpansionType.None)
+            {
+                samplesMapping = new Dictionary<int, DPCMSampleMapping>();
+            }
         }
 
         public bool IsEnvelopeActive(int envelopeType)
@@ -147,6 +150,12 @@ namespace FamiStudio
             {
                 return expansion == ExpansionType.N163;
             }
+            else if (envelopeType == EnvelopeType.YMNoiseFreq ||
+                     envelopeType == EnvelopeType.YMMixerSettings)
+            {
+                return expansion == ExpansionType.S5B ||
+                       expansion == ExpansionType.EPSM;
+            }
 
             return false;
         }
@@ -164,6 +173,15 @@ namespace FamiStudio
         public static bool EnvelopeHasRepeat(int envelopeType)
         {
             return envelopeType == EnvelopeType.N163Waveform;
+        }
+
+        public bool CanRelease(Channel channel)
+        { 
+            return 
+                VolumeEnvelope != null && VolumeEnvelope.Release >= 0 || 
+                WaveformRepeatEnvelope != null && WaveformRepeatEnvelope.Release >= 0 ||
+                expansion == ExpansionType.Vrc7 && channel.IsVrc7Channel ||
+                expansion == ExpansionType.EPSM && channel.IsEPSMFmChannel;
         }
 
         public int NumVisibleEnvelopes
@@ -550,6 +568,146 @@ namespace FamiStudio
             return serializer.CRC;
         }
 
+        public DPCMSampleMapping MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
+        {
+            Debug.Assert(Note.IsMusicalNote(note));
+
+            if (sample != null)
+            {
+                var mapping = new DPCMSampleMapping();
+                mapping.Sample = sample;
+                mapping.Pitch = pitch;
+                mapping.Loop = loop;
+                samplesMapping.Add(note, mapping);
+                return mapping;
+            }
+
+            return null;
+        }
+
+        public void UnmapDPCMSample(int note)
+        {
+            samplesMapping.Remove(note);
+        }
+
+        public DPCMSampleMapping GetDPCMMapping(int note)
+        {
+            if (samplesMapping != null)
+            { 
+                samplesMapping.TryGetValue(note, out var mapping);
+                return mapping;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public int FindDPCMSampleMapping(DPCMSample sample, int pitch, bool loop)
+        {
+            foreach (var kv in samplesMapping)
+            {
+                if (kv.Value.Sample == sample &&
+                    kv.Value.Pitch  == pitch &&
+                    kv.Value.Loop   == loop)
+                {
+                    return kv.Key;
+                }
+            }
+
+            return -1;
+        }
+
+        public bool GetMinMaxMappedSampleIndex(out int minIdx, out int maxIdx)
+        {
+            minIdx = 999;
+            maxIdx = -1;
+
+            foreach (var kv in samplesMapping)
+            {
+                minIdx = Math.Min(kv.Key, minIdx);
+                maxIdx = Math.Max(kv.Key, maxIdx);
+            }
+
+            return maxIdx != -1;
+        }
+
+        public int GetTotalMappedSampleSize(List<DPCMSample> visitedSamples = null)
+        {
+            var size = 0;
+
+            if (samplesMapping != null)
+            {
+                if (visitedSamples == null)
+                {
+                    visitedSamples = new List<DPCMSample>();
+                }
+
+                foreach (var kv in samplesMapping)
+                {
+                    if (kv.Value.Sample != null && !visitedSamples.Contains(kv.Value.Sample))
+                    {
+                        visitedSamples.Add(kv.Value.Sample);
+                        size += Utils.AlignSampleOffset(kv.Value.Sample.ProcessedData.Length);
+                    }
+                }
+            }
+
+            return size;
+        }
+
+        public bool HasAnyMappedSamples
+        {
+            get
+            {
+                return samplesMapping != null && samplesMapping.Count > 0;
+            }
+        }
+
+        public void ReplaceSampleInAllMappings(DPCMSample oldSample, DPCMSample newSample)
+        {
+            foreach (var kv in samplesMapping)
+            {
+                if (kv.Value.Sample == oldSample)
+                {
+                    kv.Value.Sample = newSample;
+                }
+            }
+            
+            if (newSample == null)
+            {
+                ClearMappingsWithNullSamples();
+            }
+        }
+
+        private void ClearMappingsWithNullSamples()
+        {
+            var toRemove = (List<int>)null;
+
+            foreach (var kv in samplesMapping)
+            {
+                if (kv.Value.Sample == null)
+                {
+                    if (toRemove == null)
+                        toRemove = new List<int>();
+                    toRemove.Add(kv.Key);
+                }
+            }
+
+            if (toRemove != null)
+            {
+                foreach (var k in toRemove)
+                {
+                    samplesMapping.Remove(k);
+                }
+            }
+        }
+
+        public void DeleteAllMappings()
+        {
+            samplesMapping.Clear();
+        }
+
         public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
 #if DEBUG
@@ -601,6 +759,20 @@ namespace FamiStudio
                 Debug.Assert(N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset));
             if (IsFds && fdsWavPreset != WavePresetType.Custom)
                 Debug.Assert(FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset));
+
+            Debug.Assert(
+                expansion != ExpansionType.None && samplesMapping == null ||
+                expansion == ExpansionType.None && samplesMapping != null);
+
+            if (samplesMapping != null)
+            {
+                foreach (var kv in samplesMapping)
+                {
+                    Debug.Assert(kv.Value != null); // Null sample is ok-ish, null mapping isnt.
+                    Debug.Assert(kv.Value.Sample == null || project.Samples.Contains(kv.Value.Sample));
+                    kv.Value.ValidateIntegrity(project, idMap);
+                }
+            }
 #endif
         }
 
@@ -696,16 +868,27 @@ namespace FamiStudio
                 }
             }
 
-            byte envelopeMask = 0;
+            ushort envelopeMask = 0;
             if (buffer.IsWriting)
             {
                 for (int i = 0; i < EnvelopeType.Count; i++)
                 {
                     if (envelopes[i] != null)
-                        envelopeMask = (byte)(envelopeMask | (1 << i));
+                        envelopeMask = (ushort)(envelopeMask | (1 << i));
                 }
             }
-            buffer.Serialize(ref envelopeMask);
+
+            // At version 15 (FamiStudio 4.1.0) we expanded the envelope mask to 16bits.
+            if (buffer.Version < 15)
+            {
+                byte envelopeMaskByte = 0;
+                buffer.Serialize(ref envelopeMaskByte);
+                envelopeMask = envelopeMaskByte;
+            }
+            else
+            {
+                buffer.Serialize(ref envelopeMask);
+            }
 
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
@@ -748,6 +931,62 @@ namespace FamiStudio
                 envelopes[EnvelopeType.WaveformRepeat].Length = 1;
             }
 
+            if (IsRegular)
+            {
+                if (buffer.IsReading)
+                    samplesMapping = new Dictionary<int, DPCMSampleMapping>();
+                else if (!buffer.IsForUndoRedo)
+                    ClearMappingsWithNullSamples();
+
+                // At version 15 (FamiStudio 4.1.0) we moved DPCM samples mapping to instruments, a-la Famitracker.
+                if (buffer.Version >= 15)
+                {
+                    var mappingCount = samplesMapping.Count;
+                    buffer.Serialize(ref mappingCount);
+
+                    // Ugly, we should look into adding support for dictionaries in the ProjectBuffer.
+                    if (buffer.IsReading)
+                    {
+                        var mappingNotes = new int[mappingCount];
+                        for (var i = 0; i < mappingCount; i++)
+                        {
+                            buffer.Serialize(ref mappingNotes[i]);
+                        }
+
+                        for (var i = 0; i < mappingCount; i++)
+                        {
+                            var mapping = new DPCMSampleMapping();
+                            mapping.SerializeState(buffer);
+                            samplesMapping.Add(mappingNotes[i], mapping);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var kv in samplesMapping)
+                        {
+                            var note = kv.Key;
+                            buffer.Serialize(ref note);
+                        }
+
+                        foreach (var kv in samplesMapping)
+                        {
+                            kv.Value.SerializeState(buffer);
+                        }
+                    }
+                }
+            }
+
+            if (buffer.Version < 15 && (IsS5B || IsEpsm))
+            {
+                envelopes[EnvelopeType.YMMixerSettings] = new Envelope(EnvelopeType.YMMixerSettings);
+                envelopes[EnvelopeType.YMNoiseFreq] = new Envelope(EnvelopeType.YMNoiseFreq);
+            }
+
+            if (buffer.IsReading)
+            {
+                PerformPostLoadActions();
+            }
+
             // Revert back presets to "customs" if they no longer match what the code generates.
             // This is in case we change the code that generates the preset.
             if (buffer.IsReading && !buffer.IsForUndoRedo)
@@ -758,11 +997,6 @@ namespace FamiStudio
                     fdsWavPreset = WavePresetType.Custom;
                 if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsModPreset))
                     fdsModPreset = WavePresetType.Custom;
-            }
-
-            if (buffer.IsReading)
-            {
-                PerformPostLoadActions();
             }
         }
     }
@@ -871,6 +1105,117 @@ namespace FamiStudio
         public static int GetValueForName(string str)
         {
             return Array.IndexOf(Names, str);
+        }
+    }
+
+    public static class InstrumentConverter
+    {
+        private delegate void ConvertDelegate(Instrument src, Instrument dst);
+        private static Dictionary<Tuple<int, int>, ConvertDelegate> ConvertMap = new Dictionary<Tuple<int, int>, ConvertDelegate>();
+
+        static InstrumentConverter()
+        {
+            // There are specialized conversion functions, well be adding more as we go.
+            ConvertMap.Add(new Tuple<int, int>(ExpansionType.Fds,  ExpansionType.N163), ConvertFdsToN163);
+            ConvertMap.Add(new Tuple<int, int>(ExpansionType.N163, ExpansionType.Fds),  ConvertN163ToFds);
+        }
+
+        private static void ConvertEnvelopeValues(Instrument srcInst, Instrument dstInst, int srcType, int dstType, Envelope srcEnv, Envelope dstEnv, int srcLen, int dstLen)
+        {
+            Envelope.GetMinMaxValueForType(srcInst, srcType, out var srcMin, out var srcMax);
+            Envelope.GetMinMaxValueForType(dstInst, dstType, out var dstMin, out var dstMax);
+
+            var srcRange = srcMax - srcMin + 1;
+            var dstRange = dstMax - dstMin + 1;
+
+            for (int di = 0; di < dstLen; di++)
+            {
+                var si = Utils.Clamp((int)Math.Floor(di * (srcLen / (float)dstLen)), 0, srcLen - 1);
+                var sv = srcEnv.Values[si];
+                var sr = (sv - srcMin) / (float)srcRange;
+                var dv = Utils.Clamp((int)Math.Floor(dstMin + sr * dstRange), dstMin, dstMax);
+
+                dstEnv.Values[di] = (sbyte)dv;
+            }
+        }
+
+        private static void ConvertEnvelopeGeneric(Instrument srcInst, Instrument dstInst, int srcType, int dstType, Envelope srcEnv, Envelope dstEnv)
+        {
+            Debug.Assert(srcEnv.CanResize   == dstEnv.CanResize);
+            Debug.Assert(srcEnv.CanLoop     == dstEnv.CanLoop);
+            Debug.Assert(srcEnv.CanRelease  == dstEnv.CanRelease);
+            Debug.Assert(srcEnv.ChunkLength == 1); // Anything with chunks should have its own specialized version.
+            Debug.Assert(dstEnv.ChunkLength == 1);
+
+            if (dstEnv.CanResize)
+                dstEnv.Length = srcEnv.Length;
+            if (dstEnv.CanLoop)
+                dstEnv.Loop = srcEnv.Loop;
+            if (dstEnv.CanRelease)
+                dstEnv.Release = srcEnv.Release;
+
+            ConvertEnvelopeValues(srcInst, dstInst, srcType, dstType, srcEnv, dstEnv, srcEnv.Length, dstEnv.Length);
+        }
+
+        private static void ConvertGeneric(Instrument srcInst, Instrument dstInst)
+        {
+            for (var e = 0; e < EnvelopeType.Count; e++)
+            {
+                var srcEnv = srcInst.Envelopes[e];
+                var dstEnv = dstInst.Envelopes[e];
+
+                if (e == EnvelopeType.Pitch)
+                    dstEnv.Relative = srcEnv.Relative;
+
+                if (srcEnv != null && dstEnv != null)
+                {
+                    ConvertEnvelopeGeneric(srcInst, dstInst, e, e, srcEnv, dstEnv);
+                }
+            }
+        }
+
+        private static void ConvertFdsToN163(Instrument src, Instrument dst)
+        {
+            dst.N163WaveSize = (byte)Envelope.GetEnvelopeMaxLength(EnvelopeType.FdsWaveform);
+            dst.N163WavePreset = WavePresetType.Custom;
+
+            ConvertGeneric(src, dst);
+            ConvertEnvelopeValues(
+                src,
+                dst,
+                EnvelopeType.FdsWaveform,
+                EnvelopeType.N163Waveform,
+                src.FdsWaveformEnvelope,
+                dst.N163WaveformEnvelope,
+                src.FdsWaveformEnvelope.Length,
+                dst.N163WaveformEnvelope.Length);
+        }
+
+        private static void ConvertN163ToFds(Instrument src, Instrument dst)
+        {
+            dst.FdsWavePreset = WavePresetType.Custom;
+            ConvertGeneric(src, dst);
+            ConvertEnvelopeValues(
+                src,
+                dst,
+                EnvelopeType.N163Waveform,
+                EnvelopeType.FdsWaveform,
+                src.N163WaveformEnvelope,
+                dst.FdsWaveformEnvelope,
+                src.N163WaveformEnvelope.ChunkLength, // Only first wave.
+                dst.FdsWaveformEnvelope.Length);
+        }
+
+        public static void Convert(Instrument src, Instrument dst)
+        {
+            Debug.Assert(src.Expansion != dst.Expansion);
+
+            if (!ConvertMap.TryGetValue(new Tuple<int, int>(src.Expansion, dst.Expansion), out var convertFunction))
+            {
+                convertFunction = ConvertGeneric;
+            }
+
+            convertFunction(src, dst);
         }
     }
 }

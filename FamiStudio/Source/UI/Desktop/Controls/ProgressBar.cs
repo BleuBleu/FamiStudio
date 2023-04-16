@@ -7,7 +7,7 @@ namespace FamiStudio
         private float progress;
         private float visibleProgress;
 
-        public ProgressBar(Dialog dlg) : base(dlg)
+        public ProgressBar()
         {
             height = DpiScaling.ScaleForWindow(10);
         }
@@ -39,7 +39,7 @@ namespace FamiStudio
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            var c = parentDialog.CommandList;
+            var c = g.GetCommandList();
 
             c.FillAndDrawRectangle(0, 0, width - 1, height - 1, Theme.DarkGreyColor1, Theme.LightGreyColor1);
             if (visibleProgress > 0.0f)

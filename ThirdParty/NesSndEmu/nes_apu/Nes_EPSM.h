@@ -41,7 +41,8 @@ public:
 	enum { reg_select2 = 0x401e };
 	enum { reg_write2 = 0x401f };
 	enum { reg_range = 0x1 };
-	enum { reg_cycle_skip = 34 };
+	enum { reg_addr_cycle_skip = 4 };
+	enum { reg_data_cycle_skip = 20 };
 
 	enum { shadow_internal_regs_count = 220 };
 	void start_seeking();
@@ -75,6 +76,8 @@ private:
 	int psg_delay;
 	int opn2_delay;
 	int last_psg_amp;
+	int sample_left;
+	int sample_right;
 	int last_opn2_amp_left;
 	int last_opn2_amp_right;
 	uint16_t opn2_mask;

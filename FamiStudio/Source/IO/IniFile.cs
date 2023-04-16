@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 
 namespace FamiStudio
 {
@@ -8,42 +9,11 @@ namespace FamiStudio
     {
         Dictionary<string, Dictionary<string, string>> iniContent = new Dictionary<string, Dictionary<string, string>>();
 
-        public bool Load(string filename)
+        public bool Load(string filename, bool trim = true)
         {
             try
             {
-                var lines = System.IO.File.ReadAllLines(filename);
-                var sectionName = "";
-                var sectionValues = new Dictionary<string, string>();
-
-                foreach (string line in lines)
-                {
-                    if (line.StartsWith("["))
-                    {
-                        if (sectionName != "")
-                        {
-                            iniContent.Add(sectionName, sectionValues);
-                            sectionName = "";
-                            sectionValues = new Dictionary<string, string>();
-                        }
-
-                        sectionName = line.TrimStart('[').TrimEnd(']');
-                    }
-                    else
-                    {
-                        int eq = line.IndexOf('=');
-                        if (eq >= 0)
-                        {
-                            sectionValues.Add(line.Substring(0, eq), line.Substring(eq + 1));
-                        }
-                    }
-                }
-
-                if (sectionName != "")
-                {
-                    iniContent.Add(sectionName, sectionValues);
-                }
-
+                LoadInternal(File.ReadAllLines(filename), trim);
                 return true;
             }
             catch
@@ -52,52 +22,142 @@ namespace FamiStudio
             }
         }
 
+        public bool LoadFromResource(string filename, bool trim = true)
+        {
+            try
+            {
+                var str = "";
+                using (Stream stream = typeof(IniFile).Assembly.GetManifestResourceStream(filename))
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    str = reader.ReadToEnd();
+                }
+
+                LoadInternal(str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries), trim);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void LoadInternal(string[] lines, bool trim)
+        {
+            var sectionName = "";
+            var sectionValues = new Dictionary<string, string>();
+
+            foreach (string line in lines)
+            {
+                var trimmedLine = trim ? line.Trim() : line;
+
+                if (trimmedLine.Length == 0)
+                    continue;
+
+                // Comments.
+                if (trimmedLine.StartsWith("#") || trimmedLine.StartsWith(";"))
+                    continue;
+
+                var idx = trimmedLine.IndexOfAny(new[] { '#', ';' });
+                if (idx >= 0)
+                    trimmedLine = trimmedLine.Substring(0, idx).Trim();
+
+                if (trimmedLine.StartsWith("["))
+                {
+                    if (sectionName != "")
+                    {
+                        iniContent.Add(sectionName, sectionValues);
+                        sectionName = "";
+                        sectionValues = new Dictionary<string, string>();
+                    }
+
+                    sectionName = trimmedLine.TrimStart('[').TrimEnd(']');
+                }
+                else
+                {
+                    int eq = trimmedLine.IndexOf('=');
+                    if (eq >= 0)
+                    {
+                        var key   = trimmedLine.Substring(0, eq);
+                        var value = trimmedLine.Substring(eq + 1);
+
+                        if (!sectionValues.ContainsKey(key))
+                        {
+                            sectionValues.Add(key, value);
+                        }
+                    }
+                }
+            }
+
+            if (sectionName != "")
+            {
+                iniContent.Add(sectionName, sectionValues);
+            }
+        }
+
         public int GetInt(string section, string key, int defaultValue)
         {
             try
             {
-                return int.Parse(iniContent[section][key]);
+                if (TryGetString(section, key, out var value))
+                {
+                    return int.Parse(value);
+                }
             }
-            catch
-            {
-                return defaultValue;
-            }
+            catch { }
+
+            return defaultValue;
         }
 
         public float GetFloat(string section, string key, float defaultValue)
         {
             try
-            {
-                return float.Parse(iniContent[section][key], CultureInfo.InvariantCulture);
+            {   
+                if (TryGetString(section, key, out var value))
+                {
+                    return float.Parse(value, CultureInfo.InvariantCulture);
+                }
             }
-            catch
-            {
-                return defaultValue;
-            }
+            catch { }
+
+            return defaultValue;
         }
 
         public bool GetBool(string section, string key, bool defaultValue)
         {
             try
             {
-                return bool.Parse(iniContent[section][key]);
+                if (TryGetString(section, key, out var value))
+                {
+                    return bool.Parse(value);
+                }
             }
-            catch
+            catch { }
+
+            return defaultValue;
+        }
+
+        public string GetString(string section, string key, string defaultValue)
+        {
+            if (TryGetString(section, key, out var value))
+            {
+                return value;
+            }
+            else
             {
                 return defaultValue;
             }
         }
 
-        public string GetString(string section, string key, string defaultValue)
+        private bool TryGetString(string section, string key, out string value)
         {
-            try
+            if (iniContent.TryGetValue(section, out var values))
             {
-                return iniContent[section][key];
+                return values.TryGetValue(key, out value);
             }
-            catch
-            {
-                return defaultValue;
-            }
+
+            value = null;
+            return false;
         }
 
         public bool HasKey(string section, string key)

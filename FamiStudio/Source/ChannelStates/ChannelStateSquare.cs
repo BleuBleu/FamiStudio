@@ -6,7 +6,7 @@ namespace FamiStudio
     public class ChannelStateSquare : ChannelState
     {
         int regOffset = 0;
-        int prevPeriodHi = 1000;
+        int prevPeriodHi = 0x80;
 
         public ChannelStateSquare(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
@@ -23,8 +23,6 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                //Debug.WriteLine(note.FriendlyName);
-
                 var period = GetPeriod();
                 var volume = GetVolume();
 
@@ -55,6 +53,11 @@ namespace FamiStudio
 
                 WriteRegister(NesApu.APU_PL1_LO + regOffset, periodLo);
                 WriteRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
+            }
+            
+            if (resetPhase)
+            {
+                WriteRegister(NesApu.APU_PL1_HI + regOffset, prevPeriodHi);
             }
 
             base.UpdateAPU();

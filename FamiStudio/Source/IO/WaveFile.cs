@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace FamiStudio
@@ -102,111 +103,136 @@ namespace FamiStudio
             }
         }
 
+        private unsafe static short[] LoadInternal(byte[] bytes, out int sampleRate)
+        {
+            sampleRate = 0;
+
+            if (bytes != null && bytes.Length >= 12)
+            {
+                if (bytes[0] == (byte)'R' &&
+                    bytes[1] == (byte)'I' &&
+                    bytes[2] == (byte)'F' &&
+                    bytes[3] == (byte)'F' &&
+                    bytes[8] == (byte)'W' &&
+                    bytes[9] == (byte)'A' &&
+                    bytes[10] == (byte)'V' &&
+                    bytes[11] == (byte)'E')
+                {
+                    // Look for format and data chunks, ignore everything else.
+                    var subChunkOffset = 12;
+                    var fmtOffset = -1;
+                    var dataOffset = -1;
+                    var dataSize = -1;
+
+                    while (subChunkOffset + 8 < bytes.Length && (fmtOffset < 0 || dataOffset < 0))
+                    {
+                        var subChunkSize = BitConverter.ToInt32(bytes, subChunkOffset + 4);
+
+                        if (bytes[subChunkOffset + 0] == (byte)'f' &&
+                            bytes[subChunkOffset + 1] == (byte)'m' &&
+                            bytes[subChunkOffset + 2] == (byte)'t' &&
+                            bytes[subChunkOffset + 3] == (byte)' ')
+                        {
+                            fmtOffset = subChunkOffset + 8;
+                        }
+                        else if (bytes[subChunkOffset + 0] == (byte)'d' &&
+                                    bytes[subChunkOffset + 1] == (byte)'a' &&
+                                    bytes[subChunkOffset + 2] == (byte)'t' &&
+                                    bytes[subChunkOffset + 3] == (byte)'a')
+                        {
+                            dataOffset = subChunkOffset + 8;
+                            dataSize = subChunkSize;
+                        }
+
+                        subChunkOffset += subChunkSize + 8;
+                    }
+                    if (fmtOffset >= 0 && dataOffset >= 0)
+                    {
+                        var fmt = new FormatSubChunk();
+                        Marshal.Copy(bytes, fmtOffset, new IntPtr(&fmt), FormatSubChunkSize);
+                        if (fmt.audioFormat == 1 && fmt.numChannels <= 2 && fmt.bitsPerSample % 8 == 0)
+                        { //Uncompressed PCM
+                            short[] wavData = null;
+                            switch (fmt.bitsPerSample)
+                            {
+                                case 8:
+                                    wavData = new short[dataSize / 1];
+                                    for (int i = 0; i < dataSize; i++)
+                                        wavData[i] = (short)((bytes[dataOffset + i] << 8) + short.MinValue + bytes[dataOffset + i]);
+                                    break;
+                                case 16:
+                                    wavData = new short[dataSize / 2];
+                                    fixed (short* p = &wavData[0])
+                                        Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
+                                    break;
+                                default:
+                                    if (fmt.bitsPerSample % 8 != 0)
+                                        break;
+                                    short divisor = (short)(fmt.bitsPerSample / 8);
+                                    wavData = new short[dataSize / divisor];
+                                    for (int i = 0; i < dataSize; i += divisor)
+                                        wavData[i / divisor] = (short)((bytes[dataOffset + i + (divisor - 1)] << 8) | bytes[dataOffset + i + (divisor-2)]);
+                                    break;
+                            }
+                            if (fmt.numChannels == 2)
+                            {
+                                var stereoData = wavData;
+                                wavData = new short[wavData.Length / 2];
+
+                                for (int i = 0; i < stereoData.Length; i += 2)
+                                    wavData[i / 2] = (short)((stereoData[i + 0] + stereoData[i + 1]) / 2);
+
+                                Log.LogMessage(LogSeverity.Warning, "Wave file is stereo and has been downmixed to mono.");
+                            }
+
+                            sampleRate = fmt.sampleRate;
+                            return wavData;
+                        }
+                        else
+                        {
+                            Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 8/16/24/32/40...-bit PCM mono and stereo wave files are supported.");
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        Log.LogMessage(LogSeverity.Error, "Cannot find format and data chunks. Make sure the file is a valid WAV file and is not corrupted.");
+                        return null;
+                    }
+                }
+            }
+
+            Log.LogMessage(LogSeverity.Error, "Invalid WAV file header. Make sure the file is a valid WAV file and is not corrupted.");
+            return null;
+        }
+
         public unsafe static short[] Load(string filename, out int sampleRate)
         {
             sampleRate = 0;
 
             try
             {
-                var bytes = File.ReadAllBytes(filename);
+                return LoadInternal(File.ReadAllBytes(filename), out sampleRate);
+            }
+            catch
+            {
+            }
 
-                if (bytes != null && bytes.Length >= 12)
+            return null;
+        }
+
+        public unsafe static short[] LoadFromResource(string resourceName, out int sampleRate)
+        {
+            sampleRate = 0;
+
+            try
+            {
+                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
                 {
-                    if (bytes[0] == (byte)'R' &&
-                        bytes[1] == (byte)'I' &&
-                        bytes[2] == (byte)'F' &&
-                        bytes[3] == (byte)'F' &&
-                        bytes[8] == (byte)'W' &&
-                        bytes[9] == (byte)'A' &&
-                        bytes[10] == (byte)'V' &&
-                        bytes[11] == (byte)'E')
-                    {
-                        // Look for format and data chunks, ignore everything else.
-                        var subChunkOffset = 12;
-                        var fmtOffset = -1;
-                        var dataOffset = -1;
-                        var dataSize = -1;
-
-                        while (subChunkOffset + 8 < bytes.Length && (fmtOffset < 0 || dataOffset < 0))
-                        {
-                            var subChunkSize = BitConverter.ToInt32(bytes, subChunkOffset + 4);
-
-                            if (bytes[subChunkOffset + 0] == (byte)'f' &&
-                                bytes[subChunkOffset + 1] == (byte)'m' &&
-                                bytes[subChunkOffset + 2] == (byte)'t' &&
-                                bytes[subChunkOffset + 3] == (byte)' ')
-                            {
-                                fmtOffset = subChunkOffset + 8;
-                            }
-                            else if (bytes[subChunkOffset + 0] == (byte)'d' &&
-                                     bytes[subChunkOffset + 1] == (byte)'a' &&
-                                     bytes[subChunkOffset + 2] == (byte)'t' &&
-                                     bytes[subChunkOffset + 3] == (byte)'a')
-                            {
-                                dataOffset = subChunkOffset + 8;
-                                dataSize = subChunkSize;
-                            }
-
-                            subChunkOffset += subChunkSize + 8;
-                        }
-
-                        if (fmtOffset >= 0 && dataOffset >= 0)
-                        {
-                            var fmt = new FormatSubChunk();
-                            Marshal.Copy(bytes, fmtOffset, new IntPtr(&fmt), FormatSubChunkSize);
-
-                            if (fmt.audioFormat == 1 && fmt.numChannels <= 2 && (fmt.bitsPerSample == 8 || fmt.bitsPerSample == 16 || fmt.bitsPerSample == 24))
-                            {
-                                short[] wavData = null;
-
-                                if (fmt.bitsPerSample == 8)
-                                {
-                                    wavData = new short[dataSize / 1];
-                                    for (int i = 0; i < dataSize; i++)
-                                        wavData[i] = (short)((bytes[dataOffset + i] << 8) + short.MinValue);
-                                }
-                                else if (fmt.bitsPerSample == 24)
-                                {
-                                    wavData = new short[dataSize / 3];
-                                    for (int i = 0; i < dataSize; i += 3)
-                                        wavData[i / 3] = (short)((bytes[dataOffset + i + 2] << 8) | bytes[dataOffset + i + 1]);
-                                }
-                                else
-                                {
-                                    wavData = new short[dataSize / 2];
-                                    fixed (short* p = &wavData[0])
-                                        Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
-                                }
-
-                                if (fmt.numChannels == 2)
-                                {
-                                    var stereoData = wavData;
-                                    wavData = new short[wavData.Length / 2];
-
-                                    for (int i = 0; i < stereoData.Length; i += 2)
-                                        wavData[i / 2] = (short)((stereoData[i + 0] + stereoData[i + 1]) / 2);
-
-                                    Log.LogMessage(LogSeverity.Warning, "Wave file is stereo and has been downmixed to mono.");
-                                }
-
-                                sampleRate = fmt.sampleRate;
-                                return wavData;
-                            }
-                            else
-                            {
-                                Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 16-bit, uncompressed, mono and stereo wave files are supported.");
-                                return null;
-                            }
-                        }
-                        else
-                        {
-                            Log.LogMessage(LogSeverity.Error, "Cannot find format and data chunks. Make sure the file is a valid WAV file and is not corrupted.");
-                            return null;
-                        }
-                    }
+                    var bytes = new byte[stream.Length];
+                    stream.Read(bytes);
+                    return LoadInternal(bytes, out sampleRate);
                 }
-
-                Log.LogMessage(LogSeverity.Error, "Invalid WAV file header. Make sure the file is a valid WAV file and is not corrupted.");
             }
             catch
             {

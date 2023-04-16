@@ -24,6 +24,7 @@ namespace FamiStudio
         private Dictionary<byte, string> vibratoEnvelopeNames = new Dictionary<byte, string>();
         private Dictionary<Arpeggio, string> arpeggioEnvelopeNames = new Dictionary<Arpeggio, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
+        private Dictionary<DPCMSampleMapping, int> sampleMappingIndices = new Dictionary<DPCMSampleMapping, int>();
         private string noArpeggioEnvelopeName;
 
         private int kernel = FamiToneKernel.FamiStudio;
@@ -56,13 +57,15 @@ namespace FamiStudio
         private const byte OpcodeSlide                 = 0x4f;
         private const byte OpcodeVolumeSlide           = 0x50;
         private const byte OpcodeDeltaCounter          = 0x51;
-        private const byte OpcodeVrc6SawMasterVolume   = 0x52; // VRC6 only
-        private const byte OpcodeVrc7ReleaseNote       = 0x53; // VRC7 only
-        private const byte OpcodeFdsModSpeed           = 0x54; // FDS only
-        private const byte OpcodeFdsModDepth           = 0x55; // FDS only
-        private const byte OpcodeFdsReleaseNote        = 0x56; // FDS only
-        private const byte OpcodeN163ReleaseNote       = 0x57; // N163 only
-        private const byte OpcodeEpsmReleaseNote       = 0x58; // EPSM only
+        private const byte OpcodePhaseReset            = 0x52;
+        private const byte OpcodeVrc6SawMasterVolume   = 0x53; // VRC6 only
+        private const byte OpcodeVrc7ReleaseNote       = 0x54; // VRC7 only
+        private const byte OpcodeFdsModSpeed           = 0x55; // FDS only
+        private const byte OpcodeFdsModDepth           = 0x56; // FDS only
+        private const byte OpcodeFdsReleaseNote        = 0x57; // FDS only
+        private const byte OpcodeN163ReleaseNote       = 0x58; // N163 only
+        private const byte OpcodeN163PhaseReset        = 0x59; // N163 only
+        private const byte OpcodeEpsmReleaseNote       = 0x5a; // EPSM only
 
         private const byte OpcodeSetReferenceFT2       = 0xff; // FT2
         private const byte OpcodeLoopFT2               = 0xfd; // FT2
@@ -72,6 +75,9 @@ namespace FamiStudio
 
         private const int SingleByteNoteMin = 12;
         private const int SingleByteNoteMax = SingleByteNoteMin + (OpcodeFirst - 1);
+
+        private const int MaxDPMCSampleMappingsBase = 63;
+        private const int MaxDPMCSampleMappingsExt  = 255;
 
         private bool usesFamiTrackerTempo = false;
         private bool usesVolumeTrack = false;
@@ -85,6 +91,9 @@ namespace FamiStudio
         private bool usesDelayedNotesOrCuts = false;
         private bool usesDeltaCounter = false;
         private bool usesReleaseNotes = false;
+        private bool usesMultipleDpcmBanks = false;
+        private bool usesExtendedDpcmRange = false;
+        private bool usesPhaseReset = false;
 
         public FamitoneMusicFile(int kernel, bool outputLog)
         {
@@ -114,6 +123,41 @@ namespace FamiStudio
             }
         }
 
+        private void GatherDPCMMappings()
+        {
+            if (project.UsesSamples)
+            {
+                var maxMappings = kernel == FamiToneKernel.FamiStudio ? MaxDPMCSampleMappingsExt : MaxDPMCSampleMappingsBase;
+
+                // Gather all unique mappings.
+                // TODO : Sort them by number of uses and favor the most commonly used ones for single-byte notes.
+                foreach (var inst in project.Instruments)
+                {
+                    if (inst.HasAnyMappedSamples)
+                    {
+                        foreach (var kv in inst.SamplesMapping)
+                        {
+                            if (kv.Value.Sample != null)
+                            {
+                                sampleMappingIndices.Add(kv.Value, 0);
+
+                                if (sampleMappingIndices.Count >= maxMappings)
+                                {
+                                    Log.LogMessage(LogSeverity.Error, $"Limit of {maxMappings} unique DPCM samples mappings reached. Some samples will not play correctly.");
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (kernel == FamiToneKernel.FamiStudio && sampleMappingIndices.Count > MaxDPMCSampleMappingsBase)
+                {
+                    usesExtendedDpcmRange = true;
+                }
+            }
+        }
+
         private int OutputHeader(bool separateSongs)
         {
             var size = 5;
@@ -137,15 +181,13 @@ namespace FamiStudio
             lines.Add($"\t{db} {project.Songs.Count}");
             lines.Add($"\t{dw} {ll}instruments");
 
-            if (project.UsesFdsExpansion || project.UsesN163Expansion || project.UsesVrc7Expansion || project.UsesEPSMExpansion)
+            if (project.UsesFdsExpansion || project.UsesN163Expansion || project.UsesVrc7Expansion || project.UsesEPSMExpansion || project.UsesS5BExpansion)
             {
                 lines.Add($"\t{dw} {ll}instruments_exp");
                 size += 2;
             }
 
-            if (!project.GetMinMaxMappedSampleIndex(out var sampleTableOffset, out _))                sampleTableOffset = 1;
-
-            lines.Add($"\t{dw} {ll}samples-{sampleTableOffset * (kernel == FamiToneKernel.FamiTone2 ? 3 : 4)}");
+            lines.Add($"\t{dw} {ll}samples-{(kernel == FamiToneKernel.FamiTone2 ? 3 : (usesMultipleDpcmBanks ? 5 : 4))}");
 
             for (int i = 0; i < project.Songs.Count; i++)
             {
@@ -190,6 +232,17 @@ namespace FamiStudio
             }
 
             return size;
+        }
+
+        private Envelope ProcessMixerEnvelope(Envelope env)
+        {
+            Envelope ymenv = env;
+            for (int j = 0; j < ymenv.Length; j++)
+            {
+                ymenv.Values[j] = (sbyte)((((byte)ymenv.Values[j] & 0x1)) | (((byte)ymenv.Values[j] & 0x2) << 2));
+            }
+
+            return ymenv;
         }
 
         private byte[] ProcessEnvelope(Envelope env, bool allowReleases, bool newPitchEnvelope)
@@ -296,6 +349,15 @@ namespace FamiStudio
             return data;
         }
 
+        private int DPCMMappingSort(DPCMSampleMapping m1, DPCMSampleMapping m2)
+        {
+            // Sort by name, then pitch.
+            var name = m1.Sample.Name.CompareTo(m2.Sample.Name);
+            if (name != 0)
+                return name;
+            return m1.Pitch.CompareTo(m2.Pitch);
+        }
+
         private int OutputInstruments()
         {
             // Process all envelope, make unique, etc.
@@ -355,6 +417,9 @@ namespace FamiStudio
                             break;
                         case EnvelopeType.FdsWaveform:
                             processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
+                            break;
+                        case EnvelopeType.YMMixerSettings:
+                            processed = ProcessEnvelope(ProcessMixerEnvelope(env), false, false);
                             break;
                         default:
                             processed = ProcessEnvelope(env,
@@ -476,9 +541,15 @@ namespace FamiStudio
             {
                 var instrument = project.Instruments[i];
 
+                if (!project.IsInstrumentUsedByOtherChannelThanDPCM(instrument))
+                {
+                    continue;
+                }
+
                 if (!instrument.IsFds  && 
                     !instrument.IsN163 &&
                     !instrument.IsVrc7 &&
+                    !instrument.IsS5B &&
                     !instrument.IsEpsm)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
@@ -516,6 +587,7 @@ namespace FamiStudio
             if (project.UsesFdsExpansion  || 
                 project.UsesN163Expansion || 
                 project.UsesVrc7Expansion ||
+                project.UsesS5BExpansion  ||
                 project.UsesEPSMExpansion)
             {
                 lines.Add($"{ll}instruments_exp:");
@@ -529,6 +601,7 @@ namespace FamiStudio
                     if (instrument.IsFds  || 
                         instrument.IsVrc7 ||
                         instrument.IsN163 ||
+                        instrument.IsS5B  ||
                         instrument.IsEpsm)
                     {
                         var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
@@ -555,6 +628,14 @@ namespace FamiStudio
                             lines.Add($"\t{dw} {ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves");
                             lines.Add($"\t{db} $00, $00, $00, $00");
                         }
+                        else if (instrument.IsS5B)
+                        {
+                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMNoiseFreq]]);
+                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMMixerSettings]]);
+
+                            lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
+                            lines.Add($"\t{db} $00, $00, $00, $00, $00, $00");
+                        }
                         else if (instrument.IsVrc7)
                         {
                             lines.Add($"\t{db} ${(instrument.Vrc7Patch << 4):x2}, $00");
@@ -562,9 +643,13 @@ namespace FamiStudio
                         }
                         else if (instrument.IsEpsm)
                         {
+                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMNoiseFreq]]);
+                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMMixerSettings]]);
+
+                            lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
                             lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
-                            // we can fit the first 8 bytes of data here to avoid needing to add padding
-                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Take(8).Select(r => $"${r:x2}"))}");
+                            // we can fit the first 4 bytes of data here to avoid needing to add padding
+                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Take(4).Select(r => $"${r:x2}"))}");
                         }
 
                         size += 16;
@@ -588,53 +673,12 @@ namespace FamiStudio
                     if (instrument.IsEpsm)
                     {
                         lines.Add($"{ll}instrument_epsm_extra_patch{i}:");
-                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(8).Select(r => $"${r:x2}"))}");
-                        size += 23;
+                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(4).Select(r => $"${r:x2}"))}");
+                        size += 27;
                     }
                 }
                 lines.Add("");
             }
-
-            // Write samples.
-            lines.Add($"{ll}samples:");
-
-            if (project.UsesSamples)
-            {
-                if (project.GetMinMaxMappedSampleIndex(out var minMapping, out var maxMapping))
-                {
-                    for (int i = minMapping; i <= maxMapping; i++)
-                    {
-                        var mapping = project.SamplesMapping[i];
-                        var sampleOffset = 0;
-                        var sampleSize = 0;
-                        var sampleInitialDmcValue = NesApu.DACDefaultValue;
-                        var samplePitchAndLoop = 0;
-                        var sampleName = "";
-
-                        if (mapping != null)
-                        {
-                            sampleOffset = Math.Max(0, project.GetAddressForSample(mapping.Sample, out _, out _)) >> 6;
-                            sampleSize = mapping.Sample.ProcessedData.Length >> 4;
-                            sampleName = $"({mapping.Sample.Name})";
-                            samplePitchAndLoop = mapping.Pitch | ((mapping.Loop ? 1 : 0) << 6);
-                            sampleInitialDmcValue = mapping.OverrideDmcInitialValue ? mapping.DmcInitialValueDiv2 * 2 : mapping.Sample.DmcInitialValueDiv2 * 2;
-                        }
-
-                        if (kernel == FamiToneKernel.FamiStudio)
-                        {
-                            size += 4;
-                            lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FAMISTUDIO_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2},${sampleInitialDmcValue:x2}\t;{i} {sampleName}");
-                        }
-                        else
-                        {
-                            size += 3;
-                            lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FT_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2}\t;{i} {sampleName}");
-                        }
-                    }
-                }
-            }
-
-            lines.Add("");
 
             // Write envelopes.
             int idx = 0;
@@ -695,6 +739,61 @@ namespace FamiStudio
             return size;
         }
 
+        private int OutputDPCMMappings()
+        {
+            var size = 0;
+
+            // Write samples.
+            lines.Add($"{ll}samples:");
+
+            if (project.UsesSamples)
+            {
+                var sortedUniqueMappings = sampleMappingIndices.Keys.ToArray();
+                Array.Sort(sortedUniqueMappings, DPCMMappingSort);
+
+                var noteValue = kernel == FamiToneKernel.FamiStudio ? SingleByteNoteMin + 1 : 1;
+
+                for (int i = 0; i < sortedUniqueMappings.Length; i++)
+                {
+                    var mapping = sortedUniqueMappings[i];
+
+                    var offset = project.GetSampleBankOffset(mapping.Sample);
+                    Debug.Assert(offset >= 0);
+                    var sampleOffset = Math.Max(0, offset) >> 6;
+                    var sampleSize = mapping.Sample.ProcessedData.Length >> 4;
+                    var sampleInitialDmcValue = mapping.OverrideDmcInitialValue ? mapping.DmcInitialValueDiv2 * 2 : mapping.Sample.DmcInitialValueDiv2 * 2;
+                    var samplePitchAndLoop = mapping.Pitch | ((mapping.Loop ? 1 : 0) << 6);
+                    var sampleBank = mapping.Sample.Bank;
+
+                    if (kernel == FamiToneKernel.FamiStudio)
+                    {
+                        if (usesMultipleDpcmBanks)
+                        {
+                            size += 5;
+                            lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FAMISTUDIO_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2},${sampleInitialDmcValue:x2},${sampleBank:x2} ; {i:x2} {mapping.Sample.Name} (Pitch:{mapping.Pitch})");
+                        }
+                        else
+                        {
+                            size += 4;
+                            lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FAMISTUDIO_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2},${sampleInitialDmcValue:x2} ; {i:x2} {mapping.Sample.Name} (Pitch:{mapping.Pitch})");
+                        }
+                    }
+                    else
+                    {
+                        size += 3;
+                        lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FT_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2}\t;{i} {mapping.Sample.Name} (Pitch:{mapping.Pitch})");
+                    }
+
+                    sampleMappingIndices[mapping] = noteValue & 0xff;
+                    noteValue++;
+                }
+            }
+
+            lines.Add("");
+
+            return size;
+        }
+
         private string GetGrooveAsmName(int[] groove, int paddingMode)
         {
             var name = string.Join("_", groove);
@@ -750,27 +849,41 @@ namespace FamiStudio
             return size;
         }
 
-        private int OutputSamples(string filename, string dmcFilename)
+        private int[] OutputDPCMSamples(string filename, string baseDmcFilename, int maxBankSize)
         {
-            var samplesSize = 0;
+            var bankSizes = new List<int>();
 
             if (project.UsesSamples)
             {
-                var sampleData = project.GetPackedSampleData();
+                usesMultipleDpcmBanks |= project.UsesMultipleDPCMBanks;
 
-                // TODO: Once we have a real project name, we will use that.
+                if (usesMultipleDpcmBanks)
+                {
+                    Log.LogMessage(LogSeverity.Info, "Project uses multiple DPCM banks, separate DMC files will be generated for each banks.");
+                }
+
+                var maxBank = usesMultipleDpcmBanks ? Project.MaxDPCMBanks : 1;
+
                 var path = Path.GetDirectoryName(filename);
                 var projectname = Utils.MakeNiceAsmName(project.Name);
 
-                if (dmcFilename == null)
-                    dmcFilename = Path.Combine(path, projectname + ".dmc");
+                if (baseDmcFilename == null)
+                    baseDmcFilename = Path.Combine(path, projectname + ".dmc");
 
-                File.WriteAllBytes(dmcFilename, sampleData);
+                for (var i = 0; i < maxBank; i++)
+                {
+                    var sampleData = project.GetPackedSampleData(i, maxBankSize);
 
-                samplesSize = sampleData.Length;
+                    if (sampleData.Length == 0)
+                        continue;
+
+                    var dmcFilename = usesMultipleDpcmBanks? Utils.AddFileSuffix(baseDmcFilename, $"_bank{i}") : baseDmcFilename;
+                    File.WriteAllBytes(dmcFilename, sampleData);
+                    bankSizes.Add(sampleData.Length);
+                }
             }
 
-            return samplesSize;
+            return bankSizes.ToArray();
         }
 
         private int FindEffectParam(Song song, int patternIdx, int noteIdx, int effect)
@@ -844,7 +957,7 @@ namespace FamiStudio
             if (kernel != FamiToneKernel.FamiStudio)
             {
                 // 0 = stop, 1 = C-1 ... 63 = D-6
-                if (value != 0 && channel != ChannelType.Noise) value = Math.Max(1, value - 12); 
+                if (value != 0 && channel != ChannelType.Noise && channel != ChannelType.Dpcm) value = Math.Max(1, value - 12); 
                 return (byte)(((value & 63) << 1) | numNotes);
             }
             else
@@ -854,19 +967,12 @@ namespace FamiStudio
                 {
                     Debug.Assert(Note.IsMusicalNote(value));
 
-                    if (channel == ChannelType.Dpcm)
-                    {
-                        value = Utils.Clamp(value - Note.DPCMNoteMin, 1, 63);
-                    }
-                    else
-                    {
-                        value = Utils.Clamp(value, 1, 96);
+                    value = Utils.Clamp(value, 1, 96);
 
-                        if (singleByte)
-                        {
-                            Debug.Assert(value > SingleByteNoteMin && value <= SingleByteNoteMax);
-                            value -= SingleByteNoteMin;
-                        }
+                    if (singleByte)
+                    {
+                        Debug.Assert(value > SingleByteNoteMin && value <= SingleByteNoteMax);
+                        value -= SingleByteNoteMin;
                     }
                 }
 
@@ -893,7 +999,7 @@ namespace FamiStudio
                 var sawVolumeChanged = false;
                 var lastVolume = 15;
 
-	            songData.Add($"{ll}song{songIdx}ch{c}:");
+                songData.Add($"{ll}song{songIdx}ch{c}:");
 
                 if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
@@ -947,9 +1053,9 @@ namespace FamiStudio
                         }
                     }
 
-                    var patternLength = song.GetPatternLength(p); 
+                    var patternLength = song.GetPatternLength(p);
 
-                    for (var it = pattern.GetDenseNoteIterator(0, patternLength); !it.Done; )
+                    for (var it = pattern.GetDenseNoteIterator(0, patternLength); !it.Done;)
                     {
                         var time = it.CurrentTime;
                         var note = it.CurrentNote;
@@ -997,7 +1103,7 @@ namespace FamiStudio
                             {
                                 var location = new NoteLocation(p, time);
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizeNtsc, out var _);
-                                channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizePal,  out var _);
+                                channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizePal, out var _);
 
                                 if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
@@ -1034,6 +1140,15 @@ namespace FamiStudio
                                 songData.Add($"${OpcodeClearPitchEnvOverride:x2}+");
 
                             usesVibrato = true;
+                        }
+
+                        if (note.HasPhaseReset)
+                        {
+                            if (channel.IsN163Channel)
+                                songData.Add($"${OpcodeN163PhaseReset:x2}+");
+                            else
+                                songData.Add($"${OpcodePhaseReset:x2}+");
+                            usesPhaseReset = true;
                         }
 
                         if (note.IsMusical)
@@ -1110,7 +1225,7 @@ namespace FamiStudio
                         if (note.IsValid)
                         {
                             // Instrument change.
-                            if (note.IsMusical && note.Instrument != null)
+                            if (note.IsMusical && note.Instrument != null && !channel.IsDpcmChannel)
                             {
                                 if (note.Instrument != instrument)
                                 {
@@ -1128,7 +1243,7 @@ namespace FamiStudio
                                     songData.Add($"${(byte)(0x80 | (idx << 1)):x2}+");
                                     instrument = note.Instrument;
                                 }
-                                else if(!note.HasAttack)
+                                else if (!note.HasAttack)
                                 {
                                     // TODO: Remove note entirely after a slide that matches the next note with no attack.
                                     songData.Add($"${OpcodeDisableAttack:x2}+");
@@ -1161,12 +1276,12 @@ namespace FamiStudio
                             if (note.IsSlideNote)
                             {
                                 var noteTableNtsc = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumN163Channels);
-                                var noteTablePal  = NesApu.GetNoteTableForChannelType(channel.Type, true,  song.Project.ExpansionNumN163Channels);
+                                var noteTablePal = NesApu.GetNoteTableForChannelType(channel.Type, true, song.Project.ExpansionNumN163Channels);
 
                                 var found = true;
                                 var location = new NoteLocation(p, time);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
-                                found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTablePal,  true,  true, out _, out int stepSizePal,  out _);
+                                found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTablePal, true, true, out _, out int stepSizePal, out _);
 
                                 if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
@@ -1200,7 +1315,7 @@ namespace FamiStudio
                                     switch (channel.Expansion)
                                     {
                                         case ExpansionType.Vrc7: opcode = OpcodeVrc7ReleaseNote; break;
-                                        case ExpansionType.Fds:  opcode = OpcodeFdsReleaseNote;  break;
+                                        case ExpansionType.Fds: opcode = OpcodeFdsReleaseNote; break;
                                         case ExpansionType.N163: opcode = OpcodeN163ReleaseNote; break;
                                         case ExpansionType.EPSM: opcode = OpcodeEpsmReleaseNote; break;
                                     }
@@ -1210,21 +1325,32 @@ namespace FamiStudio
                                 }
                                 else
                                 {
-                                    var requiresExtendedNote = kernel == FamiToneKernel.FamiStudio && note.IsMusical && (note.Value <= SingleByteNoteMin || note.Value > SingleByteNoteMax);
+                                    var noteValue = (int)note.Value;
 
-                                    // The valid range of DPCM sample should perfectly match the single-byte note range.
-                                    Debug.Assert(kernel != FamiToneKernel.FamiStudio || !channel.IsDpcmChannel || !requiresExtendedNote);
+                                    if (channel.IsDpcmChannel && note.IsMusical)
+                                    {
+                                        noteValue = kernel == FamiToneKernel.FamiStudio ? SingleByteNoteMin + 1 : 1;
+
+                                        if (note.Instrument != null)
+                                        {
+                                            var mapping = note.Instrument.GetDPCMMapping(note.Value);
+                                            if (mapping != null)
+                                                sampleMappingIndices.TryGetValue(mapping, out noteValue);
+                                        }
+                                    }
+
+                                    var requiresExtendedNote = kernel == FamiToneKernel.FamiStudio && note.IsMusical && (noteValue <= SingleByteNoteMin || noteValue > SingleByteNoteMax);
 
                                     // We encode very common notes [C1 - G7] with a single bytes and emit a special
                                     // "extended note" opcode when it falls outside of that range.
                                     if (requiresExtendedNote)
                                     {
                                         songData.Add($"${OpcodeExtendedNote:x2}+");
-                                        songData.Add($"${EncodeNoteValue(c, note.Value, false):x2}*");
+                                        songData.Add($"${EncodeNoteValue(c, noteValue, false):x2}*");
                                     }
                                     else
                                     {
-                                        songData.Add($"${EncodeNoteValue(c, note.Value, true, numNotes):x2}+*");
+                                        songData.Add($"${EncodeNoteValue(c, noteValue, true, numNotes):x2}+*");
                                     }
                                 }
                             }
@@ -1258,6 +1384,7 @@ namespace FamiStudio
                                     note.HasNoteDelay    ||
                                     note.HasCutDelay     ||
                                     note.HasDeltaCounter ||
+                                    note.HasPhaseReset   ||
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
                                 {
                                     break;
@@ -1495,6 +1622,8 @@ namespace FamiStudio
             // Get raw uncompressed song data.
             var songData = GetSongData(song, songIdx, speedChannel);
 
+            Log.LogMessage(LogSeverity.Debug, $"Uncompressed song data size {songData.Count} bytes.");
+
             // Try compression with various threshold for jump to ref.
             var bestSize = int.MaxValue;
             var bestMinNotesForJump = 0;
@@ -1502,9 +1631,8 @@ namespace FamiStudio
             for (int i = 8; i <= 40; i++)
             {
                 var size = CompressAndOutputSongData(songData, songIdx, i, false);
-#if DEBUG
-                Log.LogMessage(LogSeverity.Info, $"Compression with a match of {i} notes = {size} bytes.");
-#endif
+
+                Log.LogMessage(LogSeverity.Debug, $"Compression with a match of {i} notes = {size} bytes.");
 
                 // Equal is intentional here, if we find same size, but with larger matches, 
                 // it will likely waste less CPU doing a bunch of jumps.
@@ -1574,6 +1702,7 @@ namespace FamiStudio
                                 note.HasNoteDelay    = false;
                                 note.HasCutDelay     = false;
                                 note.HasDeltaCounter = false;
+                                note.HasPhaseReset   = false;
                                 note.Arpeggio        = null;
                             }
                             else
@@ -1622,6 +1751,11 @@ namespace FamiStudio
                     }
                 }
 
+                foreach (var sample in project.Samples)
+                {
+                    sample.Bank = 0;
+                }
+
                 project.SetExpansionAudioMask(ExpansionType.NoneMask);
             }
         }
@@ -1654,6 +1788,9 @@ namespace FamiStudio
             RemoveUnsupportedFeatures();
             project.DeleteUnusedInstruments();
 
+            foreach (var song in project.Songs)
+                song.RemoveDpcmNotesWithoutMapping();
+
             if (project.UsesFamiStudioTempo)
             {
                 foreach (var song in project.Songs)
@@ -1664,10 +1801,11 @@ namespace FamiStudio
             {
                 Debug.Assert(kernel == FamiToneKernel.FamiStudio);
 
+                // HACK : We always pretend to have 8 channels to keep the driver code simple.
                 if (project.UsesEPSMExpansion)
-                    project.SetExpansionAudioMask(ExpansionType.AllMask, 8);
+                    project.SetExpansionAudioMask(ExpansionType.AllMask, 8, false);
                 else
-                    project.SetExpansionAudioMask(ExpansionType.AllMask & ~(ExpansionType.EPSMMask), 8);
+                    project.SetExpansionAudioMask(ExpansionType.AllMask & ~(ExpansionType.EPSMMask), 8, false);
             }
         }
 
@@ -1700,17 +1838,22 @@ namespace FamiStudio
             File.WriteAllLines(includeFilename, includeLines.ToArray());
         }
 
-        public bool Save(Project originalProject, int[] songIds, int format, bool separateSongs, string filename, string dmcFilename, string includeFilename, int machine)
+        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, bool forceMultipleBanks, string filename, string dmcFilename, string includeFilename, int machine)
         {
             this.machine = machine;
+            this.usesMultipleDpcmBanks |= forceMultipleBanks;
+
             SetupProject(originalProject, songIds);
             SetupFormat(format);
+            
             CleanupEnvelopes();
+            GatherDPCMMappings();
 
-            var dmcSize    = OutputSamples(filename, dmcFilename);
-            var headerSize = OutputHeader(separateSongs);
-            var instSize   = OutputInstruments();
-            var tempoSize  = OutputTempoEnvelopes();
+            var dmcSizes     = OutputDPCMSamples(filename, dmcFilename, maxDpcmBankSize);
+            var headerSize   = OutputHeader(separateSongs);
+            var instSize     = OutputInstruments();
+            var mappingsSize = OutputDPCMMappings();
+            var tempoSize    = OutputTempoEnvelopes();
 
             if (log)
             {
@@ -1741,7 +1884,13 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, $"Total assembly file size: {headerSize + instSize + tempoSize + totalSongsSize} bytes.");
 
                 if (project.UsesSamples)
-                    Log.LogMessage(LogSeverity.Info, $"Total dmc file size: {dmcSize} bytes.");
+                {
+                    for (int i = 0; i < dmcSizes.Length; i++)
+                    {
+                        if (dmcSizes[i] != 0)
+                            Log.LogMessage(LogSeverity.Info, $"DMC bank {i} file size: {dmcSizes[i]} bytes.");
+                    }
+                }
 
                 if (kernel == FamiToneKernel.FamiStudio)
                 {
@@ -1786,11 +1935,17 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Duty Cycle effect is used, you must set FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1.");
                     if (usesDeltaCounter)
                         Log.LogMessage(LogSeverity.Info, "DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.");
+                    if (usesPhaseReset)
+                        Log.LogMessage(LogSeverity.Info, "Phase Reset effect is used, you must set FAMISTUDIO_USE_PHASE_RESET = 1.");
+                    if (usesMultipleDpcmBanks)
+                        Log.LogMessage(LogSeverity.Info, "Multiple DPCM banks are used, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
+                    else if (usesExtendedDpcmRange)
+                        Log.LogMessage(LogSeverity.Info, $"More than {MaxDPMCSampleMappingsBase} sample mappings are used. You must set FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1.");
                 }
             }
 
 #if DEBUG
-            Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + tempoSize + totalSongsSize);
+            Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + mappingsSize + tempoSize + totalSongsSize);
 #endif
 
             return true;
@@ -1932,13 +2087,13 @@ namespace FamiStudio
         }
 
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
-        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmOffset, int machine)
+        public byte[] GetBytes(Project project, int[] songIds, int songOffset, bool forceMultipleBanks, int dpcmBankSize, int dpcmOffset, int machine)
         {
             var tempFolder = Utils.GetTemporaryDiretory();
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, AssemblyFormat.ASM6, false, tempAsmFilename, tempDmcFilename, null, machine);
+            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, forceMultipleBanks, tempAsmFilename, tempDmcFilename, null, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }

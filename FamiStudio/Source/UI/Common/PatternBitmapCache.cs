@@ -134,7 +134,7 @@ namespace FamiStudio
                     var time1 = musicalNotes[i].Item1;
                     var time2 = (int)Math.Min(time1 + Math.Ceiling(note.Duration * scaleX), i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : patternCacheSizeX);
 
-                    DrawPatternBitmapNote(project, time1, time2, note, patternCacheSizeX, clampedPatternCacheSizeY, noteSizeY, minNote, maxNote, scaleY, pattern.ChannelType == ChannelType.Dpcm, data);
+                    DrawPatternBitmapNote(project, time1, time2, note, patternCacheSizeX, clampedPatternCacheSizeY, noteSizeY, minNote, maxNote, scaleY, data);
                 }
             }
 
@@ -257,19 +257,13 @@ namespace FamiStudio
                 InitCacheRows(tex);
         }
 
-        private void DrawPatternBitmapNote(Project project, int t0, int t1, Note note, int patternSizeX, int patternSizeY, int noteSizeY, int minNote, int maxNote, float scaleY, bool dpcm, int[] data)
+        private void DrawPatternBitmapNote(Project project, int t0, int t1, Note note, int patternSizeX, int patternSizeY, int noteSizeY, int minNote, int maxNote, float scaleY, int[] data)
         {
             var y = Math.Min((int)Math.Round((note.Value - minNote) / (float)(maxNote - minNote) * scaleY * patternSizeY), patternSizeY - noteSizeY);
             var instrument = note.Instrument;
 
             var color = Theme.LightGreyColor1;
-            if (dpcm)
-            {
-                var mapping = project.GetDPCMMapping(note.Value);
-                if (mapping != null)
-                    color = mapping.Sample.Color;
-            }
-            else if (instrument != null)
+            if (instrument != null)
             {
                 color = instrument.Color;
             }
@@ -298,7 +292,7 @@ namespace FamiStudio
 
             // Create new texture.
             var texture = new CacheTexture();
-            texture.bmp  = graphics.CreateEmptyBitmap(PatternCacheTextureSize, PatternCacheTextureSize, true, false);
+            texture.bmp  = graphics.CreateEmptyBitmap(PatternCacheTextureSize, PatternCacheTextureSize, TextureFormat.Rgba, false);
             InitCacheRows(texture);
             textureIdx = cacheTextures.Count;
             cacheTextures.Add(texture);

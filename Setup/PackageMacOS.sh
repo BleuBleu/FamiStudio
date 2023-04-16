@@ -8,12 +8,18 @@ set -x
 # IMPORTANT : This does not update info.plist! Still needs to be done manually.
 
 # Build
-msbuild ../FamiStudio/FamiStudio.Mac.csproj /t:Rebuild /p:Configuration=Release /verbosity:quiet
+dotnet clean -c:Release ../FamiStudio/FamiStudio.Mac.csproj
+dotnet build -c:Release ../FamiStudio/FamiStudio.Mac.csproj
 
 # Copy binaries to package.
-cp ../FamiStudio/bin/Release/*.exe ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Release/*.dylib ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Release/FamiStudio.pdb ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net6.0/*.dll ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net6.0/*.json ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net6.0/*.dylib ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net6.0/FamiStudio.pdb ./FamiStudio.app/Contents/MacOS/
+
+# Localization
+rm -f ./FamiStudio.app/Contents/MacOS/Localization/*.ini
+cp ../FamiStudio/Localization/*.ini ./FamiStudio.app/Contents/MacOS/Localization/
 
 version=`cat Version.txt`
 filename=FamiStudio$version-MacOS.zip
@@ -25,6 +31,7 @@ mkdir tmp
 
 # Create a package
 cp -R "Demo Songs" tmp/
+cp -R "Demo Instruments" tmp/
 cp -R FamiStudio.app tmp/
 cd tmp
 # Using ditto to preserve permissions and xattr.

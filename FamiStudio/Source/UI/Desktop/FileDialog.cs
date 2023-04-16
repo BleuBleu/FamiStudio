@@ -112,12 +112,12 @@ namespace FamiStudio
             var widthNoMargin = width - margin * 2;
             var y = titleBarSizeY + margin;
 
-            buttonComputer = new Button(this, "FileComputer", "Computer");
+            buttonComputer = new Button("FileComputer", "Computer");
             buttonComputer.Move(margin, y, 100, pathButtonSizeY); 
             buttonComputer.Click += ButtonComputer_Click;
             y += buttonComputer.Height + margin;
 
-            gridFiles = new Grid(this, new[] {
+            gridFiles = new Grid(new[] {
                 new ColumnDesc("",     0.0f, ColumnType.Image),
                 new ColumnDesc("Name", 0.7f, ColumnType.Label) { Ellipsis = true },
                 new ColumnDesc("Date", 0.3f, ColumnType.Label) }, 16, true);
@@ -128,7 +128,7 @@ namespace FamiStudio
             gridFiles.HeaderCellClicked += GridFiles_HeaderCellClicked;
             y += gridFiles.Height + margin;
 
-            textFile = new TextBox(this, "");
+            textFile = new TextBox("");
             textFile.Move(margin, y, widthNoMargin / 2, textFile.Height);
 
             if (mode != Mode.Save)
@@ -138,19 +138,19 @@ namespace FamiStudio
                     textFile.DisabledColor = textFile.ForeColor;
             }
 
-            dropDownType = new DropDown(this, descriptions, 0);
+            dropDownType = new DropDown( descriptions, 0);
             dropDownType.Move(margin * 2 + textFile.Width, y, widthNoMargin - margin - textFile.Width, textFile.Height);
             dropDownType.SelectedIndexChanged += DropDownType_SelectedIndexChanged;
             dropDownType.Enabled = mode != Mode.Folder;
             y += textFile.Height + margin;
 
-            buttonYes = new Button(this, "Yes", null);
+            buttonYes = new Button("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(buttonSize, buttonSize);
             buttonYes.Move(Width - buttonSize * 2 - margin * 2, y);
             buttonYes.ToolTip = "Accept";
 
-            buttonNo = new Button(this, "No", null);
+            buttonNo = new Button("No", null); 
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(buttonSize, buttonSize);
             buttonNo.Move(Width - buttonSize - margin, y);
@@ -192,7 +192,7 @@ namespace FamiStudio
                     Path.DirectorySeparatorChar,
                     Path.AltDirectorySeparatorChar}, StringSplitOptions.RemoveEmptyEntries);
 
-                var tempButton = new Button(this, "FileFolder", "");
+                var tempButton = new Button("FileFolder", "");
                 var buttonSizes = new int[splits.Length];
                 var totalSize = 0;
 
@@ -200,9 +200,11 @@ namespace FamiStudio
                 for (int i = 0; i < splits.Length; i++)
                 {
                     tempButton.Text = TrimLongFilename(splits[i]);
+                    AddControl(tempButton);
                     tempButton.AutosizeWidth();
                     buttonSizes[i] = tempButton.Width;
                     totalSize += tempButton.Width + (i > 0 ? margin : 0);
+                    RemoveControl(tempButton);
                 }
 
                 var maxWidth = width - margin * 3 - buttonComputer.Width;
@@ -233,14 +235,14 @@ namespace FamiStudio
 
                 for (int i = startButtonIndex; i < splits.Length; i++)
                 {
-                    var button = new Button(this, "FileFolder", TrimLongFilename(splits[i]));
+                    var button = new Button("FileFolder", TrimLongFilename(splits[i]));
+                    AddControl(button);
                     button.Move(x, margin + titleBarSizeY, 100, pathButtonSizeY);
                     button.AutosizeWidth();
                     button.Click += Button_Click;
                     buttonsPath.Add(button);
                     buttonPathPaths.Add(BuildPath(splits, i));
                     x += button.Width + margin;
-                    AddControl(button);
                 }
             }
         }

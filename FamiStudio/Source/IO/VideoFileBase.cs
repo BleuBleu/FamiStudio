@@ -33,11 +33,11 @@ namespace FamiStudio
         protected VideoEncoder videoEncoder;
         protected VideoChannelState[] channelStates;
         protected VideoFrameMetadata[] metadata;
-        protected FontRenderResources fontResources;
+        protected Fonts fonts;
         protected Bitmap watermark;
 
         // TODO : This is is very similar to Oscilloscope.cs, unify eventually...
-        protected float[,] UpdateOscilloscope(VideoChannelState state, int frameIndex)
+        protected float[] UpdateOscilloscope(VideoChannelState state, int frameIndex)
         {
             var meta = metadata[frameIndex];
             var newTrigger = meta.channelData[state.songChannelIndex].trigger;
@@ -75,15 +75,15 @@ namespace FamiStudio
             // have at the moment are very low EPSM notes with periods about 8 frames.
             Debug.Assert(state.holdFrameCount < 10);
 
-            var vertices = new float[oscRenderWindowSize, 2];
+            var vertices = new float[oscRenderWindowSize * 2];
             var startIdx = newTrigger >= 0 ? newTrigger : state.lastTrigger;
 
             for (int i = 0, j = startIdx - oscRenderWindowSize / 2; i < oscRenderWindowSize; i++, j++)
             {
                 var samp = j < 0 || j >= state.wav.Length ? 0 : state.wav[j];
 
-                vertices[i, 0] = i / (float)(oscRenderWindowSize - 1);
-                vertices[i, 1] = Utils.Clamp(samp / 32768.0f * state.oscScale, -1.0f, 1.0f);
+                vertices[i * 2 + 0] = i / (float)(oscRenderWindowSize - 1);
+                vertices[i * 2 + 1] = Utils.Clamp(samp / 32768.0f * state.oscScale, -1.0f, 1.0f);
             }
         
             if (newTrigger >= 0)
@@ -188,7 +188,11 @@ namespace FamiStudio
 
             // Apply a square root to keep other channels proportional, but still decent size.
             for (int i = 0; i < channelStates.Length; i++)
-                channelStates[i].oscScale = maxAbsSamples[i] == 0 ? 1.0f : (float)Math.Sqrt(globalMaxAbsSample / (float)maxAbsSamples[i]) * (32768.0f / globalMaxAbsSample);
+                channelStates[i].oscScale = maxAbsSamples[i] == 0 ? 1.0f : (float)MathF.Sqrt(globalMaxAbsSample / (float)maxAbsSamples[i]) * (32768.0f / globalMaxAbsSample);
+
+            // HACK : The scaling is not longer tied to the graphics, so we need to temporarely override it.
+            DpiScaling.ForceUnitScaling = true;
+            Platform.AcquireGLContext();
 
             // Create graphics resources.
             videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, true);
@@ -196,11 +200,12 @@ namespace FamiStudio
             if (videoGraphics == null)
             {
                 Log.LogMessage(LogSeverity.Error, "Error initializing off-screen graphics, aborting.");
+                DpiScaling.ForceUnitScaling = false;
                 return false;
             }
 
-            fontResources = new FontRenderResources(videoGraphics);
-            watermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
+            fonts = new Fonts(videoGraphics);
+            watermark = videoGraphics.CreateBitmapFromResource("FamiStudio.Resources.Misc.VideoWatermark");
 
             // Generate metadata
             Log.LogMessage(LogSeverity.Info, "Generating video metadata...");
@@ -210,16 +215,6 @@ namespace FamiStudio
             oscRenderWindowSize = (int)(oscFrameWindowSize * window);
 
             return true;
-        }
-
-        protected void ConditionalFlushCommandList(ref CommandList cmd)
-        {
-            if (cmd.IsAlmostFull())
-            {
-                var g = cmd.Graphics;
-                g.DrawCommandList(cmd);
-                cmd = g.CreateCommandList();
-            }
         }
 
         protected bool LaunchEncoderLoop(Action<int> body, Action cleanup = null)
@@ -251,17 +246,12 @@ namespace FamiStudio
 
                     var frame = metadata[f];
 
-                    videoGraphics.BeginDrawFrame();
-                    videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
+                    videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), Theme.DarkGreyColor2);
 
                     body(f);
 
                     // Watermark.
-                    var cmd = videoGraphics.CreateCommandList();
-                    cmd.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
-                    videoGraphics.DrawCommandList(cmd);
-
-                    videoGraphics.EndDrawControl();
+                    videoGraphics.OverlayCommandList.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
                     videoGraphics.EndDrawFrame();
 
                     // Readback
@@ -282,7 +272,7 @@ namespace FamiStudio
             finally
 #endif
             {
-                fontResources.Dispose();
+                fonts.Dispose();
                 watermark.Dispose();
                 videoGraphics.Dispose();
                 foreach (var c in channelStates)
@@ -291,6 +281,7 @@ namespace FamiStudio
                 cleanup?.Invoke();
                 channelStates = null;
                 metadata = null;
+                DpiScaling.ForceUnitScaling = false;
             }
 
             GC.Collect();
@@ -303,7 +294,7 @@ namespace FamiStudio
             var suffix = large ? "@2x" : "";
 
             foreach (var s in channelStates)
-                s.icon = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[s.channel.Type] + suffix);
+                s.icon = videoGraphics.CreateBitmapFromResource($"FamiStudio.Resources.Atlas.{ChannelType.Icons[s.channel.Type]}{suffix}");
         }
 
         protected void ExtendSongForLooping(Song song, int loopCount)

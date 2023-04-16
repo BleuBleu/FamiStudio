@@ -393,6 +393,11 @@ namespace FamiStudio
                 channel.DeleteEmptyNotes();
         }
 
+        public void RemoveDpcmNotesWithoutMapping()
+        {
+            channels[ChannelType.Dpcm].RemoveDpcmNotesWithoutMapping();
+        }
+
         public void DeleteNotesPastMaxInstanceLength()
         {
             foreach (var channel in channels)
@@ -556,9 +561,9 @@ namespace FamiStudio
                     {
                         foreach (var note in pattern.Notes.Values)
                         {
-                            if (note.IsValid && !note.IsStop)
+                            if (note.IsMusical && note.Instrument != null)
                             {
-                                var mapping = project.GetDPCMMapping(note.Value);
+                                var mapping = note.Instrument.GetDPCMMapping(note.Value);
 
                                 if (mapping != null)
                                 {
@@ -841,7 +846,7 @@ namespace FamiStudio
                         {
                             var note = kv.Value;
 
-                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument) || channel.Type == ChannelType.Dpcm)
+                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument))
                                 note.Instrument = null;
                         }
                     }

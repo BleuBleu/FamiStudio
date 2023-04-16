@@ -2,25 +2,31 @@
 ; Based off Brad's (rainwarrior.ca) CA65 template, both the regular and FDS version.
 
 FAMISTUDIO_VERSION_MAJOR  = 4
-FAMISTUDIO_VERSION_MINOR  = 0
+FAMISTUDIO_VERSION_MINOR  = 1
 FAMISTUDIO_VERSION_HOTFIX = 0
 
 ; Enable all features.
-FAMISTUDIO_CFG_EXTERNAL          = 1
-FAMISTUDIO_CFG_SMOOTH_VIBRATO    = 1
-FAMISTUDIO_CFG_DPCM_SUPPORT      = 1
-FAMISTUDIO_CFG_EQUALIZER         = 1
+FAMISTUDIO_CFG_EXTERNAL            = 1
+FAMISTUDIO_CFG_SMOOTH_VIBRATO      = 1
+FAMISTUDIO_CFG_DPCM_SUPPORT        = 1
+FAMISTUDIO_CFG_EQUALIZER           = 1
 
-FAMISTUDIO_USE_VOLUME_TRACK      = 1
-FAMISTUDIO_USE_VOLUME_SLIDES     = 1
-FAMISTUDIO_USE_PITCH_TRACK       = 1
-FAMISTUDIO_USE_SLIDE_NOTES       = 1
-FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1
-FAMISTUDIO_USE_VIBRATO           = 1
-FAMISTUDIO_USE_ARPEGGIO          = 1
-FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
-FAMISTUDIO_USE_DELTA_COUNTER     = 1
-FAMISTUDIO_USE_RELEASE_NOTES     = 1
+FAMISTUDIO_USE_VOLUME_TRACK        = 1
+FAMISTUDIO_USE_VOLUME_SLIDES       = 1
+FAMISTUDIO_USE_PITCH_TRACK         = 1
+FAMISTUDIO_USE_SLIDE_NOTES         = 1
+FAMISTUDIO_USE_NOISE_SLIDE_NOTES   = 1
+FAMISTUDIO_USE_VIBRATO             = 1
+FAMISTUDIO_USE_ARPEGGIO            = 1
+FAMISTUDIO_USE_DUTYCYCLE_EFFECT    = 1
+FAMISTUDIO_USE_DELTA_COUNTER       = 1
+FAMISTUDIO_USE_RELEASE_NOTES       = 1
+FAMISTUDIO_USE_PHASE_RESET         = 1
+
+.ifndef FAMISTUDIO_EXP_FDS
+    FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1
+    FAMISTUDIO_USE_DPCM_BANKSWITCHING  = 1
+.endif
 
 .ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
     FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1
@@ -75,10 +81,8 @@ INES_MAPPER = 85 ; VRC7 mapper.
 INES_MAPPER = 69 ; FME7 mapper.
 .elseif FAMISTUDIO_EXP_N163
 INES_MAPPER = 19 ; N163 mapper.
-.elseif FAMISTUDIO_EXP_MMC5
-INES_MAPPER = 5  ; MMC5 mapper.
 .else
-INES_MAPPER = 4  ; MMC3 mapper.
+INES_MAPPER = 5  ; MMC5 mapper.
 .endif
 
 INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
@@ -246,14 +250,17 @@ FILE_COUNT = 6
 ; Will be overwritten by FamiStudio.
 ; General info about the project (author, etc.), 64-bytes.
 max_song:        .byte $00
-dpcm_bank:       .byte $00 ; Index of the bank to load at $c000
+first_dpcm_bank: .byte $00 ; Index of the first DPCM bank. 
 fds_file_count:  .byte $06 ; Number of actual file on the disk.
 padding:         .res 5    ; reserved
 project_name:    .res 28   ; Project name
 project_author:  .res 28   ; Project author
 
-; Up to 12 songs for now, 384 bytes + 64 bytes header = 448 bytes.
-MAX_SONGS = 12
+.if FAMISTUDIO_EXP_FDS
+MAX_SONGS = 12 ; 12 * 32 bytes song header + 64 bytes header = 448 bytes.
+.else
+MAX_SONGS = 48 ; 48 * 32 bytes song header + 64 bytes header = 1600 bytes.
+.endif
 
 ; Will be overwritten by FamiStudio.
 ; Each entry in the song table is 32-bytes:
@@ -353,27 +360,6 @@ default_palette:
     VRC7_CHR_SELECT_1800 = $D000
     VRC7_CHR_SELECT_1C00 = $D008
 
-.elseif FAMISTUDIO_EXP_MMC5
-
-    MMC5_PRG_MODE = $5100
-    MMC5_CHR_MODE = $5101
-
-    MMC5_PRG_SELECT_8000 = $5114
-    MMC5_PRG_SELECT_A000 = $5115
-    MMC5_PRG_SELECT_C000 = $5116
-    MMC5_PRG_SELECT_E000 = $5117
-
-    MMC5_CHR_SELECT_0000 = $5120
-    MMC5_CHR_SELECT_0400 = $5121
-    MMC5_CHR_SELECT_0800 = $5122
-    MMC5_CHR_SELECT_0C00 = $5123
-    MMC5_CHR_SELECT_1000 = $5124
-    MMC5_CHR_SELECT_1400 = $5125
-    MMC5_CHR_SELECT_1800 = $5126
-    MMC5_CHR_SELECT_1C00 = $5127
-
-    MMC5_ROM_FLAGS = $80
-
 .elseif FAMISTUDIO_EXP_N163
 
     N163_CHR_SELECT_0000 = $8000
@@ -396,19 +382,24 @@ default_palette:
 
 .elseif !FAMISTUDIO_EXP_FDS
 
-    MMC3_BANK_SELECT     = $8000
-    MMC3_BANK_DATA       = $8001
+    MMC5_PRG_MODE = $5100
+    MMC5_CHR_MODE = $5101
 
-    ; inital values for the mmc3_banks to load at startup.
-    init_mmc3_banks:
-        .byte 0 ; CHR at 0 (2KB)
-        .byte 2 ; CHR at 800 (2KB)
-        .byte 4 ; CHR at 1000 (1KB)
-        .byte 5 ; CHR at 1400 (1KB)
-        .byte 6 ; CHR at 1800 (1KB)
-        .byte 7 ; CHR at 1C00 (1KB)
-        .byte 0 ; SONG data at 8000
-        .byte 1 ; SONG data at A000
+    MMC5_PRG_SELECT_8000 = $5114
+    MMC5_PRG_SELECT_A000 = $5115
+    MMC5_PRG_SELECT_C000 = $5116
+    MMC5_PRG_SELECT_E000 = $5117
+
+    MMC5_CHR_SELECT_0000 = $5120
+    MMC5_CHR_SELECT_0400 = $5121
+    MMC5_CHR_SELECT_0800 = $5122
+    MMC5_CHR_SELECT_0C00 = $5123
+    MMC5_CHR_SELECT_1000 = $5124
+    MMC5_CHR_SELECT_1400 = $5125
+    MMC5_CHR_SELECT_1800 = $5126
+    MMC5_CHR_SELECT_1C00 = $5127
+
+    MMC5_ROM_FLAGS = $80
 
 .endif
 
@@ -491,7 +482,7 @@ default_palette:
         lda #7
         sta N163_CHR_SELECT_1C00
 
-    .elseif ::FAMISTUDIO_EXP_MMC5
+    .else
 
         lda #3
         sta MMC5_PRG_MODE
@@ -515,24 +506,6 @@ default_palette:
         sta MMC5_CHR_SELECT_1800
         lda #7
         sta MMC5_CHR_SELECT_1C00
-
-    .else
-
-        ; MMC3 setup.
-        lda #00 ; vertical mirroring
-        sta $a000
-        lda #$00 ; disable wram, not needed for such a simple demo.
-        sta $a001
-
-        ; Setup initial MMC3 banks.
-        ldx #0
-        bank_loop:  
-            lda init_mmc3_banks, x
-            stx MMC3_BANK_SELECT
-            sta MMC3_BANK_DATA
-            inx
-            cpx #8
-            bne bank_loop
 
     .endif
 
@@ -961,16 +934,17 @@ version_text: ;
     text_ptr = p0
 
     ; each song table entry is 32-bytes.
+    ldy #0
+    sty song_ptr+1
     asl
+    asl ; Less than 64 max song, first 2 shift cant overflow
     asl
+    rol song_ptr+1
     asl
+    rol song_ptr+1
     asl
-    asl
-    tay
+    rol song_ptr+1
     sta song_ptr+0
-    lda #0
-    adc #0
-    sta song_ptr+1
 
     lda #<song_table
     adc song_ptr+0
@@ -1037,7 +1011,7 @@ load_success:
         stx VRC7_PRG_SELECT_8000
         inx
         stx VRC7_PRG_SELECT_A000
-        ldx dpcm_bank
+        ldx first_dpcm_bank
         stx VRC7_PRG_SELECT_C000
 
     .elseif ::FAMISTUDIO_EXP_S5B
@@ -1055,7 +1029,7 @@ load_success:
         sta FME7_PARAM
         inx        
         stx FME7_COMMAND
-        lda dpcm_bank
+        lda first_dpcm_bank
         sta FME7_PARAM     
 
     .elseif ::FAMISTUDIO_EXP_N163
@@ -1066,10 +1040,20 @@ load_success:
         clc
         adc #1
         sta N163_PRG_SELECT_A000
-        lda dpcm_bank
+        lda first_dpcm_bank
         sta N163_PRG_SELECT_C000
 
-    .elseif ::FAMISTUDIO_EXP_MMC5
+    .elseif ::FAMISTUDIO_EXP_VRC6
+
+        ; VRC6 uses 16KB pages, so just one page to map.
+        ldy #28
+        lda (song_ptr), y
+        sta VRC6_PRG_SELECT_8000
+        lda first_dpcm_bank
+        asl ; We count in 16KB page, but are mapping a 8KB page, x2.
+        sta VRC6_PRG_SELECT_C000
+
+    .else
 
         ldy #28
         lda (song_ptr), y
@@ -1078,33 +1062,9 @@ load_success:
         clc
         adc #1
         sta MMC5_PRG_SELECT_A000
-        lda dpcm_bank
+        lda first_dpcm_bank
         ora #MMC5_ROM_FLAGS
-        sta MMC5_PRG_SELECT_C000
-
-    .elseif ::FAMISTUDIO_EXP_VRC6
-
-        ; VRC6 uses 16KB pages, so just one page to map.
-        ldy #28
-        lda (song_ptr), y
-        sta VRC6_PRG_SELECT_8000
-        lda dpcm_bank
-        asl ; We count in 16KB page, but are mapping a 8KB page, x2.
-        sta VRC6_PRG_SELECT_C000
-
-    .else
-
-        ; No need to worry about DPCM page here, MMC3 has second-to-last page fixed.
-        ldx #6
-        ldy #28
-        lda (song_ptr), y
-        tay
-        stx MMC3_BANK_SELECT
-        sty MMC3_BANK_DATA
-        ldx #7
-        iny
-        stx MMC3_BANK_SELECT
-        sty MMC3_BANK_DATA       
+        sta MMC5_PRG_SELECT_C000    
 
     .endif
 
@@ -1594,3 +1554,31 @@ done:
     rts
 
 .endproc
+
+.if FAMISTUDIO_USE_DPCM_BANKSWITCHING
+.proc famistudio_dpcm_bank_callback
+    clc
+    .if ::FAMISTUDIO_EXP_VRC7
+        adc first_dpcm_bank
+        sta VRC7_PRG_SELECT_C000
+    .elseif ::FAMISTUDIO_EXP_S5B
+        ldx #$B ; $B control PRG bank $c000
+        stx FME7_COMMAND
+        adc first_dpcm_bank
+        sta FME7_PARAM     
+    .elseif ::FAMISTUDIO_EXP_N163
+        adc first_dpcm_bank
+        sta N163_PRG_SELECT_C000
+    .elseif ::FAMISTUDIO_EXP_VRC6
+        asl ; We count in 16KB page, but are mapping a 8KB page, so x2.
+        adc first_dpcm_bank
+        sta VRC6_PRG_SELECT_C000
+    .else
+        adc first_dpcm_bank
+        ora #MMC5_ROM_FLAGS
+        sta MMC5_PRG_SELECT_C000    
+    .endif
+    rts
+.endproc
+.endif
+

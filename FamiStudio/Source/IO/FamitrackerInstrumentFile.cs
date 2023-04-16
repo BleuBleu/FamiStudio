@@ -72,7 +72,7 @@ namespace FamiStudio
                 env.Release = releasePoint;
 
                 if (env.Length < itemCount)
-                    Log.LogMessage(LogSeverity.Warning, $"{EnvelopeType.Names[envType]} envelope is longer ({itemCount}) than what FamiStudio supports ({env.Length}). Truncating.");
+                    Log.LogMessage(LogSeverity.Warning, $"{EnvelopeType.LocalizedNames[envType]} envelope is longer ({itemCount}) than what FamiStudio supports ({env.Length}). Truncating.");
 
                 Array.Copy(seq, 0, env.Values, 0, env.Length);
             }
@@ -249,14 +249,11 @@ namespace FamiStudio
                     byte pitch  = bytes[mappingOffset++];
                     byte delta  = bytes[mappingOffset++];
 
-                    if (project.NoteSupportsDPCM(idx + 1))
-                    {
-                        project.MapDPCMSample(idx + 1, sampleMap[sample - 1], pitch & 0x0f, (pitch & 0x80) != 0);
-                    }
+                    instrument.MapDPCMSample(idx + 1, sampleMap[sample - 1], pitch & 0x0f, (pitch & 0x80) != 0);
                 }
             }
 
-            project.SortInstruments();
+            project.ConditionalSortInstruments();
 
             return instrument;
         }

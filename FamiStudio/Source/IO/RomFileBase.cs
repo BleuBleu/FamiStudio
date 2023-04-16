@@ -9,14 +9,12 @@ namespace FamiStudio
 {
     public class RomFileBase
     {
-        public const int MaxSongs = 12;
-
         // 64 bytes header.
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         protected unsafe struct RomProjectInfo
         {
             public byte maxSong;
-            public byte dpcmBank;
+            public byte firstDpcmBank;
             public byte fdsFileCount; // Number of files on FDS
             public fixed byte reserved[5];
             public fixed byte name[28];
@@ -98,9 +96,9 @@ namespace FamiStudio
             return projectInfo;
         }
 
-        protected unsafe RomSongEntry[] BuildSongTableOfContent(Project project, int songLoadAddr = 0x8000)
+        protected unsafe RomSongEntry[] BuildSongTableOfContent(Project project, int maxSongs, int songLoadAddr = 0x8000)
         {
-            var songTable = new RomSongEntry[MaxSongs];
+            var songTable = new RomSongEntry[maxSongs];
 
             for (int i = 0; i < project.Songs.Count; i++)
             {

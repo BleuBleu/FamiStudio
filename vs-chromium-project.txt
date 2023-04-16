@@ -5,6 +5,11 @@
 *.h
 *.xml
 *.plist
+*.vert
+*.frag
+*.ini
 
 [SearchableFiles.ignore]
 obj/
+bin/
+FamiStudio.app/

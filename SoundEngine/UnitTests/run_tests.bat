@@ -51,6 +51,14 @@ if "%rnd%"=="1" (
 	if "%rnd%"=="1" (
 		echo FAMISTUDIO_USE_DELTA_COUNTER=1 >> test_defs.inc
 	)
+	set /a rnd=%random% %%2
+	if "%rnd%"=="1" (
+		echo FAMISTUDIO_USE_DPCM_BANKSWITCHING=1 >> test_defs.inc
+	)
+	set /a rnd=%random% %%2
+	if "%rnd%"=="1" (
+		echo FAMISTUDIO_USE_DPCM_EXTENDED_RANGE=1 >> test_defs.inc
+	)
 )
 
 set /a rnd=%random% %%7

@@ -1,0 +1,20 @@
+LIBRARY   STB
+EXPORTS
+	StbGetNumberOfFonts            @1
+	StbGetFontOffsetForIndex       @2
+	StbInitFont                    @3
+	StbFreeFont                    @4
+	StbScaleForPixelHeight         @5
+	StbScaleForMappingEmToPixels   @6
+	StbGetGlyphBitmapBox           @7
+	StbMakeGlyphBitmap             @8
+	StbMakeGlyphBitmapSubpixel     @9
+	StbGetGlyphHMetrics            @10
+	StbGetGlyphKernAdvance         @11
+	StbGetFontVMetrics             @12
+	StbGetFontVMetricsOS2          @13
+	StbGetFontBoundingBox          @14
+	StbFindGlyphIndex              @15
+	StbInitPackRect                @16
+	StbFreePackRect                @17
+	StbPackRects                   @18

@@ -415,7 +415,7 @@ namespace FamiStudio
 
         private string GetPatternString(Pattern pattern, int n)
         {
-            return $"(Song={pattern.Song.Name}, Channel={ChannelType.Names[pattern.ChannelType]}, Location={pattern.Name}:{n:X2})";
+            return $"(Song={pattern.Song.Name}, Channel={ChannelType.InternalNames[pattern.ChannelType]}, Location={pattern.Name}:{n:X2})";
         }
 
         private bool IsVolumeSlideEffect(RowFxData fx)
@@ -1202,7 +1202,7 @@ namespace FamiStudio
                     var env = inst.Envelopes[i];
                     if (env != null && !env.ValuesInValidRange(inst, i))
                     {
-                        Log.LogMessage(LogSeverity.Warning, $"Envelope '{EnvelopeType.Names[i]}' of instrument '{inst.Name}' have values outside of the supported range, clamping.");
+                        Log.LogMessage(LogSeverity.Warning, $"Envelope '{EnvelopeType.LocalizedNames[i]}' of instrument '{inst.Name}' have values outside of the supported range, clamping.");
                         env.ClampToValidRange(inst, i);
                     }
                 }
@@ -1263,10 +1263,10 @@ namespace FamiStudio
                 s.RemoveUnsupportedFeatures(); // Extra security.
             }
 
-
+            project.AutoSortSongs = false;
             project.ConvertToCompoundNotes();
             project.InvalidateCumulativePatternCache();
-            project.SortEverything(false);
+            project.ConditionalSortEverything();
             project.ValidateIntegrity();
 
             PrintAdditionalWarnings();
