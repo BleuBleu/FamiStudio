@@ -521,8 +521,6 @@ namespace FamiStudio
 
             if (MidiDevice == null)
                 MidiDevice = "";
-            if (!Directory.Exists(LastInstrumentFolder))
-                LastInstrumentFolder = "";
             if (!Directory.Exists(LastSampleFolder))
                 LastSampleFolder = "";
             if (!Directory.Exists(LastExportFolder))
@@ -536,6 +534,14 @@ namespace FamiStudio
                 var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 var demoSongsPath = Path.Combine(appPath, "Demo Songs");
                 LastFileFolder = Directory.Exists(demoSongsPath) ? demoSongsPath : "";
+            }
+
+            // Try to point to the demo instruments initially.
+            if (string.IsNullOrEmpty(LastInstrumentFolder) || !Directory.Exists(LastInstrumentFolder))
+            {
+                var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var demoInstPath = Path.Combine(appPath, "Demo Instruments");
+                LastInstrumentFolder = Directory.Exists(demoInstPath) ? demoInstPath : "";
             }
 
             // Clamp to something reasonable.

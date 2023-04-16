@@ -9,20 +9,17 @@
 		* what about the delayed cut thing? 
 		* will likely need a couple more zp variables.
 
-Testing
-=======
-- Test DPCM w/ multi
-- Re-export all ROM test (.bin) files at the end.
-- Sample, instrument and song import (all places where we switched to OpenProjectAsync)
-
 Packaging
 =========
+- Preset instruments + localizations.
+	x Add to windows installer
+	x Add to windows portable
+	- Linux
+	- MacOS
 - Add "description" HTML metadata to famistudio doc.
-- Preset instruments
-- Add temple raiders demo song (MMC5)
 - Recompile ROMs, re-export data, bump versions, etc.
-- Uncheck x86 in supported android platforms.
 - MacOS install doesnt work if dotnet is missing? I thought that was fixed.
+- Re-export all ROM test (.bin) files at the end.
 
 4.1.0 Change Log
 ================
