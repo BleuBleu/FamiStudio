@@ -3304,13 +3304,13 @@ namespace FamiStudio
                 else
                 {
                     var activeExpansions = App.Project.GetActiveExpansions();
-                    var expNames = new List<string>();
+                    var addedExpansions = new List<int>();
 
                     var dlg = new PropertyDialog(ParentWindow, AddInstrumentTitle, new Point(left + x, top + y), 260, true);
                     dlg.Properties.AddLabel(null, SelectAudioExpansionLabel.Colon); // 0
 
-                    expNames.Add(ExpansionType.GetLocalizedName(ExpansionType.None, ExpansionType.LocalizationMode.Instrument));
-                    dlg.Properties.AddRadioButton(Platform.IsMobile ? SelectAudioExpansionLabel : null, expNames[0], true);
+                    addedExpansions.Add(ExpansionType.None);
+                    dlg.Properties.AddRadioButton(SelectAudioExpansionLabel, ExpansionType.GetLocalizedName(ExpansionType.None, ExpansionType.LocalizationMode.Instrument), true);
 
                     for (int i = 1; i < activeExpansions.Length; i++)
                     {
@@ -3318,7 +3318,7 @@ namespace FamiStudio
                         {
                             var expName = ExpansionType.GetLocalizedName(activeExpansions[i], ExpansionType.LocalizationMode.Instrument);
                             dlg.Properties.AddRadioButton(null, expName, false);
-                            expNames.Add(expName);
+                            addedExpansions.Add(activeExpansions[i]);
                         }
                     }
 
@@ -3329,11 +3329,11 @@ namespace FamiStudio
                     {
                         if (r == DialogResult.OK)
                         {
-                            for (int i = 0; i < expNames.Count; i++)
+                            for (int i = 0; i < addedExpansions.Count; i++)
                             {
                                 if (dlg.Properties.GetPropertyValue<bool>(i + 1))
                                 {
-                                    instrumentType = ExpansionType.GetValueForLocalizedName(expNames[i]);
+                                    instrumentType = addedExpansions[i];
                                     break;
                                 }
                             }

@@ -1,5 +1,6 @@
 4.1.0
 =====
+- TikTok mode for video export.
 - Try no attack? Do it at airport/plane.
 	=> instrument change:
 		* optional : disable attack
