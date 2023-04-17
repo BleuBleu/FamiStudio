@@ -319,6 +319,10 @@ namespace FamiStudio
             else
                 return 0;
         }
+        public int GetNoiseFrequency()
+        {
+            return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_NOISE_FREQ) & 0x1f;
+        }
 
         public double GetFrequency(int i)
         {
