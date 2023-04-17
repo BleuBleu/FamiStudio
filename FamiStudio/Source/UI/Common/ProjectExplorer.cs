@@ -1541,11 +1541,11 @@ namespace FamiStudio
                         buttons.Add(new Button(this) { type = ButtonType.RegisterExpansionHeader, text = RegistersExpansionHeaderLabel.Format(expName), bmp = bmpExpansions[e], imageTint = Theme.LightGreyColor2 });
                         buttons.Add(new Button(this) { type = ButtonType.ExpansionRegistersFirst + e, height = GetHeightForRegisterRows(expRegs.ExpansionRows), regs = expRegs.ExpansionRows, gradient = false });
 
+                        //HACK: for N163 just don't display all the channels when not all channels are used
                         int channels = (e == ExpansionType.N163) ? project.ExpansionNumN163Channels : expRegs.Labels.Length;
                         for (int i = 0; i < channels; i++)
                         {
                             var c = i;
-                            //var idx = channels[i] - channels[firstChannel]; // Assumes contiguous channels.
                             var chanRegs = expRegs.ChannelRows[i];
 
                             if (chanRegs != null && chanRegs.Length > 0)
@@ -1554,26 +1554,6 @@ namespace FamiStudio
                                 buttons.Add(new Button(this) { type = ButtonType.ChannelStateFirst + c, height = GetHeightForRegisterRows(chanRegs), regs = chanRegs, gradient = false });
                             }
                         }
-                        // } else{
-                        // var expName = ExpansionType.GetLocalizedName(e, ExpansionType.LocalizationMode.ChipName);
-                        // buttons.Add(new Button(this) { type = ButtonType.RegisterExpansionHeader, text = RegistersExpansionHeaderLabel.Format(expName), bmp = bmpExpansions[e], imageTint = Theme.LightGreyColor2 });
-                        // buttons.Add(new Button(this) { type = ButtonType.ExpansionRegistersFirst + e, height = GetHeightForRegisterRows(expRegs.ExpansionRows), regs = expRegs.ExpansionRows, gradient = false });
-
-                        // var channels = Channel.GetChannelsForExpansionMask(ExpansionType.GetMaskFromValue(e), project.ExpansionNumN163Channels);
-                        // var firstChannel = e == ExpansionType.None ? 0 : ChannelType.ExpansionAudioStart;
-                        // for (int i = firstChannel; i < channels.Length; i++)
-                        // {
-                        //     var c = channels[i];
-                        //     var idx = channels[i] - channels[firstChannel]; // Assumes contiguous channels.
-                        //     var chanRegs = expRegs.ChannelRows[idx];
-
-                        //     if (chanRegs != null && chanRegs.Length > 0)
-                        //     {
-                        //         buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = ChannelType.LocalizedNames[c], bmp = bmpChannels[c], imageTint = Theme.LightGreyColor2 });
-                        //         buttons.Add(new Button(this) { type = ButtonType.ChannelStateFirst + c, height = GetHeightForRegisterRows(chanRegs), regs = chanRegs, gradient = false });
-                        //     }
-                        // }
-                        // }
                     }
                 }
             }
