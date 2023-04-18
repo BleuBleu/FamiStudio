@@ -231,6 +231,8 @@ namespace FamiStudio
         LocalizedString ResampleWavContext;
         LocalizedString ResetDefaultValueContext;
 
+        static LocalizedString HzLabel;
+
         #endregion
 
         delegate object GetRegisterValueDelegate();
@@ -280,7 +282,7 @@ namespace FamiStudio
         {
             if (period == 0 || frequency < NesApu.FreqRegMin)
             {
-                return $"---+{Math.Abs(0):00} ({0,7:0.00}Hz)";
+                return $"---+{Math.Abs(0):00} ({0,7:0.00}{HzLabel.ToString()})";
             }
             else
             {
@@ -290,7 +292,7 @@ namespace FamiStudio
                 var note = (int)Math.Round(noteFloat);
                 var cents = (int)Math.Round((noteFloat - note) * 100.0);
 
-                return $"{GetNoteString(note),-3}{(cents < 0 ? "-" : "+")}{Math.Abs(cents):00} ({frequency,7:0.00}Hz)";
+                return $"{GetNoteString(note),-3}{(cents < 0 ? "-" : "+")}{Math.Abs(cents):00} ({frequency,7:0.00}{HzLabel.ToString()})";
             }
         }
 
@@ -527,7 +529,7 @@ namespace FamiStudio
                 {
                     new RegisterViewerRow(PitchLabel,    () => GetPitchString(i.WavePeriod, i.WaveFrequency), true), 
                     new RegisterViewerRow(VolumeLabel,   () => i.Volume.ToString("00"), true),
-                    new RegisterViewerRow(ModSpeedLabel, () => $"{i.ModSpeed,-4} ({i.ModFrequency,7:0.00}Hz, {GetPitchString(i.ModSpeed, i.ModFrequency).Substring(0,6)})", true),
+                    new RegisterViewerRow(ModSpeedLabel, () => $"{i.ModSpeed,-4} ({i.ModFrequency,7:0.00}{HzLabel.ToString()}, {GetPitchString(i.ModSpeed, i.ModFrequency).Substring(0,6)})", true),
                     new RegisterViewerRow(ModDepthLabel, () => i.ModDepth.ToString("00"), true),
                     new RegisterViewerRow(WaveLabel, DrawWaveTable, 32),
                     new RegisterViewerRow(ModLabel,  DrawModTable, 32),
@@ -691,14 +693,15 @@ namespace FamiStudio
         }
         class YMRegisterViewer : ExpansionRegisterViewer
         {
-            protected LocalizedString toneLabel;
-            protected LocalizedString toneEnabledLabel;
-            protected LocalizedString toneDisabledLabel;
-            protected LocalizedString noiseEnabledLabel;
-            protected LocalizedString noiseDisabledLabel;
-            protected LocalizedString envelopeLabel;
-            protected LocalizedString envelopeEnabledLabel;
-            protected LocalizedString envelopeDisabledLabel;
+            protected LocalizedString ToneLabel;
+            protected LocalizedString ToneEnabledLabel;
+            protected LocalizedString ToneDisabledLabel;
+            protected LocalizedString NoiseLabel;
+            protected LocalizedString NoiseEnabledLabel;
+            protected LocalizedString NoiseDisabledLabel;
+            protected LocalizedString EnvelopeLabel;
+            protected LocalizedString EnvelopeEnabledLabel;
+            protected LocalizedString EnvelopeDisabledLabel;
         }
         class S5BRegisterViewer : YMRegisterViewer
         {
@@ -714,6 +717,7 @@ namespace FamiStudio
                 };
                 Icons = new int[]{ IconSquare, IconSquare, IconSquare, IconNoise };
                 Localization.Localize(this);
+                Labels[3] = NoiseLabel.ToString();
                 i = new S5BRegisterIntepreter(r);
                 ExpansionRows = new[]
                 {
@@ -730,9 +734,9 @@ namespace FamiStudio
                     var c = j; // Important, need to make a copy for the lambda.
                     ChannelRows[c] = new[]
                     {
-                        new RegisterViewerRow(toneLabel, () => i.GetMixerSetting(c) ? toneEnabledLabel : toneDisabledLabel, true),
-                        new RegisterViewerRow(ChannelType.LocalizedNames[3], () => i.GetMixerSetting(c+3) ? noiseEnabledLabel : noiseDisabledLabel, true),
-                        new RegisterViewerRow(envelopeLabel, () => i.GetEnvelopeEnabled(c) ? envelopeEnabledLabel : envelopeDisabledLabel, true),
+                        new RegisterViewerRow(ToneLabel, () => i.GetMixerSetting(c) ? ToneEnabledLabel : ToneDisabledLabel, true),
+                        new RegisterViewerRow(NoiseLabel, () => i.GetMixerSetting(c+3) ? NoiseEnabledLabel : NoiseDisabledLabel, true),
+                        new RegisterViewerRow(EnvelopeLabel, () => i.GetEnvelopeEnabled(c) ? EnvelopeEnabledLabel : EnvelopeDisabledLabel, true),
                         new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c), i.GetToneFrequency(c)), true),
                         new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
                     };
@@ -813,9 +817,9 @@ namespace FamiStudio
                         Icons[j] = IconSquare;
                         ChannelRows[c] = new[]
                         {
-                            new RegisterViewerRow(toneLabel, () => i.GetMixerSetting(c) ? toneEnabledLabel : toneDisabledLabel, true),
-                            new RegisterViewerRow(ChannelType.LocalizedNames[3], () => i.GetMixerSetting(c+3) ? noiseEnabledLabel : noiseDisabledLabel, true),
-                            new RegisterViewerRow(envelopeLabel, () => i.GetEnvelopeEnabled(c) ? envelopeEnabledLabel : envelopeDisabledLabel, true),
+                            new RegisterViewerRow(ToneLabel, () => i.GetMixerSetting(c) ? ToneEnabledLabel : ToneDisabledLabel, true),
+                            new RegisterViewerRow(NoiseLabel, () => i.GetMixerSetting(c+3) ? NoiseEnabledLabel : NoiseDisabledLabel, true),
+                            new RegisterViewerRow(EnvelopeLabel, () => i.GetEnvelopeEnabled(c) ? EnvelopeEnabledLabel : EnvelopeDisabledLabel, true),
                             new RegisterViewerRow(PitchLabel, () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
                             new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
                         };
@@ -843,7 +847,7 @@ namespace FamiStudio
                         };
                     }
                 }
-                Labels[3] = ChannelType.LocalizedNames[ChannelType.Noise];
+                Labels[3] = NoiseLabel.ToString();
                 Icons[3] = IconNoise;
                 ChannelRows[3] = new[]
                 {
