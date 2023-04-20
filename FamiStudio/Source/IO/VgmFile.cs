@@ -1611,7 +1611,7 @@ namespace FamiStudio
                         vrc7Register[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.Vrc7Mask;
                     }
-                    if (vgmData[0] == 0x56 || vgmData[0] == 0x52 || vgmData[0] == 0x58)
+                    if (vgmData[0] == 0x56 || vgmData[0] == 0x52 || vgmData[0] == 0x58 || vgmData[0] == 0x55)
                     {
                         if(vgmData[1] == 0x10)
                             epsmRegisterLo[vgmData[1]] = epsmRegisterLo[vgmData[1]] | vgmData[2];
@@ -1620,39 +1620,39 @@ namespace FamiStudio
                             int channel = ((((vgmData[2] & 4) >> 2) + 1) * ((vgmData[2] & 3)+1)) -1;
                             if ((vgmData[2] & 0x7) == 0)
                             {
-                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
-                                    epsmFmTrigger[channel] = 1;
-                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[0] == 0)
+                                    epsmFmTrigger[0] = 1;
+                                epsmFmEnabled[0] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 1)
                             {
-                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
-                                    epsmFmTrigger[channel] = 1;
-                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[1] == 0)
+                                    epsmFmTrigger[1] = 1;
+                                epsmFmEnabled[1] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 2)
                             {
-                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
-                                    epsmFmTrigger[channel] = 1;
-                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[2] == 0)
+                                    epsmFmTrigger[2] = 1;
+                                epsmFmEnabled[2] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 4)
                             {
-                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
-                                    epsmFmTrigger[channel] = 1;
-                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[3] == 0)
+                                    epsmFmTrigger[3] = 1;
+                                epsmFmEnabled[3] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 5)
                             {
-                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
-                                    epsmFmTrigger[channel] = 1;
-                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[4] == 0)
+                                    epsmFmTrigger[4] = 1;
+                                epsmFmEnabled[4] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 6)
                             {
-                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
-                                    epsmFmTrigger[channel] = 1;
-                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[5] == 0)
+                                    epsmFmTrigger[5] = 1;
+                                epsmFmEnabled[5] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                         }
                         else
