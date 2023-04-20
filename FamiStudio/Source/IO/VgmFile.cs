@@ -1578,6 +1578,10 @@ namespace FamiStudio
                             UpdateChannel(p, n, song.Channels[c], channelStates[c]);
                     }
                 }
+                else if (vgmData[0] == 0x4F || vgmData[0] == 0x50 || vgmData[0] == 0x31)
+                    vgmDataOffset = vgmDataOffset + 2;
+                else if (vgmData[0] >= 0xC0 && vgmData[0] <= 0xDF)
+                    vgmDataOffset = vgmDataOffset + 4;
                 else
                 {
 
@@ -1600,7 +1604,7 @@ namespace FamiStudio
 
                         apuRegister[vgmData[1]] = vgmData[2];
                     }
-                    if (vgmData[0] == 0x51)
+                    else if (vgmData[0] == 0x51)
                     {
                         if (vgmData[1] >= 0x20 && vgmData[1] <= 0x28)
                         {
@@ -1611,7 +1615,7 @@ namespace FamiStudio
                         vrc7Register[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.Vrc7Mask;
                     }
-                    if (vgmData[0] == 0x56 || vgmData[0] == 0x52 || vgmData[0] == 0x58 || vgmData[0] == 0x55)
+                    else if (vgmData[0] == 0x56 || vgmData[0] == 0x52 || vgmData[0] == 0x58 || vgmData[0] == 0x55)
                     {
                         if(vgmData[1] == 0x10)
                             epsmRegisterLo[vgmData[1]] = epsmRegisterLo[vgmData[1]] | vgmData[2];
@@ -1659,16 +1663,18 @@ namespace FamiStudio
                             epsmRegisterLo[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
                     }
-                    if (vgmData[0] == 0x57 || vgmData[0] == 0x53 || vgmData[0] == 0x59)
+                    else if (vgmData[0] == 0x57 || vgmData[0] == 0x53 || vgmData[0] == 0x59)
                     {
                         epsmRegisterHi[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
                     }
-                    if (vgmData[0] == 0xA0)
+                    else if (vgmData[0] == 0xA0)
                     {
                         s5bRegister[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.S5BMask;
                     }
+                    else
+                        Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + Convert.ToHexString(vgmData) + " offset: " + vgmDataOffset);
                     //Log.LogMessage(LogSeverity.Info, "VGM Chip Data: " + Convert.ToHexString(vgmData));
                     chipCommands++;
                     vgmDataOffset = vgmDataOffset + 3;
