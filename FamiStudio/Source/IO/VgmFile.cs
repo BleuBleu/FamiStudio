@@ -535,6 +535,7 @@ namespace FamiStudio
         int[] epsmFmEnabled = new int[0x6];
         int[] epsmFmRegisterOrder = new[] { 0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 };
         int[] s5bRegister = new int[0xff];
+        int[] NOISE_FREQ_TABLE = new[] {0x004,0x008,0x010,0x020,0x040,0x060,0x080,0x0A0,0x0CA,0x0FE,0x17C,0x1FC,0x2FA,0x3F8,0x7F2,0xFE4 };
 
         class ChannelState
         {
@@ -604,6 +605,40 @@ namespace FamiStudio
                 instrument.Vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Full;
 
             return instrument;
+        }
+
+        private Instrument GetFdsInstrument(sbyte[] wavEnv, sbyte[] modEnv, byte masterVolume)
+        {
+            foreach (var inst in project.Instruments)
+            {
+                if (inst.IsFds)
+                {
+                    if (inst.FdsMasterVolume == masterVolume &&
+                        wavEnv.SequenceEqual(inst.Envelopes[EnvelopeType.FdsWaveform].Values.Take(64)) &&
+                        modEnv.SequenceEqual(inst.Envelopes[EnvelopeType.FdsModulation].Values.Take(32)))
+                    {
+                        return inst;
+                    }
+                }
+            }
+
+            for (int i = 1; ; i++)
+            {
+                var name = $"FDS {i}";
+                if (project.IsInstrumentNameUnique(name))
+                {
+                    var instrument = project.CreateInstrument(ExpansionType.Fds, name);
+
+                    Array.Copy(wavEnv, instrument.Envelopes[EnvelopeType.FdsWaveform].Values, 64);
+                    Array.Copy(modEnv, instrument.Envelopes[EnvelopeType.FdsModulation].Values, 32);
+
+                    instrument.FdsMasterVolume = masterVolume;
+                    instrument.FdsWavePreset = WavePresetType.Custom;
+                    instrument.FdsModPreset = WavePresetType.Custom;
+
+                    return instrument;
+                }
+            }
         }
 
         private Instrument GetVrc7Instrument(byte patch, byte[] patchRegs)
@@ -768,14 +803,15 @@ namespace FamiStudio
         {
             switch (channel)
             {
-/*                case ChannelType.Square1:
+                case ChannelType.Square1:
                 case ChannelType.Square2:
                     {
                         switch (state)
                         {
-                            case NotSoFatso.STATE_PERIOD: return mWave_Squares.nFreqTimer[channel].W;
-                            case NotSoFatso.STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_Squares.nDutyCycle[channel]);
-                            case NotSoFatso.STATE_VOLUME: return mWave_Squares.nLengthCount[channel] && mWave_Squares.bChannelEnabled[channel] ? mWave_Squares.nVolume[channel] : 0;
+                            case NotSoFatso.STATE_PERIOD: return (int)apuRegister[2+(channel*4)] + (int)((apuRegister[3+(channel*4)] & 0x7) << 8);
+                            case NotSoFatso.STATE_DUTYCYCLE: return (int)(apuRegister[2 + (channel * 4)] & 0xc0) >> 6;
+                            //case NotSoFatso.STATE_VOLUME: return mWave_Squares.nLengthCount[channel] && mWave_Squares.bChannelEnabled[channel] ? mWave_Squares.nVolume[channel] : 0;
+                            case NotSoFatso.STATE_VOLUME: return (apuRegister[(channel * 4)] & 0xf);
                         }
                         break;
                     }
@@ -783,8 +819,9 @@ namespace FamiStudio
                     {
                         switch (state)
                         {
-                            case NotSoFatso.STATE_PERIOD: return mWave_TND.nTriFreqTimer.W;
-                            case NotSoFatso.STATE_VOLUME: return mWave_TND.nTriLengthCount && mWave_TND.bTriChannelEnabled ? mWave_TND.nTriLinearCount : 0;
+                            case NotSoFatso.STATE_PERIOD: return (int)apuRegister[2 + (channel * 4)] + (int)((apuRegister[3 + (channel * 4)] & 0x7) << 8);
+                            //case NotSoFatso.STATE_VOLUME: return mWave_TND.nTriLengthCount && mWave_TND.bTriChannelEnabled ? mWave_TND.nTriLinearCount : 0;
+                            case NotSoFatso.STATE_VOLUME: return (apuRegister[(channel * 4)] & 0xf);
                         }
                         break;
                     }
@@ -792,13 +829,16 @@ namespace FamiStudio
                     {
                         switch (state)
                         {
-                            case NotSoFatso.STATE_VOLUME: return mWave_TND.nNoiseLengthCount && mWave_TND.bNoiseChannelEnabled ? mWave_TND.nNoiseVolume : 0;
-                            case NotSoFatso.STATE_DUTYCYCLE: return mWave_TND.bNoiseRandomMode == 6 ? 1 : 0;
-                            case NotSoFatso.STATE_PERIOD: return IndexOf(NOISE_FREQ_TABLE, 16, mWave_TND.nNoiseFreqTimer);
+                            case NotSoFatso.STATE_VOLUME: return (apuRegister[(channel * 4)] & 0xf);
+                            //case NotSoFatso.STATE_VOLUME: return mWave_TND.nNoiseLengthCount && mWave_TND.bNoiseChannelEnabled ? mWave_TND.nNoiseVolume : 0;
+                            case NotSoFatso.STATE_DUTYCYCLE: return (apuRegister[0x0e] & 0x80) >> 8;
+
+                            case NotSoFatso.STATE_PERIOD: return NOISE_FREQ_TABLE[apuRegister[0x0e]];
+                            //case NotSoFatso.STATE_PERIOD: return IndexOf(NOISE_FREQ_TABLE, 16, mWave_TND.nNoiseFreqTimer);
                         }
                         break;
                     }
-                case ChannelType.Dpcm:
+/*                case ChannelType.Dpcm:
                     {
                         switch (state)
                         {
@@ -847,8 +887,14 @@ namespace FamiStudio
                                 }
                         }
                         break;
-                    }
-                case ChannelType.Vrc6Square1:
+                    }*/
+
+                //###############################################################
+                //
+                // VRC6 is not supported by the VGM Standard
+                //
+                //###############################################################
+/*                case ChannelType.Vrc6Square1:
                 case ChannelType.Vrc6Square2:
                     {
                         int idx = channel - ChannelType.Vrc6Square1;
@@ -906,7 +952,13 @@ namespace FamiStudio
                             case NotSoFatso.STATE_FMSUSTAIN: return (vrc7Register[0x20 + idx] >> 5) & 0x01;
                         }
                         break;
-                    }/*
+                    }
+                //###############################################################
+                //
+                // MMC5 and N163 is not supported by the VGM Standard
+                //
+                //###############################################################
+                    /*
                 case ChannelType.Mmc5Square1:
                 case ChannelType.Mmc5Square2:
                     {
@@ -1036,7 +1088,7 @@ namespace FamiStudio
             var project = channel.Song.Project;
             var hasNote = false;
 
-            /*if (channel.Type == ChannelType.Dpcm)
+            if (channel.Type == ChannelType.Dpcm)
             {
                 var dmc = GetState(channel.Type, NotSoFatso.STATE_DPCMCOUNTER, 0);
                 var len = GetState(channel.Type, NotSoFatso.STATE_DPCMSAMPLELENGTH, 0);
@@ -1131,7 +1183,7 @@ namespace FamiStudio
                     state.state = ChannelState.Stopped;
                 }
             }
-            else */if (channel.Type != ChannelType.Dpcm)
+            else if (channel.Type != ChannelType.Dpcm)
             {
                 var period = GetState(channel.Type, NotSoFatso.STATE_PERIOD, 0);
                 var volume = GetState(channel.Type, NotSoFatso.STATE_VOLUME, 0);
@@ -1247,7 +1299,7 @@ namespace FamiStudio
                 {
                     instrument = GetDutyInstrument(channel, duty);
                 }
-                /*else if (channel.Type == ChannelType.FdsWave)
+                else if (channel.Type == ChannelType.FdsWave)
                 {
                     var wavEnv = new sbyte[64];
                     var modEnv = new sbyte[32];
@@ -1278,7 +1330,7 @@ namespace FamiStudio
                         state.fdsModSpeed = modSpeed;
                     }
                 }
-                else if (channel.Type >= ChannelType.N163Wave1 &&
+                /*else if (channel.Type >= ChannelType.N163Wave1 &&
                          channel.Type <= ChannelType.N163Wave8)
                 {
                     var wavePos = (byte)GetState(channel.Type, NotSoFatso.STATE_N163WAVEPOS, 0);
@@ -1493,37 +1545,6 @@ namespace FamiStudio
                     p = frame / song.PatternLength;
                     n = frame % song.PatternLength;
                     song.SetLength(p + 1);
-                    /*var channel = song.Channels[0];
-
-                    var pattern = GetOrCreatePattern(channel, p);
-                    var newNote = pattern.GetOrCreateNoteAt(n);
-                    var noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Square1, project.PalMode, project.ExpansionNumN163Channels);
-                    int period = (int)apuRegister[2] + (int)((apuRegister[3]& 0x7) << 8);
-                    newNote.Value = (byte)GetBestMatchingNote(period, noteTable, out int finePitch);
-                    newNote.Instrument = instrument;
-                    Log.LogMessage(LogSeverity.Info, "Period high value: " + apuRegister[0] + " " + apuRegister[1] + " " + apuRegister[2].ToString("X") + " " + apuRegister[3].ToString("X") + " " + newNote.Value + " " + period);
-
-                    channel = song.Channels[1];
-
-                    pattern = GetOrCreatePattern(channel, p);
-                    newNote = pattern.GetOrCreateNoteAt(n);
-                    noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Square2, project.PalMode, project.ExpansionNumN163Channels);
-                    period = (int)apuRegister[6] + (int)((apuRegister[7] & 0x7) << 8);
-                    newNote.Value = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
-                    newNote.Instrument = instrument;
-                    channel = song.Channels[2];
-
-                    pattern = GetOrCreatePattern(channel, p);
-                    newNote = pattern.GetOrCreateNoteAt(n);
-                    noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Triangle, project.PalMode, project.ExpansionNumN163Channels);
-                    period = (int)apuRegister[0xa] + (int)((apuRegister[0xb] & 0x7) << 8);
-                    newNote.Value = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
-                    newNote.Instrument = instrument;
-                    Log.LogMessage(LogSeverity.Info, "note: " + newNote);*/
-                    //channelStates[0].period = 1;
-                    //channelStates[0].state = 1;
-                    //if((project.ExpansionAudioMask & ExpansionType.EPSMMask) != 0)
-                    //UpdateChannel(p, n, song.Channels[ChannelType.EPSMSquare1], channelStates[ChannelType.EPSMSquare1]);
                     for (int c = 0; c < song.Channels.Length; c++)
                         UpdateChannel(p, n, song.Channels[c], channelStates[c]);
                 }
