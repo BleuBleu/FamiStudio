@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -525,6 +526,14 @@ namespace FamiStudio
         private bool preserveDpcmPadding;
         private readonly int[] DPCMOctaveOrder = new[] { 4, 5, 3, 6, 2, 7, 1, 0 };
 
+        int[] apuRegister = new int[0xff];
+        int[] epsmRegisterLo = new int[0xff];
+        int[] epsmRegisterHi = new int[0xff];
+        int[] epsmFmTrigger = new int[0x6];
+        int[] epsmFmEnabled = new int[0x6];
+        int[] epsmFmRegisterOrder = new[] { 0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 };
+        int[] s5bRegister = new int[0xff];
+
         class ChannelState
         {
             public const int Triggered = 1;
@@ -752,20 +761,684 @@ namespace FamiStudio
             }
         }
 
+
+        private int GetState(int channel, int state, int sub)
+        {
+            switch (channel)
+            {
+/*                case ChannelType.Square1:
+                case ChannelType.Square2:
+                    {
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return mWave_Squares.nFreqTimer[channel].W;
+                            case NotSoFatso.STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_Squares.nDutyCycle[channel]);
+                            case NotSoFatso.STATE_VOLUME: return mWave_Squares.nLengthCount[channel] && mWave_Squares.bChannelEnabled[channel] ? mWave_Squares.nVolume[channel] : 0;
+                        }
+                        break;
+                    }
+                case ChannelType.Triangle:
+                    {
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return mWave_TND.nTriFreqTimer.W;
+                            case NotSoFatso.STATE_VOLUME: return mWave_TND.nTriLengthCount && mWave_TND.bTriChannelEnabled ? mWave_TND.nTriLinearCount : 0;
+                        }
+                        break;
+                    }
+                case ChannelType.Noise:
+                    {
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_VOLUME: return mWave_TND.nNoiseLengthCount && mWave_TND.bNoiseChannelEnabled ? mWave_TND.nNoiseVolume : 0;
+                            case NotSoFatso.STATE_DUTYCYCLE: return mWave_TND.bNoiseRandomMode == 6 ? 1 : 0;
+                            case NotSoFatso.STATE_PERIOD: return IndexOf(NOISE_FREQ_TABLE, 16, mWave_TND.nNoiseFreqTimer);
+                        }
+                        break;
+                    }
+                case ChannelType.Dpcm:
+                    {
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_DPCMSAMPLELENGTH:
+                                {
+                                    if (mWave_TND.bDMCTriggered)
+                                    {
+                                        mWave_TND.bDMCTriggered = 0;
+                                        return mWave_TND.nDMCLength;
+                                    }
+                                    else
+                                    {
+                                        return 0;
+                                    }
+                                }
+                            case NotSoFatso.STATE_DPCMSAMPLEADDR:
+                                {
+                                    return mWave_TND.nDMCDMABank_Load << 16 | mWave_TND.nDMCDMAAddr_Load;
+                                }
+                            case NotSoFatso.STATE_DPCMLOOP:
+                                {
+                                    return mWave_TND.bDMCLoop;
+                                }
+                            case NotSoFatso.STATE_DPCMPITCH:
+                                {
+                                    return IndexOf(DMC_FREQ_TABLE[bPALMode], 0x10, mWave_TND.nDMCFreqTimer);
+                                }
+                            case NotSoFatso.STATE_DPCMSAMPLEDATA:
+                                {
+                                    int bank = mWave_TND.nDMCDMABank_Load;
+                                    int addr = mWave_TND.nDMCDMAAddr_Load + sub;
+                                    if (addr & 0x1000)
+                                    {
+                                        addr &= 0x0FFF;
+                                        bank = (bank + 1) & 0x07;
+                                    }
+                                    return mWave_TND.pDMCDMAPtr[bank][addr];
+                                }
+                            case NotSoFatso.STATE_DPCMCOUNTER:
+                                {
+                                    return mWave_TND.bDMCLastDeltaWrite;
+                                }
+                            case NotSoFatso.STATE_DPCMACTIVE:
+                                {
+                                    return mWave_TND.bDMCActive;
+                                }
+                        }
+                        break;
+                    }
+                case ChannelType.Vrc6Square1:
+                case ChannelType.Vrc6Square2:
+                    {
+                        int idx = channel - ChannelType.Vrc6Square1;
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return mWave_VRC6Pulse[idx].nFreqTimer.W;
+                            case NotSoFatso.STATE_DUTYCYCLE: return mWave_VRC6Pulse[idx].nDutyCycle;
+                            case NotSoFatso.STATE_VOLUME: return mWave_VRC6Pulse[idx].bChannelEnabled ? mWave_VRC6Pulse[idx].nVolume : 0;
+                        }
+                        break;
+                    }
+                case ChannelType.Vrc6Saw:
+                    {
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return mWave_VRC6Saw.nFreqTimer.W;
+                            case NotSoFatso.STATE_VOLUME: return mWave_VRC6Saw.bChannelEnabled ? mWave_VRC6Saw.nAccumRate : 0;
+                        }
+                        break;
+                    }
+                case ChannelType.FdsWave:
+                    {
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return mWave_FDS.nFreq.W;
+                            case NotSoFatso.STATE_VOLUME: return mWave_FDS.bEnabled ? mWave_FDS.nVolume : 0;
+                            case NotSoFatso.STATE_FDSWAVETABLE: return mWave_FDS.nWaveTable[sub];
+                            case NotSoFatso.STATE_FDSMODULATIONTABLE: return mWave_FDS.nLFO_Table[sub * 2];
+                            case NotSoFatso.STATE_FDSMODULATIONDEPTH: return mWave_FDS.bLFO_On && (mWave_FDS.nSweep_Mode & 2) ? mWave_FDS.nSweep_Gain : 0;
+                            case NotSoFatso.STATE_FDSMODULATIONSPEED: return mWave_FDS.bLFO_On ? mWave_FDS.nLFO_Freq.W : 0;
+                            case NotSoFatso.STATE_FDSMASTERVOLUME: return mWave_FDS.nMainVolume;
+                        }
+                        break;
+                    }
+                case ChannelType.Vrc7Fm1:
+                case ChannelType.Vrc7Fm2:
+                case ChannelType.Vrc7Fm3:
+                case ChannelType.Vrc7Fm4:
+                case ChannelType.Vrc7Fm5:
+                case ChannelType.Vrc7Fm6:
+                    {
+                        int idx = channel - ChannelType.Vrc7Fm1;
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return ((VRC7Chan[1][idx] & 1) << 8) | (VRC7Chan[0][idx]);
+                            case NotSoFatso.STATE_VOLUME: return (VRC7Chan[2][idx] >> 0) & 0xF;
+                            case NotSoFatso.STATE_VRC7PATCH: return (VRC7Chan[2][idx] >> 4) & 0xF;
+                            case NotSoFatso.STATE_FMPATCHREG: return (VRC7Instrument[0][sub]);
+                            case NotSoFatso.STATE_FMOCTAVE: return (VRC7Chan[1][idx] >> 1) & 0x07;
+                            case NotSoFatso.STATE_FMTRIGGER: return (VRC7Chan[1][idx] >> 4) & 0x01;
+                            case NotSoFatso.STATE_FMTRIGGERCHANGE: return (VRC7Triggered[idx]);
+                            case NotSoFatso.STATE_FMSUSTAIN: return (VRC7Chan[1][idx] >> 5) & 0x01;
+                        }
+                        break;
+                    }
+                case ChannelType.Mmc5Square1:
+                case ChannelType.Mmc5Square2:
+                    {
+                        int idx = channel - ChannelType.Mmc5Square1;
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return mWave_MMC5Square[idx].nFreqTimer.W;
+                            case NotSoFatso.STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_MMC5Square[idx].nDutyCycle);
+                            case NotSoFatso.STATE_VOLUME: return mWave_MMC5Square[idx].nLengthCount && mWave_MMC5Square[idx].bChannelEnabled ? mWave_MMC5Square[idx].nVolume : 0;
+                        }
+                        break;
+                    }
+                case ChannelType.N163Wave1:
+                case ChannelType.N163Wave2:
+                case ChannelType.N163Wave3:
+                case ChannelType.N163Wave4:
+                case ChannelType.N163Wave5:
+                case ChannelType.N163Wave6:
+                case ChannelType.N163Wave7:
+                case ChannelType.N163Wave8:
+                    {
+                        int idx = 7 - (channel - ChannelType.N163Wave1);
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return mWave_N106.nFreqReg[idx].D;
+                            case NotSoFatso.STATE_VOLUME: return mWave_N106.nVolume[idx];
+                            case NotSoFatso.STATE_N163WAVEPOS: return mWave_N106.nWavePosStart[idx];
+                            case NotSoFatso.STATE_N163WAVESIZE: return mWave_N106.nWaveSize[idx];
+                            case NotSoFatso.STATE_N163WAVE: return mWave_N106.nRAM[sub];
+                            case NotSoFatso.STATE_N163NUMCHANNELS: return mWave_N106.nActiveChannels + 1;
+                        }
+                        break;
+                    }*/
+                case ChannelType.S5BSquare1:
+                case ChannelType.S5BSquare2:
+                case ChannelType.S5BSquare3:
+                    {
+                        int idx = channel - ChannelType.S5BSquare1;
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return s5bRegister[0 + idx * 2] | (s5bRegister[1 + idx * 2] << 8);
+                            case NotSoFatso.STATE_VOLUME: return (((s5bRegister[7] >> idx) & 9) != 9) ? s5bRegister[8 + idx] : 0;
+                            case NotSoFatso.STATE_YMMIXER: return ((s5bRegister[7] >> idx) & 9);
+                            case NotSoFatso.STATE_YMNOISEFREQUENCY: return s5bRegister[6];
+                        }
+                        break;
+                    }
+
+                case ChannelType.EPSMrythm1:
+                case ChannelType.EPSMrythm2:
+                case ChannelType.EPSMrythm3:
+                case ChannelType.EPSMrythm4:
+                case ChannelType.EPSMrythm5:
+                case ChannelType.EPSMrythm6:
+                    {
+                        int idx = channel - ChannelType.EPSMrythm1;
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_STEREO: return (epsmRegisterLo[0x18+idx] & 0xc0);
+                            case NotSoFatso.STATE_PERIOD: return 0xc20;
+                            case NotSoFatso.STATE_VOLUME:
+                                int returnval = (epsmRegisterLo[0x10] & (1 << idx)) != 0 ? ((epsmRegisterLo[0x18 + idx] & 0x0f) >> 1) : 0;
+                                epsmRegisterLo[0x10] = ~(~epsmRegisterLo[0x10] | 1 << idx);
+                                return returnval;
+                        }
+                        break;
+                    }
+                case ChannelType.EPSMSquare1:
+                case ChannelType.EPSMSquare2:
+                case ChannelType.EPSMSquare3:
+                    {
+                        int idx = channel - ChannelType.EPSMSquare1;
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_PERIOD: return epsmRegisterLo[0 + idx*2] | (epsmRegisterLo[1 + idx * 2] << 8);
+                            case NotSoFatso.STATE_VOLUME: return (((epsmRegisterLo[7] >> idx) & 9 ) != 9)  ? epsmRegisterLo[8 + idx] : 0;
+                            case NotSoFatso.STATE_YMMIXER: return ((epsmRegisterLo[7] >> idx) & 9);
+                            case NotSoFatso.STATE_YMNOISEFREQUENCY: return epsmRegisterLo[6];
+                        }
+                        break;
+                    }
+                case ChannelType.EPSMFm1:
+                case ChannelType.EPSMFm2:
+                case ChannelType.EPSMFm3:
+                case ChannelType.EPSMFm4:
+                case ChannelType.EPSMFm5:
+                case ChannelType.EPSMFm6:
+                    {
+                        int idx = channel - ChannelType.EPSMFm1;
+                        switch (state)
+                        {
+                            case NotSoFatso.STATE_FMTRIGGER:
+                                {
+                                    int trigger = epsmFmTrigger[idx];
+                                    epsmFmTrigger[idx] = 0;
+                                    return trigger;
+                                }
+                            case NotSoFatso.STATE_FMOCTAVE:
+                                if (idx < 3)
+                                    return (epsmRegisterLo[0xa4 + idx] >> 3) & 0x07;
+                                else
+                                    return (epsmRegisterHi[0xa4 + idx - 3] >> 3) & 0x07;
+                            case NotSoFatso.STATE_PERIOD:
+                                if (idx < 3)
+                                    return (epsmRegisterLo[0xa0+idx] + ((epsmRegisterLo[0xa4 + idx] & 7) << 8)) / 4;
+                                else
+                                    return (epsmRegisterHi[0xa0 + idx-3] + ((epsmRegisterHi[0xa4 + idx-3] & 7) << 8)) / 4;
+                            case NotSoFatso.STATE_VOLUME:
+                                if(idx < 3)
+                                    return (epsmRegisterLo[0xb4 + idx] & 0xc0) > 0 ? 15 : 0;
+                                else
+                                    return (epsmRegisterHi[0xb4 + idx-3] & 0xc0) > 0 ? 15 : 0;
+                            case NotSoFatso.STATE_FMSUSTAIN: return epsmFmEnabled[idx] > 0 ? 1 : 0;
+                            case NotSoFatso.STATE_FMPATCHREG: return idx < 3 ? epsmRegisterLo[epsmFmRegisterOrder[sub]+idx]: epsmRegisterHi[epsmFmRegisterOrder[sub] + idx-3];
+                        }
+                        break;
+                    }
+            }
+
+            return 0;
+        }
+
+
+
+        private bool UpdateChannel(int p, int n, Channel channel, ChannelState state)
+        {
+            var project = channel.Song.Project;
+            var hasNote = false;
+
+            /*if (channel.Type == ChannelType.Dpcm)
+            {
+                var dmc = GetState(channel.Type, NotSoFatso.STATE_DPCMCOUNTER, 0);
+                var len = GetState(channel.Type, NotSoFatso.STATE_DPCMSAMPLELENGTH, 0);
+                var dmcActive = GetState(channel.Type, NotSoFatso.STATE_DPCMACTIVE, 0);
+
+                if (len > 0)
+                {
+                    // Subtracting one here is not correct. But it is a fact that a lot of games
+                    // seemed to favor tight sample packing and did not care about playing one
+                    // extra sample of garbage.
+                    if (!preserveDpcmPadding)
+                    {
+                        Debug.Assert((len & 0xf) == 1);
+                        len--;
+                        Debug.Assert((len & 0xf) == 0);
+                    }
+
+                    var sampleData = new byte[len];
+                    for (int i = 0; i < len; i++)
+                        sampleData[i] = (byte)GetState(channel.Type, NotSoFatso.STATE_DPCMSAMPLEDATA, i);
+
+                    var sample = project.FindMatchingSample(sampleData);
+                    if (sample == null)
+                        sample = project.CreateDPCMSampleFromDmcData($"Sample {project.Samples.Count + 1}", sampleData);
+
+                    var loop = GetState(channel.Type, NotSoFatso.STATE_DPCMLOOP, 0) != 0;
+                    var pitch = GetState(channel.Type, NotSoFatso.STATE_DPCMPITCH, 0);
+                    var noteValue = -1;
+                    var dpcmInst = (Instrument)null;
+
+                    foreach (var inst in project.Instruments)
+                    {
+                        if (inst.HasAnyMappedSamples)
+                        {
+                            noteValue = inst.FindDPCMSampleMapping(sample, pitch, loop);
+                            if (noteValue >= 0)
+                            {
+                                dpcmInst = inst;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (noteValue < 0)
+                    {
+                        dpcmInst = GetDPCMInstrument();
+
+                        var found = false;
+                        foreach (var o in DPCMOctaveOrder)
+                        {
+                            for (var i = 0; i < 12; i++)
+                            {
+                                noteValue = o * 12 + i + 1;
+                                if (dpcmInst.GetDPCMMapping(noteValue) == null)
+                                {
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (found)
+                                break;
+                        }
+
+                        Debug.Assert(found);
+                        dpcmInst.MapDPCMSample(noteValue, sample, pitch, loop);
+                    }
+
+                    if (Note.IsMusicalNote(noteValue))
+                    {
+                        var note = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n);
+                        note.Value = (byte)noteValue;
+                        note.Instrument = dpcmInst;
+                        if (state.dmc != dmc)
+                        {
+                            note.DeltaCounter = (byte)dmc;
+                            state.dmc = dmc;
+                        }
+                        hasNote = true;
+                        state.state = ChannelState.Triggered;
+                    }
+                }
+                else if (dmc != state.dmc)
+                {
+                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).DeltaCounter = (byte)dmc;
+                    state.dmc = dmc;
+                }
+
+                if (dmcActive == 0 && state.state == ChannelState.Triggered)
+                {
+                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).IsStop = true;
+                    state.state = ChannelState.Stopped;
+                }
+            }
+            else */if (channel.Type != ChannelType.Dpcm)
+            {
+                var period = GetState(channel.Type, NotSoFatso.STATE_PERIOD, 0);
+                var volume = GetState(channel.Type, NotSoFatso.STATE_VOLUME, 0);
+                var duty = GetState(channel.Type, NotSoFatso.STATE_DUTYCYCLE, 0);
+                var force = false;
+                var stop = false;
+                var release = false;
+                var attack = true;
+                var octave = -1;
+
+                // VRC6 has a much larger volume range (6-bit) than our volume (4-bit).
+                if (channel.Type == ChannelType.Vrc6Saw)
+                {
+                    volume >>= 2;
+                }
+                else if (channel.Type == ChannelType.FdsWave)
+                {
+                    volume = Math.Min(Note.VolumeMax, volume >> 1);
+                }
+                else if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
+                {
+                    volume = 15 - volume;
+                }
+
+                var hasOctave = channel.IsVrc7Channel || channel.IsEPSMFmChannel;
+                var hasVolume = channel.Type != ChannelType.Triangle;
+                var hasPitch = channel.Type != ChannelType.Noise && !channel.IsEPSMRythmChannel;
+                var hasDuty = channel.Type == ChannelType.Square1 || channel.Type == ChannelType.Square2 || channel.Type == ChannelType.Noise || channel.Type == ChannelType.Vrc6Square1 || channel.Type == ChannelType.Vrc6Square2 || channel.Type == ChannelType.Mmc5Square1 || channel.Type == ChannelType.Mmc5Square2;
+                var hasTrigger = channel.IsVrc7Channel;
+
+                if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
+                {
+                    var trigger = GetState(channel.Type, NotSoFatso.STATE_FMTRIGGER, 0) != 0;
+                    var sustain = GetState(channel.Type, NotSoFatso.STATE_FMSUSTAIN, 0) != 0;
+                    var triggerChange = GetState(channel.Type, NotSoFatso.STATE_FMTRIGGERCHANGE, 0);
+
+                    var newState = state.state;
+
+                    if (!state.fmTrigger && trigger)
+                        newState = ChannelState.Triggered;
+                    else if (state.fmTrigger && !trigger && sustain)
+                        newState = ChannelState.Released;
+                    else if (!trigger && !sustain)
+                        newState = ChannelState.Stopped;
+
+                    if (newState != state.state || triggerChange > 0)
+                    {
+                        stop = newState == ChannelState.Stopped;
+                        release = newState == ChannelState.Released;
+                        state.state = newState;
+                        force |= true;
+                    }
+                    else
+                    {
+                        attack = false;
+                    }
+
+                    octave = GetState(channel.Type, NotSoFatso.STATE_FMOCTAVE, 0);
+
+                    state.fmTrigger = trigger;
+                    state.fmSustain = sustain;
+                }
+                else if (channel.Type >= ChannelType.EPSMFm1 && channel.Type <= ChannelType.EPSMFm6)
+                {
+                    var trigger = GetState(channel.Type, NotSoFatso.STATE_FMTRIGGER, 0) != 0;
+                    var sustain = GetState(channel.Type, NotSoFatso.STATE_FMSUSTAIN, 0) > 0;
+                    var stopped = GetState(channel.Type, NotSoFatso.STATE_VOLUME, 0) == 0;
+
+                    var newState = state.state;
+
+                    if (!trigger)
+                        attack = false;
+
+                    newState = sustain ? ChannelState.Triggered : (stopped ? ChannelState.Stopped : ChannelState.Released);
+
+                    if (newState != state.state || trigger)
+                    {
+                        stop = newState == ChannelState.Stopped;
+                        release = newState == ChannelState.Released;
+                        state.state = newState;
+                        force |= true;
+                    }
+
+                    octave = GetState(channel.Type, NotSoFatso.STATE_FMOCTAVE, 0);
+
+                    state.fmTrigger = trigger;
+                    state.fmSustain = sustain;
+                }
+                else
+                {
+                    var newState = volume != 0 && (channel.Type == ChannelType.Noise || period != 0) ? ChannelState.Triggered : ChannelState.Stopped;
+
+                    if (newState != state.state)
+                    {
+                        stop = newState == ChannelState.Stopped;
+                        force |= true;
+                        state.state = newState;
+                    }
+                }
+
+                if (hasVolume)
+                {
+                    if (state.volume != volume && (volume != 0 || hasTrigger))
+                    {
+                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Volume = (byte)volume;
+                        state.volume = volume;
+                    }
+                }
+
+                Instrument instrument = null;
+
+                if (hasDuty)
+                {
+                    instrument = GetDutyInstrument(channel, duty);
+                }
+                /*else if (channel.Type == ChannelType.FdsWave)
+                {
+                    var wavEnv = new sbyte[64];
+                    var modEnv = new sbyte[32];
+
+                    for (int i = 0; i < 64; i++)
+                        wavEnv[i] = (sbyte)(GetState(channel.Type, NotSoFatso.STATE_FDSWAVETABLE, i) & 0x3f);
+                    for (int i = 0; i < 32; i++)
+                        modEnv[i] = (sbyte)(GetState(channel.Type, NotSoFatso.STATE_FDSMODULATIONTABLE, i));
+
+                    Envelope.ConvertFdsModulationToAbsolute(modEnv);
+
+                    var masterVolume = (byte)GetState(channel.Type, NotSoFatso.STATE_FDSMASTERVOLUME, 0);
+
+                    instrument = GetFdsInstrument(wavEnv, modEnv, masterVolume);
+
+                    int modDepth = GetState(channel.Type, NotSoFatso.STATE_FDSMODULATIONDEPTH, 0);
+                    int modSpeed = GetState(channel.Type, NotSoFatso.STATE_FDSMODULATIONSPEED, 0);
+
+                    if (state.fdsModDepth != modDepth)
+                    {
+                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModDepth = (byte)modDepth;
+                        state.fdsModDepth = modDepth;
+                    }
+
+                    if (state.fdsModSpeed != modSpeed)
+                    {
+                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModSpeed = (ushort)modSpeed;
+                        state.fdsModSpeed = modSpeed;
+                    }
+                }
+                else if (channel.Type >= ChannelType.N163Wave1 &&
+                         channel.Type <= ChannelType.N163Wave8)
+                {
+                    var wavePos = (byte)GetState(channel.Type, NotSoFatso.STATE_N163WAVEPOS, 0);
+                    var waveLen = (byte)GetState(channel.Type, NotSoFatso.STATE_N163WAVESIZE, 0);
+
+                    if (waveLen > 0)
+                    {
+                        var waveData = new sbyte[waveLen];
+                        for (int i = 0; i < waveLen; i++)
+                            waveData[i] = (sbyte)GetState(channel.Type, NotSoFatso.STATE_N163WAVE, wavePos + i);
+
+                        instrument = GetN163Instrument(waveData, wavePos);
+                    }
+
+                    period >>= 2;
+                }*/
+                else if (channel.Type >= ChannelType.Vrc7Fm1 &&
+                         channel.Type <= ChannelType.Vrc7Fm6)
+                {
+                    var patch = (byte)GetState(channel.Type, NotSoFatso.STATE_VRC7PATCH, 0);
+                    var regs = new byte[8];
+
+                    if (patch == 0)
+                    {
+                        for (int i = 0; i < 8; i++)
+                            regs[i] = (byte)GetState(channel.Type, NotSoFatso.STATE_FMPATCHREG, i);
+                    }
+
+                    instrument = GetVrc7Instrument(patch, regs);
+                }
+                else if (channel.Type >= ChannelType.S5BSquare1 && channel.Type <= ChannelType.S5BSquare3)
+                {
+                    var noise = (byte)GetState(channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0);
+                    var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_YMMIXER, 0);
+                    mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
+                    instrument = GetS5BInstrument(noise, mixer);
+                }
+                else if (channel.Type >= ChannelType.EPSMSquare1 && channel.Type <= ChannelType.EPSMrythm6)
+                {
+                    var regs = new byte[31];
+                    Array.Clear(regs, 0, regs.Length);
+                    if (channel.Type >= ChannelType.EPSMFm1 && channel.Type <= ChannelType.EPSMFm6)
+                    {
+                        for (int i = 0; i < 31; i++)
+                            regs[i] = (byte)GetState(channel.Type, NotSoFatso.STATE_FMPATCHREG, i);
+
+                        instrument = GetEPSMInstrument(1, regs, 0, 0);
+                    }
+                    else if (channel.Type >= ChannelType.EPSMrythm1 && channel.Type <= ChannelType.EPSMrythm6)
+                    {
+                        regs[1] = (byte)GetState(channel.Type, NotSoFatso.STATE_STEREO, 0);
+                        instrument = GetEPSMInstrument(2, regs, 0, 0);
+                    }
+                    else
+                    {
+                        var noise = (byte)GetState(channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0);
+                        var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_YMMIXER, 0);
+                        mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
+                        instrument = GetEPSMInstrument(0, regs, noise, mixer);
+                    }
+
+                }
+                else
+                {
+                    instrument = GetDutyInstrument(channel, 0);
+                }
+
+                if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
+                {
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
+                    var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
+                    var finePitch = 0;
+
+                    if (!stop && !release && state.state != ChannelState.Stopped)
+                    {
+                        if (channel.Type == ChannelType.Noise)
+                            note = (period ^ 0x0f) + 32;
+                        else
+                            note = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
+
+                        if (hasOctave)
+                        {
+                            period *= (1 << octave);
+                            while (note > 12)
+                            {
+                                note -= 12;
+                                octave++;
+                            }
+                            note += octave * 12;
+                            note = Math.Min(note, noteTable.Length - 1);
+                            finePitch = period - noteTable[note];
+                        }
+                    }
+
+                    if (note < Note.MusicalNoteMin || note > Note.MusicalNoteMax)
+                        instrument = null;
+
+                    if ((state.note != note) || (state.instrument != instrument && instrument != null) || force)
+                    {
+                        var pattern = GetOrCreatePattern(channel, p);
+                        var newNote = pattern.GetOrCreateNoteAt(n);
+                        newNote.Value = (byte)note;
+                        newNote.Instrument = instrument;
+                        state.note = note;
+                        state.octave = octave;
+                        if (instrument != null)
+                            state.instrument = instrument;
+                        if (!attack)
+                            newNote.HasAttack = false;
+                        hasNote = note != 0;
+                    }
+
+                    if (hasPitch && !stop)
+                    {
+                        Channel.GetShiftsForType(channel.Type, project.ExpansionNumN163Channels, out int pitchShift, out _);
+
+                        // We scale all pitches changes (slides, fine pitch, pitch envelopes) for
+                        // some channels with HUGE pitch values (N163, VRC7).
+                        finePitch >>= pitchShift;
+
+                        var pitch = (sbyte)Utils.Clamp(finePitch, Note.FinePitchMin, Note.FinePitchMax);
+
+                        if (pitch != state.pitch)
+                        {
+                            var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FinePitch = pitch;
+                            state.pitch = pitch;
+                        }
+                    }
+
+                    state.period = period;
+                }
+            }
+
+            return hasNote;
+        }
+
+        public static byte[] Decompress(byte[] compressed_data)
+        {
+            var outputStream = new MemoryStream();
+            using (var compressedStream = new MemoryStream(compressed_data))
+            using (System.IO.Compression.GZipStream sr = new System.IO.Compression.GZipStream(
+                compressedStream, System.IO.Compression.CompressionMode.Decompress))
+            {
+                sr.CopyTo(outputStream);
+                outputStream.Position = 0;
+                return outputStream.ToArray();
+            }
+        }
+
         public Project Load(string filename, int patternLength)
         {
             var vgmFile = System.IO.File.ReadAllBytes(filename);
+            if (filename.EndsWith(".vgz"))
+                vgmFile = Decompress(vgmFile);
+
             if (!vgmFile.Skip(0).Take(4).SequenceEqual(Encoding.ASCII.GetBytes("Vgm ")))
             {
                 Log.LogMessage(LogSeverity.Error, "Incompatible file.");
                 return null;
             }
-            if (!vgmFile.Skip(8).Take(4).SequenceEqual(BitConverter.GetBytes(0x00000170)))
+            /*if (!vgmFile.Skip(8).Take(4).SequenceEqual(BitConverter.GetBytes(0x00000170)))
             {  
                 Log.LogMessage(LogSeverity.Error, "Not version 1.70");
                 return null;
-            }
-
+            }*/
 
             project = new Project();
             var instrument = (Instrument)null;
@@ -774,11 +1447,12 @@ namespace FamiStudio
             project.Copyright = "";
             project.PalMode = false;
             var songName = "VGM Import";
+            project.SetExpansionAudioMask(0xff, 0);
             song = project.CreateSong(songName);
             instrument = project.CreateInstrument(0, "instrument 2a03");
             var p = 0;
             var n = 0;
-            channelStates = new ChannelState[song.Channels.Length];
+            channelStates = new ChannelState[50];
             for (int i = 0; i < song.Channels.Length; i++)
                 channelStates[i] = new ChannelState();
 
@@ -789,8 +1463,10 @@ namespace FamiStudio
             var chipCommands = 0;
             var samples = 0;
             var frame = 0;
-            int[] apuRegister = new int[0xff];
+            int expansionMask = 0;
             while (vgmDataOffset < vgmFile.Length) {
+                if(expansionMask != project.ExpansionAudioMask)
+                    project.SetExpansionAudioMask(expansionMask, 0);
                 if (vgmData[0] == 0x67)  //DataBlock
                 {
                     Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()));
@@ -811,7 +1487,7 @@ namespace FamiStudio
                     p = frame / song.PatternLength;
                     n = frame % song.PatternLength;
                     song.SetLength(p + 1);
-                    var channel = song.Channels[0];
+                    /*var channel = song.Channels[0];
 
                     var pattern = GetOrCreatePattern(channel, p);
                     var newNote = pattern.GetOrCreateNoteAt(n);
@@ -837,20 +1513,42 @@ namespace FamiStudio
                     period = (int)apuRegister[0xa] + (int)((apuRegister[0xb] & 0x7) << 8);
                     newNote.Value = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
                     newNote.Instrument = instrument;
-                    Log.LogMessage(LogSeverity.Info, "note: " + newNote);
+                    Log.LogMessage(LogSeverity.Info, "note: " + newNote);*/
                     //channelStates[0].period = 1;
                     //channelStates[0].state = 1;
-
-
+                    //if((project.ExpansionAudioMask & ExpansionType.EPSMMask) != 0)
+                    //UpdateChannel(p, n, song.Channels[ChannelType.EPSMSquare1], channelStates[ChannelType.EPSMSquare1]);
+                    for (int c = 0; c < song.Channels.Length; c++)
+                        UpdateChannel(p, n, song.Channels[c], channelStates[c]);
                 }
                 else if (vgmData[0] == 0x61)
                 {
-                    samples = samples + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
+                    samples = samples + BitConverter.ToInt16(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
                     vgmDataOffset = vgmDataOffset + 3;
                     while (samples >= 735)
                     {
+                        p = frame / song.PatternLength;
+                        n = frame % song.PatternLength;
+                        song.SetLength(p + 1);
                         frame++;
                         samples = samples - 735;
+                        for (int c = 0; c < song.Channels.Length; c++)
+                            UpdateChannel(p, n, song.Channels[c], channelStates[c]);
+                    }
+                }
+                else if (vgmData[0] >= 0x70 && vgmData[0] <= 0x7f)
+                {
+                    samples = samples + vgmData[0] - 0x69;
+                    vgmDataOffset = vgmDataOffset + 1;
+                    while (samples >= 735)
+                    {
+                        p = frame / song.PatternLength;
+                        n = frame % song.PatternLength;
+                        song.SetLength(p + 1);
+                        frame++;
+                        samples = samples - 735;
+                        for (int c = 0; c < song.Channels.Length; c++)
+                            UpdateChannel(p, n, song.Channels[c], channelStates[c]);
                     }
                 }
                 else
@@ -874,6 +1572,64 @@ namespace FamiStudio
                             apuRegister[0x0b]--;*/
 
                         apuRegister[vgmData[1]] = vgmData[2];
+                    }
+                    if (vgmData[0] == 0x56)
+                    {
+                        if(vgmData[1] == 0x10)
+                            epsmRegisterLo[vgmData[1]] = epsmRegisterLo[vgmData[1]] | vgmData[2];
+                        else if (vgmData[1] == 0x28)
+                        {
+                            int channel = ((((vgmData[2] & 4) >> 2) + 1) * ((vgmData[2] & 3)+1)) -1;
+                            if ((vgmData[2] & 0x7) == 0)
+                            {
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
+                                    epsmFmTrigger[channel] = 1;
+                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                            }
+                            if ((vgmData[2] & 0x7) == 1)
+                            {
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
+                                    epsmFmTrigger[channel] = 1;
+                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                            }
+                            if ((vgmData[2] & 0x7) == 2)
+                            {
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
+                                    epsmFmTrigger[channel] = 1;
+                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                            }
+                            if ((vgmData[2] & 0x7) == 4)
+                            {
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
+                                    epsmFmTrigger[channel] = 1;
+                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                            }
+                            if ((vgmData[2] & 0x7) == 5)
+                            {
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
+                                    epsmFmTrigger[channel] = 1;
+                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                            }
+                            if ((vgmData[2] & 0x7) == 6)
+                            {
+                                if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[channel] == 0)
+                                    epsmFmTrigger[channel] = 1;
+                                epsmFmEnabled[channel] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
+                            }
+                        }
+                        else
+                            epsmRegisterLo[vgmData[1]] = vgmData[2];
+                        expansionMask = expansionMask | ExpansionType.EPSMMask;
+                    }
+                    if (vgmData[0] == 0x57)
+                    {
+                        epsmRegisterHi[vgmData[1]] = vgmData[2];
+                        expansionMask = expansionMask | ExpansionType.EPSMMask;
+                    }
+                    if (vgmData[0] == 0xA0)
+                    {
+                        s5bRegister[vgmData[1]] = vgmData[2];
+                        expansionMask = expansionMask | ExpansionType.S5BMask;
                     }
                     //Log.LogMessage(LogSeverity.Info, "VGM Chip Data: " + Convert.ToHexString(vgmData));
                     chipCommands++;
@@ -907,10 +1663,10 @@ namespace FamiStudio
             song.SetDefaultPatternLength(patternLength);
             song.SetSensibleBeatLength();
             song.ConvertToCompoundNotes();
-            //song.DeleteEmptyPatterns();
+            song.DeleteEmptyPatterns();
             song.UpdatePatternStartNotes();
             song.InvalidateCumulativePatternCache();
-            //project.DeleteUnusedInstruments();
+            project.DeleteUnusedInstruments();
             return project;
         }
     }
