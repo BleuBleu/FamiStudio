@@ -1054,7 +1054,7 @@ namespace FamiStudio
                 else if (vgm)
                 {
                     var dlg = new VgmImportDialog(window, filename, ClearTemporaryProjectAndInvokeAction);
-                    //dlg.ShowDialogAsync(window, ClearTemporaryProjectAndInvokeAction);
+                    dlg.ShowDialogAsync(window, ClearTemporaryProjectAndInvokeAction);
                 }
             }
             else

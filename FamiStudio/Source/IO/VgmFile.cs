@@ -527,6 +527,8 @@ namespace FamiStudio
         private readonly int[] DPCMOctaveOrder = new[] { 4, 5, 3, 6, 2, 7, 1, 0 };
 
         int[] apuRegister = new int[0xff];
+        int[] vrc7Register = new int[0xff];
+        int[] vrc7Trigger = new int[0x6];
         int[] epsmRegisterLo = new int[0xff];
         int[] epsmRegisterHi = new int[0xff];
         int[] epsmFmTrigger = new int[0x6];
@@ -880,7 +882,7 @@ namespace FamiStudio
                             case NotSoFatso.STATE_FDSMASTERVOLUME: return mWave_FDS.nMainVolume;
                         }
                         break;
-                    }
+                    }*/
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:
                 case ChannelType.Vrc7Fm3:
@@ -891,17 +893,20 @@ namespace FamiStudio
                         int idx = channel - ChannelType.Vrc7Fm1;
                         switch (state)
                         {
-                            case NotSoFatso.STATE_PERIOD: return ((VRC7Chan[1][idx] & 1) << 8) | (VRC7Chan[0][idx]);
-                            case NotSoFatso.STATE_VOLUME: return (VRC7Chan[2][idx] >> 0) & 0xF;
-                            case NotSoFatso.STATE_VRC7PATCH: return (VRC7Chan[2][idx] >> 4) & 0xF;
-                            case NotSoFatso.STATE_FMPATCHREG: return (VRC7Instrument[0][sub]);
-                            case NotSoFatso.STATE_FMOCTAVE: return (VRC7Chan[1][idx] >> 1) & 0x07;
-                            case NotSoFatso.STATE_FMTRIGGER: return (VRC7Chan[1][idx] >> 4) & 0x01;
-                            case NotSoFatso.STATE_FMTRIGGERCHANGE: return (VRC7Triggered[idx]);
-                            case NotSoFatso.STATE_FMSUSTAIN: return (VRC7Chan[1][idx] >> 5) & 0x01;
+                            case NotSoFatso.STATE_PERIOD: return ((vrc7Register[0x20+idx] & 1) << 8) | (vrc7Register[0x10 + idx]);
+                            case NotSoFatso.STATE_VOLUME: return (vrc7Register[0x30 + idx] >> 0) & 0xF;
+                            case NotSoFatso.STATE_VRC7PATCH: return (vrc7Register[0x30 + idx] >> 4) & 0xF;
+                            case NotSoFatso.STATE_FMPATCHREG: return (vrc7Register[idx]);
+                            case NotSoFatso.STATE_FMOCTAVE: return (vrc7Register[0x20 + idx] >> 1) & 0x07;
+                            case NotSoFatso.STATE_FMTRIGGER: return (vrc7Register[0x20 + idx] >> 4) & 0x01;
+                            case NotSoFatso.STATE_FMTRIGGERCHANGE:
+                                int trigger = vrc7Trigger[idx];
+                                vrc7Trigger[idx] = 0;
+                                return trigger;
+                            case NotSoFatso.STATE_FMSUSTAIN: return (vrc7Register[0x20 + idx] >> 5) & 0x01;
                         }
                         break;
-                    }
+                    }/*
                 case ChannelType.Mmc5Square1:
                 case ChannelType.Mmc5Square2:
                     {
@@ -1449,6 +1454,7 @@ namespace FamiStudio
             var songName = "VGM Import";
             project.SetExpansionAudioMask(0xff, 0);
             song = project.CreateSong(songName);
+            song.SetDefaultPatternLength(patternLength);
             instrument = project.CreateInstrument(0, "instrument 2a03");
             var p = 0;
             var n = 0;
@@ -1573,7 +1579,18 @@ namespace FamiStudio
 
                         apuRegister[vgmData[1]] = vgmData[2];
                     }
-                    if (vgmData[0] == 0x56)
+                    if (vgmData[0] == 0x51)
+                    {
+                        if (vgmData[1] >= 0x20 && vgmData[1] <= 0x28)
+                        {
+                            int channel = vgmData[1] - 0x20;
+                            if ((vgmData[2] & 0x10) > 0)
+                                vrc7Trigger[channel] = 1;
+                        }
+                        vrc7Register[vgmData[1]] = vgmData[2];
+                        expansionMask = expansionMask | ExpansionType.Vrc7Mask;
+                    }
+                    if (vgmData[0] == 0x56 || vgmData[0] == 0x52 || vgmData[0] == 0x58)
                     {
                         if(vgmData[1] == 0x10)
                             epsmRegisterLo[vgmData[1]] = epsmRegisterLo[vgmData[1]] | vgmData[2];
@@ -1621,7 +1638,7 @@ namespace FamiStudio
                             epsmRegisterLo[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
                     }
-                    if (vgmData[0] == 0x57)
+                    if (vgmData[0] == 0x57 || vgmData[0] == 0x53 || vgmData[0] == 0x59)
                     {
                         epsmRegisterHi[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
@@ -1660,7 +1677,6 @@ namespace FamiStudio
             }
 
             song.Name = songName;
-            song.SetDefaultPatternLength(patternLength);
             song.SetSensibleBeatLength();
             song.ConvertToCompoundNotes();
             song.DeleteEmptyPatterns();
