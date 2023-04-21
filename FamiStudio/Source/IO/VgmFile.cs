@@ -535,6 +535,7 @@ namespace FamiStudio
         int[] epsmFmEnabled = new int[0x6];
         int[] epsmFmRegisterOrder = new[] { 0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 };
         int[] s5bRegister = new int[0xff];
+        bool ym2149AsEPSM;
         int[] NOISE_FREQ_TABLE = new[] {0x004,0x008,0x010,0x020,0x040,0x060,0x080,0x0A0,0x0CA,0x0FE,0x17C,0x1FC,0x2FA,0x3F8,0x7F2,0xFE4 };
         float[] clockMultiplier = new float[ExpansionType.Count];
 
@@ -1403,6 +1404,9 @@ namespace FamiStudio
                     period = (int)(period * clockMultiplier[channel.Expansion]);
                 else if(!channel.IsEPSMRythmChannel)
                     period = (int)(period / clockMultiplier[channel.Expansion]);
+                if(ym2149AsEPSM && channel.IsEPSMSquareChannel)
+                    period = (int)(period / clockMultiplier[ExpansionType.S5B]);
+
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
@@ -1485,7 +1489,7 @@ namespace FamiStudio
             }
         }
 
-        public Project Load(string filename, int patternLength, int frameSkip, bool adjustClock, bool reverseDpcm, bool preserveDpcmPad)
+        public Project Load(string filename, int patternLength, int frameSkip, bool adjustClock, bool reverseDpcm, bool preserveDpcmPad, bool ym2149AsEpsm)
         {
             var vgmFile = System.IO.File.ReadAllBytes(filename);
             if (filename.EndsWith(".vgz"))
@@ -1537,6 +1541,13 @@ namespace FamiStudio
                     clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x2C).Take(4).ToArray()) / 8000000;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x10).Take(4).ToArray()) > 0)
                     clockMultiplier[ExpansionType.Vrc7] = (float)BitConverter.ToInt32(vgmFile.Skip(0x10).Take(4).ToArray()) / 3579545;
+
+                if (ym2149AsEpsm)
+                {
+                    if (BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) > 0)
+                        clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / 2000000;
+                    ym2149AsEPSM = ym2149AsEpsm;
+                }
             }
             var chipCommands = 0;
             var samples = 0;
@@ -1693,8 +1704,16 @@ namespace FamiStudio
                     }
                     else if (vgmData[0] == 0xA0)
                     {
-                        s5bRegister[vgmData[1]] = vgmData[2];
-                        expansionMask = expansionMask | ExpansionType.S5BMask;
+                        if (ym2149AsEpsm)
+                        {
+                            epsmRegisterLo[vgmData[1]] = vgmData[2];
+                            expansionMask = expansionMask | ExpansionType.EPSMMask;
+                        }
+                        else
+                        {
+                            s5bRegister[vgmData[1]] = vgmData[2];
+                            expansionMask = expansionMask | ExpansionType.S5BMask;
+                        }
                     }
                     else
                         Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + Convert.ToHexString(vgmData) + " offset: " + vgmDataOffset);

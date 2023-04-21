@@ -17,6 +17,7 @@ namespace FamiStudio
         LocalizedString AdjustClock;
         LocalizedString ReverseDPCMBitsLabel;
         LocalizedString PreserveDPCMPaddingByte;
+        LocalizedString Ym2149AsEPSM;
 
         #endregion
 
@@ -31,6 +32,7 @@ namespace FamiStudio
             dialog.Properties.AddCheckBox(AdjustClock.Colon, true);        // 2
             dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);          // 3
             dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false); // 4
+            dialog.Properties.AddCheckBox(Ym2149AsEPSM.Colon, false); // 5
             dialog.Properties.Build();
         }
 
@@ -43,13 +45,14 @@ namespace FamiStudio
                 {
                     if (r == DialogResult.OK)
                     { 
-                        var patternLen  = dialog.Properties.GetPropertyValue<int>(0);
-                        var skipFrames  = dialog.Properties.GetPropertyValue<int>(1);
-                        var adjustClock = dialog.Properties.GetPropertyValue<bool>(2);
-                        var reverseDpcmBits = dialog.Properties.GetPropertyValue<bool>(3);
+                        var patternLen          = dialog.Properties.GetPropertyValue<int>(0);
+                        var skipFrames          = dialog.Properties.GetPropertyValue<int>(1);
+                        var adjustClock         = dialog.Properties.GetPropertyValue<bool>(2);
+                        var reverseDpcmBits     = dialog.Properties.GetPropertyValue<bool>(3);
                         var preserveDpcmPadding = dialog.Properties.GetPropertyValue<bool>(4);
+                        var ym2149AsEpsm        = dialog.Properties.GetPropertyValue<bool>(5);
 
-                        var project = new VgmFile().Load(filename, patternLen, skipFrames, adjustClock, reverseDpcmBits, preserveDpcmPadding);
+                        var project = new VgmFile().Load(filename, patternLen, skipFrames, adjustClock, reverseDpcmBits, preserveDpcmPadding, ym2149AsEpsm);
                         action(project);
                     }
                     else
