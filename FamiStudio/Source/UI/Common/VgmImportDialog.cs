@@ -13,6 +13,10 @@ namespace FamiStudio
 
         LocalizedString VgmImportTitle;
         LocalizedString PatternLength;
+        LocalizedString FramesToSkip;
+        LocalizedString AdjustClock;
+        LocalizedString ReverseDPCMBitsLabel;
+        LocalizedString PreserveDPCMPaddingByte;
 
         #endregion
 
@@ -23,6 +27,10 @@ namespace FamiStudio
             filename = file;
             dialog = new PropertyDialog(win, VgmImportTitle, 400);
             dialog.Properties.AddNumericUpDown(PatternLength.Colon, 256, 40, Pattern.MaxLength, 1);  // 0
+            dialog.Properties.AddNumericUpDown(FramesToSkip.Colon, 0, 0, 100, 1);  // 1
+            dialog.Properties.AddCheckBox(AdjustClock.Colon, true);        // 2
+            dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);          // 3
+            dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false); // 4
             dialog.Properties.Build();
         }
 
@@ -35,9 +43,13 @@ namespace FamiStudio
                 {
                     if (r == DialogResult.OK)
                     { 
-                        var patternLen          = dialog.Properties.GetPropertyValue<int>(0); 
+                        var patternLen  = dialog.Properties.GetPropertyValue<int>(0);
+                        var skipFrames  = dialog.Properties.GetPropertyValue<int>(1);
+                        var adjustClock = dialog.Properties.GetPropertyValue<bool>(2);
+                        var reverseDpcmBits = dialog.Properties.GetPropertyValue<bool>(3);
+                        var preserveDpcmPadding = dialog.Properties.GetPropertyValue<bool>(4);
 
-                        var project = new VgmFile().Load(filename, patternLen);
+                        var project = new VgmFile().Load(filename, patternLen, skipFrames, adjustClock, reverseDpcmBits, preserveDpcmPadding);
                         action(project);
                     }
                     else

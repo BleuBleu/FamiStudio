@@ -536,6 +536,7 @@ namespace FamiStudio
         int[] epsmFmRegisterOrder = new[] { 0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 };
         int[] s5bRegister = new int[0xff];
         int[] NOISE_FREQ_TABLE = new[] {0x004,0x008,0x010,0x020,0x040,0x060,0x080,0x0A0,0x0CA,0x0FE,0x17C,0x1FC,0x2FA,0x3F8,0x7F2,0xFE4 };
+        float[] clockMultiplier = new float[ExpansionType.Count];
 
         class ChannelState
         {
@@ -942,7 +943,7 @@ namespace FamiStudio
                             case NotSoFatso.STATE_PERIOD: return ((vrc7Register[0x20+idx] & 1) << 8) | (vrc7Register[0x10 + idx]);
                             case NotSoFatso.STATE_VOLUME: return (vrc7Register[0x30 + idx] >> 0) & 0xF;
                             case NotSoFatso.STATE_VRC7PATCH: return (vrc7Register[0x30 + idx] >> 4) & 0xF;
-                            case NotSoFatso.STATE_FMPATCHREG: return (vrc7Register[idx]);
+                            case NotSoFatso.STATE_FMPATCHREG: return (vrc7Register[sub]);
                             case NotSoFatso.STATE_FMOCTAVE: return (vrc7Register[0x20 + idx] >> 1) & 0x07;
                             case NotSoFatso.STATE_FMTRIGGER: return (vrc7Register[0x20 + idx] >> 4) & 0x01;
                             case NotSoFatso.STATE_FMTRIGGERCHANGE:
@@ -1398,6 +1399,7 @@ namespace FamiStudio
                     instrument = GetDutyInstrument(channel, 0);
                 }
 
+                period = (int)(period / clockMultiplier[channel.Expansion]);
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
@@ -1480,7 +1482,7 @@ namespace FamiStudio
             }
         }
 
-        public Project Load(string filename, int patternLength)
+        public Project Load(string filename, int patternLength, int frameSkip, bool adjustClock, bool reverseDpcm, bool preserveDpcmPad)
         {
             var vgmFile = System.IO.File.ReadAllBytes(filename);
             if (filename.EndsWith(".vgz"))
@@ -1497,8 +1499,9 @@ namespace FamiStudio
                 return null;
             }*/
 
+            preserveDpcmPadding = preserveDpcmPad;
+            Array.Fill(clockMultiplier, 1);
             project = new Project();
-            var instrument = (Instrument)null;
             project.Name = "VGM Import";
             project.Author = "unknown";
             project.Copyright = "";
@@ -1507,7 +1510,6 @@ namespace FamiStudio
             project.SetExpansionAudioMask(0xff, 0);
             song = project.CreateSong(songName);
             song.SetDefaultPatternLength(patternLength);
-            instrument = project.CreateInstrument(0, "instrument 2a03");
             var p = 0;
             var n = 0;
             channelStates = new ChannelState[50];
@@ -1518,6 +1520,21 @@ namespace FamiStudio
             var vgmDataOffset = BitConverter.ToInt32(vgmFile.Skip(0x34).Take(4).ToArray())+0x34;
             Log.LogMessage(LogSeverity.Info, "VGM Data Startoffset: " + vgmDataOffset);
             var vgmData = vgmFile.Skip(vgmDataOffset).Take(1).ToArray();
+            if (adjustClock)
+            {
+                if (BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) > 0)
+                    clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / (1789772 / 2);
+                if (BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = 4000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray());
+                if (BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray()) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = 8000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray());
+                if (BitConverter.ToInt32(vgmFile.Skip(0x4C).Take(4).ToArray()) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = 8000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x4C).Take(4).ToArray());
+                if (BitConverter.ToInt32(vgmFile.Skip(0x2c).Take(4).ToArray()) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = 8000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x2C).Take(4).ToArray());
+                if (BitConverter.ToInt32(vgmFile.Skip(0x10).Take(4).ToArray()) > 0)
+                    clockMultiplier[ExpansionType.Vrc7] = 8000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x10).Take(4).ToArray()) / 3579545;
+            }
             var chipCommands = 0;
             var samples = 0;
             var frame = 0;
@@ -1542,11 +1559,12 @@ namespace FamiStudio
                     vgmDataOffset = vgmDataOffset + 1;
                     frame++;
 
-                    p = frame / song.PatternLength;
-                    n = frame % song.PatternLength;
+                    p = (frame - frameSkip) / song.PatternLength;
+                    n = (frame - frameSkip) % song.PatternLength;
                     song.SetLength(p + 1);
-                    for (int c = 0; c < song.Channels.Length; c++)
-                        UpdateChannel(p, n, song.Channels[c], channelStates[c]);
+                    if(frameSkip < frame)
+                        for (int c = 0; c < song.Channels.Length; c++)
+                            UpdateChannel(p, n, song.Channels[c], channelStates[c]);
                 }
                 else if (vgmData[0] == 0x61)
                 {
@@ -1554,13 +1572,14 @@ namespace FamiStudio
                     vgmDataOffset = vgmDataOffset + 3;
                     while (samples >= 735)
                     {
-                        p = frame / song.PatternLength;
-                        n = frame % song.PatternLength;
+                        p = (frame - frameSkip) / song.PatternLength;
+                        n = (frame - frameSkip) % song.PatternLength;
                         song.SetLength(p + 1);
                         frame++;
                         samples = samples - 735;
-                        for (int c = 0; c < song.Channels.Length; c++)
-                            UpdateChannel(p, n, song.Channels[c], channelStates[c]);
+                        if (frameSkip < frame)
+                            for (int c = 0; c < song.Channels.Length; c++)
+                                UpdateChannel(p, n, song.Channels[c], channelStates[c]);
                     }
                 }
                 else if (vgmData[0] >= 0x70 && vgmData[0] <= 0x7f)
@@ -1569,13 +1588,14 @@ namespace FamiStudio
                     vgmDataOffset = vgmDataOffset + 1;
                     while (samples >= 735)
                     {
-                        p = frame / song.PatternLength;
-                        n = frame % song.PatternLength;
+                        p = (frame - frameSkip) / song.PatternLength;
+                        n = (frame - frameSkip) % song.PatternLength;
                         song.SetLength(p + 1);
                         frame++;
                         samples = samples - 735;
-                        for (int c = 0; c < song.Channels.Length; c++)
-                            UpdateChannel(p, n, song.Channels[c], channelStates[c]);
+                        if (frameSkip < frame)
+                            for (int c = 0; c < song.Channels.Length; c++)
+                                UpdateChannel(p, n, song.Channels[c], channelStates[c]);
                     }
                 }
                 else if (vgmData[0] == 0x4F || vgmData[0] == 0x50 || vgmData[0] == 0x31)
@@ -1682,6 +1702,9 @@ namespace FamiStudio
                 vgmData = vgmFile.Skip(vgmDataOffset).Take(1).ToArray();
             }
             Log.LogMessage(LogSeverity.Info, "VGM Chip Commands: " + chipCommands);
+            Log.LogMessage(LogSeverity.Info, "S5b Clock Multiplier: " + clockMultiplier[ExpansionType.S5B]);
+            Log.LogMessage(LogSeverity.Info, "EPSM Clock Multiplier: " + clockMultiplier[ExpansionType.EPSM]);
+            Log.LogMessage(LogSeverity.Info, "VRC7 Clock Multiplier: " + clockMultiplier[ExpansionType.Vrc7]);
             Log.LogMessage(LogSeverity.Info, "Frames: " + frame + " time: " + (frame/60) + "s");
 
             if (vgmFile.Skip(vgmDataOffset).Take(4).SequenceEqual(Encoding.ASCII.GetBytes("Gd3 ")))
@@ -1710,6 +1733,8 @@ namespace FamiStudio
             song.UpdatePatternStartNotes();
             song.InvalidateCumulativePatternCache();
             project.DeleteUnusedInstruments();
+            foreach (var sample in project.Samples)
+                sample.ReverseBits = reverseDpcm;
             return project;
         }
     }
