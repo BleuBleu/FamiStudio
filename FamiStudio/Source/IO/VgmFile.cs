@@ -1399,7 +1399,10 @@ namespace FamiStudio
                     instrument = GetDutyInstrument(channel, 0);
                 }
 
-                period = (int)(period / clockMultiplier[channel.Expansion]);
+                if(channel.IsEPSMFmChannel || channel.IsVrc7Channel)
+                    period = (int)(period * clockMultiplier[channel.Expansion]);
+                else if(!channel.IsEPSMRythmChannel)
+                    period = (int)(period / clockMultiplier[channel.Expansion]);
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
@@ -1525,15 +1528,15 @@ namespace FamiStudio
                 if (BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) > 0)
                     clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / (1789772 / 2);
                 if (BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = 4000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray());
+                    clockMultiplier[ExpansionType.EPSM] = 4000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) / 4000000;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = 8000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray());
+                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray()) / 8000000;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x4C).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = 8000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x4C).Take(4).ToArray());
+                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x4C).Take(4).ToArray()) / 8000000;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x2c).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = 8000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x2C).Take(4).ToArray());
+                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x2C).Take(4).ToArray()) / 8000000;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x10).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.Vrc7] = 8000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x10).Take(4).ToArray()) / 3579545;
+                    clockMultiplier[ExpansionType.Vrc7] = (float)BitConverter.ToInt32(vgmFile.Skip(0x10).Take(4).ToArray()) / 3579545;
             }
             var chipCommands = 0;
             var samples = 0;
