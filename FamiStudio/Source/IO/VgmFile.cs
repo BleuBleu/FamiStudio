@@ -736,6 +736,8 @@ namespace FamiStudio
                 stereo = " Left";
             if (patchRegs[1] == 0x40)
                 stereo = " Right";
+            if (patchRegs[1] == 0x00)
+                stereo = " Stop";
 
             if (chanType == 0)
             {
