@@ -1550,6 +1550,7 @@ namespace FamiStudio
                 }
             }
             var chipCommands = 0;
+            var unknownChipCommands = 0;
             var samples = 0;
             var frame = 0;
             int expansionMask = 0;
@@ -1596,9 +1597,12 @@ namespace FamiStudio
                                 UpdateChannel(p, n, song.Channels[c], channelStates[c]);
                     }
                 }
-                else if (vgmData[0] >= 0x70 && vgmData[0] <= 0x7f)
+                else if (vgmData[0] >= 0x70 && vgmData[0] <= 0x8f)
                 {
-                    samples = samples + vgmData[0] - 0x69;
+                    if(vgmData[0] >= 0x80)
+                        samples = samples + vgmData[0] - 0x80;
+                    else
+                        samples = samples + vgmData[0] - 0x6F;
                     vgmDataOffset = vgmDataOffset + 1;
                     while (samples >= 735)
                     {
@@ -1616,6 +1620,10 @@ namespace FamiStudio
                     vgmDataOffset = vgmDataOffset + 2;
                 else if (vgmData[0] >= 0xC0 && vgmData[0] <= 0xDF)
                     vgmDataOffset = vgmDataOffset + 4;
+                else if (vgmData[0] == 0xE0)
+                    vgmDataOffset = vgmDataOffset + 5;
+                //else if (vgmData[0] >= 0x80)
+                //    vgmDataOffset = vgmDataOffset + 3; //temporary
                 else
                 {
 
@@ -1693,6 +1701,8 @@ namespace FamiStudio
                                 epsmFmEnabled[5] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                         }
+                        else if (vgmData[1] >= 0x30 && vgmData[1] <= 0x4F)
+                            epsmRegisterLo[vgmData[1]] = vgmData[2] & 0x3f;
                         else
                             epsmRegisterLo[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
@@ -1716,7 +1726,11 @@ namespace FamiStudio
                         }
                     }
                     else
+                    {
+                        if(unknownChipCommands > 100)
                         Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + Convert.ToHexString(vgmData) + " offset: " + vgmDataOffset);
+                        unknownChipCommands++;
+                    }
                     //Log.LogMessage(LogSeverity.Info, "VGM Chip Data: " + Convert.ToHexString(vgmData));
                     chipCommands++;
                     vgmDataOffset = vgmDataOffset + 3;
