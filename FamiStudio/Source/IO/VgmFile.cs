@@ -1622,8 +1622,14 @@ namespace FamiStudio
                     vgmDataOffset = vgmDataOffset + 4;
                 else if (vgmData[0] == 0xE0)
                     vgmDataOffset = vgmDataOffset + 5;
-                //else if (vgmData[0] >= 0x80)
-                //    vgmDataOffset = vgmDataOffset + 3; //temporary
+                else if (vgmData[0] >= 0x90 && vgmData[0] <= 0x92)
+                    vgmDataOffset = vgmDataOffset + 6;
+                else if (vgmData[0] == 0x93)
+                    vgmDataOffset = vgmDataOffset + 11;
+                else if (vgmData[0] == 0x94)
+                    vgmDataOffset = vgmDataOffset + 2;
+                else if (vgmData[0] == 0x95)
+                    vgmDataOffset = vgmDataOffset + 5;
                 else
                 {
 
