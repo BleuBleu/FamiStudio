@@ -837,7 +837,7 @@ namespace FamiStudio
                             //case NotSoFatso.STATE_VOLUME: return mWave_TND.nNoiseLengthCount && mWave_TND.bNoiseChannelEnabled ? mWave_TND.nNoiseVolume : 0;
                             case NotSoFatso.STATE_DUTYCYCLE: return (apuRegister[0x0e] & 0x80) >> 8;
 
-                            case NotSoFatso.STATE_PERIOD: return NOISE_FREQ_TABLE[apuRegister[0x0e]];
+                            case NotSoFatso.STATE_PERIOD: return NOISE_FREQ_TABLE[apuRegister[0x0e]&0xf];
                             //case NotSoFatso.STATE_PERIOD: return IndexOf(NOISE_FREQ_TABLE, 16, mWave_TND.nNoiseFreqTimer);
                         }
                         break;
