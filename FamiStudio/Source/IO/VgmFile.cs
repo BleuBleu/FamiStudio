@@ -1709,7 +1709,10 @@ namespace FamiStudio
                     }
                     else if (vgmData[0] == 0x57 || vgmData[0] == 0x53 || vgmData[0] == 0x59)
                     {
-                        epsmRegisterHi[vgmData[1]] = vgmData[2];
+                        if (vgmData[1] >= 0x30 && vgmData[1] <= 0x4F)
+                            epsmRegisterHi[vgmData[1]] = vgmData[2] & 0x3f;
+                        else
+                            epsmRegisterHi[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
                     }
                     else if (vgmData[0] == 0xA0)
