@@ -1658,7 +1658,8 @@ namespace FamiStudio
                         {
                             int channel = vgmData[1] - 0x20;
                             if ((vgmData[2] & 0x10) > 0)
-                                vrc7Trigger[channel] = 1;
+                                if(channel < 6)
+                                    vrc7Trigger[channel] = 1;
                         }
                         vrc7Register[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.Vrc7Mask;
