@@ -243,6 +243,7 @@ namespace FamiStudio
 
             // Hide a few formats we don't care about on mobile.
             dialog.SetPageVisible((int)ExportFormat.Midi, Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.CommandLog, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.Text, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiTracker, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, Platform.IsDesktop);
@@ -342,7 +343,7 @@ namespace FamiStudio
             if (canExportToVideo)
             {
                 page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
-                page.AddDropDownList(ResolutionLabel.Colon, VideoResolution.Names, VideoResolution.Names[0], VideoResTooltip); // 1
+                page.AddDropDownList(ResolutionLabel.Colon, Localization.ToStringArray(VideoResolution.LocalizedNames), VideoResolution.LocalizedNames[0], VideoResTooltip); // 1
                 page.AddDropDownList(FrameRateLabel.Colon, new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 2
                 page.AddDropDownList(AudioBitRateLabel.Colon, new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 3
                 page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000", VideoBitRateTooltip); // 4

@@ -111,7 +111,7 @@ namespace FamiStudio
                 (smallChannelText ? fonts.FontMediumBold : fonts.FontVeryLargeBold) : 
                 (smallChannelText ? fonts.FontMedium     : fonts.FontVeryLarge);
             var textOffsetY = smallChannelText ? 1 : 4;
-            var channelLineWidth = resY >= 720 ? 5 : 3;
+            var channelLineWidth = 20; // MATTT resY >= 720 ? 5 : 3;
 
             LoadChannelIcons(!smallChannelText);
             BuildChannelColors(song, channelStates, metadata, colorMode);
@@ -120,6 +120,7 @@ namespace FamiStudio
             {
                 var frame = metadata[f];
                 var c = videoGraphics.DefaultCommandList;
+                var o = videoGraphics.OverlayCommandList;
 
                 c.PushClipRegion(0, 0, videoResX, videoResY);
 
@@ -162,9 +163,9 @@ namespace FamiStudio
 
                 // Grid lines
                 for (int i = 1; i < numRows; i++)
-                    c.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
+                    o.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
                 for (int i = 1; i < numColumns; i++)
-                    c.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
+                    o.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
 
                 c.PopClipRegion();
             });

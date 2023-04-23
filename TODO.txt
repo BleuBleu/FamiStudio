@@ -1,7 +1,14 @@
 4.1.0
 =====
+Beta bugs:
 - OSC trigger assert 
-- TikTok mode for video export.
+x TikTok mode for video export.
+- Copy paste between windows yes/no thing.
+x Video line Z sorting.
+- Proto VRC7 issue from #bug report
+x Merge latest PR(s)
+
+
 - Try no attack? Do it at airport/plane.
 	=> instrument change:
 		* optional : disable attack
