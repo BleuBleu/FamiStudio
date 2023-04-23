@@ -39,11 +39,11 @@ namespace FamiStudio
                     (1L << ChannelType.S5BSquare1) |
                     (1L << ChannelType.S5BSquare2) |
                     (1L << ChannelType.S5BSquare3));
-                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_TONE);
+                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_MIXER_SETTING);
                 WriteRegister(NesApu.S5B_DATA, toneReg);
                 if (noiseFreq > 0)
                 {
-                    WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_NOISE);
+                    WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_NOISE_FREQ);
                     WriteRegister(NesApu.S5B_DATA, noiseFreq);
                 }
                 WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_LO_A + channelIdx * 2);
