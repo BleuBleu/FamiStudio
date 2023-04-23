@@ -39,11 +39,11 @@ namespace FamiStudio
                     (1L << ChannelType.EPSMSquare1) |
                     (1L << ChannelType.EPSMSquare2) |
                     (1L << ChannelType.EPSMSquare3));
-                WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_TONE);
+                WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_MIXER_SETTING);
                 WriteRegister(NesApu.EPSM_DATA0, toneReg);
                 if (noiseFreq > 0)
                 {
-                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_NOISE);
+                    WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_NOISE_FREQ);
                     WriteRegister(NesApu.EPSM_DATA0, noiseFreq);
                 }
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_LO_A + channelIdx * 2);
