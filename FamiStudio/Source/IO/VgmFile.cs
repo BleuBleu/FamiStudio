@@ -533,6 +533,7 @@ namespace FamiStudio
         int[] epsmRegisterHi = new int[0xff];
         int[] epsmFmTrigger = new int[0x6];
         int[] epsmFmEnabled = new int[0x6];
+        int[] epsmFmKey = new int[0x6];
         int[] epsmFmRegisterOrder = new[] { 0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 };
         int[] s5bRegister = new int[0xff];
         bool ym2149AsEPSM;
@@ -736,8 +737,10 @@ namespace FamiStudio
                 stereo = " Left";
             if (patchRegs[1] == 0x40)
                 stereo = " Right";
-            if (patchRegs[1] == 0x00)
+            if (patchRegs[1] == 0x00 && chanType == 2)
                 stereo = " Stop";
+            if (patchRegs[1] == 0x00 && chanType != 2)
+                patchRegs[1] = 0x80;
 
             if (chanType == 0)
             {
@@ -1076,7 +1079,25 @@ namespace FamiStudio
                                 else
                                     return (epsmRegisterHi[0xb4 + idx-3] & 0xc0) > 0 ? 15 : 0;
                             case NotSoFatso.STATE_FMSUSTAIN: return epsmFmEnabled[idx] > 0 ? 1 : 0;
-                            case NotSoFatso.STATE_FMPATCHREG: return idx < 3 ? epsmRegisterLo[epsmFmRegisterOrder[sub]+idx]: epsmRegisterHi[epsmFmRegisterOrder[sub] + idx-3];
+                            case NotSoFatso.STATE_FMPATCHREG:
+                                int returnval = idx < 3 ? epsmRegisterLo[epsmFmRegisterOrder[sub] + idx] : epsmRegisterHi[epsmFmRegisterOrder[sub] + idx - 3];
+                                if (sub == 3 && (epsmFmKey[idx] & 0x10) == 0)
+                                {
+                                    returnval = 0x7f;
+                                }
+                                if (sub == 10 && (epsmFmKey[idx] & 0x20) == 0)
+                                {
+                                    returnval = 0x7f;
+                                }
+                                if (sub == 17 && (epsmFmKey[idx] & 0x40) == 0)
+                                {
+                                    returnval = 0x7f;
+                                }
+                                if (sub == 24 && (epsmFmKey[idx] & 0x80) == 0)
+                                {
+                                    returnval = 0x7f;
+                                }
+                                return returnval;
                         }
                         break;
                     }
@@ -1676,42 +1697,72 @@ namespace FamiStudio
                             if ((vgmData[2] & 0x7) == 0)
                             {
                                 if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[0] == 0)
+                                {
                                     epsmFmTrigger[0] = 1;
+                                    epsmFmKey[0] = vgmData[2];
+                                }
                                 epsmFmEnabled[0] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 1)
                             {
                                 if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[1] == 0)
+                                {
                                     epsmFmTrigger[1] = 1;
+                                    epsmFmKey[1] = vgmData[2];
+                                }
                                 epsmFmEnabled[1] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 2)
                             {
                                 if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[2] == 0)
+                                {
                                     epsmFmTrigger[2] = 1;
+                                    epsmFmKey[2] = vgmData[2];
+                                }
                                 epsmFmEnabled[2] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 4)
                             {
                                 if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[3] == 0)
+                                {
                                     epsmFmTrigger[3] = 1;
+                                    epsmFmKey[3] = vgmData[2];
+                                }
                                 epsmFmEnabled[3] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 5)
                             {
                                 if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[4] == 0)
+                                {
                                     epsmFmTrigger[4] = 1;
+                                    epsmFmKey[4] = vgmData[2];
+                                }
                                 epsmFmEnabled[4] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                             if ((vgmData[2] & 0x7) == 6)
                             {
                                 if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[5] == 0)
+                                {
                                     epsmFmTrigger[5] = 1;
+                                    epsmFmKey[5] = vgmData[2];
+                                }
                                 epsmFmEnabled[5] = (vgmData[2] & 0xf0) > 0 ? 1 : 0;
                             }
                         }
                         else if (vgmData[1] >= 0x30 && vgmData[1] <= 0x4F)
+                            epsmRegisterLo[vgmData[1]] = vgmData[2] & 0x7f;
+                        else if (vgmData[1] >= 0x50 && vgmData[1] <= 0x5F)
+                            epsmRegisterLo[vgmData[1]] = vgmData[2] & 0xdf;
+                        else if (vgmData[1] >= 0x60 && vgmData[1] <= 0x6F)
+                            epsmRegisterLo[vgmData[1]] = vgmData[2] & 0x9f;
+                        else if (vgmData[1] >= 0x70 && vgmData[1] <= 0x7F)
+                            epsmRegisterLo[vgmData[1]] = vgmData[2] & 0x1f;
+                        else if (vgmData[1] >= 0x90 && vgmData[1] <= 0x9F)
+                            epsmRegisterLo[vgmData[1]] = vgmData[2] & 0x0f;
+                        else if (vgmData[1] >= 0xB0 && vgmData[1] <= 0xB2)
                             epsmRegisterLo[vgmData[1]] = vgmData[2] & 0x3f;
+                        else if (vgmData[1] >= 0xB4 && vgmData[1] <= 0xB6)
+                            epsmRegisterLo[vgmData[1]] = vgmData[2] & 0xf7;
                         else
                             epsmRegisterLo[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
@@ -1719,7 +1770,19 @@ namespace FamiStudio
                     else if (vgmData[0] == 0x57 || vgmData[0] == 0x53 || vgmData[0] == 0x59)
                     {
                         if (vgmData[1] >= 0x30 && vgmData[1] <= 0x4F)
+                            epsmRegisterHi[vgmData[1]] = vgmData[2] & 0x7f;
+                        else if (vgmData[1] >= 0x50 && vgmData[1] <= 0x5F)
+                            epsmRegisterHi[vgmData[1]] = vgmData[2] & 0xdf;
+                        else if (vgmData[1] >= 0x60 && vgmData[1] <= 0x6F)
+                            epsmRegisterHi[vgmData[1]] = vgmData[2] & 0x9f;
+                        else if (vgmData[1] >= 0x70 && vgmData[1] <= 0x7F)
+                            epsmRegisterHi[vgmData[1]] = vgmData[2] & 0x1f;
+                        else if (vgmData[1] >= 0x90 && vgmData[1] <= 0x9F)
+                            epsmRegisterHi[vgmData[1]] = vgmData[2] & 0x0f;
+                        else if (vgmData[1] >= 0xB0 && vgmData[1] <= 0xB2)
                             epsmRegisterHi[vgmData[1]] = vgmData[2] & 0x3f;
+                        else if (vgmData[1] >= 0xB4 && vgmData[1] <= 0xB6)
+                            epsmRegisterHi[vgmData[1]] = vgmData[2] & 0xf7;
                         else
                             epsmRegisterHi[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
