@@ -1460,7 +1460,7 @@ namespace FamiStudio
                     if (note < Note.MusicalNoteMin || note > Note.MusicalNoteMax)
                         instrument = null;
 
-                    if ((state.note != note) || (state.instrument != instrument && instrument != null) || force)
+                    if (((state.note != note) || (state.instrument != instrument) || force) && instrument != null)
                     {
                         var pattern = GetOrCreatePattern(channel, p);
                         var newNote = pattern.GetOrCreateNoteAt(n);
