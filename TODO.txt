@@ -5,9 +5,11 @@ Beta bugs:
 x TikTok mode for video export.
 x Copy paste between windows yes/no thing.
 x Video line Z sorting.
-- Proto VRC7 issue from #bug report
+/ Proto VRC7 issue from #bug report
+	=> Need more info.
 x Merge latest PR(s)
-- Mark sleep issues
+x Mark sleep issues
+- Prevent drag when a dialog is active.
 x Blank presets in FDS?
 
 
