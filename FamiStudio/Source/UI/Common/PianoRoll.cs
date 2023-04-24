@@ -6685,7 +6685,7 @@ namespace FamiStudio
                         if (channel.SupportsStopNotes)
                             menu.Add(new ContextMenuOption("MenuStopNote", MakeStopNoteContext, () => { ConvertToStopNote(noteLocation, note); }));
                         if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument))
-                            menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceInstrumentContext, () => { ReplaceSelectionInstrument(App.SelectedInstrument, Point.Empty, true); }));
+                            menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceInstrumentContext, () => { ReplaceSelectionInstrument(App.SelectedInstrument, new Point(x, y)); }));
                         menu.Add(new ContextMenuOption("MenuEyedropper", MakeInstrumentCurrentContext, () => { Eyedrop(note); }));
 
                         var factor = GetBestSnapFactorForNote(noteLocation, note);
