@@ -8,7 +8,7 @@ x Video line Z sorting.
 - Proto VRC7 issue from #bug report
 x Merge latest PR(s)
 - Mark sleep issues
-- Blank presets in FDS?
+x Blank presets in FDS?
 
 
 - Try no attack? Do it at airport/plane.
