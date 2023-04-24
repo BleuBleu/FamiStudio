@@ -2142,7 +2142,7 @@ namespace FamiStudio
 
                         if (note.IsMusical)
                         {
-                            note.Instrument = channel.SupportsInstrument(newNote.Instrument) ? newNote.Instrument : null;
+                            note.Instrument = newNote.Instrument != null && channel.SupportsInstrument(newNote.Instrument) ? newNote.Instrument : null;
                             note.SlideNoteTarget = channel.SupportsSlideNotes ? newNote.SlideNoteTarget : (byte)0;
                             note.Flags = newNote.Flags;
                             note.Duration = newNote.Duration;
@@ -6012,7 +6012,7 @@ namespace FamiStudio
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[location.PatternIndex];
 
-            if (!channel.SupportsInstrument(App.SelectedInstrument))
+            if (!channel.SupportsInstrument(App.SelectedInstrument, false))
             {
                 App.ShowInstrumentError(channel, true);
                 return null;
@@ -7525,7 +7525,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (channel.SupportsInstrument(App.SelectedInstrument))
+                    if (channel.SupportsInstrument(App.SelectedInstrument, false))
                     {
                         if (pattern != null)
                         {
@@ -8386,7 +8386,7 @@ namespace FamiStudio
         { 
             var channel = Song.Channels[editChannel];
 
-            if (channel.SupportsInstrument(App.SelectedInstrument))
+            if (channel.SupportsInstrument(App.SelectedInstrument, false))
             {
                 App.PlayInstrumentNote(noteValue, false, false);
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.CreateNote, true);
