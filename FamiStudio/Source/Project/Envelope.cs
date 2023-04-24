@@ -808,7 +808,7 @@ namespace FamiStudio
 
         static WavePresetType()
         {
-            Localization.Localize(typeof(WavePresetType));
+            Localization.LocalizeStatic(typeof(WavePresetType));
         }
 
         public static int GetValueForInternalName(string str)
