@@ -9,7 +9,8 @@ x Video line Z sorting.
 	=> Need more info.
 x Merge latest PR(s)
 x Mark sleep issues
-- Prevent drag when a dialog is active.
+x Prevent drag when a dialog is active.
+- Replace instrument on mobile (see pinned in #beta)
 x Blank presets in FDS?
 
 

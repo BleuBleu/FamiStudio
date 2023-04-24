@@ -632,7 +632,7 @@ namespace FamiStudio
 
         private unsafe void DropCallback(IntPtr window, int count, IntPtr paths)
         {
-            if (count > 0)
+            if (count > 0 && !container.IsDialogActive)
             {
                 IntPtr ptr;
 
