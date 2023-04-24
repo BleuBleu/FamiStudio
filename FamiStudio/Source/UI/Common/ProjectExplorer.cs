@@ -3400,51 +3400,7 @@ namespace FamiStudio
 
             if (App.Project.NeedsExpansionInstruments)
             {
-                if (Platform.IsDesktop)
-                {
-                    HandleContextMenuInstrumentHeaderButton(x, y, SubButtonType.Add);
-                }
-                else
-                {
-                    var activeExpansions = App.Project.GetActiveExpansions();
-                    var addedExpansions = new List<int>();
-
-                    var dlg = new PropertyDialog(ParentWindow, AddInstrumentTitle, new Point(left + x, top + y), 260, true);
-                    dlg.Properties.AddLabel(null, SelectAudioExpansionLabel.Colon); // 0
-
-                    addedExpansions.Add(ExpansionType.None);
-                    dlg.Properties.AddRadioButton(SelectAudioExpansionLabel, ExpansionType.GetLocalizedName(ExpansionType.None, ExpansionType.LocalizationMode.Instrument), true);
-
-                    for (int i = 1; i < activeExpansions.Length; i++)
-                    {
-                        if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
-                        {
-                            var expName = ExpansionType.GetLocalizedName(activeExpansions[i], ExpansionType.LocalizationMode.Instrument);
-                            dlg.Properties.AddRadioButton(null, expName, false);
-                            addedExpansions.Add(activeExpansions[i]);
-                        }
-                    }
-
-                    dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
-                    dlg.Properties.Build();
-
-                    dlg.ShowDialogAsync((r) =>
-                    {
-                        if (r == DialogResult.OK)
-                        {
-                            for (int i = 0; i < addedExpansions.Count; i++)
-                            {
-                                if (dlg.Properties.GetPropertyValue<bool>(i + 1))
-                                {
-                                    instrumentType = addedExpansions[i];
-                                    break;
-                                }
-                            }
-
-                            AddInstrument(instrumentType);
-                        }
-                    });
-                }
+                HandleContextMenuInstrumentHeaderButton(x, y, SubButtonType.Add);
             }
             else
             {
@@ -4614,7 +4570,7 @@ namespace FamiStudio
         
         private bool HandleContextMenuInstrumentHeaderButton(int x, int y, SubButtonType subButtonType)
         {
-            if (App.Project.NeedsExpansionInstruments && subButtonType == SubButtonType.Add && Platform.IsDesktop)
+            if (App.Project.NeedsExpansionInstruments && subButtonType == SubButtonType.Add)
             {
                 var activeExpansions = App.Project.GetActiveExpansions();
 

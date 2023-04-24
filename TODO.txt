@@ -3,10 +3,12 @@
 Beta bugs:
 - OSC trigger assert 
 x TikTok mode for video export.
-- Copy paste between windows yes/no thing.
+x Copy paste between windows yes/no thing.
 x Video line Z sorting.
 - Proto VRC7 issue from #bug report
 x Merge latest PR(s)
+- Mark sleep issues
+- Blank presets in FDS?
 
 
 - Try no attack? Do it at airport/plane.
