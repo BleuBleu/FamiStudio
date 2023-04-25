@@ -840,8 +840,9 @@ namespace FamiStudio
                             //case NotSoFatso.STATE_VOLUME: return mWave_TND.nNoiseLengthCount && mWave_TND.bNoiseChannelEnabled ? mWave_TND.nNoiseVolume : 0;
                             case NotSoFatso.STATE_DUTYCYCLE: return (apuRegister[0x0e] & 0x80) >> 8;
 
-                            case NotSoFatso.STATE_PERIOD: return NOISE_FREQ_TABLE[apuRegister[0x0e]&0xf];
-                            //case NotSoFatso.STATE_PERIOD: return IndexOf(NOISE_FREQ_TABLE, 16, mWave_TND.nNoiseFreqTimer);
+                            //case NotSoFatso.STATE_PERIOD: return NOISE_FREQ_TABLE[apuRegister[0x0e]&0xf];
+                            case NotSoFatso.STATE_PERIOD: return apuRegister[0x0e] & 0xf;
+                                //case NotSoFatso.STATE_PERIOD: return IndexOf(NOISE_FREQ_TABLE, 16, mWave_TND.nNoiseFreqTimer);
                         }
                         break;
                     }
@@ -1458,9 +1459,13 @@ namespace FamiStudio
                     }
 
                     if (note < Note.MusicalNoteMin || note > Note.MusicalNoteMax)
+                    {
+                        if (note > Note.MusicalNoteMax && note != Note.NoteRelease)
+                            note = Note.MusicalNoteMax;
                         instrument = null;
+                    }
 
-                    if (((state.note != note) || (state.instrument != instrument) || force) && instrument != null)
+                    if ((state.note != note) || (state.instrument != instrument && instrument != null) || force)
                     {
                         var pattern = GetOrCreatePattern(channel, p);
                         var newNote = pattern.GetOrCreateNoteAt(n);
@@ -1553,7 +1558,7 @@ namespace FamiStudio
             if (adjustClock)
             {
                 if (BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / (1789772 / 2);
+                    clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / 1789772;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) > 0)
                     clockMultiplier[ExpansionType.EPSM] = 4000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) / 4000000;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray()) > 0)
