@@ -1536,6 +1536,7 @@ namespace FamiStudio
 
             preserveDpcmPadding = preserveDpcmPad;
             Array.Fill(clockMultiplier, 1);
+            bool pal = false;
             project = new Project();
             project.Name = "VGM Import";
             project.Author = "unknown";
@@ -1553,7 +1554,7 @@ namespace FamiStudio
 
 
             var vgmDataOffset = BitConverter.ToInt32(vgmFile.Skip(0x34).Take(4).ToArray())+0x34;
-            Log.LogMessage(LogSeverity.Info, "VGM Data Startoffset: " + vgmDataOffset);
+            //Log.LogMessage(LogSeverity.Info, "VGM Data Startoffset: " + vgmDataOffset);
             var vgmData = vgmFile.Skip(vgmDataOffset).Take(1).ToArray();
             if (adjustClock)
             {
@@ -1593,26 +1594,28 @@ namespace FamiStudio
                 else if (vgmData[0] == 0x66)
                 {
                     vgmDataOffset = vgmDataOffset + 1;
-                    Log.LogMessage(LogSeverity.Info, "VGM Data End");
+                    //Log.LogMessage(LogSeverity.Info, "VGM Data End");
                     break;
                 }
 
-                else if (vgmData[0] == 0x62 || vgmData[0] == 0x63)
+                else if (vgmData[0] == 0x61 || vgmData[0] == 0x63 || vgmData[0] == 0x62)
                 {
-                    vgmDataOffset = vgmDataOffset + 1;
-                    frame++;
-
-                    p = (frame - frameSkip) / song.PatternLength;
-                    n = (frame - frameSkip) % song.PatternLength;
-                    song.SetLength(p + 1);
-                    if(frameSkip < frame)
-                        for (int c = 0; c < song.Channels.Length; c++)
-                            UpdateChannel(p, n, song.Channels[c], channelStates[c]);
-                }
-                else if (vgmData[0] == 0x61)
-                {
-                    samples = samples + BitConverter.ToInt16(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
-                    vgmDataOffset = vgmDataOffset + 3;
+                    if (vgmData[0] == 0x63)
+                    {
+                        vgmDataOffset = vgmDataOffset + 1;
+                        samples = samples + 882;
+                        pal = true;
+                    }
+                    else if (vgmData[0] == 0x62)
+                    {
+                        vgmDataOffset = vgmDataOffset + 1;
+                        samples = samples + 735;
+                    }
+                    else
+                    {
+                        samples = samples + BitConverter.ToInt16(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
+                        vgmDataOffset = vgmDataOffset + 3;
+                    }
                     while (samples >= 735)
                     {
                         p = (frame - frameSkip) / song.PatternLength;
@@ -1817,6 +1820,10 @@ namespace FamiStudio
                 }
                 vgmData = vgmFile.Skip(vgmDataOffset).Take(1).ToArray();
             }
+            if(pal)
+                Log.LogMessage(LogSeverity.Info, "VGM is PAL");
+            else
+                Log.LogMessage(LogSeverity.Info, "VGM is NTSC");
             Log.LogMessage(LogSeverity.Info, "VGM Chip Commands: " + chipCommands);
             Log.LogMessage(LogSeverity.Info, "S5b Clock Multiplier: " + clockMultiplier[ExpansionType.S5B]);
             Log.LogMessage(LogSeverity.Info, "EPSM Clock Multiplier: " + clockMultiplier[ExpansionType.EPSM]);
