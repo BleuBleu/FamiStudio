@@ -536,6 +536,8 @@ namespace FamiStudio
         int[] epsmFmKey = new int[0x6];
         int[] epsmFmRegisterOrder = new[] { 0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 };
         int[] s5bRegister = new int[0xff];
+        bool dpcmTrigger = false;
+        byte[] dpcmData = new byte[0xffff];
         bool ym2149AsEPSM;
         int[] NOISE_FREQ_TABLE = new[] {0x004,0x008,0x010,0x020,0x040,0x060,0x080,0x0A0,0x0CA,0x0FE,0x17C,0x1FC,0x2FA,0x3F8,0x7F2,0xFE4 };
         float[] clockMultiplier = new float[ExpansionType.Count];
@@ -846,11 +848,11 @@ namespace FamiStudio
                         }
                         break;
                     }
-/*                case ChannelType.Dpcm:
+                case ChannelType.Dpcm:
                     {
                         switch (state)
                         {
-                            case NotSoFatso.STATE_DPCMSAMPLELENGTH:
+                            /*case NotSoFatso.STATE_DPCMSAMPLELENGTH:
                                 {
                                     if (mWave_TND.bDMCTriggered)
                                     {
@@ -861,19 +863,41 @@ namespace FamiStudio
                                     {
                                         return 0;
                                     }
-                                }
+                                }*/
+                            case NotSoFatso.STATE_DPCMSAMPLELENGTH:
+                                {
+                                    if (dpcmTrigger)
+                                    {
+                                        Log.LogMessage(LogSeverity.Info, "samplelength: " + (apuRegister[0x13] << 4) + " sampladdr: " + (apuRegister[0x12] << 6));
+                                        dpcmTrigger = false;
+
+                                        return (apuRegister[0x13] << 4) + 1;
+                                    }
+                                    else
+                                    {
+                                        return 0;
+                                    }
+                                }/*
                             case NotSoFatso.STATE_DPCMSAMPLEADDR:
                                 {
                                     return mWave_TND.nDMCDMABank_Load << 16 | mWave_TND.nDMCDMAAddr_Load;
+                                }*/
+                            case NotSoFatso.STATE_DPCMSAMPLEADDR:
+                                {
+                                    return apuRegister[0x12];
                                 }
                             case NotSoFatso.STATE_DPCMLOOP:
                                 {
-                                    return mWave_TND.bDMCLoop;
-                                }
+                                    return apuRegister[0x10] & 0x40;
+                                }/*
                             case NotSoFatso.STATE_DPCMPITCH:
                                 {
                                     return IndexOf(DMC_FREQ_TABLE[bPALMode], 0x10, mWave_TND.nDMCFreqTimer);
-                                }
+                                }*/
+                            case NotSoFatso.STATE_DPCMPITCH:
+                                {
+                                    return apuRegister[0x10] & 0x0f;
+                                }/*
                             case NotSoFatso.STATE_DPCMSAMPLEDATA:
                                 {
                                     int bank = mWave_TND.nDMCDMABank_Load;
@@ -884,18 +908,26 @@ namespace FamiStudio
                                         bank = (bank + 1) & 0x07;
                                     }
                                     return mWave_TND.pDMCDMAPtr[bank][addr];
+                                }*/
+                            case NotSoFatso.STATE_DPCMSAMPLEDATA:
+                                {
+
+                                    var nDMCDMABank_Load = (apuRegister[0x12] >> 6) | 0x04;
+                                    var nDMCDMAAddr_Load = (apuRegister[0x12] << 6) & 0x0FFF;
+
+                                    return dpcmData[((apuRegister[0x12] << 6) & 0x0FFF) + sub];
                                 }
                             case NotSoFatso.STATE_DPCMCOUNTER:
                                 {
-                                    return mWave_TND.bDMCLastDeltaWrite;
+                                    return 1;// mWave_TND.bDMCLastDeltaWrite;
                                 }
                             case NotSoFatso.STATE_DPCMACTIVE:
                                 {
-                                    return mWave_TND.bDMCActive;
+                                    return apuRegister[0x15] & 0x10;// mWave_TND.bDMCActive;
                                 }
                         }
                         break;
-                    }*/
+                    }
 
                 //###############################################################
                 //
@@ -1131,7 +1163,6 @@ namespace FamiStudio
                         len--;
                         Debug.Assert((len & 0xf) == 0);
                     }
-
                     var sampleData = new byte[len];
                     for (int i = 0; i < len; i++)
                         sampleData[i] = (byte)GetState(channel.Type, NotSoFatso.STATE_DPCMSAMPLEDATA, i);
@@ -1589,6 +1620,19 @@ namespace FamiStudio
                 if (vgmData[0] == 0x67)  //DataBlock
                 {
                     Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()));
+                    Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()));
+                    Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3+4).Take(2).ToArray()));
+                    if(Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()) == "C2")
+                    {
+                        var data = vgmFile.Skip(vgmDataOffset + 3 + 4).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray())).ToArray();
+                        for(int i = 0; i < data.Length; i++)
+                        {
+                            dpcmData[i+ BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()) - 0xc000] = data[i];
+                        }
+
+                    }
+                    else
+                        dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 +2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray())-2).ToArray();
                     vgmDataOffset = vgmDataOffset + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) + 3 + 4;
                 }
                 else if (vgmData[0] == 0x66)
@@ -1680,7 +1724,8 @@ namespace FamiStudio
                             apuRegister[0x07]--;
                         if (vgmData[1] == 0x09 && vgmData[2] == 0x8f && apuRegister[2] == 0xff)
                             apuRegister[0x0b]--;*/
-
+                        if (vgmData[1] == 0x15 && (vgmData[2] & 0x10) > 0)
+                            dpcmTrigger = true;
                         apuRegister[vgmData[1]] = vgmData[2];
                     }
                     else if (vgmData[0] == 0x51)
