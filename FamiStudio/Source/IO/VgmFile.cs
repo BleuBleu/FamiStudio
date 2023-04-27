@@ -1624,7 +1624,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3+4).Take(2).ToArray()));
                     if(Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()) == "C2")
                     {
-                        var data = vgmFile.Skip(vgmDataOffset + 3 + 4).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray())).ToArray();
+                        var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) -2).ToArray();
                         for(int i = 0; i < data.Length; i++)
                         {
                             dpcmData[i+ BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()) - 0xc000] = data[i];
