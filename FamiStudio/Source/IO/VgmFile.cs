@@ -911,11 +911,7 @@ namespace FamiStudio
                                 }*/
                             case NotSoFatso.STATE_DPCMSAMPLEDATA:
                                 {
-
-                                    var nDMCDMABank_Load = (apuRegister[0x12] >> 6) | 0x04;
-                                    var nDMCDMAAddr_Load = (apuRegister[0x12] << 6) & 0x0FFF;
-
-                                    return dpcmData[((apuRegister[0x12] << 6) & 0x0FFF) + sub];
+                                    return dpcmData[((apuRegister[0x12] << 6)) + sub];
                                 }
                             case NotSoFatso.STATE_DPCMCOUNTER:
                                 {
