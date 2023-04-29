@@ -6254,7 +6254,12 @@ namespace FamiStudio
                 env.Values[idx] = (sbyte)Utils.Clamp(env.Values[idx] + delta, min, max);
             }
 
-            editInstrument.NotifyEnvelopeChanged(editEnvelope, true);
+            // Arps will have null instruments.
+            if (editInstrument != null)
+            {
+                editInstrument.NotifyEnvelopeChanged(editEnvelope, true);
+            }
+
             MarkDirty();
         }
 
