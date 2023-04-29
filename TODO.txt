@@ -12,8 +12,13 @@ x Mark sleep issues
 x Prevent drag when a dialog is active.
 x Replace instrument on mobile (see pinned in #beta)
 x Blank presets in FDS?
+x DPCM rendering issue
+- 
+- At home: test the magic trackpad issue
+- 
 
 
+========================================
 - Try no attack? Do it at airport/plane.
 	=> instrument change:
 		* optional : disable attack

@@ -3382,13 +3382,13 @@ namespace FamiStudio
                         if (indices != null) indices[j] = i;
                     }
 
-                    r.c.DrawGeometry(points, color, 1, true);
+                    r.c.DrawGeometry(points, color, 1, true, false);
 
                     if (drawSamples)
                     {
                         var selectionValid = IsSelectionValid();
 
-                        for (int i = 0; i < points.GetLength(0); i++)
+                        for (int i = 0; i < points.Length / 2; i++)
                         {
                             var selected = isSource && selectionValid && indices[i] >= selectionMin && indices[i] <= selectionMax;
                             var sampleScale = selected ? 1.5f : 1.0f;
