@@ -812,6 +812,7 @@ namespace FamiStudio
                 var len = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMSAMPLELENGTH, 0);
                 var dmcActive = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMACTIVE, 0);
                 var minSampleLen = preserveDpcmPadding ? 1 : 2;
+                var noteTriggeredThisFrame = false;
 
                 if (len >= minSampleLen) 
                 {
@@ -888,6 +889,7 @@ namespace FamiStudio
                         }
                         hasNote = true;
                         state.state = ChannelState.Triggered;
+                        noteTriggeredThisFrame = true;
                     }
                 }
                 else if (dmc != state.dmc)
@@ -896,7 +898,10 @@ namespace FamiStudio
                     state.dmc = dmc;
                 }
 
-                if (dmcActive == 0 && state.state == ChannelState.Triggered)
+                // Some very short sample will enable/disable the DMC channel all within
+                // one frame. We'll only stop the note on the next frame. Its best we can 
+                // do. (See "Palamedes_SFX.nsfe", first track).
+                if (dmcActive == 0 && state.state == ChannelState.Triggered && !noteTriggeredThisFrame)
                 {
                     GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).IsStop = true;
                     state.state = ChannelState.Stopped;
