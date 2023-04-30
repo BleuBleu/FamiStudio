@@ -2008,7 +2008,7 @@ namespace FamiStudio
                 if (captureOperation == CaptureOperation.DragSong       ||
                     captureOperation == CaptureOperation.DragInstrument ||
                     captureOperation == CaptureOperation.DragSample     ||
-                    captureOperation == CaptureOperation.DragArpeggio)
+                    (captureOperation == CaptureOperation.DragArpeggio && draggedArpeggio != null))
                 {
                     var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
                     if (ClientRectangle.Contains(pt.X, pt.Y))
@@ -2489,7 +2489,7 @@ namespace FamiStudio
                 }
                 else if (captureOperation == CaptureOperation.DragArpeggio)
                 {
-                    if (inside && button != null && button.type == ButtonType.Arpeggio)
+                    if (inside && button != null && button.type == ButtonType.Arpeggio && draggedArpeggio != null)
                     {
                         var arpBefore = buttons[buttonIdx].arpeggio;
                         if (arpBefore != draggedArpeggio)
