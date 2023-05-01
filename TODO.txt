@@ -1,6 +1,7 @@
 4.1.0
 =====
 Beta bugs:
+- CMD+Q = crash macos.
 - OSC trigger assert 
 / Proto VRC7 issue from #bug report 
 	- Zero sec stop after
