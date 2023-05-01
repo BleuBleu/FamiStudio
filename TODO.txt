@@ -2,21 +2,10 @@
 =====
 Beta bugs:
 - OSC trigger assert 
-x TikTok mode for video export.
-x Copy paste between windows yes/no thing.
-x Video line Z sorting.
 / Proto VRC7 issue from #bug report 
-	=> Need more info.
-x Merge latest PR(s)
-x Mark sleep issues
-x Prevent drag when a dialog is active.
-x Replace instrument on mobile (see pinned in #beta)
-x Blank presets in FDS?
-x DPCM rendering issue
-x Crash modify arp
-/ Is FDS resetting phase every time?
-	=> Recompile MacOS
-- Background grey instruments 
+	- Zero sec stop after
+- Thick line video export
+- FTM import "1" in names
 - At home: test the magic trackpad issue
 - 
 
