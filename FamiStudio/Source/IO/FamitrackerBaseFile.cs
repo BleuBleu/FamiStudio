@@ -234,22 +234,26 @@ namespace FamiStudio
 
         protected Instrument CreateUniquelyNamedInstrument(int expansion, string baseName)
         {
-            return project.CreateInstrument(expansion, project.GenerateUniqueInstrumentName(baseName));
+            var name = !string.IsNullOrEmpty(baseName) && project.IsInstrumentNameUnique(baseName) ? baseName : project.GenerateUniqueInstrumentName(baseName); 
+            return project.CreateInstrument(expansion, name);
         }
 
         protected void RenameInstrumentEnsureUnique(Instrument instrument, string baseName)
         {
-            project.RenameInstrument(instrument, project.GenerateUniqueInstrumentName(baseName));
+            var name = !string.IsNullOrEmpty(baseName) && project.IsInstrumentNameUnique(baseName) ? baseName : project.GenerateUniqueInstrumentName(baseName);
+            project.RenameInstrument(instrument, name);
         }
 
         protected DPCMSample CreateUniquelyNamedSampleFromDmcData(string baseName, byte[] data)
         {
-            return project.CreateDPCMSampleFromDmcData(project.GenerateUniqueDPCMSampleName(baseName), data);
+            var name = !string.IsNullOrEmpty(baseName) && project.IsDPCMSampleNameUnique(baseName) ? baseName : project.GenerateUniqueDPCMSampleName(baseName);
+            return project.CreateDPCMSampleFromDmcData(name, data);
         }
 
         protected Song CreateUniquelyNamedSong(string baseName)
         {
-            return project.CreateSong(project.GenerateUniqueSongName(baseName));
+            var name = !string.IsNullOrEmpty(baseName) && project.IsDPCMSampleNameUnique(baseName) ? baseName : project.GenerateUniqueSongName(baseName);
+            return project.CreateSong(name);
         }
 
         protected Arpeggio GetOrCreateArpeggio(int param)

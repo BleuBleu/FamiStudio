@@ -111,7 +111,7 @@ namespace FamiStudio
                 (smallChannelText ? fonts.FontMediumBold : fonts.FontVeryLargeBold) : 
                 (smallChannelText ? fonts.FontMedium     : fonts.FontVeryLarge);
             var textOffsetY = smallChannelText ? 1 : 4;
-            var channelLineWidth = 20; // MATTT resY >= 720 ? 5 : 3;
+            var channelLineWidth = resY >= 720 ? 5 : 3;
 
             LoadChannelIcons(!smallChannelText);
             BuildChannelColors(song, channelStates, metadata, colorMode);

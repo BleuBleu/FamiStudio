@@ -86,10 +86,10 @@ namespace FamiStudio
         LocalizedString AddNewArpeggioTooltip;
         LocalizedString AddNewInstrumentTooltip;
         LocalizedString AddNewSongTooltip;
-        LocalizedString AutoSortArpeggioActiveTooltip;
-        LocalizedString AutoSortInstrumentActiveTooltip;
-        LocalizedString AutoSortSampleActiveTooltip;
-        LocalizedString AutoSortSongActiveTooltip;
+        LocalizedString AutoSortArpeggiosTooltip;
+        LocalizedString AutoSortInstrumentsTooltip;
+        LocalizedString AutoSortSamplesTooltip;
+        LocalizedString AutoSortSongsTooltip;
         LocalizedString ChangeValueFineTooltip;
         LocalizedString ChangeValueTooltip;
         LocalizedString CopyEnvelopeTooltip;
@@ -113,10 +113,6 @@ namespace FamiStudio
         LocalizedString ReplaceArpeggioTooltip;
         LocalizedString SelectArpeggioTooltip;
         LocalizedString SelectInstrumentTooltip;
-        LocalizedString SortArpeggiosTooltip;
-        LocalizedString SortInstrumentsTooltip;
-        LocalizedString SortSamplesTooltip;
-        LocalizedString SortSongTooltip;
         LocalizedString ToggleValueTooltip;
 
         // Messages
@@ -141,8 +137,6 @@ namespace FamiStudio
         LocalizedString ClipboardNoValidTextError;
         LocalizedString ClipboardInvalidNumberRegisters;
         LocalizedString CantFindSourceFileError;
-        LocalizedString AddInstrumentTitle;
-        LocalizedString SelectAudioExpansionLabel;
 
         // Import songs dialog
         LocalizedString ImportSongsTitle;
@@ -204,10 +198,6 @@ namespace FamiStudio
         LocalizedString AddExpInstrumentContext;
         LocalizedString AddRegularInstrumentContext;
         LocalizedString AutoAssignBanksContext;
-        LocalizedString AutoSortArpeggiosContext;
-        LocalizedString AutoSortInstrumentsContext;
-        LocalizedString AutoSortSamplesContext;
-        LocalizedString AutoSortSongsContext;
         LocalizedString ClearEnvelopeContext;
         LocalizedString CopyRegisterValueContext;
         LocalizedString DeleteArpeggioContext;
@@ -1079,25 +1069,25 @@ namespace FamiStudio
                     case ButtonType.SongHeader:
                     {
                         var buttons = new[] { SubButtonType.Add, SubButtonType.Load, SubButtonType.Sort };
-                        active = projectExplorer.App.Project.AutoSortSongs ? 3 : -1;
+                        active = projectExplorer.App.Project.AutoSortSongs ? -1 : 3;
                         return buttons;
                     }
                     case ButtonType.InstrumentHeader:
                     {
                         var buttons = new[] { SubButtonType.Add, SubButtonType.Load, SubButtonType.Sort };
-                        active = projectExplorer.App.Project.AutoSortInstruments ? 3 : -1;
+                        active = projectExplorer.App.Project.AutoSortInstruments ? -1 : 3;
                         return buttons;
                     }
                     case ButtonType.ArpeggioHeader:
                     {
                         var buttons = new[] { SubButtonType.Add, SubButtonType.Sort };
-                        active = projectExplorer.App.Project.AutoSortArpeggios ? 1 : -1;
+                        active = projectExplorer.App.Project.AutoSortArpeggios ? -1 : 1;
                         return buttons;
                     }
                     case ButtonType.DpcmHeader:
                     {
                         var buttons = new[] { SubButtonType.Load, SubButtonType.Sort };
-                        active = projectExplorer.App.Project.AutoSortSamples ? 1 : -1;
+                        active = projectExplorer.App.Project.AutoSortSamples ? -1 : 1;
                         return buttons;
                     }
                     case ButtonType.ProjectSettings:
@@ -2229,7 +2219,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Sort)
                     {
-                        tooltip = App.Project.AutoSortSongs ? AutoSortSongActiveTooltip.Format("<MouseRight>") : $"<MouseLeft> {SortSongTooltip}\n<MouseRight> {MoreOptionsTooltip}";
+                        tooltip = $"<MouseLeft> {AutoSortSongsTooltip}";
                     }
                 }
                 else if (buttonType == ButtonType.Song)
@@ -2257,7 +2247,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Sort)
                     {
-                        tooltip = App.Project.AutoSortInstruments ? AutoSortInstrumentActiveTooltip.Format("<MouseRight>") : $"<MouseLeft> {SortInstrumentsTooltip}\n<MouseRight> {MoreOptionsTooltip}";
+                        tooltip = $"<MouseLeft> {AutoSortInstrumentsTooltip}";
                     }
                 }
                 else if (buttonType == ButtonType.ArpeggioHeader)
@@ -2268,7 +2258,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Sort)
                     {
-                        tooltip = App.Project.AutoSortArpeggios ? AutoSortArpeggioActiveTooltip.Format("<MouseRight>") : $"<MouseLeft> {SortArpeggiosTooltip}\n<MouseRight> {MoreOptionsTooltip}";
+                        tooltip = $"<MouseLeft> {AutoSortArpeggiosTooltip}";
                     }
                 }
                 else if (buttonType == ButtonType.ProjectSettings)
@@ -2371,7 +2361,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Sort)
                     {
-                        tooltip = App.Project.AutoSortSamples ? AutoSortSampleActiveTooltip.Format("<MouseRight>") : $"<MouseLeft> {SortSamplesTooltip}\n<MouseRight> {MoreOptionsTooltip}";
+                        tooltip = $"<MouseLeft> {AutoSortSamplesTooltip}";
                     }
                 }
                 else if (buttonType == ButtonType.Arpeggio)
@@ -3026,27 +3016,11 @@ namespace FamiStudio
 
         private void SortSongs()
         {
-            if (!App.Project.AutoSortSongs)
-            {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                App.Project.SortSongs();
-                App.UndoRedoManager.EndTransaction();
-                RefreshButtons();
-            }
-        }
-
-        private void HandleContextMenuSortSongs(int x, int y)
-        {
-            App.ShowContextMenu(left + x, top + y, new[]
-            {
-                new ContextMenuOption(AutoSortSongsContext, null, () => 
-                {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                    App.Project.AutoSortSongs = !App.Project.AutoSortSongs;
-                    App.UndoRedoManager.EndTransaction();
-                    RefreshButtons();
-                }, () => App.Project.AutoSortSongs ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked)
-            });
+            var scope = !App.Project.AutoSortSongs ? TransactionScope.ProjectNoDPCMSamples : TransactionScope.Application;
+            App.UndoRedoManager.BeginTransaction(scope);
+            App.Project.AutoSortSongs = !App.Project.AutoSortSongs;
+            App.UndoRedoManager.EndTransaction();
+            RefreshButtons();
         }
 
         private void ImportSongs_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
@@ -3184,27 +3158,11 @@ namespace FamiStudio
 
         private void SortInstruments()
         {
-            if (!App.Project.AutoSortInstruments)
-            {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                App.Project.SortInstruments();
-                App.UndoRedoManager.EndTransaction();
-                RefreshButtons();
-            }
-        }
-
-        private void HandleContextMenuSortInstruments(int x, int y)
-        {
-            App.ShowContextMenu(left + x, top + y, new[]
-            {
-                new ContextMenuOption(AutoSortInstrumentsContext, null, () =>
-                {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                    App.Project.AutoSortInstruments = !App.Project.AutoSortInstruments;
-                    App.UndoRedoManager.EndTransaction();
-                    RefreshButtons();
-                }, () => App.Project.AutoSortInstruments ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked)
-            });
+            var scope = !App.Project.AutoSortSongs ? TransactionScope.ProjectNoDPCMSamples : TransactionScope.Application;
+            App.UndoRedoManager.BeginTransaction(scope);
+            App.Project.AutoSortInstruments = !App.Project.AutoSortInstruments;
+            App.UndoRedoManager.EndTransaction();
+            RefreshButtons();
         }
 
         private void LoadDPCMSample()
@@ -3472,27 +3430,11 @@ namespace FamiStudio
 
         private void SortArpeggios()
         {
-            if (!App.Project.AutoSortArpeggios)
-            {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                App.Project.SortArpeggios();
-                App.UndoRedoManager.EndTransaction();
-                RefreshButtons();
-            }
-        }
-
-        private void HandleContextMenuSortArpeggios(int x, int y)
-        {
-            App.ShowContextMenu(left + x, top + y, new[]
-            {
-                new ContextMenuOption(AutoSortArpeggiosContext, null, () =>
-                {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                    App.Project.AutoSortArpeggios = !App.Project.AutoSortArpeggios;
-                    App.UndoRedoManager.EndTransaction();
-                    RefreshButtons();
-                }, () => App.Project.AutoSortArpeggios ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked)
-            });
+            var scope = !App.Project.AutoSortSongs ? TransactionScope.ProjectNoDPCMSamples : TransactionScope.Application;
+            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+            App.Project.AutoSortArpeggios = !App.Project.AutoSortArpeggios;
+            App.UndoRedoManager.EndTransaction();
+            RefreshButtons();
         }
 
         private void ReloadDPCMSampleSourceData(DPCMSample sample)
@@ -3562,27 +3504,11 @@ namespace FamiStudio
 
         private void SortSamples()
         {
-            if (!App.Project.AutoSortSamples)
-            {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                App.Project.SortSamples();
-                App.UndoRedoManager.EndTransaction();
-                RefreshButtons();
-            }
-        }
-
-        private void HandleContextMenuSortSamples(int x, int y)
-        {
-            App.ShowContextMenu(left + x, top + y, new[]
-            {
-                new ContextMenuOption(AutoSortSamplesContext, null, () =>
-                {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                    App.Project.AutoSortSamples = !App.Project.AutoSortSamples;
-                    App.UndoRedoManager.EndTransaction();
-                    RefreshButtons();
-                }, () => App.Project.AutoSortSamples ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked)
-            });
+            var scope = !App.Project.AutoSortSongs ? TransactionScope.Project : TransactionScope.Application;
+            App.UndoRedoManager.BeginTransaction(scope);
+            App.Project.AutoSortSamples = !App.Project.AutoSortSamples;
+            App.UndoRedoManager.EndTransaction();
+            RefreshButtons();
         }
 
         private void AutoAssignSampleBanks()
@@ -3690,11 +3616,6 @@ namespace FamiStudio
                 else if (subButtonType == SubButtonType.Sort)
                     SortSongs();
             }
-            else if (e.Right)
-            {
-                if (subButtonType == SubButtonType.Sort)
-                    HandleContextMenuSortSongs(e.X, e.Y);
-            }
 
             return true;
         }
@@ -3725,11 +3646,6 @@ namespace FamiStudio
                     ImportInstruments();
                 else if (subButtonType == SubButtonType.Sort)
                     SortInstruments();
-            }
-            else if (e.Right)
-            {
-                if (subButtonType == SubButtonType.Sort)
-                    HandleContextMenuSortInstruments(e.X, e.Y);
             }
 
             return true;
@@ -3908,11 +3824,6 @@ namespace FamiStudio
                 else if (subButtonType == SubButtonType.Sort)
                     SortArpeggios();
             }
-            else if (e.Right)
-            {
-                if (subButtonType == SubButtonType.Sort)
-                    HandleContextMenuSortArpeggios(e.X, e.Y);
-            }
 
             return true;
         }
@@ -3955,11 +3866,6 @@ namespace FamiStudio
                     LoadDPCMSample();
                 else if (subButtonType == SubButtonType.Sort)
                     SortSamples();
-            }
-            else if (e.Right)
-            {
-                if (subButtonType == SubButtonType.Sort)
-                    HandleContextMenuSortSamples(e.X, e.Y);
             }
 
             return true;
@@ -4327,39 +4233,6 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleContextMenuSongHeaderButton(int x, int y, Button button, SubButtonType subButtonType)
-        {
-            if (subButtonType == SubButtonType.Sort)
-            { 
-                HandleContextMenuSortSongs(x, y);
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool HandleContextMenuSampleHeaderButton(int x, int y, Button button, SubButtonType subButtonType)
-        {
-            if (subButtonType == SubButtonType.Sort)
-            {
-                HandleContextMenuSortSamples(x, y);
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool HandleContextMenuArpeggioHeaderButton(int x, int y, Button button, SubButtonType subButtonType)
-        {
-            if (subButtonType == SubButtonType.Sort)
-            {
-                HandleContextMenuSortArpeggios(x, y);
-                return true;
-            }
-
-            return false;
-        }
-
         private void AskReplaceInstrument(Instrument inst)
         {
             var instrumentNames  = new List<string>();
@@ -4590,11 +4463,6 @@ namespace FamiStudio
                 App.ShowContextMenu(left + x, top + y, options.ToArray());
                 return true;
             }
-            else if (Platform.IsMobile && subButtonType == SubButtonType.Sort)
-            {
-                HandleContextMenuSortInstruments(x, y);
-                return true;
-            }
 
             return false;
         }
@@ -4731,8 +4599,6 @@ namespace FamiStudio
                         return HandleContextMenuProjectSettings(x, y);
                     case ButtonType.Song:
                         return HandleContextMenuSongButton(x, y, button);
-                    case ButtonType.SongHeader:
-                        return HandleContextMenuSongHeaderButton(x, y, button, subButtonType);
                     case ButtonType.Instrument:
                         return HandleContextMenuInstrumentButton(x, y, button, subButtonType, buttonIdx);
                     case ButtonType.InstrumentHeader:
@@ -4743,12 +4609,8 @@ namespace FamiStudio
                         return HandleContextMenuParamButton(x, y, button);
                     case ButtonType.Arpeggio:
                         return HandleContextMenuArpeggioButton(x, y, button);
-                    case ButtonType.ArpeggioHeader:
-                        return HandleContextMenuArpeggioHeaderButton(x, y, button, subButtonType);
                     case ButtonType.Dpcm:
                         return HandleContextMenuDpcmButton(x, y, button, subButtonType, buttonIdx);
-                    case ButtonType.DpcmHeader:
-                        return HandleContextMenuSampleHeaderButton(x, y, button, subButtonType);
                 }
 
                 return true;
