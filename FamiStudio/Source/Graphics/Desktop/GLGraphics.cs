@@ -239,7 +239,7 @@ namespace FamiStudio
             MakeFullScreenTriangle();
             BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, 6);
             BindAndUpdateColorBuffer(1, colorBuffer, colArray, 3);
-            BindAndUpdateByteBuffer(2, dashBuffer, depArray, 3, false, true); // Irrelevant
+            BindAndUpdateByteBuffer(2, dashBuffer, depArray, 3, false, false); // Irrelevant
             BindAndUpdateByteBuffer(3, depthBuffer, depArray, 3, true); // Unused
             BindAndUpdateIndexBuffer(indexBuffer, idxArray, 3);
 
@@ -520,7 +520,7 @@ namespace FamiStudio
                     { 
                         BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
                         BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
-                        BindAndUpdateByteBuffer(2, dashBuffer, draw.dshArray, draw.dshArraySize, false, false);
+                        //BindAndUpdateByteBuffer(2, dashBuffer, draw.dshArray, draw.dshArraySize, false, false); // We dont use thick dashed line on desktop.
                         BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
                         BindAndUpdateIndexBuffer(indexBuffer,  draw.idxArray, draw.idxArraySize);
 
@@ -536,7 +536,6 @@ namespace FamiStudio
                     GL.BindVertexArray(lineVao);
                     GL.Uniform(lineScaleBiasUniform, viewportScaleBias);
                     GL.Uniform(lineDashScaleUniform, 1.0f / dashSize);
-                    GL.ActiveTexture(GL.Texture0 + 0);
 
                     BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
                     BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);

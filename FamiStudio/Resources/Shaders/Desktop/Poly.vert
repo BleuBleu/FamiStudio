@@ -14,6 +14,7 @@ void main()
     gl_Position = vec4(inPosition.xy * screenScaleBias.xy + screenScaleBias.zw, inDepth, 1);
     colorInterp = inColor;
 
+#if 0 // We dont use thick dashed line on desktop.
     if (inDash != 0.0)
     {
         float dash = inDash * 0.25f;
@@ -22,6 +23,7 @@ void main()
         dashInterp = (dashCoord - floor(dash)) * uniformDashScale;
     }
     else
+#endif
     {
         dashInterp = 0.0f;
     }

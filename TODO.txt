@@ -7,7 +7,7 @@ Beta bugs:
 x Thick line video export
 x FTM import "1" in names
 x Simplify sorting thing
-- frame dash lines on Android
+x frame dash lines on Android
 - Sample color option.
 - CMD+Q = crash macos.
 - At home: test the magic trackpad issue
