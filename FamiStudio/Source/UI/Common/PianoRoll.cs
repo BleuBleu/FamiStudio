@@ -2524,20 +2524,17 @@ namespace FamiStudio
         private void RenderNotes(RenderInfo r)
         {
             var song = Song;
-            var maxX  = editMode == EditionMode.Channel ? GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern)) : Width;
+            var maxX = editMode == EditionMode.Channel ? GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern)) : Width;
                                                            
             // Draw the note backgrounds
             for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
             {
                 int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
-
                 for (int j = 0; j < 12; j++)
                 {
                     int y = octaveBaseY - j * noteSizeY;
                     if (!IsBlackKey(j))
                         r.b.FillRectangle(0, y - noteSizeY, maxX, y, Theme.DarkGreyColor4);
-                    if (i * 12 + j != NumNotes)
-                        r.b.DrawLine(0, y, maxX, y, Theme.BlackColor);
                 }
             }
 
@@ -2558,17 +2555,22 @@ namespace FamiStudio
                         var drawNotes = ShouldDrawLines(song, p, noteLength);
                         var drawFrames = drawNotes && ShouldDrawLines(song, p, 1);
 
+                        // Needed to get dashed lines to scroll properly.
+                        r.c.PushTranslation(0, -scrollY);
+
                         for (int i = p == 0 ? 1 : 0; i < patternLen; i++)
                         {
                             int x = GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(p) + i);
 
                             if (i % beatLength == 0)
-                                r.b.DrawLine(x, 0, x, Height, Theme.BlackColor, i == 0 ? 3 : 1);
+                                r.b.DrawLine(x, 0, x, virtualSizeY, Theme.BlackColor, i == 0 ? 3 : 1);
                             else if (drawNotes && i % noteLength == 0)
-                                r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1);
+                                r.b.DrawLine(x, 0, x, virtualSizeY, Theme.DarkGreyColor1);
                             else if (drawFrames && editMode != EditionMode.VideoRecording)
-                                r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1, 1, false, true);
+                                r.b.DrawLine(x, 0, x, virtualSizeY, Theme.DarkGreyColor1, 1, false, true);
                         }
+
+                        r.c.PopTransform();
                     }
                     else
                     {
@@ -2583,6 +2585,18 @@ namespace FamiStudio
                             else if (drawNotes)
                                 r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor2);
                         }
+                    }
+                }
+
+                // Horizontal black lines.
+                for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
+                {
+                    int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
+                    for (int j = 0; j < 12; j++)
+                    {
+                        int y = octaveBaseY - j * noteSizeY;
+                        if (i * 12 + j != NumNotes)
+                            r.b.DrawLine(0, y, maxX, y, Theme.BlackColor);
                     }
                 }
 
@@ -2800,6 +2814,18 @@ namespace FamiStudio
             }
             else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.
             {
+                // Horizontal black lines.
+                for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
+                {
+                    int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
+                    for (int j = 0; j < 12; j++)
+                    {
+                        int y = octaveBaseY - j * noteSizeY;
+                        if (i * 12 + j != NumNotes)
+                            r.b.DrawLine(0, y, maxX, y, Theme.BlackColor);
+                    }
+                }
+
                 foreach (var kv in editInstrument.SamplesMapping)
                 {
                     var note = kv.Key;

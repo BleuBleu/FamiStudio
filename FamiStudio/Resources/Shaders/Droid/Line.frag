@@ -1,12 +1,10 @@
-uniform sampler2D dashTexture;
-
 varying vec4 colorInterp;
-varying vec2 texCoordsInterp;
+varying float dashInterp;
 
 void main()
 {       
-    float dash = texture2D(dashTexture, texCoordsInterp).x;
+    float dashAlpha = mod(dashInterp, 2.0) < 1.0 ? 1.0 : 0.0;
 
     gl_FragColor = colorInterp;
-    gl_FragColor.a *= dash;
+    gl_FragColor.a *= dashAlpha;
 }

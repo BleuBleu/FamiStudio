@@ -461,8 +461,6 @@
     <EmbeddedResource Include="Resources\Tutorials\MobileTutorial12.gif" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Misc\Dash.tga" />
-    <EmbeddedResource Include="Resources\Misc\Dash@4x.tga" />
     <EmbeddedResource Include="Resources\Misc\VideoWatermark.tga" />
   </ItemGroup>
   <ItemGroup>

@@ -1,12 +1,15 @@
 4.1.0
 =====
 Beta bugs:
-- CMD+Q = crash macos.
 - OSC trigger assert 
 / Proto VRC7 issue from #bug report 
 	- Zero sec stop after
-- Thick line video export
-- FTM import "1" in names
+x Thick line video export
+x FTM import "1" in names
+x Simplify sorting thing
+- frame dash lines on Android
+- Sample color option.
+- CMD+Q = crash macos.
 - At home: test the magic trackpad issue
 - 
 
