@@ -7,7 +7,9 @@ uniform vec4 screenScaleBias;
 uniform float uniformDashScale;
 
 noperspective out vec4 colorInterp; 
+#if 0 // We dont use thick dashed line on desktop.
 noperspective out float dashInterp;
+#endif
 
 void main()
 {
@@ -23,8 +25,8 @@ void main()
         dashInterp = (dashCoord - floor(dash)) * uniformDashScale;
     }
     else
-#endif
     {
         dashInterp = 0.0f;
     }
+#endif
 }
