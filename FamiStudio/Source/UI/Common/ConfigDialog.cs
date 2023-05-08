@@ -41,11 +41,12 @@ namespace FamiStudio
 
         #region Localization
 
-        LocalizedString[] TimeFormatStrings  = new LocalizedString[(int)TimeFormat.Max];
-        LocalizedString[] FollowModeStrings  = new LocalizedString[2];
-        LocalizedString[] FollowSyncStrings  = new LocalizedString[3];
-        LocalizedString[] ScrollBarsStrings  = new LocalizedString[3];
-        LocalizedString[] ConfigSectionNames = new LocalizedString[(int)ConfigSection.Max];
+        LocalizedString[] TimeFormatStrings    = new LocalizedString[(int)TimeFormat.Max];
+        LocalizedString[] FollowModeStrings    = new LocalizedString[2];
+        LocalizedString[] FollowSyncStrings    = new LocalizedString[3];
+        LocalizedString[] ScrollBarsStrings    = new LocalizedString[3];
+        LocalizedString[] DpcmColorModeStrings = new LocalizedString[2];
+        LocalizedString[] ConfigSectionNames   = new LocalizedString[(int)ConfigSection.Max];
 
         // Title
         LocalizedString Title;
@@ -84,6 +85,7 @@ namespace FamiStudio
         LocalizedString ScrollBarsTooltip;
         LocalizedString ShowFamitrackerStopNotesTooltip;
         LocalizedString IdealSequencerHeightTooltip;
+        LocalizedString DpcmColorModeTooltip;
         LocalizedString AllowSequencerScrollTooltip;
         LocalizedString ShowRegisterViewerTooltip;
         LocalizedString UseOSDialogsTooltip;
@@ -97,6 +99,7 @@ namespace FamiStudio
         LocalizedString FollowRangeLabel;
         LocalizedString ScrollBarsLabel;
         LocalizedString IdealSeqHeightLabel;
+        LocalizedString DpcmColorModeLabel;
         LocalizedString AllowSeqVertScrollLabel;
         LocalizedString ShowFamitrackerStopLabel;
         LocalizedString ShowRegisterViewerLabel;
@@ -195,7 +198,7 @@ namespace FamiStudio
         {
             Localization.Localize(this);
 
-            dialog = new MultiPropertyDialog(win, Title, 550);
+            dialog = new MultiPropertyDialog(win, Title, 570);
             dialog.SetVerb(Verb, true);
 
             // Keep a copy of keyboart shortcuts
@@ -289,17 +292,18 @@ namespace FamiStudio
                     page.AddSlider(FollowRangeLabel.Colon, Settings.FollowPercent, 0.05, 0.95, 0.01f, 2, "{0:P0}", FollowRangeTooltip); // 4
                     page.AddDropDownList(ScrollBarsLabel.Colon, Localization.ToStringArray(ScrollBarsStrings), ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 5
                     page.AddDropDownList(IdealSeqHeightLabel.Colon, IdealSequencerHeightStrings, IdealSequencerHeightStrings[GetSequencerSizeIndex(Settings.IdealSequencerSize)], IdealSequencerHeightTooltip); // 6
-                    page.AddCheckBox(AllowSeqVertScrollLabel.Colon, Settings.AllowSequencerVerticalScroll, AllowSequencerScrollTooltip); // 7
-                    page.AddCheckBox(ShowFamitrackerStopLabel.Colon, Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 8
-                    page.AddCheckBox(ShowRegisterViewerLabel.Colon, Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 9
-                    page.AddCheckBox(UseOSDialogsLabel.Colon, Settings.UseOSDialogs, UseOSDialogsTooltip); // 10
+                    page.AddDropDownList(DpcmColorModeLabel.Colon, Localization.ToStringArray(DpcmColorModeStrings), DpcmColorModeStrings[Settings.DpcmColorMode], DpcmColorModeTooltip); // 7
+                    page.AddCheckBox(AllowSeqVertScrollLabel.Colon, Settings.AllowSequencerVerticalScroll, AllowSequencerScrollTooltip); // 8
+                    page.AddCheckBox(ShowFamitrackerStopLabel.Colon, Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 9
+                    page.AddCheckBox(ShowRegisterViewerLabel.Colon, Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 10
+                    page.AddCheckBox(UseOSDialogsLabel.Colon, Settings.UseOSDialogs, UseOSDialogsTooltip); // 11
                         
                     page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. 
                     page.SetPropertyVisible(3, Platform.IsDesktop);
                     page.SetPropertyVisible(5, Platform.IsDesktop);
                     page.SetPropertyVisible(6, Platform.IsDesktop);
-                    page.SetPropertyVisible(7, Platform.IsDesktop);
-                    page.SetPropertyVisible(10, Platform.IsDesktop && Platform.IsWindows); // Linux always has it disabled, MacOS always enabled, Windows can choose.
+                    page.SetPropertyVisible(8, Platform.IsDesktop);
+                    page.SetPropertyVisible(11, Platform.IsDesktop && Platform.IsWindows); // Linux always has it disabled, MacOS always enabled, Windows can choose.
                     break;
                 }
                 case ConfigSection.Input:
@@ -608,10 +612,11 @@ namespace FamiStudio
                     Settings.FollowPercent = (float)pageUI.GetPropertyValue<double>(4);
                     Settings.ScrollBars = pageUI.GetSelectedIndex(5);
                     Settings.IdealSequencerSize = Utils.ParseIntWithTrailingGarbage(pageUI.GetPropertyValue<string>(6));
-                    Settings.AllowSequencerVerticalScroll = pageUI.GetPropertyValue<bool>(7);
-                    Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(8);
-                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(9);
-                    Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(10);
+                    Settings.DpcmColorMode = pageUI.GetSelectedIndex(7);
+                    Settings.AllowSequencerVerticalScroll = pageUI.GetPropertyValue<bool>(8);
+                    Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(9);
+                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(10);
+                    Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(11);
 
                     // Sound
                     Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);

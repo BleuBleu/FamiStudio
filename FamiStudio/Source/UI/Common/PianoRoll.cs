@@ -1534,9 +1534,10 @@ namespace FamiStudio
             if (editMode != EditionMode.VideoRecording && App.SelectedChannel.Type == ChannelType.Dpcm && App.SelectedInstrument != null)
             {
                 var mapping = App.SelectedInstrument.GetDPCMMapping(note);
-                if (mapping != null)
+                if (mapping != null && mapping.Sample != null)
                 {
-                    color =  App.SelectedInstrument.Color; // Sample color or instrument color?
+                    color = Settings.DpcmColorMode == Settings.ColorModeSample ?
+                        mapping.Sample.Color : App.SelectedInstrument.Color;
                     return true;
                 }
             }
@@ -2509,7 +2510,19 @@ namespace FamiStudio
 
         private Color GetNoteColor(Channel channel, int noteValue, Instrument instrument, float alphaDim = 1.0f)
         {
-            var color = instrument != null ? instrument.Color : Theme.LightGreyColor1;
+            var color = Theme.LightGreyColor1;
+
+            if (channel.Type == ChannelType.Dpcm && Settings.DpcmColorMode == Settings.ColorModeSample && instrument != null)
+            {
+                var mapping = instrument.GetDPCMMapping(noteValue);
+                if (mapping != null && mapping.Sample != null)
+                    color = mapping.Sample.Color;
+            }
+            else if (instrument != null)
+            {
+                color = instrument.Color;
+            }
+
             return Color.FromArgb(alphaDim, color);
         }
 

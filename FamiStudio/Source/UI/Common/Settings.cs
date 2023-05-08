@@ -39,6 +39,10 @@ namespace FamiStudio
         public const int StopNotesFamiTrackerTempo = 0;
         public const int StopNotesNever            = 1;
 
+        // Constants for DPCM color mode
+        public const int ColorModeInstrument = 0;
+        public const int ColorModeSample = 1;
+
         // General section.
         public static int Version = SettingsVersion;
         public static string LanguageCode = "";
@@ -60,6 +64,7 @@ namespace FamiStudio
         public static float FollowPercent = 0.75f;
         public static int  ScrollBars = ScrollBarsNone;
         public static int  IdealSequencerSize = 25;
+        public static int  DpcmColorMode = ColorModeInstrument;
         public static bool AllowSequencerVerticalScroll = false;
         public static bool ShowImplicitStopNotes = false;
         public static bool ShowRegisterViewer = Platform.IsDesktop;
@@ -436,6 +441,7 @@ namespace FamiStudio
             FollowPercent = ini.GetFloat("UI", "FollowPercent", 0.75f);
             ScrollBars = Version < 3 ? (ini.GetBool("UI", "ShowScrollBars", false) ? ScrollBarsThin : ScrollBarsNone) : ini.GetInt("UI", "ScrollBars", ScrollBarsNone);
             IdealSequencerSize = ini.GetInt("UI", "IdealSequencerSize", 25);
+            DpcmColorMode = ini.GetInt("UI", "DpcmColorMode", ColorModeInstrument);
             AllowSequencerVerticalScroll = ini.GetBool("UI", "AllowSequencerVerticalScroll", false);
             ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", false);
             ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", Platform.IsDesktop);
@@ -633,6 +639,7 @@ namespace FamiStudio
             ini.SetFloat("UI", "FollowPercent", FollowPercent);
             ini.SetInt("UI", "ScrollBars", ScrollBars);
             ini.SetInt("UI", "IdealSequencerSize", IdealSequencerSize);
+            ini.SetInt("UI", "DpcmColorMode", DpcmColorMode);
             ini.SetBool("UI", "AllowSequencerVerticalScroll", AllowSequencerVerticalScroll);
             ini.SetBool("UI", "ShowImplicitStopNotes", ShowImplicitStopNotes);
             ini.SetBool("UI", "ShowRegisterViewer", ShowRegisterViewer);

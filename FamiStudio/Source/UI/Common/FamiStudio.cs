@@ -1216,6 +1216,7 @@ namespace FamiStudio
                     RecreateAudioPlayers();
                     RefreshLayout();
                     RefreshProjectExplorerButtons();
+                    InvalidatePatternCache();
                     InitializeMidi();
                     MarkEverythingDirty();
                 }
@@ -1225,6 +1226,11 @@ namespace FamiStudio
         private void RefreshProjectExplorerButtons()
         {
             ProjectExplorer.RefreshButtons();
+        }
+
+        private void InvalidatePatternCache()
+        {
+            Sequencer.InvalidatePatternCache();
         }
 
         public bool TryClosing()
