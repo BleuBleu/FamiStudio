@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
@@ -74,11 +74,15 @@ namespace FamiStudio
         };
         public unsafe static void Save(Song song, string filename, int filetype)
         {
-            var project = song.Project;
+            var project = song.Project.DeepClone();
+            song = project.GetSong(song.Id);
+            int numDPCMBanks = project.AutoAssignSamplesBanks(16384, out _);
             var regPlayer = new RegisterPlayer(song.Project.OutputsStereoAudio);
             var writes = regPlayer.GetRegisterValues(song, project.PalMode);
             Console.WriteLine("Writes got, length: " + writes.Length);
-            var regOptimizer = new RegisterWriteOptimizer(song.Project);
+            var regOptimizer = new RegisterWriteOptimizer(song.Project, 0x8000 
+            | ExpansionType.Vrc7Mask | ExpansionType.FdsMask 
+            | ExpansionType.S5BMask | ExpansionType.EPSMMask);
             writes = regOptimizer.OptimizeRegisterWrites(writes);
             Console.WriteLine("Writes optimized, length: " + writes.Length);
             var lastWrite = writes.Last();
@@ -161,11 +165,17 @@ namespace FamiStudio
                 gd3Data += song.Project.Copyright + "\0";   //Notes
                 int gd3Length = (gd3Data.Length * 2);
                 int loopPointFrame = song.LoopPoint;
-                var sampleData = project.GetPackedSampleData();
+                var sampleBankPointers = new int[numDPCMBanks];
+                var DPCMDataList = new List<byte>();
+                for (int i = 0; i < numDPCMBanks; i++){
+                    sampleBankPointers[i] = DPCMDataList.Count;
+                    DPCMDataList.AddRange(project.GetPackedSampleData(i).ToList());
+                }   
+                var sampleData = DPCMDataList.ToArray();
                 if (filetype == 1)
                 {
                     var writer = new BinaryWriter(file);
-                    var fileLength = sizeof(VgmHeader) + initSize + extraHeaderSize + 1 - 4 + sampleData.Length + 9; //headerbytes + init bytes - offset (4bytes)  + Extra header + audio stop 1byte
+                    var fileLength = sizeof(VgmHeader) + initSize + extraHeaderSize + 1 - 4 + sampleData.Length + ( project.UsesMultipleDPCMBanks ? 7 + VgmExport.GetAmountOfBankswitching(writes) * 12 : 9 ); //headerbytes + init bytes - offset (4bytes)  + Extra header + audio stop 1byte
                     int frameNumber = 0;
                     if (frameNumber == 0) { header.loopOffset = fileLength - 25; }  // Relative pointer difference is 24, and the 1 is the data stop command at the end
                     foreach (var reg in writes)
@@ -233,16 +243,24 @@ namespace FamiStudio
                     }
 
                     //Sample data
-                    writer.Write(new byte[] { 0x67, 0x66, 0xC2 });  //Data block, compat command for older players, type - NES APU RAM Write
-                    writer.Write(sampleData.Length + 2);  //Length of sample data + address
-                    writer.Write((ushort)0xC000);   //Address $C000 - the minimum for DPCM data
+                    if (project.UsesMultipleDPCMBanks){
+                        writer.Write(new byte[] { 0x67, 0x66, 0x07 });  //Data block, compat command for older players, type - NES APU DPCM data for further writes
+                        writer.Write(sampleData.Length);  //Length of sample data
+                    }
+                    else
+                    {    
+                        writer.Write(new byte[] { 0x67, 0x66, 0xC2 });  //Data block, compat command for older players, type - NES APU RAM Write
+                        writer.Write(sampleData.Length + 2);  //Length of sample data + address
+                        writer.Write((ushort)0xC000);   //Address $C000 - the minimum for DPCM data
+                    }
                     writer.Write(sampleData);   //Write the sample data
 
                     // Not as lame now
-                    byte addressEPSMA0 = 0;
-                    byte addressEPSMA1 = 0;
-                    byte addressVRC7 = 0;
-                    byte address5B = 0;
+                    int addressEPSMA0 = -1;
+                    int addressEPSMA1 = -1;
+                    int addressVRC7 = -1;
+                    int address5B = -1;
+                    int DPCMBank = -1;
 
                     frameNumber = 0;
                     //Inits
@@ -275,36 +293,46 @@ namespace FamiStudio
                         }
                         if (reg.Register == NesApu.EPSM_ADDR0)          //EPSM A0 Address
                         {
-                            addressEPSMA0 = (byte)reg.Value;
+                            addressEPSMA0 = reg.Value;
                         }
                         else if (reg.Register == NesApu.EPSM_ADDR1)     //EPSM A1 Address
                         {
-                            addressEPSMA1 = (byte)reg.Value;
+                            addressEPSMA1 = reg.Value;
                         }
                         else if (reg.Register == NesApu.VRC7_REG_SEL)   //VRC7 Address
                         {
-                            addressVRC7 = (byte)reg.Value;
+                            addressVRC7 = reg.Value;
                         }
                         else if (reg.Register == NesApu.S5B_ADDR)       //5B Address
                         {
-                            address5B = (byte)reg.Value;
+                            address5B = reg.Value;
                         }
                         else if (reg.Register == NesApu.EPSM_DATA0)     //EPSM A0 Data
                         {
-                            writer.Write(new byte[] { 0x56, addressEPSMA0, (byte)reg.Value });
+                            writer.Write(new byte[] { 0x56, (byte)addressEPSMA0, (byte)reg.Value });
                         }
                         else if (reg.Register == NesApu.EPSM_DATA1)     //EPSM A1 Data
                         {
-                            writer.Write(new byte[] { 0x57, addressEPSMA1, (byte)reg.Value });
+                            writer.Write(new byte[] { 0x57, (byte)addressEPSMA1, (byte)reg.Value });
                         }
                         else if (reg.Register == NesApu.VRC7_REG_WRITE) //VRC7 Data
                         {
-                            writer.Write(new byte[] { 0x51, addressVRC7, (byte)reg.Value });
+                            writer.Write(new byte[] { 0x51, (byte)addressVRC7, (byte)reg.Value });
                         }
                         else if (reg.Register == NesApu.S5B_DATA)       //5B Data
                         {
-                            writer.Write(new byte[] { 0xA0, address5B, (byte)reg.Value });
+                            writer.Write(new byte[] { 0xA0, (byte)address5B, (byte)reg.Value });
                         }
+                        else if (reg.Register == NesApu.APU_DMC_START){
+                                if (reg.Metadata[0] != DPCMBank && project.UsesMultipleDPCMBanks){
+                                    writer.Write(new byte[] {0x68, 0x66, 0x07});    //Transfer data block type NES APU RAM write
+                                    writer.Write(Utils.IntToBytes24Bit(sampleBankPointers[reg.Metadata[0]]));
+                                    writer.Write(new byte[] {0x00, 0xC0, 0x00, 0x00, 0x40, 0x00}); //Write 4000 bytes to address C000
+                                }
+                                DPCMBank = reg.Metadata[0];
+                                writer.Write (new byte[] {0xB4, NesApu.APU_DMC_START & 0xFF});
+                                writer.Write ((byte)(project.GetSampleBankOffset(project.GetSample(reg.Metadata[1]))>>6));
+                            }
                         else if ((reg.Register < 0x401c) || (reg.Register < 0x409f && reg.Register > 0x401F))   //2A03 & FDS
                         {
                             writer.Write((byte)0xb4);
@@ -520,6 +548,17 @@ namespace FamiStudio
                     sr.Close();
                 }
             }
+        }
+        private static int GetAmountOfBankswitching(RegisterWrite[] writes){
+            int bankInUse = -1;
+            int bankswitches = 0;
+            foreach (var write in writes){
+                if (write.Register == NesApu.APU_DMC_START && write.Metadata[0] != bankInUse){
+                    bankswitches++;
+                    bankInUse = write.Metadata[0];
+                }
+            }
+            return bankswitches;
         }
     }
 }

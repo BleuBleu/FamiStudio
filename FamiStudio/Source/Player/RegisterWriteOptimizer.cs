@@ -6,12 +6,20 @@ namespace FamiStudio
     class RegisterWriteOptimizer
     {
         private int[] APUStatus = Enumerable.Repeat(0xFF00, 15).ToArray();
-        //0 - 7: $4000 + (index<<1)
+        //0-7: $4000 + (index<<1)
         //8: $400B
         //9: $400F
         //10-13: $4010-$4013
         //14: $4015
         bool SampleStartedSince4011 = true; //To force writes
+
+        private int VRC7Addr = 0xFF00;
+        private int[] VRC7Status = Enumerable.Repeat(0xFF00, 26).ToArray();
+        //0-7: $00-$07
+        //8-13: $10-$15
+        //14-19: $20-$25
+        //20-25: $30-$35
+        private static readonly int[] VRC7StatusLookupTable = new int[] { 0, 8, 18, 28 };
         private int S5BAddr = 0xFF00;
         private int[] S5BStatus = Enumerable.Repeat(0xFF00, 13).ToArray();     //  S5B data (everything except for the reg 0xD, which phase resets the envelope when written to)
 
@@ -76,12 +84,18 @@ namespace FamiStudio
                             result.Add(regWrite);
                         break;
                     case NesApu.APU_DMC_FREQ:
-                    case NesApu.APU_DMC_START:
                     case NesApu.APU_DMC_LEN:
                         if (!useAPU) break;
                         if ((APUStatus[regWrite.Register-0x4006]) != regWrite.Value){
                             result.Add(regWrite);
                             APUStatus[regWrite.Register-0x4006] = regWrite.Value;
+                        }
+                        break;
+                    case NesApu.APU_DMC_START:
+                        if (!useAPU) break;
+                        if ((APUStatus[12]) != regWrite.Metadata[1]){   //Compare the sample IDs
+                            result.Add(regWrite);
+                            APUStatus[12] = regWrite.Metadata[1];
                         }
                         break;
                     case NesApu.APU_DMC_RAW:
@@ -99,6 +113,22 @@ namespace FamiStudio
                         }
                         SampleStartedSince4011 = (regWrite.Value & 0x10) != 0 ? true : false;
                         break;
+
+                    case NesApu.VRC7_REG_SEL:
+                        if (!useVRC7) break;
+                        if (regWrite.Value != VRC7Addr){
+                            result.Add(regWrite);
+                            VRC7Addr = regWrite.Value;
+                        }
+                        break;
+                    case NesApu.VRC7_REG_WRITE:
+                        if (!useVRC7) break;
+                        int index = VRC7Addr - (VRC7StatusLookupTable[VRC7Addr >> 4]);
+                        if (regWrite.Value != VRC7Status[index]){
+                            result.Add(regWrite);
+                            VRC7Status[index] = regWrite.Value;
+                        }
+                        break;
                     case NesApu.S5B_ADDR:
                         if (!useS5B) break;
                         if (regWrite.Value != S5BAddr){
@@ -107,8 +137,8 @@ namespace FamiStudio
                         }
                         break;
                     case NesApu.S5B_DATA:
-                        if (!useS5B) break;
-                        if (S5BAddr < NesApu.S5B_REG_SHAPE && regWrite.Value != S5BStatus[S5BAddr]){   //Aka S5B regs that are saved
+                        if (!(useS5B && useVRC7)) break;
+                        if (S5BAddr < NesApu.S5B_REG_SHAPE && regWrite.Value != S5BStatus[S5BAddr] && useS5B){   //Aka S5B regs that are saved
                             result.Add(regWrite);
                             S5BStatus[S5BAddr] = regWrite.Value;
                         } else if (S5BAddr >= NesApu.S5B_REG_SHAPE)  //If envelope shape register (which is not saved), or non-S5B register 
@@ -144,6 +174,10 @@ namespace FamiStudio
                         else if (EPSMA0Addr >= 0x20) {
                             result.Add(regWrite);
                         }
+                        break;
+                    case NesApu.EPSM_DATA1:
+                        if (!useEPSM) break;
+                        result.Add(regWrite);
                         break;
                     default:
                         result.Add(regWrite);

@@ -8,6 +8,7 @@ namespace FamiStudio
         public int FrameNumber;
         public int Register;
         public int Value;
+        public List<int> Metadata;  //depends on the register
     };
 
     class RegisterPlayer : BasePlayer
@@ -31,7 +32,7 @@ namespace FamiStudio
             return registerWrites.ToArray();
         }
 
-        public override void NotifyRegisterWrite(int apuIndex, int reg, int data)
+        public override void NotifyRegisterWrite(int apuIndex, int reg, int data, List<int> metadata = null)
         {
             if (apuIndex == NesApu.APU_WAV_EXPORT)
             {
@@ -40,6 +41,7 @@ namespace FamiStudio
                 write.FrameNumber = frameNumber;
                 write.Register    = reg;
                 write.Value       = data;
+                write.Metadata    = metadata;
 
                 registerWrites.Add(write);
             }
