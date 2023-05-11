@@ -94,7 +94,7 @@ namespace FamiStudio
         }
 
         public static byte[] IntToBytes24Bit (int x){
-            return new byte[] {(byte)(x & 0xff), (byte)(x >> 8 & 0xff), (byte)(x >> 16 & 0xff)};
+            return new byte[] {(byte)(x & 0xff), (byte)((x >> 8) & 0xff), (byte)((x >> 16) & 0xff)};
         }
 
         public static int Bytes24BitToInt (byte[] x){
