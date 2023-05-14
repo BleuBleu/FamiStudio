@@ -633,6 +633,11 @@ namespace FamiStudio
                     case 2: return "T";
                 }
             }
+            else if (type == EnvelopeType.YMNoiseFreq)
+            {
+                if (value == 0)
+                    return "NOP";
+            }
             else if (type == EnvelopeType.DutyCycle)
             {
                 if (instrument.IsVrc6)
