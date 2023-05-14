@@ -976,7 +976,7 @@ namespace FamiStudio
                 if (Platform.IsDesktop)
                 {
                     if (filename == null)
-                        filename = Platform.ShowOpenFileDialog(DesktopOpenProjectTitle, "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid|VGM files (*.vgm;*.vgz)|*.vgm;*.vgz", ref Settings.LastFileFolder);
+                        filename = Platform.ShowOpenFileDialog(DesktopOpenProjectTitle, "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid;*.vgm;*.vgz)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid;*.vgm;*.vgz|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid|VGM files (*.vgm;*.vgz)|*.vgm;*.vgz", ref Settings.LastFileFolder);
 
                     if (filename != null)
                         UnloadAndOpenAction(filename);
