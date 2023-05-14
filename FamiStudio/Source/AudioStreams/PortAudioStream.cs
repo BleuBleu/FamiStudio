@@ -213,7 +213,7 @@ namespace FamiStudio
             }
         }
 
-        public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
+        public unsafe void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0)
         {
             Debug.Assert(Platform.IsInMainThread());
 

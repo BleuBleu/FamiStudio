@@ -20,8 +20,8 @@ namespace FamiStudio
         int source;
         int[] buffers;
 
-        int   immediateSource = -1;
-        int[] immediateBuffers;
+        int[]   immediateSource  = new { -1, -1 };
+        int[][] immediateBuffers = new { new int[], new int[] };
 
         public OpenALStream(int rate, bool inStereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
@@ -47,7 +47,8 @@ namespace FamiStudio
 
         public void Dispose()
         {
-            StopImmediate();
+            StopImmediate(0);
+            StopImmediate(1);
 
             AL.DeleteBuffers(buffers);
             AL.DeleteSource(source);
@@ -137,36 +138,37 @@ namespace FamiStudio
             }
         }
 
-        public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
+        public unsafe void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0)
         {
             Debug.Assert(Platform.IsInMainThread());
+            Debug.Assert(channel == 0 || channel == 1);
 
-            StopImmediate();
+            StopImmediate(channel);
 
-            immediateSource  = AL.GenSource();
-            immediateBuffers = AL.GenBuffers(1);
+            immediateSource[channel]  = AL.GenSource();
+            immediateBuffers[channel] = AL.GenBuffers(1);
 
             fixed (short* p = &data[0])
-                AL.BufferData(immediateBuffers[0], AL.Mono16, new IntPtr(p), data.Length * sizeof(short), sampleRate);
+                AL.BufferData(immediateBuffers[channel][0], AL.Mono16, new IntPtr(p), data.Length * sizeof(short), sampleRate);
 
-            AL.Source(immediateSource, AL.Gain, volume);
-            AL.SourceQueueBuffer(immediateSource, immediateBuffers[0]);
-            AL.SourcePlay(immediateSource);
+            AL.Source(immediateSource[channel], AL.Gain, volume);
+            AL.SourceQueueBuffer(immediateSource[channel], immediateBuffers[0]);
+            AL.SourcePlay(immediateSource[channel]);
         } 
 
-        public void StopImmediate()
+        public void StopImmediate(int channel)
         {
             Debug.Assert(Platform.IsInMainThread());
 
-            if (immediateSource >= 0)
+            if (immediateSource[channel] >= 0)
             {
-                AL.SourceStop(immediateSource);
-                AL.Source(immediateSource, AL.Buffer, 0);
-                AL.DeleteBuffers(immediateBuffers);
-                AL.DeleteSource(immediateSource);
+                AL.SourceStop(immediateSource[channel]);
+                AL.Source(immediateSource[channel], AL.Buffer, 0);
+                AL.DeleteBuffers(immediateBuffers[channel];
+                AL.DeleteSource(immediateSource[channel];
 
-                immediateBuffers = null;
-                immediateSource = -1; 
+                immediateBuffers[channel] = null;
+                immediateSource[channel] = -1; 
             }
         }
 
@@ -177,11 +179,11 @@ namespace FamiStudio
                 var playPos = -1;
 
                 // TODO : Make sure we support the AL_EXT_OFFSET extension.
-                if (immediateSource >= 0)
+                if (immediateSource[0] >= 0)
                 {
-                    AL.GetSource(immediateSource, AL.SourceState, out int state);
+                    AL.GetSource(immediateSource[0], AL.SourceState, out int state);
                     if (state == AL.Playing)
-                        AL.GetSource(immediateSource, AL.SampleOffset, out playPos);
+                        AL.GetSource(immediateSource[0], AL.SampleOffset, out playPos);
                 }
 
                 return playPos;

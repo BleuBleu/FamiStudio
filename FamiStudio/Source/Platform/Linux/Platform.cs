@@ -119,7 +119,7 @@ namespace FamiStudio
 
         public static void Beep()
         {
-            FamiStudio.StaticInstance.PlayRawPcmSample(beep, 44100);
+            FamiStudio.StaticInstance.PlayRawPcmSample(beep, 44100, 1);
         }
 
         [DllImport("libc")]
