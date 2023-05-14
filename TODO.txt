@@ -10,6 +10,7 @@ x Simplify sorting thing
 x frame dash lines on Android
 x Sample color option.
 - Option to keep unused samples when exporting to sound engine.
+- Is there still a crash when deleting last instrument?
 - CMD+Q = crash macos.
 - At home: test the magic trackpad issue
 - 
