@@ -44,8 +44,8 @@ namespace FamiStudio
         private LocalizedString GroovePaddingTooltip;
 
         // Labels
-        private LocalizedString FamiTrackerTempoLabel;
-        private LocalizedString FamiTrackerSpeedLabel;
+        private LocalizedString TempoLabel;
+        private LocalizedString SpeedLabel;
         private LocalizedString BPMLabel;
         private LocalizedString NotesPerPatternLabel;
         private LocalizedString NotesPerBeatLabel;
@@ -94,8 +94,8 @@ namespace FamiStudio
             {
                 if (patternIdx < 0)
                 {
-                    famitrackerTempoPropIdx = props.AddNumericUpDown(FamiTrackerTempoLabel.Colon, song.FamitrackerTempo, 32, 255, 1, TempoTooltip); // 0
-                    famitrackerSpeedPropIdx = props.AddNumericUpDown(FamiTrackerSpeedLabel.Colon, song.FamitrackerSpeed, 1, 31, 1, SpeedTooltip); // 1
+                    famitrackerTempoPropIdx = props.AddNumericUpDown(TempoLabel.Colon, song.FamitrackerTempo, 32, 255, 1, TempoTooltip); // 0
+                    famitrackerSpeedPropIdx = props.AddNumericUpDown(SpeedLabel.Colon, song.FamitrackerSpeed, 1, 31, 1, SpeedTooltip); // 1
                 }
                 
                 var notesPerBeat    = patternIdx < 0 ? song.BeatLength    : song.GetPatternBeatLength(patternIdx);

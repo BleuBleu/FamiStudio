@@ -4,13 +4,7 @@ Beta bugs:
 - OSC trigger assert 
 / Proto VRC7 issue from #bug report 
 	- Zero sec stop after
-x Thick line video export
-x FTM import "1" in names
-x Simplify sorting thing
-x frame dash lines on Android
-x Sample color option.
 - Option to keep unused samples when exporting to sound engine.
-- Is there still a crash when deleting last instrument?
 - CMD+Q = crash macos.
 - At home: test the magic trackpad issue
 - 
