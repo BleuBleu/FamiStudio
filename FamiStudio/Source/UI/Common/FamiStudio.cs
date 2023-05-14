@@ -1667,11 +1667,11 @@ namespace FamiStudio
                 instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolume));
         }
 
-        public void PlayRawPcmSample(short[] data, int sampleRate, float volume = 1.0f)
+        public void PlayRawPcmSample(short[] data, int sampleRate, float volume = 1.0f, int channel = 0)
         {
             if (instrumentPlayer != null)
             {
-                instrumentPlayer.PlayRawPcmSample(data, sampleRate, volume);
+                instrumentPlayer.PlayRawPcmSample(data, sampleRate, volume, channel);
             }
         }
 

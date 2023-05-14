@@ -20,8 +20,8 @@ namespace FamiStudio
         int source;
         int[] buffers;
 
-        int[]   immediateSource  = new { -1, -1 };
-        int[][] immediateBuffers = new { new int[], new int[] };
+        int[]   immediateSource  = new [] { -1, -1 };
+        int[][] immediateBuffers = new int[2][];
 
         public OpenALStream(int rate, bool inStereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
@@ -152,7 +152,7 @@ namespace FamiStudio
                 AL.BufferData(immediateBuffers[channel][0], AL.Mono16, new IntPtr(p), data.Length * sizeof(short), sampleRate);
 
             AL.Source(immediateSource[channel], AL.Gain, volume);
-            AL.SourceQueueBuffer(immediateSource[channel], immediateBuffers[0]);
+            AL.SourceQueueBuffer(immediateSource[channel], immediateBuffers[channel][0]);
             AL.SourcePlay(immediateSource[channel]);
         } 
 
@@ -164,8 +164,8 @@ namespace FamiStudio
             {
                 AL.SourceStop(immediateSource[channel]);
                 AL.Source(immediateSource[channel], AL.Buffer, 0);
-                AL.DeleteBuffers(immediateBuffers[channel];
-                AL.DeleteSource(immediateSource[channel];
+                AL.DeleteBuffers(immediateBuffers[channel]);
+                AL.DeleteSource(immediateSource[channel]);
 
                 immediateBuffers[channel] = null;
                 immediateSource[channel] = -1; 
