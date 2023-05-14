@@ -171,9 +171,9 @@ namespace FamiStudio
             return null;
         }
 
-        public void PlayRawPcmSample(short[] data, int sampleRate, float volume)
+        public void PlayRawPcmSample(short[] data, int sampleRate, float volume, int channel = 0)
         {
-            audioStream.PlayImmediate(data, sampleRate, volume);
+            audioStream.PlayImmediate(data, sampleRate, volume, channel);
         }
 
         public int RawPcmSamplePlayPosition => audioStream.ImmediatePlayPosition;

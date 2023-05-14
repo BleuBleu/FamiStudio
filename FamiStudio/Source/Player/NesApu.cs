@@ -178,44 +178,44 @@ namespace FamiStudio
         public const int S5B_ADDR           = 0xc000;
         public const int S5B_DATA           = 0xe000;
                                             
-        public const int S5B_REG_LO_A       = 0x00;
-        public const int S5B_REG_HI_A       = 0x01;
-        public const int S5B_REG_LO_B       = 0x02;
-        public const int S5B_REG_HI_B       = 0x03;
-        public const int S5B_REG_LO_C       = 0x04;
-        public const int S5B_REG_HI_C       = 0x05;
-        public const int S5B_REG_NOISE      = 0x06;
-        public const int S5B_REG_TONE       = 0x07;
-        public const int S5B_REG_VOL_A      = 0x08;
-        public const int S5B_REG_VOL_B      = 0x09;
-        public const int S5B_REG_VOL_C      = 0x0a;
-        public const int S5B_REG_ENV_LO     = 0x0b;
-        public const int S5B_REG_ENV_HI     = 0x0c;
-        public const int S5B_REG_SHAPE      = 0x0d;
-        public const int S5B_REG_IO_A       = 0x0e;
-        public const int S5B_REG_IO_B       = 0x0f;
+        public const int S5B_REG_LO_A          = 0x00;
+        public const int S5B_REG_HI_A          = 0x01;
+        public const int S5B_REG_LO_B          = 0x02;
+        public const int S5B_REG_HI_B          = 0x03;
+        public const int S5B_REG_LO_C          = 0x04;
+        public const int S5B_REG_HI_C          = 0x05;
+        public const int S5B_REG_NOISE_FREQ    = 0x06;
+        public const int S5B_REG_MIXER_SETTING = 0x07;
+        public const int S5B_REG_VOL_A         = 0x08;
+        public const int S5B_REG_VOL_B         = 0x09;
+        public const int S5B_REG_VOL_C         = 0x0a;
+        public const int S5B_REG_ENV_LO        = 0x0b;
+        public const int S5B_REG_ENV_HI        = 0x0c;
+        public const int S5B_REG_SHAPE         = 0x0d;
+        public const int S5B_REG_IO_A          = 0x0e;
+        public const int S5B_REG_IO_B          = 0x0f;
 
         public const int EPSM_ADDR0         = 0x401c;
         public const int EPSM_DATA0         = 0x401d;
         public const int EPSM_ADDR1         = 0x401e;
         public const int EPSM_DATA1         = 0x401f;
 
-        public const int EPSM_REG_LO_A        = 0x00;
-        public const int EPSM_REG_HI_A        = 0x01;
-        public const int EPSM_REG_LO_B        = 0x02;
-        public const int EPSM_REG_HI_B        = 0x03;
-        public const int EPSM_REG_LO_C        = 0x04;
-        public const int EPSM_REG_HI_C        = 0x05;
-        public const int EPSM_REG_NOISE       = 0x06;
-        public const int EPSM_REG_TONE        = 0x07;
-        public const int EPSM_REG_VOL_A       = 0x08;
-        public const int EPSM_REG_VOL_B       = 0x09;
-        public const int EPSM_REG_VOL_C       = 0x0a;
-        public const int EPSM_REG_ENV_LO      = 0x0b;
-        public const int EPSM_REG_ENV_HI      = 0x0c;
-        public const int EPSM_REG_SHAPE       = 0x0d;
-        public const int EPSM_REG_IO_A        = 0x0e;
-        public const int EPSM_REG_IO_B        = 0x0f;
+        public const int EPSM_REG_LO_A          = 0x00;
+        public const int EPSM_REG_HI_A          = 0x01;
+        public const int EPSM_REG_LO_B          = 0x02;
+        public const int EPSM_REG_HI_B          = 0x03;
+        public const int EPSM_REG_LO_C          = 0x04;
+        public const int EPSM_REG_HI_C          = 0x05;
+        public const int EPSM_REG_NOISE_FREQ    = 0x06;
+        public const int EPSM_REG_MIXER_SETTING = 0x07;
+        public const int EPSM_REG_VOL_A         = 0x08;
+        public const int EPSM_REG_VOL_B         = 0x09;
+        public const int EPSM_REG_VOL_C         = 0x0a;
+        public const int EPSM_REG_ENV_LO        = 0x0b;
+        public const int EPSM_REG_ENV_HI        = 0x0c;
+        public const int EPSM_REG_SHAPE         = 0x0d;
+        public const int EPSM_REG_IO_A          = 0x0e;
+        public const int EPSM_REG_IO_B          = 0x0f;
         public const int EPSM_REG_RYTHM       = 0x10;
         public const int EPSM_REG_RYTHM_LEVEL = 0x18;
         public const int EPSM_REG_FM_LO_A     = 0xA0;
@@ -826,13 +826,13 @@ namespace FamiStudio
                                 SetN163Mix(apuIdx, Settings.N163Mix ? 1 : 0);
                                 break;
                             case APU_EXPANSION_SUNSOFT:
-                                WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
+                                WriteRegister(apuIdx, S5B_ADDR, S5B_REG_MIXER_SETTING);
                                 WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
                                 if ((expansions & APU_EXPANSION_MASK_NAMCO) != 0) // See comment in "ChannelStateS5B.cs".
                                     WriteRegister(apuIdx, S5B_ADDR, S5B_REG_IO_A);
                                 break;
                             case APU_EXPANSION_EPSM:
-                                WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE); SkipCycles(apuIdx, EpsmCycleAddrSkip);
+                                WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_MIXER_SETTING); SkipCycles(apuIdx, EpsmCycleAddrSkip);
                                 WriteRegister(apuIdx, EPSM_DATA0, 0x38); SkipCycles(apuIdx, EpsmCycleDataSkip); // No noise, just 3 tones for now.
                                 WriteRegister(apuIdx, EPSM_ADDR0, 0x29); SkipCycles(apuIdx, EpsmCycleAddrSkip);
                                 WriteRegister(apuIdx, EPSM_DATA0, 0x80); SkipCycles(apuIdx, EpsmCycleDataSkip);

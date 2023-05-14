@@ -180,10 +180,12 @@ namespace FamiStudio
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
-            if (dlg.Validate())
+            var apply = item != null && item.ItemId == ApplyMenuItemId;
+
+            if (!apply || dlg.Validate())
             {
                 stoppedByUser = true;
-                SetResult(item != null && item.ItemId == ApplyMenuItemId ? Result.Ok : Result.Canceled);
+                SetResult(apply ? Result.Ok : Result.Canceled);
                 Finish();
             }
 

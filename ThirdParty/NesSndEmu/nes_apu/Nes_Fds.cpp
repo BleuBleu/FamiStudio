@@ -75,6 +75,13 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 				require(data & 0x80);
 				osc.volume_env = data & 0x3f;
 				break;
+			case 3:
+				// Reset phase when turning off wave. See comment below.
+				if (((data & 0x80) != 0))
+				{
+					osc.phase = 0;
+				}
+				break;
 			case 4:
 				// TODO: Sweep envelope support.
 				require(data & 0x80);
@@ -203,7 +210,16 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 		else
 		{
 			osc.trigger = trigger_none;
-			osc.phase = 0;
+		
+			// Need to test on my FDS when im back home:
+			//	- Mesen keeps the phase at zero while the wave is disabled. 
+			//  - NSFPlay resets the phase only when disabling it through 4083
+			//  - NotSoFatso never resets the phase.
+			// From the wiki : 
+			//  "For the wave output, disabling the unit also resets the wave
+			//   position to 0 (i.e. the $4040 value)."
+			
+			//osc.phase = 0;
 		}
 		
 		int volume = min(osc.volume_env, 0x20);

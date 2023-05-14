@@ -469,26 +469,29 @@ namespace FamiStudio
 
         private void UpdateTooltips()
         {
-            buttons[(int)ButtonType.New].ToolTip       = $"<MouseLeft> {NewProjectTooltip} {Settings.FileNewShortcut.TooltipString}";
-            buttons[(int)ButtonType.Open].ToolTip      = $"<MouseLeft> {OpenProjectTooltip} {Settings.FileOpenShortcut.TooltipString}\n<MouseRight> {RecentFilesTooltip}";
-            buttons[(int)ButtonType.Save].ToolTip      = $"<MouseLeft> {SaveProjectTooltip} {Settings.FileSaveShortcut.TooltipString}\n<MouseRight> {MoreOptionsTooltip}";
-            buttons[(int)ButtonType.Export].ToolTip    = $"<MouseLeft> {ExportTooltip} {Settings.FileExportShortcut.TooltipString}\n<MouseRight> {MoreOptionsTooltip}";
-            buttons[(int)ButtonType.Copy].ToolTip      = $"<MouseLeft> {CopySelectionTooltip} {Settings.CopyShortcut.TooltipString}";
-            buttons[(int)ButtonType.Cut].ToolTip       = $"<MouseLeft> {CutSelectionTooltip} {Settings.CutShortcut.TooltipString}";
-            buttons[(int)ButtonType.Paste].ToolTip     = $"<MouseLeft> {PasteTooltip} {Settings.PasteShortcut.TooltipString}\n<MouseRight> {MoreOptionsTooltip}";
-            buttons[(int)ButtonType.Undo].ToolTip      = $"<MouseLeft> {UndoTooltip} {Settings.UndoShortcut.TooltipString}";
-            buttons[(int)ButtonType.Redo].ToolTip      = $"<MouseLeft> {RedoTooltip} {Settings.RedoShortcut.TooltipString}";
-            buttons[(int)ButtonType.Transform].ToolTip = $"<MouseLeft> {CleanupTooltip}";
-            buttons[(int)ButtonType.Config].ToolTip    = $"<MouseLeft> {SettingsTooltip}";
-            buttons[(int)ButtonType.Play].ToolTip      = $"<MouseLeft> {PlayPauseTooltip} {Settings.PlayShortcut.TooltipString} - <MouseRight> {MoreOptionsTooltip}";
-            buttons[(int)ButtonType.Rewind].ToolTip    = $"<MouseLeft> {RewindTooltip} {Settings.SeekStartShortcut.TooltipString}\n{RewindPatternTooltip} {Settings.SeekStartPatternShortcut.TooltipString}";
-            buttons[(int)ButtonType.Rec].ToolTip       = $"<MouseLeft> {ToggleRecordingTooltip} {Settings.RecordingShortcut.TooltipString}\n{AbortRecordingTooltip} <Esc>";
-            buttons[(int)ButtonType.Loop].ToolTip      = $"<MouseLeft> {ToggleLoopModeTooltip}";
-            buttons[(int)ButtonType.Qwerty].ToolTip    = $"<MouseLeft> {ToggleQWERTYTooltip} {Settings.QwertyShortcut.TooltipString}";
-            buttons[(int)ButtonType.Metronome].ToolTip = $"<MouseLeft> {ToggleMetronomeTooltip}";
-            buttons[(int)ButtonType.Machine].ToolTip   = $"<MouseLeft> {TogglePALTooltip}";
-            buttons[(int)ButtonType.Follow].ToolTip    = $"<MouseLeft> {ToggleFollowModeTooltip} {Settings.FollowModeShortcut.TooltipString}";
-            buttons[(int)ButtonType.Help].ToolTip      = $"<MouseLeft> {DocumentationTooltip}";
+            if (Platform.IsDesktop)
+            {
+                buttons[(int)ButtonType.New].ToolTip       = $"<MouseLeft> {NewProjectTooltip} {Settings.FileNewShortcut.TooltipString}";
+                buttons[(int)ButtonType.Open].ToolTip      = $"<MouseLeft> {OpenProjectTooltip} {Settings.FileOpenShortcut.TooltipString}\n<MouseRight> {RecentFilesTooltip}";
+                buttons[(int)ButtonType.Save].ToolTip      = $"<MouseLeft> {SaveProjectTooltip} {Settings.FileSaveShortcut.TooltipString}\n<MouseRight> {MoreOptionsTooltip}";
+                buttons[(int)ButtonType.Export].ToolTip    = $"<MouseLeft> {ExportTooltip} {Settings.FileExportShortcut.TooltipString}\n<MouseRight> {MoreOptionsTooltip}";
+                buttons[(int)ButtonType.Copy].ToolTip      = $"<MouseLeft> {CopySelectionTooltip} {Settings.CopyShortcut.TooltipString}";
+                buttons[(int)ButtonType.Cut].ToolTip       = $"<MouseLeft> {CutSelectionTooltip} {Settings.CutShortcut.TooltipString}";
+                buttons[(int)ButtonType.Paste].ToolTip     = $"<MouseLeft> {PasteTooltip} {Settings.PasteShortcut.TooltipString}\n<MouseRight> {MoreOptionsTooltip}";
+                buttons[(int)ButtonType.Undo].ToolTip      = $"<MouseLeft> {UndoTooltip} {Settings.UndoShortcut.TooltipString}";
+                buttons[(int)ButtonType.Redo].ToolTip      = $"<MouseLeft> {RedoTooltip} {Settings.RedoShortcut.TooltipString}";
+                buttons[(int)ButtonType.Transform].ToolTip = $"<MouseLeft> {CleanupTooltip}";
+                buttons[(int)ButtonType.Config].ToolTip    = $"<MouseLeft> {SettingsTooltip}";
+                buttons[(int)ButtonType.Play].ToolTip      = $"<MouseLeft> {PlayPauseTooltip} {Settings.PlayShortcut.TooltipString} - <MouseRight> {MoreOptionsTooltip}";
+                buttons[(int)ButtonType.Rewind].ToolTip    = $"<MouseLeft> {RewindTooltip} {Settings.SeekStartShortcut.TooltipString}\n{RewindPatternTooltip} {Settings.SeekStartPatternShortcut.TooltipString}";
+                buttons[(int)ButtonType.Rec].ToolTip       = $"<MouseLeft> {ToggleRecordingTooltip} {Settings.RecordingShortcut.TooltipString}\n{AbortRecordingTooltip} <Esc>";
+                buttons[(int)ButtonType.Loop].ToolTip      = $"<MouseLeft> {ToggleLoopModeTooltip}";
+                buttons[(int)ButtonType.Qwerty].ToolTip    = $"<MouseLeft> {ToggleQWERTYTooltip} {Settings.QwertyShortcut.TooltipString}";
+                buttons[(int)ButtonType.Metronome].ToolTip = $"<MouseLeft> {ToggleMetronomeTooltip}";
+                buttons[(int)ButtonType.Machine].ToolTip   = $"<MouseLeft> {TogglePALTooltip}";
+                buttons[(int)ButtonType.Follow].ToolTip    = $"<MouseLeft> {ToggleFollowModeTooltip} {Settings.FollowModeShortcut.TooltipString}";
+                buttons[(int)ButtonType.Help].ToolTip      = $"<MouseLeft> {DocumentationTooltip}";
+            }
         }
 
         private void UpdateButtonLayout()
@@ -1227,8 +1230,6 @@ namespace FamiStudio
                 c.PopTransform();
             }
 
-            c.PopClipRegion();
-
             if (Platform.IsMobile)
             {
                 Utils.SplitVersionNumber(Platform.ApplicationVersion, out var betaNumber);
@@ -1236,6 +1237,8 @@ namespace FamiStudio
                 if (betaNumber > 0)
                     c.DrawText($"BETA {betaNumber}", Fonts.FontSmall, x + 4, y + 4, Theme.LightRedColor);
             }
+
+            c.PopClipRegion();
 
             c.DrawRectangle(x, y, x + sx, y + sy, Theme.LightGreyColor2);
         }

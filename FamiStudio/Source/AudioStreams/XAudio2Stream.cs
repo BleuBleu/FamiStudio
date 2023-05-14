@@ -172,7 +172,7 @@ namespace FamiStudio
 #endif
         }
 
-        public void PlayImmediate(short[] data, int sampleRate, float volume)
+        public void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0)
         {
             Debug.Assert(Platform.IsInMainThread());
 

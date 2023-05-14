@@ -1222,6 +1222,7 @@ namespace FamiStudio
                     RecreateAudioPlayers();
                     RefreshLayout();
                     RefreshProjectExplorerButtons();
+                    InvalidatePatternCache();
                     InitializeMidi();
                     MarkEverythingDirty();
                 }
@@ -1231,6 +1232,11 @@ namespace FamiStudio
         private void RefreshProjectExplorerButtons()
         {
             ProjectExplorer.RefreshButtons();
+        }
+
+        private void InvalidatePatternCache()
+        {
+            Sequencer.InvalidatePatternCache();
         }
 
         public bool TryClosing()
@@ -1667,11 +1673,11 @@ namespace FamiStudio
                 instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolume));
         }
 
-        public void PlayRawPcmSample(short[] data, int sampleRate, float volume = 1.0f)
+        public void PlayRawPcmSample(short[] data, int sampleRate, float volume = 1.0f, int channel = 0)
         {
             if (instrumentPlayer != null)
             {
-                instrumentPlayer.PlayRawPcmSample(data, sampleRate, volume);
+                instrumentPlayer.PlayRawPcmSample(data, sampleRate, volume, channel);
             }
         }
 

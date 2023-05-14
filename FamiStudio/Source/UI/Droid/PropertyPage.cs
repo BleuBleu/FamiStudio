@@ -846,12 +846,42 @@ namespace FamiStudio
 
         public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
         {
-            Debug.Assert(false);
+            var prop = properties[idx];
+            Debug.Assert(prop.type == PropertyType.Grid);
+            Debug.Assert(prop.controls.Count == data.Length); // We dont support resizing on mobile atm.
+            Debug.Assert(columnNames == null); // We dont even have columns on Mobile yet.
+
+            for (int r = 0; r < data.GetLength(0); r++)
+            {
+                for (int c = 0; c < prop.columns.Length; c++)
+                {
+                    UpdateGrid(idx, r, c, data[r, c]);
+                }
+            }
         }
 
         public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)
         {
-            Debug.Assert(false);
+            var prop = properties[idx];
+            Debug.Assert(prop.type == PropertyType.Grid);
+            var ctrlIdx = rowIdx * prop.columns.Length + colIdx;
+            var view = prop.controls[ctrlIdx];
+            
+            switch (prop.columns[colIdx].Type)
+            {
+                case ColumnType.CheckBox:
+                    (view as CheckBox).Checked = (bool)value;
+                    break;
+                case ColumnType.Label:
+                    (view as TextView).Text = (string)value;
+                    break;
+                case ColumnType.Slider:
+                    (view as SeekBar).Progress = (int)value;
+                    break;
+                default:
+                    Debug.Assert(false);
+                    break;
+            }
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)

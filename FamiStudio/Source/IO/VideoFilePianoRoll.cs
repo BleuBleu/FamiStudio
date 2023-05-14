@@ -309,7 +309,16 @@ namespace FamiStudio
 
                     if (note.IsMusical)
                     {
-                        color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : Theme.LightGreyColor1);
+                        if (s.channel.Type == ChannelType.Dpcm && Settings.DpcmColorMode == Settings.ColorModeSample && note.Instrument != null)
+                        {
+                            var mapping = note.Instrument.GetDPCMMapping(note.Value);
+                            if (mapping != null && mapping.Sample != null)
+                                color = mapping.Sample.Color;
+                        }
+                        else
+                        {
+                            color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : Theme.LightGreyColor1);
+                        }
                     }
 
                     s.graphics.BeginDrawFrame(new Rectangle(0, 0, channelResX, channelResY), Theme.DarkGreyColor2);

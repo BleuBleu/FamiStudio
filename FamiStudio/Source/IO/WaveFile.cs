@@ -150,25 +150,26 @@ namespace FamiStudio
                     {
                         var fmt = new FormatSubChunk();
                         Marshal.Copy(bytes, fmtOffset, new IntPtr(&fmt), FormatSubChunkSize);
-                        if (fmt.audioFormat == 1 && fmt.numChannels <= 2 && fmt.bitsPerSample % 8 == 0)
+                        //TODO: extended chunk for float types, float types themselves
+                        if (fmt.audioFormat == 1 && fmt.numChannels <= 2 && (fmt.bitsPerSample & 0x07) == 0)
                         { //Uncompressed PCM
                             short[] wavData = null;
                             switch (fmt.bitsPerSample)
                             {
                                 case 8:
-                                    wavData = new short[dataSize / 1];
+                                    wavData = new short[dataSize];
                                     for (int i = 0; i < dataSize; i++)
                                         wavData[i] = (short)((bytes[dataOffset + i] << 8) + short.MinValue + bytes[dataOffset + i]);
                                     break;
                                 case 16:
-                                    wavData = new short[dataSize / 2];
+                                    wavData = new short[dataSize >> 1];
                                     fixed (short* p = &wavData[0])
                                         Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
                                     break;
                                 default:
-                                    if (fmt.bitsPerSample % 8 != 0)
+                                    if ((fmt.bitsPerSample & 0x07) != 0)
                                         break;
-                                    short divisor = (short)(fmt.bitsPerSample / 8);
+                                    short divisor = (short)(fmt.bitsPerSample >> 3);
                                     wavData = new short[dataSize / divisor];
                                     for (int i = 0; i < dataSize; i += divisor)
                                         wavData[i / divisor] = (short)((bytes[dataOffset + i + (divisor - 1)] << 8) | bytes[dataOffset + i + (divisor-2)]);

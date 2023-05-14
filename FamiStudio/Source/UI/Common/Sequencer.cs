@@ -1393,7 +1393,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownSetLoopPoint(MouseEventArgs e)
         {
-            bool setLoop = ParentWindow.IsKeyDown(Keys.L);
+            bool setLoop = Settings.SetLoopPointShortcut.IsKeyDown(ParentWindow);
 
             if (setLoop && e.X > channelNameSizeX && e.Left)
             {
@@ -2497,27 +2497,28 @@ namespace FamiStudio
             }
             else if (IsActiveControl)
             {
-                bool ctrl  = e.Control;
-                bool shift = e.Shift;
-
-                if (ctrl)
-                {
-                    if (e.Key == Keys.C)
-                        Copy();
-                    else if (e.Key == Keys.X)
-                        Cut();
-                    else if (e.Key == Keys.V && !shift)
-                        Paste();
-                    else if (e.Key == Keys.V && shift)
-                        PasteSpecial();
+                if (Settings.CopyShortcut.Matches(e))
+                { 
+                    Copy();
                 }
-
-                if (e.Key == Keys.Delete && IsSelectionValid())
+                else if (Settings.CutShortcut.Matches(e))
+                { 
+                    Cut();
+                }
+                else if (Settings.PasteShortcut.Matches(e))
+                { 
+                    Paste();
+                }
+                else if (Settings.PasteSpecialShortcut.Matches(e))
+                { 
+                    PasteSpecial();
+                }
+                else if (Settings.DeleteShortcut.Matches(e) && IsSelectionValid())
                 {
                     CancelDragSelection();
                     DeleteSelection();
                 }
-                else if (e.Key == Keys.A && ctrl && IsActiveControl)
+                else if (IsActiveControl && Settings.SelectAllShortcut.Matches(e))
                 {
                     SetSelection(new PatternLocation(0, 0), new PatternLocation(Song.Channels.Length - 1, Song.Length - 1), true);
                 }
@@ -2708,7 +2709,9 @@ namespace FamiStudio
                 if (pattern == null)
                     tooltipList.Add($"<MouseLeft> {AddPatternTooltip}");
 
-                tooltipList.Add($"<L><MouseLeft> {SetLoopPointTooltip}");
+                if (Settings.SetLoopPointShortcut.IsShortcutValid(0))
+                    tooltipList.Add($"{Settings.SetLoopPointShortcut.TooltipString}<MouseLeft> {SetLoopPointTooltip}");
+
                 tooltipList.Add($"<MouseWheel><Drag> {PanTooltip}");
                 tooltipList.Add($"<MouseRight><Drag> {SelectRectangleTooltip}");
 
@@ -2991,7 +2994,7 @@ namespace FamiStudio
                         }
                         App.UndoRedoManager.EndTransaction();
                     }
-                    else if (Song.Channels[selectionMax.ChannelIndex].RenamePattern(pattern, newName))
+                    else if (Song.Channels[location.ChannelIndex].RenamePattern(pattern, newName))
                     {
                         pattern.Color = newColor;
                         App.UndoRedoManager.EndTransaction();

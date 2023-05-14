@@ -1,7 +1,7 @@
 # Welcome to the FamiStudio GitHub page
 This is the GitHub page of FamiStudio, which is intended for people wanting to view/download the source code or report bug fixes.
 
-**If you are simply interested in installing FamiStudio, please visit the brand new [famistudio.org](https://famistudio.org/) or [itch.io](https://bleubleu.itch.io/famistudio).**
+**If you are simply interested in installing FamiStudio, please visit [famistudio.org](https://famistudio.org/) or [itch.io](https://bleubleu.itch.io/famistudio).**
 
 For any questions, you can reach me at [famistudio@outlook.com](mailto:famistudio@outlook.com).
 

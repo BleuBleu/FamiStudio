@@ -388,6 +388,8 @@ namespace FamiStudio
 
         public Instrument CreateInstrument(int expansion, string name = null)
         {
+            Debug.Assert(expansion >= ExpansionType.None && expansion < ExpansionType.Count);
+
             if (expansion != ExpansionType.None && !UsesExpansionAudio(expansion))
                 return null;
 

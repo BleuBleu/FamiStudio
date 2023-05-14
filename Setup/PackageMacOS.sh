@@ -31,6 +31,7 @@ mkdir tmp
 
 # Create a package
 cp -R "Demo Songs" tmp/
+cp -R "Demo Instruments" tmp/
 cp -R FamiStudio.app tmp/
 cd tmp
 # Using ditto to preserve permissions and xattr.

@@ -864,6 +864,7 @@ namespace FamiStudio
             }
 
             scrollX = 0;
+            UpdateRenderCoords(); // To update noteSizeX
         }
 
         private void CenterEnvelopeScroll()
@@ -1534,9 +1535,10 @@ namespace FamiStudio
             if (editMode != EditionMode.VideoRecording && App.SelectedChannel.Type == ChannelType.Dpcm && App.SelectedInstrument != null)
             {
                 var mapping = App.SelectedInstrument.GetDPCMMapping(note);
-                if (mapping != null)
+                if (mapping != null && mapping.Sample != null)
                 {
-                    color =  App.SelectedInstrument.Color; // Sample color or instrument color?
+                    color = Settings.DpcmColorMode == Settings.ColorModeSample ?
+                        mapping.Sample.Color : App.SelectedInstrument.Color;
                     return true;
                 }
             }
@@ -2142,7 +2144,7 @@ namespace FamiStudio
 
                         if (note.IsMusical)
                         {
-                            note.Instrument = channel.SupportsInstrument(newNote.Instrument) ? newNote.Instrument : null;
+                            note.Instrument = newNote.Instrument != null && channel.SupportsInstrument(newNote.Instrument) ? newNote.Instrument : null;
                             note.SlideNoteTarget = channel.SupportsSlideNotes ? newNote.SlideNoteTarget : (byte)0;
                             note.Flags = newNote.Flags;
                             note.Duration = newNote.Duration;
@@ -2509,7 +2511,19 @@ namespace FamiStudio
 
         private Color GetNoteColor(Channel channel, int noteValue, Instrument instrument, float alphaDim = 1.0f)
         {
-            var color = instrument != null ? instrument.Color : Theme.LightGreyColor1;
+            var color = Theme.LightGreyColor1;
+
+            if (channel.Type == ChannelType.Dpcm && Settings.DpcmColorMode == Settings.ColorModeSample && instrument != null)
+            {
+                var mapping = instrument.GetDPCMMapping(noteValue);
+                if (mapping != null && mapping.Sample != null)
+                    color = mapping.Sample.Color;
+            }
+            else if (instrument != null)
+            {
+                color = instrument.Color;
+            }
+
             return Color.FromArgb(alphaDim, color);
         }
 
@@ -2524,20 +2538,17 @@ namespace FamiStudio
         private void RenderNotes(RenderInfo r)
         {
             var song = Song;
-            var maxX  = editMode == EditionMode.Channel ? GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern)) : Width;
+            var maxX = editMode == EditionMode.Channel ? GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern)) : Width;
                                                            
             // Draw the note backgrounds
             for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
             {
                 int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
-
                 for (int j = 0; j < 12; j++)
                 {
                     int y = octaveBaseY - j * noteSizeY;
                     if (!IsBlackKey(j))
                         r.b.FillRectangle(0, y - noteSizeY, maxX, y, Theme.DarkGreyColor4);
-                    if (i * 12 + j != NumNotes)
-                        r.b.DrawLine(0, y, maxX, y, Theme.BlackColor);
                 }
             }
 
@@ -2558,17 +2569,22 @@ namespace FamiStudio
                         var drawNotes = ShouldDrawLines(song, p, noteLength);
                         var drawFrames = drawNotes && ShouldDrawLines(song, p, 1);
 
+                        // Needed to get dashed lines to scroll properly.
+                        r.c.PushTranslation(0, -scrollY);
+
                         for (int i = p == 0 ? 1 : 0; i < patternLen; i++)
                         {
                             int x = GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(p) + i);
 
                             if (i % beatLength == 0)
-                                r.b.DrawLine(x, 0, x, Height, Theme.BlackColor, i == 0 ? 3 : 1);
+                                r.b.DrawLine(x, 0, x, virtualSizeY, Theme.BlackColor, i == 0 ? 3 : 1);
                             else if (drawNotes && i % noteLength == 0)
-                                r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1);
+                                r.b.DrawLine(x, 0, x, virtualSizeY, Theme.DarkGreyColor1);
                             else if (drawFrames && editMode != EditionMode.VideoRecording)
-                                r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1, 1, false, true);
+                                r.b.DrawLine(x, 0, x, virtualSizeY, Theme.DarkGreyColor1, 1, false, true);
                         }
+
+                        r.c.PopTransform();
                     }
                     else
                     {
@@ -2583,6 +2599,18 @@ namespace FamiStudio
                             else if (drawNotes)
                                 r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor2);
                         }
+                    }
+                }
+
+                // Horizontal black lines.
+                for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
+                {
+                    int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
+                    for (int j = 0; j < 12; j++)
+                    {
+                        int y = octaveBaseY - j * noteSizeY;
+                        if (i * 12 + j != NumNotes)
+                            r.b.DrawLine(0, y, maxX, y, Theme.BlackColor);
                     }
                 }
 
@@ -2800,6 +2828,18 @@ namespace FamiStudio
             }
             else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.
             {
+                // Horizontal black lines.
+                for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
+                {
+                    int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
+                    for (int j = 0; j < 12; j++)
+                    {
+                        int y = octaveBaseY - j * noteSizeY;
+                        if (i * 12 + j != NumNotes)
+                            r.b.DrawLine(0, y, maxX, y, Theme.BlackColor);
+                    }
+                }
+
                 foreach (var kv in editInstrument.SamplesMapping)
                 {
                     var note = kv.Key;
@@ -3382,13 +3422,13 @@ namespace FamiStudio
                         if (indices != null) indices[j] = i;
                     }
 
-                    r.c.DrawGeometry(points, color, 1, true);
+                    r.c.DrawGeometry(points, color, 1, true, false);
 
                     if (drawSamples)
                     {
                         var selectionValid = IsSelectionValid();
 
-                        for (int i = 0; i < points.GetLength(0); i++)
+                        for (int i = 0; i < points.Length / 2; i++)
                         {
                             var selected = isSource && selectionValid && indices[i] >= selectionMin && indices[i] <= selectionMax;
                             var sampleScale = selected ? 1.5f : 1.0f;
@@ -5119,7 +5159,7 @@ namespace FamiStudio
                 ClearSelection();
                 MarkDirty();
             }
-            else if (e.Key == Keys.A && e.Control && IsActiveControl)
+            else if (IsActiveControl && Settings.SelectAllShortcut.Matches(e))
             {
                 SelectAll();
             }
@@ -5617,7 +5657,7 @@ namespace FamiStudio
             {
                 if (e.Left)
                 {
-                    var slide = ParentWindow.IsKeyDown(Keys.S);
+                    var slide = Settings.SlideNoteShortcut.IsKeyDown(ParentWindow);
 
                     if (slide && selectedEffectIdx == Note.EffectVolume)
                     {
@@ -5742,11 +5782,11 @@ namespace FamiStudio
                 if (left)
                 {
                     var delete  = ModifierKeys.IsShiftDown;
-                    var release = ParentWindow.IsKeyDown(Keys.R); 
-                    var stop    = ParentWindow.IsKeyDown(Keys.T);
-                    var slide   = ParentWindow.IsKeyDown(Keys.S);
-                    var attack  = ParentWindow.IsKeyDown(Keys.A);
-                    var eyedrop = ParentWindow.IsKeyDown(Keys.I);
+                    var release = Settings.ReleaseNoteShortcut.IsKeyDown(ParentWindow);
+                    var stop    = Settings.StopNoteShortcut.IsKeyDown(ParentWindow);
+                    var slide   = Settings.SlideNoteShortcut.IsKeyDown(ParentWindow);
+                    var attack  = Settings.AttackShortcut.IsKeyDown(ParentWindow);
+                    var eyedrop = Settings.EyeDropNoteShortcut.IsKeyDown(ParentWindow);
 
                     if (delete && note != null)
                     {
@@ -6012,7 +6052,7 @@ namespace FamiStudio
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[location.PatternIndex];
 
-            if (!channel.SupportsInstrument(App.SelectedInstrument))
+            if (!channel.SupportsInstrument(App.SelectedInstrument, false))
             {
                 App.ShowInstrumentError(channel, true);
                 return null;
@@ -6254,7 +6294,12 @@ namespace FamiStudio
                 env.Values[idx] = (sbyte)Utils.Clamp(env.Values[idx] + delta, min, max);
             }
 
-            editInstrument.NotifyEnvelopeChanged(editEnvelope, true);
+            // Arps will have null instruments.
+            if (editInstrument != null)
+            {
+                editInstrument.NotifyEnvelopeChanged(editEnvelope, true);
+            }
+
             MarkDirty();
         }
 
@@ -6685,7 +6730,7 @@ namespace FamiStudio
                         if (channel.SupportsStopNotes)
                             menu.Add(new ContextMenuOption("MenuStopNote", MakeStopNoteContext, () => { ConvertToStopNote(noteLocation, note); }));
                         if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument))
-                            menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceInstrumentContext, () => { ReplaceSelectionInstrument(App.SelectedInstrument, Point.Empty, true); }));
+                            menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceInstrumentContext, () => { ReplaceSelectionInstrument(App.SelectedInstrument, new Point(x, y)); }));
                         menu.Add(new ContextMenuOption("MenuEyedropper", MakeInstrumentCurrentContext, () => { Eyedrop(note); }));
 
                         var factor = GetBestSnapFactorForNote(noteLocation, note);
@@ -7525,7 +7570,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (channel.SupportsInstrument(App.SelectedInstrument))
+                    if (channel.SupportsInstrument(App.SelectedInstrument, false))
                     {
                         if (pattern != null)
                         {
@@ -8153,21 +8198,23 @@ namespace FamiStudio
 
                         if (note != null)
                         {
-                            if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease)
-                                tooltipList.Add($"<R><MouseLeft> {SetReleasePointTooltip}");
-                            if (channel.SupportsSlideNotes)
-                                tooltipList.Add($"<S><MouseLeft><Drag> {SlideNoteTooltip}");
+                            if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease && Settings.ReleaseNoteShortcut.IsShortcutValid(0))
+                                tooltipList.Add($"{Settings.ReleaseNoteShortcut.TooltipString}<MouseLeft> {SetReleasePointTooltip}");
+                            if (channel.SupportsSlideNotes && Settings.SlideNoteShortcut.IsShortcutValid(0))
+                                tooltipList.Add($"{Settings.SlideNoteShortcut.TooltipString}<MouseLeft><Drag> {SlideNoteTooltip}");
                             if (note.IsMusical)
                             {
-                                tooltipList.Add($"<A><MouseLeft> {ToggleAttackTooltip}");
-                                tooltipList.Add($"<I><MouseLeft> {InstrumentEyedropTooltip}");
+                                if (Settings.AttackShortcut.IsShortcutValid(0))
+                                    tooltipList.Add($"{Settings.AttackShortcut.TooltipString}<MouseLeft> {ToggleAttackTooltip}");
+                                if (Settings.EyeDropNoteShortcut.IsShortcutValid(0))
+                                    tooltipList.Add($"{Settings.EyeDropNoteShortcut.TooltipString}<MouseLeft> {InstrumentEyedropTooltip}");
                             }
                             tooltipList.Add($"<MouseLeft><MouseLeft> {OrTooltip} <Shift><MouseLeft> {DeleteNoteTooltip}");
                         }
                         else 
                         {
-                            if (channel.SupportsStopNotes)
-                                tooltipList.Add($"<T><MouseLeft> {AddStopNoteTooltip}");
+                            if (channel.SupportsStopNotes && Settings.StopNoteShortcut.IsShortcutValid(0))
+                                tooltipList.Add($"{Settings.StopNoteShortcut.TooltipString}<MouseLeft> {AddStopNoteTooltip}");
                         }
 
                         tooltipList.Add($"<MouseWheel> {PanTooltip}");
@@ -8384,7 +8431,7 @@ namespace FamiStudio
         { 
             var channel = Song.Channels[editChannel];
 
-            if (channel.SupportsInstrument(App.SelectedInstrument))
+            if (channel.SupportsInstrument(App.SelectedInstrument, false))
             {
                 App.PlayInstrumentNote(noteValue, false, false);
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.CreateNote, true);
@@ -8932,7 +8979,7 @@ namespace FamiStudio
             {
                 Cursor = Cursors.CopyCursor;
             }
-            else if (editMode == EditionMode.Channel && ParentWindow.IsKeyDown(Keys.I))
+            else if (editMode == EditionMode.Channel && Settings.EyeDropNoteShortcut.IsKeyDown(ParentWindow))
             {
                 Cursor = Cursors.Eyedrop;
             }

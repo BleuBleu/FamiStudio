@@ -659,6 +659,13 @@ namespace FamiStudio
         // From NESDEV wiki.
         // [0,x] = NTSC
         // [1,x] = PAL
+                
+        static LocalizedString KHzLabel;
+        static LocalizedString SemitonesLabel;
+
+        static DPCMSampleRate(){
+            Localization.LocalizeStatic(typeof(DPCMSampleRate));
+        }
         public static readonly float[,] Frequencies =
         {
             // NTSC
@@ -722,14 +729,14 @@ namespace FamiStudio
             {
                 if (str != "") str += " ";
                 var f = Frequencies[pal ? 1 : 0, idx];
-                str += (f / 1000).ToString("n1", CultureInfo.CurrentCulture) + " KHz";
+                str += (f / 1000).ToString("n1", CultureInfo.CurrentCulture) + " " + KHzLabel.ToString();
             }
 
             if (semitones)
             {
                 if (str != "") str += " ";
                 if (freq) str += "(";
-                str += GetSemitones(pal, idx).ToString("n2", CultureInfo.CurrentCulture) + " semitones";
+                str += GetSemitones(pal, idx).ToString("n2", CultureInfo.CurrentCulture) + " " + SemitonesLabel.ToString();
                 if (freq) str += ")";
             }
 
