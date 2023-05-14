@@ -2,9 +2,8 @@
 =====
 Beta bugs:
 - OSC trigger assert 
-/ Proto VRC7 issue from #bug report 
-	- Zero sec stop after
-- Option to keep unused samples when exporting to sound engine.
+- Option to keep unused samples when exporting to sound engine. 
+	=> Shelved, will need more work.
 - CMD+Q = crash macos.
 - At home: test the magic trackpad issue
 - 
