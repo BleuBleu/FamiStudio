@@ -864,6 +864,7 @@ namespace FamiStudio
             }
 
             scrollX = 0;
+            UpdateRenderCoords(); // To update noteSizeX
         }
 
         private void CenterEnvelopeScroll()
