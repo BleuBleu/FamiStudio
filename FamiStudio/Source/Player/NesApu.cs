@@ -728,6 +728,9 @@ namespace FamiStudio
                 case ChannelType.Vrc6Saw:
                 case ChannelType.Vrc6Square1:
                 case ChannelType.Vrc6Square2:
+                case ChannelType.EPSMSquare1:
+                case ChannelType.EPSMSquare2:
+                case ChannelType.EPSMSquare3:
                     return NesApu.MaximumPeriod12Bit;
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:
