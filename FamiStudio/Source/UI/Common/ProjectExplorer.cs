@@ -3233,7 +3233,7 @@ namespace FamiStudio
                                         samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
                                         samplesProject.DeleteAllInstruments();
 
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                                         bool success = App.Project.MergeProject(samplesProject);
                                         App.UndoRedoManager.AbortOrEndTransaction(success);
 
@@ -3256,7 +3256,7 @@ namespace FamiStudio
                     {
                         App.BeginLogTask();
                         {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
                             var importedSamples = new List<DPCMSample>();
 
@@ -3452,7 +3452,7 @@ namespace FamiStudio
                             if (wavData.Length > maximumSamples)
                                 Array.Resize(ref wavData, maximumSamples);
 
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
                             sample.SetWavSourceData(wavData, sampleRate, sample.SourceFilename, false);
                             sample.Process();
                             App.UndoRedoManager.EndTransaction();
@@ -3464,7 +3464,7 @@ namespace FamiStudio
                         if (dmcData.Length > DPCMSample.MaxSampleSize)
                             Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
 
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
                         sample.SetDmcSourceData(dmcData, sample.SourceFilename, false);
                         sample.Process();
                         App.UndoRedoManager.EndTransaction();
@@ -3545,7 +3545,7 @@ namespace FamiStudio
             {
                 if (r == DialogResult.Yes)
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples, TransactionFlags.StopAudio);
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project, TransactionFlags.StopAudio);
                     App.Project.DeleteSample(sample);
                     DPCMSampleDeleted?.Invoke(sample);
                     App.UndoRedoManager.EndTransaction();
