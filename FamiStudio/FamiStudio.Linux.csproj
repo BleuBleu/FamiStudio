@@ -290,6 +290,8 @@
     <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Bd.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Light.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Bold.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Regular.otf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Bold.otf" />
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />
@@ -789,6 +791,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>    
     <Content Include="Localization\FamiStudio.spa.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>                            
+    <Content Include="Localization\FamiStudio.zho.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>                            
   </ItemGroup>  

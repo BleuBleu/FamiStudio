@@ -442,8 +442,10 @@
     <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Bd.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Light.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Bold.ttf" />
-  </ItemGroup>
-  <ItemGroup>
+    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Regular.otf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Bold.otf" />
+  </ItemGroup>    
+  <ItemGroup>    
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />
   </ItemGroup>
   <ItemGroup>
@@ -715,6 +717,7 @@
     <EmbeddedResource Include="Localization\FamiStudio.por.ini" />
     <EmbeddedResource Include="Localization\FamiStudio.rus.ini" />
     <EmbeddedResource Include="Localization\FamiStudio.spa.ini" />
+    <EmbeddedResource Include="Localization\FamiStudio.zho.ini" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />
