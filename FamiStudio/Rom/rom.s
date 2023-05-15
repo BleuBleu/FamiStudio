@@ -384,6 +384,7 @@ default_palette:
 
     MMC5_PRG_MODE = $5100
     MMC5_CHR_MODE = $5101
+    MMC5_NMT_MAP  = $5105
 
     MMC5_PRG_SELECT_8000 = $5114
     MMC5_PRG_SELECT_A000 = $5115
@@ -488,6 +489,8 @@ default_palette:
         sta MMC5_PRG_MODE
         lda #3
         sta MMC5_CHR_MODE
+        lda #$44 ; Vertical mirrorring.
+        sta MMC5_NMT_MAP
 
         ; TODO : This could be a loop.
         lda #0

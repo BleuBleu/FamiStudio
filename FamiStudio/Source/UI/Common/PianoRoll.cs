@@ -445,6 +445,7 @@ namespace FamiStudio
         #region Localization
 
         // Piano Roll
+        LocalizedString EditingChannelLabel;
         LocalizedString EditingDPCMSampleLabel;
         LocalizedString EditingArpeggioLabel;
         LocalizedString EditingInstrumentEnvelopeLabel;
@@ -864,6 +865,7 @@ namespace FamiStudio
             }
 
             scrollX = 0;
+            UpdateRenderCoords(); // To update noteSizeX
         }
 
         private void CenterEnvelopeScroll()
@@ -2822,7 +2824,7 @@ namespace FamiStudio
                     var channelType = song.Channels[editChannel].Type;
                     var channelName = song.Channels[editChannel].NameWithExpansion;
 
-                    r.f.DrawText($"Editing {channelName} Channel", r.fonts.FontVeryLarge, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, Theme.LightGreyColor1);
+                    r.f.DrawText(EditingChannelLabel.Format(channelName), r.fonts.FontVeryLarge, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, Theme.LightGreyColor1);
                 }
             }
             else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.

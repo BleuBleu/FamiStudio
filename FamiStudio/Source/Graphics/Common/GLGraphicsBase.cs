@@ -748,6 +748,8 @@ namespace FamiStudio
             if (!sharedFontData.TryGetValue(name, out var data))
             {
                 var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
+                if (stream == null)
+                    stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.otf");
                 var buffer = new byte[stream.Length];
                 stream.Read(buffer, 0, buffer.Length);
 
