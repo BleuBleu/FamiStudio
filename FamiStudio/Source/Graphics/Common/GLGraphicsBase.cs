@@ -2869,7 +2869,7 @@ namespace FamiStudio
                 if (valign != TextFlags.Top)
                 {
                     // Use a tall character with no descender as reference.
-                    var charA = font.GetCharInfo('A');
+                    var charA = font.GetCharInfo('0');
 
                     // When aligning middle or center, ignore the y offset since it just
                     // adds extra padding and messes up calculations.
