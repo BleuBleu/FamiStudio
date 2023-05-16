@@ -274,7 +274,8 @@ namespace FamiStudio
             get { return n163WavPos; }
             set
             {
-                n163WavPos  = (byte)Utils.Clamp(value, 0, N163MaxWavePos);
+                Debug.Assert((value & 0x03) == 0);
+                n163WavPos  = (byte)Utils.Clamp(value       & 0xfc, 0, N163MaxWavePos);
                 n163WavSize = (byte)Utils.Clamp(n163WavSize & 0xfc, 4, N163MaxWaveSize);
                 ClampN163WaveCount();
                 UpdateN163WaveEnvelope();
