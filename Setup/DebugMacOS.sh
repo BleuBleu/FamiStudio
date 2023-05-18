@@ -15,4 +15,8 @@ cp ../FamiStudio/bin/Debug/net6.0/*.dll ./FamiStudio.app/Contents/MacOS/
 cp ../FamiStudio/bin/Debug/net6.0/*.json ./FamiStudio.app/Contents/MacOS/
 cp ../FamiStudio/bin/Debug/net6.0/*.dylib ./FamiStudio.app/Contents/MacOS/
 
+# Localization
+rm -f ./FamiStudio.app/Contents/MacOS/Localization/*.ini
+cp ../FamiStudio/Localization/*.ini ./FamiStudio.app/Contents/MacOS/Localization/
+
 open FamiStudio.app

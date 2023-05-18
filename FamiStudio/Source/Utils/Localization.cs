@@ -27,7 +27,8 @@ namespace FamiStudio
             "DEU",
             "KOR",
             "POR",
-            "RUS"
+            "RUS",
+            "ZHO",
         };
 
         static Localization()
@@ -180,7 +181,7 @@ namespace FamiStudio
     public class LanguageType
     {
         // Must match with Localization.Codes
-        public static LocalizedString[] LocalizedNames = new LocalizedString[6];
+        public static LocalizedString[] LocalizedNames = new LocalizedString[7];
 
         public static string GetLocalizedNameForCode(string code)
         {

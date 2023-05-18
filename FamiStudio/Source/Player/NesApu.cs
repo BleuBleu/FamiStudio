@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -731,6 +731,9 @@ namespace FamiStudio
                 case ChannelType.EPSMSquare1:
                 case ChannelType.EPSMSquare2:
                 case ChannelType.EPSMSquare3:
+                case ChannelType.S5BSquare1:
+                case ChannelType.S5BSquare2:
+                case ChannelType.S5BSquare3:
                     return NesApu.MaximumPeriod12Bit;
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:

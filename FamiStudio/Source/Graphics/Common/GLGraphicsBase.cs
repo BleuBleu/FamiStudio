@@ -748,6 +748,8 @@ namespace FamiStudio
             if (!sharedFontData.TryGetValue(name, out var data))
             {
                 var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
+                if (stream == null)
+                    stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.otf");
                 var buffer = new byte[stream.Length];
                 stream.Read(buffer, 0, buffer.Length);
 
@@ -2867,7 +2869,7 @@ namespace FamiStudio
                 if (valign != TextFlags.Top)
                 {
                     // Use a tall character with no descender as reference.
-                    var charA = font.GetCharInfo('A');
+                    var charA = font.GetCharInfo('0');
 
                     // When aligning middle or center, ignore the y offset since it just
                     // adds extra padding and messes up calculations.

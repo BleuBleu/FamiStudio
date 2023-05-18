@@ -15,7 +15,7 @@ namespace FamiStudio
 {
     public class FamiStudio
     {
-        private const int MaxAutosaves = 30;
+        private const int MaxAutosaves = 99;
 
         private FamiStudioWindow window;
         private Project project;
