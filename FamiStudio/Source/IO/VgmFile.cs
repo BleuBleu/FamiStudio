@@ -1617,18 +1617,18 @@ namespace FamiStudio
                 {
                     Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()));
                     Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()));
-                    Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3+4).Take(2).ToArray()));
-                    if(Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()) == "C2")
+                    Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()));
+                    if (Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()) == "C2")
                     {
-                        var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) -2).ToArray();
-                        for(int i = 0; i < data.Length; i++)
+                        var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
+                        for (int i = 0; i < data.Length; i++)
                         {
-                            dpcmData[i+ BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()) - 0xc000] = data[i];
+                            dpcmData[i + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()) - 0xc000] = data[i];
                         }
 
                     }
                     else
-                        dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 +2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray())-2).ToArray();
+                        dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                     vgmDataOffset = vgmDataOffset + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) + 3 + 4;
                 }
                 else if (vgmData[0] == 0x66)
@@ -1638,7 +1638,7 @@ namespace FamiStudio
                     break;
                 }
 
-                else if (vgmData[0] == 0x61 || vgmData[0] == 0x63 || vgmData[0] == 0x62)
+                else if (vgmData[0] == 0x61 || vgmData[0] == 0x63 || vgmData[0] == 0x62 || (vgmData[0] >= 0x70 && vgmData[0] <= 0x8f))
                 {
                     if (vgmData[0] == 0x63)
                     {
@@ -1651,30 +1651,20 @@ namespace FamiStudio
                         vgmDataOffset = vgmDataOffset + 1;
                         samples = samples + 735;
                     }
-                    else
+                    else if (vgmData[0] == 0x61)
                     {
                         samples = samples + BitConverter.ToInt16(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
                         vgmDataOffset = vgmDataOffset + 3;
                     }
-                    while (samples >= 735)
+                    else if (vgmData[0] >= 0x80)
                     {
-                        p = (frame - frameSkip) / song.PatternLength;
-                        n = (frame - frameSkip) % song.PatternLength;
-                        song.SetLength(p + 1);
-                        frame++;
-                        samples = samples - 735;
-                        if (frameSkip < frame)
-                            for (int c = 0; c < song.Channels.Length; c++)
-                                UpdateChannel(p, n, song.Channels[c], channelStates[c]);
-                    }
-                }
-                else if (vgmData[0] >= 0x70 && vgmData[0] <= 0x8f)
-                {
-                    if(vgmData[0] >= 0x80)
                         samples = samples + vgmData[0] - 0x80;
+                    }
                     else
+                    {
                         samples = samples + vgmData[0] - 0x6F;
-                    vgmDataOffset = vgmDataOffset + 1;
+                        vgmDataOffset = vgmDataOffset + 1;
+                    }
                     while (samples >= 735)
                     {
                         p = (frame - frameSkip) / song.PatternLength;
