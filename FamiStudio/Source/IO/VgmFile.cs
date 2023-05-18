@@ -1697,19 +1697,6 @@ namespace FamiStudio
                     vgmData = vgmFile.Skip(vgmDataOffset).Take(3).ToArray();
                     if (vgmData[0] == 0xB4)
                     {
-                        /*if (vgmData[1] == 0x01 && vgmData[2] == 0x87 && apuRegister[2] == 0xff)
-                            apuRegister[0x03]++;
-                        if (vgmData[1] == 0x05 && vgmData[2] == 0x87 && apuRegister[2] == 0xff)
-                            apuRegister[0x07]++;
-                        if (vgmData[1] == 0x09 && vgmData[2] == 0x87 && apuRegister[2] == 0xff)
-                            apuRegister[0x0b]++;
-
-                        if (vgmData[1] == 0x01 && vgmData[2] == 0x8f && apuRegister[2] == 0xff)
-                            apuRegister[0x03]--;
-                        if (vgmData[1] == 0x05 && vgmData[2] == 0x8f && apuRegister[2] == 0xff)
-                            apuRegister[0x07]--;
-                        if (vgmData[1] == 0x09 && vgmData[2] == 0x8f && apuRegister[2] == 0xff)
-                            apuRegister[0x0b]--;*/
                         if (vgmData[1] == 0x15 && (vgmData[2] & 0x10) > 0)
                             dpcmTrigger = true;
                         apuRegister[vgmData[1]] = vgmData[2];
@@ -1880,6 +1867,15 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, "Notes: " + gd3DataArray[9]);
             }
 
+
+            frame++;
+            p = (frame - frameSkip) / song.PatternLength;
+            n = (frame - frameSkip) % song.PatternLength;
+            for (int c = 0; c < song.Channels.Length; c++)
+            {
+                if (channelStates[c].state != ChannelState.Stopped)
+                GetOrCreatePattern(song.Channels[c], p).GetOrCreateNoteAt(n).IsStop = true;
+            }
             song.Name = songName;
             song.SetSensibleBeatLength();
             song.ConvertToCompoundNotes();
