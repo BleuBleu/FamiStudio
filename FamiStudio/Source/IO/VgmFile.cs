@@ -538,6 +538,7 @@ namespace FamiStudio
         int[] s5bRegister = new int[0xff];
         bool dpcmTrigger = false;
         byte[] dpcmData = new byte[0xffff];
+        byte[] pcmRAMData = new byte[0xffffff];
         bool ym2149AsEPSM;
         int[] NOISE_FREQ_TABLE = new[] {0x004,0x008,0x010,0x020,0x040,0x060,0x080,0x0A0,0x0CA,0x0FE,0x17C,0x1FC,0x2FA,0x3F8,0x7F2,0xFE4 };
         float[] clockMultiplier = new float[ExpansionType.Count];
@@ -1615,10 +1616,10 @@ namespace FamiStudio
                     project.SetExpansionAudioMask(expansionMask, 0);
                 if (vgmData[0] == 0x67)  //DataBlock
                 {
-                    Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()));
+                    Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()));
                     Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()));
-                    Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()));
-                    if (Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()) == "C2")
+                    Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()));
+                    if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0xC2)
                     {
                         var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                         for (int i = 0; i < data.Length; i++)
@@ -1627,9 +1628,38 @@ namespace FamiStudio
                         }
 
                     }
+                    else if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0x07)
+                    {
+                        var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
+                        for (int i = 0; i < data.Length; i++)
+                        {
+                            pcmRAMData[i + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray())] = data[i];
+                        }
+
+                    }
                     else
                         dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                     vgmDataOffset = vgmDataOffset + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) + 3 + 4;
+                }
+                if (vgmData[0] == 0x68)  //DataBlock
+                {
+                    var readOffset = vgmFile.Skip(vgmDataOffset + 3).Take(3).ToArray();
+                    var writeOffset = vgmFile.Skip(vgmDataOffset + 3 + 3).Take(3).ToArray();
+                    var copySize = vgmFile.Skip(vgmDataOffset + 3 + 3 + 3).Take(3).ToArray();
+                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Read Offset: " + Convert.ToHexString(readOffset));
+                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Write Offset: " + Convert.ToHexString(writeOffset));
+                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()));
+                    Log.LogMessage(LogSeverity.Info, "PCM RAM COPY Size: " + Convert.ToHexString(copySize));
+                    if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0x07)
+                    {
+                        var data = pcmRAMData.Skip(Utils.Bytes24BitToInt(readOffset)).Take(Utils.Bytes24BitToInt(copySize)).ToArray();
+                        for (int i = 0; i < data.Length; i++)
+                        {
+                            dpcmData[i + Utils.Bytes24BitToInt(writeOffset) - 0xc000] = data[i];
+                        }
+
+                    }
+                    vgmDataOffset = vgmDataOffset + 12;
                 }
                 else if (vgmData[0] == 0x66)
                 {
