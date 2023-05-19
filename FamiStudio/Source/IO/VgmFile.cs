@@ -1630,12 +1630,7 @@ namespace FamiStudio
                     }
                     else if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0x07)
                     {
-                        var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
-                        for (int i = 0; i < data.Length; i++)
-                        {
-                            pcmRAMData[i + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray())] = data[i];
-                        }
-
+                        pcmRAMData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                     }
                     else
                         dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
