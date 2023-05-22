@@ -916,7 +916,7 @@ namespace FamiStudio
                                 }
                             case NotSoFatso.STATE_DPCMCOUNTER:
                                 {
-                                    return 1;// mWave_TND.bDMCLastDeltaWrite;
+                                    return 0;// mWave_TND.bDMCLastDeltaWrite;
                                 }
                             case NotSoFatso.STATE_DPCMACTIVE:
                                 {
@@ -1722,7 +1722,20 @@ namespace FamiStudio
                     vgmData = vgmFile.Skip(vgmDataOffset).Take(3).ToArray();
                     if (vgmData[0] == 0xB4)
                     {
-                        if (vgmData[1] == 0x15 && (vgmData[2] & 0x10) > 0)
+
+                        if (vgmData[1] == 0x17 && vgmData[2] == 0xc0)
+                        {
+                            if (apuRegister[1] == 0x87 && apuRegister[2] == 0xff)
+                                apuRegister[0x03]++;
+                            if (apuRegister[1] == 0x8f && apuRegister[2] == 0x00)
+                                apuRegister[0x03]--;
+                            if (apuRegister[5] == 0x87 && apuRegister[6] == 0xff)
+                                apuRegister[0x07]++;
+                            if (apuRegister[5] == 0x8f && apuRegister[6] == 0x00)
+                                apuRegister[0x07]--;
+                        }
+
+                            if (vgmData[1] == 0x15 && (vgmData[2] & 0x10) > 0)
                             dpcmTrigger = true;
                         apuRegister[vgmData[1]] = vgmData[2];
                     }
