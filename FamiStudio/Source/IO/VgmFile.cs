@@ -1384,23 +1384,6 @@ namespace FamiStudio
                         state.fdsModSpeed = modSpeed;
                     }
                 }
-                /*else if (channel.Type >= ChannelType.N163Wave1 &&
-                         channel.Type <= ChannelType.N163Wave8)
-                {
-                    var wavePos = (byte)GetState(channel.Type, NotSoFatso.STATE_N163WAVEPOS, 0);
-                    var waveLen = (byte)GetState(channel.Type, NotSoFatso.STATE_N163WAVESIZE, 0);
-
-                    if (waveLen > 0)
-                    {
-                        var waveData = new sbyte[waveLen];
-                        for (int i = 0; i < waveLen; i++)
-                            waveData[i] = (sbyte)GetState(channel.Type, NotSoFatso.STATE_N163WAVE, wavePos + i);
-
-                        instrument = GetN163Instrument(waveData, wavePos);
-                    }
-
-                    period >>= 2;
-                }*/
                 else if (channel.Type >= ChannelType.Vrc7Fm1 &&
                          channel.Type <= ChannelType.Vrc7Fm6)
                 {
@@ -1582,7 +1565,6 @@ namespace FamiStudio
 
 
             var vgmDataOffset = BitConverter.ToInt32(vgmFile.Skip(0x34).Take(4).ToArray())+0x34;
-            //Log.LogMessage(LogSeverity.Info, "VGM Data Startoffset: " + vgmDataOffset);
             var vgmData = vgmFile.Skip(vgmDataOffset).Take(1).ToArray();
             if (adjustClock)
             {
@@ -1619,7 +1601,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()));
                     Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()));
                     Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()));
-                    if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0xC2)
+                    if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0xC2) //DPCM Data
                     {
                         var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                         for (int i = 0; i < data.Length; i++)
@@ -1628,7 +1610,7 @@ namespace FamiStudio
                         }
 
                     }
-                    else if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0x07)
+                    else if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0x07) //PCM RAM Data
                     {
                         pcmRAMData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                     }
@@ -1636,7 +1618,7 @@ namespace FamiStudio
                         dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                     vgmDataOffset = vgmDataOffset + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) + 3 + 4;
                 }
-                if (vgmData[0] == 0x68)  //DataBlock
+                if (vgmData[0] == 0x68)  //PCM Data Copy
                 {
                     var readOffset = vgmFile.Skip(vgmDataOffset + 3).Take(3).ToArray();
                     var writeOffset = vgmFile.Skip(vgmDataOffset + 3 + 3).Take(3).ToArray();
@@ -1684,6 +1666,7 @@ namespace FamiStudio
                     else if (vgmData[0] >= 0x80)
                     {
                         samples = samples + vgmData[0] - 0x80;
+                        vgmDataOffset = vgmDataOffset + 1;
                     }
                     else
                     {
@@ -1866,11 +1849,10 @@ namespace FamiStudio
                     }
                     else
                     {
-                        if(unknownChipCommands > 100)
+                        if(unknownChipCommands < 100)
                         Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + Convert.ToHexString(vgmData) + " offset: " + vgmDataOffset);
                         unknownChipCommands++;
                     }
-                    //Log.LogMessage(LogSeverity.Info, "VGM Chip Data: " + Convert.ToHexString(vgmData));
                     chipCommands++;
                     vgmDataOffset = vgmDataOffset + 3;
                 }
