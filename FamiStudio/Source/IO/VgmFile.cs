@@ -1565,6 +1565,9 @@ namespace FamiStudio
 
 
             var vgmDataOffset = BitConverter.ToInt32(vgmFile.Skip(0x34).Take(4).ToArray())+0x34;
+#if DEBUG
+            Log.LogMessage(LogSeverity.Info, "VGM Data Startoffset: " + vgmDataOffset);
+#endif
             var vgmData = vgmFile.Skip(vgmDataOffset).Take(1).ToArray();
             if (adjustClock)
             {
@@ -1598,9 +1601,11 @@ namespace FamiStudio
                     project.SetExpansionAudioMask(expansionMask, 0);
                 if (vgmData[0] == 0x67)  //DataBlock
                 {
+#if DEBUG
                     Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()));
                     Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()));
                     Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()));
+#endif
                     if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0xC2) //DPCM Data
                     {
                         var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
@@ -1623,10 +1628,12 @@ namespace FamiStudio
                     var readOffset = vgmFile.Skip(vgmDataOffset + 3).Take(3).ToArray();
                     var writeOffset = vgmFile.Skip(vgmDataOffset + 3 + 3).Take(3).ToArray();
                     var copySize = vgmFile.Skip(vgmDataOffset + 3 + 3 + 3).Take(3).ToArray();
+#if DEBUG
                     Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Read Offset: " + Convert.ToHexString(readOffset));
                     Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Write Offset: " + Convert.ToHexString(writeOffset));
                     Log.LogMessage(LogSeverity.Info, "PCM RAM Copy: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()));
                     Log.LogMessage(LogSeverity.Info, "PCM RAM COPY Size: " + Convert.ToHexString(copySize));
+#endif
                     if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0x07)
                     {
                         var data = pcmRAMData.Skip(Utils.Bytes24BitToInt(readOffset)).Take(Utils.Bytes24BitToInt(copySize)).ToArray();
@@ -1862,10 +1869,12 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, "VGM is PAL");
             else
                 Log.LogMessage(LogSeverity.Info, "VGM is NTSC");
+#if DEBUG
             Log.LogMessage(LogSeverity.Info, "VGM Chip Commands: " + chipCommands);
             Log.LogMessage(LogSeverity.Info, "S5b Clock Multiplier: " + clockMultiplier[ExpansionType.S5B]);
             Log.LogMessage(LogSeverity.Info, "EPSM Clock Multiplier: " + clockMultiplier[ExpansionType.EPSM]);
             Log.LogMessage(LogSeverity.Info, "VRC7 Clock Multiplier: " + clockMultiplier[ExpansionType.Vrc7]);
+#endif
             Log.LogMessage(LogSeverity.Info, "Frames: " + frame + " time: " + (frame/60) + "s");
 
             if (vgmFile.Skip(vgmDataOffset).Take(4).SequenceEqual(Encoding.ASCII.GetBytes("Gd3 ")))
@@ -1873,7 +1882,9 @@ namespace FamiStudio
                 vgmDataOffset = vgmDataOffset + 4+4+4; // "Gd3 " + version + gd3 length data
                 var gd3Data = vgmFile.Skip(vgmDataOffset).Take(vgmFile.Length-vgmDataOffset).ToArray();
                 var gd3DataArray = System.Text.Encoding.Unicode.GetString(gd3Data).Split("\0");
+#if DEBUG
                 Log.LogMessage(LogSeverity.Info, "Gd3 Data: " + System.Text.Encoding.Unicode.GetString(gd3Data));
+#endif
                 Log.LogMessage(LogSeverity.Info, "Track Name: " + gd3DataArray[0]);
                 songName = gd3DataArray[0];
                 Log.LogMessage(LogSeverity.Info, "Game Name: " + gd3DataArray[2]);
