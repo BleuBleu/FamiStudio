@@ -607,9 +607,6 @@ namespace FamiStudio
                 instrument.Envelopes[EnvelopeType.DutyCycle].Values[0] = (sbyte)duty;
             }
 
-            if (expansion == ExpansionType.Vrc6)
-                instrument.Vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Full;
-
             return instrument;
         }
 
@@ -842,10 +839,7 @@ namespace FamiStudio
                             case NotSoFatso.STATE_VOLUME: return (apuRegister[(channel * 4)] & 0xf);
                             //case NotSoFatso.STATE_VOLUME: return mWave_TND.nNoiseLengthCount && mWave_TND.bNoiseChannelEnabled ? mWave_TND.nNoiseVolume : 0;
                             case NotSoFatso.STATE_DUTYCYCLE: return (apuRegister[0x0e] & 0x80) >> 8;
-
-                            //case NotSoFatso.STATE_PERIOD: return NOISE_FREQ_TABLE[apuRegister[0x0e]&0xf];
                             case NotSoFatso.STATE_PERIOD: return apuRegister[0x0e] & 0xf;
-                                //case NotSoFatso.STATE_PERIOD: return IndexOf(NOISE_FREQ_TABLE, 16, mWave_TND.nNoiseFreqTimer);
                         }
                         break;
                     }
@@ -853,23 +847,13 @@ namespace FamiStudio
                     {
                         switch (state)
                         {
-                            /*case NotSoFatso.STATE_DPCMSAMPLELENGTH:
-                                {
-                                    if (mWave_TND.bDMCTriggered)
-                                    {
-                                        mWave_TND.bDMCTriggered = 0;
-                                        return mWave_TND.nDMCLength;
-                                    }
-                                    else
-                                    {
-                                        return 0;
-                                    }
-                                }*/
                             case NotSoFatso.STATE_DPCMSAMPLELENGTH:
                                 {
                                     if (dpcmTrigger)
                                     {
+#if DEBUG
                                         Log.LogMessage(LogSeverity.Info, "samplelength: " + (apuRegister[0x13] << 4) + " sampladdr: " + (apuRegister[0x12] << 6));
+#endif
                                         dpcmTrigger = false;
 
                                         return (apuRegister[0x13] << 4) + 1;
@@ -878,11 +862,7 @@ namespace FamiStudio
                                     {
                                         return 0;
                                     }
-                                }/*
-                            case NotSoFatso.STATE_DPCMSAMPLEADDR:
-                                {
-                                    return mWave_TND.nDMCDMABank_Load << 16 | mWave_TND.nDMCDMAAddr_Load;
-                                }*/
+                                }
                             case NotSoFatso.STATE_DPCMSAMPLEADDR:
                                 {
                                     return apuRegister[0x12];
@@ -890,26 +870,11 @@ namespace FamiStudio
                             case NotSoFatso.STATE_DPCMLOOP:
                                 {
                                     return apuRegister[0x10] & 0x40;
-                                }/*
-                            case NotSoFatso.STATE_DPCMPITCH:
-                                {
-                                    return IndexOf(DMC_FREQ_TABLE[bPALMode], 0x10, mWave_TND.nDMCFreqTimer);
-                                }*/
+                                }
                             case NotSoFatso.STATE_DPCMPITCH:
                                 {
                                     return apuRegister[0x10] & 0x0f;
-                                }/*
-                            case NotSoFatso.STATE_DPCMSAMPLEDATA:
-                                {
-                                    int bank = mWave_TND.nDMCDMABank_Load;
-                                    int addr = mWave_TND.nDMCDMAAddr_Load + sub;
-                                    if (addr & 0x1000)
-                                    {
-                                        addr &= 0x0FFF;
-                                        bank = (bank + 1) & 0x07;
-                                    }
-                                    return mWave_TND.pDMCDMAPtr[bank][addr];
-                                }*/
+                                }
                             case NotSoFatso.STATE_DPCMSAMPLEDATA:
                                 {
                                     return dpcmData[((apuRegister[0x12] << 6)) + sub];
@@ -920,44 +885,23 @@ namespace FamiStudio
                                 }
                             case NotSoFatso.STATE_DPCMACTIVE:
                                 {
-                                    return apuRegister[0x15] & 0x10;// mWave_TND.bDMCActive;
+                                    return apuRegister[0x15] & 0x10;
                                 }
                         }
                         break;
                     }
-
+                    /*
                 //###############################################################
                 //
-                // VRC6 is not supported by the VGM Standard
+                // TODO
                 //
                 //###############################################################
-/*                case ChannelType.Vrc6Square1:
-                case ChannelType.Vrc6Square2:
-                    {
-                        int idx = channel - ChannelType.Vrc6Square1;
-                        switch (state)
-                        {
-                            case NotSoFatso.STATE_PERIOD: return mWave_VRC6Pulse[idx].nFreqTimer.W;
-                            case NotSoFatso.STATE_DUTYCYCLE: return mWave_VRC6Pulse[idx].nDutyCycle;
-                            case NotSoFatso.STATE_VOLUME: return mWave_VRC6Pulse[idx].bChannelEnabled ? mWave_VRC6Pulse[idx].nVolume : 0;
-                        }
-                        break;
-                    }
-                case ChannelType.Vrc6Saw:
-                    {
-                        switch (state)
-                        {
-                            case NotSoFatso.STATE_PERIOD: return mWave_VRC6Saw.nFreqTimer.W;
-                            case NotSoFatso.STATE_VOLUME: return mWave_VRC6Saw.bChannelEnabled ? mWave_VRC6Saw.nAccumRate : 0;
-                        }
-                        break;
-                    }
                 case ChannelType.FdsWave:
                     {
                         switch (state)
                         {
-                            case NotSoFatso.STATE_PERIOD: return mWave_FDS.nFreq.W;
-                            case NotSoFatso.STATE_VOLUME: return mWave_FDS.bEnabled ? mWave_FDS.nVolume : 0;
+                            case NotSoFatso.STATE_PERIOD: return apuRegister[0x22] | (apuRegister[0x23] & 0xf)<< 8;//mWave_FDS.nFreq.W;
+                            case NotSoFatso.STATE_VOLUME: return ;//mWave_FDS.bEnabled ? mWave_FDS.nVolume : 0;
                             case NotSoFatso.STATE_FDSWAVETABLE: return mWave_FDS.nWaveTable[sub];
                             case NotSoFatso.STATE_FDSMODULATIONTABLE: return mWave_FDS.nLFO_Table[sub * 2];
                             case NotSoFatso.STATE_FDSMODULATIONDEPTH: return mWave_FDS.bLFO_On && (mWave_FDS.nSweep_Mode & 2) ? mWave_FDS.nSweep_Gain : 0;
@@ -992,43 +936,22 @@ namespace FamiStudio
                     }
                 //###############################################################
                 //
-                // MMC5 and N163 is not supported by the VGM Standard
+                // MMC5 could be used for square channels for dual apu VGM's
                 //
                 //###############################################################
-                    /*
-                case ChannelType.Mmc5Square1:
-                case ChannelType.Mmc5Square2:
+                /*
+            case ChannelType.Mmc5Square1:
+            case ChannelType.Mmc5Square2:
+                {
+                    int idx = channel - ChannelType.Mmc5Square1;
+                    switch (state)
                     {
-                        int idx = channel - ChannelType.Mmc5Square1;
-                        switch (state)
-                        {
-                            case NotSoFatso.STATE_PERIOD: return mWave_MMC5Square[idx].nFreqTimer.W;
-                            case NotSoFatso.STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_MMC5Square[idx].nDutyCycle);
-                            case NotSoFatso.STATE_VOLUME: return mWave_MMC5Square[idx].nLengthCount && mWave_MMC5Square[idx].bChannelEnabled ? mWave_MMC5Square[idx].nVolume : 0;
-                        }
-                        break;
+                        case NotSoFatso.STATE_PERIOD: return mWave_MMC5Square[idx].nFreqTimer.W;
+                        case NotSoFatso.STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_MMC5Square[idx].nDutyCycle);
+                        case NotSoFatso.STATE_VOLUME: return mWave_MMC5Square[idx].nLengthCount && mWave_MMC5Square[idx].bChannelEnabled ? mWave_MMC5Square[idx].nVolume : 0;
                     }
-                case ChannelType.N163Wave1:
-                case ChannelType.N163Wave2:
-                case ChannelType.N163Wave3:
-                case ChannelType.N163Wave4:
-                case ChannelType.N163Wave5:
-                case ChannelType.N163Wave6:
-                case ChannelType.N163Wave7:
-                case ChannelType.N163Wave8:
-                    {
-                        int idx = 7 - (channel - ChannelType.N163Wave1);
-                        switch (state)
-                        {
-                            case NotSoFatso.STATE_PERIOD: return mWave_N106.nFreqReg[idx].D;
-                            case NotSoFatso.STATE_VOLUME: return mWave_N106.nVolume[idx];
-                            case NotSoFatso.STATE_N163WAVEPOS: return mWave_N106.nWavePosStart[idx];
-                            case NotSoFatso.STATE_N163WAVESIZE: return mWave_N106.nWaveSize[idx];
-                            case NotSoFatso.STATE_N163WAVE: return mWave_N106.nRAM[sub];
-                            case NotSoFatso.STATE_N163NUMCHANNELS: return mWave_N106.nActiveChannels + 1;
-                        }
-                        break;
-                    }*/
+                    break;
+                }*/
                 case ChannelType.S5BSquare1:
                 case ChannelType.S5BSquare2:
                 case ChannelType.S5BSquare3:
@@ -1248,12 +1171,7 @@ namespace FamiStudio
                 var attack = true;
                 var octave = -1;
 
-                // VRC6 has a much larger volume range (6-bit) than our volume (4-bit).
-                if (channel.Type == ChannelType.Vrc6Saw)
-                {
-                    volume >>= 2;
-                }
-                else if (channel.Type == ChannelType.FdsWave)
+                if (channel.Type == ChannelType.FdsWave)
                 {
                     volume = Math.Min(Note.VolumeMax, volume >> 1);
                 }
@@ -1265,7 +1183,7 @@ namespace FamiStudio
                 var hasOctave = channel.IsVrc7Channel || channel.IsEPSMFmChannel;
                 var hasVolume = channel.Type != ChannelType.Triangle;
                 var hasPitch = channel.Type != ChannelType.Noise && !channel.IsEPSMRythmChannel;
-                var hasDuty = channel.Type == ChannelType.Square1 || channel.Type == ChannelType.Square2 || channel.Type == ChannelType.Noise || channel.Type == ChannelType.Vrc6Square1 || channel.Type == ChannelType.Vrc6Square2 || channel.Type == ChannelType.Mmc5Square1 || channel.Type == ChannelType.Mmc5Square2;
+                var hasDuty = channel.Type == ChannelType.Square1 || channel.Type == ChannelType.Square2 || channel.Type == ChannelType.Noise ||  channel.Type == ChannelType.Mmc5Square1 || channel.Type == ChannelType.Mmc5Square2;
                 var hasTrigger = channel.IsVrc7Channel;
 
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
