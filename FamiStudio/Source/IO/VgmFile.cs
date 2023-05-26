@@ -1433,6 +1433,22 @@ namespace FamiStudio
             return hasNote;
         }
 
+        public static float BcdToDecimal(IEnumerable<byte> bcd)
+        {
+            Debug.Assert(bcd != null || bcd.Count() != 0);
+
+            var result = 0;
+            foreach (byte item in bcd)
+            {
+                Debug.Assert((item >> 4) < 10);
+                Debug.Assert((item % 16) < 10);
+                result *= 100;
+                result = result + (((item >> 4) * 10) + item % 16);
+            }
+
+            return result;
+        }
+
         public static byte[] Decompress(byte[] compressed_data)
         {
             var outputStream = new MemoryStream();
@@ -1446,6 +1462,15 @@ namespace FamiStudio
             }
         }
 
+        /*
+         * 
+         * Todo:
+         * Add FDS Support
+         * Add PAL Support if no expansion is used
+         * Add 2A03 Sweep Support
+         * Add Possibility to import second 2A03 Squares as MMC5
+         * 
+         */
         public Project Load(string filename, int patternLength, int frameSkip, bool adjustClock, bool reverseDpcm, bool preserveDpcmPad, bool ym2149AsEpsm)
         {
             var vgmFile = System.IO.File.ReadAllBytes(filename);
@@ -1457,11 +1482,6 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, "Incompatible file.");
                 return null;
             }
-            /*if (!vgmFile.Skip(8).Take(4).SequenceEqual(BitConverter.GetBytes(0x00000170)))
-            {  
-                Log.LogMessage(LogSeverity.Error, "Not version 1.70");
-                return null;
-            }*/
 
             preserveDpcmPadding = preserveDpcmPad;
             Array.Fill(clockMultiplier, 1);
@@ -1484,6 +1504,7 @@ namespace FamiStudio
 
             var vgmDataOffset = BitConverter.ToInt32(vgmFile.Skip(0x34).Take(4).ToArray())+0x34;
 #if DEBUG
+            Log.LogMessage(LogSeverity.Info, "Version : " + (BcdToDecimal(vgmFile.Skip(8).Take(4).Reverse().ToArray()) / 100).ToString("F2"));
             Log.LogMessage(LogSeverity.Info, "VGM Data Startoffset: " + vgmDataOffset);
 #endif
             var vgmData = vgmFile.Skip(vgmDataOffset).Take(1).ToArray();
