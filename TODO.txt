@@ -131,6 +131,7 @@ Discord
 
 Backlog: 
 =========
+- How to add to the "open with" list on Android.
 - Better autosave names?
 - Finish phase reset support
 - Going in settings unutes all channels.
