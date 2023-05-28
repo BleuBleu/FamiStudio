@@ -980,7 +980,7 @@ namespace FamiStudio
                             case NotSoFatso.STATE_STEREO: return (epsmRegisterLo[0x18+idx] & 0xc0);
                             case NotSoFatso.STATE_PERIOD: return 0xc20;
                             case NotSoFatso.STATE_VOLUME:
-                                int returnval = (epsmRegisterLo[0x10] & (1 << idx)) != 0 ? ((epsmRegisterLo[0x18 + idx] & 0x0f) >> 1) : 0;
+                                int returnval = (epsmRegisterLo[0x10] & (1 << idx)) != 0 ? ((epsmRegisterLo[0x18 + idx] & 0x1f) >> 1) : 0;
                                 epsmRegisterLo[0x10] = ~(~epsmRegisterLo[0x10] | 1 << idx);
                                 return returnval;
                         }
