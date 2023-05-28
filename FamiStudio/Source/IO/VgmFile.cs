@@ -816,7 +816,7 @@ namespace FamiStudio
                         switch (state)
                         {
                             case NotSoFatso.STATE_PERIOD: return (int)apuRegister[2+(channel*4)] + (int)((apuRegister[3+(channel*4)] & 0x7) << 8);
-                            case NotSoFatso.STATE_DUTYCYCLE: return (int)(apuRegister[2 + (channel * 4)] & 0xc0) >> 6;
+                            case NotSoFatso.STATE_DUTYCYCLE: return (int)(apuRegister[(channel * 4)] & 0xc0) >> 6;
                             //case NotSoFatso.STATE_VOLUME: return mWave_Squares.nLengthCount[channel] && mWave_Squares.bChannelEnabled[channel] ? mWave_Squares.nVolume[channel] : 0;
                             case NotSoFatso.STATE_VOLUME: return (apuRegister[(channel * 4)] & 0xf);
                         }
@@ -1467,7 +1467,7 @@ namespace FamiStudio
          * Todo:
          * Add FDS Support
          * Add PAL Support if no expansion is used
-         * Add 2A03 Sweep Support
+         * Add 2A03 Sweep Support (blarrg smooth vibrato uses separate workaround)
          * Add Possibility to import second 2A03 Squares as MMC5
          * 
          */
