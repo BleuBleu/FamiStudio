@@ -1,6 +1,7 @@
 4.1.0
 =====
 Beta bugs:
+- Error: uniform uniformDashScale specified with different precision in different shaders.
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
