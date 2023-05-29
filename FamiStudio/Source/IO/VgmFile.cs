@@ -1541,9 +1541,9 @@ namespace FamiStudio
                 if (vgmData[0] == 0x67)  //DataBlock
                 {
 #if DEBUG
-                    Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()));
-                    Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()));
-                    Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()));
+                    Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 3).Take(4).Reverse().ToArray()).Replace("-", ""));
+                    Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 2).Take(1).Reverse().ToArray()).Replace("-", ""));
+                    Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).Reverse().ToArray()).Replace("-", ""));
 #endif
                     if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0xC2) //DPCM Data
                     {
@@ -1568,10 +1568,10 @@ namespace FamiStudio
                     var writeOffset = vgmFile.Skip(vgmDataOffset + 3 + 3).Take(3).ToArray();
                     var copySize = vgmFile.Skip(vgmDataOffset + 3 + 3 + 3).Take(3).ToArray();
 #if DEBUG
-                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Read Offset: " + Convert.ToHexString(readOffset));
-                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Write Offset: " + Convert.ToHexString(writeOffset));
-                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy: " + Convert.ToHexString(vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()));
-                    Log.LogMessage(LogSeverity.Info, "PCM RAM COPY Size: " + Convert.ToHexString(copySize));
+                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Read Offset: " + BitConverter.ToString(readOffset.Reverse().ToArray()).Replace("-", ""));
+                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Write Offset: " + BitConverter.ToString(writeOffset.Reverse().ToArray()).Replace("-", ""));
+                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 2).Take(1).Reverse().ToArray()).Replace("-", ""));
+                    Log.LogMessage(LogSeverity.Info, "PCM RAM COPY Size: " + BitConverter.ToString(copySize));
 #endif
                     if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0x07)
                     {
@@ -1796,7 +1796,7 @@ namespace FamiStudio
                     else
                     {
                         if(unknownChipCommands < 100)
-                        Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + Convert.ToHexString(vgmData) + " offset: " + vgmDataOffset);
+                        Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + BitConverter.ToString(vgmData.Reverse().ToArray()).Replace("-", "") + " offset: " + vgmDataOffset);
                         unknownChipCommands++;
                     }
                     chipCommands++;
