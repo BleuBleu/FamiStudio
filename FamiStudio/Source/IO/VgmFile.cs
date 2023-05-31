@@ -1477,7 +1477,7 @@ namespace FamiStudio
             if (filename.EndsWith(".vgz"))
                 vgmFile = Decompress(vgmFile);
 
-            if (!vgmFile.Skip(0).Take(4).SequenceEqual(Encoding.ASCII.GetBytes("Vgm ")))
+            if (!vgmFile.Take(4).SequenceEqual(Encoding.ASCII.GetBytes("Vgm ")))
             {
                 Log.LogMessage(LogSeverity.Error, "Incompatible file.");
                 return null;
@@ -1507,11 +1507,12 @@ namespace FamiStudio
             Log.LogMessage(LogSeverity.Info, "Version : " + (BcdToDecimal(vgmFile.Skip(8).Take(4).Reverse().ToArray()) / 100).ToString("F2"));
             Log.LogMessage(LogSeverity.Info, "VGM Data Startoffset: " + vgmDataOffset);
 #endif
-            var vgmData = vgmFile.Skip(vgmDataOffset).Take(1).ToArray();
+            var vgmData = new byte[3];
+            var vgmCommand = vgmFile[vgmDataOffset];
             if (adjustClock)
             {
                 if (BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / 1789772;
+                    clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / (((vgmFile[0x78] & vgmFile[0x79] & 0x10) == 0x10) ? 1789773 : (float)894886.5);
                 if (BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) > 0)
                     clockMultiplier[ExpansionType.EPSM] = 4000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) / 4000000;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray()) > 0)
@@ -1526,7 +1527,7 @@ namespace FamiStudio
                 if (ym2149AsEpsm)
                 {
                     if (BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) > 0)
-                        clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / 2000000;
+                        clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / (((vgmFile[0x78] & vgmFile[0x79] & 0x10) == 0x10) ? 4000000 : 2000000);
                     ym2149AsEPSM = ym2149AsEpsm;
                 }
             }
@@ -1538,14 +1539,14 @@ namespace FamiStudio
             while (vgmDataOffset < vgmFile.Length) {
                 if(expansionMask != project.ExpansionAudioMask)
                     project.SetExpansionAudioMask(expansionMask, 0);
-                if (vgmData[0] == 0x67)  //DataBlock
+                if (vgmCommand == 0x67)  //DataBlock
                 {
 #if DEBUG
                     Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 3).Take(4).Reverse().ToArray()).Replace("-", ""));
                     Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 2).Take(1).Reverse().ToArray()).Replace("-", ""));
                     Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).Reverse().ToArray()).Replace("-", ""));
 #endif
-                    if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0xC2) //DPCM Data
+                    if (vgmFile[vgmDataOffset + 2] == 0xC2) //DPCM Data
                     {
                         var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                         for (int i = 0; i < data.Length; i++)
@@ -1554,7 +1555,7 @@ namespace FamiStudio
                         }
 
                     }
-                    else if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0x07) //PCM RAM Data
+                    else if (vgmFile[vgmDataOffset + 2] == 0x07) //PCM RAM Data
                     {
                         pcmRAMData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                     }
@@ -1562,7 +1563,7 @@ namespace FamiStudio
                         dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                     vgmDataOffset = vgmDataOffset + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) + 3 + 4;
                 }
-                if (vgmData[0] == 0x68)  //PCM Data Copy
+                if (vgmCommand == 0x68)  //PCM Data Copy
                 {
                     var readOffset = vgmFile.Skip(vgmDataOffset + 3).Take(3).ToArray();
                     var writeOffset = vgmFile.Skip(vgmDataOffset + 3 + 3).Take(3).ToArray();
@@ -1573,7 +1574,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, "PCM RAM Copy: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 2).Take(1).Reverse().ToArray()).Replace("-", ""));
                     Log.LogMessage(LogSeverity.Info, "PCM RAM COPY Size: " + BitConverter.ToString(copySize));
 #endif
-                    if (vgmFile.Skip(vgmDataOffset + 2).Take(1).ToArray()[0] == 0x07)
+                    if (vgmFile[vgmDataOffset + 2] == 0x07)
                     {
                         var data = pcmRAMData.Skip(Utils.Bytes24BitToInt(readOffset)).Take(Utils.Bytes24BitToInt(copySize)).ToArray();
                         for (int i = 0; i < data.Length; i++)
@@ -1584,39 +1585,39 @@ namespace FamiStudio
                     }
                     vgmDataOffset = vgmDataOffset + 12;
                 }
-                else if (vgmData[0] == 0x66)
+                else if (vgmCommand == 0x66)
                 {
                     vgmDataOffset = vgmDataOffset + 1;
                     //Log.LogMessage(LogSeverity.Info, "VGM Data End");
                     break;
                 }
 
-                else if (vgmData[0] == 0x61 || vgmData[0] == 0x63 || vgmData[0] == 0x62 || (vgmData[0] >= 0x70 && vgmData[0] <= 0x8f))
+                else if (vgmCommand == 0x61 || vgmCommand == 0x63 || vgmCommand == 0x62 || (vgmCommand >= 0x70 && vgmCommand <= 0x8f))
                 {
-                    if (vgmData[0] == 0x63)
+                    if (vgmCommand == 0x63)
                     {
                         vgmDataOffset = vgmDataOffset + 1;
                         samples = samples + 882;
                         pal = true;
                     }
-                    else if (vgmData[0] == 0x62)
+                    else if (vgmCommand == 0x62)
                     {
                         vgmDataOffset = vgmDataOffset + 1;
                         samples = samples + 735;
                     }
-                    else if (vgmData[0] == 0x61)
+                    else if (vgmCommand == 0x61)
                     {
                         samples = samples + BitConverter.ToInt16(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
                         vgmDataOffset = vgmDataOffset + 3;
                     }
-                    else if (vgmData[0] >= 0x80)
+                    else if (vgmCommand >= 0x80)
                     {
-                        samples = samples + vgmData[0] - 0x80;
+                        samples = samples + vgmCommand - 0x80;
                         vgmDataOffset = vgmDataOffset + 1;
                     }
                     else
                     {
-                        samples = samples + vgmData[0] - 0x6F;
+                        samples = samples + vgmCommand - 0x6F;
                         vgmDataOffset = vgmDataOffset + 1;
                     }
                     while (samples >= 735)
@@ -1631,25 +1632,25 @@ namespace FamiStudio
                                 UpdateChannel(p, n, song.Channels[c], channelStates[c]);
                     }
                 }
-                else if (vgmData[0] == 0x4F || vgmData[0] == 0x50 || vgmData[0] == 0x31)
+                else if (vgmCommand == 0x4F || vgmCommand == 0x50 || vgmCommand == 0x31)
                     vgmDataOffset = vgmDataOffset + 2;
-                else if (vgmData[0] >= 0xC0 && vgmData[0] <= 0xDF)
+                else if (vgmCommand >= 0xC0 && vgmCommand <= 0xDF)
                     vgmDataOffset = vgmDataOffset + 4;
-                else if (vgmData[0] == 0xE0)
+                else if (vgmCommand == 0xE0)
                     vgmDataOffset = vgmDataOffset + 5;
-                else if (vgmData[0] >= 0x90 && vgmData[0] <= 0x92)
+                else if (vgmCommand >= 0x90 && vgmCommand <= 0x92)
                     vgmDataOffset = vgmDataOffset + 6;
-                else if (vgmData[0] == 0x93)
+                else if (vgmCommand == 0x93)
                     vgmDataOffset = vgmDataOffset + 11;
-                else if (vgmData[0] == 0x94)
+                else if (vgmCommand == 0x94)
                     vgmDataOffset = vgmDataOffset + 2;
-                else if (vgmData[0] == 0x95)
+                else if (vgmCommand == 0x95)
                     vgmDataOffset = vgmDataOffset + 5;
                 else
                 {
 
                     vgmData = vgmFile.Skip(vgmDataOffset).Take(3).ToArray();
-                    if (vgmData[0] == 0xB4)
+                    if (vgmCommand == 0xB4)
                     {
 
                         if (vgmData[1] == 0x17 && vgmData[2] == 0xc0)
@@ -1668,7 +1669,7 @@ namespace FamiStudio
                             dpcmTrigger = true;
                         apuRegister[vgmData[1]] = vgmData[2];
                     }
-                    else if (vgmData[0] == 0x51)
+                    else if (vgmCommand == 0x51)
                     {
                         if (vgmData[1] >= 0x20 && vgmData[1] <= 0x28)
                         {
@@ -1680,7 +1681,7 @@ namespace FamiStudio
                         vrc7Register[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.Vrc7Mask;
                     }
-                    else if (vgmData[0] == 0x56 || vgmData[0] == 0x52 || vgmData[0] == 0x58 || vgmData[0] == 0x55)
+                    else if (vgmCommand == 0x56 || vgmCommand == 0x52 || vgmCommand == 0x58 || vgmCommand == 0x55)
                     {
                         if(vgmData[1] == 0x10)
                             epsmRegisterLo[vgmData[1]] = epsmRegisterLo[vgmData[1]] | vgmData[2];
@@ -1760,7 +1761,7 @@ namespace FamiStudio
                             epsmRegisterLo[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
                     }
-                    else if (vgmData[0] == 0x57 || vgmData[0] == 0x53 || vgmData[0] == 0x59)
+                    else if (vgmCommand == 0x57 || vgmCommand == 0x53 || vgmCommand == 0x59)
                     {
                         if (vgmData[1] >= 0x30 && vgmData[1] <= 0x4F)
                             epsmRegisterHi[vgmData[1]] = vgmData[2] & 0x7f;
@@ -1780,7 +1781,7 @@ namespace FamiStudio
                             epsmRegisterHi[vgmData[1]] = vgmData[2];
                         expansionMask = expansionMask | ExpansionType.EPSMMask;
                     }
-                    else if (vgmData[0] == 0xA0)
+                    else if (vgmCommand == 0xA0)
                     {
                         if (ym2149AsEpsm)
                         {
@@ -1802,7 +1803,7 @@ namespace FamiStudio
                     chipCommands++;
                     vgmDataOffset = vgmDataOffset + 3;
                 }
-                vgmData = vgmFile.Skip(vgmDataOffset).Take(1).ToArray();
+                vgmCommand = vgmFile[vgmDataOffset];
             }
             if(pal)
                 Log.LogMessage(LogSeverity.Info, "VGM is PAL");
