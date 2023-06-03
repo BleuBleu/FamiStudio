@@ -74,6 +74,8 @@ namespace FamiStudio
 
         // Common labels
         static LocalizedString PitchEnvelopeLabel;
+        static LocalizedString AbsoluteLabel;
+        static LocalizedString RelativeLabel;
 
         // FDS/N163
         static LocalizedString MasterVolumeLabel;
@@ -159,7 +161,7 @@ namespace FamiStudio
                 paramInfos.Add(new InstrumentParamInfo(instrument, PitchEnvelopeLabel, 0, 1, 0, PitchEnvelopeTooltip, true)
                 {
                     GetValue = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? 1 : 0; },
-                    GetValueString = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? "Relative" : "Absolute"; },
+                    GetValueString = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? RelativeLabel : AbsoluteLabel; },
                     SetValue = (v) =>
                     {
                         var newRelative = v != 0;

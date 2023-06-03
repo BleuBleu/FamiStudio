@@ -20,8 +20,14 @@ namespace FamiStudio
         private Button buttonAdvanced;
         private PropertyPage propertyPage;
 
+        private LocalizedString AcceptTooltip;
+        private LocalizedString CancelTooltip;
+        private LocalizedString ToggleAdvancedTooltip;
+
         public PropertyDialog(FamiStudioWindow win, string title, int width, bool canAccept = true, bool canCancel = true) : base(win, title)
         {
+            Localization.Localize(this);
+
             width = DpiScaling.ScaleForWindow(width);
             Move(0, 0, width, width);
             Init();
@@ -33,6 +39,8 @@ namespace FamiStudio
 
         public PropertyDialog(FamiStudioWindow win, string title, Point pt, int w, bool leftAlign = false, bool top = false) : base(win, title)
         {
+            Localization.Localize(this);
+
             width = DpiScaling.ScaleForWindow(w);
             topAlign = top;
             if (leftAlign)
@@ -49,18 +57,18 @@ namespace FamiStudio
             buttonYes = new Button("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(buttonSize, buttonSize);
-            buttonYes.ToolTip = "Accept";
+            buttonYes.ToolTip = AcceptTooltip;
 
             buttonNo = new Button("No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(buttonSize, buttonSize);
-            buttonNo.ToolTip = "Cancel";
+            buttonNo.ToolTip = CancelTooltip;
 
             buttonAdvanced = new Button("PlusSmall", null);
             buttonAdvanced.Click += ButtonAdvanced_Click;
             buttonAdvanced.Resize(buttonSize, buttonSize);
             buttonAdvanced.Visible = false;
-            buttonAdvanced.ToolTip = "Toggle Advanced Options";
+            buttonAdvanced.ToolTip = ToggleAdvancedTooltip;
 
             AddControl(buttonYes);
             AddControl(buttonNo);

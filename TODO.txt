@@ -4,9 +4,21 @@ Beta bugs:
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
-- BETA5 : Replace instrument (A->B), R+CLICK.
+- Code review VGM import.
 - At home: test the magic trackpad issue
-- 
+- MacOS window minimize issue
+- LATER : Replace instrument (A->B), R+CLICK.
+
+Later
+=====
+- Borrow TNS-HFC3 from forple in sept/oct.
+
+Packaging
+=========
+- Add "description" HTML metadata to famistudio doc.
+- Recompile ROMs, re-export data, bump versions, etc.
+- MacOS install doesnt work if dotnet is missing? I thought that was fixed.
+- Re-export all ROM test (.bin) files at the end.
 
 ========================================
 - Try no attack? Do it at airport/plane.
@@ -17,13 +29,6 @@ Beta bugs:
 	=> problems:
 		* what about the delayed cut thing? 
 		* will likely need a couple more zp variables.
-
-Packaging
-=========
-- Add "description" HTML metadata to famistudio doc.
-- Recompile ROMs, re-export data, bump versions, etc.
-- MacOS install doesnt work if dotnet is missing? I thought that was fixed.
-- Re-export all ROM test (.bin) files at the end.
 
 4.1.0 Change Log
 ================
@@ -130,6 +135,7 @@ Discord
 
 Backlog: 
 =========
+- How to add to the "open with" list on Android.
 - Better autosave names?
 - Finish phase reset support
 - Going in settings unutes all channels.

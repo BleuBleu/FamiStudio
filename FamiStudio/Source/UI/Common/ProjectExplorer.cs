@@ -272,7 +272,7 @@ namespace FamiStudio
         {
             if (period == 0 || frequency < NesApu.FreqRegMin)
             {
-                return $"---+{Math.Abs(0):00} ({0,7:0.00}{HzLabel.ToString()})";
+                return $"---+{Math.Abs(0):00} ({0,7:0.00}{HzLabel})";
             }
             else
             {
@@ -4930,7 +4930,7 @@ namespace FamiStudio
             dlg.Properties.AddTextBox(ProjectAuthorLabel.Colon, project.Author, 31); // 1
             dlg.Properties.AddTextBox(ProjectCopyrightLabel.Colon, project.Copyright, 31); // 2
             dlg.Properties.AddDropDownList(ProjectTempoModeLabel.Colon, TempoType.Names, TempoType.Names[project.TempoMode], ProjectTempoModeTooltip); // 3
-            dlg.Properties.AddDropDownList(ProjectMachineLabel.Colon, MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], ProjectAuthoringMachineTooltip); // 4
+            dlg.Properties.AddDropDownList(ProjectMachineLabel.Colon, Localization.ToStringArray(MachineType.LocalizedNames, MachineType.CountNoDual), MachineType.LocalizedNames[project.PalMode ? MachineType.PAL : MachineType.NTSC], ProjectAuthoringMachineTooltip); // 4
             dlg.Properties.AddNumericUpDown(ProjectN163ChannelsLabel.Colon, project.ExpansionNumN163Channels, 1, 8, 1, ProjectExpansionNumChannelsTooltip); // 5 (Namco)
             dlg.Properties.AddCheckBoxList(ProjectExpansionLabel.Colon, expNames, expBools, ProjectExpansionAudioTooltip); // 6
             dlg.Properties.SetPropertyEnabled(4, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);

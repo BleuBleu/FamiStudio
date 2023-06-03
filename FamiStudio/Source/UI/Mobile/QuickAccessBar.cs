@@ -707,6 +707,9 @@ namespace FamiStudio
                 }
             }
 
+            if (items.Count == 0)
+                return;
+
             popupSelectedIdx = items.FindIndex(i => i.Data == App.SelectedInstrument);
 
             StartExpandingList((int)ButtonType.Instrument, items.ToArray());
@@ -874,8 +877,8 @@ namespace FamiStudio
         private BitmapAtlasRef GetInstrumentRenderingInfo(out string text, out Color tint)
         {
             var inst = App.SelectedInstrument;
-            text = inst.Name;
-            tint = inst.Color;
+            text = inst != null ? inst.Name : "";
+            tint = inst != null ? inst.Color : Theme.LightGreyColor1;
             var exp = inst != null ? inst.Expansion : ExpansionType.None;
             return bmpExpansions[exp];
         }

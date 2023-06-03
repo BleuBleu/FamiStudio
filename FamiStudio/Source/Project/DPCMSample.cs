@@ -663,9 +663,11 @@ namespace FamiStudio
         static LocalizedString KHzLabel;
         static LocalizedString SemitonesLabel;
 
-        static DPCMSampleRate(){
+        static DPCMSampleRate()
+        {
             Localization.LocalizeStatic(typeof(DPCMSampleRate));
         }
+
         public static readonly float[,] Frequencies =
         {
             // NTSC

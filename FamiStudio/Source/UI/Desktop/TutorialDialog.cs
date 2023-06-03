@@ -7,7 +7,8 @@ namespace FamiStudio
 {
     public class TutorialDialog : Dialog
     {
-        public LocalizedString[] TutorialMessages = new LocalizedString[11];
+        private LocalizedString[] TutorialMessages = new LocalizedString[11];
+        private LocalizedString DoNotShowAgainLabel;
 
         private int pageIndex = 0;
         private Button buttonRight;
@@ -64,7 +65,7 @@ namespace FamiStudio
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
             imageBox.ScaleImage = DpiScaling.Window > 1;
 
-            checkBoxDontShow = new CheckBox(false, "Do not show again");
+            checkBoxDontShow = new CheckBox(false, DoNotShowAgainLabel);
             checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY + titleBarSizeY, width - buttonSize * 3, checkSizeY);
 
             AddControl(buttonLeft);
