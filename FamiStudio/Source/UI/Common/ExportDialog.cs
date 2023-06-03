@@ -406,7 +406,7 @@ namespace FamiStudio
                     {
                         page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 8
                         page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 9
-                        page.AddDropDownList(OscColorLabel.Colon, OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.Instruments]); // 10
+                        page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 10
                         page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 11
                         page.AddGrid(ChannelsLabel, 
                             Platform.IsDesktop ?
@@ -422,7 +422,7 @@ namespace FamiStudio
                     page.AddTextBox(ArtistLabel.Colon, project.Author, 31); // 1
                     page.AddTextBox(CopyrightLabel.Colon, project.Copyright, 31); // 2
                     page.AddDropDownList(FormatLabel.Colon, new[] { "NSF", "NSFe" }, "NSF", NsfFormatTooltip); // 3
-                    page.AddDropDownList(ModeLabel.Colon, MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 4
+                    page.AddDropDownList(ModeLabel.Colon, Localization.ToStringArray(MachineType.LocalizedNames), MachineType.LocalizedNames[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 4
                     page.AddCheckBoxList(Platform.IsDesktop ? null : SongsLabel, songNames, null, SongListTooltip, 12); // 5
 #if DEBUG
                     page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 6
@@ -500,7 +500,7 @@ namespace FamiStudio
                 case ExportFormat.FamiTone2Sfx:
                 case ExportFormat.FamiStudioSfx:
                     page.AddDropDownList(FormatLabel.Colon, AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
-                    page.AddDropDownList(ModeLabel.Colon, MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 1
+                    page.AddDropDownList(ModeLabel.Colon, Localization.ToStringArray(MachineType.LocalizedNames), MachineType.LocalizedNames[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 1
                     page.AddCheckBox(GenerateSfxInclude.Colon, false, FT2SfxSongListTooltip); // 2
                     page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 3
                     break;

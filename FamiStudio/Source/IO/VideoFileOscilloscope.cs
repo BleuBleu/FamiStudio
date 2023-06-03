@@ -177,17 +177,18 @@ namespace FamiStudio
         public const int None = 0;
         public const int Instruments = 1;
         public const int Channel = 2;
+        public const int Count = 3;
 
-        public static readonly string[] Names =
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+
+        static OscilloscopeColorType()
         {
-            "None",
-            "Instruments",
-            "Channel (First pattern color)"
-        };
+            Localization.LocalizeStatic(typeof(OscilloscopeColorType));
+        }
 
         public static int GetIndexForName(string str)
         {
-            return Array.IndexOf(Names, str);
+            return Array.IndexOf(LocalizedNames, str);
         }
     }
 }
