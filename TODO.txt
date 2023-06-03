@@ -7,9 +7,7 @@ Beta bugs:
 	=> Shelved, will need more work.
 - BETA5 : Replace instrument (A->B), R+CLICK.
 - At home: test the magic trackpad issue
-- Android dark mode issue
 - MacOS window minimize issue
-- Various localization missing
 
 Later
 =====
