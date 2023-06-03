@@ -272,7 +272,7 @@ namespace FamiStudio
         {
             if (period == 0 || frequency < NesApu.FreqRegMin)
             {
-                return $"---+{Math.Abs(0):00} ({0,7:0.00}{HzLabel.ToString()})";
+                return $"---+{Math.Abs(0):00} ({0,7:0.00}{HzLabel})";
             }
             else
             {

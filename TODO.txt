@@ -6,7 +6,6 @@ Beta bugs:
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
 - BETA5 : Replace instrument (A->B), R+CLICK.
-- BETA5 : "Do not show again" string.
 - At home: test the magic trackpad issue
 - Android dark mode issue
 - MacOS window minimize issue
