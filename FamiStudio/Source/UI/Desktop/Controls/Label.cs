@@ -38,14 +38,19 @@ namespace FamiStudio
 
                 while (true)
                 {
-                    var n = Fonts.FontMedium.GetNumCharactersForSize(input, actualWidth);
+                    var numCharsWeCanFit = Fonts.FontMedium.GetNumCharactersForSize(input, actualWidth);
+                    var n = numCharsWeCanFit;
                     var done = n == input.Length;
                     
                     if (!done)
                     {
-                        while (!char.IsWhiteSpace(input[n]))
+                        while (n > 0 && !char.IsWhiteSpace(input[n]))
                             n--;
                     }
+
+                    // No whitespace found, let's chop in the middle of a word.
+                    if (n == 0)
+                        n = numCharsWeCanFit;
 
                     output += input.Substring(0, n);
                     output += "\n";
