@@ -22,6 +22,7 @@
 //#nullable disable
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -500,7 +501,7 @@ namespace GLFWDotNet
 			public delegate void glfwWindowHintString(int hint, string value);
 
 			[UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-			public delegate IntPtr glfwCreateWindow(int width, int height, string title, IntPtr monitor, IntPtr share);
+			public delegate IntPtr glfwCreateWindow(int width, int height, IntPtr title, IntPtr monitor, IntPtr share);
 
 			[UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
 			public delegate void glfwDestroyWindow(IntPtr window);
@@ -512,7 +513,7 @@ namespace GLFWDotNet
 			public delegate void glfwSetWindowShouldClose(IntPtr window, int value);
 
 			[UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-			public delegate void glfwSetWindowTitle(IntPtr window, string title);
+			public delegate void glfwSetWindowTitle(IntPtr window, IntPtr title);
 
 			[UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
 			public delegate void glfwSetWindowIcon(IntPtr window, int count, IntPtr images);
@@ -1733,9 +1734,11 @@ namespace GLFWDotNet
 		/// The handle of the created window, or `NULL` if an
 		/// [error](@ref error_handling) occurred.
 		/// </returns>
-		public static IntPtr glfwCreateWindow(int width, int height, string title, IntPtr monitor, IntPtr share)
+		public unsafe static IntPtr glfwCreateWindow(int width, int height, string title, IntPtr monitor, IntPtr share)
 		{
-			return _glfwCreateWindow(width, height, title, monitor, share);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(title + "\0");
+            fixed (byte* p = &bytes[0])
+				return _glfwCreateWindow(width, height, (IntPtr)p, monitor, share);
 		}
 
 		/// <summary>
@@ -1802,9 +1805,11 @@ namespace GLFWDotNet
 		/// <param name="title">
 		/// The UTF-8 encoded window title.
 		/// </param>
-		public static void glfwSetWindowTitle(IntPtr window, string title)
+		public unsafe static void glfwSetWindowTitle(IntPtr window, string title)
 		{
-			_glfwSetWindowTitle(window, title);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(title + "\0");
+			fixed (byte* p = &bytes[0])
+                _glfwSetWindowTitle(window, (IntPtr)p);
 		}
 
 		/// <summary>
