@@ -137,7 +137,7 @@ namespace FamiStudio
                     {
                         foreach (var kv in inst.SamplesMapping)
                         {
-                            if (kv.Value.Sample != null)
+                            if (kv.Value.Sample != null && !sampleMappingIndices.ContainsKey(kv.Value))
                             {
                                 sampleMappingIndices.Add(kv.Value, 0);
 
