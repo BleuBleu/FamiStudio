@@ -8,7 +8,20 @@ Beta bugs:
 - BETA5 : Replace instrument (A->B), R+CLICK.
 - BETA5 : "Do not show again" string.
 - At home: test the magic trackpad issue
-- 
+- Android dark mode issue
+- MacOS window minimize issue
+- Various localization missing
+
+Later
+=====
+- Borrow TNS-HFC3 from forple in sept/oct.
+
+Packaging
+=========
+- Add "description" HTML metadata to famistudio doc.
+- Recompile ROMs, re-export data, bump versions, etc.
+- MacOS install doesnt work if dotnet is missing? I thought that was fixed.
+- Re-export all ROM test (.bin) files at the end.
 
 ========================================
 - Try no attack? Do it at airport/plane.
@@ -19,13 +32,6 @@ Beta bugs:
 	=> problems:
 		* what about the delayed cut thing? 
 		* will likely need a couple more zp variables.
-
-Packaging
-=========
-- Add "description" HTML metadata to famistudio doc.
-- Recompile ROMs, re-export data, bump versions, etc.
-- MacOS install doesnt work if dotnet is missing? I thought that was fixed.
-- Re-export all ROM test (.bin) files at the end.
 
 4.1.0 Change Log
 ================
