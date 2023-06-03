@@ -1,13 +1,13 @@
 4.1.0
 =====
 Beta bugs:
-- Error: uniform uniformDashScale specified with different precision in different shaders.
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
-- BETA5 : Replace instrument (A->B), R+CLICK.
+- Code review VGM import.
 - At home: test the magic trackpad issue
 - MacOS window minimize issue
+- LATER : Replace instrument (A->B), R+CLICK.
 
 Later
 =====

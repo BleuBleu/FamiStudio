@@ -1,5 +1,3 @@
-uniform float uniformDashScale;
-
 varying vec4 colorInterp;
 varying float dashInterp;
 
