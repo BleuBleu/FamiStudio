@@ -9,6 +9,7 @@ namespace FamiStudio
     {
         private LocalizedString[] TutorialMessages = new LocalizedString[11];
         private LocalizedString DoNotShowAgainLabel;
+        private LocalizedString WelcomeTitle;
 
         private int pageIndex = 0;
         private Button buttonRight;
@@ -33,9 +34,11 @@ namespace FamiStudio
         private byte[] gifBuffer;
         private GCHandle gifHandle;
 
-        public TutorialDialog(FamiStudioWindow win) : base(win, "Welcome!")
+        public TutorialDialog(FamiStudioWindow win) : base(win, "")
         {
             Localization.Localize(this);
+
+            Title = WelcomeTitle;
 
             Move(0, 0, 
                 imageSizeX + margin * 2, 

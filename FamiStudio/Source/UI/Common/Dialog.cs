@@ -14,7 +14,7 @@ namespace FamiStudio
 
         private DialogResult result = DialogResult.None;
         private float tooltipTimer;
-        private string title;
+        private string title = "";
         private Control focusedControl;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForWindow(2);
@@ -46,11 +46,20 @@ namespace FamiStudio
             }
         }
 
+        public string Title
+        {
+            get { return title; }
+            set 
+            {
+                if (SetAndMarkDirty(ref title, value))
+                    titleBarSizeY = string.IsNullOrEmpty(title) ? 0 : DpiScaling.ScaleForWindow(24);
+            }
+        }
+
         public Dialog(FamiStudioWindow win, string t = "")
         {
             visible = false;
-            title = t;
-            titleBarSizeY = string.IsNullOrEmpty(t) ? 0 : DpiScaling.ScaleForWindow(24);
+            Title = t;
             win.InitDialog(this);
         }
 

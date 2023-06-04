@@ -5614,13 +5614,13 @@ sample_play:
     lda (@sample_data_ptr),y ; Initial DMC counter
     sta FAMISTUDIO_APU_DMC_RAW
 
+@start_dmc:
 .if FAMISTUDIO_USE_DPCM_BANKSWITCHING
     iny
     lda (@sample_data_ptr),y ; Bank number
     jsr famistudio_dpcm_bank_callback
 .endif
 
-@start_dmc:
     lda #%00011111 ; Start DMC
     sta FAMISTUDIO_APU_SND_CHN
 
