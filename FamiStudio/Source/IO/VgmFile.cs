@@ -1803,7 +1803,10 @@ namespace FamiStudio
                     chipCommands++;
                     vgmDataOffset = vgmDataOffset + 3;
                 }
-                vgmCommand = vgmFile[vgmDataOffset];
+                if (vgmFile.Length > vgmDataOffset)
+                    vgmCommand = vgmFile[vgmDataOffset];
+                else
+                    break;
             }
             if(pal)
                 Log.LogMessage(LogSeverity.Info, "VGM is PAL");
