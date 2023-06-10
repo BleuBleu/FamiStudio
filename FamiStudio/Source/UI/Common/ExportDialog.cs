@@ -1044,7 +1044,7 @@ namespace FamiStudio
             ShowExportResultToast(exportText);
             if (filename != null)
             {
-                VgmExport.Save(song, filename, filetype);
+                VgmFile.Save(song, filename, filetype);
                 lastExportFilename = filename;
             }
         }
