@@ -188,7 +188,7 @@ namespace FamiStudio
 
         public static int GetIndexForName(string str)
         {
-            return Array.IndexOf(LocalizedNames, str);
+            return Array.FindIndex(LocalizedNames, n => n.Value == str);
         }
     }
 }

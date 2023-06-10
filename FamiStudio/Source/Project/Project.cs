@@ -2123,7 +2123,7 @@ namespace FamiStudio
 
         public static int GetValueForName(string str)
         {
-            return Array.IndexOf(LocalizedNames, str);
+            return Array.FindIndex(LocalizedNames, n => n.Value == str);
         }
     }
 
