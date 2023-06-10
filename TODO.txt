@@ -4,9 +4,12 @@ Beta bugs:
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
-- Code review VGM import.
-- At home: test the magic trackpad issue
-- MacOS window minimize issue
+/ Code review VGM import.
+	=> Merge PR when ready.
+/ At home: test the magic trackpad issue
+	=> Broken
+/ MacOS window minimize issue
+	=> Work here? 
 - LATER : Replace instrument (A->B), R+CLICK.
 
 Later
