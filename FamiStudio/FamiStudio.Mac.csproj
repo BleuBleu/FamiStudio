@@ -151,6 +151,7 @@
     <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Common\VgmImportDialog.cs" />
     <Compile Include="Source\UI\Desktop\ContextMenu.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Button.cs" />
     <Compile Include="Source\UI\Desktop\Controls\CheckBox.cs" />
@@ -201,7 +202,6 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
     <Compile Include="Source\Video\VideoEncoderFFmpeg.cs" />
-    <Compile Include="Source\UI\Common\VgmImportDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
