@@ -1674,7 +1674,7 @@ namespace FamiStudio
                         if (vgmData[1] >= 0x20 && vgmData[1] <= 0x28)
                         {
                             int channel = vgmData[1] - 0x20;
-                            if ((vgmData[2] & 0x10) > 0)
+                            if (((vgmData[2] & 0x10) > 0) && ((vrc7Register[vgmData[1]] & 0x10) != (vgmData[2] & 0x10)))
                                 if(channel < 6)
                                     vrc7Trigger[channel] = 1;
                         }
