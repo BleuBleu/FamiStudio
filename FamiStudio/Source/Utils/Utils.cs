@@ -446,6 +446,9 @@ namespace FamiStudio
 
         public static unsafe string PtrToStringAnsi(IntPtr ptr)
         {
+            if (ptr == IntPtr.Zero)
+                return "";
+
             var p = (byte*)ptr.ToPointer();
             var n = 0;
             for (; p[n] != 0; n++) ;
@@ -455,6 +458,9 @@ namespace FamiStudio
 
         public static unsafe string PtrToStringUTF8(IntPtr ptr)
         {
+            if (ptr == IntPtr.Zero)
+                return "";
+
             // The string is UTF8.
             var p = (byte*)ptr.ToPointer();
             var n = 0;

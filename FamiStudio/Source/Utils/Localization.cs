@@ -157,9 +157,10 @@ namespace FamiStudio
             return str;
         }
 
-        public static string[] ToStringArray(LocalizedString[] locStrings)
+        public static string[] ToStringArray(LocalizedString[] locStrings, int count = int.MaxValue)
         {
-            var strings = new string[locStrings.Length];
+            count = Math.Min(count, locStrings.Length);
+            var strings = new string[count];
             for (int i = 0; i < strings.Length; i++)
                 strings[i] = locStrings[i];
             return strings;
