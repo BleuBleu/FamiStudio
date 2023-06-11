@@ -4,13 +4,8 @@ Beta bugs:
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
-/ Code review VGM import.
-	=> Merge PR when ready.
-/ At home: test the magic trackpad issue
-	=> Broken
-/ MacOS window minimize issue
-	=> Work here? 
-- LATER : Replace instrument (A->B), R+CLICK.
+- MacOS trackpad issue
+- MacOS window minimize issue
 
 Later
 =====
@@ -138,6 +133,7 @@ Discord
 
 Backlog: 
 =========
+- Replace an specific instrument by another in selection (A->B), R+CLICK.
 - How to add to the "open with" list on Android.
 - Better autosave names?
 - Finish phase reset support
