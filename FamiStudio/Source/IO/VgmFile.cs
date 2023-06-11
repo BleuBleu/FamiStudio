@@ -1563,7 +1563,7 @@ namespace FamiStudio
                         dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                     vgmDataOffset = vgmDataOffset + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) + 3 + 4;
                 }
-                if (vgmCommand == 0x68)  //PCM Data Copy
+                else if (vgmCommand == 0x68)  //PCM Data Copy
                 {
                     var readOffset = vgmFile.Skip(vgmDataOffset + 3).Take(3).ToArray();
                     var writeOffset = vgmFile.Skip(vgmDataOffset + 3 + 3).Take(3).ToArray();
@@ -1797,7 +1797,7 @@ namespace FamiStudio
                     else
                     {
                         if(unknownChipCommands < 100)
-                        Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + BitConverter.ToString(vgmData.Reverse().ToArray()).Replace("-", "") + " offset: " + vgmDataOffset);
+                        Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + BitConverter.ToString(vgmData.ToArray()).Replace("-", "") + " offset: " + vgmDataOffset + " command " + vgmCommand);
                         unknownChipCommands++;
                     }
                     chipCommands++;
