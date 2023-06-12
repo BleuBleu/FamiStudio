@@ -733,14 +733,14 @@ namespace FamiStudio
             var name = $"EPSM {Instrument.GetEpsmPatchName(1)}";
             var instrument = project.GetInstrument(name);
             var stereo = "";
-            if (patchRegs[1] == 0x80)
+            if ((patchRegs[1] & 0xC0) == 0x80)
                 stereo = " Left";
-            if (patchRegs[1] == 0x40)
+            if ((patchRegs[1] & 0xC0) == 0x40)
                 stereo = " Right";
-            if (patchRegs[1] == 0x00 && chanType == 2)
+            if ((patchRegs[1] & 0xC0) == 0x00 && chanType == 2)
                 stereo = " Stop";
-            if (patchRegs[1] == 0x00 && chanType != 2)
-                patchRegs[1] = 0x80;
+            if ((patchRegs[1] & 0xC0) == 0x00 && chanType != 2)
+                patchRegs[1] = 0xC0;
 
             if (chanType == 0)
             {
