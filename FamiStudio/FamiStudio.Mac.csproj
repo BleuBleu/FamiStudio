@@ -151,6 +151,7 @@
     <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Common\VgmImportDialog.cs" />
     <Compile Include="Source\UI\Desktop\ContextMenu.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Button.cs" />
     <Compile Include="Source\UI\Desktop\Controls\CheckBox.cs" />

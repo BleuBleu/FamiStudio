@@ -307,6 +307,7 @@
     <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Common\VgmImportDialog.cs" />
     <Compile Include="Source\UI\Droid\DroidUtils.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioWindow.cs" />
     <Compile Include="Source\UI\Droid\MobileProjectDialog.cs" />
@@ -444,8 +445,8 @@
     <EmbeddedResource Include="Resources\Fonts\Mulish-Bold.ttf" />
     <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Regular.otf" />
     <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Bold.otf" />
-  </ItemGroup>    
-  <ItemGroup>    
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />
   </ItemGroup>
   <ItemGroup>
