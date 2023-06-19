@@ -26,8 +26,30 @@ namespace FamiStudio
 
             if (BeginPlaySong(song, pal, 0))
             {
-                while (PlaySongFrame());
+                seeking = true;
+                NesApu.StartSeeking(apuIndex);
+                while (PlaySongFrameInternal(true));
+                NesApu.StopSeeking(apuIndex);
+                seeking = false;
             }
+
+            return registerWrites.ToArray();
+        }
+
+        public RegisterWrite[] GetRegisterValues(Song song, bool pal, out int length)
+        {
+            length = 0;
+            registerWrites = new List<RegisterWrite>();
+
+            if (BeginPlaySong(song, pal, 0))
+            {
+                seeking = true;
+                NesApu.StartSeeking(apuIndex);
+                while (PlaySongFrameInternal(true)){length++;};
+                NesApu.StopSeeking(apuIndex);
+                seeking = false;
+            }
+            length++;
 
             return registerWrites.ToArray();
         }

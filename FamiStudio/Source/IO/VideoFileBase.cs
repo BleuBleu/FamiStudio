@@ -110,7 +110,7 @@ namespace FamiStudio
             project = originalProject.DeepClone();
             song = project.GetSong(songId);
 
-            ExtendSongForLooping(song, loopCount);
+            song.ExtendForLooping(loopCount);
 
             // Save audio to temporary file.
             tempAudioFile = Path.Combine(Utils.GetTemporaryDiretory(), "temp.wav");
@@ -295,35 +295,6 @@ namespace FamiStudio
 
             foreach (var s in channelStates)
                 s.icon = videoGraphics.CreateBitmapFromResource($"FamiStudio.Resources.Atlas.{ChannelType.Icons[s.channel.Type]}{suffix}");
-        }
-
-        protected void ExtendSongForLooping(Song song, int loopCount)
-        {
-            // For looping, we simply extend the song by copying pattern instances.
-            if (loopCount > 1 && song.LoopPoint >= 0 && song.LoopPoint < song.Length)
-            {
-                var originalLength = song.Length;
-                var loopSectionLength = originalLength - song.LoopPoint;
-
-                song.SetLength(Math.Min(Song.MaxLength, originalLength + loopSectionLength * (loopCount - 1)));
-
-                var srcPatIdx = song.LoopPoint;
-
-                for (var i = originalLength; i < song.Length; i++)
-                {
-                    foreach (var c in song.Channels)
-                        c.PatternInstances[i] = c.PatternInstances[srcPatIdx];
-
-                    if (song.PatternHasCustomSettings(srcPatIdx))
-                    {
-                        var customSettings = song.GetPatternCustomSettings(srcPatIdx);
-                        song.SetPatternCustomSettings(i, customSettings.patternLength, customSettings.beatLength, customSettings.groove, customSettings.groovePaddingMode);
-                    }
-
-                    if (++srcPatIdx >= originalLength)
-                        srcPatIdx = song.LoopPoint;
-                }
-            }
         }
 
         protected void GetFrameRateInfo(Project project, bool half, out int numer, out int denom)

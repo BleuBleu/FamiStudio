@@ -16,7 +16,7 @@ namespace FamiStudio
             Nsf,
             Rom,
             Midi,
-            CommandLog,
+            VGM,
             Text,
             FamiTracker,
             FamiStudioMusic,
@@ -78,7 +78,6 @@ namespace FamiStudio
         LocalizedString FormatFamiStudioTextMessage;
         LocalizedString FormatFamiTrackerMessage;
         LocalizedString FormatVgmMessage;
-        LocalizedString FormatCommandLogMessage;
         LocalizedString FormatAssemblyMessage;
 
         // Export results
@@ -220,9 +219,29 @@ namespace FamiStudio
         // SFX ASM labels
         LocalizedString GenerateSfxInclude;
 
-        // VGM/Command Log labels
-        LocalizedString FileTypeLabel;
+        // VGM tooltips
 
+        LocalizedString TrackTitleEnglishTooltip;
+        LocalizedString GameNameEnglishTooltip;
+        LocalizedString SystemNameEnglishTooltip;
+        LocalizedString ComposerEnglishTooltip;
+        LocalizedString ReleaseDateTooltip;
+        LocalizedString VGMByTooltip;
+        LocalizedString SmoothLoopingTooltip;
+
+        // VGM labels
+        LocalizedString TrackTitleEnglishLabel;
+        // LocalizedString TrackNameOriginalLabel;
+        LocalizedString GameNameEnglishLabel;
+        // LocalizedString GameNameOriginalLabel;
+        LocalizedString SystemEnglishLabel;
+        // LocalizedString SystemOriginalLabel;
+        LocalizedString ComposerEnglishLabel;
+        // LocalizedString ComposerOriginalLabel;
+        LocalizedString ReleaseDateLabel;
+        LocalizedString VGMByLabel;
+        LocalizedString NotesLabel;
+        LocalizedString SmoothLoopingLabel;
         #endregion
 
         public unsafe ExportDialog(FamiStudioWindow win)
@@ -501,9 +520,23 @@ namespace FamiStudio
                     page.AddCheckBox(GenerateSfxInclude.Colon, false, FT2SfxSongListTooltip); // 2
                     page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 3
                     break;
-                case ExportFormat.CommandLog:
+                case ExportFormat.VGM:
                     page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SongListTooltip); // 0
-                    page.AddDropDownList(FileTypeLabel.Colon, new[] { "Command Log", "VGM"}, "VGM"); // 1
+                    page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(0), 0, TrackTitleEnglishTooltip); // 1
+                    page.AddTextBox(GameNameEnglishLabel.Colon, project.Name, 0, GameNameEnglishTooltip); // 2
+                    page.AddTextBox(SystemEnglishLabel.Colon, 
+                    (project.PalMode ? "PAL NES" : "NTSC NES/Famicom") + 
+                    (project.UsesVrc7Expansion ? " + Konami VRC7" : "") + 
+                    (project.UsesFdsExpansion ? " + Famicom Disk System" : "") + 
+                    (project.UsesS5BExpansion ? " + Sunsoft 5B" : "") + 
+                    (project.UsesEPSMExpansion ? " + EPSM" : ""), 0, SystemNameEnglishTooltip); // 3
+                    page.AddTextBox(ComposerEnglishLabel.Colon, project.Author, 0, ComposerEnglishTooltip); // 4
+                    page.AddTextBox(ReleaseDateLabel.Colon, DateTime.Now.ToString("yyyy/MM/dd"), 0, ReleaseDateTooltip); // 5
+                    page.AddTextBox(VGMByLabel.Colon, "FamiStudio Export", 0, VGMByTooltip); // 6
+                    page.AddTextBox(NotesLabel.Colon, project.Copyright, 0); // 7
+                    page.AddCheckBox(SmoothLoopingLabel.Colon, true, SmoothLoopingTooltip); // 8
+                    page.SetPropertyEnabled(8, project.GetSong(page.GetPropertyValue<string>(0)).LoopPoint >= 0);
+                    page.PropertyChanged += VGM_PropertyChanged;
                     break;
                 case ExportFormat.Share:
                     page.AddRadioButtonList(SharingModeLabel.Colon, new string[] { CopyToStorageOption, ShareOption }, 0, ShareTooltip);
@@ -1016,25 +1049,34 @@ namespace FamiStudio
             }
         }
 
-        private void ExportCommandLog()
+        private void VGM_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            var props = dialog.GetPropertyPage((int)ExportFormat.CommandLog);
-            var songName = props.GetPropertyValue<string>(0);
-            var ext = "asm";
-            var exportText = FormatCommandLogMessage;
-            var filetype = props.GetPropertyValue<string>(1) == "VGM" ? 1 : 0;
-            if(filetype == 1)
-            {
-                ext = "vgm";
-                exportText = FormatVgmMessage;
+            if (propIdx == 0){
+                props.SetPropertyValue(1, (string)value);
+                props.SetPropertyEnabled(8, project.GetSong((string)value).LoopPoint >= 0);
             }
-            var song = project.GetSong(songName);
+        }
+
+        private void ExportVGM()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.VGM);
+            var ext = "vgm";
+            var exportText = FormatVgmMessage;
+            var song = project.GetSong(props.GetPropertyValue<string>(0));
+            var trackTitle = props.GetPropertyValue<string>(1);
+            var gameName = props.GetPropertyValue<string>(2);
+            var system = props.GetPropertyValue<string>(3);
+            var composer = props.GetPropertyValue<string>(4);
+            var releaseDate = props.GetPropertyValue<string>(5);
+            var VGMby = props.GetPropertyValue<string>(6);
+            var notes = props.GetPropertyValue<string>(7);
+            var smoothLoop = props.GetPropertyValue<bool>(8);
             var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog($"Export {exportText}", $"{exportText} File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
-            ShowExportResultToast(exportText);
             if (filename != null)
             {
-                VgmExport.Save(song, filename, filetype);
+                VgmExport.Save(song, filename, trackTitle, gameName, system, composer, releaseDate, VGMby, notes, smoothLoop);
                 lastExportFilename = filename;
+                ShowExportResultToast(exportText);
             }
         }
 		
@@ -1195,7 +1237,7 @@ namespace FamiStudio
                 case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
                 case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
                 case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
-                case ExportFormat.CommandLog: ExportCommandLog(); break;
+                case ExportFormat.VGM: ExportVGM(); break;
                 case ExportFormat.Share: ExportShare(); break;
             }
 
