@@ -242,6 +242,7 @@ namespace FamiStudio
         LocalizedString VGMByLabel;
         LocalizedString NotesLabel;
         LocalizedString SmoothLoopingLabel;
+        LocalizedString VGMUnsupportedExpLabel;
         #endregion
 
         public unsafe ExportDialog(FamiStudioWindow win)
@@ -526,16 +527,18 @@ namespace FamiStudio
                     page.AddTextBox(GameNameEnglishLabel.Colon, project.Name, 0, GameNameEnglishTooltip); // 2
                     page.AddTextBox(SystemEnglishLabel.Colon, 
                     (project.PalMode ? "PAL NES" : "NTSC NES/Famicom") + 
-                    (project.UsesVrc7Expansion ? " + Konami VRC7" : "") + 
-                    (project.UsesFdsExpansion ? " + Famicom Disk System" : "") + 
-                    (project.UsesS5BExpansion ? " + Sunsoft 5B" : "") + 
-                    (project.UsesEPSMExpansion ? " + EPSM" : ""), 0, SystemNameEnglishTooltip); // 3
+                    (project.UsesVrc7Expansion ? $" + {ExpansionType.GetLocalizedName(2)}" : "") + 
+                    (project.UsesFdsExpansion ? $" + {ExpansionType.GetLocalizedName(3)}" : "") + 
+                    (project.UsesS5BExpansion ? $" + {ExpansionType.GetLocalizedName(6)}" : "") + 
+                    (project.UsesEPSMExpansion ? $" + {ExpansionType.GetLocalizedName(7)}" : ""), 0, SystemNameEnglishTooltip); // 3
                     page.AddTextBox(ComposerEnglishLabel.Colon, project.Author, 0, ComposerEnglishTooltip); // 4
                     page.AddTextBox(ReleaseDateLabel.Colon, DateTime.Now.ToString("yyyy/MM/dd"), 0, ReleaseDateTooltip); // 5
                     page.AddTextBox(VGMByLabel.Colon, "FamiStudio Export", 0, VGMByTooltip); // 6
                     page.AddTextBox(NotesLabel.Colon, project.Copyright, 0); // 7
                     page.AddCheckBox(SmoothLoopingLabel.Colon, true, SmoothLoopingTooltip); // 8
+                    page.AddLabel(null, VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & 0b11001)), true); // 9
                     page.SetPropertyEnabled(8, project.GetSong(page.GetPropertyValue<string>(0)).LoopPoint >= 0);
+                    page.SetPropertyVisible(9, (project.ExpansionAudioMask & 0b11011) != 0);  // Unsupported expansions
                     page.PropertyChanged += VGM_PropertyChanged;
                     break;
                 case ExportFormat.Share:
