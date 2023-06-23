@@ -1,14 +1,12 @@
 layout(location = 0) out vec4 outColor;
 
-uniform sampler2D dashTexture;
-
 noperspective in vec4 colorInterp;
-noperspective in vec2 texCoordsInterp;
+noperspective in float dashInterp;
 
 void main()
 {       
-    float dash = texture(dashTexture, texCoordsInterp).x;
+    float dashAlpha = mod(dashInterp, 2.0f) < 1.0f ? 1.0f : 0.0f;
 
     outColor = colorInterp;
-    outColor.a *= dash;
+    outColor.a *= dashAlpha;
 }

@@ -266,7 +266,7 @@ namespace FamiStudio
 
         protected void RenderFrameAndSwapBuffer(bool force = false)
         {
-            if (dirty || force)
+            if (!quit && (dirty || force))
             {
                 var rect = new Rectangle(Point.Empty, Size);
                 var clearColor = Theme.DarkGreyColor2;
@@ -404,8 +404,11 @@ namespace FamiStudio
 
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
         {
+            if (quit)
+                return;
+            
             Debug.WriteLine($"BUTTON! Button={button}, Action={action}, Mods={mods}");
-
+            
             ConditionalUpdateLastCursorPosition();
 
             if (action == GLFW_PRESS)
@@ -493,6 +496,9 @@ namespace FamiStudio
 
         private void CursorPosCallback(IntPtr window, double xpos, double ypos)
         {
+            if (quit)
+                return;
+
             //Debug.WriteLine($"POS! X={xpos}, Y={ypos}");
 
             GLFWToWindow(xpos, ypos, out lastCursorX, out lastCursorY);
@@ -540,6 +546,9 @@ namespace FamiStudio
 
         private void CursorEnterCallback(IntPtr window, int entered)
         {
+            if (quit)
+                return;
+
             Debug.WriteLine($"ENTER! entered={entered}");
 
             if (entered == 0)
@@ -554,8 +563,11 @@ namespace FamiStudio
 
         private void ScrollCallback(IntPtr window, double xoffset, double yoffset)
         {
-            Debug.WriteLine($"SCROLL! X={xoffset}, Y={yoffset}");
+            if (quit)
+                return;
 
+            Debug.WriteLine($"SCROLL! X={xoffset}, Y={yoffset}");
+            
             ConditionalUpdateLastCursorPosition();
 
             var ctrl = container.GetControlAt(lastCursorX, lastCursorY, out int cx, out int cy);
@@ -593,6 +605,9 @@ namespace FamiStudio
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
+            if (quit)
+                return;
+
             mods = FixKeyboardMods(mods, key, action);
             modifiers.Set(mods);
 
@@ -616,6 +631,9 @@ namespace FamiStudio
 
         private void CharCallback(IntPtr window, uint codepoint)
         {
+            if (quit)
+                return;
+
             //Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
 
             var controls = container.GetControlsForKeyboard(out _);
@@ -632,7 +650,7 @@ namespace FamiStudio
 
         private unsafe void DropCallback(IntPtr window, int count, IntPtr paths)
         {
-            if (count > 0)
+            if (count > 0 && !container.IsDialogActive)
             {
                 IntPtr ptr;
 

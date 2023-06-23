@@ -12,11 +12,11 @@ namespace FamiStudio
         protected bool builtAtlases;
         protected bool offscreen;
         protected int lineWidthBias;
+        protected int dashSize = 2; // Must be power-of-two, max 64.
         protected float[] viewportScaleBias = new float[4];
         protected Rectangle screenRect;
         protected Rectangle screenRectFlip;
         protected TransformStack transform = new TransformStack();
-        protected Bitmap dashedBitmap;
         protected Dictionary<int, BitmapAtlas> atlases = new Dictionary<int, BitmapAtlas>();
         protected List<ClipRegion> clipRegions = new List<ClipRegion>();
         protected Stack<ClipRegion> clipStack = new Stack<ClipRegion>();
@@ -33,8 +33,8 @@ namespace FamiStudio
         }
 
         public byte DepthValue => curDepthValue;
-        public int DashTextureSize => dashedBitmap.Size.Width;
         public int LineWidthBias => lineWidthBias;
+        public int DashSize => dashSize;
         public TransformStack Transform => transform;
         public RectangleF CurrentClipRegion => clipStack.Peek().rect;
         public bool IsOffscreen => offscreen;
@@ -218,7 +218,7 @@ namespace FamiStudio
 
             if (layerCommandLists[idx] == null)
             {
-                layerCommandLists[idx] = new CommandList(this, dashedBitmap.Size.Width);
+                layerCommandLists[idx] = new CommandList(this);
             }
 
             return layerCommandLists[idx];
@@ -405,7 +405,6 @@ namespace FamiStudio
         {
             ClearGlyphCache();
             ClearAtlases();
-            Utils.DisposeAndNullify(ref dashedBitmap);
         }
 
         public float[] GetVertexArray()
@@ -749,6 +748,8 @@ namespace FamiStudio
             if (!sharedFontData.TryGetValue(name, out var data))
             {
                 var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
+                if (stream == null)
+                    stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.otf");
                 var buffer = new byte[stream.Length];
                 stream.Read(buffer, 0, buffer.Length);
 
@@ -1240,11 +1241,13 @@ namespace FamiStudio
         {
             public float[] vtxArray;
             public int[]   colArray;
+            public byte[]  dshArray;
             public short[] idxArray;
             public byte[]  depArray;
 
             public int vtxIdx = 0;
             public int colIdx = 0;
+            public int dshIdx = 0;
             public int idxIdx = 0;
             public int depIdx = 0;
         };
@@ -1252,12 +1255,12 @@ namespace FamiStudio
         private class LineBatch
         {
             public float[] vtxArray;
-            public float[] texArray;
+            public byte[]  dshArray;
             public int[]   colArray;
             public byte[]  depArray;
 
             public int vtxIdx = 0;
-            public int texIdx = 0;
+            public int dshIdx = 0;
             public int colIdx = 0;
             public int depIdx = 0;
         };
@@ -1308,11 +1311,13 @@ namespace FamiStudio
         {
             public float[] vtxArray;
             public int[]   colArray;
+            public byte[]  dshArray;
             public short[] idxArray;
             public byte[]  depArray;
 
             public int vtxArraySize;
             public int colArraySize;
+            public int dshArraySize;
             public int idxArraySize;
             public int depArraySize;
 
@@ -1323,12 +1328,12 @@ namespace FamiStudio
         public class LineDrawData
         {
             public float[] vtxArray;
-            public float[] texArray;
+            public byte[]  dshArray;
             public int[]   colArray;
             public byte[]  depArray;
 
             public int vtxArraySize;
-            public int texArraySize;
+            public int dshArraySize;
             public int colArraySize;
             public int depArraySize;
 
@@ -1361,7 +1366,6 @@ namespace FamiStudio
             public int count;
         };
 
-        private float invDashTextureSize;
         private LineBatch lineBatch;
         private List<PolyBatch> polyBatches;
         private List<LineSmoothBatch> lineSmoothBatches;
@@ -1382,11 +1386,10 @@ namespace FamiStudio
         public bool HasAnyBitmaps        => bitmaps.Count > 0;
         public bool HasAnything          => HasAnyPolygons || HasAnyLines || HasAnySmoothLines || HasAnyTexts || HasAnyBitmaps;
 
-        public CommandList(GraphicsBase g, int dashTextureSize, int lineBias = 0)
+        public CommandList(GraphicsBase g)
         {
             graphics = g;
             xform = g.Transform;
-            invDashTextureSize = 1.0f / dashTextureSize;
         }
 
         public void PushTranslation(float x, float y)
@@ -1422,6 +1425,7 @@ namespace FamiStudio
                 { 
                     graphics.ReleaseVertexArray(batch.vtxArray);
                     graphics.ReleaseColorArray(batch.colArray);
+                    graphics.ReleaseByteArray(batch.dshArray);
                     graphics.ReleaseIndexArray(batch.idxArray);
                     graphics.ReleaseByteArray(batch.depArray);
                 }
@@ -1430,7 +1434,7 @@ namespace FamiStudio
             if (lineBatch != null)
             {
                 graphics.ReleaseVertexArray(lineBatch.vtxArray);
-                graphics.ReleaseVertexArray(lineBatch.texArray);
+                graphics.ReleaseByteArray(lineBatch.dshArray);
                 graphics.ReleaseColorArray(lineBatch.colArray);
                 graphics.ReleaseByteArray(lineBatch.depArray);
             }
@@ -1453,6 +1457,20 @@ namespace FamiStudio
             texts = null;
         }
 
+        private byte EncodeDashPattern(float x0, float x1, float y0, float y1)
+        {
+            // This unorm value will be divided by 4.0 in the shader.
+            // Integer part: Offset to apply to glFragCoord.
+            // Fractional part:
+            //   0.00 : No dash
+            //   0.50 : Horizontal dash
+            //   0.25 : Vertical Dash.
+
+            return x0 == x1 ?
+                (byte)(((int)y0 & (graphics.DashSize * 2 - 1)) * 4 + 1) :
+                (byte)(((int)x0 & (graphics.DashSize * 2 - 1)) * 4 + 2);
+        }
+
         private PolyBatch GetPolygonBatch(int numVtxNeeded, int numIdxNeeded)
         {
             if (polyBatches == null)
@@ -1469,6 +1487,7 @@ namespace FamiStudio
                 batch = new PolyBatch();
                 batch.vtxArray = graphics.GetVertexArray();
                 batch.colArray = graphics.GetColorArray();
+                batch.dshArray = graphics.GetByteArray();
                 batch.idxArray = graphics.GetIndexArray();
                 batch.depArray = graphics.GetByteArray();
                 polyBatches.Add(batch);
@@ -1483,43 +1502,25 @@ namespace FamiStudio
             {
                 lineBatch = new LineBatch();
                 lineBatch.vtxArray = graphics.GetVertexArray();
-                lineBatch.texArray = graphics.GetVertexArray();
+                lineBatch.dshArray = graphics.GetByteArray();
                 lineBatch.colArray = graphics.GetColorArray();
                 lineBatch.depArray = graphics.GetByteArray();
             }
 
             var batch = lineBatch;
             var depth = graphics.DepthValue;
+            var dashPattern = dash ? EncodeDashPattern(x0, x1, y0, y1) : (byte)0;
+
+            //if (dashPattern != 0)
+            //    Debug.WriteLine(y0.ToString());
 
             batch.vtxArray[batch.vtxIdx++] = x0;
             batch.vtxArray[batch.vtxIdx++] = y0;
             batch.vtxArray[batch.vtxIdx++] = x1;
             batch.vtxArray[batch.vtxIdx++] = y1;
 
-            if (dash)
-            {
-                if (x0 == x1)
-                {
-                    batch.texArray[batch.texIdx++] = 0.5f;
-                    batch.texArray[batch.texIdx++] = (y0 + 0.5f) * invDashTextureSize;
-                    batch.texArray[batch.texIdx++] = 0.5f;
-                    batch.texArray[batch.texIdx++] = (y1 + 0.5f) * invDashTextureSize;
-                }
-                else
-                {
-                    batch.texArray[batch.texIdx++] = (x0 + 0.5f) * invDashTextureSize;
-                    batch.texArray[batch.texIdx++] = 0.5f;
-                    batch.texArray[batch.texIdx++] = (x1 + 0.5f) * invDashTextureSize;
-                    batch.texArray[batch.texIdx++] = 0.5f;
-                }
-            }
-            else
-            {
-                batch.texArray[batch.texIdx++] = 0.5f;
-                batch.texArray[batch.texIdx++] = 0.5f;
-                batch.texArray[batch.texIdx++] = 0.5f;
-                batch.texArray[batch.texIdx++] = 0.5f;
-            }
+            batch.dshArray[batch.dshIdx++] = dashPattern;
+            batch.dshArray[batch.dshIdx++] = dashPattern;
 
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
@@ -1528,7 +1529,7 @@ namespace FamiStudio
             batch.depArray[batch.depIdx++] = depth;
         }
 
-        private void DrawThickLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool miter)
+        private void DrawThickLineInternal(float x0, float y0, float x1, float y1, Color color, int width, bool miter, bool dash)
         {
             Debug.Assert(width > 1 && width < 100);
             
@@ -1543,6 +1544,7 @@ namespace FamiStudio
 
             var batch = GetPolygonBatch(4, 6);
             var depth = graphics.DepthValue;
+            var dashPattern = dash ? EncodeDashPattern(x0, x1, y0, y1) : (byte)0;
 
             var dx = x1 - x0;
             var dy = y1 - y0;
@@ -1583,6 +1585,11 @@ namespace FamiStudio
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
+
+            batch.dshArray[batch.dshIdx++] = dashPattern;
+            batch.dshArray[batch.dshIdx++] = dashPattern;
+            batch.dshArray[batch.dshIdx++] = dashPattern;
+            batch.dshArray[batch.dshIdx++] = dashPattern;
 
             batch.depArray[batch.depIdx++] = depth;
             batch.depArray[batch.depIdx++] = depth;
@@ -1830,7 +1837,7 @@ namespace FamiStudio
             }
             else if (width > 1)
             {
-                DrawThickLineInternal(x0, y0, x1, y1, color, width, false);
+                DrawThickLineInternal(x0, y0, x1, y1, color, width, false, dash);
             }
             else
             {
@@ -1876,7 +1883,7 @@ namespace FamiStudio
                 }
                 else if (width > 1)
                 {
-                    DrawThickLineInternal(x0, y0, x1, y1, color, width, false);
+                    DrawThickLineInternal(x0, y0, x1, y1, color, width, false, false);
                 }
                 else
                 {
@@ -1911,7 +1918,7 @@ namespace FamiStudio
                 }
                 else if (width > 1)
                 {
-                    DrawThickLineInternal(x0, y0, x1, y1, color, width, miter);
+                    DrawThickLineInternal(x0, y0, x1, y1, color, width, miter, false);
                 }
                 else
                 {
@@ -2140,10 +2147,10 @@ namespace FamiStudio
             else if (width > 1)
             {
                 var halfWidth = width * 0.5f;
-                DrawThickLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false);
-                DrawThickLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false);
-                DrawThickLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false);
-                DrawThickLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, color, width, false);
+                DrawThickLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, color, width, false, false);
+                DrawThickLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, color, width, false, false);
+                DrawThickLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, color, width, false, false);
+                DrawThickLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, color, width, false, false);
             }
             else
             {
@@ -2204,6 +2211,11 @@ namespace FamiStudio
             batch.colArray[batch.colIdx++] = color.ToAbgr();
             batch.colArray[batch.colIdx++] = color.ToAbgr();
 
+            batch.dshArray[batch.dshIdx++] = 0;
+            batch.dshArray[batch.dshIdx++] = 0;
+            batch.dshArray[batch.dshIdx++] = 0;
+            batch.dshArray[batch.dshIdx++] = 0;
+
             batch.depArray[batch.depIdx++] = depth;
             batch.depArray[batch.depIdx++] = depth;
             batch.depArray[batch.depIdx++] = depth;
@@ -2261,6 +2273,11 @@ namespace FamiStudio
                     batch.colArray[batch.colIdx++] = color1.ToAbgr();
                     batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 }
+
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
 
                 batch.depArray[batch.depIdx++] = depth;
                 batch.depArray[batch.depIdx++] = depth;
@@ -2346,6 +2363,15 @@ namespace FamiStudio
                 batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 batch.colArray[batch.colIdx++] = color1.ToAbgr();
                 batch.colArray[batch.colIdx++] = color1.ToAbgr();
+
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
+                batch.dshArray[batch.dshIdx++] = 0;
 
                 batch.depArray[batch.depIdx++] = depth;
                 batch.depArray[batch.depIdx++] = depth;
@@ -2484,6 +2510,9 @@ namespace FamiStudio
                     batch.depArray[batch.depIdx++] = depth;
                     batch.depArray[batch.depIdx++] = depth;
 
+                    batch.dshArray[batch.dshIdx++] = 0;
+                    batch.dshArray[batch.dshIdx++] = 0;
+
                     cx = nx;
                     cy = ny;
                     dpx = dnx;
@@ -2546,6 +2575,7 @@ namespace FamiStudio
                     batch.vtxArray[batch.vtxIdx++] = nx;
                     batch.vtxArray[batch.vtxIdx++] = ny;
                     batch.colArray[batch.colIdx++] = gradientColor.ToAbgr();
+                    batch.dshArray[batch.dshIdx++] = 0;
                     batch.depArray[batch.depIdx++] = depth;
                 }
 
@@ -2701,11 +2731,13 @@ namespace FamiStudio
                     var draw = new PolyDrawData();
                     draw.vtxArray = batch.vtxArray;
                     draw.colArray = batch.colArray;
+                    draw.dshArray = batch.dshArray;
                     draw.idxArray = batch.idxArray;
                     draw.depArray = batch.depArray;
                     draw.numIndices = batch.idxIdx;
                     draw.vtxArraySize = batch.vtxIdx;
                     draw.colArraySize = batch.colIdx;
+                    draw.dshArraySize = batch.dshIdx;
                     draw.idxArraySize = batch.idxIdx;
                     draw.depArraySize = batch.depIdx;
                     draws.Add(draw);
@@ -2752,12 +2784,12 @@ namespace FamiStudio
             {
                 draw = new LineDrawData();
                 draw.vtxArray = lineBatch.vtxArray;
-                draw.texArray = lineBatch.texArray;
+                draw.dshArray = lineBatch.dshArray;
                 draw.colArray = lineBatch.colArray;
                 draw.depArray = lineBatch.depArray;
                 draw.numVertices = lineBatch.vtxIdx / 2;
                 draw.vtxArraySize = lineBatch.vtxIdx;
-                draw.texArraySize = lineBatch.texIdx;
+                draw.dshArraySize = lineBatch.dshIdx;
                 draw.colArraySize = lineBatch.colIdx;
                 draw.depArraySize = lineBatch.depIdx;
             }
@@ -2837,7 +2869,7 @@ namespace FamiStudio
                 if (valign != TextFlags.Top)
                 {
                     // Use a tall character with no descender as reference.
-                    var charA = font.GetCharInfo('A');
+                    var charA = font.GetCharInfo('0');
 
                     // When aligning middle or center, ignore the y offset since it just
                     // adds extra padding and messes up calculations.

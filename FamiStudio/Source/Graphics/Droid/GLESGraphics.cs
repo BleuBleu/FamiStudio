@@ -12,10 +12,11 @@ namespace FamiStudio
     {
         private int polyProgram;
         private int polyScaleBiasUniform;
+        private int polyDashScaleUniform;
 
         private int lineProgram;
         private int lineScaleBiasUniform;
-        private int lineDashTextureUniform;
+        private int lineDashScaleUniform;
 
         private int lineSmoothProgram;
         private int lineSmoothScaleBiasUniform;
@@ -58,6 +59,8 @@ namespace FamiStudio
 
         public Graphics(bool offscreen = false) : base(offscreen)
         {
+            dashSize = 8;
+
             for (int i = 0; i < NumBufferSizes; i++)
             {
                 freeVtxBuffers[i] = new List<FloatBuffer>();
@@ -76,10 +79,6 @@ namespace FamiStudio
             quadIdxArray = null;
 
             InitializeShaders();
-
-            dashedBitmap = CreateBitmapFromResource("FamiStudio.Resources.Misc.Dash");
-            GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureWrapS, GLES20.GlRepeat);
-            GLES20.GlTexParameteri(GLES20.GlTexture2d, GLES20.GlTextureWrapT, GLES20.GlRepeat);
 
             var temp = new int[1];
             GLES20.GlGetIntegerv(GLES20.GlMaxTextureSize, temp, 0);
@@ -213,10 +212,11 @@ namespace FamiStudio
         {
             polyProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Poly" );            
             polyScaleBiasUniform = GLES20.GlGetUniformLocation(polyProgram, "screenScaleBias");
+            polyDashScaleUniform = GLES20.GlGetUniformLocation(polyProgram, "uniformDashScale");
 
             lineProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Line");
             lineScaleBiasUniform = GLES20.GlGetUniformLocation(lineProgram, "screenScaleBias");
-            lineDashTextureUniform = GLES20.GlGetUniformLocation(lineProgram, "dashTexture");
+            lineDashScaleUniform = GLES20.GlGetUniformLocation(lineProgram, "uniformDashScale");
 
             lineSmoothProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.LineSmooth");
             lineSmoothScaleBiasUniform = GLES20.GlGetUniformLocation(lineSmoothProgram, "screenScaleBias");
@@ -341,12 +341,14 @@ namespace FamiStudio
             GLES20.GlColorMask(false, false, false, true);
             GLES20.GlUseProgram(polyProgram);
             GLES20.GlUniform4fv(polyScaleBiasUniform, 1, viewportScaleBias, 0);
+            GLES20.GlUniform1f(polyDashScaleUniform, 0.0f);
             GLES20.GlDepthFunc(GLES20.GlAlways);
 
             MakeFullScreenTriangle();
             BindAndUpdateVertexBuffer(0, vtxArray, 6);
             BindAndUpdateColorBuffer(1, colArray, 3);
-            BindAndUpdateByteBuffer(2, depArray, 3, true);
+            BindAndUpdateByteBuffer(2, depArray, 3, false); // Irrelevant
+            BindAndUpdateByteBuffer(3, depArray, 3, true); // Unused
 
             GLES20.GlDrawElements(GLES20.GlTriangles, 3, GLES20.GlUnsignedShort, CopyGetIdxBuffer(idxArray, 3));
             GLES20.GlColorMask(true, true, true, true);
@@ -675,11 +677,11 @@ namespace FamiStudio
             GLES20.GlVertexAttribPointer(attrib, 4, GLES20.GlUnsignedByte, true, 0, cb);
         }
 
-        private void BindAndUpdateByteBuffer(int attrib, byte[] array, int arraySize, bool signed = false)
+        private void BindAndUpdateByteBuffer(int attrib, byte[] array, int arraySize, bool signed = false, bool normalized = true)
         {
             var bb = CopyGetByteBuffer(array, arraySize);
             GLES20.GlEnableVertexAttribArray(attrib);
-            GLES20.GlVertexAttribPointer(attrib, 1, signed ? GLES20.GlByte : GLES20.GlUnsignedByte, true, 0, bb);
+            GLES20.GlVertexAttribPointer(attrib, 1, signed ? GLES20.GlByte : GLES20.GlUnsignedByte, normalized, 0, bb);
         }
 
         protected override void DrawCommandList(CommandList list, bool depthTest)
@@ -697,12 +699,14 @@ namespace FamiStudio
 
                     GLES20.GlUseProgram(polyProgram);
                     GLES20.GlUniform4fv(polyScaleBiasUniform, 1, viewportScaleBias, 0);
+                    GLES20.GlUniform1f(polyDashScaleUniform, 1.0f / dashSize);
 
                     foreach (var draw in draws)
                     { 
                         BindAndUpdateVertexBuffer(0, draw.vtxArray, draw.vtxArraySize);
                         BindAndUpdateColorBuffer(1, draw.colArray, draw.colArraySize);
-                        BindAndUpdateByteBuffer(2, draw.depArray, draw.depArraySize, true);
+                        BindAndUpdateByteBuffer(2, draw.dshArray, draw.dshArraySize, false, false);
+                        BindAndUpdateByteBuffer(3, draw.depArray, draw.depArraySize, true);
 
                         GLES20.GlDrawElements(GLES20.GlTriangles, draw.numIndices, GLES20.GlUnsignedShort, CopyGetIdxBuffer(draw.idxArray, draw.idxArraySize));
                     }
@@ -714,13 +718,11 @@ namespace FamiStudio
 
                     GLES20.GlUseProgram(lineProgram);
                     GLES20.GlUniform4fv(lineScaleBiasUniform, 1, viewportScaleBias, 0);
-                    GLES20.GlUniform1i(lineDashTextureUniform, 0);
-                    GLES20.GlActiveTexture(GLES20.GlTexture0 + 0);
-                    GLES20.GlBindTexture(GLES20.GlTexture2d, dashedBitmap.Id);
+                    GLES20.GlUniform1f(lineDashScaleUniform, 1.0f / dashSize);
 
                     BindAndUpdateVertexBuffer(0, draw.vtxArray, draw.vtxArraySize);
                     BindAndUpdateColorBuffer(1, draw.colArray, draw.colArraySize);
-                    BindAndUpdateVertexBuffer(2, draw.texArray, draw.texArraySize);
+                    BindAndUpdateByteBuffer(2, draw.dshArray, draw.dshArraySize, false, false);
                     BindAndUpdateByteBuffer(3, draw.depArray, draw.depArraySize, true);
 
                     GLES20.GlDrawArrays(GLES20.GlLines, 0, draw.numVertices);

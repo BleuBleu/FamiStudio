@@ -94,7 +94,7 @@ namespace FamiStudio
             }
         }
 
-        public void PlayImmediate(short[] data, int sampleRate, float volume)
+        public void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0)
         {
             StopImmediate();
 

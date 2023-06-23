@@ -11,11 +11,12 @@ namespace FamiStudio
     {
         private int polyProgram;
         private int polyScaleBiasUniform;
+        private int polyDashScaleUniform;
         private int polyVao;
 
         private int lineProgram;
         private int lineScaleBiasUniform;
-        private int lineDashTextureUniform;
+        private int lineDashScaleUniform;
         private int lineVao;
 
         private int lineSmoothProgram;
@@ -40,6 +41,7 @@ namespace FamiStudio
         private int vertexBuffer;
         private int colorBuffer;
         private int centerBuffer;
+        private int dashBuffer;
         private int texCoordBuffer;
         private int lineDistBuffer;
         private int indexBuffer;
@@ -69,6 +71,7 @@ namespace FamiStudio
             vertexBuffer   = GL.GenBuffer();
             colorBuffer    = GL.GenBuffer();
             centerBuffer   = GL.GenBuffer();
+            dashBuffer     = GL.GenBuffer();
             texCoordBuffer = GL.GenBuffer();
             lineDistBuffer = GL.GenBuffer();
             indexBuffer    = GL.GenBuffer();
@@ -80,21 +83,17 @@ namespace FamiStudio
 
             InitializeShaders();
 
-            dashedBitmap = CreateBitmapFromResource("FamiStudio.Resources.Misc.Dash");
-            GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.Repeat);
-            GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.Repeat);
-
             GL.GetInteger(GL.MaxTextureSize, ref maxTextureSize);
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            Utils.DisposeAndNullify(ref dashedBitmap);
             GL.DeleteBuffer(quadIdxBuffer);
             GL.DeleteBuffer(vertexBuffer);
             GL.DeleteBuffer(colorBuffer);
             GL.DeleteBuffer(centerBuffer);
+            GL.DeleteBuffer(dashBuffer);
             GL.DeleteBuffer(texCoordBuffer);
             GL.DeleteBuffer(lineDistBuffer);
             GL.DeleteBuffer(indexBuffer);
@@ -187,10 +186,11 @@ namespace FamiStudio
         {
             polyProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Poly");
             polyScaleBiasUniform = GL.GetUniformLocation(polyProgram, "screenScaleBias");
+            polyDashScaleUniform = GL.GetUniformLocation(polyProgram, "uniformDashScale");
 
             lineProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Line");
             lineScaleBiasUniform = GL.GetUniformLocation(lineProgram, "screenScaleBias");
-            lineDashTextureUniform = GL.GetUniformLocation(lineProgram, "dashTexture");
+            lineDashScaleUniform = GL.GetUniformLocation(lineProgram, "uniformDashScale");
 
             lineSmoothProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.LineSmooth");
             lineSmoothScaleBiasUniform = GL.GetUniformLocation(lineSmoothProgram, "screenScaleBias");
@@ -233,12 +233,14 @@ namespace FamiStudio
             GL.UseProgram(polyProgram);
             GL.BindVertexArray(polyVao);
             GL.Uniform(polyScaleBiasUniform, viewportScaleBias);
+            GL.Uniform(polyDashScaleUniform, 0.0f);
             GL.DepthFunc(GL.Always);
 
             MakeFullScreenTriangle();
             BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, 6);
             BindAndUpdateColorBuffer(1, colorBuffer, colArray, 3);
-            BindAndUpdateByteBuffer(2, depthBuffer, depArray, 3, true);
+            BindAndUpdateByteBuffer(2, dashBuffer, depArray, 3, false, false); // Irrelevant
+            BindAndUpdateByteBuffer(3, depthBuffer, depArray, 3, true); // Unused
             BindAndUpdateIndexBuffer(indexBuffer, idxArray, 3);
 
             GL.DrawElements(GL.Triangles, 3, GL.UnsignedShort, IntPtr.Zero);
@@ -418,7 +420,7 @@ namespace FamiStudio
             GL.BindBuffer(GL.ArrayBuffer, buffer);
             GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
             GL.EnableVertexAttribArray(attrib);
-            GL.VertexAttribPointer(attrib, 2, GL.Float, false, 0, null);
+            GL.VertexAttribPointer(attrib, 2, GL.Float, false, 0);
         }
 
         private void BindAndUpdateColorBuffer(int attrib, int buffer, int[] array, int arraySize)
@@ -426,15 +428,15 @@ namespace FamiStudio
             GL.BindBuffer(GL.ArrayBuffer, buffer);
             GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
             GL.EnableVertexAttribArray(attrib);
-            GL.VertexAttribPointer(attrib, 4, GL.UnsignedByte, true, 0, null);
+            GL.VertexAttribPointer(attrib, 4, GL.UnsignedByte, true, 0);
         }
 
-        private void BindAndUpdateByteBuffer(int attrib, int buffer, byte[] array, int arraySize, bool signed = false)
+        private void BindAndUpdateByteBuffer(int attrib, int buffer, byte[] array, int arraySize, bool signed = false, bool normalized = true)
         {
             GL.BindBuffer(GL.ArrayBuffer, buffer);
             GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
             GL.EnableVertexAttribArray(attrib);
-            GL.VertexAttribPointer(attrib, 1, signed ? GL.Byte : GL.UnsignedByte, true, 0, null);
+            GL.VertexAttribPointer(attrib, 1, signed ? GL.Byte : GL.UnsignedByte, normalized, 0);
         }
 
         private void BindAndUpdateIndexBuffer(int buffer, short[] array, int arraySize)
@@ -512,12 +514,14 @@ namespace FamiStudio
                     GL.UseProgram(polyProgram);
                     GL.BindVertexArray(polyVao);
                     GL.Uniform(polyScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(polyDashScaleUniform, 1.0f / dashSize);
 
                     foreach (var draw in draws)
                     { 
                         BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
                         BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
-                        BindAndUpdateByteBuffer(2, depthBuffer, draw.depArray, draw.depArraySize, true);
+                        //BindAndUpdateByteBuffer(2, dashBuffer, draw.dshArray, draw.dshArraySize, false, false); // We dont use thick dashed line on desktop.
+                        BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
                         BindAndUpdateIndexBuffer(indexBuffer,  draw.idxArray, draw.idxArraySize);
 
                         GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, IntPtr.Zero);
@@ -531,13 +535,11 @@ namespace FamiStudio
                     GL.UseProgram(lineProgram);
                     GL.BindVertexArray(lineVao);
                     GL.Uniform(lineScaleBiasUniform, viewportScaleBias);
-                    GL.Uniform(lineDashTextureUniform, 0);
-                    GL.ActiveTexture(GL.Texture0 + 0);
-                    GL.BindTexture(GL.Texture2D, dashedBitmap.Id);
+                    GL.Uniform(lineDashScaleUniform, 1.0f / dashSize);
 
                     BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
                     BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
-                    BindAndUpdateVertexBuffer(2, texCoordBuffer, draw.texArray, draw.texArraySize);
+                    BindAndUpdateByteBuffer(2, dashBuffer, draw.dshArray, draw.dshArraySize, false, false);
                     BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
 
                     GL.DrawArrays(GL.Lines, 0, draw.numVertices);
@@ -852,6 +854,7 @@ namespace FamiStudio
         public delegate void UseProgramDelegate(int program);
         public delegate int  GetUniformLocationDelegate(int program, [MarshalAs(UnmanagedType.LPStr)] string name);
         public delegate void VertexAttribPointerDelegate(int index, int size, int type, byte normalized, int stride, IntPtr pointer);
+        public delegate void VertexAttribIPointerDelegate(int index, int size, int type, int stride, IntPtr pointer);
         public delegate void GenBuffersDelegate(int n, IntPtr buffers);
         public delegate void DeleteBuffersDelegate(int n, IntPtr buffers);
         public delegate void BindBufferDelegate(int target, int buffer);
@@ -928,6 +931,7 @@ namespace FamiStudio
         public static UseProgramDelegate              UseProgram;
         public static GetUniformLocationDelegate      GetUniformLocation;
         public static VertexAttribPointerDelegate     VertexAttribPointerRaw;
+        public static VertexAttribIPointerDelegate    VertexAttribIPointerRaw;
         public static GenBuffersDelegate              GenBuffersRaw;
         public static DeleteBuffersDelegate           DeleteBuffersRaw;
         public static GenVertexArraysDelegate         GenVertexArraysRaw;
@@ -1004,6 +1008,7 @@ namespace FamiStudio
             UseProgram              = Marshal.GetDelegateForFunctionPointer<UseProgramDelegate>(glfwGetProcAddress("glUseProgram"));
             GetUniformLocation      = Marshal.GetDelegateForFunctionPointer<GetUniformLocationDelegate>(glfwGetProcAddress("glGetUniformLocation"));
             VertexAttribPointerRaw  = Marshal.GetDelegateForFunctionPointer<VertexAttribPointerDelegate>(glfwGetProcAddress("glVertexAttribPointer"));
+            VertexAttribIPointerRaw = Marshal.GetDelegateForFunctionPointer<VertexAttribIPointerDelegate>(glfwGetProcAddress("glVertexAttribIPointer"));
             GenBuffersRaw           = Marshal.GetDelegateForFunctionPointer<GenBuffersDelegate>(glfwGetProcAddress("glGenBuffers"));
             DeleteBuffersRaw        = Marshal.GetDelegateForFunctionPointer<DeleteBuffersDelegate>(glfwGetProcAddress("glDeleteBuffers"));
             BindBuffer              = Marshal.GetDelegateForFunctionPointer<BindBufferDelegate>(glfwGetProcAddress("glBindBuffer"));
@@ -1137,17 +1142,14 @@ namespace FamiStudio
                 TexCoordPointerRaw(size, type, stride, new IntPtr(p));
         }
 
-        public unsafe static void VertexAttribPointer(int index, int size, int type, bool normalized, int stride, float[] data)
+        public unsafe static void VertexAttribPointer(int index, int size, int type, bool normalized, int stride)
         {
-            if (data != null)
-            { 
-                fixed (float* p = &data[0])
-                    VertexAttribPointerRaw(index, size, type, (byte)(normalized ? 1 : 0), stride, new IntPtr(p));
-            }
-            else
-            {
-                VertexAttribPointerRaw(index, size, type, (byte)(normalized ? 1 : 0), stride, IntPtr.Zero);
-            }
+            VertexAttribPointerRaw(index, size, type, (byte)(normalized ? 1 : 0), stride, IntPtr.Zero);
+        }
+
+        public unsafe static void VertexAttribIPointer(int index, int size, int type, int stride)
+        {
+            VertexAttribIPointerRaw(index, size, type, stride, IntPtr.Zero);
         }
 
         public static void ColorMask(bool r, bool g, bool b, bool a)

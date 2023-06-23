@@ -425,33 +425,36 @@ namespace FamiStudio
 
     static class VideoResolution
     {
-        public static readonly string[] Names =
-        {
-            "1080p",
-            "720p",
-            "576p",
-            "480p"
-        };
+        public static LocalizedString[] LocalizedNames = new LocalizedString[6];
 
         public static readonly int[] ResolutionY =
         {
             1080,
             720,
-            576,
-            480
+            480,
+            1920,
+            1280,
+            854
         };
 
         public static readonly int[] ResolutionX =
         {
             1920,
             1280,
-            1024,
-            854
+            854,
+            1080,
+            720,
+            480,
         };
+
+        static VideoResolution()
+        {
+            Localization.LocalizeStatic(typeof(VideoResolution));
+        }
 
         public static int GetIndexForName(string str)
         {
-            return Array.IndexOf(Names, str);
+            return Array.FindIndex(LocalizedNames, n => n.Value == str);
         }
     }
 }

@@ -15,6 +15,6 @@ namespace FamiStudio
 
         void Start();
         void Stop();
-        void PlayImmediate(short[] data, int sampleRate, float volume);
+        void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0);
     }
 }

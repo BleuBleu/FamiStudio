@@ -274,8 +274,8 @@ namespace FamiStudio
             get { return n163WavPos; }
             set
             {
-                Debug.Assert((value & 0x03) == 0);
-                n163WavPos  = (byte)Utils.Clamp(value       & 0xfc, 0, N163MaxWavePos);
+                Debug.Assert((value & 0x01) == 0);
+                n163WavPos  = (byte)Utils.Clamp(value       & 0xfe, 0, N163MaxWavePos);
                 n163WavSize = (byte)Utils.Clamp(n163WavSize & 0xfc, 4, N163MaxWaveSize);
                 ClampN163WaveCount();
                 UpdateN163WaveEnvelope();
@@ -427,7 +427,7 @@ namespace FamiStudio
                 var waveSize      = isN163 ? n163WavSize  : 64;
                 var waveNormalize = isN163 ? n163ResampleWavNormalize : fdsResampleWavNormalize;
                 var wavePeriod    = isN163 ? n163ResampleWavPeriod    : fdsResampleWavPeriod;
-                var waveOffset    = isN163 ? n163ResampleWavOffset    : fdsResampleWavOffset;
+                var waveOffset    = Utils.Clamp(isN163 ? n163ResampleWavOffset : fdsResampleWavOffset, 0, wavData.Length - 1);
 
                 var wavFiltered = wavData.Clone() as short[];
                 if (waveNormalize)
@@ -439,12 +439,17 @@ namespace FamiStudio
                 var resampling = new short[waveCount * waveSize];
                 WaveUtils.Resample(wavFiltered, waveOffset, waveOffset + waveCount * wavePeriod, resampling);
 
-                var envType = IsN163 ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
+                var envType = isN163 ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
                 Envelope.GetMinMaxValueForType(this, envType, out var minValue, out var maxValue);
 
                 var env = envelopes[envType];
                 for (int i = 0; i < resampling.Length; i++)
                     env.Values[i] = (sbyte)Utils.Lerp(minValue, maxValue, (resampling[i] + 32768.0f) / 65535.0f);
+
+                if (isN163)
+                    n163ResampleWavOffset = waveOffset;
+                else
+                    fdsResampleWavOffset = waveOffset;
             }
         }
 
@@ -982,6 +987,11 @@ namespace FamiStudio
                 envelopes[EnvelopeType.YMNoiseFreq] = new Envelope(EnvelopeType.YMNoiseFreq);
             }
 
+            if (buffer.IsReading)
+            {
+                PerformPostLoadActions();
+            }
+
             // Revert back presets to "customs" if they no longer match what the code generates.
             // This is in case we change the code that generates the preset.
             if (buffer.IsReading && !buffer.IsForUndoRedo)
@@ -992,11 +1002,6 @@ namespace FamiStudio
                     fdsWavPreset = WavePresetType.Custom;
                 if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsModPreset))
                     fdsModPreset = WavePresetType.Custom;
-            }
-
-            if (buffer.IsReading)
-            {
-                PerformPostLoadActions();
             }
         }
     }

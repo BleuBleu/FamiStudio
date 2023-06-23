@@ -87,6 +87,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_84A8196F3D1242119A410729B08FD6D9"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_91F75EFBC418414FA0AC9F949A923E11"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -488,6 +494,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_84A8196F3D1242119A410729B08FD6D9"
+            {
+            "SourcePath" = "8:Demo Instruments\\Instruments EPSM.fms"
+            "TargetName" = "8:Instruments EPSM.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_E3ABD2F9CD2845619B13F2EB30917A3F"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_91F75EFBC418414FA0AC9F949A923E11"
             {
             "SourcePath" = "8:Demo Songs\\Nice.fms"
@@ -734,6 +760,17 @@
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
                     "Property" = "8:_1DC7B328893C4FF390F22C681EED7789"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E3ABD2F9CD2845619B13F2EB30917A3F"
+                    {
+                    "Name" = "8:Demo Instruments"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_A14E26ECDF6644E4A607E0831F4D03B5"
                         "Folders"
                         {
                         }
@@ -1367,7 +1404,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9A9A290F02BD4DF9857CA1EFF73548B4"
             {
-            "SourcePath" = "8:..\\FamiStudio\\obj\\Debug\\net5.0\\apphost.exe"
+            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\net5.0\\apphost.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"

@@ -93,11 +93,13 @@ namespace FamiStudio
             return result;
         }
 
-        public static byte[] IntToBytes24Bit (int x){
-            return new byte[] {(byte)(x & 0xff), (byte)((x >> 8) & 0xff), (byte)((x >> 16) & 0xff)};
+        public static byte[] IntToBytes24Bit(int x)
+        {
+            return new byte[] { (byte)(x & 0xff), (byte)(x >> 8 & 0xff), (byte)(x >> 16 & 0xff) };
         }
 
-        public static int Bytes24BitToInt (byte[] x){
+        public static int Bytes24BitToInt(byte[] x)
+        {
             return x[0] | (x[1] << 8) | (x[2] << 16);
         }
 
@@ -444,6 +446,9 @@ namespace FamiStudio
 
         public static unsafe string PtrToStringAnsi(IntPtr ptr)
         {
+            if (ptr == IntPtr.Zero)
+                return "";
+
             var p = (byte*)ptr.ToPointer();
             var n = 0;
             for (; p[n] != 0; n++) ;
@@ -453,6 +458,9 @@ namespace FamiStudio
 
         public static unsafe string PtrToStringUTF8(IntPtr ptr)
         {
+            if (ptr == IntPtr.Zero)
+                return "";
+
             // The string is UTF8.
             var p = (byte*)ptr.ToPointer();
             var n = 0;

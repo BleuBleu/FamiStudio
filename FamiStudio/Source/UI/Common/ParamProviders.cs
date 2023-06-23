@@ -74,6 +74,8 @@ namespace FamiStudio
 
         // Common labels
         static LocalizedString PitchEnvelopeLabel;
+        static LocalizedString AbsoluteLabel;
+        static LocalizedString RelativeLabel;
 
         // FDS/N163
         static LocalizedString MasterVolumeLabel;
@@ -97,7 +99,7 @@ namespace FamiStudio
         static LocalizedString TremoloLabel;
         static LocalizedString VibratoLabel;
         static LocalizedString SustainedLabel;
-        static LocalizedString WaveRectifiedLabel;
+        static LocalizedString HalfSineLabel;
         static LocalizedString KeyScalingRateLabel;
         static LocalizedString KeyScalingLevelLabel;
         static LocalizedString FreqMultiplierLabel;
@@ -159,7 +161,7 @@ namespace FamiStudio
                 paramInfos.Add(new InstrumentParamInfo(instrument, PitchEnvelopeLabel, 0, 1, 0, PitchEnvelopeTooltip, true)
                 {
                     GetValue = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? 1 : 0; },
-                    GetValueString = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? "Relative" : "Absolute"; },
+                    GetValueString = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? RelativeLabel : AbsoluteLabel; },
                     SetValue = (v) =>
                     {
                         var newRelative = v != 0;
@@ -207,7 +209,7 @@ namespace FamiStudio
                 case ExpansionType.N163:
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.InternalNames[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, WavePositionLabel, 0, 0, 0, null, false, 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WavePositionLabel, 0, 0, 0, null, false, 2)
                         { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWavePos; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WaveSizeLabel, 4, 4, 16, null, false, 4)
                         { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveSize; } });
@@ -237,7 +239,7 @@ namespace FamiStudio
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x40) >> 6; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x40)) | ((v << 6) & 0x40)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, SustainedLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x20) >> 5)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x20) >> 5; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x20)) | ((v << 5) & 0x20)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, WaveRectifiedLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x10) >> 4)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, HalfSineLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x10) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[3] & 0x10) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[3] = (byte)((instrument.Vrc7PatchRegs[3] & (~0x10)) | ((v << 4) & 0x10)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, KeyScalingRateLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x10) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x10) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x10)) | ((v << 4) & 0x10)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
@@ -261,7 +263,7 @@ namespace FamiStudio
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x40) >> 6; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x40)) | ((v << 6) & 0x40)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, SustainedLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x20) >> 5)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x20) >> 5; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x20)) | ((v << 5) & 0x20)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, WaveRectifiedLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x08) >> 3)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, HalfSineLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x08) >> 3)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[3] & 0x08) >> 3; }, SetValue = (v) => { instrument.Vrc7PatchRegs[3] = (byte)((instrument.Vrc7PatchRegs[3] & (~0x08)) | ((v << 3) & 0x08)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, KeyScalingRateLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x10) >> 4)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x10) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x10)) | ((v << 4) & 0x10)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });

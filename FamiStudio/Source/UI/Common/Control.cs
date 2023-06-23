@@ -574,8 +574,9 @@ namespace FamiStudio
 
     public class Shortcut
     {
-        public string DisplayName { get; private set; }
-        public string ConfigName  { get; private set; }
+        public string DisplayName    { get; private set; }
+        public string ConfigName     { get; private set; }
+        public bool   AllowModifiers { get; private set; } = true;
         public readonly bool AllowTwoShortcuts = true; // Always allow... { get; private set; }
 
         //public int[] ScanCodes = new int[2];
@@ -586,14 +587,22 @@ namespace FamiStudio
         {
         }
 
+        public Shortcut(string displayName, string configName, Keys k, bool allowModifiers)
+        {
+            DisplayName = displayName;
+            ConfigName = configName;
+            AllowModifiers = allowModifiers;
+            KeyValues[0] = k;
+            KeyValues[1] = Keys.Unknown;
+            Settings.AllShortcuts.Add(this);
+        }
+
         public Shortcut(string displayName, string configName, Keys k, ModifierKeys m = default(ModifierKeys))
         {
             DisplayName = displayName;
             ConfigName = configName;
-            //ScanCodes[0]  = Platform.GetKeyScancode(k);
             Modifiers[0] = m;
             KeyValues[0] = k;
-            //ScanCodes[1] = -1;
             KeyValues[1] = Keys.Unknown;
             Settings.AllShortcuts.Add(this);
         }
@@ -602,9 +611,7 @@ namespace FamiStudio
         {
             DisplayName = displayName;
             ConfigName = configName;
-            //ScanCodes[0] = Platform.GetKeyScancode(k1);
             KeyValues[0] = k1;
-            ////ScanCodes[1] = Platform.GetKeyScancode(k2);
             KeyValues[1] = k2;
             //AllowTwoShortcuts = true;
             Settings.AllShortcuts.Add(this);
@@ -614,10 +621,8 @@ namespace FamiStudio
         {
             DisplayName = displayName;
             ConfigName = configName;
-            //ScanCodes[0] = Platform.GetKeyScancode(k1);
             Modifiers[0] = m1;
             KeyValues[0] = k1;
-            //ScanCodes[1] = Platform.GetKeyScancode(k2);
             Modifiers[1] = m2;
             KeyValues[1] = k2;
             //AllowTwoShortcuts = true;
@@ -630,7 +635,7 @@ namespace FamiStudio
             clone.DisplayName = DisplayName;
             clone.ConfigName = ConfigName;
             //clone.AllowTwoShortcuts = AllowTwoShortcuts;
-            //clone.ScanCodes = ScanCodes.Clone() as int[];
+            clone.AllowModifiers = AllowModifiers;
             clone.KeyValues = KeyValues.Clone() as Keys[];
             clone.Modifiers = Modifiers.Clone() as ModifierKeys[];
             return clone;
@@ -646,20 +651,17 @@ namespace FamiStudio
 
         public void Clear(int idx)
         {
-            //ScanCodes[idx] = -1;
             KeyValues[idx] = Keys.Unknown;
             Modifiers[idx].Set(0);
         }
 
         public bool IsShortcutValid(int idx)
         {
-            //return ScanCodes[idx] >= 0;
             return KeyValues[idx] != Keys.Unknown;
         }
 
         public bool Matches(KeyEventArgs e, int idx)
         {
-            //return IsShortcut1Valid(idx) && e.Modifiers == Modifiers[idx] && e.Scancode == ScanCodes[idx];
             return IsShortcutValid(idx) && e.Modifiers == Modifiers[idx] && e.Key == KeyValues[idx];
         }
 
@@ -668,11 +670,19 @@ namespace FamiStudio
             return Matches(e, 0) || Matches(e, 1);
         }
 
+        public bool IsKeyDown(FamiStudioWindow win, int idx)
+        {
+            Debug.Assert(!AllowModifiers);
+            return IsShortcutValid(idx) && win.IsKeyDown(KeyValues[idx]);
+        }
+
+        public bool IsKeyDown(FamiStudioWindow win)
+        {
+            return IsKeyDown(win, 0) || IsKeyDown(win, 1);
+        }
+
         private string GetShortcutKeyString(int idx)
         {
-            //var str = Platform.ScancodeToString(ScanCodes[idx]);
-            //if (string.IsNullOrEmpty(str))
-            //    str = Platform.KeyToString(KeyValues[idx]);
             var str = Platform.KeyToString(KeyValues[idx]);
             if (string.IsNullOrEmpty(str))
                 str = KeyValues[idx].ToString();
@@ -732,12 +742,9 @@ namespace FamiStudio
             {
                 Modifiers[idx].FromConfigString(splits.AsSpan(0, splits.Length - 1));
                 KeyValues[idx] = (Keys)Enum.Parse(typeof(Keys), splits[splits.Length - 1]);
-                //ScanCodes[idx] = int.Parse();
             }
             else
             {
-                // Should we leave to default here?
-                //ScanCodes[idx] = -1;
                 KeyValues[idx] = Keys.Unknown;
             }
         }
@@ -745,7 +752,6 @@ namespace FamiStudio
         public string ToConfigString(int idx)
         {
             Debug.Assert(idx == 0 || AllowTwoShortcuts);
-            //return Modifiers[idx].ToConfigString() + ScanCodes[idx].ToString();
             return Modifiers[idx].ToConfigString() + KeyValues[idx].ToString();
         }
 

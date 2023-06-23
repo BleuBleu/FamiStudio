@@ -1,28 +1,32 @@
 4.1.0
 =====
-- Try no attack?
-- BUG : Convert ot MMC5 instrument
-- BUG : Seek bar in cut when using vertical scrolling in sequencer.
-- BUG : play -> pause and i hear something strange
-	=> Cant repro. Mac only? Nope
-Linux:
-- Tromino, key issues. https://discord.com/channels/747649221879922840/747649222354010173/1060127173006069820
-	=> NO REPRO
+Beta bugs:
+- OSC trigger assert 
+- Option to keep unused samples when exporting to sound engine. 
+	=> Shelved, will need more work.
+- MacOS trackpad issue
+- MacOS window minimize issue
 
-Testing
-=======
-- Test DPCM w/ multi
-- Re-export all ROM test (.bin) files at the end.
-- Sample, instrument and song import (all places where we switched to OpenProjectAsync)
+Later
+=====
+- Borrow TNS-HFC3 from forple in sept/oct.
 
 Packaging
 =========
 - Add "description" HTML metadata to famistudio doc.
-- Preset instruments
-- Add temple raiders demo song (MMC5)
 - Recompile ROMs, re-export data, bump versions, etc.
-- Uncheck x86 in supported android platforms.
 - MacOS install doesnt work if dotnet is missing? I thought that was fixed.
+- Re-export all ROM test (.bin) files at the end.
+
+========================================
+- Try no attack? Do it at airport/plane.
+	=> instrument change:
+		* optional : disable attack
+		* optional : change the instrument, for FM instrument, will look if attack is disabled and not rebind envelopes if disabled.
+		* play a note (if attack, reset envelopes)
+	=> problems:
+		* what about the delayed cut thing? 
+		* will likely need a couple more zp variables.
 
 4.1.0 Change Log
 ================
@@ -44,7 +48,8 @@ Packaging
 - Project explorer sorting improvements
 - NSF import support on Android
 - Stereo and delay export support on Android.
-- Sunsoft 5B noise support
+- Sunsoft 5B noise support (Perkka contribution)
+- Experimental translations (spanish being the most complete)
 
 Android SDK 12
 ==============
@@ -128,6 +133,8 @@ Discord
 
 Backlog: 
 =========
+- Replace an specific instrument by another in selection (A->B), R+CLICK.
+- How to add to the "open with" list on Android.
 - Better autosave names?
 - Finish phase reset support
 - Going in settings unutes all channels.
@@ -177,4 +184,3 @@ Backlog:
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
-- Wayland support on Linux (GLFW supports it). Standard file dialogs.

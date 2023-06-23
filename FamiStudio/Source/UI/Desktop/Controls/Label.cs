@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace FamiStudio
 {
@@ -38,13 +40,25 @@ namespace FamiStudio
 
                 while (true)
                 {
-                    var n = Fonts.FontMedium.GetNumCharactersForSize(input, actualWidth);
+                    var numCharsWeCanFit = Fonts.FontMedium.GetNumCharactersForSize(input, actualWidth);
+                    var minimunCharsPerLine = Math.Max((int)(numCharsWeCanFit * 0.62), numCharsWeCanFit - 20);
+                    var n = numCharsWeCanFit;
                     var done = n == input.Length;
                     
                     if (!done)
                     {
-                        while (!char.IsWhiteSpace(input[n]))
+                        while (!char.IsWhiteSpace(input[n]) && input[n] != '\u201C' && char.GetUnicodeCategory(input[n]) != UnicodeCategory.OpenPunctuation)
+                        {
                             n--;
+                            // No whitespace or punctuation found, let's chop in the middle of a word.
+                            if (n <= minimunCharsPerLine)
+                            {
+                                n = numCharsWeCanFit;
+                                if (char.IsPunctuation(input[n]))
+                                    n--;
+                                break;
+                            }
+                        }
                     }
 
                     output += input.Substring(0, n);

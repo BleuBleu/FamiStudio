@@ -120,6 +120,7 @@ namespace FamiStudio
             {
                 var frame = metadata[f];
                 var c = videoGraphics.DefaultCommandList;
+                var o = videoGraphics.OverlayCommandList;
 
                 c.PushClipRegion(0, 0, videoResX, videoResY);
 
@@ -162,9 +163,9 @@ namespace FamiStudio
 
                 // Grid lines
                 for (int i = 1; i < numRows; i++)
-                    c.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
+                    o.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
                 for (int i = 1; i < numColumns; i++)
-                    c.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
+                    o.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
 
                 c.PopClipRegion();
             });
@@ -176,17 +177,18 @@ namespace FamiStudio
         public const int None = 0;
         public const int Instruments = 1;
         public const int Channel = 2;
+        public const int Count = 3;
 
-        public static readonly string[] Names =
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+
+        static OscilloscopeColorType()
         {
-            "None",
-            "Instruments",
-            "Channel (First pattern color)"
-        };
+            Localization.LocalizeStatic(typeof(OscilloscopeColorType));
+        }
 
         public static int GetIndexForName(string str)
         {
-            return Array.IndexOf(Names, str);
+            return Array.FindIndex(LocalizedNames, n => n.Value == str);
         }
     }
 }

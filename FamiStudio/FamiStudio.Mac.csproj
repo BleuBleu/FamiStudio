@@ -152,6 +152,7 @@
     <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Common\VgmImportDialog.cs" />
     <Compile Include="Source\UI\Desktop\ContextMenu.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Button.cs" />
     <Compile Include="Source\UI\Desktop\Controls\CheckBox.cs" />
@@ -295,6 +296,8 @@
     <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Bd.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Light.ttf" />
     <EmbeddedResource Include="Resources\Fonts\Mulish-Bold.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Regular.otf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Bold.otf" />
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />
@@ -313,8 +316,6 @@
     <EmbeddedResource Include="Resources\Tutorials\Tutorial10.gif" />
   </ItemGroup>    
   <ItemGroup>    
-    <EmbeddedResource Include="Resources\Misc\Dash.tga" />
-    <EmbeddedResource Include="Resources\Misc\Dash@2x.tga" />
     <EmbeddedResource Include="Resources\Misc\VideoWatermark.tga" />
   </ItemGroup>    
   <ItemGroup>    
@@ -538,6 +539,7 @@
     <EmbeddedResource Include="Resources\Atlas\Maximize.tga" />
     <EmbeddedResource Include="Resources\Atlas\Maximize@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuBankAssign.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MenuBankAssign@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuCheckOff.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuCheckOff@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuCheckOn.tga" />
@@ -794,6 +796,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>    
     <Content Include="Localization\FamiStudio.spa.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>                            
+    <Content Include="Localization\FamiStudio.zho.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>                            
   </ItemGroup>  

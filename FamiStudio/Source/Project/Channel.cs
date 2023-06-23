@@ -65,8 +65,11 @@ namespace FamiStudio
             return patterns.Find(p => p.Id == id);
         }
 
-        public bool SupportsInstrument(Instrument instrument)
+        public bool SupportsInstrument(Instrument instrument, bool allowNull = true)
         {
+            if (instrument == null)
+                return allowNull;
+
             if (instrument.Expansion == ExpansionType.None && (IsRegularChannel || IsMmc5Channel))
                 return true;
 

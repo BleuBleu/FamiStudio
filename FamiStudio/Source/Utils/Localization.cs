@@ -27,7 +27,8 @@ namespace FamiStudio
             "DEU",
             "KOR",
             "POR",
-            "RUS"
+            "RUS",
+            "ZHO",
         };
 
         static Localization()
@@ -156,9 +157,10 @@ namespace FamiStudio
             return str;
         }
 
-        public static string[] ToStringArray(LocalizedString[] locStrings)
+        public static string[] ToStringArray(LocalizedString[] locStrings, int count = int.MaxValue)
         {
-            var strings = new string[locStrings.Length];
+            count = Math.Min(count, locStrings.Length);
+            var strings = new string[count];
             for (int i = 0; i < strings.Length; i++)
                 strings[i] = locStrings[i];
             return strings;
@@ -180,7 +182,7 @@ namespace FamiStudio
     public class LanguageType
     {
         // Must match with Localization.Codes
-        public static LocalizedString[] LocalizedNames = new LocalizedString[6];
+        public static LocalizedString[] LocalizedNames = new LocalizedString[7];
 
         public static string GetLocalizedNameForCode(string code)
         {

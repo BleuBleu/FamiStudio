@@ -388,6 +388,8 @@ namespace FamiStudio
 
         public Instrument CreateInstrument(int expansion, string name = null)
         {
+            Debug.Assert(expansion >= ExpansionType.None && expansion < ExpansionType.Count);
+
             if (expansion != ExpansionType.None && !UsesExpansionAudio(expansion))
                 return null;
 
@@ -2107,25 +2109,21 @@ namespace FamiStudio
     public static class MachineType
     {
         public const int NTSC = 0;
-        public const int PAL  = 1;
+        public const int PAL = 1;
         public const int Dual = 2;
+        public const int Count = 3;
+        public const int CountNoDual = 2;
 
-        public static readonly string[] Names =
-        {
-            "NTSC",
-            "PAL",
-            "Dual"
-        };
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
 
-        public static readonly string[] NamesNoDual =
+        static MachineType()
         {
-            "NTSC",
-            "PAL"
-        };
+            Localization.LocalizeStatic(typeof(MachineType));
+        }
 
         public static int GetValueForName(string str)
         {
-            return Array.IndexOf(Names, str);
+            return Array.FindIndex(LocalizedNames, n => n.Value == str);
         }
     }
 
