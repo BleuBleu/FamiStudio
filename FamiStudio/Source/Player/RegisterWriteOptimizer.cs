@@ -31,9 +31,7 @@ namespace FamiStudio
             int[] EPSMRhythmStatus = Enumerable.Repeat(0xFF00, 7).ToArray();    //0-5: $18-$1D, $11
             int[] EPSMFMA0Status = Enumerable.Repeat(0xFF00, 135).ToArray();
             int[] EPSMFMA1Status = Enumerable.Repeat(0xFF00, 135).ToArray();
-            RegisterWrite EPSMFMHiPitchBuffer = new();
-            EPSMFMHiPitchBuffer.Register = 0xFF00; // to shut the compiler up
-            EPSMFMHiPitchBuffer.Value = 0xFF00; // to shut the compiler up
+            RegisterWrite EPSMFMHiPitchBuffer = new RegisterWrite { Register = 0xFF00, Value = 0xFF00 };
             bool EPSMFMHiPitchBuffered = false;
 
 
@@ -43,8 +41,11 @@ namespace FamiStudio
                 switch (regWrite.Register){
                     case 0x4009: case 0x400D: //Non-existent registers:
                         break;
-                    case >= NesApu.APU_PL1_VOL and < NesApu.APU_TRI_HI:     //  $4000 - $400A
-                    case >= NesApu.APU_NOISE_VOL and < NesApu.APU_NOISE_HI: //  $400C, $400E
+                        case int bulky1 when regWrite.Register >= NesApu.APU_PL1_VOL && regWrite.Register < NesApu.APU_TRI_HI:     //  $4000 - $400A
+                        case int bulky2 when regWrite.Register >= NesApu.APU_NOISE_VOL && regWrite.Register < NesApu.APU_NOISE_HI: //  $400C, $400E
+                        // Less bulky versions for when we stop using Mono on Android:
+                        // case >= NesApu.APU_PL1_VOL and < NesApu.APU_TRI_HI:     //  $4000 - $400A
+                        // case >= NesApu.APU_NOISE_VOL and < NesApu.APU_NOISE_HI: //  $400C, $400E
                         if ((regWrite.Register & 1) != 0)    //If the register is $4001/03/05/07, which reset stuff on write
                             firstPass.Add(regWrite);
                         else if (regWrite.Value != APUStatus[(regWrite.Register&0xF)>>1]){  //If the register does not reset stuff
@@ -251,7 +252,7 @@ namespace FamiStudio
             bool useS5B = (chipMask & 0x0020) != 0 ? true : false;
             bool useEPSM = (chipMask & 0x0040) != 0 ? true : false;
             Console.WriteLine($"============ REMOVE EXPANSION WRITES BUT =============\nuseAPU = {useAPU};\nuseVRC6 = {useVRC6};\nuseVRC7 = {useVRC7};\nuseFDS = {useFDS};\nuseMMC5 = {useMMC5};\nuseN163 = {useN163};\nuseS5B = {useS5B}\nuseEPSM = {useEPSM};");
-            List<RegisterWrite> output = new();
+            List<RegisterWrite> output = new List<RegisterWrite>();
             foreach (var w in writes){
                 if (
                     (w.Register >= NesApu.APU_PL1_VOL && w.Register <= NesApu.APU_FRAME_CNT && useAPU) ||

@@ -263,7 +263,6 @@ namespace FamiStudio
 
             // Hide a few formats we don't care about on mobile.
             dialog.SetPageVisible((int)ExportFormat.Midi, Platform.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.CommandLog, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.Text, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiTracker, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, Platform.IsDesktop);
@@ -1074,8 +1073,6 @@ namespace FamiStudio
         private void ExportVGM()
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.VGM);
-            var ext = "vgm";
-            var exportText = FormatVgmMessage;
             var song = project.GetSong(props.GetPropertyValue<string>(0));
             var trackTitle = props.GetPropertyValue<string>(1);
             var gameName = props.GetPropertyValue<string>(2);
@@ -1085,13 +1082,25 @@ namespace FamiStudio
             var VGMby = props.GetPropertyValue<string>(6);
             var notes = props.GetPropertyValue<string>(7);
             var smoothLoop = props.GetPropertyValue<bool>(8);
-            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog($"Export {exportText}", $"{exportText} File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
-            if (filename != null)
+            if (Platform.IsMobile)
             {
-                VgmFile.Save(song, filename, trackTitle, gameName, system, composer, releaseDate, VGMby, notes, smoothLoop);
-                lastExportFilename = filename;
-                ShowExportResultToast(exportText);
+                Platform.StartMobileSaveFileOperationAsync("*/*", $"{trackTitle}.vgm", (f) =>
+                {
+                    VgmFile.Save(song, (f), trackTitle, gameName, system, composer, releaseDate, VGMby, notes, smoothLoop);
+                    Platform.FinishMobileSaveFileOperationAsync(true, () => { ShowExportResultToast(FormatVgmMessage); });
+                });
             }
+            else
+            {
+                var filename = lastExportFilename ?? Platform.ShowSaveFileDialog($"Export {FormatVgmMessage}", $"{FormatVgmMessage} File (*.vgm)|*.vgm", ref Settings.LastExportFolder);
+                if (filename != null)
+                {
+                    VgmFile.Save(song, filename, trackTitle, gameName, system, composer, releaseDate, VGMby, notes, smoothLoop);
+                    lastExportFilename = filename;
+                    ShowExportResultToast(FormatVgmMessage);
+                }
+            }
+            
         }
 		
         private void ExportFamiTracker()

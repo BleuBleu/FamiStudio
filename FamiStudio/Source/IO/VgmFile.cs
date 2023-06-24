@@ -200,7 +200,7 @@ namespace FamiStudio
                 bool DPCMUsed = sampleData.Length != 0;
                 var writer = new BinaryWriter(file);
                 var fileLength = sizeof(VgmHeader) + initSize + extraHeaderSize 
-                + 1 - 4 + (DPCMUsed ? (sampleData.Length + ( project.UsesMultipleDPCMBanks ? 7 + VgmExport.GetAmountOfBankswitching(writes) * 12 : 9 )) : 0); 
+                + 1 - 4 + (DPCMUsed ? (sampleData.Length + ( project.UsesMultipleDPCMBanks ? 7 + GetAmountOfBankswitching(writes) * 12 : 9 )) : 0); 
                 //headerbytes + init bytes - offset (4bytes)  + Extra header + audio stop 1byte
                 int frameNumber = 0;
                 if (IntroLength == 0) { header.loopOffset = fileLength - 25; }  // Relative pointer difference is 24, and the 1 is the data stop command at the end
