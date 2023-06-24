@@ -94,11 +94,11 @@ namespace FamiStudio
 
                 var headerBytes = new byte[sizeof(WaveHeader)];
                 Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);
-                file.Write(headerBytes, 0, headerBytes.Length);
+                file.Write(headerBytes);
 
-                // So lame.
-                foreach (var s in samples)
-                    file.Write(BitConverter.GetBytes(s), 0, sizeof(short)); 
+                var sampleBytes = new byte[samples.Length*2];
+                Buffer.BlockCopy(samples, 0, sampleBytes, 0, sampleBytes.Length);
+                file.Write(sampleBytes);
 
             }
         }

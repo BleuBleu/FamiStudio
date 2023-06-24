@@ -524,23 +524,27 @@ namespace FamiStudio
                     page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 3
                     break;
                 case ExportFormat.VGM:
-                    page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SongListTooltip); // 0
-                    page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(0), 0, TrackTitleEnglishTooltip); // 1
-                    page.AddTextBox(GameNameEnglishLabel.Colon, project.Name, 0, GameNameEnglishTooltip); // 2
+                    int VGMWarnID;
+                    if (Platform.IsMobile)
+                        VGMWarnID = page.AddLabel(VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & 0b11001)), null, true); // 0
+                    int VGMSongSelect = page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SongListTooltip); // 0/1
+                    page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(0), 0, TrackTitleEnglishTooltip); // 1/2
+                    page.AddTextBox(GameNameEnglishLabel.Colon, project.Name, 0, GameNameEnglishTooltip); // 2/3
                     page.AddTextBox(SystemEnglishLabel.Colon, 
                     (project.PalMode ? "PAL NES" : "NTSC NES/Famicom") + 
                     (project.UsesVrc7Expansion ? $" + {ExpansionType.GetLocalizedName(2)}" : "") + 
                     (project.UsesFdsExpansion ? $" + {ExpansionType.GetLocalizedName(3)}" : "") + 
                     (project.UsesS5BExpansion ? $" + {ExpansionType.GetLocalizedName(6)}" : "") + 
-                    (project.UsesEPSMExpansion ? $" + {ExpansionType.GetLocalizedName(7)}" : ""), 0, SystemNameEnglishTooltip); // 3
-                    page.AddTextBox(ComposerEnglishLabel.Colon, project.Author, 0, ComposerEnglishTooltip); // 4
-                    page.AddTextBox(ReleaseDateLabel.Colon, DateTime.Now.ToString("yyyy/MM/dd"), 0, ReleaseDateTooltip); // 5
-                    page.AddTextBox(VGMByLabel.Colon, "FamiStudio Export", 0, VGMByTooltip); // 6
-                    page.AddTextBox(NotesLabel.Colon, project.Copyright, 0); // 7
-                    page.AddCheckBox(SmoothLoopingLabel.Colon, true, SmoothLoopingTooltip); // 8
-                    page.AddLabel(null, VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & 0b11001)), true); // 9
-                    page.SetPropertyEnabled(8, project.GetSong(page.GetPropertyValue<string>(0)).LoopPoint >= 0);
-                    page.SetPropertyVisible(9, (project.ExpansionAudioMask & 0b11011) != 0);  // Unsupported expansions
+                    (project.UsesEPSMExpansion ? $" + {ExpansionType.GetLocalizedName(7)}" : ""), 0, SystemNameEnglishTooltip); // 3/4
+                    page.AddTextBox(ComposerEnglishLabel.Colon, project.Author, 0, ComposerEnglishTooltip); // 4/5
+                    page.AddTextBox(ReleaseDateLabel.Colon, DateTime.Now.ToString("yyyy\\/MM\\/dd"), 0, ReleaseDateTooltip); // 5/6
+                    page.AddTextBox(VGMByLabel.Colon, "FamiStudio Export", 0, VGMByTooltip); // 6/7
+                    page.AddTextBox(NotesLabel.Colon, project.Copyright, 0); // 7/8
+                    page.AddCheckBox(SmoothLoopingLabel.Colon, true, SmoothLoopingTooltip); // 8/9
+                    if (Platform.IsDesktop)
+                        VGMWarnID = page.AddLabel(null, VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & 0b11001)), true); // 9
+                    page.SetPropertyVisible(VGMWarnID, (project.ExpansionAudioMask & 0b11001) != 0);  // Unsupported expansions
+                    page.SetPropertyEnabled(VGMSongSelect+8, project.GetSong(page.GetPropertyValue<string>(VGMSongSelect)).LoopPoint >= 0);
                     page.PropertyChanged += VGM_PropertyChanged;
                     break;
                 case ExportFormat.Share:
@@ -1064,38 +1068,48 @@ namespace FamiStudio
 
         private void VGM_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (propIdx == 0){
-                props.SetPropertyValue(1, (string)value);
-                props.SetPropertyEnabled(8, project.GetSong((string)value).LoopPoint >= 0);
+            int songSelect = Platform.IsDesktop ? 0 : 1;
+            if (propIdx == songSelect)
+            {
+                props.SetPropertyValue(songSelect+1, (string)value);
+                props.SetPropertyEnabled(songSelect+8, project.GetSong((string)value).LoopPoint >= 0);
             }
         }
 
         private void ExportVGM()
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.VGM);
-            var song = project.GetSong(props.GetPropertyValue<string>(0));
-            var trackTitle = props.GetPropertyValue<string>(1);
-            var gameName = props.GetPropertyValue<string>(2);
-            var system = props.GetPropertyValue<string>(3);
-            var composer = props.GetPropertyValue<string>(4);
-            var releaseDate = props.GetPropertyValue<string>(5);
-            var VGMby = props.GetPropertyValue<string>(6);
-            var notes = props.GetPropertyValue<string>(7);
-            var smoothLoop = props.GetPropertyValue<bool>(8);
+            string trackTitle;
             if (Platform.IsMobile)
             {
+                trackTitle = props.GetPropertyValue<string>(2);
                 Platform.StartMobileSaveFileOperationAsync("*/*", $"{trackTitle}.vgm", (f) =>
                 {
-                    VgmFile.Save(song, (f), trackTitle, gameName, system, composer, releaseDate, VGMby, notes, smoothLoop);
+                    VgmFile.Save(project.GetSong(props.GetPropertyValue<string>(1)), (f), trackTitle,
+                        props.GetPropertyValue<string>(3),
+                        props.GetPropertyValue<string>(4),
+                        props.GetPropertyValue<string>(5),
+                        props.GetPropertyValue<string>(6),
+                        props.GetPropertyValue<string>(7),
+                        props.GetPropertyValue<string>(8),
+                        props.GetPropertyValue<bool>(9));
                     Platform.FinishMobileSaveFileOperationAsync(true, () => { ShowExportResultToast(FormatVgmMessage); });
                 });
             }
             else
             {
+                trackTitle = props.GetPropertyValue<string>(1);
                 var filename = lastExportFilename ?? Platform.ShowSaveFileDialog($"Export {FormatVgmMessage}", $"{FormatVgmMessage} File (*.vgm)|*.vgm", ref Settings.LastExportFolder);
                 if (filename != null)
                 {
-                    VgmFile.Save(song, filename, trackTitle, gameName, system, composer, releaseDate, VGMby, notes, smoothLoop);
+                    VgmFile.Save(project.GetSong(props.GetPropertyValue<string>(0)), filename, trackTitle,
+                        props.GetPropertyValue<string>(2),
+                        props.GetPropertyValue<string>(3),
+                        props.GetPropertyValue<string>(4),
+                        props.GetPropertyValue<string>(5),
+                        props.GetPropertyValue<string>(6),
+                        props.GetPropertyValue<string>(7),
+                        props.GetPropertyValue<bool>(8));
                     lastExportFilename = filename;
                     ShowExportResultToast(FormatVgmMessage);
                 }
