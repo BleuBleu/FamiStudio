@@ -5,7 +5,6 @@ Beta bugs:
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
 - MacOS trackpad issue
-- MacOS window minimize issue
 
 Later
 =====

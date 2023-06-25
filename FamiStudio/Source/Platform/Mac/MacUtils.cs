@@ -247,8 +247,6 @@ namespace FamiStudio
             clsNSMenuItem = GetClass("NSMenuItem");
             clsNSSound = GetClass("NSSound");
 
-            nsApplication = SendIntPtr(clsNSApplication, selSharedApplication);
-
             CarbonEventTypeSpec eventType;
             eventType.EventClass = EventClassAppleEvent;
             eventType.EventKind = EventOpenDocuments;
@@ -264,6 +262,11 @@ namespace FamiStudio
         {
             nsWindow = nsWin;
 
+            // Calling this before creating the window creates a ton of issues. It prevents
+            // the app from restoring once minimized, and may also break our ability to debug 
+            // correctly.
+            nsApplication = SendIntPtr(clsNSApplication, selSharedApplication); 
+            
             CreateMenu();
         }
         
