@@ -9,20 +9,14 @@ PROCESS_NAME=FamiStudio
 APPNAME="FamiStudio"
 
 # .NET version check
-REQUIRED_MAJOR=6
-REQUIRED_MINOR=0
-
 VERSION_TITLE="Cannot launch $APPNAME"
-VERSION_MSG="$APPNAME requires .NET $REQUIRED_MAJOR.$REQUIRED_MINOR or later."
-DOWNLOAD_URL="https://learn.microsoft.com/en-us/dotnet/core/install/macos"
+VERSION_MSG="$APPNAME requires the .NET 6.0 runtime."
+DOWNLOAD_URL="https://famistudio.org/doc/install/#macos"
 
-DOTNET_VERSION="$(/usr/local/share/dotnet/dotnet --version)"
-DOTNET_VERSION_MAJOR="$(echo $DOTNET_VERSION | cut -f1 -d.)"
-DOTNET_VERSION_MINOR="$(echo $DOTNET_VERSION | cut -f2 -d.)"
+DOTNET_RUNTIMES="$(/usr/local/share/dotnet/dotnet --list-runtimes)"
+DOTNET_RUNTIME_GREP="$(echo $DOTNET_RUNTIMES | grep 'Microsoft.NETCore.App 6.0')"
 
-if [ -z "$DOTNET_VERSION" ] \
-    || [ $DOTNET_VERSION_MAJOR -lt $REQUIRED_MAJOR ] \
-    || [ $DOTNET_VERSION_MAJOR -eq $REQUIRED_MAJOR -a $DOTNET_VERSION_MINOR -lt $REQUIRED_MINOR ]
+if [ -z "$DOTNET_RUNTIMES" ] || [ -z "$DOTNET_RUNTIME_GREP" ] 
 then
     osascript \
     -e "set question to display dialog \"$VERSION_MSG\" with title \"$VERSION_TITLE\" buttons {\"Cancel\", \"Download...\"} default button 2" \
