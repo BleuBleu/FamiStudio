@@ -31,6 +31,9 @@ Created by the [Xiph.Org Foundation](https://xiph.org/). Used for the OGG/Vorbis
 ### GLFW
 [GLFW](https://www.glfw.org/) is a very simple windowing & input management system for OpenGL. It is used by all 3 platforms on Desktop for the main FamiStudio window. The C# bindings are provided by [GLFWDotNet](https://github.com/smack0007/GLFWDotNet).
 
+### Stb
+[Stb](https://github.com/nothings/stb) is a fantastic, pure-C, single-file library that does a bunch of low-level things that are useful for game development. FamiStudio uses their True-Type font rasterization and rectangle packing code for its text rendering.
+
 ## Demo Songs
 
 A few demo songs are also provided with FamiStudio. Unless mentioned, the demo songs are my re-creations, done by reverse-engineering the NSF.

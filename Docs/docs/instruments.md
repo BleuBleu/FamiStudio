@@ -4,12 +4,13 @@ The project explorer displays the list of songs and instruments in the current p
 
 ![](images/ProjectExplorer.png#center)
 
-Most standard instruments have 4 buttons :
+Most standard instruments have 5 buttons :
 
 * The duty cycle envelope
 * The volume envelope
 * The pitch envelope
 * The arpeggio envelope
+* DPCM Samples
 
 An envelope is simply a parameter that can change over the duration of a note as it plays. It can be used to create vibrato, tremolo, change the attack and release of a note, for example. If an instrument currently has no envelope for a particular type, it will appear dimmed.
 
@@ -89,9 +90,9 @@ Clicking on an envelope button and dragging it on another instrument will copy t
 
 Envelopes cannot be deleted per-se, they can be cleared to they have essentially no effect. To clear and envelope, simply select the "Clear Envelope" option from the instrument context menu.
 
-# DPCM Instrument
+# Editing DPCM Samples
 
-The DPCM Instrument is a special instrument able to play DPCM samples. It is always present and cannot be deleted. For more information, please refer to the [DPCM Samples](dpcm.md) section. 
+DPCM Samples are covered in depth in the [DPCM Samples](dpcm.md) section. 
 
 # Editing Arpeggios
 

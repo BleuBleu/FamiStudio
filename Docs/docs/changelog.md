@@ -2,6 +2,36 @@
 
 Version history / release notes for each release.
 
+## Version 4.1.0
+
+System Requirement Changes:
+
+* Windows version is now 64-bit and targets .NET 5.0.
+* Linux/MacOS versions now uses .NET 6.0. Mono is not longer used (See [installation](install.md) page for .NET download links)
+* All desktop version now requires OpenGL 3.3.
+* Android version now requires OpenGL ES 2.0.
+* Windows 7 and 32-bit systems are longer supported.
+
+Changes/Fixes:
+
+* Configurable keyboard shortcuts
+* Text rendering changes, small text may look slightly blurrier. 
+* More UI scaling % options
+* More context menus options throughout the app
+* DPCM improvements:
+	* No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
+	* Up to 256KB of samples using bank switching.
+* Option to mix N163 or not
+* Project explorer sorting improvements
+* NSF import support on Android
+* Stereo and delay export support on Android.
+* Sunsoft 5B noise support (Perkka contribution)
+* Experimental VGM import support (Perkka contribution)
+* Experimental translations 
+	* Spanish (MiniTube contribution)
+	* Portuguese (PBnJK contribution)
+	* Simplified chinese (xwjcool123 contribution)
+
 ## Version 4.0.6 (Hotfix)
 
 Changes/Fixes:

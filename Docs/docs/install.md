@@ -1,10 +1,14 @@
+---
+description: Allo
+---
+
 # Installation
 
 ## System requirements
 
 For all 3 desktop platforms, FamiStudio requires the following software/hardware environment:
 
-* Windows 8 or newer (Windows 7 is no longer supported).
+* Windows 8 (64-bit) or newer (Windows 7 or 32-bit systems are no longer supported).
 * MacOS 10.15 "Catalina" or newer
 * .NET Runtime (5.0 on Windows, 6.0 on other platforms)
 * OpenGL 3.3 support or newer

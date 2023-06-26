@@ -12,20 +12,9 @@ Later
 
 Packaging
 =========
-- Add "description" HTML metadata to famistudio doc.
+/ Add "description" HTML metadata to famistudio doc.
 - Recompile ROMs, re-export data, bump versions, etc.
-- MacOS install doesnt work if dotnet is missing? I thought that was fixed.
 - Re-export all ROM test (.bin) files at the end.
-
-========================================
-- Try no attack? Do it at airport/plane.
-	=> instrument change:
-		* optional : disable attack
-		* optional : change the instrument, for FM instrument, will look if attack is disabled and not rebind envelopes if disabled.
-		* play a note (if attack, reset envelopes)
-	=> problems:
-		* what about the delayed cut thing? 
-		* will likely need a couple more zp variables.
 
 4.1.0 Change Log
 ================
@@ -125,6 +114,13 @@ MkDocs
 - Install Python 
 - pip install mkdocs 
 - pip install mkdocs-bootswatch 
+- pip install mkdocs-meta-descriptions-plugin
+- Modify "%localappdata%\Programs\Python\Python39\Lib\site-packages\mkdocs\themes\mkdocs\base.html"
+		{% if page.meta and page.meta.description %}
+		<meta name="description" content="{{ page.meta.description }}">
+		{% elif config.site_description %}
+		<meta name="description" content="{{ config.site_description }}">
+		{% endif %}
  
 Discord 
 ======= 
@@ -132,6 +128,16 @@ Discord
 
 Backlog: 
 =========
+
+========================================
+- No-attack refactor:
+	- instrument change:
+		* optional : disable attack
+		* optional : change the instrument, for FM instrument, will look if attack is disabled and not rebind envelopes if disabled.
+		* play a note (if attack, reset envelopes)
+	- problems:
+		* what about the delayed cut thing? 
+		* will likely need a couple more zp variables.
 - Replace an specific instrument by another in selection (A->B), R+CLICK.
 - How to add to the "open with" list on Android.
 - Better autosave names?
