@@ -4,54 +4,84 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace FamiStudio
 {
     public static class WaveFile
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        unsafe struct WaveHeader
+        unsafe struct PCMWaveHeader
         {
             // Riff Wave Header
             public fixed byte chunkId[4];
-            public int chunkSize;
+            public uint chunkSize;
             public fixed byte format[4];
             
             // Format Subchunk
             public fixed byte subChunk1Id[4];
-            public int subChunk1Size;
-            public short audioFormat;
-            public short numChannels;
-            public int sampleRate;
-            public int byteRate;
-            public short blockAlign;
-            public short bitsPerSample;
+            public uint subChunk1Size;
+            public ushort audioFormat;
+            public ushort numChannels;
+            public uint sampleRate;
+            public uint byteRate;
+            public ushort blockAlign;
+            public ushort bitsPerSample;
             //short int extraParamSize;
             
             // Data Subchunk
             public fixed byte subChunk2Id[4];
-            public int subChunk2Size;
+            public uint subChunk2Size;
         };
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         unsafe struct FormatSubChunk
         {
-            // Format Subchunk
-            public short audioFormat;
-            public short numChannels;
-            public int sampleRate;
-            public int byteRate;
-            public short blockAlign;
-            public short bitsPerSample;
+            // Format Subchunk with an extension size specifier (non PCM formats)
+            public ushort audioFormat;
+            public ushort numChannels;
+            public uint sampleRate;
+            public uint byteRate;
+            public ushort blockAlign;
+            public ushort bitsPerSample;
+            public ushort extraParamSize;
         };
+        /* The technically correct way to define GUIDs, but we do not care about 
+         * 3 incredibly obscure types of wav encodings that use all of them
+         * For more info check libsndfile source code, specifically wavlike.c around line 64 
+        unsafe struct GUID
+        {
+            public uint field1;
+            public ushort field2;
+            public ushort field3;
+            public fixed byte field4[8];
+        };
+        */
 
-        const int FormatSubChunkSize = 16;
+        unsafe struct FormatSubChunkExtension
+        {
+            // The Format SubChunk is extended according to WAVE_FORMAT_EXTENSIBLE standard
+            public ushort validBitsPerSample;
+            public ushort speakerPositionMaskLo;    // Doesn't work as a uint
+            public ushort speakerPositionMaskHi;    // or an int for some reason
+            public ushort audioFormat;
+            public fixed byte restOfGUID[14];
+            // public GUID audioFormatGUID;
+        }
+
+        const ushort WAVE_FORMAT_PCM = 0x0001;
+        const ushort WAVE_FORMAT_IEEE_FLOAT = 0x0003;
+        const ushort WAVE_FORMAT_EXTENSIBLE = 0xFFFE;
+
+        static readonly byte[] defaultRestOfGUID = 
+            { 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71 };
+        const int FormatSubChunkSize = 18;
 
         public unsafe static void Save(short[] samples, string filename, int sampleRate, int numChannels)
         {
             using (var file = new FileStream(filename, FileMode.Create))
             {
-                var header = new WaveHeader();
+                var header = new PCMWaveHeader();
 
                 // RIFF WAVE Header
                 header.chunkId[0] = (byte)'R';
@@ -68,12 +98,12 @@ namespace FamiStudio
                 header.subChunk1Id[1] = (byte)'m';
                 header.subChunk1Id[2] = (byte)'t';
                 header.subChunk1Id[3] = (byte)' ';
-                header.audioFormat = 1; // FOR PCM
-                header.numChannels = (short)numChannels; // 1 for MONO, 2 for stereo
-                header.sampleRate = sampleRate; // ie 44100 hertz, cd quality audio
+                header.audioFormat = WAVE_FORMAT_PCM; // FOR PCM
+                header.numChannels = (ushort)numChannels; // 1 for MONO, 2 for stereo
+                header.sampleRate = (uint)sampleRate; // ie 44100 hertz, cd quality audio
                 header.bitsPerSample = 16; // 
                 header.byteRate = header.sampleRate * header.numChannels * header.bitsPerSample / 8;
-                header.blockAlign = (short)(header.numChannels * header.bitsPerSample / 8);
+                header.blockAlign = (ushort)(header.numChannels * header.bitsPerSample / 8);
 
                 // Data subchunk
                 header.subChunk2Id[0] = (byte)'d';
@@ -89,10 +119,10 @@ namespace FamiStudio
                 //    chunkSize += (nChannels * bitsPerSample/8)
                 //    subChunk2Size += (nChannels * bitsPerSample/8)
                 header.subChunk1Size = 16;
-                header.subChunk2Size = samples.Length * sizeof(short);
+                header.subChunk2Size = (uint)(samples.Length * sizeof(short));
                 header.chunkSize = 4 + (8 + header.subChunk1Size) + (8 + header.subChunk2Size);
 
-                var headerBytes = new byte[sizeof(WaveHeader)];
+                var headerBytes = new byte[sizeof(PCMWaveHeader)];
                 Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);
                 file.Write(headerBytes);
 
@@ -150,30 +180,68 @@ namespace FamiStudio
                     {
                         var fmt = new FormatSubChunk();
                         Marshal.Copy(bytes, fmtOffset, new IntPtr(&fmt), FormatSubChunkSize);
-                        //TODO: extended chunk for float types, float types themselves
-                        if (fmt.audioFormat == 1 && fmt.numChannels <= 2 && (fmt.bitsPerSample & 0x07) == 0)
-                        { //Uncompressed PCM
+                        // The last 2 bytes don't matter if it's PCM
+
+                        if (fmt.audioFormat == WAVE_FORMAT_EXTENSIBLE)
+                        {   //Copy UUID
+                            if (fmt.extraParamSize == 22)
+                            {   // The only other officially supported option is 0
+                                var fmtExt = new FormatSubChunkExtension();
+                                Marshal.Copy(bytes, fmtOffset + sizeof(FormatSubChunk), new IntPtr(&fmtExt), fmt.extraParamSize);
+                                var GUID = new byte[14];
+                                for (int i = 0; i < 14; i++) { GUID[i] = fmtExt.restOfGUID[i]; }
+                                if (Enumerable.SequenceEqual(GUID, defaultRestOfGUID)) //Prevents 2 obscure audio formats
+                                    fmt.audioFormat = (ushort)fmtExt.audioFormat;   // from passing off as normal PCM/Float
+                            }
+                        }
+
+                        if ((fmt.audioFormat == WAVE_FORMAT_PCM || fmt.audioFormat == WAVE_FORMAT_IEEE_FLOAT) && fmt.numChannels <= 2)
+                        { // Uncompressed PCM or float
                             short[] wavData = null;
-                            switch (fmt.bitsPerSample)
+                            if (fmt.audioFormat == WAVE_FORMAT_PCM)
                             {
-                                case 8:
-                                    wavData = new short[dataSize];
-                                    for (int i = 0; i < dataSize; i++)
-                                        wavData[i] = (short)((bytes[dataOffset + i] << 8) + short.MinValue + bytes[dataOffset + i]);
-                                    break;
-                                case 16:
-                                    wavData = new short[dataSize >> 1];
-                                    fixed (short* p = &wavData[0])
-                                        Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
-                                    break;
-                                default:
-                                    if ((fmt.bitsPerSample & 0x07) != 0)
+                                fmt.bitsPerSample = (ushort)((fmt.bitsPerSample + 7) & ~0x07);  // Round up to the nearest 8
+                                switch (fmt.bitsPerSample)
+                                {
+                                    case 8:
+                                        wavData = new short[dataSize];
+                                        for (int i = 0; i < dataSize; i++)
+                                            wavData[i] = (short)((bytes[dataOffset + i] << 8) + short.MinValue + bytes[dataOffset + i]);
                                         break;
-                                    short divisor = (short)(fmt.bitsPerSample >> 3);
-                                    wavData = new short[dataSize / divisor];
-                                    for (int i = 0; i < dataSize; i += divisor)
-                                        wavData[i / divisor] = (short)((bytes[dataOffset + i + (divisor - 1)] << 8) | bytes[dataOffset + i + (divisor-2)]);
-                                    break;
+                                    case 16:
+                                        wavData = new short[dataSize >> 1];
+                                        fixed (short* p = &wavData[0])
+                                            Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
+                                        break;
+                                    default:
+                                        short divisor = (short)(fmt.bitsPerSample >> 3);
+                                        wavData = new short[dataSize / divisor];
+                                        for (int i = 0; i < dataSize; i += divisor)
+                                            wavData[i / divisor] = (short)((bytes[dataOffset + i + (divisor - 1)] << 8) | bytes[dataOffset + i + (divisor - 2)]);
+                                        break;
+                                }
+                            } else if (fmt.audioFormat == WAVE_FORMAT_IEEE_FLOAT)
+                            {
+                                switch (fmt.bitsPerSample)
+                                {
+#if NET6_0_OR_GREATER
+                                    case 16:
+                                        wavData = new short[dataSize >> 1];
+                                        for (int i = 0; i < dataSize; i += 2)
+                                            wavData[i >> 1] = (short)(BitConverter.ToHalf(bytes, dataOffset + i) * 32767);
+                                        break;
+#endif
+                                    case 32:
+                                        wavData = new short[dataSize >> 2];
+                                        for (int i = 0; i < dataSize; i += 4)
+                                            wavData[i >> 2] = (short)(BitConverter.ToSingle(bytes, dataOffset + i) * 32767);
+                                        break;
+                                    case 64:
+                                        wavData = new short[dataSize >> 3];
+                                        for (int i = 0; i < dataSize; i += 8)
+                                            wavData[i >> 3] = (short)(BitConverter.ToDouble(bytes, dataOffset + i) * 32767);
+                                        break;
+                                };
                             }
                             if (fmt.numChannels == 2)
                             {
@@ -186,12 +254,12 @@ namespace FamiStudio
                                 Log.LogMessage(LogSeverity.Warning, "Wave file is stereo and has been downmixed to mono.");
                             }
 
-                            sampleRate = fmt.sampleRate;
+                            sampleRate = (int)fmt.sampleRate;
                             return wavData;
                         }
                         else
                         {
-                            Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 8/16/24/32/40...-bit PCM mono and stereo wave files are supported.");
+                            Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 8/16/24/32...-bit PCM and 32/64-bit float mono and stereo wave files are supported.");
                             return null;
                         }
                     }
