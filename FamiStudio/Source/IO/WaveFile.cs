@@ -224,13 +224,15 @@ namespace FamiStudio
                             {
                                 switch (fmt.bitsPerSample)
                                 {
-#if NET6_0_OR_GREATER
-                                    case 16:
+                                    case 16:    // apparently nonexistent, but idc
                                         wavData = new short[dataSize >> 1];
                                         for (int i = 0; i < dataSize; i += 2)
-                                            wavData[i >> 1] = (short)(BitConverter.ToHalf(bytes, dataOffset + i) * 32767);
-                                        break;
+#if NET6_0_OR_GREATER   // Linux, Mac
+                                            wavData[i >> 1] = (short)((float)BitConverter.ToHalf(bytes, dataOffset + i) * 32767);
+#else   // Windows, Android
+                                            wavData[i >> 1] = (short)(Utils.ToHalf(BitConverter.ToUInt16(bytes, dataOffset + i)) * 32767);
 #endif
+                                        break;
                                     case 32:
                                         wavData = new short[dataSize >> 2];
                                         for (int i = 0; i < dataSize; i += 4)
@@ -259,7 +261,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 8/16/24/32...-bit PCM and 32/64-bit float mono and stereo wave files are supported.");
+                            Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 8/16/24/32...-bit PCM and 16/32/64-bit float mono and stereo wave files are supported.");
                             return null;
                         }
                     }
