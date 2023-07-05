@@ -666,14 +666,14 @@ namespace FamiStudio
             var name = $"EPSM {Instrument.GetEpsmPatchName(1)}";
             var instrument = project.GetInstrument(name);
             var stereo = "";
-            if (patchRegs[1] == 0x80)
+            if ((patchRegs[1] & 0xC0) == 0x80)
                 stereo = " Left";
-            if (patchRegs[1] == 0x40)
+            if ((patchRegs[1] & 0xC0) == 0x40)
                 stereo = " Right";
-            if (patchRegs[1] == 0x00 && chanType == 2)
+            if ((patchRegs[1] & 0xC0) == 0x00 && chanType == 2)
                 stereo = " Stop";
-            if (patchRegs[1] == 0x00 && chanType != 2)
-                patchRegs[1] = 0x80;
+            if ((patchRegs[1] & 0xC0) == 0x00 && chanType != 2)
+                patchRegs[1] = 0xC0;
 
             if (chanType == 0)
             {
@@ -1447,7 +1447,7 @@ namespace FamiStudio
                 if (BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) > 0)
                     clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / (((vgmFile[0x78] & vgmFile[0x79] & 0x10) == 0x10) ? 1789773 : (float)894886.5);
                 if (BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = 4000000 / (float)BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) / 4000000;
+                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) / 4000000;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray()) > 0)
                     clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray()) / 8000000;
                 if (BitConverter.ToInt32(vgmFile.Skip(0x4C).Take(4).ToArray()) > 0)
@@ -1496,7 +1496,7 @@ namespace FamiStudio
                         dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
                     vgmDataOffset = vgmDataOffset + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) + 3 + 4;
                 }
-                if (vgmCommand == 0x68)  //PCM Data Copy
+                else if (vgmCommand == 0x68)  //PCM Data Copy
                 {
                     var readOffset = vgmFile.Skip(vgmDataOffset + 3).Take(3).ToArray();
                     var writeOffset = vgmFile.Skip(vgmDataOffset + 3 + 3).Take(3).ToArray();
@@ -1607,7 +1607,7 @@ namespace FamiStudio
                         if (vgmData[1] >= 0x20 && vgmData[1] <= 0x28)
                         {
                             int channel = vgmData[1] - 0x20;
-                            if ((vgmData[2] & 0x10) > 0)
+                            if (((vgmData[2] & 0x10) > 0) && ((vrc7Register[vgmData[1]] & 0x10) != (vgmData[2] & 0x10)))
                                 if(channel < 6)
                                     vrc7Trigger[channel] = 1;
                         }
@@ -1730,7 +1730,7 @@ namespace FamiStudio
                     else
                     {
                         if(unknownChipCommands < 100)
-                        Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + BitConverter.ToString(vgmData.Reverse().ToArray()).Replace("-", "") + " offset: " + vgmDataOffset);
+                        Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + BitConverter.ToString(vgmData.ToArray()).Replace("-", "") + " offset: " + vgmDataOffset + " command " + vgmCommand);
                         unknownChipCommands++;
                     }
                     chipCommands++;

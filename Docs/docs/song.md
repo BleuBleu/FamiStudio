@@ -64,9 +64,9 @@ Right below the project name are the songs.
 
 To add new songs, simply click on the little "+" icon on the song header.
 
-## Reordering songs
+## Reordering songs, instruments, DPCM Samples or Arpeggios
 
-You can drag & drop songs to reorder them in the list. Songs are the only things that are not always sorted alphabetically in the project explorer at the moment.
+Each section of the project explorer has a little "sort" button (A-Z) next to it. If highlighted, it means items will be kept in alphabetical order. Disabling this will allow you to re-order things to your liking. Re-ordering an item will disable auto-sorting.
 
 ## Importing/Merging songs
 
