@@ -261,7 +261,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 8/16/24/32...-bit PCM and 16/32/64-bit float mono and stereo wave files are supported.");
+                            Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only uncompressed PCM and 16/32/64-bit float mono and stereo wave files are supported.");
                             return null;
                         }
                     }
