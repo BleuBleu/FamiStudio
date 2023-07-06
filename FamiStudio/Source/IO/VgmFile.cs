@@ -75,9 +75,7 @@ namespace FamiStudio
             public int ExtraHeaderOffset;
         };
         public unsafe static void Save(Song song, string filename, string trackTitle, string gameName, string system, string composer, string releaseDate, string VGMby, string notes, bool smoothLoop)
-        {
-            //This is a fucking mess, please forgive me
-
+        {   //This is a mess, works somehow tho
             var project = song.Project.DeepClone();
             song = project.GetSong(song.Id);
             var regPlayer = new RegisterPlayer(project.OutputsStereoAudio);
@@ -85,34 +83,41 @@ namespace FamiStudio
             int numDPCMBanks = (!project.UsesMultipleDPCMBanks &&
             project.GetPackedSampleData(0).Length <= 16384) ?
             1 : project.AutoAssignSamplesBanks(16384, out _);
+            var sampleBanks = new Dictionary<int, int>();
+            foreach (var sample in project.Samples) sampleBanks.Add(sample.Id, sample.Bank);
             var writes = regPlayer.GetRegisterValues(song, project.PalMode, out OGSongLength);
-            Console.WriteLine($"OG SONG LENGTH: {OGSongLength}");
             int TotalLength = 0, IntroLength = 0;
-            if (smoothLoop){
+            if (smoothLoop)
+            {
                 song.ExtendForLooping(2);
                 writes = regPlayer.GetRegisterValues(song, project.PalMode, out TotalLength);
             }
             bool loopsTwice = false;
-            Console.WriteLine("Writes got, length: " + writes.Length);
-            writes = RegisterWriteOptimizer.RemoveExpansionWritesBut(writes, 0x8000 
-            | ExpansionType.Vrc7Mask | ExpansionType.FdsMask 
+            Debug.WriteLine("Writes got, length: " + writes.Length);
+            writes = RegisterWriteOptimizer.RemoveExpansionWritesBut(writes, 0x8000
+            | ExpansionType.Vrc7Mask | ExpansionType.FdsMask
             | ExpansionType.S5BMask | ExpansionType.EPSMMask);
-            if (song.LoopPoint >= 0){
-                if (song.LoopPoint > 0){
+            if (song.LoopPoint >= 0)
+            {
+                if (song.LoopPoint > 0)
+                {
                     var IntroLengthSong = project.DeepClone().GetSong(song.Id);
                     IntroLengthSong.SetLength(IntroLengthSong.LoopPoint);
                     regPlayer.GetRegisterValues(IntroLengthSong, project.PalMode, out IntroLength);
                 }
-                if (smoothLoop){
+                if (smoothLoop)
+                {
                     writes = OptimizeLooping(writes, IntroLength, OGSongLength, out loopsTwice);
                     if (loopsTwice) IntroLength = OGSongLength;
                     else TotalLength = OGSongLength;
-                } else TotalLength = OGSongLength;
-            } else TotalLength = OGSongLength;        
-            Console.WriteLine("Optimized looping, length: " + writes.Length);
+                }
+                else TotalLength = OGSongLength;
+            }
+            else TotalLength = OGSongLength;
+            Debug.WriteLine("Optimized looping, length: " + writes.Length);
 
             writes = RegisterWriteOptimizer.OptimizeRegisterWrites(writes);
-            Console.WriteLine("Writes optimized, length: " + writes.Length);
+            Debug.WriteLine("Writes optimized, length: " + writes.Length);
              
             {
                 var newWrites = new RegisterWrite[writes.Length+1];
@@ -192,7 +197,8 @@ namespace FamiStudio
                 int loopPointFrame = song.LoopPoint;
                 var sampleBankPointers = new int[numDPCMBanks];
                 var DPCMDataList = new List<byte>();
-                for (int i = 0; i < numDPCMBanks; i++){
+                for (int i = 0; i < numDPCMBanks; i++)
+                {
                     sampleBankPointers[i] = DPCMDataList.Count;
                     DPCMDataList.AddRange(project.GetPackedSampleData(i).ToList());
                 }   
@@ -200,7 +206,7 @@ namespace FamiStudio
                 bool DPCMUsed = sampleData.Length != 0;
                 var writer = new BinaryWriter(file);
                 var fileLength = sizeof(VgmHeader) + initSize + extraHeaderSize 
-                + 1 - 4 + (DPCMUsed ? (sampleData.Length + ( project.UsesMultipleDPCMBanks ? 7 + GetAmountOfBankswitching(writes) * 12 : 9 )) : 0); 
+                + 1 - 4 + (DPCMUsed ? (sampleData.Length + ( project.UsesMultipleDPCMBanks ? 7 + GetAmountOfBankswitching(sampleBanks, writes) * 12 : 9 )) : 0); 
                 //headerbytes + init bytes - offset (4bytes)  + Extra header + audio stop 1byte
                 int frameNumber = 0;
                 if (IntroLength == 0) { header.loopOffset = fileLength - 25; }  // Relative pointer difference is 24, and the 1 is the data stop command at the end
@@ -208,18 +214,25 @@ namespace FamiStudio
                 {
                     while (frameNumber < reg.FrameNumber)
                     {
-                        if (reg.FrameNumber - frameNumber >= 3){
+                        if (reg.FrameNumber - frameNumber >= 3)
+                        {
                             fileLength += 3;
-                            if (IntroLength <= frameNumber || IntroLength >= reg.FrameNumber || IntroLength >= frameNumber + maxFramesPerWaitCommand){
+                            if (IntroLength <= frameNumber || IntroLength >= reg.FrameNumber || IntroLength >= frameNumber + maxFramesPerWaitCommand)
+                            {
                                 frameNumber += Utils.Clamp(reg.FrameNumber - frameNumber, 3, maxFramesPerWaitCommand);
-                                if (IntroLength == frameNumber){
+                                if (IntroLength == frameNumber)
+                                {
                                     header.loopOffset = fileLength - 25;    // Relative pointer difference is 24, the 1 is the data stop command at the end
                                 }
-                            } else {    // IntroLength sandwiched between frameNumber and reg.FrameNumber
+                            }
+                            else
+                            {    // IntroLength sandwiched between frameNumber and reg.FrameNumber
                                 frameNumber += Utils.Clamp(IntroLength - frameNumber, 3, maxFramesPerWaitCommand);
                                 header.loopOffset = fileLength - 25;    // Relative pointer difference is 24, the 1 is the data stop command at the end
-                            }   
-                        } else {
+                            }
+                        }
+                        else
+                        {
                             frameNumber++;
                             fileLength++;
                             if (frameNumber == IntroLength) { header.loopOffset = fileLength - 25; }  // Relative pointer difference is 24, and the 1 is the data stop command at the end
@@ -232,8 +245,8 @@ namespace FamiStudio
                 }
                 if (song.LoopPoint >= 0)
                 {
-                    header.loopBase = loopsTwice ? (byte) 1 : (byte) 0;
-                    header.loopModifier = 0x10; 
+                    header.loopBase = loopsTwice ? (byte)1 : (byte)0;
+                    header.loopModifier = 0x10;
                     header.loopSamples = (TotalLength - IntroLength) * samplesPerFrame;
                 }
                 else
@@ -280,14 +293,16 @@ namespace FamiStudio
                         writer.Write((ushort)0x8140); //volume bit 7 for absolute 8.8 fixed point
                     }
                 }
-                if (DPCMUsed){
+                if (DPCMUsed)
+                {
                     //Sample data
-                    if (project.UsesMultipleDPCMBanks){
+                    if (project.UsesMultipleDPCMBanks)
+                    {
                         writer.Write(new byte[] { 0x67, 0x66, 0x07 });  //Data block, compat command for older players, type - NES APU DPCM data for further writes
                         writer.Write(sampleData.Length);  //Length of sample data
                     }
                     else
-                    {    
+                    {
                         writer.Write(new byte[] { 0x67, 0x66, 0xC2 });  //Data block, compat command for older players, type - NES APU RAM Write
                         writer.Write(sampleData.Length + 2);  //Length of sample data + address
                         writer.Write((ushort)0xC000);   //Address $C000 - the minimum for DPCM data
@@ -327,18 +342,24 @@ namespace FamiStudio
                 {
                     while (frameNumber < reg.FrameNumber)
                     {
-                        if (reg.FrameNumber - frameNumber >= 3){
-                            if (IntroLength <= frameNumber || IntroLength >= reg.FrameNumber || IntroLength >= frameNumber + maxFramesPerWaitCommand){
-                                
+                        if (reg.FrameNumber - frameNumber >= 3)
+                        {
+                            if (IntroLength <= frameNumber || IntroLength >= reg.FrameNumber || IntroLength >= frameNumber + maxFramesPerWaitCommand)
+                            {
+
                                 writer.Write((byte)0x61);
-                                writer.Write((short)(Utils.Clamp(reg.FrameNumber - frameNumber, 3, maxFramesPerWaitCommand)*samplesPerFrame));
+                                writer.Write((short)(Utils.Clamp(reg.FrameNumber - frameNumber, 3, maxFramesPerWaitCommand) * samplesPerFrame));
                                 frameNumber += Utils.Clamp(reg.FrameNumber - frameNumber, 3, maxFramesPerWaitCommand);
-                            } else {    // IntroLength sandwiched between frameNumber and reg.FrameNumber
+                            }
+                            else
+                            {    // IntroLength sandwiched between frameNumber and reg.FrameNumber
                                 writer.Write((byte)0x61);
-                                writer.Write((short)(Utils.Clamp(IntroLength - frameNumber, 3, maxFramesPerWaitCommand)*samplesPerFrame));
+                                writer.Write((short)(Utils.Clamp(IntroLength - frameNumber, 3, maxFramesPerWaitCommand) * samplesPerFrame));
                                 frameNumber += Utils.Clamp(IntroLength - frameNumber, 3, maxFramesPerWaitCommand);
                             }
-                        } else {
+                        }
+                        else
+                        {
                             frameNumber++;
                             writer.Write(waitCommand);
                         }
@@ -375,16 +396,18 @@ namespace FamiStudio
                     {
                         writer.Write(new byte[] { 0xA0, (byte)address5B, (byte)reg.Value });
                     }
-                    else if (reg.Register == NesApu.APU_DMC_START){
-                            if (reg.Metadata[0] != DPCMBank && project.UsesMultipleDPCMBanks){
-                                writer.Write(new byte[] {0x68, 0x66, 0x07});    //Transfer data block type NES APU RAM write
-                                writer.Write(Utils.IntToBytes24Bit(sampleBankPointers[reg.Metadata[0]]));
-                                writer.Write(new byte[] {0x00, 0xC0, 0x00, 0x00, 0x40, 0x00}); //Write 4000 bytes to address C000
-                            }
-                            DPCMBank = reg.Metadata[0];
-                            writer.Write (new byte[] {0xB4, NesApu.APU_DMC_START & 0xFF});
-                            writer.Write ((byte)(project.GetSampleBankOffset(project.GetSample(reg.Metadata[1]))>>6));
+                    else if (reg.Register == NesApu.APU_DMC_START)
+                    {
+                        if (sampleBanks[reg.Metadata[0]] != DPCMBank && project.UsesMultipleDPCMBanks)
+                        {
+                            writer.Write(new byte[] { 0x68, 0x66, 0x07 });    //Transfer data block type NES APU RAM write
+                            writer.Write(Utils.IntToBytes24Bit(sampleBankPointers[sampleBanks[reg.Metadata[0]]]));
+                            writer.Write(new byte[] { 0x00, 0xC0, 0x00, 0x00, 0x40, 0x00 }); //Write 4000 bytes to address C000
                         }
+                        DPCMBank = sampleBanks[reg.Metadata[0]];
+                        writer.Write(new byte[] { 0xB4, NesApu.APU_DMC_START & 0xFF });
+                        writer.Write((byte)(project.GetSampleBankOffset(project.GetSample(reg.Metadata[0])) >> 6));
+                    }
                     else if ((reg.Register < 0x401c) || (reg.Register < 0x409f && reg.Register > 0x401F))   //2A03 & FDS
                     {
                         writer.Write((byte)0xb4);
@@ -406,48 +429,51 @@ namespace FamiStudio
                 writer.Close();
             }
         }
-        private static int GetAmountOfBankswitching(RegisterWrite[] writes){
+        private static int GetAmountOfBankswitching(Dictionary<int, int> sampleBanks, RegisterWrite[] writes)
+        {
             int bankInUse = -1;
             int bankswitches = 0;
-            foreach (var write in writes){
-                if (write.Register == NesApu.APU_DMC_START && write.Metadata[0] != bankInUse){
+            foreach (var write in writes)
+            {
+                if (write.Register == NesApu.APU_DMC_START && sampleBanks[write.Metadata[0]] != bankInUse)
+                {
                     bankswitches++;
-                    bankInUse = write.Metadata[0];
+                    bankInUse = sampleBanks[write.Metadata[0]];
                 }
             }
             return bankswitches;
         }
 
-        private static RegisterWrite[] OptimizeLooping(RegisterWrite[] writes, int IntroLength, int LoopFrame, out bool loopsTwice){
-
+        private static RegisterWrite[] OptimizeLooping(RegisterWrite[] writes, int IntroLength, int LoopFrame, out bool loopsTwice)
+        {
             //TODO: determine states at frames instead of comparing writes
-
             int pointer = 0;
-            while (writes[pointer++].FrameNumber != IntroLength);
-            Console.WriteLine(" === LoopOpt: Loop pointer " + pointer + " at frame " + writes[pointer].FrameNumber);
+            while (writes[pointer++].FrameNumber != IntroLength) ;
+            Debug.WriteLine(" === LoopOpt: Loop pointer " + pointer + " at frame " + writes[pointer].FrameNumber);
             int afterLoopPointer = pointer;
-            while (writes[afterLoopPointer++].FrameNumber != LoopFrame);
+            while (writes[afterLoopPointer++].FrameNumber != LoopFrame) ;
             int finalLoopPointer = afterLoopPointer;
-            Console.WriteLine(" === LoopOpt: Second loop pointer " + afterLoopPointer + " at frame " + writes[afterLoopPointer].FrameNumber);
-            int LoopLength = LoopFrame - IntroLength;   //reused a shitton of times
+            Debug.WriteLine(" === LoopOpt: Second loop pointer " + afterLoopPointer + " at frame " + writes[afterLoopPointer].FrameNumber);
+            int LoopLength = LoopFrame - IntroLength;   //reused a bunch of times
             int frame = IntroLength;
-            for (; frame < LoopFrame; frame++){
-                while (writes[afterLoopPointer++].FrameNumber < frame + LoopLength && afterLoopPointer < writes.Length);    //Pad afterLoopPointer 
-                while (writes[pointer++].FrameNumber < frame);  //To pad pointer 
-                for (; afterLoopPointer < writes.Length && writes[pointer].FrameNumber <= frame && writes[afterLoopPointer].FrameNumber <= frame + LoopFrame; pointer++, afterLoopPointer++){
+            for (; frame < LoopFrame; frame++)
+            {
+                while (writes[afterLoopPointer++].FrameNumber < frame + LoopLength && afterLoopPointer < writes.Length) ;    //Pad afterLoopPointer 
+                while (writes[pointer++].FrameNumber < frame) ;  //To pad pointer 
+                for (; afterLoopPointer < writes.Length && writes[pointer].FrameNumber <= frame && writes[afterLoopPointer].FrameNumber <= frame + LoopFrame; pointer++, afterLoopPointer++)
+                {
                     if (!(writes[pointer].Register == writes[afterLoopPointer].Register &&
                     writes[pointer].Value == writes[afterLoopPointer].Value &&
-                    ((writes[pointer].Register == NesApu.APU_DMC_START && 
-                    writes[pointer].Metadata[1] == writes[afterLoopPointer].Metadata[1]) ||
-                    writes[pointer].Register != NesApu.APU_DMC_START))){
-                        Console.WriteLine($"Dumbass broke at frame {writes[pointer].FrameNumber} at pointer {pointer}/{afterLoopPointer} because \'{writes[pointer].Value:x2} => ${writes[pointer].Register:x4}\' isn't equal to \'{writes[afterLoopPointer].Value:x2} => ${writes[afterLoopPointer].Register:x4}\'");
+                    ((writes[pointer].Register == NesApu.APU_DMC_START &&
+                    writes[pointer].Metadata[0] == writes[afterLoopPointer].Metadata[0]) ||
+                    writes[pointer].Register != NesApu.APU_DMC_START)))
+                    {
+                        Debug.WriteLine($"Dumbass broke at frame {writes[pointer].FrameNumber} at pointer {pointer}/{afterLoopPointer} because \'{writes[pointer].Value:x2} => ${writes[pointer].Register:x4}\' isn't equal to \'{writes[afterLoopPointer].Value:x2} => ${writes[afterLoopPointer].Register:x4}\'");
                         loopsTwice = true;
                         return writes;
                     }
-                    }
-                
-
-                //Console.WriteLine(frame.ToString() + " " + pointer.ToString() + " " + afterLoopPointer.ToString());
+                }
+                //Debug.WriteLine(frame.ToString() + " " + pointer.ToString() + " " + afterLoopPointer.ToString());
             }
             loopsTwice = false;
             return writes.Take(finalLoopPointer).ToArray();

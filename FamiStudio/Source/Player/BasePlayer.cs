@@ -252,9 +252,8 @@ namespace FamiStudio
 
             if (startNote != 0)
             {
-                seeking = true;
-                NesApu.StartSeeking(apuIndex);
-
+                StartSeeking();
+                
                 AdvanceChannels();
                 UpdateChannels();
                 UpdateTempo();
@@ -265,8 +264,7 @@ namespace FamiStudio
                         break;
                 }
 
-                NesApu.StopSeeking(apuIndex);
-                seeking = false;
+                StopSeeking();
             }
             else
             {
@@ -354,6 +352,19 @@ namespace FamiStudio
 
             return true;
         }
+
+        protected void StartSeeking()
+        {
+            seeking = true;
+            NesApu.StartSeeking(apuIndex);
+        }
+
+        protected void StopSeeking()
+        {
+            NesApu.StopSeeking(apuIndex);
+            seeking = false;
+        }
+
 
         protected bool AdvanceSong(int songLength, LoopMode loopMode)
         {

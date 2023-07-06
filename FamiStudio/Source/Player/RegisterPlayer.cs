@@ -26,11 +26,9 @@ namespace FamiStudio
 
             if (BeginPlaySong(song, pal, 0))
             {
-                seeking = true;
-                NesApu.StartSeeking(apuIndex);
+                StartSeeking();
                 while (PlaySongFrameInternal(true));
-                NesApu.StopSeeking(apuIndex);
-                seeking = false;
+                StopSeeking();
             }
 
             return registerWrites.ToArray();
@@ -43,11 +41,9 @@ namespace FamiStudio
 
             if (BeginPlaySong(song, pal, 0))
             {
-                seeking = true;
-                NesApu.StartSeeking(apuIndex);
+                StartSeeking();
                 while (PlaySongFrameInternal(true)){length++;};
-                NesApu.StopSeeking(apuIndex);
-                seeking = false;
+                StopSeeking();
             }
             length++;
 
