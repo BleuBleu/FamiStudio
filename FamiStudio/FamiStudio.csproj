@@ -304,7 +304,6 @@
     <EmbeddedResource Include="Resources\Tutorials\Tutorial7.gif" />
     <EmbeddedResource Include="Resources\Tutorials\Tutorial8.gif" />
     <EmbeddedResource Include="Resources\Tutorials\Tutorial9.gif" />
-    <EmbeddedResource Include="Resources\Tutorials\Tutorial10.gif" />
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Misc\VideoWatermark.tga" />
