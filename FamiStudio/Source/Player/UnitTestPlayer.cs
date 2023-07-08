@@ -26,7 +26,7 @@ namespace FamiStudio
             file.Close();
         }
 
-        public override void NotifyRegisterWrite(int apuIndex, int reg, int data)
+        public override void NotifyRegisterWrite(int apuIndex, int reg, int data, List<int> metadata = null)
         {
             if (apuIndex == NesApu.APU_WAV_EXPORT)
                 file.WriteLine($"Frame {frameNumber} Register {reg:X4} {data:X2}");

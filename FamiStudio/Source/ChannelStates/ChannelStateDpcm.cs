@@ -1,4 +1,5 @@
-﻿namespace FamiStudio
+﻿using System.Collections.Generic;
+namespace FamiStudio
 {
     public class ChannelStateDpcm : ChannelState
     {
@@ -48,7 +49,7 @@
 
                             NesApu.CurrentSample.Value = sample.ProcessedData;
 
-                            WriteRegister(NesApu.APU_DMC_START, 0);
+                            WriteRegister(NesApu.APU_DMC_START, 0, 4, new List<int> { sample.Id });
                             WriteRegister(NesApu.APU_DMC_LEN, sample.ProcessedData.Length >> 4);
                             WriteRegister(NesApu.APU_DMC_FREQ, mapping.Pitch | (mapping.Loop ? 0x40 : 0x00));
                             WriteRegister(NesApu.APU_DMC_RAW, dmcInitialValue);

@@ -751,6 +751,7 @@ namespace FamiStudio
                     (prop.control as Button).Text = (string)value;
                     break;
                 case PropertyType.LogTextBox:
+                case PropertyType.TextBox:
                     (prop.control as TextBox).Text = (string)value;
                     break;
                 case PropertyType.ProgressBar:
