@@ -21,7 +21,7 @@ Changes/Fixes:
 * VGM & WAV code cleanup (alexmush contribution)
 * VGM import support (Perkka & alexmush contribution)
 * Translations:
-	* Spanish (NicolAR contribution)
+	* Spanish (NicolAR, zukinnyk and LagMager contribution)
 	* Portuguese (BeepsNBoops contribution)
 	* Simplified chinese (xwjcool123 and FRC contribution)
 
