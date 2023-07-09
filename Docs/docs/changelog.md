@@ -4,15 +4,6 @@ Version history / release notes for each release.
 
 ## Version 4.1.0
 
-System Requirement Changes:
-
-* Windows version is now 64-bit and targets .NET 5.0.
-* Linux/MacOS versions now uses .NET 6.0. Mono is not longer used (See [installation](install.md) page for .NET download links)
-* MacOS now requires at least Catalina and will run natively on ARM if you install the ARM version of .NET
-* All desktop version now requires OpenGL 3.3.
-* Android version now requires OpenGL ES 2.0.
-* Windows 7 and 32-bit systems are longer supported.
-
 Changes/Fixes:
 
 * DPCM improvements:
@@ -32,6 +23,15 @@ Changes/Fixes:
 	* Spanish (MiniTube contribution)
 	* Portuguese (PBnJK contribution)
 	* Simplified chinese (xwjcool123 contribution)
+
+System Requirement Changes:
+
+* Windows version is now 64-bit and targets .NET 5.0.
+* Linux/MacOS versions now uses .NET 6.0. Mono is not longer used (See [installation](install.md) page for .NET download links)
+* MacOS now requires at least Catalina and will run natively on ARM if you install the ARM version of .NET
+* All desktop version now requires OpenGL 3.3.
+* Android version now requires OpenGL ES 2.0.
+* Windows 7 and 32-bit systems are longer supported.
 
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
 	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/1xQbFUGz0Co" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
