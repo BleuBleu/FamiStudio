@@ -38,7 +38,7 @@ Created by the [Xiph.Org Foundation](https://xiph.org/). Used for the OGG/Vorbis
 
 A few demo songs are also provided with FamiStudio. Unless mentioned, the demo songs are my re-creations, done by reverse-engineering the NSF.
 
-* Another Winter - Anamanagughi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Another Winter - Anamanaguchi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Castlevania 2 - Bloody Tears
 * Dedrecil - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * DuckTales! - The Moon
@@ -54,7 +54,7 @@ A few demo songs are also provided with FamiStudio. Unless mentioned, the demo s
 * Mina the Hollower - Crypt Road (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Ochame Kinou - (cover by <a href='https://www.youtube.com/channel/UC5ttIE37dv2BFPzbaSBdrXQ'>Kawashin</a>. Thanks!!!)
-* SCAT - Stage 1 (cover by marklincadet. Thanks!!!)
+* SCAT - Stage 1 (Contributed by marklincadet. Thanks!!!)
 * Seashell Searching - Original (song by Rei8bit. Thanks!!!)
 * Shatterhand - Final Stage
 * Shovel Knight - Strike the Earth! (Plains of Passage) & The Schemer
