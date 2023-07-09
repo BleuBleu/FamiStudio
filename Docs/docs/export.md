@@ -1,4 +1,4 @@
-6# Exporting Songs
+# Exporting Songs
 
 The export dialog is access through the main toolbar or with CTRL+E on the keyboard. To quickly repeat a previous export (same format and output file), you can right click on the export icon in the toolbar or press CTRL+SHIFT+E.
 
