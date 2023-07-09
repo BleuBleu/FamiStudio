@@ -1,7 +1,3 @@
----
-description: Allo
----
-
 # Installation
 
 ## System requirements
@@ -45,7 +41,7 @@ To bypass the warning, simply click "More Info" and then "Run Anyway".
 
 ### Installation
 
-On MacOS, you will need to install the .NET 6.0 Runtime. Here are some direct download link from Microsoft. Pick the architecture that matches your hardware.
+On MacOS, you will need to install the .NET 6.0 Runtime. Here are some direct download link from Microsoft. Pick the architecture that matches your hardware. Installing the correct version for your CPU is important as it will ensure the app runs natively on your Mac.
 
 * [.NET 6.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-6.0.19-macos-x64-installer) for x64 (Intel)
 * [.NET 6.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-6.0.19-macos-arm64-installer) for ARM64 (M1/M2)

@@ -8,6 +8,7 @@ System Requirement Changes:
 
 * Windows version is now 64-bit and targets .NET 5.0.
 * Linux/MacOS versions now uses .NET 6.0. Mono is not longer used (See [installation](install.md) page for .NET download links)
+* MacOS now requires at least Catalina and will run natively on ARM if you install the ARM version of .NET
 * All desktop version now requires OpenGL 3.3.
 * Android version now requires OpenGL ES 2.0.
 * Windows 7 and 32-bit systems are longer supported.
