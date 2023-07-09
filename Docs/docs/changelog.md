@@ -14,13 +14,13 @@ System Requirement Changes:
 
 Changes/Fixes:
 
+* DPCM improvements:
+	* No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
+	* Up to 256KB of samples using bank switching.
 * Configurable keyboard shortcuts
 * Text rendering changes, small text may look slightly blurrier. 
 * More UI scaling % options
 * More context menus options throughout the app
-* DPCM improvements:
-	* No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
-	* Up to 256KB of samples using bank switching.
 * Option to mix N163 or not
 * Project explorer sorting improvements
 * NSF import support on Android
@@ -31,6 +31,11 @@ Changes/Fixes:
 	* Spanish (MiniTube contribution)
 	* Portuguese (PBnJK contribution)
 	* Simplified chinese (xwjcool123 contribution)
+
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/1xQbFUGz0Co" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
 
 ## Version 4.0.6 (Hotfix)
 

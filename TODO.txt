@@ -1,42 +1,11 @@
-Later
-=====
-- Borrow TNS-HFC3 from forple in sept/oct.
-
-Packaging
-=========
-/ Add "description" HTML metadata to famistudio doc.
+4.1.0 Packaging
+===============
 - Recompile ROMs, re-export data, bump versions, etc.
 - Re-export all ROM test (.bin) files at the end.
 
-4.1.0 Change Log
-================
-System Requirement Changes:
-
-* Windows version is now 64-bit and targets .NET 5.0.
-* Linux/MacOS versions now uses .NET 6.0. Mono is not longer used (See [installation](install.md) page for .NET download links)
-* All desktop version now requires OpenGL 3.3.
-* Android version now requires OpenGL ES 2.0.
-* Windows 7 and 32-bit systems are longer supported.
-
-Changes/Fixes:
-
-* Configurable keyboard shortcuts
-* Text rendering changes, small text may look slightly blurrier. 
-* More UI scaling % options
-* More context menus options throughout the app
-* DPCM improvements:
-	* No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
-	* Up to 256KB of samples using bank switching.
-* Option to mix N163 or not
-* Project explorer sorting improvements
-* NSF import support on Android
-* Stereo and delay export support on Android.
-* Sunsoft 5B noise support (Perkka contribution)
-* Experimental VGM import support (Perkka contribution)
-* Experimental translations 
-	* Spanish (MiniTube contribution)
-	* Portuguese (PBnJK contribution)
-	* Simplified chinese (xwjcool123 contribution)
+Later
+=====
+- Borrow TNS-HFC3 from forple in sept/oct.
 
 Android SDK 12
 ==============
@@ -106,6 +75,8 @@ Desktop tutorial GIFs
 
 Trailer/scroll 
 ============== 
+- Need to install System.Drawing.Common 5.0.3
+- Change net5.0 to net5.0-windows
 - Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece. 
  
 MkDocs 
