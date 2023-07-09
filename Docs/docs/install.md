@@ -74,6 +74,6 @@ Please install the following dependencies before trying to run the Linux version
 
 Then simply launch the application with this command:
 ```
-dotnet FamiStudio.exe
+dotnet FamiStudio.dll
 ```
 If you run a very old version of Linux or if you are running an exotic architecture, you may have missing dependencies. If this is the case, you may have to compile some of the libraries. This is a rather manual process. Please follow the build steps on [GitHub](https://github.com/BleuBleu/FamiStudio). 

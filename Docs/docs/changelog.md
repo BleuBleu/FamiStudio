@@ -18,11 +18,12 @@ Changes/Fixes:
 * NSF import support on Android
 * Stereo and delay export support on Android.
 * Sunsoft 5B noise support (Perkka contribution)
-* Experimental VGM import support (Perkka contribution)
-* Experimental translations 
-	* Spanish (MiniTube contribution)
-	* Portuguese (PBnJK contribution)
-	* Simplified chinese (xwjcool123 contribution)
+* VGM & WAV code cleanup (alexmush contribution)
+* VGM import support (Perkka & alexmush contribution)
+* Translations:
+	* Spanish (NicolAR contribution)
+	* Portuguese (BeepsNBoops contribution)
+	* Simplified chinese (xwjcool123 and FRC contribution)
 
 System Requirement Changes:
 
