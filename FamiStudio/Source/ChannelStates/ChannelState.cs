@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -475,10 +476,10 @@ namespace FamiStudio
             }
         }
 
-        protected void WriteRegister(int reg, int data, int skipCycles = 4)
+        protected void WriteRegister(int reg, int data, int skipCycles = 4, List<int> metadata = null)
         {
             NesApu.WriteRegister(apuIdx, reg, data);
-            player.NotifyRegisterWrite(apuIdx, reg, data);
+            player.NotifyRegisterWrite(apuIdx, reg, data, metadata);
             
             // Internally, NesSndEmu skips 4 cycles. Here we have the option to add more.
             skipCycles -= 4;

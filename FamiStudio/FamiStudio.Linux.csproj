@@ -107,6 +107,7 @@
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\RegisterWriteOptimizer.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
@@ -309,7 +310,6 @@
     <EmbeddedResource Include="Resources\Tutorials\Tutorial7.gif" />
     <EmbeddedResource Include="Resources\Tutorials\Tutorial8.gif" />
     <EmbeddedResource Include="Resources\Tutorials\Tutorial9.gif" />
-    <EmbeddedResource Include="Resources\Tutorials\Tutorial10.gif" />
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Misc\VideoWatermark.tga" />

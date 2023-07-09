@@ -267,6 +267,7 @@
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\RegisterWriteOptimizer.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
@@ -734,7 +735,11 @@
     <EmbeddedResource Include="..\Setup\Demo Songs\Mega Man 2.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Mega Man 10.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Megami Tensei II.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Mina the Hollower.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Nice.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Ochame Kinou.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\SCAT.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Seashell Searching.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\SFX.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Shatterhand.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Shovel Knight.fms" />

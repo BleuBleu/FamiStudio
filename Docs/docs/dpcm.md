@@ -2,7 +2,11 @@
 
 DPCM (Delta Pulse Code Modulation) samples are 1-bit digital samples that the NES/Famicom supports. They are of very low quality but have been used quite successfully for drums and basses. 
 
-To use a DPCM sample, it first needs to be loaded, then it needs to be assigned to a key of the piano, in the DPCM instrument.
+To use a DPCM sample, it first needs to be loaded, then it needs to be assigned to a key of the piano of a specific instrument. To edit the key/sample assignments of an instrument, click the little "sample" (rightmost) icon next to an instrument.
+
+> Prior to FamiStudio 4.1.0, only a special "DPCM Instrument" could hold samples
+> in that way. This is no longer the case, any non-expansion intrument can now hold
+> samples. 
 
 The samples workflow in FamiStudio is lossless in a way that once a sample is imported, any modification done to it will not modify the source data. Every time a parameter is changed, the source data will be re-processed to generate the final sample.
 
@@ -26,7 +30,7 @@ If you do not wish to use the built-in DPCM sample editor of FamiStudio there ar
 
 Samples are loaded by clicking the little folder icon next to the "DPCM Samples" section in the project explorer. FamiStudio can import samples from WAV files or from a DMC files. Note that importing DMC files and doing extensive processing is not recommended as these samples are very low-quality to begin with and any extra processing will degrade it further.
 
-It is also possible to import samples from another FamiStudio project. Note that doing this will not import the sample assignments to keys of the piano (DPCM Instrument). To import those as well, you maybe want to import the DPCM instrument in the Instrument section of the Project Explorer.
+It is also possible to import samples from another FamiStudio project. Note that doing this will not import the sample assignments to keys of the piano or any instrument information. To import those as well, you maybe want to import the whole instrument instrument in the Instrument section of the Project Explorer. This will import all the piano/key assignments, as well as the used samples.
 
 Once loaded, you can rename a sample or change its color by clicking the gear icon (or double-clicking on it)button. You can also play the sample by clicking the little play button next to it:
 
@@ -105,9 +109,15 @@ Clicking on the little disk icon in the Project Explorer allows you to export a 
 * Left-clicking will export the processed sample as a DMC file.
 * Right-clicking will export the source data (in its original format, WAV or DMC)
 
-## Assigning a DPCM sample to a key of the DPCM instrument
+## Assigning a DPCM sample to an instrument
 
-Once a sample is loaded, it can be assign to a key of the "DPCM instrument". Clicking on the little icon next to the DPCM Instrument in the project explorer will open the piano roll in DPCM edition mode.
+Once a sample is loaded, it can be assign to a key of an instrument. 
+
+> Prior to FamiStudio 4.1.0, only a special "DPCM Instrument" could hold samples
+> in that way. This is no longer the case, any non-expansion intrument can now hold
+> samples. 
+
+Clicking on the little "sample" (rightmost) icon next to the a non-expansion instrument in the project explorer will open the piano roll in DPCM edition mode.
 
 ![](images/DPCMInstrument.png#center)
 

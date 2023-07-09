@@ -26,8 +26,6 @@ Note that only a small subset of features is supported. Only the following effec
 
 Besides effects, there are also other limitations:
 
-* If multiple instruments assign DPCM samples to the same key of the DPCM instrument, only the first one will be assigned. Other samples will be loaded, but unassigned to any keys.
-* All DPCM samples will be loaded (and potentially assigned to a key of the DPCM instrument) but any sample over the 16KB FamiStudio limit will not play correctly or at all.
 * VRC7 1xx/2xx/3xx/Qxx/Rxx effects will likely not sound like FamiTracker and will need manual corrections.
 * Instruments using both pitch and arpeggio envelopes at the same time will likely not sound the same as in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker resets the pitch at each arpeggio notes, while FamiStudio does not. 
 * VRC6 saw channel is not influenced by duty cycle in FamiStudio. FamiStudio has a "saw master volume" on VRC6 instruments. Import/export process does not try account for this. Manual corrections may be needed.

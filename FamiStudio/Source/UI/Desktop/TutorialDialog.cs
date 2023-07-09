@@ -7,7 +7,7 @@ namespace FamiStudio
 {
     public class TutorialDialog : Dialog
     {
-        private LocalizedString[] TutorialMessages = new LocalizedString[11];
+        private LocalizedString[] TutorialMessages = new LocalizedString[10];
         private LocalizedString DoNotShowAgainLabel;
         private LocalizedString WelcomeTitle;
 

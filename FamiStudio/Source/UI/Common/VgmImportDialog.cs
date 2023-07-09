@@ -5,8 +5,6 @@ namespace FamiStudio
     class VgmImportDialog
     {
         private PropertyDialog dialog;
-        private string[] songNames;
-        private int[]    songDurations;
         private string filename;
 
         #region Localization

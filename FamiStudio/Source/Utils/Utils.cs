@@ -75,6 +75,25 @@ namespace FamiStudio
             return (x < 0) ? (int)MathF.Ceiling(x) : (int)MathF.Floor(x);
         }
 
+        public static float ToHalf(ushort x)    // Will be obsolete once we completely move to .NET 6.0+
+        {
+            bool sign = (x & 0x8000) != 0;
+            int exponent = (x & 0x7C00) >> 10;
+            int significand = x & 0x03FF;
+            if (exponent == 0 && significand == 0){
+                return sign ? -0 : 0;
+            } else if (exponent == 0 && significand != 0){
+                return (float)((sign ? -1 : 1) * Math.Pow(2, -14) * (significand / 1024.0));
+            } else if (exponent == 31 && significand == 0){
+                return sign ? float.NegativeInfinity : float.PositiveInfinity;
+            } else if (exponent == 31 && significand != 0){
+                return float.NaN;
+            } else {
+                return (float)((sign ? -1 : 1) * Math.Pow(2, exponent-15) * (1 + significand / 1024.0));
+            }
+            return 0;
+        }
+
         public static float Frac(float x)
         {
             return x - (int)x;
