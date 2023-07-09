@@ -55,7 +55,7 @@ A few demo songs are also provided with FamiStudio. Unless mentioned, the demo s
 * Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Ochame Kinou - (cover by <a href='https://www.youtube.com/channel/UC5ttIE37dv2BFPzbaSBdrXQ'>Kawashin</a>. Thanks!!!)
 * SCAT - Stage 1 (Contributed by marklincadet. Thanks!!!)
-* Seashell Searching - Original (song by Rei8bit. Thanks!!!)
+* Seashell Searching - Original (by Rei8bit. Thanks!!!)
 * Shatterhand - Final Stage
 * Shovel Knight - Strike the Earth! (Plains of Passage) & The Schemer
 * Silver Surfer : BGM2
