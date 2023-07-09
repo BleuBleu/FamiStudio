@@ -59,7 +59,7 @@ A few demo songs are also provided with FamiStudio. Unless mentioned, the demo s
 * Shatterhand - Final Stage
 * Shovel Knight - Strike the Earth! (Plains of Passage) & The Schemer
 * Silver Surfer : BGM2
-* Sonic 1 - Partial OST (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Sonic 1 - Partial Soundtrack (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Sonic 3 - Special Stage (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Tetris Theme A - FamiStudio Tutorial Song (song created in tutorial)
 * Tower of Heaven - Indignant Divinity (Flashygoodness, cover by <a href='https://www.youtube.com/watch?v=0qV4dSBOH5s'>Danooct1</a>. Thanks!!!)
