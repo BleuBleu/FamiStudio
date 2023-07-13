@@ -732,6 +732,7 @@
     <EmbeddedResource Include="..\Setup\Demo Songs\Journey To Silius.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Lagrange Point.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Layla The Iris Missions.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Lupin The Third.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Mega Man 2.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Mega Man 10.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Megami Tensei II.fms" />
