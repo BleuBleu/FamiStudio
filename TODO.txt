@@ -6,7 +6,7 @@ x Sneaky/proto Cherish song doesnt play DPCM when exported to ROM.
 - Cmd + Q while playing = crash when closing.
 - Register viewer monospace issues with chinese, portuguese too?
 - Clear effet issue
-- First click is ignored when clicking out of a context menu.
+x First click is ignored when clicking out of a context menu.
 - Verum Corner demo song
 
 Later

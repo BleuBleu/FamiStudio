@@ -76,12 +76,6 @@ namespace FamiStudio
                 return false;
             }
 
-            // Context menu have highest priority priority.
-            if (contextMenu.Visible && c != contextMenu)
-            {
-                return false;
-            }
-
             // Only top dialog can be interacted with.
             if (IsDialogActive && c != dialogs.Last())
             {
