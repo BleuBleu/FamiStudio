@@ -136,7 +136,7 @@ namespace FamiStudio
                 }
                 else if (e.Key == Keys.Down)
                 {
-                    SetHoveredItemIndex(Math.Clamp(hoveredItemIndex - 1, 0, menuOptions.Length + 1));
+                    SetHoveredItemIndex(Math.Clamp(hoveredItemIndex + 1, 0, menuOptions.Length - 1));
                 }
             }
         }
