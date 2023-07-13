@@ -7648,8 +7648,9 @@ namespace FamiStudio
         private void ClearEffectValue(NoteLocation location, bool allowSelection = false)
         {
             var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+            var note = (Note)null;
 
-            if (pattern != null && pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out var note))
+            if (pattern != null && (allowSelection || pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out note)))
             {
                 if (allowSelection && SelectionCoversMultiplePatterns())
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
@@ -7667,7 +7668,7 @@ namespace FamiStudio
 
                     MarkSelectedPatternsDirty();
                 }
-                else
+                else if (note != null)
                 {
                     note.ClearEffectValue(selectedEffectIdx);
                     MarkPatternDirty(location.PatternIndex);

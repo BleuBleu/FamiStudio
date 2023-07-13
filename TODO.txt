@@ -4,10 +4,10 @@ x Sneaky/proto Cherish song doesnt play DPCM when exported to ROM.
 x Sneaky/proto Silence n163 export issue
 x First click is ignored when clicking out of a context menu.
 x Verum Corner demo song
+x Clear effet issue
 - MacOS file open issue, seems like we need to click twice now?
 - Cmd + Q while playing = crash when closing.
 - Register viewer monospace issues with chinese, portuguese too?
-- Clear effet issue
 
 Later
 =====
