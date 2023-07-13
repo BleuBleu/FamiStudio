@@ -1,7 +1,13 @@
-4.1.0 Packaging
-===============
-- Recompile ROMs, re-export data, bump versions, etc.
-- Re-export all ROM test (.bin) files at the end.
+4.1.1 Hotfix
+============
+x Sneaky/proto Cherish song doesnt play DPCM when exported to ROM.
+- Sneaky/proto Silence n163 export issue
+- MacOS file open issue, seems like we need to click twice now?
+- Cmd + Q while playing = crash when closing.
+- Register viewer monospace issues with chinese, portuguese too?
+- Clear effet issue
+- First click is ignored when clicking out of a context menu.
+- Verum Corner demo song
 
 Later
 =====
@@ -85,7 +91,7 @@ MkDocs
 - pip install mkdocs 
 - pip install mkdocs-bootswatch 
 - pip install mkdocs-meta-descriptions-plugin
-- Modify "%localappdata%\Programs\Python\Python39\Lib\site-packages\mkdocs\themes\mkdocs\base.html"
+- Modify "%localappdata%\Programs\Python\Python311\Lib\site-packages\mkdocs\themes\mkdocs\base.html"
 		{% if page.meta and page.meta.description %}
 		<meta name="description" content="{{ page.meta.description }}">
 		{% elif config.site_description %}

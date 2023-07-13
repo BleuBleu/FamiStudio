@@ -192,7 +192,8 @@ namespace FamiStudio
                 for (int i = 0; i < songBanks.Count; i++)
                     Array.Copy(songBanks[i].ToArray(), 0, songBanksBytes, i * songBankSize, songBanks[i].Count);
 
-                projectInfo.firstDpcmBank = (byte)songBanks.Count;
+                // VRC6 uses 16KB pages, but we count in 8KB pages, so x2.
+                projectInfo.firstDpcmBank = (byte)(songBanks.Count * (songBankSize / bankSize));
 
                 // Patch in code (project info and song table are after the code, 0xf000).
                 Marshal.Copy(new IntPtr(&projectInfo), prgBytes, RomTocOffset, sizeof(RomProjectInfo));
