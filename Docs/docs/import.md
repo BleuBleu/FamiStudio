@@ -67,7 +67,7 @@ The MIDI channel 10 is special an specific keys can be selected to filter specif
 
 ## FamiStudio Text 
 
-The FamiStudio text format is support, please see the documentation above for the format specification.
+The FamiStudio text format is supported, please see the documentation above for the format specification.
 
 ## Nintendo Sound Format
 
@@ -75,12 +75,12 @@ NSF (and NSFE) files can be imported in the desktop version of FamiStudio. This 
 
 ![](images/ImportNsf.png#center)
 
-Most NSF file will not contain the names of songs so they will usually have placeholder names. Besides the song to import, are the most important settings :
+Most NSF files will not contain the names of songs, so they will usually have placeholder names. Besides the song to import, are the most important settings :
 
 * **Duration** : Time (in sec) to extract from the NSF. 
 * **Pattern Length** : Number of frames in a pattern.
 * **Start frame** : Used to offset the entire song by a number of frames. This is useful when a song has an intro that is not the same length as the other patterns.
-* **Remove intro silence** : Some songs start with a bit of silence, this will wait until any sound is produce to start recording.
+* **Remove intro silence** : Some songs start with a bit of silence, this will wait until any sound is produced to start recording.
 * **Reverse DPCM bits** : This will set the "Reverse Bits" flag on all the imported samples. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should.
 * **Preserve DPCM padding bytes** : Force FamiStudio to keep the last byte of every sample, this will make all samples 16 bytes larger simply to keep an extra byte. This could be useful to keep looping samples intact. Should remain off most of the time since most games seem to ignore this byte.
 

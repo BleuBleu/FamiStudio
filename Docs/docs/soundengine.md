@@ -54,7 +54,7 @@ Features that can be toggled on/off depending on the needs of your projects:
 
 Enabling more features will make the sound engine code larger and use more RAM. The zeropage usage is 7 bytes and can be easily aliased with some of your ZP variables as they are only used as temporary variables inside the famistudio_xxx subroutines.
 
-Here is a table to give a rough idea of the best/worst cast of RAM/CODE usage. Note that each column includes all features of the columns on the left. So the rightmost column has every feature enabled. In reality, you can toggle features individually. These tables where generated with only NTSC support, DPCM support enabled and no SFX streams.
+Here is a table to give a rough idea of the best/worst case of RAM/CODE usage. Note that each column includes all features of the columns on the left. So the rightmost column has every feature enabled. In reality, you can toggle features individually. These tables where generated with only NTSC support, DPCM support enabled and no SFX streams.
 
 **Code size**
 
@@ -177,7 +177,7 @@ For ASM6, you simply need to specify the location at which to allocate the `ZP`/
 
 ### 2. Audio Expansions Configuration
 
-You can enable up to one audio expansion (`FAMISTUDIO_EXP_XXX`). Enabling more than one expansion will lead to undefined behavior. Memory usage goes up as more complex expansions are used. The audio expansion you choose **MUST MATCH** with the data you will load in the engine. Loading a FDS song while enabling VRC6 will lead to undefined behavior.
+You can only enable one audio expansion (`FAMISTUDIO_EXP_XXX`). Enabling more than one expansion will lead to undefined behavior. Memory usage goes up as more complex expansions are used. The audio expansion you choose **MUST MATCH** with the data you will load in the engine. Loading a FDS song while enabling VRC6 will lead to undefined behavior.
 
     ; Konami VRC6 (2 extra square + saw)
     FAMISTUDIO_EXP_VRC6          = 1 
