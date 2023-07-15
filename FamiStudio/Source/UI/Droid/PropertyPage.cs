@@ -928,6 +928,7 @@ namespace FamiStudio
             switch (prop.type)
             {
                 case PropertyType.TextBox:
+                case PropertyType.FileTextBox:
                 case PropertyType.ColoredTextBox:
                 case PropertyType.LogTextBox:
                     return (prop.controls[0] as EditText).Text;
@@ -1023,6 +1024,7 @@ namespace FamiStudio
                     (prop.controls[0] as MaterialButton).Text = (string)value;
                     break;
                 case PropertyType.TextBox:
+                case PropertyType.FileTextBox:
                 case PropertyType.LogTextBox:
                     (prop.controls[0] as EditText).Text = (string)value;
                     break;
