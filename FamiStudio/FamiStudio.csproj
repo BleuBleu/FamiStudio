@@ -149,6 +149,7 @@
     <Compile Include="Source\UI\Desktop\Controls\CheckBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ColorPicker.cs" />
     <Compile Include="Source\UI\Desktop\Controls\DropDown.cs" />
+    <Compile Include="Source\UI\Desktop\Controls\FileTextBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Grid.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ImageBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Label.cs" />

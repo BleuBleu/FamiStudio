@@ -302,6 +302,11 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        public int AddFileTextBox(string label, string value, int maxLength = 0, string tooltip = null)
+        {
+            return AddTextBox(label, value, maxLength, tooltip);
+        }
+
         public bool OnEditorAction(TextView v, [GeneratedEnum] ImeAction actionId, KeyEvent e)
         {
             if (actionId == ImeAction.Done)

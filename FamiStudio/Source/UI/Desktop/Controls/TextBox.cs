@@ -45,10 +45,11 @@ namespace FamiStudio
         protected Color backColor     = Theme.DarkGreyColor1;
         protected Color selColor      = Theme.MediumGreyColor1;
 
-        protected int topMargin    = DpiScaling.ScaleForWindow(3);
-        protected int outerMargin  = DpiScaling.ScaleForWindow(0);
-        protected int innerMargin  = DpiScaling.ScaleForWindow(4);
-        protected int scrollAmount = DpiScaling.ScaleForWindow(20);
+        protected int topMargin        = DpiScaling.ScaleForWindow(3);
+        protected int outerMarginLeft  = DpiScaling.ScaleForWindow(0);
+        protected int outerMarginRight = DpiScaling.ScaleForWindow(0);
+        protected int innerMargin      = DpiScaling.ScaleForWindow(4);
+        protected int scrollAmount     = DpiScaling.ScaleForWindow(20);
 
         public Color ForeColor      { get => foreColor;     set { foreColor     = value; MarkDirty(); } }
         public Color DisabledColor  { get => disabledColor; set { disabledColor = value; MarkDirty(); } }
@@ -122,11 +123,11 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            Cursor = enabled && e.X > outerMargin && e.X < (width - outerMargin) ? Cursors.IBeam : Cursors.Default;
+            Cursor = enabled && e.X > outerMarginLeft && e.X < (width - outerMarginRight) ? Cursors.IBeam : Cursors.Default;
 
             if (mouseSelecting)
             {
-                var c = PixelToChar(e.X - outerMargin);
+                var c = PixelToChar(e.X - outerMarginLeft);
                 var selMin = Math.Min(mouseSelectionChar, c);
                 var selMax = Math.Max(mouseSelectionChar, c);
 
@@ -141,7 +142,7 @@ namespace FamiStudio
         {
             if (e.Left && enabled)
             {
-                var c = PixelToChar(e.X - outerMargin);
+                var c = PixelToChar(e.X - outerMarginLeft);
                 SetAndMarkDirty(ref caretIndex, c);
                 SetAndMarkDirty(ref selectionStart, c);
                 SetAndMarkDirty(ref selectionLength, 0);
@@ -167,7 +168,7 @@ namespace FamiStudio
         {
             if (e.Left && enabled)
             { 
-                var c0 = PixelToChar(e.X - outerMargin);
+                var c0 = PixelToChar(e.X - outerMarginLeft);
                 var c1 = c0;
 
                 c0 = FindWordStart(c0, -1);
@@ -521,7 +522,7 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
-            textAreaWidth = width - outerMargin * 2;
+            textAreaWidth = width - (outerMarginLeft + outerMarginRight);
             textAreaWidthNoMargin = textAreaWidth - innerMargin * 2;
             UpdateScrollParams();
         }
@@ -530,7 +531,7 @@ namespace FamiStudio
         {
             var c = g.GetCommandList();
 
-            c.PushTranslation(outerMargin, 0);
+            c.PushTranslation(outerMarginLeft, 0);
             c.FillAndDrawRectangle(0, 0, textAreaWidth - 1, height - 1, backColor, enabled ? foreColor : disabledColor);
             
             if (selectionLength > 0 && HasDialogFocus && enabled)

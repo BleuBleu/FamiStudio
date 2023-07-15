@@ -369,7 +369,7 @@ namespace FamiStudio
                 }
                 case ConfigSection.FFmpeg:
                     page.AddLabel(null, FFmpegRequiredLabel, true); // 0
-                    page.AddButton(null, Settings.FFmpegExecutablePath, FFmpegPathTooltip); // 1
+                    page.AddFileTextBox(null, Settings.FFmpegExecutablePath, 0, FFmpegPathTooltip); // 1
                     page.AddLinkLabel(null, FFmpegDownloadLabel, "https://famistudio.org/doc/ffmpeg/"); // 3
                     page.PropertyClicked += FFmpegPage_PropertyClicked;
                     break;

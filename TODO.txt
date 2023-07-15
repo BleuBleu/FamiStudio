@@ -5,6 +5,9 @@ x Sneaky/proto Silence n163 export issue
 x First click is ignored when clicking out of a context menu.
 x Verum Corner demo song
 x Clear effet issue
+x Solidify rt midi code, update + check version (rtmidi_get_version), add to DLL resolve
+- Text format DPCM issue.
+- ffmpeg linux path thing.
 - MacOS file open issue, seems like we need to click twice now?
 - Cmd + Q while playing = crash when closing.
 - Register viewer monospace issues with chinese, portuguese too?
