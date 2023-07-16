@@ -139,7 +139,10 @@ namespace FamiStudio
                         }
                     }
                 }
-                else if (instrument.HasAnyMappedSamples)
+
+                lines.Add(instrumentLine);
+
+                if (instrument.HasAnyMappedSamples)
                 {
                     foreach (var kv in instrument.SamplesMapping)
                     {
@@ -157,7 +160,6 @@ namespace FamiStudio
                         }
                     }
                 }
-                lines.Add(instrumentLine);
 
                 for (int i = 0; i < EnvelopeType.Count; i++)
                 {
