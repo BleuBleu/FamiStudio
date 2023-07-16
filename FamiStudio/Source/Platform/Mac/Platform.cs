@@ -21,6 +21,8 @@ namespace FamiStudio
         public const string DllPrefix = "";
         public const string DllExtension = ".dylib";
 
+        public const int RtMidiVersionHint = 6;
+
         public static bool Initialize(bool commandLine)
         {
             MacUtils.Initialize();
