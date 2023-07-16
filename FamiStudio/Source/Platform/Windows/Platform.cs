@@ -34,7 +34,7 @@ namespace FamiStudio
 
 #if !DEBUG
             if (IsPortableMode)
-                AssociateExtension(".fms", Assembly.GetExecutingAssembly().Location, "FamiStudio Project", "FamiStudio Project");
+                AssociateExtension(".fms", Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".exe"), "FamiStudio Project", "FamiStudio Project");
 #endif
 
             return true;
