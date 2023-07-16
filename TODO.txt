@@ -1,8 +1,9 @@
 4.1.1 Hotfix
 ============
-- MacOS file open issue, seems like we need to click twice now?
+/ MacOS file open issue, seems like we need to click twice now?
 - Register viewer monospace issues with chinese, portuguese too? Limit monospace to a few characters.
 - Look at android crashes
+- On Linux, give error if you dont enter a filename when exporting.
 
 4.1.1 Change Log
 ================
@@ -12,6 +13,7 @@
 - Fixed startup crashes with rtmidi on Linux and updating the version we provide
 - Fixed export of DPCM samples with FamiStudio Text format
 - Fixed file association on Windows when using the portable EXE version
+- Fixed file association on MacOS not always working
 - Fixed first mouse click outside a context menu being ignored (will behave like 4.0.x)
 - Fixed occasional crash on MacOS when using Cmd+Q
 - Fixed issues with MIDI device on MacOS

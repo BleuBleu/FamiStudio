@@ -31,4 +31,4 @@ tar -a -c -f ..\FamiStudio%Version%-WinInstaller.zip Setup.msi Setup.exe
 cd ..
 
 del ..\FamiStudio\bin\Release\net5.0\FamiStudio.Android.dll
-tar -a -c -f FamiStudio%Version%-WinPortableExe.zip "Demo Songs\*.*" "Demo Instruments\*.*" WindowsReadme.txt portable.txt -C ..\FamiStudio Localization\*.ini -C bin\Release\net5.0 *.exe *.dll *.json FamiStudio.pdb
+tar -a -c -f FamiStudio%Version%-WinPortableExe.zip "Demo Songs\*.*" "Demo Instruments\*.*" WindowsDotNetReadme.txt portable.txt -C ..\FamiStudio Localization\*.ini -C bin\Release\net5.0 *.exe *.dll *.json FamiStudio.pdb
