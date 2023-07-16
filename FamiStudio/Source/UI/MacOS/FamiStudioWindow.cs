@@ -52,7 +52,7 @@ namespace FamiStudio
                         magnificationAccum = 0;
 
                     magnificationAccum += magnification;
-
+                    
                     float threshold = 1.0f / (float)Utils.Clamp(Settings.TrackPadZoomSensitity, 1, 16);
 
                     if (Math.Abs(magnificationAccum) > threshold)
@@ -69,7 +69,7 @@ namespace FamiStudio
                         var ctrl = container.GetControlAt(pt.X, pt.Y, out int x, out int y);
 
                         var origModifiers = modifiers.Value;
-                        origModifiers |= GLFW_MOD_CONTROL;
+                        modifiers.Set(origModifiers | GLFW_MOD_CONTROL);
                         ctrl.MouseWheel(new MouseEventArgs(0, pt.X, pt.Y, 0, magnificationAccum));
                         modifiers.Set(origModifiers);
 
