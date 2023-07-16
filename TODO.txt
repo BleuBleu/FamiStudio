@@ -1,6 +1,5 @@
 4.1.1 Hotfix
 ============
-- DPCM Transpose issue.
 - MacOS file open issue, seems like we need to click twice now?
 - Register viewer monospace issues with chinese, portuguese too? Limit monospace to a few characters.
 - Look at android crashes
@@ -8,6 +7,7 @@
 4.1.1 Change Log
 ================
 - Fixed DPCM samples not playing when exporting to ROM with VRC6
+- Fixed transposition of DPCM samples incorrectly affecting all instruments
 - Fixed "Clear effect values" not always working
 - Fixed startup crashes with rtmidi on Linux and updating the version we provide
 - Fixed export of DPCM samples with FamiStudio Text format
@@ -17,7 +17,6 @@
 - Fixed issues with MIDI device on MacOS
 - Fixed trackpad controls on MacOS 
 - Changed the ffmpeg path option to allow text input, and allow using ffmpeg if its on the PATH
-- 
 
 Later
 =====

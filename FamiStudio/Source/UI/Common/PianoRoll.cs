@@ -4561,13 +4561,13 @@ namespace FamiStudio
                             // potentially in multiple songs.
                             App.UndoRedoManager.RestoreTransaction(false);
                             App.UndoRedoManager.AbortTransaction();
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
                             // Need to redo everything + transpose.
                             editInstrument.UnmapDPCMSample(captureNoteValue);
                             editInstrument.UnmapDPCMSample(noteValue);
                             editInstrument.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
-                            App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
+                            App.Project.TransposeDPCMMapping(captureNoteValue, noteValue, editInstrument);
                         }
 
                         DPCMSampleMapped?.Invoke(noteValue);
