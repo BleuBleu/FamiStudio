@@ -1,20 +1,32 @@
 4.1.1 Hotfix
 ============
-x Sneaky/proto Cherish song doesnt play DPCM when exported to ROM.
-x Sneaky/proto Silence n163 export issue
-x First click is ignored when clicking out of a context menu.
-x Verum Corner demo song
-x Clear effet issue
-x Solidify rt midi code, update + check version (rtmidi_get_version), add to DLL resolve
-x ffmpeg linux path thing.
-- Text format DPCM issue.
+- DPCM Transpose issue.
 - MacOS file open issue, seems like we need to click twice now?
-- Cmd + Q while playing = crash when closing.
 - Register viewer monospace issues with chinese, portuguese too? Limit monospace to a few characters.
+- Look at android crashes
+
+4.1.1 Change Log
+================
+- Fixed DPCM samples not playing when exporting to ROM with VRC6
+- Fixed "Clear effect values" not always working
+- Fixed startup crashes with rtmidi on Linux and updating the version we provide
+- Fixed export of DPCM samples with FamiStudio Text format
+- Fixed file association on Windows when using the portable EXE version
+- Fixed first mouse click outside a context menu being ignored (will behave like 4.0.x)
+- Fixed occasional crash on MacOS when using Cmd+Q
+- Fixed issues with MIDI device on MacOS
+- Fixed trackpad controls on MacOS 
+- Changed the ffmpeg path option to allow text input, and allow using ffmpeg if its on the PATH
+- 
 
 Later
 =====
 - Borrow TNS-HFC3 from forple in sept/oct.
+
+dotnet publish
+==============
+- dotnet publish /p:Configuration=Release /p:Platform="x64" ../FamiStudio/FamiStudio.csproj -r win-x64 -c Release -f net5.0 --self-contained
+- Copies all the runtime with the build, kind of weird.
 
 Android SDK 12
 ==============
