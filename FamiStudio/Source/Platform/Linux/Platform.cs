@@ -23,6 +23,8 @@ namespace FamiStudio
         public const string DllPrefix = "lib";
         public const string DllExtension = ".so";
 
+        public static int RtMidiVersionHint { get; private set; } = 6; // We whip with version 5.0, which is named 6.0.0. Go figure.
+
         public static bool Initialize(bool commandLine)
         {
             // Must be set before GLFW dll tries to load.
@@ -71,7 +73,21 @@ namespace FamiStudio
                     return handle;
                 }
             }
+            else if (libraryName.Contains("rtmidi"))
+            {
+                // Let's try to load version 4.0 or 5.0 (which are strangely named 5.0.0 and 6.0.0 respectively...)
+                for (var i = 6; i >= 5; i--)
+                {
+                    if (NativeLibrary.TryLoad($"librtmidi.so.{i}", assembly, DllImportSearchPath.System32, out handle))
+                    {
+                        // See comment in RtMidi.GetDeviceName() to see why we do this.
+                        RtMidiVersionHint = i;
+                        return handle;
+                    }
+                }
+            }
 
+            // Fallback to our own binary as a last resort.
             NativeLibrary.TryLoad(libraryName, assembly, DllImportSearchPath.ApplicationDirectory, out handle);
             
             return handle;

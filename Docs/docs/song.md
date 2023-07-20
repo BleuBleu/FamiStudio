@@ -12,7 +12,7 @@ Clicking on the little gear icon or selecting the "Project Properties..." option
 
 ## Expansion audio
 
-The project properties is also where you select your [Expansion Audio](expansion.md). Expansion will add extra channels on top of the default 5 that the NES supported. Note that changing the expansion audio in a project will delete all data (patterns, notes, instrument) related to the previous expansion.
+The project properties is also where you select your [Expansion Audio](expansion.md). Expansion will add extra channels on top of the default 5 that the NES supported. Note that remving a expansion audio in a project will delete all data (patterns, notes, instrument) related to the it.
 
 Please visit the [Expansion Audio](expansion.md) section for more detail about each expansion.
 
@@ -20,7 +20,7 @@ Please visit the [Expansion Audio](expansion.md) section for more detail about e
 
 FamiStudio supports two tempo modes : **FamiStudio** and **FamiTracker**. 
 
-The tempo mode will affect how the tempo of you songs is calculated, how much control you have over the notes of your song and how your song plays on PAL systems. Note that changing the tempo mode when you have songs created is possible, but not recommended, the conversion is quite crude at the moment.
+The tempo mode will affect how the tempo of you songs is calculated, how much control you have over the notes of your song and how your song plays on PAL systems. Note that changing the tempo mode when you have songs created is possible, but not recommended, the conversion is still quite crude at the moment.
 
 ### FamiStudio Tempo Mode
 
@@ -58,15 +58,15 @@ You should use FamiTracker tempo mode if:
 
 # Editing songs
 
-Right below the project name are the songs.
+THe songs are right below the project name
 
 ## Adding/Deleting songs
 
 To add new songs, simply click on the little "+" icon on the song header.
 
-## Reordering songs
+## Reordering songs, instruments, DPCM Samples or Arpeggios
 
-You can drag & drop songs to reorder them in the list. Songs are the only things that are not always sorted alphabetically in the project explorer at the moment.
+Each section of the project explorer has a little "sort" button (A-Z) next to it. If highlighted, it means items will be kept in alphabetical order. Disabling this will allow you to re-order things to your liking. Re-ordering an item will disable auto-sorting.
 
 ## Importing/Merging songs
 

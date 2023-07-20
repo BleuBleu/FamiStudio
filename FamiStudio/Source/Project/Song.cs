@@ -1090,6 +1090,35 @@ namespace FamiStudio
             }
         }
 
+        public void ExtendForLooping(int loopCount)
+        {
+            // For looping, we simply extend the song by copying pattern instances.
+            if (loopCount > 1 && LoopPoint >= 0 && LoopPoint < Length)
+            {
+                var originalLength = Length;
+                var loopSectionLength = originalLength - LoopPoint;
+
+                SetLength(Math.Min(Song.MaxLength, originalLength + loopSectionLength * (loopCount - 1)));
+
+                var srcPatIdx = LoopPoint;
+
+                for (var i = originalLength; i < Length; i++)
+                {
+                    foreach (var c in Channels)
+                        c.PatternInstances[i] = c.PatternInstances[srcPatIdx];
+
+                    if (PatternHasCustomSettings(srcPatIdx))
+                    {
+                        var customSettings = GetPatternCustomSettings(srcPatIdx);
+                        SetPatternCustomSettings(i, customSettings.patternLength, customSettings.beatLength, customSettings.groove, customSettings.groovePaddingMode);
+                    }
+
+                    if (++srcPatIdx >= originalLength)
+                        srcPatIdx = LoopPoint;
+                }
+            }
+        }
+
         public void ChangeId(int newId)
         {
             id = newId;

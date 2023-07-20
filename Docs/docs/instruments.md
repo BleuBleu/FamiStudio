@@ -4,12 +4,13 @@ The project explorer displays the list of songs and instruments in the current p
 
 ![](images/ProjectExplorer.png#center)
 
-Most standard instruments have 4 buttons :
+Most standard instruments have 5 buttons :
 
 * The duty cycle envelope
 * The volume envelope
 * The pitch envelope
 * The arpeggio envelope
+* DPCM Samples
 
 An envelope is simply a parameter that can change over the duration of a note as it plays. It can be used to create vibrato, tremolo, change the attack and release of a note, for example. If an instrument currently has no envelope for a particular type, it will appear dimmed.
 
@@ -17,11 +18,11 @@ Expansion instruments may have different envelope types. For details on Expansio
 
 ## Editing instrument properties
 
-Clicking on the little gear icon next to an instrument (or **right-clicking** and selecting "Instrument Properties...") will show its properties. Like most things in FamiStudio, you can rename the instrument and change its color. 
+Clicking on the little gear icon next to an instrument (or **right-clicking** and selecting "Instrument Properties...") will show its properties (Name and Color). Like most things in FamiStudio, you can rename the instrument and change its color. 
 
 ![](images/EditInstrument.png#center)
 
-Most instruments also have parameters that can be edited in real-time by clicking the little arrow and expanding the button. 
+Most instruments also have parameters that can be edited in real-time by clicking the little arrow on the left side of the instrument. 
 
 ![](images/EditInstrument2.png#center)
 
@@ -33,11 +34,11 @@ Parameter(s) that is available on most instruments:
      
 ## Adding instruments
 
-You can add an instrument by pressing the "+" sign, and you can delete one by selecting "Delete Instrument" from the context menu. Deleting an instrument will delete all notes used by that instrument.
+You can add an instrument by pressing the "+" sign, and you can delete one by right clicking it and selecting "Delete Instrument". Deleting an instrument will delete all notes used by that instrument.
 
 ## Replacing an instrument by another
 
-To replace an instrument by another throughout the entire project, you can select the "Replace Instrument..." option from the context menu of the instrument. This will bring up a list allowing you to select the new instrument. This works similarly on mobile, except the list is less colored.
+To replace an instrument by another throughout the entire project, you can right click the instrument and select "Replace Instrument...". This will bring up a list allowing you to select the new instrument. This works similarly on mobile, except the list is less colored.
 
 ![](images/ReplaceInstrument2.png#center)
 
@@ -51,7 +52,7 @@ Also, when importing instruments from another FMS file that uses DPCM samples, y
 
 ![](images/ImportInstruments.png#center)
 
-Note that instruments that are using incompatible expansion audio will not be able to be imported. Also, instruments with the same names are assumed to be the same. If you project already contains an instrument called "Piano" and you try to import another one called "Piano", nothing will happen. You are responsible to uniquely name your instruments if they are truly different.
+Note that instruments that are using incompatible expansion audio will not be able to be imported. Also, instruments with the same names are assumed to be the same. If you project already contains an instrument called "Piano" and you try to import another one called "Piano", nothing will happen. The same happens with songs. You are responsible to uniquely name your instruments if they are different.
 
 ## Editing instrument envelopes
 
@@ -89,9 +90,9 @@ Clicking on an envelope button and dragging it on another instrument will copy t
 
 Envelopes cannot be deleted per-se, they can be cleared to they have essentially no effect. To clear and envelope, simply select the "Clear Envelope" option from the instrument context menu.
 
-# DPCM Instrument
+# Editing DPCM Samples
 
-The DPCM Instrument is a special instrument able to play DPCM samples. It is always present and cannot be deleted. For more information, please refer to the [DPCM Samples](dpcm.md) section. 
+DPCM Samples are covered in depth in the [DPCM Samples](dpcm.md) section. 
 
 # Editing Arpeggios
 

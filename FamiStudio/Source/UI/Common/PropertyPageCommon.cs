@@ -30,6 +30,7 @@ namespace FamiStudio
     public enum PropertyType
     {
         TextBox,
+        FileTextBox,
         ColoredTextBox,
         NumericUpDown,
         Slider,

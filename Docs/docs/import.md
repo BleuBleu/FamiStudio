@@ -26,8 +26,6 @@ Note that only a small subset of features is supported. Only the following effec
 
 Besides effects, there are also other limitations:
 
-* If multiple instruments assign DPCM samples to the same key of the DPCM instrument, only the first one will be assigned. Other samples will be loaded, but unassigned to any keys.
-* All DPCM samples will be loaded (and potentially assigned to a key of the DPCM instrument) but any sample over the 16KB FamiStudio limit will not play correctly or at all.
 * VRC7 1xx/2xx/3xx/Qxx/Rxx effects will likely not sound like FamiTracker and will need manual corrections.
 * Instruments using both pitch and arpeggio envelopes at the same time will likely not sound the same as in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker resets the pitch at each arpeggio notes, while FamiStudio does not. 
 * VRC6 saw channel is not influenced by duty cycle in FamiStudio. FamiStudio has a "saw master volume" on VRC6 instruments. Import/export process does not try account for this. Manual corrections may be needed.
@@ -69,7 +67,7 @@ The MIDI channel 10 is special an specific keys can be selected to filter specif
 
 ## FamiStudio Text 
 
-The FamiStudio text format is support, please see the documentation above for the format specification.
+The FamiStudio text format is supported, please see the documentation above for the format specification.
 
 ## Nintendo Sound Format
 
@@ -77,12 +75,12 @@ NSF (and NSFE) files can be imported in the desktop version of FamiStudio. This 
 
 ![](images/ImportNsf.png#center)
 
-Most NSF file will not contain the names of songs so they will usually have placeholder names. Besides the song to import, are the most important settings :
+Most NSF files will not contain the names of songs, so they will usually have placeholder names. Besides the song to import, are the most important settings :
 
 * **Duration** : Time (in sec) to extract from the NSF. 
 * **Pattern Length** : Number of frames in a pattern.
 * **Start frame** : Used to offset the entire song by a number of frames. This is useful when a song has an intro that is not the same length as the other patterns.
-* **Remove intro silence** : Some songs start with a bit of silence, this will wait until any sound is produce to start recording.
+* **Remove intro silence** : Some songs start with a bit of silence, this will wait until any sound is produced to start recording.
 * **Reverse DPCM bits** : This will set the "Reverse Bits" flag on all the imported samples. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should.
 * **Preserve DPCM padding bytes** : Force FamiStudio to keep the last byte of every sample, this will make all samples 16 bytes larger simply to keep an extra byte. This could be useful to keep looping samples intact. Should remain off most of the time since most games seem to ignore this byte.
 

@@ -31,26 +31,35 @@ Created by the [Xiph.Org Foundation](https://xiph.org/). Used for the OGG/Vorbis
 ### GLFW
 [GLFW](https://www.glfw.org/) is a very simple windowing & input management system for OpenGL. It is used by all 3 platforms on Desktop for the main FamiStudio window. The C# bindings are provided by [GLFWDotNet](https://github.com/smack0007/GLFWDotNet).
 
+### Stb
+[Stb](https://github.com/nothings/stb) is a fantastic, pure-C, single-file library that does a bunch of low-level things that are useful for game development. FamiStudio uses their True-Type font rasterization and rectangle packing code for its text rendering.
+
 ## Demo Songs
 
 A few demo songs are also provided with FamiStudio. Unless mentioned, the demo songs are my re-creations, done by reverse-engineering the NSF.
 
-* Another Winter - Anamanagughi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
-* Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
-* Dedrecil - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
-* Layla : The Iris Missions - Iris (by Supper)
-* Tower of Heaven - Indignant Divinity (Flashygoodness, cover by <a href='https://www.youtube.com/watch?v=0qV4dSBOH5s'>Danooct1</a>. Thanks!!!)
-* Green Hill Zone Theme - Sonic (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
-* Mega Man 2 - Stage Select & Dr. Wily's Castle
-* Journey To Silius - Intro
-* DuckTales! - The Moon
+* Another Winter - Anamanaguchi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Castlevania 2 - Bloody Tears
-* Shovel Knight - Strike the Earth! (Plains of Passage)
-* Shatterhand - Final Stage
+* Dedrecil - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* DuckTales! - The Moon
 * Gimmick - Strange Memories of Death (Improvements contributed by marklincadet. Thanks!!!)
-* Silver Surfer : BGM2
 * Gradius II - Farewell
 * Gyruss - Stage 2
-* FamiStudio - Tutorial Song (song created in tutorial)
+* Journey To Silius - Intro
 * Lagrange Point - Theme of Isis & Aqueduct (Contributed by marklincadet. Thanks!!!)
-* Megami Tensei II - Explorer  (Contributed by marklincadet. Thanks!!!)
+* Layla : The Iris Missions - Iris (by Supper)
+* Mega Man 2 - Stage Select & Dr. Wily's Castle
+* Mega Man 10 - King of Blades (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Megami Tensei II - Explorer (Contributed by marklincadet. Thanks!!!)
+* Mina the Hollower - Crypt Road (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Ochame Kinou - (cover by <a href='https://www.youtube.com/channel/UC5ttIE37dv2BFPzbaSBdrXQ'>Kawashin</a>. Thanks!!!)
+* SCAT - Stage 1 (Contributed by marklincadet. Thanks!!!)
+* Seashell Searching - Original (by Rei8bit. Thanks!!!)
+* Shatterhand - Final Stage
+* Shovel Knight - Strike the Earth! (Plains of Passage) & The Schemer
+* Silver Surfer : BGM2
+* Sonic 1 - Partial Soundtrack (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Sonic 3 - Special Stage (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Tetris Theme A - FamiStudio Tutorial Song (song created in tutorial)
+* Tower of Heaven - Indignant Divinity (Flashygoodness, cover by <a href='https://www.youtube.com/watch?v=0qV4dSBOH5s'>Danooct1</a>. Thanks!!!)

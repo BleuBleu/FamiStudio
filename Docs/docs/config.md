@@ -10,15 +10,21 @@ The configuration dialog dialog is accessed from the toolbar.
 
 ![](images/ConfigGeneral.png#center)
 
+* **Language**: Language to use in the app. These translations are user-contributed and may vary in quality/completeness. This also may affect the font used inside the app. By default, FamiStudio will try to make a best-guess based on the language of the OS.
+
 * **Check for updates**: At startup FamiStudio checks for new version online. This can be disabled.
 
 * **Show Tutorial at Startup**: If enabled, the on-boarding tutorial will be showed when FamiStudio is launched.
 
 * **Clear Undo/Redo on save**: Wipes the undo/redo stack every time the project is saved. This help keep the memory usage lower, but limits your ability to undo indefinitely.
 
+* **Rewing after play** : If enabled, the play head will move back to its previous location when stopping playback.
+
 * **Open last project on start**: Remember which project you last open and re-opens it next time you launch FamiStudio.
 
 * **Auto-save a copy every 2 minutes**: Save a backup copy of the current project every 2 minutes. This may prevent loosing data when the application crashes.
+
+* **Pattern name prefix** / **digits**: Allows customizing the default name of patterns. The prefix may be empty to get a purerely numeric name. The number of digit will be prefixed with zeroes.
 
 ## User Interface Configuration
 
@@ -39,19 +45,25 @@ The configuration dialog dialog is accessed from the toolbar.
     * **Piano Roll**: Only enables follow mode in the piano roll.
     * **Both**: Enables follow mode on both controls.<br><br>
 
+* **Follow Mode Range Limit**: The position at which follow mode your start scrolling, relative to the width of the sequencer/piano roll.
+
 * **Scroll Bars**: Display scrolls bars in the Sequencer and the Piano Roll.
 
     * **None**: No scroll bares.
     * **Thin**: Small scroll bars.
     * **Thick**: Large scroll bars.<br><br>
 
-* **Ideal Sequencer Height** : The ideal height of the Sequencer, in percentage of the height of the FamiStudio window. Note that patterns have a minimum size, so this *ideal* size may not be achievable when there are many channels.
+* **Ideal Sequencer Height**: The ideal height of the Sequencer, in percentage of the height of the FamiStudio window. Note that patterns have a minimum size, so this *ideal* size may not be achievable when there are many channels.
+
+* **DPCM Channel Color Mode**: Color to use for the notes on the DPCM channel. You may use the color of the instrument, or the color of the DPCM samples.
 
 * **Allow Sequencer Vertical Scrolling** : If enabled and the ideal height above cannot be achieve (usually because there are too many channels), will allow vertically scrolling in the sequencer instead of going above the ideal size.
 
 * **Show FamiTracker Stop Notes**: When using FamiTracker tempo mode, display implicit stop notes (whenever a note ends without being interrupted by another note) as little triangles. This makes it easier to set note delays for those.
 
-* **Show Piano Roll View Range**: Displays a yellow rectangle in the sequencer representing the view range of the piano roll.
+* **Show Register View Tab**: When enabled, will show the Register Viewer tab in the Project Explorer, which displays the state of the registers in real-time.
+
+* **Use Operating System Dialogs**: If enabled, will use the Windows dialogs for things like file open/save and message boxes. When disabled, will use the custom FamiStudio dialogs. This is only available on Windows.
 
 ## Input Configuration
 
@@ -78,7 +90,9 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Prevent popping on square channels**: The NES/Famicom had a bug where the phase of square channels will reset around some notes (A-3, A-2, D-2, A-1, F-1, D-1, and B-0 on NTSC, or A#3, A#2, D#2, A#1, F#1, D#1, and C-0 on PAL), resulting in audible clicks or pops. This option will work around that bug using the Smooth Vibrato technique by Blaarg, resulting in smooth pitch changes. Note that this option will not carry over to FamiTracker if you export.
 
-* **Clamp periods and notes** : Notes that go below the lowest possible note or above the highest possible note will typically wrap around when listening the song on real hardware. This is due to the fact that currently the SoundEngine does not clamp notes or period to the valid range. The emulation inside FamiStudio does it by default. If you want a more hardware accurate behavior, you can disable this option.
+* **Mix Namco 163 channels**: When enabled, FamiStudio will correctly mix the Namco 163 channels. Leave this OFF and set a very agressive low-pass filter to mimic real hardware. 
+
+* **Clamp periods and notes**: Notes that go below the lowest possible note or above the highest possible note will typically wrap around when listening the song on real hardware. This is due to the fact that currently the SoundEngine does not clamp notes or period to the valid range. The emulation inside FamiStudio does it by default. If you want a more hardware accurate behavior, you can disable this option.
 
 * **Mute piano roll interactions during playback** : When enabled, dragging/adding notes in the piano roll will not preview the notes when the song is playing. Some users find this distracting.
 
@@ -108,11 +122,11 @@ Note that these settings have no effect outside of FamiStudio.
 
 FFMpeg is a video encoder required to enable video export. You can download it from [here](ffmpeg.md). Once downloaded and installed somewhere on your computer, you will need to tell FamiStudio where it is.
 
-## QWERTY Configuration
+## Keyboards Configuration
 
-![](images/ConfigQWERTY.png#center)
+![](images/ConfigKeys.png#center)
 
-This section allows remapping the keyboard keys for keyboard-piano input. This allows FamiStudio to support AZERTY, QWERTZ or any other international keyboard. Up to 2 keys can be assigned to a note.
+This section allows remapping the keyboard shortcuts for most actions. The default layout will usually be based off the QWERTY layout, but it can be modified after to support arbitrary keyboard layouts such as QWERTZ or AZERTY.
 
 ## Mobile Configuration
 

@@ -362,6 +362,9 @@ namespace FamiStudio
                 }
                 else if (mode == Mode.Save)
                 {
+                    if (string.IsNullOrEmpty(textFile.Text))
+                        return false;
+
                     // Force extension.
                     if (!MatchesExtensionList(f, extensions))
                         f += extensions[0].Trim('*');
