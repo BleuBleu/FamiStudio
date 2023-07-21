@@ -208,7 +208,7 @@ namespace FamiStudio
 
                 case ExpansionType.N163:
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
-                        { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.InternalNames[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
+                        { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePositionLabel, 0, 0, 0, null, false, 2)
                         { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWavePos; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WaveSizeLabel, 4, 4, 16, null, false, 4)
