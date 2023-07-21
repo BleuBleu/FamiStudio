@@ -1,8 +1,9 @@
 4.1.1 Hotfix
 ============
-/ MacOS file open issue, seems like we need to click twice now?
 - N163 "Resample" string not localized.
 - Register viewer monospace issues with chinese, portuguese too? Limit monospace to a few characters.
+- Piano roll video compression issues?
+/ Update ffmpeg doc for arm64 (https://www.osxexperts.net/)
 
 Exception android.runtime.JavaProxyThrowable: System.IndexOutOfRangeException: Index was outside the bounds of the array.
   at FamiStudio.WaveUtils.AdjustVolume (System.Int16[] wave, System.Collections.Generic.List`1[T] volumeEnvelope) [0x00083] in <9a3d9e2e7fe24f698554996a131f0729>:0 
@@ -26,6 +27,7 @@ Exception android.runtime.JavaProxyThrowable: System.IndexOutOfRangeException: I
 - Fixed occasional crash on MacOS when using Cmd+Q
 - Fixed issues with MIDI device on MacOS
 - Fixed trackpad controls on MacOS 
+- Fixed keyboard shortcut confusion with select/force display channels
 - Changed the ffmpeg path option to allow text input, and allow using ffmpeg if its on the PATH
 
 Later
