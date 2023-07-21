@@ -927,18 +927,20 @@ namespace FamiStudio
 
         public static bool IsMonospaceChar(char c)
         {
+            var cat = char.GetUnicodeCategory(c);
+
             return
-                c == '$' ||
-                c == '-' ||
-                c == '+' ||
-                c == '#' ||
-                c == '(' ||
-                c == ')' ||
-                c == '.' ||
-                c == ' ' ||
-                (c >= 'a' && c <= 'z') ||
-                (c >= 'A' && c <= 'Z') ||
-                (c >= '0' && c <= '9');
+                (c == '$') ||
+                (c == '-') ||
+                (c == '+') ||
+                (c == '#') ||
+                (c == '(') ||
+                (c == ')') ||
+                (c == '.') ||
+                (c == ' ') ||
+                (c >= '0' && c <= '9') ||
+                (cat == System.Globalization.UnicodeCategory.LowercaseLetter) || // Chinese/korean/japanese characters return "OtherLetter"
+                (cat == System.Globalization.UnicodeCategory.UppercaseLetter);
         }
 
         public int MeasureString(string text, bool mono)
