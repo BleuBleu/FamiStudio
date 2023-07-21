@@ -3,6 +3,7 @@
 - N163 "Resample" string not localized.
 - Register viewer monospace issues with chinese, portuguese too? Limit monospace to a few characters.
 - Piano roll video compression issues?
+- Look at the sketchy export dialog code from alex.
 / Update ffmpeg doc for arm64 (https://www.osxexperts.net/)
 
 Exception android.runtime.JavaProxyThrowable: System.IndexOutOfRangeException: Index was outside the bounds of the array.

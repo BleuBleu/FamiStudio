@@ -88,9 +88,8 @@ namespace FamiStudio
             InitialFrameBufferClear();
             CreateGraphics();
             BindGLFWCallbacks();
-
-            container = new FamiStudioContainer(this);
-            activeControl = PianoRoll;
+            CreateContainer();
+            RefreshLayout();
         }
 
         private void BindGLFWCallbacks()
@@ -149,6 +148,12 @@ namespace FamiStudio
         {
             graphics = new Graphics();
             fonts = new Fonts(graphics);
+        }
+
+        private void CreateContainer()
+        {
+            container = new FamiStudioContainer(this);
+            activeControl = PianoRoll;
         }
 
         private void DestroyGraphics()
@@ -828,7 +833,7 @@ namespace FamiStudio
 
         public void InitDialog(Dialog dialog)
         {
-			container.InitDialog(dialog);
+            container.InitDialog(dialog);
         }
 
         public void PushDialog(Dialog dialog)
