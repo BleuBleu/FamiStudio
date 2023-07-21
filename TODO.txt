@@ -29,6 +29,7 @@ Exception android.runtime.JavaProxyThrowable: System.IndexOutOfRangeException: I
 - Fixed trackpad controls on MacOS 
 - Fixed keyboard shortcut confusion with select/force display channels
 - Changed the ffmpeg path option to allow text input, and allow using ffmpeg if its on the PATH
+- Changed the default keyboard shortcut to force display channel to SHIFT + F-keys on MacOS to avoid issues
 
 Later
 =====
