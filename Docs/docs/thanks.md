@@ -36,30 +36,31 @@ Created by the [Xiph.Org Foundation](https://xiph.org/). Used for the OGG/Vorbis
 
 ## Demo Songs
 
-A few demo songs are also provided with FamiStudio. Unless mentioned, the demo songs are my re-creations, done by reverse-engineering the NSF.
+A few demo songs are also provided with FamiStudio. Unless mentioned, the demo songs are my re-creations, done by reverse-engineering the NSF. Many thanks to the contributors.
 
-* Another Winter - Anamanaguchi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Another Winter - Anamanaguchi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * Castlevania 2 - Bloody Tears
-* Dedrecil - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Dedrecil - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * DuckTales! - The Moon
-* Gimmick - Strange Memories of Death (Improvements contributed by marklincadet. Thanks!!!)
+* Gimmick - Strange Memories of Death (Improvements contributed by [marklincadet](https://youtube.com/@marklincadet))
 * Gradius II - Farewell
 * Gyruss - Stage 2
 * Journey To Silius - Intro
-* Lagrange Point - Theme of Isis & Aqueduct (Contributed by marklincadet. Thanks!!!)
+* Lagrange Point - Theme of Isis & Aqueduct (Contributed by [marklincadet](https://youtube.com/@marklincadet))
 * Layla : The Iris Missions - Iris (by Supper)
+* Lupin The Third (cover by [Verum Corner](https://www.youtube.com/@verumcorner393))
 * Mega Man 2 - Stage Select & Dr. Wily's Castle
-* Mega Man 10 - King of Blades (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
-* Megami Tensei II - Explorer (Contributed by marklincadet. Thanks!!!)
-* Mina the Hollower - Crypt Road (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
-* Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
-* Ochame Kinou - (cover by <a href='https://www.youtube.com/channel/UC5ttIE37dv2BFPzbaSBdrXQ'>Kawashin</a>. Thanks!!!)
-* SCAT - Stage 1 (Contributed by marklincadet. Thanks!!!)
-* Seashell Searching - Original (by Rei8bit. Thanks!!!)
+* Mega Man 10 - King of Blades (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
+* Megami Tensei II - Explorer (Contributed by [marklincadet](https://youtube.com/@marklincadet))
+* Mina the Hollower - Crypt Road (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
+* Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
+* Ochame Kinou - (cover by <a href='https://www.youtube.com/channel/UC5ttIE37dv2BFPzbaSBdrXQ'>Kawashin</a>)
+* SCAT - Stage 1 (Contributed by [marklincadet](https://youtube.com/@marklincadet))
+* Seashell Searching - Original (by Rei8bit)
 * Shatterhand - Final Stage
 * Shovel Knight - Strike the Earth! (Plains of Passage) & The Schemer
 * Silver Surfer : BGM2
-* Sonic 1 - Partial Soundtrack (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
-* Sonic 3 - Special Stage (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Sonic 1 - Partial Soundtrack (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
+* Sonic 3 - Special Stage (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * Tetris Theme A - FamiStudio Tutorial Song (song created in tutorial)
-* Tower of Heaven - Indignant Divinity (Flashygoodness, cover by <a href='https://www.youtube.com/watch?v=0qV4dSBOH5s'>Danooct1</a>. Thanks!!!)
+* Tower of Heaven - Indignant Divinity (Flashygoodness, cover by <a href='https://www.youtube.com/watch?v=0qV4dSBOH5s'>Danooct1</a>)
