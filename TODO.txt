@@ -1,35 +1,7 @@
-4.1.1 Hotfix
+4.1.2 Hotfix
 ============
 - Piano roll video compression issues?
-- Look at the sketchy export dialog code from alex.
 / Update ffmpeg doc for arm64 (https://www.osxexperts.net/)
-
-Exception android.runtime.JavaProxyThrowable: System.IndexOutOfRangeException: Index was outside the bounds of the array.
-  at FamiStudio.WaveUtils.AdjustVolume (System.Int16[] wave, System.Collections.Generic.List`1[T] volumeEnvelope) [0x00083] in <9a3d9e2e7fe24f698554996a131f0729>:0 
-  at FamiStudio.DPCMSample.Process () [0x0023e] in <9a3d9e2e7fe24f698554996a131f0729>:0 
-  at FamiStudio.PianoRoll.UpdateVolumeEnvelopeDrag (System.Int32 x, System.Int32 y, System.Boolean final) [0x000d9] in <9a3d9e2e7fe24f698554996a131f0729>:0 
-  at FamiStudio.PianoRoll.UpdateCaptureOperation (System.Int32 x, System.Int32 y, System.Single scale, System.Boolean realTime) [0x001bc] in <9a3d9e2e7fe24f698554996a131f0729>:0 
-  at FamiStudio.PianoRoll.OnTouchMove (System.Int32 x, System.Int32 y) [0x00000] in <9a3d9e2e7fe24f698554996a131f0729>:0 
-  at FamiStudio.Control.TouchMove (System.Int32 x, System.Int32 y) [0x00000] in <9a3d9e2e7fe24f698554996a131f0729>:0 
-  at FamiStudio.FamiStudioWindow.OnTouchEvent (Android.Views.MotionEvent e) [0x000ab] in <9a3d9e2e7fe24f698554996a131f0729>:0 
-  
-4.1.1 Change Log
-================
-- Fixed DPCM samples not playing when exporting to ROM with VRC6
-- Fixed transposition of DPCM samples incorrectly affecting all instruments
-- Fixed "Clear effect values" not always working
-- Fixed startup crashes with rtmidi on Linux and updating the version we provide
-- Fixed export of DPCM samples with FamiStudio Text format
-- Fixed file association on Windows when using the portable EXE version
-- Fixed file association on MacOS not always working
-- Fixed first mouse click outside a context menu being ignored (will behave like 4.0.x)
-- Fixed occasional crash on MacOS when using Cmd+Q
-- Fixed issues with MIDI device on MacOS
-- Fixed trackpad controls on MacOS 
-- Fixed keyboard shortcut confusion with select/force display channels
-- Fixed minor localization issues.
-- Changed the ffmpeg path option to allow text input, and allow using ffmpeg if its on the PATH
-- Changed the default keyboard shortcut to force display channel to SHIFT + F-keys on MacOS to avoid issues
 
 Later
 =====
