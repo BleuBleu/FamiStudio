@@ -16,13 +16,13 @@ List of expansions supported:
 
 * **Namco 163**: Adds up to 8 wavetable channels. It has 128 bytes of RAM to store all the currently used waveforms. Waveforms can be 4, 8, 16 and 32 in size. Smaller waveforms will sound worse, but you can have more of them at any given time. FamiStudio will work at its best with a sample size of 16. Also, it should be noted that for technical reasons, the more channels you add, the worse the audio quality will be. It is recommended that you use 4 channels or less, which is what most games using the expansion did.
 
-* **Sunsoft S5B**: Add 3 extra square channels with shared noise capabilities. These channels are fixed at a duty cycle or 50%. It was based off the Yamaha YM2149F. While this expansion was extremely powerful, it was only ever used in one game (Gimmick!) and this game did not make use of any advanced features of the chip. For this reason, FamiStudio (and most emulator) only support a small subset of features.
+* **Sunsoft S5B**: Add 3 extra square channels with shared noise capabilities. These channels are fixed at a duty cycle of 50%. It was based off the Yamaha YM2149F. While this expansion was extremely powerful, it was only ever used in one game (Gimmick!) and this game did not make use of any advanced features of the chip. For this reason, FamiStudio (and most emulators) only support a small subset of features.
 
 * **EPSM**: EPSM is not an audio expansion that ever used, or even existed in the lifetime of the NES, but rather the pet project of [Perkka](https://github.com/Perkka2/EPSM) who designed a small circuit board that can be plugged in the expansion port of the NES and controlled by it to produce sound. The expansion is based off the Yamaha YMF288 chip and adds 3 extra square channels with shared noise capabilities, 6 FM synthesis channels and 6 rhythm channels. The square are fixed at a duty cycle or 50%. Those are essentially the same as Sunsoft S5B. The FM channels are 4-OP channels that can be configured independently. The rhythm channels are 6 pre-defined drum samples.
 
 ## Enabling expansion audio
 
-The audio expansion(s) used is set in the project properties, which you can access by double-clicking on the project name (first row in the Project Explorer).
+The audio expansion(s) used is set in the project properties, which you can access by clicking on the gear next to the project name (first row in the Project Explorer).
 
 ![](images/EditProject.png#center)
 
@@ -34,7 +34,7 @@ Note that while using multiple audio expansion(s) is supported in FamiStudio, no
 
 Almost all expansion audio requires using special instruments on the expansion channels, the only exception being MMC5 because of its similarity with the regular square channels.
 
-When you have an expansion enabled and try to create an instrument, you will be asked what time of instrument you want to create.
+When you have an expansion enabled and try to create an instrument, you will be asked what kind of instrument you want to create.
 
 ![](images/CreateExpInstrument.png#center)
 

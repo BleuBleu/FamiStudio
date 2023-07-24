@@ -122,9 +122,9 @@ namespace FamiStudio
             {
                 App.HideContextMenu();
             }
-            else if (hoveredItemIndex >= 0)
+            else 
             {
-                if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+                if (hoveredItemIndex >= 0 && (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter))
                 {
                     App.HideContextMenu();
                     MarkDirty();
@@ -132,11 +132,11 @@ namespace FamiStudio
                 }
                 else if (e.Key == Keys.Up)
                 {
-                    SetHoveredItemIndex(Math.Max(0, hoveredItemIndex - 1));
+                    SetHoveredItemIndex(Math.Clamp(hoveredItemIndex - 1, 0, menuOptions.Length - 1));
                 }
                 else if (e.Key == Keys.Down)
                 {
-                    SetHoveredItemIndex(Math.Min(menuOptions.Length - 1, hoveredItemIndex + 1));
+                    SetHoveredItemIndex(Math.Clamp(hoveredItemIndex + 1, 0, menuOptions.Length - 1));
                 }
             }
         }

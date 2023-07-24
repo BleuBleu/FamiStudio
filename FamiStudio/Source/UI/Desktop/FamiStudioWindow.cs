@@ -625,8 +625,11 @@ namespace FamiStudio
                     famistudio.KeyUp(e);
             }
 
-            foreach (var ctrl in controls)
-                SendKeyUpOrDown(ctrl, e, down);
+            if (!quit)
+            {
+                foreach (var ctrl in controls)
+                    SendKeyUpOrDown(ctrl, e, down);
+            }
         }
 
         private void CharCallback(IntPtr window, uint codepoint)

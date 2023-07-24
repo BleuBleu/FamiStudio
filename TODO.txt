@@ -1,43 +1,41 @@
-4.1.0
-=====
-Beta bugs:
-- OSC trigger assert 
-- Option to keep unused samples when exporting to sound engine. 
-	=> Shelved, will need more work.
-- MacOS trackpad issue
+4.1.1 Hotfix
+============
+/ MacOS file open issue, seems like we need to click twice now?
+- N163 "Resample" string not localized.
+- Register viewer monospace issues with chinese, portuguese too? Limit monospace to a few characters.
+
+Exception android.runtime.JavaProxyThrowable: System.IndexOutOfRangeException: Index was outside the bounds of the array.
+  at FamiStudio.WaveUtils.AdjustVolume (System.Int16[] wave, System.Collections.Generic.List`1[T] volumeEnvelope) [0x00083] in <9a3d9e2e7fe24f698554996a131f0729>:0 
+  at FamiStudio.DPCMSample.Process () [0x0023e] in <9a3d9e2e7fe24f698554996a131f0729>:0 
+  at FamiStudio.PianoRoll.UpdateVolumeEnvelopeDrag (System.Int32 x, System.Int32 y, System.Boolean final) [0x000d9] in <9a3d9e2e7fe24f698554996a131f0729>:0 
+  at FamiStudio.PianoRoll.UpdateCaptureOperation (System.Int32 x, System.Int32 y, System.Single scale, System.Boolean realTime) [0x001bc] in <9a3d9e2e7fe24f698554996a131f0729>:0 
+  at FamiStudio.PianoRoll.OnTouchMove (System.Int32 x, System.Int32 y) [0x00000] in <9a3d9e2e7fe24f698554996a131f0729>:0 
+  at FamiStudio.Control.TouchMove (System.Int32 x, System.Int32 y) [0x00000] in <9a3d9e2e7fe24f698554996a131f0729>:0 
+  at FamiStudio.FamiStudioWindow.OnTouchEvent (Android.Views.MotionEvent e) [0x000ab] in <9a3d9e2e7fe24f698554996a131f0729>:0 
+  
+4.1.1 Change Log
+================
+- Fixed DPCM samples not playing when exporting to ROM with VRC6
+- Fixed transposition of DPCM samples incorrectly affecting all instruments
+- Fixed "Clear effect values" not always working
+- Fixed startup crashes with rtmidi on Linux and updating the version we provide
+- Fixed export of DPCM samples with FamiStudio Text format
+- Fixed file association on Windows when using the portable EXE version
+- Fixed file association on MacOS not always working
+- Fixed first mouse click outside a context menu being ignored (will behave like 4.0.x)
+- Fixed occasional crash on MacOS when using Cmd+Q
+- Fixed issues with MIDI device on MacOS
+- Fixed trackpad controls on MacOS 
+- Changed the ffmpeg path option to allow text input, and allow using ffmpeg if its on the PATH
 
 Later
 =====
 - Borrow TNS-HFC3 from forple in sept/oct.
 
-Packaging
-=========
-/ Add "description" HTML metadata to famistudio doc.
-- Recompile ROMs, re-export data, bump versions, etc.
-- Re-export all ROM test (.bin) files at the end.
-
-4.1.0 Change Log
-================
-- Windows version is now 64-bit and targets .NET 5.0.
-- Linux/MacOS versions now uses .NET 6.0. Mono is not longer used.
-	- Install .NET for macOS here : https://learn.microsoft.com/en-us/dotnet/core/install/macos
-	- Install .NET for Linux here : https://learn.microsoft.com/en-us/dotnet/core/install/linux
-- All desktop version now requires OpenGL 3.3.
-- Android version now requires OpenGL ES 2.0.
-- Windows 7 is no longer supported.
-- Configurable keyboard shortcuts
-- Text rendering changes, small text may look slightly blurrier. 
-- More UI scaling % options
-- More context menus options throughout the app
-- DPCM improvements:
-	- No more "DPCM instrument", each instrument can have DPCM samples assigned (a-la FamiTracker)
-	- Up to 256KB of samples using bank switching.
-- Option to mix N163 or not
-- Project explorer sorting improvements
-- NSF import support on Android
-- Stereo and delay export support on Android.
-- Sunsoft 5B noise support (Perkka contribution)
-- Experimental translations (spanish being the most complete)
+dotnet publish
+==============
+- dotnet publish /p:Configuration=Release /p:Platform="x64" ../FamiStudio/FamiStudio.csproj -r win-x64 -c Release -f net5.0 --self-contained
+- Copies all the runtime with the build, kind of weird.
 
 Android SDK 12
 ==============
@@ -107,7 +105,9 @@ Desktop tutorial GIFs
 
 Trailer/scroll 
 ============== 
-- Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece. 
+- Need to install System.Drawing.Common 5.0.3
+- Change net5.0 to net5.0-windows
+- Stashed in 933bf502b3f46d8d9fda25fb815cc7602479b4b6. 
  
 MkDocs 
 ====== 
@@ -115,7 +115,7 @@ MkDocs
 - pip install mkdocs 
 - pip install mkdocs-bootswatch 
 - pip install mkdocs-meta-descriptions-plugin
-- Modify "%localappdata%\Programs\Python\Python39\Lib\site-packages\mkdocs\themes\mkdocs\base.html"
+- Modify "%localappdata%\Programs\Python\Python311\Lib\site-packages\mkdocs\themes\mkdocs\base.html"
 		{% if page.meta and page.meta.description %}
 		<meta name="description" content="{{ page.meta.description }}">
 		{% elif config.site_description %}
@@ -128,8 +128,10 @@ Discord
 
 Backlog: 
 =========
-
-========================================
+- OSC trigger assert 
+- Option to keep unused samples when exporting to sound engine. 
+	=> Shelved, will need more work.
+- MacOS trackpad issue
 - No-attack refactor:
 	- instrument change:
 		* optional : disable attack

@@ -63,7 +63,8 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
-            outerMargin = GetButtonRect(0).Width + textBoxMargin;
+            outerMarginLeft = GetButtonRect(0).Width + textBoxMargin;
+            outerMarginRight = outerMarginLeft;
 
             var g = ParentWindow.Graphics;
             bmp = new[]

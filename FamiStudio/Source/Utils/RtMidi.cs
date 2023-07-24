@@ -23,8 +23,11 @@ namespace FamiStudio
         [DllImport(RtMidiLibName)]
         static extern int rtmidi_get_port_count(IntPtr device);
 
-        [DllImport(RtMidiLibName)]
-        static extern IntPtr rtmidi_get_port_name(IntPtr device, int portNumber);
+        [DllImport(RtMidiLibName, EntryPoint = "rtmidi_get_port_name")]
+        static extern IntPtr rtmidi_get_port_name_old(IntPtr device, int portNumber); // pre-5.0.0
+
+        [DllImport(RtMidiLibName, EntryPoint = "rtmidi_get_port_name")]
+        static extern int rtmidi_get_port_name_new(IntPtr device, int portNumber, IntPtr bufOut, IntPtr bufLen); // 5.0.0 and newer
 
         [DllImport(RtMidiLibName)]
         static extern void rtmidi_open_port(IntPtr device, int portNumber, string portName);
@@ -46,6 +49,8 @@ namespace FamiStudio
 
         private static IntPtr midiIn = IntPtr.Zero;
         private static RtMidiCCallback callback = null;
+
+        private const string ErrorPortName = "(Unknown)";
 
         public static void Initialize()
         {
@@ -85,8 +90,31 @@ namespace FamiStudio
 
         public static unsafe string GetDeviceName(int idx)
         {
-            return Marshal.PtrToStringAnsi(rtmidi_get_port_name(midiIn, idx));
-        }
+            // This is kind of ridiculous. In rtmidi 5 (which is named 6.0.0), they changed the signature 
+            // of this function. We currently have no way to know which version we are running besides looking
+            // at the name of the library we are loading. We could try to call both function until it works 
+            // (i tried it), but that's even stupider.
+
+            try
+            {
+                if (Platform.RtMidiVersionHint >= 6)
+                {
+                    var bufferSize = 1024;
+                    var buffer = stackalloc byte[bufferSize];
+                    var charCount = rtmidi_get_port_name_new(midiIn, idx, new IntPtr(&buffer[0]), new IntPtr(&bufferSize));
+                    return charCount > 0 && charCount <= 1024 ? Marshal.PtrToStringAnsi(new IntPtr(&buffer[0]), charCount) : ErrorPortName;
+                }
+                else 
+                {
+                    var namePtr = rtmidi_get_port_name_old(midiIn, idx);
+                    return Marshal.PtrToStringAnsi(namePtr);
+                }
+            }
+            catch
+            {
+                return ErrorPortName;
+            }
+    }
 
         public static bool Open(int idx)
         {

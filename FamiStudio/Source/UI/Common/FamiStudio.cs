@@ -643,7 +643,13 @@ namespace FamiStudio
                 return false;
             }
 
-            Initialize(win, args.Length > 0 ? args[0] : null);
+            #if FAMISTUDIO_MACOS
+                var filename = MacUtils.GetInitialOpenDocument();   
+            #else
+                var filename = args.Length > 0 ? args[0] : null;
+            #endif
+
+            Initialize(win, filename);
             window.Run();
 
             return true;

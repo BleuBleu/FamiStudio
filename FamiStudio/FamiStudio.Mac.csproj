@@ -158,6 +158,7 @@
     <Compile Include="Source\UI\Desktop\Controls\CheckBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ColorPicker.cs" />
     <Compile Include="Source\UI\Desktop\Controls\DropDown.cs" />
+    <Compile Include="Source\UI\Desktop\Controls\FileTextBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Grid.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ImageBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Label.cs" />
@@ -313,7 +314,6 @@
     <EmbeddedResource Include="Resources\Tutorials\Tutorial7.gif" />
     <EmbeddedResource Include="Resources\Tutorials\Tutorial8.gif" />
     <EmbeddedResource Include="Resources\Tutorials\Tutorial9.gif" />
-    <EmbeddedResource Include="Resources\Tutorials\Tutorial10.gif" />
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Misc\VideoWatermark.tga" />

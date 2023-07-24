@@ -1053,7 +1053,6 @@ load_success:
         lda (song_ptr), y
         sta VRC6_PRG_SELECT_8000
         lda first_dpcm_bank
-        asl ; We count in 16KB page, but are mapping a 8KB page, x2.
         sta VRC6_PRG_SELECT_C000
 
     .else
@@ -1573,7 +1572,6 @@ done:
         adc first_dpcm_bank
         sta N163_PRG_SELECT_C000
     .elseif ::FAMISTUDIO_EXP_VRC6
-        asl ; We count in 16KB page, but are mapping a 8KB page, so x2.
         adc first_dpcm_bank
         sta VRC6_PRG_SELECT_C000
     .else

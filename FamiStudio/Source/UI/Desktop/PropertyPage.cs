@@ -101,6 +101,21 @@ namespace FamiStudio
             return textBox;
         }
 
+        private TextBox CreateFileTextBox(string txt, int maxLength, string tooltip = null)
+        {
+            var textBox = new FileTextBox(txt, maxLength);
+            textBox.ToolTip = tooltip;
+            textBox.Click += FileTextBox_Click;
+
+            return textBox;
+        }
+
+        private void FileTextBox_Click(Control sender)
+        {
+            var propIdx = GetPropertyIndexForControl(sender);
+            PropertyClicked?.Invoke(this, ClickType.Button, propIdx, -1, -1);
+        }
+
         private LogTextBox CreateLogTextBox()
         {
             return new LogTextBox(15);
@@ -310,6 +325,18 @@ namespace FamiStudio
                     type = PropertyType.TextBox,
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateTextBox(value, maxLength, tooltip)
+                });
+            return properties.Count - 1;
+        }
+
+        public int AddFileTextBox(string label, string value, int maxLength = 0, string tooltip = null)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.TextBox,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateFileTextBox(value, maxLength, tooltip)
                 });
             return properties.Count - 1;
         }
@@ -669,6 +696,7 @@ namespace FamiStudio
             switch (prop.type)
             {
                 case PropertyType.TextBox:
+                case PropertyType.FileTextBox:
                 case PropertyType.ColoredTextBox:
                 case PropertyType.LogTextBox:
                     return (prop.control as TextBox).Text;
@@ -751,6 +779,7 @@ namespace FamiStudio
                     (prop.control as Button).Text = (string)value;
                     break;
                 case PropertyType.LogTextBox:
+                case PropertyType.FileTextBox:
                 case PropertyType.TextBox:
                     (prop.control as TextBox).Text = (string)value;
                     break;

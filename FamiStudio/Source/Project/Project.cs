@@ -306,7 +306,7 @@ namespace FamiStudio
             return sample;
         }
 
-        public void TransposeDPCMMapping(int oldNote, int newNote)
+        public void TransposeDPCMMapping(int oldNote, int newNote, Instrument instrument)
         {
             foreach (var song in songs)
             {
@@ -317,7 +317,7 @@ namespace FamiStudio
                     bool dirty = false;
                     foreach (var note in pattern.Notes.Values)
                     {
-                        if (note.Value == oldNote)
+                        if (note.Instrument == instrument && note.Value == oldNote)
                         {
                             note.Value = (byte)newNote;
                             dirty = true;

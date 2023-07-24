@@ -302,6 +302,11 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        public int AddFileTextBox(string label, string value, int maxLength = 0, string tooltip = null)
+        {
+            return AddTextBox(label, value, maxLength, tooltip);
+        }
+
         public bool OnEditorAction(TextView v, [GeneratedEnum] ImeAction actionId, KeyEvent e)
         {
             if (actionId == ImeAction.Done)
@@ -923,6 +928,7 @@ namespace FamiStudio
             switch (prop.type)
             {
                 case PropertyType.TextBox:
+                case PropertyType.FileTextBox:
                 case PropertyType.ColoredTextBox:
                 case PropertyType.LogTextBox:
                     return (prop.controls[0] as EditText).Text;
@@ -1018,6 +1024,7 @@ namespace FamiStudio
                     (prop.controls[0] as MaterialButton).Text = (string)value;
                     break;
                 case PropertyType.TextBox:
+                case PropertyType.FileTextBox:
                 case PropertyType.LogTextBox:
                     (prop.controls[0] as EditText).Text = (string)value;
                     break;

@@ -18,11 +18,11 @@ Expansion instruments may have different envelope types. For details on Expansio
 
 ## Editing instrument properties
 
-Clicking on the little gear icon next to an instrument (or **right-clicking** and selecting "Instrument Properties...") will show its properties. Like most things in FamiStudio, you can rename the instrument and change its color. 
+Clicking on the little gear icon next to an instrument (or **right-clicking** and selecting "Instrument Properties...") will show its properties (Name and Color). Like most things in FamiStudio, you can rename the instrument and change its color. 
 
 ![](images/EditInstrument.png#center)
 
-Most instruments also have parameters that can be edited in real-time by clicking the little arrow and expanding the button. 
+Most instruments also have parameters that can be edited in real-time by clicking the little arrow on the left side of the instrument. 
 
 ![](images/EditInstrument2.png#center)
 
@@ -34,11 +34,11 @@ Parameter(s) that is available on most instruments:
      
 ## Adding instruments
 
-You can add an instrument by pressing the "+" sign, and you can delete one by selecting "Delete Instrument" from the context menu. Deleting an instrument will delete all notes used by that instrument.
+You can add an instrument by pressing the "+" sign, and you can delete one by right clicking it and selecting "Delete Instrument". Deleting an instrument will delete all notes used by that instrument.
 
 ## Replacing an instrument by another
 
-To replace an instrument by another throughout the entire project, you can select the "Replace Instrument..." option from the context menu of the instrument. This will bring up a list allowing you to select the new instrument. This works similarly on mobile, except the list is less colored.
+To replace an instrument by another throughout the entire project, you can right click the instrument and select "Replace Instrument...". This will bring up a list allowing you to select the new instrument. This works similarly on mobile, except the list is less colored.
 
 ![](images/ReplaceInstrument2.png#center)
 
@@ -52,7 +52,7 @@ Also, when importing instruments from another FMS file that uses DPCM samples, y
 
 ![](images/ImportInstruments.png#center)
 
-Note that instruments that are using incompatible expansion audio will not be able to be imported. Also, instruments with the same names are assumed to be the same. If you project already contains an instrument called "Piano" and you try to import another one called "Piano", nothing will happen. You are responsible to uniquely name your instruments if they are truly different.
+Note that instruments that are using incompatible expansion audio will not be able to be imported. Also, instruments with the same names are assumed to be the same. If you project already contains an instrument called "Piano" and you try to import another one called "Piano", nothing will happen. The same happens with songs. You are responsible to uniquely name your instruments if they are different.
 
 ## Editing instrument envelopes
 

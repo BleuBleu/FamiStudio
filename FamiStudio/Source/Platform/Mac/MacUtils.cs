@@ -223,6 +223,7 @@ namespace FamiStudio
         static IntPtr famiStudioPasteboard;
         static float  doubleClickInterval = 0.25f;
         static EventDelegate eventDelegate;
+        static string lastOpenedDocument;
 
         public static IntPtr FoundationLibrary => foundationLib;
         public static IntPtr NSApplication => nsApplication;
@@ -765,6 +766,11 @@ namespace FamiStudio
             return null;
         }
 
+        public static string GetInitialOpenDocument()
+        {
+            return lastOpenedDocument;
+        }
+
         static int HandleOpenDocuments(IntPtr callRef, IntPtr eventRef, IntPtr user_data)
         {
             try
@@ -775,6 +781,7 @@ namespace FamiStudio
                 {
                     foreach (var kv in docs)
                     {
+                        lastOpenedDocument = kv.Key;
                         FileOpen?.Invoke(kv.Key);
                         break;
                     }

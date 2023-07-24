@@ -4561,13 +4561,13 @@ namespace FamiStudio
                             // potentially in multiple songs.
                             App.UndoRedoManager.RestoreTransaction(false);
                             App.UndoRedoManager.AbortTransaction();
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
                             // Need to redo everything + transpose.
                             editInstrument.UnmapDPCMSample(captureNoteValue);
                             editInstrument.UnmapDPCMSample(noteValue);
                             editInstrument.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
-                            App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
+                            App.Project.TransposeDPCMMapping(captureNoteValue, noteValue, editInstrument);
                         }
 
                         DPCMSampleMapped?.Invoke(noteValue);
@@ -7648,8 +7648,9 @@ namespace FamiStudio
         private void ClearEffectValue(NoteLocation location, bool allowSelection = false)
         {
             var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+            var note = (Note)null;
 
-            if (pattern != null && pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out var note))
+            if (pattern != null && (allowSelection || pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out note)))
             {
                 if (allowSelection && SelectionCoversMultiplePatterns())
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
@@ -7667,7 +7668,7 @@ namespace FamiStudio
 
                     MarkSelectedPatternsDirty();
                 }
-                else
+                else if (note != null)
                 {
                     note.ClearEffectValue(selectedEffectIdx);
                     MarkPatternDirty(location.PatternIndex);
