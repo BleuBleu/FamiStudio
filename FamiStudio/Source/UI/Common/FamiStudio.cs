@@ -1906,7 +1906,7 @@ namespace FamiStudio
 
                 for (int i = 0; i < Settings.DisplayChannelShortcuts.Length; i++)
                 {
-                    if (Settings.ActiveChannelShortcuts[i].Matches(e))
+                    if (Settings.DisplayChannelShortcuts[i].Matches(e))
                     {
                         ForceDisplayChannelMask ^= (1L << i);
                         Sequencer.MarkDirty();

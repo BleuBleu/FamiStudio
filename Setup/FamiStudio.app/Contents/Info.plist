@@ -35,12 +35,8 @@
 	<string>FamiStudio</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>4.1.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>4.1.0</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2019-2023 BleuBleu, All Rights Reserved.</string>
 	<key>NSPrincipalClass</key>
@@ -57,5 +53,9 @@
 	<false/>
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
+	<key>CFBundleVersion</key>
+	<string>4.1.1</string>
+	<key>CFBundleShortVersionString</key>
+	<string>4.1.1</string>
 </dict>
 </plist>

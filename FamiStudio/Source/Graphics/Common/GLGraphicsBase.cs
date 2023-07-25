@@ -925,34 +925,41 @@ namespace FamiStudio
             return text.Length;
         }
 
+        public static bool IsMonospaceChar(char c)
+        {
+            var cat = char.GetUnicodeCategory(c);
+
+            return
+                (c == '$') ||
+                (c == '-') ||
+                (c == '+') ||
+                (c == '#') ||
+                (c == '(') ||
+                (c == ')') ||
+                (c == '.') ||
+                (c == ' ') ||
+                (c >= '0' && c <= '9') ||
+                (cat == System.Globalization.UnicodeCategory.LowercaseLetter) || // Chinese/korean/japanese characters return "OtherLetter"
+                (cat == System.Globalization.UnicodeCategory.UppercaseLetter);
+        }
+
         public int MeasureString(string text, bool mono)
         {
             int x = 0;
 
-            if (mono)
+            for (int i = 0; i < text.Length; i++)
             {
-                var info = GetCharInfo('0');
+                var c0 = text[i];
+                var isMonoChar = mono && IsMonospaceChar(c0);
+                var info = GetCharInfo(isMonoChar ? '0' :c0);
 
-                for (int i = 0; i < text.Length; i++)
+                var advance = info.xadvance;
+                if (i != text.Length - 1 && !isMonoChar)
                 {
-                    x += (int)info.xadvance;
+                    char c1 = text[i + 1];
+                    advance += GetKerning(c0, c1);
                 }
-            }
-            else
-            {
-                for (int i = 0; i < text.Length; i++)
-                {
-                    var c0 = text[i];
-                    var info = GetCharInfo(c0);
-
-                    var advance = info.xadvance;
-                    if (i != text.Length - 1)
-                    {
-                        char c1 = text[i + 1];
-                        advance += GetKerning(c0, c1);
-                    }
-                    x += (int)advance;
-                }
+                x += (int)advance;
             }
 
             return x;
@@ -2891,68 +2898,7 @@ namespace FamiStudio
                 int x = (int)(inst.layoutRect.X + alignmentOffsetX);
                 int y = (int)(inst.layoutRect.Y + alignmentOffsetY);
                     
-                if (mono)
-                {
-                    var infoMono = font.GetCharInfo('0');
-
-                    for (int i = 0; i < inst.text.Length; i++)
-                    {
-                        var c0 = inst.text[i];
-                        var info = font.GetCharInfo(c0);
-
-                        if (info.texture != 0)
-                        {
-                            if (draw == null || draw.textureId != info.texture)
-                                draw = drawDatas[info.texture];
-
-                            var monoAjustX = (infoMono.width - info.width + 1) / 2;
-                            var monoAjustY = (infoMono.height - info.height + 1) / 2;
-
-                            var x0 = x + info.xoffset + monoAjustX;
-                            var y0 = y + info.yoffset;
-                            var x1 = x0 + info.width;
-                            var y1 = y0 + info.height;
-
-                            var vtxIdx = (draw.start + draw.count) * 8;
-                            var texIdx = (draw.start + draw.count) * 8;
-                            var colIdx = (draw.start + draw.count) * 4;
-                            var depIdx = (draw.start + draw.count) * 4;
-
-                            vtxArray[vtxIdx++] = x0;
-                            vtxArray[vtxIdx++] = y0;
-                            vtxArray[vtxIdx++] = x1;
-                            vtxArray[vtxIdx++] = y0;
-                            vtxArray[vtxIdx++] = x1;
-                            vtxArray[vtxIdx++] = y1;
-                            vtxArray[vtxIdx++] = x0;
-                            vtxArray[vtxIdx++] = y1;
-
-                            texArray[texIdx++] = info.u0;
-                            texArray[texIdx++] = info.v0;
-                            texArray[texIdx++] = info.u1;
-                            texArray[texIdx++] = info.v0;
-                            texArray[texIdx++] = info.u1;
-                            texArray[texIdx++] = info.v1;
-                            texArray[texIdx++] = info.u0;
-                            texArray[texIdx++] = info.v1;
-
-                            colArray[colIdx++] = packedColor;
-                            colArray[colIdx++] = packedColor;
-                            colArray[colIdx++] = packedColor;
-                            colArray[colIdx++] = packedColor;
-
-                            depArray[depIdx++] = inst.depth;
-                            depArray[depIdx++] = inst.depth;
-                            depArray[depIdx++] = inst.depth;
-                            depArray[depIdx++] = inst.depth;
-
-                            draw.count++;
-                        }
-
-                        x += (int)infoMono.xadvance;
-                    }
-                }
-                else if (inst.flags.HasFlag(TextFlags.Clip)) // Slow path when there is clipping.
+                if (inst.flags.HasFlag(TextFlags.Clip)) // Slow path when there is clipping.
                 {
                     var clipMinX = (int)(inst.clipRect.X);
                     var clipMaxX = (int)(inst.clipRect.X + inst.clipRect.Width);
@@ -3054,14 +3000,18 @@ namespace FamiStudio
                     for (int i = 0; i < inst.text.Length; i++)
                     {
                         var c0 = inst.text[i];
+                        var isMonoChar = mono && Font.IsMonospaceChar(c0);
                         var info = font.GetCharInfo(c0);
+                        var advanceInfo = isMonoChar ? font.GetCharInfo('0') : info;
 
                         if (info.texture != 0)
                         {
                             if (draw == null || draw.textureId != info.texture)
                                 draw = drawDatas[info.texture];
 
-                            var x0 = x + info.xoffset;
+                            var monoAjustX = isMonoChar ? (advanceInfo.width - info.width + 1) / 2 : 0;
+
+                            var x0 = x + info.xoffset + monoAjustX;
                             var y0 = y + info.yoffset;
                             var x1 = x0 + info.width;
                             var y1 = y0 + info.height;
@@ -3102,8 +3052,8 @@ namespace FamiStudio
                             draw.count++;
                         }
 
-                        var advance = info.xadvance;
-                        if (i != inst.text.Length - 1)
+                        var advance = advanceInfo.xadvance;
+                        if (i != inst.text.Length - 1 && !isMonoChar)
                         {
                             char c1 = inst.text[i + 1];
                             advance += font.GetKerning(c0, c1);

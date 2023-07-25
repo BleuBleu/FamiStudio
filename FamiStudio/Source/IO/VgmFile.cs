@@ -1277,7 +1277,7 @@ namespace FamiStudio
                 }
                 else if (channel.Type >= ChannelType.S5BSquare1 && channel.Type <= ChannelType.S5BSquare3)
                 {
-                    var noise = (byte)GetState(channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0);
+                    var noise = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
                     var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_YMMIXER, 0);
                     mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
                     instrument = GetS5BInstrument(noise, mixer);
@@ -1300,7 +1300,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        var noise = (byte)GetState(channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0);
+                        var noise = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
                         var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_YMMIXER, 0);
                         mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
                         instrument = GetEPSMInstrument(0, regs, noise, mixer);
@@ -1505,6 +1505,12 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 2).Take(1).Reverse().ToArray()).Replace("-", ""));
                     Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).Reverse().ToArray()).Replace("-", ""));
 #endif
+
+                    if (vgmFile.Length < (vgmDataOffset + 3 + 4))
+                        break;
+
+                    if (vgmFile.Length < (BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2))
+                        break;
                     if (vgmFile[vgmDataOffset + 2] == 0xC2) //DPCM Data
                     {
                         var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
@@ -1524,6 +1530,8 @@ namespace FamiStudio
                 }
                 else if (vgmCommand == 0x68)  //PCM Data Copy
                 {
+                    if (vgmFile.Length < (vgmDataOffset + 3 + 3 + 3 + 3))
+                        break;
                     var readOffset = vgmFile.Skip(vgmDataOffset + 3).Take(3).ToArray();
                     var writeOffset = vgmFile.Skip(vgmDataOffset + 3 + 3).Take(3).ToArray();
                     var copySize = vgmFile.Skip(vgmDataOffset + 3 + 3 + 3).Take(3).ToArray();
@@ -1533,6 +1541,8 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, "PCM RAM Copy: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 2).Take(1).Reverse().ToArray()).Replace("-", ""));
                     Log.LogMessage(LogSeverity.Info, "PCM RAM COPY Size: " + BitConverter.ToString(copySize));
 #endif
+                    if (vgmFile.Length < (Utils.Bytes24BitToInt(copySize) + vgmDataOffset))
+                        break;
                     if (vgmFile[vgmDataOffset + 2] == 0x07)
                     {
                         var data = pcmRAMData.Skip(Utils.Bytes24BitToInt(readOffset)).Take(Utils.Bytes24BitToInt(copySize)).ToArray();
@@ -1566,6 +1576,8 @@ namespace FamiStudio
                     }
                     else if (vgmCommand == 0x61)
                     {
+                        if (vgmFile.Length < (vgmDataOffset + 3))
+                            break;
                         samples = samples + BitConverter.ToInt16(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
                         vgmDataOffset = vgmDataOffset + 3;
                     }
@@ -1607,7 +1619,8 @@ namespace FamiStudio
                     vgmDataOffset = vgmDataOffset + 5;
                 else
                 {
-
+                    if (vgmFile.Length < (vgmDataOffset + 3))
+                        break;
                     vgmData = vgmFile.Skip(vgmDataOffset).Take(3).ToArray();
                     if (vgmCommand == 0xB4)
                     {
@@ -1779,25 +1792,28 @@ namespace FamiStudio
 #endif
             Log.LogMessage(LogSeverity.Info, "Frames: " + frame + " time: " + (frame/60) + "s");
 
-            if (vgmFile.Skip(vgmDataOffset).Take(4).SequenceEqual(Encoding.ASCII.GetBytes("Gd3 ")))
+            if (vgmFile.Length > (vgmDataOffset + 4))
             {
-                vgmDataOffset = vgmDataOffset + 4+4+4; // "Gd3 " + version + gd3 length data
-                var gd3Data = vgmFile.Skip(vgmDataOffset).Take(vgmFile.Length-vgmDataOffset).ToArray();
-                var gd3DataArray = System.Text.Encoding.Unicode.GetString(gd3Data).Split("\0");
+                if (vgmFile.Skip(vgmDataOffset).Take(4).SequenceEqual(Encoding.ASCII.GetBytes("Gd3 ")))
+                {
+                    vgmDataOffset = vgmDataOffset + 4 + 4 + 4; // "Gd3 " + version + gd3 length data
+                    var gd3Data = vgmFile.Skip(vgmDataOffset).Take(vgmFile.Length - vgmDataOffset).ToArray();
+                    var gd3DataArray = System.Text.Encoding.Unicode.GetString(gd3Data).Split("\0");
 #if DEBUG
-                Log.LogMessage(LogSeverity.Info, "Gd3 Data: " + System.Text.Encoding.Unicode.GetString(gd3Data));
+                    Log.LogMessage(LogSeverity.Info, "Gd3 Data: " + System.Text.Encoding.Unicode.GetString(gd3Data));
 #endif
-                Log.LogMessage(LogSeverity.Info, "Track Name: " + gd3DataArray[0]);
-                songName = gd3DataArray[0];
-                Log.LogMessage(LogSeverity.Info, "Game Name: " + gd3DataArray[2]);
-                project.Name = gd3DataArray[2] + gd3DataArray[4];
-                Log.LogMessage(LogSeverity.Info, "System Name: " + gd3DataArray[4]);
-                Log.LogMessage(LogSeverity.Info, "Original Author Name: " + gd3DataArray[6]);
-                project.Copyright = gd3DataArray[6];
-                Log.LogMessage(LogSeverity.Info, "Release Date: " + gd3DataArray[7]);
-                Log.LogMessage(LogSeverity.Info, "Converted by: " + gd3DataArray[8]);
-                project.Author = gd3DataArray[8];
-                Log.LogMessage(LogSeverity.Info, "Notes: " + gd3DataArray[9]);
+                    Log.LogMessage(LogSeverity.Info, "Track Name: " + gd3DataArray[0]);
+                    songName = gd3DataArray[0];
+                    Log.LogMessage(LogSeverity.Info, "Game Name: " + gd3DataArray[2]);
+                    project.Name = gd3DataArray[2] + gd3DataArray[4];
+                    Log.LogMessage(LogSeverity.Info, "System Name: " + gd3DataArray[4]);
+                    Log.LogMessage(LogSeverity.Info, "Original Author Name: " + gd3DataArray[6]);
+                    project.Copyright = gd3DataArray[6];
+                    Log.LogMessage(LogSeverity.Info, "Release Date: " + gd3DataArray[7]);
+                    Log.LogMessage(LogSeverity.Info, "Converted by: " + gd3DataArray[8]);
+                    project.Author = gd3DataArray[8];
+                    Log.LogMessage(LogSeverity.Info, "Notes: " + gd3DataArray[9]);
+                }
             }
 
 

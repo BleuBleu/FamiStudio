@@ -5,6 +5,6 @@ Here are some download links for ffmpeg. If you are a more advanced user, feel f
 Both of these website offer nightly builds (their usually have weird numbers in the name) and stable builds (with nice version number like '4.3.1'). Stable versions are recommended.
 
 * [Windows](https://github.com/BtbN/FFmpeg-Builds/releases/) : Download recent stable version with "win64-gpl-shared" in the name. 
-* [MacOS](https://evermeet.cx/ffmpeg/) : Download the stable version on the right side.
+* [MacOS](https://www.osxexperts.net/) : Be sure to pick the right CPU type! (Intel/Apple Silicon)
 
 On Linux, simply use your favorite package manager. You should be able to figure it out.

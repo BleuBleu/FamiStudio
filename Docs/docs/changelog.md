@@ -2,6 +2,26 @@
 
 Version history / release notes for each release.
 
+## Version 4.1.1 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed DPCM samples not playing when exporting to ROM with VRC6
+* Fixed transposition of DPCM samples incorrectly affecting all instruments
+* Fixed "Clear effect values" not always working
+* Fixed startup crashes with rtmidi on Linux and updating the version we provide
+* Fixed export of DPCM samples with FamiStudio Text format
+* Fixed file association on Windows when using the portable EXE version
+* Fixed file association on MacOS not always working
+* Fixed first mouse click outside a context menu being ignored (will behave like 4.0.x)
+* Fixed occasional crash on MacOS when using Cmd+Q
+* Fixed issues with MIDI device on MacOS
+* Fixed trackpad controls on MacOS 
+* Fixed keyboard shortcut confusion with select/force display channels
+* Fixed minor localization issues.
+* Changed the ffmpeg path option to allow text input, and allow using ffmpeg if its on the PATH
+* Changed the default keyboard shortcut to force display channel to SHIFT + F-keys on MacOS to avoid issues
+
 ## Version 4.1.0
 
 Changes/Fixes:
