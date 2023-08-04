@@ -242,66 +242,6 @@ namespace FamiStudio
     }
     class OPNIInstrumentFile
     {
-
-        readonly static int[] EnvelopeTypeLookup =
-        {
-            EnvelopeType.Volume,   // SEQ_VOLUME
-            EnvelopeType.Arpeggio, // SEQ_ARPEGGIO
-            EnvelopeType.Pitch,    // SEQ_PITCH
-            EnvelopeType.Count,    // SEQ_HIPITCH
-            EnvelopeType.DutyCycle // SEQ_DUTYCYCLE
-        };
-
-        const int SEQ_COUNT = 5;
-        const int MAX_DSAMPLES = 64;
-
-        private void ReadEnvelope(byte[] bytes, ref int offset, Instrument instrument, int envType)
-        {
-            var itemCount = BitConverter.ToInt32(bytes, offset); offset += 4;
-            var loopPoint = BitConverter.ToInt32(bytes, offset); offset += 4;
-            var releasePoint = BitConverter.ToInt32(bytes, offset); offset += 4;
-            var setting = BitConverter.ToInt32(bytes, offset); offset += 4;
-
-            var seq = new sbyte[itemCount];
-            for (int j = 0; j < itemCount; j++)
-                seq[j] = (sbyte)bytes[offset++];
-
-            // Skip unsupported types.
-            if (envType == EnvelopeType.Count)
-            {
-                Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported, ignoring.");
-                return;
-            }
-
-            Envelope env = instrument.Envelopes[envType];
-
-            if (env == null)
-                return;
-
-            if (releasePoint >= 0 && !env.CanRelease)
-                releasePoint = -1;
-
-            // FamiTracker allows envelope with release with no loop. We dont allow that.
-            if (env.CanRelease && releasePoint != -1)
-            {
-                if (loopPoint == -1)
-                    loopPoint = releasePoint;
-                if (releasePoint != -1)
-                    releasePoint++;
-            }
-
-            if (envType == EnvelopeType.Pitch)
-                env.Relative = true;
-
-            if (env != null)
-            {
-                env.Length = itemCount;
-                env.Loop = loopPoint;
-                env.Release = releasePoint;
-                Array.Copy(seq, 0, env.Values, 0, itemCount);
-            }
-        }
-
         public Instrument CreateFromFile(Project project, string filename)
         {
             var bytes = System.IO.File.ReadAllBytes(filename);
