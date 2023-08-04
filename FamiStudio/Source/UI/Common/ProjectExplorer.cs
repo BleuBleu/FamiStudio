@@ -3054,11 +3054,20 @@ namespace FamiStudio
                         RefreshButtons();
                         App.EndLogTask();
                     }
-                    if (filename.ToLower().EndsWith("bti"))
+                    else if (filename.ToLower().EndsWith("bti"))
                     {
                         App.BeginLogTask();
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                         var success = new BambootrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
+                        App.UndoRedoManager.AbortOrEndTransaction(success);
+                        RefreshButtons();
+                        App.EndLogTask();
+                    }
+                    else if (filename.ToLower().EndsWith("opni"))
+                    {
+                        App.BeginLogTask();
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                        var success = new OPNIInstrumentFile().CreateFromFile(App.Project, filename) != null;
                         App.UndoRedoManager.AbortOrEndTransaction(success);
                         RefreshButtons();
                         App.EndLogTask();
@@ -3135,7 +3144,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = Platform.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti)|*.fti;*.fms;*.txt;*.ftm;*.bti|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+                var filename = Platform.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti;*.opni)|*.fti;*.fms;*.txt;*.ftm;*.bti;*.opni|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|OPN Instrument File (*.opni)|*.opni|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
                 ImportInstrumentsAction(filename);
             }
         }
