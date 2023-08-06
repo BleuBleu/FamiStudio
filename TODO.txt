@@ -1,17 +1,19 @@
 4.1.2 Hotfix
 ============
-- N163 DC (mix vs non-mix)
+/ N163 DC (mix vs non-mix), are we backwards with NSFPlay?
 - Play note from all exp = crash?
 - Modifying a pattern twice if selected twice.
 - Left mouse click on "+" instrument
-- Dedrecil rename + fix
-- Lupin song fix from how2
 - cv3_kopie.fms crashes on play? VRC7 issue
 - Double-click issue on checkboxes in the P.E.
+- Recompile NesSndEmu on all platforms.
 
 4.1.2 Change log
 ================
 - Fixed issue with "Follow Mode" with small % values
+- Fixed a couple issues with demo songs
+- Fixed out of range volumes when importing .fti containing FDS instruments
+- Changed mixing slightly for N163. Songs using 7 or 8 channels may sound slight quieter now.
 - Minor localiztion fixes.
 
 4.2.0
