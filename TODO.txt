@@ -2,6 +2,7 @@
 ============
 / N163 DC (mix vs non-mix), are we backwards with NSFPlay?
 	- We should output a middle value when not playing anything.
+	- Bias of -8.
 - Play note from all exp = crash?
 - Modifying a pattern twice if selected twice.
 - Left mouse click on "+" instrument

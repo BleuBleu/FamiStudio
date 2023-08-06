@@ -1070,7 +1070,7 @@ namespace FamiStudio
             bmpGizmoResizeFill = g.GetBitmapAtlasRef("GizmoResizeFill");
             bmpEffectFrame = g.GetBitmapAtlasRef("EffectFrame");
             bmpEffectRepeat = g.GetBitmapAtlasRef("EffectRepeat");
-            bmpEffects = g.GetBitmapAtlasRefs(Note.EffectIcons);
+            bmpEffects = g.GetBitmapAtlasRefs(EffectType.Icons);
 
             if (Platform.IsMobile)
             {
@@ -1495,7 +1495,7 @@ namespace FamiStudio
                             r.c.FillRectangle(0, 0, pianoSizeX, effectButtonSizeY, Theme.MediumGreyColor1);
                         r.c.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
                         r.c.DrawBitmapAtlas(bmpEffects[effectIdx], effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
-                        r.c.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? r.fonts.FontSmallBold : r.fonts.FontSmall, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);
+                        r.c.DrawText(EffectType.LocalizedNames[effectIdx], selectedEffectIdx == effectIdx ? r.fonts.FontSmallBold : r.fonts.FontSmall, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);
                         r.c.PopTransform();
 
                         effectButtonY += effectButtonSizeY;
@@ -1517,7 +1517,7 @@ namespace FamiStudio
                     r.c.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
 
                     var bmp  = editMode == EditionMode.DPCM ? bmpEffects[Note.EffectVolume] : bmpEffectRepeat;
-                    var text = editMode == EditionMode.DPCM ? Note.EffectNames[Note.EffectVolume] : EnvelopeType.LocalizedNames[EnvelopeType.WaveformRepeat];
+                    var text = editMode == EditionMode.DPCM ? EffectType.LocalizedNames[Note.EffectVolume] : EnvelopeType.LocalizedNames[EnvelopeType.WaveformRepeat];
 
                     r.c.DrawBitmapAtlas(bmp, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
                     r.c.DrawText(text, r.fonts.FontSmallBold, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);

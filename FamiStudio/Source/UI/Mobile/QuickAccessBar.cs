@@ -191,7 +191,7 @@ namespace FamiStudio
             bmpPlay = g.GetBitmapAtlasRef("Play");
             bmpEffectNone = g.GetBitmapAtlasRef("MobileEffectNone");
             bmpEffectRepeat = g.GetBitmapAtlasRef("MobileEffectRepeat");
-            bmpEffects = g.GetBitmapAtlasRefs(Note.EffectIcons, "Mobile");
+            bmpEffects = g.GetBitmapAtlasRefs(EffectType.Icons, "Mobile");
             bmpExpansions = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpEnvelopes = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
             bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
@@ -588,7 +588,7 @@ namespace FamiStudio
                     item = new ListItem();
                     item.Color = Theme.LightGreyColor1;
                     item.Image = bmpEffects[i];
-                    item.Text = Note.EffectNames[i];
+                    item.Text = EffectType.LocalizedNames[i];
                     item.Data = i;
                     items[j] = item;
 
@@ -841,7 +841,7 @@ namespace FamiStudio
         {
             var validEffect = App.SelectedEffect >= 0 && App.EffectPanelExpanded;
 
-            text = validEffect ? Note.EffectNames[App.SelectedEffect] : NoneLabel;
+            text = validEffect ? EffectType.LocalizedNames[App.SelectedEffect] : NoneLabel;
             tint = Theme.LightGreyColor1;
             return validEffect ? bmpEffects[App.SelectedEffect] : bmpEffectNone;
         }
