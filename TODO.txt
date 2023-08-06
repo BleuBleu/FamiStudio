@@ -12,7 +12,7 @@
 4.1.2 Change log
 ================
 - Fixed issue with "Follow Mode" with small % values
-- 
+- Minor localiztion fixes.
 
 4.2.0
 =====
