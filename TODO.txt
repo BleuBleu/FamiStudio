@@ -1,7 +1,23 @@
 4.1.2 Hotfix
 ============
+- N163 DC (mix vs non-mix)
+- Play note from all exp = crash?
+- Modifying a pattern twice if selected twice.
+- Left mouse click on "+" instrument
+- Dedrecil rename + fix
+- Lupin song fix from how2
+- cv3_kopie.fms crashes on play? VRC7 issue
+- Double-click issue on checkboxes in the P.E.
+
+4.1.2 Change log
+================
+- Fixed issue with "Follow Mode" with small % values
+- 
+
+4.2.0
+=====
+- Make MacOS respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Piano roll video compression issues?
-/ Update ffmpeg doc for arm64 (https://www.osxexperts.net/)
 
 Later
 =====

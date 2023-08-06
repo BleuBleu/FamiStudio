@@ -5281,7 +5281,7 @@ namespace FamiStudio
 
             var seekX = GetPixelForNote(App.CurrentFrame);
             var minX = 0;
-            var maxX = (int)((Width * percent) - pianoSizeX);
+            var maxX = (int)((Width - pianoSizeX) * percent);
 
             // Keep everything visible 
             if (seekX < minX)
