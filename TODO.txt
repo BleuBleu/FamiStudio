@@ -1,6 +1,7 @@
 4.1.2 Hotfix
 ============
 / N163 DC (mix vs non-mix), are we backwards with NSFPlay?
+	- We should output a middle value when not playing anything.
 - Play note from all exp = crash?
 - Modifying a pattern twice if selected twice.
 - Left mouse click on "+" instrument
@@ -14,6 +15,7 @@
 - Fixed a couple issues with demo songs
 - Fixed out of range volumes when importing .fti containing FDS instruments
 - Fixed effect icons sometimes visible past the end of a pattern
+- Fixed issue where instruments fail to load properly when a stop note is used before any N163 notes
 - Changed mixing slightly for N163. Songs using 7 or 8 channels may sound slight quieter now.
 - Minor localiztion fixes.
 
