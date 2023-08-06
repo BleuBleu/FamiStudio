@@ -2758,14 +2758,19 @@ namespace FamiStudio
                     for (int p = r.minVisiblePattern; p < r.maxVisiblePattern; p++)
                     {
                         var pattern = channel.PatternInstances[p];
-
+                        
                         if (pattern == null)
                             continue;
+
+                        var patternLen = song.GetPatternLength(p);
 
                         foreach (var kv in pattern.Notes)
                         {
                             var time = kv.Key;
                             var note = kv.Value;
+
+                            if (time >= patternLen)
+                                break;
 
                             if (note.HasAnyEffect)
                             {

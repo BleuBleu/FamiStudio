@@ -13,6 +13,7 @@
 - Fixed issue with "Follow Mode" with small % values
 - Fixed a couple issues with demo songs
 - Fixed out of range volumes when importing .fti containing FDS instruments
+- Fixed effect icons sometimes visible past the end of a pattern
 - Changed mixing slightly for N163. Songs using 7 or 8 channels may sound slight quieter now.
 - Minor localiztion fixes.
 
