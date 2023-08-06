@@ -17,7 +17,7 @@
 - Fixed out of range volumes when importing .fti containing FDS instruments
 - Fixed effect icons sometimes visible past the end of a pattern
 - Fixed issue where instruments fail to load properly when a stop note is used before any N163 notes
-- Changed mixing slightly for N163. Songs using 7 or 8 channels may sound slight quieter now.
+- Improved N163 emulation slightly. Songs using 7 or 8 channels may sound slight quieter now and volume might react a bit differently as well.
 - Minor localiztion fixes.
 
 4.2.0
