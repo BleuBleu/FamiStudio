@@ -140,7 +140,7 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 			float sum = 0.0f;
 			for (int i = osc_count - active_oscs; i < osc_count; i++)
 				sum += oscs[i].sample;
-			sample = (int)(sum / min(6, max(1, active_oscs)) + 0.5f); 
+			sample = (int)(sum / max(1, active_oscs) + 0.5f); 
 		}
 		else
 		{
