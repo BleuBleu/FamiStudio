@@ -245,13 +245,25 @@ namespace FamiStudio
         public Instrument CreateFromFile(Project project, string filename)
         {
             var bytes = System.IO.File.ReadAllBytes(filename);
-
-            if (bytes.Length != 77)
+            var offset = 12;
+            if (bytes.Length == 77) //Version 1
             {
-                Log.LogMessage(LogSeverity.Error, "Incompatible file.");
-                return null;
+                if (!bytes.Skip(0).Take(11).SequenceEqual(Encoding.ASCII.GetBytes("WOPN2-INST\0")))
+                {
+                    Log.LogMessage(LogSeverity.Error, "Incompatible file.");
+                    return null;
+                }
             }
-            if (!bytes.Skip(0).Take(11).SequenceEqual(Encoding.ASCII.GetBytes("WOPN2-INST\0")))
+            else if (bytes.Length == 79 || bytes.Length == 83) //Version 2
+            {
+                offset = offset + 2;
+                if (!bytes.Skip(0).Take(11).SequenceEqual(Encoding.ASCII.GetBytes("WOPN2-IN2T\0")))
+                {
+                    Log.LogMessage(LogSeverity.Error, "Incompatible file.");
+                    return null;
+                }
+            }
+            else
             {
                 Log.LogMessage(LogSeverity.Error, "Incompatible file.");
                 return null;
@@ -266,9 +278,9 @@ namespace FamiStudio
             }
 
 
-            var instrumentNameData = bytes.Skip(12).Take(32).ToArray();
+            var instrumentNameData = bytes.Skip(offset).Take(32).ToArray();
             var instrumentNameDataArray = System.Text.Encoding.Latin1.GetString(instrumentNameData).Split("\0");
-            var name = instrumentNameDataArray[0];
+            string name = string.IsNullOrEmpty(instrumentNameDataArray[0]) ? "EPSM Instrument" : instrumentNameDataArray[0];
 
             if (project.GetInstrument(name) != null)
             {
@@ -277,7 +289,7 @@ namespace FamiStudio
             }
             var instrument = project.CreateInstrument(instType, name);
             //0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 -- Register order
-            var offset = 47;
+            offset = offset + 35;
             instrument.EpsmPatchRegs[0] = (byte)(bytes[offset]);
             offset++;
             //instrument.EpsmPatchRegs[30] = (byte)(bytes[offset] & 0xf); //The OPN2 Bank editor seems to use this for AMS/PMS but the OPNI Specification uses it for LFO Frequency
