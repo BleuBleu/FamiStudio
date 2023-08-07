@@ -135,6 +135,10 @@ namespace FamiStudio
                 ReadEnvelope(bytes, ref offset, instrument, instrument.Envelopes[EnvelopeType.Volume],   EnvelopeType.Volume);
                 ReadEnvelope(bytes, ref offset, instrument, instrument.Envelopes[EnvelopeType.Arpeggio], EnvelopeType.Arpeggio);
                 ReadEnvelope(bytes, ref offset, instrument, instrument.Envelopes[EnvelopeType.Pitch],    EnvelopeType.Pitch);
+
+                // Famitracker FDS envelopes uses the full volume range (0...32), we stick to 0...15.
+                for (int i = 0; i < instrument.VolumeEnvelope.Length; i++)
+                    instrument.VolumeEnvelope.Values[i] = (sbyte)Math.Min(15, instrument.VolumeEnvelope.Values[i] / 2);
             }
             else if (instType == ExpansionType.None)
             {

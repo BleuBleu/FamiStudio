@@ -21,40 +21,6 @@ namespace FamiStudio
             "B"
         };
 
-        public static readonly string[] EffectNames =
-        {
-            "Volume",
-            "Vib Speed",
-            "Vib Depth",
-            "Pitch",
-            "Speed",
-            "FDS Depth",
-            "FDS Speed",
-            "Duty Cycle",
-            "Note Delay",
-            "Cut Delay",
-            "Volume Slide",
-            "DAC",
-            "Phase Reset"
-        };
-
-        public static readonly string[] EffectIcons = new string[]
-        {
-            "EffectVolume",
-            "EffectVibrato",
-            "EffectVibrato",
-            "EffectPitch",
-            "EffectSpeed",
-            "EffectMod",
-            "EffectMod",
-            "EffectDutyCycle",
-            "EffectNoteDelay",
-            "EffectCutDelay",
-            "EffectVolume",
-            "EffectDutyCycle",
-            "EffectDutyCycle",
-        };
-
         public const int VolumeMax       = 0x0f;
         public const int VibratoSpeedMax = 0x0c;
         public const int VibratoDepthMax = 0x0f;
@@ -70,6 +36,7 @@ namespace FamiStudio
         public const int MusicalNoteC4   = 0x31;
         public const int MusicalNoteC7   = 0x55;
 
+        // TODO : Move to "EffectType".
         public const int EffectVolume       =  0;
         public const int EffectVibratoSpeed =  1; // 4Xy
         public const int EffectVibratoDepth =  2; // 4xY
@@ -838,7 +805,34 @@ namespace FamiStudio
             return (NoteFilter)(1 << (fx + 16));
         }
     }
-    
+
+    public static class EffectType
+    {
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Note.EffectCount];
+
+        public static readonly string[] Icons = new string[]
+        {
+            "EffectVolume",
+            "EffectVibrato",
+            "EffectVibrato",
+            "EffectPitch",
+            "EffectSpeed",
+            "EffectMod",
+            "EffectMod",
+            "EffectDutyCycle",
+            "EffectNoteDelay",
+            "EffectCutDelay",
+            "EffectVolume",
+            "EffectDutyCycle",
+            "EffectDutyCycle",
+        };
+
+        static EffectType()
+        {
+            Localization.LocalizeStatic(typeof(EffectType));
+        }
+    }
+
     [Flags]
     public enum NoteFilter
     {

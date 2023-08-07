@@ -42,7 +42,7 @@ namespace FamiStudio
                 if (channel.ShouldDisplayEffect(i))
                 {
                     checkToEffect.Add(i);
-                    effectList.Add(Note.EffectNames[i]);
+                    effectList.Add(EffectType.LocalizedNames[i]);
                     checkedList.Add((effectsMask & (1 << i)) != 0);
                 }
             }
