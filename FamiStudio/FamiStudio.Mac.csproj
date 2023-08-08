@@ -77,6 +77,7 @@
     <Compile Include="Source\Graphics\Desktop\GLGraphics.cs" />
     <Compile Include="Source\IO\AudioExportUtils.cs" />
     <Compile Include="Source\IO\BambootrackerInstrumentFile.cs" />
+    <Compile Include="Source\IO\OPNIInstrumentFile.cs" />
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\FamitoneSoundEffectFile.cs" />

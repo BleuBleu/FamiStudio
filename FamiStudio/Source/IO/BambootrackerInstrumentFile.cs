@@ -21,10 +21,10 @@ namespace FamiStudio
 
         private void ReadEnvelope(byte[] bytes, ref int offset, Instrument instrument, int envType)
         {
-            var itemCount    = BitConverter.ToInt32(bytes, offset); offset += 4;
-            var loopPoint    = BitConverter.ToInt32(bytes, offset); offset += 4;
+            var itemCount = BitConverter.ToInt32(bytes, offset); offset += 4;
+            var loopPoint = BitConverter.ToInt32(bytes, offset); offset += 4;
             var releasePoint = BitConverter.ToInt32(bytes, offset); offset += 4;
-            var setting      = BitConverter.ToInt32(bytes, offset); offset += 4;
+            var setting = BitConverter.ToInt32(bytes, offset); offset += 4;
 
             var seq = new sbyte[itemCount];
             for (int j = 0; j < itemCount; j++)
@@ -59,8 +59,8 @@ namespace FamiStudio
 
             if (env != null)
             {
-                env.Length  = itemCount;
-                env.Loop    = loopPoint;
+                env.Length = itemCount;
+                env.Loop = loopPoint;
                 env.Release = releasePoint;
                 Array.Copy(seq, 0, env.Values, 0, itemCount);
             }
@@ -128,7 +128,7 @@ namespace FamiStudio
                 //offset++;
                 int value = bytes[offset++];
                 if (i == 0)
-                    instrument.EpsmPatchRegs[i] = (byte)(((value & 0xf0)>>4)| ((value & 0x0f) << 3));
+                    instrument.EpsmPatchRegs[i] = (byte)(((value & 0xf0) >> 4) | ((value & 0x0f) << 3));
                 if (i == 1)
                     instrument.EpsmPatchRegs[4] = (byte)((value & 0x1f));
                 if (i == 2)
@@ -155,54 +155,54 @@ namespace FamiStudio
                     instrument.EpsmPatchRegs[2] = (byte)(instrument.EpsmPatchRegs[2] | ((value & 0x0f)));
                 }
                 if (i == 7)
-                    instrument.EpsmPatchRegs[4+7] = (byte)((value & 0x1f));
+                    instrument.EpsmPatchRegs[4 + 7] = (byte)((value & 0x1f));
                 if (i == 8)
                 {
-                    instrument.EpsmPatchRegs[5+7] = (byte)((value & 0x1f));
-                    instrument.EpsmPatchRegs[4+7] = (byte)(instrument.EpsmPatchRegs[4+7] | ((value & 0xe0) << 1));
+                    instrument.EpsmPatchRegs[5 + 7] = (byte)((value & 0x1f));
+                    instrument.EpsmPatchRegs[4 + 7] = (byte)(instrument.EpsmPatchRegs[4 + 7] | ((value & 0xe0) << 1));
                 }
                 if (i == 9)
                 {
-                    instrument.EpsmPatchRegs[6+7] = (byte)((value & 0x1f));
-                    instrument.EpsmPatchRegs[2+7] = (byte)(instrument.EpsmPatchRegs[2+7] | ((value & 0xe0) >> 1));
+                    instrument.EpsmPatchRegs[6 + 7] = (byte)((value & 0x1f));
+                    instrument.EpsmPatchRegs[2 + 7] = (byte)(instrument.EpsmPatchRegs[2 + 7] | ((value & 0xe0) >> 1));
                 }
                 if (i == 10)
                 {
-                    instrument.EpsmPatchRegs[7+7] = (byte)((value & 0xff));
+                    instrument.EpsmPatchRegs[7 + 7] = (byte)((value & 0xff));
                 }
                 if (i == 11)
                 {
-                    instrument.EpsmPatchRegs[3+7] = (byte)((value & 0xff));
+                    instrument.EpsmPatchRegs[3 + 7] = (byte)((value & 0xff));
                 }
                 if (i == 12)
                 {
-                    instrument.EpsmPatchRegs[6+7] = (byte)(((value & 0x70) >> 4) | ((~(value & 0x80) >> 4) & 0x8));
-                    instrument.EpsmPatchRegs[2+7] = (byte)(instrument.EpsmPatchRegs[2+7] | ((value & 0x0f)));
+                    instrument.EpsmPatchRegs[6 + 7] = (byte)(((value & 0x70) >> 4) | ((~(value & 0x80) >> 4) & 0x8));
+                    instrument.EpsmPatchRegs[2 + 7] = (byte)(instrument.EpsmPatchRegs[2 + 7] | ((value & 0x0f)));
                 }
                 if (i == 13)
-                    instrument.EpsmPatchRegs[4+14] = (byte)((value & 0x1f));
+                    instrument.EpsmPatchRegs[4 + 14] = (byte)((value & 0x1f));
                 if (i == 14)
                 {
-                    instrument.EpsmPatchRegs[5+14] = (byte)((value & 0x1f));
-                    instrument.EpsmPatchRegs[4+14] = (byte)(instrument.EpsmPatchRegs[4+14] | ((value & 0xe0) << 1));
+                    instrument.EpsmPatchRegs[5 + 14] = (byte)((value & 0x1f));
+                    instrument.EpsmPatchRegs[4 + 14] = (byte)(instrument.EpsmPatchRegs[4 + 14] | ((value & 0xe0) << 1));
                 }
                 if (i == 15)
                 {
-                    instrument.EpsmPatchRegs[6+14] = (byte)((value & 0x1f));
-                    instrument.EpsmPatchRegs[2+14] = (byte)(instrument.EpsmPatchRegs[2+14] | ((value & 0xe0) >> 1));
+                    instrument.EpsmPatchRegs[6 + 14] = (byte)((value & 0x1f));
+                    instrument.EpsmPatchRegs[2 + 14] = (byte)(instrument.EpsmPatchRegs[2 + 14] | ((value & 0xe0) >> 1));
                 }
                 if (i == 16)
                 {
-                    instrument.EpsmPatchRegs[7+14] = (byte)((value & 0xff));
+                    instrument.EpsmPatchRegs[7 + 14] = (byte)((value & 0xff));
                 }
                 if (i == 17)
                 {
-                    instrument.EpsmPatchRegs[3+14] = (byte)((value & 0xff));
+                    instrument.EpsmPatchRegs[3 + 14] = (byte)((value & 0xff));
                 }
                 if (i == 18)
                 {
-                    instrument.EpsmPatchRegs[6+14] = (byte)(((value & 0x70) >> 4) | ((~(value & 0x80) >> 4) & 0x8));
-                    instrument.EpsmPatchRegs[2+14] = (byte)(instrument.EpsmPatchRegs[2+14] | ((value & 0x0f)));
+                    instrument.EpsmPatchRegs[6 + 14] = (byte)(((value & 0x70) >> 4) | ((~(value & 0x80) >> 4) & 0x8));
+                    instrument.EpsmPatchRegs[2 + 14] = (byte)(instrument.EpsmPatchRegs[2 + 14] | ((value & 0x0f)));
                 }
                 if (i == 19)
                     instrument.EpsmPatchRegs[4 + 21] = (byte)((value & 0x1f));
