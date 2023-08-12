@@ -5312,6 +5312,8 @@ namespace FamiStudio
                         // Treat double-clicks as click. These are generated when click
                         // very fast on a button : click -> double click -> click -> double click -> ...
                         return HandleMouseDoubleClickParamListButton(e, button, buttonIdx);
+                    case ButtonType.ParamCheckbox:
+                        return HandleMouseDownParamCheckboxButton(e, button);
                 }
 
                 return true;
