@@ -202,19 +202,21 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 	}
 	else
 	{
+		blip_time_t clk = clock();
+
 		if (addr >= Nes_Apu::start_addr && addr <= Nes_Apu::end_addr)
 		{
-			apu.write_register(clock(), addr, data);
+			apu.write_register(clk, addr, data);
 		}
 		else
 		{
-			if (expansions & expansion_mask_vrc6) vrc6.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_vrc7) vrc7.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_fds) fds.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_mmc5) mmc5.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_namco) namco.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_sunsoft) sunsoft.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_epsm) epsm.write_register(clock(), addr, data);
+			if (expansions & expansion_mask_vrc6) vrc6.write_register(clk, addr, data);
+			if (expansions & expansion_mask_vrc7) vrc7.write_register(clk, addr, data);
+			if (expansions & expansion_mask_fds) fds.write_register(clk, addr, data);
+			if (expansions & expansion_mask_mmc5) mmc5.write_register(clk, addr, data);
+			if (expansions & expansion_mask_namco) namco.write_register(clk, addr, data);
+			if (expansions & expansion_mask_sunsoft) sunsoft.write_register(clk, addr, data);
+			if (expansions & expansion_mask_epsm) epsm.write_register(clk, addr, data);
 		}
 	}
 }
@@ -270,7 +272,7 @@ int Simple_Apu::read_status()
 	return apu.read_status( clock() );
 }
 
-void Simple_Apu::skip_cycles(long cycles)
+int Simple_Apu::skip_cycles(long cycles)
 {
 	if (!seeking)
 	{
@@ -285,6 +287,8 @@ void Simple_Apu::skip_cycles(long cycles)
 		if (expansions & expansion_mask_sunsoft) sunsoft.run_until(time);
 		if (expansions & expansion_mask_epsm) epsm.run_until(time); //Disabled until Perkka takes a look.
 	}
+
+	return time;
 }
 
 int Simple_Apu::get_namco_wave_pos(int n163ChanIndex)

@@ -81,7 +81,7 @@ public:
 	
 	// End a 1/60 sound frame
 	void end_frame();
-	void skip_cycles(long cycles);
+	int skip_cycles(long cycles);
 	
 	// Resets
 	void reset();
