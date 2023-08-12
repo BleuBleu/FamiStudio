@@ -4833,11 +4833,6 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleTouchDoubleClickParamListButton(int x, int y, Button button, int buttonIdx)
-        {
-            return ClickParamListOrSliderButton(x, y, button, buttonIdx, false);
-        }
-
         private bool HandleTouchDoubleClickButtons(int x, int y)
         {
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
@@ -4848,9 +4843,8 @@ namespace FamiStudio
 
                 switch (button.type)
                 {
-                    case ButtonType.ParamList:
-                    case ButtonType.ParamSlider:
-                        return HandleTouchDoubleClickParamListButton(x, y, button, buttonIdx);
+                    case ButtonType.ParamCheckbox:
+                        return HandleTouchClickParamCheckboxButton(x, y, button);
                 }
 
                 return true;
