@@ -1,7 +1,7 @@
 4.1.2 Hotfix
 ============
+- Make VRC7 patch 0 change in famitone (+ test staggered instrument changes)
 - Modifying a pattern twice if selected twice.
-- Double-click issue on checkboxes in the P.E.
 - Recompile NesSndEmu on all platforms.
 
 4.1.2 Change log
