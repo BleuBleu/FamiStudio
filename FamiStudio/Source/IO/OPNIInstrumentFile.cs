@@ -43,7 +43,7 @@ namespace FamiStudio
 
 
             var instrumentNameData = bytes.Skip(offset).Take(32).ToArray();
-            var instrumentNameDataArray = System.Text.Encoding.Latin1.GetString(instrumentNameData).Split("\0");
+            var instrumentNameDataArray = System.Text.Encoding.ASCII.GetString(instrumentNameData).Split("\0");
             string name = string.IsNullOrEmpty(instrumentNameDataArray[0]) ? "EPSM Instrument" : instrumentNameDataArray[0];
 
             if (project.GetInstrument(name) != null)
