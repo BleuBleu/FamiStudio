@@ -1,17 +1,12 @@
 4.1.2 Hotfix
 ============
-/ N163 DC (mix vs non-mix), are we backwards with NSFPlay?
-	- We should output a middle value when not playing anything.
-	- Bias of -8.
-- Play note from all exp = crash?
 - Modifying a pattern twice if selected twice.
-- Left mouse click on "+" instrument
-- cv3_kopie.fms crashes on play? VRC7 issue
 - Double-click issue on checkboxes in the P.E.
 - Recompile NesSndEmu on all platforms.
 
 4.1.2 Change log
 ================
+- Fixed instrument context menu disapearing when using a left-click
 - Fixed issue with "Follow Mode" with small % values
 - Fixed a couple issues with demo songs
 - Fixed out of range volumes when importing .fti containing FDS instruments
