@@ -2764,7 +2764,16 @@ namespace FamiStudio
 
         protected bool HandleMouseUpButtons(MouseEventArgs e)
         {
-            return e.Right && HandleContextMenuButtons(e.X, e.Y);
+            if (e.Right)
+            {
+                return HandleContextMenuButtons(e.X, e.Y);
+            }
+            else if (e.Left)
+            {
+                return HandleContextMenuButtonsLeftClick(e.X, e.Y);
+            }
+
+            return false;
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -3649,9 +3658,7 @@ namespace FamiStudio
         {
             if (e.Left)
             {
-                if (subButtonType == SubButtonType.Add)
-                    AskAddInstrument(e.X, e.Y);
-                else if (subButtonType == SubButtonType.Load)
+                if (subButtonType == SubButtonType.Load)
                     ImportInstruments();
                 else if (subButtonType == SubButtonType.Sort)
                     SortInstruments();
@@ -4624,6 +4631,16 @@ namespace FamiStudio
 
                 return true;
             }
+
+            return false;
+        }
+
+        private bool HandleContextMenuButtonsLeftClick(int x, int y)
+        {
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
+
+            if (buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.InstrumentHeader)
+                return HandleContextMenuInstrumentHeaderButton(x, y, subButtonType);
 
             return false;
         }
