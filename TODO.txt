@@ -1,19 +1,14 @@
-4.1.2 Hotfix
-============
-- Make VRC7 patch 0 change in famitone (+ test staggered instrument changes)
-- Modifying a pattern twice if selected twice.
-- Recompile NesSndEmu on all platforms.
-
 4.1.2 Change log
 ================
 - Fixed instrument context menu disapearing when using a left-click
 - Fixed issue with "Follow Mode" with small % values
-- Fixed a couple issues with demo songs
 - Fixed out of range volumes when importing .fti containing FDS instruments
 - Fixed effect icons sometimes visible past the end of a pattern
-- Fixed issue where instruments fail to load properly when a stop note is used before any N163 notes
-- Improved N163 emulation slightly. Songs using 7 or 8 channels may sound slight quieter now and volume might react a bit differently as well.
-- Minor localiztion fixes.
+- Fixed issue where instruments fail to load properly when a stop note is used before any other notes
+- Fixed a couple of minor issues with demo songs
+- Fixed crash when playing a note from all channels with all expensions enabled
+- Improved N163 emulation slightly. Songs using 7 or 8 channels may sound slight quieter now and volume might react a bit differently as well
+- Minor localization fixes
 
 4.2.0
 =====
@@ -120,6 +115,7 @@ Discord
 
 Backlog: 
 =========
+- When multiple VRC7 instrument all use patch 0 at same time (like on first note), they all upload it. Its stupid. Only the first one should, or something like that.
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
