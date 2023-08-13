@@ -6694,8 +6694,9 @@ namespace FamiStudio
         {
             var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-            note.IsStop = true;
+            note.Release = 0;
             note.Duration = 1;
+            note.IsStop = true;
             MarkPatternDirty(pattern);
             App.UndoRedoManager.EndTransaction();
         }
