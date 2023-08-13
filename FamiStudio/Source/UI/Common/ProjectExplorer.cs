@@ -4639,8 +4639,11 @@ namespace FamiStudio
         {
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
 
-            if (buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.InstrumentHeader)
-                return HandleContextMenuInstrumentHeaderButton(x, y, subButtonType);
+            if (buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.InstrumentHeader && subButtonType == SubButtonType.Add)
+            {
+                AskAddInstrument(x, y);
+                return true;
+            }
 
             return false;
         }
