@@ -440,7 +440,7 @@ namespace FamiStudio
                         break;
                     case WavePresetType.Flat:
                         for (int i = 0; i < localChunkLength; i++)
-                            values[chunkOffset + i] = (sbyte)((min + max) / 2);
+                            values[chunkOffset + i] = (sbyte)Math.Round((min + max) / 2.0);
                         break;
                     case WavePresetType.PWM:
                         for (int i = 0; i < localChunkLength; i++)
