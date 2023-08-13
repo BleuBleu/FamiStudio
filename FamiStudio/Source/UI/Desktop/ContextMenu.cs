@@ -88,7 +88,7 @@ namespace FamiStudio
             return idx;
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             var itemIndex = GetIndexAtCoord(e.X, e.Y);
 
