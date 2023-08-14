@@ -42,6 +42,9 @@ namespace FamiStudio
         private LocalizedString DeleteProjectTitle;
         private LocalizedString ProjectDeletedToast;
 
+        private LocalizedString SaveToNewProjectRadio;
+        private LocalizedString NewProjectPrefix;
+
         public MobileProjectDialog(FamiStudio fami, string title, bool save, bool allowStorage = true)
         {
             Localization.Localize(this);
@@ -68,12 +71,12 @@ namespace FamiStudio
 
             if (save)
             {
-                userProjects.Add("Save to a New Project.");
+                userProjects.Add(SaveToNewProjectRadio);
 
                 // Generate unique name
                 for (int i = 1; ; i++)
                 {
-                    newProjectName = $"NewProject{i}";
+                    newProjectName = $"{NewProjectPrefix}{i}";
                     if (userProjects.Find(p => p.ToLower() == newProjectName.ToLower()) == null)
                         break;
                 }
