@@ -1,14 +1,15 @@
 4.1.2 Change log
 ================
 - Fixed instrument context menu disapearing when using a left-click
-- Fixed issue with "Follow Mode" with small % values
+- Fixed "Follow Mode" jittering when using small % values
 - Fixed out of range volumes when importing .fti containing FDS instruments
 - Fixed effect icons sometimes visible past the end of a pattern
 - Fixed issue where instruments fail to load properly when a stop note is used before any other notes
-- Fixed a couple of minor issues with demo songs
 - Fixed crash when playing a note from all channels with all expensions enabled
+- Fixed a couple of minor issues with demo songs
 - Improved N163 emulation slightly. Songs using 7 or 8 channels may sound slight quieter now and volume might react a bit differently as well
 - Minor localization fixes
+- An APK of the Android version is now available for download, but no support will be provided if it does not work on your device
 
 4.2.0
 =====
