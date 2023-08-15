@@ -1,15 +1,8 @@
-4.1.2 Change log
-================
-- Fixed instrument context menu disapearing when using a left-click
-- Fixed "Follow Mode" jittering when using small % values
-- Fixed out of range volumes when importing .fti containing FDS instruments
-- Fixed effect icons sometimes visible past the end of a pattern
-- Fixed issue where instruments fail to load properly when a stop note is used before any other notes
-- Fixed crash when playing a note from all channels with all expensions enabled
-- Fixed a couple of minor issues with demo songs
-- Improved N163 emulation slightly. Songs using 7 or 8 channels may sound slight quieter now and volume might react a bit differently as well
-- Minor localization fixes
-- An APK of the Android version is now available for download, but no support will be provided if it does not work on your device
+4.1.3
+=====
+x N163 "pop" just when opening a project.
+	=> Rebuild NesSndEMu on all platforms.
+- 
 
 4.2.0
 =====
@@ -116,6 +109,7 @@ Discord
 
 Backlog: 
 =========
+- When using shy mode, we could make the patterns larger if there is room.
 - When multiple VRC7 instrument all use patch 0 at same time (like on first note), they all upload it. Its stupid. Only the first one should, or something like that.
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 

@@ -32,7 +32,7 @@ void Nes_Namco::reset()
 	addr_reg = 0;
 	active_osc = osc_count - 1;
 	delay = 0;
-	last_amp = 0;
+	last_amp = 120;
 	last_time = 0;
 	mix = true;
 

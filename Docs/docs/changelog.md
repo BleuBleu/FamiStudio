@@ -1,6 +1,28 @@
 # Change Log
 
-Version history / release notes for each release.
+Version history / release notes for each release. 
+
+To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
+
+## Version 4.1.2 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed instrument context menu disappearing when using a left-click
+* Fixed "Follow Mode" jittering when using small % values
+* Fixed out of range volumes when importing .fti containing FDS instruments
+* Fixed effect icons sometimes visible past the end of a pattern
+* Fixed issue where instruments fail to load properly when a stop note is used before any other notes
+* Fixed crash when playing a note from all channels with all expansions enabled
+* Fixed a couple of minor issues with demo songs
+* Fixed N163 emulation issue where waves where not properly biased by -8
+* OPNI instrument import support for EPSM instruments (Perkka contribution)
+* Minor localization fixes
+* An APK of the Android version is now available for download, but no support will be provided if it does not work on your device
+
+Breaking/Behavior changes:
+
+* Songs using 7 or 8 N163 channels may sound slight quieter now and volume might react a bit differently as well
 
 ## Version 4.1.1 (Hotfix)
 
