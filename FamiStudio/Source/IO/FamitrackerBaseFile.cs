@@ -614,7 +614,7 @@ namespace FamiStudio
 
                             if (fx.fx == Effect_Arpeggio)
                             {
-                                if (note == null)
+                                if (note == null && lastNoteInstrument != null && Note.IsMusicalNote(lastNoteValue))
                                 {
                                     note = pattern.GetOrCreateNoteAt(n);
                                     note.Value = lastNoteValue;
@@ -627,7 +627,7 @@ namespace FamiStudio
                             }
                         }
 
-                        if (note != null)
+                        if (note != null && note.IsMusical)
                         {
                             note.Arpeggio = currentArpeggio;
                         }

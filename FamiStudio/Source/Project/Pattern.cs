@@ -315,6 +315,20 @@ namespace FamiStudio
             }
         }
 
+        public void FixBadData()
+        {
+            var vals = notes.Values;
+
+            for (int i = vals.Count - 1; i >= 0; i--)
+            {
+                // Old version had a FamiTracker import bug that would assign arpeggios to
+                // non-musical notes.
+                var note = vals[i];
+                if (note != null && note.Arpeggio != null && !note.IsMusical)
+                    note.Arpeggio = null;
+            }
+        }
+
         public void RemoveDpcmNotesWithoutMapping()
         {
             Debug.Assert(Channel.IsDpcmChannel);
@@ -409,6 +423,7 @@ namespace FamiStudio
                 Debug.Assert((note.IsMusical && note.Duration > 0) || (note.IsStop && note.Duration == 1) || (!note.IsMusicalOrStop && note.Duration == 0));
                 Debug.Assert(!note.IsValid || note.IsRelease || note.Value <= Note.MusicalNoteMax);
                 Debug.Assert(!note.IsStop || note.Instrument == null);
+                Debug.Assert(note.Arpeggio == null || note.IsMusical);
 
                 for (int i = 0; i < Note.EffectCount; i++)
                 {
@@ -516,6 +531,9 @@ namespace FamiStudio
                 // This can happen when pasting from an expansion to another. We wont find the channel.
                 if (buffer.Project.IsChannelActive(channelType))
                     ClearNotesPastMaxInstanceLength();
+
+                if (!buffer.IsForUndoRedo)
+                    FixBadData();
             }
         }
     }

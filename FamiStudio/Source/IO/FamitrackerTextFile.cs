@@ -449,9 +449,7 @@ namespace FamiStudio
                                     if (noteData[1] != "..")
                                     {
                                         instruments.TryGetValue(Convert.ToInt32(noteData[1], 16), out var foundInstrument);
-                                        if (j == 5)
-                                            note.Instrument = null;
-                                        else if (channel.SupportsInstrument(foundInstrument))
+                                        if (channel.SupportsInstrument(foundInstrument))
                                             note.Instrument = foundInstrument;
                                     }
                                 }

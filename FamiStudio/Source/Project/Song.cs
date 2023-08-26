@@ -229,7 +229,7 @@ namespace FamiStudio
                 else
                 {
                     var beatLengths = Utils.GetFactors(patternLength);
-                    beatLength = beatLengths[beatLengths.Length / 2];
+                    beatLength = beatLengths.Length == 0 ? 1 : beatLengths[beatLengths.Length / 2];
                 }
             }
             else
