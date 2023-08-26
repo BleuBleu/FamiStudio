@@ -126,6 +126,12 @@ namespace FamiStudio
             var newFile = idx == userProjects.Count - 1;
             var filename = dialog.Properties.GetPropertyValue<string>(1);
 
+            // In case user types the exact same name as exsiting project.
+            if (newFile && File.Exists(GetUserProjectFilename(filename)))
+            {
+                newFile = false;
+            }
+
             if (newFile && string.IsNullOrEmpty(filename))
             {
                 Platform.ShowToast(famistudio.Window, EnterValidFilenameToast);
