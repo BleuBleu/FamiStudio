@@ -14,6 +14,7 @@ x N163 "pop" just when opening a project.
 - Fixed issue where envelope editor would let you set releases on FDS waveform  
 - Fixed "Unassign unused DPCM instrument keys" cleanup option not working if another DPCM instrument was using the same piano key
 - Fixed bug introduced in 4.1.2 where notes were replaying their attack if a gap was left between the notes
+- Fixed issue where note attacks were re-triggers unconditionally when crossing the loop point when exporting to NSF/ROM/SoundEngine
 - Names that are too long to fit in the project explorer are now truncated with ellipsis (...) on Desktop (was already the case on Mobile)
 
 4.2.0

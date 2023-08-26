@@ -998,6 +998,8 @@ namespace FamiStudio
                 var sawVolume = Vrc6SawMasterVolumeType.Half;
                 var sawVolumeChanged = false;
                 var lastVolume = 15;
+                var firstInstrumentInLoop = (Instrument)null;
+                var lastInstrumentInLoop = (Instrument)null;
 
                 songData.Add($"{ll}song{songIdx}ch{c}:");
 
@@ -1005,6 +1007,28 @@ namespace FamiStudio
                 {
                     songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeSpeed : OpcodeSpeedFT2):x2}+");
                     songData.Add($"${song.FamitrackerSpeed:x2}");
+                }
+
+                // Look at the first/last instrument in the looping section to see if we 
+                // will need to reset it when looping.
+                if (song.LoopPoint >= 0)
+                {
+                    for (var p = song.LoopPoint; p < song.Length; p++)
+                    {
+                        var pattern = channel.PatternInstances[p];
+                        if (pattern != null)
+                        {
+                            foreach (var kv in pattern.Notes)
+                            {
+                                if (kv.Value.IsMusical && kv.Value.Instrument != null)
+                                {
+                                    if (firstInstrumentInLoop == null)
+                                        firstInstrumentInLoop = kv.Value.Instrument;
+                                    lastInstrumentInLoop = kv.Value.Instrument;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 for (int p = 0; p < song.Length; p++)
@@ -1015,9 +1039,14 @@ namespace FamiStudio
                     {
                         songData.Add($"{ll}song{songIdx}ch{c}loop:");
 
-                        // Clear stored instrument to force a reset. We might be looping
-                        // to a section where the instrument was set from a previous pattern.
-                        instrument = null;
+                        // Only reload the instruments if its different. Setting it to NULL unconditionally
+                        // forces re-triggerring attacks on notes that had them disabled.
+                        if (lastInstrumentInLoop != firstInstrumentInLoop)
+                        {
+                            instrument = null;
+                        }
+
+                        // TODO : We probably want to do the same for those too?
                         arpeggio = null;
                         lastVolume = -1;
 
