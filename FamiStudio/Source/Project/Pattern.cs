@@ -246,6 +246,12 @@ namespace FamiStudio
                         note.Instrument = null;
                     foundAnyUnsupportedFeature = true;
                 }
+                if (!note.HasAttack && !channel.SupportsNoAttackNotes)
+                {
+                    if (!checkOnly)
+                        note.HasAttack = true;
+                    foundAnyUnsupportedFeature = true;
+                }
             }
 
             if (notesToRemove != null)
