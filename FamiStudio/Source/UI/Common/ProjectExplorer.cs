@@ -1247,7 +1247,7 @@ namespace FamiStudio
 
             public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader || type == ButtonType.ProjectSettings ? Theme.LightGreyColor1 : Color.Black;
 
-            public bool TextEllipsis => type == ButtonType.ProjectSettings || ((type == ButtonType.Song || type == ButtonType.Instrument || type == ButtonType.Dpcm || type == ButtonType.Arpeggio) && Platform.IsMobile);
+            public bool TextEllipsis => type == ButtonType.ProjectSettings || type == ButtonType.Song || type == ButtonType.Instrument || type == ButtonType.Dpcm || type == ButtonType.Arpeggio;
             
             public BitmapAtlasRef GetIcon(SubButtonType sub)
             {
