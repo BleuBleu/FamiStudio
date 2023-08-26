@@ -629,6 +629,7 @@ namespace FamiStudio
                 else if (buffer.IsReading && IsStop)
                 {
                     duration = 1;
+                    instrument = null;
                 }
             }
 

@@ -191,7 +191,6 @@ namespace FamiStudio
             if (newNote.IsStop)
             {
                 note = newNote;
-                note.Instrument = null;
             }
             else if (newNote.IsRelease)
             {

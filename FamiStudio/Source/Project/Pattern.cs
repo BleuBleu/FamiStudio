@@ -402,6 +402,7 @@ namespace FamiStudio
                 Debug.Assert(note.Release == 0 || note.Release > 0 && note.Release < note.Duration);
                 Debug.Assert((note.IsMusical && note.Duration > 0) || (note.IsStop && note.Duration == 1) || (!note.IsMusicalOrStop && note.Duration == 0));
                 Debug.Assert(!note.IsValid || note.IsRelease || note.Value <= Note.MusicalNoteMax);
+                Debug.Assert(!note.IsStop || note.Instrument == null);
 
                 for (int i = 0; i < Note.EffectCount; i++)
                 {
