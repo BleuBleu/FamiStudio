@@ -2,8 +2,6 @@
 =====
 x N163 "pop" just when opening a project.
 	=> Rebuild NesSndEMu on all platforms.
-x Washed out colors on android
-	=> Test keyboard
 - DPCM vs no-attack : How to disable the attack anyway?
 	=> Need to duplicate patterns. What other effects can be copied like that???
 - 
