@@ -108,7 +108,13 @@ namespace FamiStudio
             UpdateLayout();
 
             if (topAlign)
+            {
                 Move(left, base.top - height);
+            }
+            else if (!center && WindowRectangle.Bottom > ParentContainer.WindowRectangle.Bottom)
+            {
+                Move(left, ParentContainer.WindowRectangle.Bottom - height - 10);
+            }
 
             if (center)
                 CenterToWindow();
