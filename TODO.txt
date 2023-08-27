@@ -3,7 +3,6 @@
 x N163 "pop" just when opening a project.
 	=> Rebuild NesSndEMu on all platforms.
 - Fixes from shovel kniht
-- stop note null instrument fix in bad data
 	https://discord.com/channels/@me/819772561940152321/1143672738746224640
 
 4.1.3 Change Log
@@ -18,6 +17,8 @@ x N163 "pop" just when opening a project.
 - Fixed loophole where you could disable note attacks on the DPCM channel by duplicating patterns
 - Fixed DPCM samples not importing correctly from FamiTracker TXT files
 - Fixed issue where arpeggios imported from FamiTracker files would not play sometimes
+- Fixed issue when exporting N163 songs to NSF/ROM/FDS/SoundEngine with instrument names only differentiated by special characters
+- Fixed QWERTY piano input getting stuck if pressing another key while holding a key
 - Names that are too long to fit in the project explorer are now truncated with ellipsis (...) on Desktop (was already the case on Mobile)
 
 4.2.0
