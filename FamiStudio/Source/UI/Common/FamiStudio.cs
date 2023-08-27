@@ -1791,10 +1791,6 @@ namespace FamiStudio
             {
                 return;
             }
-            else
-            {
-                lastRecordingKeyDown = -1;
-            }
 
             if (recordingMode && Settings.QwertyStopShortcut.Matches(e))
             {
