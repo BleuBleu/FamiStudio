@@ -2,8 +2,6 @@
 =====
 x N163 "pop" just when opening a project.
 	=> Rebuild NesSndEMu on all platforms.
-- Fixes from shovel kniht
-	https://discord.com/channels/@me/819772561940152321/1143672738746224640
 
 4.1.3 Change Log
 ================
