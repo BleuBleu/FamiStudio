@@ -1156,6 +1156,14 @@ namespace FamiStudio
 
                 if (folder != null)
                 {
+                    if (!project.EnsureSongAssemblyNamesAreUnique())
+                    {
+                        ShowExportResultToast(FormatAssemblyMessage, false);
+                        return;
+                    }
+
+                    var success = true;
+
                     foreach (var songId in songIds)
                     {
                         var song = project.GetSong(songId);
@@ -1168,11 +1176,11 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        f.Save(project, new int[] { songId }, exportFormat, -1, true, forceBankswitching, songFilename, dpcmFilename, includeFilename, MachineType.Dual);
+                        success = success && f.Save(project, new int[] { songId }, exportFormat, -1, true, forceBankswitching, songFilename, dpcmFilename, includeFilename, MachineType.Dual);
                     }
 
                     lastExportFilename = folder;
-                    ShowExportResultToast(FormatAssemblyMessage);
+                    ShowExportResultToast(FormatAssemblyMessage, success);
                 }
             }
             else
@@ -1187,10 +1195,10 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    f.Save(project, songIds, exportFormat, -1, false, forceBankswitching, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
+                    var success = f.Save(project, songIds, exportFormat, -1, false, forceBankswitching, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
 
                     lastExportFilename = filename;
-                    ShowExportResultToast(FormatAssemblyMessage);
+                    ShowExportResultToast(FormatAssemblyMessage, success);
                 }
             }
         }
@@ -1211,8 +1219,8 @@ namespace FamiStudio
                 var includeFilename = generateInclude ? Path.ChangeExtension(filename, null) + "_sfxlist.inc" : null;
 
                 FamitoneSoundEffectFile f = new FamitoneSoundEffectFile();
-                f.Save(project, songIds, exportFormat, mode, famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2, filename, includeFilename);
-                ShowExportResultToast(FormatAssemblyMessage);
+                var result = f.Save(project, songIds, exportFormat, mode, famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2, filename, includeFilename);
+                ShowExportResultToast(FormatAssemblyMessage, result);
                 lastExportFilename = filename;
             }
         }

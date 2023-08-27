@@ -56,6 +56,11 @@ namespace FamiStudio
 
         public bool Save(Project project, int[] songIds, int format, int machine, int kernel, string filename, string includeFilename)
         {
+            if (!project.EnsureSongAssemblyNamesAreUnique())
+            {
+                return false;
+            }
+
             SetupFormat(format);
 
             var modeStrings = new List<string>();

@@ -500,6 +500,11 @@ namespace FamiStudio
             {
                 if (seperate)
                 {
+                    if (!project.EnsureSongAssemblyNamesAreUnique())
+                    {
+                        return;
+                    }
+
                     var songNamePattern = ParseOption($"{engineName}-asm-seperate-song-pattern", "{project}_{song}");
                     var dpcmNamePattern = ParseOption($"{engineName}-asm-seperate-dmc-pattern", "{project}");
 

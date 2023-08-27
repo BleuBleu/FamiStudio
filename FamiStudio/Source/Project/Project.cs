@@ -265,6 +265,21 @@ namespace FamiStudio
             return songs.Find(s => s.Name == name) == null;
         }
 
+        public bool EnsureSongAssemblyNamesAreUnique()
+        {
+            foreach (var song in songs)
+            {
+                var asmName = Utils.MakeNiceAsmName(song.Name);
+                if (songs.FindAll(s => Utils.MakeNiceAsmName(s.Name) == asmName).Count > 1)
+                {
+                    Log.LogMessage(LogSeverity.Error, $"Song names are not unique when exported to assemly, avoid using only special characters to differentiate songs.");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public DPCMSample CreateDPCMSample(string name)
         {
             // Already exist, this should not happen.

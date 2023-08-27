@@ -625,7 +625,7 @@ namespace FamiStudio
 
                             lines.Add($"\t{dw} {ll}env{repeatEnvIdx}");
                             lines.Add($"\t{db} ${instrument.N163WavePos:x2}, ${instrument.N163WaveSize:x2}");
-                            lines.Add($"\t{dw} {ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves");
+                            lines.Add($"\t{dw} {ll}n163_inst{instrumentCountExp}_waves");
                             lines.Add($"\t{db} $00, $00, $00, $00");
                         }
                         else if (instrument.IsS5B)
@@ -705,7 +705,7 @@ namespace FamiStudio
                 {
                     if (instrument.IsN163)
                     {
-                        lines.Add($"{ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves:");
+                        lines.Add($"{ll}n163_inst{instrumentIndices[instrument]}_waves:");
 
                         var waves = instrumentWaveforms[instrument];
                         for (int i = 0; i < waves.Length; i++)
@@ -1905,6 +1905,11 @@ namespace FamiStudio
 
             if (includeFilename != null)
             {
+                if (!project.EnsureSongAssemblyNamesAreUnique())
+                {
+                    return false;
+                }
+
                 OutputIncludeFile(includeFilename);
             }
 
