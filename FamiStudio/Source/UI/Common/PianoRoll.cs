@@ -1238,7 +1238,7 @@ namespace FamiStudio
 
         public bool CanEnvelopeDisplayFrame()
         {
-            return editEnvelope < EnvelopeType.RegularCount || editEnvelope == EnvelopeType.N163Waveform || editEnvelope == EnvelopeType.FdsWaveform;
+            return editEnvelope != EnvelopeType.FdsModulation && editEnvelope != EnvelopeType.WaveformRepeat;
         }
 
         class RenderInfo
