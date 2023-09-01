@@ -444,7 +444,7 @@ namespace FamiStudio
 
                 var env = envelopes[envType];
                 for (int i = 0; i < resampling.Length; i++)
-                    env.Values[i] = (sbyte)Utils.Lerp(minValue, maxValue, (resampling[i] + 32768.0f) / 65535.0f);
+                    env.Values[i] = (sbyte)MathF.Round(Utils.Lerp(minValue, maxValue, (resampling[i] + 32768.0f) / 65535.0f));
 
                 if (isN163)
                     n163ResampleWavOffset = waveOffset;

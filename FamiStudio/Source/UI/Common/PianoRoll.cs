@@ -3121,7 +3121,7 @@ namespace FamiStudio
                             }
 
                             var sample = waveData[sampleIndex];
-                            var val = Utils.Lerp(envTypeMinValue, envTypeMaxValue, (sample + 32768.0f) / 65535.0f);
+                            var val = Utils.Lerp(envTypeMinValue, envTypeMaxValue + 1, (sample + 32768.0f) / 65535.0f);
 
                             var x = Utils.Lerp(x0, x1, j / (float)numVerticesPerColumn) + noteSizeX * 0.5f;
                             var y = (virtualSizeY - envelopeValueSizeY * (val + bias)) - scrollY;
