@@ -24,7 +24,7 @@ On MacOS, VS Code is used for development, but Visual Studio for Mac might work 
 On Linux, VS Code is used for development and we target .NET 6.0. Much like MacOS, a little shell script, "build_linux.sh" is provided to compile each of the C++ DLLs. No makefile is provided at the moment. [OpenAL Soft](https://openal-soft.org/) is provided as a precompiled AMD64 binary with ALSA support, if you recompile your own you will need to replace libopenal32.so or edit the [dllmap](https://www.mono-project.com/docs/advanced/pinvoke/dllmap/) (FamiStudio.exe.config) to point to the correct library. Same for [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) which is provided as librtmidi.so.
 
 ### Android
-On Android, Visual Studio 2022 is used and we target API level 33 (Android 13.0) and still use Mono here. We will migrate to .NET soon. The C++ DLLs needs to be compiled manually for all 3 architectures (x64, ARM, ARM64) whenever there is a change. We target a minimum version API level of 26 (Android 8.0, Oreo), so make sure to test features on all versions in between. 
+On Android, Visual Studio 2022 is used and we target API level 33 (Android 13.0) and still use Mono here. The C++ DLLs needs to be compiled manually for all 3 architectures (x64, ARM, ARM64) whenever there is a change. We target a minimum version API level of 26 (Android 8.0, Oreo), so make sure to test features on all versions in between. 
 
 ## Contributing
 I'm hesitant to take unsolicited pull requests. If you want to contribute a feature, please get in touch with me first so we can come up with a plan. This will avoid wasting both your time and mine.
