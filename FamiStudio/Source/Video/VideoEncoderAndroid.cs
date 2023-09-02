@@ -81,7 +81,7 @@ namespace FamiStudio
             videoFormat.SetInteger(MediaFormat.KeyIFrameInterval, 4);
             videoFormat.SetInteger(MediaFormat.KeyProfile, (int)MediaCodecProfileType.Avcprofilehigh);
             videoFormat.SetInteger(MediaFormat.KeyLevel, (int)MediaCodecProfileLevel.Avclevel31);
-
+            
             videoEncoder = MediaCodec.CreateEncoderByType(VideoMimeType);
             videoEncoder.Configure(videoFormat, null, null, MediaCodecConfigFlags.Encode);
             surface = videoEncoder.CreateInputSurface();
@@ -148,14 +148,13 @@ namespace FamiStudio
             int index = audioEncoder.DequeueInputBuffer(-1);
             if (index >= 0)
             {
-                ByteBuffer[] inputBuffers = audioEncoder.GetInputBuffers();
-                ByteBuffer buffer = inputBuffers[index];
+                ByteBuffer buffer = audioEncoder.GetInputBuffer(index);
 
                 var len = Utils.Clamp(audioData.Length - audioDataIdx, 0, buffer.Remaining());
                 buffer.Clear();
                 buffer.Put(audioData, audioDataIdx, len);
 
-                long presentationTime = (audioDataIdx * SecondsToMicroSeconds) / (44100 * 2 * numAudioChannels);
+                long presentationTime = (audioDataIdx * SecondsToMicroSeconds) / (44100 * sizeof(short) * numAudioChannels);
                 audioDataIdx += len;
 
                 var done = audioDataIdx == audioData.Length;
@@ -311,7 +310,6 @@ namespace FamiStudio
                 encoder.SignalEndOfInputStream();
             }
 
-            ByteBuffer[] encoderOutputBuffers = encoder.GetOutputBuffers();
             while (true)
             {
                 int encoderStatus = encoder.DequeueOutputBuffer(bufferInfo, TIMEOUT_USEC);
@@ -326,10 +324,6 @@ namespace FamiStudio
                     {
                         Debug.WriteLine("No output available, spinning to await EOS");
                     }
-                }
-                else if (encoderStatus == (int)MediaCodecInfoState.OutputBuffersChanged)
-                {
-                    encoderOutputBuffers = encoder.GetOutputBuffers();
                 }
                 else if (encoderStatus == (int)MediaCodecInfoState.OutputFormatChanged)
                 {
@@ -364,7 +358,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    ByteBuffer encodedData = encoderOutputBuffers[encoderStatus];
+                    ByteBuffer encodedData = encoder.GetOutputBuffer(encoderStatus);
                     Debug.Assert(encodedData != null);
 
                     if ((bufferInfo.Flags & MediaCodecBufferFlags.CodecConfig) != 0)

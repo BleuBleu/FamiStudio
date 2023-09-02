@@ -26,8 +26,6 @@ namespace FamiStudio
         public MobilePiano     MobilePiano     => mobilePiano;
         public Control         ActiveControl   => activeControl;
 
-        public bool IsLandscape => width > height;
-        
         public bool MobilePianoVisible
         {
             get { return mobilePiano.Visible; }
