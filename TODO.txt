@@ -2,10 +2,8 @@
 =====
 x N163 "pop" just when opening a project.
 	=> Rebuild NesSndEMu on all platforms.
-- Cant type in numeric UP/DOWNS??
 - Are waveforms too small in osc export? whopper song with single column
 	https://discord.com/channels/@me/819772561940152321/1145591745854308414
-- Android encoder bitrate is messed up.
 - MacOS sound glitches out after a while
 	https://discord.com/channels/@me/819772561940152321/1146697308545753108
 
@@ -140,6 +138,7 @@ Discord
 
 Backlog: 
 =========
+- Android encoder bitrate is messed up.
 - Piano roll video compression issues?
 - "Comment" box in project. Proto DM
 - When multiple VRC7 instrument all use patch 0 at same time (like on first note), they all upload it. Its stupid. Only the first one should, or something like that.
