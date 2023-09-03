@@ -130,6 +130,8 @@ Discord
 
 Backlog: 
 =========
+- Low slide notes going down + arp going up = glitch. Fix idea : Internally modify the arp to make it less strong based on slide range (ex: div by 4 if doing down 2 octaves).
+  https://discord.com/channels/747649221879922840/1024388342210642150/1147714295581388910
 - MacOS sound glitches out after a while (doesnt happen here on BigSur)
 	https://discord.com/channels/@me/819772561940152321/1146697308545753108
 - Android encoder bitrate is messed up.
