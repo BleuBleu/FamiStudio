@@ -1,10 +1,3 @@
-4.1.3
-=====
-- Are waveforms too small in osc export? whopper song with single column
-	https://discord.com/channels/@me/819772561940152321/1145591745854308414
-- MacOS sound glitches out after a while
-	https://discord.com/channels/@me/819772561940152321/1146697308545753108
-
 4.1.3 Change Log
 ================
 - Fixed "pop" when opening N163 projects or playing N163 songs
@@ -30,6 +23,7 @@
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
 - Finish/fix phase reset support
 - FDS automod
+- Latency improvements, decouple buffered audio frames VS. buffered emulated frames.
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Video export improvements? Unified piano roll, preview, etc?
 - Android media player notification option
@@ -136,6 +130,8 @@ Discord
 
 Backlog: 
 =========
+- MacOS sound glitches out after a while (doesnt happen here on BigSur)
+	https://discord.com/channels/@me/819772561940152321/1146697308545753108
 - Android encoder bitrate is messed up.
 - Piano roll video compression issues?
 - "Comment" box in project. Proto DM
