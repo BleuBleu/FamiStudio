@@ -4,6 +4,25 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.1.3 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed "pop" when opening N163 projects or playing N163 songs
+* Fixed colors becoming progressively washed out when performing specific actions on Android
+* Fixed overwrite confirmation dialog not appearing if you type the exact same name of an existing project on Android
+* Fixed issue where envelope editor would let you set releases on FDS waveform  
+* Fixed "Unassign unused DPCM instrument keys" cleanup option not working if another DPCM instrument was using the same piano key
+* Fixed bug introduced in 4.1.2 where notes were replaying their attack if a gap was left between the notes
+* Fixed issue where note attacks were re-triggers unconditionally when crossing the loop point when exporting to NSF/ROM/SoundEngine
+* Fixed loophole where you could disable note attacks on the DPCM channel by duplicating patterns
+* Fixed DPCM samples not importing correctly from FamiTracker TXT files
+* Fixed issue where arpeggios imported from FamiTracker files would not play sometimes
+* Fixed issue when exporting N163 songs to NSF/ROM/FDS/SoundEngine with instrument names only differentiated by special characters
+* Fixed QWERTY piano input getting stuck if pressing another key while holding a key
+* Names that are too long to fit in the project explorer are now truncated with ellipsis (...) on Desktop (was already the case on Mobile)
+* Upgraded to Android API level 33 (Android 13.0)
+
 ## Version 4.1.2 (Hotfix)
 
 Changes/Fixes:
