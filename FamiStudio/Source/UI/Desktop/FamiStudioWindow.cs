@@ -164,11 +164,8 @@ namespace FamiStudio
 
         public static unsafe FamiStudioWindow CreateWindow(FamiStudio fs)
         {
-            // Try 3.3 first, much more standard.
             glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             glfwWindowHint(GLFW_MAXIMIZED, 1);
             glfwWindowHint(GLFW_RESIZABLE, 1);
             glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
@@ -180,22 +177,25 @@ namespace FamiStudio
         #endif            
         #if DEBUG
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
-        #endif
+#endif
 
-            var window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
-            if (window == IntPtr.Zero)
+            IntPtr window = IntPtr.Zero;
+
+            // Try 3.3 core first, much more standard. Then try all the way down to 3.0, in compatiblity profile.
+            for (var minor = 3; minor >= 0 && window == IntPtr.Zero; minor--)
             {
-                // Fallback to 3.0 if needed.
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, minor == 3 ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_ANY_PROFILE);
 
                 window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
-                if (window == IntPtr.Zero)
-                {
-                    glfwTerminate();
-                    return null;
-                }
             }
+
+            if (window == IntPtr.Zero)
+            {
+                glfwTerminate();
+                return null;
+            }
+
 
             glfwMakeContextCurrent(window);
             glfwSwapInterval(1);
