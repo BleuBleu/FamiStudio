@@ -196,7 +196,6 @@ namespace FamiStudio
                 return null;
             }
 
-
             glfwMakeContextCurrent(window);
             glfwSwapInterval(1);
 

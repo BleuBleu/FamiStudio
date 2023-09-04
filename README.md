@@ -15,7 +15,7 @@ FamiStudio is composed of a few projects:
 - The Setup project (Windows only)
 
 ### Windows
-On Windows, Visual Studio 2019 is used for development, but VS Code with the C# plugin should work too. We target .NET 5.0, but newer version should work (will migrate to Visual Studio 2022 and .NET 6.0 in the next major version). The project contains everything, including both DLLs and the Setup project. In you plan to recompile the C++ DLLs, you will need to install C++ support in Visual Studio. The Setup project is built using the "Microsoft Visual Studio Installer Projects" extension which can be installed from Visual Studio in the "Extensions and Updates" menu.
+On Windows, Visual Studio 2022 is used for development, but VS Code with the C# plugin should work too. We target .NET 6.0. The project contains everything, including both DLLs and the Setup project. In you plan to recompile the C++ DLLs, you will need to install C++ support in Visual Studio. The Setup project is built using the "Microsoft Visual Studio Installer Projects" extension which can be installed from Visual Studio in the "Extensions and Updates" menu.
 
 ### MacOS
 On MacOS, VS Code is used for development, but Visual Studio for Mac might work too. We target .NET 6.0. The C++ DLLs can be compiled using a little shell script "build_macos.sh" that is located in the each of the folders. No fancy makefile here. [PortAudio](http://www.portaudio.com/) and [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/), which are used for audio output and MIDI input respectively have been pre-compiled using Homebrew and are likely not going to change often. The Application bundle is updated manually at each release.
