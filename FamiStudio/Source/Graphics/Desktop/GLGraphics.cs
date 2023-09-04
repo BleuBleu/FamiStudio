@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -112,7 +113,7 @@ namespace FamiStudio
             GL.DeleteProgram(depthProgram);
         }
 
-        private int CompileShader(string resourceName, int type)
+        private int CompileShader(string resourceName, int type, out List<string> attributes)
         {
             var code = "";
             using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(resourceName))
@@ -121,10 +122,55 @@ namespace FamiStudio
                 code = reader.ReadToEnd();
             }
 
+            if (type == GL.VertexShader)
+            {
+                attributes = new List<string>();
+
+                var lines = code.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var l in lines)
+                {
+                    if (l.StartsWith("attribute "))
+                    {
+                        var splits = l.Split(new[] { ' ', '\t', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        attributes.Add(splits[splits.Length - 1]);
+                    }
+                }
+            }
+            else
+            {
+                attributes = null;
+            }
+
+            var versionMajor = 0;
+            var versionMinor = 0;
+
+            GL.GetInteger(GL.MajorVersion, ref versionMajor);
+            GL.GetInteger(GL.MinorVersion, ref versionMinor);
+            
+            Debug.Assert(versionMajor == 3);
+
+            string glslVersion;
+            
+            switch (versionMinor)
+            {
+                case 0:
+                    glslVersion = $"130";
+                    break;
+                case 1:
+                    glslVersion = $"140";
+                    break;
+                case 2:
+                    glslVersion = $"150";
+                    break;
+                default:
+                    glslVersion = $"{versionMajor}{versionMinor}0 core";
+                    break;
+            }
+
             var shader = GL.CreateShader(type);
             var source = new []
             {
-                "#version 330 core\n",
+                $"#version {glslVersion}\n",
                 "#line 1\n",
                 code
             };
@@ -150,7 +196,7 @@ namespace FamiStudio
         {
             var program = GL.CreateProgram();
 
-            var vert = CompileShader(resourceName + ".vert", GL.VertexShader);
+            var vert = CompileShader(resourceName + ".vert", GL.VertexShader, out var attributes);
             GL.AttachShader(program, vert);
 
             // Fragment shaders are optional, but MacOS misbehave when there is
@@ -160,8 +206,13 @@ namespace FamiStudio
             if (useFragment)
         #endif
             { 
-                var frag = CompileShader(resourceName + ".frag", GL.FragmentShader);
+                var frag = CompileShader(resourceName + ".frag", GL.FragmentShader, out _);
                 GL.AttachShader(program, frag);
+            }
+
+            for (int i = 0; i < attributes.Count; i++)
+            {
+                GL.BindAttribLocation(program, i, attributes[i]);
             }
 
             GL.LinkProgram(program);
@@ -804,6 +855,8 @@ namespace FamiStudio
         public const int DepthComponent            = 0x1902;
         public const int UnpackAlignment           = 0x0CF5;
         public const int MaxTextureSize            = 0x0D33;
+        public const int MajorVersion              = 0x821B;
+        public const int MinorVersion              = 0x821C;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void DebugCallback(int source, int type, int id, int severity, int length, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userParam);
@@ -884,6 +937,7 @@ namespace FamiStudio
         public delegate void GetIntegerDelegate(int name, ref int data);
         public delegate int  GetErrorDelegate();
         public delegate int  CheckFramebufferStatusDelegate(int target);
+        public delegate void BindAttribLocationDelegate(int program, int index, [MarshalAs(UnmanagedType.LPStr)] string name);
 
         public static ClearDelegate                   Clear;
         public static ClearDepthDelegate              ClearDepth;
@@ -961,6 +1015,7 @@ namespace FamiStudio
         public static GetIntegerDelegate              GetInteger;
         public static GetErrorDelegate                GetError;
         public static CheckFramebufferStatusDelegate  CheckFramebufferStatus;
+        public static BindAttribLocationDelegate      BindAttribLocation;
 
         public static void StaticInitialize()
         {
@@ -1040,6 +1095,7 @@ namespace FamiStudio
             BindFramebuffer         = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(glfwGetProcAddress("glBindFramebuffer"));
             FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(glfwGetProcAddress("glFramebufferTexture2D"));
             DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(glfwGetProcAddress("glDeleteFramebuffers"));
+            BindAttribLocation      = Marshal.GetDelegateForFunctionPointer<BindAttribLocationDelegate>(glfwGetProcAddress("glBindAttribLocation"));
 
 #if DEBUG && !FAMISTUDIO_MACOS 
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));

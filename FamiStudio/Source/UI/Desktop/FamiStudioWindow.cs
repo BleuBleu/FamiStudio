@@ -164,6 +164,7 @@ namespace FamiStudio
 
         public static unsafe FamiStudioWindow CreateWindow(FamiStudio fs)
         {
+            // Try 3.3 first, much more standard.
             glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -184,8 +185,16 @@ namespace FamiStudio
             var window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
             if (window == IntPtr.Zero)
             {
-                glfwTerminate();
-                return null;
+                // Fallback to 3.0 if needed.
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+
+                window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
+                if (window == IntPtr.Zero)
+                {
+                    glfwTerminate();
+                    return null;
+                }
             }
 
             glfwMakeContextCurrent(window);

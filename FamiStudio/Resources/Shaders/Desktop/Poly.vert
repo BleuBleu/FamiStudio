@@ -1,7 +1,7 @@
-layout(location = 0) in vec2  inPosition;
-layout(location = 1) in vec4  inColor;
-layout(location = 2) in float inDash;
-layout(location = 3) in float inDepth;
+attribute vec2  inPosition;
+attribute vec4  inColor;
+attribute float inDash;
+attribute float inDepth;
 
 uniform vec4 screenScaleBias;
 uniform float uniformDashScale;
