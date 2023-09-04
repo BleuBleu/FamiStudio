@@ -53,7 +53,7 @@ namespace FamiStudio
         {
         }
 
-        public PropertyPage(Android.Content.Context ctx)
+        public PropertyPage(global::Android.Content.Context ctx)
         {
             context = ctx;
         }
@@ -137,7 +137,7 @@ namespace FamiStudio
         private Spinner CreateSpinner(string[] values, string value, string tooltip = null)
         {
             var spinner = new Spinner(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
-            var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, values);
+            var adapter = new CustomFontArrayAdapter(spinner, context, global::Android.Resource.Layout.SimpleSpinnerItem, values);
             spinner.Adapter = adapter;
             spinner.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
             spinner.SetSelection(adapter.GetPosition(value));
@@ -206,7 +206,7 @@ namespace FamiStudio
 
         private ProgressBar CreateProgressBar(float value)
         {
-            var progress = new ProgressBar(context, null, Android.Resource.Attribute.ProgressBarStyleHorizontal);
+            var progress = new ProgressBar(context, null, global::Android.Resource.Attribute.ProgressBarStyleHorizontal);
             progress.Min = 0;
             progress.Max = 1000;
             progress.Progress = (int)Math.Round(value * 1000);
@@ -535,7 +535,7 @@ namespace FamiStudio
         {
             var spinner = properties[idx].controls[0] as Spinner;
             var selIdx  = spinner.SelectedItemPosition;
-            var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, values);
+            var adapter = new CustomFontArrayAdapter(spinner, context, global::Android.Resource.Layout.SimpleSpinnerItem, values);
 
             spinner.Adapter = adapter;
             
@@ -1116,7 +1116,7 @@ namespace FamiStudio
         public CustomFontArrayAdapter(Spinner spin, Context context, int textViewResourceId, string[] values) : base(context, textViewResourceId, values)
         {
             spinner = spin;
-            SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+            SetDropDownViewResource(global::Android.Resource.Layout.SimpleSpinnerDropDownItem);
         }
 
         public override View GetView(int position, View convertView, ViewGroup parent)
@@ -1172,13 +1172,13 @@ namespace FamiStudio
 
             buttonLess = new MaterialButton(context);
             buttonLess.Text = "-";
-            buttonLess.SetTextColor(Android.Graphics.Color.Black);
+            buttonLess.SetTextColor(global::Android.Graphics.Color.Black);
             buttonLess.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1));
             buttonLess.LayoutParameters = lp;
 
             buttonMore = new MaterialButton(context);
             buttonMore.Text = "+";
-            buttonMore.SetTextColor(Android.Graphics.Color.Black);
+            buttonMore.SetTextColor(global::Android.Graphics.Color.Black);
             buttonMore.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1));
             buttonMore.LayoutParameters = lp;
 
@@ -1308,7 +1308,7 @@ namespace FamiStudio
 
             public override void Run()
             {
-                (picker.Context as Activity).RunOnUiThread(() => { picker.DoFastScroll(); });
+                (picker.Context as global::Android.App.Activity).RunOnUiThread(() => { picker.DoFastScroll(); });
             }
         }
     }
@@ -1359,7 +1359,7 @@ namespace FamiStudio
             borderPaint = new Paint();
             borderPaint.SetStyle(Paint.Style.Stroke);
             borderPaint.StrokeWidth = BorderWidth;
-            borderPaint.Color = Android.Graphics.Color.Black;
+            borderPaint.Color = global::Android.Graphics.Color.Black;
 
             fillPaints = new Paint[Theme.CustomColors.GetLength(0), Theme.CustomColors.GetLength(1)];
 
@@ -1369,7 +1369,7 @@ namespace FamiStudio
                 {
                     var fillPaint = new Paint();
                     fillPaint.SetStyle(Paint.Style.Fill);
-                    fillPaint.Color = new Android.Graphics.Color(Theme.CustomColors[i, j].ToArgb());
+                    fillPaint.Color = new global::Android.Graphics.Color(Theme.CustomColors[i, j].ToArgb());
                     fillPaints[i, j] = fillPaint;
                 }
             }

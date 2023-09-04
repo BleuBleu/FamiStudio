@@ -2,7 +2,11 @@
 =================
 x Review OpenGL 3.3 requirements, can we lower this to 3.2, 3.1, 3.0?
 x Upgrade Windows to .NET 6.0
-- Switch to .NET for Android too.
+/ Switch to .NET for Android too.
+	- Fix NET6TODO
+	- Test debug/release 
+	- Setup keystore, etc.
+	- Bring back APK
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
 - Finish/fix phase reset support
 - FDS automod

@@ -1,4 +1,6 @@
-﻿using Android.Content;
+﻿global using FamiStudio.Android;
+
+using Android.Content;
 using Android.Util;
 using AndroidX.Core.Content;
 using System.Reflection;
@@ -8,13 +10,6 @@ namespace FamiStudio
 {
     public static class DroidUtils
     {
-        public static string GetAttributeValue(Android.Content.Res.Resources.Theme theme, int resId)
-        {
-            TypedValue typedValue = new TypedValue();
-            theme.ResolveAttribute(resId, typedValue, true);
-            return typedValue.CoerceToString();
-        }
-
         public static int GetSizeAttributeInPixel(Context context, int resId)
         {
             var att = context.ObtainStyledAttributes(new[] { resId });
@@ -23,9 +18,9 @@ namespace FamiStudio
             return dimension;
         }
 
-        public static Android.Graphics.Color ToAndroidColor(Color color)
+        public static global::Android.Graphics.Color ToAndroidColor(Color color)
         {
-            return new Android.Graphics.Color(color.R, color.G, color.B, color.A);
+            return new global::Android.Graphics.Color(color.R, color.G, color.B, color.A);
         }
 
         public static int DpToPixels(int dp)
@@ -33,23 +28,23 @@ namespace FamiStudio
             return (int)(dp * Xamarin.Essentials.Platform.AppContext.Resources.DisplayMetrics.Density);
         }
 
-        public static Android.Graphics.Color GetColorFromResources(Context context, int resId)
+        public static global::Android.Graphics.Color GetColorFromResources(Context context, int resId)
         {
             // Seriously google?
-            return new Android.Graphics.Color(ContextCompat.GetColor(context, resId));
+            return new global::Android.Graphics.Color(ContextCompat.GetColor(context, resId));
         }
 
-        public static Android.Graphics.Bitmap LoadTgaBitmapFromResource(string name, bool swap = false)
+        public static global::Android.Graphics.Bitmap LoadTgaBitmapFromResource(string name, bool swap = false)
         {
             var img = TgaFile.LoadFromResource(name, swap);
-            return Android.Graphics.Bitmap.CreateBitmap(img.Data, img.Width, img.Height, Android.Graphics.Bitmap.Config.Argb8888);
+            return global::Android.Graphics.Bitmap.CreateBitmap(img.Data, img.Width, img.Height, global::Android.Graphics.Bitmap.Config.Argb8888);
         }
 
-        public static Android.Graphics.Bitmap LoadPngBitmapFromResource(string name, bool premultiplied = false)
+        public static global::Android.Graphics.Bitmap LoadPngBitmapFromResource(string name, bool premultiplied = false)
         {
-            return Android.Graphics.BitmapFactory.DecodeStream(
+            return global::Android.Graphics.BitmapFactory.DecodeStream(
                 Assembly.GetExecutingAssembly().GetManifestResourceStream(name), null,
-                new Android.Graphics.BitmapFactory.Options() { InPremultiplied = premultiplied });
+                new global::Android.Graphics.BitmapFactory.Options() { InPremultiplied = premultiplied });
         }
 
     }

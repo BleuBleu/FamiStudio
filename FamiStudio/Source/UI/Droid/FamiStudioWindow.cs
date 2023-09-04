@@ -92,7 +92,7 @@ namespace FamiStudio
         {
             get
             {
-                Android.Graphics.Rect rect = new Android.Graphics.Rect();
+                var rect = new global::Android.Graphics.Rect();
                 glSurfaceView.GetDrawingRect(rect);
                 return new Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());
             }
@@ -127,7 +127,8 @@ namespace FamiStudio
             ForceScreenOn(false);
 
         #if DEBUG
-            Debug.Listeners.Add(new DebuggerBreakListener());
+            // NET6TODO : Still needed?
+            //Debug.Listeners.Add(new DebuggerBreakListener());
         #endif
 
             Init.InitializeBaseSystems();
@@ -985,7 +986,7 @@ namespace FamiStudio
                 var c = main.ContentResolver.Query(data.Data, null, null, null);
                 if (c != null && c.MoveToFirst())
                 {
-                    int id = c.GetColumnIndex(Android.Provider.IOpenableColumns.DisplayName);
+                    int id = c.GetColumnIndex(global::Android.Provider.IOpenableColumns.DisplayName);
                     if (id != -1)
                         filename = c.GetString(id);
                 }
@@ -1028,7 +1029,7 @@ namespace FamiStudio
     {
         protected Action<string> callback;
         protected string lastSaveTempFile;
-        protected Android.Net.Uri lastSaveFileUri;
+        protected global::Android.Net.Uri lastSaveFileUri;
 
         public SaveDialogActivityInfo(Action<string> cb)
         {

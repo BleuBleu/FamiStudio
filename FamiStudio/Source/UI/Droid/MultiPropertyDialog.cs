@@ -128,7 +128,7 @@ namespace FamiStudio
             dlg = info.Dialog;
             tabsFragment = new MultiPropertyTabFragment(dlg);
             
-            var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, Android.Resource.Attribute.ActionBarSize));
+            var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, global::Android.Resource.Attribute.ActionBarSize));
             appBarLayoutParams.ScrollFlags = 0;
 
             toolbar = new AndroidX.AppCompat.Widget.Toolbar(new ContextThemeWrapper(this, Resource.Style.ToolbarTheme));
@@ -141,7 +141,7 @@ namespace FamiStudio
             {
                 actionBar.SetDisplayHomeAsUpEnabled(true);
                 actionBar.SetHomeButtonEnabled(true);
-                actionBar.SetHomeAsUpIndicator(Android.Resource.Drawable.IcMenuCloseClearCancel);
+                actionBar.SetHomeAsUpIndicator(global::Android.Resource.Drawable.IcMenuCloseClearCancel);
                 actionBar.Title = dlg.Title;
             }
 

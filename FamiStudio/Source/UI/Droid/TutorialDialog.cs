@@ -50,7 +50,7 @@ namespace FamiStudio
         private ManualResetEvent gifQuitEvent = new ManualResetEvent(false);
         private Task gifTask;
         private IntPtr gif;
-        private Android.Graphics.Bitmap gifBmp;
+        private global::Android.Graphics.Bitmap gifBmp;
         private int gifSizeX;
         private int gifSizeY;
         private byte[] gifData;
@@ -102,7 +102,7 @@ namespace FamiStudio
                 return;
             }
 
-            var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, Android.Resource.Attribute.ActionBarSize));
+            var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, global::Android.Resource.Attribute.ActionBarSize));
             appBarLayoutParams.ScrollFlags = 0;
 
             toolbar = new AndroidX.AppCompat.Widget.Toolbar(new ContextThemeWrapper(this, Resource.Style.ToolbarTheme));
@@ -136,7 +136,7 @@ namespace FamiStudio
 
             var linearLayout = new LinearLayout(new ContextThemeWrapper(this, Resource.Style.DarkBackgroundStyle));
             linearLayout.LayoutParameters = coordLayoutParams;
-            linearLayout.Orientation = Android.Widget.Orientation.Vertical;
+            linearLayout.Orientation = global::Android.Widget.Orientation.Vertical;
             linearLayout.AddView(textView);
             linearLayout.AddView(imageView);
 
@@ -196,7 +196,7 @@ namespace FamiStudio
             gif = Gif.Open(gifHandle.AddrOfPinnedObject(), 1);
             gifSizeX = Gif.GetWidth(gif);
             gifSizeY = Gif.GetHeight(gif);
-            gifBmp = Android.Graphics.Bitmap.CreateBitmap(gifSizeX, gifSizeY, Android.Graphics.Bitmap.Config.Argb8888, false);
+            gifBmp = global::Android.Graphics.Bitmap.CreateBitmap(gifSizeX, gifSizeY, global::Android.Graphics.Bitmap.Config.Argb8888, false);
             gifBuffer = new byte[gifSizeX * gifSizeY * 4];
             imageView.SetImageBitmap(gifBmp);
 
