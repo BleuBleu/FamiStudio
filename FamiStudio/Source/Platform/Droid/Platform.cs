@@ -261,7 +261,7 @@ namespace FamiStudio
 
         public static void OpenUrl(string url)
         {
-            FamiStudioWindow.Instance.StartActivity(new Intent(Intent.ActionView, global::Android.Net.Uri.Parse(url)));
+            FamiStudioWindow.Instance.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(url)));
         }
 
         public static void SetClipboardData(byte[] data)
