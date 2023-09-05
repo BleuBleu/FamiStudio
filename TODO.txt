@@ -113,6 +113,7 @@ Discord
 
 Backlog: 
 =========
+- Dump more stats when exporting to sound engine so artists can optimize instruments, etc. Option to dump a log too maybe?
 - Low slide notes going down + arp going up = glitch. Fix idea : Internally modify the arp to make it less strong based on slide range (ex: div by 4 if doing down 2 octaves).
   https://discord.com/channels/747649221879922840/1024388342210642150/1147714295581388910
 - MacOS sound glitches out after a while (doesnt happen here on BigSur)
