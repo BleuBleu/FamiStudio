@@ -1854,12 +1854,7 @@ namespace FamiStudio
 
         public void DrawLine(List<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
-        #if FAMISTUDIO_ANDROID
-            // NET6TODO : When we migrate to .NET 6 on Android, well remove this.
-            DrawLine(points.ToArray(), color, width, smooth, miter);
-        #else
             DrawLine(CollectionsMarshal.AsSpan(points), color, width, smooth, miter);
-        #endif
         }
 
         public void DrawLine(Span<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)

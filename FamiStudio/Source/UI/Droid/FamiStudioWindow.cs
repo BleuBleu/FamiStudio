@@ -127,8 +127,7 @@ namespace FamiStudio
             ForceScreenOn(false);
 
         #if DEBUG
-            // NET6TODO : Still needed?
-            //Debug.Listeners.Add(new DebuggerBreakListener());
+            System.Diagnostics.Trace.Listeners.Add(new DebuggerBreakListener());
         #endif
 
             Init.InitializeBaseSystems();

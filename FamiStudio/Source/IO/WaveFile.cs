@@ -227,11 +227,7 @@ namespace FamiStudio
                                     case 16:    // apparently nonexistent, but idc
                                         wavData = new short[dataSize >> 1];
                                         for (int i = 0; i < dataSize; i += 2)
-#if NET6_0_OR_GREATER   // Linux, Mac
                                             wavData[i >> 1] = (short)((float)BitConverter.ToHalf(bytes, dataOffset + i) * 32767);
-#else   // Windows, Android
-                                            wavData[i >> 1] = (short)(Utils.ToHalf(BitConverter.ToUInt16(bytes, dataOffset + i)) * 32767);
-#endif
                                         break;
                                     case 32:
                                         wavData = new short[dataSize >> 2];
