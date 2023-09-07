@@ -7,6 +7,13 @@ x Upgrade Windows to .NET 6.0
 	- Setup keystore, etc.
 	- Bring back APK
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
+	- Add folder info, just name + color + expanded flag.
+	- Instrument/songs/samples/arps will have a folder string
+	- Add UI to create folder.
+	- Add to validate integrity, folder must exist
+	- P.E. Will scan folders and display correctly
+	- Save/load in FS text
+	- Must also sort if auto-sort is enabled.
 - Finish/fix phase reset support
 - FDS automod
 - Latency improvements, decouple buffered audio frames VS. buffered emulated frames.
@@ -184,3 +191,5 @@ Backlog:
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
+- Length counter support? https://www.youtube.com/watch?v=Fg8B3kiVckY
+- 
