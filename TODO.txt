@@ -12,6 +12,7 @@
 - Android media player notification option
 - Fix that bug where patterns are modified twice if you select 2 instances
 - When using shy mode, we could make the patterns larger if there is room.
+- Mamke relative pitch envelopes and option in the sound engine
 
 Later
 =====
