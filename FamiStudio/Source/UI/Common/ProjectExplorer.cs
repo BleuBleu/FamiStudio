@@ -195,6 +195,7 @@ namespace FamiStudio
         LocalizedString RenameSampleError;
 
         // Context menus
+        LocalizedString AddFolderContext;
         LocalizedString AddExpInstrumentContext;
         LocalizedString AddRegularInstrumentContext;
         LocalizedString AutoAssignBanksContext;
@@ -2238,8 +2239,6 @@ namespace FamiStudio
                     if (subButtonType == SubButtonType.Add)
                     {
                         tooltip = $"<MouseLeft> {AddNewInstrumentTooltip}";
-                        if (App.Project.NeedsExpansionInstruments)
-                            tooltip += $" - <MouseRight> {MoreOptionsTooltip}";
                     }
                     else if (subButtonType == SubButtonType.Load)
                     {
@@ -3370,18 +3369,13 @@ namespace FamiStudio
             BlinkButton(App.SelectedInstrument);
         }
 
+        private void AddInstrumentFolder()
+        {
+        }
+
         private void AskAddInstrument(int x, int y)
         {
-            var instrumentType = ExpansionType.None;
-
-            if (App.Project.NeedsExpansionInstruments)
-            {
-                HandleContextMenuInstrumentHeaderButton(x, y, SubButtonType.Add);
-            }
-            else
-            {
-                AddInstrument(instrumentType);
-            }
+            HandleContextMenuInstrumentHeaderButton(x, y, SubButtonType.Add);
         }
 
         private void ToggleExpandInstrument(Instrument inst)
@@ -4459,7 +4453,7 @@ namespace FamiStudio
         
         private bool HandleContextMenuInstrumentHeaderButton(int x, int y, SubButtonType subButtonType)
         {
-            if (App.Project.NeedsExpansionInstruments && subButtonType == SubButtonType.Add)
+            if (subButtonType == SubButtonType.Add)
             {
                 var activeExpansions = App.Project.GetActiveExpansions();
 
@@ -4475,6 +4469,8 @@ namespace FamiStudio
                         options.Add(new ContextMenuOption(ExpansionType.Icons[activeExpansions[i]], AddExpInstrumentContext.Format(expName), () => { AddInstrument(activeExpansions[j]); }));
                     }
                 }
+
+                options.Add(new ContextMenuOption("Folder", AddFolderContext, () => { AddInstrumentFolder(); }, ContextMenuSeparator.Before));
 
                 App.ShowContextMenu(left + x, top + y, options.ToArray());
                 return true;

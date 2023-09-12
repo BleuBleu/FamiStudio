@@ -484,6 +484,8 @@
     <EmbeddedResource Include="Resources\Atlas\FileFolder@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\FileHome.tga" />
     <EmbeddedResource Include="Resources\Atlas\FileHome@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Folder.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Folder@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\GhostSmall.tga" />
