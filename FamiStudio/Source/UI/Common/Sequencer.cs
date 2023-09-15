@@ -345,7 +345,7 @@ namespace FamiStudio
                 var sizeMask = oddWindowScaling ? 0xfffe : 0xffff; // Keep size even at 150%.
                 var idealSequencerHeight = ParentWindow.Height * Settings.IdealSequencerSize / 100;
                 
-                channelSizeY = channelCount > 0 ? Math.Max((idealSequencerHeight / channelCount) & sizeMask, minChannelSize) : minChannelSize;
+                channelSizeY = visibleChannelCount > 0 ? Math.Max((idealSequencerHeight / visibleChannelCount) & sizeMask, minChannelSize) : minChannelSize;
 
                 var actualSequencerHeight = channelSizeY * visibleChannelCount;
 
