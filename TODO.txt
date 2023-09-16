@@ -27,6 +27,7 @@ x When using shy mode, we could make the patterns larger if there is room.
 	- Unified piano roll mode.
 	- Rename "Bitmap" to "Texture"
 	- Add a preview button (will need a passthrough encoder)
+	x Grid drop-downs are broken with scrolling.
 - Finish/fix phase reset support
 - FDS automod
 - Latency improvements, decouple buffered audio frames VS. buffered emulated frames.

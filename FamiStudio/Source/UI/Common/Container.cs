@@ -9,9 +9,10 @@ namespace FamiStudio
         // These are only used by scroll container.
         protected int containerScrollX;
         protected int containerScrollY;
-
         protected List<Control> controls = new List<Control>();
-        
+
+        public int ScrollX => containerScrollX;
+        public int ScrollY => containerScrollY;
         public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
         public Container()
@@ -48,9 +49,6 @@ namespace FamiStudio
 
         public virtual Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
         {
-            winX += containerScrollX;
-            winY += containerScrollY;
-
             // First look for containers. Last containers are considered to have higher Z-order.
             for (int i = controls.Count - 1; i >= 0; i--)
             {

@@ -154,6 +154,8 @@ namespace FamiStudio
             {
                 p.X += c.Left;
                 p.Y += c.Top;
+                p.X -= c.ScrollX;
+                p.Y -= c.ScrollY;
                 c = c.ParentContainer;
             }
 
@@ -168,6 +170,8 @@ namespace FamiStudio
             {
                 p.X -= c.Left;
                 p.Y -= c.Top;
+                p.X += c.ScrollX;
+                p.Y += c.ScrollY;
                 c = c.ParentContainer;
             }
 

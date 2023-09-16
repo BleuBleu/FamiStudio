@@ -107,12 +107,5 @@ namespace FamiStudio
             c.FillAndDrawRectangle(0, scrollBarPosY - 1, scrollbarWidth, scrollBarPosY + scrollBarSizeY, Theme.MediumGreyColor1, Theme.LightGreyColor1);
             c.PopTransform();
         }
-
-        //public override void Render(Graphics g)
-        //{
-        //    g.PushClipRegion(0, 0, width, height);
-        //    OnRender(g);
-        //    g.PopClipRegion();
-        //}
     }
 }
