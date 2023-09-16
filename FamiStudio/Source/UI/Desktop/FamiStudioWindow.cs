@@ -47,7 +47,6 @@ namespace FamiStudio
         private int lastButtonPress = -1;
         private Point contextMenuPoint = Point.Empty;
         private double lastTickTime = -1.0f;
-        private float magnificationAccum = 0;
         private bool quit = false;
         private int lastCursorX = -1;
         private int lastCursorY = -1;
@@ -174,10 +173,10 @@ namespace FamiStudio
             glfwWindowHint(GLFW_STENCIL_BITS, 0);
         #if FAMISTUDIO_MACOS
             glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, 1);
-        #endif            
+        #endif
         #if DEBUG
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
-#endif
+        #endif
 
             IntPtr window = IntPtr.Zero;
 

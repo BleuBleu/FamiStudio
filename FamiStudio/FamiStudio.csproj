@@ -137,6 +137,7 @@
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
+    <Compile Include="Source\UI\Common\RegisterViewer.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\Settings.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
@@ -486,6 +487,8 @@
     <EmbeddedResource Include="Resources\Atlas\FileHome@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Folder.tga" />
     <EmbeddedResource Include="Resources\Atlas\Folder@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\FolderOpen.tga" />
+    <EmbeddedResource Include="Resources\Atlas\FolderOpen@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\GhostSmall.tga" />

@@ -6,6 +6,8 @@ namespace FamiStudio
 {
     public partial class FamiStudioWindow
     {
+        private float magnificationAccum = 0;
+
         private IntPtr selType = MacUtils.SelRegisterName("type");
         private IntPtr selMagnification = MacUtils.SelRegisterName("magnification");
         private IntPtr selNextEventMatchingMask = MacUtils.SelRegisterName("nextEventMatchingMask:untilDate:inMode:dequeue:");

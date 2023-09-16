@@ -22,7 +22,8 @@ namespace FamiStudio
         // Version 13 = FamiStudio 3.3.0 (EPSM, Delta counter)
         // Version 14 = FamiStudio 4.0.0 (Unicode text).
         // Version 15 = FamiStudio 4.1.0 (DPCM bankswitching)
-        public const int Version = 15;
+        // Version 16 = FamiStudio 4.2.0 (Folders)
+        public const int Version = 16;
         public const int MaxMappedSampleSize = 0x40000;
         public const int MaxDPCMBanks = 64; 
         public const int MaxSampleAddress = 255 * 64;
@@ -31,6 +32,7 @@ namespace FamiStudio
         private List<Instrument> instruments = new List<Instrument>();
         private List<Arpeggio> arpeggios = new List<Arpeggio>();
         private List<Song> songs = new List<Song>();
+        private List<Folder> folders = new List<Folder>();
         private int nextUniqueId = 100;
         private string filename = "";
         private string name = "Untitled";
@@ -73,8 +75,8 @@ namespace FamiStudio
         public bool UsesMmc5Expansion => (expansionMask & ExpansionType.Mmc5Mask) != 0;
         public bool UsesS5BExpansion => (expansionMask & ExpansionType.S5BMask) != 0;
         public bool UsesEPSMExpansion => (expansionMask & ExpansionType.EPSMMask) != 0;
-
         public bool OutputsStereoAudio => UsesEPSMExpansion;
+        public bool HasAnyFolders => folders.Count > 0;
 
         public string Filename { get => filename; set => filename = value; }
         public string Name { get => name; set => name = value; }
@@ -289,7 +291,7 @@ namespace FamiStudio
                 return null;
             }
 
-            var sample = new DPCMSample(GenerateUniqueId(), name);
+            var sample = new DPCMSample(this, GenerateUniqueId(), name);
             samples.Add(sample);
             ConditionalSortSamples();
             return sample;
@@ -426,7 +428,7 @@ namespace FamiStudio
             else if (arpeggios.Find(arp => arp.Name == name) != null)
                 return null;
 
-            var arpeggio = new Arpeggio(GenerateUniqueId(), name);
+            var arpeggio = new Arpeggio(this, GenerateUniqueId(), name);
             arpeggios.Add(arpeggio);
             ConditionalSortArpeggios();
             return arpeggio;
@@ -701,6 +703,22 @@ namespace FamiStudio
             }
         }
 
+        public string GenerateUniqueFolderName(int type, string baseName = "Folder")
+        {
+            if (string.IsNullOrEmpty(baseName))
+                baseName = "Folder";
+
+            if (!FolderExists(type, baseName))
+                return baseName;
+
+            for (int i = 1; ; i++)
+            {
+                var name = $"{baseName} {i}";
+                if (!FolderExists(type, name))
+                    return name;
+            }
+        }
+
         public bool RenameInstrument(Instrument instrument, string name)
         {
             if (instrument.Name == name)
@@ -729,6 +747,7 @@ namespace FamiStudio
                 else
                     return AlphaNumericComparer.CompareStatic(i1.Name, i2.Name);
             });
+            SortFolders(FolderType.Instrument);
         }
 
         public void ConditionalSortInstruments()
@@ -771,6 +790,7 @@ namespace FamiStudio
             {
                 return AlphaNumericComparer.CompareStatic(a1.Name, a2.Name);
             });
+            SortFolders(FolderType.Arpeggio);
         }
 
         public void ConditionalSortArpeggios()
@@ -813,6 +833,7 @@ namespace FamiStudio
             {
                 return AlphaNumericComparer.CompareStatic(s1.Name, s2.Name);
             });
+            SortFolders(FolderType.Sample);
         }
 
         public void ConditionalSortSamples()
@@ -854,6 +875,7 @@ namespace FamiStudio
             {
                 return AlphaNumericComparer.CompareStatic(s1.Name, s2.Name);
             });
+            SortFolders(FolderType.Song);
         }
 
         public void ConditionalSortSongs()
@@ -871,6 +893,29 @@ namespace FamiStudio
                 songs.Insert(songs.IndexOf(songBefore) + 1, song);
             else
                 songs.Insert(0, song);
+        }
+
+        public void SortFolders(int type)
+        {
+            var foldersForType    = new List<Folder>();
+            var foldersOtherTypes = new List<Folder>();
+
+            foreach (var f in folders)
+            {
+                if (f.Type == type)
+                    foldersForType.Add(f);
+                else
+                    foldersOtherTypes.Add(f);
+            }
+
+            foldersForType.Sort((f1, f2) =>
+            {
+                return AlphaNumericComparer.CompareStatic(f1.Name, f2.Name);
+            });
+
+            folders.Clear();
+            folders.AddRange(foldersOtherTypes);
+            folders.AddRange(foldersForType);
         }
 
         public void SetExpansionAudioMask(int newExpansionMask, int numChannels = 1, bool resizeN163RAM = true)
@@ -1036,6 +1081,58 @@ namespace FamiStudio
                 return true;
             }
         }
+
+        public Folder CreateFolder(int type, string name = null)
+        {
+            if (name == null)
+                name = GenerateUniqueFolderName(type);
+            else if (FolderExists(type, name))
+                return GetFolder(type, name);
+
+            var folder = new Folder(type, name);
+            folders.Add(folder);
+            return folder; // MATTT : Conditional sort here????
+        }
+
+        public bool RenameFolder(int type, Folder folder, string name)
+        {
+            if (folder.Name == name)
+                return true;
+            if (string.IsNullOrEmpty(name))
+                return false;
+
+            if (!FolderExists(type, name))
+            {
+                var oldName = folder.Name;
+                folder.Name = name;
+
+                switch (type)
+                {
+                    case FolderType.Song:
+                        songs.ForEach(s => { if (s.FolderName == oldName) s.FolderName = name; });
+                        ConditionalSortSongs();
+                        break;
+                    case FolderType.Instrument:
+                        instruments.ForEach(i => { if (i.FolderName == oldName) i.FolderName = name; });
+                        ConditionalSortInstruments();
+                        break;
+                    case FolderType.Arpeggio:
+                        arpeggios.ForEach(a => { if (a.FolderName == oldName) a.FolderName = name; });
+                        ConditionalSortArpeggios();
+                        break;
+                    case FolderType.Sample:
+                        samples.ForEach(s => { if (s.FolderName == oldName) s.FolderName = name; });
+                        ConditionalSortSamples();
+                        break;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        // MATTT : Add a sort folder method, call it in the "Conditional sort, etc".
 
         public void DeleteUnmappedSamples()
         {
@@ -1766,6 +1863,41 @@ namespace FamiStudio
 #endif
         }
 
+        public bool FolderExists(int type, string name)
+        {
+            return folders.Exists(f => f.Type == type && f.Name == name);
+        }
+
+        public Folder GetFolder(int type, string name)
+        {
+            return folders.Find(f => f.Type == type && f.Name == name);
+        }
+
+        public List<Folder> GetFoldersForType(int type)
+        {
+            return folders.FindAll(f => f.Type == type);
+        }
+
+        public List<Song> GetSongsInFolder(string name)
+        {
+            return songs.FindAll(s => (name ?? "") == (s.FolderName ?? ""));
+        }
+
+        public List<Instrument> GetInstrumentsInFolder(string name)
+        {
+            return instruments.FindAll(i => (name ?? "") == (i.FolderName ?? ""));
+        }
+
+        public List<Arpeggio> GetArpeggiosInFolder(string name)
+        {
+            return arpeggios.FindAll(a => (name ?? "") == (a.FolderName ?? ""));
+        }
+
+        public List<DPCMSample> GetSamplesInFolder(string name)
+        {
+            return samples.FindAll(s => (name ?? "") == (s.FolderName ?? ""));
+        }
+
         public void SerializeDPCMSamples(ProjectBuffer buffer)
         {
             // Samples
@@ -1926,6 +2058,18 @@ namespace FamiStudio
                 buffer.Serialize(ref pal);
             }
 
+            // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer.
+            if (buffer.Version >= 16)
+            {
+                var folderCount = folders.Count;
+                buffer.Serialize(ref folderCount);
+                buffer.InitializeList(ref folders, folderCount);
+                foreach (var folder in folders)
+                {
+                    folder.SerializeState(buffer);
+                }
+            }
+
             // DPCM samples
             var legacyMappings = (Dictionary<int, DPCMSampleMapping>)null;
             if (includeSamples)
@@ -1978,7 +2122,43 @@ namespace FamiStudio
             return newProject;
         }
     }
-    
+
+    public static class FolderType
+    {
+        public const int Song       = 0;
+        public const int Instrument = 1;
+        public const int Arpeggio   = 2;
+        public const int Sample     = 3;
+    }
+
+    public class Folder
+    {
+        private int    type;
+        private string name;
+        private bool   expanded = true;
+
+        public int    Type     { get => type;     set => type     = value; }
+        public string Name     { get => name;     set => name     = value; }
+        public bool   Expanded { get => expanded; set => expanded = value; }
+
+        public Folder()
+        {
+        }
+
+        public Folder(int t, string n)
+        {
+            type = t;
+            name = n;
+        }
+
+        public void SerializeState(ProjectBuffer buffer)
+        {
+            buffer.Serialize(ref type);
+            buffer.Serialize(ref name);
+            buffer.Serialize(ref expanded);
+        }
+    }
+
     public static class ExpansionType
     {
         public const int None  = 0;

@@ -12,6 +12,7 @@ namespace FamiStudio
         private int expansion = ExpansionType.None;
         private Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         private Color color;
+        private string folderName;
         private Project project;
         private Dictionary<int, DPCMSampleMapping> samplesMapping;
 
@@ -59,6 +60,8 @@ namespace FamiStudio
         public Dictionary<int, DPCMSampleMapping> SamplesMapping => samplesMapping;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
         public byte[] EpsmPatchRegs => epsmPatchRegs;
+        public string FolderName { get => folderName; set => folderName = value; }
+        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Instrument, folderName);
 
         public bool IsRegular => expansion == ExpansionType.None;
         public bool IsFds     => expansion == ExpansionType.Fds;
@@ -727,6 +730,7 @@ namespace FamiStudio
 
             Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
             Debug.Assert(project.GetInstrument(id) == this);
+            Debug.Assert(string.IsNullOrEmpty(folderName) || project.FolderExists(FolderType.Instrument, folderName));
 
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
@@ -909,6 +913,7 @@ namespace FamiStudio
                 }
             }
 
+            // At version 5 (FamiStudio 2.0.0) we added duty cycle envelopes.
             if (buffer.Version < 5)
             {
                 envelopes[EnvelopeType.DutyCycle] = new Envelope(EnvelopeType.DutyCycle);
@@ -917,6 +922,12 @@ namespace FamiStudio
                     envelopes[EnvelopeType.DutyCycle].Length = 1;
                     envelopes[EnvelopeType.DutyCycle].Values[0] = (sbyte)dutyCycle;
                 }
+            }
+
+            // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer.
+            if (buffer.Version >= 16)
+            {
+                buffer.Serialize(ref folderName);
             }
 
             // At version 12, FamiStudio 3.2.0, we realized that we had some FDS envelopes (likely imported from NSF)

@@ -79,7 +79,7 @@ namespace FamiStudio
 
                 Debug.Assert(!sample.HasAnyProcessingOptions);
 
-                lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
+                lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{ConditionalGenerateAttribute("Folder", sample.FolderName)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
             }
 
             // Instruments
@@ -93,7 +93,8 @@ namespace FamiStudio
                     instrument.DeleteN163ResampleWavData();
                 }
 
-                var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}";
+                var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}{ConditionalGenerateAttribute("Folder", instrument.FolderName)}";
+
                 if (instrument.IsExpansionInstrument)
                 {
                     instrumentLine += GenerateAttribute("Expansion", ExpansionType.InternalNames[instrument.Expansion]);
@@ -183,7 +184,7 @@ namespace FamiStudio
             foreach (var arpeggio in project.Arpeggios)
             {
                 var env = arpeggio.Envelope;
-                var arpeggioLine = $"\tArpeggio{GenerateAttribute("Name", arpeggio.Name)}{GenerateAttribute("Length", env.Length)}";
+                var arpeggioLine = $"\tArpeggio{GenerateAttribute("Name", arpeggio.Name)}{ConditionalGenerateAttribute("Folder", arpeggio.FolderName)}{GenerateAttribute("Length", env.Length)}";
                 if (env.Loop >= 0) arpeggioLine += GenerateAttribute("Loop", env.Loop);
                 arpeggioLine += GenerateAttribute("Values", String.Join(",", env.Values.Take(env.Length)));
                 lines.Add(arpeggioLine);
@@ -192,7 +193,7 @@ namespace FamiStudio
             // Songs
             foreach (var song in project.Songs)
             {
-                var songStr = $"\tSong{GenerateAttribute("Name", song.Name)}{GenerateAttribute("Length", song.Length)}{GenerateAttribute("LoopPoint", song.LoopPoint)}";
+                var songStr = $"\tSong{GenerateAttribute("Name", song.Name)}{ConditionalGenerateAttribute("Folder", song.FolderName)}{GenerateAttribute("Length", song.Length)}{GenerateAttribute("LoopPoint", song.LoopPoint)}";
 
                 if (song.UsesFamiTrackerTempo)
                 {
@@ -299,6 +300,11 @@ namespace FamiStudio
         private static string GenerateAttribute(string key, object value)
         {
             return $" {key}=\"{value.ToString().Replace("\"", "\"\"")}\"";
+        }
+
+        private static string ConditionalGenerateAttribute(string key, object value)
+        {
+            return string.IsNullOrEmpty(value.ToString()) ? "" : GenerateAttribute(key, value);
         }
 
         private static readonly Regex NameRegex = new Regex("^\\s*([^\"=\\s]+)\\s*(.*)\\s*$", RegexOptions.Compiled);
@@ -417,6 +423,8 @@ namespace FamiStudio
                             for (int i = 0; i < data.Length; i++)
                                 data[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
                             var sample = project.CreateDPCMSampleFromDmcData(parameters["Name"], data);
+                            if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Sample, folderName) != null)
+                                sample.FolderName = folderName;
                             break;
                         }
                         case "Instrument":
@@ -425,6 +433,8 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Expansion", out var instrumentExpStr))
                                 instrumentExp = ExpansionType.GetValueForInternalName(instrumentExpStr);
                             instrument = project.CreateInstrument(instrumentExp, parameters["Name"]);
+                            if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Instrument, folderName) != null)
+                                instrument.FolderName = folderName;
 
                             if (instrument.IsFds)
                             {
@@ -502,6 +512,8 @@ namespace FamiStudio
                             arpeggio = project.CreateArpeggio(parameters["Name"]);
                             arpeggio.Envelope.Length = int.Parse(parameters["Length"]);
                             
+                            if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Arpeggio, folderName) != null)
+                                arpeggio.FolderName = folderName;
                             if (parameters.TryGetValue("Loop", out var loopStr))
                                 arpeggio.Envelope.Loop = int.Parse(loopStr);
 
@@ -535,6 +547,9 @@ namespace FamiStudio
                             song.SetLength(int.Parse(parameters["Length"]));
                             song.SetBeatLength(int.Parse(parameters["BeatLength"]));
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
+
+                            if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Song, folderName) != null)
+                                arpeggio.FolderName = folderName;
 
                             if (song.UsesFamiTrackerTempo)
                             {

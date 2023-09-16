@@ -12,6 +12,8 @@ namespace FamiStudio
         private int id;
         private string name;
         private Color color;
+        private string folderName;
+        private Project project;
         private int bank = 0;
 
         // Source data
@@ -45,6 +47,8 @@ namespace FamiStudio
         public string Name { get => name;  set => name  = value; }
         public Color Color { get => color; set => color = value; }
         public int Bank    { get => bank;  set => bank  = value; }
+        public string FolderName { get => folderName; set => folderName = value; }
+        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Song, folderName);
 
         public string SourceFilename => sourceFilename;
         public bool SourceDataIsWav { get => sourceData is DPCMSampleWavSourceData; }
@@ -84,8 +88,9 @@ namespace FamiStudio
             // For serialization.
         }
 
-        public DPCMSample(int id, string name)
+        public DPCMSample(Project project, int id, string name)
         {
+            this.project = project;
             this.id = id;
             this.name = name;
             this.color = Theme.RandomCustomColor();
@@ -340,6 +345,8 @@ namespace FamiStudio
 #if DEBUG
             project.ValidateId(id);
 
+            Debug.Assert(project == this.project);
+
             if (idMap.TryGetValue(id, out var foundObj))
                 Debug.Assert(foundObj == this);
             else
@@ -348,6 +355,7 @@ namespace FamiStudio
             Debug.Assert(project.GetSample(id) == this);
             Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
             Debug.Assert(bank >= 0 && bank < Project.MaxDPCMBanks);
+            Debug.Assert(string.IsNullOrEmpty(folderName) || project.FolderExists(FolderType.Sample, folderName));
 #endif
         }
 
@@ -406,6 +414,9 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
+            if (buffer.IsReading)
+                project = buffer.Project;
+
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
 
@@ -432,7 +443,15 @@ namespace FamiStudio
 
                 // At version 15 (FamiStudio 4.1.0) we added DPCM bankswitching.
                 if (buffer.Version >= 15)
+                {
                     buffer.Serialize(ref bank);
+                }
+
+                // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer.
+                if (buffer.Version >= 16)
+                {
+                    buffer.Serialize(ref folderName);
+                }
 
                 // Processing parameters.
                 buffer.Serialize(ref sampleRate);

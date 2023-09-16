@@ -166,9 +166,9 @@ namespace FamiStudio
                             fmtOffset = subChunkOffset + 8;
                         }
                         else if (bytes[subChunkOffset + 0] == (byte)'d' &&
-                                    bytes[subChunkOffset + 1] == (byte)'a' &&
-                                    bytes[subChunkOffset + 2] == (byte)'t' &&
-                                    bytes[subChunkOffset + 3] == (byte)'a')
+                                 bytes[subChunkOffset + 1] == (byte)'a' &&
+                                 bytes[subChunkOffset + 2] == (byte)'t' &&
+                                 bytes[subChunkOffset + 3] == (byte)'a')
                         {
                             dataOffset = subChunkOffset + 8;
                             dataSize = subChunkSize;

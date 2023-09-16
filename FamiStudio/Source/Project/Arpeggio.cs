@@ -13,18 +13,23 @@ namespace FamiStudio
         private string name;
         private Envelope envelope = new Envelope(EnvelopeType.Arpeggio);
         private Color color;
+        private string folderName;
+        private Project project;
 
         public int Id => id;
         public Envelope Envelope => envelope;
         public string Name { get => name; set => name = value; }
         public Color Color { get => color; set => color = value; }
+        public string FolderName { get => folderName; set => folderName = value; }
+        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Song, folderName);
 
         public Arpeggio()
         {
         }
 
-        public Arpeggio(int id, string name)
+        public Arpeggio(Project project, int id, string name)
         {
+            this.project = project;
             this.id = id;
             this.name = name;
             this.color = Theme.RandomCustomColor();
@@ -42,6 +47,8 @@ namespace FamiStudio
 #if DEBUG
             project.ValidateId(id);
 
+            Debug.Assert(project == this.project);
+
             if (idMap.TryGetValue(id, out var foundObj))
                 Debug.Assert(foundObj == this);
             else
@@ -49,14 +56,25 @@ namespace FamiStudio
 
             Debug.Assert(project.GetArpeggio(id) == this);
             Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
+            Debug.Assert(string.IsNullOrEmpty(folderName) || project.FolderExists(FolderType.Arpeggio, folderName));
 #endif
         }
 
         public void SerializeState(ProjectBuffer buffer)
         {
+            if (buffer.IsReading)
+                project = buffer.Project;
+
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
             buffer.Serialize(ref color);
+
+            // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer.
+            if (buffer.Version >= 16)
+            {
+                buffer.Serialize(ref folderName);
+            }
+
             envelope.SerializeState(buffer, EnvelopeType.Arpeggio);
         }
 

@@ -853,7 +853,7 @@ namespace FamiStudio
                     dialog.AddControl(prop.control);
                 }
 
-                if (prop.type == PropertyType.ColoredTextBox)
+                if ((prop.type == PropertyType.ColoredTextBox || prop.type == PropertyType.TextBox) && i == 0)
                 {
                     (prop.control as TextBox).SelectAll();
                     prop.control.GrabDialogFocus();

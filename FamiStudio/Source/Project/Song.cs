@@ -14,6 +14,7 @@ namespace FamiStudio
         private Project project;
         private Channel[] channels;
         private Color color;
+        private string folderName;
         private int patternLength = 96;
         private int songLength = 16;
         private int beatLength = 40;
@@ -52,6 +53,8 @@ namespace FamiStudio
         public bool UsesFamiTrackerTempo => project.UsesFamiTrackerTempo;
         public int FamitrackerTempo { get => famitrackerTempo; set => famitrackerTempo = value; }
         public int FamitrackerSpeed { get => famitrackerSpeed; set => famitrackerSpeed = value; }
+        public string FolderName { get => folderName; set => folderName = value; }
+        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Song, folderName);
 
         public NoteLocation StartLocation => new NoteLocation(0, 0);
         public NoteLocation EndLocation   => new NoteLocation(songLength, 0);
@@ -578,6 +581,19 @@ namespace FamiStudio
             }
         }
 
+        public TimeSpan GetTimeAtLocation(NoteLocation location)
+        {
+            return project.UsesFamiStudioTempo ? TimeSpan.FromMilliseconds(location.ToAbsoluteNoteIndex(this) * 1000.0 / (project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC)) : TimeSpan.Zero;
+        }
+
+        public TimeSpan Duration
+        {
+            get
+            {
+                return GetTimeAtLocation(EndLocation);
+            }
+        }
+
 #if DEBUG
         public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
@@ -585,6 +601,7 @@ namespace FamiStudio
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
             Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
+            Debug.Assert(string.IsNullOrEmpty(folderName) || project.FolderExists(FolderType.Song, folderName));
 
             project.ValidateId(id);
 
@@ -1182,6 +1199,12 @@ namespace FamiStudio
 
                     for (int i = songLength; i < MaxLength; i++)
                         patternCustomSettings[i].Clear();
+                }
+
+                // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer.
+                if (buffer.Version >= 16)
+                {
+                    buffer.Serialize(ref folderName);
                 }
 
                 if (buffer.IsReading)
