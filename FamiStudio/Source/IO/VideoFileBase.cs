@@ -5,12 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-#if FAMISTUDIO_ANDROID
-using VideoEncoder = FamiStudio.VideoEncoderAndroid;
-#else
-using VideoEncoder = FamiStudio.VideoEncoderFFmpeg;
-#endif
-
 namespace FamiStudio
 {
     class VideoFileBase
@@ -30,7 +24,7 @@ namespace FamiStudio
         protected Project project;
         protected Song song;
         protected OffscreenGraphics videoGraphics;
-        protected VideoEncoder videoEncoder;
+        protected IVideoEncoder videoEncoder;
         protected VideoChannelState[] channelStates;
         protected VideoFrameMetadata[] metadata;
         protected Fonts fonts;
@@ -99,7 +93,7 @@ namespace FamiStudio
 
             Log.LogMessage(LogSeverity.Info, "Detecting FFmpeg...");
 
-            videoEncoder = VideoEncoder.CreateInstance();
+            videoEncoder = Platform.CreateVideoEncoder();
             if (videoEncoder == null)
                 return false;
 

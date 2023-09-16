@@ -39,7 +39,7 @@ namespace FamiStudio
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             var deltaY = e.ScrollY > 0 ? scrollStepSize : -scrollStepSize;
-            SetScroll(scrollY - deltaY);
+            SetScroll(containerScrollY - deltaY);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -48,7 +48,7 @@ namespace FamiStudio
             if (e.X >= width - scrollbarWidth)
             {
                 captureMouseY = e.Y;
-                captureScrollY = scrollY;
+                captureScrollY = containerScrollY;
                 UpdateScroll(e.Y);
                 scrolling = true;
                 Capture = true;
@@ -83,13 +83,13 @@ namespace FamiStudio
         private void SetScroll(int newScrollY)
         {
             newScrollY = Utils.Clamp(newScrollY, 0, virtualSizeY - height);
-            SetAndMarkDirty(ref scrollY, newScrollY);
+            SetAndMarkDirty(ref containerScrollY, newScrollY);
         }
 
         private void GetScrollBarParams(out int posY, out int sizeY)
         {
             sizeY = (int)Math.Round(height * (height  / (float)virtualSizeY));
-            posY  = (int)Math.Round(height * (scrollY / (float)virtualSizeY));
+            posY  = (int)Math.Round(height * (containerScrollY / (float)virtualSizeY));
         }
 
         protected override void OnRender(Graphics g)

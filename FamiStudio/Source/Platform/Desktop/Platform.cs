@@ -52,6 +52,18 @@ namespace FamiStudio
             return true;
         }
 
+        public static IVideoEncoder CreateVideoEncoder()
+        {
+            if (VideoEncoderFFmpeg.DetectFFmpeg())
+            {
+                return new VideoEncoderFFmpeg();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public static bool IsInMainThread()
         {
             return mainThread == Thread.CurrentThread;

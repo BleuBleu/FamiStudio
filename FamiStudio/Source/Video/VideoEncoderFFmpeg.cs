@@ -13,21 +13,8 @@ namespace FamiStudio
         private BinaryWriter stream;
         private byte[] videoImage;
 
-        private VideoEncoderFFmpeg()
+        public VideoEncoderFFmpeg()
         {
-
-        }
-
-        public static VideoEncoderFFmpeg CreateInstance()
-        {
-            if (DetectFFmpeg(Settings.FFmpegExecutablePath))
-            {
-                return new VideoEncoderFFmpeg();
-            }
-            else
-            {
-                return null;
-            }
         }
 
         public bool BeginEncoding(int resX, int resY, int frameRateNumer, int frameRateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
@@ -94,11 +81,11 @@ namespace FamiStudio
             return process;
         }
 
-        private static bool DetectFFmpeg(string ffmpegExecutable)
+        public static bool DetectFFmpeg()
         {
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true, false);
+                var process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-version", false, true, false);
                 var output = process.StandardOutput.ReadToEnd();
 
                 var ret = true;
