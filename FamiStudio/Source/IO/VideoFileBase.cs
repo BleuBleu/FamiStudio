@@ -423,6 +423,25 @@ namespace FamiStudio
         }
     }
 
+    static class VideoMode
+    {
+        public const int Oscilloscope = 0;
+        public const int PianoRollSeparateChannels = 1;
+        public const int Count = 2;
+
+        public static LocalizedString[] LocalizedNames = new LocalizedString[2];
+
+        static VideoMode()
+        {
+            Localization.LocalizeStatic(typeof(VideoMode));
+        }
+
+        public static int GetIndexForName(string str)
+        {
+            return Array.FindIndex(LocalizedNames, n => n.Value == str);
+        }
+    }
+
     static class VideoResolution
     {
         public static LocalizedString[] LocalizedNames = new LocalizedString[6];

@@ -118,7 +118,8 @@ namespace FamiStudio
         LocalizedString LoopNTimesOption;
         LocalizedString DurationOption;
 
-        // Video tooltips          
+        // Video tooltips
+        LocalizedString VideoModeTooltip;
         LocalizedString VideoResTooltip;
         LocalizedString FpsTooltip;
         LocalizedString VideoBitRateTooltip;
@@ -129,6 +130,7 @@ namespace FamiStudio
         LocalizedString MobileExportVideoMessage;
 
         // Video labels
+        LocalizedString VideoModeLabel;
         LocalizedString ResolutionLabel;
         LocalizedString FrameRateLabel;
         LocalizedString AudioBitRateLabel;
@@ -385,38 +387,26 @@ namespace FamiStudio
 
                     if (canExportToVideo)
                     {
-                        page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
-                        page.AddDropDownList(ResolutionLabel.Colon, Localization.ToStringArray(VideoResolution.LocalizedNames), VideoResolution.LocalizedNames[0], VideoResTooltip); // 1
-                        page.AddDropDownList(FrameRateLabel.Colon, new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 2
-                        page.AddDropDownList(AudioBitRateLabel.Colon, new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 3
-                        page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000", VideoBitRateTooltip); // 4
-                        page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 5
-                        page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 6
-                        page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 7
-
-                        // MATTT : Unify those!
-                        // Piano roll
-                        //page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 9
-                        //page.AddGrid(ChannelsLabel,
-                        //    Platform.IsDesktop ?
-                        //    new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption }) } :
-                        //    new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), 7, ChannelGridTooltipVid); // 10
-                        //page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
-                        //page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
-                        //page.PropertyChanged += VideoPage_PropertyChanged;
-
-                        // Oscilloscope.
-                        page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 8
-                        page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 9
-                        page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 10
-                        page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTootip); // 11
-                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 12
+                        page.AddDropDownList(VideoModeLabel.Colon, Localization.ToStringArray(VideoMode.LocalizedNames), VideoMode.LocalizedNames[0], VideoModeTooltip); // 0
+                        page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 1
+                        page.AddDropDownList(ResolutionLabel.Colon, Localization.ToStringArray(VideoResolution.LocalizedNames), VideoResolution.LocalizedNames[0], VideoResTooltip); // 2
+                        page.AddDropDownList(FrameRateLabel.Colon, new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 3
+                        page.AddDropDownList(AudioBitRateLabel.Colon, new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 4
+                        page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000", VideoBitRateTooltip); // 5
+                        page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 6
+                        page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 7
+                        page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 8
+                        page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 9
+                        page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 10
+                        page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 11
+                        page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTootip); // 12
+                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 13
                         page.AddGrid(ChannelsLabel,
                             Platform.IsDesktop ?
                             new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption }) } :
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), 7, ChannelGridTooltipVid); // 13
-                        page.SetPropertyEnabled(12, !project.OutputsStereoAudio); // Force stereo for EPSM.
-                        page.SetColumnEnabled(13, 2, project.OutputsStereoAudio);
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), 7, ChannelGridTooltipVid); // 14
+                        page.SetPropertyEnabled(13, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                        page.SetColumnEnabled(14, 2, project.OutputsStereoAudio);
                         page.SetScrolling(500);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
@@ -550,11 +540,11 @@ namespace FamiStudio
         {
             if (propIdx == 0)
             {
-                props.UpdateGrid(13, GetDefaultChannelsGridData(Platform.IsDesktop, project.Songs[props.GetSelectedIndex(0)]));
+                props.UpdateGrid(14, GetDefaultChannelsGridData(Platform.IsDesktop, project.Songs[props.GetSelectedIndex(1)]));
             }
-            else if (propIdx == 12) // Stereo
+            else if (propIdx == 13) // Stereo
             {
-                props.SetColumnEnabled(13, 2, (bool)value);
+                props.SetColumnEnabled(14, 2, (bool)value);
             }
         }
 
@@ -727,19 +717,22 @@ namespace FamiStudio
             {
                 if (filename != null)
                 {
-                    var pianoRoll = false; // MATTT : Add a "video mode" property.
-
-                    var songName = props.GetPropertyValue<string>(0);
-                    var resolutionIdx = props.GetSelectedIndex(1);
+                    var videoMode = props.GetSelectedIndex(0);
+                    var songName = props.GetPropertyValue<string>(1);
+                    var resolutionIdx = props.GetSelectedIndex(2);
                     var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
                     var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
-                    var halfFrameRate = props.GetSelectedIndex(2) == 1;
-                    var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
-                    var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
-                    var loopCount = props.GetPropertyValue<int>(5);
-                    var delay = props.GetPropertyValue<int>(6);
-                    var oscWindow = props.GetPropertyValue<int>(7);
-                    var stereo = props.GetPropertyValue<bool>(12);
+                    var halfFrameRate = props.GetSelectedIndex(3) == 1;
+                    var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
+                    var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5), CultureInfo.InvariantCulture);
+                    var loopCount = props.GetPropertyValue<int>(6);
+                    var delay = props.GetPropertyValue<int>(7);
+                    var oscWindow = props.GetPropertyValue<int>(8);
+                    var oscNumColumns = props.GetPropertyValue<int>(9);
+                    var oscLineThickness = props.GetPropertyValue<int>(10);
+                    var oscColorMode = props.GetSelectedIndex(11);
+                    var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(12) - 3);
+                    var stereo = props.GetPropertyValue<bool>(13);
                     var song = project.GetSong(songName);
                     var channelCount = project.GetActiveChannelCount();
                     var channelMask = 0L;
@@ -748,27 +741,21 @@ namespace FamiStudio
 
                     for (int i = 0; i < channelCount; i++)
                     {
-                        if (props.GetPropertyValue<bool>(13, i, 0))
+                        if (props.GetPropertyValue<bool>(14, i, 0))
                             channelMask |= (1L << i);
 
-                        pan[i] = props.GetPropertyValue<int>(13, i, 2) / 100.0f;
-                        triggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(13, i, 3) == EmulationOption : true;
+                        pan[i] = props.GetPropertyValue<int>(14, i, 2) / 100.0f;
+                        triggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(14, i, 3) == EmulationOption : true;
                     }
                   
                     lastExportFilename = filename;
 
-                    if (pianoRoll)
+                    if (videoMode == VideoMode.PianoRollSeparateChannels)
                     {
-                        var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(11) - 3);
-
                         return new VideoFilePianoRoll().Save(project, song.Id, loopCount, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan, triggers);
                     }
                     else
                     {
-                        var oscNumColumns    = props.GetPropertyValue<int>(8);
-                        var oscLineThickness = props.GetPropertyValue<int>(9);
-                        var oscColorMode     = props.GetSelectedIndex(10);
-
                         return new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, stereo, pan, triggers);
                     }
                 }
