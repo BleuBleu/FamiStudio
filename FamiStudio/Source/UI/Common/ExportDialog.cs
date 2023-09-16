@@ -720,9 +720,10 @@ namespace FamiStudio
                     var videoMode = props.GetSelectedIndex(0);
                     var resolutionIdx = props.GetSelectedIndex(2);
                     var channelCount = project.GetActiveChannelCount();
-                    var channelMask = 0L;
 
                     var settings = new VideoExportSettings();
+                    settings.Filename = filename;
+                    settings.Project = project;
                     settings.SongId = project.GetSong(props.GetPropertyValue<string>(1)).Id;
                     settings.ResX = VideoResolution.ResolutionX[resolutionIdx];
                     settings.ResY = VideoResolution.ResolutionY[resolutionIdx];
@@ -739,11 +740,12 @@ namespace FamiStudio
                     settings.Stereo = props.GetPropertyValue<bool>(13);
                     settings.ChannelPan = new float[channelCount];
                     settings.EmuTriggers = new bool[channelCount];
+                    settings.ChannelMask = 0;
 
                     for (int i = 0; i < channelCount; i++)
                     {
                         if (props.GetPropertyValue<bool>(14, i, 0))
-                            channelMask |= (1L << i);
+                            settings.ChannelMask |= (1L << i);
 
                         settings.ChannelPan[i] = props.GetPropertyValue<int>(14, i, 2) / 100.0f;
                         settings.EmuTriggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(14, i, 3) == EmulationOption : true;

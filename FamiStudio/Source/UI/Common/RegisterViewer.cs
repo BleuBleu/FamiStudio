@@ -11,7 +11,7 @@ namespace FamiStudio
         delegate void DrawRegisterDelegate(CommandList c, Fonts res, Rectangle rect);
 
         public static readonly string[] NoteNamesPadded =
-{
+        {
             "C-",
             "C#",
             "D-",
@@ -119,7 +119,6 @@ namespace FamiStudio
             protected int IconFM = 5;
             protected int IconWaveTable = 6;
             protected int IconRhythm = 7;
-
 
             public string[] Labels { get; internal set;}
             public int[] Icons { get; internal set;}
@@ -451,6 +450,7 @@ namespace FamiStudio
                 c.DrawLine(256 * sx, 0, 256 * sx, rect.Height, Theme.BlackColor);
             }
         }
+
         class YMRegisterViewer : ExpansionRegisterViewer
         {
             protected LocalizedString ToneLabel;
@@ -463,6 +463,7 @@ namespace FamiStudio
             protected LocalizedString EnvelopeEnabledLabel;
             protected LocalizedString EnvelopeDisabledLabel;
         }
+
         class S5BRegisterViewer : YMRegisterViewer
         {
             S5BRegisterIntepreter i;
