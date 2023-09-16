@@ -31,7 +31,7 @@ namespace FamiStudio
             get { return focusedControl; }
             set 
             {
-                if (value == focusedControl)
+                if (value == focusedControl || (value != null && !value.CanFocus))
                     return;
 
                 if (focusedControl != null)

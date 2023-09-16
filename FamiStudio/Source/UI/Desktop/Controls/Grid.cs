@@ -465,13 +465,15 @@ namespace FamiStudio
 
             if (sign != 0)
             {
-                SetAndMarkDirty(ref scroll, Utils.Clamp(scroll + sign * 3, 0, maxScroll));
+                if (SetAndMarkDirty(ref scroll, Utils.Clamp(scroll + sign * 3, 0, maxScroll)))
+                    e.MarkHandled();
 
                 if (dropDownActive != null && dropDownActive.Visible)
                 {
                     dropDownActive.SetListOpened(false);
                     dropDownActive.Visible = false;
                     GrabDialogFocus();
+                    e.MarkHandled();
                 }
 
                 UpdateHover(e);

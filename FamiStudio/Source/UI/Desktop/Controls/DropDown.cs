@@ -270,6 +270,8 @@ namespace FamiStudio
             {
                 SelectedIndex = Utils.Clamp(selectedIndex + sign, 0, items.Length - 1);
             }
+
+            e.MarkHandled();
         }
 
         protected override void OnRender(Graphics g)

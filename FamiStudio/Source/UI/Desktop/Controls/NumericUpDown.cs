@@ -206,6 +206,8 @@ namespace FamiStudio
             {
                 Value += e.ScrollY > 0 ? 1 : -1;
             }
+
+            e.MarkHandled();
         }
 
         protected override void OnRender(Graphics g)

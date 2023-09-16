@@ -138,6 +138,7 @@
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
     <Compile Include="Source\UI\Common\RegisterViewer.cs" />
+    <Compile Include="Source\UI\Common\ScrollContainer.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\Settings.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />

@@ -1611,10 +1611,12 @@ namespace FamiStudio
                     }
                 }
             }
+
+            // MATTT : Call GetScrollbarParams(). Remove duplicated code.
             if (needsScrollBar)
             {
                 int scrollBarSizeY = (int)Math.Round(scrollAreaSizeY * (scrollAreaSizeY / (float)virtualSizeY));
-                int scrollBarPosY = (int)Math.Round(scrollAreaSizeY * (scrollY / (float)virtualSizeY));
+                int scrollBarPosY  = (int)Math.Round(scrollAreaSizeY * (scrollY / (float)virtualSizeY));
 
                 c.FillAndDrawRectangle(contentSizeX, 0, Width - 1, Height, Theme.DarkGreyColor4, Theme.BlackColor);
                 c.FillAndDrawRectangle(contentSizeX, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, Theme.MediumGreyColor1, Theme.BlackColor);

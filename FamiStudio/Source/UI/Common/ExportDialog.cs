@@ -11,8 +11,7 @@ namespace FamiStudio
         enum ExportFormat
         {
             WavMp3,
-            VideoPianoRoll,
-            VideoOscilloscope,
+            Video,
             Nsf,
             Rom,
             Midi,
@@ -32,7 +31,6 @@ namespace FamiStudio
         string[] ExportIcons =
         {
             "ExportWav",
-            "ExportVideo",
             "ExportVideo",
             "ExportNsf",
             "ExportRom",
@@ -220,7 +218,6 @@ namespace FamiStudio
         LocalizedString GenerateSfxInclude;
 
         // VGM tooltips
-
         LocalizedString TrackTitleEnglishTooltip;
         LocalizedString GameNameEnglishTooltip;
         LocalizedString SystemNameEnglishTooltip;
@@ -249,7 +246,7 @@ namespace FamiStudio
         {
             Localization.Localize(this);
 
-            dialog = new MultiPropertyDialog(win, Title, 600, 200);
+            dialog = new MultiPropertyDialog(win, Title, 620, 200);
             dialog.SetVerb(Verb);
             app = win.FamiStudio;
             project = app.Project;
@@ -354,30 +351,6 @@ namespace FamiStudio
             return data;
         }
 
-        private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
-        {
-            // TODO : Make this part of the VideoEncoder.
-            canExportToVideo = (!Platform.IsDesktop || !string.IsNullOrEmpty(Settings.FFmpegExecutablePath));
-
-            if (canExportToVideo)
-            {
-                page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
-                page.AddDropDownList(ResolutionLabel.Colon, Localization.ToStringArray(VideoResolution.LocalizedNames), VideoResolution.LocalizedNames[0], VideoResTooltip); // 1
-                page.AddDropDownList(FrameRateLabel.Colon, new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 2
-                page.AddDropDownList(AudioBitRateLabel.Colon, new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 3
-                page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000", VideoBitRateTooltip); // 4
-                page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 5
-                page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 6
-                page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 7
-                return true;
-            }
-            else
-            {
-                page.AddLabel(null, RequireFFMpegLabel, true);
-                return false;
-            }
-        }
-
         private PropertyPage CreatePropertyPage(PropertyPage page, ExportFormat format)
         {
             var songNames = GetSongNames();
@@ -406,34 +379,50 @@ namespace FamiStudio
                     page.PropertyChanged += WavMp3_PropertyChanged;
                     page.PropertyClicked += WavMp3_PropertyClicked;
                     break;
-                case ExportFormat.VideoPianoRoll:
-                    if (AddCommonVideoProperties(page, songNames)) // 0-7
+                case ExportFormat.Video:
+                    // TODO : Make this part of the VideoEncoder.
+                    canExportToVideo = (!Platform.IsDesktop || !string.IsNullOrEmpty(Settings.FFmpegExecutablePath));
+
+                    if (canExportToVideo)
                     {
-                        page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTootip); // 8
-                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 9
-                        page.AddGrid(ChannelsLabel,
-                            Platform.IsDesktop ?
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption }) } :
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), 7, ChannelGridTooltipVid); // 10
-                        page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
-                        page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
-                        page.PropertyChanged += VideoPage_PropertyChanged;
-                    }
-                    break;
-                case ExportFormat.VideoOscilloscope:
-                    if (AddCommonVideoProperties(page, songNames)) // 0-7
-                    {
+                        page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
+                        page.AddDropDownList(ResolutionLabel.Colon, Localization.ToStringArray(VideoResolution.LocalizedNames), VideoResolution.LocalizedNames[0], VideoResTooltip); // 1
+                        page.AddDropDownList(FrameRateLabel.Colon, new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 2
+                        page.AddDropDownList(AudioBitRateLabel.Colon, new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 3
+                        page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000", VideoBitRateTooltip); // 4
+                        page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 5
+                        page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 6
+                        page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 7
+
+                        // MATTT : Unify those!
+                        // Piano roll
+                        //page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 9
+                        //page.AddGrid(ChannelsLabel,
+                        //    Platform.IsDesktop ?
+                        //    new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption }) } :
+                        //    new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), 7, ChannelGridTooltipVid); // 10
+                        //page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                        //page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
+                        //page.PropertyChanged += VideoPage_PropertyChanged;
+
+                        // Oscilloscope.
                         page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 8
                         page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 9
                         page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 10
-                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 11
-                        page.AddGrid(ChannelsLabel, 
+                        page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTootip); // 11
+                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 12
+                        page.AddGrid(ChannelsLabel,
                             Platform.IsDesktop ?
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption } ) } :
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), 7, ChannelGridTooltipVid); // 12
-                        page.SetPropertyEnabled(11, !project.OutputsStereoAudio); // Force stereo for EPSM.
-                        page.SetColumnEnabled(12, 2, project.OutputsStereoAudio);
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption }) } :
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), 7, ChannelGridTooltipVid); // 13
+                        page.SetPropertyEnabled(12, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                        page.SetColumnEnabled(13, 2, project.OutputsStereoAudio);
+                        page.SetScrolling(500);
                         page.PropertyChanged += VideoPage_PropertyChanged;
+                    }
+                    else
+                    {
+                        page.AddLabel(null, RequireFFMpegLabel, true);
                     }
                     break;
                 case ExportFormat.Nsf:
@@ -561,11 +550,11 @@ namespace FamiStudio
         {
             if (propIdx == 0)
             {
-                props.UpdateGrid(props.PropertyCount - 1, GetDefaultChannelsGridData(Platform.IsDesktop, project.Songs[props.GetSelectedIndex(0)]));
+                props.UpdateGrid(13, GetDefaultChannelsGridData(Platform.IsDesktop, project.Songs[props.GetSelectedIndex(0)]));
             }
-            else if (propIdx == props.PropertyCount - 2) // Stereo
+            else if (propIdx == 12) // Stereo
             {
-                props.SetColumnEnabled(props.PropertyCount - 1, 2, (bool)value);
+                props.SetColumnEnabled(13, 2, (bool)value);
             }
         }
 
@@ -727,19 +716,18 @@ namespace FamiStudio
             }
         }
 
-        private void ExportVideo(bool pianoRoll)
+        private void ExportVideo()
         {
             if (!canExportToVideo)
                 return;
 
-            var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
+            var props = dialog.GetPropertyPage((int)ExportFormat.Video);
 
             Func<string, bool> ExportVideoAction = (filename) =>
             {
                 if (filename != null)
                 {
-                    var stereoPropIdx   = pianoRoll ? 9 : 11;
-                    var channelsPropIdx = pianoRoll ? 10 : 12;
+                    var pianoRoll = false; // MATTT : Add a "video mode" property.
 
                     var songName = props.GetPropertyValue<string>(0);
                     var resolutionIdx = props.GetSelectedIndex(1);
@@ -751,7 +739,7 @@ namespace FamiStudio
                     var loopCount = props.GetPropertyValue<int>(5);
                     var delay = props.GetPropertyValue<int>(6);
                     var oscWindow = props.GetPropertyValue<int>(7);
-                    var stereo = props.GetPropertyValue<bool>(stereoPropIdx);
+                    var stereo = props.GetPropertyValue<bool>(12);
                     var song = project.GetSong(songName);
                     var channelCount = project.GetActiveChannelCount();
                     var channelMask = 0L;
@@ -760,18 +748,18 @@ namespace FamiStudio
 
                     for (int i = 0; i < channelCount; i++)
                     {
-                        if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
+                        if (props.GetPropertyValue<bool>(13, i, 0))
                             channelMask |= (1L << i);
 
-                        pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
-                        triggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(channelsPropIdx, i, 3) == EmulationOption : true;
+                        pan[i] = props.GetPropertyValue<int>(13, i, 2) / 100.0f;
+                        triggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(13, i, 3) == EmulationOption : true;
                     }
                   
                     lastExportFilename = filename;
 
                     if (pianoRoll)
                     {
-                        var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(8) - 3);
+                        var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(11) - 3);
 
                         return new VideoFilePianoRoll().Save(project, song.Id, loopCount, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan, triggers);
                     }
@@ -1271,8 +1259,7 @@ namespace FamiStudio
             switch (selectedFormat)
             {
                 case ExportFormat.WavMp3: ExportWavMp3(); break;
-                case ExportFormat.VideoPianoRoll: ExportVideo(true); break;
-                case ExportFormat.VideoOscilloscope: ExportVideo(false); break;
+                case ExportFormat.Video: ExportVideo(); break;
                 case ExportFormat.Nsf: ExportNsf(); break;
                 case ExportFormat.Rom: ExportRom(); break;
                 case ExportFormat.Midi: ExportMidi(); break;

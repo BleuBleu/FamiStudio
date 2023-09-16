@@ -6,10 +6,19 @@ namespace FamiStudio
 {
     public class Container : Control
     {
+        // These are only used by scroll container.
+        protected int scrollX;
+        protected int scrollY;
+
         protected List<Control> controls = new List<Control>();
+        
         public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
         public Container()
+        {
+        }
+
+        public virtual void ContainerMouseWheelNotify(Control control, MouseEventArgs e)
         {
         }
 
@@ -39,6 +48,9 @@ namespace FamiStudio
 
         public virtual Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
         {
+            winX += scrollX;
+            winY += scrollY;
+
             // First look for containers. Last containers are considered to have higher Z-order.
             for (int i = controls.Count - 1; i >= 0; i--)
             {
@@ -134,7 +146,7 @@ namespace FamiStudio
             {
                 if ((c is Container) == container && c.Visible)
                 {
-                    g.Transform.PushTranslation(c.Left, c.Top);
+                    g.Transform.PushTranslation(c.Left - scrollX, c.Top - scrollY);
                     c.Render(g);
                     g.Transform.PopTransform();
                 }

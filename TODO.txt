@@ -6,7 +6,7 @@ x Upgrade Windows to .NET 6.0
 	- Test debug/release 
 	- Setup keystore, etc.
 	- Bring back APK
-- Instrument folders + collapse entire sections (samples, arps, etc.) 
+/ Instrument folders + collapse entire sections (samples, arps, etc.) 
 	/ When adding new instruments, add them to same folder of selected instrument (done for instruments, do same for all)
 	- For moving instrument, do it like Gimp. Only difference is that we will enforce that instrument not in folders will always be at the end.
 	- Toggle expand on double-click
@@ -19,11 +19,15 @@ x Upgrade Windows to .NET 6.0
 	- Make it work on mobile.
 - Keep colors on FS.txt
 x When using shy mode, we could make the patterns larger if there is room.
+- Video export improvements:
+	x Add support for scroll property page:
+	/ Unify all video export in one => Add a "video mode"
+	- Add support to overlay register values 
+	- Unified piano roll mode.
 - Finish/fix phase reset support
 - FDS automod
 - Latency improvements, decouple buffered audio frames VS. buffered emulated frames.
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
-- Video export improvements? Unified piano roll, preview, etc? Overlay registers?
 - Android media player notification option
 - Fix that bug where patterns are modified twice if you select 2 instances
 - Extended intrument mode for sound engine, up to 256. 

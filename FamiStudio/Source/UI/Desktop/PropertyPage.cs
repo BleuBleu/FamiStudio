@@ -19,8 +19,10 @@ namespace FamiStudio
         private int baseY;
         private int layoutWidth;
         private int layoutHeight;
+        private int scrollingHeight;
         private List<Property> properties = new List<Property>();
         private Dialog dialog;
+        private ScrollContainer scrollContainer;
 
         private readonly static string[] WarningIcons = 
         {
@@ -51,7 +53,14 @@ namespace FamiStudio
                     if (prop.control != null)
                         prop.control.Visible = value;
                 }
+                if (scrollContainer != null)
+                    scrollContainer.Visible = value;
             }
+        }
+
+        public void SetScrolling(int height)
+        {
+            scrollingHeight = height;
         }
 
         private int GetPropertyIndexForControl(Control ctrl)
@@ -822,8 +831,21 @@ namespace FamiStudio
                 }
             }
 
-            int totalHeight = 0;
-            int warningWidth = showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
+            var totalHeight = 0;
+            var warningWidth = showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
+            var container = dialog as Container;
+            var actualLayoutWidth = layoutWidth;
+
+            if (scrollingHeight > 0)
+            {
+                scrollContainer = new ScrollContainer();
+                scrollContainer.Move(baseX, baseY, actualLayoutWidth, scrollingHeight);
+                dialog.AddControl(scrollContainer);
+                baseX = 0;
+                baseY = 0;
+                container = scrollContainer;
+                actualLayoutWidth -= scrollContainer.ScrollBarSpacing;
+            }
 
             for (int i = 0; i < propertyCount; i++)
             {
@@ -839,18 +861,18 @@ namespace FamiStudio
                 if (prop.label != null)
                 {
                     prop.label.Move(baseX, baseY + totalHeight, maxLabelWidth, prop.label.Height);
-                    prop.control.Move(baseX + maxLabelWidth + margin, baseY + totalHeight, layoutWidth - maxLabelWidth - warningWidth - margin, prop.control.Height);
+                    prop.control.Move(baseX + maxLabelWidth + margin, baseY + totalHeight, actualLayoutWidth - maxLabelWidth - warningWidth - margin, prop.control.Height);
 
-                    dialog.AddControl(prop.label);
-                    dialog.AddControl(prop.control);
+                    container.AddControl(prop.label);
+                    container.AddControl(prop.control);
 
                     height = prop.label.Height;
                 }
                 else
                 {
-                    prop.control.Move(baseX, baseY + totalHeight, layoutWidth, prop.control.Height);
+                    prop.control.Move(baseX, baseY + totalHeight, actualLayoutWidth, prop.control.Height);
 
-                    dialog.AddControl(prop.control);
+                    container.AddControl(prop.control);
                 }
 
                 if ((prop.type == PropertyType.ColoredTextBox || prop.type == PropertyType.TextBox) && i == 0)
@@ -864,15 +886,23 @@ namespace FamiStudio
                 if (prop.warningIcon != null)
                 {
                     prop.warningIcon.Move(
-                        baseX + layoutWidth - prop.warningIcon.Width,
+                        baseX + actualLayoutWidth - prop.warningIcon.Width,
                         baseY + totalHeight + (height - prop.warningIcon.Height) / 2);
-                    dialog.AddControl(prop.warningIcon);
+                    container.AddControl(prop.warningIcon);
                 }
 
                 totalHeight += height;
             }
 
-            layoutHeight = totalHeight;
+            if (scrollingHeight > 0)
+            {
+                scrollContainer.VirtualSizeY = totalHeight + margin;
+                layoutHeight = scrollingHeight; 
+            }
+            else
+            {
+                layoutHeight = totalHeight;
+            }
         }
     }
 }
