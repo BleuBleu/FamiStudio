@@ -104,7 +104,7 @@ namespace FamiStudio
 
             c.PushTranslation(width - scrollbarWidth - 1, 0);
             c.FillAndDrawRectangle(0, 0, scrollbarWidth, height - 1, Theme.DarkGreyColor4, Theme.LightGreyColor1);
-            c.FillAndDrawRectangle(0, scrollBarPosY - 1, Width - 1, scrollBarPosY + scrollBarSizeY, Theme.MediumGreyColor1, Theme.LightGreyColor1);
+            c.FillAndDrawRectangle(0, scrollBarPosY - 1, scrollbarWidth, scrollBarPosY + scrollBarSizeY, Theme.MediumGreyColor1, Theme.LightGreyColor1);
             c.PopTransform();
         }
 
