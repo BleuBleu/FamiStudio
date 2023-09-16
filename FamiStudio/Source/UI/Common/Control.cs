@@ -115,7 +115,7 @@ namespace FamiStudio
         public bool HasDialogFocus => ParentDialog?.FocusedControl == this;
         public void GrabDialogFocus()  { if (ParentDialog != null) ParentDialog.FocusedControl = this; }
         public void ClearDialogFocus() { if (ParentDialog != null) ParentDialog.FocusedControl = null; }
-        public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); if (!visible) ClearDialogFocus(); MarkDirty(); } } }
+        public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
         public bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
         public bool CanFocus { get => canFocus; }
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
