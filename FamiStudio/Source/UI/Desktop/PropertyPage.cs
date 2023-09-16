@@ -362,6 +362,24 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        public ImageBox CreateImageBox(Bitmap bmp, int resX, int resY)
+        {
+            var image = new ImageBox(bmp);
+            image.Resize(resX, resY);
+            return image;
+        }
+
+        public int AddImage(Bitmap bmp, int resX, int resY)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Image,
+                    control = CreateImageBox(bmp, resX, resY)
+                });
+            return properties.Count - 1;
+        }
+
         public int AddButton(string label, string value, string tooltip = null)
         {
             properties.Add(
@@ -800,6 +818,9 @@ namespace FamiStudio
                     break;
                 case PropertyType.NumericUpDown:
                     (prop.control as NumericUpDown).Value = (int)value;
+                    break;
+                case PropertyType.Image:
+                    (prop.control as ImageBox).Image = (Bitmap)value;
                     break;
             }
         }

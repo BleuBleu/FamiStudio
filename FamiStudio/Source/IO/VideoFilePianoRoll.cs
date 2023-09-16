@@ -250,9 +250,9 @@ namespace FamiStudio
             }
         }
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, int window, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, float pianoRollZoom, bool stereo, float[] pan, bool[] emuTriggers)
+        public unsafe bool Save(VideoExportSettings settings)
         {
-            if (!InitializeEncoder(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, window, channelMask, audioDelay, audioBitRate, videoBitRate, stereo, pan, emuTriggers))
+            if (!InitializeEncoder(settings))
                 return false;
 
             var channelResXFloat = videoResX / (float)channelStates.Length;
@@ -263,7 +263,7 @@ namespace FamiStudio
             foreach (var state in channelStates)
             {
                 state.graphics = OffscreenGraphics.Create(channelResX, channelResY, false);
-                state.bitmap = videoGraphics.CreateBitmapFromOffscreenGraphics(state.graphics);
+                state.bitmap = state.graphics.GetTexture();
 
                 // Measure the longest text.
                 longestChannelName = Math.Max(longestChannelName, state.graphics.MeasureString(state.channelText, fonts.FontVeryLarge));
@@ -273,7 +273,7 @@ namespace FamiStudio
             var smallChannelText = longestChannelName + 32 + ChannelIconTextSpacing > channelResY * 0.8f;
             var font = smallChannelText ? fonts.FontMedium : fonts.FontVeryLarge;
             var textOffsetY = smallChannelText ? 1 : 4;
-            var pianoRollScaleX = Utils.Clamp(resY / 1080.0f, 0.6f, 0.9f);
+            var pianoRollScaleX = Utils.Clamp(settings.ResY / 1080.0f, 0.6f, 0.9f);
             var pianoRollScaleY = channelResY < VeryThinNoteThreshold ? 0.5f : (channelResY < ThinNoteThreshold ? 0.667f : 1.0f);
             var channelLineWidth = channelResY < ThinNoteThreshold ? 3 : 5;
             var gradientSizeY = 256 * (videoResY / 1080.0f);
@@ -284,11 +284,11 @@ namespace FamiStudio
             var pianoRoll = new PianoRoll();
             pianoRoll.OverrideGraphics(videoGraphics, fonts);
             pianoRoll.Move(0, 0, channelResX, channelResY);
-            pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
+            pianoRoll.StartVideoRecording(channelStates[0].graphics, song, settings.PianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
 
             // Build the scrolling data.
             var numVisibleNotes = (int)Math.Floor(channelResY / (float)noteSizeY);
-            ComputeChannelsScroll(metadata, channelMask, numVisibleNotes);
+            ComputeChannelsScroll(metadata, settings.ChannelMask, numVisibleNotes);
 
             if (song.UsesFamiTrackerTempo)
                 SmoothFamitrackerScrolling(metadata);
@@ -362,7 +362,7 @@ namespace FamiStudio
                         o.DrawLine(channelPosX0, 0, channelPosX0, videoResY, Theme.BlackColor, channelLineWidth);
 
                     var oscMinY = (int)(ChannelIconPosY + s.icon.Size.Height + 10);
-                    var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
+                    var oscMaxY = (int)(oscMinY + 100.0f * (videoResY / 1080.0f));
 
                     var oscilloscope = UpdateOscilloscope(s, f);
 

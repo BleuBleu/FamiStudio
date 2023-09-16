@@ -91,12 +91,12 @@ namespace FamiStudio
             }
         }
 
-        public bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, int lineThickness, int window, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, bool stereo, float[] pan, bool[] emuTriggers)
+        public bool Save(VideoExportSettings settings)
         {
-            if (!InitializeEncoder(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, window, channelMask, audioDelay, audioBitRate, videoBitRate, stereo, pan, emuTriggers))
+            if (!InitializeEncoder(settings))
                 return false;
 
-            numColumns = Math.Min(numColumns, channelStates.Length);
+            var numColumns = Math.Min(settings.OscNumColumns, channelStates.Length);
             var numRows = (int)Math.Ceiling(channelStates.Length / (float)numColumns);
 
             var channelResXFloat = videoResX / (float)numColumns;
@@ -107,14 +107,14 @@ namespace FamiStudio
 
             // Tweak some cosmetic stuff that depends on resolution.
             var smallChannelText = channelResY < 128;
-            var font = lineThickness > 1 ?
+            var font = settings.OscLineThickness > 1 ?
                 (smallChannelText ? fonts.FontMediumBold : fonts.FontVeryLargeBold) : 
                 (smallChannelText ? fonts.FontMedium     : fonts.FontVeryLarge);
             var textOffsetY = smallChannelText ? 1 : 4;
-            var channelLineWidth = resY >= 720 ? 5 : 3;
+            var channelLineWidth = settings.ResY >= 720 ? 5 : 3;
 
             LoadChannelIcons(!smallChannelText);
-            BuildChannelColors(song, channelStates, metadata, colorMode);
+            BuildChannelColors(song, channelStates, metadata, settings.OscColorMode);
 
             return LaunchEncoderLoop((f) =>
             {
@@ -149,7 +149,7 @@ namespace FamiStudio
                     var oscilloscope = UpdateOscilloscope(s, f);
 
                     c.PushTransform(channelPosX0, channelPosY0 + channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
-                    c.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, lineThickness);
+                    c.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, settings.OscLineThickness);
                     c.PopTransform();
 
                     // Icons + text

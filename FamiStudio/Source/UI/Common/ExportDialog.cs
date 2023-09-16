@@ -718,45 +718,46 @@ namespace FamiStudio
                 if (filename != null)
                 {
                     var videoMode = props.GetSelectedIndex(0);
-                    var songName = props.GetPropertyValue<string>(1);
                     var resolutionIdx = props.GetSelectedIndex(2);
-                    var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
-                    var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
-                    var halfFrameRate = props.GetSelectedIndex(3) == 1;
-                    var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
-                    var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5), CultureInfo.InvariantCulture);
-                    var loopCount = props.GetPropertyValue<int>(6);
-                    var delay = props.GetPropertyValue<int>(7);
-                    var oscWindow = props.GetPropertyValue<int>(8);
-                    var oscNumColumns = props.GetPropertyValue<int>(9);
-                    var oscLineThickness = props.GetPropertyValue<int>(10);
-                    var oscColorMode = props.GetSelectedIndex(11);
-                    var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(12) - 3);
-                    var stereo = props.GetPropertyValue<bool>(13);
-                    var song = project.GetSong(songName);
                     var channelCount = project.GetActiveChannelCount();
                     var channelMask = 0L;
-                    var pan = new float[channelCount];
-                    var triggers = new bool[channelCount];
+
+                    var settings = new VideoExportSettings();
+                    settings.SongId = project.GetSong(props.GetPropertyValue<string>(1)).Id;
+                    settings.ResX = VideoResolution.ResolutionX[resolutionIdx];
+                    settings.ResY = VideoResolution.ResolutionY[resolutionIdx];
+                    settings.HalfFrameRate = props.GetSelectedIndex(3) == 1;
+                    settings.AudioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
+                    settings.VideoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5), CultureInfo.InvariantCulture);
+                    settings.LoopCount = props.GetPropertyValue<int>(6);
+                    settings.AudioDelay = props.GetPropertyValue<int>(7);
+                    settings.OscWindow = props.GetPropertyValue<int>(8);
+                    settings.OscNumColumns = props.GetPropertyValue<int>(9);
+                    settings.OscLineThickness = props.GetPropertyValue<int>(10);
+                    settings.OscColorMode = props.GetSelectedIndex(11);
+                    settings.PianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(12) - 3);
+                    settings.Stereo = props.GetPropertyValue<bool>(13);
+                    settings.ChannelPan = new float[channelCount];
+                    settings.EmuTriggers = new bool[channelCount];
 
                     for (int i = 0; i < channelCount; i++)
                     {
                         if (props.GetPropertyValue<bool>(14, i, 0))
                             channelMask |= (1L << i);
 
-                        pan[i] = props.GetPropertyValue<int>(14, i, 2) / 100.0f;
-                        triggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(14, i, 3) == EmulationOption : true;
+                        settings.ChannelPan[i] = props.GetPropertyValue<int>(14, i, 2) / 100.0f;
+                        settings.EmuTriggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(14, i, 3) == EmulationOption : true;
                     }
                   
                     lastExportFilename = filename;
 
                     if (videoMode == VideoMode.PianoRollSeparateChannels)
                     {
-                        return new VideoFilePianoRoll().Save(project, song.Id, loopCount, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan, triggers);
+                        return new VideoFilePianoRoll().Save(settings);
                     }
                     else
                     {
-                        return new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, oscWindow, filename, resolutionX, resolutionY, halfFrameRate, channelMask, delay, audioBitRate, videoBitRate, stereo, pan, triggers);
+                        return new VideoFileOscilloscope().Save(settings);
                     }
                 }
                 else

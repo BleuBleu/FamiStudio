@@ -395,11 +395,6 @@ namespace FamiStudio
             return new Bitmap(this, CreateTexture(bmp, false), bmp.Width, bmp.Height);
         }
 
-        public Bitmap CreateBitmapFromOffscreenGraphics(OffscreenGraphics g)
-        {
-            return new Bitmap(this, g.Texture, g.SizeX, g.SizeY, false);
-        }
-
         protected unsafe override BitmapAtlas CreateBitmapAtlasFromResources(string[] names)
         {
             // Need to sort since we do binary searches on the names.
@@ -735,6 +730,11 @@ namespace FamiStudio
             base.EndDrawFrame(clearAlpha);
 
             GL.BindFramebuffer(GL.DrawFramebuffer, 0);
+        }
+
+        public Bitmap GetTexture()
+        {
+            return new Bitmap(this, texture, resX, resY, false);
         }
 
         public unsafe void GetBitmap(byte[] data)

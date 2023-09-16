@@ -86,9 +86,9 @@ namespace FamiStudio
             return vertices;
         }
 
-        protected bool InitializeEncoder(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfRate, int window, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, bool stereo, float[] pan, bool[] emuTriggers)
+        protected bool InitializeEncoder(VideoExportSettings settings)
         {
-            if (channelMask == 0 || loopCount < 1)
+            if (settings.ChannelMask == 0 || settings.LoopCount < 1)
                 return false;
 
             Log.LogMessage(LogSeverity.Info, "Detecting FFmpeg...");
@@ -97,18 +97,18 @@ namespace FamiStudio
             if (videoEncoder == null)
                 return false;
 
-            videoResX = resX;
-            videoResY = resY;
-            halfFrameRate = halfRate;
+            videoResX = settings.ResX;
+            videoResY = settings.ResY;
+            halfFrameRate = settings.HalfFrameRate;
 
-            project = originalProject.DeepClone();
-            song = project.GetSong(songId);
+            project = settings.Project.DeepClone();
+            song = project.GetSong(settings.SongId);
 
-            song.ExtendForLooping(loopCount);
+            song.ExtendForLooping(settings.LoopCount);
 
             // Save audio to temporary file.
             tempAudioFile = Path.Combine(Utils.GetTemporaryDiretory(), "temp.wav");
-            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, audioDelay, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, settings.ChannelMask, false, false, settings.Stereo, settings.ChannelPan, settings.AudioDelay, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
 
             if (Log.ShouldAbortOperation)
                 return false;
@@ -116,18 +116,18 @@ namespace FamiStudio
             // Start encoder, must be done before any GL calls on Android.
             GetFrameRateInfo(song.Project, halfFrameRate, out var frameRateNumer, out var frameRateDenom);
 
-            if (!videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, videoBitRate, audioBitRate, stereo, tempAudioFile, filename))
+            if (!videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, settings.VideoBitRate, settings.AudioBitRate, settings.Stereo, tempAudioFile, settings.Filename))
             {
                 Log.LogMessage(LogSeverity.Error, "Error starting video encoder, aborting.");
                 return false;
             }
 
             // Create the channel states.
-            channelStates = new VideoChannelState[Utils.NumberOfSetBits(channelMask)];
+            channelStates = new VideoChannelState[Utils.NumberOfSetBits(settings.ChannelMask)];
 
             for (int i = 0, channelIndex = 0; i < song.Channels.Length; i++)
             {
-                if ((channelMask & (1L << i)) == 0)
+                if ((settings.ChannelMask & (1L << i)) == 0)
                     continue;
 
                 var channel = song.Channels[i];
@@ -138,7 +138,7 @@ namespace FamiStudio
                 state.songChannelIndex = i;
                 state.channel = song.Channels[i];
                 state.channelText = state.channel.NameWithExpansion;
-                state.useEmuTriggers = emuTriggers == null || emuTriggers[i];
+                state.useEmuTriggers = settings.EmuTriggers == null || settings.EmuTriggers[i];
 
                 channelStates[channelIndex] = state;
                 channelIndex++;
@@ -206,7 +206,7 @@ namespace FamiStudio
             metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
 
             oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
-            oscRenderWindowSize = (int)(oscFrameWindowSize * window);
+            oscRenderWindowSize = (int)(oscFrameWindowSize * settings.OscWindow);
 
             return true;
         }
@@ -465,5 +465,28 @@ namespace FamiStudio
         {
             return Array.FindIndex(LocalizedNames, n => n.Value == str);
         }
+    }
+
+    class VideoExportSettings
+    {
+        public Project Project;
+        public int SongId;
+        public int LoopCount;
+        public int OscWindow;
+        public string Filename;
+        public int ResX;
+        public int ResY;
+        public bool HalfFrameRate;
+        public long ChannelMask;
+        public int AudioDelay;
+        public int AudioBitRate;
+        public int VideoBitRate;
+        public int OscColorMode;
+        public int OscNumColumns;
+        public int OscLineThickness;
+        public float PianoRollZoom;
+        public bool Stereo;
+        public float[] ChannelPan;
+        public bool[] EmuTriggers;
     }
 }

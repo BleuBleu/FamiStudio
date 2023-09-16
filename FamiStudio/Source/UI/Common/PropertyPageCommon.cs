@@ -45,7 +45,8 @@ namespace FamiStudio
         LogTextBox,
         ProgressBar,
         Radio,
-        RadioList
+        RadioList,
+        Image
     };
 
     public enum CommentType
