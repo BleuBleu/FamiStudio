@@ -198,6 +198,7 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
     <Compile Include="Source\Video\VideoEncoderFFmpeg.cs" />
+    <Compile Include="Source\Video\VideoEncoderInterface.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />

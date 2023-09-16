@@ -7,10 +7,11 @@ using System.Text;
 
 namespace FamiStudio
 {
-    class VideoEncoderFFmpeg
+    class VideoEncoderFFmpeg : IVideoEncoder
     {
         private Process process;
         private BinaryWriter stream;
+        private byte[] videoImage;
 
         private VideoEncoderFFmpeg()
         {
@@ -33,6 +34,7 @@ namespace FamiStudio
         {
             process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -aac_is disable -b:a {audioBitRate}k \"{outputFile}\"", true, false, true);
             stream = new BinaryWriter(process.StandardInput.BaseStream);
+            videoImage = new byte[resX * resY * 4];
 
             if (Platform.IsWindows)
             {
@@ -43,9 +45,10 @@ namespace FamiStudio
             return true;
         }
 
-        public void AddFrame(byte[] image)
+        public void AddFrame(OffscreenGraphics graphics)
         {
-            stream.Write(image);
+            graphics.GetBitmap(videoImage);
+            stream.Write(videoImage);
         }
 
         public void EndEncoding(bool abort)

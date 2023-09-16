@@ -219,7 +219,6 @@ namespace FamiStudio
 
         protected bool LaunchEncoderLoop(Action<int> body, Action cleanup = null)
         {
-            var videoImage = new byte[videoResY * videoResX * 4];
             var success = true;
             var lastTime = DateTime.Now;
 
@@ -254,11 +253,8 @@ namespace FamiStudio
                     videoGraphics.OverlayCommandList.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
                     videoGraphics.EndDrawFrame();
 
-                    // Readback
-                    videoGraphics.GetBitmap(videoImage);
-
                     // Send to encoder.
-                    videoEncoder.AddFrame(videoImage);
+                    videoEncoder.AddFrame(videoGraphics);
                 }
 
                 videoEncoder.EndEncoding(!success);
