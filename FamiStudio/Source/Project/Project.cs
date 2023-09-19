@@ -1897,6 +1897,11 @@ namespace FamiStudio
         {
             return samples.FindAll(s => (name ?? "") == (s.FolderName ?? ""));
         }
+        
+        public void ExpandAllFolders(int type, bool expand)
+        {
+            folders.ForEach(f => { if (f.Type == type) f.Expanded = expand; });
+        }
 
         public void SerializeDPCMSamples(ProjectBuffer buffer)
         {

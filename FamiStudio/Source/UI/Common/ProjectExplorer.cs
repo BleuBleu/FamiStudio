@@ -108,6 +108,7 @@ namespace FamiStudio
         LocalizedString PropertiesInstrumentTooltip;
         LocalizedString PropertiesProjectTooltip;
         LocalizedString PropertiesSongTooltip;
+        LocalizedString PropertiesFolderTooltip;
         LocalizedString ReloadSourceDataTooltip;
         LocalizedString ReorderSongsTooltip;
         LocalizedString ReplaceArpeggioTooltip;
@@ -227,6 +228,8 @@ namespace FamiStudio
         LocalizedString ReplaceWithContext;
         LocalizedString ResampleWavContext;
         LocalizedString ResetDefaultValueContext;
+        LocalizedString CollapseAllContext;
+        LocalizedString ExpandAllContext;
 
         static LocalizedString HzLabel;
 
@@ -506,7 +509,7 @@ namespace FamiStudio
                     }
                     case ButtonType.Instrument:
                     {
-                        var expandButton = projectExplorer.ShowExpandButtons() && InstrumentParamProvider.HasParams(instrument);
+                        var expandButton = InstrumentParamProvider.HasParams(instrument);
                         var numSubButtons = instrument.NumVisibleEnvelopes + (expandButton ? 1 : 0) + (instrument.IsRegular ? 1 : 0) + 1;
                         var buttons = new SubButtonType[numSubButtons];
                         var j = 0;
@@ -1151,23 +1154,6 @@ namespace FamiStudio
             RefreshButtons();
         }
 
-        protected bool ShowExpandButtons()
-        {
-            if (App.Project != null)
-            {
-                if (App.Project.Instruments.Find(i => InstrumentParamProvider.HasParams(i)) != null)
-                    return true;
-
-                if (App.Project.HasAnyFolders)
-                    return true;
-
-                if (App.Project.Samples.Count > 0)
-                    return true;
-            }
-
-            return false;
-        }
-        
         public int ScaleLineForWindow(int width) 
         { 
             return width == 1 ? 1 : DpiScaling.ScaleForWindow(width) | 1; 
@@ -1323,7 +1309,6 @@ namespace FamiStudio
 
             c.DrawLine(0, 0, 0, Height, Theme.BlackColor);
 
-            var showExpandButton = ShowExpandButtons();
             var firstParam = true;
             var y = -scrollY;
             var iconSize = DpiScaling.ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
@@ -1409,7 +1394,7 @@ namespace FamiStudio
                     var leftExpandPadding = 0;
                     var centered = button.TextCentered;
 
-                    if (showExpandButton && !centered)
+                    if (!centered)
                     {
                         leftButtonPadding = 1 + expandButtonSizeX;
 
@@ -1717,7 +1702,7 @@ namespace FamiStudio
                 var button = buttons[buttonIndex];
 
                 // MATTT : Clean this up.
-                if (ShowExpandButtons() && x < (expandButtonPosX + expandButtonSizeX) && ((button.instrument != null && InstrumentParamProvider.HasParams(button.instrument)) || (button.sample != null) || (button.folder != null))) 
+                if (x < (expandButtonPosX + expandButtonSizeX) && ((button.instrument != null && InstrumentParamProvider.HasParams(button.instrument)) || (button.sample != null) || (button.folder != null))) 
                 {
                     sub = SubButtonType.Expand;
                     return buttonIndex;
@@ -1827,6 +1812,21 @@ namespace FamiStudio
                     else if (subButtonType == SubButtonType.Sort)
                     {
                         tooltip = $"<MouseLeft> {AutoSortArpeggiosTooltip}";
+                    }
+                }
+                else if (
+                    buttonType == ButtonType.SongFolder ||
+                    buttonType == ButtonType.InstrumentFolder ||
+                    buttonType == ButtonType.ArpeggioFolder ||
+                    buttonType == ButtonType.DpcmFolder)
+                {
+                    if (subButtonType == SubButtonType.Properties)
+                    {
+                        tooltip = $"<MouseLeft> {PropertiesFolderTooltip}";
+                    }
+                    else if (subButtonType == SubButtonType.Max)
+                    {
+                        tooltip = $"<MouseRight> {MoreOptionsTooltip}";
                     }
                 }
                 else if (buttonType == ButtonType.ProjectSettings)
@@ -4243,6 +4243,24 @@ namespace FamiStudio
             return true;
         }
 
+        private void ExpandAllFolders(int type, bool expand)
+        {
+            App.Project.ExpandAllFolders(type, expand);
+            RefreshButtons();
+        }
+
+        private bool HandleContextMenuFolderButton(int x, int y, Button button)
+        {
+            var menu = new List<ContextMenuOption>();
+
+            menu.Add(new ContextMenuOption("Folder",     CollapseAllContext, () => { ExpandAllFolders(button.folder.Type, false); }));
+            menu.Add(new ContextMenuOption("FolderOpen", ExpandAllContext,   () => { ExpandAllFolders(button.folder.Type, true);  }));
+
+            App.ShowContextMenu(left + x, top + y, menu.ToArray());
+
+            return true;
+        }
+
         private void ResetParamButtonDefaultValue(Button button)
         {
             App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
@@ -4290,6 +4308,11 @@ namespace FamiStudio
                         return HandleContextMenuArpeggioButton(x, y, button);
                     case ButtonType.Dpcm:
                         return HandleContextMenuDpcmButton(x, y, button, subButtonType, buttonIdx);
+                    case ButtonType.SongFolder:
+                    case ButtonType.InstrumentFolder:
+                    case ButtonType.ArpeggioFolder:
+                    case ButtonType.DpcmFolder:
+                        return HandleContextMenuFolderButton(x, y, button);
                 }
 
                 return true;
@@ -4372,8 +4395,8 @@ namespace FamiStudio
         private bool IsPointInButtonIcon(Button button, int buttonRelX, int buttonRelY)
         {
             var iconSize = DpiScaling.ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
-            var iconRelX = buttonRelX - (buttonIconPosX + (ShowExpandButtons() ? expandButtonPosX + expandButtonSizeX : 0));
-            var iconRelY = buttonRelY - buttonIconPosY;
+            var iconRelX = buttonRelX - (buttonIconPosX + expandButtonPosX + expandButtonSizeX); // MATTT : Why 2 ?
+            var iconRelY = buttonRelY - (buttonIconPosY);
 
             if (iconRelX < 0 || iconRelX > iconSize ||
                 iconRelY < 0 || iconRelY > iconSize)
