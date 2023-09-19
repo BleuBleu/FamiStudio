@@ -20,13 +20,11 @@ x Upgrade Windows to .NET 6.0
 - Keep colors on FS.txt
 x When using shy mode, we could make the patterns larger if there is room.
 - Video export improvements:
-	x Add support for scroll property page:
-	x Unify all video export in one => Add a "video mode"
-	x Drop downs inside scrollable containes are broken.
 	- Add support to overlay register values 
+	- Add support to draw title/composer.
 	- Unified piano roll mode.
 	- Rename "Bitmap" to "Texture"
-	- Add a preview button (will need a passthrough encoder)
+	- Add a preview? 
 	x Grid drop-downs are broken with scrolling.
 - Finish/fix phase reset support
 - FDS automod
