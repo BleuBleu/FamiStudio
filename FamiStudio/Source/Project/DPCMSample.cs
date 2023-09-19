@@ -48,7 +48,7 @@ namespace FamiStudio
         public Color Color { get => color; set => color = value; }
         public int Bank    { get => bank;  set => bank  = value; }
         public string FolderName { get => folderName; set => folderName = value; }
-        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Song, folderName);
+        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Sample, folderName);
 
         public string SourceFilename => sourceFilename;
         public bool SourceDataIsWav { get => sourceData is DPCMSampleWavSourceData; }
@@ -338,6 +338,11 @@ namespace FamiStudio
         public void ChangeId(int newId)
         {
             id = newId;
+        }
+
+        public void SetProject(Project newProject)
+        {
+            project = newProject;
         }
 
         public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)

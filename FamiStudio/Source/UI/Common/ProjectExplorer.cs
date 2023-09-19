@@ -693,12 +693,12 @@ namespace FamiStudio
             {
                 get
                 {
-                    // MATTT
+                    // MATTT : Arps are too indented.
                     return
                         type == ButtonType.Song       && !string.IsNullOrEmpty(song.FolderName) ||
-                        type == ButtonType.Instrument && !string.IsNullOrEmpty(instrument.FolderName); /* ||
-                        type == ButtonType.Arpeggio   && !string.IsNullOrEmpty(arpeggio.FolderName) ||
-                        type == ButtonType.Dpcm       && !string.IsNullOrEmpty(sample.FolderName);*/
+                        type == ButtonType.Instrument && !string.IsNullOrEmpty(instrument.FolderName) ||
+                        type == ButtonType.Arpeggio   && !string.IsNullOrEmpty(arpeggio?.FolderName) ||
+                        type == ButtonType.Dpcm       && !string.IsNullOrEmpty(sample.FolderName);
 
                 }
             }
@@ -2044,7 +2044,8 @@ namespace FamiStudio
                             draggedInstrument.FolderName = draggedInFolder == null ? null : draggedInFolder.Name;
                             if (draggedInFolder != null && !draggedInFolder.Expanded)
                             {
-                                // MATTT : If moving between any 2 folders, we should respect sorting? Not sure whats best here.
+                                // MATTT : If moving between any 2 folders, we should respect sorting? Not sure whats best here. 
+                                // MATTT : When figured out, do same for all others.
                                 draggedInFolder.Expanded = true;
                                 BlinkButton(draggedInstrument);
                                 App.Project.ConditionalSortInstruments();
@@ -2074,6 +2075,7 @@ namespace FamiStudio
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
                             App.Project.MoveArpeggio(draggedArpeggio, arpBefore);
+                            draggedArpeggio.FolderName = draggedInFolder == null ? null : draggedInFolder.Name;
                             App.Project.AutoSortArpeggios = false;
                             App.UndoRedoManager.EndTransaction();
                         }
@@ -2094,6 +2096,7 @@ namespace FamiStudio
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                             App.Project.MoveSample(draggedSample, sampleBefore);
+                            draggedSample.FolderName = draggedInFolder == null ? null : draggedInFolder.Name;
                             App.Project.AutoSortSamples = false;
                             App.UndoRedoManager.EndTransaction();
                         }
@@ -4395,7 +4398,7 @@ namespace FamiStudio
         private bool IsPointInButtonIcon(Button button, int buttonRelX, int buttonRelY)
         {
             var iconSize = DpiScaling.ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
-            var iconRelX = buttonRelX - (buttonIconPosX + expandButtonPosX + expandButtonSizeX); // MATTT : Why 2 ?
+            var iconRelX = buttonRelX - (buttonIconPosX + expandButtonPosX + expandButtonSizeX); // MATTT : Why 2 ? Check on Android.
             var iconRelY = buttonRelY - (buttonIconPosY);
 
             if (iconRelX < 0 || iconRelX > iconSize ||

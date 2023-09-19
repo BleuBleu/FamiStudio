@@ -1464,10 +1464,12 @@ namespace FamiStudio
                         otherProject.ReplaceSampleInAllMappings(otherSample, existingSample);
                         otherProject.samples.Insert(otherProject.samples.IndexOf(otherSample), existingSample); // To pass validation.
                         otherProject.DeleteSample(otherSample);
+                        otherSample.SetProject(this);
                     }
                     else
                     {
                         samples.Add(otherSample);
+                        otherSample.SetProject(this);
                     }
                 }
 
@@ -1544,10 +1546,12 @@ namespace FamiStudio
                         otherProject.ReplaceArpeggio(otherArpeggio, existingArpeggio);
                         otherProject.arpeggios.Insert(otherProject.arpeggios.IndexOf(otherArpeggio), existingArpeggio); // To pass validation.
                         otherProject.DeleteArpeggio(otherArpeggio);
+                        otherArpeggio.SetProject(this);
                     }
                     else
                     {
                         arpeggios.Add(otherArpeggio);
+                        otherArpeggio.SetProject(this);
                     }
                 }
 

@@ -21,7 +21,7 @@ namespace FamiStudio
         public string Name { get => name; set => name = value; }
         public Color Color { get => color; set => color = value; }
         public string FolderName { get => folderName; set => folderName = value; }
-        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Song, folderName);
+        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Arpeggio, folderName);
 
         public Arpeggio()
         {
@@ -40,6 +40,11 @@ namespace FamiStudio
             this.envelope.Values[2] = 7;
             this.envelope.Length = 3;
             this.envelope.Loop = 0;
+        }
+
+        public void SetProject(Project newProject)
+        {
+            project = newProject;
         }
 
         public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
