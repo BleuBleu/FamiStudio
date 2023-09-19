@@ -8,7 +8,7 @@ namespace FamiStudio
 {
     public partial class ProjectExplorer : Container
     {
-        const int DefaultExpandButtonSizeX    = 8;
+        const int DefaultExpandButtonSizeX    = 10;
         const int DefaultExpandButtonPosX     = 3;
         const int DefaultExpandButtonPosY     = 8;
         const int DefaultButtonIconPosX       = 3;
@@ -693,13 +693,11 @@ namespace FamiStudio
             {
                 get
                 {
-                    // MATTT : Arps are too indented.
                     return
-                        type == ButtonType.Song       && !string.IsNullOrEmpty(song.FolderName) ||
-                        type == ButtonType.Instrument && !string.IsNullOrEmpty(instrument.FolderName) ||
-                        type == ButtonType.Arpeggio   && !string.IsNullOrEmpty(arpeggio?.FolderName) ||
-                        type == ButtonType.Dpcm       && !string.IsNullOrEmpty(sample.FolderName);
-
+                        !string.IsNullOrEmpty(song?.FolderName) ||
+                        !string.IsNullOrEmpty(instrument?.FolderName) ||
+                        !string.IsNullOrEmpty(arpeggio?.FolderName) ||
+                        !string.IsNullOrEmpty(sample?.FolderName);
                 }
             }
 
@@ -1390,22 +1388,23 @@ namespace FamiStudio
                         }
                     }
 
-                    var leftButtonPadding = 0;
-                    var leftExpandPadding = 0;
+                    var indentContent = 0;
+                    var indentExpandButton = 0;
+                    var hasExpandButton = subButtons != null && subButtons.Contains(SubButtonType.Expand);
                     var centered = button.TextCentered;
 
-                    if (!centered)
+                    if (hasExpandButton || button.IsParam)
                     {
-                        leftButtonPadding = 1 + expandButtonSizeX;
-
-                        if (button.IsInFolder)
-                        {
-                            leftExpandPadding = 1 + expandButtonSizeX;
-                            leftButtonPadding += leftExpandPadding;
-                        }
-
-                        c.PushTranslation(leftButtonPadding, 0);
+                        indentContent = expandButtonSizeX;
                     }
+
+                    if (button.IsInFolder && !button.IsParam)
+                    {
+                        indentExpandButton += expandButtonSizeX;
+                        indentContent += indentExpandButton;
+                    }
+
+                    c.PushTranslation(indentContent, 0);
 
                     var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
                     var ellipsisFlag = button.TextEllipsis ? TextFlags.Ellipsis : TextFlags.None;
@@ -1413,7 +1412,7 @@ namespace FamiStudio
 
                     if (button.type == ButtonType.ParamCustomDraw)
                     {
-                        button.param.CustomDraw(c, Fonts, new Rectangle(0, 0, contentSizeX - leftButtonPadding - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
+                        button.param.CustomDraw(c, Fonts, new Rectangle(0, 0, contentSizeX - indentContent - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
                     }
                     else if (button.type >= ButtonType.ExpansionRegistersFirst && button.type < ButtonType.ChannelStateFirst)
                     {
@@ -1428,7 +1427,7 @@ namespace FamiStudio
                         if (button.Text != null)
                         {
                             var textX = button.bmp == null ? buttonTextNoIconPosX : buttonTextPosX;
-                            c.DrawText(button.Text, button.Font, textX, 0, enabled ? button.textColor : disabledColor, (centered ? TextFlags.Center : TextFlags.Left) | ellipsisFlag | TextFlags.Middle, (centered ? contentSizeX - textX * 2 : firstSubButtonX - buttonTextPosX - leftButtonPadding), buttonSizeY);
+                            c.DrawText(button.Text, button.Font, textX, 0, enabled ? button.textColor : disabledColor, (centered ? TextFlags.Center : TextFlags.Left) | ellipsisFlag | TextFlags.Middle, (centered ? contentSizeX - textX * 2 : firstSubButtonX - buttonTextPosX - indentContent), buttonSizeY);
                         }
 
                         if (button.bmp != null)
@@ -1441,8 +1440,7 @@ namespace FamiStudio
                         }
                     }
 
-                    if (leftButtonPadding != 0)
-                        c.PopTransform();
+                    c.PopTransform();
 
                     if (button.param != null)
                     {
@@ -1492,7 +1490,7 @@ namespace FamiStudio
                         }
                         else if (button.type == ButtonType.ParamTabs)
                         {
-                            var tabWidth = Utils.DivideAndRoundUp(contentSizeX - leftButtonPadding - paramRightPadX, button.tabNames.Length);
+                            var tabWidth = Utils.DivideAndRoundUp(contentSizeX - indentContent - paramRightPadX, button.tabNames.Length);
 
                             for (var j = 0; j < button.tabNames.Length; j++)
                             {
@@ -1503,7 +1501,7 @@ namespace FamiStudio
                                 var tabFont         = tabSelect ? Fonts.FontMediumBold : Fonts.FontMedium;
                                 var tabLine         = tabSelect ? 3 : 1;
 
-                                c.PushTranslation(leftButtonPadding + tabWidth * j, 0);
+                                c.PushTranslation(indentContent + tabWidth * j, 0);
                                 c.DrawText(tabName, tabFont, 0, 0, tabLineBrush, TextFlags.MiddleCenter, tabWidth, button.height);
                                 c.DrawLine(0, button.height - tabLine / 2, tabWidth, button.height - tabLine / 2, tabLineBrush, ScaleLineForWindow(tabLine));
                                 c.PopTransform();
@@ -1517,9 +1515,9 @@ namespace FamiStudio
 
                         if (subButtons != null)
                         {
-                            c.PushTranslation(leftExpandPadding, 0);
+                            c.PushTranslation(indentExpandButton, 0);
 
-                            for (int j = 0, x = contentSizeX - subButtonMarginX - subButtonSizeX - leftExpandPadding; j < subButtons.Length; j++, x -= (subButtonSpacingX + subButtonSizeX))
+                            for (int j = 0, x = contentSizeX - subButtonMarginX - subButtonSizeX - indentExpandButton; j < subButtons.Length; j++, x -= (subButtonSpacingX + subButtonSizeX))
                             {
                                 var sub = subButtons[j];
                                 var bmp = button.GetIcon(sub);
@@ -1577,8 +1575,7 @@ namespace FamiStudio
                             case CaptureOperation.DragArpeggio:   lineColor = draggedArpeggio.Color;   break;
                         }
 
-                        // MATTT : Test
-                        c.DrawLine(draggedInFolder != null ? 20 : 0, lineY, contentSizeX, lineY, lineColor, draggedLineSizeY);
+                        c.DrawLine(draggedInFolder != null ? expandButtonSizeX : 0, lineY, contentSizeX, lineY, lineColor, draggedLineSizeY);
                     }
                 }
                 else if ((captureOperation == CaptureOperation.DragInstrumentEnvelope || captureOperation == CaptureOperation.DragArpeggioValues) && envelopeDragIdx >= 0)
@@ -1597,12 +1594,8 @@ namespace FamiStudio
                 }
             }
 
-            // MATTT : Call GetScrollbarParams(). Remove duplicated code.
-            if (needsScrollBar)
+            if (GetScrollBarParams(out var scrollBarPosY, out var scrollBarSizeY))
             {
-                int scrollBarSizeY = (int)Math.Round(scrollAreaSizeY * (scrollAreaSizeY / (float)virtualSizeY));
-                int scrollBarPosY  = (int)Math.Round(scrollAreaSizeY * (scrollY / (float)virtualSizeY));
-
                 c.FillAndDrawRectangle(contentSizeX, 0, Width - 1, Height, Theme.DarkGreyColor4, Theme.BlackColor);
                 c.FillAndDrawRectangle(contentSizeX, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, Theme.MediumGreyColor1, Theme.BlackColor);
             }
@@ -1700,9 +1693,14 @@ namespace FamiStudio
             if (buttonIndex >= 0 && buttonIndex < buttons.Count)
             {
                 var button = buttons[buttonIndex];
+                var expandPosX = expandButtonPosX;
+                var subButtons = button.GetSubButtons(out _);
+                var hasExpandButton = subButtons != null && subButtons.Contains(SubButtonType.Expand);
 
-                // MATTT : Clean this up.
-                if (x < (expandButtonPosX + expandButtonSizeX) && ((button.instrument != null && InstrumentParamProvider.HasParams(button.instrument)) || (button.sample != null) || (button.folder != null))) 
+                if (button.IsInFolder)
+                    expandPosX += expandButtonSizeX;
+
+                if (hasExpandButton && x < (expandPosX + expandButtonSizeX))
                 {
                     sub = SubButtonType.Expand;
                     return buttonIndex;
@@ -1711,7 +1709,6 @@ namespace FamiStudio
                 buttonRelX = x;
                 buttonRelY = y - buttonBaseY + scrollY;
 
-                var subButtons = button.GetSubButtons(out _);
                 if (subButtons != null)
                 {
                     y -= (buttonBaseY - scrollY);
@@ -4397,6 +4394,7 @@ namespace FamiStudio
 
         private bool IsPointInButtonIcon(Button button, int buttonRelX, int buttonRelY)
         {
+            // MATTT : Almost certainly wrong.
             var iconSize = DpiScaling.ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
             var iconRelX = buttonRelX - (buttonIconPosX + expandButtonPosX + expandButtonSizeX); // MATTT : Why 2 ? Check on Android.
             var iconRelY = buttonRelY - (buttonIconPosY);

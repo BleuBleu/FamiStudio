@@ -7,10 +7,11 @@ x Upgrade Windows to .NET 6.0
 	- Setup keystore, etc.
 	- Bring back APK
 / Instrument folders + collapse entire sections (samples, arps, etc.) 
-	- For moving instrument, do it like Gimp. Only difference is that we will enforce that instrument not in folders will always be at the end.
 	- Cleanup X offset/drawing/clicking code.
+	- For moving instrument, do it like Gimp. Only difference is that we will enforce that instrument not in folders will always be at the end.
 	/ Ability to rename/reorder folders.
 	- Make it work on mobile.
+	- Only instruments "+" works with right-click...
 - Keep colors on FS.txt
 x When using shy mode, we could make the patterns larger if there is room.
 - Video export improvements:
