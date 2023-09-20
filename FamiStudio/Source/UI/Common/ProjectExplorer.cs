@@ -131,6 +131,8 @@ namespace FamiStudio
         LocalizedString AskDeleteArpeggioTitle;
         LocalizedString AskDeleteSampleMessage;
         LocalizedString AskDeleteSampleTitle;
+        LocalizedString AskDeleteFolderMessage;
+        LocalizedString AskDeleteFolderTitle;
         LocalizedString AskReplaceInstrumentMessage;
         LocalizedString AskReplaceInstrumentTitle;
         LocalizedString AskReplaceArpeggioMessage;
@@ -212,6 +214,7 @@ namespace FamiStudio
         LocalizedString DeleteInstrumentContext;
         LocalizedString DeleteSampleContext;
         LocalizedString DeleteSongContext;
+        LocalizedString DeleteFolderContext;
         LocalizedString DiscardSourceWavDataContext;
         LocalizedString DiscardSourceWavDataTooltip;
         LocalizedString DiscardWavDataContext;
@@ -4249,12 +4252,76 @@ namespace FamiStudio
             RefreshButtons();
         }
 
+        private void AskDeleteFolder(Folder folder)
+        {
+            Platform.MessageBoxAsync(ParentWindow, AskDeleteFolderMessage.Format(folder.Name), AskDeleteFolderTitle, MessageBoxButtons.YesNoCancel, (r) =>
+            {
+                if (r != DialogResult.Cancel)
+                {
+                    App.UndoRedoManager.BeginTransaction(folder.Type == FolderType.Sample ? TransactionScope.ProjectNoDPCMSamples : TransactionScope.Project, r == DialogResult.Yes ? TransactionFlags.StopAudio : TransactionFlags.None);
+
+                    if (r == DialogResult.Yes)
+                    {
+                        switch (folder.Type)
+                        {
+                            case FolderType.Song:
+                                App.Project.GetSongsInFolder(folder.Name).ForEach(s => { if (App.Project.Songs.Count > 1) { App.Project.DeleteSong(s); } });
+                                App.Project.GetSongsInFolder(folder.Name).ForEach(s => s.FolderName = null);
+                                if (App.SelectedSong == null || !App.Project.SongExists(App.SelectedSong))
+                                    App.SelectedSong = App.Project.Songs[0];
+                                break;
+                            case FolderType.Instrument:
+                                App.Project.GetInstrumentsInFolder(folder.Name).ForEach(i => { App.Project.DeleteInstrument(i); InstrumentDeleted?.Invoke(i); });
+                                if (App.Project.Instruments.Count > 0 && (App.SelectedInstrument == null || !App.Project.InstrumentExists(App.SelectedInstrument)))
+                                    App.SelectedInstrument = App.Project.Instruments[0];
+                                else
+                                    App.SelectedInstrument = null;
+                                break;
+                            case FolderType.Arpeggio:
+                                App.Project.GetArpeggiosInFolder(folder.Name).ForEach(a => { App.Project.DeleteArpeggio(a); ArpeggioDeleted?.Invoke(a); });
+                                if (App.Project.Arpeggios.Count > 0 && (App.SelectedArpeggio == null || !App.Project.ArpeggioExists(App.SelectedArpeggio)))
+                                    App.SelectedArpeggio = App.Project.Arpeggios[0];
+                                else
+                                    App.SelectedArpeggio = null;
+                                break;
+                            case FolderType.Sample:
+                                App.Project.GetSamplesInFolder(folder.Name).ForEach(s => { App.Project.DeleteSample(s); DPCMSampleDeleted?.Invoke(s); });
+                                break;
+                        }
+                    }
+                    else if (r == DialogResult.No)
+                    {
+                        switch (folder.Type)
+                        {
+                            case FolderType.Song:       
+                                App.Project.GetSongsInFolder(folder.Name).ForEach(s => s.FolderName = null); 
+                                break;
+                            case FolderType.Instrument: 
+                                App.Project.GetInstrumentsInFolder(folder.Name).ForEach(i => i.FolderName = null); 
+                                break;
+                            case FolderType.Arpeggio:   
+                                App.Project.GetArpeggiosInFolder(folder.Name).ForEach(a => a.FolderName = null); 
+                                break;
+                            case FolderType.Sample:     
+                                App.Project.GetSamplesInFolder(folder.Name).ForEach(s => s.FolderName = null); 
+                                break;
+                        }
+                    }
+
+                    App.Project.DeleteFolder(folder.Type, folder.Name);
+                    App.UndoRedoManager.EndTransaction();
+                    RefreshButtons();
+                }
+            });
+        }
+
         private bool HandleContextMenuFolderButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
 
-            menu.Add(new ContextMenuOption("Folder",     CollapseAllContext, () => { ExpandAllFolders(button.folder.Type, false); }));
-            menu.Add(new ContextMenuOption("FolderOpen", ExpandAllContext,   () => { ExpandAllFolders(button.folder.Type, true);  }));
+            menu.Add(new ContextMenuOption("MenuDelete", DeleteFolderContext, () => { AskDeleteFolder(button.folder); }, ContextMenuSeparator.After));
+            menu.Add(new ContextMenuOption("Folder",     CollapseAllContext,  () => { ExpandAllFolders(button.folder.Type, false); }));
+            menu.Add(new ContextMenuOption("FolderOpen", ExpandAllContext,    () => { ExpandAllFolders(button.folder.Type, true);  }));
 
             App.ShowContextMenu(left + x, top + y, menu.ToArray());
 

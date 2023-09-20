@@ -1094,6 +1094,17 @@ namespace FamiStudio
             return folder; // MATTT : Conditional sort here????
         }
 
+        public void DeleteFolder(int type, string name)
+        {
+            Debug.Assert(
+                (type == FolderType.Song && songs.Find(s => s.FolderName == name) == null) ||
+                (type == FolderType.Instrument && instruments.Find(i => i.FolderName == name) == null) ||
+                (type == FolderType.Arpeggio && arpeggios.Find(a => a.FolderName == name) == null) ||
+                (type == FolderType.Sample && samples.Find(s => s.FolderName == name) == null));
+
+            folders.RemoveAll(f => f.Type == type && f.Name == name);
+        }
+
         public bool RenameFolder(int type, Folder folder, string name)
         {
             if (folder.Name == name)
