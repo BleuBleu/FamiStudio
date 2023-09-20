@@ -234,8 +234,6 @@ namespace FamiStudio
         LocalizedString CollapseAllContext;
         LocalizedString ExpandAllContext;
 
-        static LocalizedString HzLabel;
-
         #endregion
 
         public static readonly string[] RegisterIconsList =
@@ -408,7 +406,7 @@ namespace FamiStudio
 
         // Register viewer stuff
         NesApu.NesRegisterValues registerValues;
-        ExpansionRegisterViewer[] registerViewers = new ExpansionRegisterViewer[ExpansionType.Count];
+        RegisterViewer[] registerViewers = new RegisterViewer[ExpansionType.Count];
 
         // Hover
         int hoverButtonIndex = -1;
@@ -870,7 +868,7 @@ namespace FamiStudio
         {
             var h = 0;
             for (int i = 0; i < regs.Length; i++)
-                h += DpiScaling.ScaleForWindow(regs[i].Height);
+                h += DpiScaling.ScaleForWindow(regs[i].CustomHeight > 0 ? regs[i].CustomHeight : DefaultRegisterSizeY);
             return h;
         }
 
@@ -1195,7 +1193,7 @@ namespace FamiStudio
             for (int i = 0; i < button.regs.Length; i++)
             {
                 var reg = button.regs[i];
-                var regSizeY = DpiScaling.ScaleForWindow(reg.Height);
+                var regSizeY = DpiScaling.ScaleForWindow(reg.CustomHeight > 0 ? reg.CustomHeight : DefaultRegisterSizeY);
 
                 c.PushTranslation(0, y);
 
