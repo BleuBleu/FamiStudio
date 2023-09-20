@@ -15,7 +15,8 @@ namespace FamiStudio
         protected int videoResX = 1920;
         protected int videoResY = 1080;
 
-        protected bool   halfFrameRate;
+        protected bool halfFrameRate;
+        protected bool showRegisters;
         protected string tempAudioFile;
 
         protected int oscFrameWindowSize;
@@ -29,6 +30,9 @@ namespace FamiStudio
         protected VideoFrameMetadata[] metadata;
         protected Fonts fonts;
         protected Bitmap watermark;
+        protected NesApu.NesRegisterValues registerValues;
+        protected List<RegisterViewer> registerViewers;
+        protected Color[] registerColors = new Color[11];
 
         // TODO : This is is very similar to Oscilloscope.cs, unify eventually...
         protected float[] UpdateOscilloscope(VideoChannelState state, int frameIndex)
@@ -100,10 +104,9 @@ namespace FamiStudio
             videoResX = settings.ResX;
             videoResY = settings.ResY;
             halfFrameRate = settings.HalfFrameRate;
-
+            showRegisters = settings.ShowRegisters;
             project = settings.Project.DeepClone();
             song = project.GetSong(settings.SongId);
-
             song.ExtendForLooping(settings.LoopCount);
 
             // Save audio to temporary file.
@@ -201,14 +204,108 @@ namespace FamiStudio
             fonts = new Fonts(videoGraphics);
             watermark = videoGraphics.CreateBitmapFromResource("FamiStudio.Resources.Misc.VideoWatermark");
 
+            if (showRegisters)
+            {
+                registerValues = new NesApu.NesRegisterValues();
+                registerViewers = new List<RegisterViewer>();
+
+                foreach (var exp in project.GetActiveExpansions())
+                {
+                    registerViewers.Add(RegisterViewer.CreateForExpansion(exp, registerValues));
+                }
+
+                var color0 = Theme.LightGreyColor2; // Grey
+                var color1 = Theme.CustomColors[14, 5]; // Orange
+                var color2 = Theme.CustomColors[0, 5]; // Red
+
+                for (int i = 0; i < registerColors.Length; i++)
+                {
+                    var alpha = i / (float)(registerColors.Length - 1);
+                    var color = Color.FromArgb(
+                        (int)Utils.Lerp(color2.R, color0.R, alpha),
+                        (int)Utils.Lerp(color2.G, color0.G, alpha),
+                        (int)Utils.Lerp(color2.B, color0.B, alpha));
+                    registerColors[i] = color;
+                }
+            }
+
             // Generate metadata
             Log.LogMessage(LogSeverity.Info, "Generating video metadata...");
-            metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
+            metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, showRegisters, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
 
             oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
             oscRenderWindowSize = (int)(oscFrameWindowSize * settings.OscWindow);
 
             return true;
+        }
+
+        protected void DrawRegisterValues(VideoFrameMetadata frame)
+        {
+            if (showRegisters)
+            {
+                frame.registerValues.CopyTo(registerValues);
+
+                var c = videoGraphics.OverlayCommandList;
+                var y = 0;
+
+                // MATTT Tweak those and position the register in a nice looking position.
+                var contentSizeX = 250;
+                var buttonTextNoIconPosX = 0;
+                var registerLabelSizeX = 50; 
+
+                foreach (var regViewer in registerViewers)
+                {
+                    foreach (var row in regViewer.RegisterRows)
+                    {
+                        var regSizeY = row.CustomHeight > 0 ? row.CustomHeight : 10;
+
+                        c.PushTranslation(0, y);
+
+                        if (row.CustomDraw != null)
+                        {
+                            var label = row.Label;
+                            c.DrawText(label, fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle | TextFlags.DropShadow, 0, regSizeY);
+
+                            c.PushTranslation(registerLabelSizeX + 1, 0);
+                            row.CustomDraw(c, fonts, new Rectangle(0, 0, contentSizeX - registerLabelSizeX - 1, regSizeY));
+                            c.PopTransform();
+                        }
+                        else if (row.GetValue != null)
+                        {
+                            var label = row.Label;
+                            var value = row.GetValue().ToString();
+                            var flags = TextFlags.Middle | TextFlags.DropShadow | (row.Monospace ? TextFlags.Monospace : TextFlags.None);
+
+                            c.DrawText(label, fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
+                            c.DrawText(value, fonts.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, Theme.LightGreyColor2, flags, 0, regSizeY);
+                        }
+                        else
+                        {
+                            c.DrawText(row.Label, fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle | TextFlags.DropShadow, 0, regSizeY);
+
+                            var flags = TextFlags.Monospace | TextFlags.Middle | TextFlags.DropShadow;
+                            var x = buttonTextNoIconPosX + registerLabelSizeX;
+
+                            for (var r = row.AddStart; r <= row.AddEnd; r++)
+                            {
+                                for (var s = row.SubStart; s <= row.SubEnd; s++)
+                                {
+                                    var val = registerValues.GetRegisterValue(regViewer.Expansion, r, out var age, s);
+                                    var str = $"${val:X2} ";
+                                    var color = registerColors[Math.Min(age, registerColors.Length - 1)];
+
+                                    c.DrawText(str, fonts.FontSmall, x, 0, color, flags, 0, regSizeY);
+                                    x += (int)c.Graphics.MeasureString(str, fonts.FontSmall, true);
+                                }
+                            }
+                        }
+
+                        c.PopTransform();
+                        y += regSizeY;
+
+                    }
+                }
+            }
         }
 
         protected bool LaunchEncoderLoop(Action<int> body, Action cleanup = null)
@@ -242,6 +339,9 @@ namespace FamiStudio
                     videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), Theme.DarkGreyColor2);
 
                     body(f);
+
+                    // Registers.
+                    DrawRegisterValues(frame);
 
                     // Watermark.
                     videoGraphics.OverlayCommandList.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
@@ -349,18 +449,21 @@ namespace FamiStudio
         public float playNote;
         public int   wavOffset;
         public ChannelMetadata[] channelData;
+        public NesApu.NesRegisterValues registerValues;
     };
 
     class VideoMetadataPlayer : BasePlayer
     {
         int numSamples = 0;
         int prevNumSamples = 0;
+        bool readRegisters;
         List<VideoFrameMetadata> metadata;
 
-        public VideoMetadataPlayer(int sampleRate, bool stereo, int maxLoop) : base(NesApu.APU_WAV_EXPORT, stereo, sampleRate)
+        public VideoMetadataPlayer(int sampleRate, bool stereo, bool registers, int maxLoop) : base(NesApu.APU_WAV_EXPORT, stereo, sampleRate)
         {
             maxLoopCount = maxLoop;
             metadata = new List<VideoFrameMetadata>();
+            readRegisters = registers;
         }
 
         private void WriteMetadata(List<VideoFrameMetadata> metadata)
@@ -378,6 +481,12 @@ namespace FamiStudio
                 meta.channelData[i].note    = channelStates[i].CurrentNote;
                 meta.channelData[i].volume  = channelStates[i].CurrentVolume;
                 meta.channelData[i].trigger = GetOscilloscopeTrigger(channelStates[i].InnerChannelType);
+            }
+
+            if (readRegisters)
+            {
+                meta.registerValues = new NesApu.NesRegisterValues();
+                GetRegisterValues(meta.registerValues);
             }
 
             metadata.Add(meta);
@@ -485,6 +594,7 @@ namespace FamiStudio
         public int OscNumColumns;
         public int OscLineThickness;
         public float PianoRollZoom;
+        public bool ShowRegisters;
         public bool Stereo;
         public float[] ChannelPan;
         public bool[] EmuTriggers;

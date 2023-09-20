@@ -1236,9 +1236,10 @@ namespace FamiStudio
         BottomCenter = Bottom | Center,
         BottomRight  = Bottom | Right,
 
-        Clip      = 1 << 7,
-        Ellipsis  = 1 << 8,
-        Monospace = 1 << 9
+        Clip       = 1 << 7,
+        Ellipsis   = 1 << 8,
+        Monospace  = 1 << 9,
+        DropShadow = 1 << 10
     }
 
     // This is common to both OGL, it only does data packing, no GL calls.
@@ -2599,6 +2600,7 @@ namespace FamiStudio
             Debug.Assert(!flags.HasFlag(TextFlags.Clip) || !flags.HasFlag(TextFlags.Ellipsis));
             Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Ellipsis));
             Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Clip));
+            Debug.Assert(!flags.HasFlag(TextFlags.DropShadow) || !flags.HasFlag(TextFlags.Clip));
             Debug.Assert(!flags.HasFlag(TextFlags.Ellipsis) || width > 0);
             Debug.Assert((flags & TextFlags.HorizontalAlignMask) != TextFlags.Center || width  > 0);
             Debug.Assert((flags & TextFlags.VerticalAlignMask)   == TextFlags.Top    || height > 0);
@@ -2609,6 +2611,22 @@ namespace FamiStudio
             }
 
             xform.TransformPoint(ref x, ref y);
+
+            if ((flags & TextFlags.DropShadow) != 0)
+            {
+                Debug.Assert(clipMinX == 0 && clipMaxX == 0);
+
+                var shadowInst = new TextInstance();
+                shadowInst.layoutRect = new RectangleF(x + 1, y + 1, width, height);
+                shadowInst.clipRect = shadowInst.layoutRect;
+                shadowInst.flags = flags;
+                shadowInst.text = text;
+                shadowInst.font = font;
+                shadowInst.color = Color.Black;
+                shadowInst.depth = graphics.DepthValue;
+
+                texts.Add(shadowInst);
+            }
 
             var inst = new TextInstance();
             inst.layoutRect = new RectangleF(x, y, width, height);

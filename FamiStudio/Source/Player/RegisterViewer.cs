@@ -10,6 +10,7 @@ namespace FamiStudio
         protected LocalizedString VolumeLabel;
         protected LocalizedString DutyLabel;
 
+        // These are really UI specific things... Should be somewhere else.
         protected int IconSquare = 0;
         protected int IconTriangle = 1;
         protected int IconNoise = 2;
@@ -19,15 +20,30 @@ namespace FamiStudio
         protected int IconWaveTable = 6;
         protected int IconRhythm = 7;
 
-        public string[] Labels { get; internal set; }
-        public int[] Icons { get; internal set; }
-        public RegisterViewerRow[] ExpansionRows { get; internal set; }
-        public RegisterViewerRow[][] ChannelRows { get; internal set; }
+        protected int expansion;
+
+        public static readonly string[] Icons =
+        {
+            "ChannelSquare",
+            "ChannelTriangle",
+            "ChannelNoise",
+            "ChannelDPCM",
+            "ChannelSaw",
+            "ChannelFM",
+            "ChannelWaveTable",
+            "ChannelRythm"
+        };
+
+        public string[] InterpreterLabels { get; internal set; }
+        public int[] InterpreterIcons { get; internal set; }
+        public RegisterViewerRow[] RegisterRows { get; internal set; }
+        public RegisterViewerRow[][] InterpeterRows { get; internal set; }
+        public int Expansion => expansion;
 
         public delegate object GetRegisterValueDelegate();
         public delegate void DrawRegisterDelegate(CommandList c, Fonts res, Rectangle rect);
 
-        public static readonly string[] NoteNamesPadded =
+        protected static readonly string[] NoteNamesPadded =
         {
             "C-",
             "C#",
@@ -42,6 +58,11 @@ namespace FamiStudio
             "A#",
             "B-"
         };
+
+        public RegisterViewer(int exp)
+        {
+            expansion = exp;
+        }
 
         protected double NoteFromFreq(double f)
         {
@@ -73,6 +94,24 @@ namespace FamiStudio
                 return $"{GetNoteString(note),-3}{(cents < 0 ? "-" : "+")}{Math.Abs(cents):00} ({frequency,7:0.00}{HzLabel.ToString()})";
             }
         }
+
+        public static RegisterViewer CreateForExpansion(int exp, NesApu.NesRegisterValues r)
+        {
+            switch (exp)
+            {
+                case ExpansionType.None: return new ApuRegisterViewer(r);
+                case ExpansionType.Vrc6: return new Vrc6RegisterViewer(r);
+                case ExpansionType.Vrc7: return new Vrc7RegisterViewer(r);
+                case ExpansionType.Fds:  return new FdsRegisterViewer(r);
+                case ExpansionType.Mmc5: return new Mmc5RegisterViewer(r);
+                case ExpansionType.N163: return new N163RegisterViewer(r);
+                case ExpansionType.S5B:  return new S5BRegisterViewer(r);
+                case ExpansionType.EPSM: return new EpsmRegisterViewer(r);
+            }
+
+            Debug.Assert(false);
+            return null;
+        }
     }
 
     public class ApuRegisterViewer : RegisterViewer
@@ -88,16 +127,16 @@ namespace FamiStudio
 
         ApuRegisterInterpreter i;
 
-        public ApuRegisterViewer(NesApu.NesRegisterValues r)
+        public ApuRegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.None)
         {
-            Labels = new string[5];
+            InterpreterLabels = new string[5];
             for (int j = 0; j < 5; j++){
-                Labels[j] = ChannelType.LocalizedNames[ChannelType.Square1+j];
+                InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.Square1+j];
             };
-            Icons = new int[]{ IconSquare, IconSquare, IconTriangle, IconNoise, IconDPCM };
+            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconTriangle, IconNoise, IconDPCM };
             Localization.Localize(this);
             i = new ApuRegisterInterpreter(r);
-            ExpansionRows = new[]
+            RegisterRows = new[]
             {
                 new RegisterViewerRow("$4000", 0x4000, 0x4003),
                 new RegisterViewerRow("$4004", 0x4004, 0x4007),
@@ -105,30 +144,30 @@ namespace FamiStudio
                 new RegisterViewerRow("$400C", 0x400c, 0x400f),
                 new RegisterViewerRow("$4010", 0x4010, 0x4013)
             };
-            ChannelRows = new RegisterViewerRow[5][];
-            ChannelRows[0] = new[]
+            InterpeterRows = new RegisterViewerRow[5][];
+            InterpeterRows[0] = new[]
             {
                 new RegisterViewerRow(PitchLabel,     () => GetPitchString(i.GetSquarePeriod(0), i.GetSquareFrequency(0)), true),
                 new RegisterViewerRow(VolumeLabel,    () => i.GetSquareVolume(0).ToString("00"), true),
                 new RegisterViewerRow(DutyLabel,      () => i.GetSquareDuty(0), true)
             };                                        
-            ChannelRows[1] = new[]                    
+            InterpeterRows[1] = new[]                    
             {                                         
                 new RegisterViewerRow(PitchLabel,     () => GetPitchString(i.GetSquarePeriod(1), i.GetSquareFrequency(1)), true),
                 new RegisterViewerRow(VolumeLabel,    () => i.GetSquareVolume(1).ToString("00"), true),
                 new RegisterViewerRow(DutyLabel,      () => i.GetSquareDuty(1), true)
             };                                        
-            ChannelRows[2] = new[]                    
+            InterpeterRows[2] = new[]                    
             {                                         
                 new RegisterViewerRow(PitchLabel,     () => GetPitchString(i.TrianglePeriod, i.TriangleFrequency), true),
             };                                        
-            ChannelRows[3] = new[]                    
+            InterpeterRows[3] = new[]                    
             {                                         
                 new RegisterViewerRow(PitchLabel,     () => i.NoisePeriod.ToString("X"), true),
                 new RegisterViewerRow(VolumeLabel,    () => i.NoiseVolume.ToString("00"), true),
                 new RegisterViewerRow(ModeLabel,      () => i.NoiseMode, true)
             };
-            ChannelRows[4] = new[]
+            InterpeterRows[4] = new[]
             {
                 new RegisterViewerRow(FrequencyLabel, () => DPCMSampleRate.GetString(false, r.Pal, true, true, i.DpcmFrequency), true),
                 new RegisterViewerRow(LoopLabel,      () => i.DpcmLoop ? LoopOption : OnceOption, false),
@@ -143,35 +182,35 @@ namespace FamiStudio
     {
         Vrc6RegisterInterpreter i;
 
-        public Vrc6RegisterViewer(NesApu.NesRegisterValues r)
+        public Vrc6RegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.Vrc6)
         {
-            Labels = new string[3];
+            InterpreterLabels = new string[3];
             for (int j = 0; j < 3; j++){
-                Labels[j] = ChannelType.LocalizedNames[ChannelType.Vrc6Square1+j];
+                InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.Vrc6Square1+j];
             };
-            Icons = new int[]{ IconSquare, IconSquare, IconSaw };
+            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconSaw };
             Localization.Localize(this);
             i = new Vrc6RegisterInterpreter(r);
-            ExpansionRows = new[]
+            RegisterRows = new[]
             {
                 new RegisterViewerRow("$9000", 0x9000, 0x9002),
                 new RegisterViewerRow("$A000", 0xA000, 0xA002),
                 new RegisterViewerRow("$B000", 0xB000, 0xB002)
             };
-            ChannelRows = new RegisterViewerRow[3][];
-            ChannelRows[0] = new[]
+            InterpeterRows = new RegisterViewerRow[3][];
+            InterpeterRows[0] = new[]
             {
                 new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetSquarePeriod(0), i.GetSquareFrequency(0)), true),
                 new RegisterViewerRow(VolumeLabel, () => i.GetSquareVolume(0).ToString("00"), true),
                 new RegisterViewerRow(DutyLabel,   () => i.GetSquareDuty(0), true)
             };
-            ChannelRows[1] = new[]
+            InterpeterRows[1] = new[]
             {
                 new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetSquarePeriod(1), i.GetSquareFrequency(1)), true),
                 new RegisterViewerRow(VolumeLabel, () => i.GetSquareVolume(1).ToString("00"), true),
                 new RegisterViewerRow(DutyLabel,   () => i.GetSquareDuty(1), true)
             };
-            ChannelRows[2] = new[]
+            InterpeterRows[2] = new[]
             {
                 new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.SawPeriod, i.SawFrequency), true),
                 new RegisterViewerRow(VolumeLabel, () => i.SawVolume.ToString("00"), true),
@@ -184,25 +223,25 @@ namespace FamiStudio
         LocalizedString PatchLabel;
         Vrc7RegisterIntepreter i;
 
-        public Vrc7RegisterViewer(NesApu.NesRegisterValues r)
+        public Vrc7RegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.Vrc7)
         {
-            Labels = new string[6];
-            Icons = new int[6];
+            InterpreterLabels = new string[6];
+            InterpreterIcons = new int[6];
             Localization.Localize(this);
             i = new Vrc7RegisterIntepreter(r);
-            ExpansionRows = new[]
+            RegisterRows = new[]
             {
                 new RegisterViewerRow("$10", 0x9030, 0x10, 0x16),
                 new RegisterViewerRow("$20", 0x9030, 0x20, 0x26),
                 new RegisterViewerRow("$30", 0x9030, 0x30, 0x36)
             };
-            ChannelRows = new RegisterViewerRow[6][];
+            InterpeterRows = new RegisterViewerRow[6][];
             for (int j = 0; j < 6; j++)
             {
-                Labels[j] = ChannelType.LocalizedNames[ChannelType.Vrc7Fm1+j];
-                Icons[j] = IconFM;
+                InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.Vrc7Fm1+j];
+                InterpreterIcons[j] = IconFM;
                 var c = j; // Important, need to make a copy for the lambda.
-                ChannelRows[c] = new[]
+                InterpeterRows[c] = new[]
                 {
                     new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
                     new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
@@ -220,27 +259,27 @@ namespace FamiStudio
         LocalizedString ModLabel;
         FdsRegisterIntepreter i;
 
-        public FdsRegisterViewer(NesApu.NesRegisterValues r)
+        public FdsRegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.Fds)
         {
-            Labels = new string[] { ChannelType.LocalizedNames[ChannelType.FdsWave] };
-            Icons = new int[] { IconWaveTable };
+            InterpreterLabels = new string[] { ChannelType.LocalizedNames[ChannelType.FdsWave] };
+            InterpreterIcons = new int[] { IconWaveTable };
             Localization.Localize(this);
             i = new FdsRegisterIntepreter(r);
-            ExpansionRows = new[]
+            RegisterRows = new[]
             {
                 new RegisterViewerRow("$4080", 0x4080, 0x4083),
                 new RegisterViewerRow("$4084", 0x4084, 0x4087),
                 new RegisterViewerRow("$4088", 0x4088, 0x408b),
+                new RegisterViewerRow(WaveLabel, DrawWaveTable, 32),
+                new RegisterViewerRow(ModLabel,  DrawModTable, 32)
             };
-            ChannelRows = new RegisterViewerRow[1][];
-            ChannelRows[0] = new[]
+            InterpeterRows = new RegisterViewerRow[1][];
+            InterpeterRows[0] = new[]
             {
                 new RegisterViewerRow(PitchLabel,    () => GetPitchString(i.WavePeriod, i.WaveFrequency), true), 
                 new RegisterViewerRow(VolumeLabel,   () => i.Volume.ToString("00"), true),
                 new RegisterViewerRow(ModSpeedLabel, () => $"{i.ModSpeed,-4} ({i.ModFrequency,7:0.00}{HzLabel.ToString()}, {GetPitchString(i.ModSpeed, i.ModFrequency).Substring(0,6)})", true),
-                new RegisterViewerRow(ModDepthLabel, () => i.ModDepth.ToString("00"), true),
-                new RegisterViewerRow(WaveLabel, DrawWaveTable, 32),
-                new RegisterViewerRow(ModLabel,  DrawModTable, 32),
+                new RegisterViewerRow(ModDepthLabel, () => i.ModDepth.ToString("00"), true)
             };
         }
 
@@ -264,7 +303,7 @@ namespace FamiStudio
                     c.FillRectangle(x * sx, h - y, (x + 1) * sx, h, color);
             }
 
-            c.FillRectangle(64 * sx, 0, 64 * sx, rect.Height, Theme.DarkGreyColor3);
+            c.FillRectangle(64 * sx, 0, 64 * sx, rect.Height, Theme.DarkGreyColor3); // MATTT : Same issue as N163, looks ugly in video.
             c.DrawLine(64 * sx, 0, 64 * sx, rect.Height, Theme.BlackColor);
         }
 
@@ -283,29 +322,29 @@ namespace FamiStudio
     {
         Mmc5RegisterIntepreter i;
 
-        public Mmc5RegisterViewer(NesApu.NesRegisterValues r)
+        public Mmc5RegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.Mmc5)
         {
-            Labels = new string[] 
+            InterpreterLabels = new string[] 
             { 
                 ChannelType.LocalizedNames[ChannelType.Mmc5Square1],
                 ChannelType.LocalizedNames[ChannelType.Mmc5Square2]
             };
-            Icons = new int[] { IconSquare, IconSquare };
+            InterpreterIcons = new int[] { IconSquare, IconSquare };
             Localization.Localize(this);
             i = new Mmc5RegisterIntepreter(r);
-            ExpansionRows = new[]
+            RegisterRows = new[]
             {
                 new RegisterViewerRow("$5000", 0x5000, 0x5003),
                 new RegisterViewerRow("$5004", 0x5004, 0x5007),
             };
-            ChannelRows = new RegisterViewerRow[2][];
-            ChannelRows[0] = new[]
+            InterpeterRows = new RegisterViewerRow[2][];
+            InterpeterRows[0] = new[]
             {
                 new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetSquarePeriod(0), i.GetSquareFrequency(0)), true),
                 new RegisterViewerRow(VolumeLabel, () => i.GetSquareVolume(0).ToString("00"), true),
                 new RegisterViewerRow(DutyLabel,   () => i.GetSquareDuty(0), true)
             };
-            ChannelRows[1] = new[]
+            InterpeterRows[1] = new[]
             {
                 new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetSquarePeriod(1), i.GetSquareFrequency(1)), true),
                 new RegisterViewerRow(VolumeLabel, () => i.GetSquareVolume(1).ToString("00"), true),
@@ -319,13 +358,13 @@ namespace FamiStudio
     {
         N163RegisterIntepreter i;
 
-        public N163RegisterViewer(NesApu.NesRegisterValues r)
+        public N163RegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.N163)
         {
-            Labels = new string[8];
-            Icons = new int[8];
+            InterpreterLabels = new string[8];
+            InterpreterIcons = new int[8];
             Localization.Localize(this);
             i = new N163RegisterIntepreter(r);
-            ExpansionRows = new[]
+            RegisterRows = new[]
             {
                 new RegisterViewerRow("$00", 0x4800, 0x00, 0x07 ),
                 new RegisterViewerRow("$08", 0x4800, 0x08, 0x0f ),
@@ -345,13 +384,13 @@ namespace FamiStudio
                 new RegisterViewerRow("$78", 0x4800, 0x78, 0x7f ),
                 new RegisterViewerRow("RAM", DrawRamMap, 32),
             };
-            ChannelRows = new RegisterViewerRow[8][];
+            InterpeterRows = new RegisterViewerRow[8][];
             for (int j = 0; j < 8; j++)
             {
                 var c = j; // Important, need to make a copy for the lambda.
-                Labels[j] = ChannelType.LocalizedNames[ChannelType.N163Wave1+j];
-                Icons[j] = IconWaveTable;
-                ChannelRows[c] = new[]
+                InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.N163Wave1+j];
+                InterpreterIcons[j] = IconWaveTable;
+                InterpeterRows[c] = new[]
                 {
                     new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
                     new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
@@ -395,7 +434,7 @@ namespace FamiStudio
                 c.FillRectangle((x * 2 + 1) * sx, h - hi, (x * 2 + 2) * sx, h, color);
             }
 
-            c.FillRectangle(numValues * sx, 0, 256 * sx, rect.Height, Theme.DarkGreyColor3);
+            c.FillRectangle(numValues * sx, 0, 256 * sx, rect.Height, Theme.DarkGreyColor3); // MATTT : This adds a ugly grey rectangle in videos.
             c.DrawLine(256 * sx, 0, 256 * sx, rect.Height, Theme.BlackColor);
         }
     }
@@ -411,26 +450,30 @@ namespace FamiStudio
         protected LocalizedString EnvelopeLabel;
         protected LocalizedString EnvelopeEnabledLabel;
         protected LocalizedString EnvelopeDisabledLabel;
+
+        public YMRegisterViewer(int exp) : base (exp) 
+        { 
+        }
     }
 
     public class S5BRegisterViewer : YMRegisterViewer
     {
         S5BRegisterIntepreter i;
 
-        public S5BRegisterViewer(NesApu.NesRegisterValues r)
+        public S5BRegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.S5B)
         {
-            Labels = new string[]
+            InterpreterLabels = new string[]
             {
                 ChannelType.LocalizedNames[ChannelType.S5BSquare1],
                 ChannelType.LocalizedNames[ChannelType.S5BSquare2],
                 ChannelType.LocalizedNames[ChannelType.S5BSquare3],
                 ChannelType.LocalizedNames[ChannelType.Noise]
             };
-            Icons = new int[]{ IconSquare, IconSquare, IconSquare, IconNoise };
+            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconSquare, IconNoise };
             Localization.Localize(this);
-            Labels[3] = NoiseLabel.ToString();
+            InterpreterLabels[3] = NoiseLabel.ToString();
             i = new S5BRegisterIntepreter(r);
-            ExpansionRows = new[]
+            RegisterRows = new[]
             {
                 new RegisterViewerRow("$00", 0xE000, 0x00, 0x01),
                 new RegisterViewerRow("$02", 0xE000, 0x02, 0x03),
@@ -439,11 +482,11 @@ namespace FamiStudio
                 new RegisterViewerRow("$08", 0xE000, 0x08, 0x0a),
                 new RegisterViewerRow("$0B", 0xE000, 0x0B, 0x0D),
             };
-            ChannelRows = new RegisterViewerRow[4][];
+            InterpeterRows = new RegisterViewerRow[4][];
             for (int j = 0; j < 3; j++)
             {
                 var c = j; // Important, need to make a copy for the lambda.
-                ChannelRows[c] = new[]
+                InterpeterRows[c] = new[]
                 {
                     new RegisterViewerRow(ToneLabel, () => i.GetMixerSetting(c) ? ToneEnabledLabel : ToneDisabledLabel, true),
                     new RegisterViewerRow(NoiseLabel, () => i.GetMixerSetting(c+3) ? NoiseEnabledLabel : NoiseDisabledLabel, true),
@@ -452,7 +495,7 @@ namespace FamiStudio
                     new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
                 };
             }
-            ChannelRows[3] = new[]
+            InterpeterRows[3] = new[]
             {
                 new RegisterViewerRow(PitchLabel, () => i.GetNoiseFrequency().ToString("00"), true)
             };
@@ -468,13 +511,13 @@ namespace FamiStudio
         LocalizedString VolOP4Label;
         EpsmRegisterIntepreter i;
 
-        public EpsmRegisterViewer(NesApu.NesRegisterValues r)
+        public EpsmRegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.EPSM)
         {
-            Labels = new string[16];
-            Icons = new int[16];
+            InterpreterLabels = new string[16];
+            InterpreterIcons = new int[16];
             Localization.Localize(this);
             i = new EpsmRegisterIntepreter(r);
-            ExpansionRows = new[]
+            RegisterRows = new[]
             {
                 new RegisterViewerRow("$00", 0x401d, 0x00, 0x01),
                 new RegisterViewerRow("$02", 0x401d, 0x02, 0x03),
@@ -519,15 +562,15 @@ namespace FamiStudio
                 new RegisterViewerRow("$A0 A1", 0x401f, 0xa0, 0xa7),
                 new RegisterViewerRow("$B0 A1", 0x401f, 0xb0, 0xb7),
             };
-            ChannelRows = new RegisterViewerRow[16][];
+            InterpeterRows = new RegisterViewerRow[16][];
             for (int j = 0; j < 16; j++)
             {
                 var c = j; // Important, need to make a copy for the lambda.
                 if (j < 3)
                 {
-                    Labels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+j];
-                    Icons[j] = IconSquare;
-                    ChannelRows[c] = new[]
+                    InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+j];
+                    InterpreterIcons[j] = IconSquare;
+                    InterpeterRows[c] = new[]
                     {
                         new RegisterViewerRow(ToneLabel, () => i.GetMixerSetting(c) ? ToneEnabledLabel : ToneDisabledLabel, true),
                         new RegisterViewerRow(NoiseLabel, () => i.GetMixerSetting(c+3) ? NoiseEnabledLabel : NoiseDisabledLabel, true),
@@ -538,9 +581,9 @@ namespace FamiStudio
                 }
                 if (j >= 4 && j < 10)
                 {
-                    Labels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+j-1];
-                    Icons[j] = IconFM;
-                    ChannelRows[c] = new[]
+                    InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+j-1];
+                    InterpreterIcons[j] = IconFM;
+                    InterpeterRows[c] = new[]
                     {
                         new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c-1), i.GetFrequency(c-1)), true),
                         new RegisterViewerRow(StereoLabel, () => i.GetStereo(c-1), true),
@@ -552,25 +595,25 @@ namespace FamiStudio
                 }
                 if (j >= 10)
                 {
-                    Labels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+j-1];
-                    Icons[j] = IconRhythm;
-                    ChannelRows[c] = new[]
+                    InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+j-1];
+                    InterpreterIcons[j] = IconRhythm;
+                    InterpeterRows[c] = new[]
                     {
                         new RegisterViewerRow(StereoLabel, () => i.GetStereo(c-1), true),
                         new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c-1).ToString("00"), true),
                     };
                 }
             }
-            Labels[3] = NoiseLabel.ToString();
-            Icons[3] = IconNoise;
-            ChannelRows[3] = new[]
+            InterpreterLabels[3] = NoiseLabel.ToString();
+            InterpreterIcons[3] = IconNoise;
+            InterpeterRows[3] = new[]
             {
                 new RegisterViewerRow(PitchLabel, () => i.GetNoiseFrequency().ToString("00"), true)
             };
         }
     }
 
-    public class RegisterViewerRow : RegisterViewer
+    public class RegisterViewerRow
     {
         public string Label;
         public int CustomHeight;
@@ -579,8 +622,8 @@ namespace FamiStudio
         public int SubStart;
         public int SubEnd;
         public bool Monospace;
-        public GetRegisterValueDelegate GetValue;
-        public DrawRegisterDelegate CustomDraw;
+        public RegisterViewer.GetRegisterValueDelegate GetValue;
+        public RegisterViewer.DrawRegisterDelegate CustomDraw;
 
         // Address range.
         public RegisterViewerRow(string label, int addStart, int addEnd)
@@ -601,7 +644,7 @@ namespace FamiStudio
         }
 
         // Text label.
-        public RegisterViewerRow(string label, GetRegisterValueDelegate value, bool mono = false)
+        public RegisterViewerRow(string label, RegisterViewer.GetRegisterValueDelegate value, bool mono = false)
         {
             Label = label;
             GetValue = value;
@@ -609,7 +652,7 @@ namespace FamiStudio
         }
 
         // Custom draw.
-        public RegisterViewerRow(string label, DrawRegisterDelegate draw, int height)
+        public RegisterViewerRow(string label, RegisterViewer.DrawRegisterDelegate draw, int height)
         {
             Label = label;
             CustomHeight = height;

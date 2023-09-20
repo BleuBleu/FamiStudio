@@ -236,18 +236,6 @@ namespace FamiStudio
 
         #endregion
 
-        public static readonly string[] RegisterIconsList =
-        {
-            "ChannelSquare",
-            "ChannelTriangle",
-            "ChannelNoise",
-            "ChannelDPCM",
-            "ChannelSaw",
-            "ChannelFM",
-            "ChannelWaveTable",
-            "ChannelRythm"
-        };
-
         enum ButtonType
         {
             // Project explorer buttons.
@@ -1052,18 +1040,18 @@ namespace FamiStudio
                     {
                         var expName = ExpansionType.GetLocalizedName(e, ExpansionType.LocalizationMode.ChipName);
                         buttons.Add(new Button(this) { type = ButtonType.RegisterExpansionHeader, text = RegistersExpansionHeaderLabel.Format(expName), bmp = bmpExpansions[e], imageTint = Theme.LightGreyColor2 });
-                        buttons.Add(new Button(this) { type = ButtonType.ExpansionRegistersFirst + e, height = GetHeightForRegisterRows(expRegs.ExpansionRows), regs = expRegs.ExpansionRows, gradient = false });
+                        buttons.Add(new Button(this) { type = ButtonType.ExpansionRegistersFirst + e, height = GetHeightForRegisterRows(expRegs.RegisterRows), regs = expRegs.RegisterRows, gradient = false });
 
                         //HACK: for N163 just don't display all the channels when not all channels are used
-                        int channels = (e == ExpansionType.N163) ? project.ExpansionNumN163Channels : expRegs.Labels.Length;
+                        int channels = (e == ExpansionType.N163) ? project.ExpansionNumN163Channels : expRegs.InterpreterLabels.Length;
                         for (int i = 0; i < channels; i++)
                         {
                             var c = i;
-                            var chanRegs = expRegs.ChannelRows[i];
+                            var chanRegs = expRegs.InterpeterRows[i];
 
                             if (chanRegs != null && chanRegs.Length > 0)
                             {
-                                buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = expRegs.Labels[c], bmp = bmpRegisters[expRegs.Icons[c]], imageTint = Theme.LightGreyColor2 });
+                                buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = expRegs.InterpreterLabels[c], bmp = bmpRegisters[expRegs.InterpreterIcons[c]], imageTint = Theme.LightGreyColor2 });
                                 buttons.Add(new Button(this) { type = ButtonType.ChannelStateFirst + c, height = GetHeightForRegisterRows(chanRegs), regs = chanRegs, gradient = false });
                             }
                         }
@@ -1109,7 +1097,7 @@ namespace FamiStudio
             bmpExpansions  = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpEnvelopes   = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
             bmpChannels    = g.GetBitmapAtlasRefs(ChannelType.Icons);
-            bmpRegisters   = g.GetBitmapAtlasRefs(RegisterIconsList);
+            bmpRegisters   = g.GetBitmapAtlasRefs(RegisterViewer.Icons);
             bmpExpand      = g.GetBitmapAtlasRef("InstrumentExpand");
             bmpExpanded    = g.GetBitmapAtlasRef("InstrumentExpanded");
             bmpOverflow    = g.GetBitmapAtlasRef("Warning");

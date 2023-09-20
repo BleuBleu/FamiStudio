@@ -174,7 +174,7 @@ namespace FamiStudio
             // that extends beyond the bounding of a dialog, for example.
             if (focusedControl != null && focusedControl.HitTest(winX, winY))
             {
-                Debug.Assert(focusedControl.Visible);
+                Debug.Assert(focusedControl.Visible); // MATTT I hit this opening the export dialog sometimes (when opening a 2nd time??)
                 var winPos = focusedControl.WindowPosition;
                 ctrlX = winX - winPos.X;
                 ctrlY = winY - winPos.Y;

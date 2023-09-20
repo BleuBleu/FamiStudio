@@ -127,6 +127,7 @@ namespace FamiStudio
         LocalizedString OscColumnsTooltip;
         LocalizedString OscThicknessTooltip;
         LocalizedString PianoRollZoomTootip;
+        LocalizedString VideoOverlayRegistersTooltip;
         LocalizedString MobileExportVideoMessage;
 
         // Video labels
@@ -144,6 +145,7 @@ namespace FamiStudio
         LocalizedString OscThicknessLabel;
         LocalizedString OscColorLabel;
         LocalizedString ExportingVideoLabel;
+        LocalizedString VideoOverlayRegistersLabel;
 
         // Video grid
         LocalizedString ChannelColumn;
@@ -382,7 +384,7 @@ namespace FamiStudio
                     page.PropertyClicked += WavMp3_PropertyClicked;
                     break;
                 case ExportFormat.Video:
-                    // TODO : Make this part of the VideoEncoder.
+                    // MATTT : Make this part of the VideoEncoder.
                     canExportToVideo = (!Platform.IsDesktop || !string.IsNullOrEmpty(Settings.FFmpegExecutablePath));
 
                     if (canExportToVideo)
@@ -400,13 +402,14 @@ namespace FamiStudio
                         page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 10
                         page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 11
                         page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTootip); // 12
-                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 13
+                        page.AddCheckBox(VideoOverlayRegistersLabel.Colon, false, VideoOverlayRegistersTooltip); // 13
+                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 14
                         page.AddGrid(ChannelsLabel,
                             Platform.IsDesktop ?
                             new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption }) } :
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), 7, ChannelGridTooltipVid); // 14
-                        page.SetPropertyEnabled(13, !project.OutputsStereoAudio); // Force stereo for EPSM.
-                        page.SetColumnEnabled(14, 2, project.OutputsStereoAudio);
+                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), 7, ChannelGridTooltipVid); // 15
+                        page.SetPropertyEnabled(14, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                        page.SetColumnEnabled(15, 2, project.OutputsStereoAudio);
                         page.SetScrolling(500);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
@@ -540,11 +543,11 @@ namespace FamiStudio
         {
             if (propIdx == 0)
             {
-                props.UpdateGrid(14, GetDefaultChannelsGridData(Platform.IsDesktop, project.Songs[props.GetSelectedIndex(1)]));
+                props.UpdateGrid(15, GetDefaultChannelsGridData(Platform.IsDesktop, project.Songs[props.GetSelectedIndex(1)]));
             }
-            else if (propIdx == 13) // Stereo
+            else if (propIdx == 14) // Stereo
             {
-                props.SetColumnEnabled(14, 2, (bool)value);
+                props.SetColumnEnabled(15, 2, (bool)value);
             }
         }
 
@@ -737,18 +740,19 @@ namespace FamiStudio
                     settings.OscLineThickness = props.GetPropertyValue<int>(10);
                     settings.OscColorMode = props.GetSelectedIndex(11);
                     settings.PianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(12) - 3);
-                    settings.Stereo = props.GetPropertyValue<bool>(13);
+                    settings.ShowRegisters = props.GetPropertyValue<bool>(13);
+                    settings.Stereo = props.GetPropertyValue<bool>(14);
                     settings.ChannelPan = new float[channelCount];
                     settings.EmuTriggers = new bool[channelCount];
                     settings.ChannelMask = 0;
 
                     for (int i = 0; i < channelCount; i++)
                     {
-                        if (props.GetPropertyValue<bool>(14, i, 0))
+                        if (props.GetPropertyValue<bool>(15, i, 0))
                             settings.ChannelMask |= (1L << i);
 
-                        settings.ChannelPan[i] = props.GetPropertyValue<int>(14, i, 2) / 100.0f;
-                        settings.EmuTriggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(14, i, 3) == EmulationOption : true;
+                        settings.ChannelPan[i] = props.GetPropertyValue<int>(15, i, 2) / 100.0f;
+                        settings.EmuTriggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(15, i, 3) == EmulationOption : true;
                     }
                   
                     lastExportFilename = filename;
