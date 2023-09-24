@@ -79,7 +79,7 @@ namespace FamiStudio
 
                 Debug.Assert(!sample.HasAnyProcessingOptions);
 
-                lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{ConditionalGenerateAttribute("Folder", sample.FolderName)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
+                lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{GenerateAttribute("Color", sample.Color.ToHexString())}{ConditionalGenerateAttribute("Folder", sample.FolderName)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
             }
 
             // Instruments
@@ -93,7 +93,7 @@ namespace FamiStudio
                     instrument.DeleteN163ResampleWavData();
                 }
 
-                var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}{ConditionalGenerateAttribute("Folder", instrument.FolderName)}";
+                var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}{GenerateAttribute("Color", instrument.Color.ToHexString())}{ConditionalGenerateAttribute("Folder", instrument.FolderName)}";
 
                 if (instrument.IsExpansionInstrument)
                 {
@@ -184,7 +184,7 @@ namespace FamiStudio
             foreach (var arpeggio in project.Arpeggios)
             {
                 var env = arpeggio.Envelope;
-                var arpeggioLine = $"\tArpeggio{GenerateAttribute("Name", arpeggio.Name)}{ConditionalGenerateAttribute("Folder", arpeggio.FolderName)}{GenerateAttribute("Length", env.Length)}";
+                var arpeggioLine = $"\tArpeggio{GenerateAttribute("Name", arpeggio.Name)}{GenerateAttribute("Color", arpeggio.Color.ToHexString())}{ConditionalGenerateAttribute("Folder", arpeggio.FolderName)}{GenerateAttribute("Length", env.Length)}";
                 if (env.Loop >= 0) arpeggioLine += GenerateAttribute("Loop", env.Loop);
                 arpeggioLine += GenerateAttribute("Values", String.Join(",", env.Values.Take(env.Length)));
                 lines.Add(arpeggioLine);
@@ -193,7 +193,7 @@ namespace FamiStudio
             // Songs
             foreach (var song in project.Songs)
             {
-                var songStr = $"\tSong{GenerateAttribute("Name", song.Name)}{ConditionalGenerateAttribute("Folder", song.FolderName)}{GenerateAttribute("Length", song.Length)}{GenerateAttribute("LoopPoint", song.LoopPoint)}";
+                var songStr = $"\tSong{GenerateAttribute("Name", song.Name)}{GenerateAttribute("Color", song.Color.ToHexString())}{ConditionalGenerateAttribute("Folder", song.FolderName)}{GenerateAttribute("Length", song.Length)}{GenerateAttribute("LoopPoint", song.LoopPoint)}";
 
                 if (song.UsesFamiTrackerTempo)
                 {
@@ -234,7 +234,7 @@ namespace FamiStudio
 
                     foreach (var pattern in channel.Patterns)
                     {
-                        lines.Add($"\t\t\tPattern{GenerateAttribute("Name", pattern.Name)}");
+                        lines.Add($"\t\t\tPattern{GenerateAttribute("Name", pattern.Name)}{GenerateAttribute("Color", pattern.Color.ToHexString())}");
 
                         foreach (var kv in pattern.Notes)
                         {
@@ -425,6 +425,8 @@ namespace FamiStudio
                             var sample = project.CreateDPCMSampleFromDmcData(parameters["Name"], data);
                             if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Sample, folderName) != null)
                                 sample.FolderName = folderName;
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                sample.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
                             break;
                         }
                         case "Instrument":
@@ -435,6 +437,8 @@ namespace FamiStudio
                             instrument = project.CreateInstrument(instrumentExp, parameters["Name"]);
                             if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Instrument, folderName) != null)
                                 instrument.FolderName = folderName;
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                instrument.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
 
                             if (instrument.IsFds)
                             {
@@ -516,6 +520,8 @@ namespace FamiStudio
                                 arpeggio.FolderName = folderName;
                             if (parameters.TryGetValue("Loop", out var loopStr))
                                 arpeggio.Envelope.Loop = int.Parse(loopStr);
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                arpeggio.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
 
                             var values = parameters["Values"].Split(',');
                             for (int j = 0; j < values.Length; j++)
@@ -549,7 +555,9 @@ namespace FamiStudio
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
 
                             if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Song, folderName) != null)
-                                arpeggio.FolderName = folderName;
+                                song.FolderName = folderName;
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                song.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
 
                             if (song.UsesFamiTrackerTempo)
                             {
@@ -615,6 +623,8 @@ namespace FamiStudio
                         case "Pattern":
                         {
                             pattern = channel.CreatePattern(parameters["Name"]);
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                pattern.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
                             break;
                         }
                         case "Note":
