@@ -1,5 +1,5 @@
-attribute vec2  inPosition;
-attribute float inDepth;
+ATTRIB_IN vec2  inPosition;
+ATTRIB_IN float inDepth;
 
 uniform vec4 screenScaleBias;
 

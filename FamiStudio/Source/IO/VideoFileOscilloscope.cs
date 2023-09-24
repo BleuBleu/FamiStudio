@@ -5,93 +5,7 @@ namespace FamiStudio
 {
     class VideoFileOscilloscope : VideoFileBase
     {
-        private void BuildChannelColors(Song song, VideoChannelState[] channels, VideoFrameMetadata[] meta, int colorMode)
-        {
-            Color[,] colors = new Color[meta.Length, meta[0].channelData.Length];
-
-            // Get the note colors.
-            for (int i = 0; i < meta.Length; i++)
-            {
-                var m = meta[i];
-
-                for (int j = 0; j < channels.Length; j++)
-                {
-                    var note = m.channelData[channels[j].songChannelIndex].note;
-
-                    if (note != null && note.IsMusical)
-                    {
-                        var color = Theme.LightGreyColor1;
-
-                        if (colorMode == OscilloscopeColorType.Channel)
-                        {
-                            var channel = song.Channels[channels[j].songChannelIndex];
-                            for (int p = 0; p < channel.PatternInstances.Length; p++)
-                            {
-                                if (channel.PatternInstances[p] != null)
-                                {
-                                    color = channel.PatternInstances[p].Color;
-                                    break;
-                                }
-                            }
-                        }
-                        else if (colorMode != OscilloscopeColorType.None)
-                        {
-                            if (note.Instrument != null && colorMode == OscilloscopeColorType.Instruments)
-                            {
-                                color = note.Instrument.Color;
-                            }
-                        }
-
-                        colors[i, j] = color;
-                    }
-                }
-            }
-
-            // Extend any color until we hit another one.
-            for (int i = 0; i < colors.GetLength(0) - 1; i++)
-            {
-                for (int j = 0; j < colors.GetLength(1); j++)
-                {
-                    if (colors[i, j].A != 0)
-                    {
-                        if (colors[i + 1, j].A == 0)
-                            colors[i + 1, j] = colors[i, j];
-                    }
-                    else
-                    {
-                        colors[i, j] = Theme.LightGreyColor1;
-                    }
-                }
-            }
-
-            const int ColorBlendTime = 5;
-
-            // Blend the colors.
-            for (int i = 0; i < meta.Length; i++)
-            {
-                var m = meta[i];
-
-                for (int j = 0; j < m.channelData.Length; j++)
-                {
-                    int avgR = 0;
-                    int avgG = 0;
-                    int avgB = 0;
-                    int count = 0;
-
-                    for (int k = i; k < i + ColorBlendTime && k < meta.Length; k++)
-                    {
-                        avgR += colors[k, j].R;
-                        avgG += colors[k, j].G;
-                        avgB += colors[k, j].B;
-                        count++;
-                    }
-
-                    m.channelData[j].color = Color.FromArgb(avgR / count, avgG / count, avgB / count);
-                }
-            }
-        }
-
-        public bool Save(VideoExportSettings settings)
+         public bool Save(VideoExportSettings settings)
         {
             if (!InitializeEncoder(settings))
                 return false;
@@ -114,7 +28,6 @@ namespace FamiStudio
             var channelLineWidth = settings.ResY >= 720 ? 5 : 3;
 
             LoadChannelIcons(!smallChannelText);
-            BuildChannelColors(song, channelStates, metadata, settings.OscColorMode);
 
             return LaunchEncoderLoop((f) =>
             {

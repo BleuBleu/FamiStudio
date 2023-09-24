@@ -55,6 +55,11 @@ namespace FamiStudio
             return Lerp(l0, l1, alpha1);
         }
 
+        public static float DegreesToRadians(float angle)
+        {
+            return angle * MathF.PI / 180.0f;
+        }
+
         public static bool IsNearlyEqual(float a, float b, float delta = 1e-5f)
         {
             return MathF.Abs(a - b) < delta;
@@ -316,6 +321,12 @@ namespace FamiStudio
         public static float SmootherStep(float x)
         {
             return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
+        }
+
+        public static void ToCartesian(float angle, float distance, out float x, out float y)
+        {
+            x = MathF.Cos(angle) * distance;
+            y = MathF.Sin(angle) * distance;
         }
 
         public static string GetTemporaryDiretory()

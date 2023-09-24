@@ -19,6 +19,7 @@ namespace FamiStudio
         protected bool showRegisters;
         protected string tempAudioFile;
 
+        protected int registerPosY = 0;
         protected int oscFrameWindowSize;
         protected int oscRenderWindowSize;
 
@@ -32,6 +33,7 @@ namespace FamiStudio
         protected Bitmap watermark;
         protected NesApu.NesRegisterValues registerValues;
         protected List<RegisterViewer> registerViewers;
+        protected List<Bitmap> registerViewerIcons;
         protected Color[] registerColors = new Color[11];
 
         // TODO : This is is very similar to Oscilloscope.cs, unify eventually...
@@ -90,6 +92,92 @@ namespace FamiStudio
             return vertices;
         }
 
+        private void BuildChannelColors(Song song, VideoChannelState[] channels, VideoFrameMetadata[] meta, int colorMode)
+        {
+            Color[,] colors = new Color[meta.Length, meta[0].channelData.Length];
+
+            // Get the note colors.
+            for (int i = 0; i < meta.Length; i++)
+            {
+                var m = meta[i];
+
+                for (int j = 0; j < channels.Length; j++)
+                {
+                    var note = m.channelData[channels[j].songChannelIndex].note;
+
+                    if (note != null && note.IsMusical)
+                    {
+                        var color = Theme.LightGreyColor1;
+
+                        if (colorMode == OscilloscopeColorType.Channel)
+                        {
+                            var channel = song.Channels[channels[j].songChannelIndex];
+                            for (int p = 0; p < channel.PatternInstances.Length; p++)
+                            {
+                                if (channel.PatternInstances[p] != null)
+                                {
+                                    color = channel.PatternInstances[p].Color;
+                                    break;
+                                }
+                            }
+                        }
+                        else if (colorMode != OscilloscopeColorType.None)
+                        {
+                            if (note.Instrument != null && colorMode == OscilloscopeColorType.Instruments)
+                            {
+                                color = note.Instrument.Color;
+                            }
+                        }
+
+                        colors[i, j] = color;
+                    }
+                }
+            }
+
+            // Extend any color until we hit another one.
+            for (int i = 0; i < colors.GetLength(0) - 1; i++)
+            {
+                for (int j = 0; j < colors.GetLength(1); j++)
+                {
+                    if (colors[i, j].A != 0)
+                    {
+                        if (colors[i + 1, j].A == 0)
+                            colors[i + 1, j] = colors[i, j];
+                    }
+                    else
+                    {
+                        colors[i, j] = Theme.LightGreyColor1;
+                    }
+                }
+            }
+
+            const int ColorBlendTime = 5;
+
+            // Blend the colors.
+            for (int i = 0; i < meta.Length; i++)
+            {
+                var m = meta[i];
+
+                for (int j = 0; j < m.channelData.Length; j++)
+                {
+                    int avgR = 0;
+                    int avgG = 0;
+                    int avgB = 0;
+                    int count = 0;
+
+                    for (int k = i; k < i + ColorBlendTime && k < meta.Length; k++)
+                    {
+                        avgR += colors[k, j].R;
+                        avgG += colors[k, j].G;
+                        avgB += colors[k, j].B;
+                        count++;
+                    }
+
+                    m.channelData[j].color = Color.FromArgb(avgR / count, avgG / count, avgB / count);
+                }
+            }
+        }
+
         protected bool InitializeEncoder(VideoExportSettings settings)
         {
             if (settings.ChannelMask == 0 || settings.LoopCount < 1)
@@ -97,10 +185,7 @@ namespace FamiStudio
 
             Log.LogMessage(LogSeverity.Info, "Detecting FFmpeg...");
 
-            videoEncoder = Platform.CreateVideoEncoder();
-            if (videoEncoder == null)
-                return false;
-
+            videoEncoder = settings.Encoder;
             videoResX = settings.ResX;
             videoResY = settings.ResY;
             halfFrameRate = settings.HalfFrameRate;
@@ -208,10 +293,12 @@ namespace FamiStudio
             {
                 registerValues = new NesApu.NesRegisterValues();
                 registerViewers = new List<RegisterViewer>();
+                registerViewerIcons = new List<Bitmap>();
 
                 foreach (var exp in project.GetActiveExpansions())
                 {
                     registerViewers.Add(RegisterViewer.CreateForExpansion(exp, registerValues));
+                    registerViewerIcons.Add(videoGraphics.CreateBitmapFromResource($"FamiStudio.Resources.Atlas.{ExpansionType.Icons[exp]}"));
                 }
 
                 var color0 = Theme.LightGreyColor2; // Grey
@@ -236,6 +323,8 @@ namespace FamiStudio
             oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
             oscRenderWindowSize = (int)(oscFrameWindowSize * settings.OscWindow);
 
+            BuildChannelColors(song, channelStates, metadata, settings.OscColorMode);
+
             return true;
         }
 
@@ -246,15 +335,42 @@ namespace FamiStudio
                 frame.registerValues.CopyTo(registerValues);
 
                 var c = videoGraphics.OverlayCommandList;
-                var y = 0;
+                var maxWidth = 0;
+                var byteWidth = (int)c.Graphics.MeasureString("$00 ", fonts.FontSmall, true);
 
-                // MATTT Tweak those and position the register in a nice looking position.
-                var contentSizeX = 250;
-                var buttonTextNoIconPosX = 0;
-                var registerLabelSizeX = 50; 
-
-                foreach (var regViewer in registerViewers)
+                for (int i = 0; i < registerViewers.Count; i++)
                 {
+                    var regViewer = registerViewers[i];
+
+                    foreach (var row in regViewer.RegisterRows)
+                    {
+                        if (row.GetValue == null && row.CustomDraw == null)
+                        {
+                            var numBytes = (row.AddEnd - row.AddStart + 1) * (row.SubEnd - row.SubStart + 1);
+                            var rowWidth = numBytes * byteWidth;
+                            maxWidth = Math.Max(maxWidth, rowWidth);
+                        }
+                    }
+                }
+
+                var y = 0;
+                var buttonTextNoIconPosX = 0;
+                var registerLabelSizeX = 50;
+                var contentSizeX = maxWidth + registerLabelSizeX;
+
+                c.PushTranslation(videoResX - contentSizeX, registerPosY);
+
+                for (int i = 0; i < registerViewers.Count; i++)
+                {
+                    var regViewer = registerViewers[i];
+                    var icon = registerViewerIcons[i];
+
+                    c.DrawBitmap(icon, 0, y, 1, Theme.LightGreyColor2);
+                    c.DrawText(ExpansionType.GetLocalizedName(regViewer.Expansion, ExpansionType.LocalizationMode.ChipName), fonts.FontSmallBold, icon.Size.Width + 2, y, Theme.LightGreyColor2, TextFlags.Middle, 0, icon.Size.Height);
+                    y += icon.Size.Height;
+                    c.DrawLine(0, y, contentSizeX - 4, y, Theme.LightGreyColor2);
+                    y += 2;
+
                     foreach (var row in regViewer.RegisterRows)
                     {
                         var regSizeY = row.CustomHeight > 0 ? row.CustomHeight : 10;
@@ -267,7 +383,7 @@ namespace FamiStudio
                             c.DrawText(label, fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle | TextFlags.DropShadow, 0, regSizeY);
 
                             c.PushTranslation(registerLabelSizeX + 1, 0);
-                            row.CustomDraw(c, fonts, new Rectangle(0, 0, contentSizeX - registerLabelSizeX - 1, regSizeY));
+                            row.CustomDraw(c, fonts, new Rectangle(0, 0, contentSizeX - registerLabelSizeX - 1, regSizeY), true);
                             c.PopTransform();
                         }
                         else if (row.GetValue != null)
@@ -276,12 +392,12 @@ namespace FamiStudio
                             var value = row.GetValue().ToString();
                             var flags = TextFlags.Middle | TextFlags.DropShadow | (row.Monospace ? TextFlags.Monospace : TextFlags.None);
 
-                            c.DrawText(label, fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
+                            c.DrawText(label, fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle | TextFlags.Monospace, 0, regSizeY);
                             c.DrawText(value, fonts.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, Theme.LightGreyColor2, flags, 0, regSizeY);
                         }
                         else
                         {
-                            c.DrawText(row.Label, fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle | TextFlags.DropShadow, 0, regSizeY);
+                            c.DrawText(row.Label, fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle | TextFlags.DropShadow | TextFlags.Monospace, 0, regSizeY);
 
                             var flags = TextFlags.Monospace | TextFlags.Middle | TextFlags.DropShadow;
                             var x = buttonTextNoIconPosX + registerLabelSizeX;
@@ -302,9 +418,12 @@ namespace FamiStudio
 
                         c.PopTransform();
                         y += regSizeY;
-
                     }
+
+                    y += 4;
                 }
+
+                c.PopTransform();
             }
         }
 
@@ -336,7 +455,7 @@ namespace FamiStudio
 
                     var frame = metadata[f];
 
-                    videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), Theme.DarkGreyColor2);
+                    videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), true, Theme.DarkGreyColor2);
 
                     body(f);
 
@@ -348,7 +467,8 @@ namespace FamiStudio
                     videoGraphics.EndDrawFrame();
 
                     // Send to encoder.
-                    videoEncoder.AddFrame(videoGraphics);
+                    if (!videoEncoder.AddFrame(videoGraphics))
+                        break;
                 }
 
                 videoEncoder.EndEncoding(!success);
@@ -367,6 +487,7 @@ namespace FamiStudio
                 videoGraphics.Dispose();
                 foreach (var c in channelStates)
                     c.icon?.Dispose();
+                // MATTT dispose registerViewerIcons
                 File.Delete(tempAudioFile);
                 cleanup?.Invoke();
                 channelStates = null;
@@ -526,9 +647,10 @@ namespace FamiStudio
     {
         public const int Oscilloscope = 0;
         public const int PianoRollSeparateChannels = 1;
-        public const int Count = 2;
+        public const int PianoRollUnified = 2;
+        public const int Count = 3;
 
-        public static LocalizedString[] LocalizedNames = new LocalizedString[2];
+        public static LocalizedString[] LocalizedNames = new LocalizedString[3];
 
         static VideoMode()
         {
@@ -580,6 +702,7 @@ namespace FamiStudio
     {
         public Project Project;
         public int SongId;
+        public int VideoMode;
         public int LoopCount;
         public int OscWindow;
         public string Filename;
@@ -594,9 +717,11 @@ namespace FamiStudio
         public int OscNumColumns;
         public int OscLineThickness;
         public float PianoRollZoom;
+        public float PianoRollPerspective;
         public bool ShowRegisters;
         public bool Stereo;
         public float[] ChannelPan;
         public bool[] EmuTriggers;
+        public IVideoEncoder Encoder;
     }
 }

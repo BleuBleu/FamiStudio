@@ -11,7 +11,7 @@ using Debug = System.Diagnostics.Debug;
 namespace FamiStudio
 {
     // Based off https://bigflake.com/mediacodec/. Thanks!!!
-    class VideoEncoderAndroid
+    public class VideoEncoderAndroid : IVideoEncoder
     {
         const long SecondsToMicroSeconds = 1000000;
         const long SecondsToNanoSeconds  = 1000000000;
@@ -53,14 +53,8 @@ namespace FamiStudio
 
         public bool AlternateByteOrdering => false;
 
-        private VideoEncoderAndroid()
+        public VideoEncoderAndroid()
         {
-        }
-
-        public static VideoEncoderAndroid CreateInstance()
-        {
-            // TODO : Check support!
-            return new VideoEncoderAndroid();
         }
 
         // https://github.com/lanhq147/SampleMediaFrame/blob/e2f20ff9eef73318e5a9b4de15458c5c2eb0fd46/app/src/main/java/com/google/android/exoplayer2/video/av/HWRecorder.java
@@ -164,7 +158,7 @@ namespace FamiStudio
             return audioDataIdx < audioData.Length;
         }
 
-        public void AddFrame(byte[] image)
+        public bool AddFrame(OffscreenGraphics graphics)
         {
             Debug.WriteLine($"Sending frame {frameIndex} to encoder");
 
@@ -176,6 +170,8 @@ namespace FamiStudio
             CheckEglError();
 
             DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
+            
+            return true;
         }
 
         public void EndEncoding(bool abort)

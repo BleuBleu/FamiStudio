@@ -1,12 +1,12 @@
-attribute vec2  inPosition;
-attribute vec4  inColor;
-attribute vec2  inTexCoords;
-attribute float inDepth;
+ATTRIB_IN vec2  inPosition;
+ATTRIB_IN vec4  inColor;
+ATTRIB_IN vec3  inTexCoords;
+ATTRIB_IN float inDepth;
 
 uniform vec4 screenScaleBias;
 
-noperspective out vec4 colorInterp; 
-noperspective out vec2 texCoordsInterp;
+INTERP_OUT             vec4 colorInterp; 
+INTERP_PERSPECTIVE_OUT vec3 texCoordsInterp;
 
 void main()
 {

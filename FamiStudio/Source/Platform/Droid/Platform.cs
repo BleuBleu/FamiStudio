@@ -55,6 +55,11 @@ namespace FamiStudio
             return new AndroidAudioStream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
         }
 
+        public static IVideoEncoder CreateVideoEncoder()
+        {
+            return new VideoEncoderAndroid();
+        }
+
         public static string UserProjectsDirectory => Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
         public static string SettingsDirectory     => System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
         public static string ApplicationVersion    => Assembly.GetExecutingAssembly().GetName().Version.ToString();

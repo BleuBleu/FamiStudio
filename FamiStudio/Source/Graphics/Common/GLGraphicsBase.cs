@@ -23,7 +23,6 @@ namespace FamiStudio
         protected CommandList[] layerCommandLists = new CommandList[(int)GraphicsLayer.Count];
         protected byte curDepthValue = 0x80; // -128
         protected byte maxDepthValue = 0x80; // -128
-        protected Color clearColor;
         protected int maxTextureSize;
 
         protected struct ClipRegion
@@ -63,7 +62,7 @@ namespace FamiStudio
         public abstract void DeleteTexture(int id);
         public abstract void UpdateTexture(int id, int x, int y, int width, int height, byte[] data);
         protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
-        protected abstract void Clear();
+        protected abstract void Initialize(bool clear, Color clearColor);
         protected abstract void DrawCommandList(CommandList list, bool depthTest);
         protected abstract void DrawDepthPrepass();
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
@@ -108,12 +107,11 @@ namespace FamiStudio
                 BuildBitmapAtlases();
         }
 
-        public virtual void BeginDrawFrame(Rectangle rect, Color clear)
+        public virtual void BeginDrawFrame(Rectangle rect, bool clear, Color clearColor)
         {
             Debug.Assert(transform.IsEmpty);
             Debug.Assert(clipStack.Count == 0);
 
-            clearColor = clear;
             clipRegions.Clear();
 
             screenRect = rect;
@@ -126,6 +124,8 @@ namespace FamiStudio
             viewportScaleBias[1] = -2.0f / screenRect.Height;
             viewportScaleBias[2] = -1.0f;
             viewportScaleBias[3] =  1.0f;
+
+            Initialize(clear, clearColor);
         }
 
         public virtual void EndDrawFrame(bool clearAlpha = false)
@@ -133,7 +133,6 @@ namespace FamiStudio
             Debug.Assert(transform.IsEmpty);
             Debug.Assert(clipStack.Count == 0);
 
-            Clear();
             DrawDepthPrepass();
 
             for (int i = 0; i < layerCommandLists.Length; i++)
@@ -177,6 +176,59 @@ namespace FamiStudio
             vtxArray[3] = 0;
             vtxArray[4] = screenRect.Width * 2;
             vtxArray[5] = screenRect.Height * 3;
+        }
+
+        protected void MakeFullScreenQuad()
+        {
+            var vtxIdx = 0;
+            var texIdx = 0;
+
+            var x0 = 0;
+            var y0 = 0;
+            var x1 = screenRect.Width;
+            var y1 = screenRect.Height;
+
+            vtxArray[vtxIdx++] = x0;
+            vtxArray[vtxIdx++] = y0;
+            vtxArray[vtxIdx++] = x1;
+            vtxArray[vtxIdx++] = y0;
+            vtxArray[vtxIdx++] = x1;
+            vtxArray[vtxIdx++] = y1;
+            vtxArray[vtxIdx++] = x0;
+            vtxArray[vtxIdx++] = y1;
+
+            texArray[texIdx++] = 0.0f;
+            texArray[texIdx++] = 1.0f;
+            texArray[texIdx++] = 1.0f;
+            texArray[texIdx++] = 1.0f;
+            texArray[texIdx++] = 1.0f;
+            texArray[texIdx++] = 0.0f;
+            texArray[texIdx++] = 0.0f;
+            texArray[texIdx++] = 0.0f;
+        }
+
+        protected float[] GetBlurKernel(int numRings = 5)
+        {
+            var kernel = new List<float>();
+            kernel.Add(0);
+            kernel.Add(0);
+            kernel.Add(0);
+            kernel.Add(0);
+
+            for (var r = 1; r < numRings; r++)
+            {
+                for (var i = 0; i < r * 6; i++)
+                {
+                    var angle = i * 2 * MathF.PI / (r * 6);
+                    Utils.ToCartesian(angle, r, out var sx, out var sy);
+                    kernel.Add(sx / screenRect.Width  * 2.0f); // MATTT Doubling.
+                    kernel.Add(sy / screenRect.Height * 2.0f); // MATTT Doubling.
+                    kernel.Add(0);
+                    kernel.Add(0);
+                }
+            }
+
+            return kernel.ToArray();
         }
 
         public virtual void PushClipRegion(Point p, Size s, bool clipParents = true)
@@ -1242,6 +1294,14 @@ namespace FamiStudio
         DropShadow = 1 << 10
     }
 
+    [Flags]
+    public enum BitmapFlags
+    {
+        Default     = 0,
+        Rotated90   = 1 << 0,
+        Perspective = 1 << 1
+    }
+
     // This is common to both OGL, it only does data packing, no GL calls.
     public class CommandList
     {
@@ -1311,7 +1371,7 @@ namespace FamiStudio
             public float v1;
             public float opacity;
             public Color tint;
-            public bool rotated;
+            public BitmapFlags flags;
             public byte depth;
         }
 
@@ -2654,12 +2714,19 @@ namespace FamiStudio
         public void DrawBitmap(Bitmap bmp, float x, float y, float opacity = 1.0f, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
-            DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0, 0, 1, 1, false, tint);
+            DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0, 0, 1, 1, BitmapFlags.Default, tint);
         }
 
-        public void DrawBitmapScaled(Bitmap bmp, float x, float y, float sx, float sy)
+        public void DrawBitmapScaled(Bitmap bmp, float x, float y, float sx, float sy, bool flip)
         {
-            DrawBitmap(bmp, x, y, sx, sy, 1, 0, 0, 1, 1);
+            if (flip)
+            {
+                DrawBitmap(bmp, x, y, sx, sy, 1, 0, 1, 1, 0);
+            }
+            else
+            {
+                DrawBitmap(bmp, x, y, sx, sy, 1, 0, 0, 1, 1);
+            }
         }
 
         public void DrawBitmapCentered(Bitmap bmp, float x, float y, float width, float height, float opacity = 1.0f, Color tint = new Color())
@@ -2676,7 +2743,7 @@ namespace FamiStudio
             var elementIndex = bmp.ElementIndex;
             var elementSize = bmp.ElementSize;
             atlas.GetElementUVs(elementIndex, out var u0, out var v0, out var u1, out var v1);
-            DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, false, tint);
+            DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, BitmapFlags.Default, tint);
         }
 
         public void DrawBitmapAtlasCentered(BitmapAtlasRef bmp, float x, float y, float width, float height, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
@@ -2693,7 +2760,7 @@ namespace FamiStudio
             DrawBitmapAtlas(bmp, x, y, opacity, scale, tint);
         }
 
-        public void DrawBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false, Color tint = new Color())
+        public void DrawBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, BitmapFlags flags = BitmapFlags.Default, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             if (!bitmaps.TryGetValue(bmp, out var list))
@@ -2733,7 +2800,7 @@ namespace FamiStudio
             }
 
             inst.opacity = opacity;
-            inst.rotated = rotated;
+            inst.flags = flags;
 
             list.Add(inst);
         }
@@ -3119,37 +3186,98 @@ namespace FamiStudio
                     var x1 = inst.x + inst.sx;
                     var y1 = inst.y + inst.sy;
                     var tint = inst.tint != Color.Empty ? inst.tint : Color.White;
+                    var rotated = inst.flags.HasFlag(BitmapFlags.Rotated90);
+                    var perspective = inst.flags.HasFlag(BitmapFlags.Perspective);
 
-                    vtxArray[vtxIdx++] = x0;
-                    vtxArray[vtxIdx++] = y0;
-                    vtxArray[vtxIdx++] = x1;
-                    vtxArray[vtxIdx++] = y0;
-                    vtxArray[vtxIdx++] = x1;
-                    vtxArray[vtxIdx++] = y1;
-                    vtxArray[vtxIdx++] = x0;
-                    vtxArray[vtxIdx++] = y1;
-
-                    if (inst.rotated)
+                    if (!perspective)
                     {
-                        texArray[texIdx++] = inst.u1;
-                        texArray[texIdx++] = inst.v0;
-                        texArray[texIdx++] = inst.u1;
-                        texArray[texIdx++] = inst.v1;
-                        texArray[texIdx++] = inst.u0;
-                        texArray[texIdx++] = inst.v1;
-                        texArray[texIdx++] = inst.u0;
-                        texArray[texIdx++] = inst.v0;
+                        vtxArray[vtxIdx++] = x0;
+                        vtxArray[vtxIdx++] = y0;
+                        vtxArray[vtxIdx++] = x1;
+                        vtxArray[vtxIdx++] = y0;
+                        vtxArray[vtxIdx++] = x1;
+                        vtxArray[vtxIdx++] = y1;
+                        vtxArray[vtxIdx++] = x0;
+                        vtxArray[vtxIdx++] = y1;
+
+                        if (!rotated)
+                        {
+                            texArray[texIdx++] = inst.u0;
+                            texArray[texIdx++] = inst.v0;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = inst.u1;
+                            texArray[texIdx++] = inst.v0;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = inst.u1;
+                            texArray[texIdx++] = inst.v1;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = inst.u0;
+                            texArray[texIdx++] = inst.v1;
+                            texArray[texIdx++] = 1.0f;
+                        }
+                        else
+                        {
+                            // 90 degrees UV rotation.
+                            texArray[texIdx++] = inst.u1;
+                            texArray[texIdx++] = inst.v0;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = inst.u1;
+                            texArray[texIdx++] = inst.v1;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = inst.u0;
+                            texArray[texIdx++] = inst.v1;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = inst.u0;
+                            texArray[texIdx++] = inst.v0;
+                            texArray[texIdx++] = 1.0f;
+                        }
                     }
-                    else
+                    else 
                     {
-                        texArray[texIdx++] = inst.u0;
-                        texArray[texIdx++] = inst.v0;
-                        texArray[texIdx++] = inst.u1;
-                        texArray[texIdx++] = inst.v0;
-                        texArray[texIdx++] = inst.u1;
-                        texArray[texIdx++] = inst.v1;
-                        texArray[texIdx++] = inst.u0;
-                        texArray[texIdx++] = inst.v1;
+                        var ratio = inst.flags.HasFlag(BitmapFlags.Rotated90) ? inst.sy / bmp.Size.Width : inst.sy / bmp.Size.Height;
+                        var numPixels = (int)(inst.sy * (1.0f - ratio));
+                        var tx = 1.0f - numPixels / inst.sx * 2;
+
+                        // Perspective mode basically ignores the UVs and assumes (0,0) ... (1,1).
+                        if (!rotated)
+                        {
+                            texArray[texIdx++] = 0.0f;
+                            texArray[texIdx++] = 0.0f;
+                            texArray[texIdx++] = tx;
+                            texArray[texIdx++] = tx;
+                            texArray[texIdx++] = 0.0f;
+                            texArray[texIdx++] = tx;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = 0.0f;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = 1.0f;
+                        }
+                        else
+                        {
+                            texArray[texIdx++] = tx;
+                            texArray[texIdx++] = 0.0f;
+                            texArray[texIdx++] = tx;
+                            texArray[texIdx++] = tx;
+                            texArray[texIdx++] = tx;
+                            texArray[texIdx++] = tx;
+                            texArray[texIdx++] = 0.0f;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = 1.0f;
+                            texArray[texIdx++] = 0.0f;
+                            texArray[texIdx++] = 0.0f;
+                            texArray[texIdx++] = 1.0f;
+                        }
+
+                        vtxArray[vtxIdx++] = x0 + numPixels;
+                        vtxArray[vtxIdx++] = y0;
+                        vtxArray[vtxIdx++] = x1 - numPixels;
+                        vtxArray[vtxIdx++] = y0;
+                        vtxArray[vtxIdx++] = x1;
+                        vtxArray[vtxIdx++] = y1;
+                        vtxArray[vtxIdx++] = x0;
+                        vtxArray[vtxIdx++] = y1;
                     }
 
                     var packedOpacity = new Color(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)).ToAbgr();

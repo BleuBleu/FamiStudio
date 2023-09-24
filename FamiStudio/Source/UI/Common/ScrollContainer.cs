@@ -44,14 +44,25 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            // MATTT : If user clicks outside of the thumb, scroll up/down by a fixed amount.
             if (e.X >= width - scrollbarWidth)
             {
-                captureMouseY = e.Y;
-                captureScrollY = containerScrollY;
-                UpdateScroll(e.Y);
-                scrolling = true;
-                Capture = true;
+                GetScrollBarParams(out var scrollBarPosY, out var scrollBarSizeY);
+                if (e.Y < scrollBarPosY)
+                {
+                    SetScroll(containerScrollY - height);
+                }
+                else if (e.Y > (scrollBarPosY + scrollBarSizeY))
+                {
+                    SetScroll(containerScrollY + height);
+                }
+                else
+                {
+                    captureMouseY = e.Y;
+                    captureScrollY = containerScrollY;
+                    UpdateScroll(e.Y);
+                    scrolling = true;
+                    Capture = true;
+                }
             }
         }
 

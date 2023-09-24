@@ -13,6 +13,7 @@ namespace FamiStudio
             public Control control;
             public ImageBox warningIcon;
             public bool visible = true;
+            public bool forceKeepSize;
         };
 
         private int baseX;
@@ -367,17 +368,6 @@ namespace FamiStudio
             var image = new ImageBox(bmp);
             image.Resize(resX, resY);
             return image;
-        }
-
-        public int AddImage(Bitmap bmp, int resX, int resY)
-        {
-            properties.Add(
-                new Property()
-                {
-                    type = PropertyType.Image,
-                    control = CreateImageBox(bmp, resX, resY)
-                });
-            return properties.Count - 1;
         }
 
         public int AddButton(string label, string value, string tooltip = null)
@@ -818,9 +808,6 @@ namespace FamiStudio
                     break;
                 case PropertyType.NumericUpDown:
                     (prop.control as NumericUpDown).Value = (int)value;
-                    break;
-                case PropertyType.Image:
-                    (prop.control as ImageBox).Image = (Bitmap)value;
                     break;
             }
         }

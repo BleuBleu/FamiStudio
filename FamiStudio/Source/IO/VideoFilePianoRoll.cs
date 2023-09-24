@@ -147,15 +147,9 @@ namespace FamiStudio
                 }
                 while (removed);
 
-                // Build the actually scrolling data. 
-                var minScroll = (float)Math.Ceiling(Note.MusicalNoteMin + numVisibleNotes * 0.5f);
-                var maxScroll = (float)Math.Floor  (Note.MusicalNoteMax - numVisibleNotes * 0.5f);
-
-                Debug.Assert(maxScroll >= minScroll);
-
                 foreach (var segment in segments)
                 {
-                    segment.scroll = Utils.Clamp(segment.minNote + (segment.maxNote - segment.minNote) * 0.5f, minScroll, maxScroll);
+                    segment.scroll = segment.minNote + (segment.maxNote - segment.minNote) * 0.5f;
                 }
 
                 for (var s = 0; s < segments.Count; s++)
@@ -255,18 +249,46 @@ namespace FamiStudio
             if (!InitializeEncoder(settings))
                 return false;
 
+            // MATTT : Clean those up. Its a mess between separate and unified.
+            var separateChannels = settings.VideoMode == VideoMode.PianoRollSeparateChannels;
             var channelResXFloat = videoResX / (float)channelStates.Length;
             var channelResX = videoResY;
             var channelResY = (int)channelResXFloat;
             var longestChannelName = 0.0f;
 
+            var cosPerspectiveAngle = MathF.Cos(Utils.DegreesToRadians(settings.PianoRollPerspective));
+            var numPerspectivePixels = (int)((1.0f - cosPerspectiveAngle) * videoResY);
+
+            var unifiedPianoRollGraphics   = (OffscreenGraphics)null;
+            var unifiedPerspectiveGraphics = (OffscreenGraphics)null;
+            var unifiedPianoRollTexture    = (Bitmap)null;
+            var unifiedPerspectiveTexture  = (Bitmap)null;
+
+            if (!separateChannels)
+            {
+                channelResX = (int)(videoResY / cosPerspectiveAngle);
+                channelResY = videoResX + numPerspectivePixels * 2;
+
+                unifiedPianoRollGraphics = OffscreenGraphics.Create(channelResX, channelResY, false);
+                unifiedPianoRollTexture = unifiedPianoRollGraphics.GetTexture();
+                unifiedPerspectiveGraphics = OffscreenGraphics.Create(videoResX, videoResY, false);
+                unifiedPerspectiveTexture = unifiedPerspectiveGraphics.GetTexture();
+            }
+
             foreach (var state in channelStates)
             {
-                state.graphics = OffscreenGraphics.Create(channelResX, channelResY, false);
-                state.bitmap = state.graphics.GetTexture();
+                if (separateChannels)
+                {
+                    state.graphics = OffscreenGraphics.Create(channelResX, channelResY, false);
+                    state.bitmap = state.graphics.GetTexture();
+                }
+                else
+                {
+                    state.graphics = videoGraphics;
+                }
 
                 // Measure the longest text.
-                longestChannelName = Math.Max(longestChannelName, state.graphics.MeasureString(state.channelText, fonts.FontVeryLarge));
+                longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, fonts.FontVeryLarge));
             }
 
             // Tweak some cosmetic stuff that depends on resolution.
@@ -277,14 +299,27 @@ namespace FamiStudio
             var pianoRollScaleY = channelResY < VeryThinNoteThreshold ? 0.5f : (channelResY < ThinNoteThreshold ? 0.667f : 1.0f);
             var channelLineWidth = channelResY < ThinNoteThreshold ? 3 : 5;
             var gradientSizeY = 256 * (videoResY / 1080.0f);
-
+            
             LoadChannelIcons(!smallChannelText);
 
+            var oscMinY = (int)(ChannelIconPosY + channelStates[0].icon.Size.Height + 10);
+            var oscMaxY = (int)(oscMinY + 100.0f * (videoResY / 1080.0f));
+            registerPosY = oscMaxY + 4;
+
             // Setup piano roll and images.
+            var noteSizeY = 0;
             var pianoRoll = new PianoRoll();
             pianoRoll.OverrideGraphics(videoGraphics, fonts);
             pianoRoll.Move(0, 0, channelResX, channelResY);
-            pianoRoll.StartVideoRecording(channelStates[0].graphics, song, settings.PianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
+
+            if (separateChannels)
+            {
+                pianoRoll.StartVideoRecording(song, 0, settings.PianoRollZoom, pianoRollScaleX, pianoRollScaleY, out noteSizeY);
+            }
+            else
+            {
+                pianoRoll.StartVideoRecording(song, settings.ChannelMask, settings.PianoRollZoom, 1.0f, 2.0f, out noteSizeY); // MATTT Scale X/Y
+            }
 
             // Build the scrolling data.
             var numVisibleNotes = (int)Math.Floor(channelResY / (float)noteSizeY);
@@ -299,12 +334,13 @@ namespace FamiStudio
             {
                 var frame = metadata[f];
 
-                // Render the piano rolls for each channels.
-                foreach (var s in channelStates)
-                {
-                    var volume = frame.channelData[s.songChannelIndex].volume;
-                    var note   = frame.channelData[s.songChannelIndex].note;
+                var highlightedKeys = new ValueTuple<int, Color>[channelStates.Length];
 
+                for (int i = 0; i < channelStates.Length; i++)
+                { 
+                    var s = channelStates[i];
+                    var volume = frame.channelData[s.songChannelIndex].volume;
+                    var note = frame.channelData[s.songChannelIndex].note;
                     var color = Color.Transparent;
 
                     if (note.IsMusical)
@@ -321,23 +357,52 @@ namespace FamiStudio
                         }
                     }
 
-                    s.graphics.BeginDrawFrame(new Rectangle(0, 0, channelResX, channelResY), Theme.DarkGreyColor2);
-                    pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.channelData[s.songChannelIndex].scroll, note.Value, color);
-                    s.graphics.EndDrawFrame(true);
+                    highlightedKeys[i] = (note.Value, color);
+                }
+
+                if (separateChannels)
+                {
+                    // Render the piano rolls for each channels.
+                    for (int i = 0; i < channelStates.Length; i++)
+                    {
+                        var s = channelStates[i];
+
+                        s.graphics.BeginDrawFrame(new Rectangle(0, 0, channelResX, channelResY), true, Theme.DarkGreyColor2);
+                        pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.channelData[s.songChannelIndex].scroll, new[] { highlightedKeys[i] });
+                        s.graphics.EndDrawFrame(true);
+                    }
+                }
+                else
+                {
+                    unifiedPianoRollGraphics.BeginDrawFrame(new Rectangle(0, 0, channelResX, channelResY), true, Theme.DarkGreyColor2);
+                    pianoRoll.RenderVideoFrame(unifiedPianoRollGraphics, 0 /*s.channel.Index*/, frame.playPattern, frame.playNote, frame.channelData[0 /*s.songChannelIndex*/].scroll, highlightedKeys);
+                    unifiedPianoRollGraphics.EndDrawFrame(true);
+
+                    unifiedPerspectiveGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), true, Theme.DarkGreyColor2);
+                    //unifiedPerspectiveGraphics.DefaultCommandList.DrawBitmap(unifiedPianoRollTexture, -numTiltPixels, videoResY - channelResX, channelResY, channelResX, 1.0f, 0, 0, 1, 1, BitmapFlags.Rotated90); // MATTT
+                    unifiedPerspectiveGraphics.DefaultCommandList.DrawBitmap(unifiedPianoRollTexture, -numPerspectivePixels, 0, channelResY, videoResY, 1.0f, 0, 0, 1, 1, BitmapFlags.Perspective | BitmapFlags.Rotated90);
+                    unifiedPerspectiveGraphics.EndDrawFrame();
                 }
 
                 // Render the full screen overlay.
-                videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), Color.Black);
+                videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), false, Color.Black);
                 videoGraphics.PushClipRegion(0, 0, videoResX, videoResY);
 
                 var c = videoGraphics.BackgroundCommandList;
                 var o = videoGraphics.DefaultCommandList;
 
-                // Composite the channel renders.
-                foreach (var s in channelStates)
+                if (separateChannels)
                 {
-                    int channelPosX0 = (int)Math.Round(s.videoChannelIndex * channelResXFloat);
-                    c.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
+                    // Composite the channel renders.
+                    foreach (var s in channelStates)
+                    {
+                        int channelPosX0 = (int)Math.Round(s.videoChannelIndex * channelResXFloat);
+                        c.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, BitmapFlags.Rotated90);
+                    }
+                }
+                else
+                {
+                    videoGraphics.DrawBlur(unifiedPerspectiveTexture.Id);
                 }
 
                 videoGraphics.PopClipRegion();
@@ -346,28 +411,26 @@ namespace FamiStudio
                 o.FillRectangleGradient(0, 0, videoResX, gradientSizeY, Color.Black, Color.Transparent, true, gradientSizeY);
 
                 // Channel names + oscilloscope
-                foreach (var s in channelStates)
+                for (int i = 0; i < channelStates.Length; i++)
                 {
-                    int channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
-                    int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
+                    var s = channelStates[i];
 
+                    var channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
+                    var channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
                     var channelNameSizeX = (int)videoGraphics.MeasureString(s.channelText, font);
-                    var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.icon.Size.Width + ChannelIconTextSpacing) / 2;
+                    var channelIconPosX = channelPosX0 + (int)channelResXFloat / 2 - (channelNameSizeX + s.icon.Size.Width + ChannelIconTextSpacing) / 2;
 
                     o.FillAndDrawRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.icon.Size.Width - 1, ChannelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
                     o.DrawBitmap(s.icon, channelIconPosX, ChannelIconPosY, 1, Theme.LightGreyColor1);
                     o.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, Theme.LightGreyColor1);
 
-                    if (s.videoChannelIndex > 0)
+                    if (s.videoChannelIndex > 0 && separateChannels)
                         o.DrawLine(channelPosX0, 0, channelPosX0, videoResY, Theme.BlackColor, channelLineWidth);
-
-                    var oscMinY = (int)(ChannelIconPosY + s.icon.Size.Height + 10);
-                    var oscMaxY = (int)(oscMinY + 100.0f * (videoResY / 1080.0f));
 
                     var oscilloscope = UpdateOscilloscope(s, f);
 
                     o.PushTransform(channelPosX0 + 10, (oscMinY + oscMaxY) / 2, channelPosX1 - channelPosX0 - 20, (oscMinY - oscMaxY) / 2);
-                    o.DrawNiceSmoothLine(oscilloscope, Theme.LightGreyColor1);
+                    o.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, settings.OscLineThickness);
                     o.PopTransform();
                 }
             }, () =>
@@ -375,11 +438,17 @@ namespace FamiStudio
                 // Cleanup.
                 pianoRoll.EndVideoRecording();
 
-                foreach (var c in channelStates)
+                if (settings.VideoMode == VideoMode.PianoRollSeparateChannels)
                 {
-                    c.bitmap.Dispose();
-                    c.graphics.Dispose();
+                    foreach (var c in channelStates)
+                    {
+                        c.bitmap.Dispose();
+                        c.graphics.Dispose();
+                    }
                 }
+
+                Utils.DisposeAndNullify(ref unifiedPianoRollGraphics);
+                Utils.DisposeAndNullify(ref unifiedPerspectiveGraphics);
             });
         }
     }

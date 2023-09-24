@@ -203,6 +203,7 @@
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\RegisterViewer.cs" />
     <Compile Include="Source\Player\RegisterWriteOptimizer.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
@@ -271,6 +272,7 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
     <Compile Include="Source\Video\VideoEncoderAndroid.cs" />
+    <Compile Include="Source\Video\VideoEncoderInterface.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
@@ -501,6 +503,8 @@
     <EmbeddedResource Include="Resources\Atlas\ExportVideo@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ExportWav@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\File@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Folder@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\FolderOpen@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\GhostSmall@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\GizmoResizeFill@4x.tga" />
@@ -634,18 +638,20 @@
     <EmbeddedResource Include="Rom\rom_vrc7_ntsc_famitracker.nes" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Shaders\Droid\Bitmap.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Bitmap.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Depth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Depth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Line.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Line.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\LineSmooth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\LineSmooth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Poly.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Poly.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Text.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Text.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Line.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Line.vert" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Text.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Text.vert" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Localization\FamiStudio.deu.ini" />

@@ -15,16 +15,19 @@ x Upgrade Windows to .NET 6.0
 - Keep colors on FS.txt
 x When using shy mode, we could make the patterns larger if there is room.
 - Video export improvements:
-	/ Add support to overlay register values 
-		- Draw text with drop shadow
-		- Draw somewhere nice
-		- Add header + icon for each expansion.
 	- Add support to draw title/composer.
-	- Unified piano roll mode.
-	- Rename "Bitmap" to "Texture"
-	- Add a preview? 
-	x Grid drop-downs are broken with scrolling.
+	- Add a 3D + separate mode, this would unify code a lot...
+	/ Unified piano roll mode.
+		x Show all channels 
+		x Highlight piano keys
+		- Figure out the options to add (piano key size)
+		- Figure out scrolling.
+		- Cleanup MATTT
+		- Unchecking channel should remove them from piano roll. Keep osc if channel is non-empty.
+		- Overlap when too many channels.
+- Rename "Bitmap" to "Texture"
 - Finish/fix phase reset support
+	=> option to fully emulation from start.
 - FDS automod
 - Latency improvements, decouple buffered audio frames VS. buffered emulated frames.
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
@@ -134,6 +137,8 @@ Discord
 
 Backlog: 
 =========
+- Bug import N163 instruments
+	https://discord.com/channels/@me/819772561940152321/1154660603617607741
 - Low slide notes going down + arp going up = glitch. Fix idea : Internally modify the arp to make it less strong based on slide range (ex: div by 4 if doing down 2 octaves).
   https://discord.com/channels/747649221879922840/1024388342210642150/1147714295581388910
 - MacOS sound glitches out after a while (doesnt happen here on BigSur)

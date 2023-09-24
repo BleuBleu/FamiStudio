@@ -58,6 +58,10 @@ namespace FamiStudio
             context = ctx;
         }
 
+        public void SetScrolling(int dummy)
+        {
+        }
+
         private string SanitizeLabel(string label)
         {
             return label != null ? label.TrimEnd(new[] { ' ', ':' }) : null;

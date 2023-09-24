@@ -361,7 +361,8 @@ namespace FamiStudio
 
         // Video stuff
         Song videoSong;
-        Color videoKeyColor;
+        ValueTuple<int,Color>[] videoHighlightKeys;
+        long videoForceDisplayChannelMask;
 
         // Hover
         int hoverPianoNote  = -1;
@@ -769,7 +770,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void StartVideoRecording(Graphics g, Song song, float videoZoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
+        public void StartVideoRecording(Song song, long forceDisplayMask, float videoZoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
         {
             editChannel = 0;
             editMode = EditionMode.VideoRecording;
@@ -777,6 +778,7 @@ namespace FamiStudio
             zoom = videoZoom;
             pianoScaleX = pianoRollScaleX;
             zoomY = pianoRollScaleY;
+            videoForceDisplayChannelMask = forceDisplayMask;
 
             UpdateRenderCoords();
 
@@ -785,6 +787,7 @@ namespace FamiStudio
 
         public void EndVideoRecording()
         {
+            videoForceDisplayChannelMask = 0;
         }
 
         public void ApplySettings()
@@ -1548,6 +1551,21 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HighlightPianoNote(CommandList c, int note, Color color, bool whiteKey)
+        {
+            if (Note.IsMusicalNote(note))
+            {
+                Note.GetOctaveAndNote(note, out var octave, out var octaveNote);
+
+                if (whiteKey == !IsBlackKey(octaveNote))
+                    c.FillRectangle(GetKeyRectangle(octave, octaveNote), color);
+
+                return true;
+            }
+
+            return false;
+        }
+
         private void RenderPiano(RenderInfo r)
         {
             if (!pianoVisible)
@@ -1573,17 +1591,15 @@ namespace FamiStudio
             }
 
             // Highlight play/hover note (white keys)
-            if (Note.IsMusicalNote(playHighlightNote))
+            if (videoHighlightKeys != null)
             {
-                Note.GetOctaveAndNote(playHighlightNote, out var octave, out var octaveNote);
-                if (!IsBlackKey(octaveNote))
-                    r.c.FillRectangle(GetKeyRectangle(octave, octaveNote), editMode == EditionMode.VideoRecording ? videoKeyColor : whiteKeyPressedColor);
+                foreach (var pair in videoHighlightKeys)
+                    HighlightPianoNote(r.c, pair.Item1, pair.Item2, true);
             }
-            else if (Note.IsMusicalNote(hoverPianoNote))
+            else
             {
-                Note.GetOctaveAndNote(hoverPianoNote, out var octave, out var octaveNote);
-                if (!IsBlackKey(octaveNote))
-                    r.c.FillRectangle(GetKeyRectangle(octave, octaveNote), whiteKeyHoverColor);
+                if (!HighlightPianoNote(r.c, playHighlightNote, whiteKeyPressedColor, true))
+                    HighlightPianoNote(r.c, hoverPianoNote, whiteKeyHoverColor, true);
             }
 
             // Draw the piano
@@ -1594,7 +1610,7 @@ namespace FamiStudio
                 for (int j = 0; j < 12; j++)
                 {
                     var noteIdx = i * 12 + j;
-                    if (noteIdx >= NumNotes)
+                    if (noteIdx >= NumNotes && editMode != EditionMode.VideoRecording)
                         break;
 
                     if (IsBlackKey(j))
@@ -1617,17 +1633,15 @@ namespace FamiStudio
             }
 
             // Highlight play/hover note (black keys)
-            if (Note.IsMusicalNote(playHighlightNote))
+            if (videoHighlightKeys != null)
             {
-                Note.GetOctaveAndNote(playHighlightNote, out var octave, out var octaveNote);
-                if (IsBlackKey(octaveNote))
-                    r.c.FillRectangle(GetKeyRectangle(octave, octaveNote), editMode == EditionMode.VideoRecording ? videoKeyColor : blackKeyPressedColor);
+                foreach (var pair in videoHighlightKeys)
+                    HighlightPianoNote(r.c, pair.Item1, pair.Item2, false);
             }
-            else if (Note.IsMusicalNote(hoverPianoNote))
+            else
             {
-                Note.GetOctaveAndNote(hoverPianoNote, out var octave, out var octaveNote);
-                if (IsBlackKey(octaveNote))
-                    r.c.FillRectangle(GetKeyRectangle(octave, octaveNote), blackKeyHoverColor);
+                if (!HighlightPianoNote(r.c, playHighlightNote, blackKeyPressedColor, false))
+                    HighlightPianoNote(r.c, hoverPianoNote, blackKeyHoverColor, false);
             }
 
             // QWERTY key labels.
@@ -2571,21 +2585,17 @@ namespace FamiStudio
                         var drawFrames = drawNotes && ShouldDrawLines(song, p, 1);
 
                         // Needed to get dashed lines to scroll properly.
-                        r.c.PushTranslation(0, -scrollY);
-
                         for (int i = p == 0 ? 1 : 0; i < patternLen; i++)
                         {
                             int x = GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(p) + i);
 
                             if (i % beatLength == 0)
-                                r.b.DrawLine(x, 0, x, virtualSizeY, Theme.BlackColor, i == 0 ? 3 : 1);
+                                r.b.DrawLine(x, 0, x, Height, Theme.BlackColor, i == 0 ? 3 : 1);
                             else if (drawNotes && i % noteLength == 0)
-                                r.b.DrawLine(x, 0, x, virtualSizeY, Theme.DarkGreyColor1);
+                                r.b.DrawLine(x, 0, x, Height, Theme.DarkGreyColor1);
                             else if (drawFrames && editMode != EditionMode.VideoRecording)
-                                r.b.DrawLine(x, 0, x, virtualSizeY, Theme.DarkGreyColor1, 1, false, true);
+                                r.b.DrawLine(x, -scrollY, x, virtualSizeY - scrollY, Theme.DarkGreyColor1, 1, false, true);
                         }
-
-                        r.c.PopTransform();
                     }
                     else
                     {
@@ -2610,7 +2620,7 @@ namespace FamiStudio
                     for (int j = 0; j < 12; j++)
                     {
                         int y = octaveBaseY - j * noteSizeY;
-                        if (i * 12 + j != NumNotes)
+                        if (i * 12 + j != NumNotes || editMode == EditionMode.VideoRecording)
                             r.b.DrawLine(0, y, maxX, y, Theme.BlackColor);
                     }
                 }
@@ -2669,9 +2679,10 @@ namespace FamiStudio
                 foreach (var c in channelsToRender)
                 {
                     var channel = song.Channels[c];
-                    var isActiveChannel = c == editChannel;
+                    var channelBitMask = 1L << c;
+                    var isActiveChannel = c == editChannel || (videoForceDisplayChannelMask & channelBitMask) != 0;
 
-                    if (isActiveChannel || (ghostChannelMask & (1L << c)) != 0)
+                    if (isActiveChannel || (ghostChannelMask & channelBitMask) != 0)
                     {
                         var drawImplicitStopNotes = 
                             isActiveChannel &&
@@ -3641,7 +3652,7 @@ namespace FamiStudio
             r.b.PopClipRegion();
         }
 
-        public void RenderVideoFrame(Graphics g, int channel, int patternIndex, float noteIndex, float centerNote, int highlightKey, Color highlightColor)
+        public void RenderVideoFrame(Graphics g, int channel, int patternIndex, float noteIndex, float centerNote, (int, Color)[] highlightKeys)
         {
             Debug.Assert(editMode == EditionMode.VideoRecording);
 
@@ -3650,8 +3661,7 @@ namespace FamiStudio
             editChannel = channel;
             scrollX = (int)Math.Round((Song.GetPatternStartAbsoluteNoteIndex(patternIndex) + noteIndex) * (double)noteSizeX);
             scrollY = noteY - (Height - headerAndEffectSizeY) / 2;
-            playHighlightNote = highlightKey;
-            videoKeyColor = highlightColor;
+            videoHighlightKeys = highlightKeys;
 
             OnRender(g);
         }
@@ -3798,8 +3808,11 @@ namespace FamiStudio
             r.c = g.DefaultCommandList;
             r.f = g.ForegroundCommandList;
 
-            r.maxVisibleNote = NumNotes - Utils.Clamp((int)Math.Floor(scrollY / (float)noteSizeY), 0, NumNotes);
-            r.minVisibleNote = NumNotes - Utils.Clamp((int)Math.Ceiling((scrollY + Height - headerAndEffectSizeY) / (float)noteSizeY), 0, NumNotes);
+            var minNote = editMode == EditionMode.VideoRecording ? -10000 : 0;
+            var maxNote = editMode == EditionMode.VideoRecording ?  10000 : NumNotes;
+
+            r.maxVisibleNote = NumNotes - Utils.Clamp((int)Math.Floor(scrollY / (float)noteSizeY), minNote, maxNote);
+            r.minVisibleNote = NumNotes - Utils.Clamp((int)Math.Ceiling((scrollY + Height - headerAndEffectSizeY) / (float)noteSizeY), minNote, maxNote);
             r.maxVisibleOctave = (int)Math.Ceiling(r.maxVisibleNote / 12.0f);
             r.minVisibleOctave = (int)Math.Floor(r.minVisibleNote / 12.0f);
             r.minVisiblePattern = Utils.Clamp(Song.PatternIndexFromAbsoluteNoteIndex(minVisibleNoteIdx) + 0, 0, Song.Length);

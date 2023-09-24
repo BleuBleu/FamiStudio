@@ -30,6 +30,12 @@ namespace FamiStudio
         private int bmpTextureUniform;
         private int bmpVao;
 
+        private int blurProgram;
+        private int blurScaleBiasUniform;
+        private int blurKernelUniform;
+        private int blurTextureUniform;
+        private int blurVao;
+
         private int textProgram;
         private int textScaleBiasUniform;
         private int textTextureUniform;
@@ -66,6 +72,7 @@ namespace FamiStudio
             lineVao       = GL.GenVertexArray();
             lineSmoothVao = GL.GenVertexArray();
             bmpVao        = GL.GenVertexArray();
+            blurVao       = GL.GenVertexArray();
             textVao       = GL.GenVertexArray();
             depthVao      = GL.GenVertexArray();
 
@@ -103,12 +110,14 @@ namespace FamiStudio
             GL.DeleteVertexArray(lineVao);
             GL.DeleteVertexArray(lineSmoothVao);
             GL.DeleteVertexArray(bmpVao);
+            GL.DeleteVertexArray(blurVao);
             GL.DeleteVertexArray(textVao);
             GL.DeleteVertexArray(depthVao);
             GL.DeleteProgram(polyProgram);
             GL.DeleteProgram(lineProgram);
             GL.DeleteProgram(lineSmoothProgram);
             GL.DeleteProgram(bmpProgram);
+            GL.DeleteProgram(blurProgram);
             GL.DeleteProgram(textProgram);
             GL.DeleteProgram(depthProgram);
         }
@@ -129,7 +138,7 @@ namespace FamiStudio
                 var lines = code.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var l in lines)
                 {
-                    if (l.StartsWith("attribute "))
+                    if (l.StartsWith("ATTRIB_IN "))
                     {
                         var splits = l.Split(new[] { ' ', '\t', ';' }, StringSplitOptions.RemoveEmptyEntries);
                         attributes.Add(splits[splits.Length - 1]);
@@ -171,6 +180,13 @@ namespace FamiStudio
             var source = new []
             {
                 $"#version {glslVersion}\n",
+                "#define ATTRIB_IN in\n",
+                "#define INTERP_IN noperspective in\n",
+                "#define INTERP_OUT noperspective out\n",
+                "#define INTERP_PERSPECTIVE_IN in\n",
+                "#define INTERP_PERSPECTIVE_OUT out\n",
+                "#define TEX texture\n",
+                "#define TEXPROJ textureProj\n",
                 "#line 1\n",
                 code
             };
@@ -235,31 +251,36 @@ namespace FamiStudio
 
         private void InitializeShaders()
         {
-            polyProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Poly");
+            polyProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Poly");
             polyScaleBiasUniform = GL.GetUniformLocation(polyProgram, "screenScaleBias");
-            polyDashScaleUniform = GL.GetUniformLocation(polyProgram, "uniformDashScale");
+            polyDashScaleUniform = GL.GetUniformLocation(polyProgram, "dashScale");
 
-            lineProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Line");
+            lineProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Line");
             lineScaleBiasUniform = GL.GetUniformLocation(lineProgram, "screenScaleBias");
-            lineDashScaleUniform = GL.GetUniformLocation(lineProgram, "uniformDashScale");
+            lineDashScaleUniform = GL.GetUniformLocation(lineProgram, "dashScale");
 
-            lineSmoothProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.LineSmooth");
+            lineSmoothProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.LineSmooth");
             lineSmoothScaleBiasUniform = GL.GetUniformLocation(lineSmoothProgram, "screenScaleBias");
             lineSmoothWindowSizeUniform = GL.GetUniformLocation(lineSmoothProgram, "windowSize");
 
-            bmpProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Bitmap");
+            bmpProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Bitmap");
             bmpScaleBiasUniform = GL.GetUniformLocation(bmpProgram, "screenScaleBias");
             bmpTextureUniform = GL.GetUniformLocation(bmpProgram, "tex");
 
-            textProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Text");
+            blurProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Blur");
+            blurScaleBiasUniform = GL.GetUniformLocation(blurProgram, "screenScaleBias");
+            blurKernelUniform = GL.GetUniformLocation(blurProgram, "blurKernel");
+            blurTextureUniform = GL.GetUniformLocation(blurProgram, "tex");
+
+            textProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Text");
             textScaleBiasUniform = GL.GetUniformLocation(textProgram, "screenScaleBias");
             textTextureUniform = GL.GetUniformLocation(textProgram, "tex");
 
-            depthProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Desktop.Depth", false);
+            depthProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Depth", false);
             depthScaleBiasUniform = GL.GetUniformLocation(depthProgram, "screenScaleBias");
         }
 
-        protected override void Clear()
+        protected override void Initialize(bool clear, Color clearColor)
         {
             GL.Viewport(screenRectFlip.Left, screenRectFlip.Top, screenRectFlip.Width, screenRectFlip.Height);
             GL.Disable(GL.CullFace);
@@ -270,9 +291,13 @@ namespace FamiStudio
             GL.DepthFunc(GL.Always);
             GL.Disable(GL.StencilTest);
             GL.Disable(GL.ScissorTest);
-            GL.ClearDepth(0.0f);
-            GL.ClearColor(clearColor.R / 255.0f, clearColor.G / 255.0f, clearColor.B / 255.0f, clearColor.A / 255.0f);
-            GL.Clear(GL.ColorBufferBit | GL.DepthBufferBit);
+
+            if (clear)
+            {
+                GL.ClearDepth(0.0f);
+                GL.ClearColor(clearColor.R / 255.0f, clearColor.G / 255.0f, clearColor.B / 255.0f, clearColor.A / 255.0f);
+                GL.Clear(GL.ColorBufferBit | GL.DepthBufferBit);
+            }
         }
 
         protected override void ClearAlpha()
@@ -283,7 +308,7 @@ namespace FamiStudio
             GL.ColorMask(false, false, false, true);
             GL.UseProgram(polyProgram);
             GL.BindVertexArray(polyVao);
-            GL.Uniform(polyScaleBiasUniform, viewportScaleBias);
+            GL.Uniform(polyScaleBiasUniform, viewportScaleBias, 4);
             GL.Uniform(polyDashScaleUniform, 0.0f);
             GL.DepthFunc(GL.Always);
 
@@ -461,12 +486,12 @@ namespace FamiStudio
             return new BitmapAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects);
         }
 
-        private void BindAndUpdateVertexBuffer(int attrib, int buffer, float[] array, int arraySize)
+        private void BindAndUpdateVertexBuffer(int attrib, int buffer, float[] array, int arraySize, int numComponents = 2)
         {
             GL.BindBuffer(GL.ArrayBuffer, buffer);
             GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
             GL.EnableVertexAttribArray(attrib);
-            GL.VertexAttribPointer(attrib, 2, GL.Float, false, 0);
+            GL.VertexAttribPointer(attrib, numComponents, GL.Float, false, 0);
         }
 
         private void BindAndUpdateColorBuffer(int attrib, int buffer, int[] array, int arraySize)
@@ -489,6 +514,31 @@ namespace FamiStudio
         {
             GL.BindBuffer(GL.ElementArrayBuffer, buffer);
             GL.BufferData(GL.ElementArrayBuffer, array, arraySize, GL.DynamicDraw);
+        }
+
+        public void DrawBlur(int textureId)
+        {
+            var kernel = GetBlurKernel();
+
+            MakeFullScreenQuad();
+
+            // MATTT : We do point filtering here!!!
+            GL.PushDebugGroup("Blur");
+            GL.DepthFunc(GL.Always);
+            GL.UseProgram(blurProgram);
+            GL.BindVertexArray(blurVao);
+            GL.Uniform(blurScaleBiasUniform, viewportScaleBias, 4);
+            GL.Uniform(blurTextureUniform, 0);
+            GL.Uniform(blurKernelUniform, kernel, 4, kernel.Length / 4);
+            GL.ActiveTexture(GL.Texture0 + 0);
+            GL.BindTexture(GL.Texture2D, textureId);
+
+            BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, 8);
+            BindAndUpdateVertexBuffer(1, texCoordBuffer, texArray, 8);
+            GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
+            GL.DrawElements(GL.Triangles, 6, GL.UnsignedShort, IntPtr.Zero);
+            GL.DepthFunc(GL.Equal);
+            GL.PopDebugGroup();
         }
 
         protected unsafe override void DrawDepthPrepass()
@@ -530,7 +580,7 @@ namespace FamiStudio
 
             GL.UseProgram(depthProgram);
             GL.BindVertexArray(depthVao);
-            GL.Uniform(depthScaleBiasUniform, viewportScaleBias);
+            GL.Uniform(depthScaleBiasUniform, viewportScaleBias, 4);
 
             BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxIdx);
             BindAndUpdateByteBuffer(1, depthBuffer, depArray, depIdx, true);
@@ -559,7 +609,7 @@ namespace FamiStudio
 
                     GL.UseProgram(polyProgram);
                     GL.BindVertexArray(polyVao);
-                    GL.Uniform(polyScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(polyScaleBiasUniform, viewportScaleBias, 4);
                     GL.Uniform(polyDashScaleUniform, 1.0f / dashSize);
 
                     foreach (var draw in draws)
@@ -580,7 +630,7 @@ namespace FamiStudio
 
                     GL.UseProgram(lineProgram);
                     GL.BindVertexArray(lineVao);
-                    GL.Uniform(lineScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(lineScaleBiasUniform, viewportScaleBias, 4);
                     GL.Uniform(lineDashScaleUniform, 1.0f / dashSize);
 
                     BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
@@ -597,7 +647,7 @@ namespace FamiStudio
 
                     GL.UseProgram(lineSmoothProgram);
                     GL.BindVertexArray(lineSmoothVao);
-                    GL.Uniform(lineSmoothScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(lineSmoothScaleBiasUniform, viewportScaleBias, 4);
                     GL.Uniform(lineSmoothWindowSizeUniform, screenRect.Width, screenRect.Height);
 
                     foreach (var draw in draws)
@@ -617,13 +667,13 @@ namespace FamiStudio
 
                     GL.UseProgram(bmpProgram);
                     GL.BindVertexArray(bmpVao);
-                    GL.Uniform(bmpScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(bmpScaleBiasUniform, viewportScaleBias, 4);
                     GL.Uniform(bmpTextureUniform, 0);
                     GL.ActiveTexture(GL.Texture0 + 0);
 
                     BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxSize);
                     BindAndUpdateColorBuffer(1, colorBuffer, colArray, colSize);
-                    BindAndUpdateVertexBuffer(2, texCoordBuffer, texArray, texSize);
+                    BindAndUpdateVertexBuffer(2, texCoordBuffer, texArray, texSize, 3);
                     BindAndUpdateByteBuffer(3, depthBuffer, depArray, depSize, true);
                     GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
 
@@ -640,7 +690,7 @@ namespace FamiStudio
 
                     GL.UseProgram(textProgram);
                     GL.BindVertexArray(textVao);
-                    GL.Uniform(textScaleBiasUniform, viewportScaleBias);
+                    GL.Uniform(textScaleBiasUniform, viewportScaleBias, 4);
                     GL.Uniform(textTextureUniform, 0);
                     GL.ActiveTexture(GL.Texture0 + 0);
 
@@ -692,8 +742,9 @@ namespace FamiStudio
             texture = GL.GenTexture();
             GL.BindTexture(GL.Texture2D, texture);
             GL.TexImage2D(GL.Texture2D, 0, GL.Rgba, imageSizeX, imageSizeY, 0, GL.Rgba, GL.UnsignedByte, IntPtr.Zero);
-            GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Nearest);
-            GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Nearest);
+            GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Linear); // MATTT
+            GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Linear); // MATTT
+            GL.TexParameter(GL.Texture2D, GL.TextureMaxAnisotropy, 8); // MATTT Make all these an option.
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
 
@@ -717,12 +768,12 @@ namespace FamiStudio
             return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
         }
 
-        public override void BeginDrawFrame(Rectangle rect, Color clear)
+        public override void BeginDrawFrame(Rectangle rect, bool clear, Color color)
         {
             GL.BindFramebuffer(GL.DrawFramebuffer, fbo);
             GL.DrawBuffer(GL.ColorAttachment0);
 
-            base.BeginDrawFrame(rect, clear);
+            base.BeginDrawFrame(rect, clear, color);
         }
 
         public override void EndDrawFrame(bool clearAlpha = false)
@@ -857,6 +908,7 @@ namespace FamiStudio
         public const int MaxTextureSize            = 0x0D33;
         public const int MajorVersion              = 0x821B;
         public const int MinorVersion              = 0x821C;
+        public const int TextureMaxAnisotropy      = 0x84FE;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void DebugCallback(int source, int type, int id, int severity, int length, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userParam);
@@ -1330,16 +1382,16 @@ namespace FamiStudio
             Uniform4fRaw(location, x, y, z, w);
         }
 
-        public static unsafe void Uniform(int location, float[] values)
+        public static unsafe void Uniform(int location, float[] values, int numComponents, int numElements = 1)
         {
             fixed (float* p = &values[0])
             {
-                switch (values.Length)
+                switch (numComponents)
                 {
-                    case 1: Uniform1fvRaw(location, 1, (IntPtr)p); break;
-                    case 2: Uniform2fvRaw(location, 1, (IntPtr)p); break;
-                    case 3: Uniform3fvRaw(location, 1, (IntPtr)p); break;
-                    case 4: Uniform4fvRaw(location, 1, (IntPtr)p); break;
+                    case 1: Uniform1fvRaw(location, numElements, (IntPtr)p); break;
+                    case 2: Uniform2fvRaw(location, numElements, (IntPtr)p); break;
+                    case 3: Uniform3fvRaw(location, numElements, (IntPtr)p); break;
+                    case 4: Uniform4fvRaw(location, numElements, (IntPtr)p); break;
                     default: Debug.Assert(false); break;
                 }
             }

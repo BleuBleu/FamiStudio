@@ -1,13 +1,13 @@
-attribute vec2  inPosition;
-attribute vec4  inColor;
-attribute float inDash;
-attribute float inDepth;
+ATTRIB_IN vec2  inPosition;
+ATTRIB_IN vec4  inColor;
+ATTRIB_IN float inDash;
+ATTRIB_IN float inDepth;
 
 uniform vec4 screenScaleBias;
-uniform float uniformDashScale;
+uniform float dashScale;
 
-varying vec4 colorInterp; 
-varying float dashInterp;
+INTERP_OUT vec4 colorInterp; 
+INTERP_OUT float dashInterp;
 
 void main()
 {
@@ -19,7 +19,7 @@ void main()
         float dash = inDash * 0.25;
         float dashCoord = fract(dash) == 0.25 ? inPosition.y : inPosition.x;
 
-        dashInterp = (dashCoord - floor(dash)) * uniformDashScale;
+        dashInterp = (dashCoord - floor(dash)) * dashScale;
     }
     else
     {

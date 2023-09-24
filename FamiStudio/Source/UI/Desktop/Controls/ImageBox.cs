@@ -9,6 +9,7 @@ namespace FamiStudio
         private BitmapAtlasRef bmpAtlas;
         private Color tint = Color.White;
         private bool scale;
+        private bool flip;
 
         public ImageBox(string image)
         {
@@ -46,6 +47,12 @@ namespace FamiStudio
             set { scale = value; MarkDirty(); }
         }
 
+        public bool FlipImage
+        {
+            get { return flip; }
+            set { flip = value; MarkDirty(); }
+        }
+
         private void UpdateAtlasBitmap()
         {
             if (!string.IsNullOrEmpty(atlasImageName))
@@ -70,7 +77,7 @@ namespace FamiStudio
             {
                 if (scale)
                 {
-                    c.DrawBitmapScaled(bmp, 0, 0, width, height);
+                    c.DrawBitmapScaled(bmp, 0, 0, width, height, flip);
                 }
                 else
                 {

@@ -26,6 +26,12 @@ namespace FamiStudio
         private int bmpScaleBiasUniform;
         private int bmpTextureUniform;
 
+        private int blurProgram;
+        private int blurScaleBiasUniform;
+        private int blurKernelUniform;
+        private int blurTextureUniform;
+        private int blurVao;
+
         private int textProgram;
         private int textScaleBiasUniform;
         private int textTextureUniform;
@@ -126,6 +132,15 @@ namespace FamiStudio
                 code += "precision mediump float;\n";
             }
 
+            code += "#define ATTRIB_IN attribute\n";
+            code += "#define INTERP_IN varying\n";
+            code += "#define INTERP_OUT varying\n";
+            code += "#define INTERP_PERSPECTIVE_IN varying\n";
+            code += "#define INTERP_PERSPECTIVE_OUT varying\n";
+            code += "#define TEX texture2D\n";
+            code += "#define TEXPROJ texture2DProj\n";
+            code += "#define FAMISTUDIO_ANDROID 1\n";
+
             using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(resourceName))
             using (StreamReader reader = new StreamReader(stream))
             {
@@ -139,7 +154,7 @@ namespace FamiStudio
                 var lines = code.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var l in lines)
                 {
-                    if (l.StartsWith("attribute "))
+                    if (l.StartsWith("ATTRIB_IN "))
                     {
                         var splits = l.Split(new[] { ' ', '\t', ';' }, StringSplitOptions.RemoveEmptyEntries);
                         attributes.Add(splits[splits.Length - 1]);
@@ -210,27 +225,32 @@ namespace FamiStudio
 
         private void InitializeShaders()
         {
-            polyProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Poly" );            
+            polyProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Poly" );            
             polyScaleBiasUniform = GLES20.GlGetUniformLocation(polyProgram, "screenScaleBias");
-            polyDashScaleUniform = GLES20.GlGetUniformLocation(polyProgram, "uniformDashScale");
+            polyDashScaleUniform = GLES20.GlGetUniformLocation(polyProgram, "dashScale");
 
-            lineProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Line");
+            lineProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Line");
             lineScaleBiasUniform = GLES20.GlGetUniformLocation(lineProgram, "screenScaleBias");
-            lineDashScaleUniform = GLES20.GlGetUniformLocation(lineProgram, "uniformDashScale");
+            lineDashScaleUniform = GLES20.GlGetUniformLocation(lineProgram, "dashScale");
 
-            lineSmoothProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.LineSmooth");
+            lineSmoothProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.LineSmooth");
             lineSmoothScaleBiasUniform = GLES20.GlGetUniformLocation(lineSmoothProgram, "screenScaleBias");
             lineSmoothWindowSizeUniform = GLES20.GlGetUniformLocation(lineSmoothProgram, "windowSize");
 
-            bmpProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Bitmap");
+            bmpProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Bitmap");
             bmpScaleBiasUniform = GLES20.GlGetUniformLocation(bmpProgram, "screenScaleBias");
             bmpTextureUniform = GLES20.GlGetUniformLocation(bmpProgram, "tex");
 
-            textProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Text");
+            blurProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Blur");
+            blurScaleBiasUniform = GLES20.GlGetUniformLocation(blurProgram, "screenScaleBias");
+            blurKernelUniform = GLES20.GlGetUniformLocation(blurProgram, "blurKernel");
+            blurTextureUniform = GLES20.GlGetUniformLocation(blurProgram, "tex");
+
+            textProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Text");
             textScaleBiasUniform = GLES20.GlGetUniformLocation(textProgram, "screenScaleBias");
             textTextureUniform = GLES20.GlGetUniformLocation(textProgram, "tex");
 
-            depthProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Droid.Depth");
+            depthProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Depth");
             depthScaleBiasUniform = GLES20.GlGetUniformLocation(depthProgram, "screenScaleBias");
         }
 
@@ -240,13 +260,14 @@ namespace FamiStudio
             GLES20.GlDeleteProgram(lineProgram);
             GLES20.GlDeleteProgram(lineSmoothProgram);
             GLES20.GlDeleteProgram(bmpProgram);
+            GLES20.GlDeleteProgram(blurProgram);
             GLES20.GlDeleteProgram(textProgram);
             GLES20.GlDeleteProgram(depthProgram);
         }
 
-        public override void BeginDrawFrame(Rectangle rect, Color clear)
+        public override void BeginDrawFrame(Rectangle rect, bool clear, Color color)
         {
-            base.BeginDrawFrame(rect, clear);
+            base.BeginDrawFrame(rect, clear, color);
 
             for (int i = 0; i < NumBufferSizes; i++)
             {
@@ -261,7 +282,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void Clear()
+        protected override void Initialize(bool clear, Color clearColor)
         {
             GLES20.GlViewport(screenRectFlip.Left, screenRectFlip.Top, screenRectFlip.Width, screenRectFlip.Height);
             GLES20.GlDisable((int)2884); // Cull face?
@@ -272,8 +293,35 @@ namespace FamiStudio
             GLES20.GlDisable(GLES20.GlStencilTest);
             GLES20.GlDisable(GLES20.GlScissorTest);
 
-            GLES20.GlClearColor(clearColor.R / 255.0f, clearColor.G / 255.0f, clearColor.B / 255.0f, clearColor.A / 255.0f);
-            GLES20.GlClear(GLES20.GlColorBufferBit | GLES20.GlDepthBufferBit);
+            if (clear)
+            {
+                GLES20.GlClearColor(clearColor.R / 255.0f, clearColor.G / 255.0f, clearColor.B / 255.0f, clearColor.A / 255.0f);
+                GLES20.GlClear(GLES20.GlColorBufferBit | GLES20.GlDepthBufferBit);
+            }
+        }
+
+        public void DrawBlur(int textureId)
+        {
+            var kernel = GetBlurKernel();
+
+            MakeFullScreenQuad();
+
+            // MATTT : We do point filtering here!!!
+            GLES20.GlDepthFunc(GLES20.GlAlways);
+            GLES20.GlUseProgram(blurProgram);
+            //GL.BindVertexArray(blurVao);
+            GLES20.GlUniform4fv(depthScaleBiasUniform, 1, viewportScaleBias, 0);
+            GLES20.GlUniform1i(blurTextureUniform, 0);
+            GLES20.GlUniform4fv(blurKernelUniform, kernel.Length, kernel, 0);
+            GLES20.GlActiveTexture(GLES20.GlTexture0 + 0);
+            GLES20.GlBindTexture(GLES20.GlTexture2d, textureId);
+
+            BindAndUpdateVertexBuffer(0, vtxArray, 8);
+            BindAndUpdateVertexBuffer(1, texArray, 8, 3);
+
+            quadIdxBuffer.Position(0);
+            GLES20.GlDrawElements(GLES20.GlTriangles, 6, GLES20.GlUnsignedShort, quadIdxBuffer);
+            GLES20.GlDepthFunc(GLES20.GlEqual);
         }
 
         protected override void DrawDepthPrepass()
@@ -663,11 +711,11 @@ namespace FamiStudio
             return buffer;
         }
 
-        private void BindAndUpdateVertexBuffer(int attrib, float[] array, int arraySize)
+        private void BindAndUpdateVertexBuffer(int attrib, float[] array, int arraySize, int numComponents = 2)
         {
             var vb = CopyGetVtxBuffer(array, arraySize);
             GLES20.GlEnableVertexAttribArray(attrib);
-            GLES20.GlVertexAttribPointer(attrib, 2, GLES20.GlFloat, false, 0, vb);
+            GLES20.GlVertexAttribPointer(attrib, numComponents, GLES20.GlFloat, false, 0, vb);
         }
 
         private void BindAndUpdateColorBuffer(int attrib, int[] array, int arraySize)
@@ -758,7 +806,7 @@ namespace FamiStudio
 
                     BindAndUpdateVertexBuffer(0, vtxArray, vtxSize);
                     BindAndUpdateColorBuffer(1, colArray, colSize);
-                    BindAndUpdateVertexBuffer(2, texArray, texSize);
+                    BindAndUpdateVertexBuffer(2, texArray, texSize, 3);
                     BindAndUpdateByteBuffer(3, depArray, depSize, true);
 
                     foreach (var draw in drawData)
@@ -820,6 +868,7 @@ namespace FamiStudio
                 GLES20.GlGenFramebuffers(1, fbos, 0);
                 fbo = fbos[0];
 
+                // MATTT : Filtering here (+ aniso)
                 GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, fbo);
                 GLES20.GlFramebufferTexture2D(GLES20.GlFramebuffer, GLES20.GlColorAttachment0, GLES20.GlTexture2d, texture, 0);
                 GLES20.GlFramebufferTexture2D(GLES20.GlFramebuffer, GLES20.GlDepthAttachment, GLES20.GlTexture2d, depth, 0);
@@ -844,12 +893,12 @@ namespace FamiStudio
             return null;
         }
 
-        public override void BeginDrawFrame(Rectangle rect, Color clear)
+        public override void BeginDrawFrame(Rectangle rect, bool clear, Color color)
         {
             if (fbo > 0)
                 GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, fbo);
 
-            base.BeginDrawFrame(rect, clear);
+            base.BeginDrawFrame(rect, clear, color);
         }
 
         public override void EndDrawFrame(bool clearAlpha = false)
@@ -858,6 +907,11 @@ namespace FamiStudio
 
             if (fbo > 0)
                 GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, 0);
+        }
+
+        public Bitmap GetTexture()
+        {
+            return new Bitmap(this, texture, resX, resY, false);
         }
 
         public unsafe void GetBitmap(byte[] data)

@@ -1,14 +1,13 @@
-attribute vec2  inPosition;
-attribute vec4  inColor;
-attribute float inLineDist;
-attribute float inDepth;
+ATTRIB_IN vec2  inPosition;
+ATTRIB_IN vec4  inColor;
+ATTRIB_IN float inLineDist;
+ATTRIB_IN float inDepth;
 
 uniform vec4 screenScaleBias;
 uniform vec2 windowSize;
 
-varying vec4 colorInterp; 
-varying vec2 centerPosInterp; 
-varying float lineDistInterp; 
+INTERP_OUT vec4 colorInterp; 
+INTERP_OUT float lineDistInterp; 
 
 void main()
 {

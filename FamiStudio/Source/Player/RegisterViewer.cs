@@ -41,7 +41,7 @@ namespace FamiStudio
         public int Expansion => expansion;
 
         public delegate object GetRegisterValueDelegate();
-        public delegate void DrawRegisterDelegate(CommandList c, Fonts res, Rectangle rect);
+        public delegate void DrawRegisterDelegate(CommandList c, Fonts res, Rectangle rect, bool video);
 
         protected static readonly string[] NoteNamesPadded =
         {
@@ -283,7 +283,7 @@ namespace FamiStudio
             };
         }
 
-        void DrawInternal(CommandList c, Fonts res, Rectangle rect, byte[] vals, int maxVal, bool signed)
+        void DrawInternal(CommandList c, Fonts res, Rectangle rect, byte[] vals, int maxVal, bool signed, bool video)
         {
             var sx = rect.Width  / 64;
             var sy = rect.Height / (float)maxVal;
@@ -303,18 +303,21 @@ namespace FamiStudio
                     c.FillRectangle(x * sx, h - y, (x + 1) * sx, h, color);
             }
 
-            c.FillRectangle(64 * sx, 0, 64 * sx, rect.Height, Theme.DarkGreyColor3); // MATTT : Same issue as N163, looks ugly in video.
-            c.DrawLine(64 * sx, 0, 64 * sx, rect.Height, Theme.BlackColor);
+            if (!video)
+            {
+                c.FillRectangle(64 * sx, 0, 64 * sx, rect.Height, Theme.DarkGreyColor3); 
+                c.DrawLine(64 * sx, 0, 64 * sx, rect.Height, Theme.BlackColor);
+            }
         }
 
-        void DrawWaveTable(CommandList c, Fonts res, Rectangle rect)
+        void DrawWaveTable(CommandList c, Fonts res, Rectangle rect, bool video)
         {
-            DrawInternal(c, res, rect, i.GetWaveTable(), 63, true);
+            DrawInternal(c, res, rect, i.GetWaveTable(), 63, true, video);
         }
 
-        void DrawModTable(CommandList c, Fonts res, Rectangle rect)
+        void DrawModTable(CommandList c, Fonts res, Rectangle rect, bool video)
         {
-            DrawInternal(c, res, rect, i.GetModTable(), 7, false);
+            DrawInternal(c, res, rect, i.GetModTable(), 7, false, video);
         }
     }
 
@@ -398,7 +401,7 @@ namespace FamiStudio
             }
         }
 
-        void DrawRamMap(CommandList c, Fonts res, Rectangle rect)
+        void DrawRamMap(CommandList c, Fonts res, Rectangle rect, bool video)
         {
             var ramSize   = 128 - i.NumActiveChannels * 8;
             var numValues = ramSize * 2;
@@ -434,8 +437,11 @@ namespace FamiStudio
                 c.FillRectangle((x * 2 + 1) * sx, h - hi, (x * 2 + 2) * sx, h, color);
             }
 
-            c.FillRectangle(numValues * sx, 0, 256 * sx, rect.Height, Theme.DarkGreyColor3); // MATTT : This adds a ugly grey rectangle in videos.
-            c.DrawLine(256 * sx, 0, 256 * sx, rect.Height, Theme.BlackColor);
+            if (!video)
+            {
+                c.FillRectangle(numValues * sx, 0, 256 * sx, rect.Height, Theme.DarkGreyColor3); 
+                c.DrawLine(256 * sx, 0, 256 * sx, rect.Height, Theme.BlackColor);
+            }
         }
     }
 

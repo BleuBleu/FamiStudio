@@ -32,10 +32,11 @@ namespace FamiStudio
             return true;
         }
 
-        public void AddFrame(OffscreenGraphics graphics)
+        public bool AddFrame(OffscreenGraphics graphics)
         {
             graphics.GetBitmap(videoImage);
             stream.Write(videoImage);
+            return true;
         }
 
         public void EndEncoding(bool abort)

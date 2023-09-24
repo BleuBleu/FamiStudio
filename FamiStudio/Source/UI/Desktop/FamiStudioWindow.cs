@@ -283,7 +283,7 @@ namespace FamiStudio
                 var rect = new Rectangle(Point.Empty, Size);
                 var clearColor = Theme.DarkGreyColor2;
 
-                graphics.BeginDrawFrame(rect, clearColor);
+                graphics.BeginDrawFrame(rect, true, clearColor);
                 container.Render(graphics);
                 graphics.EndDrawFrame();
 

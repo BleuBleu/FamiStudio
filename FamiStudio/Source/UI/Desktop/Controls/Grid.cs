@@ -465,8 +465,10 @@ namespace FamiStudio
 
             if (sign != 0)
             {
-                if (SetAndMarkDirty(ref scroll, Utils.Clamp(scroll + sign * 3, 0, maxScroll)))
+                if (GetScrollBarParams(out _, out _))
                     e.MarkHandled();
+
+                SetAndMarkDirty(ref scroll, Utils.Clamp(scroll + sign * 3, 0, maxScroll));
 
                 if (dropDownActive != null && dropDownActive.Visible)
                 {

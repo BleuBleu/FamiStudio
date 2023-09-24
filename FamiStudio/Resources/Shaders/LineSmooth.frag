@@ -1,5 +1,5 @@
-varying vec4 colorInterp;
-varying float lineDistInterp; 
+INTERP_IN vec4 colorInterp;
+INTERP_IN float lineDistInterp; 
 
 void main()
 {   
