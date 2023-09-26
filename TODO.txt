@@ -8,15 +8,16 @@ x Upgrade Windows to .NET 6.0
 	- Bring back APK
 / Instrument folders + collapse entire sections (samples, arps, etc.) 
 	x Add delete function.
+	x Only instruments "+" works with right-click...
 	- Ability to move folders
 	- Make it work on mobile.
 	- Figure out drag vs. sorting issue.
-	- Only instruments "+" works with right-click...
 x Keep colors on FS.txt
 x When using shy mode, we could make the patterns larger if there is room.
 - Video export improvements:
 	- Add support to draw title/composer.
-	- Add a 3D + separate mode, this would unify code a lot...
+	- Make 3D work with separate mode, this would unify code a lot...
+	- Add num rows options for separate mode
 	/ Unified piano roll mode.
 		x Show all channels 
 		x Highlight piano keys

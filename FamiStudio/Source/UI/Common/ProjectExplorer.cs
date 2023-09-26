@@ -3266,6 +3266,7 @@ namespace FamiStudio
             return true;
         }
 
+        // MATTT : Never called?
         private bool HandleMouseDownSongHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
         {
             if (e.Left)
@@ -4064,7 +4065,7 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
         }
 
-        private bool HandleContextMenuInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
+        private bool HandleContextMenuInstrumentButton(int x, int y, Button button, SubButtonType subButtonType)
         {
             var menu = new List<ContextMenuOption>();
             var inst = button.instrument;
@@ -4135,6 +4136,17 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleContextMenuSongHeaderButton(int x, int y, SubButtonType subButtonType)
+        {
+            if (subButtonType == SubButtonType.Add)
+            {
+                AskAddSong(x, y);
+                return true;
+            }
+
+            return false;
+        }
+
         private void DuplicateArpeggio(Arpeggio arp)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
@@ -4197,6 +4209,17 @@ namespace FamiStudio
             return true;
         }
 
+        private bool HandleContextMenuArpeggioHeaderButton(int x, int y, SubButtonType subButtonType)
+        {
+            if (subButtonType == SubButtonType.Add)
+            {
+                AskAddArpeggio(x, y);
+                return true;
+            }
+
+            return false;
+        }
+
         private void DeleteDpcmSourceWavData(DPCMSample sample)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
@@ -4230,6 +4253,17 @@ namespace FamiStudio
             App.ShowContextMenu(left + x, top + y, menu.ToArray());
 
             return true;
+        }
+
+        private bool HandleContextMenuDpcmHeaderButton(int x, int y, SubButtonType subButtonType)
+        {
+            if (subButtonType == SubButtonType.Add)
+            {
+                AskAddSampleFolder(x, y);
+                return true;
+            }
+
+            return false;
         }
 
         private void ExpandAllFolders(int type, bool expand)
@@ -4349,8 +4383,10 @@ namespace FamiStudio
                         return HandleContextMenuProjectSettings(x, y);
                     case ButtonType.Song:
                         return HandleContextMenuSongButton(x, y, button);
+                    case ButtonType.SongHeader:
+                        return HandleContextMenuSongHeaderButton(x, y, subButtonType);
                     case ButtonType.Instrument:
-                        return HandleContextMenuInstrumentButton(x, y, button, subButtonType, buttonIdx);
+                        return HandleContextMenuInstrumentButton(x, y, button, subButtonType);
                     case ButtonType.InstrumentHeader:
                         return HandleContextMenuInstrumentHeaderButton(x, y, subButtonType);
                     case ButtonType.ParamSlider:
@@ -4359,8 +4395,12 @@ namespace FamiStudio
                         return HandleContextMenuParamButton(x, y, button);
                     case ButtonType.Arpeggio:
                         return HandleContextMenuArpeggioButton(x, y, button);
+                    case ButtonType.ArpeggioHeader:
+                        return HandleContextMenuArpeggioHeaderButton(x, y, subButtonType);
                     case ButtonType.Dpcm:
                         return HandleContextMenuDpcmButton(x, y, button, subButtonType, buttonIdx);
+                    case ButtonType.DpcmHeader:
+                        return HandleContextMenuDpcmHeaderButton(x, y, subButtonType);
                     case ButtonType.SongFolder:
                     case ButtonType.InstrumentFolder:
                     case ButtonType.ArpeggioFolder:
