@@ -27,43 +27,43 @@ namespace FamiStudio
 
         protected override void LoadInstrument(Instrument instrument)
         {
-            if (instrument != null)
-            {
-                Debug.Assert(instrument.IsN163);
+            if (instrument == null)
+                return;
 
-                if (instrument.IsN163)
-                {
-                    // This can actually trigger if you tweak an instrument while playing a song.
-                    //Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
+            Debug.Assert(instrument.IsN163);
 
-                    waveIndex = -1;
-                    wavePos = instrument.N163WavePos / 2;
-                    waveLength = 256 - instrument.N163WaveSize;
+            if (!instrument.IsN163)
+                return;
 
-                    WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
-                }
-            }
+            // This can actually trigger if you tweak an instrument while playing a song.
+            //Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
+
+            waveIndex = -1;
+            wavePos = instrument.N163WavePos / 2;
+            waveLength = 256 - instrument.N163WaveSize;
+
+            WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
         }
 
         private void ConditionalLoadWave()
         {
             var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
-            
-            if (newWaveIndex != waveIndex)
+
+            if (newWaveIndex == waveIndex)
+                return;
+
+            var waveEnv = envelopes[EnvelopeType.N163Waveform];
+
+            // Can be null if the instrument was null.
+            if (waveEnv != null)
             {
-                var waveEnv = envelopes[EnvelopeType.N163Waveform];
+                var wav = waveEnv.GetN163Waveform(newWaveIndex);
 
-                // Can be null if the instrument was null.
-                if (waveEnv != null)
-                { 
-                    var wav = waveEnv.GetN163Waveform(newWaveIndex);
-
-                    for (int i = 0; i < wav.Length; i++)
-                        WriteN163Register(wavePos + i, wav[i], 18); // 18 cycles approximately mimic our assembly loop.
-                }
-
-                waveIndex = newWaveIndex;
+                for (int i = 0; i < wav.Length; i++)
+                    WriteN163Register(wavePos + i, wav[i], 18); // 18 cycles approximately mimic our assembly loop.
             }
+
+            waveIndex = newWaveIndex;
         }
 
         public override int GetEnvelopeFrame(int envIdx)

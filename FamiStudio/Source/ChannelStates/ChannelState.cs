@@ -96,66 +96,66 @@ namespace FamiStudio
                 needClone = false;
             }
 
-            if (newNote != null)
-            { 
-                // We dont delay speed effects. This is not what FamiTracker does, but I dont care.
-                // There is a special place in hell for people who delay speed effect.
-                if (newNote.HasSpeed)
-                {
-                    famitrackerSpeed = newNote.Speed;
-                }
+            if (newNote == null)
+                return;
 
-                // Clear any pending release.
-                if (newNote.IsMusicalOrStop)
-                {
-                    releaseCounter = 0;
-                }
-
-                // Slide params needs to be computed right away since we wont have access to the play position/channel later.
-                int noteSlidePitch = 0;
-                int noteSlideStep  = 0;
-
-                if (newNote.IsMusical)
-                {
-                    if (newNote.IsSlideNote)
-                    {
-                        channel.ComputeSlideNoteParams(newNote, location, famitrackerSpeed, noteTable, palPlayback, true, out noteSlidePitch, out noteSlideStep, out _);
-                    }
-
-                    if (newNote.HasRelease)
-                    {
-                        var releaseLocation = location.Advance(song, newNote.Release);
-                        // Don't process release that go beyond the end of the song.
-                        if (releaseLocation.IsInSong(song))
-                           releaseCounter = newNote.Release;
-                    }
-
-                    var stopLocation = location.Advance(song, newNote.Duration);
-                    // Don't stop notes that go beyond the end of the song.
-                    if (stopLocation.IsInSong(song))
-                        durationCounter = newNote.Duration;
-                    else
-                        durationCounter = 0;
-                }
-
-                if (newNote.HasVolumeSlide)
-                {
-                    channel.ComputeVolumeSlideNoteParams(newNote, location, famitrackerSpeed, palPlayback, out volumeSlideStep, out _);
-                }
-
-                // Store note for later if delayed.
-                if (newNote.HasNoteDelay)
-                {
-                    delayedNote = newNote;
-                    delayedNoteCounter = newNote.NoteDelay + 1;
-                    delayedNoteSlidePitch = noteSlidePitch;
-                    delayedNoteSlideStep  = noteSlideStep;
-                    delayedNoteVolumeSlideStep = volumeSlideStep;
-                    return;
-                }
-
-                PlayNote(newNote, noteSlidePitch, noteSlideStep, volumeSlideStep, needClone);
+            // We dont delay speed effects. This is not what FamiTracker does, but I dont care.
+            // There is a special place in hell for people who delay speed effect.
+            if (newNote.HasSpeed)
+            {
+                famitrackerSpeed = newNote.Speed;
             }
+
+            // Clear any pending release.
+            if (newNote.IsMusicalOrStop)
+            {
+                releaseCounter = 0;
+            }
+
+            // Slide params needs to be computed right away since we wont have access to the play position/channel later.
+            int noteSlidePitch = 0;
+            int noteSlideStep = 0;
+
+            if (newNote.IsMusical)
+            {
+                if (newNote.IsSlideNote)
+                {
+                    channel.ComputeSlideNoteParams(newNote, location, famitrackerSpeed, noteTable, palPlayback, true, out noteSlidePitch, out noteSlideStep, out _);
+                }
+
+                if (newNote.HasRelease)
+                {
+                    var releaseLocation = location.Advance(song, newNote.Release);
+                    // Don't process release that go beyond the end of the song.
+                    if (releaseLocation.IsInSong(song))
+                        releaseCounter = newNote.Release;
+                }
+
+                var stopLocation = location.Advance(song, newNote.Duration);
+                // Don't stop notes that go beyond the end of the song.
+                if (stopLocation.IsInSong(song))
+                    durationCounter = newNote.Duration;
+                else
+                    durationCounter = 0;
+            }
+
+            if (newNote.HasVolumeSlide)
+            {
+                channel.ComputeVolumeSlideNoteParams(newNote, location, famitrackerSpeed, palPlayback, out volumeSlideStep, out _);
+            }
+
+            // Store note for later if delayed.
+            if (newNote.HasNoteDelay)
+            {
+                delayedNote = newNote;
+                delayedNoteCounter = newNote.NoteDelay + 1;
+                delayedNoteSlidePitch = noteSlidePitch;
+                delayedNoteSlideStep = noteSlideStep;
+                delayedNoteVolumeSlideStep = volumeSlideStep;
+                return;
+            }
+
+            PlayNote(newNote, noteSlidePitch, noteSlideStep, volumeSlideStep, needClone);
         }
 
         public void PlayNote(Note newNote, int noteSlidePitch = 0, int noteSlideStep = 0, int noteVolumeSlideStep = 0, bool needClone = true)
@@ -199,12 +199,15 @@ namespace FamiStudio
                 {
                     for (int j = 0; j < EnvelopeType.Count; j++)
                     {
-                        if (envelopes[j] != null && envelopes[j].Release >= 0)
-                        {
-                            envelopeIdx[j] = envelopes[j].Release;
-                            if (j == EnvelopeType.WaveformRepeat)
-                                envelopeValues[j] = envelopes[EnvelopeType.WaveformRepeat].Values[envelopeIdx[j]] + 1;
-                        }
+                        if (envelopes[j] == null || envelopes[j].Release < 0)
+                            continue;
+
+                        envelopeIdx[j] = envelopes[j].Release;
+
+                        if (j != EnvelopeType.WaveformRepeat)
+                            continue;
+
+                        envelopeValues[j] = envelopes[EnvelopeType.WaveformRepeat].Values[envelopeIdx[j]] + 1;
                     }
                 }
 
@@ -370,109 +373,108 @@ namespace FamiStudio
 
         private void UpdateEnvelopes()
         {
-            if (note.Instrument != null)
+            if (note.Instrument == null)
+                return;
+
+            for (int j = 0; j < EnvelopeType.Count; j++)
             {
-                for (int j = 0; j < EnvelopeType.Count; j++)
+                if (envelopes[j] == null ||
+                    (skipEmptyEnvelopes && envelopes[j].IsEmpty(j)) ||
+                    (!skipEmptyEnvelopes && envelopes[j].Length == 0))
                 {
-                    if (envelopes[j] == null ||
-                        ( skipEmptyEnvelopes && envelopes[j].IsEmpty(j)) ||
-                        (!skipEmptyEnvelopes && envelopes[j].Length == 0))
-                    {
-                        if (j != EnvelopeType.DutyCycle)
-                            envelopeValues[j] = Envelope.GetEnvelopeDefaultValue(j);
-                        continue;
-                    }
-
-                    var env = envelopes[j];
-                    var idx = envelopeIdx[j];
-
-                    // Non-looping, relative envelope end up with -1 when done.
-                    if (idx < 0)
-                    {
-                        Debug.Assert(env.Relative);
-                        continue;
-                    }
-
-                    var reloadValue = false;
-                    var canJumpToLoop = true;
-
-                    // We handle the repeat envelopes a bit different since they are not
-                    // stored in their final form. Here the envelope stores the number of
-                    // frame to repeat this waveform. In the NSF driver it will simply
-                    // contain the wave index and be handled like any other envelopes.
-                    if (j == EnvelopeType.WaveformRepeat)
-                    {
-                        Debug.Assert(envelopeValues[j] > 0);
-
-                        if (--envelopeValues[j] == 0)
-                        {
-                            idx++;
-                            reloadValue = true;
-                        }
-                        else
-                        {
-                            canJumpToLoop = false;
-                        }
-                    }
-                    else
-                    {
-                        if (env.Relative)
-                        {
-                            Debug.Assert(j == EnvelopeType.Pitch);
-                            envelopeValues[j] += envelopes[j].Values[idx];
-                        }
-                        else
-                        {
-                            envelopeValues[j] = envelopes[j].Values[idx];
-                        }
-
-                        idx++;
-                    }
-
-                    if (env.Release >= 0 && idx == env.Release && canJumpToLoop)
-                        envelopeIdx[j] = env.Loop;
-                    else if (idx >= env.Length)
-                        envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : (env.Relative ? -1 : env.Length - 1);
-                    else
-                        envelopeIdx[j] = idx;
-
-                    if (reloadValue)
-                        envelopeValues[j] = envelopes[j].Values[envelopeIdx[j]];
+                    if (j != EnvelopeType.DutyCycle)
+                        envelopeValues[j] = Envelope.GetEnvelopeDefaultValue(j);
+                    continue;
                 }
+
+                var env = envelopes[j];
+                var idx = envelopeIdx[j];
+
+                // Non-looping, relative envelope end up with -1 when done.
+                if (idx < 0)
+                {
+                    Debug.Assert(env.Relative);
+                    continue;
+                }
+
+                var reloadValue = false;
+                var canJumpToLoop = true;
+
+                // We handle the repeat envelopes a bit different since they are not
+                // stored in their final form. Here the envelope stores the number of
+                // frame to repeat this waveform. In the NSF driver it will simply
+                // contain the wave index and be handled like any other envelopes.
+                if (j == EnvelopeType.WaveformRepeat)
+                {
+                    Debug.Assert(envelopeValues[j] > 0);
+
+                    if (--envelopeValues[j] == 0)
+                    {
+                        idx++;
+                        reloadValue = true;
+                    }
+                    else
+                    {
+                        canJumpToLoop = false;
+                    }
+                }
+                else
+                {
+                    if (env.Relative)
+                    {
+                        Debug.Assert(j == EnvelopeType.Pitch);
+                        envelopeValues[j] += envelopes[j].Values[idx];
+                    }
+                    else
+                    {
+                        envelopeValues[j] = envelopes[j].Values[idx];
+                    }
+
+                    idx++;
+                }
+
+                if (env.Release >= 0 && idx == env.Release && canJumpToLoop)
+                    envelopeIdx[j] = env.Loop;
+                else if (idx >= env.Length)
+                    envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : (env.Relative ? -1 : env.Length - 1);
+                else
+                    envelopeIdx[j] = idx;
+
+                if (reloadValue)
+                    envelopeValues[j] = envelopes[j].Values[envelopeIdx[j]];
             }
         }
 
         private void UpdateSlide()
         {
-            if (slideStep != 0)
-            {
-                slidePitch += slideStep;
-
-                if ((slideStep > 0 && slidePitch > 0) ||
-                    (slideStep < 0 && slidePitch < 0))
-                {
-                    slidePitch = 0;
-                    slideStep = 0;
-                }
-            }
-            else
+            if (slideStep == 0)
             {
                 slidePitch = 0;
+                return;
+            }
+
+            slidePitch += slideStep;
+
+            if ((slideStep > 0 && slidePitch > 0) ||
+                (slideStep < 0 && slidePitch < 0))
+            {
+                slidePitch = 0;
+                slideStep = 0;
             }
         }
 
         private void UpdateVolumeSlide()
         {
-            if (volumeSlideStep != 0)
-            {
-                volume += volumeSlideStep;
+            if (volumeSlideStep == 0)
+                return;
 
-                if ((volumeSlideStep > 0 && volume >= volumeSlideTarget) ||
-                    (volumeSlideStep < 0 && volume <= volumeSlideTarget))
-                {
-                    volume = volumeSlideTarget;
-                    volumeSlideStep = 0;
-                }
+            volume += volumeSlideStep;
+
+            if ((volumeSlideStep > 0 && volume >= volumeSlideTarget) ||
+                (volumeSlideStep < 0 && volume <= volumeSlideTarget))
+            {
+                volume = volumeSlideTarget;
+                volumeSlideStep = 0;
             }
         }
 

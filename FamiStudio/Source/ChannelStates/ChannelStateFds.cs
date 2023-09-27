@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    class ChannelStateFds : ChannelState
+    internal sealed class ChannelStateFds : ChannelState
     {
         byte   modDelayCounter;
         ushort modDepth;
@@ -15,31 +15,31 @@ namespace FamiStudio
 
         protected override void LoadInstrument(Instrument instrument)
         {
-            if (instrument != null)
-            {
-                Debug.Assert(instrument.IsFds);
+            if (instrument == null)
+                return;
 
-                if (instrument.IsFds)
-                {
-                    var wav = instrument.Envelopes[EnvelopeType.FdsWaveform];
-                    var mod = instrument.Envelopes[EnvelopeType.FdsModulation].BuildFdsModulationTable();
+            Debug.Assert(instrument.IsFds);
 
-                    Debug.Assert(wav.Length == 0x40);
-                    Debug.Assert(mod.Length == 0x20);
+            if (!instrument.IsFds)
+                return;
 
-                    WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
+            var wav = instrument.Envelopes[EnvelopeType.FdsWaveform];
+            var mod = instrument.Envelopes[EnvelopeType.FdsModulation].BuildFdsModulationTable();
 
-                    for (int i = 0; i < 0x40; ++i)
-                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff);
+            Debug.Assert(wav.Length == 0x40);
+            Debug.Assert(mod.Length == 0x20);
 
-                    WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
-                    WriteRegister(NesApu.FDS_MOD_HI, 0x80);
-                    WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
+            WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
 
-                    for (int i = 0; i < 0x20; ++i)
-                        WriteRegister(NesApu.FDS_MOD_TABLE, mod[i] & 0xff);
-                }
-            }
+            for (int i = 0; i < 0x40; ++i)
+                WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff);
+
+            WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
+            WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+            WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
+
+            for (int i = 0; i < 0x20; ++i)
+                WriteRegister(NesApu.FDS_MOD_TABLE, mod[i] & 0xff);
         }
 
         public override int GetEnvelopeFrame(int envIdx)

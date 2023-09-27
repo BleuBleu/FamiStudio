@@ -22,32 +22,32 @@ namespace FamiStudio
 
         protected override void LoadInstrument(Instrument instrument)
         {
-            if (instrument != null)
+            if (instrument == null)
+                return;
+
+            Debug.Assert(instrument.IsVrc7);
+
+            if (!instrument.IsVrc7)
+                return;
+
+            if (instrument.Vrc7Patch == 0)
             {
-                Debug.Assert(instrument.IsVrc7);
+                // Tell other channels using custom patches that they will need 
+                // to reload their instruments.
+                player.NotifyInstrumentLoaded(
+                    instrument,
+                    (1L << ChannelType.Vrc7Fm1) |
+                    (1L << ChannelType.Vrc7Fm2) |
+                    (1L << ChannelType.Vrc7Fm3) |
+                    (1L << ChannelType.Vrc7Fm4) |
+                    (1L << ChannelType.Vrc7Fm5) |
+                    (1L << ChannelType.Vrc7Fm6));
 
-                if (instrument.IsVrc7)
-                {
-                    if (instrument.Vrc7Patch == 0)
-                    {
-                        // Tell other channels using custom patches that they will need 
-                        // to reload their instruments.
-                        player.NotifyInstrumentLoaded(
-                            instrument,
-                            (1L << ChannelType.Vrc7Fm1) |
-                            (1L << ChannelType.Vrc7Fm2) |
-                            (1L << ChannelType.Vrc7Fm3) |
-                            (1L << ChannelType.Vrc7Fm4) |
-                            (1L << ChannelType.Vrc7Fm5) |
-                            (1L << ChannelType.Vrc7Fm6));
-
-                        for (byte i = 0; i < 8; i++)
-                            WriteVrc7Register(i, instrument.Vrc7PatchRegs[i]);
-                    }
-
-                    vrc7Instrument = (byte)(instrument.Vrc7Patch << 4);
-                }
+                for (byte i = 0; i < 8; i++)
+                    WriteVrc7Register(i, instrument.Vrc7PatchRegs[i]);
             }
+
+            vrc7Instrument = (byte)(instrument.Vrc7Patch << 4);
         }
 
         public override void IntrumentLoadedNotify(Instrument instrument)
