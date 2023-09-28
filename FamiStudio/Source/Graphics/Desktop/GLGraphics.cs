@@ -516,11 +516,11 @@ namespace FamiStudio
             GL.BufferData(GL.ElementArrayBuffer, array, arraySize, GL.DynamicDraw);
         }
 
-        public void DrawBlur(int textureId)
+        public void DrawBlur(int textureId, int x, int y, int width, int height)
         {
-            var kernel = GetBlurKernel();
+            var kernel = GetBlurKernel(width, height);
 
-            MakeFullScreenQuad();
+            MakeQuad(x, y, width, height);
 
             // MATTT : We do point filtering here!!!
             GL.PushDebugGroup("Blur");
@@ -745,16 +745,16 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Linear); // MATTT
             GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Linear); // MATTT
             GL.TexParameter(GL.Texture2D, GL.TextureMaxAnisotropy, 8); // MATTT Make all these an option.
-            GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
-            GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
+            GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToEdge);
+            GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToEdge);
 
             depth = GL.GenTexture();
             GL.BindTexture(GL.Texture2D, depth);
             GL.TexImage2D(GL.Texture2D, 0, GL.DepthComponent, imageSizeX, imageSizeY, 0, GL.DepthComponent, GL.UnsignedShort, IntPtr.Zero);
             GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Nearest);
-            GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
-            GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
+            GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToEdge);
+            GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToEdge);
 
             fbo = GL.GenFramebuffer();
             GL.BindFramebuffer(GL.Framebuffer, fbo);
@@ -846,6 +846,7 @@ namespace FamiStudio
         public const int Clamp                     = 0x2900;
         public const int Repeat                    = 0x2901;
         public const int ClampToBorder             = 0x812D;
+        public const int ClampToEdge               = 0x812F;
         public const int SrcAlpha                  = 0x0302;
         public const int OneMinusSrcAlpha          = 0x0303;
         public const int Blend                     = 0x0BE2;
@@ -864,7 +865,6 @@ namespace FamiStudio
         public const int TextureMinFilter          = 0x2801;
         public const int Nearest                   = 0x2600;
         public const int Linear                    = 0x2601;
-        public const int ClampToEdge               = 0x812F;
         public const int Rgb8                      = 0x8051;
         public const int Rgba8                     = 0x8058;
         public const int ColorArray                = 0x8076;

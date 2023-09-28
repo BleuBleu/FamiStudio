@@ -35,6 +35,7 @@ namespace FamiStudio
                 var c = videoGraphics.DefaultCommandList;
                 var o = videoGraphics.OverlayCommandList;
 
+                videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), true, Theme.DarkGreyColor2);
                 c.PushClipRegion(0, 0, videoResX, videoResY);
 
                 // Draw gradients.

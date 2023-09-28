@@ -455,14 +455,11 @@ namespace FamiStudio
 
                     var frame = metadata[f];
 
-                    videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), true, Theme.DarkGreyColor2);
-
                     body(f);
 
-                    // Registers.
+                    // Registers + watermark.
+                    videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), false, Theme.DarkGreyColor2);
                     DrawRegisterValues(frame);
-
-                    // Watermark.
                     videoGraphics.OverlayCommandList.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
                     videoGraphics.EndDrawFrame();
 
@@ -545,8 +542,6 @@ namespace FamiStudio
         public string channelText;
         public Channel channel;
         public Bitmap icon;
-        public Bitmap bitmap; // Offscreen bitmap for piano roll
-        public OffscreenGraphics graphics;
         public short[] wav;
         public float oscScale;
         public int lastTrigger;
@@ -718,6 +713,7 @@ namespace FamiStudio
         public int OscLineThickness;
         public float PianoRollZoom;
         public float PianoRollPerspective;
+        public int PianoRollNumRows;
         public bool ShowRegisters;
         public bool Stereo;
         public float[] ChannelPan;

@@ -396,7 +396,7 @@ namespace FamiStudio
                         page.AddDropDownList(ResolutionLabel.Colon, Localization.ToStringArray(VideoResolution.LocalizedNames), VideoResolution.LocalizedNames[0], VideoResTooltip); // 2
                         page.AddDropDownList(FrameRateLabel.Colon, new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 3
                         page.AddDropDownList(AudioBitRateLabel.Colon, new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 4
-                        page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000", VideoBitRateTooltip); // 5
+                        page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000", "20000", "30000" }, "8000", VideoBitRateTooltip); // 5
                         page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 6
                         page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 7
                         page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 8
@@ -552,12 +552,10 @@ namespace FamiStudio
         #if !FAMISTUDIO_ANDROID
             if (propIdx == 17)
             {
-                // MATTT : Adjust the scale depending on how much size we have.
-
                 var resolutionIdx = props.GetSelectedIndex(2);
                 var halfFrameRate = props.GetSelectedIndex(3) == 1;
-                var previewResX = VideoResolution.ResolutionX[resolutionIdx] / 2;
-                var previewResY = VideoResolution.ResolutionY[resolutionIdx] / 2;
+                var previewResX = VideoResolution.ResolutionX[resolutionIdx];
+                var previewResY = VideoResolution.ResolutionY[resolutionIdx];
                 var previewDialog = new VideoPreviewDialog(dialog.ParentWindow, previewResX, previewResY, (project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC) * (halfFrameRate ? 0.5f : 1.0f));
 
                 previewDialog.ShowDialogNonModal();
@@ -574,7 +572,7 @@ namespace FamiStudio
             {
                 var newMode = props.GetSelectedIndex(propIdx);
                 props.SetPropertyEnabled(12, newMode != VideoMode.Oscilloscope);
-                props.SetPropertyEnabled(13, newMode == VideoMode.PianoRollUnified);
+                props.SetPropertyEnabled(13, newMode != VideoMode.Oscilloscope);
             }
             else if (propIdx == 1) // Song
             {
@@ -768,6 +766,7 @@ namespace FamiStudio
             settings.OscNumColumns = props.GetPropertyValue<int>(9);
             settings.OscLineThickness = props.GetPropertyValue<int>(10);
             settings.OscColorMode = props.GetSelectedIndex(11);
+            settings.PianoRollNumRows = 2; // MATTT
             settings.PianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(12) - 3);
             settings.PianoRollPerspective = Utils.ParseIntWithTrailingGarbage(props.GetPropertyValue<string>(13));
             settings.ShowRegisters = props.GetPropertyValue<bool>(14);

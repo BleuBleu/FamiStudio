@@ -770,7 +770,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void StartVideoRecording(Song song, long forceDisplayMask, float videoZoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
+        public void StartVideoRecording(Song song, float videoZoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
         {
             editChannel = 0;
             editMode = EditionMode.VideoRecording;
@@ -778,7 +778,6 @@ namespace FamiStudio
             zoom = videoZoom;
             pianoScaleX = pianoRollScaleX;
             zoomY = pianoRollScaleY;
-            videoForceDisplayChannelMask = forceDisplayMask;
 
             UpdateRenderCoords();
 
@@ -3652,7 +3651,7 @@ namespace FamiStudio
             r.b.PopClipRegion();
         }
 
-        public void RenderVideoFrame(Graphics g, int channel, int patternIndex, float noteIndex, float centerNote, (int, Color)[] highlightKeys)
+        public void RenderVideoFrame(Graphics g, int channel, long forceDisplayMask, int patternIndex, float noteIndex, float centerNote, (int, Color)[] highlightKeys)
         {
             Debug.Assert(editMode == EditionMode.VideoRecording);
 
@@ -3662,6 +3661,7 @@ namespace FamiStudio
             scrollX = (int)Math.Round((Song.GetPatternStartAbsoluteNoteIndex(patternIndex) + noteIndex) * (double)noteSizeX);
             scrollY = noteY - (Height - headerAndEffectSizeY) / 2;
             videoHighlightKeys = highlightKeys;
+            videoForceDisplayChannelMask = forceDisplayMask;
 
             OnRender(g);
         }

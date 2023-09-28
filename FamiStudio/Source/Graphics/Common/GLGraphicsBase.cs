@@ -178,15 +178,15 @@ namespace FamiStudio
             vtxArray[5] = screenRect.Height * 3;
         }
 
-        protected void MakeFullScreenQuad()
+        protected void MakeQuad(int x, int y, int width, int height)
         {
             var vtxIdx = 0;
             var texIdx = 0;
 
-            var x0 = 0;
-            var y0 = 0;
-            var x1 = screenRect.Width;
-            var y1 = screenRect.Height;
+            var x0 = x;
+            var y0 = y;
+            var x1 = x + width;
+            var y1 = y + height;
 
             vtxArray[vtxIdx++] = x0;
             vtxArray[vtxIdx++] = y0;
@@ -207,7 +207,7 @@ namespace FamiStudio
             texArray[texIdx++] = 0.0f;
         }
 
-        protected float[] GetBlurKernel(int numRings = 5)
+        protected float[] GetBlurKernel(int width, int height, int numRings = 5)
         {
             var kernel = new List<float>();
             kernel.Add(0);
@@ -221,8 +221,8 @@ namespace FamiStudio
                 {
                     var angle = i * 2 * MathF.PI / (r * 6);
                     Utils.ToCartesian(angle, r, out var sx, out var sy);
-                    kernel.Add(sx / screenRect.Width  * 2.0f); // MATTT Doubling.
-                    kernel.Add(sy / screenRect.Height * 2.0f); // MATTT Doubling.
+                    kernel.Add(sx / width  * 2.0f); // MATTT Doubling.
+                    kernel.Add(sy / height * 2.0f); // MATTT Doubling.
                     kernel.Add(0);
                     kernel.Add(0);
                 }
@@ -1297,9 +1297,10 @@ namespace FamiStudio
     [Flags]
     public enum BitmapFlags
     {
-        Default     = 0,
-        Rotated90   = 1 << 0,
-        Perspective = 1 << 1
+        Default       = 0,
+        Rotated90     = 1 << 0,
+        Perspective   = 1 << 1,
+        Perspective2x = 1 << 2,
     }
 
     // This is common to both OGL, it only does data packing, no GL calls.
@@ -3187,7 +3188,7 @@ namespace FamiStudio
                     var y1 = inst.y + inst.sy;
                     var tint = inst.tint != Color.Empty ? inst.tint : Color.White;
                     var rotated = inst.flags.HasFlag(BitmapFlags.Rotated90);
-                    var perspective = inst.flags.HasFlag(BitmapFlags.Perspective);
+                    var perspective = inst.flags.HasFlag(BitmapFlags.Perspective) | inst.flags.HasFlag(BitmapFlags.Perspective2x);
 
                     if (!perspective)
                     {
@@ -3234,7 +3235,8 @@ namespace FamiStudio
                     }
                     else 
                     {
-                        var ratio = inst.flags.HasFlag(BitmapFlags.Rotated90) ? inst.sy / bmp.Size.Width : inst.sy / bmp.Size.Height;
+                        var srcScale = inst.flags.HasFlag(BitmapFlags.Perspective2x) ? 2 : 1;
+                        var ratio = inst.flags.HasFlag(BitmapFlags.Rotated90) ? inst.sy / (bmp.Size.Width * srcScale) : inst.sy / (bmp.Size.Height * srcScale);
                         var numPixels = (int)(inst.sy * (1.0f - ratio));
                         var tx = 1.0f - numPixels / inst.sx * 2;
 

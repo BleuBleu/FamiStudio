@@ -10,25 +10,50 @@ namespace FamiStudio
         private int margin = DpiScaling.ScaleForWindow(8);
         private int buttonSize = DpiScaling.ScaleForWindow(36);
         private int labelSizeY = DpiScaling.ScaleForWindow(18);
+        private bool firstFrameAdded;
         private float targetFrameTime;
         private double lastFrameTime = -1;
         private Label label;
         private ImageBox imageBox;
         private Button buttonYes;
+        private LocalizedString VideoPreviewTitle;
         private LocalizedString VideoPreviewLabel;
         private LocalizedString AcceptTooltip;
 
-        public VideoPreviewDialog(FamiStudioWindow win, int resX, int resY, float fps) : base(win, "Video Preview")
+        public VideoPreviewDialog(FamiStudioWindow win, int resX, int resY, float fps) : base(win, "A")
         {
             Localization.Localize(this);
 
-            Resize(resX + margin * 2, margin * 4 + labelSizeY + resY + buttonSize + titleBarSizeY);
+            var winSizeX = 0;
+            var winSizeY = 0;
+            var previewSizeX = 0;
+            var previewSizeY = 0;
+            var fraction = 4;
+
+            for (; fraction >= 1; fraction--)
+            {
+                previewSizeX = resX * fraction / 4;
+                previewSizeY = resY * fraction / 4;
+
+                winSizeX = previewSizeX + margin * 2;
+                winSizeY = margin * 4 + labelSizeY + previewSizeY + buttonSize + titleBarSizeY;
+                
+                if (winSizeX < win.Size.Width && 
+                    winSizeY < win.Size.Height)
+                {
+                    break;
+                }
+            }
+
+            Title = VideoPreviewTitle.Format(fraction * 100 / 4);
+
+            Resize(winSizeX, winSizeY);
 
             label = new Label(VideoPreviewLabel, true);
             label.Move(margin, margin + titleBarSizeY, width - margin, labelSizeY);
 
             imageBox = new ImageBox((Bitmap)null);
-            imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, resX, resY);
+            imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, previewSizeX, previewSizeY);
             imageBox.ScaleImage = true;
             imageBox.FlipImage = true;
 
@@ -58,8 +83,19 @@ namespace FamiStudio
             CenterToWindow();
         }
 
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (!e.Handled && e.Key == Keys.Escape)
+            {
+                Close(DialogResult.Cancel);
+            }
+        }
+
         public bool AddFrame(OffscreenGraphics graphics)
         {
+            firstFrameAdded = true;
             label.Text = VideoPreviewLabel;
             imageBox.Image = graphics.GetTexture();
             if (ParentWindow == null)
@@ -87,11 +123,14 @@ namespace FamiStudio
 
         public void EndEncoding(bool abort)
         {
+            // Texture will be disposed, cant display anymore.
+            imageBox.Image = null;
         }
 
         public void LogMessage(string msg)
         {
-            label.Text = msg;
+            if (!firstFrameAdded)
+                label.Text = msg;
         }
 
         public void ReportProgress(float progress)
