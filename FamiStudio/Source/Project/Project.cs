@@ -1143,6 +1143,17 @@ namespace FamiStudio
             return false;
         }
 
+        public void MoveFolder(Folder folder, Folder folderBefore)
+        {
+            Debug.Assert(folders.Contains(folder));
+            folders.Remove(folder);
+
+            if (folderBefore != null)
+                folders.Insert(folders.IndexOf(folderBefore) + 1, folder);
+            else
+                folders.Insert(0, folder);
+        }
+
         // MATTT : Add a sort folder method, call it in the "Conditional sort, etc".
 
         public void DeleteUnmappedSamples()

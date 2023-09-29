@@ -7,11 +7,7 @@ x Upgrade Windows to .NET 6.0
 	- Setup keystore, etc.
 	- Bring back APK
 / Instrument folders + collapse entire sections (samples, arps, etc.) 
-	x Add delete function.
-	x Only instruments "+" works with right-click...
-	- Ability to move folders
 	- Make it work on mobile.
-	- Figure out drag vs. sorting issue.
 x Keep colors on FS.txt
 x When using shy mode, we could make the patterns larger if there is room.
 - Video export improvements:
@@ -35,6 +31,7 @@ x When using shy mode, we could make the patterns larger if there is room.
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 - Fix that bug where patterns are modified twice if you select 2 instances
+	- Also applies to custom pattern settings apparently. https://discord.com/channels/@me/819772561940152321/1157147940029206649
 - Extended intrument mode for sound engine, up to 256. 
 - Project cleanup doesnt respect sorting? 
 	https://discord.com/channels/@me/819772561940152321/1151930656302051398
@@ -139,6 +136,8 @@ Discord
 
 Backlog: 
 =========
+- A way to view the preview effect value (grey rectangle). Either draw it on the left edge, or in the piano roll tolltip.
+	https://discord.com/channels/@me/819772561940152321/1157075515199475732
 - Bug import N163 instruments
 	https://discord.com/channels/@me/819772561940152321/1154660603617607741
 - Low slide notes going down + arp going up = glitch. Fix idea : Internally modify the arp to make it less strong based on slide range (ex: div by 4 if doing down 2 octaves).

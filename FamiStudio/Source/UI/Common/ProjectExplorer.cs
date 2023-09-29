@@ -572,6 +572,22 @@ namespace FamiStudio
                 }
             }
 
+            public bool ItemIsInFolder
+            {
+                get
+                {
+                    switch (type)
+                    {
+                        case ButtonType.Song:       return !string.IsNullOrEmpty(song.FolderName);
+                        case ButtonType.Instrument: return !string.IsNullOrEmpty(instrument.FolderName);
+                        case ButtonType.Arpeggio:   return arpeggio != null && !string.IsNullOrEmpty(arpeggio.FolderName);
+                        case ButtonType.Dpcm:       return !string.IsNullOrEmpty(sample.FolderName);
+                    }
+
+                    return false;
+                }
+            }
+
             public string Text
             {
                 get
@@ -1249,13 +1265,16 @@ namespace FamiStudio
                 if (buttonIdx >= 0)
                 {
                     var button = buttons[buttonIdx];
+                    var nextButton = buttonIdx != buttons.Count - 1 ? buttons[buttonIdx + 1] : null;
 
                     if ((captureOperation == CaptureOperation.DragSong       && (button.type == ButtonType.Song       || button.type == ButtonType.SongHeader       || button.type == ButtonType.SongFolder)) ||
                         (captureOperation == CaptureOperation.DragInstrument && (button.type == ButtonType.Instrument || button.type == ButtonType.InstrumentHeader || button.type == ButtonType.InstrumentFolder)) ||
                         (captureOperation == CaptureOperation.DragSample     && (button.type == ButtonType.Dpcm       || button.type == ButtonType.DpcmHeader       || button.type == ButtonType.DpcmFolder)) ||
-                        (captureOperation == CaptureOperation.DragArpeggio   && (button.type == ButtonType.Arpeggio   || button.type == ButtonType.ArpeggioFolder))) // No header to account for "None" arp.
+                        (captureOperation == CaptureOperation.DragArpeggio   && (button.type == ButtonType.Arpeggio   || button.type == ButtonType.ArpeggioFolder)) || // No header to account for "None" arp.
+                        // Folder can be insert : below another folder OR below the last item not in a folder
+                        (captureOperation == CaptureOperation.DragFolder     && ((button.folder != null && button.folder.Type == draggedFolder.Type) || (!button.ItemIsInFolder && nextButton != null && nextButton.folder != null && nextButton.folder.Type == draggedFolder.Type))))
                     {
-                        if (button.folder != null)
+                        if (captureOperation != CaptureOperation.DragFolder && button.folder != null)
                         {
                             folder = button.folder;
                         }
@@ -1546,7 +1565,8 @@ namespace FamiStudio
                 if (captureOperation == CaptureOperation.DragSong       ||
                     captureOperation == CaptureOperation.DragInstrument ||
                     captureOperation == CaptureOperation.DragSample     ||
-                    captureOperation == CaptureOperation.DragArpeggio)
+                    captureOperation == CaptureOperation.DragArpeggio   ||
+                    captureOperation == CaptureOperation.DragFolder)
                 {
                     var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
                     var beforeButtonIdx = GetDragCaptureState(pt.X, pt.Y, out var draggedInFolder);
@@ -1554,7 +1574,7 @@ namespace FamiStudio
                     if (beforeButtonIdx >= 0)
                     {
                         var lineY = (beforeButtonIdx + 1) * buttonSizeY - scrollY;
-                        var lineColor = Color.Black;
+                        var lineColor = Theme.LightGreyColor2;
 
                         switch (captureOperation)
                         {
@@ -2008,10 +2028,20 @@ namespace FamiStudio
                         var songBefore = buttons[buttonIdx].song;
                         if (songBefore != draggedSong)
                         {
+                            var oldFolder = draggedSong.Folder;
                             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
                             App.Project.MoveSong(draggedSong, songBefore);
                             draggedSong.FolderName = draggedInFolder == null ? null : draggedInFolder.Name;
-                            App.Project.AutoSortSongs = false;
+                            if (draggedInFolder != null && !draggedInFolder.Expanded)
+                            {
+                                draggedInFolder.Expanded = true;
+                                BlinkButton(draggedSong);
+                            }
+                            if (oldFolder == draggedSong.Folder)
+                            {
+                                App.Project.AutoSortSongs = false;
+                            }
+                            App.Project.ConditionalSortSongs();
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
@@ -2025,21 +2055,20 @@ namespace FamiStudio
                         var instrumentBefore = buttons[buttonIdx].instrument;
                         if (instrumentBefore != draggedInstrument)
                         {
+                            var oldFolder = draggedInstrument.Folder;
                             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
                             App.Project.MoveInstrument(draggedInstrument, instrumentBefore);
                             draggedInstrument.FolderName = draggedInFolder == null ? null : draggedInFolder.Name;
                             if (draggedInFolder != null && !draggedInFolder.Expanded)
                             {
-                                // MATTT : If moving between any 2 folders, we should respect sorting? Not sure whats best here. 
-                                // MATTT : When figured out, do same for all others.
                                 draggedInFolder.Expanded = true;
                                 BlinkButton(draggedInstrument);
-                                App.Project.ConditionalSortInstruments();
                             }
-                            else
+                            if (oldFolder == draggedInstrument.Folder)
                             {
                                 App.Project.AutoSortInstruments = false;
                             }
+                            App.Project.ConditionalSortInstruments();
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
@@ -2059,10 +2088,20 @@ namespace FamiStudio
                         var arpBefore = buttons[buttonIdx].arpeggio;
                         if (arpBefore != draggedArpeggio)
                         {
+                            var oldFolder = draggedArpeggio.Folder;
                             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
                             App.Project.MoveArpeggio(draggedArpeggio, arpBefore);
                             draggedArpeggio.FolderName = draggedInFolder == null ? null : draggedInFolder.Name;
-                            App.Project.AutoSortArpeggios = false;
+                            if (draggedInFolder != null && !draggedInFolder.Expanded)
+                            {
+                                draggedInFolder.Expanded = true;
+                                BlinkButton(draggedArpeggio);
+                            }
+                            if (oldFolder == draggedArpeggio.Folder)
+                            {
+                                App.Project.AutoSortArpeggios = false;
+                            }
+                            App.Project.ConditionalSortArpeggios();
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
@@ -2080,10 +2119,20 @@ namespace FamiStudio
                         var sampleBefore = buttons[buttonIdx].sample;
                         if (sampleBefore != draggedSample)
                         {
+                            var oldFolder = draggedSample.Folder;
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                             App.Project.MoveSample(draggedSample, sampleBefore);
                             draggedSample.FolderName = draggedInFolder == null ? null : draggedInFolder.Name;
-                            App.Project.AutoSortSamples = false;
+                            if (draggedInFolder != null && !draggedInFolder.Expanded)
+                            {
+                                draggedInFolder.Expanded = true;
+                                BlinkButton(draggedSample);
+                            }
+                            if (oldFolder == draggedSample.Folder)
+                            {
+                                App.Project.AutoSortSamples = false;
+                            }
+                            App.Project.ConditionalSortSamples();
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
@@ -2097,6 +2146,26 @@ namespace FamiStudio
                             instrument.MapDPCMSample(mappingNote, draggedSample);
                             App.UndoRedoManager.EndTransaction();
                             DPCMSampleMapped?.Invoke(draggedSample, ControlToScreen(new Point(x, y)));
+                        }
+                    }
+                }
+                else if (captureOperation == CaptureOperation.DragFolder)
+                {
+                    if (inside && button != null)
+                    {
+                        var folderBefore = buttons[buttonIdx].folder;
+                        if (folderBefore != draggedFolder)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.Project.MoveFolder(draggedFolder, folderBefore);
+                            switch (draggedFolder.Type)
+                            {
+                                case FolderType.Song:       App.Project.AutoSortSongs       = false; break;
+                                case FolderType.Instrument: App.Project.AutoSortInstruments = false; break;
+                                case FolderType.Arpeggio:   App.Project.AutoSortArpeggios   = false; break;
+                                case FolderType.Sample:     App.Project.AutoSortSamples     = false; break;
+                            }
+                            App.UndoRedoManager.EndTransaction();
                         }
                     }
                 }
@@ -2226,7 +2295,6 @@ namespace FamiStudio
             if (captureOperation != CaptureOperation.None && realTime)
             {
                 captureDuration += delta;
-                Debug.WriteLine($"Duration {captureDuration} {delta}");
             }
 
             if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
