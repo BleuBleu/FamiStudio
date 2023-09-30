@@ -327,10 +327,21 @@ namespace FamiStudio
 
             BuildChannelColors(song, channelStates, metadata, settings.OscColorMode);
 
-            if (!string.IsNullOrEmpty(song.Name))         authorText.Add(song.Name);
-            if (!string.IsNullOrEmpty(project.Name))      authorText.Add(project.Name);
-            if (!string.IsNullOrEmpty(project.Author))    authorText.Add(project.Author);
-            if (!string.IsNullOrEmpty(project.Copyright)) authorText.Add(project.Copyright);
+            if (!string.IsNullOrEmpty(project.Name))
+            {
+                if (!string.IsNullOrEmpty(song.Name))
+                    authorText.Add($"{project.Name} - {song.Name}");
+                else
+                    authorText.Add(project.Name);
+            }
+
+            if (!string.IsNullOrEmpty(project.Author))
+            {
+                if (!string.IsNullOrEmpty(project.Copyright))
+                    authorText.Add($"{project.Author} (c) {project.Copyright}");
+                else
+                    authorText.Add(project.Author);
+            }
 
             return true;
         }
@@ -469,9 +480,17 @@ namespace FamiStudio
                     DrawRegisterValues(frame);
                     videoGraphics.OverlayCommandList.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
                     
-                    var textY = videoResY - authorText.Count * fonts.FontSmall.LineHeight - TextMargin;
-                    for (var i = 0; i < authorText.Count; i++, textY += fonts.FontSmall.LineHeight)
-                        videoGraphics.OverlayCommandList.DrawText(authorText[i], fonts.FontSmall, TextMargin, textY, Theme.LightGreyColor2, TextFlags.DropShadow);
+                    var textY = videoResY - authorText.Count * fonts.FontMediumBold.LineHeight - TextMargin;
+                    for (var i = 0; i < authorText.Count; i++, textY += fonts.FontMediumBold.LineHeight)
+                    {
+                        // Ghetto drop shadow...
+                        var shadowColor = new Color(0, 0, 0, 96);
+                        videoGraphics.OverlayCommandList.DrawText(authorText[i], fonts.FontMediumBold, TextMargin - 1, textY - 1, shadowColor);
+                        videoGraphics.OverlayCommandList.DrawText(authorText[i], fonts.FontMediumBold, TextMargin - 1, textY + 1, shadowColor);
+                        videoGraphics.OverlayCommandList.DrawText(authorText[i], fonts.FontMediumBold, TextMargin + 1, textY - 1, shadowColor);
+                        videoGraphics.OverlayCommandList.DrawText(authorText[i], fonts.FontMediumBold, TextMargin + 1, textY + 1, shadowColor);
+                        videoGraphics.OverlayCommandList.DrawText(authorText[i], fonts.FontMediumBold, TextMargin, textY, Theme.LightGreyColor1);
+                    }
 
                     videoGraphics.EndDrawFrame();
 
