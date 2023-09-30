@@ -15,13 +15,13 @@ x When using shy mode, we could make the patterns larger if there is room.
 	/ Unified piano roll mode.
 		x Show all channels 
 		x Highlight piano keys
-		/ Make 3D work with separate mode, this would unify code a lot...
-		/ Use a single off-screen graphics
-		- Add num rows options for separate mode
-		- Figure out the options to add (piano key size)
+		x Make 3D work with separate mode, this would unify code a lot...
+		x Use a single off-screen graphics
+		x Add num rows options for separate mode
+		- Figure out the options to add (piano key size?)
 		- Figure out scrolling.
 		- Cleanup MATTT
-		- In unified mode, unchecking channel should remove them from piano roll. Keep osc if channel is non-empty.
+		- In unified mode, unchecking channel should remove them from piano roll. (Keep osc if channel is non-empty?)
 		- Overlap when too many channels???
 - Rename "Bitmap" to "Texture"
 - Finish/fix phase reset support
