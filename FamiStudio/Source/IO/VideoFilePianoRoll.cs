@@ -301,7 +301,7 @@ namespace FamiStudio
             var pianoRoll = new PianoRoll();
             pianoRoll.OverrideGraphics(videoGraphics, fonts);
             pianoRoll.Move(0, 0, renderSizeY, renderSizeX); // Piano roll is 90 degrees rotated.
-            pianoRoll.StartVideoRecording(song, settings.PianoRollZoom, 1.0f, 1.0f, out noteSizeY); // MATTT Figure out scale X/Y
+            pianoRoll.StartVideoRecording(song, settings.PianoRollZoom, 1.0f, 1.0f, settings.ChannelTranspose, out noteSizeY); // MATTT Figure out scale X/Y
 
             //if (separateChannels)
             //{
@@ -382,7 +382,7 @@ namespace FamiStudio
                         }
                     }
 
-                    highlightedKeys[i] = (note.Value, color);
+                    highlightedKeys[i] = (note.Value + settings.ChannelTranspose[s.songChannelIndex], color);
                 }
 
                 if (separateChannels)

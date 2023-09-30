@@ -154,6 +154,7 @@ namespace FamiStudio
         // Video grid
         LocalizedString ChannelColumn;
         LocalizedString PanColumn;
+        LocalizedString TransposeColumn;
         LocalizedString TriggerColumn;
         LocalizedString EmulationOption;
         LocalizedString PeakSpeedOption;
@@ -254,7 +255,7 @@ namespace FamiStudio
         {
             Localization.Localize(this);
 
-            dialog = new MultiPropertyDialog(win, Title, 620, 200);
+            dialog = new MultiPropertyDialog(win, Title, 640, 200);
             dialog.SetVerb(Verb);
             app = win.FamiStudio;
             project = app.Project;
@@ -325,7 +326,7 @@ namespace FamiStudio
             return channelActives;
         }
 
-        private object[,] GetDefaultChannelsGridData(bool triggers, Song song)
+        private object[,] GetDefaultChannelsGridData(bool tranpose, bool trigger, Song song)
         {
             // Find all channels used by the project.
             var anyChannelActive = false;
@@ -346,14 +347,16 @@ namespace FamiStudio
             }
 
             var channelTypes = project.GetActiveChannelList();
-            var data = new object[channelTypes.Length, triggers ? 4 : 3];
-            for (int i = 0; i < channelTypes.Length; i++)
+            var data = new object[channelTypes.Length, trigger ? 5 : 3];
+
+            for (var i = 0; i < channelTypes.Length; i++)
             {
-                data[i, 0] = !anyChannelActive || channelActives[i];
-                data[i, 1] = ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]);
-                data[i, 2] = 50;
-                if (triggers)
-                    data[i, 3] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? EmulationOption.Value : PeakSpeedOption.Value;
+                var j = 0;
+                data[i, j++] = !anyChannelActive || channelActives[i];
+                data[i, j++] = ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]);
+                data[i, j++] = 50;
+                if (tranpose) data[i, j++] = 0;
+                if (trigger)  data[i, j++] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? EmulationOption.Value : PeakSpeedOption.Value;
             }
 
             return data;
@@ -377,7 +380,7 @@ namespace FamiStudio
                     page.AddCheckBox(SeparateChannelFilesLabel.Colon, false, SeperateFilesTooltip); // 8
                     page.AddCheckBox(SeparateIntroFileLabel.Colon, false, SeperateIntroTooltip); // 9
                     page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 10
-                    page.AddGrid(ChannelsLabel, new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.4f), new ColumnDesc(PanColumn, 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(false, app.SelectedSong), 7, ChannelGridTooltip); // 11
+                    page.AddGrid(ChannelsLabel, new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.4f), new ColumnDesc(PanColumn, 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(false, false, app.SelectedSong), 7, ChannelGridTooltip); // 11
                     page.SetPropertyEnabled( 3, false);
                     page.SetPropertyEnabled( 6, false);
                     page.SetPropertyVisible( 8, Platform.IsDesktop); // No separate files on mobile.
@@ -393,6 +396,18 @@ namespace FamiStudio
 
                     if (canExportToVideo)
                     {
+                        var gridColumns = new List<ColumnDesc>();
+                        
+                        gridColumns.Add(new ColumnDesc("", 0.0f, ColumnType.CheckBox));
+                        gridColumns.Add(new ColumnDesc(ChannelColumn, 0.3f));
+                        gridColumns.Add(new ColumnDesc(PanColumn, Platform.IsDesktop ? 0.2f : 0.7f, ColumnType.Slider, "{0} %"));
+
+                        if (Platform.IsDesktop)
+                        {
+                            gridColumns.Add(new ColumnDesc(TransposeColumn, 0.2f, -8, 8));
+                            gridColumns.Add(new ColumnDesc(TriggerColumn, 0.2f, new string[] { EmulationOption, PeakSpeedOption }));
+                        }
+
                         page.AddDropDownList(VideoModeLabel.Colon, Localization.ToStringArray(VideoMode.LocalizedNames), VideoMode.LocalizedNames[0], VideoModeTooltip); // 0
                         page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 1
                         page.AddDropDownList(ResolutionLabel.Colon, Localization.ToStringArray(VideoResolution.LocalizedNames), VideoResolution.LocalizedNames[0], VideoResTooltip); // 2
@@ -410,10 +425,7 @@ namespace FamiStudio
                         page.AddDropDownList(PianoRollPerspectiveLabel.Colon, new[] { "0°", "45°", "60°", "75°" }, "60°", PianoRollPerspectiveTooltip); // 14
                         page.AddCheckBox(VideoOverlayRegistersLabel.Colon, false, VideoOverlayRegistersTooltip); // 15
                         page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 16
-                        page.AddGrid(ChannelsLabel,
-                            Platform.IsDesktop ?
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.4f, ColumnType.Slider, "{0} %"), new ColumnDesc(TriggerColumn, 0.1f, new string[] { EmulationOption, PeakSpeedOption }) } :
-                            new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.3f), new ColumnDesc(PanColumn, 0.7f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(Platform.IsDesktop, app.SelectedSong), project.GetActiveChannelCount() + 1, ChannelGridTooltipVid); // 17
+                        page.AddGrid(ChannelsLabel, gridColumns.ToArray(), GetDefaultChannelsGridData(Platform.IsDesktop, Platform.IsDesktop, app.SelectedSong), project.GetActiveChannelCount() + 1, ChannelGridTooltipVid); // 17
                         page.AddButton(null, "Preview"); // 18
                         page.SetPropertyEnabled(12, false);
                         page.SetPropertyEnabled(13, false);
@@ -421,6 +433,7 @@ namespace FamiStudio
                         page.SetPropertyEnabled(16, !project.OutputsStereoAudio); // Force stereo for EPSM.
                         page.SetPropertyVisible(18, Platform.IsDesktop);
                         page.SetColumnEnabled(17, 2, project.OutputsStereoAudio);
+                        page.SetColumnEnabled(17, 3, false);
                         page.SetScrolling(500);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                         page.PropertyClicked += VideoPage_PropertyClicked;
@@ -578,10 +591,11 @@ namespace FamiStudio
                 props.SetPropertyEnabled(12, newMode != VideoMode.Oscilloscope);
                 props.SetPropertyEnabled(13, newMode == VideoMode.PianoRollSeparateChannels);
                 props.SetPropertyEnabled(14, newMode != VideoMode.Oscilloscope);
+                props.SetColumnEnabled(17, 3, newMode == VideoMode.PianoRollUnified);
             }
             else if (propIdx == 1) // Song
             {
-                props.UpdateGrid(16, GetDefaultChannelsGridData(Platform.IsDesktop, project.Songs[props.GetSelectedIndex(1)]));
+                props.UpdateGrid(16, GetDefaultChannelsGridData(Platform.IsDesktop, Platform.IsDesktop, project.Songs[props.GetSelectedIndex(1)]));
             }
             else if (propIdx == 16) // Stereo
             {
@@ -593,7 +607,7 @@ namespace FamiStudio
         {
             if (propIdx == 0)
             {
-                props.UpdateGrid(11, GetDefaultChannelsGridData(false, project.Songs[props.GetSelectedIndex(0)]));
+                props.UpdateGrid(11, GetDefaultChannelsGridData(false, false, project.Songs[props.GetSelectedIndex(0)]));
             }
             else if (propIdx == 1)
             {
@@ -777,6 +791,7 @@ namespace FamiStudio
             settings.ShowRegisters = props.GetPropertyValue<bool>(15);
             settings.Stereo = preview ? false : props.GetPropertyValue<bool>(16);
             settings.ChannelPan = new float[channelCount];
+            settings.ChannelTranspose = new int[channelCount];
             settings.EmuTriggers = new bool[channelCount];
             settings.ChannelMask = 0;
             settings.Encoder = forcedEncoder != null ? forcedEncoder : Platform.CreateVideoEncoder();
@@ -787,7 +802,8 @@ namespace FamiStudio
                     settings.ChannelMask |= (1L << i);
 
                 settings.ChannelPan[i] = preview ? 0.5f : props.GetPropertyValue<int>(17, i, 2) / 100.0f;
-                settings.EmuTriggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(17, i, 3) == EmulationOption : true;
+                settings.ChannelTranspose[i] = Platform.IsDesktop ? props.GetPropertyValue<int>(17, i, 3) * 12 : 0;
+                settings.EmuTriggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(17, i, 4) == EmulationOption : true;
             }
 
             if (videoMode == VideoMode.Oscilloscope)

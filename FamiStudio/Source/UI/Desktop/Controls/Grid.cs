@@ -55,6 +55,8 @@ namespace FamiStudio
         private BitmapAtlasRef bmpCheckOff;
         private BitmapAtlasRef bmpRadioOn;
         private BitmapAtlasRef bmpRadioOff;
+        private BitmapAtlasRef bmpUpDownPlus;
+        private BitmapAtlasRef bmpUpDownMinus;
 
         private int margin         = DpiScaling.ScaleForWindow(4);
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
@@ -243,10 +245,12 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             var g = Graphics;
-            bmpCheckOn  = g.GetBitmapAtlasRef("CheckBoxYes");
-            bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
-            bmpRadioOn  = g.GetBitmapAtlasRef("RadioButtonOn");
-            bmpRadioOff = g.GetBitmapAtlasRef("RadioButtonOff");
+            bmpCheckOn     = g.GetBitmapAtlasRef("CheckBoxYes");
+            bmpCheckOff    = g.GetBitmapAtlasRef("CheckBoxNo");
+            bmpRadioOn     = g.GetBitmapAtlasRef("RadioButtonOn");
+            bmpRadioOff    = g.GetBitmapAtlasRef("RadioButtonOff");
+            bmpUpDownPlus  = g.GetBitmapAtlasRef("UpDownPlus");
+            bmpUpDownMinus = g.GetBitmapAtlasRef("UpDownMinus");
 
             UpdateLayout();
 
@@ -369,8 +373,6 @@ namespace FamiStudio
                                 }
                                 case ColumnType.DropDown:
                                 {
-                                                    Debug.WriteLine("LIST OPENING");
-
                                     dropDownActive.Visible = true;
                                     dropDownActive.Move(left + columnOffsets[col], top + (row + numHeaderRows - scroll) * rowHeight, columnWidths[col], rowHeight);
                                     dropDownActive.SetItems(colDesc.DropDownValues);
@@ -379,6 +381,15 @@ namespace FamiStudio
                                     dropDownActive.GrabDialogFocus();
                                     dropDownRow = row;
                                     dropDownCol = col;
+                                    break;
+                                }
+                                case ColumnType.NumericUpDown:
+                                {
+                                    var increment = 0;
+                                    if (e.X <= (left + columnOffsets[col + 0] + rowHeight)) increment = -1;
+                                    if (e.X >= (left + columnOffsets[col + 1] - rowHeight)) increment =  1;
+                                    data[row, col] = Utils.Clamp((int)data[row, col] + increment, colDesc.MinValue, colDesc.MaxValue);
+                                    ValueChanged?.Invoke(this, row, col, data[row, col]);
                                     break;
                                 }
                             }
@@ -487,6 +498,17 @@ namespace FamiStudio
             if (e.Left && PixelToCell(e.X, e.Y, out var row, out var col) && row < data.GetLength(0))
             {
                 CellDoubleClicked?.Invoke(this, row, col);
+
+                // Handle double-clicks as clicks for few types to make them more responsive.
+                if ((e.Y > rowHeight * numHeaderRows))
+                {
+                    var colDesc = columns[col];
+                    if (colDesc.Type == ColumnType.CheckBox ||
+                        colDesc.Type == ColumnType.NumericUpDown)
+                    {
+                        OnMouseDown(e);
+                    }
+                }
             }
         }
 
@@ -642,6 +664,20 @@ namespace FamiStudio
                             {
                                 var bmp = g.GetBitmapAtlasRef((string)val);
                                 c.DrawBitmapAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, 1, foreColor);
+                                break;
+                            }
+                            case ColumnType.NumericUpDown:
+                            {
+                                if (cellEnabled)
+                                {
+                                    c.DrawBitmapAtlasCentered(bmpUpDownMinus, 0, 0, rowHeight, rowHeight, 1, 1, foreColor);
+                                    c.DrawBitmapAtlasCentered(bmpUpDownPlus, colWidth - rowHeight, 0, rowHeight, rowHeight, 1, 1, foreColor);
+                                    c.DrawText(val.ToString(), Fonts.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                }
+                                else
+                                {
+                                    c.DrawText("N/A", Fonts.FontMedium, 0, 0, Theme.MediumGreyColor1, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                }
                                 break;
                             }
                         }

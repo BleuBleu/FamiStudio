@@ -63,7 +63,8 @@ namespace FamiStudio
         Button,
         DropDown,
         Slider,
-        Image
+        Image,
+        NumericUpDown
     };
 
     public enum ClickType
@@ -83,6 +84,8 @@ namespace FamiStudio
         public ColumnType Type = ColumnType.Label;
         public string[] DropDownValues;
         public string StringFormat = "{0}";
+        public int MinValue;
+        public int MaxValue;
 
         public ColumnDesc(string name, float width, ColumnType type = ColumnType.Label, string format = "{0}")
         {
@@ -100,6 +103,15 @@ namespace FamiStudio
             Type = ColumnType.DropDown;
             DropDownValues = values;
             Width = width;
+        }
+
+        public ColumnDesc(string name, float width, int min, int max)
+        {
+            Name = name;
+            Type = ColumnType.NumericUpDown;
+            Width = width;
+            MinValue = min;
+            MaxValue = max;
         }
 
         //public Type GetPropertyType()
