@@ -9,8 +9,9 @@ namespace FamiStudio
 {
     class VideoFileBase
     {
-        protected const int   SampleRate = 44100;
-        protected const int   ChannelIconTextSpacing = 8;
+        protected const int TextMargin = 4;
+        protected const int SampleRate = 44100;
+        protected const int ChannelIconTextSpacing = 8;
 
         protected int videoResX = 1920;
         protected int videoResY = 1080;
@@ -35,6 +36,7 @@ namespace FamiStudio
         protected List<RegisterViewer> registerViewers;
         protected List<Bitmap> registerViewerIcons;
         protected Color[] registerColors = new Color[11];
+        protected List<string> authorText = new List<string>();
 
         // TODO : This is is very similar to Oscilloscope.cs, unify eventually...
         protected float[] UpdateOscilloscope(VideoChannelState state, int frameIndex)
@@ -325,6 +327,11 @@ namespace FamiStudio
 
             BuildChannelColors(song, channelStates, metadata, settings.OscColorMode);
 
+            if (!string.IsNullOrEmpty(song.Name))         authorText.Add(song.Name);
+            if (!string.IsNullOrEmpty(project.Name))      authorText.Add(project.Name);
+            if (!string.IsNullOrEmpty(project.Author))    authorText.Add(project.Author);
+            if (!string.IsNullOrEmpty(project.Copyright)) authorText.Add(project.Copyright);
+
             return true;
         }
 
@@ -457,10 +464,15 @@ namespace FamiStudio
 
                     body(f);
 
-                    // Registers + watermark.
+                    // Registers + watermark + artist.
                     videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), false, Theme.DarkGreyColor2);
                     DrawRegisterValues(frame);
                     videoGraphics.OverlayCommandList.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
+                    
+                    var textY = videoResY - authorText.Count * fonts.FontSmall.LineHeight - TextMargin;
+                    for (var i = 0; i < authorText.Count; i++, textY += fonts.FontSmall.LineHeight)
+                        videoGraphics.OverlayCommandList.DrawText(authorText[i], fonts.FontSmall, TextMargin, textY, Theme.LightGreyColor2, TextFlags.DropShadow);
+
                     videoGraphics.EndDrawFrame();
 
                     // Send to encoder.

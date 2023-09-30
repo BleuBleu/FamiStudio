@@ -420,9 +420,9 @@ namespace FamiStudio
                         page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 9
                         page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 10
                         page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 11
-                        page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTooltip); // 12
+                        page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "6.25%", "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTooltip); // 12
                         page.AddNumericUpDown(PianoRollNumRowsLabel.Colon, 1, 1, 16, 1, PianoRollNumRowsTooltip); // 13
-                        page.AddDropDownList(PianoRollPerspectiveLabel.Colon, new[] { "0°", "45°", "60°", "75°" }, "60°", PianoRollPerspectiveTooltip); // 14
+                        page.AddDropDownList(PianoRollPerspectiveLabel.Colon, new[] { "0°", "30°", "45°", "60°", "75°" }, "60°", PianoRollPerspectiveTooltip); // 14
                         page.AddCheckBox(VideoOverlayRegistersLabel.Colon, false, VideoOverlayRegistersTooltip); // 15
                         page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 16
                         page.AddGrid(ChannelsLabel, gridColumns.ToArray(), GetDefaultChannelsGridData(Platform.IsDesktop, Platform.IsDesktop, app.SelectedSong), project.GetActiveChannelCount() + 1, ChannelGridTooltipVid); // 17
