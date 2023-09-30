@@ -341,7 +341,7 @@ namespace FamiStudio
                 var channelPosX = (int)MathF.Round((idx % numCols) * channelSizeXFloat);
                 var channelPosY = (int)MathF.Round((idx / numCols) * channelSizeYFloat);
 
-                videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), idx == 0, Color.Black); // MATTT : Correct position
+                videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), idx == 0, Theme.DarkGreyColor2);
 
                 if (settings.PianoRollPerspective > 0)
                 {
