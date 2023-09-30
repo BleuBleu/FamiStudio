@@ -30,8 +30,9 @@ x When using shy mode, we could make the patterns larger if there is room.
 - Latency improvements, decouple buffered audio frames VS. buffered emulated frames.
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
-- Fix that bug where patterns are modified twice if you select 2 instances
-	- Also applies to custom pattern settings apparently. https://discord.com/channels/@me/819772561940152321/1157147940029206649
+x Fix that bug where patterns are modified twice if you select 2 instances
+- Also applies to custom pattern settings apparently?
+	https://discord.com/channels/@me/819772561940152321/1157147940029206649
 - Extended intrument mode for sound engine, up to 256. 
 - Project cleanup doesnt respect sorting? 
 	https://discord.com/channels/@me/819772561940152321/1151930656302051398

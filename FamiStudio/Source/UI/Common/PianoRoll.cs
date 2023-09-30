@@ -4002,18 +4002,24 @@ namespace FamiStudio
                 var scaling = (Utils.Clamp(originalValue + delta, minValue, maxValue) - minValue) / (float)(originalValue - minValue);
                 var minLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin);
                 var maxLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMax);
+                var processedNotes = new HashSet<Note>();
 
                 for (var it = channel.GetSparseNoteIterator(minLocation, maxLocation, Note.GetFilterForEffect(selectedEffectIdx)); !it.Done; it.Next())
                 {
-                    var value = it.Note.GetEffectValue(selectedEffectIdx);
+                    if (!processedNotes.Contains(it.Note))
+                    {
+                        var value = it.Note.GetEffectValue(selectedEffectIdx);
 
-                    if (relativeEffectScaling)
-                    {
-                        it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp((int)Math.Round((value - minValue) * scaling + minValue), minValue, maxValue));
-                    }
-                    else
-                    {
-                        it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp(value + delta, minValue, maxValue));
+                        if (relativeEffectScaling)
+                        {
+                            it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp((int)Math.Round((value - minValue) * scaling + minValue), minValue, maxValue));
+                        }
+                        else
+                        {
+                            it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp(value + delta, minValue, maxValue));
+                        }
+
+                        processedNotes.Add(it.Note);
                     }
                 }
 
@@ -8825,10 +8831,11 @@ namespace FamiStudio
             var resizeNoteEnd = captureNoteAbsoluteIdx + resizeNote.Duration;
             var snappedLocation = NoteLocation.Max(SnapNote(location, Platform.IsDesktop), SnapNote(captureNoteLocation, true));
             var deltaNoteIdx = snappedLocation.ToAbsoluteNoteIndex(Song) - resizeNoteEnd;
+            var processedNotes = new HashSet<Note>();
 
             TransformNotes(min, max, false, final, false, (note, idx) =>
             {
-                if (note != null && note.IsMusical)
+                if (note != null && note.IsMusical && !processedNotes.Contains(note))
                 {
                     // HACK : Try to preserve releases.
                     var hadRelease = note.HasRelease;
@@ -8837,6 +8844,7 @@ namespace FamiStudio
                         note.Release = note.Duration - 1;
                 }
 
+                processedNotes.Add(note);
                 return note;
             });
 
