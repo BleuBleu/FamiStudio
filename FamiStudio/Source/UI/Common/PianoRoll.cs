@@ -423,6 +423,8 @@ namespace FamiStudio
         public bool CanDelete     => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio || editMode == EditionMode.DPCM);
         public bool IsActiveControl => App != null && App.ActiveControl == this;
 
+        public static int DefaultPianoKeyWidth => DefaultNoteSizeY;
+
         public Instrument EditInstrument   => editInstrument;
         public Arpeggio   EditArpeggio     => editArpeggio;
         public DPCMSample EditSample       => editSample;
@@ -771,7 +773,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void StartVideoRecording(Song song, float videoZoom, float pianoRollScaleX, float pianoRollScaleY, int[] transpose, out int outNoteSizeY)
+        public void StartVideoRecording(Song song, float videoZoom, float pianoRollScaleX, float pianoRollScaleY, int[] transpose)
         {
             Debug.Assert(transpose == null || transpose.Length == song.Channels.Length);
 
@@ -784,8 +786,6 @@ namespace FamiStudio
             videoChannelTranspose = transpose;
 
             UpdateRenderCoords();
-
-            outNoteSizeY = noteSizeY;
         }
 
         public void EndVideoRecording()
@@ -955,7 +955,7 @@ namespace FamiStudio
 
         private int GetPixelYForNoteValue(int note)
         {
-            Debug.Assert(Note.IsMusicalNote(note));
+            Debug.Assert(Note.IsMusicalNote(note) || editMode == EditionMode.VideoRecording);
             return virtualSizeY - note * noteSizeY - scrollY;
         }
 

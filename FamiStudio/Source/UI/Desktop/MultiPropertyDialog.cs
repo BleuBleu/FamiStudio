@@ -130,6 +130,9 @@ namespace FamiStudio
                 var visible = i == idx;
                 tabs[i].button.BoldFont = visible;
                 tabs[i].properties.Visible = visible;
+
+                if (visible)
+                    tabs[i].properties.ConditionalSetTextBoxFocus();
             }
         }
 

@@ -9,25 +9,23 @@ namespace FamiStudio
     {
         const int ChannelIconPosY = 26;
         const int SegmentTransitionNumFrames = 16;
-        const int ThinNoteThreshold = 288;
-        const int VeryThinNoteThreshold = 192;
 
-        private void ComputeChannelsScroll(VideoFrameMetadata[] frames, long channelMask, int numVisibleNotes)
+        private void ComputeChannelsScroll(int channelIndex, VideoFrameMetadata[] frames, long channelMask, int numVisibleNotes)
         {
             var numFrames = frames.Length;
             var numChannels = frames[0].channelData.Length;
+
+            // Go through all the frames and split them in segments. 
+            // A segment is a section of the song where all the notes fit in the view.
+            var segments = new List<ScrollSegment>();
+            var currentSegment = (ScrollSegment)null;
+            var minOverallNote = int.MaxValue;
+            var maxOverallNote = int.MinValue;
 
             for (int c = 0; c < numChannels; c++)
             {
                 if ((channelMask & (1L << c)) == 0)
                     continue;
-
-                // Go through all the frames and split them in segments. 
-                // A segment is a section of the song where all the notes fit in the view.
-                var segments = new List<ScrollSegment>();
-                var currentSegment = (ScrollSegment)null;
-                var minOverallNote = int.MaxValue;
-                var maxOverallNote = int.MinValue;
 
                 for (int f = 0; f < numFrames; f++)
                 {
@@ -151,25 +149,25 @@ namespace FamiStudio
                 {
                     segment.scroll = segment.minNote + (segment.maxNote - segment.minNote) * 0.5f;
                 }
+            }
 
-                for (var s = 0; s < segments.Count; s++)
+            for (var s = 0; s < segments.Count; s++)
+            {
+                var segment0 = segments[s + 0];
+                var segment1 = s == segments.Count - 1 ? null : segments[s + 1];
+
+                for (int f = segment0.startFrame; f < segment0.endFrame - (segment1 == null ? 0 : SegmentTransitionNumFrames); f++)
                 {
-                    var segment0 = segments[s + 0];
-                    var segment1 = s == segments.Count - 1 ? null : segments[s + 1];
+                    frames[f].channelData[channelIndex].scroll = segment0.scroll;
+                }
 
-                    for (int f = segment0.startFrame; f < segment0.endFrame - (segment1 == null ? 0 : SegmentTransitionNumFrames); f++)
+                if (segment1 != null)
+                {
+                    // Smooth transition to next segment.
+                    for (int f = segment0.endFrame - SegmentTransitionNumFrames, a = 0; f < segment0.endFrame; f++, a++)
                     {
-                        frames[f].channelData[c].scroll = segment0.scroll;
-                    }
-
-                    if (segment1 != null)
-                    {
-                        // Smooth transition to next segment.
-                        for (int f = segment0.endFrame - SegmentTransitionNumFrames, a = 0; f < segment0.endFrame; f++, a++)
-                        {
-                            var lerp = a / (float)SegmentTransitionNumFrames;
-                            frames[f].channelData[c].scroll = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmootherStep(lerp));
-                        }
+                        var lerp = a / (float)SegmentTransitionNumFrames;
+                        frames[f].channelData[channelIndex].scroll = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmootherStep(lerp));
                     }
                 }
             }
@@ -244,6 +242,92 @@ namespace FamiStudio
             }
         }
 
+        private float QuantizeNoteScaling(float scale)
+        {
+            return Utils.Clamp(MathF.Floor(scale * 4), 2, 8) / 4.0f; // [0.5, 2.0]
+        }
+
+        private void ComputeSongNoteMinMaxRange(long channelMask, int[] channelTranspose, out int minNote, out int maxNote)
+        {
+            // Ignore the bottom/top 5%.
+            const float fractionToIgnore = 0.05f;
+
+            var numFrames = metadata.Length;
+            var numChannels = metadata[0].channelData.Length;
+            var histogram = new SortedDictionary<int, int>();
+            var totalNoteCount = 0;
+
+            for (int c = 0; c < numChannels; c++)
+            {
+                if ((channelMask & (1L << c)) == 0)
+                    continue;
+
+                for (int f = 0; f < numFrames; f++)
+                {
+                    var frame = metadata[f];
+                    var note = frame.channelData[c].note;
+
+                    if (note.IsMusical)
+                    {
+                        var key = note.Value + channelTranspose[c];
+                        histogram.TryGetValue(key, out var cnt);
+                        histogram[key] = cnt + 1;
+                        totalNoteCount++;
+                    }
+                }
+            }
+
+            if (histogram.Count > 0)
+            {
+                var numNotesToIgnore = (int)(totalNoteCount * fractionToIgnore);
+                var noteCount = 0;
+
+                minNote = int.MaxValue;
+                maxNote = int.MinValue;
+
+                foreach (var kv in histogram)
+                {
+                    var numAboveHi = Math.Max(0, noteCount + kv.Value - totalNoteCount + numNotesToIgnore);
+                    var numBelowLo = Math.Max(0, numNotesToIgnore - noteCount);
+                    var numValid = Math.Max(0, kv.Value - numBelowLo - numAboveHi);
+
+                    if (numValid > 0)
+                    {
+                        minNote = Math.Min(minNote, kv.Key);
+                        maxNote = Math.Max(maxNote, kv.Key);
+                    }
+
+                    noteCount += kv.Value;
+                }
+
+                Debug.Assert(minNote != int.MaxValue);
+                Debug.Assert(maxNote != int.MinValue);
+            }
+            else
+            {
+                minNote = Note.MusicalNoteC4;
+                maxNote = Note.MusicalNoteC4;
+            }
+        }
+
+        private void ComputeProjectionParams(float angle, int sizeX, int sizeY, out float u0, out float v0)
+        {
+            // This transform (rotate) and perspective-project the top-left corner 
+            // of the image. Returns the 2D position in UV space.
+            float tanHalfFov = MathF.Tan(Utils.DegreesToRadians(45.0f) * 0.5f);
+            float aspectRatio = sizeX / (float)sizeY;
+
+            var px = 1.0f;
+            var py = 0.0f;
+            Utils.RotatePoint2D(angle, ref px, ref py);
+            
+            var topWidth  = 1.0f / (1.0f + 2.0f * MathF.Sin(angle) / aspectRatio * tanHalfFov);
+            var imgHeight = (((px * 2.0f - 1.0f) / (1.0f + (py * (2.0f / aspectRatio * tanHalfFov)))) * 0.5f + 0.5f);
+
+            u0 = (1.0f - topWidth) * 0.5f;
+            v0 = (1.0f - imgHeight);
+        }
+
         public unsafe bool Save(VideoExportSettings settings)
         {
             if (!InitializeEncoder(settings))
@@ -251,6 +335,7 @@ namespace FamiStudio
 
             // MATTT : Clean those up. Its a mess between separate and unified.
             var separateChannels = settings.VideoMode == VideoMode.PianoRollSeparateChannels;
+            var perspective = settings.PianoRollPerspective > 0;
 
             var numCols = separateChannels ? Math.Min(channelStates.Length, Utils.DivideAndRoundUp(channelStates.Length, settings.PianoRollNumRows)) : 1;
             var numRows = separateChannels ? Utils.DivideAndRoundUp(channelStates.Length, numCols) : 1;
@@ -259,19 +344,21 @@ namespace FamiStudio
             var channelSizeX = (int)channelSizeXFloat;
             var channelSizeY = (int)channelSizeYFloat;
 
-            var cosPerspectiveAngle  = MathF.Cos(Utils.DegreesToRadians(settings.PianoRollPerspective));
-            var numPerspectivePixels = (int)((1.0f - cosPerspectiveAngle) * channelSizeY);
-            var renderSizeX = channelSizeX + numPerspectivePixels * 2;
-            var renderSizeY = (int)(channelSizeY / cosPerspectiveAngle);
+            var perspectiveAngle = Utils.DegreesToRadians(settings.PianoRollPerspective);
+            ComputeProjectionParams(perspectiveAngle, channelSizeX, channelSizeY, out var u, out var v);
 
-            var pianoRollGraphics = OffscreenGraphics.Create(renderSizeY, renderSizeX, false); // Piano roll is 90 degrees rotated.
+            var numPerspectivePixels = (int)(u * channelSizeX * 2);
+            var renderSizeX = channelSizeX + numPerspectivePixels * 2;
+            var renderSizeY = (int)(channelSizeY / (1.0f - v));
+
+            var pianoRollGraphics = OffscreenGraphics.Create(renderSizeY, renderSizeX, false, perspective); // Piano roll is 90 degrees rotated.
             var pianoRollTexture  = pianoRollGraphics.GetTexture();
 
             // Render 3D perspective with 2x SSAA to reduce aliasing in the distance.
-            var perspective2xGraphics = settings.PianoRollPerspective > 0 ? OffscreenGraphics.Create(channelSizeX * 2, channelSizeY * 2, false) : null;
-            var perspective2xTexture  = settings.PianoRollPerspective > 0 ? perspective2xGraphics.GetTexture() : null;
-            var perspective1xGraphics = settings.PianoRollPerspective > 0 ? OffscreenGraphics.Create(channelSizeX * 1, channelSizeY * 1, false) : null;
-            var perspective1xTexture  = settings.PianoRollPerspective > 0 ? perspective1xGraphics.GetTexture() : null;
+            var perspective2xGraphics = perspective ? OffscreenGraphics.Create(channelSizeX * 2, channelSizeY * 2, false, true) : null;
+            var perspective2xTexture  = perspective ? perspective2xGraphics.GetTexture() : null;
+            var perspective1xGraphics = perspective ? OffscreenGraphics.Create(channelSizeX * 1, channelSizeY * 1, false, true) : null;
+            var perspective1xTexture  = perspective ? perspective1xGraphics.GetTexture() : null;
 
             var longestChannelName = 0.0f;
             foreach (var state in channelStates)
@@ -281,10 +368,9 @@ namespace FamiStudio
             var smallChannelText = true; // MATTT longestChannelName + 32 + ChannelIconTextSpacing > renderSizeY * 0.8f;
             var font = smallChannelText ? fonts.FontMedium : fonts.FontVeryLarge;
             var textOffsetY = smallChannelText ? 1 : 4;
-            //var pianoRollScaleX = Utils.Clamp(settings.ResY / 1080.0f, 0.6f, 0.9f);
-            //var pianoRollScaleY = renderSizeY < VeryThinNoteThreshold ? 0.5f : (renderSizeY < ThinNoteThreshold ? 0.667f : 1.0f);
-            var channelLineWidth = 3; // renderSizeY < ThinNoteThreshold ? 3 : 5; // MATTT : This is wrong.
+            var channelLineWidth = 3;
             var gradientSizeY = 256 * (videoResY / 1080.0f) / numRows;
+            var blurScale = Utils.Clamp(MathF.Min(channelSizeX / 1000.0f, channelSizeY / 1000.0f) * 2.0f, 0.25f, 2.0f);
 
             LoadChannelIcons(!smallChannelText);
 
@@ -297,24 +383,47 @@ namespace FamiStudio
             var highlightedKeys = new ValueTuple<int, Color>[channelStates.Length];
 
             // Setup piano roll and images.
-            var noteSizeY = 0;
+            // MATTT : There used to be a [0.6, 0.9] clamp here.
+            // MATTT : Compensate for perspective here?
+            var pianoRollScaleX = channelSizeY / 1080.0f; // / cosHalfPerspectiveAngle;
+            var pianoRollScaleY = 1.0f;
+
+            if (settings.PianoRollNoteWidth == 0)
+            {
+                // Keep at least 2 octaves on screen by default.
+                var numNotesToShow = 24;
+
+                if (settings.VideoMode == VideoMode.PianoRollUnified)
+                {
+                    ComputeSongNoteMinMaxRange(settings.ChannelMask, settings.ChannelTranspose, out var minNote, out var maxNote);
+                    numNotesToShow = (maxNote - minNote + 1);
+                }
+
+                pianoRollScaleY = QuantizeNoteScaling(channelSizeX / (float)numNotesToShow / PianoRoll.DefaultPianoKeyWidth);
+            }
+            else
+            {
+                pianoRollScaleY = settings.PianoRollNoteWidth;
+            }
+
             var pianoRoll = new PianoRoll();
             pianoRoll.OverrideGraphics(videoGraphics, fonts);
             pianoRoll.Move(0, 0, renderSizeY, renderSizeX); // Piano roll is 90 degrees rotated.
-            pianoRoll.StartVideoRecording(song, settings.PianoRollZoom, 1.0f, 1.0f, settings.ChannelTranspose, out noteSizeY); // MATTT Figure out scale X/Y
-
-            //if (separateChannels)
-            //{
-            //    pianoRoll.StartVideoRecording(song, 0, settings.PianoRollZoom, pianoRollScaleX, pianoRollScaleY, out noteSizeY);
-            //}
-            //else
-            //{
-            //}
+            pianoRoll.StartVideoRecording(song, settings.PianoRollZoom, pianoRollScaleX, pianoRollScaleY, settings.ChannelTranspose); // MATTT Figure out scale X/Y
 
             // Build the scrolling data.
-            // MATTT Figure out how that's going to work.
-            var numVisibleNotes = (int)Math.Floor(renderSizeY / (float)noteSizeY);
-            ComputeChannelsScroll(metadata, settings.ChannelMask, numVisibleNotes);
+            var noteSizeY = (int)(PianoRoll.DefaultPianoKeyWidth * pianoRollScaleY);
+            var numVisibleNotes = (int)Math.Floor(channelSizeX / (float)noteSizeY);
+
+            if (separateChannels)
+            {
+                for (var c = 0; c < metadata[0].channelData.Length; c++)
+                    ComputeChannelsScroll(c, metadata, (1L << c) & settings.ChannelMask, numVisibleNotes);
+            }
+            else
+            {
+                ComputeChannelsScroll(0, metadata, settings.ChannelMask, numVisibleNotes);
+            }
 
             if (song.UsesFamiTrackerTempo)
                 SmoothFamitrackerScrolling(metadata);
@@ -330,7 +439,7 @@ namespace FamiStudio
                 if (settings.PianoRollPerspective > 0)
                 {
                     perspective2xGraphics.BeginDrawFrame(new Rectangle(0, 0, channelSizeX * 2, channelSizeY * 2), true, Theme.DarkGreyColor2);
-                    perspective2xGraphics.DefaultCommandList.DrawBitmap(pianoRollTexture, -numPerspectivePixels * 2, 0, renderSizeX * 2, channelSizeY * 2, 1.0f, 0, 0, 1, 1, BitmapFlags.Perspective2x | BitmapFlags.Rotated90);
+                    perspective2xGraphics.DefaultCommandList.DrawBitmap(pianoRollTexture, -numPerspectivePixels * 2, 0, renderSizeX * 2, channelSizeY * 2, 1.0f, u, v, 1, 1, BitmapFlags.Perspective | BitmapFlags.Rotated90);
                     perspective2xGraphics.EndDrawFrame();
 
                     perspective1xGraphics.BeginDrawFrame(new Rectangle(0, 0, channelSizeX, channelSizeY), true, Theme.DarkGreyColor2);
@@ -345,7 +454,7 @@ namespace FamiStudio
 
                 if (settings.PianoRollPerspective > 0)
                 {
-                    videoGraphics.DrawBlur(perspective1xTexture.Id, channelPosX, channelPosY, channelSizeX, channelSizeY);
+                    videoGraphics.DrawBlur(perspective1xTexture.Id, channelPosX, channelPosY, channelSizeX, channelSizeY, blurScale);
                 }
                 else
                 {
@@ -399,7 +508,6 @@ namespace FamiStudio
                 var o = videoGraphics.OverlayCommandList;
 
                 videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), false, Color.Black);
-                //videoGraphics.PopClipRegion();
 
                 // Gradients + grid lines.
                 for (var i = 0; i < numRows; i++)

@@ -279,7 +279,7 @@ namespace FamiStudio
             Platform.AcquireGLContext();
 
             // Create graphics resources.
-            videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, true);
+            videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, true, settings.PreviewMode);
 
             if (videoGraphics == null)
             {
@@ -588,8 +588,8 @@ namespace FamiStudio
             public Note  note;
             public int   volume;
             public int   trigger;
-            public float scroll; // Only used by piano roll (TODO : Move somewhere else).
-            public Color color;  // Only used by oscilloscope (TODO : Move somewhere else)
+            public float scroll; // Only used by piano roll.
+            public Color color;
         };
 
         public int   playPattern;
@@ -742,6 +742,7 @@ namespace FamiStudio
         public int OscColorMode;
         public int OscNumColumns;
         public int OscLineThickness;
+        public float PianoRollNoteWidth;
         public float PianoRollZoom;
         public float PianoRollPerspective;
         public int PianoRollNumRows;
@@ -750,6 +751,7 @@ namespace FamiStudio
         public float[] ChannelPan;
         public int[] ChannelTranspose;
         public bool[] EmuTriggers;
+        public bool PreviewMode;
         public IVideoEncoder Encoder;
     }
 }

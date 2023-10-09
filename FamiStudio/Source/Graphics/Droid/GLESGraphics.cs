@@ -300,13 +300,12 @@ namespace FamiStudio
             }
         }
 
-        public void DrawBlur(int textureId)
+        public void DrawBlur(int textureId, int x, int y, int width, int height, float blurScale = 2.0f)
         {
-            var kernel = GetBlurKernel();
+            var kernel = GetBlurKernel(width, height, blurScale);
 
-            MakeFullScreenQuad();
+            MakeQuad(x, y, width, height);
 
-            // MATTT : We do point filtering here!!!
             GLES20.GlDepthFunc(GLES20.GlAlways);
             GLES20.GlUseProgram(blurProgram);
             //GL.BindVertexArray(blurVao);
@@ -854,21 +853,22 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(true)
+        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback, bool filter) : base(true)
         {
             resX = imageSizeX;
             resY = imageSizeY;
 
+            // On mobile, if we dont want to read back, it means we are rendering directly to the
+            // backbuffer of the temporary context created for video export.
             if (!allowReadback)
             {
-                texture = CreateEmptyTexture(imageSizeX, imageSizeY, TextureFormat.Rgba,  false);
+                texture = CreateEmptyTexture(imageSizeX, imageSizeY, TextureFormat.Rgba, filter);
                 depth   = CreateEmptyTexture(imageSizeX, imageSizeY, TextureFormat.Depth, false);
 
                 var fbos = new int[1];
                 GLES20.GlGenFramebuffers(1, fbos, 0);
                 fbo = fbos[0];
 
-                // MATTT : Filtering here (+ aniso)
                 GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, fbo);
                 GLES20.GlFramebufferTexture2D(GLES20.GlFramebuffer, GLES20.GlColorAttachment0, GLES20.GlTexture2d, texture, 0);
                 GLES20.GlFramebufferTexture2D(GLES20.GlFramebuffer, GLES20.GlDepthAttachment, GLES20.GlTexture2d, depth, 0);
@@ -876,13 +876,13 @@ namespace FamiStudio
             }
         }
 
-        public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
+        public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback, bool filter = false)
         {
 #if !DEBUG
             try
 #endif
             {
-                return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
+                return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback, filter);
             }
 #if !DEBUG
             catch

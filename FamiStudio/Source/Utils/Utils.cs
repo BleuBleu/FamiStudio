@@ -60,6 +60,18 @@ namespace FamiStudio
             return angle * MathF.PI / 180.0f;
         }
 
+        public static void RotatePoint2D(float angle, ref float x, ref float y)
+        {
+            var c = MathF.Cos(angle);
+            var s = MathF.Sin(angle);
+
+            float x1 = x * c - y * s;
+            float y1 = x * s + y * c;
+            
+            x = x1;
+            y = y1;
+        }
+
         public static bool IsNearlyEqual(float a, float b, float delta = 1e-5f)
         {
             return MathF.Abs(a - b) < delta;

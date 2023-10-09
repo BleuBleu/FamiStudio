@@ -64,6 +64,21 @@ namespace FamiStudio
             scrollingHeight = height;
         }
 
+        public void ConditionalSetTextBoxFocus()
+        {
+            if (properties.Count > 0)
+            {
+                var prop = properties[0];
+                prop.control.ClearDialogFocus();
+
+                if (prop.type == PropertyType.TextBox || prop.type == PropertyType.ColoredTextBox)
+                {
+                    (prop.control as TextBox).SelectAll();
+                    prop.control.GrabDialogFocus();
+                }
+            }
+        }
+
         private int GetPropertyIndexForControl(Control ctrl)
         {
             for (int i = 0; i < properties.Count; i++)
@@ -883,12 +898,6 @@ namespace FamiStudio
                     container.AddControl(prop.control);
                 }
 
-                if ((prop.type == PropertyType.ColoredTextBox || prop.type == PropertyType.TextBox) && i == 0)
-                {
-                    (prop.control as TextBox).SelectAll();
-                    prop.control.GrabDialogFocus();
-                }
-
                 height = Math.Max(prop.control.Height, height);
 
                 if (prop.warningIcon != null)
@@ -911,6 +920,8 @@ namespace FamiStudio
             {
                 layoutHeight = totalHeight;
             }
+
+            ConditionalSetTextBoxFocus();
         }
     }
 }

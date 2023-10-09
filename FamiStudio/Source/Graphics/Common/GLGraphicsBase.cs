@@ -37,6 +37,8 @@ namespace FamiStudio
         public TransformStack Transform => transform;
         public RectangleF CurrentClipRegion => clipStack.Peek().rect;
         public bool IsOffscreen => offscreen;
+        public int ScreenWidth => screenRect.Width;
+        public int ScreenHeight => screenRect.Height;
 
         protected const int MaxAtlasResolution = 1024;
         protected const int MaxVertexCount = 64 * 1024;
@@ -156,6 +158,12 @@ namespace FamiStudio
             {
                 ClearAlpha();
             }
+
+            // MATTT : Fixes some graphical corruption on my intel laptop. Test nvidia.
+            if (offscreen)
+            {
+                GL.Flush();
+            }
         }
 
         protected void MakeFullScreenTriangle()
@@ -207,7 +215,7 @@ namespace FamiStudio
             texArray[texIdx++] = 0.0f;
         }
 
-        protected float[] GetBlurKernel(int width, int height, int numRings = 5)
+        protected float[] GetBlurKernel(int width, int height, float scale, int numRings = 5)
         {
             var kernel = new List<float>();
             kernel.Add(0);
@@ -221,8 +229,8 @@ namespace FamiStudio
                 {
                     var angle = i * 2 * MathF.PI / (r * 6);
                     Utils.ToCartesian(angle, r, out var sx, out var sy);
-                    kernel.Add(sx / width  * 2.0f); // MATTT Doubling.
-                    kernel.Add(sy / height * 2.0f); // MATTT Doubling.
+                    kernel.Add(sx / width  * scale);
+                    kernel.Add(sy / height * scale);
                     kernel.Add(0);
                     kernel.Add(0);
                 }
@@ -1297,10 +1305,9 @@ namespace FamiStudio
     [Flags]
     public enum BitmapFlags
     {
-        Default       = 0,
-        Rotated90     = 1 << 0,
-        Perspective   = 1 << 1,
-        Perspective2x = 1 << 2,
+        Default     = 0,
+        Rotated90   = 1 << 0,
+        Perspective = 1 << 1,
     }
 
     // This is common to both OGL, it only does data packing, no GL calls.
@@ -3161,6 +3168,8 @@ namespace FamiStudio
             return orderedDrawData;
         }
 
+        static float t = 0.7f;
+
         public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
         {
             var drawData = new List<DrawData>();
@@ -3188,7 +3197,7 @@ namespace FamiStudio
                     var y1 = inst.y + inst.sy;
                     var tint = inst.tint != Color.Empty ? inst.tint : Color.White;
                     var rotated = inst.flags.HasFlag(BitmapFlags.Rotated90);
-                    var perspective = inst.flags.HasFlag(BitmapFlags.Perspective) | inst.flags.HasFlag(BitmapFlags.Perspective2x);
+                    var perspective = inst.flags.HasFlag(BitmapFlags.Perspective);
 
                     if (!perspective)
                     {
@@ -3235,10 +3244,7 @@ namespace FamiStudio
                     }
                     else 
                     {
-                        var srcScale = inst.flags.HasFlag(BitmapFlags.Perspective2x) ? 2 : 1;
-                        var ratio = inst.flags.HasFlag(BitmapFlags.Rotated90) ? inst.sy / (bmp.Size.Width * srcScale) : inst.sy / (bmp.Size.Height * srcScale);
-                        var numPixels = (int)(inst.sy * (1.0f - ratio));
-                        var tx = 1.0f - numPixels / inst.sx * 2;
+                        var tx = graphics.ScreenWidth / (float)inst.sx;
 
                         // Perspective mode basically ignores the UVs and assumes (0,0) ... (1,1).
                         if (!rotated)
@@ -3272,10 +3278,11 @@ namespace FamiStudio
                             texArray[texIdx++] = 1.0f;
                         }
 
-                        vtxArray[vtxIdx++] = x0 + numPixels;
-                        vtxArray[vtxIdx++] = y0;
-                        vtxArray[vtxIdx++] = x1 - numPixels;
-                        vtxArray[vtxIdx++] = y0;
+                        // Asumes everything is fullscreen.
+                        vtxArray[vtxIdx++] = 0;
+                        vtxArray[vtxIdx++] = 0;
+                        vtxArray[vtxIdx++] = graphics.ScreenWidth;
+                        vtxArray[vtxIdx++] = 0;
                         vtxArray[vtxIdx++] = x1;
                         vtxArray[vtxIdx++] = y1;
                         vtxArray[vtxIdx++] = x0;

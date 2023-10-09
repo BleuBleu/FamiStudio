@@ -126,6 +126,7 @@ namespace FamiStudio
         LocalizedString OscWindowTooltip;
         LocalizedString OscColumnsTooltip;
         LocalizedString OscThicknessTooltip;
+        LocalizedString PianoRollNoteWidthTooltip;
         LocalizedString PianoRollZoomTooltip;
         LocalizedString PianoRollNumRowsTooltip;
         LocalizedString PianoRollPerspectiveTooltip;
@@ -142,6 +143,7 @@ namespace FamiStudio
         LocalizedString AudioDelayMsLabel;
         LocalizedString OscilloscopeWindowLabel;
         LocalizedString RequireFFMpegLabel;
+        LocalizedString PianoRollNoteWidthLabel;
         LocalizedString PianoRollZoomLabel;
         LocalizedString PianoRollNumRowsLabel;
         LocalizedString PianoRollPerspectiveLabel;
@@ -420,20 +422,22 @@ namespace FamiStudio
                         page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 9
                         page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 10
                         page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 11
-                        page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "6.25%", "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTooltip); // 12
-                        page.AddNumericUpDown(PianoRollNumRowsLabel.Colon, 1, 1, 16, 1, PianoRollNumRowsTooltip); // 13
-                        page.AddDropDownList(PianoRollPerspectiveLabel.Colon, new[] { "0°", "30°", "45°", "60°", "75°" }, "60°", PianoRollPerspectiveTooltip); // 14
-                        page.AddCheckBox(VideoOverlayRegistersLabel.Colon, false, VideoOverlayRegistersTooltip); // 15
-                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 16
-                        page.AddGrid(ChannelsLabel, gridColumns.ToArray(), GetDefaultChannelsGridData(Platform.IsDesktop, Platform.IsDesktop, app.SelectedSong), project.GetActiveChannelCount() + 1, ChannelGridTooltipVid); // 17
-                        page.AddButton(null, "Preview"); // 18
+                        page.AddDropDownList(PianoRollNoteWidthLabel.Colon, new[] { "Auto", "50%", "75%", "100%", "125%", "150%", "175%", "200%" }, "Auto", PianoRollNoteWidthTooltip); // 12
+                        page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "6.25%", "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTooltip); // 13
+                        page.AddNumericUpDown(PianoRollNumRowsLabel.Colon, 1, 1, 16, 1, PianoRollNumRowsTooltip); // 14
+                        page.AddDropDownList(PianoRollPerspectiveLabel.Colon, new[] { "0°", "30°", "45°", "60°", "75°" }, "60°", PianoRollPerspectiveTooltip); // 15
+                        page.AddCheckBox(VideoOverlayRegistersLabel.Colon, false, VideoOverlayRegistersTooltip); // 16
+                        page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio); // 17
+                        page.AddGrid(ChannelsLabel, gridColumns.ToArray(), GetDefaultChannelsGridData(Platform.IsDesktop, Platform.IsDesktop, app.SelectedSong), project.GetActiveChannelCount() + 1, ChannelGridTooltipVid); // 18
+                        page.AddButton(null, "Preview"); // 19
                         page.SetPropertyEnabled(12, false);
                         page.SetPropertyEnabled(13, false);
                         page.SetPropertyEnabled(14, false);
-                        page.SetPropertyEnabled(16, !project.OutputsStereoAudio); // Force stereo for EPSM.
-                        page.SetPropertyVisible(18, Platform.IsDesktop);
-                        page.SetColumnEnabled(17, 2, project.OutputsStereoAudio);
-                        page.SetColumnEnabled(17, 3, false);
+                        page.SetPropertyEnabled(15, false);
+                        page.SetPropertyEnabled(17, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                        page.SetPropertyVisible(19, Platform.IsDesktop);
+                        page.SetColumnEnabled(18, 2, project.OutputsStereoAudio);
+                        page.SetColumnEnabled(18, 3, false);
                         page.SetScrolling(500);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                         page.PropertyClicked += VideoPage_PropertyClicked;
@@ -567,7 +571,7 @@ namespace FamiStudio
         private void VideoPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
         #if !FAMISTUDIO_ANDROID
-            if (propIdx == 18)
+            if (propIdx == 19)
             {
                 var resolutionIdx = props.GetSelectedIndex(2);
                 var halfFrameRate = props.GetSelectedIndex(3) == 1;
@@ -589,17 +593,18 @@ namespace FamiStudio
             {
                 var newMode = props.GetSelectedIndex(propIdx);
                 props.SetPropertyEnabled(12, newMode != VideoMode.Oscilloscope);
-                props.SetPropertyEnabled(13, newMode == VideoMode.PianoRollSeparateChannels);
-                props.SetPropertyEnabled(14, newMode != VideoMode.Oscilloscope);
-                props.SetColumnEnabled(17, 3, newMode == VideoMode.PianoRollUnified);
+                props.SetPropertyEnabled(13, newMode != VideoMode.Oscilloscope);
+                props.SetPropertyEnabled(14, newMode == VideoMode.PianoRollSeparateChannels);
+                props.SetPropertyEnabled(15, newMode != VideoMode.Oscilloscope);
+                props.SetColumnEnabled(18, 3, newMode == VideoMode.PianoRollUnified);
             }
             else if (propIdx == 1) // Song
             {
-                props.UpdateGrid(16, GetDefaultChannelsGridData(Platform.IsDesktop, Platform.IsDesktop, project.Songs[props.GetSelectedIndex(1)]));
+                props.UpdateGrid(17, GetDefaultChannelsGridData(Platform.IsDesktop, Platform.IsDesktop, project.Songs[props.GetSelectedIndex(1)]));
             }
-            else if (propIdx == 16) // Stereo
+            else if (propIdx == 17) // Stereo
             {
-                props.SetColumnEnabled(17, 2, (bool)value);
+                props.SetColumnEnabled(18, 2, (bool)value);
             }
         }
 
@@ -785,25 +790,27 @@ namespace FamiStudio
             settings.OscNumColumns = props.GetPropertyValue<int>(9);
             settings.OscLineThickness = props.GetPropertyValue<int>(10);
             settings.OscColorMode = props.GetSelectedIndex(11);
-            settings.PianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(12) - 3);
-            settings.PianoRollNumRows = props.GetPropertyValue<int>(13);
-            settings.PianoRollPerspective = Utils.ParseIntWithTrailingGarbage(props.GetPropertyValue<string>(14));
-            settings.ShowRegisters = props.GetPropertyValue<bool>(15);
-            settings.Stereo = preview ? false : props.GetPropertyValue<bool>(16);
+            settings.PianoRollNoteWidth = Utils.ParseIntWithTrailingGarbage(props.GetPropertyValue<string>(12)) / 100.0f;
+            settings.PianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(13) - 3);
+            settings.PianoRollNumRows = props.GetPropertyValue<int>(14);
+            settings.PianoRollPerspective = Utils.ParseIntWithTrailingGarbage(props.GetPropertyValue<string>(15));
+            settings.ShowRegisters = props.GetPropertyValue<bool>(16);
+            settings.Stereo = preview ? false : props.GetPropertyValue<bool>(17);
             settings.ChannelPan = new float[channelCount];
             settings.ChannelTranspose = new int[channelCount];
             settings.EmuTriggers = new bool[channelCount];
             settings.ChannelMask = 0;
+            settings.PreviewMode = preview;
             settings.Encoder = forcedEncoder != null ? forcedEncoder : Platform.CreateVideoEncoder();
 
             for (int i = 0; i < channelCount; i++)
             {
-                if (props.GetPropertyValue<bool>(17, i, 0))
+                if (props.GetPropertyValue<bool>(18, i, 0))
                     settings.ChannelMask |= (1L << i);
 
-                settings.ChannelPan[i] = preview ? 0.5f : props.GetPropertyValue<int>(17, i, 2) / 100.0f;
-                settings.ChannelTranspose[i] = Platform.IsDesktop ? props.GetPropertyValue<int>(17, i, 3) * 12 : 0;
-                settings.EmuTriggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(17, i, 4) == EmulationOption : true;
+                settings.ChannelPan[i] = preview ? 0.5f : props.GetPropertyValue<int>(18, i, 2) / 100.0f;
+                settings.ChannelTranspose[i] = Platform.IsDesktop ? props.GetPropertyValue<int>(18, i, 3) * 12 : 0;
+                settings.EmuTriggers[i] = Platform.IsDesktop ? props.GetPropertyValue<string>(18, i, 4) == EmulationOption : true;
             }
 
             if (videoMode == VideoMode.Oscilloscope)

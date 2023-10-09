@@ -646,7 +646,7 @@ namespace FamiStudio
             #if FAMISTUDIO_MACOS
                 var filename = MacUtils.GetInitialOpenDocument();   
             #else
-                var filename = args.Length > 0 ? args[0] : null;
+                var filename = Array.Find(args, a => !a.StartsWith("-"));
             #endif
 
             Initialize(win, filename);

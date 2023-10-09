@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -516,13 +517,12 @@ namespace FamiStudio
             GL.BufferData(GL.ElementArrayBuffer, array, arraySize, GL.DynamicDraw);
         }
 
-        public void DrawBlur(int textureId, int x, int y, int width, int height)
+        public void DrawBlur(int textureId, int x, int y, int width, int height, float blurScale = 2.0f)
         {
-            var kernel = GetBlurKernel(width, height);
+            var kernel = GetBlurKernel(width, height, blurScale);
 
             MakeQuad(x, y, width, height);
 
-            // MATTT : We do point filtering here!!!
             GL.PushDebugGroup("Blur");
             GL.DepthFunc(GL.Always);
             GL.UseProgram(blurProgram);
@@ -734,7 +734,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(true) 
+        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback, bool filter) : base(true) 
         {
             resX = imageSizeX;
             resY = imageSizeY;
@@ -742,9 +742,9 @@ namespace FamiStudio
             texture = GL.GenTexture();
             GL.BindTexture(GL.Texture2D, texture);
             GL.TexImage2D(GL.Texture2D, 0, GL.Rgba, imageSizeX, imageSizeY, 0, GL.Rgba, GL.UnsignedByte, IntPtr.Zero);
-            GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Linear); // MATTT
-            GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Linear); // MATTT
-            GL.TexParameter(GL.Texture2D, GL.TextureMaxAnisotropy, 8); // MATTT Make all these an option.
+            GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, filter ? GL.Linear : GL.Nearest); 
+            GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, filter ? GL.Linear : GL.Nearest); 
+            GL.TexParameter(GL.Texture2D, GL.TextureMaxAnisotropy, filter ? 8 : 1);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToEdge);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToEdge);
 
@@ -763,9 +763,9 @@ namespace FamiStudio
             GL.BindFramebuffer(GL.Framebuffer, 0);
         }
 
-        public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
+        public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback, bool filter = false)
         {
-            return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
+            return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback, filter);
         }
 
         public override void BeginDrawFrame(Rectangle rect, bool clear, Color color)
@@ -833,6 +833,7 @@ namespace FamiStudio
     public static class GL
     {
         private static bool initialized;
+        private static bool renderdoc;
 
         public const int DepthBufferBit            = 0x0100;
         public const int ColorBufferBit            = 0x4000;
@@ -1153,6 +1154,8 @@ namespace FamiStudio
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));
             PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(glfwGetProcAddress("glPopDebugGroupKHR"));
             DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(glfwGetProcAddress("glDebugMessageCallback"));
+
+            renderdoc = Array.FindIndex(Environment.GetCommandLineArgs(), c => c.ToLower() == "-renderdoc") >= 0;
 #endif
 
             initialized = true;
@@ -1434,7 +1437,7 @@ namespace FamiStudio
         public static void PushDebugGroup(string name)
         {
 #if DEBUG && !FAMISTUDIO_MACOS
-            if (PushDebugGroupRaw != null)
+            if (renderdoc && PushDebugGroupRaw != null)
                 PushDebugGroupRaw(DebugSourceApplication, 0, -1, name);
 #endif
         }
@@ -1442,7 +1445,7 @@ namespace FamiStudio
         public static void PopDebugGroup()
         {
 #if DEBUG && !FAMISTUDIO_MACOS
-            if (PopDebugGroupRaw != null)
+            if (renderdoc && PopDebugGroupRaw != null)
                 PopDebugGroupRaw();
 #endif
         }
