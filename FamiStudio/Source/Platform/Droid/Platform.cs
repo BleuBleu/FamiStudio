@@ -20,6 +20,7 @@ namespace FamiStudio
         public static event AudioDeviceChangedDelegate AudioDeviceChanged;
         
         public static bool IsCommandLine => false;
+        public static bool CanExportToVideo => true;
 
         private static Toast    lastToast;
         private static DateTime lastToastTime = DateTime.MinValue;

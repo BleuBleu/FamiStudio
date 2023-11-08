@@ -1091,7 +1091,8 @@ namespace FamiStudio
 
             var folder = new Folder(type, name);
             folders.Add(folder);
-            return folder; // MATTT : Conditional sort here????
+            ConditionalSortFolders(type);
+            return folder;
         }
 
         public void DeleteFolder(int type, string name)
@@ -1154,7 +1155,24 @@ namespace FamiStudio
                 folders.Insert(0, folder);
         }
 
-        // MATTT : Add a sort folder method, call it in the "Conditional sort, etc".
+        private void ConditionalSortFolders(int type)
+        {
+            switch (type)
+            {
+                case FolderType.Song:
+                    ConditionalSortSongs(); 
+                    break;
+                case FolderType.Instrument: 
+                    ConditionalSortInstruments(); 
+                    break;
+                case FolderType.Sample:     
+                    ConditionalSortSamples(); 
+                    break;
+                case FolderType.Arpeggio:  
+                    ConditionalSortArpeggios(); 
+                    break;
+            }
+        }
 
         public void DeleteUnmappedSamples()
         {

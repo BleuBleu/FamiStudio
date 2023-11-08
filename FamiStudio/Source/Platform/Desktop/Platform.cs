@@ -14,6 +14,7 @@ namespace FamiStudio
 
         public static string ApplicationVersion => version;
         public static bool IsCommandLine => !initializedGlfw;
+        public static bool CanExportToVideo => !string.IsNullOrEmpty(Settings.FFmpegExecutablePath);
 
         public const bool ThreadOwnsGLContext = true;
 

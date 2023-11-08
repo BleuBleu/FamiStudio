@@ -393,10 +393,7 @@ namespace FamiStudio
                     page.PropertyClicked += WavMp3_PropertyClicked;
                     break;
                 case ExportFormat.Video:
-                    // MATTT : Make this part of the VideoEncoder.
-                    canExportToVideo = (!Platform.IsDesktop || !string.IsNullOrEmpty(Settings.FFmpegExecutablePath));
-
-                    if (canExportToVideo)
+                    if (Platform.CanExportToVideo)
                     {
                         var gridColumns = new List<ColumnDesc>();
                         

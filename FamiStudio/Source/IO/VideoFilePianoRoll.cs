@@ -450,10 +450,8 @@ namespace FamiStudio
 
             var highlightedKeys = new ValueTuple<int, Color>[channelStates.Length];
 
-            // Setup piano roll and images.
-            // MATTT : There used to be a [0.6, 0.9] clamp here.
-            // MATTT : Compensate for perspective here?
-            var pianoRollScaleX = channelSizeY / 1080.0f; // / cosHalfPerspectiveAngle;
+            // Compensate "a bit" for perspective.
+            var pianoRollScaleX = channelSizeY / 1080.0f / (1.0f - (v * 0.5f)); 
             var pianoRollScaleY = 1.0f;
 
             if (settings.PianoRollNoteWidth == 0)
@@ -477,7 +475,7 @@ namespace FamiStudio
             var pianoRoll = new PianoRoll();
             pianoRoll.OverrideGraphics(videoGraphics, fonts);
             pianoRoll.Move(0, 0, renderSizeY, renderSizeX); // Piano roll is 90 degrees rotated.
-            pianoRoll.StartVideoRecording(song, settings.PianoRollZoom, pianoRollScaleX, pianoRollScaleY, settings.ChannelTranspose); // MATTT Figure out scale X/Y
+            pianoRoll.StartVideoRecording(song, settings.PianoRollZoom, pianoRollScaleX, pianoRollScaleY, settings.ChannelTranspose);
 
             // Build the scrolling data.
             var noteSizeY = (int)(PianoRoll.DefaultPianoKeyWidth * pianoRollScaleY);

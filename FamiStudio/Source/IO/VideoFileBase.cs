@@ -523,9 +523,8 @@ namespace FamiStudio
                 fonts.Dispose();
                 watermark.Dispose();
                 videoGraphics.Dispose();
-                foreach (var c in channelStates)
-                    c.icon?.Dispose();
-                // MATTT dispose registerViewerIcons
+                Array.ForEach(channelStates, c => c.icon.Dispose());
+                registerViewerIcons?.ForEach(i => i.Dispose());
                 File.Delete(tempAudioFile);
                 cleanup?.Invoke();
                 channelStates = null;

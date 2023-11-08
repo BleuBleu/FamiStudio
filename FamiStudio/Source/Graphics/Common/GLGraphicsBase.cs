@@ -3168,8 +3168,6 @@ namespace FamiStudio
             return orderedDrawData;
         }
 
-        static float t = 0.7f;
-
         public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
         {
             var drawData = new List<DrawData>();
