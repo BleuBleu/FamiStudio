@@ -285,7 +285,7 @@ namespace FamiStudio
                         if (note.IsSlideNote)
                         {
                             minNoteValue = Math.Min(minNoteValue, note.SlideNoteTarget + trans - 1);
-                            maxNoteValue = Math.Max(minNoteValue, note.SlideNoteTarget + trans + 1);
+                            maxNoteValue = Math.Max(maxNoteValue, note.SlideNoteTarget + trans + 1);
                         }
 
                         // Only consider arpeggios if they are not too big.
