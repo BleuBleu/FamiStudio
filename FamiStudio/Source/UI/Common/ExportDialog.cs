@@ -418,8 +418,8 @@ namespace FamiStudio
                         page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000", "20000", "30000" }, "8000", VideoBitRateTooltip); // 5
                         page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 6
                         page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 7
-                        page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 8
-                        page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 9
+                        page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 8
+                        page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 9
                         page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 10
                         page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 11
                         page.AddDropDownList(PianoRollNoteWidthLabel.Colon, new[] { "Auto", "50%", "75%", "100%", "125%", "150%", "175%", "200%" }, "Auto", PianoRollNoteWidthTooltip); // 12
@@ -592,6 +592,7 @@ namespace FamiStudio
             if (propIdx == 0) // Video mode
             {
                 var newMode = props.GetSelectedIndex(propIdx);
+                props.SetPropertyEnabled(8,  newMode == VideoMode.Oscilloscope);
                 props.SetPropertyEnabled(12, newMode != VideoMode.Oscilloscope);
                 props.SetPropertyEnabled(13, newMode != VideoMode.Oscilloscope);
                 props.SetPropertyEnabled(14, newMode == VideoMode.PianoRollSeparateChannels);
@@ -786,8 +787,8 @@ namespace FamiStudio
             settings.VideoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5), CultureInfo.InvariantCulture);
             settings.LoopCount = props.GetPropertyValue<int>(6);
             settings.AudioDelay = props.GetPropertyValue<int>(7);
-            settings.OscWindow = props.GetPropertyValue<int>(8);
-            settings.OscNumColumns = props.GetPropertyValue<int>(9);
+            settings.OscNumColumns = props.GetPropertyValue<int>(8);
+            settings.OscWindow = props.GetPropertyValue<int>(9);
             settings.OscLineThickness = props.GetPropertyValue<int>(10);
             settings.OscColorMode = props.GetSelectedIndex(11);
             settings.PianoRollNoteWidth = Utils.ParseIntWithTrailingGarbage(props.GetPropertyValue<string>(12)) / 100.0f;
@@ -795,7 +796,7 @@ namespace FamiStudio
             settings.PianoRollNumRows = props.GetPropertyValue<int>(14);
             settings.PianoRollPerspective = Utils.ParseIntWithTrailingGarbage(props.GetPropertyValue<string>(15));
             settings.ShowRegisters = props.GetPropertyValue<bool>(16);
-            settings.Stereo = preview ? false : props.GetPropertyValue<bool>(17);
+            settings.Stereo = preview ? project.OutputsStereoAudio : props.GetPropertyValue<bool>(17);
             settings.ChannelPan = new float[channelCount];
             settings.ChannelTranspose = new int[channelCount];
             settings.EmuTriggers = new bool[channelCount];

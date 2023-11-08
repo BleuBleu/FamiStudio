@@ -95,6 +95,7 @@ namespace FamiStudio
         {
             newScrollY = Utils.Clamp(newScrollY, 0, virtualSizeY - height);
             SetAndMarkDirty(ref containerScrollY, newScrollY);
+            ClearDialogFocus(); // This will close drop-downs, etc.
         }
 
         private void GetScrollBarParams(out int posY, out int sizeY)

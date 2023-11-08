@@ -78,16 +78,26 @@ namespace FamiStudio
             Debug.Assert(state.holdFrameCount < 10);
 
             var vertices = new float[oscRenderWindowSize * 2];
-            var startIdx = newTrigger >= 0 ? newTrigger : state.lastTrigger;
 
-            for (int i = 0, j = startIdx - oscRenderWindowSize / 2; i < oscRenderWindowSize; i++, j++)
-            {
-                var samp = j < 0 || j >= state.wav.Length ? 0 : state.wav[j];
+            #if false
+                // For debugging oscilloscope placement
+                for (int i = 0; i < vertices.Length / 2; i++)
+                {
+                    vertices[i * 2 + 0] = i / (float)(oscRenderWindowSize - 1);
+                    vertices[i * 2 + 1] = (i & 1) != 0 ? 1 : -1;
+                }
+            #else
+                var startIdx = newTrigger >= 0 ? newTrigger : state.lastTrigger;
 
-                vertices[i * 2 + 0] = i / (float)(oscRenderWindowSize - 1);
-                vertices[i * 2 + 1] = Utils.Clamp(samp / 32768.0f * state.oscScale, -1.0f, 1.0f);
-            }
-        
+                for (int i = 0, j = startIdx - oscRenderWindowSize / 2; i < oscRenderWindowSize; i++, j++)
+                {
+                    var samp = j < 0 || j >= state.wav.Length ? 0 : state.wav[j];
+
+                    vertices[i * 2 + 0] = i / (float)(oscRenderWindowSize - 1);
+                    vertices[i * 2 + 1] = Utils.Clamp(samp / 32768.0f * state.oscScale, -1.0f, 1.0f);
+                }
+            #endif
+
             if (newTrigger >= 0)
                 state.lastTrigger = newTrigger;
 

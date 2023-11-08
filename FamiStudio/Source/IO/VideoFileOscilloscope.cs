@@ -10,10 +10,10 @@ namespace FamiStudio
             if (!InitializeEncoder(settings))
                 return false;
 
-            var numColumns = Math.Min(settings.OscNumColumns, channelStates.Length);
-            var numRows = (int)Math.Ceiling(channelStates.Length / (float)numColumns);
+            var numCols = Math.Min(settings.OscNumColumns, channelStates.Length);
+            var numRows = (int)Math.Ceiling(channelStates.Length / (float)numCols);
 
-            var channelResXFloat = videoResX / (float)numColumns;
+            var channelResXFloat = videoResX / (float)numCols;
             var channelResYFloat = videoResY / (float)numRows;
 
             var channelResX = (int)channelResXFloat;
@@ -28,6 +28,10 @@ namespace FamiStudio
             var channelLineWidth = settings.ResY >= 720 ? 5 : 3;
 
             LoadChannelIcons(!smallChannelText);
+
+            // If we have an empty channel, put the registers there.
+            var hasEmptyChannel = (channelStates.Length % numCols) != 0;
+            registerPosY = (hasEmptyChannel ? (numRows - 1) * channelResY : 0) + 4;
 
             return LaunchEncoderLoop((f) =>
             {
@@ -51,8 +55,8 @@ namespace FamiStudio
                 {
                     var s = channelStates[i];
 
-                    var channelX = i % numColumns;
-                    var channelY = i / numColumns;
+                    var channelX = i % numCols;
+                    var channelY = i / numCols;
 
                     var channelPosX0 = (channelX + 0) * channelResX;
                     var channelPosX1 = (channelX + 1) * channelResX;
@@ -78,7 +82,7 @@ namespace FamiStudio
                 // Grid lines
                 for (int i = 1; i < numRows; i++)
                     o.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
-                for (int i = 1; i < numColumns; i++)
+                for (int i = 1; i < numCols; i++)
                     o.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
 
                 c.PopClipRegion();

@@ -13,24 +13,9 @@ x When using shy mode, we could make the patterns larger if there is room.
 - Video export improvements:
 	x Add support to draw title/composer.
 	/ Unified piano roll mode.
-		x Show all channels 
-		x Highlight piano keys
-		x Make 3D work with separate mode, this would unify code a lot...
-		x Use a single off-screen graphics
-		x Add num rows options for separate mode
-		- Figure out the options to add (piano key size?)
-			x Auto, 50, 75, 100, 125, 150, 175, 200%.
-			/ For single-channel, auto will apply simple rule : see 2 octaves.
-			/ For unified, build histogram and pick range that covers 95% of all notes (~2 sigma). Derive size from that.
-		/ Weight flicker in separate channel 2D mode.
-			=> glFlush fixes it.
-		- Figure out scrolling.
-			=> Scrolling is super weird intro shovel knight.
+		x Test channel scroll vs. transpose.
+		- In sep mode, 2D, piano can look very quished with 2 rows.
 		- Cleanup MATTT
-		x Fix intense stretching when weird aspect ratio.
-		- In unified mode, unchecking channel should remove them from piano roll. (Keep osc if channel is non-empty?)
-		- Overlap when too many channels???
-		- How come the osc in piano rolls dont use teh full width of the channel?
 		- Make it work on mobile.
 - Rename "Bitmap" to "Texture"
 - Size option for mobile piano

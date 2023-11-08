@@ -159,7 +159,7 @@ namespace FamiStudio
                 ClearAlpha();
             }
 
-            // MATTT : Fixes some graphical corruption on my intel laptop. Test nvidia.
+            // This fixes some graphical corruption on my intel laptop. 
             if (offscreen)
             {
                 GL.Flush();

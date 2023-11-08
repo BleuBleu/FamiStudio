@@ -7,10 +7,10 @@ namespace FamiStudio
 {
     class VideoFilePianoRoll : VideoFileBase
     {
-        const int ChannelIconPosY = 26;
+        const int ChannelIconPosY = 24;
         const int SegmentTransitionNumFrames = 16;
 
-        private void ComputeChannelsScroll(int channelIndex, VideoFrameMetadata[] frames, long channelMask, int numVisibleNotes)
+        private void ComputeChannelsScroll(int channelIndex, VideoFrameMetadata[] frames, long channelMask, int numVisibleNotes, int[] channelTranspose)
         {
             var numFrames = frames.Length;
             var numChannels = frames[0].channelData.Length;
@@ -22,133 +22,142 @@ namespace FamiStudio
             var minOverallNote = int.MaxValue;
             var maxOverallNote = int.MinValue;
 
-            for (int c = 0; c < numChannels; c++)
+            for (int f = 0; f < numFrames; f++)
             {
-                if ((channelMask & (1L << c)) == 0)
-                    continue;
+                var frame = frames[f];
+                var minNoteValue = int.MaxValue;
+                var maxNoteValue = int.MinValue;
 
-                for (int f = 0; f < numFrames; f++)
+                for (int c = 0; c < numChannels; c++)
                 {
-                    var frame = frames[f];
-                    var note  = frame.channelData[c].note;
+                    if ((channelMask & (1L << c)) == 0)
+                        continue;
+
+                    var note = frame.channelData[c].note;
+                    var trans = channelTranspose[c];
 
                     if (note.IsMusical)
                     {
-                        if (currentSegment == null)
-                        {
-                            currentSegment = new ScrollSegment();
-                            segments.Add(currentSegment);
-                        }
-
-                        // If its the start of a new pattern and we've been not moving for ~10 sec, let's start a new segment.
-                        bool forceNewSegment = frame.playNote == 0 && (f - currentSegment.startFrame) > 600;
-
-                        var minNoteValue = note.Value - 1;
-                        var maxNoteValue = note.Value + 1;
+                        minNoteValue = Math.Min(note.Value + trans, minNoteValue);
+                        maxNoteValue = Math.Max(note.Value + trans, maxNoteValue);
 
                         // Only consider slides if they arent too large.
                         if (note.IsSlideNote && Math.Abs(note.SlideNoteTarget - note.Value) < numVisibleNotes / 2)
                         {
-                            minNoteValue = Math.Min(note.Value, note.SlideNoteTarget) - 1;
-                            maxNoteValue = Math.Max(note.Value, note.SlideNoteTarget) + 1;
+                            minNoteValue = Math.Min(note.Value + trans, note.SlideNoteTarget + trans - 1);
+                            maxNoteValue = Math.Max(note.Value + trans, note.SlideNoteTarget + trans + 1);
                         }
 
                         // Only consider arpeggios if they are not too big.
                         if (note.IsArpeggio && note.Arpeggio.GetChordMinMaxOffset(out var minArp, out var maxArp) && maxArp - minArp < numVisibleNotes / 2)
                         {
-                            minNoteValue = note.Value + minArp;
-                            maxNoteValue = note.Value + maxArp;
-                        }
-
-                        minOverallNote = Math.Min(minOverallNote, minNoteValue);
-                        maxOverallNote = Math.Max(maxOverallNote, maxNoteValue);
-
-                        var newMinNote = Math.Min(currentSegment.minNote, minNoteValue);
-                        var newMaxNote = Math.Max(currentSegment.maxNote, maxNoteValue);
-
-                        // If we cant fit the next note in the view, start a new segment.
-                        if (forceNewSegment || newMaxNote - newMinNote + 1 > numVisibleNotes)
-                        {
-                            currentSegment.endFrame = f;
-                            currentSegment = new ScrollSegment();
-                            currentSegment.startFrame = f;
-                            segments.Add(currentSegment);
-
-                            currentSegment.minNote = minNoteValue;
-                            currentSegment.maxNote = maxNoteValue;
-                        }
-                        else
-                        {
-                            currentSegment.minNote = newMinNote;
-                            currentSegment.maxNote = newMaxNote;
+                            minNoteValue = Math.Min(note.Value + trans + minArp, minNoteValue);
+                            maxNoteValue = Math.Max(note.Value + trans + maxArp, maxNoteValue);
                         }
                     }
                 }
 
-                // Not a single notes in this channel...
+                if (minNoteValue == int.MaxValue)
+                {
+                    continue;
+                }
+
+                minOverallNote = Math.Min(minOverallNote, minNoteValue);
+                maxOverallNote = Math.Max(maxOverallNote, maxNoteValue);
+
                 if (currentSegment == null)
                 {
                     currentSegment = new ScrollSegment();
-                    currentSegment.minNote = Note.FromFriendlyName("C4");
-                    currentSegment.maxNote = currentSegment.minNote;
                     segments.Add(currentSegment);
                 }
 
-                currentSegment.endFrame = numFrames;
+                // If its the start of a new pattern and we've been not moving for ~10 sec, let's start a new segment.
+                bool forceNewSegment = frame.playNote == 0 && (f - currentSegment.startFrame) > 600;
 
-                // Remove very small segments, these make the camera move too fast, looks bad.
-                var shortestAllowedSegment = SegmentTransitionNumFrames * 2;
+                var newMinNote = Math.Min(currentSegment.minNote, minNoteValue);
+                var newMaxNote = Math.Max(currentSegment.maxNote, maxNoteValue);
 
-                bool removed = false;
-                do
+                // If we cant fit the next note in the view, start a new segment.
+                if (forceNewSegment || newMaxNote - newMinNote + 1 > numVisibleNotes)
                 {
-                    var sortedSegment = new List<ScrollSegment>(segments);
+                    currentSegment.endFrame = f;
+                    currentSegment = new ScrollSegment();
+                    currentSegment.startFrame = f;
+                    segments.Add(currentSegment);
 
-                    sortedSegment.Sort((s1, s2) => s1.NumFrames.CompareTo(s2.NumFrames));
+                    currentSegment.minNote = minNoteValue;
+                    currentSegment.maxNote = maxNoteValue;
+                }
+                else
+                {
+                    currentSegment.minNote = newMinNote;
+                    currentSegment.maxNote = newMaxNote;
+                }
+            }
 
-                    if (sortedSegment[0].NumFrames >= shortestAllowedSegment)
+            // Not a single notes in this channel...
+            if (currentSegment == null)
+            {
+                currentSegment = new ScrollSegment();
+                currentSegment.minNote = Note.FromFriendlyName("C4");
+                currentSegment.maxNote = currentSegment.minNote;
+                segments.Add(currentSegment);
+            }
+
+            currentSegment.endFrame = numFrames;
+
+            // Remove very small segments, these make the camera move too fast, looks bad.
+            var shortestAllowedSegment = SegmentTransitionNumFrames * 2;
+
+            bool removed = false;
+            do
+            {
+                var sortedSegment = new List<ScrollSegment>(segments);
+
+                sortedSegment.Sort((s1, s2) => s1.NumFrames.CompareTo(s2.NumFrames));
+
+                if (sortedSegment[0].NumFrames >= shortestAllowedSegment)
+                    break;
+
+                for (int s = 0; s < sortedSegment.Count; s++)
+                {
+                    var seg = sortedSegment[s];
+
+                    if (seg.NumFrames >= shortestAllowedSegment)
                         break;
 
-                    for (int s = 0; s < sortedSegment.Count; s++)
+                    var thisSegmentIndex = segments.IndexOf(seg);
+
+                    // Segment is too short, see if we can merge with previous/next one.
+                    var mergeSegmentIndex = -1;
+                    var mergeSegmentLength = -1;
+                    if (thisSegmentIndex > 0)
                     {
-                        var seg = sortedSegment[s];
-
-                        if (seg.NumFrames >= shortestAllowedSegment)
-                            break;
-
-                        var thisSegmentIndex = segments.IndexOf(seg);
-
-                        // Segment is too short, see if we can merge with previous/next one.
-                        var mergeSegmentIndex  = -1;
-                        var mergeSegmentLength = -1;
-                        if (thisSegmentIndex > 0)
-                        {
-                            mergeSegmentIndex  = thisSegmentIndex - 1;
-                            mergeSegmentLength = segments[thisSegmentIndex - 1].NumFrames;
-                        }
-                        if (thisSegmentIndex != segments.Count - 1 && segments[thisSegmentIndex + 1].NumFrames > mergeSegmentLength)
-                        {
-                            mergeSegmentIndex = thisSegmentIndex + 1;
-                            mergeSegmentLength = segments[thisSegmentIndex + 1].NumFrames;
-                        }
-                        if (mergeSegmentIndex >= 0)
-                        {
-                            // Merge.
-                            var mergeSeg = segments[mergeSegmentIndex];
-                            mergeSeg.startFrame = Math.Min(mergeSeg.startFrame, seg.startFrame);
-                            mergeSeg.endFrame   = Math.Max(mergeSeg.endFrame, seg.endFrame);
-                            segments.RemoveAt(thisSegmentIndex);
-                            removed = true;
-                            break;
-                        }
+                        mergeSegmentIndex = thisSegmentIndex - 1;
+                        mergeSegmentLength = segments[thisSegmentIndex - 1].NumFrames;
+                    }
+                    if (thisSegmentIndex != segments.Count - 1 && segments[thisSegmentIndex + 1].NumFrames > mergeSegmentLength)
+                    {
+                        mergeSegmentIndex = thisSegmentIndex + 1;
+                        mergeSegmentLength = segments[thisSegmentIndex + 1].NumFrames;
+                    }
+                    if (mergeSegmentIndex >= 0)
+                    {
+                        // Merge.
+                        var mergeSeg = segments[mergeSegmentIndex];
+                        mergeSeg.startFrame = Math.Min(mergeSeg.startFrame, seg.startFrame);
+                        mergeSeg.endFrame = Math.Max(mergeSeg.endFrame, seg.endFrame);
+                        segments.RemoveAt(thisSegmentIndex);
+                        removed = true;
+                        break;
                     }
                 }
-                while (removed);
+            }
+            while (removed);
 
-                foreach (var segment in segments)
-                {
-                    segment.scroll = segment.minNote + (segment.maxNote - segment.minNote) * 0.5f;
-                }
+            foreach (var segment in segments)
+            {
+                segment.scroll = segment.minNote + (segment.maxNote - segment.minNote) * 0.5f;
             }
 
             for (var s = 0; s < segments.Count; s++)
@@ -249,6 +258,58 @@ namespace FamiStudio
 
         private void ComputeSongNoteMinMaxRange(long channelMask, int[] channelTranspose, out int minNote, out int maxNote)
         {
+#if true
+            var numFrames = metadata.Length;
+            var numChannels = metadata[0].channelData.Length;
+            var minNoteValue = int.MaxValue;
+            var maxNoteValue = int.MinValue;
+
+            for (var f = 0; f < numFrames; f++)
+            {
+                var frame = metadata[f];
+
+                for (var c = 0; c < numChannels; c++)
+                {
+                    if ((channelMask & (1L << c)) == 0)
+                        continue;
+
+                    var note = frame.channelData[c].note;
+                    var trans = channelTranspose[c];
+
+                    if (note.IsMusical)
+                    {
+                        minNoteValue = Math.Min(note.Value + trans, minNoteValue);
+                        maxNoteValue = Math.Max(note.Value + trans, maxNoteValue);
+
+                        // Only consider slides if they arent too large.
+                        if (note.IsSlideNote)
+                        {
+                            minNoteValue = Math.Min(minNoteValue, note.SlideNoteTarget + trans - 1);
+                            maxNoteValue = Math.Max(minNoteValue, note.SlideNoteTarget + trans + 1);
+                        }
+
+                        // Only consider arpeggios if they are not too big.
+                        if (note.IsArpeggio && note.Arpeggio.GetChordMinMaxOffset(out var minArp, out var maxArp))
+                        {
+                            minNoteValue = Math.Min(note.Value + minArp + trans, minNoteValue);
+                            maxNoteValue = Math.Max(note.Value + maxArp + trans, maxNoteValue);
+                        }
+                    }
+                }
+            }
+
+            if (minNoteValue != int.MaxValue)
+            {
+                minNote = minNoteValue - 1;
+                maxNote = maxNoteValue + 1;
+            }
+            else
+            {
+                minNote = Note.MusicalNoteC4;
+                maxNote = Note.MusicalNoteC4;
+            }
+
+#else
             // Ignore the bottom/top 5%.
             const float fractionToIgnore = 0.05f;
 
@@ -308,6 +369,7 @@ namespace FamiStudio
                 minNote = Note.MusicalNoteC4;
                 maxNote = Note.MusicalNoteC4;
             }
+#endif
         }
 
         private void ComputeProjectionParams(float angle, int sizeX, int sizeY, out float u0, out float v0)
@@ -333,7 +395,6 @@ namespace FamiStudio
             if (!InitializeEncoder(settings))
                 return false;
 
-            // MATTT : Clean those up. Its a mess between separate and unified.
             var separateChannels = settings.VideoMode == VideoMode.PianoRollSeparateChannels;
             var perspective = settings.PianoRollPerspective > 0;
 
@@ -365,7 +426,8 @@ namespace FamiStudio
                 longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, fonts.FontVeryLarge));
 
             // Tweak some cosmetic stuff that depends on resolution.
-            var smallChannelText = true; // MATTT longestChannelName + 32 + ChannelIconTextSpacing > renderSizeY * 0.8f;
+            var channelHeaderSizeXFloat = separateChannels ? channelSizeX : videoResX / (float)channelStates.Length;
+            var smallChannelText = longestChannelName + 32 + ChannelIconTextSpacing > channelHeaderSizeXFloat * 0.8f;
             var font = smallChannelText ? fonts.FontMedium : fonts.FontVeryLarge;
             var textOffsetY = smallChannelText ? 1 : 4;
             var channelLineWidth = 3;
@@ -374,11 +436,17 @@ namespace FamiStudio
 
             LoadChannelIcons(!smallChannelText);
 
-            var channelHeaderSizeXFloat = separateChannels ? channelSizeX : videoResX / (float)channelStates.Length;
+            // Avoid square aspect ratio for oscilloscope 3:1 is max.
+            var oscSizeY = (int)Math.Min(channelHeaderSizeXFloat / 3, 100.0f * (channelSizeY / 1080.0f));
+            var oscMinY = ChannelIconPosY * 2 + channelStates[0].icon.Size.Height;
+            var oscMaxY = (oscMinY + oscSizeY);
+            var oscPosY = (oscMinY + oscMaxY) / 2;
+            var oscScaleY = (oscMaxY - oscMinY) / 2;
+            var oscChannelPadX = separateChannels ? 0 : 5;
 
-            //var oscMinY = (int)(ChannelIconPosY + channelStates[0].icon.Size.Height + 10);
-            //var oscMaxY = (int)(oscMinY + 100.0f * (videoResY / 1080.0f));
-            //registerPosY = oscMaxY + 4;
+            // If we have an empty channel, put the registers there.
+            var hasEmptyChannel = separateChannels && (channelStates.Length % numCols) != 0;
+            registerPosY = (hasEmptyChannel ? (numRows - 1) * channelSizeY : oscMaxY) + 4;
 
             var highlightedKeys = new ValueTuple<int, Color>[channelStates.Length];
 
@@ -418,11 +486,11 @@ namespace FamiStudio
             if (separateChannels)
             {
                 for (var c = 0; c < metadata[0].channelData.Length; c++)
-                    ComputeChannelsScroll(c, metadata, (1L << c) & settings.ChannelMask, numVisibleNotes);
+                    ComputeChannelsScroll(c, metadata, (1L << c) & settings.ChannelMask, numVisibleNotes, settings.ChannelTranspose);
             }
             else
             {
-                ComputeChannelsScroll(0, metadata, settings.ChannelMask, numVisibleNotes);
+                ComputeChannelsScroll(channelStates[0].songChannelIndex, metadata, settings.ChannelMask, numVisibleNotes, settings.ChannelTranspose);
             }
 
             if (song.UsesFamiTrackerTempo)
@@ -432,8 +500,10 @@ namespace FamiStudio
 
             var RenderPianoRollAndComposite = (VideoFrameMetadata frame, int idx, (int, Color)[] keys) =>
             {
+                var s = channelStates[idx];
+
                 pianoRollGraphics.BeginDrawFrame(new Rectangle(0, 0, renderSizeY, renderSizeX), true, Theme.DarkGreyColor2);
-                pianoRoll.RenderVideoFrame(pianoRollGraphics, channelStates[idx].songChannelIndex, separateChannels ? 0 : settings.ChannelMask, frame.playPattern, frame.playNote, frame.channelData[idx].scroll, keys);
+                pianoRoll.RenderVideoFrame(pianoRollGraphics, s.songChannelIndex, separateChannels ? 0 : settings.ChannelMask, frame.playPattern, frame.playNote, frame.channelData[s.songChannelIndex].scroll, keys);
                 pianoRollGraphics.EndDrawFrame(true);
 
                 if (settings.PianoRollPerspective > 0)
@@ -540,9 +610,10 @@ namespace FamiStudio
                     o.FillAndDrawRectangle(channelIconPosX, 0, channelIconPosX + s.icon.Size.Width - 1, s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
                     o.DrawBitmap(s.icon, channelIconPosX, 0, 1, Theme.LightGreyColor1);
                     o.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, textOffsetY, Theme.LightGreyColor1);
-                    o.PushTransform(10, 50 /*(oscMinY + oscMaxY) / 2*/, channelHeaderSizeXFloat - 20, 50 /*(oscMinY - oscMaxY) / 2*/); // MATTT : Hardcoded values!!!
-                    o.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, settings.OscLineThickness);
                     o.PopTransform();
+
+                    o.PushTransform(channelPosX + oscChannelPadX, channelPosY + oscPosY, channelHeaderSizeXFloat - oscChannelPadX * 2, oscScaleY);
+                    o.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, settings.OscLineThickness);
                     o.PopTransform();
                 }
             }, () =>
