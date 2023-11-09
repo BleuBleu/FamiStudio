@@ -780,6 +780,8 @@ namespace FamiStudio
         {
             base.EndDrawFrame(clearAlpha);
 
+            // This fixes some graphical corruption on my intel laptop. 
+            GL.Flush();
             GL.BindFramebuffer(GL.DrawFramebuffer, 0);
         }
 
