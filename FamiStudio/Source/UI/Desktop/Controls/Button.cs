@@ -10,7 +10,7 @@ namespace FamiStudio
 
         private string text;
         private string imageName;
-        private BitmapAtlasRef bmp;
+        private TextureAtlasRef bmp;
         private int margin = DpiScaling.ScaleForWindow(4);
         private bool bold;
         private bool ellipsis;
@@ -101,7 +101,7 @@ namespace FamiStudio
         {
             if (HasParent && !string.IsNullOrEmpty(imageName))
             {
-                bmp = ParentWindow.Graphics.GetBitmapAtlasRef(imageName);
+                bmp = ParentWindow.Graphics.GetTextureAtlasRef(imageName);
                 Debug.Assert(bmp != null);
             }
         }
@@ -132,7 +132,7 @@ namespace FamiStudio
 
             if (!hasText && bmp != null)
             {
-                c.DrawBitmapAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, 1, color);
+                c.DrawTextureAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, 1, color);
             }
             else if (hasText && bmp == null)
             {
@@ -140,7 +140,7 @@ namespace FamiStudio
             }
             else if (hasText && bmp != null)
             {
-                c.DrawBitmapAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, 1, color);
+                c.DrawTextureAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, 1, color);
                 c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, color, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 

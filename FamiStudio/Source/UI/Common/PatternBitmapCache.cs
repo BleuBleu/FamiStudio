@@ -29,7 +29,7 @@ namespace FamiStudio
 
         class CacheTexture
         {
-            public Bitmap bmp;
+            public Texture bmp;
             public CacheRow[] rows;
         }
 
@@ -74,7 +74,7 @@ namespace FamiStudio
             v1 = v0 + rect.Height * InvPatternCacheTextureSize * scaleFactorV;
         }
 
-        public Bitmap GetOrAddPattern(Pattern pattern, int patternLen, int framesPerNote, out float u0, out float v0, out float u1, out float v1)
+        public Texture GetOrAddPattern(Pattern pattern, int patternLen, int framesPerNote, out float u0, out float v0, out float u1, out float v1)
         {
             // Look in cache first.
             if (patternCache.TryGetValue(pattern.Id, out var list))
@@ -141,7 +141,7 @@ namespace FamiStudio
             // Update texture.
             Allocate(patternCacheSizeX, out var textureIdx, out var x, out var y);
             var texture = cacheTextures[textureIdx];
-            graphics.UpdateBitmap(texture.bmp, x, y, patternCacheSizeX, clampedPatternCacheSizeY, data);
+            graphics.UpdateTexture(texture.bmp, x, y, patternCacheSizeX, clampedPatternCacheSizeY, data);
 
             if (!patternCache.TryGetValue(pattern.Id, out list))
             {
@@ -302,7 +302,7 @@ namespace FamiStudio
 
             // Create new texture.
             var texture = new CacheTexture();
-            texture.bmp  = graphics.CreateEmptyBitmap(PatternCacheTextureSize, PatternCacheTextureSize, TextureFormat.Rgba, false);
+            texture.bmp  = graphics.CreateEmptyTexture(PatternCacheTextureSize, PatternCacheTextureSize, TextureFormat.Rgba, false);
             InitCacheRows(texture);
             textureIdx = cacheTextures.Count;
             cacheTextures.Add(texture);

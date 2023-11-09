@@ -403,30 +403,30 @@ namespace FamiStudio
         Color sliderFillColor = Color.FromArgb(64, Color.Black);
         Color disabledColor   = Color.FromArgb(64, Color.Black);
         Color[] registerColors = new Color[11];
-        BitmapAtlasRef bmpExpand;
-        BitmapAtlasRef bmpExpanded;
-        BitmapAtlasRef bmpOverflow;
-        BitmapAtlasRef bmpCheckBoxYes;
-        BitmapAtlasRef bmpCheckBoxNo;
-        BitmapAtlasRef bmpButtonLeft;
-        BitmapAtlasRef bmpButtonRight;
-        BitmapAtlasRef bmpButtonMinus;
-        BitmapAtlasRef bmpButtonPlus;
-        BitmapAtlasRef bmpSong;
-        BitmapAtlasRef bmpAdd;
-        BitmapAtlasRef bmpSort;
-        BitmapAtlasRef bmpPlay;
-        BitmapAtlasRef bmpDPCM;
-        BitmapAtlasRef bmpLoad;
-        BitmapAtlasRef bmpWaveEdit;
-        BitmapAtlasRef bmpReload;
-        BitmapAtlasRef bmpProperties;
-        BitmapAtlasRef bmpFolder;
-        BitmapAtlasRef bmpFolderOpen;
-        BitmapAtlasRef[] bmpExpansions;
-        BitmapAtlasRef[] bmpEnvelopes;
-        BitmapAtlasRef[] bmpChannels;
-        BitmapAtlasRef[] bmpRegisters;
+        TextureAtlasRef bmpExpand;
+        TextureAtlasRef bmpExpanded;
+        TextureAtlasRef bmpOverflow;
+        TextureAtlasRef bmpCheckBoxYes;
+        TextureAtlasRef bmpCheckBoxNo;
+        TextureAtlasRef bmpButtonLeft;
+        TextureAtlasRef bmpButtonRight;
+        TextureAtlasRef bmpButtonMinus;
+        TextureAtlasRef bmpButtonPlus;
+        TextureAtlasRef bmpSong;
+        TextureAtlasRef bmpAdd;
+        TextureAtlasRef bmpSort;
+        TextureAtlasRef bmpPlay;
+        TextureAtlasRef bmpDPCM;
+        TextureAtlasRef bmpLoad;
+        TextureAtlasRef bmpWaveEdit;
+        TextureAtlasRef bmpReload;
+        TextureAtlasRef bmpProperties;
+        TextureAtlasRef bmpFolder;
+        TextureAtlasRef bmpFolderOpen;
+        TextureAtlasRef[] bmpExpansions;
+        TextureAtlasRef[] bmpEnvelopes;
+        TextureAtlasRef[] bmpChannels;
+        TextureAtlasRef[] bmpRegisters;
 
         class Button
         {
@@ -435,7 +435,7 @@ namespace FamiStudio
             public Color imageTint = Color.Black;
             public Color textColor;
             public Color textDisabledColor;
-            public BitmapAtlasRef bmp;
+            public TextureAtlasRef bmp;
             public int height;
             public bool gradient = true;
             public string[] tabNames;
@@ -706,7 +706,7 @@ namespace FamiStudio
                 }
             }
 
-            public BitmapAtlasRef GetIcon(SubButtonType sub)
+            public TextureAtlasRef GetIcon(SubButtonType sub)
             {
                 switch (sub)
                 {
@@ -1110,31 +1110,31 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             var g = ParentWindow.Graphics;
-            bmpExpansions  = g.GetBitmapAtlasRefs(ExpansionType.Icons);
-            bmpEnvelopes   = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
-            bmpChannels    = g.GetBitmapAtlasRefs(ChannelType.Icons);
-            bmpRegisters   = g.GetBitmapAtlasRefs(RegisterViewer.Icons);
-            bmpExpand      = g.GetBitmapAtlasRef("InstrumentExpand");
-            bmpExpanded    = g.GetBitmapAtlasRef("InstrumentExpanded");
-            bmpOverflow    = g.GetBitmapAtlasRef("Warning");
-            bmpCheckBoxYes = g.GetBitmapAtlasRef("CheckBoxYes");
-            bmpCheckBoxNo  = g.GetBitmapAtlasRef("CheckBoxNo");
-            bmpButtonLeft  = g.GetBitmapAtlasRef("ButtonLeft");
-            bmpButtonRight = g.GetBitmapAtlasRef("ButtonRight");
-            bmpButtonMinus = g.GetBitmapAtlasRef("ButtonMinus");
-            bmpButtonPlus  = g.GetBitmapAtlasRef("ButtonPlus");
-            bmpSong        = g.GetBitmapAtlasRef("Music");
-            bmpAdd         = g.GetBitmapAtlasRef("Add");
-            bmpPlay        = g.GetBitmapAtlasRef("PlaySource");
-            bmpDPCM        = g.GetBitmapAtlasRef("ChannelDPCM");
-            bmpLoad        = g.GetBitmapAtlasRef("InstrumentOpen");
-            bmpWaveEdit    = g.GetBitmapAtlasRef("WaveEdit");
-            bmpReload      = g.GetBitmapAtlasRef("Reload");
-            bmpAdd         = g.GetBitmapAtlasRef("Add");
-            bmpProperties  = g.GetBitmapAtlasRef("Properties");
-            bmpFolder      = g.GetBitmapAtlasRef("Folder");
-            bmpFolderOpen  = g.GetBitmapAtlasRef("FolderOpen");
-            bmpSort        = g.GetBitmapAtlasRef("Sort");
+            bmpExpansions  = g.GetTextureAtlasRefs(ExpansionType.Icons);
+            bmpEnvelopes   = g.GetTextureAtlasRefs(EnvelopeType.Icons);
+            bmpChannels    = g.GetTextureAtlasRefs(ChannelType.Icons);
+            bmpRegisters   = g.GetTextureAtlasRefs(RegisterViewer.Icons);
+            bmpExpand      = g.GetTextureAtlasRef("InstrumentExpand");
+            bmpExpanded    = g.GetTextureAtlasRef("InstrumentExpanded");
+            bmpOverflow    = g.GetTextureAtlasRef("Warning");
+            bmpCheckBoxYes = g.GetTextureAtlasRef("CheckBoxYes");
+            bmpCheckBoxNo  = g.GetTextureAtlasRef("CheckBoxNo");
+            bmpButtonLeft  = g.GetTextureAtlasRef("ButtonLeft");
+            bmpButtonRight = g.GetTextureAtlasRef("ButtonRight");
+            bmpButtonMinus = g.GetTextureAtlasRef("ButtonMinus");
+            bmpButtonPlus  = g.GetTextureAtlasRef("ButtonPlus");
+            bmpSong        = g.GetTextureAtlasRef("Music");
+            bmpAdd         = g.GetTextureAtlasRef("Add");
+            bmpPlay        = g.GetTextureAtlasRef("PlaySource");
+            bmpDPCM        = g.GetTextureAtlasRef("ChannelDPCM");
+            bmpLoad        = g.GetTextureAtlasRef("InstrumentOpen");
+            bmpWaveEdit    = g.GetTextureAtlasRef("WaveEdit");
+            bmpReload      = g.GetTextureAtlasRef("Reload");
+            bmpAdd         = g.GetTextureAtlasRef("Add");
+            bmpProperties  = g.GetTextureAtlasRef("Properties");
+            bmpFolder      = g.GetTextureAtlasRef("Folder");
+            bmpFolderOpen  = g.GetTextureAtlasRef("FolderOpen");
+            bmpSort        = g.GetTextureAtlasRef("Sort");
 
             var color0 = Theme.LightGreyColor2; // Grey
             var color1 = Theme.CustomColors[14, 5]; // Orange
@@ -1440,7 +1440,7 @@ namespace FamiStudio
 
                         if (button.bmp != null)
                         {
-                            c.DrawBitmapAtlas(button.bmp, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, button.imageTint);
+                            c.DrawTextureAtlas(button.bmp, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, button.imageTint);
                             if (highlighted && (button.type == ButtonType.Song || button.type == ButtonType.Instrument || button.type == ButtonType.Dpcm || button.type == ButtonType.Arpeggio))
                             { 
                                 c.DrawRectangle(buttonIconPosX, buttonIconPosY, buttonIconPosX + iconSize - 4, buttonIconPosY + iconSize - 4, Theme.WhiteColor, 3, true, true);
@@ -1465,13 +1465,13 @@ namespace FamiStudio
                             var opacityR = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
 
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
-                            c.DrawBitmapAtlas(bmpButtonMinus, 0, 0, opacityL, bitmapScale, Color.Black);
+                            c.DrawTextureAtlas(bmpButtonMinus, 0, 0, opacityL, bitmapScale, Color.Black);
                             c.PushTranslation(paramButtonSizeX, 0);
                             c.FillRectangle(1, 1, valSizeX, sliderSizeY, sliderFillColor);
                             c.DrawRectangle(0, 0, actualSliderSizeX, sliderSizeY, enabled ? Theme.BlackColor : disabledColor, 1);
                             c.DrawText(paramStr, Fonts.FontMedium, 0, -sliderPosY, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
                             c.PopTransform();
-                            c.DrawBitmapAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, opacityR, bitmapScale, Color.Black);
+                            c.DrawTextureAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, opacityR, bitmapScale, Color.Black);
                             c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamCheckbox)
@@ -1480,7 +1480,7 @@ namespace FamiStudio
 
                             c.PushTranslation(contentSizeX - checkBoxPosX, checkBoxPosY);
                             c.DrawRectangle(0, 0, bmpCheckBoxYes.ElementSize.Width * bitmapScale - 1, bmpCheckBoxYes.ElementSize.Height * bitmapScale - 1, Color.FromArgb(opacity, Color.Black));
-                            c.DrawBitmapAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, 0, 0, opacity, bitmapScale, Color.Black);
+                            c.DrawTextureAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, 0, 0, opacity, bitmapScale, Color.Black);
                             c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamList)
@@ -1491,8 +1491,8 @@ namespace FamiStudio
                             var opacityR = enabled && paramVal != paramNext ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
 
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
-                            c.DrawBitmapAtlas(bmpButtonLeft, 0, 0, opacityL, bitmapScale, Color.Black);
-                            c.DrawBitmapAtlas(bmpButtonRight, sliderSizeX - paramButtonSizeX, 0, opacityR, bitmapScale, Color.Black);
+                            c.DrawTextureAtlas(bmpButtonLeft, 0, 0, opacityL, bitmapScale, Color.Black);
+                            c.DrawTextureAtlas(bmpButtonRight, sliderSizeX - paramButtonSizeX, 0, opacityR, bitmapScale, Color.Black);
                             c.DrawText(paramStr, Fonts.FontMedium, 0, -sliderPosY, Theme.BlackColor, TextFlags.MiddleCenter, sliderSizeX, button.height);
                             c.PopTransform();
                         }
@@ -1533,11 +1533,11 @@ namespace FamiStudio
 
                                 if (sub == SubButtonType.Expand)
                                 {
-                                    c.DrawBitmapAtlas(bmp, expandButtonPosX, expandButtonPosY, hoverOpacity, bitmapScale, tint);
+                                    c.DrawTextureAtlas(bmp, expandButtonPosX, expandButtonPosY, hoverOpacity, bitmapScale, tint);
                                 }
                                 else
                                 {
-                                    c.DrawBitmapAtlas(bmp, x, subButtonPosY, ((activeMask & (1 << j)) != 0 ? 1.0f : 0.2f) * hoverOpacity, bitmapScale, tint);
+                                    c.DrawTextureAtlas(bmp, x, subButtonPosY, ((activeMask & (1 << j)) != 0 ? 1.0f : 0.2f) * hoverOpacity, bitmapScale, tint);
 
                                     if (highlighted && sub < SubButtonType.EnvelopeMax)
                                         c.DrawRectangle(x, subButtonPosY, x + iconSize - 4, subButtonPosY + iconSize - 4, Theme.WhiteColor, 3, true, true);
@@ -1595,7 +1595,7 @@ namespace FamiStudio
                         var bx = pt.X - captureButtonRelX;
                         var by = pt.Y - captureButtonRelY - topTabSizeY;
 
-                        c.DrawBitmapAtlas(bmpEnvelopes[envelopeDragIdx], bx, by, 0.5f, bitmapScale, Color.Black);
+                        c.DrawTextureAtlas(bmpEnvelopes[envelopeDragIdx], bx, by, 0.5f, bitmapScale, Color.Black);
 
                         if (Platform.IsMobile)
                             c.DrawRectangle(bx, by, bx + iconSize - 4, by + iconSize - 4, Theme.WhiteColor, 3, true, true);

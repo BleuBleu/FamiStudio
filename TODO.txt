@@ -12,7 +12,7 @@ x Keep colors on FS.txt
 x When using shy mode, we could make the patterns larger if there is room.
 - Video export improvements:
 	- Test/Make it work on mobile.
-- Rename "Bitmap" to "Texture"
+x Rename "Bitmap" to "Texture"
 - Size option for mobile piano
 - Finish/fix phase reset support
 	=> option to fully emulation from start.

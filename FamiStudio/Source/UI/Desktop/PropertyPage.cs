@@ -378,7 +378,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public ImageBox CreateImageBox(Bitmap bmp, int resX, int resY)
+        public ImageBox CreateImageBox(Texture bmp, int resX, int resY)
         {
             var image = new ImageBox(bmp);
             image.Resize(resX, resY);

@@ -325,13 +325,13 @@ namespace FamiStudio
             GL.PopDebugGroup();
         }
 
-        public void UpdateBitmap(Bitmap bmp, int x, int y, int width, int height, byte[] data)
+        public void UpdateBitmap(Texture bmp, int x, int y, int width, int height, byte[] data)
         {
             GL.BindTexture(GL.Texture2D, bmp.Id);
             GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Bgr, GL.UnsignedByte, data);
         }
 
-        public void UpdateBitmap(Bitmap bmp, int x, int y, int width, int height, int[] data)
+        public void UpdateBitmap(Texture bmp, int x, int y, int width, int height, int[] data)
         {
             GL.BindTexture(GL.Texture2D, bmp.Id);
             GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Rgba, GL.UnsignedByte, data);
@@ -359,7 +359,7 @@ namespace FamiStudio
             }
         }
 
-        public override int CreateEmptyTexture(int width, int height, TextureFormat format, bool filter)
+        public override int CreateTexture(int width, int height, TextureFormat format, bool filter)
         {
             int id = GL.GenTexture();
 
@@ -415,13 +415,13 @@ namespace FamiStudio
             }
         }
 
-        public Bitmap CreateBitmapFromResource(string name)
+        public Texture CreateTextureFromResource(string name)
         {
             var bmp = LoadBitmapFromResourceWithScaling(name);
-            return new Bitmap(this, CreateTexture(bmp, false), bmp.Width, bmp.Height);
+            return new Texture(this, CreateTexture(bmp, false), bmp.Width, bmp.Height);
         }
 
-        protected unsafe override BitmapAtlas CreateBitmapAtlasFromResources(string[] names)
+        protected unsafe override TextureAtlas CreateTextureAtlasFromResources(string[] names)
         {
             // Need to sort since we do binary searches on the names.
             Array.Sort(names);
@@ -466,7 +466,7 @@ namespace FamiStudio
             atlasSizeX = Utils.NextPowerOfTwo(atlasSizeX);
             atlasSizeY = Utils.NextPowerOfTwo(atlasSizeY);
 
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, TextureFormat.Rgba, false);
+            var textureId = CreateTexture(atlasSizeX, atlasSizeY, TextureFormat.Rgba, false);
             GL.BindTexture(GL.Texture2D, textureId);
 
             Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
@@ -484,7 +484,7 @@ namespace FamiStudio
                 }
             }
 
-            return new BitmapAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects);
+            return new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects);
         }
 
         private void BindAndUpdateVertexBuffer(int attrib, int buffer, float[] array, int arraySize, int numComponents = 2)
@@ -661,9 +661,9 @@ namespace FamiStudio
                     }
                 }
 
-                if (list.HasAnyBitmaps)
+                if (list.HasAnyTextures)
                 {
-                    var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out _);
+                    var drawData = list.GetTextureDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out _);
 
                     GL.UseProgram(bmpProgram);
                     GL.BindVertexArray(bmpVao);
@@ -785,9 +785,9 @@ namespace FamiStudio
             GL.BindFramebuffer(GL.DrawFramebuffer, 0);
         }
 
-        public Bitmap GetTexture()
+        public Texture GetTexture()
         {
-            return new Bitmap(this, texture, resX, resY, false);
+            return new Texture(this, texture, resX, resY, false);
         }
 
         public unsafe void GetBitmap(byte[] data)

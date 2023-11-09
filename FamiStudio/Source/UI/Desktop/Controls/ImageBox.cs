@@ -5,8 +5,8 @@ namespace FamiStudio
     public class ImageBox : Control
     {
         private string atlasImageName;
-        private Bitmap bmp;
-        private BitmapAtlasRef bmpAtlas;
+        private Texture bmp;
+        private TextureAtlasRef bmpAtlas;
         private Color tint = Color.White;
         private bool scale;
         private bool flip;
@@ -17,7 +17,7 @@ namespace FamiStudio
             atlasImageName = image;
         }
 
-        public ImageBox(Bitmap b)
+        public ImageBox(Texture b)
         {
             height = DpiScaling.ScaleForWindow(24);
             bmp = b;
@@ -29,7 +29,7 @@ namespace FamiStudio
             set { atlasImageName = value; UpdateAtlasBitmap(); MarkDirty(); }
         }
 
-        public Bitmap Image
+        public Texture Image
         {
             get { return bmp; }
             set { bmp = value; MarkDirty(); }
@@ -57,7 +57,7 @@ namespace FamiStudio
         {
             if (!string.IsNullOrEmpty(atlasImageName))
             {
-                bmpAtlas = Graphics.GetBitmapAtlasRef(atlasImageName);
+                bmpAtlas = Graphics.GetTextureAtlasRef(atlasImageName);
                 Debug.Assert(bmpAtlas != null);
             }
         }
@@ -77,22 +77,22 @@ namespace FamiStudio
             {
                 if (scale)
                 {
-                    c.DrawBitmapScaled(bmp, 0, 0, width, height, flip);
+                    c.DrawTextureScaled(bmp, 0, 0, width, height, flip);
                 }
                 else
                 {
-                    c.DrawBitmapCentered(bmp, 0, 0, width, height, 1, tint);
+                    c.DrawTextureCentered(bmp, 0, 0, width, height, 1, tint);
                 }
             }
             else if (!string.IsNullOrEmpty(atlasImageName))
             {
                 if (bmpAtlas == null)
                 {
-                    bmpAtlas = g.GetBitmapAtlasRef(atlasImageName);
+                    bmpAtlas = g.GetTextureAtlasRef(atlasImageName);
                     Debug.Assert(bmpAtlas != null);
                 }
 
-                c.DrawBitmapAtlasCentered(bmpAtlas, 0, 0, width, height, 1, 1, tint);
+                c.DrawTextureAtlasCentered(bmpAtlas, 0, 0, width, height, 1, 1, tint);
             }
             else
             {

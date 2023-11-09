@@ -9,8 +9,8 @@ namespace FamiStudio
         private bool check;
         private bool hover;
         private int margin = DpiScaling.ScaleForWindow(4);
-        private BitmapAtlasRef bmpCheckOn;
-        private BitmapAtlasRef bmpCheckOff;
+        private TextureAtlasRef bmpCheckOn;
+        private TextureAtlasRef bmpCheckOff;
 
         public CheckBox(bool chk, string txt = null)
         {
@@ -27,8 +27,8 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
-            bmpCheckOn  = window.Graphics.GetBitmapAtlasRef("CheckBoxYes");
-            bmpCheckOff = window.Graphics.GetBitmapAtlasRef("CheckBoxNo");
+            bmpCheckOn  = window.Graphics.GetTextureAtlasRef("CheckBoxYes");
+            bmpCheckOff = window.Graphics.GetTextureAtlasRef("CheckBoxNo");
         }
 
         public bool IsPointInCheckBox(int x, int y)
@@ -68,7 +68,7 @@ namespace FamiStudio
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
             c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, hover && enabled ? Theme.DarkGreyColor3 : Theme.DarkGreyColor1, color);
-            c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, color);
+            c.DrawTextureAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, color);
 
             if (!string.IsNullOrEmpty(text))
                 c.DrawText(text, Fonts.FontMedium, bmpSize.Width + margin, 0, color, TextFlags.MiddleLeft, 0, height);

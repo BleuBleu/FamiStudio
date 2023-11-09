@@ -51,12 +51,12 @@ namespace FamiStudio
         private DropDown dropDownInactive;
         private DropDown dropDownActive;
 
-        private BitmapAtlasRef bmpCheckOn;
-        private BitmapAtlasRef bmpCheckOff;
-        private BitmapAtlasRef bmpRadioOn;
-        private BitmapAtlasRef bmpRadioOff;
-        private BitmapAtlasRef bmpUpDownPlus;
-        private BitmapAtlasRef bmpUpDownMinus;
+        private TextureAtlasRef bmpCheckOn;
+        private TextureAtlasRef bmpCheckOff;
+        private TextureAtlasRef bmpRadioOn;
+        private TextureAtlasRef bmpRadioOff;
+        private TextureAtlasRef bmpUpDownPlus;
+        private TextureAtlasRef bmpUpDownMinus;
 
         private int margin         = DpiScaling.ScaleForWindow(4);
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
@@ -245,12 +245,12 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             var g = Graphics;
-            bmpCheckOn     = g.GetBitmapAtlasRef("CheckBoxYes");
-            bmpCheckOff    = g.GetBitmapAtlasRef("CheckBoxNo");
-            bmpRadioOn     = g.GetBitmapAtlasRef("RadioButtonOn");
-            bmpRadioOff    = g.GetBitmapAtlasRef("RadioButtonOff");
-            bmpUpDownPlus  = g.GetBitmapAtlasRef("UpDownPlus");
-            bmpUpDownMinus = g.GetBitmapAtlasRef("UpDownMinus");
+            bmpCheckOn     = g.GetTextureAtlasRef("CheckBoxYes");
+            bmpCheckOff    = g.GetTextureAtlasRef("CheckBoxNo");
+            bmpRadioOn     = g.GetTextureAtlasRef("RadioButtonOn");
+            bmpRadioOff    = g.GetTextureAtlasRef("RadioButtonOff");
+            bmpUpDownPlus  = g.GetTextureAtlasRef("UpDownPlus");
+            bmpUpDownMinus = g.GetTextureAtlasRef("UpDownMinus");
 
             UpdateLayout();
 
@@ -646,7 +646,7 @@ namespace FamiStudio
                                 var radioBaseX = (colWidth  - bmpRadioOn.ElementSize.Width)  / 2;
                                 var radioBaseY = (rowHeight - bmpRadioOn.ElementSize.Height) / 2;
                                 c.PushTranslation(radioBaseX, radioBaseY);
-                                c.DrawBitmapAtlas((bool)val ? bmpRadioOn : bmpRadioOff, 0, 0, 1, 1, foreColor);
+                                c.DrawTextureAtlas((bool)val ? bmpRadioOn : bmpRadioOff, 0, 0, 1, 1, foreColor);
                                 c.PopTransform();
                                 break;
                             }
@@ -656,22 +656,22 @@ namespace FamiStudio
                                 var checkBaseY = (rowHeight - bmpCheckOn.ElementSize.Height) / 2;
                                 c.PushTranslation(checkBaseX, checkBaseY);
                                 c.DrawRectangle(0, 0, bmpCheckOn.ElementSize.Width - 1, bmpCheckOn.ElementSize.Height - 1, foreColor);
-                                c.DrawBitmapAtlas((bool)val ? bmpCheckOn : bmpCheckOff, 0, 0, 1, 1, foreColor);
+                                c.DrawTextureAtlas((bool)val ? bmpCheckOn : bmpCheckOff, 0, 0, 1, 1, foreColor);
                                 c.PopTransform();
                                 break;
                             }
                             case ColumnType.Image:
                             {
-                                var bmp = g.GetBitmapAtlasRef((string)val);
-                                c.DrawBitmapAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, 1, foreColor);
+                                var bmp = g.GetTextureAtlasRef((string)val);
+                                c.DrawTextureAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, 1, foreColor);
                                 break;
                             }
                             case ColumnType.NumericUpDown:
                             {
                                 if (cellEnabled)
                                 {
-                                    c.DrawBitmapAtlasCentered(bmpUpDownMinus, 0, 0, rowHeight, rowHeight, 1, 1, foreColor);
-                                    c.DrawBitmapAtlasCentered(bmpUpDownPlus, colWidth - rowHeight, 0, rowHeight, rowHeight, 1, 1, foreColor);
+                                    c.DrawTextureAtlasCentered(bmpUpDownMinus, 0, 0, rowHeight, rowHeight, 1, 1, foreColor);
+                                    c.DrawTextureAtlasCentered(bmpUpDownPlus, colWidth - rowHeight, 0, rowHeight, rowHeight, 1, 1, foreColor);
                                     c.DrawText(val.ToString(), Fonts.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else

@@ -52,7 +52,7 @@ namespace FamiStudio
             label = new Label(VideoPreviewLabel, true);
             label.Move(margin, margin + titleBarSizeY, width - margin, labelSizeY);
 
-            imageBox = new ImageBox((Bitmap)null);
+            imageBox = new ImageBox((Texture)null);
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, previewSizeX, previewSizeY);
             imageBox.ScaleImage = true;
             imageBox.FlipImage = true;

@@ -7,8 +7,8 @@ namespace FamiStudio
     {
         private bool check;
         private bool hover;
-        private BitmapAtlasRef bmpRadioOff;
-        private BitmapAtlasRef bmpRadioOn;
+        private TextureAtlasRef bmpRadioOff;
+        private TextureAtlasRef bmpRadioOn;
 
         public RadioButton(string txt, bool chk, bool multi = false) : base(txt, multi)
         {
@@ -24,8 +24,8 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             var g = ParentWindow.Graphics;
-            bmpRadioOff = g.GetBitmapAtlasRef("RadioButtonOff");
-            bmpRadioOn  = g.GetBitmapAtlasRef("RadioButtonOn");
+            bmpRadioOff = g.GetTextureAtlasRef("RadioButtonOff");
+            bmpRadioOn  = g.GetTextureAtlasRef("RadioButtonOn");
             labelOffsetX = bmpRadioOff.ElementSize.Width + DpiScaling.ScaleForWindow(8);
             base.OnAddedToContainer();
         }
@@ -66,7 +66,7 @@ namespace FamiStudio
             base.OnRender(g);
 
             var c = g.GetCommandList();
-            c.DrawBitmapAtlasCentered(check ? bmpRadioOn : bmpRadioOff, 0, 0, bmpRadioOn.ElementSize.Width, height, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
+            c.DrawTextureAtlasCentered(check ? bmpRadioOn : bmpRadioOff, 0, 0, bmpRadioOn.ElementSize.Width, height, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
         }
     }
 }

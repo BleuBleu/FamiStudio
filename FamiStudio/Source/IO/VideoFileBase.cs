@@ -31,10 +31,10 @@ namespace FamiStudio
         protected VideoChannelState[] channelStates;
         protected VideoFrameMetadata[] metadata;
         protected Fonts fonts;
-        protected Bitmap watermark;
+        protected Texture watermark;
         protected NesApu.NesRegisterValues registerValues;
         protected List<RegisterViewer> registerViewers;
-        protected List<Bitmap> registerViewerIcons;
+        protected List<Texture> registerViewerIcons;
         protected Color[] registerColors = new Color[11];
         protected List<string> authorText = new List<string>();
 
@@ -299,18 +299,18 @@ namespace FamiStudio
             }
 
             fonts = new Fonts(videoGraphics);
-            watermark = videoGraphics.CreateBitmapFromResource("FamiStudio.Resources.Misc.VideoWatermark");
+            watermark = videoGraphics.CreateTextureFromResource("FamiStudio.Resources.Misc.VideoWatermark");
 
             if (showRegisters)
             {
                 registerValues = new NesApu.NesRegisterValues();
                 registerViewers = new List<RegisterViewer>();
-                registerViewerIcons = new List<Bitmap>();
+                registerViewerIcons = new List<Texture>();
 
                 foreach (var exp in project.GetActiveExpansions())
                 {
                     registerViewers.Add(RegisterViewer.CreateForExpansion(exp, registerValues));
-                    registerViewerIcons.Add(videoGraphics.CreateBitmapFromResource($"FamiStudio.Resources.Atlas.{ExpansionType.Icons[exp]}"));
+                    registerViewerIcons.Add(videoGraphics.CreateTextureFromResource($"FamiStudio.Resources.Atlas.{ExpansionType.Icons[exp]}"));
                 }
 
                 var color0 = Theme.LightGreyColor2; // Grey
@@ -393,7 +393,7 @@ namespace FamiStudio
                     var regViewer = registerViewers[i];
                     var icon = registerViewerIcons[i];
 
-                    c.DrawBitmap(icon, 0, y, 1, Theme.LightGreyColor2);
+                    c.DrawTexture(icon, 0, y, 1, Theme.LightGreyColor2);
                     c.DrawText(ExpansionType.GetLocalizedName(regViewer.Expansion, ExpansionType.LocalizationMode.ChipName), fonts.FontSmallBold, icon.Size.Width + 2, y, Theme.LightGreyColor2, TextFlags.Middle, 0, icon.Size.Height);
                     y += icon.Size.Height;
                     c.DrawLine(0, y, contentSizeX - 4, y, Theme.LightGreyColor2);
@@ -488,7 +488,7 @@ namespace FamiStudio
                     // Registers + watermark + artist.
                     videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), false, Theme.DarkGreyColor2);
                     DrawRegisterValues(frame);
-                    videoGraphics.OverlayCommandList.DrawBitmap(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
+                    videoGraphics.OverlayCommandList.DrawTexture(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
                     
                     var textY = videoResY - authorText.Count * fonts.FontMediumBold.LineHeight - TextMargin;
                     for (var i = 0; i < authorText.Count; i++, textY += fonts.FontMediumBold.LineHeight)
@@ -542,7 +542,7 @@ namespace FamiStudio
             var suffix = large ? "@2x" : "";
 
             foreach (var s in channelStates)
-                s.icon = videoGraphics.CreateBitmapFromResource($"FamiStudio.Resources.Atlas.{ChannelType.Icons[s.channel.Type]}{suffix}");
+                s.icon = videoGraphics.CreateTextureFromResource($"FamiStudio.Resources.Atlas.{ChannelType.Icons[s.channel.Type]}{suffix}");
         }
 
         protected void GetFrameRateInfo(Project project, bool half, out int numer, out int denom)
@@ -581,7 +581,7 @@ namespace FamiStudio
         public int songChannelIndex;
         public string channelText;
         public Channel channel;
-        public Bitmap icon;
+        public Texture icon;
         public short[] wav;
         public float oscScale;
         public int lastTrigger;

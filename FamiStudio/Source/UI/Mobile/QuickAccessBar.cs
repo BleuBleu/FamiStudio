@@ -21,7 +21,7 @@ namespace FamiStudio
         const int DefaultListItemSize     = 120;
         const int DefaultListIconPos      = 12;
 
-        private delegate BitmapAtlasRef RenderInfoDelegate(out string text, out Color tint);
+        private delegate TextureAtlasRef RenderInfoDelegate(out string text, out Color tint);
         private delegate void ListItemClickDelegate(int idx);
         private delegate bool EnabledDelegate();
         private delegate void EmptyDelegate();
@@ -52,8 +52,8 @@ namespace FamiStudio
             public int TextX;
             public int TextY;
             public Color Color;
-            public BitmapAtlasRef Image;
-            public BitmapAtlasRef ExtraImage;
+            public TextureAtlasRef Image;
+            public TextureAtlasRef ExtraImage;
             public Func<ListItem, float> GetImageOpacity;
             public Func<ListItem, float> GetExtraImageOpacity;
             public string Text;
@@ -84,23 +84,23 @@ namespace FamiStudio
             Count
         }
 
-        BitmapAtlasRef   bmpSequencer;
-        BitmapAtlasRef   bmpPianoRoll;
-        BitmapAtlasRef   bmpProjectExplorer;
-        BitmapAtlasRef   bmpSnapOn;
-        BitmapAtlasRef   bmpSnapOff;
-        BitmapAtlasRef   bmpCheckOff;
-        BitmapAtlasRef   bmpCheckOn;
-        BitmapAtlasRef   bmpRadio;
-        BitmapAtlasRef   bmpArpeggio;
-        BitmapAtlasRef   bmpGhostSmall;
-        BitmapAtlasRef   bmpPlay;
-        BitmapAtlasRef   bmpEffectNone;
-        BitmapAtlasRef   bmpEffectRepeat;
-        BitmapAtlasRef[] bmpEffects;
-        BitmapAtlasRef[] bmpEnvelopes;
-        BitmapAtlasRef[] bmpChannels;
-        BitmapAtlasRef[] bmpExpansions;
+        TextureAtlasRef   bmpSequencer;
+        TextureAtlasRef   bmpPianoRoll;
+        TextureAtlasRef   bmpProjectExplorer;
+        TextureAtlasRef   bmpSnapOn;
+        TextureAtlasRef   bmpSnapOff;
+        TextureAtlasRef   bmpCheckOff;
+        TextureAtlasRef   bmpCheckOn;
+        TextureAtlasRef   bmpRadio;
+        TextureAtlasRef   bmpArpeggio;
+        TextureAtlasRef   bmpGhostSmall;
+        TextureAtlasRef   bmpPlay;
+        TextureAtlasRef   bmpEffectNone;
+        TextureAtlasRef   bmpEffectRepeat;
+        TextureAtlasRef[] bmpEffects;
+        TextureAtlasRef[] bmpEnvelopes;
+        TextureAtlasRef[] bmpChannels;
+        TextureAtlasRef[] bmpExpansions;
 
         Font buttonFont;
         Color scrollBarColor = Color.FromArgb(64, Color.Black);
@@ -178,23 +178,23 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             var g= ParentWindow.Graphics;
-            bmpSequencer = g.GetBitmapAtlasRef("Sequencer");
-            bmpPianoRoll = g.GetBitmapAtlasRef("PianoRoll");
-            bmpProjectExplorer = g.GetBitmapAtlasRef("ProjectExplorer");
-            bmpSnapOn = g.GetBitmapAtlasRef("MobileSnapOn");
-            bmpSnapOff = g.GetBitmapAtlasRef("MobileSnapOff");
-            bmpCheckOff = g.GetBitmapAtlasRef("MobileCheckOff");
-            bmpCheckOn = g.GetBitmapAtlasRef("MobileCheckOn");
-            bmpRadio = g.GetBitmapAtlasRef("MobileRadio");
-            bmpArpeggio = g.GetBitmapAtlasRef("MobileArpeggio");
-            bmpGhostSmall = g.GetBitmapAtlasRef("GhostSmall");
-            bmpPlay = g.GetBitmapAtlasRef("Play");
-            bmpEffectNone = g.GetBitmapAtlasRef("MobileEffectNone");
-            bmpEffectRepeat = g.GetBitmapAtlasRef("MobileEffectRepeat");
-            bmpEffects = g.GetBitmapAtlasRefs(EffectType.Icons, "Mobile");
-            bmpExpansions = g.GetBitmapAtlasRefs(ExpansionType.Icons);
-            bmpEnvelopes = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
-            bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
+            bmpSequencer = g.GetTextureAtlasRef("Sequencer");
+            bmpPianoRoll = g.GetTextureAtlasRef("PianoRoll");
+            bmpProjectExplorer = g.GetTextureAtlasRef("ProjectExplorer");
+            bmpSnapOn = g.GetTextureAtlasRef("MobileSnapOn");
+            bmpSnapOff = g.GetTextureAtlasRef("MobileSnapOff");
+            bmpCheckOff = g.GetTextureAtlasRef("MobileCheckOff");
+            bmpCheckOn = g.GetTextureAtlasRef("MobileCheckOn");
+            bmpRadio = g.GetTextureAtlasRef("MobileRadio");
+            bmpArpeggio = g.GetTextureAtlasRef("MobileArpeggio");
+            bmpGhostSmall = g.GetTextureAtlasRef("GhostSmall");
+            bmpPlay = g.GetTextureAtlasRef("Play");
+            bmpEffectNone = g.GetTextureAtlasRef("MobileEffectNone");
+            bmpEffectRepeat = g.GetTextureAtlasRef("MobileEffectRepeat");
+            bmpEffects = g.GetTextureAtlasRefs(EffectType.Icons, "Mobile");
+            bmpExpansions = g.GetTextureAtlasRefs(ExpansionType.Icons);
+            bmpEnvelopes = g.GetTextureAtlasRefs(EnvelopeType.Icons);
+            bmpChannels = g.GetTextureAtlasRefs(ChannelType.Icons);
 
             buttons[(int)ButtonType.Sequencer]      = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
             buttons[(int)ButtonType.PianoRoll]      = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
@@ -808,28 +808,28 @@ namespace FamiStudio
             }
         }
 
-        private BitmapAtlasRef GetSequencerRenderInfo(out string text, out Color tint)
+        private TextureAtlasRef GetSequencerRenderInfo(out string text, out Color tint)
         {
             text = null;
             tint = App.ActiveControl == App.Sequencer ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
             return bmpSequencer;
         }
 
-        private BitmapAtlasRef GetPianoRollRenderInfo(out string text, out Color tint)
+        private TextureAtlasRef GetPianoRollRenderInfo(out string text, out Color tint)
         {
             text = null;
             tint = App.ActiveControl == App.PianoRoll && App.IsEditingChannel ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
             return bmpPianoRoll;
         }
 
-        private BitmapAtlasRef GetProjectExplorerInfo(out string text, out Color tint)
+        private TextureAtlasRef GetProjectExplorerInfo(out string text, out Color tint)
         {
             text = null;
             tint = App.ActiveControl == App.ProjectExplorer || App.ActiveControl == App.PianoRoll && !App.IsEditingChannel ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
             return bmpProjectExplorer;
         }
 
-        private BitmapAtlasRef GetSnapRenderInfo(out string text, out Color tint)
+        private TextureAtlasRef GetSnapRenderInfo(out string text, out Color tint)
         {
             var snapEnabled = App.SnapEnabled;
             text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] + (App.SnapEffectEnabled ? " (FX)" : "") : SnapOffLabel;
@@ -837,7 +837,7 @@ namespace FamiStudio
             return snapEnabled ? bmpSnapOn : bmpSnapOff;
         }
 
-        private BitmapAtlasRef GetEffectRenderInfo(out string text, out Color tint)
+        private TextureAtlasRef GetEffectRenderInfo(out string text, out Color tint)
         {
             var validEffect = App.SelectedEffect >= 0 && App.EffectPanelExpanded;
 
@@ -846,35 +846,35 @@ namespace FamiStudio
             return validEffect ? bmpEffects[App.SelectedEffect] : bmpEffectNone;
         }
 
-        private BitmapAtlasRef GetDPCMEffectRenderInfo(out string text, out Color tint)
+        private TextureAtlasRef GetDPCMEffectRenderInfo(out string text, out Color tint)
         {
             text = App.EffectPanelExpanded ? VolumeLabel : NoneLabel;
             tint = Theme.LightGreyColor1;
             return App.EffectPanelExpanded ? bmpEffects[Note.EffectVolume] : bmpEffectNone;
         }
 
-        private BitmapAtlasRef GetDPCMPlayRenderInfo(out string text, out Color tint)
+        private TextureAtlasRef GetDPCMPlayRenderInfo(out string text, out Color tint)
         {
             text = "Play";
             tint = App.EditSample.Color;
             return bmpPlay;
         }
 
-        private BitmapAtlasRef GetWaveformEffectRenderInfo(out string text, out Color tint)
+        private TextureAtlasRef GetWaveformEffectRenderInfo(out string text, out Color tint)
         {
             text = App.EffectPanelExpanded ? RepeatLabel : NoneLabel;
             tint = Theme.LightGreyColor1;
             return App.EffectPanelExpanded ? bmpEffectRepeat : bmpEffectNone;
         }
 
-        private BitmapAtlasRef GetChannelRenderInfo(out string text, out Color tint)
+        private TextureAtlasRef GetChannelRenderInfo(out string text, out Color tint)
         {
             text = App.SelectedChannel.NameWithExpansion;
             tint = Theme.LightGreyColor1;
             return bmpChannels[App.SelectedChannel.Type];
         }
 
-        private BitmapAtlasRef GetInstrumentRenderingInfo(out string text, out Color tint)
+        private TextureAtlasRef GetInstrumentRenderingInfo(out string text, out Color tint)
         {
             var inst = App.SelectedInstrument;
             text = inst != null ? inst.Name : "";
@@ -883,7 +883,7 @@ namespace FamiStudio
             return bmpExpansions[exp];
         }
 
-        private BitmapAtlasRef GetEnvelopeRenderingInfo(out string text, out Color tint)
+        private TextureAtlasRef GetEnvelopeRenderingInfo(out string text, out Color tint)
         {
             var envType = App.EditEnvelopeType;
             var inst = App.SelectedInstrument;
@@ -892,7 +892,7 @@ namespace FamiStudio
             return bmpEnvelopes[envType];
         }
 
-        private BitmapAtlasRef GetArpeggioRenderInfo(out string text, out Color tint)
+        private TextureAtlasRef GetArpeggioRenderInfo(out string text, out Color tint)
         {
             var arp = App.SelectedArpeggio;
             text = arp != null ? arp.Name  : NoneLabel;
@@ -1072,7 +1072,7 @@ namespace FamiStudio
                 if (btn.Visible)
                 {
                     var bmp = btn.GetRenderInfo(out var text, out var tint);
-                    c.DrawBitmapAtlas(bmp, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
+                    c.DrawTextureAtlas(bmp, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
 
                     if (!string.IsNullOrEmpty(text))
                         c.DrawText(text, buttonFont, btn.TextX, btn.TextY, Theme.LightGreyColor1, TextFlags.Center | TextFlags.Ellipsis, buttonSize, 0);
@@ -1107,13 +1107,13 @@ namespace FamiStudio
                     
                     if (item.Image != null)
                     { 
-                        c.DrawBitmapAtlas(item.Image, item.IconX, item.IconY, opacity, iconScaleFloat, Color.Black);
+                        c.DrawTextureAtlas(item.Image, item.IconX, item.IconY, opacity, iconScaleFloat, Color.Black);
                     }
 
                     if (item.ExtraImage != null)
                     {
                         var extraOpacity = item.GetExtraImageOpacity != null ? item.GetExtraImageOpacity(item) : 1.0f;
-                        c.DrawBitmapAtlas(item.ExtraImage, item.ExtraIconX, item.ExtraIconY, extraOpacity, iconScaleFloat, Color.Black);
+                        c.DrawTextureAtlas(item.ExtraImage, item.ExtraIconX, item.ExtraIconY, extraOpacity, iconScaleFloat, Color.Black);
                     }
 
                     c.DrawText(item.Text, i == popupSelectedIdx ? Fonts.FontMediumBold : Fonts.FontMedium, item.TextX, item.TextY, item.TextColor, TextFlags.Middle, 0, listItemSize);

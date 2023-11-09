@@ -507,11 +507,11 @@ namespace FamiStudio
                 if (settings.PianoRollPerspective > 0)
                 {
                     perspective2xGraphics.BeginDrawFrame(new Rectangle(0, 0, channelSizeX * 2, channelSizeY * 2), true, Theme.DarkGreyColor2);
-                    perspective2xGraphics.DefaultCommandList.DrawBitmap(pianoRollTexture, -numPerspectivePixels * 2, 0, renderSizeX * 2, channelSizeY * 2, 1.0f, u, v, 1, 1, BitmapFlags.Perspective | BitmapFlags.Rotated90);
+                    perspective2xGraphics.DefaultCommandList.DrawTexture(pianoRollTexture, -numPerspectivePixels * 2, 0, renderSizeX * 2, channelSizeY * 2, 1.0f, u, v, 1, 1, TextureFlags.Perspective | TextureFlags.Rotated90);
                     perspective2xGraphics.EndDrawFrame();
 
                     perspective1xGraphics.BeginDrawFrame(new Rectangle(0, 0, channelSizeX, channelSizeY), true, Theme.DarkGreyColor2);
-                    perspective1xGraphics.DefaultCommandList.DrawBitmap(perspective2xTexture, 0, 0, channelSizeX, channelSizeY, 1.0f, 0, 1, 1, 0);
+                    perspective1xGraphics.DefaultCommandList.DrawTexture(perspective2xTexture, 0, 0, channelSizeX, channelSizeY, 1.0f, 0, 1, 1, 0);
                     perspective1xGraphics.EndDrawFrame();
                 }
 
@@ -527,7 +527,7 @@ namespace FamiStudio
                 else
                 {
                     videoGraphics.PushClipRegion(channelPosX, channelPosY, channelSizeX, channelSizeY);
-                    videoGraphics.DefaultCommandList.DrawBitmap(pianoRollTexture, channelPosX, channelPosY, channelSizeX, channelSizeY, 1, 0, 0, 1, 1, BitmapFlags.Rotated90);
+                    videoGraphics.DefaultCommandList.DrawTexture(pianoRollTexture, channelPosX, channelPosY, channelSizeX, channelSizeY, 1, 0, 0, 1, 1, TextureFlags.Rotated90);
                     videoGraphics.PopClipRegion();
                 }
 
@@ -606,7 +606,7 @@ namespace FamiStudio
 
                     o.PushTranslation(channelPosX, channelPosY + ChannelIconPosY);
                     o.FillAndDrawRectangle(channelIconPosX, 0, channelIconPosX + s.icon.Size.Width - 1, s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
-                    o.DrawBitmap(s.icon, channelIconPosX, 0, 1, Theme.LightGreyColor1);
+                    o.DrawTexture(s.icon, channelIconPosX, 0, 1, Theme.LightGreyColor1);
                     o.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, textOffsetY, Theme.LightGreyColor1);
                     o.PopTransform();
 

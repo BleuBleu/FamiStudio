@@ -469,14 +469,14 @@ namespace FamiStudio
         {
             var instrument = userData1 as Instrument;
             var algo = instrument.EpsmPatchRegs[0] & 0x07;
-            var bmp = c.Graphics.GetBitmapAtlasRef($"Algorithm{algo}");
+            var bmp = c.Graphics.GetTextureAtlasRef($"Algorithm{algo}");
             var bmpSize = bmp.ElementSize;
 
             var posX = (rect.Left + rect.Right)  / 2 - bmpSize.Width  / 2;
             var posY = (rect.Top  + rect.Bottom) / 2 - bmpSize.Height / 2;
 
             c.FillAndDrawRectangle(rect, Color.FromArgb(128, Color.Black), Theme.BlackColor);
-            c.DrawBitmapAtlas(bmp, posX, posY);
+            c.DrawTextureAtlas(bmp, posX, posY);
         }
     }
 

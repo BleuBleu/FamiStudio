@@ -239,7 +239,7 @@ namespace FamiStudio
         bool redTooltip = false;
         new string tooltip = "";
         Font timeCodeFont;
-        BitmapAtlasRef[] bmpSpecialCharacters;
+        TextureAtlasRef[] bmpSpecialCharacters;
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
         private delegate void MouseWheelDelegate(float delta);
@@ -271,7 +271,7 @@ namespace FamiStudio
         private int timecodeOscSizeY;
 
         private Color warningColor = Color.FromArgb(205, 77, 64);
-        private BitmapAtlasRef[] bmpButtons;
+        private TextureAtlasRef[] bmpButtons;
         private Button[] buttons = new Button[(int)ButtonType.Count];
 
         private bool oscilloscopeVisible = true;
@@ -356,7 +356,7 @@ namespace FamiStudio
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
             var g = ParentWindow.Graphics;
-            bmpButtons = g.GetBitmapAtlasRefs(ButtonImageNames);
+            bmpButtons = g.GetTextureAtlasRefs(ButtonImageNames);
             timeCodeFont = Fonts.FontHuge;
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
@@ -412,7 +412,7 @@ namespace FamiStudio
                 buttonIconPosY          = DpiScaling.ScaleForWindow(DefaultButtonIconPosY);
                 buttonSize              = DpiScaling.ScaleForWindow(DefaultButtonSize);
 
-                bmpSpecialCharacters = g.GetBitmapAtlasRefs(SpecialCharImageNames);
+                bmpSpecialCharacters = g.GetTextureAtlasRefs(SpecialCharImageNames);
 
                 specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(32) };
                 specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
@@ -1016,7 +1016,7 @@ namespace FamiStudio
                 if (status != ButtonStatus.Disabled && hover)
                     opacity *= 0.75f;
                 
-                c.DrawBitmapAtlas(bmpButtons[(int)bmpIndex], btn.IconPos.X, btn.IconPos.Y, opacity, iconScaleFloat, tint);
+                c.DrawTextureAtlas(bmpButtons[(int)bmpIndex], btn.IconPos.X, btn.IconPos.Y, opacity, iconScaleFloat, tint);
             }
         }
 
@@ -1106,7 +1106,7 @@ namespace FamiStudio
 
                             if (specialCharacter.BmpIndex != SpecialCharImageIndices.Count)
                             {
-                                c.DrawBitmapAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyColor1);
+                                c.DrawTextureAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyColor1);
                             }
                             else
                             {

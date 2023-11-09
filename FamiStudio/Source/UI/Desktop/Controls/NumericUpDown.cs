@@ -12,7 +12,7 @@ namespace FamiStudio
         private int min;
         private int max = 10;
         private int inc = 1;
-        private BitmapAtlasRef[] bmp;
+        private TextureAtlasRef[] bmp;
         private float captureDuration;
         private int   captureButton = -1;
         private int   hoverButton = -1;
@@ -69,8 +69,8 @@ namespace FamiStudio
             var g = ParentWindow.Graphics;
             bmp = new[]
             {
-                g.GetBitmapAtlasRef("UpDownMinus"),
-                g.GetBitmapAtlasRef("UpDownPlus")
+                g.GetTextureAtlasRef("UpDownMinus"),
+                g.GetTextureAtlasRef("UpDownPlus")
             };
 
             // "outerMargin" needs to be set before calling this.
@@ -232,7 +232,7 @@ namespace FamiStudio
                 c.FillAndDrawRectangle(rects[i], fillBrush, color);
 
                 c.PushTranslation(0, captureButton == i ? 1 : 0);
-                c.DrawBitmapAtlasCentered(bmp[i], rects[i], 1, 1, color);
+                c.DrawTextureAtlasCentered(bmp[i], rects[i], 1, 1, color);
                 c.PopTransform();
             }
         }

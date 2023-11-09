@@ -37,8 +37,8 @@ namespace FamiStudio
         private readonly Color DarkGreyColor4Light = Theme.Lighten(Theme.DarkGreyColor4);
         private readonly Color DarkGreyColor5Light = Theme.Lighten(Theme.DarkGreyColor5);
 
-        private BitmapAtlasRef bmpMobilePianoDrag;
-        private BitmapAtlasRef bmpMobilePianoRest;
+        private TextureAtlasRef bmpMobilePianoDrag;
+        private TextureAtlasRef bmpMobilePianoRest;
 
         private int scrollX = -1;
         private int playAbsNote = -1;
@@ -59,8 +59,8 @@ namespace FamiStudio
             layoutSize = Math.Min(screenSize.Width, screenSize.Height) / 4;
 
             var g = ParentWindow.Graphics;
-            bmpMobilePianoDrag = g.GetBitmapAtlasRef("MobilePianoDrag");
-            bmpMobilePianoRest = g.GetBitmapAtlasRef("MobilePianoRest");
+            bmpMobilePianoDrag = g.GetTextureAtlasRef("MobilePianoDrag");
+            bmpMobilePianoRest = g.GetTextureAtlasRef("MobilePianoRest");
         }
         
         private void UpdateRenderCoords()
@@ -263,7 +263,7 @@ namespace FamiStudio
                         var posX = r.X + r.Width / 2 - (int)(size.Width * scale / 2);
                         var posY = r.Height / 2 - (int)(size.Height * scale / 2);
                         var bmp = App.IsRecording && j == 1 ? bmpMobilePianoRest : bmpMobilePianoDrag;
-                        c.DrawBitmapAtlas(bmp, posX, posY, 0.25f, scale, Color.Black);
+                        c.DrawTextureAtlas(bmp, posX, posY, 0.25f, scale, Color.Black);
                     }
                 }
             }

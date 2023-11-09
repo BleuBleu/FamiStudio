@@ -16,10 +16,10 @@ namespace FamiStudio
         int minSizeX;
 
         int hoveredItemIndex = -1;
-        BitmapAtlasRef[] bmpContextMenu;
-        BitmapAtlasRef bmpMenuCheckOn;
-        BitmapAtlasRef bmpMenuCheckOff;
-        BitmapAtlasRef bmpMenuRadio;
+        TextureAtlasRef[] bmpContextMenu;
+        TextureAtlasRef bmpMenuCheckOn;
+        TextureAtlasRef bmpMenuCheckOff;
+        TextureAtlasRef bmpMenuRadio;
         ContextMenuOption[] menuOptions;
 
         public ContextMenu()
@@ -30,9 +30,9 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             var g = ParentWindow.Graphics;
-            bmpMenuCheckOn  = g.GetBitmapAtlasRef("MenuCheckOn");
-            bmpMenuCheckOff = g.GetBitmapAtlasRef("MenuCheckOff");
-            bmpMenuRadio    = g.GetBitmapAtlasRef("MenuRadio");
+            bmpMenuCheckOn  = g.GetTextureAtlasRef("MenuCheckOn");
+            bmpMenuCheckOff = g.GetTextureAtlasRef("MenuCheckOff");
+            bmpMenuRadio    = g.GetTextureAtlasRef("MenuRadio");
         }
 
         private void UpdateRenderCoords()
@@ -48,7 +48,7 @@ namespace FamiStudio
             UpdateRenderCoords();
 
             menuOptions = options;
-            bmpContextMenu = new BitmapAtlasRef[options.Length];
+            bmpContextMenu = new TextureAtlasRef[options.Length];
 
             // Measure size.
             var g = ParentWindow.Graphics;
@@ -64,7 +64,7 @@ namespace FamiStudio
 
                 if (!string.IsNullOrEmpty(option.Image))
                 {
-                    bmpContextMenu[i] = g.GetBitmapAtlasRef(option.Image);
+                    bmpContextMenu[i] = g.GetTextureAtlasRef(option.Image);
                     Debug.Assert(bmpContextMenu != null);
                 }
             }
@@ -201,7 +201,7 @@ namespace FamiStudio
 
                 if (bmp != null)
                 {
-                    c.DrawBitmapAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
+                    c.DrawTextureAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
                 }
 
                 c.DrawText(option.Text, Fonts.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);

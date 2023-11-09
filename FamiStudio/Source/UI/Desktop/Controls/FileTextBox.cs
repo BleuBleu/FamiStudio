@@ -8,7 +8,7 @@ namespace FamiStudio
         public delegate void ClickDelegate(Control sender);
         public event ClickDelegate Click;
 
-        private BitmapAtlasRef bmp;
+        private TextureAtlasRef bmp;
         private bool hoverButton;
         private bool captureButton;
 
@@ -24,7 +24,7 @@ namespace FamiStudio
             outerMarginRight = GetButtonRect().Width + textBoxMargin;
 
             var g = ParentWindow.Graphics;
-            bmp = g.GetBitmapAtlasRef("FileFolder");
+            bmp = g.GetTextureAtlasRef("FileFolder");
 
             // "outerMargin" needs to be set before calling this.
             base.OnAddedToContainer();
@@ -85,7 +85,7 @@ namespace FamiStudio
 
             c.FillAndDrawRectangle(rect, fillBrush, color);
             c.PushTranslation(0, captureButton ? 1 : 0);
-            c.DrawBitmapAtlasCentered(bmp, rect, 1, 1, color);
+            c.DrawTextureAtlasCentered(bmp, rect, 1, 1, color);
             c.PopTransform();
         }
     }

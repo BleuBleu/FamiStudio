@@ -132,20 +132,20 @@ namespace FamiStudio
         Color volumeSlideBarFillColor      = Color.FromArgb( 64, Theme.LightGreyColor1);
         Color loopSectionColor             = Color.FromArgb( 64, Theme.BlackColor);
 
-        BitmapAtlasRef bmpLoopSmallFill;
-        BitmapAtlasRef bmpReleaseSmallFill;
-        BitmapAtlasRef bmpEnvResize;
-        BitmapAtlasRef bmpExpandedSmall;
-        BitmapAtlasRef bmpCollapsedSmall;
-        BitmapAtlasRef bmpMaximize;
-        BitmapAtlasRef bmpSnap;
-        BitmapAtlasRef bmpSnapOff;
-        BitmapAtlasRef bmpGizmoResizeLeftRight;
-        BitmapAtlasRef bmpGizmoResizeUpDown;
-        BitmapAtlasRef bmpGizmoResizeFill;
-        BitmapAtlasRef bmpEffectFrame;
-        BitmapAtlasRef bmpEffectRepeat;
-        BitmapAtlasRef[] bmpEffects;
+        TextureAtlasRef bmpLoopSmallFill;
+        TextureAtlasRef bmpReleaseSmallFill;
+        TextureAtlasRef bmpEnvResize;
+        TextureAtlasRef bmpExpandedSmall;
+        TextureAtlasRef bmpCollapsedSmall;
+        TextureAtlasRef bmpMaximize;
+        TextureAtlasRef bmpSnap;
+        TextureAtlasRef bmpSnapOff;
+        TextureAtlasRef bmpGizmoResizeLeftRight;
+        TextureAtlasRef bmpGizmoResizeUpDown;
+        TextureAtlasRef bmpGizmoResizeFill;
+        TextureAtlasRef bmpEffectFrame;
+        TextureAtlasRef bmpEffectRepeat;
+        TextureAtlasRef[] bmpEffects;
         float[][] stopNoteGeometry        = new float[2][]; // [1] is used to draw arps.
         float[][] stopReleaseNoteGeometry = new float[2][]; // [1] is used to draw arps.
         float[][] releaseNoteGeometry     = new float[2][]; // [1] is used to draw arps.
@@ -386,8 +386,8 @@ namespace FamiStudio
         private class Gizmo
         {
             public Rectangle Rect;
-            public BitmapAtlasRef FillImage = null;
-            public BitmapAtlasRef Image;
+            public TextureAtlasRef FillImage = null;
+            public TextureAtlasRef Image;
             public GizmoAction Action;
             public string GizmoText;
             public int OffsetX;
@@ -1070,20 +1070,20 @@ namespace FamiStudio
 
             var g = graphics;
             fontSmallCharSizeX = ParentWindow.Fonts.FontSmall.MeasureString("0", false);
-            bmpLoopSmallFill = g.GetBitmapAtlasRef("LoopSmallFill");
-            bmpReleaseSmallFill = g.GetBitmapAtlasRef("ReleaseSmallFill");
-            bmpEnvResize = g.GetBitmapAtlasRef("EnvResize");
-            bmpExpandedSmall = g.GetBitmapAtlasRef("ExpandedSmall");
-            bmpCollapsedSmall = g.GetBitmapAtlasRef("CollapsedSmall");
-            bmpMaximize = g.GetBitmapAtlasRef("Maximize");
-            bmpSnap = g.GetBitmapAtlasRef("Snap");
-            bmpSnapOff = g.GetBitmapAtlasRef("SnapOff");
-            bmpGizmoResizeLeftRight = g.GetBitmapAtlasRef("GizmoResizeLeftRight");
-            bmpGizmoResizeUpDown = g.GetBitmapAtlasRef("GizmoResizeUpDown");
-            bmpGizmoResizeFill = g.GetBitmapAtlasRef("GizmoResizeFill");
-            bmpEffectFrame = g.GetBitmapAtlasRef("EffectFrame");
-            bmpEffectRepeat = g.GetBitmapAtlasRef("EffectRepeat");
-            bmpEffects = g.GetBitmapAtlasRefs(EffectType.Icons);
+            bmpLoopSmallFill = g.GetTextureAtlasRef("LoopSmallFill");
+            bmpReleaseSmallFill = g.GetTextureAtlasRef("ReleaseSmallFill");
+            bmpEnvResize = g.GetTextureAtlasRef("EnvResize");
+            bmpExpandedSmall = g.GetTextureAtlasRef("ExpandedSmall");
+            bmpCollapsedSmall = g.GetTextureAtlasRef("CollapsedSmall");
+            bmpMaximize = g.GetTextureAtlasRef("Maximize");
+            bmpSnap = g.GetTextureAtlasRef("Snap");
+            bmpSnapOff = g.GetTextureAtlasRef("SnapOff");
+            bmpGizmoResizeLeftRight = g.GetTextureAtlasRef("GizmoResizeLeftRight");
+            bmpGizmoResizeUpDown = g.GetTextureAtlasRef("GizmoResizeUpDown");
+            bmpGizmoResizeFill = g.GetTextureAtlasRef("GizmoResizeFill");
+            bmpEffectFrame = g.GetTextureAtlasRef("EffectFrame");
+            bmpEffectRepeat = g.GetTextureAtlasRef("EffectRepeat");
+            bmpEffects = g.GetTextureAtlasRefs(EffectType.Icons);
 
             if (Platform.IsMobile)
             {
@@ -1296,14 +1296,14 @@ namespace FamiStudio
                     r.c.PushTranslation(GetPixelXForAbsoluteNoteIndex(env.Loop), 0);
                     r.b.FillRectangle(0, 0, GetPixelXForAbsoluteNoteIndex(((env.Release >= 0 ? env.Release : env.Length) - env.Loop), false), headerAndEffectSizeY, rep != null ? loopSectionColor : Theme.DarkGreyColor5);
                     r.b.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
-                    r.c.DrawBitmapAtlas(bmpLoopSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
+                    r.c.DrawTextureAtlas(bmpLoopSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
                     r.c.PopTransform();
                 }
                 if (env.Release >= 0)
                 {
                     r.c.PushTranslation(GetPixelXForAbsoluteNoteIndex(env.Release), 0);
                     r.b.DrawLine(0, 0, 0, headerAndEffectSizeY, Theme.BlackColor);
-                    r.c.DrawBitmapAtlas(bmpReleaseSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
+                    r.c.DrawTextureAtlas(bmpReleaseSmallFill, iconPos + 1, iconPos, 1.0f, bitmapScale, rep != null ? Theme.BlackColor : Theme.LightGreyColor1);
                     r.c.PopTransform();
                 }
                 if (env.Length > 0)
@@ -1318,7 +1318,7 @@ namespace FamiStudio
                 if (env.CanResize)
                 {
                     r.c.PushTranslation(GetPixelXForAbsoluteNoteIndex(env.Length), 0);
-                    r.c.DrawBitmapAtlas(bmpEnvResize, iconPos + 1, iconPos, 1.0f, bitmapScale, Theme.LightGreyColor1);
+                    r.c.DrawTextureAtlas(bmpEnvResize, iconPos + 1, iconPos, 1.0f, bitmapScale, Theme.LightGreyColor1);
                     r.c.PopTransform();
                 }
 
@@ -1472,21 +1472,21 @@ namespace FamiStudio
             if (!Platform.IsMobile && editMode != EditionMode.VideoRecording)
             {
                 var maxRect = GetMaximizeButtonRect();
-                r.c.DrawBitmapAtlas(bmpMaximize, maxRect.X, maxRect.Y, (hoverTopLeftButton & 4) != 0 ? 0.75f : 1.0f, 1.0f, maximized ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
+                r.c.DrawTextureAtlas(bmpMaximize, maxRect.X, maxRect.Y, (hoverTopLeftButton & 4) != 0 ? 0.75f : 1.0f, 1.0f, maximized ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
             }
 
             // Effect icons
             if (editMode == EditionMode.Channel)
             {
                 var toggleRect = GetToggleEffectPanelButtonRect();
-                r.c.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, toggleRect.X, toggleRect.Y, (hoverTopLeftButton & 1) != 0 ? 0.75f : 1.0f, bitmapScale, Theme.LightGreyColor1);
+                r.c.DrawTextureAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, toggleRect.X, toggleRect.Y, (hoverTopLeftButton & 1) != 0 ? 0.75f : 1.0f, bitmapScale, Theme.LightGreyColor1);
 
                 if (SnapAllowed && !Platform.IsMobile)
                 {
                     var snapBtnRect = GetSnapButtonRect();
                     var snapResRect = GetSnapResolutionRect();
 
-                    r.c.DrawBitmapAtlas(SnapEnabled || App.IsRecording ? bmpSnap : bmpSnapOff, snapBtnRect.X, snapBtnRect.Y, (hoverTopLeftButton & 2) != 0 ? 0.75f : 1.0f, 1.0f, App.IsRecording ? Theme.DarkRedColor : (SnapEnabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1));
+                    r.c.DrawTextureAtlas(SnapEnabled || App.IsRecording ? bmpSnap : bmpSnapOff, snapBtnRect.X, snapBtnRect.Y, (hoverTopLeftButton & 2) != 0 ? 0.75f : 1.0f, 1.0f, App.IsRecording ? Theme.DarkRedColor : (SnapEnabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1));
                     r.c.DrawText(SnapResolutionType.Names[snapResolution], r.fonts.FontSmall, snapResRect.X, snapResRect.Y, App.IsRecording ? Theme.DarkRedColor : (SnapEnabled ? Theme.LightGreyColor2 : Theme.MediumGreyColor1), TextFlags.Right | TextFlags.Middle, snapResRect.Width, snapResRect.Height);
                 }
 
@@ -1507,7 +1507,7 @@ namespace FamiStudio
                         if (hoverEffectIndex == i)
                             r.c.FillRectangle(0, 0, pianoSizeX, effectButtonSizeY, Theme.MediumGreyColor1);
                         r.c.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
-                        r.c.DrawBitmapAtlas(bmpEffects[effectIdx], effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
+                        r.c.DrawTextureAtlas(bmpEffects[effectIdx], effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
                         r.c.DrawText(EffectType.LocalizedNames[effectIdx], selectedEffectIdx == effectIdx ? r.fonts.FontSmallBold : r.fonts.FontSmall, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);
                         r.c.PopTransform();
 
@@ -1522,7 +1522,7 @@ namespace FamiStudio
             }
             else if (editMode == EditionMode.DPCM || editMode == EditionMode.Envelope && editInstrument.Envelopes[EnvelopeType.WaveformRepeat] != null)
             {
-                r.c.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, 0, 0, 1.0f, bitmapScale, Theme.LightGreyColor1);
+                r.c.DrawTextureAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, 0, 0, 1.0f, bitmapScale, Theme.LightGreyColor1);
 
                 if (showEffectsPanel)
                 {
@@ -1532,7 +1532,7 @@ namespace FamiStudio
                     var bmp  = editMode == EditionMode.DPCM ? bmpEffects[Note.EffectVolume] : bmpEffectRepeat;
                     var text = editMode == EditionMode.DPCM ? EffectType.LocalizedNames[Note.EffectVolume] : EnvelopeType.LocalizedNames[EnvelopeType.WaveformRepeat];
 
-                    r.c.DrawBitmapAtlas(bmp, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
+                    r.c.DrawTextureAtlas(bmp, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
                     r.c.DrawText(text, r.fonts.FontSmallBold, effectNamePosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, effectButtonSizeY);
                     r.c.PushTranslation(0, effectButtonSizeY);
                     r.c.DrawLine(0, -1, pianoSizeX, -1, Theme.BlackColor);
@@ -1925,8 +1925,8 @@ namespace FamiStudio
                             var lineColor = IsGizmoHighlighted(g, headerSizeY) ? Color.White : Color.Black;
 
                             if (g.FillImage != null)
-                                r.c.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Theme.LightGreyColor1);
-                            r.c.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
+                                r.c.DrawTextureAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Theme.LightGreyColor1);
+                            r.c.DrawTextureAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
                         }
                     }
 
@@ -2013,8 +2013,8 @@ namespace FamiStudio
                         foreach (var g in gizmos)
                         {
                             if (g.FillImage != null)
-                                r.c.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, EditInstrument.Color);
-                            r.c.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Color.White);
+                                r.c.DrawTextureAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, EditInstrument.Color);
+                            r.c.DrawTextureAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Color.White);
                         }
                     }
 
@@ -2812,8 +2812,8 @@ namespace FamiStudio
                                         var iconX = GetPixelXForAbsoluteNoteIndex(channel.Song.GetPatternStartAbsoluteNoteIndex(p, time)) + (int)(noteSizeX / 2) - effectIconSizeX / 2;
                                         var iconY = effectPosY + effectIconPosY;
 
-                                        r.f.DrawBitmapAtlas(bmpEffectFrame, iconX, iconY, 1.0f, effectBitmapScale, drawOpaque ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
-                                        r.f.DrawBitmapAtlas(bmpEffects[fx], iconX, iconY, drawOpaque ? 1.0f : 0.4f, effectBitmapScale, Theme.LightGreyColor1);
+                                        r.f.DrawTextureAtlas(bmpEffectFrame, iconX, iconY, 1.0f, effectBitmapScale, drawOpaque ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
+                                        r.f.DrawTextureAtlas(bmpEffects[fx], iconX, iconY, drawOpaque ? 1.0f : 0.4f, effectBitmapScale, Theme.LightGreyColor1);
                                         effectPosY += effectIconSizeX + effectIconPosY + 1;
                                     }
                                 }
@@ -2836,8 +2836,8 @@ namespace FamiStudio
                             var lineColor = highlighted ? Color.White : Color.Black;
 
                             if (g.FillImage != null)
-                                r.f.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, fillColor);
-                            r.f.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, lineColor);
+                                r.f.DrawTextureAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, fillColor);
+                            r.f.DrawTextureAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, lineColor);
 
                             if (highlighted && !string.IsNullOrEmpty(g.GizmoText))
                                 r.f.DrawText(g.GizmoText, r.fonts.FontSmall, g.Rect.X - g.Rect.Width / 8, g.Rect.Y, Theme.WhiteColor, TextFlags.MiddleRight, 0, g.Rect.Height);
@@ -3216,8 +3216,8 @@ namespace FamiStudio
                     var lineColor = IsGizmoHighlighted(g, 0) ? Color.White : Color.Black;
 
                     if (g.FillImage != null)
-                        r.f.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, color);
-                    r.f.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
+                        r.f.DrawTextureAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, color);
+                    r.f.DrawTextureAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
                 }
             }
         }
