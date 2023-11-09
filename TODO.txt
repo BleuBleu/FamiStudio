@@ -18,6 +18,19 @@ x Rename "Bitmap" to "Texture"
 	=> option to fully emulation from start.
 - FDS automod
 - Latency improvements, decouple buffered audio frames VS. buffered emulated frames.
+	- Notes on each stream type:
+		- XAudio2: Takes buffer size + num into account.
+		- OpenAL: Considers # buffers, isngores buffer size (queues entire frame all the time)
+		- PortAudio: Ignore *everything*. You can specify "frames per buffer", but not # of buffers. 
+		- Android: Only takes buffer size into account. You cant configure the # of buffers.
+	- The plan:
+		1) Add a latency setting (in ms.).
+		2) Change # buffer setting to "number of buffered emulated frame". Can be zero, but will lead in piss-poor multithreading, but lower latency, make sure tooltip mentions this.
+		3) Some stream (xaudio2, openal) will have to calculate # of buffers.
+		4) Make instrument/audio player behave differently when NumBufferedEmulatedFrames = 0. Two solutions
+			1) Keep everything same, trigger semaphore on buffer refill + wait for emulation.
+			2) Change to avoid creating the 2 threads. Would be the best way. More changes.
+		5) Make sure tooltip explains that minimum latency is still 1 NES frame + a bit more.
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 x Fix that bug where patterns are modified twice if you select 2 instances
