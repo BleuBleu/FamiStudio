@@ -125,7 +125,7 @@ namespace FamiStudio
             Gif.AdvanceFrame(gif);
             fixed (byte* p = &gifBuffer[0])
                 Gif.RenderFrame(gif, new IntPtr(p), gifSizeX * 3, 3);
-            ParentWindow.Graphics.UpdateBitmap(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
+            ParentWindow.Graphics.UpdateTexture(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
 
             var decodeTime = (int)((Platform.TimeSeconds() - decodeStart) * 1000);
 

@@ -325,13 +325,13 @@ namespace FamiStudio
             GL.PopDebugGroup();
         }
 
-        public void UpdateBitmap(Texture bmp, int x, int y, int width, int height, byte[] data)
+        public void UpdateTexture(Texture bmp, int x, int y, int width, int height, byte[] data)
         {
             GL.BindTexture(GL.Texture2D, bmp.Id);
             GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Bgr, GL.UnsignedByte, data);
         }
 
-        public void UpdateBitmap(Texture bmp, int x, int y, int width, int height, int[] data)
+        public void UpdateTexture(Texture bmp, int x, int y, int width, int height, int[] data)
         {
             GL.BindTexture(GL.Texture2D, bmp.Id);
             GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Rgba, GL.UnsignedByte, data);
