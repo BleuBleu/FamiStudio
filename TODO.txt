@@ -39,6 +39,7 @@ x Fix that bug where patterns are modified twice if you select 2 instances
 - Extended intrument mode for sound engine, up to 256. 
 - Project cleanup doesnt respect sorting? 
 	https://discord.com/channels/@me/819772561940152321/1151930656302051398
+- Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 
 4.2.0 Testing
 =============
