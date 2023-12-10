@@ -40,6 +40,8 @@ x Fix that bug where patterns are modified twice if you select 2 instances
 - Project cleanup doesnt respect sorting? 
 	https://discord.com/channels/@me/819772561940152321/1151930656302051398
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
+- Karashin N163 comparison with NSFPLAY, listen to Wave 1 isolated.
+	https://discord.com/channels/@me/1093046594062004286/1183464431674470570
 
 4.2.0 Testing
 =============
