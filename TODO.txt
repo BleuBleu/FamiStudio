@@ -42,6 +42,7 @@ x Fix that bug where patterns are modified twice if you select 2 instances
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Karashin N163 comparison with NSFPLAY, listen to Wave 1 isolated.
 	https://discord.com/channels/@me/1093046594062004286/1183464431674470570
+- Is export setting DPI scaling at 100% when exporting, does it affect the whole UI?
 
 4.2.0 Testing
 =============
