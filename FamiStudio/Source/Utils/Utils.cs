@@ -552,9 +552,7 @@ namespace FamiStudio
                 var y2 = zy * zy;
 
                 if (x2 + y2 > 4)
-                {
                     return numIterations;
-                }
 
                 zy = 2 * zx * zy + startB;
                 zx = (x2 - y2) + startA;
@@ -575,18 +573,18 @@ namespace FamiStudio
                 var sum = 0.0f;
                 var t0 = Platform.TimeSeconds();
 
-                for (int y = 0; y < 256; y++)
+                for (var y = 0; y < 64; y++)
                 {
-                    for (int x = 0; y < 256; y++)
+                    for (var x = 0; x < 64; x++)
                     {
-                        sum += JuliaSet(x / 256.0f, y / 256.0f) * rnd.Next();
+                        sum += JuliaSet(x / 32.0f - 1.0f, y / 32.0f - 1.0f) * rnd.Next();
                     }
                 }
 
                 var t1 = Platform.TimeSeconds();
                 var score = 1.0f / (float)(t1 - t0);
 
-                Trace.WriteLine($"CPU benchmark iteration score {score}");
+                Trace.WriteLine($"CPU benchmark iteration score {score} {sum}");
 
                 bestScore = Math.Max(bestScore, score);
 
