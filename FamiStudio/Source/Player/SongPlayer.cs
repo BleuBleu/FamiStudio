@@ -26,6 +26,7 @@ namespace FamiStudio
 
         public void Play(Song song, int frame, bool pal)
         {
+            emulationDone = false;
             shouldStopStream = false;
 
             if (UsesEmulationThread)
@@ -124,6 +125,8 @@ namespace FamiStudio
                     // (like SFX) and avoids cutting the last couple frames of audio.
                     if (reachedEnd)
                     {
+                        emulationDone = true;
+
                         while (audioStream.IsPlaying && emulationQueue.Count != 0)
                             Thread.Sleep(1);
                         break;

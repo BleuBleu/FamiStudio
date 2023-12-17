@@ -24,6 +24,7 @@ x Rename "Bitmap" to "Texture"
 		- OpenAL: Considers # buffers, ignores buffer size (queues entire frame all the time)
 		- PortAudio: Ignore *everything*. You can specify "frames per buffer", but not # of buffers. 
 		- Android: Only takes buffer size into account. You cant configure the # of buffers.
+	- Short.fms : Doesnt rewind after play once.
 	- Port + test other streams.
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option

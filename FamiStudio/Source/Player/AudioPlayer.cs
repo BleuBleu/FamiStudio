@@ -32,6 +32,7 @@ namespace FamiStudio
         protected ManualResetEvent stopEvent;
         protected ConcurrentQueue<FrameAudioData> emulationQueue;
         protected bool shouldStopStream = false;
+        protected bool emulationDone = false;
 
         // Only used when number of buffered emulation frame == 0
         protected FrameAudioData lastFrameAudioData;
@@ -137,7 +138,7 @@ namespace FamiStudio
             if (UsesEmulationThread && !shouldStopStream)
             {
                 // Stream is about to start, wait for emulation to pre-fill its buffers.
-                while (emulationQueue.Count < numBufferedFrames)
+                while (emulationQueue.Count < numBufferedFrames && !emulationDone)
                     Thread.Sleep(1);
             }
         }

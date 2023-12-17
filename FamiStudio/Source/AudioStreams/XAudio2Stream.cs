@@ -29,7 +29,6 @@ namespace FamiStudio
         private int lastSamplesOffset = 0;
         private int bufferPrefillCount;
         private int queuedBufferCount;
-        //private int frameSizeInBytes;
 
         // Immediate voice for playing raw PCM data (used by DPCM editor).
         private SourceVoice immediateVoice;
@@ -38,14 +37,10 @@ namespace FamiStudio
 
         public XAudio2Stream(int rate, bool stereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
-            xaudio2 = new XAudio2();
-
-            //xaudio2 = new XAudio2(XAudio2Version.Version27); // To simulate Windows 7 behavior.
-            //xaudio2.CriticalError += Xaudio2_CriticalError;
-
             var numBuffers = Math.Max(4, bufferSizeMs / 25);
             var bufferSizeBytes = Utils.RoundUp(rate * bufferSizeMs / 1000 * sizeof(short) * (stereo ? 2 : 1) / numBuffers, sizeof(short) * 2);
 
+            xaudio2 = new XAudio2();
             masteringVoice = new MasteringVoice(xaudio2);
             waveFormat = new WaveFormat(rate, 16, stereo ? 2 : 1);
             audioBuffersRing = new AudioBuffer[numBuffers];
@@ -204,9 +199,9 @@ namespace FamiStudio
                     }
                     while (bufferSampleCount != 0);
 
-                    // MATTT : There is a "End of stream" flag, we should use that.
                     audioBuffersRing[nextBuffer].AudioDataPointer = buffer.Pointer;
                     audioBuffersRing[nextBuffer].AudioBytes = buffer.Size;
+                    audioBuffersRing[nextBuffer].Flags = done ? BufferFlags.EndOfStream : BufferFlags.None;
 
                     Interlocked.Increment(ref queuedBufferCount);
                     sourceVoice.SubmitSourceBuffer(audioBuffersRing[nextBuffer], null);
