@@ -559,7 +559,7 @@ namespace FamiStudio
                 var bmp = bitmaps[i];
                 var buffer = IntBuffer.Wrap(bmp.Data);
 
-                Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
+                //Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
 
                 GLES20.GlTexSubImage2D(GLES20.GlTexture2d, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, GLES20.GlRgba, GLES20.GlUnsignedByte, buffer);
             }

@@ -1576,7 +1576,7 @@ namespace FamiStudio
         {
             Debug.Assert(songPlayer == null);
             Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
-            songPlayer = new SongPlayer(palPlayback, Platform.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio);
+            songPlayer = new SongPlayer(palPlayback, Platform.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio, Settings.AudioBufferSize, Settings.NumBufferedFrames);
             songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
             songPlayer.SetSelectionRange(min, max);
         }
@@ -1584,8 +1584,8 @@ namespace FamiStudio
         private void InitializeInstrumentPlayer()
         {
             Debug.Assert(instrumentPlayer == null);
-            instrumentPlayer = new InstrumentPlayer(palPlayback, Platform.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio);
-            instrumentPlayer.Start(project, palPlayback);
+            instrumentPlayer = new InstrumentPlayer(palPlayback, Platform.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio, Settings.AudioBufferSize, Settings.NumBufferedFrames);
+            instrumentPlayer.Start(project, palPlayback); 
         }
 
         private void ShutdownSongPlayer()
@@ -2020,7 +2020,7 @@ namespace FamiStudio
                 lastPlayPosition = songPlayer.PlayPosition;
                 instrumentPlayer.ConnectOscilloscope(null);
                 songPlayer.ConnectOscilloscope(oscilloscope);
-                songPlayer.Play(song, songPlayer.PlayPosition, palPlayback);
+                songPlayer.Play(song, songPlayer.PlayPosition, palPlayback); // MATTT : Pal playback and play position are known by player here... Silly.
                 Platform.ForceScreenOn(true);
             }
         }
@@ -2242,21 +2242,6 @@ namespace FamiStudio
             InitializeAudioPlayers();
         }
 
-        private void ConditionalReconnectOscilloscope()
-        {
-            // This can happen when a song with no loop point naturally ends. We dont get notified of 
-            // this (we probably should) and we end up not reconnecting the oscilloscope.
-            if (songPlayer != null &&
-                !songPlayer.IsPlaying && 
-                songPlayer.IsOscilloscopeConnected &&
-                instrumentPlayer != null &&
-                !instrumentPlayer.IsOscilloscopeConnected)
-            {
-                songPlayer.ConnectOscilloscope(null);
-                instrumentPlayer.ConnectOscilloscope(oscilloscope);
-            }
-        }
-
         private void ConditionalShowTutorial()
         {
             // Edge case where we open a NSF from the command line and the open dialog is active.
@@ -2286,10 +2271,20 @@ namespace FamiStudio
         private bool AppNeedsRealTimeUpdate()
         {
             return songPlayer       != null && songPlayer.IsPlaying       || 
-                   instrumentPlayer != null && instrumentPlayer.IsPlaying || 
+                   instrumentPlayer != null && instrumentPlayer.IsPlayingAnyNotes || 
                    PianoRoll.IsEditingInstrument || 
                    PianoRoll.IsEditingArpeggio   || 
                    PianoRoll.IsEditingDPCMSample;
+        }
+
+        private void StopSongPlayerIfReachedEnd()
+        {
+            // This can happen when a song with no loop point naturally ends. 
+            if (songPlayer != null && songPlayer.StopIfReachedSongEnd())
+            {
+                songPlayer.ConnectOscilloscope(null);
+                instrumentPlayer.ConnectOscilloscope(oscilloscope);
+            }
         }
 
         private void ProcessAudioDeviceChanges()
@@ -2341,11 +2336,11 @@ namespace FamiStudio
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
             averageTickRateMs = Utils.Lerp(averageTickRateMs, deltaTime * 1000.0f, 0.01f);
 
+            StopSongPlayerIfReachedEnd();
             ProcessAudioDeviceChanges();
             ProcessQueuedMidiNotes();
             ConditionalMarkControlsDirty();
             ConditionalShowTutorial();
-            ConditionalReconnectOscilloscope();
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
             CheckStopInstrumentNote(deltaTime);

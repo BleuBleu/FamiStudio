@@ -475,7 +475,7 @@ namespace FamiStudio
             {
                 var bmp = bitmaps[i];
 
-                Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
+                //Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
 
                 fixed (int* ptr = &bmp.Data[0])
                 {

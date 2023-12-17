@@ -10,7 +10,7 @@ namespace FamiStudio
 {
     public class AndroidAudioStream : IAudioStream
     {
-        public bool IsStarted => playingTask != null;
+        public bool IsPlaying => playingTask != null;
 
         private GetBufferDataCallback bufferFill;
         private bool quit;
@@ -18,7 +18,7 @@ namespace FamiStudio
         private AudioTrack audioTrackImmediate;
         private Task playingTask;
 
-        public AndroidAudioStream(int rate, bool stereo, int bufferSizeInBytes, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public AndroidAudioStream(int rate, bool stereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
         {
             // Probably not needed, but i've seen things about effects in the log that
             // worries me. Doesnt hurt.
@@ -27,6 +27,7 @@ namespace FamiStudio
 
             bufferFill = bufferFillCallback;
 
+            // MATTT : Port to new behavior : buffer size, delayed start, etc.
             audioTrack = new AudioTrack.Builder()
                 .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
                 .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(rate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(stereo ? ChannelOut.Stereo : ChannelOut.Mono).Build())

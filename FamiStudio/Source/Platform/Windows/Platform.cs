@@ -45,9 +45,9 @@ namespace FamiStudio
             ShutdownDesktop();
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
-            return new XAudio2Stream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
+            return new XAudio2Stream(rate, stereo, bufferSizeMs, bufferFillCallback, streamStartCallback);
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]

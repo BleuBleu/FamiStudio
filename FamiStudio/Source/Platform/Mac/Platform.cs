@@ -37,9 +37,9 @@ namespace FamiStudio
             ShutdownDesktop();
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
         {
-            return new PortAudioStream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
+            return new PortAudioStream(rate, stereo, bufferSizeMs, bufferFillCallback);
         }
 
         private static string[] GetExtensionList(string str)
