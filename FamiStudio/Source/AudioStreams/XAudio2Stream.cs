@@ -44,11 +44,8 @@ namespace FamiStudio
             //xaudio2.CriticalError += Xaudio2_CriticalError;
 
             var numBuffers = Math.Max(2, bufferSizeMs / 50);
-            //var frameSizeInBytes = sizeof(short) * (stereo ? 2 : 1);
             var bufferSizeBytes = Utils.RoundUp(rate * bufferSizeMs / 1000 * sizeof(short) * (stereo ? 2 : 1) / numBuffers, sizeof(short) * 2);
 
-            // TODO : We need to decouple the number of emulated buffered frames and the 
-            // size of the low-level audio buffers.
             masteringVoice = new MasteringVoice(xaudio2);
             waveFormat = new WaveFormat(rate, 16, stereo ? 2 : 1);
             audioBuffersRing = new AudioBuffer[numBuffers];
@@ -91,7 +88,6 @@ namespace FamiStudio
 
             sourceVoice = new SourceVoice(xaudio2, waveFormat);
             sourceVoice.BufferEnd += SourceVoice_BufferEnd;
-            //sourceVoice.Start();
 
             quitEvent.Reset();
 
