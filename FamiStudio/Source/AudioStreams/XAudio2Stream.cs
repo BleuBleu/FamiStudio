@@ -43,7 +43,7 @@ namespace FamiStudio
             //xaudio2 = new XAudio2(XAudio2Version.Version27); // To simulate Windows 7 behavior.
             //xaudio2.CriticalError += Xaudio2_CriticalError;
 
-            var numBuffers = Math.Max(2, bufferSizeMs / 50);
+            var numBuffers = Math.Max(4, bufferSizeMs / 25);
             var bufferSizeBytes = Utils.RoundUp(rate * bufferSizeMs / 1000 * sizeof(short) * (stereo ? 2 : 1) / numBuffers, sizeof(short) * 2);
 
             masteringVoice = new MasteringVoice(xaudio2);
@@ -204,6 +204,7 @@ namespace FamiStudio
                     }
                     while (bufferSampleCount != 0);
 
+                    // MATTT : There is a "End of stream" flag, we should use that.
                     audioBuffersRing[nextBuffer].AudioDataPointer = buffer.Pointer;
                     audioBuffersRing[nextBuffer].AudioBytes = buffer.Size;
 
