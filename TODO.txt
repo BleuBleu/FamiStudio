@@ -41,6 +41,8 @@ x Fix that bug where patterns are modified twice if you select 2 instances
 	https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104
 - Dont publish for chromebooks
 
+- FDS filtering (expose the cutoff frequency for all expansions, set default to 2000 for FDS)
+
 4.2.0 Testing
 =============
 - Test all project explorer buttons with folders. Make sure no offsets.
