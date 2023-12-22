@@ -36,6 +36,7 @@ x Rename "Bitmap" to "Texture"
 x Fix that bug where patterns are modified twice if you select 2 instances
 - Also applies to custom pattern settings apparently?
 	https://discord.com/channels/@me/819772561940152321/1157147940029206649
+	https://discord.com/channels/@me/819772561940152321/1157848245352005696 (<=== VIDEO!)
 - Extended intrument mode for sound engine, up to 256. 
 - Project cleanup doesnt respect sorting? 
 	https://discord.com/channels/@me/819772561940152321/1151930656302051398
