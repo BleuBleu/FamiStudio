@@ -6,14 +6,14 @@ namespace FamiStudio
 {
     public class SongPlayer : AudioPlayer
     {
-        struct SongPlayerStartInfo
+        protected struct SongPlayerStartInfo
         {
             public Song song;
             public int startNote;
             public bool pal;
         };
 
-        public SongPlayer(bool pal, int sampleRate, bool stereo) : base(NesApu.APU_SONG, pal, sampleRate, stereo, Settings.NumBufferedAudioFrames)
+        public SongPlayer(bool pal, int sampleRate, bool stereo, int bufferSizeMs, int numFrames) : base(NesApu.APU_SONG, pal, sampleRate, stereo, bufferSizeMs, numFrames)
         {
             loopMode = LoopMode.LoopPoint;
         }
@@ -26,32 +26,62 @@ namespace FamiStudio
 
         public void Play(Song song, int frame, bool pal)
         {
-            Debug.Assert(playerThread == null);
-            Debug.Assert(sampleQueue.Count == 0);
+            emulationDone = false;
+            shouldStopStream = false;
 
-            ResetThreadingObjects();
+            if (UsesEmulationThread)
+            {
+                Debug.Assert(emulationThread == null);
+                Debug.Assert(emulationQueue.Count == 0);
 
-            playerThread = new Thread(PlayerThread);
-            playerThread.Start(new SongPlayerStartInfo() { song = song, startNote = frame, pal = pal });
+                ResetThreadingObjects();
+
+                emulationThread = new Thread(EmulationThread);
+                emulationThread.Start(new SongPlayerStartInfo() { song = song, startNote = frame, pal = pal });
+            }
+            else
+            {
+                BeginPlaySong(song, pal, frame);
+            }
+
+            audioStream.Stop(true); // Extra safety
+            audioStream.Start();
         }
 
         public void Stop()
         {
-            // Keeping a local variable of the thread since the song may
-            // end naturally and may set playerThread = null after we have set
-            // the stop event.
-            var thread = playerThread;
-            if (thread != null)
+            if (UsesEmulationThread)
             {
-                stopEvent.Set();
-                thread.Join();
-                Debug.Assert(playerThread == null);
+                // Keeping a local variable of the thread since the song may
+                // end naturally and may set playerThread = null after we have set
+                // the stop event.
+                var thread = emulationThread;
+                if (thread != null)
+                {
+                    stopEvent.Set();
+                    thread.Join();
+                    Debug.Assert(emulationThread == null);
+                }
             }
+
+            audioStream.Stop(true);
+        }
+
+        public bool StopIfReachedSongEnd()
+        {
+            if (shouldStopStream)
+            {
+                audioStream.Stop(false);
+                shouldStopStream = false;
+                return true;
+            }
+
+            return false;
         }
 
         public bool IsPlaying
         {
-            get { return playerThread != null; }
+            get { return UsesEmulationThread ? emulationThread != null : audioStream.IsPlaying; }
         }
 
 #if false // Enable to debug oscilloscope triggers for a specific channel of a song.
@@ -63,18 +93,23 @@ namespace FamiStudio
         }
 #endif
 
-        unsafe void PlayerThread(object o)
+        protected override bool EmulateFrame()
+        {
+            return PlaySongFrame();
+        }
+
+        unsafe void EmulationThread(object o)
         {
             var startInfo = (SongPlayerStartInfo)o;
 
             // Since BeginPlaySong is not inside the main loop and will
             // call EndFrame, we need to subtract one immediately so that
             // the semaphore count is not off by one.
-            bufferSemaphore.WaitOne();
+            emulationSemaphore.WaitOne();
 
             if (BeginPlaySong(startInfo.song, startInfo.pal, startInfo.startNote))
             {
-                var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
+                var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
 
                 while (true)
                 {
@@ -90,20 +125,18 @@ namespace FamiStudio
                     // (like SFX) and avoids cutting the last couple frames of audio.
                     if (reachedEnd)
                     {
-                        if (audioStream.IsStarted)
-                        {
-                            while (sampleQueue.Count != 0)
-                                Thread.Sleep(1);
-                        }
+                        emulationDone = true;
+
+                        while (audioStream.IsPlaying && emulationQueue.Count != 0)
+                            Thread.Sleep(1);
                         break;
                     }
                 }
             }
 
-            audioStream.Stop();
-            while (sampleQueue.TryDequeue(out _));
-
-            playerThread = null;
+            shouldStopStream = true;
+            while (emulationQueue.TryDequeue(out _));
+            emulationThread = null;
         }
     };
 }

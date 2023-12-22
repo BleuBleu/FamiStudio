@@ -120,7 +120,9 @@ namespace FamiStudio
         LocalizedString AltRightZoomsInOut;
 
         // Sound tooltips
+        LocalizedString AudioBufferSizeTooltip;
         LocalizedString NumBufferedFramesTooltip;
+        LocalizedString LatencyTooltip;
         LocalizedString StopInstrumentTooltip;
         LocalizedString PreventPoppingTooltip;
         LocalizedString N163MixerTooltip;
@@ -129,6 +131,7 @@ namespace FamiStudio
         LocalizedString MetronomeVolumeTooltip;
 
         // Sound labels
+        LocalizedString AudioBufferSizeLabel;
         LocalizedString NumBufferFramesLabel;
         LocalizedString StopInstrumentAfterLabel;
         LocalizedString PreventPoppingLabel;
@@ -325,13 +328,14 @@ namespace FamiStudio
                 }
                 case ConfigSection.Sound:
                 {
-                    page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedAudioFrames, 2, 16, 1, NumBufferedFramesTooltip); // 0
-                    page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 1
-                    page.AddCheckBox(PreventPoppingLabel.Colon, Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 2
-                    page.AddCheckBox(MixN163Label.Colon, Settings.N163Mix, N163MixerTooltip); // 3
-                    page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 4
-                    page.AddCheckBox(MuteDragSoundsLabel.Colon, Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 5
-                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 6
+                    page.AddNumericUpDown(AudioBufferSizeLabel.Colon, Settings.AudioBufferSize, 1, 500, 1, AudioBufferSizeTooltip.ToString() + LatencyTooltip.ToString()); // 0
+                    page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedFrames, 0, 16, 1, NumBufferedFramesTooltip.ToString() + LatencyTooltip.ToString()); // 1
+                    page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 2
+                    page.AddCheckBox(PreventPoppingLabel.Colon, Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 3
+                    page.AddCheckBox(MixN163Label.Colon, Settings.N163Mix, N163MixerTooltip); // 4
+                    page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 5
+                    page.AddCheckBox(MuteDragSoundsLabel.Colon, Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 6
+                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 7
                     break;
                 }
                 case ConfigSection.Mixer:
@@ -619,13 +623,14 @@ namespace FamiStudio
                     Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(11);
 
                     // Sound
-                    Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);
-                    Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(1);
-                    Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(2);
-                    Settings.N163Mix = pageSound.GetPropertyValue<bool>(3);
-                    Settings.ClampPeriods = pageSound.GetPropertyValue<bool>(4);
-                    Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(5);
-                    Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(6);
+                    Settings.AudioBufferSize = pageSound.GetPropertyValue<int>(0);
+                    Settings.NumBufferedFrames = pageSound.GetPropertyValue<int>(1);
+                    Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(2);
+                    Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(3);
+                    Settings.N163Mix = pageSound.GetPropertyValue<bool>(4);
+                    Settings.ClampPeriods = pageSound.GetPropertyValue<bool>(5);
+                    Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(6);
+                    Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(7);
 
                     // Input
                     Settings.TrackPadControls = pageInput.GetPropertyValue<bool>(0);

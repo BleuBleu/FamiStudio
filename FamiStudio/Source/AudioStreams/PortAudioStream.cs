@@ -102,11 +102,12 @@ namespace FamiStudio
         private volatile int immediateStreamPosition = -1;
         private PaStreamCallback immediateStreamCallback;
 
-        public PortAudioStream(int rate, bool inStereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public PortAudioStream(int rate, bool inStereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
         {
             if (refCount == 0)
                 Pa_Initialize();
 
+            // MATTT : Port to new behavior : buffer size, delayed start, etc.
             refCount++;
             stereo = inStereo;
             streamCallback = new PaStreamCallback(StreamCallback);
@@ -131,7 +132,7 @@ namespace FamiStudio
             }
         }
 
-        public bool IsStarted => playing;
+        public bool IsPlaying => playing;
 
         public void Dispose()
         {

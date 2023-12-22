@@ -23,7 +23,7 @@ namespace FamiStudio
         int[]   immediateSource  = new [] { -1, -1 };
         int[][] immediateBuffers = new int[2][];
 
-        public OpenALStream(int rate, bool inStereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public OpenALStream(int rate, bool inStereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
         {
             if (device == IntPtr.Zero)
             {
@@ -35,6 +35,7 @@ namespace FamiStudio
                 Console.WriteLine($"Default OpenAL audio device is '{deviceName}'");
             }
 
+            // MATTT : Port to new behavior : buffer size, delayed start, etc.
             stereo = inStereo;
             // TODO : We need to decouple the number of emulated buffered frames and the 
             // size of the low-level audio buffers.
@@ -54,7 +55,7 @@ namespace FamiStudio
             AL.DeleteSource(source);
         }
 
-        public bool IsStarted => playingTask != null;
+        public bool IsPlaying => playingTask != null;
 
         public void Start()
         {
@@ -109,6 +110,7 @@ namespace FamiStudio
                     numProcessed = initBufferIdx + 1;
                 }
 
+                // MATTT : Change this logic to handle smaller buffers, like we do for portaudio and xaudio2.
                 for (int i = 0; i < numProcessed && !quit; )
                 {
                     var data = bufferFill();

@@ -93,9 +93,9 @@ namespace FamiStudio
             return handle;
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
         {
-            return new OpenALStream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
+            return new OpenALStream(rate, stereo, bufferSizeMs, bufferFillCallback);
         }
 
         public static unsafe string[] ShowPlatformOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)

@@ -538,6 +538,63 @@ namespace FamiStudio
             x *= invLen;
             y *= invLen;
         }
+
+        public static int JuliaSet(float zx, float zy)
+        {
+            var startA = -0.56f;
+            var startB = 0.23f;
+            var maxit = 300;
+            var numIterations = 0;
+
+            while (numIterations < maxit)
+            {
+                var x2 = zx * zx;
+                var y2 = zy * zy;
+
+                if (x2 + y2 > 4)
+                    return numIterations;
+
+                zy = 2 * zx * zy + startB;
+                zx = (x2 - y2) + startA;
+
+                numIterations++;
+            }
+
+            return numIterations;
+        }
+
+        public static float BenchmarkCPU()
+        {
+            var bestScore = -float.MaxValue;
+            var rnd = new Random(Guid.NewGuid().GetHashCode());
+
+            for (int i = 0; i < 10; i++)
+            {
+                var sum = 0.0f;
+                var t0 = Platform.TimeSeconds();
+
+                for (var y = 0; y < 64; y++)
+                {
+                    for (var x = 0; x < 64; x++)
+                    {
+                        sum += JuliaSet(x / 32.0f - 1.0f, y / 32.0f - 1.0f) * rnd.Next();
+                    }
+                }
+
+                var t1 = Platform.TimeSeconds();
+                var score = 1.0f / (float)(t1 - t0);
+
+                Trace.WriteLine($"CPU benchmark iteration score {score} {sum}");
+
+                bestScore = Math.Max(bestScore, score);
+
+                Thread.Sleep(1);
+            }
+
+            Trace.WriteLine($"CPU benchmark best score {bestScore}");
+
+            return bestScore;
+        }
     }
 
     public class ThreadSafeCounter

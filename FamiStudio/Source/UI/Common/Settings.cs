@@ -19,7 +19,8 @@ namespace FamiStudio
         // Version 6   : FamiStudio 3.3.0
         // Version 7   : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files, dialogs)
         // Version 8   : FamiStudio 4.1.0 (Configurable keys)
-        public const int SettingsVersion = 8;
+        // Version 9   : FamiStudio 4.2.0 (Latency improvements)
+        public const int SettingsVersion = 9;
         public const int NumRecentFiles = 10;
 
         // Constants for follow.
@@ -190,8 +191,13 @@ namespace FamiStudio
         public static Shortcut[] DisplayChannelShortcuts;
 
         // Audio section
-        const int DefaultNumBufferedAudioFrames = Platform.IsLinux ? 4 : Platform.IsAndroid ? 2 : 3;
-        public static int NumBufferedAudioFrames = DefaultNumBufferedAudioFrames;
+        // MATTT : Tweak and re-test all of this.
+        const int DefaultNumBufferedFrames = 2;
+        const int DefaultAudioBufferSize = Platform.IsLinux ? 50 : Platform.IsAndroid ? 30 : 40;
+        const int EmulationThreadCpuScoreThreshold = 100;
+
+        public static int AudioBufferSize = DefaultAudioBufferSize;
+        public static int NumBufferedFrames = DefaultNumBufferedFrames;
         public static int InstrumentStopTime = 1;
         public static bool SquareSmoothVibrato = true;
         public static bool N163Mix = true;
@@ -461,7 +467,8 @@ namespace FamiStudio
             }
 
             // Audio
-            NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
+            AudioBufferSize = ini.GetInt("Audio", "AudioBufferSize", DefaultAudioBufferSize);
+            NumBufferedFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedFrames);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
             N163Mix = ini.GetBool("Audio", "N163Mix", true);
@@ -469,6 +476,16 @@ namespace FamiStudio
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
             MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
             SeparateChannelsExportTndMode = ini.GetInt("Audio", "SeparateChannelsExportTndMode", NesApu.TND_MODE_SINGLE);
+
+            // Latency changes, reset to default.
+            if (Version < 9)
+            {
+                // On first run, if CPU is fast enough, disable emulation thread.
+                if (Utils.BenchmarkCPU() > EmulationThreadCpuScoreThreshold)
+                    NumBufferedFrames = 0;
+
+                AudioBufferSize = DefaultAudioBufferSize;
+            }
 
             // MIDI
             MidiDevice = ini.GetString("MIDI", "Device", "");
@@ -555,7 +572,7 @@ namespace FamiStudio
             }
 
             // Clamp to something reasonable.
-            NumBufferedAudioFrames = Utils.Clamp(NumBufferedAudioFrames, 2, 16);
+            NumBufferedFrames = Utils.Clamp(NumBufferedFrames, 0, 16);
 
             // Linux or Mac is more likely to have standard path for ffmpeg.
             if (Platform.IsLinux || Platform.IsMacOS)
@@ -655,7 +672,8 @@ namespace FamiStudio
             ini.SetBool("Input", "AltZoomAllowed", AltZoomAllowed);
 
             // Audio
-            ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);
+            ini.SetInt("Audio", "AudioBufferSize", AudioBufferSize);
+            ini.SetInt("Audio", "NumBufferedFrames", NumBufferedFrames);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
             ini.SetBool("Audio", "N163Mix", N163Mix);
