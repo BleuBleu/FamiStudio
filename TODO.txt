@@ -25,7 +25,7 @@ x Rename "Bitmap" to "Texture"
 		- PortAudio: You suggest a latency, and stream-specific info can have more params. You can specify "frames per buffer", but not recommended.
 		- Android: Only takes buffer size into account. You cant configure the # of buffers.
 	- BUG : Short.fms : Doesnt rewind after play once.
-	- BUG : Play, change expansion (toggle EPSM), song player stalls on stop. (NO REPRO... UGH.)
+	- BUG : Song player stalls on stop. (NO REPRO... UGH.)
 	x BUG : If have EPSM project, new project, we dont re-create the streams.
 	x WASAPI in shared mode is the way to go.
 	x DPCM preview now sounds like ass. Its ok now?

@@ -336,7 +336,7 @@ namespace FamiStudio
             wasapiStreamInfo.size = (uint)sizeof(PaWasapiStreamInfo);
             wasapiStreamInfo.hostApiType = PaHostApiTypeId.paWASAPI;
             wasapiStreamInfo.version = 1;
-            wasapiStreamInfo.flags = paWinWasapiAutoConvert;
+            wasapiStreamInfo.flags = paWinWasapiAutoConvert; 
             wasapiStreamInfo.streamCategory = PaWasapiStreamCategory.eAudioCategoryMedia;
             
             var streamParams = new PaStreamParameters();
@@ -438,7 +438,7 @@ namespace FamiStudio
                         if (newSamples != null)
                         {
                             samples = WaveUtils.ResampleStream(samples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
-                            MixImmediateData(samples);
+                            samples = MixImmediateData(samples, samples == newSamples); // Samples are read-only, need to duplicate if we didn't resample.
                             break;
                         }
 
@@ -461,7 +461,7 @@ namespace FamiStudio
             return PaStreamCallbackResult.Continue;
         }
 
-        void MixImmediateData(short[] samples)
+        short[] MixImmediateData(short[] samples, bool duplicate)
         {
             // Mix in immediate data if any, storing in variable since main thread can change it anytime.
             var immData = immediateData;
@@ -469,12 +469,16 @@ namespace FamiStudio
             {
                 var channelCount = stereo ? 2 : 1;
                 var sampleCount = Math.Min(samples.Length, (immData.samples.Length - immData.samplesOffset) * channelCount);
+                var outputSamples = duplicate ? (short[])samples.Clone() : samples;
 
                 for (int i = 0, j = immData.samplesOffset; i < sampleCount; i++, j += (i % channelCount) == 0 ? 1 : 0)
-                    samples[i] = (short)Math.Clamp(samples[i] + immData.samples[j], short.MinValue, short.MaxValue);
+                    outputSamples[i] = (short)Math.Clamp(samples[i] + immData.samples[j], short.MinValue, short.MaxValue);
 
                 immData.samplesOffset += sampleCount / channelCount;
+                return outputSamples;
             }
+
+            return samples;
         }
 
         void StreamFinishedCallback(IntPtr userData)
