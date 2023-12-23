@@ -13,7 +13,7 @@ namespace FamiStudio
             public bool pal;
         };
 
-        public SongPlayer(bool pal, int sampleRate, bool stereo, int bufferSizeMs, int numFrames) : base(NesApu.APU_SONG, pal, sampleRate, stereo, bufferSizeMs, numFrames)
+        public SongPlayer(IAudioStream stream, bool pal, int sampleRate, bool stereo, int numFrames) : base(stream, NesApu.APU_SONG, pal, sampleRate, stereo, numFrames)
         {
             loopMode = LoopMode.LoopPoint;
         }
@@ -26,6 +26,9 @@ namespace FamiStudio
 
         public void Play(Song song, int frame, bool pal)
         {
+            if (audioStream == null)
+                return;
+
             emulationDone = false;
             shouldStopStream = false;
 
@@ -45,7 +48,7 @@ namespace FamiStudio
             }
 
             audioStream.Stop(true); // Extra safety
-            audioStream.Start();
+            audioStream.Start(AudioBufferFillCallback, AudioStreamStartingCallback);
         }
 
         public void Stop()
@@ -64,14 +67,14 @@ namespace FamiStudio
                 }
             }
 
-            audioStream.Stop(true);
+            audioStream?.Stop(true);
         }
 
         public bool StopIfReachedSongEnd()
         {
             if (shouldStopStream)
             {
-                audioStream.Stop(false);
+                audioStream?.Stop(false);
                 shouldStopStream = false;
                 return true;
             }
@@ -81,7 +84,7 @@ namespace FamiStudio
 
         public bool IsPlaying
         {
-            get { return UsesEmulationThread ? emulationThread != null : audioStream.IsPlaying; }
+            get { return UsesEmulationThread ? emulationThread != null : (audioStream != null && audioStream.IsPlaying); }
         }
 
 #if false // Enable to debug oscilloscope triggers for a specific channel of a song.

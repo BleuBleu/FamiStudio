@@ -22,12 +22,12 @@ namespace FamiStudio
         int[] envelopeFrames = new int[EnvelopeType.Count];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
 
-        bool IsPlaying => UsesEmulationThread ? emulationThread != null : audioStream.IsPlaying;
+        bool IsPlaying => UsesEmulationThread ? emulationThread != null : (audioStream != null && audioStream.IsPlaying);
 
         public bool IsPlayingAnyNotes => activeChannel >= 0;
         public int  PlayingNote => playingNote;
 
-        public InstrumentPlayer(bool pal, int sampleRate, bool stereo, int bufferSizeMs, int numFrames) : base(NesApu.APU_INSTRUMENT, pal, sampleRate, stereo, bufferSizeMs, numFrames)
+        public InstrumentPlayer(IAudioStream stream, bool pal, int sampleRate, bool stereo, int numFrames) : base(stream, NesApu.APU_INSTRUMENT, pal, sampleRate, stereo, numFrames)
         {
         }
 
@@ -47,22 +47,25 @@ namespace FamiStudio
             }
         }
 
+        // MATTT : Remove wait if not needed.
         public void StopAllNotes(bool wait = false)
         {
             if (IsPlaying)
             {
-                if (wait)
-                    while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
+                while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
 
                 noteQueue.Enqueue(new PlayerNote() { channel = -1 });
 
-                if (wait)
-                    while (!noteQueue.IsEmpty) Thread.Sleep(1);
+                //if (wait && UsesEmulationThread)
+                //    while (!noteQueue.IsEmpty) Thread.Sleep(1);
             }
         }
 
         public void Start(Project project, bool pal)
         {
+            if (audioStream == null)
+                return;
+
             expansionMask = project.ExpansionAudioMask;
             numN163Channels = project.ExpansionNumN163Channels;
             palPlayback = pal;
@@ -84,7 +87,7 @@ namespace FamiStudio
                 emulationThread.Start();
             }
 
-            audioStream.Start();
+            audioStream.Start(AudioBufferFillCallback, AudioStreamStartingCallback);
         }
 
         public void Stop(bool stopNotes = true)
@@ -100,11 +103,10 @@ namespace FamiStudio
                     emulationThread.Join();
                     emulationThread = null;
                 }
-
-                channelStates = null;
             }
 
-            audioStream.Stop(true);
+            audioStream?.Stop(true);
+            channelStates = null;
         }
 
         public int GetEnvelopeFrame(int idx)

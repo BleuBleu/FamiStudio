@@ -25,24 +25,28 @@ namespace FamiStudio
         private GetBufferDataCallback bufferFill;
         private StreamStartingCallback streamStarting;
         private Task playingTask;
-        private short[] lastSamples = null;
-        private int lastSamplesOffset = 0;
         private int bufferPrefillCount;
         private int queuedBufferCount;
+        private int inputSampleRate;
+        private int outputSampleRate;
 
         // Immediate voice for playing raw PCM data (used by DPCM editor).
         private SourceVoice immediateVoice;
         private AudioBuffer immediateAudioBuffer;
         private bool immediateDonePlaying;
 
-        public XAudio2Stream(int rate, bool stereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
+        public XAudio2Stream(int rate, bool stereo, int bufferSizeMs)
         {
-            var numBuffers = Math.Max(4, bufferSizeMs / 25);
-            var bufferSizeBytes = Utils.RoundUp(rate * bufferSizeMs / 1000 * sizeof(short) * (stereo ? 2 : 1) / numBuffers, sizeof(short) * 2);
-
             xaudio2 = new XAudio2();
-            masteringVoice = new MasteringVoice(xaudio2);
-            waveFormat = new WaveFormat(rate, 16, stereo ? 2 : 1);
+            masteringVoice = new MasteringVoice(xaudio2, stereo ? 2 : 1, 0);
+            masteringVoice.GetVoiceDetails(out var details);
+            inputSampleRate = rate;
+            outputSampleRate = details.InputSampleRate;
+            waveFormat = new WaveFormat(outputSampleRate, 16, stereo ? 2 : 1);
+
+            var numBuffers = Math.Max(4, bufferSizeMs / 25);
+            var bufferSizeBytes = Utils.RoundUp(outputSampleRate * bufferSizeMs / 1000 * sizeof(short) * (stereo ? 2 : 1) / numBuffers, sizeof(short) * 2);
+
             audioBuffersRing = new AudioBuffer[numBuffers];
             memBuffers = new DataPointer[audioBuffersRing.Length];
 
@@ -53,8 +57,6 @@ namespace FamiStudio
                 memBuffers[i].Pointer = Utilities.AllocateMemory(memBuffers[i].Size);
             }
 
-            bufferFill = bufferFillCallback;
-            streamStarting = streamStartCallback;
             quitEvent = new ManualResetEvent(false);
         }
 
@@ -71,12 +73,14 @@ namespace FamiStudio
 
         public bool IsPlaying => sourceVoice != null;
 
-        public void Start()
+        public void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
             Debug.Assert(sourceVoice == null);
             Debug.Assert(bufferSemaphore == null);
 
-            lastSamplesOffset = 0;
+            bufferFill = bufferFillCallback;
+            streamStarting = streamStartCallback;
+
             queuedBufferCount = 0;
             bufferSemaphore = new Semaphore(audioBuffersRing.Length, audioBuffersRing.Length);
             bufferPrefillCount = audioBuffersRing.Length;
@@ -91,6 +95,8 @@ namespace FamiStudio
 
         public void Stop(bool abort)
         {
+            StopImmediate();
+
             if (playingTask != null)
             {
                 quitEvent.Set();
@@ -120,12 +126,14 @@ namespace FamiStudio
                 bufferSemaphore.Dispose();
                 bufferSemaphore = null;
             }
+
+            bufferFill = null;
+            streamStarting = null;
         }
 
         public void Dispose()
         {
             Stop(true);
-            StopImmediate();
 
             for (int i = 0; i < audioBuffersRing.Length; i++)
             {
@@ -147,9 +155,11 @@ namespace FamiStudio
             try
             {
 #endif
-                var nextBuffer = 0;
+                var bufferIndex = 0;
                 var waitEvents = new WaitHandle[] { quitEvent, bufferSemaphore };
                 var done = false;
+                var samples = (short[])null;
+                var samplesOffset = 0;
 
                 while (!done)
                 {
@@ -160,25 +170,28 @@ namespace FamiStudio
                         break;
                     }
 
-                    var buffer = memBuffers[nextBuffer];
+                    var buffer = memBuffers[bufferIndex];
                     var bufferSampleCount = buffer.Size / sizeof(short);
                     var bufferPtr = buffer.Pointer;
 
                     do
                     {
-                        if (lastSamplesOffset == 0)
+                        if (samplesOffset == 0)
                         {
                             while (true)
                             {
-                                lastSamples = bufferFill(out done);
+                                var newSamples = bufferFill(out done);
                                 
                                 // If we are done, pad the last buffer with zeroes so the stream can start
                                 // for super-short (ex: 1-frame) non-looping songs.
                                 if (done)
-                                    lastSamples = new short[bufferSampleCount - lastSamplesOffset];
+                                    newSamples = new short[bufferSampleCount - samplesOffset];
 
-                                if (lastSamples != null)
+                                if (newSamples != null)
+                                {
+                                    samples = newSamples;
                                     break;
+                                }
                                 
                                 if (quitEvent.WaitOne(0))
                                     return;
@@ -187,24 +200,24 @@ namespace FamiStudio
                             }
                         }
 
-                        var numSamplesToCopy = Math.Min(bufferSampleCount, lastSamples.Length - lastSamplesOffset);
-                        Marshal.Copy(lastSamples, lastSamplesOffset, bufferPtr, numSamplesToCopy);
+                        var numSamplesToCopy = Math.Min(bufferSampleCount, samples.Length - samplesOffset);
+                        Marshal.Copy(samples, samplesOffset, bufferPtr, numSamplesToCopy);
 
-                        lastSamplesOffset += numSamplesToCopy;
-                        if (lastSamplesOffset == lastSamples.Length)
-                            lastSamplesOffset = 0;
+                        samplesOffset += numSamplesToCopy;
+                        if (samplesOffset == samples.Length)
+                            samplesOffset = 0;
 
                         bufferPtr = IntPtr.Add(bufferPtr, numSamplesToCopy * sizeof(short));
                         bufferSampleCount = bufferSampleCount - numSamplesToCopy;
                     }
                     while (bufferSampleCount != 0);
 
-                    audioBuffersRing[nextBuffer].AudioDataPointer = buffer.Pointer;
-                    audioBuffersRing[nextBuffer].AudioBytes = buffer.Size;
-                    audioBuffersRing[nextBuffer].Flags = done ? BufferFlags.EndOfStream : BufferFlags.None;
+                    audioBuffersRing[bufferIndex].AudioDataPointer = buffer.Pointer;
+                    audioBuffersRing[bufferIndex].AudioBytes = buffer.Size;
+                    audioBuffersRing[bufferIndex].Flags = done ? BufferFlags.EndOfStream : BufferFlags.None;
 
                     Interlocked.Increment(ref queuedBufferCount);
-                    sourceVoice.SubmitSourceBuffer(audioBuffersRing[nextBuffer], null);
+                    sourceVoice.SubmitSourceBuffer(audioBuffersRing[bufferIndex], null);
 
                     // Only start the stream once the buffers are pre-filled.
                     if ((bufferPrefillCount > 0 && --bufferPrefillCount == 0) || done)
@@ -215,7 +228,7 @@ namespace FamiStudio
                         sourceVoice.Start();
                     }
 
-                    nextBuffer = ++nextBuffer % audioBuffersRing.Length;
+                    bufferIndex = ++bufferIndex % audioBuffersRing.Length;
                 }
 #if DEBUG
             }

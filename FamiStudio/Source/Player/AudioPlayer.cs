@@ -31,8 +31,8 @@ namespace FamiStudio
         protected Semaphore emulationSemaphore;
         protected ManualResetEvent stopEvent;
         protected ConcurrentQueue<FrameAudioData> emulationQueue;
-        protected bool shouldStopStream = false;
-        protected bool emulationDone = false;
+        protected volatile bool shouldStopStream = false;
+        protected volatile bool emulationDone = false;
 
         // Only used when number of buffered emulation frame == 0
         protected FrameAudioData lastFrameAudioData;
@@ -42,11 +42,11 @@ namespace FamiStudio
         public bool IsOscilloscopeConnected => oscilloscope != null;
         protected bool UsesEmulationThread => numBufferedFrames > 0;
 
-        protected AudioPlayer(int apuIndex, bool pal, int sampleRate, bool stereo, int bufferSizeMs, int numFrames) : base(apuIndex, stereo, sampleRate)
+        protected AudioPlayer(IAudioStream stream, int apuIndex, bool pal, int sampleRate, bool stereo, int numFrames) : base(apuIndex, stereo, sampleRate) // MATTT : Pal not passed to player?
         {
             numBufferedFrames = numFrames;
-            audioStream = Platform.CreateAudioStream(sampleRate, stereo, bufferSizeMs, AudioBufferFillCallback, AudioStreamStartingCallback);
-            registerValues.SetPalMode(pal);
+            audioStream = stream;
+            registerValues.SetPalMode(pal); // MATTT : Why is this here?
             
             if (UsesEmulationThread)
             {
@@ -133,7 +133,7 @@ namespace FamiStudio
             return data.samples;
         }
 
-        void AudioStreamStartingCallback()
+        protected void AudioStreamStartingCallback()
         {
             if (UsesEmulationThread && !shouldStopStream)
             {
@@ -158,7 +158,8 @@ namespace FamiStudio
                     emulationThread.Join();
             }
 
-            audioStream.Dispose();
+            audioStream?.Stop(false); // MATTT : Abort?
+            audioStream = null;
         }
 
         public void ConnectOscilloscope(IOscilloscope osc)

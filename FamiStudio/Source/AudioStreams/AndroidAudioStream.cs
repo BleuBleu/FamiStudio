@@ -14,23 +14,32 @@ namespace FamiStudio
 
         private GetBufferDataCallback bufferFill;
         private bool quit;
+        private bool stereo;
         private AudioTrack audioTrack;
         private AudioTrack audioTrackImmediate;
         private Task playingTask;
+        private int inputSampleRate;
+        private int outputSampleRate;
+        private short[] lastSamples;
+        private double resampleIndex = 0.0;
 
-        public AndroidAudioStream(int rate, bool stereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
+        public AndroidAudioStream(int rate, bool inStereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
         {
             // Probably not needed, but i've seen things about effects in the log that
             // worries me. Doesnt hurt.
             AudioManager am = (AudioManager)Application.Context.GetSystemService(Context.AudioService);
             am.UnloadSoundEffects();
 
+            stereo = inStereo;
+            inputSampleRate = rate;
+            outputSampleRate = int.Parse(am.GetProperty(AudioManager.PropertyOutputSampleRate), CultureInfo.InvariantCulture);
+
             bufferFill = bufferFillCallback;
 
             // MATTT : Port to new behavior : buffer size, delayed start, etc.
             audioTrack = new AudioTrack.Builder()
                 .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
-                .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(rate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(stereo ? ChannelOut.Stereo : ChannelOut.Mono).Build())
+                .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(outputSampleRate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(stereo ? ChannelOut.Stereo : ChannelOut.Mono).Build())
                 .SetTransferMode(AudioTrackMode.Stream)
                 .SetPerformanceMode(AudioTrackPerformanceMode.LowLatency)
                 .SetBufferSizeInBytes(bufferSizeInBytes).Build();
@@ -40,6 +49,8 @@ namespace FamiStudio
 
         public void Start()
         {
+            lastSamples = null;
+            resampleIndex = 0.0;
             quit = false;
             audioTrack.Play();
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
@@ -61,10 +72,11 @@ namespace FamiStudio
             while (!quit)
             {
                 // Write will block if the buffer is full. If only all streams were this easy!
-                var samples = bufferFill();
-                if (samples != null)
+                var newSamples = bufferFill();
+                if (newSamples != null)
                 {
-                    audioTrack.Write(samples, 0, samples.Length, WriteMode.Blocking);
+                    lastSamples = WaveUtils.ResampleStream(lastSamples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
+                    audioTrack.Write(lastSamples, 0, lastSamples.Length, WriteMode.Blocking);
                 }
                 else
                 {
@@ -99,6 +111,7 @@ namespace FamiStudio
         {
             StopImmediate();
 
+			// MATTT : Mix with regular stream, dont create a new track just for that.
             audioTrackImmediate = new AudioTrack.Builder()
                 .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
                 .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(sampleRate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(ChannelOut.Mono).Build())
@@ -120,7 +133,7 @@ namespace FamiStudio
         {
             get
             {
-                return audioTrackImmediate != null && audioTrackImmediate.PlayState == PlayState.Playing && audioTrackImmediate.PlaybackHeadPosition < audioTrackImmediate.BufferSizeInFrames ? audioTrackImmediate.PlaybackHeadPosition : 0;
+                return audioTrackImmediate != null && audioTrackImmediate.PlayState == PlayState.Playing && audioTrackImmediate.PlaybackHeadPosition < audioTrackImmediate.BufferSizeInFrames ? audioTrackImmediate.PlaybackHeadPosition : -1;
             }
         }
     }
