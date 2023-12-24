@@ -768,18 +768,20 @@
     <EmbeddedResource Include="Rom\rom_vrc7_ntsc_famitracker.nes" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Bitmap.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Bitmap.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Depth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Depth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Line.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Line.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\LineSmooth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\LineSmooth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Poly.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Poly.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Text.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Text.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Line.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Line.vert" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Text.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Text.vert" />
   </ItemGroup>  
   <ItemGroup>
     <Content Include="Localization\FamiStudio.deu.ini">
