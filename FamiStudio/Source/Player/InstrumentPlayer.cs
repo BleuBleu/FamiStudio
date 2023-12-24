@@ -22,8 +22,6 @@ namespace FamiStudio
         int[] envelopeFrames = new int[EnvelopeType.Count];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
 
-        bool IsPlaying => UsesEmulationThread ? emulationThread != null : (audioStream != null && audioStream.IsPlaying);
-
         public bool IsPlayingAnyNotes => activeChannel >= 0;
         public int  PlayingNote => playingNote;
 
@@ -79,14 +77,18 @@ namespace FamiStudio
             for (int i = 0; i < channelStates.Length; i++)
                 EnableChannelType(channelStates[i].InnerChannelType, false);
 
-            if (numBufferedFrames > 0)
+            if (UsesEmulationThread)
             {
+                Debug.Assert(emulationThread == null);
+                Debug.Assert(emulationQueue.Count == 0);
+
                 ResetThreadingObjects();
 
                 emulationThread = new Thread(EmulationThread);
                 emulationThread.Start();
             }
 
+            audioStream.Stop(true); // Extra safety
             audioStream.Start(AudioBufferFillCallback, AudioStreamStartingCallback);
         }
 
@@ -107,6 +109,12 @@ namespace FamiStudio
 
             audioStream?.Stop(true);
             channelStates = null;
+
+            if (UsesEmulationThread)
+            {
+                while (emulationQueue.Count > 0)
+                    emulationQueue.TryDequeue(out _);
+            }
         }
 
         public int GetEnvelopeFrame(int idx)
@@ -206,36 +214,17 @@ namespace FamiStudio
             return true;
         }
 
-        unsafe void EmulationThread(object o)
+        void EmulationThread(object o)
         {
-#if !DEBUG
-            try
+            var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
+
+            while (true)
             {
-#endif
-                var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
+                if (WaitHandle.WaitAny(waitEvents) == 0)
+                    break;
 
-                while (true)
-                {
-                    if (WaitHandle.WaitAny(waitEvents) == 0)
-                    {
-                        break;
-                    }
-
-                    EmulateFrame();
-                }
-
-                while (emulationQueue.TryDequeue(out _)) 
-                    Thread.Sleep(1);
-
-#if !DEBUG
+                EmulateFrame();
             }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-                if (Debugger.IsAttached)
-                    Debugger.Break();
-            }
-#endif
         }
     }
 }

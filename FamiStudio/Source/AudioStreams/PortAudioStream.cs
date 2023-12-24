@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using static FamiStudio.PortAudioStream;
 
 namespace FamiStudio
 {
@@ -140,6 +137,7 @@ namespace FamiStudio
             public double defaultSampleRate;
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         public struct PaWasapiStreamInfo
         {
             public uint size;
@@ -164,6 +162,14 @@ namespace FamiStudio
             public uint flags; 
             public uint framesPerBuffer;
             public uint channelMask;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
+        public struct PaStreamCallbackTimeInfo
+        {
+            public double inputBufferAdcTime;
+            public double currentTime;
+            public double outputBufferDacTime;
         }
 
         public static uint paPrimeOutputBuffersUsingStreamCallback = 8u;
@@ -237,7 +243,7 @@ namespace FamiStudio
         public delegate void PaStreamFinishedCallback(IntPtr userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate PaStreamCallbackResult PaStreamCallback(IntPtr input, IntPtr output, uint frameCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData);
+        public delegate PaStreamCallbackResult PaStreamCallback(IntPtr input, IntPtr output, uint frameCount, PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData);
 
         // Wrapping in a class so that assignment is atomic.
         private class ImmediateData
@@ -248,14 +254,13 @@ namespace FamiStudio
         }
 
         private IntPtr stream = new IntPtr();
-        private volatile bool playing;
+        private volatile bool play;
         private GetBufferDataCallback bufferFill;
         private bool stereo;
         private int outputSampleRate;
         private int inputSampleRate;
         private PaStreamCallback streamCallback;
         private PaStreamFinishedCallback streamFinishedCallback;
-        private StreamStartingCallback streamStarting;
 
         private static int deviceIndex = -1;
         private static int deviceSampleRate;
@@ -269,7 +274,7 @@ namespace FamiStudio
         public bool Stereo => stereo;
         public int InputSampleRate => inputSampleRate;
         public int OutputSampleRate => outputSampleRate;
-        public bool IsPlaying => playing;
+        public bool IsPlaying => play;
         public static int DeviceSampleRate => deviceSampleRate;
 
         private PortAudioStream()
@@ -327,10 +332,10 @@ namespace FamiStudio
 
             portAudioStream.streamCallback = new PaStreamCallback(portAudioStream.StreamCallback);
             portAudioStream.streamFinishedCallback = new PaStreamFinishedCallback(portAudioStream.StreamFinishedCallback);
-
             portAudioStream.stereo = stereo;
             portAudioStream.inputSampleRate = rate;
             portAudioStream.outputSampleRate = rate;
+            portAudioStream.play = false;
 
             var wasapiStreamInfo = new PaWasapiStreamInfo();
             wasapiStreamInfo.size = (uint)sizeof(PaWasapiStreamInfo);
@@ -362,6 +367,20 @@ namespace FamiStudio
 
             Pa_SetStreamFinishedCallback(portAudioStream.stream, portAudioStream.streamFinishedCallback);
 
+            // Ideally we would call Pa_StartStream/Pa_StopStream in Start/Stop, but on both MacOS and Windows,
+            // there are a couple of issues with that. 
+            //
+            // - At the end of a non-looping song, returning paComplete should play all the queue buffer and 
+            //   stop the stream, but most backends interpret paComplete as paAbort and just stops immediately
+            //   so stopping a stream at end of a song is tricky.
+            //
+            // - When re-starting a stream, PortAudio will often play the last samples of the last play and i found
+            //   no way to work around this. 
+            //
+            // Instead will keep the stream running at all time and output zeroe\s where there is nothing to play.
+
+            Pa_StartStream(portAudioStream.stream);
+
             refCount++;
 
             return portAudioStream;
@@ -369,32 +388,20 @@ namespace FamiStudio
 
         public void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
-            bufferFill = bufferFillCallback;
-            streamStarting = streamStartCallback;
+            Debug.Assert(!play);
 
+            bufferFill = bufferFillCallback;
             resampleIndex = 0.0;
             samples = null;
             samplesOffset = 0;
-
-            // The "paPrimeOutputBuffersUsingStreamCallback" flag is not honored by most
-            // backends, so call stream starting here as well to make sure the emulation
-            // thread starts with full queue of buffers. Ideally we would just monitor
-            // the PaStreamCallbackFlags.PrimingOutput and call it once that's done.
-            streamStarting();
-
-            Pa_StartStream(stream);
-            playing = true;
+            streamStartCallback();
+            play = true;
         }
 
         public void Stop(bool abort)
         {
             StopImmediate();
-
-            if (playing)
-            {
-                Debug.WriteLine("*** Stop");
-                Pa_AbortStream(stream); // Seem slightly faster?
-            }
+            play = false;
         }
 
         public void Dispose()
@@ -403,6 +410,7 @@ namespace FamiStudio
 
             if (stream != IntPtr.Zero)
             {
+                Pa_AbortStream(stream);
                 Pa_CloseStream(stream);
                 stream = IntPtr.Zero;
             }
@@ -415,48 +423,57 @@ namespace FamiStudio
             }
         }
 
-        PaStreamCallbackResult StreamCallback(IntPtr input, IntPtr output, uint sampleCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData)
+        PaStreamCallbackResult StreamCallback(IntPtr input, IntPtr output, uint sampleCount, PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData)
         {
             var outPtr = output;
 
             if (stereo)
 	            sampleCount *= 2;
 
-            do
+            if (play)
             {
-                if (samplesOffset == 0)
+                do
                 {
-                    while (true)
+                    if (samplesOffset == 0)
                     {
-                        var newSamples = bufferFill(out var done);
-
-                        // If we are done, pad the last buffer with zeroes so the stream can start
-                        // for super-short (ex: 1-frame) non-looping songs.
-                        if (done)
-                            newSamples = new short[sampleCount - samplesOffset];
-
-                        if (newSamples != null)
+                        while (true)
                         {
-                            samples = WaveUtils.ResampleStream(samples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
-                            samples = MixImmediateData(samples, samples == newSamples); // Samples are read-only, need to duplicate if we didn't resample.
-                            break;
+                            var newSamples = bufferFill(out var done);
+
+                            if (done)
+                            {
+                                // If we are done, pad the last buffer with zeros.
+                                newSamples = new short[sampleCount - samplesOffset];
+                                play = false;
+                            }
+
+                            if (newSamples != null)
+                            {
+                                samples = WaveUtils.ResampleStream(samples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
+                                samples = MixImmediateData(samples, samples == newSamples); // Samples are read-only, need to duplicate if we didn't resample.
+                                break;
+                            }
+
+                            Pa_Sleep(0);
                         }
-
-                        Pa_Sleep(0);
                     }
+
+                    var numSamplesToCopy = (int)Math.Min(sampleCount, samples.Length - samplesOffset);
+                    Marshal.Copy(samples, samplesOffset, outPtr, numSamplesToCopy);
+
+                    samplesOffset += numSamplesToCopy;
+                    if (samplesOffset == samples.Length)
+                        samplesOffset = 0;
+
+                    outPtr = IntPtr.Add(outPtr, numSamplesToCopy * sizeof(short));
+                    sampleCount = (uint)(sampleCount - numSamplesToCopy);
                 }
-
-                var numSamplesToCopy = (int)Math.Min(sampleCount, samples.Length - samplesOffset);
-                Marshal.Copy(samples, samplesOffset, outPtr, numSamplesToCopy);
-
-                samplesOffset += numSamplesToCopy;
-                if (samplesOffset == samples.Length)
-                    samplesOffset = 0;
-
-                outPtr = IntPtr.Add(outPtr, numSamplesToCopy * sizeof(short));
-                sampleCount = (uint)(sampleCount - numSamplesToCopy);
+                while (sampleCount != 0);
             }
-            while (sampleCount != 0);
+            else
+            {
+                Platform.ZeroMemory(output, (int)sampleCount * sizeof(short));
+            }
 
             return PaStreamCallbackResult.Continue;
         }
@@ -484,7 +501,7 @@ namespace FamiStudio
         void StreamFinishedCallback(IntPtr userData)
         {
             Debug.WriteLine("*** StreamFinishedCallback");
-            playing = false;
+            play = false;
         }
 
         public unsafe void PlayImmediate(short[] samples, int sampleRate, float volume, int channel = 0)

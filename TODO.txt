@@ -24,21 +24,8 @@ x Rename "Bitmap" to "Texture"
 		- OpenAL: Considers # buffers, ignores buffer size (queues entire frame all the time)
 		- PortAudio: You suggest a latency, and stream-specific info can have more params. You can specify "frames per buffer", but not recommended.
 		- Android: Only takes buffer size into account. You cant configure the # of buffers.
-	- BUG : Short.fms : Doesnt rewind after play once.
-	- BUG : Song player stalls on stop. (NO REPRO... UGH.)
-	x BUG : If have EPSM project, new project, we dont re-create the streams.
-	x WASAPI in shared mode is the way to go.
-	x DPCM preview now sounds like ass. Its ok now?
-	x Decouple audio stream & audio player.
-	x Fix immediate stream sample rate.
-	x Dont reinitialize port audio unless there is a device change.
-	/ Port + test other streams.
-	x Switch to PortAudio for Windows
-	x Convert from 44100 to device rate
-	- FrameAudioData should tell us if we reached end. Not when we hit null
-	- See if we can remove a few of these hacky flags : emulationDone, shouldStopStream, etc. At least, regroup them in basic function shared by both threaded + non-threaded. **** EmulateFrame is a mess.
-	x Add toast when audio device changes
-	x Dont recreate devices all the time when leaving settings.
+	- Port + test other streams.
+	- Cleanup "EmulateFrame" mess.
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 x Fix that bug where patterns are modified twice if you select 2 instances

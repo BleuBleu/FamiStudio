@@ -13,6 +13,7 @@ namespace FamiStudio
         public class FrameAudioData
         {
             public short[] samples;
+            public int   playPosition;
             public int   triggerSample = NesApu.TRIGGER_NONE;
             public int   metronomePosition;
             public float metronomePitch  = 1.0f;
@@ -31,8 +32,6 @@ namespace FamiStudio
         protected Semaphore emulationSemaphore;
         protected ManualResetEvent stopEvent;
         protected ConcurrentQueue<FrameAudioData> emulationQueue;
-        protected volatile bool shouldStopStream = false;
-        protected volatile bool emulationDone = false;
 
         // Only used when number of buffered emulation frame == 0
         protected FrameAudioData lastFrameAudioData;
@@ -40,7 +39,21 @@ namespace FamiStudio
         protected abstract bool EmulateFrame();
 
         public bool IsOscilloscopeConnected => oscilloscope != null;
+        public bool IsPlaying => UsesEmulationThread ? (emulationThread != null || emulationQueue.Count > 0) : (audioStream != null && audioStream.IsPlaying);
+        
         protected bool UsesEmulationThread => numBufferedFrames > 0;
+
+        public override int PlayPosition
+        {
+            get 
+            {
+                // Take the oldest frame in the queue as our play position when using emulation thread.
+                if (UsesEmulationThread && emulationQueue.TryPeek(out var data) && data != null)
+                    return Math.Max(0, data.playPosition);
+                else
+                    return base.PlayPosition;
+            }
+        }
 
         protected AudioPlayer(IAudioStream stream, int apuIndex, bool pal, int sampleRate, bool stereo, int numFrames) : base(apuIndex, stereo, sampleRate) // MATTT : Pal not passed to player?
         {
@@ -102,7 +115,6 @@ namespace FamiStudio
                 if (!emulationQueue.TryDequeue(out data))
                 {
                     // Trace.WriteLine("Audio is starving!");
-                    done = shouldStopStream;
                     return null;
                 }
 
@@ -113,13 +125,16 @@ namespace FamiStudio
             {
                 // First time it wont be null since we call BeginPlaySong.
                 if (lastFrameAudioData == null)
-                    shouldStopStream |= !EmulateFrame();
-                done = shouldStopStream;
+                    EmulateFrame();
                 data = lastFrameAudioData;
                 lastFrameAudioData = null;
+            }
 
-                if (done)
-                    return null;
+            // This means we've reached the end of a non-looping song.
+            if (data == null)
+            {
+                done = true;
+                return null;
             }
 
             // If we are driving the toolbar oscilloscope, provide samples.
@@ -135,10 +150,10 @@ namespace FamiStudio
 
         protected void AudioStreamStartingCallback()
         {
-            if (UsesEmulationThread && !shouldStopStream)
+            if (UsesEmulationThread)
             {
                 // Stream is about to start, wait for emulation to pre-fill its buffers.
-                while (emulationQueue.Count < numBufferedFrames && !emulationDone)
+                while (emulationQueue.Count < numBufferedFrames && !reachedEnd)
                     Thread.Sleep(1);
             }
         }
@@ -184,6 +199,7 @@ namespace FamiStudio
 
             data.samples = base.EndFrame();
             data.metronomePosition = metronomePlayPosition;
+            data.playPosition = playPosition;
 
             if (beatIndex == 0)
             {

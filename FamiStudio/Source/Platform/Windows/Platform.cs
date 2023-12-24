@@ -55,12 +55,7 @@ namespace FamiStudio
 
         public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
         {
-#if false
-            return new XAudio2Stream(rate, stereo, bufferSizeMs);
-#else
-            // MATTT : Test failure.
             return PortAudioStream.Create(rate, stereo, bufferSizeMs);
-#endif
         }
 
         public static int AudioDeviceSampleRate => PortAudioStream.DeviceSampleRate;
@@ -320,6 +315,14 @@ namespace FamiStudio
         public static void Beep()
         {
             MessageBeep(0);
+        }
+
+        [DllImport("kernel32.dll")]
+        public unsafe static extern bool RtlZeroMemory(void* destination, int length);
+
+        public static unsafe void ZeroMemory(IntPtr p, int len)
+        {
+            RtlZeroMemory(p.ToPointer(), len);
         }
 
         [DllImport("user32.dll")]

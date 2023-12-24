@@ -2057,7 +2057,7 @@ namespace FamiStudio
                 lastPlayPosition = songPlayer.PlayPosition;
                 instrumentPlayer.ConnectOscilloscope(null);
                 songPlayer.ConnectOscilloscope(oscilloscope);
-                songPlayer.Play(song, songPlayer.PlayPosition, palPlayback); // MATTT : Pal playback and play position are known by player here... Silly.
+                songPlayer.Start(song, songPlayer.PlayPosition, palPlayback); // MATTT : Pal playback and play position are known by player here... Silly.
                 Platform.ForceScreenOn(true);
             }
         }
@@ -2314,10 +2314,15 @@ namespace FamiStudio
                    PianoRoll.IsEditingDPCMSample;
         }
 
-        private void StopSongPlayerIfReachedEnd()
+        private void ConditionalReconnectOscilloscope()
         {
-            // This can happen when a song with no loop point naturally ends. 
-            if (songPlayer != null && songPlayer.StopIfReachedSongEnd())
+            // This can happen when a song with no loop point naturally ends. We don't get notified of 
+            // this (we probably should) and we end up not reconnecting the oscilloscope.
+            if (songPlayer != null &&
+                !songPlayer.IsPlaying &&
+                songPlayer.IsOscilloscopeConnected &&
+                instrumentPlayer != null &&
+                !instrumentPlayer.IsOscilloscopeConnected)
             {
                 songPlayer.ConnectOscilloscope(null);
                 instrumentPlayer.ConnectOscilloscope(oscilloscope);
@@ -2374,11 +2379,11 @@ namespace FamiStudio
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
             averageTickRateMs = Utils.Lerp(averageTickRateMs, deltaTime * 1000.0f, 0.01f);
 
-            StopSongPlayerIfReachedEnd();
             ProcessAudioDeviceChanges();
             ProcessQueuedMidiNotes();
             ConditionalMarkControlsDirty();
             ConditionalShowTutorial();
+            ConditionalReconnectOscilloscope();
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
             CheckStopInstrumentNote(deltaTime);
