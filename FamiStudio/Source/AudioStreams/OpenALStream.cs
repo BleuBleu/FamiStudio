@@ -12,11 +12,12 @@ namespace FamiStudio
         private static IntPtr context;
 
         private GetBufferDataCallback bufferFill;
+        private StreamStartingCallback streamStarting;
         private int freq;
         private bool quit;
         private Task playingTask;
         private bool stereo;
-
+        private int bufferSizeBytes;
         private int source;
         private int[] buffers;
 
@@ -43,12 +44,14 @@ namespace FamiStudio
                 Console.WriteLine($"Default OpenAL audio device is '{deviceName}'");
             }
 
+            var numBuffers = Math.Max(4, bufferSizeMs / 25);
             var stream = new OpenALStream();
 
             stream.stereo = stereo;
             stream.freq = rate;
             stream.source = AL.GenSource();
-            stream.buffers = AL.GenBuffers(4);
+            stream.buffers = AL.GenBuffers(numBuffers);
+            stream.bufferSizeBytes = Utils.RoundUp(rate * bufferSizeMs / 1000 * sizeof(short) * (stereo ? 2 : 1) / numBuffers, sizeof(short) * 2);
             stream.quit = false;
 
             return stream;
@@ -69,6 +72,7 @@ namespace FamiStudio
         {
             quit = false;
             bufferFill = bufferFillCallback;
+            streamStarting = streamStartCallback;
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
 
@@ -85,6 +89,7 @@ namespace FamiStudio
             AL.Source(source, AL.Buffer, 0);
 
             bufferFill = null;
+            streamStarting = null;
         }
 
         private void DebugStream()
@@ -99,7 +104,8 @@ namespace FamiStudio
 
         private unsafe void PlayAsync()
         {
-            int initBufferIdx = buffers.Length - 1;
+            var streamStarted = false;
+            var initBufferIdx = buffers.Length - 1;
 
             while (!quit)
             {
@@ -135,6 +141,13 @@ namespace FamiStudio
                     }
                     else
                     {
+                        // MATTT : Mutex with Stop() to avoid 2 threads stopping.
+                        if (done)
+                        {
+                            // MATTT : Cant call stop, it doesnt process the remaining buffer. Must wait until numProcessed == numBuffers to stop.
+                            AL.SourceStop(source);
+                            return;
+                        }
                         Thread.Sleep(1);
                     }
                 }
@@ -145,6 +158,13 @@ namespace FamiStudio
                 if (state != AL.Playing)
                 {
                     Debug.WriteLine("RESTART!");
+
+                    if (!streamStarted)
+                    {
+                        streamStarting();
+                        streamStarted = true;
+                    }
+                    
                     //DebugStream();
                     AL.SourcePlay(source);
                 }
