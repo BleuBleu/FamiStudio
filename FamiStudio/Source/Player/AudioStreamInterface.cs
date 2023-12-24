@@ -12,9 +12,10 @@ namespace FamiStudio
     public interface IAudioStream : IDisposable
     {
         bool IsPlaying { get; }
+        bool Stereo { get; }
         int ImmediatePlayPosition { get; }
 
-        void Start();
+        void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback);
         void Stop(bool abort);
         void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0);
     }

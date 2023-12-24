@@ -40,13 +40,14 @@ namespace FamiStudio
         protected bool seeking = false;
         protected bool beat = false;
         protected bool stereo = false;
+        protected volatile bool reachedEnd = false;
         protected int  tndMode = NesApu.TND_MODE_SINGLE;
         protected int  beatIndex = -1;
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
         protected long channelMask = -1;
-        protected int  playPosition = 0;
+        protected volatile int playPosition = 0;
         protected NoteLocation playLocation = new NoteLocation(0, 0);
         protected NesApu.NesRegisterValues registerValues = new NesApu.NesRegisterValues();
 
@@ -86,10 +87,10 @@ namespace FamiStudio
             set { loopMode = value; }
         }
 
-        public int PlayPosition
+        public virtual int PlayPosition
         {
-            get { return Math.Max(0, Thread.VolatileRead(ref playPosition)); }
-            set { Thread.VolatileWrite(ref playPosition, value); }
+            get { return Math.Max(0, playPosition); }
+            set { playPosition = value; }
         }
 
         public int PlayRate
@@ -240,6 +241,7 @@ namespace FamiStudio
             frameNumber = 0;
             famitrackerTempoCounter = 0;
             channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
+            reachedEnd = false;
 
             Debug.Assert(song.Project.OutputsStereoAudio == stereo);
 
@@ -258,7 +260,7 @@ namespace FamiStudio
                 UpdateChannels();
                 UpdateTempo();
 
-                while (playLocation.ToAbsoluteNoteIndex(song) < startNote - 1)
+                while (playLocation.ToAbsoluteNoteIndex(song) < startNote)
                 {
                     if (!PlaySongFrameInternal(true))
                         break;
@@ -316,7 +318,10 @@ namespace FamiStudio
                     //Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
 
                     if (!AdvanceSong(song.Length, seeking ? LoopMode.None : loopMode))
+                    {
+                        reachedEnd = true;
                         return false;
+                    }
 
                     AdvanceChannels();
                 }
@@ -406,9 +411,7 @@ namespace FamiStudio
 
             if (playLocation.PatternIndex >= songLength)
             {
-                loopCount++;
-
-                if (maxLoopCount > 0 && loopCount >= maxLoopCount)
+                if (maxLoopCount > 0 && ((loopMode == LoopMode.LoopPoint && song.LoopPoint >= 0) || loopMode == LoopMode.Song) && ++loopCount >= maxLoopCount)
                 {
                     return false;
                 }

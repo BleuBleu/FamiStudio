@@ -24,6 +24,8 @@ namespace FamiStudio
         private Arpeggio selectedArpeggio;
         private SongPlayer songPlayer;
         private InstrumentPlayer instrumentPlayer;
+        private IAudioStream songStream;
+        private IAudioStream instrumentStream;
         private Oscilloscope oscilloscope;
         private UndoRedoManager undoRedoManager;
         private ExportDialog exportDialog;
@@ -96,7 +98,7 @@ namespace FamiStudio
         public MobilePiano      MobilePiano     => window.MobilePiano;
         public Control          ActiveControl   => window.ActiveControl;
         public FamiStudioWindow Window          => window;
-        public BasePlayer       ActivePlayer    => IsPlaying ? (BasePlayer)songPlayer : (BasePlayer)instrumentPlayer;
+        public BasePlayer       ActivePlayer    => IsPlaying ? songPlayer : instrumentPlayer;
 
         public bool IsSequencerActive          => ActiveControl == Sequencer;
         public bool IsPianoRollActive          => ActiveControl == PianoRoll;
@@ -136,6 +138,7 @@ namespace FamiStudio
         LocalizedString NewProjectTitle;
         LocalizedString IncompatibleInstrumentError;
         LocalizedString IncompatibleExpRequiredError;
+        LocalizedString AudioDeviceChanged;
 
         #endregion
 
@@ -722,9 +725,9 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayNotification(string msg, bool beep = true)
+        public void DisplayNotification(string msg, bool beep = true, bool forceLongDuration = false)
         {
-            Platform.ShowToast(window, msg, msg.Length > 60);
+            Platform.ShowToast(window, msg, forceLongDuration || msg.Length > 60);
 
             if (beep)
                 Platform.Beep();
@@ -743,11 +746,12 @@ namespace FamiStudio
                 SeekSong(0);
             }
 
-            if (flags.HasFlag(TransactionFlags.ReinitializeAudio))
+            if (flags.HasFlag(TransactionFlags.RecreateStreams))
             {
-                // This is overly careful, the only case where this might be needed
-                // is when PAL mode changes, or when the number of buffered frames are 
-                // changed in the settings.
+                ShutdownAudioPlayers(true);
+            }
+            else if (flags.HasFlag(TransactionFlags.RecreatePlayers))
+            {
                 ShutdownAudioPlayers();
             }
         }
@@ -758,7 +762,7 @@ namespace FamiStudio
 
             ValidateIntegrity();
 
-            if (flags.HasFlag(TransactionFlags.ReinitializeAudio))
+            if (flags.HasFlag(TransactionFlags.RecreatePlayers))
             {
                 palPlayback = project.PalMode;
                 InitializeAudioPlayers();
@@ -881,7 +885,7 @@ namespace FamiStudio
         private void InitProject()
         {
             StopRecording();
-            ShutdownAudioPlayers();
+            ShutdownAudioPlayers(songStream != null && songStream.Stereo != project.OutputsStereoAudio);
 
             StaticProject = project;
             song = project.Songs[0];
@@ -1182,7 +1186,7 @@ namespace FamiStudio
 
         private void ExportDialog_Exporting()
         {
-            StopEverything(true);
+            StopEverything();
 
             // Make sure we arent in real-time mode, this mean we will 
             // be constantly rendering frames as we export.
@@ -1202,7 +1206,7 @@ namespace FamiStudio
             {
                 suspended = true;
                 StopEverything();
-                ShutdownAudioPlayers();
+                ShutdownAudioPlayers(true);
                 SaveWorkInProgress();
             }
         }
@@ -1223,9 +1227,12 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync((r) =>
             {
-                if (r == DialogResult.OK)
+                if (r != DialogResult.Cancel) 
                 {
-                    RecreateAudioPlayers();
+                    // Yes = audio settings changed.
+                    if (r == DialogResult.Yes)
+                        RecreateAudioPlayers(true);
+
                     RefreshLayout();
                     RefreshProjectExplorerButtons();
                     InvalidatePatternCache();
@@ -1258,7 +1265,7 @@ namespace FamiStudio
                 Midi.Shutdown();
 
                 StopEverything();
-                ShutdownAudioPlayers();
+                ShutdownAudioPlayers(true);
                 SaveSettings();
 
                 close = true;
@@ -1560,23 +1567,31 @@ namespace FamiStudio
             }
         }
 
-        public void StopInstrument(bool wait = false)
+        public void StopInstrument()
         {
             if (instrumentPlayer != null)
-                instrumentPlayer.StopAllNotes(wait);
+                instrumentPlayer.StopAllNotes();
         }
 
-        public void StopEverything(bool wait = false)
+        public void StopEverything()
         {
             StopSong();
-            StopInstrument(wait);
+            StopInstrument();
         }
 
         private void InitializeSongPlayer()
         {
             Debug.Assert(songPlayer == null);
             Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
-            songPlayer = new SongPlayer(palPlayback, Platform.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio, Settings.AudioBufferSize, Settings.NumBufferedFrames);
+
+            if (songStream == null)
+            {
+                songStream = Platform.CreateAudioStream(NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
+                if (songStream == null)
+                    DisplayNotification("Error creating audio stream!", true, true); // MATTT : Localize + better message.
+            }
+
+            songPlayer = new SongPlayer(songStream, palPlayback, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.NumBufferedFrames); // MATTT 44100
             songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
             songPlayer.SetSelectionRange(min, max);
         }
@@ -1584,11 +1599,19 @@ namespace FamiStudio
         private void InitializeInstrumentPlayer()
         {
             Debug.Assert(instrumentPlayer == null);
-            instrumentPlayer = new InstrumentPlayer(palPlayback, Platform.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio, Settings.AudioBufferSize, Settings.NumBufferedFrames);
-            instrumentPlayer.Start(project, palPlayback); 
+
+            if (instrumentStream == null)
+            { 
+                instrumentStream = Platform.CreateAudioStream(NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
+                if (instrumentStream == null)
+                    DisplayNotification("Error creating audio stream!", true, true); // MATTT : Localize + better message.
+            }
+
+            instrumentPlayer = new InstrumentPlayer(instrumentStream, palPlayback, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.NumBufferedFrames); // MATTT 44100
+            instrumentPlayer.Start(project, palPlayback);
         }
 
-        private void ShutdownSongPlayer()
+        private void ShutdownSongPlayer(bool shutdownStream)
         {
             if (songPlayer != null)
             {
@@ -1596,9 +1619,16 @@ namespace FamiStudio
                 songPlayer.Shutdown();
                 songPlayer = null;
             }
+
+            if (shutdownStream && songStream != null)
+            {
+                songStream.Stop(true); // MATTT : Abort?
+                songStream.Dispose();
+                songStream = null;
+            }
         }
 
-        private void ShutdownInstrumentPlayer()
+        private void ShutdownInstrumentPlayer(bool shutdownStream)
         {
             if (instrumentPlayer != null)
             {
@@ -1606,6 +1636,13 @@ namespace FamiStudio
                 instrumentPlayer.Shutdown();
                 instrumentPlayer = null;
                 PianoRoll.HighlightPianoNote(Note.NoteInvalid);
+            }
+
+            if (shutdownStream && instrumentStream != null)
+            {
+                instrumentStream.Stop(true);   
+                instrumentStream.Dispose(); 
+                instrumentStream = null;    
             }
         }
 
@@ -1700,7 +1737,7 @@ namespace FamiStudio
                 var playersWereValid = songPlayer != null;
 
                 if (playersWereValid)
-                    ShutdownAudioPlayers();
+                    ShutdownAudioPlayers(false);
 
 				palPlayback = value;
 				if (project.UsesFamiTrackerTempo)
@@ -2020,7 +2057,7 @@ namespace FamiStudio
                 lastPlayPosition = songPlayer.PlayPosition;
                 instrumentPlayer.ConnectOscilloscope(null);
                 songPlayer.ConnectOscilloscope(oscilloscope);
-                songPlayer.Play(song, songPlayer.PlayPosition, palPlayback); // MATTT : Pal playback and play position are known by player here... Silly.
+                songPlayer.Start(song, songPlayer.PlayPosition, palPlayback); // MATTT : Pal playback and play position are known by player here... Silly.
                 Platform.ForceScreenOn(true);
             }
         }
@@ -2228,16 +2265,16 @@ namespace FamiStudio
             }
         }
 
-        private void ShutdownAudioPlayers()
+        private void ShutdownAudioPlayers(bool shutdownStream = false)
         {
-            ShutdownSongPlayer();
-            ShutdownInstrumentPlayer();
+            ShutdownSongPlayer(shutdownStream);
+            ShutdownInstrumentPlayer(shutdownStream);
             ShutdownOscilloscope();
         }
 
-        private void RecreateAudioPlayers()
+        private void RecreateAudioPlayers(bool recreateStream = false)
         {
-            ShutdownAudioPlayers();
+            ShutdownAudioPlayers(recreateStream);
             InitializeMetronome();
             InitializeAudioPlayers();
         }
@@ -2277,10 +2314,15 @@ namespace FamiStudio
                    PianoRoll.IsEditingDPCMSample;
         }
 
-        private void StopSongPlayerIfReachedEnd()
+        private void ConditionalReconnectOscilloscope()
         {
-            // This can happen when a song with no loop point naturally ends. 
-            if (songPlayer != null && songPlayer.StopIfReachedSongEnd())
+            // This can happen when a song with no loop point naturally ends. We don't get notified of 
+            // this (we probably should) and we end up not reconnecting the oscilloscope.
+            if (songPlayer != null &&
+                !songPlayer.IsPlaying &&
+                songPlayer.IsOscilloscopeConnected &&
+                instrumentPlayer != null &&
+                !instrumentPlayer.IsOscilloscopeConnected)
             {
                 songPlayer.ConnectOscilloscope(null);
                 instrumentPlayer.ConnectOscilloscope(oscilloscope);
@@ -2292,6 +2334,7 @@ namespace FamiStudio
             if (audioDeviceChanged)
             {
                 RecreateAudioPlayers();
+                DisplayNotification(AudioDeviceChanged);
                 audioDeviceChanged = false;
             }
         }
@@ -2336,11 +2379,11 @@ namespace FamiStudio
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
             averageTickRateMs = Utils.Lerp(averageTickRateMs, deltaTime * 1000.0f, 0.01f);
 
-            StopSongPlayerIfReachedEnd();
             ProcessAudioDeviceChanges();
             ProcessQueuedMidiNotes();
             ConditionalMarkControlsDirty();
             ConditionalShowTutorial();
+            ConditionalReconnectOscilloscope();
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
             CheckStopInstrumentNote(deltaTime);

@@ -22,12 +22,10 @@ namespace FamiStudio
         int[] envelopeFrames = new int[EnvelopeType.Count];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
 
-        bool IsPlaying => UsesEmulationThread ? emulationThread != null : audioStream.IsPlaying;
-
         public bool IsPlayingAnyNotes => activeChannel >= 0;
         public int  PlayingNote => playingNote;
 
-        public InstrumentPlayer(bool pal, int sampleRate, bool stereo, int bufferSizeMs, int numFrames) : base(NesApu.APU_INSTRUMENT, pal, sampleRate, stereo, bufferSizeMs, numFrames)
+        public InstrumentPlayer(IAudioStream stream, bool pal, int sampleRate, bool stereo, int numFrames) : base(stream, NesApu.APU_INSTRUMENT, pal, sampleRate, stereo, numFrames)
         {
         }
 
@@ -47,22 +45,20 @@ namespace FamiStudio
             }
         }
 
-        public void StopAllNotes(bool wait = false)
+        public void StopAllNotes()
         {
             if (IsPlaying)
             {
-                if (wait)
-                    while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
-
+                noteQueue.Clear(); 
                 noteQueue.Enqueue(new PlayerNote() { channel = -1 });
-
-                if (wait)
-                    while (!noteQueue.IsEmpty) Thread.Sleep(1);
             }
         }
 
         public void Start(Project project, bool pal)
         {
+            if (audioStream == null)
+                return;
+
             expansionMask = project.ExpansionAudioMask;
             numN163Channels = project.ExpansionNumN163Channels;
             palPlayback = pal;
@@ -76,15 +72,19 @@ namespace FamiStudio
             for (int i = 0; i < channelStates.Length; i++)
                 EnableChannelType(channelStates[i].InnerChannelType, false);
 
-            if (numBufferedFrames > 0)
+            if (UsesEmulationThread)
             {
+                Debug.Assert(emulationThread == null);
+                Debug.Assert(emulationQueue.Count == 0);
+
                 ResetThreadingObjects();
 
                 emulationThread = new Thread(EmulationThread);
                 emulationThread.Start();
             }
 
-            audioStream.Start();
+            audioStream.Stop(true); // Extra safety
+            audioStream.Start(AudioBufferFillCallback, AudioStreamStartingCallback);
         }
 
         public void Stop(bool stopNotes = true)
@@ -92,7 +92,7 @@ namespace FamiStudio
             if (IsPlaying)
             {
                 if (stopNotes)
-                    StopAllNotes(true);
+                    StopAllNotes();
 
                 if (UsesEmulationThread)
                 {
@@ -100,11 +100,11 @@ namespace FamiStudio
                     emulationThread.Join();
                     emulationThread = null;
                 }
-
-                channelStates = null;
             }
 
-            audioStream.Stop(true);
+            audioStream?.Stop(true);
+            emulationQueue?.Clear();
+            channelStates = null;
         }
 
         public int GetEnvelopeFrame(int idx)
@@ -204,36 +204,17 @@ namespace FamiStudio
             return true;
         }
 
-        unsafe void EmulationThread(object o)
+        void EmulationThread(object o)
         {
-#if !DEBUG
-            try
+            var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
+
+            while (true)
             {
-#endif
-                var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
+                if (WaitHandle.WaitAny(waitEvents) == 0)
+                    break;
 
-                while (true)
-                {
-                    if (WaitHandle.WaitAny(waitEvents) == 0)
-                    {
-                        break;
-                    }
-
-                    EmulateFrame();
-                }
-
-                while (emulationQueue.TryDequeue(out _)) 
-                    Thread.Sleep(1);
-
-#if !DEBUG
+                EmulateFrame();
             }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-                if (Debugger.IsAttached)
-                    Debugger.Break();
-            }
-#endif
         }
     }
 }

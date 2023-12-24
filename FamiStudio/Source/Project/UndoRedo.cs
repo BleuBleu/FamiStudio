@@ -21,9 +21,10 @@ namespace FamiStudio
 
     public enum TransactionFlags
     {
-        None              = 0,
-        StopAudio         = 1,
-        ReinitializeAudio = 2
+        None            = 0,
+        StopAudio       = 1,
+        RecreatePlayers = 2,
+        RecreateStreams = 4 // Should only be used along with RecreatePlayers.
     };
 
     public class Transaction

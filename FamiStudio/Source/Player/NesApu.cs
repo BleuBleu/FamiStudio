@@ -248,6 +248,9 @@ namespace FamiStudio
         public const double FreqC0 = 16.3516;
         public const double FreqRegMin = 15.8862;  //The minimum frequency displayed in the registers tab, C0 - 49.9893 cents
 
+        // One day this will be a setting.
+        public const int EmulationSampleRate = 44100;
+
         // When playing back in the app, we always put samples at 0xc000. Completely arbitrary.
         public const int DPCMSampleAddr = 0xc000;
 

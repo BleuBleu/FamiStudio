@@ -623,11 +623,23 @@ namespace FamiStudio
                     Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(11);
 
                     // Sound
-                    Settings.AudioBufferSize = pageSound.GetPropertyValue<int>(0);
-                    Settings.NumBufferedFrames = pageSound.GetPropertyValue<int>(1);
+                    var newAudioBufferSize = pageSound.GetPropertyValue<int>(0);
+                    var newNumBufferedFrames = pageSound.GetPropertyValue<int>(1);
+                    var newN163Mix = pageSound.GetPropertyValue<bool>(4);
+
+                    if (Settings.AudioBufferSize   != newAudioBufferSize   ||
+                        Settings.NumBufferedFrames != newNumBufferedFrames ||
+                        Settings.N163Mix           != newN163Mix)
+                    {
+                        // Use "Yes" as a special code to mean to recreate audio players.
+                        r = DialogResult.Yes;
+                    }
+
+                    Settings.AudioBufferSize = newAudioBufferSize;
+                    Settings.NumBufferedFrames = newNumBufferedFrames;
                     Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(2);
                     Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(3);
-                    Settings.N163Mix = pageSound.GetPropertyValue<bool>(4);
+                    Settings.N163Mix = newN163Mix;
                     Settings.ClampPeriods = pageSound.GetPropertyValue<bool>(5);
                     Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(6);
                     Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(7);

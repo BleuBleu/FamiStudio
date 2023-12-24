@@ -22,10 +22,10 @@ x Rename "Bitmap" to "Texture"
 	- Notes on each stream type:
 		- XAudio2: Takes buffer size + num into account.
 		- OpenAL: Considers # buffers, ignores buffer size (queues entire frame all the time)
-		- PortAudio: Ignore *everything*. You can specify "frames per buffer", but not # of buffers. 
+		- PortAudio: You suggest a latency, and stream-specific info can have more params. You can specify "frames per buffer", but not recommended.
 		- Android: Only takes buffer size into account. You cant configure the # of buffers.
-	- Short.fms : Doesnt rewind after play once.
 	- Port + test other streams.
+	- Cleanup "EmulateFrame" mess.
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 x Fix that bug where patterns are modified twice if you select 2 instances
@@ -36,12 +36,13 @@ x Fix that bug where patterns are modified twice if you select 2 instances
 - Project cleanup doesnt respect sorting? 
 	https://discord.com/channels/@me/819772561940152321/1151930656302051398
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
-- Karashin N163 comparison with NSFPLAY, listen to Wave 1 isolated.
+- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated.
 	https://discord.com/channels/@me/1093046594062004286/1183464431674470570
+- Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
+	https://discord.com/channels/@me/819772561940152321/1187597131859636276
 - Is export setting DPI scaling at 100% when exporting, does it affect the whole UI?
 	https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104
 - Dont publish for chromebooks
-
 - FDS filtering (expose the cutoff frequency for all expansions, set default to 2000 for FDS)
 
 4.2.0 Testing
@@ -210,11 +211,9 @@ Backlog:
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Paste special, option to rename patterns.
-- ffmpeg path on Linux should work on path (Puna on CC discord).
 - Uncompressed envelopes
 - CLI only EXE (Linux only).
 - C0 is hidden by scroll bars
-- C0 is hidden in piano roll video
 - Piano roll scale on desktop?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - Dont reset camera in piano roll when deleting instrument (probably to handle case where you were editing the instrument)

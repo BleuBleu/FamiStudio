@@ -13,7 +13,7 @@ namespace FamiStudio
             public bool pal;
         };
 
-        public SongPlayer(bool pal, int sampleRate, bool stereo, int bufferSizeMs, int numFrames) : base(NesApu.APU_SONG, pal, sampleRate, stereo, bufferSizeMs, numFrames)
+        public SongPlayer(IAudioStream stream, bool pal, int sampleRate, bool stereo, int numFrames) : base(stream, NesApu.APU_SONG, pal, sampleRate, stereo, numFrames)
         {
             loopMode = LoopMode.LoopPoint;
         }
@@ -24,10 +24,10 @@ namespace FamiStudio
             base.Shutdown();
         }
 
-        public void Play(Song song, int frame, bool pal)
+        public void Start(Song song, int frame, bool pal)
         {
-            emulationDone = false;
-            shouldStopStream = false;
+            if (audioStream == null)
+                return;
 
             if (UsesEmulationThread)
             {
@@ -45,7 +45,7 @@ namespace FamiStudio
             }
 
             audioStream.Stop(true); // Extra safety
-            audioStream.Start();
+            audioStream.Start(AudioBufferFillCallback, AudioStreamStartingCallback);
         }
 
         public void Stop()
@@ -64,24 +64,15 @@ namespace FamiStudio
                 }
             }
 
-            audioStream.Stop(true);
-        }
+            audioStream?.Stop(true);
 
-        public bool StopIfReachedSongEnd()
-        {
-            if (shouldStopStream)
+            if (UsesEmulationThread)
             {
-                audioStream.Stop(false);
-                shouldStopStream = false;
-                return true;
+                // When stopping, reset the play position to the first frame in the queue,
+                // this prevent the cursor from jumping ahead when playing/stopping quickly
+                playPosition = PlayPosition;
+                emulationQueue.Clear();
             }
-
-            return false;
-        }
-
-        public bool IsPlaying
-        {
-            get { return UsesEmulationThread ? emulationThread != null : audioStream.IsPlaying; }
         }
 
 #if false // Enable to debug oscilloscope triggers for a specific channel of a song.
@@ -95,10 +86,16 @@ namespace FamiStudio
 
         protected override bool EmulateFrame()
         {
-            return PlaySongFrame();
+            var advanced = PlaySongFrame();
+
+            // When reaching the end of a non looping song, push a null to signal to stop the stream.
+            if (!advanced && UsesEmulationThread)
+                emulationQueue.Enqueue(null);
+
+            return advanced;
         }
 
-        unsafe void EmulationThread(object o)
+        void EmulationThread(object o)
         {
             var startInfo = (SongPlayerStartInfo)o;
 
@@ -113,29 +110,14 @@ namespace FamiStudio
 
                 while (true)
                 {
-                    var idx = WaitHandle.WaitAny(waitEvents);
-
-                    if (idx == 0)
+                    if (WaitHandle.WaitAny(waitEvents) == 0)
                         break;
 
-                    var reachedEnd = !PlaySongFrame();
-
-                    // When we reach the end of the song, we will wait for the stream to finished 
-                    // consuming the queued samples. This happens when songs don't have loop points,
-                    // (like SFX) and avoids cutting the last couple frames of audio.
-                    if (reachedEnd)
-                    {
-                        emulationDone = true;
-
-                        while (audioStream.IsPlaying && emulationQueue.Count != 0)
-                            Thread.Sleep(1);
+                    if (!EmulateFrame())
                         break;
-                    }
                 }
             }
 
-            shouldStopStream = true;
-            while (emulationQueue.TryDequeue(out _));
             emulationThread = null;
         }
     };

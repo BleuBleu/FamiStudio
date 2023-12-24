@@ -108,6 +108,7 @@
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\RegisterViewer.cs" />
     <Compile Include="Source\Player\RegisterWriteOptimizer.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
@@ -142,6 +143,7 @@
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
+    <Compile Include="Source\UI\Common\ScrollContainer.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\Settings.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
@@ -182,6 +184,7 @@
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
     <Compile Include="Source\UI\Desktop\Toast.cs" />
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
+    <Compile Include="Source\UI\Desktop\VideoPreviewDialog.cs" />
     <Compile Include="Source\UI\Linux\Cursors.cs" />
     <Compile Include="Source\UI\Linux\FamiStudioWindow.cs" />
     <Compile Include="Source\Utils\AlphaNumericSort.cs" />
@@ -201,6 +204,7 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
     <Compile Include="Source\Video\VideoEncoderFFmpeg.cs" />
+    <Compile Include="Source\Video\VideoEncoderInterface.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
@@ -490,6 +494,10 @@
     <EmbeddedResource Include="Resources\Atlas\FileFolder@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\FileHome.tga" />
     <EmbeddedResource Include="Resources\Atlas\FileHome@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Folder.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Folder@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\FolderOpen.tga" />
+    <EmbeddedResource Include="Resources\Atlas\FolderOpen@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\GhostSmall.tga" />
@@ -764,18 +772,20 @@
     <EmbeddedResource Include="Rom\rom_vrc7_ntsc_famitracker.nes" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Bitmap.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Bitmap.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Depth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Depth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Line.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Line.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\LineSmooth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\LineSmooth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Poly.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Poly.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Text.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Text.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Line.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Line.vert" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Text.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Text.vert" />
   </ItemGroup>  
   <ItemGroup>
     <Content Include="Localization\FamiStudio.deu.ini">

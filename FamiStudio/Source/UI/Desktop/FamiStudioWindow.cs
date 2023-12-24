@@ -623,7 +623,7 @@ namespace FamiStudio
             mods = FixKeyboardMods(mods, key, action);
             modifiers.Set(mods);
 
-            Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode} ({Platform.ScancodeToString(scancode)}), Action = {action}, Mods = {mods}");
+            //Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode} ({Platform.ScancodeToString(scancode)}), Action = {action}, Mods = {mods}");
 
             var controls = container.GetControlsForKeyboard(out var mainFamistudioControl);
             var down = action == GLFW_PRESS || action == GLFW_REPEAT;

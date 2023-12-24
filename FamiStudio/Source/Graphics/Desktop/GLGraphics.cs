@@ -157,7 +157,12 @@ namespace FamiStudio
             GL.GetInteger(GL.MajorVersion, ref versionMajor);
             GL.GetInteger(GL.MinorVersion, ref versionMinor);
             
-            Debug.Assert(versionMajor == 3);
+            // Linux can report 4.1, even though we asked for a 3.3 core context.
+            if (versionMajor > 3)
+            {
+                versionMajor = 3;
+                versionMinor = 3;
+            }
 
             string glslVersion;
             
