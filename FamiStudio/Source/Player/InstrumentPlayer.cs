@@ -45,17 +45,12 @@ namespace FamiStudio
             }
         }
 
-        // MATTT : Remove wait if not needed.
-        public void StopAllNotes(bool wait = false)
+        public void StopAllNotes()
         {
             if (IsPlaying)
             {
-                while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
-
+                noteQueue.Clear(); 
                 noteQueue.Enqueue(new PlayerNote() { channel = -1 });
-
-                //if (wait && UsesEmulationThread)
-                //    while (!noteQueue.IsEmpty) Thread.Sleep(1);
             }
         }
 
@@ -97,7 +92,7 @@ namespace FamiStudio
             if (IsPlaying)
             {
                 if (stopNotes)
-                    StopAllNotes(true);
+                    StopAllNotes();
 
                 if (UsesEmulationThread)
                 {
@@ -108,13 +103,8 @@ namespace FamiStudio
             }
 
             audioStream?.Stop(true);
+            emulationQueue?.Clear();
             channelStates = null;
-
-            if (UsesEmulationThread)
-            {
-                while (emulationQueue.Count > 0)
-                    emulationQueue.TryDequeue(out _);
-            }
         }
 
         public int GetEnvelopeFrame(int idx)

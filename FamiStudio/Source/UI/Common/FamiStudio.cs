@@ -1186,7 +1186,7 @@ namespace FamiStudio
 
         private void ExportDialog_Exporting()
         {
-            StopEverything(true);
+            StopEverything();
 
             // Make sure we arent in real-time mode, this mean we will 
             // be constantly rendering frames as we export.
@@ -1567,16 +1567,16 @@ namespace FamiStudio
             }
         }
 
-        public void StopInstrument(bool wait = false)
+        public void StopInstrument()
         {
             if (instrumentPlayer != null)
-                instrumentPlayer.StopAllNotes(wait);
+                instrumentPlayer.StopAllNotes();
         }
 
-        public void StopEverything(bool wait = false)
+        public void StopEverything()
         {
             StopSong();
-            StopInstrument(wait);
+            StopInstrument();
         }
 
         private void InitializeSongPlayer()

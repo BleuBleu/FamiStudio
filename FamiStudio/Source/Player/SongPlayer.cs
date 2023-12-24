@@ -71,9 +71,7 @@ namespace FamiStudio
                 // When stopping, reset the play position to the first frame in the queue,
                 // this prevent the cursor from jumping ahead when playing/stopping quickly
                 playPosition = PlayPosition;
-
-                while (emulationQueue.Count > 0)
-                    emulationQueue.TryDequeue(out _);
+                emulationQueue.Clear();
             }
         }
 
