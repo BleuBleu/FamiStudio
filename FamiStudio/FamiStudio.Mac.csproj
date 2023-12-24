@@ -112,6 +112,7 @@
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\RegisterViewer.cs" />
     <Compile Include="Source\Player\RegisterWriteOptimizer.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
@@ -146,6 +147,7 @@
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
+    <Compile Include="Source\UI\Common\ScrollContainer.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\Settings.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
@@ -186,6 +188,7 @@
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
     <Compile Include="Source\UI\Desktop\Toast.cs" />
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
+    <Compile Include="Source\UI\Desktop\VideoPreviewDialog.cs" />
     <Compile Include="Source\UI\MacOS\Cursors.cs" />
     <Compile Include="Source\UI\MacOS\FamiStudioWindow.cs" />
     <Compile Include="Source\Utils\AlphaNumericSort.cs" />
@@ -205,6 +208,7 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
     <Compile Include="Source\Video\VideoEncoderFFmpeg.cs" />
+    <Compile Include="Source\Video\VideoEncoderInterface.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
