@@ -17,33 +17,41 @@ namespace FamiStudio
         private Task playingTask;
         private bool stereo;
 
-        int source;
-        int[] buffers;
+        private int source;
+        private int[] buffers;
 
-        int[]   immediateSource  = new [] { -1, -1 };
-        int[][] immediateBuffers = new int[2][];
+        private int[]   immediateSource  = new [] { -1, -1 };
+        private int[][] immediateBuffers = new int[2][];
 
-        public OpenALStream(int rate, bool inStereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
+        public bool Stereo => stereo;
+
+        private OpenALStream()
+        {
+        }
+
+        public static OpenALStream Create(int rate, bool stereo, int bufferSizeMs)
         {
             if (device == IntPtr.Zero)
             {
                 device = ALC.OpenDevice(null);
+                if (device == IntPtr.Zero) return null;
                 context = ALC.CreateContext(device, null);
+                if (context == IntPtr.Zero) return null;
                 ALC.MakeContextCurrent(context);
 
                 var deviceName = ALC.GetString(device, ALC.DeviceSpecifier);
                 Console.WriteLine($"Default OpenAL audio device is '{deviceName}'");
             }
 
-            // MATTT : Port to new behavior : buffer size, delayed start, etc.
-            stereo = inStereo;
-            // TODO : We need to decouple the number of emulated buffered frames and the 
-            // size of the low-level audio buffers.
-            freq = rate;
-            source = AL.GenSource();
-            buffers = AL.GenBuffers(numBuffers);
-            bufferFill = bufferFillCallback;
-            quit = false;
+            var stream = new OpenALStream();
+
+            stream.stereo = stereo;
+            stream.freq = rate;
+            stream.source = AL.GenSource();
+            stream.buffers = AL.GenBuffers(4);
+            stream.quit = false;
+
+            return stream;
         }
 
         public void Dispose()
@@ -57,13 +65,14 @@ namespace FamiStudio
 
         public bool IsPlaying => playingTask != null;
 
-        public void Start()
+        public void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
             quit = false;
+            bufferFill = bufferFillCallback;
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
 
-        public void Stop()
+        public void Stop(bool abort)
         {
             if (playingTask != null)
             {
@@ -74,6 +83,8 @@ namespace FamiStudio
 
             AL.SourceStop(source);
             AL.Source(source, AL.Buffer, 0);
+
+            bufferFill = null;
         }
 
         private void DebugStream()
@@ -113,7 +124,7 @@ namespace FamiStudio
                 // MATTT : Change this logic to handle smaller buffers, like we do for portaudio and xaudio2.
                 for (int i = 0; i < numProcessed && !quit; )
                 {
-                    var data = bufferFill();
+                    var data = bufferFill(out var done); // MATTT
                     if (data != null)
                     {
                         int bufferId = initBufferIdx >= 0 ? buffers[initBufferIdx--] : AL.SourceUnqueueBuffer(source);
