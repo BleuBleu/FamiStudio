@@ -20,6 +20,8 @@ namespace FamiStudio
         private int bufferSizeBytes;
         private int source;
         private int[] buffers;
+        private short[] samples;
+        private int samplesOffset;
 
         private int[]   immediateSource  = new [] { -1, -1 };
         private int[][] immediateBuffers = new int[2][];
@@ -73,6 +75,8 @@ namespace FamiStudio
             quit = false;
             bufferFill = bufferFillCallback;
             streamStarting = streamStartCallback;
+            samples = null;
+            samplesOffset = 0;
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
 
@@ -90,6 +94,8 @@ namespace FamiStudio
 
             bufferFill = null;
             streamStarting = null;
+            samples = null;
+            samplesOffset = 0;
         }
 
         private void DebugStream()
@@ -105,18 +111,20 @@ namespace FamiStudio
         private unsafe void PlayAsync()
         {
             var streamStarted = false;
-            var initBufferIdx = buffers.Length - 1;
+            var done = false;
+            var bufferSampleCount = bufferSizeBytes / sizeof(short);
+            var bufferSamples = new short[bufferSampleCount];
 
             while (!quit)
             {
-                int numProcessed = 0;
+                int numBuffersToFill = 0;
 
-                if (initBufferIdx < 0)
+                if (streamStarted)
                 {
                     do
                     {
-                        AL.GetSource(source, AL.BuffersProcessed, out numProcessed);
-                        if (numProcessed != 0) break;
+                        AL.GetSource(source, AL.BuffersProcessed, out numBuffersToFill);
+                        if (numBuffersToFill != 0) break;
                         if (quit) return;
                         Thread.Sleep(1);
                     }
@@ -124,32 +132,61 @@ namespace FamiStudio
                 }
                 else
                 {
-                    numProcessed = initBufferIdx + 1;
+                    numBuffersToFill = buffers.Length;
                 }
 
-                // MATTT : Change this logic to handle smaller buffers, like we do for portaudio and xaudio2.
-                for (int i = 0; i < numProcessed && !quit; )
+                for (int i = 0; i < numBuffersToFill && !quit; )
                 {
-                    var data = bufferFill(out var done); // MATTT
-                    if (data != null)
+                    int bufferId = streamStarted ? AL.SourceUnqueueBuffer(source) : buffers[i];
+                    var bufferSamplesOffset = 0;
+
+                    do
                     {
-                        int bufferId = initBufferIdx >= 0 ? buffers[initBufferIdx--] : AL.SourceUnqueueBuffer(source);
-                        fixed (short* p = &data[0])
-                            AL.BufferData(bufferId, stereo ? AL.Stereo16 : AL.Mono16, new IntPtr(p), data.Length * sizeof(short), freq);
-                        AL.SourceQueueBuffer(source, bufferId);
-                        i++;
-                    }
-                    else
-                    {
-                        // MATTT : Mutex with Stop() to avoid 2 threads stopping.
-                        if (done)
+                        if (samplesOffset == 0)
                         {
-                            // MATTT : Cant call stop, it doesnt process the remaining buffer. Must wait until numProcessed == numBuffers to stop.
-                            AL.SourceStop(source);
-                            return;
+                            while (true)
+                            {
+                                var newSamples = bufferFill(out done);
+                                
+                                // If we are done, pad the last buffer with zeroes so the stream can start
+                                // for super-short (ex: 1-frame) non-looping songs.
+                                if (done)
+                                {
+                                    // MATTT : Cant call stop, it doesnt process the remaining buffer. Must wait until numProcessed == numBuffers to stop.
+                                    //AL.SourceStop(source);
+                                     newSamples = new short[bufferSampleCount - samplesOffset];
+                                }
+
+                                if (newSamples != null)
+                                {
+                                    samples = newSamples;
+                                    break;
+                                }
+                                
+                                if (quit)
+                                    return;
+                                
+                                Thread.Sleep(1);
+                            }
                         }
-                        Thread.Sleep(1);
+
+                        var numSamplesToCopy = samples.Length - samplesOffset;
+                        numSamplesToCopy = Math.Min(bufferSampleCount - bufferSamplesOffset, numSamplesToCopy);
+                        Array.Copy(samples, samplesOffset, bufferSamples, bufferSamplesOffset, numSamplesToCopy);
+                        
+                        samplesOffset += numSamplesToCopy;
+                        if (samplesOffset == samples.Length)
+                            samplesOffset = 0;
+
+                        bufferSamplesOffset += numSamplesToCopy;
                     }
+                    while (bufferSamplesOffset < bufferSampleCount);
+
+                    fixed (short* p = &bufferSamples[0])
+                        AL.BufferData(bufferId, stereo ? AL.Stereo16 : AL.Mono16, new IntPtr(p), bufferSamples.Length * sizeof(short), freq);
+
+                    AL.SourceQueueBuffer(source, bufferId);
+                    i++;
                 }
 
                 //DebugStream();

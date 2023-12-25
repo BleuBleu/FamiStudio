@@ -193,7 +193,7 @@ namespace FamiStudio
         // Audio section
         // MATTT : Tweak and re-test all of this.
         const int DefaultNumBufferedFrames = 2;
-        const int DefaultAudioBufferSize = Platform.IsLinux ? 50 : Platform.IsAndroid ? 30 : 40;
+        const int DefaultAudioBufferSize = Platform.IsLinux ? 60 : 30;
         const int EmulationThreadCpuScoreThreshold = 100;
 
         public static int AudioBufferSize = DefaultAudioBufferSize;
