@@ -51,9 +51,9 @@ namespace FamiStudio
             return 1.0f;
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
         {
-            return new AndroidAudioStream(rate, stereo, bufferSizeMs, bufferFillCallback);
+            return AndroidAudioStream.Create(rate, stereo, bufferSizeMs);
         }
 
         public static IVideoEncoder CreateVideoEncoder()

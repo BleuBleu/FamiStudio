@@ -584,14 +584,14 @@ namespace FamiStudio
                 var t1 = Platform.TimeSeconds();
                 var score = 1.0f / (float)(t1 - t0);
 
-                Trace.WriteLine($"CPU benchmark iteration score {score} {sum}");
+                Console.WriteLine($"CPU benchmark iteration score {score} {sum}");
 
                 bestScore = Math.Max(bestScore, score);
 
                 Thread.Sleep(1);
             }
 
-            Trace.WriteLine($"CPU benchmark best score {bestScore}");
+            Console.WriteLine($"CPU benchmark best score {bestScore}");
 
             return bestScore;
         }

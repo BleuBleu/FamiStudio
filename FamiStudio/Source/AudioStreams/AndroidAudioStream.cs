@@ -1,7 +1,10 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Media;
+using Android.Renderscripts;
 using System;
+using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
 
 using Debug = System.Diagnostics.Debug;
@@ -10,45 +13,62 @@ namespace FamiStudio
 {
     public class AndroidAudioStream : IAudioStream
     {
-        public bool IsPlaying => playingTask != null;
+        // Wrapping in a class so that assignment is atomic.
+        private class ImmediateData
+        {
+            public int samplesOffset = 0;
+            public int sampleRate = 0;
+            public short[] samples = null;
+        }
 
         private GetBufferDataCallback bufferFill;
         private bool quit;
         private bool stereo;
         private AudioTrack audioTrack;
-        private AudioTrack audioTrackImmediate;
         private Task playingTask;
         private int inputSampleRate;
         private int outputSampleRate;
         private short[] lastSamples;
         private double resampleIndex = 0.0;
+        private volatile ImmediateData immediateData = null;
 
-        public AndroidAudioStream(int rate, bool inStereo, int bufferSizeMs, GetBufferDataCallback bufferFillCallback)
+        public bool IsPlaying => playingTask != null;
+        public bool Stereo => stereo;
+
+        private AndroidAudioStream()
+        {
+        }
+
+        public static AndroidAudioStream Create(int rate, bool inStereo, int bufferSizeMs)
         {
             // Probably not needed, but i've seen things about effects in the log that
             // worries me. Doesnt hurt.
             AudioManager am = (AudioManager)Application.Context.GetSystemService(Context.AudioService);
             am.UnloadSoundEffects();
 
-            stereo = inStereo;
-            inputSampleRate = rate;
-            outputSampleRate = int.Parse(am.GetProperty(AudioManager.PropertyOutputSampleRate), CultureInfo.InvariantCulture);
+            var stream = new AndroidAudioStream();
 
-            bufferFill = bufferFillCallback;
+            stream.stereo = inStereo;
+            stream.inputSampleRate = rate;
+            stream.outputSampleRate = int.Parse(am.GetProperty(AudioManager.PropertyOutputSampleRate), CultureInfo.InvariantCulture);
+            
+            var bufferSizeBytes = Utils.RoundUp(stream.outputSampleRate * bufferSizeMs / 1000 * sizeof(short) * (stream.stereo ? 2 : 1), sizeof(short) * 2);
 
-            // MATTT : Port to new behavior : buffer size, delayed start, etc.
-            audioTrack = new AudioTrack.Builder()
+            stream.audioTrack = new AudioTrack.Builder()
                 .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
-                .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(outputSampleRate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(stereo ? ChannelOut.Stereo : ChannelOut.Mono).Build())
+                .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(stream.outputSampleRate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(stream.stereo ? ChannelOut.Stereo : ChannelOut.Mono).Build())
                 .SetTransferMode(AudioTrackMode.Stream)
                 .SetPerformanceMode(AudioTrackPerformanceMode.LowLatency)
-                .SetBufferSizeInBytes(bufferSizeInBytes).Build();
+                .SetBufferSizeInBytes(bufferSizeBytes).Build();
 
-                Debug.Assert(audioTrack.PerformanceMode == AudioTrackPerformanceMode.LowLatency);
+            Debug.Assert(stream.audioTrack.PerformanceMode == AudioTrackPerformanceMode.LowLatency);
+
+            return stream;
         }
 
-        public void Start()
+        public void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
+            bufferFill = bufferFillCallback;
             lastSamples = null;
             resampleIndex = 0.0;
             quit = false;
@@ -56,15 +76,19 @@ namespace FamiStudio
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
 
-        public void Stop()
+        public void Stop(bool abort)
         {
-            if (playingTask != null)
+            lock (this)
             {
-                quit = true;
-                playingTask.Wait();
-                playingTask = null;
+                if (playingTask != null)
+                {
+                    quit = true;
+                    playingTask.Wait();
+                    playingTask = null;
+                }
+
+                audioTrack.Stop();
             }
-            audioTrack.Stop();
         }
 
         private unsafe void PlayAsync()
@@ -72,23 +96,52 @@ namespace FamiStudio
             while (!quit)
             {
                 // Write will block if the buffer is full. If only all streams were this easy!
-                var newSamples = bufferFill();
+                var newSamples = bufferFill(out var done);
                 if (newSamples != null)
                 {
                     lastSamples = WaveUtils.ResampleStream(lastSamples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
+                    lastSamples = MixImmediateData(lastSamples, lastSamples == newSamples); // Samples are read-only, need to duplicate if we didn't resample.
+
+                    // MATTT : Read the doc to see how blocking really works.
                     audioTrack.Write(lastSamples, 0, lastSamples.Length, WriteMode.Blocking);
                 }
                 else
                 {
+                    if (done)
+                    {
+                        Stop(false);
+                        return;
+                    }
+
                     Debug.WriteLine("Starvation!");
                     System.Threading.Thread.Sleep(4);
                 }
             }
         }
 
+        short[] MixImmediateData(short[] samples, bool duplicate)
+        {
+            // Mix in immediate data if any, storing in variable since main thread can change it anytime.
+            var immData = immediateData;
+            if (immData != null && immData.samplesOffset < immData.samples.Length)
+            {
+                var channelCount = stereo ? 2 : 1;
+                var sampleCount = Math.Min(samples.Length, (immData.samples.Length - immData.samplesOffset) * channelCount);
+                var outputSamples = duplicate ? (short[])samples.Clone() : samples;
+
+                for (int i = 0, j = immData.samplesOffset; i < sampleCount; i++, j += (i % channelCount) == 0 ? 1 : 0)
+                    outputSamples[i] = (short)Math.Clamp(samples[i] + immData.samples[j], short.MinValue, short.MaxValue);
+
+                immData.samplesOffset += sampleCount / channelCount;
+                return outputSamples;
+            }
+
+            return samples;
+        }
+
         public void Dispose()
         {
-            Stop();
+            Stop(true);
             StopImmediate();
 
             audioTrack.Release();
@@ -98,42 +151,35 @@ namespace FamiStudio
 
         private void StopImmediate()
         {
-            if (audioTrackImmediate != null)
-            {
-                audioTrackImmediate.Stop();
-                audioTrackImmediate.Release();
-                audioTrackImmediate.Dispose();
-                audioTrackImmediate = null;
-            }
+            immediateData = null;
         }
 
-        public void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0)
+        public void PlayImmediate(short[] samples, int sampleRate, float volume, int channel = 0)
         {
+            Debug.Assert(Platform.IsInMainThread());
+
             StopImmediate();
 
-			// MATTT : Mix with regular stream, dont create a new track just for that.
-            audioTrackImmediate = new AudioTrack.Builder()
-                .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
-                .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(sampleRate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(ChannelOut.Mono).Build())
-                .SetTransferMode(AudioTrackMode.Static)
-                .SetBufferSizeInBytes(data.Length * sizeof(short)).Build();
-
-            // Volume adjustment
+            // Cant find volume adjustment in port audio.
             short vol = (short)(volume * 32768);
 
-            var immediateStreamData = new short[data.Length];
-            for (int i = 0; i < data.Length; i++)
-                immediateStreamData[i] = (short)((data[i] * vol) >> 15);
+            var adjustedSamples = new short[samples.Length];
+            for (int i = 0; i < samples.Length; i++)
+                adjustedSamples[i] = (short)((samples[i] * vol) >> 15);
 
-            audioTrackImmediate.Write(immediateStreamData, 0, immediateStreamData.Length);
-            audioTrackImmediate.Play();
+            var data = new ImmediateData();
+            data.sampleRate = sampleRate;
+            data.samplesOffset = 0;
+            data.samples = WaveUtils.ResampleBuffer(adjustedSamples, sampleRate, outputSampleRate, false);
+            immediateData = data;
         }
 
         public int ImmediatePlayPosition
         {
             get
             {
-                return audioTrackImmediate != null && audioTrackImmediate.PlayState == PlayState.Playing && audioTrackImmediate.PlaybackHeadPosition < audioTrackImmediate.BufferSizeInFrames ? audioTrackImmediate.PlaybackHeadPosition : -1;
+                var data = immediateData;
+                return data != null && data.samplesOffset < data.samples.Length ? data.samplesOffset * data.sampleRate / outputSampleRate : -1;
             }
         }
     }

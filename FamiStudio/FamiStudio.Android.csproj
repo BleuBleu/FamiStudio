@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0-android33.0</TargetFramework>
+    <TargetFramework>net7.0-android</TargetFramework>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
     <MapFileExtensions>true</MapFileExtensions>
     <SupportUrl>https://twitter.com/nesbleubleu</SupportUrl>
@@ -21,6 +20,8 @@
     <EnableNETAnalyzers>False</EnableNETAnalyzers>
     <AnalysisLevel>6.0</AnalysisLevel>
     <RootNamespace>FamiStudio</RootNamespace>
+    <CheckEolWorkloads>false</CheckEolWorkloads>
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
