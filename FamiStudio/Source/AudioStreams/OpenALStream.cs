@@ -82,24 +82,32 @@ namespace FamiStudio
 
         public void Stop(bool abort)
         {
+            StopInternal(abort, true);
+        }
+
+        private void StopInternal(bool abort, bool mainThread)
+        {
             lock (this)
             {
-                // Stop can be called from the task itself for non-looping song so we 
-                // need a mutex and we dont want to wait for the task if we are the task.
-                if (Platform.IsInMainThread() && playingTask != null)
+                if (playingTask != null)
                 {
-                    quit = true;
-                    playingTask.Wait();
+                    // Stop can be called from the task itself for non-looping song so we 
+                    // need a mutex and we dont want to wait for the task if we are the task.
+                    if (mainThread)
+                    {
+                        quit = true;
+                        playingTask.Wait();
+                    }
+
+                    AL.SourceStop(source);
+                    AL.Source(source, AL.Buffer, 0);
+
+                    playingTask = null;
+                    bufferFill = null;
+                    streamStarting = null;
+                    samples = null;
+                    samplesOffset = 0;
                 }
-
-                AL.SourceStop(source);
-                AL.Source(source, AL.Buffer, 0);
-
-                playingTask = null;
-                bufferFill = null;
-                streamStarting = null;
-                samples = null;
-                samplesOffset = 0;
             }
         }
 
@@ -222,7 +230,7 @@ namespace FamiStudio
 
                         if (numQueued == numProcessed)
                         {
-                            Stop(false);
+                            StopInternal(false, false);
                             return;
                         }
                     }

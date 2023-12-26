@@ -24,8 +24,10 @@ x Rename "Bitmap" to "Texture"
 		- OpenAL: Considers # buffers, ignores buffer size (queues entire frame all the time)
 		- PortAudio: You suggest a latency, and stream-specific info can have more params. You can specify "frames per buffer", but not recommended.
 		- Android: Only takes buffer size into account. You cant configure the # of buffers.
-	- Port + test other streams.
+	/ Port + test other streams.
+		- Android : Read on non-blocking + run short/1-frame tests.
 	- Cleanup "EmulateFrame" mess.
+	- Cleanup MATTT
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 x Fix that bug where patterns are modified twice if you select 2 instances

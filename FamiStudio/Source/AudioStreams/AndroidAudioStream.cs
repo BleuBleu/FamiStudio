@@ -22,7 +22,7 @@ namespace FamiStudio
         }
 
         private GetBufferDataCallback bufferFill;
-        private bool quit;
+        private volatile bool quit;
         private bool stereo;
         private AudioTrack audioTrack;
         private Task playingTask;
@@ -76,18 +76,28 @@ namespace FamiStudio
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
 
-        public void Stop(bool abort)
+        public void Stop(bool abort) // MATTT : Is abort needed still?
+        {
+            StopInternal(abort, true);
+        }
+
+        private void StopInternal(bool abort, bool mainThread)
         {
             lock (this)
             {
                 if (playingTask != null)
                 {
-                    quit = true;
-                    playingTask.Wait();
+                    // Stop can be called from the task itself for non-looping song so we 
+                    // need a mutex and we dont want to wait for the task if we are the task.
+                    if (mainThread)
+                    {
+                        quit = true;
+                        playingTask.Wait();
+                    }
+
+                    audioTrack.Stop();
                     playingTask = null;
                 }
-
-                audioTrack.Stop();
             }
         }
 
@@ -109,7 +119,7 @@ namespace FamiStudio
                 {
                     if (done)
                     {
-                        Stop(false);
+                        StopInternal(false, false);
                         return;
                     }
 
