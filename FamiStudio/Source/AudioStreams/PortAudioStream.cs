@@ -401,7 +401,14 @@ namespace FamiStudio
         public void Stop(bool abort)
         {
             StopImmediate();
-            play = false;
+
+            // The play flag can only be toggle when we arent inside the callback,
+            // otherwise, we may return immediately, then the callback may call
+            // bufferFill() after the stream has been stopped.
+            lock (this)
+            {
+                play = false;
+            }
         }
 
         public void Dispose()
@@ -430,49 +437,52 @@ namespace FamiStudio
             if (stereo)
 	            sampleCount *= 2;
 
-            if (play)
+            lock (this)
             {
-                do
+                if (play)
                 {
-                    if (samplesOffset == 0)
+                    do
                     {
-                        while (true)
+                        if (samplesOffset == 0)
                         {
-                            var newSamples = bufferFill(out var done);
-
-                            if (done)
+                            while (true)
                             {
-                                // If we are done, pad the last buffer with zeros.
-                                newSamples = new short[sampleCount - samplesOffset];
-                                play = false;
-                            }
+                                var newSamples = bufferFill(out var done);
 
-                            if (newSamples != null)
-                            {
-                                samples = WaveUtils.ResampleStream(samples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
-                                samples = MixImmediateData(samples, samples == newSamples); // Samples are read-only, need to duplicate if we didn't resample.
-                                break;
-                            }
+                                if (done)
+                                {
+                                    // If we are done, pad the last buffer with zeros.
+                                    newSamples = new short[sampleCount - samplesOffset];
+                                    play = false;
+                                }
 
-                            Pa_Sleep(0);
+                                if (newSamples != null)
+                                {
+                                    samples = WaveUtils.ResampleStream(samples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
+                                    samples = MixImmediateData(samples, samples == newSamples); // Samples are read-only, need to duplicate if we didn't resample.
+                                    break;
+                                }
+
+                                Pa_Sleep(0);
+                            }
                         }
+
+                        var numSamplesToCopy = (int)Math.Min(sampleCount, samples.Length - samplesOffset);
+                        Marshal.Copy(samples, samplesOffset, outPtr, numSamplesToCopy);
+
+                        samplesOffset += numSamplesToCopy;
+                        if (samplesOffset == samples.Length)
+                            samplesOffset = 0;
+
+                        outPtr = IntPtr.Add(outPtr, numSamplesToCopy * sizeof(short));
+                        sampleCount = (uint)(sampleCount - numSamplesToCopy);
                     }
-
-                    var numSamplesToCopy = (int)Math.Min(sampleCount, samples.Length - samplesOffset);
-                    Marshal.Copy(samples, samplesOffset, outPtr, numSamplesToCopy);
-
-                    samplesOffset += numSamplesToCopy;
-                    if (samplesOffset == samples.Length)
-                        samplesOffset = 0;
-
-                    outPtr = IntPtr.Add(outPtr, numSamplesToCopy * sizeof(short));
-                    sampleCount = (uint)(sampleCount - numSamplesToCopy);
+                    while (sampleCount != 0);
                 }
-                while (sampleCount != 0);
-            }
-            else
-            {
-                Platform.ZeroMemory(output, (int)sampleCount * sizeof(short));
+                else
+                {
+                    Platform.ZeroMemory(output, (int)sampleCount * sizeof(short));
+                }
             }
 
             return PaStreamCallbackResult.Continue;
