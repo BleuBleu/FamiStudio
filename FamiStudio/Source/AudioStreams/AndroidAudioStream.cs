@@ -46,20 +46,26 @@ namespace FamiStudio
             AudioManager am = (AudioManager)Application.Context.GetSystemService(Context.AudioService);
             am.UnloadSoundEffects();
 
+            // To allow low-latency, we must output direct in the device sample rate,
+            // we'll handle the conversion ourselves.
+            var deviceSampleRate = int.Parse(am.GetProperty(AudioManager.PropertyOutputSampleRate), CultureInfo.InvariantCulture); ;
+            var minBufferSizeInFrames = int.Parse(am.GetProperty(AudioManager.PropertyOutputFramesPerBuffer), CultureInfo.InvariantCulture);
+
             var stream = new AndroidAudioStream();
 
             stream.stereo = inStereo;
             stream.inputSampleRate = rate;
-            stream.outputSampleRate = int.Parse(am.GetProperty(AudioManager.PropertyOutputSampleRate), CultureInfo.InvariantCulture);
-            
-            var bufferSizeBytes = Utils.RoundUp(stream.outputSampleRate * bufferSizeMs / 1000 * sizeof(short) * (stream.stereo ? 2 : 1), sizeof(short) * 2);
+            stream.outputSampleRate = deviceSampleRate;
+
+            var bufferSizeInFrames = Utils.RoundUp(stream.outputSampleRate * bufferSizeMs / 1000, 2); // Keep even
+            var bufferSizeInBytes = Math.Max(minBufferSizeInFrames, bufferSizeInFrames) * sizeof(short) * (stream.stereo ? 2 : 1);
 
             stream.audioTrack = new AudioTrack.Builder()
                 .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
                 .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(stream.outputSampleRate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(stream.stereo ? ChannelOut.Stereo : ChannelOut.Mono).Build())
                 .SetTransferMode(AudioTrackMode.Stream)
                 .SetPerformanceMode(AudioTrackPerformanceMode.LowLatency)
-                .SetBufferSizeInBytes(bufferSizeBytes).Build();
+                .SetBufferSizeInBytes(bufferSizeInBytes).Build();
 
             Debug.Assert(stream.audioTrack.PerformanceMode == AudioTrackPerformanceMode.LowLatency);
 
@@ -149,7 +155,7 @@ namespace FamiStudio
 
         public void Dispose()
         {
-            Stop(true);
+            Stop();
             StopImmediate();
 
             audioTrack.Release();

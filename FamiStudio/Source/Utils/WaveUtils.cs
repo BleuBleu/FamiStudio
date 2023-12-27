@@ -49,7 +49,6 @@ namespace FamiStudio
             }
         }
 
-        // MATTT : Test if curr only have 1 sample. Could technically happen in non-looping song.
         static public short[] ResampleStream(short[] prev, short[] curr, int inputRate, int outputRate, bool stereo, ref double sampleIndex)
         {
             if (inputRate == outputRate)
