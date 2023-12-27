@@ -102,43 +102,41 @@ namespace FamiStudio
             return output;
         }
 
-        // MATTT : Remove the ToArray(). 
         static public short[] ResampleBuffer(short[] source, int inputRate, int outputRate, bool stereo)
         {
             var ratio = inputRate / (double)outputRate;
-            var output = new List<short>();
             var sampleIndex = 0.0;
             var channelCount = stereo ? 2 : 1;
-            var frameCount = source.Length / channelCount;
+            var inputFrameCount = source.Length / channelCount;
+            var outputFrameCount = (int)(inputFrameCount / ratio);
+            var output = new short[outputFrameCount * channelCount];
 
-            while (true)
+            for (var i = 0; i < outputFrameCount * channelCount; i += channelCount)
             {
                 var alpha = Math.Abs(Utils.Frac(sampleIndex));
-                var idx0 = (int)Math.Floor(sampleIndex);
-                var idx1 = (int)Math.Ceiling(sampleIndex);
+
+                var idx0 = Math.Min((int)Math.Floor  (sampleIndex), inputFrameCount - 1) * channelCount;
+                var idx1 = Math.Min((int)Math.Ceiling(sampleIndex), inputFrameCount - 1) * channelCount;
 
                 {
-                    var s0 = source[Math.Min(idx0, frameCount - 1) * channelCount + 0];
-                    var s1 = source[Math.Min(idx1, frameCount - 1) * channelCount + 0];
+                    var s0 = source[idx0];
+                    var s1 = source[idx1];
 
-                    output.Add((short)Utils.Lerp(s0, s1, alpha));
+                    output[i] = (short)Utils.Lerp(s0, s1, alpha);
                 }
 
                 if (stereo)
                 {
-                    var s0 = source[Math.Min(idx0, frameCount - 1) * channelCount + 1];
-                    var s1 = source[Math.Min(idx1, frameCount - 1) * channelCount + 1];
+                    var s0 = source[idx0 + 1];
+                    var s1 = source[idx1 + 1];
 
-                    output.Add((short)Utils.Lerp(s0, s1, alpha));
+                    output[i + 1] = (short)Utils.Lerp(s0, s1, alpha);
                 }
-
-                if (idx1 >= source.Length)
-                    break;
 
                 sampleIndex += ratio;
             }
 
-            return output.ToArray();
+            return output;
         }
 
         static public void Normalize(short[] wav)

@@ -122,7 +122,6 @@ namespace FamiStudio
         // Sound tooltips
         LocalizedString AudioBufferSizeTooltip;
         LocalizedString NumBufferedFramesTooltip;
-        LocalizedString LatencyTooltip;
         LocalizedString StopInstrumentTooltip;
         LocalizedString PreventPoppingTooltip;
         LocalizedString N163MixerTooltip;
@@ -328,8 +327,8 @@ namespace FamiStudio
                 }
                 case ConfigSection.Sound:
                 {
-                    page.AddNumericUpDown(AudioBufferSizeLabel.Colon, Settings.AudioBufferSize, 1, 500, 1, AudioBufferSizeTooltip.ToString() + LatencyTooltip.ToString()); // 0
-                    page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedFrames, 0, 16, 1, NumBufferedFramesTooltip.ToString() + LatencyTooltip.ToString()); // 1
+                    page.AddNumericUpDown(AudioBufferSizeLabel.Colon, Settings.AudioBufferSize, 1, 500, 1, AudioBufferSizeTooltip); // 0
+                    page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedFrames, 0, 16, 1, NumBufferedFramesTooltip); // 1
                     page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 2
                     page.AddCheckBox(PreventPoppingLabel.Colon, Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 3
                     page.AddCheckBox(MixN163Label.Colon, Settings.N163Mix, N163MixerTooltip); // 4

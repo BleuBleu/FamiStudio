@@ -15,15 +15,7 @@ x When using shy mode, we could make the patterns larger if there is room.
 x Rename "Bitmap" to "Texture"
 - FDS automod
 / Latency improvements:
-	- Notes on each stream type:
-		- XAudio2: Takes buffer size + num into account.
-		- OpenAL: Considers # buffers, ignores buffer size (queues entire frame all the time)
-		- PortAudio: You suggest a latency, and stream-specific info can have more params. You can specify "frames per buffer", but not recommended.
-		- Android: Only takes buffer size into account. You cant configure the # of buffers.
-	/ Port + test other streams.
-		- Android : Read on non-blocking + run short/1-frame tests.
-	- Cleanup MATTT
-	- Make sure array == array only compares the object pointers.
+	- Android : Run short/1-frame tests.
 - Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
 	https://discord.com/channels/@me/819772561940152321/1187597131859636276
 - FDS filtering (expose the cutoff frequency for all expansions, set default to 2000 for FDS)
