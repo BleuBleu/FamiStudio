@@ -1,9 +1,13 @@
 4.2.0 Brainstorm
 =================
 x Review OpenGL 3.3 requirements, can we lower this to 3.2, 3.1, 3.0?
-x Upgrade Windows to .NET 6.0
+x Upgrade Windows to .NET 7.0
+	- Windows (need internet connection)
+	- Linux
+	- MacOS (change/test main.command script)
+	- Update download links in doc
 / Switch to .NET for Android too.
-	- Test debug/release 
+	x Test debug/release 
 	- Setup keystore, etc.
 	- Bring back APK
 / Instrument folders + collapse entire sections (samples, arps, etc.) 
@@ -13,10 +17,6 @@ x When using shy mode, we could make the patterns larger if there is room.
 - Video export improvements:
 	- Test/Make it work on mobile.
 x Rename "Bitmap" to "Texture"
-- Undo acciental changes to demo songs (shovel, JTS, etc.)
-- Size option for mobile piano
-- Finish/fix phase reset support
-	=> option to fully emulation from start.
 - FDS automod
 / Latency improvements:
 	- Notes on each stream type:
@@ -28,6 +28,11 @@ x Rename "Bitmap" to "Texture"
 		- Android : Read on non-blocking + run short/1-frame tests.
 	- Cleanup "EmulateFrame" mess.
 	- Cleanup MATTT
+	- Make sure array == array only compares the object pointers.
+- Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
+	https://discord.com/channels/@me/819772561940152321/1187597131859636276
+- FDS filtering (expose the cutoff frequency for all expansions, set default to 2000 for FDS)
+- Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 x Fix that bug where patterns are modified twice if you select 2 instances
@@ -40,17 +45,17 @@ x Fix that bug where patterns are modified twice if you select 2 instances
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated.
 	https://discord.com/channels/@me/1093046594062004286/1183464431674470570
-- Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
-	https://discord.com/channels/@me/819772561940152321/1187597131859636276
 - Is export setting DPI scaling at 100% when exporting, does it affect the whole UI?
 	https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104
 - Dont publish for chromebooks
-- FDS filtering (expose the cutoff frequency for all expansions, set default to 2000 for FDS)
-- Can we keep undo/redo buttons on screen to 1280px? Like hide metronome, etc.
-4.2.0 Testing
-=============
+- Finish/fix phase reset support
+	=> option to fully emulation from start.
+
+4.2.0 Testing/Packaging
+=======================
 - Test all project explorer buttons with folders. Make sure no offsets.
-- 
+- Undo acciental changes to demo songs (shovel, JTS, etc.)
+- Make sure PortAudio.dll is included in portable + setup.
 
 Later
 =====
@@ -152,17 +157,15 @@ Discord
 
 Backlog: 
 =========
+- Can we keep undo/redo buttons on screen to 1280px? Like hide metronome, etc.
 - A way to view the preview effect value (grey rectangle). Either draw it on the left edge, or in the piano roll tolltip.
 	https://discord.com/channels/@me/819772561940152321/1157075515199475732
 - Bug import N163 instruments
 	https://discord.com/channels/@me/819772561940152321/1154660603617607741
 - Low slide notes going down + arp going up = glitch. Fix idea : Internally modify the arp to make it less strong based on slide range (ex: div by 4 if doing down 2 octaves).
   https://discord.com/channels/747649221879922840/1024388342210642150/1147714295581388910
-- MacOS sound glitches out after a while (doesnt happen here on BigSur)
-	https://discord.com/channels/@me/819772561940152321/1146697308545753108
 - Android encoder bitrate is messed up.
 - Piano roll video compression issues?
-- "Comment" box in project. Proto DM
 - When multiple VRC7 instrument all use patch 0 at same time (like on first note), they all upload it. Its stupid. Only the first one should, or something like that.
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
@@ -194,7 +197,7 @@ Backlog:
 - Weird shift when using an external display with different scaling (ex: 100% vs 150%)
 - Add effect to select N163 wave. How does it react in FT.
 - Full range volume for expansions?
-- Different aspect ratios for video export?
+- Different aspect ratios for video export? Somebody asked for square
 - Improve linux file dialog (Steo feedback)
 - Hold SHIFT+click for multiple delete.
 - Idea from perkka "When an instrument is selected. Have the channels thats not supported by it slightly faded out, or the channel names that support it in bold or something"
