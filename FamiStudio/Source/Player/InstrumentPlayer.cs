@@ -83,7 +83,7 @@ namespace FamiStudio
                 emulationThread.Start();
             }
 
-            audioStream.Stop(true); // Extra safety
+            audioStream.Stop(); // Extra safety
             audioStream.Start(AudioBufferFillCallback, AudioStreamStartingCallback);
         }
 
@@ -102,7 +102,7 @@ namespace FamiStudio
                 }
             }
 
-            audioStream?.Stop(true);
+            audioStream?.Stop();
             emulationQueue?.Clear();
             channelStates = null;
         }

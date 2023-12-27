@@ -93,7 +93,7 @@ namespace FamiStudio
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
 
-        public void Stop(bool abort)
+        public void Stop()
         {
             StopImmediate();
 
@@ -133,7 +133,7 @@ namespace FamiStudio
 
         public void Dispose()
         {
-            Stop(true);
+            Stop();
 
             for (int i = 0; i < audioBuffersRing.Length; i++)
             {
@@ -170,7 +170,7 @@ namespace FamiStudio
                         break;
                     }
 
-                    var buffer = memBuffers[bufferIndex];
+                    vaStopr buffer = memBuffers[bufferIndex];
                     var bufferSampleCount = buffer.Size / sizeof(short);
                     var bufferPtr = buffer.Pointer;
 

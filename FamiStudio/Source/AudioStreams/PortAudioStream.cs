@@ -398,7 +398,7 @@ namespace FamiStudio
             play = true;
         }
 
-        public void Stop(bool abort)
+        public void Stop()
         {
             StopImmediate();
 
@@ -413,7 +413,7 @@ namespace FamiStudio
 
         public void Dispose()
         {
-            Stop(true);
+            Stop();
 
             if (stream != IntPtr.Zero)
             {

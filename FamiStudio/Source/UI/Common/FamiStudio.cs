@@ -1622,7 +1622,7 @@ namespace FamiStudio
 
             if (shutdownStream && songStream != null)
             {
-                songStream.Stop(true); // MATTT : Abort?
+                songStream.Stop();
                 songStream.Dispose();
                 songStream = null;
             }
@@ -1632,7 +1632,7 @@ namespace FamiStudio
         {
             if (instrumentPlayer != null)
             {
-                instrumentPlayer.Stop(true);
+                instrumentPlayer.Stop();
                 instrumentPlayer.Shutdown();
                 instrumentPlayer = null;
                 PianoRoll.HighlightPianoNote(Note.NoteInvalid);
@@ -1640,7 +1640,7 @@ namespace FamiStudio
 
             if (shutdownStream && instrumentStream != null)
             {
-                instrumentStream.Stop(true);   
+                instrumentStream.Stop();   
                 instrumentStream.Dispose(); 
                 instrumentStream = null;    
             }

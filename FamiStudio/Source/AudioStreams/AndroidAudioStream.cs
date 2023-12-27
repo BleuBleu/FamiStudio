@@ -76,12 +76,12 @@ namespace FamiStudio
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
 
-        public void Stop(bool abort) // MATTT : Is abort needed still?
+        public void Stop()
         {
-            StopInternal(abort, true);
+            StopInternal(true);
         }
 
-        private void StopInternal(bool abort, bool mainThread)
+        private void StopInternal(bool mainThread)
         {
             lock (this)
             {
@@ -111,15 +111,13 @@ namespace FamiStudio
                 {
                     lastSamples = WaveUtils.ResampleStream(lastSamples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
                     lastSamples = MixImmediateData(lastSamples, lastSamples == newSamples); // Samples are read-only, need to duplicate if we didn't resample.
-
-                    // MATTT : Read the doc to see how blocking really works.
                     audioTrack.Write(lastSamples, 0, lastSamples.Length, WriteMode.Blocking);
                 }
                 else
                 {
                     if (done)
                     {
-                        StopInternal(false, false);
+                        StopInternal(false);
                         return;
                     }
 

@@ -80,12 +80,12 @@ namespace FamiStudio
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
 
-        public void Stop(bool abort)
+        public void Stop()
         {
-            StopInternal(abort, true);
+            StopInternal(true);
         }
 
-        private void StopInternal(bool abort, bool mainThread)
+        private void StopInternal(bool mainThread)
         {
             lock (this)
             {
@@ -230,7 +230,7 @@ namespace FamiStudio
 
                         if (numQueued == numProcessed)
                         {
-                            StopInternal(false, false);
+                            StopInternal(false);
                             return;
                         }
                     }

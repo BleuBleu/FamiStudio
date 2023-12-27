@@ -44,7 +44,7 @@ namespace FamiStudio
                 BeginPlaySong(song, pal, frame);
             }
 
-            audioStream.Stop(true); // Extra safety
+            audioStream.Stop(); // Extra safety
             audioStream.Start(AudioBufferFillCallback, AudioStreamStartingCallback);
         }
 
@@ -64,7 +64,7 @@ namespace FamiStudio
                 }
             }
 
-            audioStream?.Stop(true);
+            audioStream?.Stop();
 
             if (UsesEmulationThread)
             {

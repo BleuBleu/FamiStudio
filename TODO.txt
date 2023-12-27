@@ -2,10 +2,6 @@
 =================
 x Review OpenGL 3.3 requirements, can we lower this to 3.2, 3.1, 3.0?
 x Upgrade Windows to .NET 7.0
-	- Windows (need internet connection)
-	- Linux
-	- MacOS (change/test main.command script)
-	- Update download links in doc
 / Switch to .NET for Android too.
 	x Test debug/release 
 	- Setup keystore, etc.
@@ -26,7 +22,6 @@ x Rename "Bitmap" to "Texture"
 		- Android: Only takes buffer size into account. You cant configure the # of buffers.
 	/ Port + test other streams.
 		- Android : Read on non-blocking + run short/1-frame tests.
-	- Cleanup "EmulateFrame" mess.
 	- Cleanup MATTT
 	- Make sure array == array only compares the object pointers.
 - Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?

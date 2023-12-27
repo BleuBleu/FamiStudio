@@ -16,7 +16,7 @@ namespace FamiStudio
         int ImmediatePlayPosition { get; }
 
         void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback);
-        void Stop(bool abort);
+        void Stop();
         void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0);
     }
 }

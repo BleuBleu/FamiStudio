@@ -173,7 +173,7 @@ namespace FamiStudio
                     emulationThread.Join();
             }
 
-            audioStream?.Stop(false); // MATTT : Abort?
+            audioStream?.Stop();
             audioStream = null;
         }
 
