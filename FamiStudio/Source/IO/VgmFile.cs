@@ -78,19 +78,19 @@ namespace FamiStudio
         {   //This is a mess, works somehow tho
             var project = song.Project.DeepClone();
             song = project.GetSong(song.Id);
-            var regPlayer = new RegisterPlayer(project.OutputsStereoAudio);
+            var regPlayer = new RegisterPlayer(project.PalMode, project.OutputsStereoAudio);
             int OGSongLength;
             int numDPCMBanks = (!project.UsesMultipleDPCMBanks &&
             project.GetPackedSampleData(0).Length <= 16384) ?
             1 : project.AutoAssignSamplesBanks(16384, out _);
             var sampleBanks = new Dictionary<int, int>();
             foreach (var sample in project.Samples) sampleBanks.Add(sample.Id, sample.Bank);
-            var writes = regPlayer.GetRegisterValues(song, project.PalMode, out OGSongLength);
+            var writes = regPlayer.GetRegisterValues(song, out OGSongLength);
             int TotalLength = 0, IntroLength = 0;
             if (smoothLoop)
             {
                 song.ExtendForLooping(2);
-                writes = regPlayer.GetRegisterValues(song, project.PalMode, out TotalLength);
+                writes = regPlayer.GetRegisterValues(song, out TotalLength);
             }
             bool loopsTwice = false;
             Debug.WriteLine("Writes got, length: " + writes.Length);
@@ -103,7 +103,7 @@ namespace FamiStudio
                 {
                     var IntroLengthSong = project.DeepClone().GetSong(song.Id);
                     IntroLengthSong.SetLength(IntroLengthSong.LoopPoint);
-                    regPlayer.GetRegisterValues(IntroLengthSong, project.PalMode, out IntroLength);
+                    regPlayer.GetRegisterValues(IntroLengthSong, out IntroLength);
                 }
                 if (smoothLoop)
                 {

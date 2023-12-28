@@ -253,7 +253,7 @@ namespace FamiStudio
             Utils.NonBlockingParallelFor(channelStates.Length, NesApu.NUM_WAV_EXPORT_APU, counter, (stateIndex, threadIndex) =>
             {
                 var state = channelStates[stateIndex];
-                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1L << state.songChannelIndex, threadIndex).GetSongSamples(song, song.Project.PalMode, -1, false, true);
+                state.wav = new WavPlayer(SampleRate, song.Project.PalMode, song.Project.OutputsStereoAudio, 1, 1L << state.songChannelIndex, threadIndex).GetSongSamples(song, -1, false, true);
                 state.triggerFunction = new PeakSpeedTrigger(state.wav, false);
 
                 if (Log.ShouldAbortOperation)
@@ -330,7 +330,7 @@ namespace FamiStudio
 
             // Generate metadata
             Log.LogMessage(LogSeverity.Info, "Generating video metadata...");
-            metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, showRegisters, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
+            metadata = new VideoMetadataPlayer(SampleRate, song.Project.PalMode, song.Project.OutputsStereoAudio, showRegisters, 1).GetVideoMetadata(song, -1);
 
             oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
             oscRenderWindowSize = (int)(oscFrameWindowSize * settings.OscWindow);
@@ -615,7 +615,7 @@ namespace FamiStudio
         bool readRegisters;
         List<VideoFrameMetadata> metadata;
 
-        public VideoMetadataPlayer(int sampleRate, bool stereo, bool registers, int maxLoop) : base(NesApu.APU_WAV_EXPORT, stereo, sampleRate)
+        public VideoMetadataPlayer(int sampleRate, bool pal, bool stereo, bool registers, int maxLoop) : base(NesApu.APU_WAV_EXPORT, pal, stereo, sampleRate)
         {
             maxLoopCount = maxLoop;
             metadata = new List<VideoFrameMetadata>();
@@ -650,14 +650,14 @@ namespace FamiStudio
             prevNumSamples = numSamples;
         }
 
-        public VideoFrameMetadata[] GetVideoMetadata(Song song, bool pal, int duration)
+        public VideoFrameMetadata[] GetVideoMetadata(Song song, int duration)
         {
             int maxSample = int.MaxValue;
 
             if (duration > 0)
                 maxSample = duration * sampleRate;
 
-            if (BeginPlaySong(song, pal, 0))
+            if (BeginPlaySong(song))
             {
                 WriteMetadata(metadata);
 

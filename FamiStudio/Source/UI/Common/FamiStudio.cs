@@ -1607,7 +1607,7 @@ namespace FamiStudio
                     DisplayNotification("Error creating audio stream!", true, true); // MATTT : Localize + better message.
             }
 
-            instrumentPlayer = new InstrumentPlayer(instrumentStream, palPlayback, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.NumBufferedFrames); // MATTT 44100
+            instrumentPlayer = new InstrumentPlayer(instrumentStream, palPlayback, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.NumBufferedFrames); 
             instrumentPlayer.Start(project, palPlayback);
         }
 
@@ -2057,7 +2057,7 @@ namespace FamiStudio
                 lastPlayPosition = songPlayer.PlayPosition;
                 instrumentPlayer.ConnectOscilloscope(null);
                 songPlayer.ConnectOscilloscope(oscilloscope);
-                songPlayer.Start(song, songPlayer.PlayPosition, palPlayback); // MATTT : Pal playback and play position are known by player here... Silly.
+                songPlayer.Start(song);
                 Platform.ForceScreenOn(true);
             }
         }

@@ -55,11 +55,10 @@ namespace FamiStudio
             }
         }
 
-        protected AudioPlayer(IAudioStream stream, int apuIndex, bool pal, int sampleRate, bool stereo, int numFrames) : base(apuIndex, stereo, sampleRate) // MATTT : Pal not passed to player?
+        protected AudioPlayer(IAudioStream stream, int apuIndex, bool pal, int sampleRate, bool stereo, int numFrames) : base(apuIndex, pal, stereo, sampleRate) 
         {
             numBufferedFrames = numFrames;
             audioStream = stream;
-            registerValues.SetPalMode(pal); // MATTT : Why is this here?
             
             if (UsesEmulationThread)
             {

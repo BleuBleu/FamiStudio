@@ -581,7 +581,7 @@ namespace FamiStudio
             Settings.ClampPeriods = true;
             Settings.SquareSmoothVibrato = true;
 
-            new UnitTestPlayer(project.OutputsStereoAudio).GenerateUnitTestOutput(project.Songs[0], filename, HasOption("pal"));
+            new UnitTestPlayer(HasOption("pal"), project.OutputsStereoAudio).GenerateUnitTestOutput(project.Songs[0], filename);
         }
 
         private void RunEpsmUnitTest(string nsf, string filename)

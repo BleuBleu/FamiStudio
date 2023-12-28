@@ -10,7 +10,6 @@ namespace FamiStudio
         {
             public Song song;
             public int startNote;
-            public bool pal;
         };
 
         public SongPlayer(IAudioStream stream, bool pal, int sampleRate, bool stereo, int numFrames) : base(stream, NesApu.APU_SONG, pal, sampleRate, stereo, numFrames)
@@ -24,7 +23,7 @@ namespace FamiStudio
             base.Shutdown();
         }
 
-        public void Start(Song song, int frame, bool pal)
+        public void Start(Song song)
         {
             if (audioStream == null)
                 return;
@@ -37,11 +36,11 @@ namespace FamiStudio
                 ResetThreadingObjects();
 
                 emulationThread = new Thread(EmulationThread);
-                emulationThread.Start(new SongPlayerStartInfo() { song = song, startNote = frame, pal = pal });
+                emulationThread.Start(new SongPlayerStartInfo() { song = song, startNote = PlayPosition });
             }
             else
             {
-                BeginPlaySong(song, pal, frame);
+                BeginPlaySong(song, PlayPosition);
             }
 
             audioStream.Stop(); // Extra safety
@@ -104,7 +103,7 @@ namespace FamiStudio
             // the semaphore count is not off by one.
             emulationSemaphore.WaitOne();
 
-            if (BeginPlaySong(startInfo.song, startInfo.pal, startInfo.startNote))
+            if (BeginPlaySong(startInfo.song, startInfo.startNote))
             {
                 var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
 

@@ -11,16 +11,16 @@ namespace FamiStudio
     {
         StreamWriter file;
 
-        public UnitTestPlayer(bool stereo) : base(NesApu.APU_WAV_EXPORT, stereo)
+        public UnitTestPlayer(bool pal, bool stereo) : base(NesApu.APU_WAV_EXPORT, pal, stereo)
         {
             loopMode = LoopMode.None;
         }
 
-        public void GenerateUnitTestOutput(Song song, string filename, bool pal = false)
+        public void GenerateUnitTestOutput(Song song, string filename)
         {
             file = new StreamWriter(filename);
 
-            if (BeginPlaySong(song, pal, 0))
+            if (BeginPlaySong(song))
                 while (PlaySongFrame()) ;
 
             file.Close();

@@ -63,12 +63,14 @@ namespace FamiStudio
         protected int tempoEnvelopeIndex;
         protected int tempoEnvelopeCounter;
 
-        protected BasePlayer(int apu, bool stereo, int rate = 44100)
+        protected BasePlayer(int apu, bool pal, bool inStereo, int rate = 44100)
         {
-            this.apuIndex = apu;
-            this.sampleRate = rate;
-            this.dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
-            this.stereo = stereo;
+            apuIndex = apu;
+            sampleRate = rate;
+            dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
+            stereo = inStereo;
+            palPlayback = pal;
+            registerValues.SetPalMode(pal);
         }
 
         public virtual void Shutdown()
@@ -230,12 +232,11 @@ namespace FamiStudio
             }
         }
 
-        public bool BeginPlaySong(Song s, bool pal, int startNote)
+        public bool BeginPlaySong(Song s, int startNote = 0)
         {
             song = s;
             famitrackerTempo = song.UsesFamiTrackerTempo;
             famitrackerSpeed = song.FamitrackerSpeed;
-            palPlayback = pal;
             playPosition = startNote;
             playLocation = new NoteLocation(0, 0);
             frameNumber = 0;

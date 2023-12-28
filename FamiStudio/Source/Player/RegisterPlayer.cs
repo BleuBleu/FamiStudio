@@ -15,16 +15,16 @@ namespace FamiStudio
     {
         List<RegisterWrite> registerWrites;
 
-        public RegisterPlayer(bool stereo) : base(NesApu.APU_WAV_EXPORT, stereo)
+        public RegisterPlayer(bool pal, bool stereo) : base(NesApu.APU_WAV_EXPORT, pal, stereo)
         {
             loopMode = LoopMode.None;
         }
 
-        public RegisterWrite[] GetRegisterValues(Song song, bool pal)
+        public RegisterWrite[] GetRegisterValues(Song song)
         {
             registerWrites = new List<RegisterWrite>();
 
-            if (BeginPlaySong(song, pal, 0))
+            if (BeginPlaySong(song))
             {
                 StartSeeking();
                 while (PlaySongFrameInternal(true));
@@ -34,12 +34,12 @@ namespace FamiStudio
             return registerWrites.ToArray();
         }
 
-        public RegisterWrite[] GetRegisterValues(Song song, bool pal, out int length)
+        public RegisterWrite[] GetRegisterValues(Song song, out int length)
         {
             length = 0;
             registerWrites = new List<RegisterWrite>();
 
-            if (BeginPlaySong(song, pal, 0))
+            if (BeginPlaySong(song))
             {
                 StartSeeking();
                 while (PlaySongFrameInternal(true)){length++;};
