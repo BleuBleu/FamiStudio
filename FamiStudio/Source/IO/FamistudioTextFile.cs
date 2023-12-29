@@ -23,12 +23,15 @@ namespace FamiStudio
             CultureInfo.CurrentCulture = oldCulture;
         }
 
-        public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData, bool noVersion = false)
+        public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData, FamiStudioTextFlags flags = FamiStudioTextFlags.None)
         {
             var project = originalProject.DeepClone();
             project.DeleteAllSongsBut(songIds, deleteUnusedData);
 
             SetInvariantCulture();
+
+            var noVersion = flags.HasFlag(FamiStudioTextFlags.NoVersion);
+            var noColors = flags.HasFlag(FamiStudioTextFlags.NoColors);
 
             var lines = new List<string>();
 
@@ -79,7 +82,7 @@ namespace FamiStudio
 
                 Debug.Assert(!sample.HasAnyProcessingOptions);
 
-                lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{GenerateAttribute("Color", sample.Color.ToHexString())}{ConditionalGenerateAttribute("Folder", sample.FolderName)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
+                lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{ConditionalGenerateAttribute("Color", sample.Color.ToHexString(), !noColors)}{GenerateAttributeIfNonEmpty("Folder", sample.FolderName)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
             }
 
             // Instruments
@@ -93,7 +96,7 @@ namespace FamiStudio
                     instrument.DeleteN163ResampleWavData();
                 }
 
-                var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}{GenerateAttribute("Color", instrument.Color.ToHexString())}{ConditionalGenerateAttribute("Folder", instrument.FolderName)}";
+                var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}{ConditionalGenerateAttribute("Color", instrument.Color.ToHexString(), !noColors)}{GenerateAttributeIfNonEmpty("Folder", instrument.FolderName)}";
 
                 if (instrument.IsExpansionInstrument)
                 {
@@ -184,7 +187,7 @@ namespace FamiStudio
             foreach (var arpeggio in project.Arpeggios)
             {
                 var env = arpeggio.Envelope;
-                var arpeggioLine = $"\tArpeggio{GenerateAttribute("Name", arpeggio.Name)}{GenerateAttribute("Color", arpeggio.Color.ToHexString())}{ConditionalGenerateAttribute("Folder", arpeggio.FolderName)}{GenerateAttribute("Length", env.Length)}";
+                var arpeggioLine = $"\tArpeggio{GenerateAttribute("Name", arpeggio.Name)}{ConditionalGenerateAttribute("Color", arpeggio.Color.ToHexString(), !noColors)}{GenerateAttributeIfNonEmpty("Folder", arpeggio.FolderName)}{GenerateAttribute("Length", env.Length)}";
                 if (env.Loop >= 0) arpeggioLine += GenerateAttribute("Loop", env.Loop);
                 arpeggioLine += GenerateAttribute("Values", String.Join(",", env.Values.Take(env.Length)));
                 lines.Add(arpeggioLine);
@@ -193,7 +196,7 @@ namespace FamiStudio
             // Songs
             foreach (var song in project.Songs)
             {
-                var songStr = $"\tSong{GenerateAttribute("Name", song.Name)}{GenerateAttribute("Color", song.Color.ToHexString())}{ConditionalGenerateAttribute("Folder", song.FolderName)}{GenerateAttribute("Length", song.Length)}{GenerateAttribute("LoopPoint", song.LoopPoint)}";
+                var songStr = $"\tSong{GenerateAttribute("Name", song.Name)}{ConditionalGenerateAttribute("Color", song.Color.ToHexString(), !noColors)}{GenerateAttributeIfNonEmpty("Folder", song.FolderName)}{GenerateAttribute("Length", song.Length)}{GenerateAttribute("LoopPoint", song.LoopPoint)}";
 
                 if (song.UsesFamiTrackerTempo)
                 {
@@ -234,7 +237,7 @@ namespace FamiStudio
 
                     foreach (var pattern in channel.Patterns)
                     {
-                        lines.Add($"\t\t\tPattern{GenerateAttribute("Name", pattern.Name)}{GenerateAttribute("Color", pattern.Color.ToHexString())}");
+                        lines.Add($"\t\t\tPattern{GenerateAttribute("Name", pattern.Name)}{ConditionalGenerateAttribute("Color", pattern.Color.ToHexString(), !noColors)}");
 
                         foreach (var kv in pattern.Notes)
                         {
@@ -302,9 +305,14 @@ namespace FamiStudio
             return $" {key}=\"{value.ToString().Replace("\"", "\"\"")}\"";
         }
 
-        private static string ConditionalGenerateAttribute(string key, object value)
+        private static string GenerateAttributeIfNonEmpty(string key, object value)
         {
-            return string.IsNullOrEmpty(value.ToString()) ? "" : GenerateAttribute(key, value);
+            return !string.IsNullOrEmpty(value.ToString()) ? GenerateAttribute(key, value) : string.Empty;
+        }
+
+        private static string ConditionalGenerateAttribute(string key, object value, bool condition)
+        {
+            return condition ? GenerateAttribute(key, value) : string.Empty;
         }
 
         private static readonly Regex NameRegex = new Regex("^\\s*([^\"=\\s]+)\\s*(.*)\\s*$", RegexOptions.Compiled);
@@ -710,5 +718,13 @@ namespace FamiStudio
             }
 #endif
         }
+    }
+
+    [Flags]
+    public enum FamiStudioTextFlags
+    {
+        None = 0,
+        NoVersion = 1,
+        NoColors = 2
     }
 }

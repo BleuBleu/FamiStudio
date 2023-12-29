@@ -467,10 +467,12 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                var cleanup   = HasOption("famistudio-txt-cleanup");
-                var noVersion = HasOption("famistudio-txt-noversion");
+                var cleanup = HasOption("famistudio-txt-cleanup");
+                var flags   = HasOption("famistudio-txt-bare") ? 
+                        FamiStudioTextFlags.NoVersion | FamiStudioTextFlags.NoColors : 
+                        FamiStudioTextFlags.None;
 
-                new FamistudioTextFile().Save(project, filename, exportSongIds, cleanup, noVersion);
+                new FamistudioTextFile().Save(project, filename, exportSongIds, cleanup, flags);
             }
         }
 
