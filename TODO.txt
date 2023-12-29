@@ -18,12 +18,13 @@ x Rename "Bitmap" to "Texture"
 x Improved FDS filtering.
 / Latency improvements:
 	- Android : Run short/1-frame tests.
+	- MacOS : Audio device detection change.
 - Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 x Fix that bug where patterns are modified twice if you select 2 instances
-- Also applies to custom pattern settings apparently? (https://discord.com/channels/@me/819772561940152321/1157848245352005696)
-- Extended intrument mode for sound engine, up to 256. 
+x When changing note length, we may mess up other pattern. We need to duplicated them + warn user. (https://discord.com/channels/@me/819772561940152321/1157848245352005696)
+- Extended intrument \mode for sound engine, up to 256. 
 x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/819772561940152321/1151930656302051398)
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
@@ -37,6 +38,7 @@ x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/8197
 - Test all project explorer buttons with folders. Make sure no offsets.
 - Undo acciental changes to demo songs (shovel, JTS, etc.)
 - Make sure PortAudio.dll is included in portable + setup.
+- Compare FDS filter with my FDS once im back home. See how close we can get without adding a dedicated filter.
 
 Later
 =====

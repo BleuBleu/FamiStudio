@@ -70,6 +70,11 @@ namespace FamiStudio
         private LocalizedString ConvertMobileLabel;
         private LocalizedString ConvertResizeNotes;
         private LocalizedString ConvertLeaveNotes;
+        private LocalizedString DuplicateLabel;
+
+        // Notifications
+        private LocalizedString DuplicateNotificationSong;
+        private LocalizedString DuplicateNotificationCustom;
 
         #endregion
 
@@ -275,7 +280,7 @@ namespace FamiStudio
                 props.SetPropertyEnabled(i, enabled);
         }
 
-        private void ShowConvertTempoDialogAsync(FamiStudioWindow win, bool conversionNeeded, Action<bool> callback)
+        private void ShowConvertTempoDialogAsync(FamiStudioWindow win, bool conversionNeeded, Action<bool, bool> callback)
         {
             if (conversionNeeded)
             {
@@ -283,16 +288,19 @@ namespace FamiStudio
                 messageDlg.Properties.AddLabel(null, ConvertMobileLabel, true); // 0
                 messageDlg.Properties.AddRadioButton(Platform.IsMobile ? ConvertMobileLabel : null, ConvertResizeNotes, true, true); // 1
                 messageDlg.Properties.AddRadioButton(Platform.IsMobile ? ConvertMobileLabel : null, ConvertLeaveNotes, false, true); // 2
+                messageDlg.Properties.AddLabelCheckBox(DuplicateLabel, true); // 3
                 messageDlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 messageDlg.Properties.Build();
                 messageDlg.ShowDialogAsync((r) =>
                 {
-                    callback(messageDlg.Properties.GetPropertyValue<bool>(1));
+                    callback(
+                        messageDlg.Properties.GetPropertyValue<bool>(1),
+                        messageDlg.Properties.GetPropertyValue<bool>(3));
                 });
             }
             else
             {
-                callback(false);
+                callback(false, false);
             }
         }
 
@@ -327,9 +335,13 @@ namespace FamiStudio
                         var patternLength = props.GetPropertyValue<int>(notesPerPatternPropIdx);
 
                         if (custom)
+                        {
                             song.SetPatternCustomSettings(i, patternLength, beatLength);
+                        }
                         else
+                        {
                             song.ClearPatternCustomSettings(i);
+                        }
                     }
                 }
 
@@ -354,9 +366,14 @@ namespace FamiStudio
 
                 if (patternIdx == -1)
                 {
-                    ShowConvertTempoDialogAsync(win, noteLength != originalNoteLength, (c) =>
+                    ShowConvertTempoDialogAsync(win, noteLength != originalNoteLength, (convert, duplicate) =>
                     {
-                        song.ChangeFamiStudioTempoGroove(groove, c);
+                        if (duplicate && song.DuplicatePatternsForNoteLengthChange(0, song.Length - 1, true))
+                        {
+                            FamiStudio.StaticInstance.DisplayNotification(DuplicateNotificationSong, false);
+                        }
+
+                        song.ChangeFamiStudioTempoGroove(groove, convert);
                         song.SetBeatLength(beatLength * song.NoteLength);
                         song.SetDefaultPatternLength(patternLength * song.NoteLength);
                         song.SetGroovePaddingMode(groovePadMode);
@@ -381,23 +398,37 @@ namespace FamiStudio
                     for (int i = minPatternIdx; i <= maxPatternIdx; i++)
                     {
                         if (actualNoteLength != song.GetPatternNoteLength(patternIdx))
+                        {
                             patternsToResize.Add(i);
+                        }
                     }
 
-                    ShowConvertTempoDialogAsync(win, patternsToResize.Count > 0, (c) =>
+                    ShowConvertTempoDialogAsync(win, patternsToResize.Count > 0, (convert, duplicate) =>
                     {
-                        if (c)
+                        if (convert)
                         {
+                            if (duplicate && song.DuplicatePatternsForNoteLengthChange(minPatternIdx, maxPatternIdx, false))
+                            {
+                                FamiStudio.StaticInstance.DisplayNotification(DuplicateNotificationCustom, false);
+                            }
+
+                            var processedPatterns = new HashSet<Pattern>();
                             foreach (var p in patternsToResize)
-                                song.ResizePatternNotes(p, actualNoteLength);
+                            {
+                                song.ResizePatternNotes(p, actualNoteLength, processedPatterns);
+                            }
                         }
 
                         for (int i = minPatternIdx; i <= maxPatternIdx; i++)
                         {
                             if (custom)
+                            {
                                 song.SetPatternCustomSettings(i, actualPatternLength, actualBeatLength, groove, groovePadMode);
+                            }
                             else
+                            {
                                 song.ClearPatternCustomSettings(i);
+                            }
                         }
 
                         FinishApply(callback);

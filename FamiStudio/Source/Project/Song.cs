@@ -508,6 +508,62 @@ namespace FamiStudio
             }
         }
 
+        public bool DuplicatePatternsForNoteLengthChange(int minPatternIdx, int maxPatternIdx, bool ignoreCustomSettings)
+        {
+            var duplicatedAnything = false;
+
+            // Gather all patterns inside/outside the range we will be modifying.
+            foreach (var channel in channels)
+            {
+                var patternsInsideRange  = new HashSet<Pattern>();
+                var patternsOutsideRange = new HashSet<Pattern>();
+
+                for (var p = 0; p < songLength; p++)
+                {
+                    var pattern = channel.PatternInstances[p];
+
+                    if (pattern != null)
+                    {
+                        var inRange = p >= minPatternIdx && p <= maxPatternIdx && (!ignoreCustomSettings || !PatternHasCustomSettings(p));
+
+                        if (inRange)
+                            patternsInsideRange.Add(pattern);
+                        else
+                            patternsOutsideRange.Add(pattern);
+                    }
+                }
+
+                // For all patterns inside the range, see if there are also instances
+                // outside of it. It so, we will need to duplicate the pattenrs to avoid
+                // breaking anything.
+                var oldToNewPattern = new Dictionary<Pattern, Pattern>();
+
+                foreach (var pattern in patternsInsideRange)
+                {
+                    if (patternsOutsideRange.Contains(pattern))
+                    {
+                        oldToNewPattern.Add(pattern, pattern.ShallowClone());
+                        duplicatedAnything = true;
+                    }
+                }
+
+                for (var p = minPatternIdx; p <= maxPatternIdx; p++)
+                {
+                    var inRange = !ignoreCustomSettings || !PatternHasCustomSettings(p);
+                    if (inRange)
+                    {
+                        var oldPattern = channel.PatternInstances[p];
+                        if (oldPattern != null && oldToNewPattern.TryGetValue(oldPattern, out var newPattern))
+                        {
+                            channel.PatternInstances[p] = newPattern;
+                        }
+                    }
+                }
+            }
+
+            return duplicatedAnything;
+        }
+
         public void ChangeFamiStudioTempoGroove(int[] newGroove, bool convert)
         {
             var newNoteLength = Utils.Min(newGroove);
