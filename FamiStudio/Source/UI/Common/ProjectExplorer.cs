@@ -3334,14 +3334,11 @@ namespace FamiStudio
             return true;
         }
 
-        // MATTT : Never called?
         private bool HandleMouseDownSongHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
         {
             if (e.Left)
             {
-                if (subButtonType == SubButtonType.Add)
-                    AskAddSong(e.X, e.Y);
-                else if (subButtonType == SubButtonType.Load)
+                if (subButtonType == SubButtonType.Load)
                     ImportSongs();
                 else if (subButtonType == SubButtonType.Sort)
                     SortSongs();
@@ -3690,6 +3687,8 @@ namespace FamiStudio
                         return HandleMouseDownSongProjectSettings(e, subButtonType);
                     case ButtonType.Song:
                         return HandleMouseDownSongButton(e, button, buttonIdx, subButtonType);
+                    case ButtonType.SongHeader:
+                        return HandleMouseDownSongHeaderButton(e, subButtonType);
                     case ButtonType.InstrumentHeader:
                         return HandleMouseDownInstrumentHeaderButton(e, subButtonType);
                     case ButtonType.Instrument:
