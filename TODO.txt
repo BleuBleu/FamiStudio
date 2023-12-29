@@ -11,24 +11,26 @@ x Upgrade Windows to .NET 7.0
 	- Make it work on mobile.
 x Keep colors on FS.txt
 x When using shy mode, we could make the patterns larger if there is room.
-- Video export improvements:
+/ Video export improvements:
 	- Test/Make it work on mobile.
 x Rename "Bitmap" to "Texture"
-- FDS automod
 x Improved FDS filtering.
+x Fix that bug where patterns are modified twice if you select 2 instances
+x When changing note length, we may mess up other pattern. We need to duplicated them + warn user. (https://discord.com/channels/@me/819772561940152321/1157848245352005696)
+x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/819772561940152321/1151930656302051398)
 / Latency improvements:
 	- Android : Run short/1-frame tests.
 	- MacOS : Audio device detection change.
+- Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
+	=> MacOS only, GLFWToWindow() uses DpiScaling.Window.
+x Export -> Video settings scrolling area doesnt take scaling into account.
+- FDS automod
 - Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
-x Fix that bug where patterns are modified twice if you select 2 instances
-x When changing note length, we may mess up other pattern. We need to duplicated them + warn user. (https://discord.com/channels/@me/819772561940152321/1157848245352005696)
-- Extended intrument \mode for sound engine, up to 256. 
-x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/819772561940152321/1151930656302051398)
+- Extended intrument mode for sound engine, up to 256. 
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
-- Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
 - Dont publish for chromebooks
 - Finish/fix phase reset support
 	=> option to fully emulation from start.

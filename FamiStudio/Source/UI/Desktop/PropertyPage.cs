@@ -61,7 +61,7 @@ namespace FamiStudio
 
         public void SetScrolling(int height)
         {
-            scrollingHeight = height;
+            scrollingHeight = DpiScaling.ScaleForWindow(height);
         }
 
         public void ConditionalSetTextBoxFocus()
