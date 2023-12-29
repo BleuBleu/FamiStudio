@@ -1183,8 +1183,14 @@ namespace FamiStudio
                 inst.GetTotalMappedSampleSize(usedSamples);
             }
 
-            samples.Clear();
-            samples.AddRange(usedSamples);
+            // Preserve ordering in case sorting isnt enabled.
+            for (var i = samples.Count - 1; i >= 0; i--)
+            {
+                if (!usedSamples.Contains(samples[i]))
+                    samples.RemoveAt(i);
+            }
+
+            ConditionalSortSamples();
         }
 
         public int GetTotalSampleSize()
@@ -1726,7 +1732,13 @@ namespace FamiStudio
                 }
             }
 
-            instruments = new List<Instrument>(usedInstruments);
+            // Preserve ordering in case sorting isnt enabled.
+            for (var i = instruments.Count - 1; i >= 0; i--)
+            {
+                if (!usedInstruments.Contains(instruments[i]))
+                    instruments.RemoveAt(i);
+            }
+
             ConditionalSortInstruments();
         }
 
@@ -1817,7 +1829,13 @@ namespace FamiStudio
                 }
             }
 
-            arpeggios = new List<Arpeggio>(usedArpeggios);
+            // Preserve ordering in case sorting isnt enabled.
+            for (var i = arpeggios.Count - 1; i >= 0; i--)
+            {
+                if (!usedArpeggios.Contains(arpeggios[i]))
+                    arpeggios.RemoveAt(i);
+            }
+
             ConditionalSortArpeggios();
         }
 

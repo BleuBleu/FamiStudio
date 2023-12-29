@@ -2,6 +2,7 @@
 =================
 x Review OpenGL 3.3 requirements, can we lower this to 3.2, 3.1, 3.0?
 x Upgrade Windows to .NET 7.0
+	- Test MacOS startup script.
 / Switch to .NET for Android too.
 	x Test debug/release 
 	- Setup keystore, etc.
@@ -17,23 +18,16 @@ x Rename "Bitmap" to "Texture"
 x Improved FDS filtering.
 / Latency improvements:
 	- Android : Run short/1-frame tests.
-- Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
-	https://discord.com/channels/@me/819772561940152321/1187597131859636276
 - Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 x Fix that bug where patterns are modified twice if you select 2 instances
-- Also applies to custom pattern settings apparently?
-	https://discord.com/channels/@me/819772561940152321/1157147940029206649
-	https://discord.com/channels/@me/819772561940152321/1157848245352005696 (<=== VIDEO!)
+- Also applies to custom pattern settings apparently? (https://discord.com/channels/@me/819772561940152321/1157848245352005696)
 - Extended intrument mode for sound engine, up to 256. 
-- Project cleanup doesnt respect sorting? 
-	https://discord.com/channels/@me/819772561940152321/1151930656302051398
+x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/819772561940152321/1151930656302051398)
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
-- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated.
-	https://discord.com/channels/@me/1093046594062004286/1183464431674470570
-- Is export setting DPI scaling at 100% when exporting, does it affect the whole UI?
-	https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104
+- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
+- Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
 - Dont publish for chromebooks
 - Finish/fix phase reset support
 	=> option to fully emulation from start.
@@ -215,3 +209,5 @@ Backlog:
 - Length counter support? https://www.youtube.com/watch?v=Fg8B3kiVckY
 - Double-click to edit name of instrument
 - Way to tell if a pattern has other instances, like highlight all instances when mouse over? 
+- Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
+	https://discord.com/channels/@me/819772561940152321/1187597131859636276
