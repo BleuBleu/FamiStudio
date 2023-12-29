@@ -14,11 +14,11 @@ x When using shy mode, we could make the patterns larger if there is room.
 	- Test/Make it work on mobile.
 x Rename "Bitmap" to "Texture"
 - FDS automod
+x Improved FDS filtering.
 / Latency improvements:
 	- Android : Run short/1-frame tests.
 - Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
 	https://discord.com/channels/@me/819772561940152321/1187597131859636276
-- FDS filtering (expose the cutoff frequency for all expansions, set default to 2000 for FDS)
 - Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
@@ -213,4 +213,5 @@ Backlog:
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
 - Length counter support? https://www.youtube.com/watch?v=Fg8B3kiVckY
-- 
+- Double-click to edit name of instrument
+- Way to tell if a pattern has other instances, like highlight all instances when mouse over? 

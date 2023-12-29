@@ -231,7 +231,7 @@ namespace FamiStudio
             new ExpansionMix(0.0f,  -5.0f, 12000), // None
             new ExpansionMix(0.0f,  -5.0f, 12000), // Vrc6
             new ExpansionMix(0.0f, -15.0f, 12000), // Vrc7
-            new ExpansionMix(0.0f, -15.0f,  2000), // Fds // MATTT
+            new ExpansionMix(0.0f, -40.0f,  2000), // Fds
             new ExpansionMix(0.0f,  -5.0f, 12000), // Mmc5
             new ExpansionMix(0.0f, -15.0f, 12000), // N163
             new ExpansionMix(0.0f,  -5.0f, 12000), // S5B
