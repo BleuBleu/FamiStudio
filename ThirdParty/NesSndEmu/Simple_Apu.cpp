@@ -149,9 +149,9 @@ int Simple_Apu::get_channel_trigger(int exp, int idx)
 	return trigger_none;
 }
 
-void Simple_Apu::treble_eq(int exp, double treble, int sample_rate)
+void Simple_Apu::treble_eq(int exp, double treble_amount, int treble_freq, int sample_rate)
 {
-	blip_eq_t eq(treble, 0, sample_rate);
+	blip_eq_t eq(treble_amount, treble_freq, sample_rate);
 
 	switch (exp)
 	{
@@ -164,6 +164,16 @@ void Simple_Apu::treble_eq(int exp, double treble, int sample_rate)
 		case expansion_sunsoft: sunsoft.treble_eq(eq); break;
 		case expansion_epsm: epsm.treble_eq(eq); break;
 	}
+}
+
+void Simple_Apu::bass_freq(int bass_freq)
+{
+	buf.bass_freq(bass_freq);
+	tnd[0].bass_freq(bass_freq);
+	tnd[1].bass_freq(bass_freq);
+	tnd[2].bass_freq(bass_freq);
+	buf_epsm_left.bass_freq(bass_freq);
+	buf_epsm_right.bass_freq(bass_freq);
 }
 
 void Simple_Apu::set_expansion_volume(int exp, double volume)

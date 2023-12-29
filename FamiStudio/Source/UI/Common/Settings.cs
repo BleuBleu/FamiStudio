@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace FamiStudio
 {
@@ -19,7 +20,7 @@ namespace FamiStudio
         // Version 6   : FamiStudio 3.3.0
         // Version 7   : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files, dialogs)
         // Version 8   : FamiStudio 4.1.0 (Configurable keys)
-        // Version 9   : FamiStudio 4.2.0 (Latency improvements)
+        // Version 9   : FamiStudio 4.2.0 (Latency improvements, more filtering options)
         public const int SettingsVersion = 9;
         public const int NumRecentFiles = 10;
 
@@ -208,30 +209,33 @@ namespace FamiStudio
 
         // Mixer section
         public static float GlobalVolume = -2.0f; // in dB
+        public static int BassCutoffHz = 16; // in Hz
 
         public struct ExpansionMix
         {
-            public ExpansionMix(float v, float t)
+            public ExpansionMix(float v, float t, int rf)
             {
-                volume = v;
-                treble = t;
+                VolumeDb = v;
+                TrebleDb = t;
+                TrebleRolloffHz = rf;
             }
 
-            public float volume; // in dB
-            public float treble; // in dB
+            public float VolumeDb;
+            public float TrebleDb;
+            public int TrebleRolloffHz;
         }
 
         public static ExpansionMix[] ExpansionMixerSettings        = new ExpansionMix[ExpansionType.Count];
         public static ExpansionMix[] DefaultExpansionMixerSettings = new ExpansionMix[ExpansionType.Count]
         {
-            new ExpansionMix(0.0f,  -5.0f), // None
-            new ExpansionMix(0.0f,  -5.0f), // Vrc6
-            new ExpansionMix(0.0f, -15.0f), // Vrc7
-            new ExpansionMix(0.0f, -15.0f), // Fds
-            new ExpansionMix(0.0f,  -5.0f), // Mmc5
-            new ExpansionMix(0.0f, -15.0f), // N163
-            new ExpansionMix(0.0f,  -5.0f), // S5B
-            new ExpansionMix(0.0f,  -5.0f)  // EPSM
+            new ExpansionMix(0.0f,  -5.0f, 12000), // None
+            new ExpansionMix(0.0f,  -5.0f, 12000), // Vrc6
+            new ExpansionMix(0.0f, -15.0f, 12000), // Vrc7
+            new ExpansionMix(0.0f, -15.0f,  2000), // Fds // MATTT
+            new ExpansionMix(0.0f,  -5.0f, 12000), // Mmc5
+            new ExpansionMix(0.0f, -15.0f, 12000), // N163
+            new ExpansionMix(0.0f,  -5.0f, 12000), // S5B
+            new ExpansionMix(0.0f,  -5.0f, 12000)  // EPSM
         };
 
         // MIDI section
@@ -509,14 +513,21 @@ namespace FamiStudio
 
             // Mixer.
             GlobalVolume = ini.GetFloat("Mixer", "GlobalVolume", -3.0f);
+            BassCutoffHz = ini.GetInt("Mixer", "BassCutoffHz", 16);
 
             Array.Copy(DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
 
-            for (int i = 0; i < ExpansionType.Count; i++)
-            {
-                var section = "Mixer" + ExpansionType.InternalNames[i];
-                ExpansionMixerSettings[i].volume = ini.GetFloat(section, "Volume", DefaultExpansionMixerSettings[i].volume);
-                ExpansionMixerSettings[i].treble = ini.GetFloat(section, "Treble", DefaultExpansionMixerSettings[i].treble);
+            // At Version 9 (FamiStudio 4.2.0) we added more filtering options, so reset everything.
+            if (Version >= 9)
+            { 
+                for (int i = 0; i < ExpansionType.Count; i++)
+                {
+                    var section = "Mixer" + ExpansionType.InternalNames[i];
+
+                    ExpansionMixerSettings[i].VolumeDb        = ini.GetFloat(section, "VolumeDb",        DefaultExpansionMixerSettings[i].VolumeDb);
+                    ExpansionMixerSettings[i].TrebleDb        = ini.GetFloat(section, "TrebleDb",        DefaultExpansionMixerSettings[i].TrebleDb);
+                    ExpansionMixerSettings[i].TrebleRolloffHz = ini.GetInt(section, "TrebleRolloffHz", DefaultExpansionMixerSettings[i].TrebleRolloffHz);
+                }
             }
 
             // At version 7 (FamiStudio 4.1.0) we allowed configuring all the keys.
@@ -688,8 +699,8 @@ namespace FamiStudio
             for (int i = 0; i < ExpansionType.Count; i++)
             {
                 var section = "Mixer" + ExpansionType.InternalNames[i];
-                ini.SetFloat(section, "Volume", ExpansionMixerSettings[i].volume);
-                ini.SetFloat(section, "Treble", ExpansionMixerSettings[i].treble);
+                ini.SetFloat(section, "Volume", ExpansionMixerSettings[i].VolumeDb);
+                ini.SetFloat(section, "Treble", ExpansionMixerSettings[i].TrebleDb);
             }
 
             // MIDI

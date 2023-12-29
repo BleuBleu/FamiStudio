@@ -11,7 +11,7 @@ namespace FamiStudio
         private const string NesSndEmuDll = Platform.DllPrefix + "NesSndEmu" + Platform.DllExtension;
 
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuInit")]
-        public extern static int Init(int apuIdx, int sampleRate, int pal, int seperateTnd, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
+        public extern static int Init(int apuIdx, int sampleRate, int bassFreq, int pal, int seperateTnd, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuWriteRegister")]
         public extern static void WriteRegister(int apuIdx, int addr, int data);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSamplesAvailable")]
@@ -37,7 +37,7 @@ namespace FamiStudio
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuIsSeeking")]
         public extern static int IsSeeking(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuTrebleEq")]
-        public extern static void TrebleEq(int apuIdx, int expansion, double treble, int sample_rate);
+        public extern static void TrebleEq(int apuIdx, int expansion, double treble, int trebleFreq, int sample_rate);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetAudioExpansions")]
         public extern static int GetAudioExpansions(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSetExpansionVolume")]
@@ -776,9 +776,10 @@ namespace FamiStudio
                 return sample[offset];
         }
 
+        // TODO : This part of the app should access the settings directly, they should be passed.
         public static void InitAndReset(int apuIdx, int sampleRate, bool pal, int seperateTndMode, int expansions, int numNamcoChannels, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
         {
-            Init(apuIdx, sampleRate, pal ? 1 : 0, seperateTndMode, expansions, dmcCallback);
+            Init(apuIdx, sampleRate, Settings.BassCutoffHz, pal ? 1 : 0, seperateTndMode, expansions, dmcCallback);
             Reset(apuIdx);
             WriteRegister(apuIdx, APU_SND_CHN,    0x0f); // enable channels, stop DMC
             WriteRegister(apuIdx, APU_TRI_LINEAR, 0x80); // disable triangle length counter
@@ -791,8 +792,8 @@ namespace FamiStudio
 
             var apuSettings = Settings.ExpansionMixerSettings[NesApu.APU_EXPANSION_NONE];
 
-            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.treble, sampleRate);
-            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.volume + Settings.GlobalVolume));
+            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.TrebleDb, apuSettings.TrebleRolloffHz, sampleRate);
+            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.VolumeDb + Settings.GlobalVolume));
 
             if (expansions != APU_EXPANSION_MASK_NONE)
             {
@@ -802,8 +803,8 @@ namespace FamiStudio
                     {
                         var expSettings = Settings.ExpansionMixerSettings[expansion];
 
-                        TrebleEq(apuIdx, expansion, expSettings.treble, sampleRate);
-                        SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.volume + Settings.GlobalVolume));
+                        TrebleEq(apuIdx, expansion, expSettings.TrebleDb, expSettings.TrebleRolloffHz, sampleRate);
+                        SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.VolumeDb + Settings.GlobalVolume));
 
                         switch (expansion)
                         {

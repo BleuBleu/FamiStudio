@@ -141,16 +141,21 @@ namespace FamiStudio
 
         // Mixer tooltips
         LocalizedString GlobalVolumeTooltip;
+        LocalizedString GlobalBassTooltip;
         LocalizedString ExpansionTooltip;
         LocalizedString ExpansionVolumeTooltip;
         LocalizedString ExpansionTrebleTooltip;
+        LocalizedString ExpansionTrebleFreqTooltip;
         LocalizedString ExpansionResetTooltip;
 
         // Mixer labels
         LocalizedString GlobalVolumeLabel;
+        LocalizedString GlobalBassLabel;
+        LocalizedString ExpansionSettingsLabel;
         LocalizedString ExpansionLabel;
         LocalizedString ExpansionVolumeLabel;
         LocalizedString ExpansionTrebleLabel;
+        LocalizedString ExpansionTrebleFreqLabel;
         LocalizedString ResetLabel;
         LocalizedString ResetButtonLabel;
         LocalizedString NoteLabel;
@@ -340,11 +345,14 @@ namespace FamiStudio
                 case ConfigSection.Mixer:
                 {
                     page.AddSlider(GlobalVolumeLabel.Colon, Settings.GlobalVolume, -10.0, 3.0, 0.1, 1, "{0:+0.0;-0.0} dB", GlobalVolumeTooltip); // 0
-                    page.AddDropDownList(ExpansionLabel.Colon, Localization.ToStringArray(ExpansionType.LocalizedNames), ExpansionType.LocalizedNames[0], ExpansionTooltip); // 1
-                    page.AddSlider(ExpansionVolumeLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 2
-                    page.AddSlider(ExpansionTrebleLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 3
-                    page.AddButton(Platform.IsDesktop ? null : ResetLabel, ResetButtonLabel, ExpansionResetTooltip); // 4
-                    page.AddLabel(Platform.IsDesktop ? null : NoteLabel, NoteMessageLabel, true); // 5
+                    page.AddSlider(GlobalBassLabel.Colon, Settings.BassCutoffHz, 2, 100, 2, 0, "{0:0} Hz", GlobalBassTooltip); // 1
+                    page.AddLabel(null, ExpansionSettingsLabel, true); // 2
+                    page.AddDropDownList(ExpansionLabel.Colon, Localization.ToStringArray(ExpansionType.LocalizedChipNames), ExpansionType.LocalizedChipNames[0], ExpansionTooltip); // 3
+                    page.AddSlider(ExpansionVolumeLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].VolumeDb, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 4
+                    page.AddSlider(ExpansionTrebleLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].TrebleDb, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 5
+                    page.AddSlider(ExpansionTrebleFreqLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].TrebleRolloffHz, 100.0, 44100.0, 100, 0, "{0:0} Hz", ExpansionTrebleFreqTooltip); // 6
+                    page.AddButton(Platform.IsDesktop ? null : ResetLabel, ResetButtonLabel, ExpansionResetTooltip); // 7
+                    page.AddLabel(Platform.IsDesktop ? null : NoteLabel, NoteMessageLabel, true); // 8
                     page.PropertyChanged += MixerPage_PropertyChanged;
                     page.PropertyClicked += MixerPage_PropertyClicked;
                     break;
@@ -544,9 +552,9 @@ namespace FamiStudio
 
         private void MixerPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (propIdx == 4 && click == ClickType.Button)
+            if (propIdx == 7 && click == ClickType.Button)
             {
-                var expansion = props.GetSelectedIndex(1);
+                var expansion = props.GetSelectedIndex(3);
                 expansionMixer[expansion] = Settings.DefaultExpansionMixerSettings[expansion];
                 RefreshMixerSettings();
             }
@@ -555,27 +563,32 @@ namespace FamiStudio
         private void RefreshMixerSettings()
         {
             var props = pages[(int)ConfigSection.Mixer];
-            var expansion = props.GetSelectedIndex(1);
+            var expansion = props.GetSelectedIndex(3);
 
-            props.SetPropertyValue(2, (double)expansionMixer[expansion].volume);
-            props.SetPropertyValue(3, (double)expansionMixer[expansion].treble);
+            props.SetPropertyValue(4, (double)expansionMixer[expansion].VolumeDb);
+            props.SetPropertyValue(5, (double)expansionMixer[expansion].TrebleDb);
+            props.SetPropertyValue(6, (double)expansionMixer[expansion].TrebleRolloffHz);
         }
 
         private void MixerPage_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            var expansion = props.GetSelectedIndex(1);
+            var expansion = props.GetSelectedIndex(3);
 
-            if (propIdx == 1)
+            if (propIdx == 3)
             {
                 RefreshMixerSettings();
             }
-            else if (propIdx == 2)
+            else if (propIdx == 4)
             {
-                expansionMixer[expansion].volume = (float)(double)value;
+                expansionMixer[expansion].VolumeDb = (float)(double)value;
             }
-            else if (propIdx == 3)
+            else if (propIdx == 5)
             {
-                expansionMixer[expansion].treble = (float)(double)value;
+                expansionMixer[expansion].TrebleDb = (float)(double)value;
+            }
+            else if (propIdx == 6)
+            {
+                expansionMixer[expansion].TrebleRolloffHz = (int)(double)value;
             }
         }
 
@@ -654,6 +667,7 @@ namespace FamiStudio
 
                     // Mixer.
                     Settings.GlobalVolume = (float)pageMixer.GetPropertyValue<double>(0);
+                    Settings.BassCutoffHz = (int)(double)pageMixer.GetPropertyValue<double>(1);
                     Array.Copy(expansionMixer, Settings.ExpansionMixerSettings, Settings.ExpansionMixerSettings.Length);
 
                     // MIDI

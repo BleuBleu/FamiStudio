@@ -2235,6 +2235,7 @@ namespace FamiStudio
 
         // Use these to display to user
         public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+        public static LocalizedString[] LocalizedChipNames = new LocalizedString[0];
 
         // Use these to save in files, etc.
         public static readonly string[] InternalNames =
@@ -2268,6 +2269,8 @@ namespace FamiStudio
         static ExpansionType()
         {
             Localization.LocalizeStatic(typeof(ExpansionType));
+            LocalizedChipNames = (LocalizedString[])LocalizedNames.Clone();
+            LocalizedChipNames[0] = NoneName;
         }
 
         public static bool NeedsExpansionInstrument(int value)
