@@ -1,6 +1,5 @@
-famistudio_set_instrument(x = env, y = channel index, a = instrument index)
+famistudio_load_basic_envelopes(ptr1/y inst point, r0 = instrument index, x = )
 {
-	famistudio_ptr0 = a << 1; 
 	famistudio_env_addr[x++] = famistudio_ptr0[y += 2]
 
 	// Only if FAMISTUDIO_USE_ARPEGGIO
@@ -13,12 +12,6 @@ famistudio_set_instrument(x = env, y = channel index, a = instrument index)
 	{
 		y++;
 	}
-
-	// @init_envelopes
-	famistudio_env_ptr[x - 1] = 1;
-	famistudio_env_ptr[x] = 0;
-	famistudio_env_repeat[x - 1] = 0;
-	famistudio_env_repeat[x] = 0;
 
 	// Duty cycle envelope
 	if (channel == 2) // Triangle has no duty.
@@ -40,17 +33,40 @@ famistudio_set_instrument(x = env, y = channel index, a = instrument index)
 			famistudio_pitch_env_value[x] = 0;
 			famistudio_pitch_env_addr[x] = famistudio_ptr0[++y++];
 		}
-		
-		// @reset_pitch_env
-		famistudio_pitch_env_repeat[x] = 0;
-		famistudio_pitch_env_ptr[x] = 1;
-	}
+	}	
 }
 
-famistudio_set_exp_instrument(x = env, y = channel index, a = instrument index))
+famistudio_set_instrument(x/r0 = channel index, a = instrument index)
 {
-	// Very similar to 'famistudio_set_instrument' but without duty.
-	// ...TODO...
+	x = famistudio_channel_env[x]
+
+	famistudio_ptr0 = a << 1; 
+	famistudio_load_basic_envelopes();
+}
+
+famistudio_do_note_attack(x/r0 = channel index)
+{
+	x = famistudio_channel_env[x];
+
+	famistudio_env_ptr[x] = 1;
+	famistudio_env_ptr[x+1] = 0;
+	famistudio_env_repeat[x] = 0;
+	famistudio_env_repeat[x+1] = 0;
+
+	// Duty cycle envelope
+	if (channel != 2) // Triangle has no duty.
+	{
+		famistudio_env_repeat[x+2] = 0;	
+		famistudio_env_ptr[x+2] = 0;
+	}
+
+	x = famistudio_channel_to_pitch_env[chan_idx]
+	if (x >= 0)
+	{
+		sta famistudio_pitch_env_value[x] = 0
+		sta famistudio_pitch_env_repeat[x] = 0
+		sta famistudio_pitch_env_ptr[x] = 1
+	}
 }
 
 opcode_extended_note()
@@ -77,26 +93,31 @@ opcode_disable_attack()
 opcode_vrc7_release_note()
 {
 	// TODO	
+	// Jumps to @done here!
 }
 
 opcode_fds_release_note()
 {
 	// TODO	
+	// Jumps to @done here!
 }
 
 opcode_n163_release_note()
 {
 	// TODO	
+	// Jumps to @done here!
 }
 
 opcode_epsm_release_note()
 {
 	// TODO
+	// Jumps to @done here!
 }
 
 opcode_release_note()
 {
 	// TODO	
+	// Jumps to @done here!
 }
 
 opcode_famitracker_speed()
@@ -299,7 +320,7 @@ famistudio_update_channel(x = channel index)
 			{
 				// @set_repeat
 				famistudio_chn_repeat[x] = a;
-				break;
+				break; 
 			}
 			else
 			{
@@ -333,28 +354,29 @@ famistudio_update_channel(x = channel index)
 				famistudio_chn_cut_delay[x] = -1;
 			}
 
-			// @check_stop_note + @set_final_update_flags
-			if (famistudio_chn_note[x])
+			// @check_dpcm_channel
+			if (x == 4)
 			{
-				// @check_no_attack
-				if (update_flags & 0x80)
+				if (famistudio_chn_note[x])
 				{
-					update_flags = 0
+					famistudio_music_sample_play(famistudio_chn_note[x] - 12);
+				}
+				else
+				{
+					famistudio_sample_stop();
 				}
 			}
-			else
+			// @check_stop_note 
+			else if (famistudio_chn_note[x] && (update_flags & 0x80) == 0)
 			{
-				update_flags = x == 4 ? 1 : 0;
-			}
 
-			// @famistudio_chn_vrc7_trigger
-			if (update_flags)
-			{
 				// @set_vrc7_triggers (+ same for EPSM)
 				if (x is vrc7 channel) 
 				{
 					famistudio_chn_vrc7_trigger[x] = 1;
 				}
+
+				famistudio_do_note_attack();
 			}
 
 			break;			
@@ -382,8 +404,6 @@ famistudio_update_channel(x = channel index)
 		// @flush_y
 		famistudio_chn_ptr[x] = channel_data_ptr + y;
 	}
-
-	a = @update_flags
 }
 
 famistudio_update_row(x = channel index)

@@ -615,8 +615,9 @@ namespace FamiStudio
                             var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
 
+                            lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}");
                             lines.Add($"\t{db} {instrument.FdsMasterVolume}");
-                            lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}, {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
+                            lines.Add($"\t{dw} {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
                             lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00");
                         }
                         else if (instrument.IsN163)
@@ -1341,13 +1342,14 @@ namespace FamiStudio
 
                                     // This is a bit overkill but simplifies the asm code. If we every run
                                     // out of opcodes, we could easily go back to a single release opcode.
-                                    switch (channel.Expansion)
-                                    {
-                                        case ExpansionType.Vrc7: opcode = OpcodeVrc7ReleaseNote; break;
-                                        case ExpansionType.Fds: opcode = OpcodeFdsReleaseNote; break;
-                                        case ExpansionType.N163: opcode = OpcodeN163ReleaseNote; break;
-                                        case ExpansionType.EPSM: opcode = OpcodeEpsmReleaseNote; break;
-                                    }
+                                    if (channel.IsVrc7Channel)
+                                        opcode = OpcodeVrc7ReleaseNote;
+                                    else if (channel.IsFdsChannel)
+                                        opcode = OpcodeFdsReleaseNote;
+                                    else if (channel.IsN163Channel)
+                                        opcode = OpcodeN163ReleaseNote;
+                                    else if (channel.IsEPSMFmChannel)
+                                        opcode = OpcodeEpsmReleaseNote;
 
                                     songData.Add($"${opcode:x2}+*");
                                     usesReleaseNotes = true;

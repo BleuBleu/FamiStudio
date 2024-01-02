@@ -25,11 +25,16 @@ x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/8197
 	=> MacOS only, GLFWToWindow() uses DpiScaling.Window.
 x Export -> Video settings scrolling area doesnt take scaling into account.
 x Sort button for songs doesnt do shit?
+- Sound engine improvements:
+	x Instrument/attack refactor
+	- Allow no-attack when envelopes are identical (mostly useful for EPSM/VRC7)
+	- Make project settings a multi-property dialog, add sound engine options for dpcm/inst extended range.
+	- Extended intrument mode for sound engine, up to 256
+	- At the end, run special unit test with all songs.
 - FDS automod
 - Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
-- Extended intrument mode for sound engine, up to 256. 
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - Dont publish for chromebooks
@@ -156,14 +161,6 @@ Backlog:
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
-- No-attack refactor:
-	- instrument change:
-		* optional : disable attack
-		* optional : change the instrument, for FM instrument, will look if attack is disabled and not rebind envelopes if disabled.
-		* play a note (if attack, reset envelopes)
-	- problems:
-		* what about the delayed cut thing? 
-		* will likely need a couple more zp variables.
 - Replace an specific instrument by another in selection (A->B), R+CLICK.
 - How to add to the "open with" list on Android.
 - Better autosave names?
@@ -208,9 +205,6 @@ Backlog:
 - Piano roll scale on desktop?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - Dont reset camera in piano roll when deleting instrument (probably to handle case where you were editing the instrument)
-- Improve no-attack.
-	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
-	- Draw attack as red if user makes a mistake.
 - Length counter support? https://www.youtube.com/watch?v=Fg8B3kiVckY
 - Double-click to edit name of instrument
 - Way to tell if a pattern has other instances, like highlight all instances when mouse over? 
