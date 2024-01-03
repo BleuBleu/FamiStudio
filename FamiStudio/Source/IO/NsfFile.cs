@@ -144,6 +144,9 @@ namespace FamiStudio
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
+                project.SoundEngineUsesExtendedInstruments = true;
+                project.SoundEngineUsesDpcmBankSwitching = true;
+                project.SoundEngineUsesExtendedDpcm = true;
 
                 // In the multiple expansion driver, with EPSM enabled, we run out of RAM and use MMC5 EXRAM
                 // so we need to force enable it here.
@@ -284,7 +287,7 @@ namespace FamiStudio
 
                     var bank = nsfBytes.Count / NsfBankSize;
                     var addr = NsfMemoryStart + (nsfBytes.Count & (NsfBankSize - 1));
-                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, true, dpcmBankSize, dpcmBaseAddr, machine);
+                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, dpcmBaseAddr, machine);
                     var maxSongAddr = project.UsesSamples ? dpcmBaseAddr : codeBaseAddr;
 
                     if (addr + songBytes.Length > maxSongAddr)
@@ -297,7 +300,7 @@ namespace FamiStudio
                     if (songBytes.Length <= driverBankLeft)
                     {
                         addr = codeBaseAddr + driverBankOffset;
-                        songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, true, dpcmBankSize, dpcmBaseAddr, machine);
+                        songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, dpcmBaseAddr, machine);
                         for (var j = 0; j < songBytes.Length; j++)
                             nsfBytes[driverBankOffset + j] = songBytes[j];
                         driverBankOffset += songBytes.Length;

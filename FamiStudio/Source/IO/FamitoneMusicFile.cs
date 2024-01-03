@@ -91,8 +91,6 @@ namespace FamiStudio
         private bool usesDelayedNotesOrCuts = false;
         private bool usesDeltaCounter = false;
         private bool usesReleaseNotes = false;
-        private bool usesMultipleDpcmBanks = false;
-        private bool usesExtendedDpcmRange = false;
         private bool usesPhaseReset = false;
 
         public FamitoneMusicFile(int kernel, bool outputLog)
@@ -127,7 +125,7 @@ namespace FamiStudio
         {
             if (project.UsesSamples)
             {
-                var maxMappings = kernel == FamiToneKernel.FamiStudio ? MaxDPMCSampleMappingsExt : MaxDPMCSampleMappingsBase;
+                var maxMappings = kernel == FamiToneKernel.FamiStudio && project.SoundEngineUsesExtendedDpcm ? MaxDPMCSampleMappingsExt : MaxDPMCSampleMappingsBase;
 
                 // Gather all unique mappings.
                 // TODO : Sort them by number of uses and favor the most commonly used ones for single-byte notes.
@@ -149,11 +147,6 @@ namespace FamiStudio
                             }
                         }
                     }
-                }
-
-                if (kernel == FamiToneKernel.FamiStudio && sampleMappingIndices.Count > MaxDPMCSampleMappingsBase)
-                {
-                    usesExtendedDpcmRange = true;
                 }
             }
         }
@@ -187,7 +180,7 @@ namespace FamiStudio
                 size += 2;
             }
 
-            lines.Add($"\t{dw} {ll}samples-{(kernel == FamiToneKernel.FamiTone2 ? 3 : (usesMultipleDpcmBanks ? 5 : 4))}");
+            lines.Add($"\t{dw} {ll}samples-{(kernel == FamiToneKernel.FamiTone2 ? 3 : (project.SoundEngineUsesDpcmBankSwitching ? 5 : 4))}");
 
             for (int i = 0; i < project.Songs.Count; i++)
             {
@@ -536,6 +529,7 @@ namespace FamiStudio
             lines.Add($"{ll}instruments:");
 
             var instrumentCount = 0;
+            var instrumentLimit = project.SoundEngineUsesExtendedInstruments ? 256 : 64;
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {
@@ -549,7 +543,7 @@ namespace FamiStudio
                 if (!instrument.IsFds  && 
                     !instrument.IsN163 &&
                     !instrument.IsVrc7 &&
-                    !instrument.IsS5B &&
+                    !instrument.IsS5B  &&
                     !instrument.IsEpsm)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
@@ -578,8 +572,8 @@ namespace FamiStudio
                 }
             }
 
-            if (instrumentCount > 64)
-                Log.LogMessage(LogSeverity.Error, $"Number of instrument ({instrumentCount}) exceeds the limit of 64, song will not sound correct.");
+            if (instrumentCount > instrumentLimit)
+                Log.LogMessage(LogSeverity.Error, $"Number of instrument ({instrumentCount}) exceeds the limit of {instrumentLimit}, song will not sound correct.");
 
             lines.Add("");
 
@@ -593,6 +587,7 @@ namespace FamiStudio
                 lines.Add($"{ll}instruments_exp:");
 
                 var instrumentCountExp = 0;
+                var instrumentLimitExp = project.SoundEngineUsesExtendedInstruments ? 256 : 32;
 
                 for (int i = 0; i < project.Instruments.Count; i++)
                 {
@@ -658,8 +653,8 @@ namespace FamiStudio
                     }
                 }
 
-                if (instrumentCountExp > 32)
-                    Log.LogMessage(LogSeverity.Error, $"Number of expansion instrument ({instrumentCountExp}) exceeds the limit of 32, song will not sound correct.");
+                if (instrumentCountExp > instrumentLimitExp)
+                    Log.LogMessage(LogSeverity.Error, $"Number of expansion instrument ({instrumentCountExp}) exceeds the limit of {instrumentLimitExp}, song will not sound correct.");
 
                 lines.Add("");
             }
@@ -768,7 +763,7 @@ namespace FamiStudio
 
                     if (kernel == FamiToneKernel.FamiStudio)
                     {
-                        if (usesMultipleDpcmBanks)
+                        if (project.SoundEngineUsesDpcmBankSwitching)
                         {
                             size += 5;
                             lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FAMISTUDIO_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2},${sampleInitialDmcValue:x2},${sampleBank:x2} ; {i:x2} {mapping.Sample.Name} (Pitch:{mapping.Pitch})");
@@ -856,15 +851,12 @@ namespace FamiStudio
 
             if (project.UsesSamples)
             {
-                usesMultipleDpcmBanks |= project.UsesMultipleDPCMBanks;
-
-                if (usesMultipleDpcmBanks)
+                if (project.SoundEngineUsesDpcmBankSwitching)
                 {
-                    Log.LogMessage(LogSeverity.Info, "Project uses multiple DPCM banks, separate DMC files will be generated for each banks.");
+                    Log.LogMessage(LogSeverity.Info, "Project uses DPCM bank switching, separate DMC files will be generated for each banks.");
                 }
 
-                var maxBank = usesMultipleDpcmBanks ? Project.MaxDPCMBanks : 1;
-
+                var maxBank = project.SoundEngineUsesDpcmBankSwitching ? Project.MaxDPCMBanks : 1;
                 var path = Path.GetDirectoryName(filename);
                 var projectname = Utils.MakeNiceAsmName(project.Name);
 
@@ -878,7 +870,7 @@ namespace FamiStudio
                     if (sampleData.Length == 0)
                         continue;
 
-                    var dmcFilename = usesMultipleDpcmBanks? Utils.AddFileSuffix(baseDmcFilename, $"_bank{i}") : baseDmcFilename;
+                    var dmcFilename = project.SoundEngineUsesDpcmBankSwitching ? Utils.AddFileSuffix(baseDmcFilename, $"_bank{i}") : baseDmcFilename;
                     File.WriteAllBytes(dmcFilename, sampleData);
                     bankSizes.Add(sampleData.Length);
                 }
@@ -1788,6 +1780,9 @@ namespace FamiStudio
                 }
 
                 project.SetExpansionAudioMask(ExpansionType.NoneMask);
+                project.SoundEngineUsesExtendedInstruments = false;
+                project.SoundEngineUsesDpcmBankSwitching = false;
+                project.SoundEngineUsesExtendedDpcm = false;
             }
         }
 
@@ -1869,11 +1864,10 @@ namespace FamiStudio
             File.WriteAllLines(includeFilename, includeLines.ToArray());
         }
 
-        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, bool forceMultipleBanks, string filename, string dmcFilename, string includeFilename, int machine)
+        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, string filename, string dmcFilename, string includeFilename, int machine)
         {
             this.machine = machine;
-            this.usesMultipleDpcmBanks |= forceMultipleBanks;
-
+            
             SetupProject(originalProject, songIds);
             SetupFormat(format);
             
@@ -1973,10 +1967,12 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.");
                     if (usesPhaseReset)
                         Log.LogMessage(LogSeverity.Info, "Phase Reset effect is used, you must set FAMISTUDIO_USE_PHASE_RESET = 1.");
-                    if (usesMultipleDpcmBanks)
-                        Log.LogMessage(LogSeverity.Info, "Multiple DPCM banks are used, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
-                    else if (usesExtendedDpcmRange)
-                        Log.LogMessage(LogSeverity.Info, $"More than {MaxDPMCSampleMappingsBase} sample mappings are used. You must set FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1.");
+                    if (project.SoundEngineUsesDpcmBankSwitching)
+                        Log.LogMessage(LogSeverity.Info, "Project has DPCM bankswitching enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
+                    else if (project.SoundEngineUsesExtendedDpcm)
+                        Log.LogMessage(LogSeverity.Info, $"Project has extended DPCM mode enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1.");
+                    if (project.SoundEngineUsesExtendedInstruments)
+                        Log.LogMessage(LogSeverity.Info, $"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
                 }
             }
 
@@ -2123,13 +2119,13 @@ namespace FamiStudio
         }
 
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
-        public byte[] GetBytes(Project project, int[] songIds, int songOffset, bool forceMultipleBanks, int dpcmBankSize, int dpcmOffset, int machine)
+        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmBankSize, int dpcmOffset, int machine)
         {
             var tempFolder = Utils.GetTemporaryDiretory();
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, forceMultipleBanks, tempAsmFilename, tempDmcFilename, null, machine);
+            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, tempAsmFilename, tempDmcFilename, null, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }

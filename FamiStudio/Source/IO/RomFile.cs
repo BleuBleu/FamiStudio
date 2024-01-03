@@ -54,6 +54,9 @@ namespace FamiStudio
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
+                project.SoundEngineUsesExtendedInstruments = true;
+                project.SoundEngineUsesDpcmBankSwitching = true;
+                project.SoundEngineUsesExtendedDpcm = true;
 
                 if (project.UsesFdsExpansion)
                 {
@@ -109,7 +112,7 @@ namespace FamiStudio
                     }
 
                     var song = project.Songs[i];
-                    var songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, RomSongDataStart, true, bankSize, RomDpcmStart, pal ? MachineType.PAL : MachineType.NTSC); 
+                    var songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, RomSongDataStart, bankSize, RomDpcmStart, pal ? MachineType.PAL : MachineType.NTSC); 
 
                     if (songBytes.Length > MaxSongSize)
                     {
@@ -135,7 +138,7 @@ namespace FamiStudio
                             {
                                 songBank = j;
                                 songAddr = RomSongDataStart + songBanks[j].Count;
-                                songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, songAddr, true, bankSize, RomDpcmStart, pal ? MachineType.PAL : MachineType.NTSC); 
+                                songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, songAddr, bankSize, RomDpcmStart, pal ? MachineType.PAL : MachineType.NTSC); 
                                 Debug.Assert(songBytes.Length <= freeSpace);
                                 foundExistingBank = true;
                                 break;

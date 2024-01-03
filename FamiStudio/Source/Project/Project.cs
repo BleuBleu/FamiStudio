@@ -22,7 +22,7 @@ namespace FamiStudio
         // Version 13 = FamiStudio 3.3.0 (EPSM, Delta counter)
         // Version 14 = FamiStudio 4.0.0 (Unicode text).
         // Version 15 = FamiStudio 4.1.0 (DPCM bankswitching)
-        // Version 16 = FamiStudio 4.2.0 (Folders)
+        // Version 16 = FamiStudio 4.2.0 (Folders, sound engine options)
         public const int Version = 16;
         public const int MaxMappedSampleSize = 0x40000;
         public const int MaxDPCMBanks = 64; 
@@ -46,6 +46,11 @@ namespace FamiStudio
         private bool sortSamples = true;
         private bool sortArpeggios = true;
 
+        // Sound engine options.
+        private bool soundEngineUsesExtendedInstruments = false;
+        private bool soundEngineUsesExtendedDpcm = false;
+        private bool soundEngineUsesBankSwitching = false;
+
         // This flag has different meaning depending on the tempo mode:
         //  - In FamiStudio  mode, it means the source data is authored on PAL
         //  - In FamiTracker mode, it means the last playback mode was PAL
@@ -64,24 +69,29 @@ namespace FamiStudio
 
         public int N163WaveRAMSize => 128 - 8 * expansionNumN163Channels;
 
-        public bool UsesAnyExpansionAudio => (expansionMask != ExpansionType.NoneMask);
-        public bool UsesSingleExpansionAudio => (Utils.NumberOfSetBits(expansionMask) == 1);
+        public bool UsesAnyExpansionAudio       => (expansionMask != ExpansionType.NoneMask);
+        public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
         public bool UsesMultipleExpansionAudios => (Utils.NumberOfSetBits(expansionMask) > 1);
 
-        public bool UsesFdsExpansion => (expansionMask & ExpansionType.FdsMask) != 0;
-        public bool UsesN163Expansion => (expansionMask & ExpansionType.N163Mask) != 0;
-        public bool UsesVrc6Expansion => (expansionMask & ExpansionType.Vrc6Mask) != 0;
-        public bool UsesVrc7Expansion => (expansionMask & ExpansionType.Vrc7Mask) != 0;
-        public bool UsesMmc5Expansion => (expansionMask & ExpansionType.Mmc5Mask) != 0;
-        public bool UsesS5BExpansion => (expansionMask & ExpansionType.S5BMask) != 0;
-        public bool UsesEPSMExpansion => (expansionMask & ExpansionType.EPSMMask) != 0;
+        public bool UsesFdsExpansion   => (expansionMask & ExpansionType.FdsMask) != 0;
+        public bool UsesN163Expansion  => (expansionMask & ExpansionType.N163Mask) != 0;
+        public bool UsesVrc6Expansion  => (expansionMask & ExpansionType.Vrc6Mask) != 0;
+        public bool UsesVrc7Expansion  => (expansionMask & ExpansionType.Vrc7Mask) != 0;
+        public bool UsesMmc5Expansion  => (expansionMask & ExpansionType.Mmc5Mask) != 0;
+        public bool UsesS5BExpansion   => (expansionMask & ExpansionType.S5BMask) != 0;
+        public bool UsesEPSMExpansion  => (expansionMask & ExpansionType.EPSMMask) != 0;
+        
         public bool OutputsStereoAudio => UsesEPSMExpansion;
         public bool HasAnyFolders => folders.Count > 0;
 
-        public string Filename { get => filename; set => filename = value; }
-        public string Name { get => name; set => name = value; }
-        public string Author { get => author; set => author = value; }
+        public string Filename  { get => filename;  set => filename = value; }
+        public string Name      { get => name;      set => name = value; }
+        public string Author    { get => author;    set => author = value; }
         public string Copyright { get => copyright; set => copyright = value; }
+
+        public bool SoundEngineUsesExtendedInstruments { get => soundEngineUsesExtendedInstruments; set => soundEngineUsesExtendedInstruments = value; }
+        public bool SoundEngineUsesExtendedDpcm        { get => soundEngineUsesExtendedDpcm || soundEngineUsesBankSwitching; set => soundEngineUsesExtendedDpcm = value; }
+        public bool SoundEngineUsesDpcmBankSwitching   { get => soundEngineUsesBankSwitching; set => soundEngineUsesBankSwitching = value; }
 
         public Project(bool createSongAndInstrument = false)
         {
@@ -2125,7 +2135,8 @@ namespace FamiStudio
                 buffer.Serialize(ref pal);
             }
 
-            // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer.
+            // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer and
+            // some sound-engine specific options.
             if (buffer.Version >= 16)
             {
                 var folderCount = folders.Count;
@@ -2135,6 +2146,10 @@ namespace FamiStudio
                 {
                     folder.SerializeState(buffer);
                 }
+
+                buffer.Serialize(ref soundEngineUsesExtendedInstruments);
+                buffer.Serialize(ref soundEngineUsesExtendedDpcm);
+                buffer.Serialize(ref soundEngineUsesBankSwitching);
             }
 
             // DPCM samples

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace FamiStudio
 {
@@ -53,6 +54,8 @@ namespace FamiStudio
                         prop.label.Visible = value;
                     if (prop.control != null)
                         prop.control.Visible = value;
+                    if (prop.warningIcon != null)
+                        prop.warningIcon.Visible = !string.IsNullOrEmpty(prop.warningIcon.ToolTip); ;  
                 }
                 if (scrollContainer != null)
                     scrollContainer.Visible = value;

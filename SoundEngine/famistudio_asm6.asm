@@ -215,6 +215,10 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 ; assigned to a note, with a specific pitch/loop, etc.). Implied when using FAMISTUDIO_USE_DPCM_BANKSWITCHING.
 ; FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1
 
+; Allows having up to 256 instrument at the cost of slightly higher CPU usage when switching instrument.
+; When this is off, the limit is 64 for regular instruments and 32 for expansion instrumnets.
+; FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1
+
 ; Must be enabled if your project uses the "Phase Reset" effect.
 ; FAMISTUDIO_USE_PHASE_RESET = 1
 
@@ -364,6 +368,10 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 
 .ifndef FAMISTUDIO_USE_DPCM_EXTENDED_RANGE
     FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 0
+.endif
+
+.ifndef FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+    FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 0
 .endif
 
 .ifndef FAMISTUDIO_USE_DPCM_BANKSWITCHING
@@ -3101,7 +3109,7 @@ famistudio_update:
 ;----------------------------------------------------------------------------------------------------------------------
 @update:
 
-    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
+.if FAMISTUDIO_USE_FAMITRACKER_TEMPO
 
     lda famistudio_tempo_acc_hi
     cmp famistudio_song_speed
@@ -3119,7 +3127,7 @@ famistudio_update:
         stx famistudio_tempo_advance_row
     .endif
 
-    .else ; FamiStudio tempo
+.else ; FamiStudio tempo
 
     ; Decrement envelope counter, see if we need to advance.
     dec famistudio_tempo_env_counter
@@ -3154,7 +3162,7 @@ famistudio_update:
 @store_frame_count:
     sta famistudio_tempo_frame_cnt
 
-    .endif
+.endif
 
 ;----------------------------------------------------------------------------------------------------------------------
 @advance_song:
@@ -3808,15 +3816,15 @@ famistudio_do_note_attack:
 
 famistudio_load_basic_envelopes:
 
-    intrument_ptr = famistudio_ptr1
+    instrument_ptr = famistudio_ptr1
     chan_idx      = famistudio_r0
     tmp_x         = famistudio_r3
 
     ; Volume envelope
-    lda (intrument_ptr),y
+    lda (instrument_ptr),y
     sta famistudio_env_addr_lo,x
     iny
-    lda (intrument_ptr),y
+    lda (instrument_ptr),y
     iny
     sta famistudio_env_addr_hi,x
     inx
@@ -3834,10 +3842,10 @@ famistudio_load_basic_envelopes:
 .endif
 
 @arpeggio_envelope:    
-    lda (intrument_ptr),y
+    lda (instrument_ptr),y
     sta famistudio_env_addr_lo,x
     iny
-    lda (intrument_ptr),y
+    lda (instrument_ptr),y
     sta famistudio_env_addr_hi,x
 
 @duty_envelope:
@@ -3852,10 +3860,10 @@ famistudio_load_basic_envelopes:
     @duty:
         inx
         iny
-        lda (intrument_ptr),y
+        lda (instrument_ptr),y
         sta famistudio_env_addr_lo,x
         iny
-        lda (intrument_ptr),y
+        lda (instrument_ptr),y
         sta famistudio_env_addr_hi,x
         jmp @pitch_envelope        
     @no_duty:
@@ -3880,10 +3888,10 @@ famistudio_load_basic_envelopes:
     bmi @done ; Instrument pitch is overriden by vibrato, dont touch!
 .endif    
     iny
-    lda (intrument_ptr),y
+    lda (instrument_ptr),y
     sta famistudio_pitch_env_addr_lo,x
     iny
-    lda (intrument_ptr),y
+    lda (instrument_ptr),y
     sta famistudio_pitch_env_addr_hi,x
 .if !FAMISTUDIO_EXP_NONE
     ; For expansion, preserve X (envelope index) and Y (pointer in instrument data)
@@ -3907,8 +3915,14 @@ famistudio_load_basic_envelopes:
 
 famistudio_set_instrument:
 
-    intrument_ptr = famistudio_ptr1
+    instrument_ptr = famistudio_ptr1
     chan_idx      = famistudio_r0
+
+    ; Pre-multiply by 4 if not using extended range, faster pointer arithmetic.
+    .if !FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+    asl a
+    asl a
+    .endif
 
     ldy chan_idx
     ldx famistudio_channel_env,y
@@ -3940,13 +3954,31 @@ famistudio_set_instrument:
 
 @base_instrument:
 
-    asl ; Instrument number is pre multiplied by 4
-    tay
-    lda famistudio_instrument_hi
-    adc #0 ; Use carry to extend range for 64 instruments
-    sta intrument_ptr+1
-    lda famistudio_instrument_lo
-    sta intrument_ptr+0
+    .if !FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+        asl ; Instrument number is pre multiplied by 4
+        tay
+        lda famistudio_instrument_hi
+        adc #0 ; Use carry to extend range for 64 instruments
+        sta instrument_ptr+1
+        lda famistudio_instrument_lo
+        sta instrument_ptr+0
+    .else
+        ; Multiply by instrument stride of 8.
+        ldy #0
+        sty instrument_ptr+1
+        asl
+        rol instrument_ptr+1 
+        asl
+        rol instrument_ptr+1 
+        asl
+        rol instrument_ptr+1 
+        clc
+        adc famistudio_instrument_lo
+        sta instrument_ptr+0
+        lda instrument_ptr+1
+        adc famistudio_instrument_hi
+        sta instrument_ptr+1
+    .endif
 
     jmp famistudio_load_basic_envelopes ; Will 'rts'
 
@@ -3965,6 +3997,7 @@ famistudio_get_exp_inst_ptr:
 
     instrument_ptr = famistudio_ptr1
 
+ .if !FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
     asl ; Instrument number is pre multiplied by 4
     asl
     tay
@@ -3973,6 +4006,26 @@ famistudio_get_exp_inst_ptr:
     sta instrument_ptr+1
     lda famistudio_exp_instrument_lo
     sta instrument_ptr+0
+.else
+    ; Multiply by expansion instrument stride of 16.
+    ldy #0
+    sty instrument_ptr+1
+    asl
+    rol instrument_ptr+1 
+    asl
+    rol instrument_ptr+1 
+    asl
+    rol instrument_ptr+1 
+    asl
+    rol instrument_ptr+1 
+    clc
+    adc famistudio_exp_instrument_lo
+    sta instrument_ptr+0
+    lda instrument_ptr+1
+    adc famistudio_exp_instrument_hi
+    sta instrument_ptr+1
+.endif   
+
     rts
 
 .endif
@@ -4467,7 +4520,9 @@ famistudio_set_n163_instrument:
     ptr      = famistudio_ptr1
     chan_idx = famistudio_r0
 
-    sta famistudio_chn_n163_instrument-FAMISTUDIO_N163_CH0_IDX,y ; Store instrument number*4
+    ; Store instrument number (premultipled by 4 if not using extended range)
+    sta famistudio_chn_n163_instrument-FAMISTUDIO_N163_CH0_IDX,y
+    
     jsr famistudio_get_exp_inst_ptr
     jsr famistudio_load_basic_envelopes
 
@@ -4568,8 +4623,6 @@ famistudio_advance_channel:
     and #$7f
     lsr a
     bcs @set_repeat
-    asl a
-    asl a
 
     ; Set the instrument. `famistudio_set_instrument` (or proc it calls) are not
     ; allowed to clobber r0/r1/r2 or ptr0.

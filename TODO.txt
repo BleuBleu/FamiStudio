@@ -28,8 +28,10 @@ x Sort button for songs doesnt do shit?
 - Sound engine improvements:
 	x Instrument/attack refactor
 	- Allow no-attack when envelopes are identical (mostly useful for EPSM/VRC7)
-	- Make project settings a multi-property dialog, add sound engine options for dpcm/inst extended range.
-	- Extended intrument mode for sound engine, up to 256
+		- Call MergeIndenticalInstrument pre-export.
+	x Make project settings a multi-property dialog, add sound engine options for dpcm/inst extended range.
+		- Make real icons.
+	x Extended intrument mode for sound engine, up to 256
 	- At the end, run special unit test with all songs.
 - FDS automod
 - Size option for mobile piano

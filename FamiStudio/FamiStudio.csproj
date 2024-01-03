@@ -136,6 +136,7 @@
     <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
+    <Compile Include="Source\UI\Common\ProjectPropertiesDialog.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
     <Compile Include="Source\UI\Common\ScrollContainer.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
@@ -671,6 +672,12 @@
     <EmbeddedResource Include="Resources\Atlas\PlaySource@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\PlusSmall.tga" />
     <EmbeddedResource Include="Resources\Atlas\PlusSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesExpansion.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesExpansion@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\QwertyPiano.tga" />

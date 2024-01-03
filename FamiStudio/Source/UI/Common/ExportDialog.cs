@@ -201,7 +201,6 @@ namespace FamiStudio
         LocalizedString FT2SepFilesTooltip;
         LocalizedString FT2SepFilesFmtTooltip;
         LocalizedString FT2DmcFmtTooltip;
-        LocalizedString FT2BankswitchTooltip;
         LocalizedString FT2SongListTooltip;
         LocalizedString FT2SfxSongListTooltip;
 
@@ -211,7 +210,6 @@ namespace FamiStudio
         LocalizedString SeparateFilesLabel;
         LocalizedString SongNamePatternLabel;
         LocalizedString DmcNamePatternLabel;
-        LocalizedString ForceDpcmBankSwitchingLabel;
         LocalizedString GenerateSongListIncludeLabel;
 
         // Share tooltips
@@ -516,9 +514,8 @@ namespace FamiStudio
                         page.AddCheckBox(SeparateFilesLabel.Colon, false, FT2SepFilesTooltip); // 1
                         page.AddTextBox(SongNamePatternLabel.Colon, "{project}_{song}", 0, FT2SepFilesFmtTooltip); // 2
                         page.AddTextBox(DmcNamePatternLabel.Colon, "{project}", 0, FT2DmcFmtTooltip); // 3
-                        page.AddCheckBox(ForceDpcmBankSwitchingLabel.Colon, false, FT2BankswitchTooltip); // 4
-                        page.AddCheckBox(GenerateSongListIncludeLabel.Colon, false, FT2SongListTooltip); // 5
-                        page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 6
+                        page.AddCheckBox(GenerateSongListIncludeLabel.Colon, false, FT2SongListTooltip); // 4
+                        page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 5
                         page.SetPropertyEnabled(2, false);
                         page.SetPropertyEnabled(3, false);
                         page.PropertyChanged += SoundEngine_PropertyChanged;
@@ -1193,14 +1190,13 @@ namespace FamiStudio
             var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioMusic : (int)ExportFormat.FamiTone2Music);
 
             var separate = props.GetPropertyValue<bool>(1);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(6));
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
             var kernel = famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2;
             var exportFormat = AssemblyFormat.GetValueForName(props.GetPropertyValue<string>(0));
             var ext = exportFormat == AssemblyFormat.CA65 ? "s" : "asm";
             var songNamePattern = props.GetPropertyValue<string>(2);
             var dpcmNamePattern = props.GetPropertyValue<string>(3);
-            var forceBankswitching = props.GetPropertyValue<bool>(4);
-            var generateInclude = props.GetPropertyValue<bool>(5);
+            var generateInclude = props.GetPropertyValue<bool>(4);
 
             if (separate)
             {
@@ -1228,7 +1224,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        success = success && f.Save(project, new int[] { songId }, exportFormat, -1, true, forceBankswitching, songFilename, dpcmFilename, includeFilename, MachineType.Dual);
+                        success = success && f.Save(project, new int[] { songId }, exportFormat, -1, true, songFilename, dpcmFilename, includeFilename, MachineType.Dual);
                     }
 
                     lastExportFilename = folder;
@@ -1247,7 +1243,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    var success = f.Save(project, songIds, exportFormat, -1, false, forceBankswitching, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
+                    var success = f.Save(project, songIds, exportFormat, -1, false, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
 
                     lastExportFilename = filename;
                     ShowExportResultToast(FormatAssemblyMessage, success);
