@@ -76,6 +76,7 @@ namespace FamiStudio
 
                 if (noteTriggered)
                 {
+                    // TODO : This is wrong, mod unit could be running.
                     WriteRegister(NesApu.FDS_SWEEP_BIAS, 0);
 
                     if (note.Instrument != null)

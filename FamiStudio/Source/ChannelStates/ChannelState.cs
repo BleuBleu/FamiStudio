@@ -214,8 +214,10 @@ namespace FamiStudio
             }
             else if (newNote.IsMusical)
             {
-                bool instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentReload;
-                bool arpeggioChanged   = note.Arpeggio   != newNote.Arpeggio;
+                var instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentReload;
+                var arpeggioChanged   = note.Arpeggio   != newNote.Arpeggio;
+
+                var noteHasAttack = newNote.HasAttack || !Channel.CanDisableAttack(channelType, note.Instrument, newNote.Instrument);
 
                 note = newNote;
 
@@ -237,21 +239,28 @@ namespace FamiStudio
                     envelopeValues[EnvelopeType.Arpeggio] = 0;
                 }
                 // If same arpeggio, but note has an attack, reset it.
-                else if (note.HasAttack && arpeggioEnvelopeOverride)
+                else if (noteHasAttack && arpeggioEnvelopeOverride)
                 {
                     envelopeIdx[EnvelopeType.Arpeggio] = 0;
                     envelopeValues[EnvelopeType.Arpeggio] = 0;
                 }
 
-                if (instrumentChanged || note.HasAttack)
+                if (noteHasAttack)
                 {
-                    for (int j = 0; j < EnvelopeType.Count; j++)
+                    if (instrumentChanged)
                     {
-                        if ((j != EnvelopeType.Pitch     || !pitchEnvelopeOverride) &&
-                            (j != EnvelopeType.Arpeggio  || !arpeggioEnvelopeOverride))
+                        for (var j = 0; j < EnvelopeType.Count; j++)
                         {
-                            envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
+                            if ((j != EnvelopeType.Pitch || !pitchEnvelopeOverride) &&
+                                (j != EnvelopeType.Arpeggio || !arpeggioEnvelopeOverride))
+                            {
+                                envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
+                            }
                         }
+                    }
+
+                    for (var j = 0; j < EnvelopeType.Count; j++)
+                    {
                         envelopeIdx[j] = 0;
                     }
 

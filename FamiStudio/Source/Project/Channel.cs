@@ -27,19 +27,19 @@ namespace FamiStudio
         public int ExpansionChannelIndex => ChannelType.GetExpansionChannelIndexForChannelType(type);
         public int Index => ChannelTypeToIndex(type, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels);
 
-        public bool IsRegularChannel    => Expansion == ExpansionType.None;
-        public bool IsFdsChannel        => Expansion == ExpansionType.Fds;
-        public bool IsN163Channel       => Expansion == ExpansionType.N163;
-        public bool IsVrc6Channel       => Expansion == ExpansionType.Vrc6;
-        public bool IsVrc7Channel       => Expansion == ExpansionType.Vrc7;
-        public bool IsMmc5Channel       => Expansion == ExpansionType.Mmc5;
-        public bool IsS5BChannel        => Expansion == ExpansionType.S5B;
-        public bool IsNoiseChannel      => type == ChannelType.Noise;
-        public bool IsDpcmChannel       => type == ChannelType.Dpcm;
-        public bool IsEPSMChannel       => type >= ChannelType.EPSMSquare1 && type <= ChannelType.EPSMrythm6;
-        public bool IsEPSMSquareChannel => type >= ChannelType.EPSMSquare1 && type <= ChannelType.EPSMSquare3;
-        public bool IsEPSMFmChannel     => type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6;
-        public bool IsEPSMRythmChannel  => type >= ChannelType.EPSMrythm1 && type <= ChannelType.EPSMrythm6;
+        public bool IsRegularChannel    => ChannelType.IsRegularChannel(type);
+        public bool IsFdsChannel        => ChannelType.IsFdsChannel(type);
+        public bool IsN163Channel       => ChannelType.IsN163Channel(type);
+        public bool IsVrc6Channel       => ChannelType.IsVrc6Channel(type);
+        public bool IsVrc7Channel       => ChannelType.IsVrc7Channel(type);
+        public bool IsMmc5Channel       => ChannelType.IsMmc5Channel(type);
+        public bool IsS5BChannel        => ChannelType.IsS5BChannel(type);
+        public bool IsNoiseChannel      => ChannelType.IsNoiseChannel(type);
+        public bool IsDpcmChannel       => ChannelType.IsDpcmChannel(type);
+        public bool IsEPSMChannel       => ChannelType.IsEPSMChannel(type);
+        public bool IsEPSMSquareChannel => ChannelType.IsEPSMSquareChannel(type);
+        public bool IsEPSMFmChannel     => ChannelType.IsEPSMFmChannel(type);
+        public bool IsEPSMRythmChannel  => ChannelType.IsEPSMRythmChannel(type);
 
         public Channel(Song song, int type, int songLength)
         {
@@ -1467,6 +1467,51 @@ namespace FamiStudio
             DeleteUnusedPatterns();
         }
 
+        // This should mimic the behavior of the sound engine, only these instrument
+        // have the proper logic to reload an instrument when there is no attack.
+        public static bool CanDisableAttack(int channelType, Instrument i1, Instrument i2)
+        {
+            if (i1 == null || i2 == null)
+            {
+                return false;
+            }
+
+            // TODO : Maybe no attack on DPCM could mean switch sample without restting DAC? 
+            if (ChannelType.IsDpcmChannel(channelType))
+            {
+                return false;
+            }
+
+            if (i1 == i2)
+            {
+                return true;
+            }
+
+            Debug.Assert(i1.Expansion == i2.Expansion);
+
+            if (ChannelType.IsN163Channel(channelType))
+            {
+                // N163 instruments is a bit to complex to allow disabling
+                // attack on instrument switch.
+                return false;
+            }
+            else if (ChannelType.IsFdsChannel(channelType))
+            {
+                // For FDS, we will allow the wave + modulation envelopes to be different
+                // but there is very little value in this. We dont force a phase reset 
+                // between notes so disabling the attack wont change anything really.
+                return Instrument.AllEnvelopesAreIdentical(i1, i2, 
+                    ~((1 << EnvelopeType.FdsWaveform) |
+                      (1 << EnvelopeType.FdsModulation)));
+            }
+            else
+            {
+                // For regular and FM instrument, as long as envelopes matches, it 
+                // garantees we wont have out-of-bounds pointers when switching envelopes.
+                return Instrument.AllEnvelopesAreIdentical(i1, i2);
+            }
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsWriting)
@@ -1575,7 +1620,7 @@ namespace FamiStudio
         public const int FdsWave = 14;
         public const int Mmc5Square1 = 15;
         public const int Mmc5Square2 = 16;
-        public const int Mmc5Dpcm = 17;
+        public const int Mmc5Dpcm = 17; // Rename me
         public const int N163Wave1 = 18;
         public const int N163Wave2 = 19;
         public const int N163Wave3 = 20;
@@ -1833,6 +1878,21 @@ namespace FamiStudio
         {
             return Array.IndexOf(InternalNames, str);
         }
+
+        public static bool IsRegularChannel(int type) => type <= Dpcm;
+        public static bool IsFdsChannel(int type) => type == FdsWave;
+        public static bool IsN163Channel(int type) => type >= N163Wave1 && type <= N163Wave8;
+        public static bool IsVrc6Channel(int type) => type >= Vrc6Square1 && type <= Vrc6Saw;
+        public static bool IsVrc7Channel(int type) => type >= Vrc7Fm1 && type <= Vrc7Fm6;
+        public static bool IsMmc5Channel(int type) => type >= Mmc5Square1 && type <= Mmc5Dpcm;
+        public static bool IsS5BChannel(int type) => type >= S5BSquare1 && type <= S5BSquare3;
+        public static bool IsNoiseChannel(int type) => type == Noise;
+        public static bool IsDpcmChannel(int type) => type == Dpcm;
+        public static bool IsEPSMChannel(int type) => type >= EPSMSquare1 && type <= EPSMrythm6;
+        public static bool IsEPSMSquareChannel(int type) => type >= EPSMSquare1 && type <= EPSMSquare3;
+        public static bool IsEPSMFmChannel(int type) => type >= EPSMFm1 && type <= EPSMFm6;
+        public static bool IsEPSMRythmChannel(int type) => type >= EPSMrythm1 && type <= EPSMrythm6;
+
     }
 
     // Iterator to to iterate on musical notes in a range of the song and automatically find the following note.

@@ -46,6 +46,7 @@ namespace FamiStudio
         public ChannelStateEPSMFm(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
             channelIdx = channelType - ChannelType.EPSMFm1;
+            channelIdxHigh = channelIdx >= 3 ? channelIdx - 3 : channelIdx;
         }
 
         protected override void LoadInstrument(Instrument instrument)
@@ -54,10 +55,9 @@ namespace FamiStudio
             { 
                 Debug.Assert(instrument.IsEpsm);
                 
-                channelIdxHigh = channelIdx >= 3 ? channelIdx - 3 : channelIdx;
-                stereoFlags    = instrument.EpsmPatchRegs[1];
-                algorithm      = instrument.EpsmPatchRegs[0];
-                patchRegs      = instrument.EpsmPatchRegs;
+                stereoFlags = instrument.EpsmPatchRegs[1];
+                algorithm   = instrument.EpsmPatchRegs[0];
+                patchRegs   = instrument.EpsmPatchRegs;
             }
         }
 

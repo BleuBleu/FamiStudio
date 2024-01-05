@@ -1413,13 +1413,16 @@ namespace FamiStudio
 
         public void DeleteAllSongsBut(int[] songIds, bool deleteUnusedData = true)
         {
-            for (int i = songs.Count - 1; i >= 0; i--)
+            if (songIds != null)
             {
-                var song = songs[i];
-
-                if (Array.IndexOf(songIds, song.Id) < 0)
+                for (int i = songs.Count - 1; i >= 0; i--)
                 {
-                    DeleteSong(song);
+                    var song = songs[i];
+
+                    if (Array.IndexOf(songIds, song.Id) < 0)
+                    {
+                        DeleteSong(song);
+                    }
                 }
             }
 
@@ -1664,6 +1667,18 @@ namespace FamiStudio
                     i++;
                 }
             }
+        }
+
+        public void RemoveDpcmNotesWithoutMapping()
+        {
+            foreach (var song in songs)
+                song.RemoveDpcmNotesWithoutMapping();
+        }
+
+        public void PermanentlyApplyGrooves()
+        {
+            foreach (var song in songs)
+                song.PermanentlyApplyGrooves();
         }
 
         public void ConvertToFamiStudioTempo()

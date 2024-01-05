@@ -244,7 +244,7 @@ namespace FamiStudio
             if (env.IsEmpty(EnvelopeType.Count))
                 return null;
 
-            env.Truncate();
+            env.Optimize();
 
             // Special case for envelopes with a single value (like duty often are).
             // Make them 127 in length so that they update less often.
@@ -1249,6 +1249,14 @@ namespace FamiStudio
                             // Instrument change.
                             if (note.IsMusical && note.Instrument != null && !channel.IsDpcmChannel)
                             {
+                                var attack = note.HasAttack || !Channel.CanDisableAttack(channel.Type, instrument, note.Instrument);
+
+                                if (!attack)
+                                {
+                                    // TODO: Remove note entirely after a slide that matches the next note with no attack.
+                                    songData.Add($"${OpcodeDisableAttack:x2}+");
+                                }
+
                                 if (note.Instrument != instrument)
                                 {
                                     // Change saw volume if needed.
@@ -1264,11 +1272,6 @@ namespace FamiStudio
                                     int idx = instrumentIndices[note.Instrument];
                                     songData.Add($"${(byte)(0x80 | (idx << 1)):x2}+");
                                     instrument = note.Instrument;
-                                }
-                                else if (!note.HasAttack)
-                                {
-                                    // TODO: Remove note entirely after a slide that matches the next note with no attack.
-                                    songData.Add($"${OpcodeDisableAttack:x2}+");
                                 }
                             }
 
@@ -1798,30 +1801,12 @@ namespace FamiStudio
                 project.ConvertToFamiTrackerTempo(false);
             }
 
-            // NULL = All songs.
-            if (songIds != null)
-            {
-                for (int i = 0; i < project.Songs.Count; i++)
-                {
-                    if (!songIds.Contains(project.Songs[i].Id))
-                    {
-                        project.DeleteSong(project.Songs[i]);
-                        i--;
-                    }
-                }
-            }
-
+            project.DeleteAllSongsBut(songIds);
             RemoveUnsupportedFeatures();
-            project.DeleteUnusedInstruments();
-
-            foreach (var song in project.Songs)
-                song.RemoveDpcmNotesWithoutMapping();
-
-            if (project.UsesFamiStudioTempo)
-            {
-                foreach (var song in project.Songs)
-                    song.PermanentlyApplyGrooves();
-            }
+            project.Cleanup();
+            project.MergeIdenticalInstruments();
+            project.RemoveDpcmNotesWithoutMapping();
+            project.PermanentlyApplyGrooves();
 
             if (project.UsesMultipleExpansionAudios)
             {

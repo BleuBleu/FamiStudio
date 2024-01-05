@@ -327,10 +327,52 @@ namespace FamiStudio
                 values[j] = (sbyte)(values[j] - values[j - 1]);
         }
 
-        public void Truncate()
+        public static bool AreIdentical(int type, Envelope e1, Envelope e2)
         {
-            if (relative || !canResize || length == 0 || release >= 0)
+            if (e1.length    != e2.length   ||
+                e1.loop      != e2.loop     ||
+                e1.release   != e2.release  ||
+                e1.relative  != e2.relative ||
+                e1.maxLength != e2.maxLength)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < e1.length; i++)
+            {
+                if (e1.values[i] != e2.values[i])
+                    return false;
+            }
+            
+            // These are implied by the type, so they should always match.
+            Debug.Assert(
+                e1.maxLength   == e2.maxLength   &&
+                e1.chunkLength == e2.chunkLength &&
+                e1.canResize   == e2.canResize   &&
+                e1.canLoop     == e2.canLoop     &&
+                e1.canRelease  == e2.canRelease);
+
+            return true;
+        }
+
+        public void Optimize()
+        {
+            if (length == 0|| chunkLength > 1 || !canResize)
+            {
                 return;
+            }
+
+            if (AllValuesEqual(values[0]))
+            {
+                loop = -1;
+                release = -1;
+                Length = 1;
+                return;
+            }
+
+            // TODO : We can optimize more here. We should do it in 2 step.
+            // 1) Shorten loop (if any) if its all the same values.
+            // 2) Remove identical trailing values (start at release if any)
 
             if (loop >= 0)
             {
@@ -341,11 +383,12 @@ namespace FamiStudio
                         return;
                 }
 
-                length = 1;
+                Length = 1;
             }
             else
             {
-                // Non looping envelope can be optimized by removing all the trailing values that have the same value.
+                // Non looping envelope (or envelope with releases) can be optimized
+                // by removing all the trailing values that have the same value.
                 int i = length - 2;
                 for (; i >= 0 && i > release; i--)
                 {
@@ -353,7 +396,7 @@ namespace FamiStudio
                         break;
                 }
 
-                length = i + 2;
+                Length = i + 2;
             }
         }
 
