@@ -2908,7 +2908,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			case STATE_STEREO: return (mWave_EPSM[idx].nVolume & 0xc0);
 			case STATE_PERIOD: return 0xc20;
 			case STATE_VOLUME: 
-				int returnval = mWave_EPSM[idx].bChannelEnabled ? ((mWave_EPSM[idx].nVolume & 0x0f) >> 1) : 0;
+				int returnval = mWave_EPSM[idx].bChannelEnabled ? ((mWave_EPSM[idx].nVolume & 0x1f) >> 1) : 0;
 				mWave_EPSM[idx].bChannelEnabled = 0;
 				return returnval;
 			}
