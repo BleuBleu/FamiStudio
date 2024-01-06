@@ -1,9 +1,9 @@
-@taskkill /im mesenx.exe
+@taskkill /im mesen.exe
 
 @..\..\Tools\msxsl.exe %USERPROFILE%\Documents\Mesen\Debugger\nsf.Workspace.xml ..\..\..\NES\tools\bin\cleandebug.xml -o %USERPROFILE%\Documents\Mesen\Debugger\nsf.Workspace.xml
 
-PatchNsf epsm.nsf nsf_famistudio_epsm_ntsc.bin nsf.nsf
-copy /y nsf_famistudio_epsm_ntsc.dbg nsf.dbg
+PatchNsf n163s5b.nsf nsf_famistudio_multi_n163_4ch_ntsc.bin nsf.nsf
+copy /y nsf_famistudio_multi_n163_4ch_ntsc.dbg nsf.dbg
 
 @findstr /V "zeropage.*type=equ @LOCAL-MACRO_SYMBOL" nsf.dbg > nsf.dbg.new
 @del nsf.dbg
@@ -12,4 +12,4 @@ copy /y nsf_famistudio_epsm_ntsc.dbg nsf.dbg
 @del %USERPROFILE%\Documents\Mesen\Debugger\nsf.cdl
 @del %USERPROFILE%\Documents\Mesen\RecentGames\nsf.*
 
-..\..\Tools\MesenX.exe nsf.nsf
+..\..\Tools\Mesen.exe nsf.nsf
