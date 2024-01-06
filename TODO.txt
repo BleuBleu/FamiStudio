@@ -27,13 +27,14 @@ x Export -> Video settings scrolling area doesnt take scaling into account.
 x Sort button for songs doesnt do shit?
 - Sound engine improvements:
 	x Instrument/attack refactor
-	- Allow no-attack when envelopes are identical (mostly useful for EPSM/VRC7)
-		x Call MergeIndenticalInstrument pre-export.
+	x Allow no-attack when envelopes are identical (mostly useful for EPSM/VRC7)
 	x Make project settings a multi-property dialog, add sound engine options for dpcm/inst extended range.
 		- Make real icons.
 	x Extended intrument mode for sound engine, up to 256
 	- At the end, run special unit test with all songs.
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
+	- Dont compress vibrato envelopes.
+	- New opcode "override envelope and reset", call only when speed changes.
 - FDS automod
 	- Review FDS_SWEEP_BIAS usage. Re-read nes dev wiki. 
 - Size option for mobile piano
@@ -43,6 +44,14 @@ x Sort button for songs doesnt do shit?
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - Dont publish for chromebooks
 - Finish/fix phase reset support
+	=> See how each channel manages its delay, must never write > time.
+		x 2A03 Squares (+MMC5)
+		x VRC6
+		/ FDS
+		/ N163 (okay-ish, we always do 15-cycle update).
+		=> For FDS/N163, review our use of "delay", a bit sketchy.
+		=> Remove "sprintf(ttt, "%d\n", ticks);" in NotSoFaso.
+	=> Reorganize in-app channel update to mimic ASM more closely.
 	=> option to fully emulation from start.
 - Replace an specific instrument by another in selection (A->B), R+CLICK.
 - We should be able to drag/copy samples mappings between instruments.
