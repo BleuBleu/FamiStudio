@@ -93,10 +93,6 @@ public:
 		int mn;
 		float freq;
 
-		char ttt[256];
-		sprintf(ttt, "%d\n", ticks);
-		//OutputDebugStringA(ttt);
-
 		while(ticks)
 		{
 			mn = ticks;
