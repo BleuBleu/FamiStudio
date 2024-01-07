@@ -1818,6 +1818,10 @@ namespace FamiStudio
             {
                 foreach (var channel in song.Channels)
                 {
+                    // DPCM channel doesn;t actually uses real instruments.
+                    if (channel.IsDpcmChannel)
+                        continue;
+
                     var prevInstrument = (Instrument)null;
 
                     for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
