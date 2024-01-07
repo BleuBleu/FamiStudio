@@ -275,6 +275,13 @@ namespace FamiStudio
             false, // MobilePan
         };
 
+        enum NoteAttackState
+        {
+            Attack,
+            NoAttack,
+            NoAttackError
+        }
+
         int captureNoteAbsoluteIdx = 0;
         int captureMouseAbsoluteIdx = 0;
         int captureNoteValue = 0;
@@ -2649,6 +2656,7 @@ namespace FamiStudio
                 var highlightReleased = false;
                 var highlightLastNoteValue = Note.NoteInvalid;
                 var highlightLastInstrument = (Instrument)null;
+                var highlightAttackState = NoteAttackState.Attack;
 
                 if (editMode != EditionMode.VideoRecording && !ParentWindow.IsAsyncDialogInProgress)
                 {
@@ -2721,17 +2729,26 @@ namespace FamiStudio
                         for (var it = channel.GetSparseNoteIterator(min, max); !it.Done; it.Next())
                         {
                             var note = it.Note;
+                            var noteAttackState = NoteAttackState.Attack;
 
                             // Release notes are no longer supported in the piano roll. 
                             Debug.Assert(!note.IsRelease);
 
                             if (note.IsMusical)
                             {
-                                lastNoteValue = note.Value;
-                                lastInstrument = note.Instrument;
+                                // We'll display an empty attack when the user tries to disable in a 
+                                // situation where its not supported.
+                                noteAttackState = note.HasAttack ? 
+                                    NoteAttackState.Attack : 
+                                    Channel.CanDisableAttack(channel.Type, lastInstrument, note.Instrument) ?
+                                        NoteAttackState.NoAttack :
+                                        NoteAttackState.NoAttackError;
 
-                                if (note.HasAttack)
+                                if (noteAttackState != NoteAttackState.NoAttack)
                                     released = false;
+
+                                lastNoteValue  = note.Value;
+                                lastInstrument = note.Instrument;
                             }
 
                             if (isActiveChannel && it.Location == highlightLocation)
@@ -2739,11 +2756,12 @@ namespace FamiStudio
                                 highlightReleased = released;
                                 highlightLastNoteValue = lastNoteValue;
                                 highlightLastInstrument = lastInstrument;
+                                highlightAttackState = noteAttackState;
                             }
 
                             if (note.IsMusical)
                             {
-                                RenderNote(r, it.Location, note, song, c, it.DistanceToNextCut, drawImplicitStopNotes, isActiveChannel, false, released);
+                                RenderNote(r, it.Location, note, song, c, it.DistanceToNextCut, drawImplicitStopNotes, isActiveChannel, false, released, noteAttackState);
                             }
                             else if (note.IsStop)
                             {
@@ -2760,7 +2778,7 @@ namespace FamiStudio
                         {
                             if (highlightNote.IsMusical)
                             {
-                                RenderNote(r, highlightLocation, highlightNote, song, c, channel.GetDistanceToNextNote(highlightLocation), drawImplicitStopNotes, true, true, highlightReleased);
+                                RenderNote(r, highlightLocation, highlightNote, song, c, channel.GetDistanceToNextNote(highlightLocation), drawImplicitStopNotes, true, true, highlightReleased, highlightAttackState);
                             }
                             else if (highlightNote.IsStop)
                             {
@@ -3250,7 +3268,7 @@ namespace FamiStudio
             r.c.PopClipRegion();
         }
 
-        private void RenderNoteBody(RenderInfo r, Note note, Color color, int time, int noteLen, int transpose, bool outline, bool selected, bool activeChannel, bool released, bool isFirstPart, int slideDuration = -1)
+        private void RenderNoteBody(RenderInfo r, Note note, Color color, int time, int noteLen, int transpose, bool outline, bool selected, bool activeChannel, bool released, bool isFirstPart, int slideDuration, NoteAttackState attackState)
         {
             var noteValue = note.Value + transpose;
             var x = GetPixelXForAbsoluteNoteIndex(time);
@@ -3286,9 +3304,16 @@ namespace FamiStudio
 
             if (!outline)
             {
-                if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + attackIconPosX * 2 + 2)
+                if (isFirstPart && attackState != NoteAttackState.NoAttack && sx > noteAttackSizeX + attackIconPosX * 2 + 2)
                 {
-                    r.c.FillRectangle(attackIconPosX + 1, attackIconPosX + 1, attackIconPosX + noteAttackSizeX + 1, sy - attackIconPosX, activeChannel ? attackColor : attackBrushForceDisplayColor);
+                    if (attackState == NoteAttackState.NoAttackError)
+                    {
+                        r.c.DrawRectangle(attackIconPosX + 1, attackIconPosX + 1, attackIconPosX + noteAttackSizeX, sy - attackIconPosX - 1, activeChannel ? attackColor : attackBrushForceDisplayColor);
+                    }
+                    else
+                    {
+                        r.c.FillRectangle(attackIconPosX + 1, attackIconPosX + 1, attackIconPosX + noteAttackSizeX + 1, sy - attackIconPosX, activeChannel ? attackColor : attackBrushForceDisplayColor);
+                    }
                     noteTextPosX += noteAttackSizeX + attackIconPosX + 2;
                 }
 
@@ -3341,7 +3366,7 @@ namespace FamiStudio
             r.c.PopTransform();
         }
 
-        private void RenderNote(RenderInfo r, NoteLocation location, Note note, Song song, int channelIndex, int distanceToNextNote, bool drawImplicityStopNotes, bool isActiveChannel, bool highlighted, bool released)
+        private void RenderNote(RenderInfo r, NoteLocation location, Note note, Song song, int channelIndex, int distanceToNextNote, bool drawImplicityStopNotes, bool isActiveChannel, bool highlighted, bool released, NoteAttackState attackState)
         {
             Debug.Assert(note.IsMusical);
 
@@ -3360,7 +3385,7 @@ namespace FamiStudio
             // Draw first part, from start to release point.
             if (note.HasRelease)
             {
-                RenderNoteBody(r, note, color, absoluteIndex, Math.Min(note.Release, duration), transpose, highlighted, selected, isActiveChannel, released, true, slideDuration);
+                RenderNoteBody(r, note, color, absoluteIndex, Math.Min(note.Release, duration), transpose, highlighted, selected, isActiveChannel, released, true, slideDuration, attackState);
                 absoluteIndex += note.Release;
                 duration -= note.Release;
 
@@ -3377,7 +3402,7 @@ namespace FamiStudio
             // Then second part, after release to stop note.
             if (duration > 0)
             {
-                RenderNoteBody(r, note, color, absoluteIndex, duration, transpose, highlighted, selected, isActiveChannel, released, !note.HasRelease, slideDuration);
+                RenderNoteBody(r, note, color, absoluteIndex, duration, transpose, highlighted, selected, isActiveChannel, released, !note.HasRelease, slideDuration, attackState);
                 absoluteIndex += duration;
 
                 if (drawImplicityStopNotes && absoluteIndex < nextAbsoluteIndex && !highlighted)

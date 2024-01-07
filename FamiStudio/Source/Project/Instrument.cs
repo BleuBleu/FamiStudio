@@ -576,6 +576,42 @@ namespace FamiStudio
             return serializer.CRC;
         }
 
+        public static bool AllEnvelopesAreIdentical(Instrument i1, Instrument i2, int envelopeMask = -1)
+        {
+            if (i1 == null || i2 == null)
+            {
+                return false;
+            }
+            
+            if (i1 != i2)
+            {
+                Debug.Assert(i1.expansion == i2.expansion);
+
+                for (var i = 0; i < EnvelopeType.Count; i++)
+                {
+                    var mask = 1 << i;
+
+                    if ((envelopeMask & mask) != 0)
+                    {
+                        var e1 = i1.envelopes[i];
+                        var e2 = i2.envelopes[i];
+
+                        Debug.Assert((e1 == null) == (e2 == null));
+
+                        if (e1 != null && e2 != null)
+                        {
+                            if (!Envelope.AreIdentical(i, e1, e2))
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
         public DPCMSampleMapping MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
         {
             Debug.Assert(Note.IsMusicalNote(note));

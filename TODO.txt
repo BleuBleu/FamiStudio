@@ -27,13 +27,16 @@ x Export -> Video settings scrolling area doesnt take scaling into account.
 x Sort button for songs doesnt do shit?
 - Sound engine improvements:
 	x Instrument/attack refactor
-	- Allow no-attack when envelopes are identical (mostly useful for EPSM/VRC7)
-		- Call MergeIndenticalInstrument pre-export.
+	x Allow no-attack when envelopes are identical (mostly useful for EPSM/VRC7)
 	x Make project settings a multi-property dialog, add sound engine options for dpcm/inst extended range.
 		- Make real icons.
 	x Extended intrument mode for sound engine, up to 256
 	- At the end, run special unit test with all songs.
+- Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
+	- Dont compress vibrato envelopes.
+	- New opcode "override envelope and reset", call only when speed changes.
 - FDS automod
+	- Review FDS_SWEEP_BIAS usage. Re-read nes dev wiki. 
 - Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
@@ -41,7 +44,17 @@ x Sort button for songs doesnt do shit?
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - Dont publish for chromebooks
 - Finish/fix phase reset support
+	=> See how each channel manages its delay, must never write > time.
+		x 2A03 Squares (+MMC5)
+		x VRC6
+		/ FDS
+		/ N163 (okay-ish, we always do 15-cycle update).
+		=> For FDS/N163, review our use of "delay", a bit sketchy.
+		=> Remove "sprintf(ttt, "%d\n", ticks);" in NotSoFaso.
+	=> Reorganize in-app channel update to mimic ASM more closely.
 	=> option to fully emulation from start.
+- Replace an specific instrument by another in selection (A->B), R+CLICK.
+- We should be able to drag/copy samples mappings between instruments.
 
 4.2.0 Testing/Packaging
 =======================
@@ -49,6 +62,7 @@ x Sort button for songs doesnt do shit?
 - Undo acciental changes to demo songs (shovel, JTS, etc.)
 - Make sure PortAudio.dll is included in portable + setup.
 - Compare FDS filter with my FDS once im back home. See how close we can get without adding a dedicated filter.
+- Add new features to unit tests
 
 Later
 =====
@@ -158,17 +172,14 @@ Backlog:
 - Low slide notes going down + arp going up = glitch. Fix idea : Internally modify the arp to make it less strong based on slide range (ex: div by 4 if doing down 2 octaves).
   https://discord.com/channels/747649221879922840/1024388342210642150/1147714295581388910
 - Android encoder bitrate is messed up.
-- Piano roll video compression issues?
 - When multiple VRC7 instrument all use patch 0 at same time (like on first note), they all upload it. Its stupid. Only the first one should, or something like that.
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
-- Replace an specific instrument by another in selection (A->B), R+CLICK.
 - How to add to the "open with" list on Android.
 - Better autosave names?
 - Going in settings unutes all channels.
 - Delete instruments resets play head.
-- We should be able to drag/copy samples mappings between instruments.
 - Export DMC samples on Mobile.
 - Option to set snapping auto depending on last resize.
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.

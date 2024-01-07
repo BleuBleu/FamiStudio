@@ -499,10 +499,6 @@ FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
     FAMISTUDIO_EXP_EPSM_ENV_CNT     = FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT + FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
     FAMISTUDIO_EXP_EPSM_CHANNELS    = FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT + FAMISTUDIO_EXP_EPSM_FM_CHN_CNT + FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
     FAMISTUDIO_EXP_EPSM_TRIG_CHN    = FAMISTUDIO_EXP_EPSM_FM_CHN_CNT + FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
-.out .sprintf("FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT %d", FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT)
-.out .sprintf("FAMISTUDIO_EXP_EPSM_RHYTHM_CNT %d", FAMISTUDIO_EXP_EPSM_RHYTHM_CNT)
-.out .sprintf("FAMISTUDIO_EXP_EPSM_FM_CHN_CNT %d", FAMISTUDIO_EXP_EPSM_FM_CHN_CNT)
-.out .sprintf("FAMISTUDIO_EXP_EPSM_CHANNELS %d", FAMISTUDIO_EXP_EPSM_CHANNELS)
 .else
 FAMISTUDIO_EXP_EPSM_CHANNELS    = 0
 .endif
@@ -4286,6 +4282,23 @@ famistudio_get_exp_inst_ptr:
 
 .endif
 
+.if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_EPSM
+
+.macro skip_exp_basic_envelopes
+.if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+    ldy #6
+.else
+    iny
+    iny
+    iny
+    iny
+    iny
+    iny
+.endif
+.endmacro
+
+.endif
+
 .if FAMISTUDIO_EXP_VRC7
 
 ;======================================================================================================================
@@ -4300,12 +4313,21 @@ famistudio_get_exp_inst_ptr:
 
 famistudio_set_vrc7_instrument:
 
-    @ptr      = famistudio_ptr1
-    @chan_idx = famistudio_r0
-    
+    @ptr          = famistudio_ptr1
+    @chan_idx     = famistudio_r0
+    @update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
+   
     jsr famistudio_get_exp_inst_ptr
-    jsr famistudio_load_basic_envelopes
+    bit @update_flags
+    bpl @load_envelopes
 
+    @skip_envelopes:
+        skip_exp_basic_envelopes
+        jmp @load_patch
+    @load_envelopes:
+        jsr famistudio_load_basic_envelopes
+
+    @load_patch:
     ldx @chan_idx
     lda (@ptr),y
     sta famistudio_chn_vrc7_patch-FAMISTUDIO_VRC7_CH0_IDX,x
@@ -4427,12 +4449,12 @@ famistudio_set_s5b_instrument:
 
 famistudio_set_epsm_instrument:
 
-    @ptr        = famistudio_ptr1
-    @env_ptr    = famistudio_ptr2
-    @ex_patch   = famistudio_ptr2
-    @reg_offset = famistudio_r3
-    @chan_idx   = famistudio_r0
-
+    @ptr          = famistudio_ptr1
+    @env_ptr      = famistudio_ptr2
+    @ex_patch     = famistudio_ptr2
+    @chan_idx     = famistudio_r0
+    @update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
+    @reg_offset   = famistudio_r3
 
     cpy #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
     bcc @process_regular_instrument
@@ -4472,10 +4494,17 @@ famistudio_set_epsm_instrument:
         rts
 @process_regular_instrument:
     jsr famistudio_get_exp_inst_ptr
-    jsr famistudio_load_basic_envelopes
+    bit @update_flags
+    bpl @load_envelopes
 
-    ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
-    ; increase y and go past noise and mixer envelope indexes
+    ; The exporter will ensure this only happens on FM channels.
+    @skip_envelopes:
+        skip_exp_basic_envelopes
+        jmp @check_square_channel
+    @load_envelopes:
+        jsr famistudio_load_basic_envelopes
+
+    @check_square_channel:
     ; channels 0-2 (square) do not need any further handling since they do not support patches
     lda @chan_idx
     cmp #FAMISTUDIO_EPSM_CHAN_FM_START
@@ -4600,17 +4629,26 @@ famistudio_set_epsm_instrument:
 
 famistudio_set_fds_instrument:
 
-    @ptr        = famistudio_ptr1
-    @wave_ptr   = famistudio_ptr2
-    @tmp_y      = famistudio_r3 
+    @ptr          = famistudio_ptr1
+    @wave_ptr     = famistudio_ptr2
+    @update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
+    @tmp_y        = famistudio_r3 
 
     jsr famistudio_get_exp_inst_ptr
-    jsr famistudio_load_basic_envelopes
+    bit @update_flags
+    bpl @load_envelopes
 
-    lda #0
-    sta FAMISTUDIO_FDS_SWEEP_BIAS
+    @skip_envelopes:
+        skip_exp_basic_envelopes
+        jmp @write_fds_wave
+    @load_envelopes:
+        jsr famistudio_load_basic_envelopes
 
     @write_fds_wave:
+
+        ; TODO : This is wrong, mod unit could be running.
+        lda #0
+        sta FAMISTUDIO_FDS_SWEEP_BIAS
 
         ora #$80
         sta FAMISTUDIO_FDS_VOL ; Enable wave RAM write
