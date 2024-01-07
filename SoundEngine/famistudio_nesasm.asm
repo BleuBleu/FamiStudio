@@ -853,9 +853,9 @@ famistudio_chn_cut_delay:         .rs FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_note_counter:      .rs FAMISTUDIO_NUM_CHANNELS
     .endif
     .if FAMISTUDIO_USE_PHASE_RESET
-famistudio_phase_reset:           .res 1 ; bit 0/1 = 2a03, bit 2/3/4 = vrc6, 5/6 = mmc5, bit 7 = fds
+famistudio_phase_reset:           .rs 1 ; bit 0/1 = 2a03, bit 2/3/4 = vrc6, 5/6 = mmc5, bit 7 = fds
     .if FAMISTUDIO_EXP_N163
-famistudio_phase_reset_n163:      .res 1 ; bit 0...7 = n163
+famistudio_phase_reset_n163:      .rs 1 ; bit 0...7 = n163
     .endif
     .endif
     .if FAMISTUDIO_USE_DELTA_COUNTER
@@ -2104,20 +2104,20 @@ phase_reset_mask\@ = \8
 
     .if (FAMISTUDIO_USE_PHASE_RESET != 0) & (phase_reset_mask\@ != 0)
     lda famistudio_phase_reset
-    and phase_reset_mask
-    beq .phase_reset_done
+    and #phase_reset_mask\@
+    beq .phase_reset_done\@
     .if idx\@ < 2 | ((FAMISTUDIO_EXP_MMC5 != 0) & (idx\@ >= FAMISTUDIO_MMC5_CH0_IDX) & (idx\@ <= FAMISTUDIO_MMC5_CH1_IDX))
-        lda pulse_prev
-        sta reg_hi
+        lda pulse_prev\@
+        sta reg_hi\@
     .else
-    .if (FAMISTUDIO_EXP_VRC6 != 0) & (idx >= FAMISTUDIO_VRC6_CH0_IDX) & (idx <= FAMISTUDIO_VRC6_CH2_IDX)
+    .if (FAMISTUDIO_EXP_VRC6 != 0) & (idx\@ >= FAMISTUDIO_VRC6_CH0_IDX) & (idx\@ <= FAMISTUDIO_VRC6_CH2_IDX)
         lda <.pitch\@+1
-        sta reg_hi
+        sta reg_hi\@
         ora #$80
-        sta reg_hi
+        sta reg_hi\@
     .endif
     .endif    
-    .phase_reset_done:
+    .phase_reset_done\@:
    .endif
 
     .endm
@@ -3554,22 +3554,22 @@ famistudio_update:
 ;----------------------------------------------------------------------------------------------------------------------
 .update_sound:
 
-    famistudio_update_channel_sound 0, FAMISTUDIO_CH0_ENVS, famistudio_pulse1_prev, FAMISTUDIO_ALIAS_PL1_HI, FAMISTUDIO_ALIAS_PL1_LO, FAMISTUDIO_ALIAS_PL1_VOL, FAMISTUDIO_APU_PL1_SWEEP, #$01
-    famistudio_update_channel_sound 1, FAMISTUDIO_CH1_ENVS, famistudio_pulse2_prev, FAMISTUDIO_ALIAS_PL2_HI, FAMISTUDIO_ALIAS_PL2_LO, FAMISTUDIO_ALIAS_PL2_VOL, FAMISTUDIO_APU_PL2_SWEEP, #$02
+    famistudio_update_channel_sound 0, FAMISTUDIO_CH0_ENVS, famistudio_pulse1_prev, FAMISTUDIO_ALIAS_PL1_HI, FAMISTUDIO_ALIAS_PL1_LO, FAMISTUDIO_ALIAS_PL1_VOL, FAMISTUDIO_APU_PL1_SWEEP, $01
+    famistudio_update_channel_sound 1, FAMISTUDIO_CH1_ENVS, famistudio_pulse2_prev, FAMISTUDIO_ALIAS_PL2_HI, FAMISTUDIO_ALIAS_PL2_LO, FAMISTUDIO_ALIAS_PL2_VOL, FAMISTUDIO_APU_PL2_SWEEP, $02
     famistudio_update_channel_sound 2, FAMISTUDIO_CH2_ENVS, 0, FAMISTUDIO_ALIAS_TRI_HI, FAMISTUDIO_ALIAS_TRI_LO, FAMISTUDIO_ALIAS_TRI_LINEAR, 0, 0
     famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVS, 0, FAMISTUDIO_ALIAS_NOISE_LO, 0, FAMISTUDIO_ALIAS_NOISE_VOL, 0, 0
 
     .if FAMISTUDIO_EXP_VRC6
 .update_vrc6_sound:
-    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH0_IDX, FAMISTUDIO_VRC6_CH0_ENVS, 0, FAMISTUDIO_VRC6_PL1_HI, FAMISTUDIO_VRC6_PL1_LO, FAMISTUDIO_VRC6_PL1_VOL, 0, #$04
-    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH1_IDX, FAMISTUDIO_VRC6_CH1_ENVS, 0, FAMISTUDIO_VRC6_PL2_HI, FAMISTUDIO_VRC6_PL2_LO, FAMISTUDIO_VRC6_PL2_VOL, 0, #$08
-    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH2_IDX, FAMISTUDIO_VRC6_CH2_ENVS, 0, FAMISTUDIO_VRC6_SAW_HI, FAMISTUDIO_VRC6_SAW_LO, FAMISTUDIO_VRC6_SAW_VOL, 0, #$10
+    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH0_IDX, FAMISTUDIO_VRC6_CH0_ENVS, 0, FAMISTUDIO_VRC6_PL1_HI, FAMISTUDIO_VRC6_PL1_LO, FAMISTUDIO_VRC6_PL1_VOL, 0, $04
+    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH1_IDX, FAMISTUDIO_VRC6_CH1_ENVS, 0, FAMISTUDIO_VRC6_PL2_HI, FAMISTUDIO_VRC6_PL2_LO, FAMISTUDIO_VRC6_PL2_VOL, 0, $08
+    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH2_IDX, FAMISTUDIO_VRC6_CH2_ENVS, 0, FAMISTUDIO_VRC6_SAW_HI, FAMISTUDIO_VRC6_SAW_LO, FAMISTUDIO_VRC6_SAW_VOL, 0, $10
     .endif
 
     .if FAMISTUDIO_EXP_MMC5
 .update_mmc5_sound:
-    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH0_IDX, FAMISTUDIO_MMC5_CH0_ENVS, famistudio_mmc5_pulse1_prev, FAMISTUDIO_MMC5_PL1_HI, FAMISTUDIO_MMC5_PL1_LO, FAMISTUDIO_MMC5_PL1_VOL, 0, #$20
-    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH1_IDX, FAMISTUDIO_MMC5_CH1_ENVS, famistudio_mmc5_pulse2_prev, FAMISTUDIO_MMC5_PL2_HI, FAMISTUDIO_MMC5_PL2_LO, FAMISTUDIO_MMC5_PL2_VOL, 0, #$40
+    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH0_IDX, FAMISTUDIO_MMC5_CH0_ENVS, famistudio_mmc5_pulse1_prev, FAMISTUDIO_MMC5_PL1_HI, FAMISTUDIO_MMC5_PL1_LO, FAMISTUDIO_MMC5_PL1_VOL, 0, $20
+    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH1_IDX, FAMISTUDIO_MMC5_CH1_ENVS, famistudio_mmc5_pulse2_prev, FAMISTUDIO_MMC5_PL2_HI, FAMISTUDIO_MMC5_PL2_LO, FAMISTUDIO_MMC5_PL2_VOL, 0, $40
     .endif
 
     .if FAMISTUDIO_EXP_FDS
@@ -4838,6 +4838,7 @@ famistudio_advance_channel:
     lsr a
     bcs .set_repeat
 
+.instrument_change:
     ; Set the instrument. `famistudio_set_instrument` (or proc it calls) are not
     ; allowed to clobber r0/r1/r2 or ptr0.
     sty <.temp_ptr_y
@@ -4972,6 +4973,11 @@ famistudio_advance_channel:
     ora <.update_flags
     sta <.update_flags
     jmp .read_byte 
+
+.opcode_end_song:
+    lda #$80 ; TODO : Should we stop, or just call famistudio_music_stop here?
+    sta famistudio_song_speed
+    jmp .read_byte
 
     .if FAMISTUDIO_USE_RELEASE_NOTES  
 .jump_to_release_envelope:
@@ -5108,6 +5114,13 @@ famistudio_advance_channel:
     sta famistudio_phase_reset_n163
     jmp .read_byte     
     .endif    
+    .endif
+
+    .if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+.opcode_extended_instrument:
+    lda [.channel_data_ptr],y
+    iny
+    jmp .instrument_change
     .endif
 
     .if FAMISTUDIO_USE_PITCH_TRACK
@@ -5386,6 +5399,7 @@ famistudio_advance_channel:
     ; - use volume slides, but didnt enable "FAMISTUDIO_USE_VOLUME_SLIDES"
     ; - use DMC counter effect, but didnt enable "FAMISTUDIO_USE_DELTA_COUNTER"
     ; - use a Phase Reset efect, but didnt enable the "FAMISTUDIO_USE_PHASE_RESET"
+    ; - use an instrument > 63, but didnt enable "FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE"
 
     brk 
 
@@ -5394,111 +5408,117 @@ famistudio_advance_channel:
         .byte LOW(.opcode_set_reference)                ; $41
         .byte LOW(.opcode_loop)                         ; $42
         .byte LOW(.opcode_disable_attack)               ; $43
+        .byte LOW(.opcode_end_song)                     ; $44
     .if FAMISTUDIO_USE_RELEASE_NOTES    
-        .byte LOW(.opcode_release_note)                 ; $44
-    .else
-        .byte LOW(.opcode_invalid)                      ; $44
-    .endif
-    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
-        .byte LOW(.opcode_famitracker_speed)            ; $45
+        .byte LOW(.opcode_release_note)                 ; $45
     .else
         .byte LOW(.opcode_invalid)                      ; $45
     .endif
+    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
+        .byte LOW(.opcode_famitracker_speed)            ; $46
+    .else
+        .byte LOW(.opcode_invalid)                      ; $46
+    .endif
     .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-        .byte LOW(.opcode_note_delay)                   ; $46
-        .byte LOW(.opcode_cut_delay)                    ; $47
+        .byte LOW(.opcode_note_delay)                   ; $47
+        .byte LOW(.opcode_cut_delay)                    ; $48
     .endif
     .if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-        .byte LOW(.opcode_set_tempo_envelope)           ; $46
-        .byte LOW(.opcode_reset_tempo_envelope)         ; $47
+        .byte LOW(.opcode_set_tempo_envelope)           ; $47
+        .byte LOW(.opcode_reset_tempo_envelope)         ; $48
     .endif
     .if (FAMISTUDIO_USE_FAMITRACKER_TEMPO != 0) & (FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 0)
-        .byte LOW(.opcode_invalid)                      ; $46
         .byte LOW(.opcode_invalid)                      ; $47
+        .byte LOW(.opcode_invalid)                      ; $48
     .endif    
     .if FAMISTUDIO_USE_VIBRATO    
-        .byte LOW(.opcode_override_pitch_envelope)      ; $48
-        .byte LOW(.opcode_clear_pitch_override_flag)    ; $49
+        .byte LOW(.opcode_override_pitch_envelope)      ; $49
+        .byte LOW(.opcode_clear_pitch_override_flag)    ; $4a
     .else
-        .byte LOW(.opcode_invalid)                      ; $48
         .byte LOW(.opcode_invalid)                      ; $49
+        .byte LOW(.opcode_invalid)                      ; $4a
     .endif   
     .if FAMISTUDIO_USE_ARPEGGIO
-        .byte LOW(.opcode_override_arpeggio_envelope)   ; $4a
-        .byte LOW(.opcode_clear_arpeggio_override_flag) ; $4b
-        .byte LOW(.opcode_reset_arpeggio)               ; $4c
+        .byte LOW(.opcode_override_arpeggio_envelope)   ; $4b
+        .byte LOW(.opcode_clear_arpeggio_override_flag) ; $4c
+        .byte LOW(.opcode_reset_arpeggio)               ; $4d
     .else
-        .byte LOW(.opcode_invalid)                      ; $4a
         .byte LOW(.opcode_invalid)                      ; $4b
         .byte LOW(.opcode_invalid)                      ; $4c
-    .endif    
-    .if FAMISTUDIO_USE_PITCH_TRACK
-        .byte LOW(.opcode_fine_pitch)                   ; $4d
-    .else
         .byte LOW(.opcode_invalid)                      ; $4d
     .endif    
-    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-        .byte LOW(.opcode_duty_cycle_effect)            ; $4e
+    .if FAMISTUDIO_USE_PITCH_TRACK
+        .byte LOW(.opcode_fine_pitch)                   ; $4e
     .else
         .byte LOW(.opcode_invalid)                      ; $4e
     .endif    
-    .if FAMISTUDIO_USE_SLIDE_NOTES
-        .byte LOW(.opcode_slide)                        ; $4f
+    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+        .byte LOW(.opcode_duty_cycle_effect)            ; $4f
     .else
         .byte LOW(.opcode_invalid)                      ; $4f
     .endif    
-    .if FAMISTUDIO_USE_VOLUME_SLIDES
-        .byte LOW(.opcode_volume_slide)                 ; $50
+    .if FAMISTUDIO_USE_SLIDE_NOTES
+        .byte LOW(.opcode_slide)                        ; $50
     .else
         .byte LOW(.opcode_invalid)                      ; $50
-    .endif
-    .if FAMISTUDIO_USE_DELTA_COUNTER
-        .byte LOW(.opcode_dmc_counter)                  ; $51
+    .endif    
+    .if FAMISTUDIO_USE_VOLUME_SLIDES
+        .byte LOW(.opcode_volume_slide)                 ; $51
     .else
         .byte LOW(.opcode_invalid)                      ; $51
     .endif
-    .if FAMISTUDIO_USE_PHASE_RESET
-        .byte LOW(.opcode_phase_reset)                  ; $52
+    .if FAMISTUDIO_USE_DELTA_COUNTER
+        .byte LOW(.opcode_dmc_counter)                  ; $52
     .else
         .byte LOW(.opcode_invalid)                      ; $52
     .endif
-    .if !FAMISTUDIO_EXP_NONE                            ; Begin expansion-specific opcodes
-    .if FAMISTUDIO_EXP_VRC6
-        .byte LOW(.opcode_vrc6_saw_volume)              ; $53
+    .if FAMISTUDIO_USE_PHASE_RESET
+        .byte LOW(.opcode_phase_reset)                  ; $53
     .else
         .byte LOW(.opcode_invalid)                      ; $53
     .endif
-    .if (FAMISTUDIO_EXP_VRC7 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte LOW(.opcode_vrc7_release_note)            ; $54
+    .if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+        .byte LOW(.opcode_extended_instrument)          ; $54
     .else
         .byte LOW(.opcode_invalid)                      ; $54
     .endif
-    .if FAMISTUDIO_EXP_FDS
-        .byte LOW(.opcode_fds_mod_speed)                ; $55
-        .byte LOW(.opcode_fds_mod_depth)                ; $56
+    .if !FAMISTUDIO_EXP_NONE                            ; Begin expansion-specific opcodes
+    .if FAMISTUDIO_EXP_VRC6
+        .byte LOW(.opcode_vrc6_saw_volume)              ; $55
     .else
         .byte LOW(.opcode_invalid)                      ; $55
+    .endif
+    .if (FAMISTUDIO_EXP_VRC7 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte LOW(.opcode_vrc7_release_note)            ; $56
+    .else
         .byte LOW(.opcode_invalid)                      ; $56
     .endif
-    .if (FAMISTUDIO_EXP_FDS != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte LOW(.opcode_fds_release_note)             ; $57
+    .if FAMISTUDIO_EXP_FDS
+        .byte LOW(.opcode_fds_mod_speed)                ; $57
+        .byte LOW(.opcode_fds_mod_depth)                ; $58
     .else
         .byte LOW(.opcode_invalid)                      ; $57
-    .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte LOW(.opcode_n163_release_note)            ; $58
-    .else
         .byte LOW(.opcode_invalid)                      ; $58
     .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_PHASE_RESET != 0)
-        .byte LOW(.opcode_n163_phase_reset)             ; $59
+    .if (FAMISTUDIO_EXP_FDS != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte LOW(.opcode_fds_release_note)             ; $59
     .else
         .byte LOW(.opcode_invalid)                      ; $59
     .endif
-    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte LOW(.opcode_epsm_release_note)            ; $5a
+    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte LOW(.opcode_n163_release_note)            ; $5a
     .else
         .byte LOW(.opcode_invalid)                      ; $5a
+    .endif
+    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_PHASE_RESET != 0)
+        .byte LOW(.opcode_n163_phase_reset)             ; $5b
+    .else
+        .byte LOW(.opcode_invalid)                      ; $5b
+    .endif
+    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte LOW(.opcode_epsm_release_note)            ; $5c
+    .else
+        .byte LOW(.opcode_invalid)                      ; $5c
     .endif
     .endif
 
@@ -5507,111 +5527,117 @@ famistudio_advance_channel:
         .byte HIGH(.opcode_set_reference)                ; $41
         .byte HIGH(.opcode_loop)                         ; $42
         .byte HIGH(.opcode_disable_attack)               ; $43
+        .byte HIGH(.opcode_end_song)                     ; $44
     .if FAMISTUDIO_USE_RELEASE_NOTES    
-        .byte HIGH(.opcode_release_note)                 ; $44
-    .else
-        .byte HIGH(.opcode_invalid)                      ; $44
-    .endif
-    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
-        .byte HIGH(.opcode_famitracker_speed)            ; $45
+        .byte HIGH(.opcode_release_note)                 ; $45
     .else
         .byte HIGH(.opcode_invalid)                      ; $45
     .endif
+    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
+        .byte HIGH(.opcode_famitracker_speed)            ; $46
+    .else
+        .byte HIGH(.opcode_invalid)                      ; $46
+    .endif
     .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-        .byte HIGH(.opcode_note_delay)                   ; $46
-        .byte HIGH(.opcode_cut_delay)                    ; $47
+        .byte HIGH(.opcode_note_delay)                   ; $47
+        .byte HIGH(.opcode_cut_delay)                    ; $48
     .endif
     .if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-        .byte HIGH(.opcode_set_tempo_envelope)           ; $46
-        .byte HIGH(.opcode_reset_tempo_envelope)         ; $47
+        .byte HIGH(.opcode_set_tempo_envelope)           ; $47
+        .byte HIGH(.opcode_reset_tempo_envelope)         ; $48
     .endif
     .if (FAMISTUDIO_USE_FAMITRACKER_TEMPO != 0) & (FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 0)
-        .byte HIGH(.opcode_invalid)                      ; $46
         .byte HIGH(.opcode_invalid)                      ; $47
+        .byte HIGH(.opcode_invalid)                      ; $48
     .endif    
     .if FAMISTUDIO_USE_VIBRATO    
-        .byte HIGH(.opcode_override_pitch_envelope)      ; $48
-        .byte HIGH(.opcode_clear_pitch_override_flag)    ; $49
+        .byte HIGH(.opcode_override_pitch_envelope)      ; $49
+        .byte HIGH(.opcode_clear_pitch_override_flag)    ; $4a
     .else
-        .byte HIGH(.opcode_invalid)                      ; $48
         .byte HIGH(.opcode_invalid)                      ; $49
+        .byte HIGH(.opcode_invalid)                      ; $4a
     .endif   
     .if FAMISTUDIO_USE_ARPEGGIO
-        .byte HIGH(.opcode_override_arpeggio_envelope)   ; $4a
-        .byte HIGH(.opcode_clear_arpeggio_override_flag) ; $4b
-        .byte HIGH(.opcode_reset_arpeggio)               ; $4c
+        .byte HIGH(.opcode_override_arpeggio_envelope)   ; $4b
+        .byte HIGH(.opcode_clear_arpeggio_override_flag) ; $4c
+        .byte HIGH(.opcode_reset_arpeggio)               ; $4d
     .else
-        .byte HIGH(.opcode_invalid)                      ; $4a
         .byte HIGH(.opcode_invalid)                      ; $4b
         .byte HIGH(.opcode_invalid)                      ; $4c
-    .endif    
-    .if FAMISTUDIO_USE_PITCH_TRACK
-        .byte HIGH(.opcode_fine_pitch)                   ; $4d
-    .else
         .byte HIGH(.opcode_invalid)                      ; $4d
     .endif    
-    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-        .byte HIGH(.opcode_duty_cycle_effect)            ; $4e
+    .if FAMISTUDIO_USE_PITCH_TRACK
+        .byte HIGH(.opcode_fine_pitch)                   ; $4e
     .else
         .byte HIGH(.opcode_invalid)                      ; $4e
     .endif    
-    .if FAMISTUDIO_USE_SLIDE_NOTES
-        .byte HIGH(.opcode_slide)                        ; $4f
+    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+        .byte HIGH(.opcode_duty_cycle_effect)            ; $4f
     .else
         .byte HIGH(.opcode_invalid)                      ; $4f
     .endif    
-    .if FAMISTUDIO_USE_VOLUME_SLIDES
-        .byte HIGH(.opcode_volume_slide)                 ; $50
+    .if FAMISTUDIO_USE_SLIDE_NOTES
+        .byte HIGH(.opcode_slide)                        ; $50
     .else
         .byte HIGH(.opcode_invalid)                      ; $50
-    .endif
-    .if FAMISTUDIO_USE_DELTA_COUNTER
-        .byte HIGH(.opcode_dmc_counter)                  ; $51
+    .endif    
+    .if FAMISTUDIO_USE_VOLUME_SLIDES
+        .byte HIGH(.opcode_volume_slide)                 ; $51
     .else
         .byte HIGH(.opcode_invalid)                      ; $51
     .endif
-    .if FAMISTUDIO_USE_PHASE_RESET
-        .byte HIGH(.opcode_phase_reset)                  ; $52
+    .if FAMISTUDIO_USE_DELTA_COUNTER
+        .byte HIGH(.opcode_dmc_counter)                  ; $52
     .else
         .byte HIGH(.opcode_invalid)                      ; $52
     .endif
-    .if !FAMISTUDIO_EXP_NONE                             ; Begin expansion-specific opcodes
-    .if FAMISTUDIO_EXP_VRC6
-        .byte HIGH(.opcode_vrc6_saw_volume)              ; $53
+    .if FAMISTUDIO_USE_PHASE_RESET
+        .byte HIGH(.opcode_phase_reset)                  ; $53
     .else
         .byte HIGH(.opcode_invalid)                      ; $53
     .endif
-    .if (FAMISTUDIO_EXP_VRC7 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte HIGH(.opcode_vrc7_release_note)            ; $54
+    .if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+        .byte HIGH(.opcode_extended_instrument)          ; $54
     .else
         .byte HIGH(.opcode_invalid)                      ; $54
     .endif
-    .if FAMISTUDIO_EXP_FDS
-        .byte HIGH(.opcode_fds_mod_speed)                ; $55
-        .byte HIGH(.opcode_fds_mod_depth)                ; $56
+    .if !FAMISTUDIO_EXP_NONE                             ; Begin expansion-specific opcodes
+    .if FAMISTUDIO_EXP_VRC6
+        .byte HIGH(.opcode_vrc6_saw_volume)              ; $55
     .else
         .byte HIGH(.opcode_invalid)                      ; $55
+    .endif
+    .if (FAMISTUDIO_EXP_VRC7 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte HIGH(.opcode_vrc7_release_note)            ; $56
+    .else
         .byte HIGH(.opcode_invalid)                      ; $56
     .endif
-    .if (FAMISTUDIO_EXP_FDS != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte HIGH(.opcode_fds_release_note)             ; $57
+    .if FAMISTUDIO_EXP_FDS
+        .byte HIGH(.opcode_fds_mod_speed)                ; $57
+        .byte HIGH(.opcode_fds_mod_depth)                ; $58
     .else
         .byte HIGH(.opcode_invalid)                      ; $57
-    .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte HIGH(.opcode_n163_release_note)            ; $58
-    .else
         .byte HIGH(.opcode_invalid)                      ; $58
     .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_PHASE_RESET != 0)
-        .byte HIGH(.opcode_n163_phase_reset)             ; $59
+    .if (FAMISTUDIO_EXP_FDS != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte HIGH(.opcode_fds_release_note)             ; $59
     .else
         .byte HIGH(.opcode_invalid)                      ; $59
     .endif
-    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte HIGH(.opcode_epsm_release_note)            ; $5a
+    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte HIGH(.opcode_n163_release_note)            ; $5a
     .else
         .byte HIGH(.opcode_invalid)                      ; $5a
+    .endif
+    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_PHASE_RESET != 0)
+        .byte HIGH(.opcode_n163_phase_reset)             ; $5b
+    .else
+        .byte HIGH(.opcode_invalid)                      ; $5b
+    .endif
+    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte HIGH(.opcode_epsm_release_note)            ; $5c
+    .else
+        .byte HIGH(.opcode_invalid)                      ; $5c
     .endif
     .endif
 
@@ -5647,8 +5673,8 @@ famistudio_sfx_sample_play:
 
 sample_play:
 
-.tmp = famistudio_r2
-.sample_index = famistudio_r2
+.tmp = famistudio_r3
+.sample_index = famistudio_r3
 .sample_data_ptr = famistudio_ptr1
 
     .if (FAMISTUDIO_USE_DPCM_BANKSWITCHING != 0) | (FAMISTUDIO_USE_DPCM_EXTENDED_RANGE != 0)

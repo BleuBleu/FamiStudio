@@ -4833,6 +4833,7 @@ famistudio_advance_channel:
     lsr a
     bcs @set_repeat
 
+@instrument_change:
     ; Set the instrument. `famistudio_set_instrument` (or proc it calls) are not
     ; allowed to clobber r0/r1/r2 or ptr0.
     sty @temp_ptr_y
@@ -4967,6 +4968,11 @@ famistudio_advance_channel:
     ora @update_flags
     sta @update_flags
     jmp @read_byte 
+
+@opcode_end_song:
+    lda #$80 ; TODO : Should we stop, or just call famistudio_music_stop here?
+    sta famistudio_song_speed
+    jmp @read_byte
 
 .if FAMISTUDIO_USE_RELEASE_NOTES
 @jump_to_release_envelope:
@@ -5103,6 +5109,13 @@ famistudio_advance_channel:
     sta famistudio_phase_reset_n163
     jmp @read_byte     
 .endif    
+.endif
+
+.if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+@opcode_extended_instrument:
+    lda (@channel_data_ptr),y
+    iny
+    jmp @instrument_change
 .endif
 
 .if FAMISTUDIO_USE_PITCH_TRACK
@@ -5379,6 +5392,7 @@ famistudio_advance_channel:
     ; - use volume slides, but didnt enable "FAMISTUDIO_USE_VOLUME_SLIDES"
     ; - use DMC counter effect, but didnt enable "FAMISTUDIO_USE_DELTA_COUNTER"
     ; - use a Phase Reset efect, but didnt enable the "FAMISTUDIO_USE_PHASE_RESET"
+    ; - use an instrument > 63, but didnt enable "FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE"
 
     brk 
 
@@ -5387,109 +5401,115 @@ famistudio_advance_channel:
     .byte <@opcode_set_reference                ; $41
     .byte <@opcode_loop                         ; $42
     .byte <@opcode_disable_attack               ; $43
+    .byte <@opcode_end_song                     ; $44
 .if FAMISTUDIO_USE_RELEASE_NOTES    
-    .byte <@opcode_release_note                 ; $44
-.else
-    .byte <@opcode_invalid                      ; $44
-.endif
-.if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
-    .byte <@opcode_famitracker_speed            ; $45
+    .byte <@opcode_release_note                 ; $45
 .else
     .byte <@opcode_invalid                      ; $45
 .endif
-.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-    .byte <@opcode_note_delay                   ; $46
-    .byte <@opcode_cut_delay                    ; $47
-.elseif !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    .byte <@opcode_set_tempo_envelope           ; $46
-    .byte <@opcode_reset_tempo_envelope         ; $47
+.if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
+    .byte <@opcode_famitracker_speed            ; $46
 .else
     .byte <@opcode_invalid                      ; $46
+.endif
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+    .byte <@opcode_note_delay                   ; $47
+    .byte <@opcode_cut_delay                    ; $48
+.elseif !FAMISTUDIO_USE_FAMITRACKER_TEMPO
+    .byte <@opcode_set_tempo_envelope           ; $47
+    .byte <@opcode_reset_tempo_envelope         ; $48
+.else
     .byte <@opcode_invalid                      ; $47
+    .byte <@opcode_invalid                      ; $48
 .endif    
 .if FAMISTUDIO_USE_VIBRATO    
-    .byte <@opcode_override_pitch_envelope      ; $48
-    .byte <@opcode_clear_pitch_override_flag    ; $49
+    .byte <@opcode_override_pitch_envelope      ; $49
+    .byte <@opcode_clear_pitch_override_flag    ; $4a
 .else
-    .byte <@opcode_invalid                      ; $48
     .byte <@opcode_invalid                      ; $49
+    .byte <@opcode_invalid                      ; $4a
 .endif   
 .if FAMISTUDIO_USE_ARPEGGIO
-    .byte <@opcode_override_arpeggio_envelope   ; $4a
-    .byte <@opcode_clear_arpeggio_override_flag ; $4b
-    .byte <@opcode_reset_arpeggio               ; $4c
+    .byte <@opcode_override_arpeggio_envelope   ; $4b
+    .byte <@opcode_clear_arpeggio_override_flag ; $4c
+    .byte <@opcode_reset_arpeggio               ; $4d
 .else
-    .byte <@opcode_invalid                      ; $4a
     .byte <@opcode_invalid                      ; $4b
     .byte <@opcode_invalid                      ; $4c
-.endif    
-.if FAMISTUDIO_USE_PITCH_TRACK
-    .byte <@opcode_fine_pitch                   ; $4d
-.else
     .byte <@opcode_invalid                      ; $4d
 .endif    
-.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-    .byte <@opcode_duty_cycle_effect            ; $4e
+.if FAMISTUDIO_USE_PITCH_TRACK
+    .byte <@opcode_fine_pitch                   ; $4e
 .else
     .byte <@opcode_invalid                      ; $4e
 .endif    
-.if FAMISTUDIO_USE_SLIDE_NOTES
-    .byte <@opcode_slide                        ; $4f
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+    .byte <@opcode_duty_cycle_effect            ; $4f
 .else
     .byte <@opcode_invalid                      ; $4f
 .endif    
-.if FAMISTUDIO_USE_VOLUME_SLIDES
-    .byte <@opcode_volume_slide                 ; $50
+.if FAMISTUDIO_USE_SLIDE_NOTES
+    .byte <@opcode_slide                        ; $50
 .else
     .byte <@opcode_invalid                      ; $50
-.endif
-.if FAMISTUDIO_USE_DELTA_COUNTER
-    .byte <@opcode_dmc_counter                  ; $51
+.endif    
+.if FAMISTUDIO_USE_VOLUME_SLIDES
+    .byte <@opcode_volume_slide                 ; $51
 .else
     .byte <@opcode_invalid                      ; $51
 .endif
-.if FAMISTUDIO_USE_PHASE_RESET
-    .byte <@opcode_phase_reset                  ; $52
+.if FAMISTUDIO_USE_DELTA_COUNTER
+    .byte <@opcode_dmc_counter                  ; $52
 .else
     .byte <@opcode_invalid                      ; $52
 .endif
-.if !FAMISTUDIO_EXP_NONE                        ; Begin expansion-specific opcodes
-.if FAMISTUDIO_EXP_VRC6
-    .byte <@opcode_vrc6_saw_volume              ; $53
+.if FAMISTUDIO_USE_PHASE_RESET
+    .byte <@opcode_phase_reset                  ; $53
 .else
     .byte <@opcode_invalid                      ; $53
 .endif
-.if FAMISTUDIO_EXP_VRC7 && FAMISTUDIO_USE_RELEASE_NOTES
-    .byte <@opcode_vrc7_release_note            ; $54
+.if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+    .byte <@opcode_extended_instrument          ; $54
 .else
     .byte <@opcode_invalid                      ; $54
 .endif
-.if FAMISTUDIO_EXP_FDS
-    .byte <@opcode_fds_mod_speed                ; $55
-    .byte <@opcode_fds_mod_depth                ; $56
+.if !FAMISTUDIO_EXP_NONE                        ; Begin expansion-specific opcodes
+.if FAMISTUDIO_EXP_VRC6
+    .byte <@opcode_vrc6_saw_volume              ; $55
 .else
     .byte <@opcode_invalid                      ; $55
+.endif
+.if FAMISTUDIO_EXP_VRC7 && FAMISTUDIO_USE_RELEASE_NOTES
+    .byte <@opcode_vrc7_release_note            ; $56
+.else
     .byte <@opcode_invalid                      ; $56
 .endif
-.if FAMISTUDIO_EXP_FDS && FAMISTUDIO_USE_RELEASE_NOTES
-    .byte <@opcode_fds_release_note             ; $57
+.if FAMISTUDIO_EXP_FDS
+    .byte <@opcode_fds_mod_speed                ; $57
+    .byte <@opcode_fds_mod_depth                ; $58
 .else
     .byte <@opcode_invalid                      ; $57
-.endif
-.if FAMISTUDIO_EXP_N163 && FAMISTUDIO_USE_RELEASE_NOTES
-    .byte <@opcode_n163_release_note            ; $58
-.else
     .byte <@opcode_invalid                      ; $58
 .endif
-.if FAMISTUDIO_EXP_N163 && FAMISTUDIO_USE_PHASE_RESET
-    .byte <@opcode_n163_phase_reset             ; $59
+.if FAMISTUDIO_EXP_FDS && FAMISTUDIO_USE_RELEASE_NOTES
+    .byte <@opcode_fds_release_note             ; $59
 .else
     .byte <@opcode_invalid                      ; $59
 .endif
-.if FAMISTUDIO_EXP_EPSM && FAMISTUDIO_USE_RELEASE_NOTES
-    .byte <@opcode_epsm_release_note            ; $5a
+.if FAMISTUDIO_EXP_N163 && FAMISTUDIO_USE_RELEASE_NOTES
+    .byte <@opcode_n163_release_note            ; $5a
 .else
     .byte <@opcode_invalid                      ; $5a
+.endif
+.if FAMISTUDIO_EXP_N163 && FAMISTUDIO_USE_PHASE_RESET
+    .byte <@opcode_n163_phase_reset             ; $5b
+.else
+    .byte <@opcode_invalid                      ; $5b
+.endif
+.if FAMISTUDIO_EXP_EPSM && FAMISTUDIO_USE_RELEASE_NOTES
+    .byte <@opcode_epsm_release_note            ; $5c
+.else
+    .byte <@opcode_invalid                      ; $5c
 .endif
 .endif
 
@@ -5498,109 +5518,115 @@ famistudio_advance_channel:
     .byte >@opcode_set_reference                ; $41
     .byte >@opcode_loop                         ; $42
     .byte >@opcode_disable_attack               ; $43
+    .byte >@opcode_end_song                     ; $44
 .if FAMISTUDIO_USE_RELEASE_NOTES    
-    .byte >@opcode_release_note                 ; $44
-.else
-    .byte >@opcode_invalid                      ; $44
-.endif
-.if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
-    .byte >@opcode_famitracker_speed            ; $45
+    .byte >@opcode_release_note                 ; $45
 .else
     .byte >@opcode_invalid                      ; $45
 .endif
-.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-    .byte >@opcode_note_delay                   ; $46
-    .byte >@opcode_cut_delay                    ; $47
-.elseif !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    .byte >@opcode_set_tempo_envelope           ; $46
-    .byte >@opcode_reset_tempo_envelope         ; $47
+.if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
+    .byte >@opcode_famitracker_speed            ; $46
 .else
     .byte >@opcode_invalid                      ; $46
+.endif
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+    .byte >@opcode_note_delay                   ; $47
+    .byte >@opcode_cut_delay                    ; $48
+.elseif !FAMISTUDIO_USE_FAMITRACKER_TEMPO
+    .byte >@opcode_set_tempo_envelope           ; $47
+    .byte >@opcode_reset_tempo_envelope         ; $48
+.else
     .byte >@opcode_invalid                      ; $47
+    .byte >@opcode_invalid                      ; $48
 .endif    
 .if FAMISTUDIO_USE_VIBRATO    
-    .byte >@opcode_override_pitch_envelope      ; $48
-    .byte >@opcode_clear_pitch_override_flag    ; $49
+    .byte >@opcode_override_pitch_envelope      ; $49
+    .byte >@opcode_clear_pitch_override_flag    ; $4a
 .else
-    .byte >@opcode_invalid                      ; $48
     .byte >@opcode_invalid                      ; $49
+    .byte >@opcode_invalid                      ; $4a
 .endif   
 .if FAMISTUDIO_USE_ARPEGGIO
-    .byte >@opcode_override_arpeggio_envelope   ; $4a
-    .byte >@opcode_clear_arpeggio_override_flag ; $4b
-    .byte >@opcode_reset_arpeggio               ; $4c
+    .byte >@opcode_override_arpeggio_envelope   ; $4b
+    .byte >@opcode_clear_arpeggio_override_flag ; $4c
+    .byte >@opcode_reset_arpeggio               ; $4d
 .else
-    .byte >@opcode_invalid                      ; $4a
     .byte >@opcode_invalid                      ; $4b
     .byte >@opcode_invalid                      ; $4c
-.endif    
-.if FAMISTUDIO_USE_PITCH_TRACK
-    .byte >@opcode_fine_pitch                   ; $4d
-.else
     .byte >@opcode_invalid                      ; $4d
 .endif    
-.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-    .byte >@opcode_duty_cycle_effect            ; $4e
+.if FAMISTUDIO_USE_PITCH_TRACK
+    .byte >@opcode_fine_pitch                   ; $4e
 .else
     .byte >@opcode_invalid                      ; $4e
 .endif    
-.if FAMISTUDIO_USE_SLIDE_NOTES
-    .byte >@opcode_slide                        ; $4f
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+    .byte >@opcode_duty_cycle_effect            ; $4f
 .else
     .byte >@opcode_invalid                      ; $4f
 .endif    
-.if FAMISTUDIO_USE_VOLUME_SLIDES
-    .byte >@opcode_volume_slide                 ; $50
+.if FAMISTUDIO_USE_SLIDE_NOTES
+    .byte >@opcode_slide                        ; $50
 .else
     .byte >@opcode_invalid                      ; $50
-.endif
-.if FAMISTUDIO_USE_DELTA_COUNTER
-    .byte >@opcode_dmc_counter                  ; $51
+.endif    
+.if FAMISTUDIO_USE_VOLUME_SLIDES
+    .byte >@opcode_volume_slide                 ; $51
 .else
     .byte >@opcode_invalid                      ; $51
 .endif
-.if FAMISTUDIO_USE_PHASE_RESET
-    .byte >@opcode_phase_reset                  ; $52
+.if FAMISTUDIO_USE_DELTA_COUNTER
+    .byte >@opcode_dmc_counter                  ; $52
 .else
     .byte >@opcode_invalid                      ; $52
 .endif
-.if !FAMISTUDIO_EXP_NONE                        ; Begin expansion-specific opcodes
-.if FAMISTUDIO_EXP_VRC6
-    .byte >@opcode_vrc6_saw_volume              ; $53
+.if FAMISTUDIO_USE_PHASE_RESET
+    .byte >@opcode_phase_reset                  ; $53
 .else
     .byte >@opcode_invalid                      ; $53
 .endif
-.if FAMISTUDIO_EXP_VRC7 && FAMISTUDIO_USE_RELEASE_NOTES
-    .byte >@opcode_vrc7_release_note            ; $54
+.if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+    .byte >@opcode_extended_instrument          ; $54
 .else
     .byte >@opcode_invalid                      ; $54
 .endif
-.if FAMISTUDIO_EXP_FDS
-    .byte >@opcode_fds_mod_speed                ; $55
-    .byte >@opcode_fds_mod_depth                ; $56
+.if !FAMISTUDIO_EXP_NONE                        ; Begin expansion-specific opcodes
+.if FAMISTUDIO_EXP_VRC6
+    .byte >@opcode_vrc6_saw_volume              ; $55
 .else
     .byte >@opcode_invalid                      ; $55
+.endif
+.if FAMISTUDIO_EXP_VRC7 && FAMISTUDIO_USE_RELEASE_NOTES
+    .byte >@opcode_vrc7_release_note            ; $56
+.else
     .byte >@opcode_invalid                      ; $56
 .endif
-.if FAMISTUDIO_EXP_FDS && FAMISTUDIO_USE_RELEASE_NOTES
-    .byte >@opcode_fds_release_note             ; $57
+.if FAMISTUDIO_EXP_FDS
+    .byte >@opcode_fds_mod_speed                ; $57
+    .byte >@opcode_fds_mod_depth                ; $58
 .else
     .byte >@opcode_invalid                      ; $57
-.endif
-.if FAMISTUDIO_EXP_N163 && FAMISTUDIO_USE_RELEASE_NOTES
-    .byte >@opcode_n163_release_note            ; $58
-.else
     .byte >@opcode_invalid                      ; $58
 .endif
-.if FAMISTUDIO_EXP_N163 && FAMISTUDIO_USE_PHASE_RESET
-    .byte >@opcode_n163_phase_reset             ; $59
+.if FAMISTUDIO_EXP_FDS && FAMISTUDIO_USE_RELEASE_NOTES
+    .byte >@opcode_fds_release_note             ; $59
 .else
     .byte >@opcode_invalid                      ; $59
 .endif
-.if FAMISTUDIO_EXP_EPSM && FAMISTUDIO_USE_RELEASE_NOTES
-    .byte >@opcode_epsm_release_note            ; $5a
+.if FAMISTUDIO_EXP_N163 && FAMISTUDIO_USE_RELEASE_NOTES
+    .byte >@opcode_n163_release_note            ; $5a
 .else
     .byte >@opcode_invalid                      ; $5a
+.endif
+.if FAMISTUDIO_EXP_N163 && FAMISTUDIO_USE_PHASE_RESET
+    .byte >@opcode_n163_phase_reset             ; $5b
+.else
+    .byte >@opcode_invalid                      ; $5b
+.endif
+.if FAMISTUDIO_EXP_EPSM && FAMISTUDIO_USE_RELEASE_NOTES
+    .byte >@opcode_epsm_release_note            ; $5c
+.else
+    .byte >@opcode_invalid                      ; $5c
 .endif
 .endif
 
@@ -5636,8 +5662,8 @@ famistudio_sfx_sample_play:
 
 sample_play:
 
-    @tmp = famistudio_r2
-    @sample_index = famistudio_r2
+    @tmp = famistudio_r3
+    @sample_index = famistudio_r3
     @sample_data_ptr = famistudio_ptr1
 
 .if FAMISTUDIO_USE_DPCM_BANKSWITCHING || FAMISTUDIO_USE_DPCM_EXTENDED_RANGE

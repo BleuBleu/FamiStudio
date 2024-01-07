@@ -35,37 +35,41 @@ namespace FamiStudio
         private const int MaxRepeatCountFT2FS = 63;
         private const int MaxRepeatCountFT2   = 60;
 
+        private const int ExtendedInstrumentStart = 64;
+
         // Matches "famistudio_opcode_jmp" in assembly.
         private const byte OpcodeFirst                 = 0x40;
         private const byte OpcodeExtendedNote          = 0x40;
         private const byte OpcodeSetReference          = 0x41;
         private const byte OpcodeLoop                  = 0x42;
         private const byte OpcodeDisableAttack         = 0x43;
-        private const byte OpcodeReleaseNote           = 0x44;
-        private const byte OpcodeSpeed                 = 0x45; // FamiTracker tempo only
-        private const byte OpcodeDelayedNote           = 0x46; // FamiTracker tempo only
-        private const byte OpcodeDelayedCut            = 0x47; // FamiTracker tempo only
-        private const byte OpcodeSetTempoEnv           = 0x46; // FamiStudio tempo only
-        private const byte OpcodeResetTempoEnv         = 0x47; // FamiStudio tempo only
-        private const byte OpcodeOverridePitchEnv      = 0x48;
-        private const byte OpcodeClearPitchEnvOverride = 0x49;
-        private const byte OpcodeOverridArpEnv         = 0x4a;
-        private const byte OpcodeClearArpEnvOverride   = 0x4b;
-        private const byte OpcodeResetArpEnv           = 0x4c;
-        private const byte OpcodeFinePitch             = 0x4d;
-        private const byte OpcodeDutyCycle             = 0x4e;
-        private const byte OpcodeSlide                 = 0x4f;
-        private const byte OpcodeVolumeSlide           = 0x50;
-        private const byte OpcodeDeltaCounter          = 0x51;
-        private const byte OpcodePhaseReset            = 0x52;
-        private const byte OpcodeVrc6SawMasterVolume   = 0x53; // VRC6 only
-        private const byte OpcodeVrc7ReleaseNote       = 0x54; // VRC7 only
-        private const byte OpcodeFdsModSpeed           = 0x55; // FDS only
-        private const byte OpcodeFdsModDepth           = 0x56; // FDS only
-        private const byte OpcodeFdsReleaseNote        = 0x57; // FDS only
-        private const byte OpcodeN163ReleaseNote       = 0x58; // N163 only
-        private const byte OpcodeN163PhaseReset        = 0x59; // N163 only
-        private const byte OpcodeEpsmReleaseNote       = 0x5a; // EPSM only
+        private const byte OpcodeEndSong               = 0x44;
+        private const byte OpcodeReleaseNote           = 0x45;
+        private const byte OpcodeSpeed                 = 0x46; // FamiTracker tempo only
+        private const byte OpcodeDelayedNote           = 0x47; // FamiTracker tempo only
+        private const byte OpcodeDelayedCut            = 0x48; // FamiTracker tempo only
+        private const byte OpcodeSetTempoEnv           = 0x47; // FamiStudio tempo only
+        private const byte OpcodeResetTempoEnv         = 0x48; // FamiStudio tempo only
+        private const byte OpcodeOverridePitchEnv      = 0x49;
+        private const byte OpcodeClearPitchEnvOverride = 0x4a;
+        private const byte OpcodeOverridArpEnv         = 0x4b;
+        private const byte OpcodeClearArpEnvOverride   = 0x4c;
+        private const byte OpcodeResetArpEnv           = 0x4d;
+        private const byte OpcodeFinePitch             = 0x4e;
+        private const byte OpcodeDutyCycle             = 0x4f;
+        private const byte OpcodeSlide                 = 0x50;
+        private const byte OpcodeVolumeSlide           = 0x51;
+        private const byte OpcodeDeltaCounter          = 0x52;
+        private const byte OpcodePhaseReset            = 0x53;
+        private const byte OpcodeExtendedInstrument    = 0x54;
+        private const byte OpcodeVrc6SawMasterVolume   = 0x55; // VRC6 only
+        private const byte OpcodeVrc7ReleaseNote       = 0x56; // VRC7 only
+        private const byte OpcodeFdsModSpeed           = 0x57; // FDS only
+        private const byte OpcodeFdsModDepth           = 0x58; // FDS only
+        private const byte OpcodeFdsReleaseNote        = 0x59; // FDS only
+        private const byte OpcodeN163ReleaseNote       = 0x5a; // N163 only
+        private const byte OpcodeN163PhaseReset        = 0x5b; // N163 only
+        private const byte OpcodeEpsmReleaseNote       = 0x5c; // EPSM only
 
         private const byte OpcodeSetReferenceFT2       = 0xff; // FT2
         private const byte OpcodeLoopFT2               = 0xfd; // FT2
@@ -1269,8 +1273,17 @@ namespace FamiStudio
                                         songData.Add($"${1 - sawVolume:x2}");
                                     }
 
-                                    int idx = instrumentIndices[note.Instrument];
-                                    songData.Add($"${(byte)(0x80 | (idx << 1)):x2}+");
+                                    var idx = instrumentIndices[note.Instrument];
+                                    if (kernel == FamiToneKernel.FamiStudio && idx >= ExtendedInstrumentStart)
+                                    {
+                                        songData.Add($"${OpcodeExtendedInstrument:x2}+");
+                                        songData.Add($"${idx:x2}");
+                                    }
+                                    else
+                                    {
+                                        songData.Add($"${(byte)(0x80 | (idx << 1)):x2}+");
+                                    }
+
                                     instrument = note.Instrument;
                                 }
                             }
@@ -1427,8 +1440,15 @@ namespace FamiStudio
 
                 if (song.LoopPoint < 0)
                 {
-                    songData.Add($"{ll}song{songIdx}ch{c}loop:");
-                    songData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}");
+                    if (kernel == FamiToneKernel.FamiStudio)
+                    {
+                        songData.Add($"${OpcodeEndSong:x2}+");
+                    }
+                    else
+                    {
+                        songData.Add($"{ll}song{songIdx}ch{c}loop:");
+                        songData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}");
+                    }
                 }
 
                 songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeLoop : OpcodeLoopFT2):x2}");
@@ -1789,6 +1809,45 @@ namespace FamiStudio
             }
         }
 
+        private void SortInstruments()
+        {
+            var instrumentChanges = new List<(Instrument, int)>();
+
+            // Roughly estimate the number of times an instrument will trigger and instrument change.
+            foreach (var song in project.Songs)
+            {
+                foreach (var channel in song.Channels)
+                {
+                    var prevInstrument = (Instrument)null;
+
+                    for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                    {
+                        var instrument = it.Note.Instrument;
+                        if (instrument != null && instrument != prevInstrument)
+                        {
+                            var idx = instrumentChanges.FindIndex(i => i.Item1 == instrument);
+
+                            if (idx == -1)
+                                instrumentChanges.Add((instrument, 1));
+                            else
+                                instrumentChanges[idx] = (instrument, instrumentChanges[idx].Item2 + 1);
+
+                            prevInstrument = instrument;
+                        }
+                    }
+                }
+            }
+
+            instrumentChanges.Sort((i1, i2) => i2.Item2.CompareTo(i1.Item2));
+
+            // Sort by most common to least common.
+            for (var i = instrumentChanges.Count - 1; i >= 0; i--)
+            {
+                var instrument = instrumentChanges[i].Item1;
+                project.MoveInstrument(instrument, null);
+            }
+        }
+
         private void SetupProject(Project originalProject, int[] songIds)
         {
             // Work on a temporary copy.
@@ -1817,6 +1876,11 @@ namespace FamiStudio
                     project.SetExpansionAudioMask(ExpansionType.AllMask, 8, false);
                 else
                     project.SetExpansionAudioMask(ExpansionType.AllMask & ~(ExpansionType.EPSMMask), 8, false);
+            }
+
+            if (kernel == FamiToneKernel.FamiStudio)
+            {
+                SortInstruments();
             }
         }
 

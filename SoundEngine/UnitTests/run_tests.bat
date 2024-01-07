@@ -144,6 +144,16 @@ if "%rnd%"=="1" (
 	echo FAMISTUDIO_USE_DUTYCYCLE_EFFECT=1 >> test_defs.inc
 )
 
+set /a rnd=%random% %%2
+if "%rnd%"=="1" (
+	echo FAMISTUDIO_USE_PHASE_RESET=1 >> test_defs.inc
+)
+
+set /a rnd=%random% %%2
+if "%rnd%"=="1" (
+	echo FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE=1 >> test_defs.inc
+)
+
 type test_defs.inc
 
 :: Compile everything.
