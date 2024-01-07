@@ -55,6 +55,7 @@ x Sort button for songs doesnt do shit?
 	=> option to fully emulation from start.
 - Replace an specific instrument by another in selection (A->B), R+CLICK.
 - We should be able to drag/copy samples mappings between instruments.
+- Ti suggestion: stop non looping song for real with an opcode.
 
 4.2.0 Testing/Packaging
 =======================
