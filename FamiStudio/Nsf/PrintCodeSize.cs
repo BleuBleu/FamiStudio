@@ -19,6 +19,7 @@ namespace PrintCodeSize
             }
 
             driverSize -= 128; // NSF header.
+            driverSize += 6; // Vectors.
             driverSize = ((driverSize + 4095) / 4096) * 4096;
 
             var driverBankCount = driverSize / 4096;

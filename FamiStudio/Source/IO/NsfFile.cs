@@ -221,6 +221,8 @@ namespace FamiStudio
                         break;
                 }
 
+                driverActualSize += 6; // Vectors
+
                 // If we hit this, it means the NSF was compiled with the wrong number of banks.
                 Debug.Assert(Utils.RoundUp(driverActualSize, NsfBankSize) == driverSizePadded);
 
