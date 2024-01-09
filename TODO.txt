@@ -58,6 +58,9 @@ x Sort button for songs doesnt do shit?
 / Ti suggestion: stop non looping song for real with an opcode.
 	=> Done, not tested at all.
 - BUG : First samples of CV2 plays wrong??? Only if at first frame...
+- S5B Envelope, not from discussion with abstract64:
+	- On the instrument : envelope enable + shape + option to have auto-period (off/on, with option to have some kind of +/- offset/octave from the note pitch)
+	- As a effect : Effect to manually dial the period. Would probably override anything set on the insturment (?), override until turn off?
 
 4.2.0 Testing/Packaging
 =======================
