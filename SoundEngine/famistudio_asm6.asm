@@ -2385,8 +2385,10 @@ famistudio_epsm_fm_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 6
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 8
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 10
-famistudio_epsm_register_order:
-    .byte $B0, $B4, $30, $40, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates
+famistudio_epsm_register_order: ;changed order for optimized patch loading
+    .byte $40, $30, $B4, $B0, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
+;famistudio_epsm_register_order:
+;    .byte $B0, $B4, $30, $40, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates
 famistudio_epsm_channel_key_table:
     .byte $f0, $f1, $f2, $f4, $f5, $f6
 .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
@@ -2651,74 +2653,59 @@ famistudio_update_epsm_fm_channel_sound:
         sta vol_offset
 
     @update_volume:
+    ldx vol_offset
+    lda famistudio_epsm_fm_vol_table,x
+    sta vol_offset ; store volume level here
     
+    ldx reg_offset    
     lda famistudio_chn_epsm_alg,y
-    cmp #7
-    bpl @op_1_2_3_4
-    cmp #5
-    bpl @op_2_3_4
     cmp #4
-    bpl @op_2_4
-    jmp @op_4
-    
-    ; todo
+    bcc @op_4 ; 0-1-2-3
+    beq @op_2_4 ; 4
+    cmp #7 ; 5
+    bcc @op_2_3_4 ; 6
+	           ; 7
     @op_1_2_3_4:
         lda famistudio_epsm_vol_table_op1,y
-        ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-        ldx vol_offset
         lda famistudio_chn_epsm_vol_op1,y
         clc
-        adc famistudio_epsm_fm_vol_table,x
-        cmp #127
-        bmi @save_op1
+	adc vol_offset
+        bpl @save_op1
         lda #127
     @save_op1:
-        ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_WRITE0,x
     @op_2_3_4:
         lda famistudio_epsm_vol_table_op3,y
-        ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-        ldx vol_offset
         lda famistudio_chn_epsm_vol_op3,y
         clc
-        adc famistudio_epsm_fm_vol_table,x
-        cmp #127
-        bmi @save_op3
+        adc vol_offset
+        bpl @save_op3
         lda #127
     @save_op3:
-        ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_WRITE0,x
     @op_2_4:
         lda famistudio_epsm_vol_table_op2,y
-        ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-        ldx vol_offset
         lda famistudio_chn_epsm_vol_op2,y
         clc
-        adc famistudio_epsm_fm_vol_table,x
-        cmp #127
-        bmi @save_op2
+        adc vol_offset
+        bpl @save_op2
         lda #127
     @save_op2:
-        ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_WRITE0,x
     @op_4:
         ; Write volume
-        lda famistudio_epsm_vol_table_op4,y
-        ldx reg_offset
-        sta FAMISTUDIO_EPSM_REG_SEL0,x
-        ldx vol_offset
-        lda famistudio_chn_epsm_vol_op4,y
-        clc
-        adc famistudio_epsm_fm_vol_table,x
-        cmp #127
-        bmi @save_op4
-        lda #127
+        lda famistudio_epsm_vol_table_op4,y ; 4
+        sta FAMISTUDIO_EPSM_REG_SEL0,x ; 5
+        lda famistudio_chn_epsm_vol_op4,y ; 4
+	clc ; 2
+        adc vol_offset ; 3
+        bpl @save_op4 ; 2/3
+        lda #127 ; 2
     @save_op4:
-        ldx reg_offset
-        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x ; 5  = 26/27
 
         nop
         clc
@@ -4246,32 +4233,28 @@ famistudio_set_s5b_instrument:
 ; [in] a:    instrument index.
 ;======================================================================================================================
 .macro famistudio_epsm_write_patch_registers select, write
-    ldx #0
-    @loop_main_patch:
-        lda famistudio_epsm_register_order,x
-        clc
-        adc reg_offset
-        sta select
-        lda (ptr),y
-        sta write
-        iny
-        inx
-        ; we have 4 bytes in the instrument_exp instead of padding. The rest is in ex_patch
-        cpx #4
-        bne @loop_main_patch
+    ldx #4-1 ; we have 4 bytes in the instrument_exp instead of padding. The rest is in ex_patch
+@loop_main_patch:
+        lda famistudio_epsm_register_order,x ; 4
+        ora reg_offset ; 3
+        sta select ; 4
+        lda (ptr),y ; 5
+        sta write ; 4
+        iny	; 2
+	dex	; 2
+        bpl @loop_main_patch ; 3  ; =27
     ; load bytes 4-30 from the extra patch data pointer
-    ldy #0
-    @loop_extra_patch:
-        lda famistudio_epsm_register_order,x
-        clc
-        adc reg_offset
-        sta select
-        lda (ex_patch),y
-        sta write
-        iny
-        inx
-        cpx #30
-        bne @loop_extra_patch
+    ldy #26-1
+    ldx reg_offset
+@loop_extra_patch:
+        txa	; 2
+        ora famistudio_epsm_register_order+4,y ; 4
+        sta select ; 4
+        lda (ex_patch),y ; 5
+        sta write ; 4
+        dey	; 2
+	nop	; 2 DELAY FOR MESEN-X
+        bpl @loop_extra_patch ; 3  ; =26
 .endm
 
 ;======================================================================================================================
@@ -4424,9 +4407,11 @@ famistudio_set_epsm_instrument:
 
     @reg_set_1:
         famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
-    
+        nop
+	
     @last_reg:
-        lda famistudio_epsm_register_order,x
+ 	LDY #26 ; last reg patch ptr
+	lda #$22 ; famistudio_epsm_register_order,x
         clc
         adc reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0
