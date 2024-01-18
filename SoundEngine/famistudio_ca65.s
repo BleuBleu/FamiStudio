@@ -2424,7 +2424,8 @@ famistudio_epsm_fm_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 8
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 10
 famistudio_epsm_register_order: ;changed order for optimized patch loading
-    .byte $40, $30, $B4, $B0, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
+;    .byte $40, $30, $B4, $B0, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
+    .byte $50, $30, $B4, $B0, $60, $70, $80, $90, $38, $58, $68, $78, $88, $98, $34, $54, $64, $74, $84, $94, $3c, $5c, $6c, $7c, $8c, $9c, $40, $48, $44, $4c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
 ;famistudio_epsm_register_order:
 ;    .byte $B0, $B4, $30, $40, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates
 famistudio_epsm_channel_key_table:
@@ -2672,6 +2673,7 @@ famistudio_update_epsm_fm_channel_sound:
     lda @pitch+0
     sta FAMISTUDIO_EPSM_REG_WRITE0,x
 
+;.ifdef EPSM_Volume
     ; Read/multiply volume
     ldx famistudio_epsm_fm_env_table,y
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -2747,7 +2749,8 @@ famistudio_update_epsm_fm_channel_sound:
         sta FAMISTUDIO_EPSM_REG_WRITE0,x ; 5  = 26/27
 
         nop
-        clc
+;.endif
+		clc
         lda famistudio_chn_epsm_trigger,y
         bpl @no_release
 
@@ -4433,12 +4436,6 @@ famistudio_set_epsm_instrument:
     iny
     lda (@ptr),y
     sta famistudio_chn_epsm_fm_stereo ,x
-    iny
-    iny
-    lda (@ptr),y
-    sta famistudio_chn_epsm_vol_op1,x
-    dey
-    dey
     dey
 
     ; Now if we are channels 1-3 then we use @reg_set_0, otherwise for 4-6 its reg set 1
@@ -4455,30 +4452,33 @@ famistudio_set_epsm_instrument:
         nop
 	
     @last_reg:
- 	LDY #26 ; last reg patch ptr
-	lda #$22 ; famistudio_epsm_register_order,x
+ 	    ldy #26 ; last reg patch ptr
+	    lda #$22 ; famistudio_epsm_register_order,x
         clc
         adc @reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0
         lda (@ex_patch),y
         sta FAMISTUDIO_EPSM_REG_WRITE0
-        
+;.ifdef EPSM_Volume        
         lda @chan_idx    
         sbc #(FAMISTUDIO_EPSM_CHAN_FM_START - 1) ; Carry is not set, so - 1.
         tax
-        ldy #6
+        ldy #22
+        lda (@ex_patch),y
+        sta famistudio_chn_epsm_vol_op1,x
+        iny
         lda (@ex_patch),y
         sta famistudio_chn_epsm_vol_op2,x
-        ldy #13
+        iny
         lda (@ex_patch),y
         sta famistudio_chn_epsm_vol_op3,x
-        ldy #20 
+        iny
         lda (@ex_patch),y
         sta famistudio_chn_epsm_vol_op4,x
 
+;.endif 
     @done:        
         rts
-    
 .endif
 
 .if FAMISTUDIO_EXP_FDS

@@ -96,6 +96,7 @@ namespace FamiStudio
         private bool usesDeltaCounter = false;
         private bool usesReleaseNotes = false;
         private bool usesPhaseReset = false;
+        static readonly int[] epsmRegOrder = new[] { 0, 1, 2, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 3, 10, 17, 24, 30 };
 
         public FamitoneMusicFile(int kernel, bool outputLog)
         {
@@ -646,10 +647,15 @@ namespace FamiStudio
                             var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMNoiseFreq]]);
                             var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMMixerSettings]]);
 
+                            byte[] epsmPatchRegsReordered = new byte[epsmRegOrder.Length];
+                            for (int reg = 0; reg < epsmRegOrder.Length; reg++)
+                            {
+                                epsmPatchRegsReordered[reg] = instrument.EpsmPatchRegs[epsmRegOrder[reg]];
+                            }
                             lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
                             lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
                             // we can fit the first 4 bytes of data here to avoid needing to add padding
-                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Take(4).Select(r => $"${r:x2}"))}");
+                            lines.Add($"\t{db} {String.Join(",", epsmPatchRegsReordered .Take(4).Select(r => $"${r:x2}"))}");
                         }
 
                         size += 16;
@@ -672,8 +678,13 @@ namespace FamiStudio
                     var instrument = project.Instruments[i];
                     if (instrument.IsEpsm)
                     {
+                        byte[] epsmPatchRegsReordered = new byte[epsmRegOrder.Length];
+                        for (int reg = 0; reg < epsmRegOrder.Length; reg++)
+                        {
+                            epsmPatchRegsReordered[reg] = instrument.EpsmPatchRegs[epsmRegOrder[reg]];
+                        }
                         lines.Add($"{ll}instrument_epsm_extra_patch{i}:");
-                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(4).Select(r => $"${r:x2}"))}");
+                        lines.Add($"\t{db} {String.Join(",", epsmPatchRegsReordered.Skip(4).Select(r => $"${r:x2}"))}");
                         size += 27;
                     }
                 }
