@@ -872,6 +872,7 @@ famistudio_chn_epsm_rhythm_volume: .res FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
 famistudio_chn_epsm_rhythm_stereo: .res FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
 famistudio_chn_epsm_trigger:       .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT + FAMISTUDIO_EXP_EPSM_RHYTHM_CNT ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_fm_stereo:     .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+famistudio_chn_epsm_fm_instrument: .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_alg:           .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_vol_op1:       .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_vol_op2:       .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
@@ -2461,7 +2462,8 @@ famistudio_epsm_fm_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 8
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 10
 famistudio_epsm_register_order: ;changed order for optimized patch loading
-    .byte $40, $30, $B4, $B0, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
+;    .byte $40, $30, $B4, $B0, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
+    .byte $50, $30, $B4, $B0, $60, $70, $80, $90, $38, $58, $68, $78, $88, $98, $34, $54, $64, $74, $84, $94, $3c, $5c, $6c, $7c, $8c, $9c, $40, $48, $44, $4c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
 ;famistudio_epsm_register_order:
 ;    .byte $B0, $B4, $30, $40, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates
 famistudio_epsm_channel_key_table:
@@ -2586,13 +2588,14 @@ famistudio_update_epsm_square_channel_sound:
 ;
 ; [in] y: EPSM channel idx (0,1,2,3,4,5)
 ;======================================================================================================================
-
 famistudio_update_epsm_fm_channel_sound:
 
     @pitch      = famistudio_ptr1
     @reg_offset = famistudio_r1
     @vol_offset = famistudio_r0
+    @chan_idx   = famistudio_r2
 
+    sty @chan_idx
     ; If the writes are done to channels 0-2, use FAMISTUDIO_EPSM_REG_SEL0 if 3-5 use FAMISTUDIO_EPSM_REG_SEL1
     ; This reg_offset stores the difference so we can later load it into x and do sta FAMISTUDIO_EPSM_REG_SEL0, x
     ; to account for the difference
@@ -2626,6 +2629,36 @@ famistudio_update_epsm_fm_channel_sound:
     rts
 
 @nocut:
+
+    ; Check if the channel needs to stop the note
+
+    ; Un-trigger previous note if needed.
+    lda famistudio_chn_epsm_trigger,y
+    beq @update_instrument_check
+    @untrigger_prev_note:
+        ; Untrigger note.  
+        lda #FAMISTUDIO_EPSM_REG_KEY
+        sta FAMISTUDIO_EPSM_REG_SEL0
+
+        lda famistudio_epsm_channel_key_table, y
+        and #$0f ; remove trigger
+        sta FAMISTUDIO_EPSM_REG_WRITE0
+;        nop
+;        nop
+;        nop
+        nop
+        nop
+        nop
+;        rts
+    @update_instrument_check:
+    lda famistudio_chn_epsm_fm_instrument,y
+	cmp #$ff
+	beq @no_instrument_update
+	jsr update_fm_instrument
+	ldy @chan_idx
+	lda #$ff
+	sta famistudio_chn_epsm_fm_instrument,y
+	@no_instrument_update:
 
     ldx @reg_offset
     lda famistudio_epsm_fm_stereo_reg_table,y
@@ -2671,30 +2704,8 @@ famistudio_update_epsm_fm_channel_sound:
     asl
     ora @pitch+1
     sta @pitch+1
-    
-    ; Check if the channel needs to stop the note
-
-    ; Un-trigger previous note if needed.
-    lda famistudio_chn_epsm_trigger,y
-    beq @write_hi_period
-    @untrigger_prev_note:
-        ; Untrigger note.  
-        lda #FAMISTUDIO_EPSM_REG_KEY
-        sta FAMISTUDIO_EPSM_REG_SEL0
-
-        lda famistudio_epsm_channel_key_table, y
-        and #$0f ; remove trigger
-        sta FAMISTUDIO_EPSM_REG_WRITE0
-        nop
-        nop
-        nop
-        nop
-        nop
-        nop
-;        rts
 
     @write_hi_period:
-
 
     ; Write pitch (hi)
     ldx @reg_offset
@@ -2808,6 +2819,170 @@ famistudio_update_epsm_fm_channel_sound:
 
     rts
 
+
+;======================================================================================================================
+; FAMISTUDIO_EPSM_WRITE_PATCH_REGISTER (internal)
+;
+; Internal function to set a EPSM instrument for a given channel
+;
+; [in] y/r0: channel index
+; [in] x:    index of first envelope of instrument
+; [in] a:    instrument index.
+;======================================================================================================================
+.macro famistudio_epsm_write_patch_registers select, write
+
+    .local @loop_main_patch
+    .local @loop_extra_patch
+    .local @alg_4
+    .local @alg_5_6
+    .local @alg_0_1_2_3
+
+    ldx #4-1 ; we have 4 bytes in the instrument_exp instead of padding. The rest is in ex_patch
+    @loop_main_patch:
+        lda famistudio_epsm_register_order,x ; 4
+        ora @reg_offset ; 3
+        sta select ; 4
+        lda (@ptr),y ; 5
+        sta write ; 4
+        iny	; 2
+        dex	; 2
+        bpl @loop_main_patch ; 3  ; =27
+    ; load bytes 4-30 from the extra patch data pointer
+    ;ldy #26-1
+    ldy #26-5 ; we skip updating the 4 operators
+    ldx @reg_offset
+    @loop_extra_patch:
+        txa	; 2
+        ora famistudio_epsm_register_order+4,y ; 4
+        sta select ; 4
+        lda (@ex_patch),y ; 5
+        sta write ; 4
+        dey	; 2
+        nop	; 2 DELAY FOR MESEN-X
+        bpl @loop_extra_patch ; 3  ; =26
+
+    ldx @chan_idx2
+    lda famistudio_chn_epsm_alg,x
+    cmp #4
+    bcc @alg_0_1_2_3 ; 0-1-2-3
+    beq @alg_4 ; 4
+    jmp @alg_5_6 ; 5
+    @alg_0_1_2_3:
+    ;3+2+1
+    ldy #23
+    ldx @reg_offset
+    txa	; 2
+    ora famistudio_epsm_register_order+4,y ; 4
+    sta select ; 4
+    lda (@ex_patch),y ; 5
+    sta write ; 4
+    nop	; 2 DELAY FOR MESEN-X
+    @alg_4:
+    ;3+1
+    ldy #24
+    ldx @reg_offset
+    txa	; 2
+    ora famistudio_epsm_register_order+4,y ; 4
+    sta select ; 4
+    lda (@ex_patch),y ; 5
+    sta write ; 4
+    nop	; 2 DELAY FOR MESEN-X
+    @alg_5_6:
+    ;1
+    ldy #22
+    ldx @reg_offset
+    txa	; 2
+    ora famistudio_epsm_register_order+4,y ; 4
+    sta select ; 4
+    lda (@ex_patch),y ; 5
+    sta write ; 4
+    nop	; 2 DELAY FOR MESEN-X
+.endmacro
+
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_EPSM_FM_INSTRUMENT (internal)
+;
+; Updates the EPSM audio registers for a given channel.
+;
+; [in] y: EPSM channel idx (0,1,2,3,4,5)
+;======================================================================================================================
+    ; Now we are dealing with either a FM or Rhythm instrument. a = channel index
+    ; if we are an FM instrument then there is a offset we need to apply to the register select
+
+    ; Skip over the two SSG specific envelopes by jumping up 4 bytes
+update_fm_instrument:
+    @ptr          = famistudio_ptr1
+    @env_ptr      = famistudio_ptr2
+    @ex_patch     = famistudio_ptr2
+    @chan_idx     = famistudio_r0
+    @chan_idx2    = famistudio_r2
+    @update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
+    @reg_offset   = famistudio_r3
+    clc	
+    jsr famistudio_get_exp_inst_ptr
+    ldy #10
+
+    ; And then read the pointer to the extended instrument patch data
+    lda (@ptr),y
+    sta @ex_patch
+    iny
+    lda (@ptr),y
+    sta @ex_patch+1
+    iny
+
+@fm_channel:
+    ldx @chan_idx2
+    ; FM channel 1-6, we need to look up the register select offset from the table
+    lda famistudio_channel_epsm_chan_table,x
+    sta @reg_offset
+
+    ; Now we need to store the algorithm and stereo for later use
+    lda (@ptr),y
+    and #$07
+    sta famistudio_chn_epsm_alg,x ;store algorithm
+    iny
+    lda (@ptr),y
+    sta famistudio_chn_epsm_fm_stereo ,x
+    dey
+
+    ; Now if we are channels 1-3 then we use @reg_set_0, otherwise for 4-6 its reg set 1
+    lda @chan_idx2
+    cmp #3
+    bpl @reg_set_1
+
+    @reg_set_0:
+        famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL0, FAMISTUDIO_EPSM_REG_WRITE0
+        jmp @last_reg
+
+    @reg_set_1:
+        famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
+        nop
+	
+    @last_reg:
+        ldy #26 ; last reg patch ptr
+        lda #$22 ; famistudio_epsm_register_order,x
+        clc
+        adc @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0
+        lda (@ex_patch),y
+        sta FAMISTUDIO_EPSM_REG_WRITE0    
+        lda @chan_idx2
+        tax
+        ldy #22
+        lda (@ex_patch),y
+        sta famistudio_chn_epsm_vol_op1,x
+        iny
+        lda (@ex_patch),y
+        sta famistudio_chn_epsm_vol_op2,x
+        iny
+        lda (@ex_patch),y
+        sta famistudio_chn_epsm_vol_op3,x
+        iny
+        lda (@ex_patch),y
+        sta famistudio_chn_epsm_vol_op4,x
+    @done:
+rts
+
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_RHYTHM_CHANNEL_SOUND (internal)
 ;
@@ -2863,7 +3038,7 @@ famistudio_update_epsm_rhythm_channel_sound:
     lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
     sta famistudio_chn_epsm_trigger+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT,y
     sta FAMISTUDIO_EPSM_ADDR
-    nop ;Some delay needed before writing the rythm key
+    nop ;Some delay needed before writing the rhythm key
     nop
     lda famistudio_epsm_rhythm_key_table,y
     sta FAMISTUDIO_EPSM_DATA
@@ -4385,45 +4560,6 @@ famistudio_set_s5b_instrument:
 .if FAMISTUDIO_EXP_EPSM
 
 ;======================================================================================================================
-; FAMISTUDIO_EPSM_WRITE_PATCH_REGISTER (internal)
-;
-; Internal function to set a EPSM instrument for a given channel
-;
-; [in] y/r0: channel index
-; [in] x:    index of first envelope of instrument
-; [in] a:    instrument index.
-;======================================================================================================================
-.macro famistudio_epsm_write_patch_registers select, write
-
-    .local @loop_main_patch
-    .local @loop_extra_patch
-
-
-    ldx #4-1 ; we have 4 bytes in the instrument_exp instead of padding. The rest is in ex_patch
-    @loop_main_patch:
-        lda famistudio_epsm_register_order,x ; 4
-        ora @reg_offset ; 3
-        sta select ; 4
-        lda (@ptr),y ; 5
-        sta write ; 4
-        iny	; 2
-        dex	; 2
-        bpl @loop_main_patch ; 3  ; =27
-    ; load bytes 4-30 from the extra patch data pointer
-    ldy #26-1
-    ldx @reg_offset
-    @loop_extra_patch:
-        txa	; 2
-        ora famistudio_epsm_register_order+4,y ; 4
-        sta select ; 4
-        lda (@ex_patch),y ; 5
-        sta write ; 4
-        dey	; 2
-        nop	; 2 DELAY FOR MESEN-X
-        bpl @loop_extra_patch ; 3  ; =26
-.endmacro
-
-;======================================================================================================================
 ; FAMISTUDIO_SET_EPSM_INSTRUMENT (internal)
 ;
 ; Internal function to set a EPSM instrument. 
@@ -4438,6 +4574,7 @@ famistudio_set_epsm_instrument:
     @env_ptr      = famistudio_ptr2
     @ex_patch     = famistudio_ptr2
     @chan_idx     = famistudio_r0
+    @chan_idx2    = famistudio_r0
     @update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
     @reg_offset   = famistudio_r3
 
@@ -4478,6 +4615,10 @@ famistudio_set_epsm_instrument:
         ldx @chan_idx
         rts
 @process_regular_instrument:
+    cpy #FAMISTUDIO_EPSM_CHAN_FM_START
+    bcc @skip_fm_instrument
+        sta famistudio_chn_epsm_fm_instrument-FAMISTUDIO_EPSM_CHAN_FM_START,y
+    @skip_fm_instrument:
     jsr famistudio_get_exp_inst_ptr
     bit @update_flags
     bpl @load_envelopes
@@ -4515,91 +4656,7 @@ famistudio_set_epsm_instrument:
         rts
 
 @not_square_channel:
-    ; Now we are dealing with either a FM or Rhythm instrument. a = channel index
-    ; if we are an FM instrument then there is a offset we need to apply to the register select
-
-    ; Skip over the two SSG specific envelopes by jumping up 4 bytes
-    iny
-    iny
-    iny
-    iny
-
-    ; And then read the pointer to the extended instrument patch data
-    lda (@ptr),y
-    sta @ex_patch
-    iny
-    lda (@ptr),y
-    sta @ex_patch+1
-    iny
-
-@fm_channel:
-    lda @chan_idx
-    ; FM channel 1-6, we need to look up the register select offset from the table
-    sec
-    sbc #FAMISTUDIO_EPSM_CHAN_FM_START
-    tax
-    lda famistudio_channel_epsm_chan_table,x
-    sta @reg_offset
-
-    lda #FAMISTUDIO_EPSM_REG_KEY
-    sta FAMISTUDIO_EPSM_REG_SEL0
-    lda famistudio_epsm_channel_key_table, x
-    and #$0f ; remove trigger
-    sta FAMISTUDIO_EPSM_REG_WRITE0
-
-    ; Now we need to store the algorithm and 1st operator volume for later use
-    lda (@ptr),y
-    and #$07
-    sta famistudio_chn_epsm_alg,x ;store algorithm
-    iny
-    lda (@ptr),y
-    sta famistudio_chn_epsm_fm_stereo ,x
-    iny
-    iny
-    lda (@ptr),y
-    sta famistudio_chn_epsm_vol_op1,x
-    dey
-    dey
-    dey
-
-    ; Now if we are channels 1-3 then we use @reg_set_0, otherwise for 4-6 its reg set 1
-    lda @chan_idx
-    cmp #FAMISTUDIO_EPSM_CH6_IDX
-    bpl @reg_set_1
-
-    @reg_set_0:
-        famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL0, FAMISTUDIO_EPSM_REG_WRITE0
-        jmp @last_reg
-
-    @reg_set_1:
-        famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
-        nop
-	
-    @last_reg:
- 	LDY #26 ; last reg patch ptr
-	lda #$22 ; famistudio_epsm_register_order,x
-        clc
-        adc @reg_offset
-        sta FAMISTUDIO_EPSM_REG_SEL0
-        lda (@ex_patch),y
-        sta FAMISTUDIO_EPSM_REG_WRITE0
-        
-        lda @chan_idx    
-        sbc #(FAMISTUDIO_EPSM_CHAN_FM_START - 1) ; Carry is not set, so - 1.
-        tax
-        ldy #6
-        lda (@ex_patch),y
-        sta famistudio_chn_epsm_vol_op2,x
-        ldy #13
-        lda (@ex_patch),y
-        sta famistudio_chn_epsm_vol_op3,x
-        ldy #20 
-        lda (@ex_patch),y
-        sta famistudio_chn_epsm_vol_op4,x
-
-    @done:        
-        rts
-    
+    rts
 .endif
 
 .if FAMISTUDIO_EXP_FDS
