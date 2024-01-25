@@ -2837,9 +2837,10 @@ update_fm_instrument:
     update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
     reg_offset   = famistudio_r3
     clc	
-	jsr famistudio_get_exp_inst_ptr
-	ldy #10
-
+    jsr famistudio_get_exp_inst_ptr
+    tya
+    adc #10
+    tay
     ; And then read the pointer to the extended instrument patch data
     lda (ptr),y
     sta ex_patch

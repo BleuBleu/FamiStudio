@@ -2886,8 +2886,9 @@ update_fm_instrument:
 .reg_offset   = famistudio_r3
     clc	
     jsr famistudio_get_exp_inst_ptr
-    ldy #10
-
+    tya
+    adc #10
+    tay
     ; And then read the pointer to the extended instrument patch data
     lda [.ptr],y
     sta <.ex_patch
