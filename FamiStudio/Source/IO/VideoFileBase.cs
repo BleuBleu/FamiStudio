@@ -657,15 +657,12 @@ namespace FamiStudio
             if (duration > 0)
                 maxSample = duration * sampleRate;
 
-            if (BeginPlaySong(song))
+            BeginPlaySong(song);
+
+            while (PlaySongFrame() && numSamples < maxSample)
             {
                 WriteMetadata(metadata);
-
-                while (PlaySongFrame() && numSamples < maxSample)
-                {
-                    WriteMetadata(metadata);
-                    Log.ReportProgress(0.0f);
-                }
+                Log.ReportProgress(0.0f);
             }
 
             return metadata.ToArray();

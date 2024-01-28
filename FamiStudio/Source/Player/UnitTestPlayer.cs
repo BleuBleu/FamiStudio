@@ -20,13 +20,13 @@ namespace FamiStudio
         {
             file = new StreamWriter(filename);
 
-            if (BeginPlaySong(song))
-                while (PlaySongFrame()) ;
+            BeginPlaySong(song);
+            while (PlaySongFrame()) ;
 
             file.Close();
         }
 
-        public override void NotifyRegisterWrite(int apuIndex, int reg, int data, List<int> metadata = null)
+        public override void NotifyRegisterWrite(int apuIndex, int reg, int data, int metadata = 0)
         {
             if (apuIndex == NesApu.APU_WAV_EXPORT)
                 file.WriteLine($"Frame {frameNumber} Register {reg:X4} {data:X2}");

@@ -203,6 +203,7 @@ namespace FamiStudio
         public static bool SquareSmoothVibrato = true;
         public static bool N163Mix = true;
         public static bool ClampPeriods = true;
+        public static bool AccurateSeek = false;
         public static bool NoDragSoungWhenPlaying = false;
         public static int MetronomeVolume = 50;
         public static int SeparateChannelsExportTndMode = NesApu.TND_MODE_SINGLE;
@@ -477,6 +478,7 @@ namespace FamiStudio
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
             N163Mix = ini.GetBool("Audio", "N163Mix", true);
             ClampPeriods = ini.GetBool("Audio", "ClampPeriods", true);
+            AccurateSeek = ini.GetBool("Audio", "AccurateSeek", false);
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
             MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
             SeparateChannelsExportTndMode = ini.GetInt("Audio", "SeparateChannelsExportTndMode", NesApu.TND_MODE_SINGLE);
@@ -689,6 +691,7 @@ namespace FamiStudio
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
             ini.SetBool("Audio", "N163Mix", N163Mix);
             ini.SetBool("Audio", "ClampPeriods", ClampPeriods);
+            ini.SetBool("Audio", "AccurateSeek", AccurateSeek);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
             ini.SetInt("Audio", "MetronomeVolume", MetronomeVolume);
             ini.SetInt("Audio", "SeparateChannelsExportTndMode", SeparateChannelsExportTndMode);

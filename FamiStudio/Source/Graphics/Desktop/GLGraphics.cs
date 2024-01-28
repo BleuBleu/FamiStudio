@@ -840,7 +840,9 @@ namespace FamiStudio
     public static class GL
     {
         private static bool initialized;
+    #if DEBUG && !FAMISTUDIO_MACOS
         private static bool renderdoc;
+    #endif
 
         public const int DepthBufferBit            = 0x0100;
         public const int ColorBufferBit            = 0x4000;
@@ -1157,7 +1159,7 @@ namespace FamiStudio
             DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(glfwGetProcAddress("glDeleteFramebuffers"));
             BindAttribLocation      = Marshal.GetDelegateForFunctionPointer<BindAttribLocationDelegate>(glfwGetProcAddress("glBindAttribLocation"));
 
-#if DEBUG && !FAMISTUDIO_MACOS 
+#if DEBUG && !FAMISTUDIO_MACOS
             PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));
             PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(glfwGetProcAddress("glPopDebugGroupKHR"));
             DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(glfwGetProcAddress("glDebugMessageCallback"));

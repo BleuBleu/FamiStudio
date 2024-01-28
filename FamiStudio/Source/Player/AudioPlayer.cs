@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -36,11 +37,16 @@ namespace FamiStudio
         // Only used when number of buffered emulation frame == 0
         protected FrameAudioData lastFrameAudioData;
 
+        // Used when accurate seeking.
+        protected volatile bool abortSeek;
+        protected Task seekTask;
+
         protected abstract bool EmulateFrame();
 
         public bool IsOscilloscopeConnected => oscilloscope != null;
-        public bool IsPlaying => UsesEmulationThread ? (emulationThread != null || emulationQueue.Count > 0) : (audioStream != null && audioStream.IsPlaying);
-        
+        public bool IsPlaying => (UsesEmulationThread ? (emulationThread != null || emulationQueue.Count > 0) : (audioStream != null && audioStream.IsPlaying)) || IsSeeking;
+        public bool IsSeeking => seekTask != null;
+
         protected bool UsesEmulationThread => numBufferedFrames > 0;
 
         public override int PlayPosition
