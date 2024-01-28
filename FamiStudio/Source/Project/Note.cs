@@ -824,8 +824,8 @@ namespace FamiStudio
             "EffectNoteDelay",
             "EffectCutDelay",
             "EffectVolume",
-            "EffectDutyCycle",
-            "EffectDutyCycle",
+            "EffectDAC",
+            "EffectPhaseReset",
         };
 
         static EffectType()

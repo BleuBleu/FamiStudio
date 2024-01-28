@@ -398,15 +398,15 @@ namespace FamiStudio
                     }
                     else if (reg.Register == NesApu.APU_DMC_START)
                     {
-                        if (sampleBanks[reg.Metadata[0]] != DPCMBank && project.UsesMultipleDPCMBanks)
+                        if (sampleBanks[reg.Metadata] != DPCMBank && project.UsesMultipleDPCMBanks)
                         {
                             writer.Write(new byte[] { 0x68, 0x66, 0x07 });    //Transfer data block type NES APU RAM write
-                            writer.Write(Utils.IntToBytes24Bit(sampleBankPointers[sampleBanks[reg.Metadata[0]]]));
+                            writer.Write(Utils.IntToBytes24Bit(sampleBankPointers[sampleBanks[reg.Metadata]]));
                             writer.Write(new byte[] { 0x00, 0xC0, 0x00, 0x00, 0x40, 0x00 }); //Write 4000 bytes to address C000
                         }
-                        DPCMBank = sampleBanks[reg.Metadata[0]];
+                        DPCMBank = sampleBanks[reg.Metadata];
                         writer.Write(new byte[] { 0xB4, NesApu.APU_DMC_START & 0xFF });
-                        writer.Write((byte)(project.GetSampleBankOffset(project.GetSample(reg.Metadata[0])) >> 6));
+                        writer.Write((byte)(project.GetSampleBankOffset(project.GetSample(reg.Metadata)) >> 6));
                     }
                     else if ((reg.Register < 0x401c) || (reg.Register < 0x409f && reg.Register > 0x401F))   //2A03 & FDS
                     {
@@ -435,10 +435,10 @@ namespace FamiStudio
             int bankswitches = 0;
             foreach (var write in writes)
             {
-                if (write.Register == NesApu.APU_DMC_START && sampleBanks[write.Metadata[0]] != bankInUse)
+                if (write.Register == NesApu.APU_DMC_START && sampleBanks[write.Metadata] != bankInUse)
                 {
                     bankswitches++;
-                    bankInUse = sampleBanks[write.Metadata[0]];
+                    bankInUse = sampleBanks[write.Metadata];
                 }
             }
             return bankswitches;
@@ -465,7 +465,7 @@ namespace FamiStudio
                     if (!(writes[pointer].Register == writes[afterLoopPointer].Register &&
                     writes[pointer].Value == writes[afterLoopPointer].Value &&
                     ((writes[pointer].Register == NesApu.APU_DMC_START &&
-                    writes[pointer].Metadata[0] == writes[afterLoopPointer].Metadata[0]) ||
+                    writes[pointer].Metadata == writes[afterLoopPointer].Metadata) ||
                     writes[pointer].Register != NesApu.APU_DMC_START)))
                     {
                         Debug.WriteLine($"Dumbass broke at frame {writes[pointer].FrameNumber} at pointer {pointer}/{afterLoopPointer} because \'{writes[pointer].Value:x2} => ${writes[pointer].Register:x4}\' isn't equal to \'{writes[afterLoopPointer].Value:x2} => ${writes[afterLoopPointer].Register:x4}\'");

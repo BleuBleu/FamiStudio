@@ -1220,7 +1220,19 @@ namespace FamiStudio
 
         private Color GetSeekBarColor()
         {
-            return (editMode == EditionMode.Channel && App.IsRecording) ? Theme.DarkRedColor : Theme.YellowColor;
+            if (editMode == EditionMode.Channel)
+            {
+                if (App.IsRecording)
+                {
+                    return Theme.DarkRedColor;
+                }
+                else if (App.IsSeeking)
+                {
+                    return Theme.Lighten(Theme.YellowColor, (int)(Math.Abs(Math.Sin(Platform.TimeSeconds() * 12.0)) * 75));
+                }
+            }
+
+            return Theme.YellowColor;
         }
 
         private void ForEachWaveTimecode(RenderInfo r, Action<float, float, int, int> function)

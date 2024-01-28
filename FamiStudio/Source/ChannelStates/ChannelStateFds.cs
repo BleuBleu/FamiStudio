@@ -8,6 +8,7 @@ namespace FamiStudio
         byte   modDelayCounter;
         ushort modDepth;
         ushort modSpeed;
+        int    prevPeriodHi;
 
         public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx) : base(player, apuIdx, channelIdx, false)
         {
@@ -56,8 +57,6 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
-            var periodHi = 0;
-
             if (note.IsStop)
             {
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80); // Zero volume
@@ -68,7 +67,8 @@ namespace FamiStudio
                 var period = GetPeriod();
                 var volume = GetVolume();
 
-                periodHi = (period >> 8) & 0x0f;
+                var periodHi = (period >> 8) & 0x0f;
+                prevPeriodHi = periodHi;
 
                 WriteRegister(NesApu.FDS_FREQ_HI, periodHi);
                 WriteRegister(NesApu.FDS_FREQ_LO, (period >> 0) & 0xff);
@@ -108,13 +108,15 @@ namespace FamiStudio
                 modDelayCounter--;
             }
 
-            if (resetPhase)
-            {
-                WriteRegister(NesApu.FDS_FREQ_HI, periodHi | 0x80);
-                WriteRegister(NesApu.FDS_FREQ_HI, periodHi);
-            }
-
             base.UpdateAPU();
+        }
+
+        protected override void ResetPhase()
+        {
+            SkipCycles(6); // lda/ora
+            WriteRegister(NesApu.FDS_FREQ_HI, prevPeriodHi | 0x80);
+            SkipCycles(2); // and
+            WriteRegister(NesApu.FDS_FREQ_HI, prevPeriodHi);
         }
     }
 }
