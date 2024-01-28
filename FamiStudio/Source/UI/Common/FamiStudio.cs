@@ -2458,7 +2458,7 @@ namespace FamiStudio
             }
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             var oldSong = song;
             var currentFrame = CurrentFrame;
@@ -2470,9 +2470,9 @@ namespace FamiStudio
             buffer.Serialize(ref song);
             buffer.Serialize(ref currentFrame);
 
-            ProjectExplorer.SerializeState(buffer);
-            Sequencer.SerializeState(buffer);
-            PianoRoll.SerializeState(buffer);
+            ProjectExplorer.Serialize(buffer);
+            Sequencer.Serialize(buffer);
+            PianoRoll.Serialize(buffer);
 
             SerializeActiveControl(buffer);
 

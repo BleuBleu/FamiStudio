@@ -211,32 +211,7 @@ namespace FamiStudio
         public static float GlobalVolume = -2.0f; // in dB
         public static int BassCutoffHz = 16; // in Hz
 
-        public struct ExpansionMix
-        {
-            public ExpansionMix(float v, float t, int rf)
-            {
-                VolumeDb = v;
-                TrebleDb = t;
-                TrebleRolloffHz = rf;
-            }
-
-            public float VolumeDb;
-            public float TrebleDb;
-            public int TrebleRolloffHz;
-        }
-
-        public static ExpansionMix[] ExpansionMixerSettings        = new ExpansionMix[ExpansionType.Count];
-        public static ExpansionMix[] DefaultExpansionMixerSettings = new ExpansionMix[ExpansionType.Count]
-        {
-            new ExpansionMix(0.0f,  -5.0f, 12000), // None
-            new ExpansionMix(0.0f,  -5.0f, 12000), // Vrc6
-            new ExpansionMix(0.0f, -15.0f, 12000), // Vrc7
-            new ExpansionMix(0.0f, -40.0f,  2000), // Fds
-            new ExpansionMix(0.0f,  -5.0f, 12000), // Mmc5
-            new ExpansionMix(0.0f, -15.0f, 12000), // N163
-            new ExpansionMix(0.0f,  -5.0f, 12000), // S5B
-            new ExpansionMix(0.0f,  -5.0f, 12000)  // EPSM
-        };
+        public static ExpansionMixer[] ExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count];
 
         // MIDI section
         public static string MidiDevice = "";
@@ -515,7 +490,7 @@ namespace FamiStudio
             GlobalVolume = ini.GetFloat("Mixer", "GlobalVolume", -3.0f);
             BassCutoffHz = ini.GetInt("Mixer", "BassCutoffHz", 16);
 
-            Array.Copy(DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
+            Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
 
             // At Version 9 (FamiStudio 4.2.0) we added more filtering options, so reset everything.
             if (Version >= 9)
@@ -524,9 +499,9 @@ namespace FamiStudio
                 {
                     var section = "Mixer" + ExpansionType.InternalNames[i];
 
-                    ExpansionMixerSettings[i].VolumeDb        = ini.GetFloat(section, "VolumeDb",        DefaultExpansionMixerSettings[i].VolumeDb);
-                    ExpansionMixerSettings[i].TrebleDb        = ini.GetFloat(section, "TrebleDb",        DefaultExpansionMixerSettings[i].TrebleDb);
-                    ExpansionMixerSettings[i].TrebleRolloffHz = ini.GetInt(section, "TrebleRolloffHz", DefaultExpansionMixerSettings[i].TrebleRolloffHz);
+                    ExpansionMixerSettings[i].VolumeDb        = ini.GetFloat(section, "VolumeDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].VolumeDb);
+                    ExpansionMixerSettings[i].TrebleDb        = ini.GetFloat(section, "TrebleDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
+                    ExpansionMixerSettings[i].TrebleRolloffHz = ini.GetInt(section, "TrebleRolloffHz", ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleRolloffHz);
                 }
             }
 

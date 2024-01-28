@@ -61,6 +61,13 @@ x Sort button for songs doesnt do shit?
 - S5B Envelope, not from discussion with abstract64:
 	- On the instrument : envelope enable + shape + option to have auto-period (off/on, with option to have some kind of +/- offset/octave from the note pitch)
 	- As a effect : Effect to manually dial the period. Would probably override anything set on the insturment (?), override until turn off?
+- Mixer improvements:
+	- Switch to list of grids.
+	- Add min/max to slider in grid.
+	- Use a Func<> for formatting slider.
+	- Add mixer settings to project + override flag
+	- Apply the override in NES apu reset.
+	- 
 
 4.2.0 Testing/Packaging
 =======================

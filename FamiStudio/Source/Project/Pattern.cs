@@ -266,7 +266,7 @@ namespace FamiStudio
         public uint ComputeCRC(uint crc = 0)
         {
             var serializer = new ProjectCrcBuffer(crc);
-            SerializeState(serializer);
+            Serialize(serializer);
             return serializer.CRC;
         }
 
@@ -457,7 +457,7 @@ namespace FamiStudio
             id = newId;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
@@ -497,7 +497,7 @@ namespace FamiStudio
                     {
                         var time = (short)kv.Key;
                         buffer.Serialize(ref time);
-                        kv.Value.SerializeState(buffer);
+                        kv.Value.Serialize(buffer);
                     }
                 }
                 else
@@ -507,7 +507,7 @@ namespace FamiStudio
                         short time = 0;
                         buffer.Serialize(ref time);
                         var note = new Note();
-                        note.SerializeState(buffer);
+                        note.Serialize(buffer);
                         notes[time] = note;
                     }
                 }

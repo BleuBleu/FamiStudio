@@ -1197,7 +1197,7 @@ namespace FamiStudio
             id = newId;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             lock (songLock)
             {
@@ -1270,7 +1270,7 @@ namespace FamiStudio
                 }
 
                 foreach (var channel in channels)
-                    channel.SerializeState(buffer);
+                    channel.Serialize(buffer);
 
                 if (buffer.IsReading && !buffer.IsForUndoRedo)
                     DeleteNotesPastMaxInstanceLength();

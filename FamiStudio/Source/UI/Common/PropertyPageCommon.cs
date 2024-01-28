@@ -75,6 +75,13 @@ namespace FamiStudio
         Button
     };
 
+    [Flags]
+    public enum GridOptions
+    {
+        None = 0,
+        NoHeader = 1
+    }
+
     public class ColumnDesc
     {
         public string Name;

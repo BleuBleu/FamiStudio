@@ -589,9 +589,9 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
+        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None)
         {
-            var grid = new Grid(columnDescs, numRows, true);
+            var grid = new Grid(columnDescs, numRows, !options.HasFlag(GridOptions.NoHeader));
 
             if (data != null)
                 grid.UpdateData(data);
@@ -648,14 +648,15 @@ namespace FamiStudio
             grid.SetRowColor(rowIdx, color);
         }
 
-        public void AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
+        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Grid,
-                    control = CreateGrid(columnDescs, data, numRows, tooltip)
+                    control = CreateGrid(columnDescs, data, numRows, tooltip, options)
                 });
+            return properties.Count - 1;
         }
 
         public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)

@@ -5128,7 +5128,7 @@ namespace FamiStudio
         {
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref expandedInstrument);
             buffer.Serialize(ref selectedInstrumentTab);

@@ -129,6 +129,7 @@
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
     <Compile Include="Source\UI\Common\Init.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
+    <Compile Include="Source\UI\Common\MixerProperties.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
@@ -676,6 +677,8 @@
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesExpansion@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesMixer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesMixer@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties.tga" />

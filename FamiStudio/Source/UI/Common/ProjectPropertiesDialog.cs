@@ -8,6 +8,7 @@ namespace FamiStudio
         {
             Info,
             Expansion,
+            Mixer,
             SoundEngine,
             Max
         };
@@ -59,6 +60,7 @@ namespace FamiStudio
         private PropertyPage[] pages = new PropertyPage[(int)ProjectSection.Max];
         private MultiPropertyDialog dialog;
         private Project project;
+        private MixerProperties mixerProperties;
         
         public PropertyPage InfoPage        => dialog.GetPropertyPage((int)ProjectSection.Info);
         public PropertyPage ExpansionPage   => dialog.GetPropertyPage((int)ProjectSection.Expansion);
@@ -128,6 +130,12 @@ namespace FamiStudio
                     page.SetPropertyEnabled(1, project.UsesExpansionAudio(ExpansionType.N163));
                     page.PropertyChanged += Expansion_PropertyChanged;
                     UpdateExpansionWarnings(page);
+                    break;
+                }
+                case ProjectSection.Mixer:
+                {
+                    page.SetScrolling(300); // MATTT
+                    mixerProperties = new MixerProperties(page, project);
                     break;
                 }
                 case ProjectSection.SoundEngine:
