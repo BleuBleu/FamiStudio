@@ -5,6 +5,7 @@ namespace FamiStudio
     public class ChannelStateVrc6Square : ChannelState
     {
         int regOffset = 0;
+        int prevPeriodHi = 0;
 
         public ChannelStateVrc6Square(IPlayerInterface player, int apuIdx, int channelType) : base(player, apuIdx, channelType, false)
         {
@@ -14,7 +15,6 @@ namespace FamiStudio
         public override void UpdateAPU()
         {
             var duty = GetDuty();
-            var periodHi = 0;
 
             if (note.IsStop)
             {
@@ -25,21 +25,25 @@ namespace FamiStudio
                 var period = GetPeriod();
                 var volume = GetVolume();
                 
-                periodHi = ((period >> 8) & 0x0f);
+                var periodHi = ((period >> 8) & 0x0f);
+                prevPeriodHi = periodHi;
 
                 WriteRegister(NesApu.VRC6_PL1_LO  + regOffset, period & 0xff);
                 WriteRegister(NesApu.VRC6_PL1_HI  + regOffset, periodHi | 0x80);
                 WriteRegister(NesApu.VRC6_PL1_VOL + regOffset, (duty << 4) | volume);
             }
 
-            // Clear and set the hi-bit of 9002/A002 to reset phase.
-            if (resetPhase)
-            {
-                WriteRegister(NesApu.VRC6_PL1_HI + regOffset, periodHi);
-                WriteRegister(NesApu.VRC6_PL1_HI + regOffset, periodHi | 0x80);
-            }
-
             base.UpdateAPU();
         }
-    };
+
+        protected override void ResetPhase()
+        {
+            // Clear and set the hi-bit of 9002/A002 to reset phase.
+            SkipCycles(6); // tax/lda
+            WriteRegister(NesApu.VRC6_PL1_HI + regOffset, prevPeriodHi);
+            SkipCycles(2); // ora
+            WriteRegister(NesApu.VRC6_PL1_HI + regOffset, prevPeriodHi | 0x80);
+            SkipCycles(2); // txa
+        }
+    }
 }

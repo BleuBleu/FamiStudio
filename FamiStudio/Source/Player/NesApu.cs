@@ -216,10 +216,10 @@ namespace FamiStudio
         public const int EPSM_REG_SHAPE         = 0x0d;
         public const int EPSM_REG_IO_A          = 0x0e;
         public const int EPSM_REG_IO_B          = 0x0f;
-        public const int EPSM_REG_RYTHM       = 0x10;
-        public const int EPSM_REG_RYTHM_LEVEL = 0x18;
-        public const int EPSM_REG_FM_LO_A     = 0xA0;
-        public const int EPSM_REG_FM_HI_A     = 0xA4;
+        public const int EPSM_REG_RYTHM         = 0x10;
+        public const int EPSM_REG_RYTHM_LEVEL   = 0x18;
+        public const int EPSM_REG_FM_LO_A       = 0xA0;
+        public const int EPSM_REG_FM_HI_A       = 0xA4;
 
         // See comment in Simple_Apu.h.
         public const int TND_MODE_SINGLE           = 0;
@@ -243,7 +243,7 @@ namespace FamiStudio
         public const int FreqNtsc = 1789773;
         public const int FreqPal  = 1662607;
         public const int FreqEPSM = 8000000;
-
+            
         public const double FreqC1 = 32.7032;
         public const double FreqC0 = 16.3516;
         public const double FreqRegMin = 15.8862;  //The minimum frequency displayed in the registers tab, C0 - 49.9893 cents
@@ -764,11 +764,12 @@ namespace FamiStudio
             return NesApu.MaximumPeriod11Bit;
         }
 
-        public static ThreadLocal<byte[]> CurrentSample = new ThreadLocal<byte[]>();
+        public static byte[][] CurrentSample = new byte[2 + NUM_WAV_EXPORT_APU][];
 
         public static int DmcReadCallback(IntPtr data, int addr)
         {
-            var sample = CurrentSample.Value;
+            var apuIdx = data.ToInt32();
+            var sample = CurrentSample[apuIdx];
             var offset = addr - DPCMSampleAddr;
             if (sample == null || offset < 0 || offset >= sample.Length)
                 return DACDefaultValue;

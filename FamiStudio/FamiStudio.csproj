@@ -407,6 +407,8 @@
     <EmbeddedResource Include="Resources\Atlas\DuplicateMove@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectCutDelay.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectCutDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectDAC.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectDAC@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectDutyCycle.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectDutyCycle@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectFrame.tga" />
@@ -415,6 +417,8 @@
     <EmbeddedResource Include="Resources\Atlas\EffectMod@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectNoteDelay.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectNoteDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectPhaseReset.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectPhaseReset@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectPitch.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectPitch@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectRepeat.tga" />
@@ -725,6 +729,8 @@
     <EmbeddedResource Include="Resources\Atlas\UpDownMinus@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\UpDownPlus.tga" />
     <EmbeddedResource Include="Resources\Atlas\UpDownPlus@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Wait.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Wait@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Warning.tga" />
     <EmbeddedResource Include="Resources\Atlas\Warning@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\WarningGood.tga" />

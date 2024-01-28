@@ -8,7 +8,7 @@ namespace FamiStudio
         public int FrameNumber;
         public int Register;
         public int Value;
-        public List<int> Metadata;  //depends on the register
+        public int Metadata;  //depends on the register
     };
 
     class RegisterPlayer : BasePlayer
@@ -24,12 +24,11 @@ namespace FamiStudio
         {
             registerWrites = new List<RegisterWrite>();
 
-            if (BeginPlaySong(song))
-            {
-                StartSeeking();
-                while (PlaySongFrameInternal(true));
-                StopSeeking();
-            }
+            BeginPlaySong(song);
+
+            StartSeeking();
+            while (PlaySongFrameInternal(true));
+            StopSeeking();
 
             return registerWrites.ToArray();
         }
@@ -39,18 +38,16 @@ namespace FamiStudio
             length = 0;
             registerWrites = new List<RegisterWrite>();
 
-            if (BeginPlaySong(song))
-            {
-                StartSeeking();
-                while (PlaySongFrameInternal(true)){length++;};
-                StopSeeking();
-            }
-            length++;
+            BeginPlaySong(song);
+
+            StartSeeking();
+            while (PlaySongFrameInternal(true)){length++;};
+            StopSeeking();
 
             return registerWrites.ToArray();
         }
 
-        public override void NotifyRegisterWrite(int apuIndex, int reg, int data, List<int> metadata = null)
+        public override void NotifyRegisterWrite(int apuIndex, int reg, int data, int metadata = 0)
         {
             if (apuIndex == NesApu.APU_WAV_EXPORT)
             {
