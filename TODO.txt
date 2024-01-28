@@ -60,9 +60,10 @@ x BUG : First samples of CV2 plays wrong??? Only if at first frame...
 	- On the instrument : envelope enable + shape + option to have auto-period (off/on, with option to have some kind of +/- offset/octave from the note pitch)
 	- As a effect : Effect to manually dial the period. Would probably override anything set on the insturment (?), override until turn off?
 - Hold SHIFT+click (also double-click) for multiple delete.
-- Zoom level changes when going env then come back to piano 
+x Zoom level changes when going env then come back to piano 
 / Mixer improvements
 	- Make it work on mobile.
+	- Should we store the "AllowMixerOverride" somewhere else? FamiStudio.cs?
 
 4.2.0 Testing/Packaging
 =======================

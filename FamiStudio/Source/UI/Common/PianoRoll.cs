@@ -817,7 +817,7 @@ namespace FamiStudio
 
         public void SaveChannelScroll()
         {
-            if (Platform.IsMobile && editMode == EditionMode.Channel)
+            if (editMode == EditionMode.Channel)
             {
                 lastChannelScrollX = scrollX;
                 lastChannelScrollY = scrollY;
@@ -833,6 +833,11 @@ namespace FamiStudio
                 scrollY = lastChannelScrollY;
                 zoom = lastChannelZoom;
                 return true;
+            }
+            else if (Platform.IsDesktop && lastChannelZoom > 0)
+            {
+                // Intentionally not returning true so that we still center the scroll.
+                zoom = lastChannelZoom;
             }
 
             return false;
