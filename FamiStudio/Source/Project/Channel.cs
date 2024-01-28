@@ -315,6 +315,7 @@ namespace FamiStudio
             return patterns.Find(p => p.Name == name) == null;
         }
 
+        // TODO : We should not reference Settings from here.
         public string GenerateUniquePatternName(string baseName = null)
         {
             if (baseName == null)
@@ -332,6 +333,7 @@ namespace FamiStudio
             }
         }
 
+        // TODO : We should not reference Settings from here.
         public string GenerateUniquePatternNameSmart(string oldName)
         {
             int firstDigit;
@@ -1505,7 +1507,7 @@ namespace FamiStudio
             }
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             if (buffer.IsWriting)
                 DeleteUnusedPatterns();
@@ -1521,7 +1523,7 @@ namespace FamiStudio
 
             buffer.InitializeList(ref patterns, patternCount);
             foreach (var pattern in patterns)
-                pattern.SerializeState(buffer);
+                pattern.Serialize(buffer);
 
             for (int i = 0; i < patternInstances.Length; i++)
                 buffer.Serialize(ref patternInstances[i], this);

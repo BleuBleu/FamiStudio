@@ -271,7 +271,7 @@ namespace FamiStudio
                 );
         }
 
-        public static void SerializeState(ProjectBuffer buffer)
+        public static void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref nextColorIdx);
         }

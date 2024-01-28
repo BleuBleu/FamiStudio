@@ -9598,7 +9598,7 @@ namespace FamiStudio
         }
 #endif
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             int editModeInt = (int)editMode;
             buffer.Serialize(ref editModeInt);

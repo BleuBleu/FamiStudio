@@ -3230,7 +3230,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref scrollX);
             buffer.Serialize(ref zoom);

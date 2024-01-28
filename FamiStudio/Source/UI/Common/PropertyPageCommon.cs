@@ -75,6 +75,13 @@ namespace FamiStudio
         Button
     };
 
+    [Flags]
+    public enum GridOptions
+    {
+        None = 0,
+        NoHeader = 1
+    }
+
     public class ColumnDesc
     {
         public string Name;
@@ -83,17 +90,18 @@ namespace FamiStudio
         public float Width = 0.0f;
         public ColumnType Type = ColumnType.Label;
         public string[] DropDownValues;
-        public string StringFormat = "{0}";
+        public Func<object, string> Formatter = DefaultFormat;
         public int MinValue;
         public int MaxValue;
 
-        public ColumnDesc(string name, float width, ColumnType type = ColumnType.Label, string format = "{0}")
+        private static string DefaultFormat(object o) => o.ToString();
+
+        public ColumnDesc(string name, float width, ColumnType type = ColumnType.Label)
         {
             Debug.Assert(type != ColumnType.CheckBox || width == 0.0f);
 
             Name = name;
             Type = type;
-            StringFormat = type == ColumnType.CheckBox || type == ColumnType.Image ? "" : format;
             Width = type == ColumnType.CheckBox || type == ColumnType.Image ? 0.0f : width;
         }
 
@@ -109,6 +117,16 @@ namespace FamiStudio
         {
             Name = name;
             Type = ColumnType.NumericUpDown;
+            Width = width;
+            MinValue = min;
+            MaxValue = max;
+        }
+
+        public ColumnDesc(string name, float width, int min, int max, Func<object, string> fmt)
+        {
+            Name = name;
+            Type = ColumnType.Slider;
+            Formatter = fmt;
             Width = width;
             MinValue = min;
             MaxValue = max;

@@ -1710,7 +1710,7 @@ namespace FamiStudio
 
                 if (sample.SourceDataIsWav)
                 {
-                    instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolume));
+                    instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolumeDb));
                     return;
                 }
                 else
@@ -1729,7 +1729,7 @@ namespace FamiStudio
             WaveUtils.DpcmToWave(dmcData, sample.DmcInitialValueDiv2, out short[] wave);
 
             if (wave.Length > 0)
-                instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolume));
+                instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolumeDb));
         }
 
         public void PlayRawPcmSample(short[] data, int sampleRate, float volume = 1.0f, int channel = 0)
@@ -2483,7 +2483,7 @@ namespace FamiStudio
             }
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             var oldSong = song;
             var currentFrame = CurrentFrame;
@@ -2495,9 +2495,9 @@ namespace FamiStudio
             buffer.Serialize(ref song);
             buffer.Serialize(ref currentFrame);
 
-            ProjectExplorer.SerializeState(buffer);
-            Sequencer.SerializeState(buffer);
-            PianoRoll.SerializeState(buffer);
+            ProjectExplorer.Serialize(buffer);
+            Sequencer.Serialize(buffer);
+            PianoRoll.Serialize(buffer);
 
             SerializeActiveControl(buffer);
 

@@ -139,28 +139,6 @@ namespace FamiStudio
         LocalizedString MuteDragSoundsLabel;
         LocalizedString MetronomeVolumeLabel;
 
-        // Mixer tooltips
-        LocalizedString GlobalVolumeTooltip;
-        LocalizedString GlobalBassTooltip;
-        LocalizedString ExpansionTooltip;
-        LocalizedString ExpansionVolumeTooltip;
-        LocalizedString ExpansionTrebleTooltip;
-        LocalizedString ExpansionTrebleFreqTooltip;
-        LocalizedString ExpansionResetTooltip;
-
-        // Mixer labels
-        LocalizedString GlobalVolumeLabel;
-        LocalizedString GlobalBassLabel;
-        LocalizedString ExpansionSettingsLabel;
-        LocalizedString ExpansionLabel;
-        LocalizedString ExpansionVolumeLabel;
-        LocalizedString ExpansionTrebleLabel;
-        LocalizedString ExpansionTrebleFreqLabel;
-        LocalizedString ResetLabel;
-        LocalizedString ResetButtonLabel;
-        LocalizedString NoteLabel;
-        LocalizedString NoteMessageLabel;
-
         // MIDI tooltips
         LocalizedString MidiDeviceTooltip;
 
@@ -196,7 +174,8 @@ namespace FamiStudio
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
         private List<Shortcut> shortcuts; // We keep a copy here in case the user cancels.
-        private Settings.ExpansionMix[] expansionMixer = new Settings.ExpansionMix[ExpansionType.Count];
+        private ExpansionMixer[] expansionMixer = new ExpansionMixer[ExpansionType.Count];
+        private MixerProperties mixerProperties;
 
         private int keysRowIndex;
         private int keysColIndex;
@@ -344,17 +323,8 @@ namespace FamiStudio
                 }
                 case ConfigSection.Mixer:
                 {
-                    page.AddSlider(GlobalVolumeLabel.Colon, Settings.GlobalVolume, -10.0, 3.0, 0.1, 1, "{0:+0.0;-0.0} dB", GlobalVolumeTooltip); // 0
-                    page.AddSlider(GlobalBassLabel.Colon, Settings.BassCutoffHz, 2, 100, 2, 0, "{0:0} Hz", GlobalBassTooltip); // 1
-                    page.AddLabel(null, ExpansionSettingsLabel, true); // 2
-                    page.AddDropDownList(ExpansionLabel.Colon, Localization.ToStringArray(ExpansionType.LocalizedChipNames), ExpansionType.LocalizedChipNames[0], ExpansionTooltip); // 3
-                    page.AddSlider(ExpansionVolumeLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].VolumeDb, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 4
-                    page.AddSlider(ExpansionTrebleLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].TrebleDb, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 5
-                    page.AddSlider(ExpansionTrebleFreqLabel.Colon, Settings.ExpansionMixerSettings[ExpansionType.None].TrebleRolloffHz, 100.0, 44100.0, 100, 0, "{0:0} Hz", ExpansionTrebleFreqTooltip); // 6
-                    page.AddButton(Platform.IsDesktop ? null : ResetLabel, ResetButtonLabel, ExpansionResetTooltip); // 7
-                    page.AddLabel(Platform.IsDesktop ? null : NoteLabel, NoteMessageLabel, true); // 8
-                    page.PropertyChanged += MixerPage_PropertyChanged;
-                    page.PropertyClicked += MixerPage_PropertyClicked;
+                    page.SetScrolling(400); // MATTT
+                    mixerProperties = new MixerProperties(page, null);
                     break;
                 }
                 case ConfigSection.MIDI:
@@ -555,7 +525,7 @@ namespace FamiStudio
             if (propIdx == 7 && click == ClickType.Button)
             {
                 var expansion = props.GetSelectedIndex(3);
-                expansionMixer[expansion] = Settings.DefaultExpansionMixerSettings[expansion];
+                expansionMixer[expansion] = ExpansionMixer.DefaultExpansionMixerSettings[expansion];
                 RefreshMixerSettings();
             }
         }
@@ -666,9 +636,7 @@ namespace FamiStudio
                     Settings.AltZoomAllowed = pageInput.GetPropertyValue<bool>(6);
 
                     // Mixer.
-                    Settings.GlobalVolume = (float)pageMixer.GetPropertyValue<double>(0);
-                    Settings.BassCutoffHz = (int)(double)pageMixer.GetPropertyValue<double>(1);
-                    Array.Copy(expansionMixer, Settings.ExpansionMixerSettings, Settings.ExpansionMixerSettings.Length);
+                    mixerProperties.Apply();
 
                     // MIDI
                     Settings.MidiDevice = pageMIDI.GetPropertyValue<string>(0);

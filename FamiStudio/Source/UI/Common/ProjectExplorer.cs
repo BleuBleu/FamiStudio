@@ -6,6 +6,9 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
+    // This needs a full rewrite. It was written back when we did not have proper a widget system so all
+    // we could do were these "uber-widgets" that handled everything. Now it needs to be broken down in 
+    // proper buttons, sliders, etc. Maybe one day.
     public partial class ProjectExplorer : Container
     {
         const int DefaultExpandButtonSizeX    = 10;
@@ -115,6 +118,7 @@ namespace FamiStudio
         LocalizedString SelectArpeggioTooltip;
         LocalizedString SelectInstrumentTooltip;
         LocalizedString ToggleValueTooltip;
+        LocalizedString AllowProjectMixerSettings;
 
         // Messages
         LocalizedString CopyArpeggioMessage;
@@ -282,6 +286,7 @@ namespace FamiStudio
             Expand,
             Overflow,
             Properties,
+            Mixer,
             Max
         }
 
@@ -412,6 +417,7 @@ namespace FamiStudio
         TextureAtlasRef bmpProperties;
         TextureAtlasRef bmpFolder;
         TextureAtlasRef bmpFolderOpen;
+        TextureAtlasRef bmpMixer;
         TextureAtlasRef[] bmpExpansions;
         TextureAtlasRef[] bmpEnvelopes;
         TextureAtlasRef[] bmpChannels;
@@ -481,6 +487,10 @@ namespace FamiStudio
                         return buttons;
                     }
                     case ButtonType.ProjectSettings:
+                    {
+                        active = projectExplorer.App.Project.AllowMixerOverride ? 3 : 1;
+                        return new[] { SubButtonType.Properties, SubButtonType.Mixer };
+                    }
                     case ButtonType.Song:
                     {
                         return new[] { SubButtonType.Properties };
@@ -715,6 +725,8 @@ namespace FamiStudio
                         return projectExplorer.bmpLoad;
                     case SubButtonType.Properties:
                         return projectExplorer.bmpProperties;
+                    case SubButtonType.Mixer:
+                        return projectExplorer.bmpMixer;
                     case SubButtonType.Expand:
                     {
                         if (folder != null)
@@ -1124,6 +1136,7 @@ namespace FamiStudio
             bmpFolder      = g.GetTextureAtlasRef("Folder");
             bmpFolderOpen  = g.GetTextureAtlasRef("FolderOpen");
             bmpSort        = g.GetTextureAtlasRef("Sort");
+            bmpMixer       = g.GetTextureAtlasRef("Mixer");
 
             var color0 = Theme.LightGreyColor2; // Grey
             var color1 = Theme.CustomColors[14, 5]; // Orange
@@ -1424,7 +1437,15 @@ namespace FamiStudio
                         if (button.Text != null)
                         {
                             var textX = button.bmp == null ? buttonTextNoIconPosX : buttonTextPosX;
-                            c.DrawText(button.Text, button.Font, textX, 0, enabled ? button.textColor : disabledColor, (centered ? TextFlags.Center : TextFlags.Left) | ellipsisFlag | TextFlags.Middle, (centered ? contentSizeX - textX * 2 : firstSubButtonX - buttonTextPosX - indentContent), buttonSizeY);
+                            if (centered)
+                            {
+                                var margin = contentSizeX - firstSubButtonX - textX;
+                                c.DrawText(button.Text, button.Font, margin, 0, enabled ? button.textColor : disabledColor, TextFlags.MiddleCenter | ellipsisFlag, contentSizeX - margin * 2, buttonSizeY);
+                            }
+                            else
+                            {
+                                c.DrawText(button.Text, button.Font, textX, 0, enabled ? button.textColor : disabledColor, TextFlags.MiddleLeft | ellipsisFlag, firstSubButtonX - buttonTextPosX - indentContent, buttonSizeY);
+                            }
                         }
 
                         if (button.bmp != null)
@@ -1829,6 +1850,10 @@ namespace FamiStudio
                     if (subButtonType == SubButtonType.Properties)
                     {
                         tooltip = $"<MouseLeft> {PropertiesProjectTooltip}";
+                    }
+                    else if (subButtonType == SubButtonType.Mixer)
+                    {
+                        tooltip = $"<MouseLeft> {AllowProjectMixerSettings}";
                     }
                     else
                     {
@@ -3312,12 +3337,14 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownSongProjectSettings(MouseEventArgs e, SubButtonType subButtonType)
+        private bool HandleMouseDownProjectSettings(MouseEventArgs e, SubButtonType subButtonType)
         {
             if (e.Left)
             {
                 if (subButtonType == SubButtonType.Properties)
                     EditProjectProperties(new Point(e.X, e.Y));
+                else if (subButtonType == SubButtonType.Mixer)
+                    ToggleAllowProjectMixer();
             }
 
             return true;
@@ -3673,7 +3700,7 @@ namespace FamiStudio
                 switch (button.type)
                 {
                     case ButtonType.ProjectSettings:
-                        return HandleMouseDownSongProjectSettings(e, subButtonType);
+                        return HandleMouseDownProjectSettings(e, subButtonType);
                     case ButtonType.Song:
                         return HandleMouseDownSongButton(e, button, buttonIdx, subButtonType);
                     case ButtonType.SongHeader:
@@ -3728,6 +3755,8 @@ namespace FamiStudio
         {
             if (subButtonType == SubButtonType.Properties)
                 EditProjectProperties(new Point(x, y));
+            else if (subButtonType == SubButtonType.Mixer)
+                ToggleAllowProjectMixer();
 
             return true;
         }
@@ -4796,85 +4825,96 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    if (r == DialogResult.OK)
+                    var project = App.Project;
+                    var newExpansionMask = dlg.ExpansionMask;
+                    var expansionRemoved = (project.ExpansionAudioMask & newExpansionMask) != project.ExpansionAudioMask;
+
+                    var tempoMode = dlg.TempoMode;
+                    var palAuthoring = dlg.Machine == MachineType.PAL;
+                    var numN163Channels = dlg.NumN163Channels;
+
+                    var changedTempoMode = tempoMode != project.TempoMode;
+                    var changedExpansion = newExpansionMask != project.ExpansionAudioMask;
+                    var changedNumChannels = numN163Channels != project.ExpansionNumN163Channels;
+                    var changedAuthoringMachine = palAuthoring != project.PalMode;
+                    var changedExpMixer = dlg.MixerProperties.Changed;
+
+                    var transFlags = TransactionFlags.None;
+
+                    if (changedAuthoringMachine || changedNumChannels || changedExpMixer)
+                        transFlags = TransactionFlags.RecreatePlayers;
+                    else if (changedExpansion)
+                        transFlags = TransactionFlags.RecreatePlayers | TransactionFlags.RecreateStreams; // Toggling EPSM will change mono/stereo and requires new audiostreams.
+                    else if (changedTempoMode)
+                        transFlags = TransactionFlags.StopAudio;
+
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, transFlags);
+
+                    project.Name = dlg.Title;
+                    project.Author = dlg.Author;
+                    project.Copyright = dlg.Copyright;
+
+                    if (changedExpansion || changedNumChannels)
                     {
-                        var project = App.Project;
-                        var newExpansionMask = dlg.ExpansionMask;
-                        var expansionRemoved = (project.ExpansionAudioMask & newExpansionMask) != project.ExpansionAudioMask;
-
-                        var tempoMode = dlg.TempoMode;
-                        var palAuthoring = dlg.Machine == MachineType.PAL;
-                        var numN163Channels = dlg.NumN163Channels;
-
-                        var changedTempoMode = tempoMode != project.TempoMode;
-                        var changedExpansion = newExpansionMask != project.ExpansionAudioMask;
-                        var changedNumChannels = numN163Channels != project.ExpansionNumN163Channels;
-                        var changedAuthoringMachine = palAuthoring != project.PalMode;
-
-                        var transFlags = TransactionFlags.None;
-
-                        if (changedAuthoringMachine || changedNumChannels)
-                            transFlags = TransactionFlags.RecreatePlayers;
-                        else if (changedExpansion)
-                            transFlags = TransactionFlags.RecreatePlayers | TransactionFlags.RecreateStreams; // Toggling EPSM will change mono/stereo and requires new audiostreams.
-                        else if (changedTempoMode)
-                            transFlags = TransactionFlags.StopAudio;
-
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, transFlags);
-
-                        project.Name = dlg.Title;
-                        project.Author = dlg.Author;
-                        project.Copyright = dlg.Copyright;
-
-                        if (changedExpansion || changedNumChannels)
-                        {
-                            App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
-                            project.SetExpansionAudioMask(newExpansionMask, numN163Channels);
-                            ProjectModified?.Invoke();
-                            Reset();
-                        }
-
-                        if (changedTempoMode)
-                        {
-                            if (tempoMode == TempoType.FamiStudio)
-                            {
-                                if (!project.AreSongsEmpty && Platform.IsDesktop)
-                                    Platform.MessageBox(ParentWindow, ProjectConvertToFamiTrackerMessage, ProjectChangeTempoModeTitle, MessageBoxButtons.OK);
-                                project.ConvertToFamiStudioTempo();
-                            }
-                            else if (tempoMode == TempoType.FamiTracker)
-                            {
-                                if (!project.AreSongsEmpty && Platform.IsDesktop)
-                                    Platform.MessageBox(ParentWindow, ProjectConvertToFamiStudioMessage, ProjectChangeTempoModeTitle, MessageBoxButtons.OK);
-                                project.ConvertToFamiTrackerTempo(project.AreSongsEmpty);
-                            }
-
-                            ProjectModified?.Invoke();
-                            Reset();
-                        }
-
-                        if (changedAuthoringMachine && project.UsesFamiStudioTempo)
-                        {
-                            project.PalMode = palAuthoring;
-                            App.PalPlayback = palAuthoring;
-                        }
-
-                        var toast = (string)null;
-
-                        if (expansionRemoved)
-                            toast += ProjectExpansionRemovedMessage + "\n";
-                        if (changedNumChannels)
-                            toast += ProjectChangedN163ChannelMessage;
-
-                        if (!string.IsNullOrEmpty(toast))
-                            Platform.ShowToast(window, toast, true);
-
-                        App.UndoRedoManager.EndTransaction();
+                        App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
+                        project.SetExpansionAudioMask(newExpansionMask, numN163Channels);
+                        ProjectModified?.Invoke();
+                        Reset();
                     }
+
+                    if (changedTempoMode)
+                    {
+                        if (tempoMode == TempoType.FamiStudio)
+                        {
+                            if (!project.AreSongsEmpty && Platform.IsDesktop)
+                                Platform.MessageBox(ParentWindow, ProjectConvertToFamiTrackerMessage, ProjectChangeTempoModeTitle, MessageBoxButtons.OK);
+                            project.ConvertToFamiStudioTempo();
+                        }
+                        else if (tempoMode == TempoType.FamiTracker)
+                        {
+                            if (!project.AreSongsEmpty && Platform.IsDesktop)
+                                Platform.MessageBox(ParentWindow, ProjectConvertToFamiStudioMessage, ProjectChangeTempoModeTitle, MessageBoxButtons.OK);
+                            project.ConvertToFamiTrackerTempo(project.AreSongsEmpty);
+                        }
+
+                        ProjectModified?.Invoke();
+                        Reset();
+                    }
+
+                    if (changedAuthoringMachine && project.UsesFamiStudioTempo)
+                    {
+                        project.PalMode = palAuthoring;
+                        App.PalPlayback = palAuthoring;
+                    }
+
+                    dlg.MixerProperties.Apply();
+
+                    var toast = (string)null;
+
+                    if (expansionRemoved)
+                        toast += ProjectExpansionRemovedMessage + "\n";
+                    if (changedNumChannels)
+                        toast += ProjectChangedN163ChannelMessage;
+
+                    if (!string.IsNullOrEmpty(toast))
+                        Platform.ShowToast(window, toast, true);
+
+                    App.UndoRedoManager.EndTransaction();
 
                     RefreshButtons();
                 }
             });
+        }
+
+        private void ToggleAllowProjectMixer()
+        {
+            var project = App.Project;
+
+            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.RecreatePlayers);
+            project.AllowMixerOverride = !project.AllowMixerOverride;
+            App.UndoRedoManager.EndTransaction();
+            
+            RefreshButtons(true);
         }
 
         private void EditSongProperties(Point pt, Song song)
@@ -5128,7 +5168,7 @@ namespace FamiStudio
         {
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref expandedInstrument);
             buffer.Serialize(ref selectedInstrumentTab);

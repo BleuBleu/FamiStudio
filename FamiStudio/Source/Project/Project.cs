@@ -22,7 +22,7 @@ namespace FamiStudio
         // Version 13 = FamiStudio 3.3.0 (EPSM, Delta counter)
         // Version 14 = FamiStudio 4.0.0 (Unicode text).
         // Version 15 = FamiStudio 4.1.0 (DPCM bankswitching)
-        // Version 16 = FamiStudio 4.2.0 (Folders, sound engine options)
+        // Version 16 = FamiStudio 4.2.0 (Folders, sound engine options, project mixer settings)
         public const int Version = 16;
         public const int MaxMappedSampleSize = 0x40000;
         public const int MaxDPCMBanks = 64; 
@@ -45,6 +45,12 @@ namespace FamiStudio
         private bool sortInstruments = true;
         private bool sortSamples = true;
         private bool sortArpeggios = true;
+
+        // Project mixer overrides;
+        private bool allowMixerOverride = true;
+        private bool overrideBassCutoffHz = false;
+        private int bassCutoffHz = 16; // in Hz (matches Settings.DefaultBassCutoffHz, need to move constant somewhere)
+        private ExpansionMixer[] mixerSettings = new ExpansionMixer[ExpansionType.Count];
 
         // Sound engine options.
         private bool soundEngineUsesExtendedInstruments = false;
@@ -93,8 +99,16 @@ namespace FamiStudio
         public bool SoundEngineUsesExtendedDpcm        { get => soundEngineUsesExtendedDpcm || soundEngineUsesBankSwitching; set => soundEngineUsesExtendedDpcm = value; }
         public bool SoundEngineUsesDpcmBankSwitching   { get => soundEngineUsesBankSwitching; set => soundEngineUsesBankSwitching = value; }
 
+        public bool AllowMixerOverride   { get => allowMixerOverride;   set => allowMixerOverride   = value; }
+        public bool OverrideBassCutoffHz { get => overrideBassCutoffHz; set => overrideBassCutoffHz = value; }
+        public int  BassCutoffHz         { get => bassCutoffHz;         set => bassCutoffHz         = value; }
+
+        public ExpansionMixer[] ExpansionMixerSettings => mixerSettings;
+
         public Project(bool createSongAndInstrument = false)
         {
+            Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, mixerSettings, mixerSettings.Length);
+
             if (createSongAndInstrument)
             {
                 CreateSong();
@@ -387,7 +401,7 @@ namespace FamiStudio
         public Song DuplicateSong(Song song)
         {
             var saveSerializer = new ProjectSaveBuffer(this);
-            song.SerializeState(saveSerializer);
+            song.Serialize(saveSerializer);
             var newSong = CreateSong();
             var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
 
@@ -399,7 +413,7 @@ namespace FamiStudio
                     loadSerializer.RemapId(pattern.Id, GenerateUniqueId());
             }
 
-            newSong.SerializeState(loadSerializer);
+            newSong.Serialize(loadSerializer);
             newSong.Name = GenerateUniqueSongName(newSong.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
 
             MoveSong(newSong, song);
@@ -447,11 +461,11 @@ namespace FamiStudio
         public Arpeggio DuplicateArpeggio(Arpeggio arpeggio)
         {
             var saveSerializer = new ProjectSaveBuffer(this);
-            arpeggio.SerializeState(saveSerializer);
+            arpeggio.Serialize(saveSerializer);
             var newArpeggio = CreateArpeggio();
             var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
             loadSerializer.RemapId(arpeggio.Id, newArpeggio.Id);
-            newArpeggio.SerializeState(loadSerializer);
+            newArpeggio.Serialize(loadSerializer);
             newArpeggio.Name = GenerateUniqueArpeggioName(newArpeggio.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
             MoveArpeggio(newArpeggio, arpeggio);
             ConditionalSortArpeggios();
@@ -508,11 +522,11 @@ namespace FamiStudio
         public Instrument DuplicateInstrument(Instrument instrument)
         {
             var saveSerializer = new ProjectSaveBuffer(this);
-            instrument.SerializeState(saveSerializer);
+            instrument.Serialize(saveSerializer);
             var newInstrument = CreateInstrument(instrument.Expansion);
             var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
             loadSerializer.RemapId(instrument.Id, newInstrument.Id);
-            newInstrument.SerializeState(loadSerializer);
+            newInstrument.Serialize(loadSerializer);
             newInstrument.Name = GenerateUniqueInstrumentName(newInstrument.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
             MoveInstrument(newInstrument, instrument);
             ConditionalSortInstruments();
@@ -1998,7 +2012,7 @@ namespace FamiStudio
             buffer.InitializeList(ref samples, sampleCount);
 
             foreach (var sample in samples)
-                sample.SerializeState(buffer);
+                sample.Serialize(buffer);
         }
 
         // This is only used for pre-4.1.0 files where we had just 1 global "DPCM instrument".
@@ -2018,7 +2032,7 @@ namespace FamiStudio
                         const int OldDPCMNoteMin = 0x0c;
 
                         var mapping = new DPCMSampleMapping();
-                        mapping.SerializeState(buffer);
+                        mapping.Serialize(buffer);
                         legacyMappings.Add(OldDPCMNoteMin + i, mapping);
                     }
                 }
@@ -2077,7 +2091,7 @@ namespace FamiStudio
             buffer.Serialize(ref instrumentCount);
             buffer.InitializeList(ref instruments, instrumentCount);
             foreach (var instrument in instruments)
-                instrument.SerializeState(buffer);
+                instrument.Serialize(buffer);
         }
 
         public void SerializeArpeggioState(ProjectBuffer buffer)
@@ -2086,11 +2100,11 @@ namespace FamiStudio
             buffer.Serialize(ref arpeggioCount);
             buffer.InitializeList(ref arpeggios, arpeggioCount);
             foreach (var arp in arpeggios)
-                arp.SerializeState(buffer);
+                arp.Serialize(buffer);
         }
 
 
-        public void SerializeState(ProjectBuffer buffer, bool includeSamples = true)
+        public void Serialize(ProjectBuffer buffer, bool includeSamples = true)
         {
             if (!buffer.IsForUndoRedo)
             {
@@ -2159,12 +2173,50 @@ namespace FamiStudio
                 buffer.InitializeList(ref folders, folderCount);
                 foreach (var folder in folders)
                 {
-                    folder.SerializeState(buffer);
+                    folder.Serialize(buffer);
                 }
 
                 buffer.Serialize(ref soundEngineUsesExtendedInstruments);
                 buffer.Serialize(ref soundEngineUsesExtendedDpcm);
                 buffer.Serialize(ref soundEngineUsesBankSwitching);
+            }
+
+            // At version 16 (FamiStudio 4.2.0) we added project-specific mixer settings that can
+            // override the app's settings.
+            if (buffer.Version >= 16)
+            {
+                var overrideMask = 0;
+
+                if (buffer.IsWriting)
+                {
+                    // Only save the settings if they are overriden AND we are really using
+                    // this expansion. This is in case we want to change the default settings
+                    // later. We wont end up with a bunch of files with outdated settings.
+                    for (var i = 0; i < mixerSettings.Length; i++)
+                    {
+                        var bit = 1 << i;
+                        if (mixerSettings[i].Override && (bit & expansionMask) != 0)
+                            overrideMask |= bit;
+                    }
+                }
+
+                if (buffer.IsForUndoRedo)
+                    buffer.Serialize(ref allowMixerOverride);
+                buffer.Serialize(ref overrideBassCutoffHz);
+                if (overrideBassCutoffHz)
+                    buffer.Serialize(ref bassCutoffHz);
+                buffer.Serialize(ref overrideMask);
+
+                if (buffer.IsReading)
+                {
+                    Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, mixerSettings, mixerSettings.Length);
+                }
+
+                for (var i = 0; i < mixerSettings.Length; i++)
+                {
+                    if ((overrideMask & (1 << i)) != 0)
+                        mixerSettings[i].Serialize(buffer);
+                }
             }
 
             // DPCM samples
@@ -2190,7 +2242,7 @@ namespace FamiStudio
             buffer.InitializeList(ref songs, songCount);
             foreach (var song in songs)
             {
-                song.SerializeState(buffer);
+                song.Serialize(buffer);
             }
 
             CreateLegacyDPCMInstrument(legacyMappings);
@@ -2211,10 +2263,10 @@ namespace FamiStudio
         public Project DeepClone()
         {
             var saveSerializer = new ProjectSaveBuffer(this);
-            SerializeState(saveSerializer);
+            Serialize(saveSerializer);
             var newProject = new Project();
             var loadSerializer = new ProjectLoadBuffer(newProject, saveSerializer.GetBuffer(), Version);
-            newProject.SerializeState(loadSerializer);
+            newProject.Serialize(loadSerializer);
             newProject.ValidateIntegrity();
             return newProject;
         }
@@ -2248,7 +2300,7 @@ namespace FamiStudio
             name = n;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref type);
             buffer.Serialize(ref name);
@@ -2437,5 +2489,41 @@ namespace FamiStudio
         {
             return Array.IndexOf(Names, str);
         }
+    }
+
+    public struct ExpansionMixer
+    {
+        public ExpansionMixer(float v, float t, int rf)
+        {
+            VolumeDb = v;
+            TrebleDb = t;
+            TrebleRolloffHz = rf;
+        }
+
+        public bool Override;
+        public float VolumeDb;
+        public float TrebleDb;
+        public int TrebleRolloffHz;
+
+        public void Serialize(ProjectBuffer buffer)
+        {
+            // Override flag will be serialized as a bit mask before.
+            buffer.Serialize(ref VolumeDb);
+            buffer.Serialize(ref TrebleDb);
+            buffer.Serialize(ref TrebleRolloffHz);
+        }
+
+        // MATTT : Do we want to impose these new defaults or not? 
+        public static readonly ExpansionMixer[] DefaultExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count]
+        {
+            new ExpansionMixer(0.0f,  -5.0f, 12000), // None
+            new ExpansionMixer(0.0f,  -5.0f, 12000), // Vrc6
+            new ExpansionMixer(0.0f, -15.0f, 12000), // Vrc7
+            new ExpansionMixer(0.0f, -40.0f,  2000), // Fds
+            new ExpansionMixer(0.0f,  -5.0f, 12000), // Mmc5
+            new ExpansionMixer(0.0f, -15.0f, 12000), // N163
+            new ExpansionMixer(0.0f,  -5.0f, 12000), // S5B
+            new ExpansionMixer(0.0f,  -5.0f, 12000)  // EPSM
+        };
     }
 }

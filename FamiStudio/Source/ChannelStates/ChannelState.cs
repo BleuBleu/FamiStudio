@@ -544,6 +544,7 @@ namespace FamiStudio
             forceInstrumentReload = true;
         }
 
+        // TODO : We should not reference settings from here.
         protected int GetPeriod()
         {
             var noteVal = note.Value + envelopeValues[EnvelopeType.Arpeggio];
