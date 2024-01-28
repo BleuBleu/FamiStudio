@@ -639,6 +639,9 @@
     <EmbeddedResource Include="Resources\Atlas\Metronome@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MinusSmall.tga" />
     <EmbeddedResource Include="Resources\Atlas\MinusSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\More.tga" />
     <EmbeddedResource Include="Resources\Atlas\More@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MouseLeft.tga" />

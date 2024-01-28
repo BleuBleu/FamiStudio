@@ -315,6 +315,7 @@ namespace FamiStudio
             return patterns.Find(p => p.Name == name) == null;
         }
 
+        // TODO : We should not reference Settings from here.
         public string GenerateUniquePatternName(string baseName = null)
         {
             if (baseName == null)
@@ -332,6 +333,7 @@ namespace FamiStudio
             }
         }
 
+        // TODO : We should not reference Settings from here.
         public string GenerateUniquePatternNameSmart(string oldName)
         {
             int firstDigit;

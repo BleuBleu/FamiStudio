@@ -243,6 +243,32 @@ namespace FamiStudio
             NesApu.EnableChannel(apuIndex, exp, idx, enable ? 1 : 0);
         }
 
+        protected void InitAndResetApu(Project project)
+        {
+            var expMixerSettings = new ExpansionMixer[ExpansionType.Count];
+
+            // Apply project overrides.
+            for (int i = 0; i < expMixerSettings.Length; i++)
+            {
+                expMixerSettings[i] = project.AllowMixerOverride && project.ExpansionMixerSettings[i].Override ?
+                    project.ExpansionMixerSettings[i] :
+                    Settings.ExpansionMixerSettings[i];
+            }
+
+            NesApu.InitAndReset(
+                apuIndex, 
+                sampleRate, 
+                Settings.GlobalVolumeDb,
+                project.OverrideBassCutoffHz ? project.BassCutoffHz : Settings.BassCutoffHz, 
+                expMixerSettings,
+                palPlayback, 
+                Settings.N163Mix,
+                tndMode, 
+                project.ExpansionAudioMask, 
+                project.ExpansionNumN163Channels, 
+                dmcCallback);
+        }
+
         protected void UpdateChannelsMuting()
         {
             for (int i = 0; i < channelStates.Length; i++)
@@ -268,7 +294,7 @@ namespace FamiStudio
             playbackRateCounter = 1;
             tempoEnvelopeCounter = 0;
 
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels, dmcCallback);
+            InitAndResetApu(song.Project);
             UpdateChannelsMuting();
         }
 

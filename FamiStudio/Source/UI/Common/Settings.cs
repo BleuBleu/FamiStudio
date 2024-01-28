@@ -209,9 +209,10 @@ namespace FamiStudio
         public static int SeparateChannelsExportTndMode = NesApu.TND_MODE_SINGLE;
 
         // Mixer section
-        public static float GlobalVolume = -2.0f; // in dB
-        public static int BassCutoffHz = 16; // in Hz
-
+        public const float DefaultGlobalVolumeDb = -2.0f;
+        public const int DefaultBassCutoffHz = 16;
+        public static float GlobalVolumeDb = DefaultGlobalVolumeDb; // in dB
+        public static int BassCutoffHz = DefaultBassCutoffHz; // in Hz
         public static ExpansionMixer[] ExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count];
 
         // MIDI section
@@ -489,7 +490,7 @@ namespace FamiStudio
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
             // Mixer.
-            GlobalVolume = ini.GetFloat("Mixer", "GlobalVolume", -3.0f);
+            GlobalVolumeDb = ini.GetFloat("Mixer", "GlobalVolume", -3.0f);
             BassCutoffHz = ini.GetInt("Mixer", "BassCutoffHz", 16);
 
             Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
@@ -672,7 +673,7 @@ namespace FamiStudio
             ini.SetInt("Audio", "SeparateChannelsExportTndMode", SeparateChannelsExportTndMode);
 
             // Mixer
-            ini.SetFloat("Mixer", "GlobalVolume", GlobalVolume);
+            ini.SetFloat("Mixer", "GlobalVolume", GlobalVolumeDb);
 
             for (int i = 0; i < ExpansionType.Count; i++)
             {

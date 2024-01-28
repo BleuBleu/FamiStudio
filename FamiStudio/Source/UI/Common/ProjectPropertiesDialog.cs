@@ -71,6 +71,8 @@ namespace FamiStudio
         public string Copyright => InfoPage.GetPropertyValue<string>(2);
         public int    TempoMode => InfoPage.GetSelectedIndex(3);
         public int    Machine   => InfoPage.GetSelectedIndex(4);
+        
+        public MixerProperties MixerProperties => mixerProperties;
 
         public int ExpansionMask   => GetSelectedExpansionMask();
         public int NumN163Channels => ExpansionPage.GetPropertyValue<int>(1);

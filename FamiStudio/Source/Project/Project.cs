@@ -47,8 +47,9 @@ namespace FamiStudio
         private bool sortArpeggios = true;
 
         // Project mixer overrides;
+        private bool allowMixerOverride = true;
         private bool overrideBassCutoffHz = false;
-        private int bassCutoffHz = 16; // in Hz
+        private int bassCutoffHz = 16; // in Hz (matches Settings.DefaultBassCutoffHz, need to move constant somewhere)
         private ExpansionMixer[] mixerSettings = new ExpansionMixer[ExpansionType.Count];
 
         // Sound engine options.
@@ -97,6 +98,12 @@ namespace FamiStudio
         public bool SoundEngineUsesExtendedInstruments { get => soundEngineUsesExtendedInstruments; set => soundEngineUsesExtendedInstruments = value; }
         public bool SoundEngineUsesExtendedDpcm        { get => soundEngineUsesExtendedDpcm || soundEngineUsesBankSwitching; set => soundEngineUsesExtendedDpcm = value; }
         public bool SoundEngineUsesDpcmBankSwitching   { get => soundEngineUsesBankSwitching; set => soundEngineUsesBankSwitching = value; }
+
+        public bool AllowMixerOverride   { get => allowMixerOverride;   set => allowMixerOverride   = value; }
+        public bool OverrideBassCutoffHz { get => overrideBassCutoffHz; set => overrideBassCutoffHz = value; }
+        public int  BassCutoffHz         { get => bassCutoffHz;         set => bassCutoffHz         = value; }
+
+        public ExpansionMixer[] ExpansionMixerSettings => mixerSettings;
 
         public Project(bool createSongAndInstrument = false)
         {
@@ -2193,6 +2200,8 @@ namespace FamiStudio
                     }
                 }
 
+                if (buffer.IsForUndoRedo)
+                    buffer.Serialize(ref allowMixerOverride);
                 buffer.Serialize(ref overrideBassCutoffHz);
                 if (overrideBassCutoffHz)
                     buffer.Serialize(ref bassCutoffHz);
@@ -2504,6 +2513,7 @@ namespace FamiStudio
             buffer.Serialize(ref TrebleRolloffHz);
         }
 
+        // MATTT : Do we want to impose these new defaults or not? 
         public static readonly ExpansionMixer[] DefaultExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count]
         {
             new ExpansionMixer(0.0f,  -5.0f, 12000), // None

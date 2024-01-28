@@ -32,6 +32,7 @@ namespace FamiStudio
 
                 if (deltaHi != 0) // Avoid resetting the sequence.
                 {
+                    // TODO : We should not reference settings from here.
                     if (Settings.SquareSmoothVibrato && Math.Abs(deltaHi) == 1 && !IsSeeking)
                     {
                         // Blaarg's smooth vibrato technique using the sweep to avoid resetting the phase. Cool stuff.
