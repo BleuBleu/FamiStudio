@@ -168,6 +168,7 @@ namespace FamiStudio
             SelectWave,
             CreateNote,
             CreateSlideNote,
+            DeleteNotes,
             DragSlideNoteTarget,
             DragSlideNoteTargetGizmo,
             DragVolumeSlideTarget,
@@ -212,6 +213,7 @@ namespace FamiStudio
             ThesholdNormalMobileOnly, // SelectWave
             0,                        // CreateNote
             ThesholdNormal,           // CreateSlideNote
+            ThesholdSmall,            // DeleteNotes
             ThesholdNormal,           // DragSlideNoteTarget
             ThesholdNormal,           // DragSlideNoteTargetGizmo
             0,                        // DragVolumeSlideTarget
@@ -251,6 +253,7 @@ namespace FamiStudio
             true,  // SelectWave
             true,  // CreateNote
             true,  // CreateSlideNote
+            false, // DeleteNotes
             true,  // DragSlideNoteTarget
             true,  // DragSlideNoteTargetGizmo
             false, // DragVolumeSlideTarget
@@ -4379,6 +4382,7 @@ namespace FamiStudio
                 {
                     AbortCaptureOperation(); 
                     DeleteSingleNote(noteLocation, mouseLocation, note);
+                    StartCaptureOperation(e.X, e.Y, CaptureOperation.DeleteNotes);
                 }
 
                 return true;
@@ -4599,6 +4603,9 @@ namespace FamiStudio
                         ZoomAtLocation(x, scale);
                         DoScroll(x - mouseLastX, y - mouseLastY);
                         break;
+                    case CaptureOperation.DeleteNotes:
+                        UpdateDeleteNotes(x, y);
+                        break;
                 }
             }
         }
@@ -4728,6 +4735,9 @@ namespace FamiStudio
                         canFling = true;
                         break;
                     case CaptureOperation.MobileZoomVertical:
+                        break;
+                    case CaptureOperation.DeleteNotes:
+                        EndDeleteNotes();
                         break;
                     case CaptureOperation.DragLoop:
                     case CaptureOperation.DragRelease:
@@ -5867,9 +5877,11 @@ namespace FamiStudio
                     var attack  = Settings.AttackShortcut.IsKeyDown(ParentWindow);
                     var eyedrop = Settings.EyeDropNoteShortcut.IsKeyDown(ParentWindow);
 
-                    if (delete && note != null)
+                    if (delete)
                     {
-                        DeleteSingleNote(noteLocation, mouseLocation, note);
+                        if (note != null)
+                            DeleteSingleNote(noteLocation, mouseLocation, note);
+                        StartCaptureOperation(e.X, e.Y, CaptureOperation.DeleteNotes);
                     }
                     else if (slide)
                     {
@@ -7896,7 +7908,7 @@ namespace FamiStudio
             }
             else
             {
-                // Preserve mosty effect values when deleting single notes.
+                // Preserve most effect values when deleting single notes.
                 note.Clear();
                 note.HasNoteDelay = false;
                 note.HasCutDelay = false;
@@ -7907,6 +7919,40 @@ namespace FamiStudio
 
             MarkPatternDirty(noteLocation.PatternIndex);
             App.UndoRedoManager.EndTransaction();
+        }
+
+        private void UpdateDeleteNotes(int x, int y)
+        {
+            if (GetLocationForCoord(x, y, out var mouseLocation, out byte noteValue) && mouseLocation.IsInSong(Song))
+            {
+                var channel = Song.Channels[editChannel];
+                var noteLocation = mouseLocation;
+                var note = channel.FindMusicalNoteAtLocation(ref noteLocation, noteValue);
+
+                if (note != null)
+                {
+                    if (!App.UndoRedoManager.HasTransactionInProgress)
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+
+                    var pattern = Song.Channels[editChannel].PatternInstances[noteLocation.PatternIndex];
+
+                    // Preserve most effect values when deleting single notes.
+                    note.Clear();
+                    note.HasNoteDelay = false;
+                    note.HasCutDelay = false;
+
+                    if (note.IsEmpty)
+                        pattern.Notes.Remove(noteLocation.NoteIndex);
+
+                    MarkPatternDirty(noteLocation.PatternIndex);
+                }
+            }
+        }
+
+        private void EndDeleteNotes()
+        {
+            if (App.UndoRedoManager.HasTransactionInProgress)
+                App.UndoRedoManager.EndTransaction();
         }
 
         private void ToggleReleaseNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
@@ -9062,6 +9108,10 @@ namespace FamiStudio
             else if (ModifierKeys.IsControlDown && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
             {
                 Cursor = Cursors.CopyCursor;
+            }
+            else if (captureOperation == CaptureOperation.DeleteNotes)
+            {
+                Cursor = Cursors.Eraser;
             }
             else if (editMode == EditionMode.Channel && Settings.EyeDropNoteShortcut.IsKeyDown(ParentWindow))
             {

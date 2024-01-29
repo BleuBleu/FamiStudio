@@ -274,6 +274,9 @@
     <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
   </ItemGroup>
   <ItemGroup>    
+    <EmbeddedResource Include="Resources\Cursors\CursorEraser32.tga" />
+    <EmbeddedResource Include="Resources\Cursors\CursorEraser48.tga" />
+    <EmbeddedResource Include="Resources\Cursors\CursorEraser64.tga" />
     <EmbeddedResource Include="Resources\Cursors\CursorEyedrop32.tga" />
     <EmbeddedResource Include="Resources\Cursors\CursorEyedrop48.tga" />
     <EmbeddedResource Include="Resources\Cursors\CursorEyedrop64.tga" />

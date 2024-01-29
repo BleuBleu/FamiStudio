@@ -45,6 +45,7 @@ namespace FamiStudio
 
             var size = Platform.GetCursorSize(scaling);
             Eyedrop = CreateCursorFromResource(size, 6, 25, "CursorEyedrop");
+            Eraser  = CreateCursorFromResource(size, 9, 22, "CursorEraser");
         }
     }
 }
