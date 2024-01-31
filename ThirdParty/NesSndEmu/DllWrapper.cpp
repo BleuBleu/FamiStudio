@@ -19,7 +19,7 @@ extern "C" int __stdcall NesApuInit(int apuIdx, int sampleRate, int bass_freq, i
 		return -1;
 
 	apu[apuIdx].set_audio_expansions(expansions);
-	apu[apuIdx].dmc_reader(dmcReadFunc, NULL);
+	apu[apuIdx].dmc_reader(dmcReadFunc, (void*)apuIdx);
 	apu[apuIdx].bass_freq(bass_freq);
 
 	return 0;

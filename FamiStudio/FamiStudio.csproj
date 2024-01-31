@@ -129,6 +129,7 @@
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
     <Compile Include="Source\UI\Common\Init.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
+    <Compile Include="Source\UI\Common\MixerProperties.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
@@ -407,6 +408,8 @@
     <EmbeddedResource Include="Resources\Atlas\DuplicateMove@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectCutDelay.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectCutDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectDAC.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectDAC@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectDutyCycle.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectDutyCycle@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectFrame.tga" />
@@ -415,6 +418,8 @@
     <EmbeddedResource Include="Resources\Atlas\EffectMod@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectNoteDelay.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectNoteDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectPhaseReset.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectPhaseReset@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectPitch.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectPitch@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectRepeat.tga" />
@@ -634,6 +639,9 @@
     <EmbeddedResource Include="Resources\Atlas\Metronome@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MinusSmall.tga" />
     <EmbeddedResource Include="Resources\Atlas\MinusSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\More.tga" />
     <EmbeddedResource Include="Resources\Atlas\More@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MouseLeft.tga" />
@@ -676,6 +684,8 @@
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesExpansion@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesMixer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesMixer@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties.tga" />
@@ -725,6 +735,8 @@
     <EmbeddedResource Include="Resources\Atlas\UpDownMinus@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\UpDownPlus.tga" />
     <EmbeddedResource Include="Resources\Atlas\UpDownPlus@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Wait.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Wait@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Warning.tga" />
     <EmbeddedResource Include="Resources\Atlas\Warning@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\WarningGood.tga" />

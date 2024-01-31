@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace FamiStudio
 {
     public class SongPlayer : AudioPlayer
     {
-        protected struct SongPlayerStartInfo
-        {
-            public Song song;
-            public int startNote;
-        };
-
         public SongPlayer(IAudioStream stream, bool pal, int sampleRate, bool stereo, int numFrames) : base(stream, NesApu.APU_SONG, pal, sampleRate, stereo, numFrames)
         {
             loopMode = LoopMode.LoopPoint;
@@ -28,6 +23,38 @@ namespace FamiStudio
             if (audioStream == null)
                 return;
 
+            var startNote = playPosition;
+
+            BeginPlaySong(song);
+
+            if (startNote > 0)
+            {
+                if (accurateSeek)
+                {
+                    abortSeek = false;
+                    seekTask = Task.Factory.StartNew(() => { while (SeekTo(startNote) && !abortSeek); });
+                    return;
+                }
+                else
+                {
+                    while (SeekTo(startNote));
+                }
+            }
+
+            StartInternal();
+        }
+
+        public void StartIfSeekComplete()
+        {
+            if (IsSeeking && seekTask.IsCompleted)
+            {
+                seekTask = null;
+                StartInternal();
+            }
+        }
+
+        private void StartInternal()
+        {
             if (UsesEmulationThread)
             {
                 Debug.Assert(emulationThread == null);
@@ -36,11 +63,7 @@ namespace FamiStudio
                 ResetThreadingObjects();
 
                 emulationThread = new Thread(EmulationThread);
-                emulationThread.Start(new SongPlayerStartInfo() { song = song, startNote = PlayPosition });
-            }
-            else
-            {
-                BeginPlaySong(song, PlayPosition);
+                emulationThread.Start();
             }
 
             audioStream.Stop(); // Extra safety
@@ -49,6 +72,13 @@ namespace FamiStudio
 
         public void Stop()
         {
+            if (IsSeeking)
+            {
+                abortSeek = true;
+                seekTask.Wait();
+                seekTask = null;
+            }
+
             if (UsesEmulationThread)
             {
                 // Keeping a local variable of the thread since the song may
@@ -93,28 +123,18 @@ namespace FamiStudio
 
             return advanced;
         }
-
-        void EmulationThread(object o)
+        
+        private void EmulationThread(object o)
         {
-            var startInfo = (SongPlayerStartInfo)o;
+            var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
 
-            // Since BeginPlaySong is not inside the main loop and will
-            // call EndFrame, we need to subtract one immediately so that
-            // the semaphore count is not off by one.
-            emulationSemaphore.WaitOne();
-
-            if (BeginPlaySong(startInfo.song, startInfo.startNote))
+            while (true)
             {
-                var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
+                if (WaitHandle.WaitAny(waitEvents) == 0)
+                    break;
 
-                while (true)
-                {
-                    if (WaitHandle.WaitAny(waitEvents) == 0)
-                        break;
-
-                    if (!EmulateFrame())
-                        break;
-                }
+                if (!EmulateFrame())
+                    break;
             }
 
             emulationThread = null;

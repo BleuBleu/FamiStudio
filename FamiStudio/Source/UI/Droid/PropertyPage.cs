@@ -767,6 +767,11 @@ namespace FamiStudio
         {
         }
 
+        public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<object, string> fmt)
+        {
+            Debug.Assert(false); // MATTT : TODO!
+        }
+
         public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null)
         {
             // We need initial data on mobile.
@@ -822,8 +827,8 @@ namespace FamiStudio
                                 break;
                             case ColumnType.Slider:
                                 var seek = new SeekBar(new ContextThemeWrapper(context, Resource.Style.LightGraySeekBar));
-                                seek.Min = 0;
-                                seek.Max = 100;
+                                seek.Min = col.MinValue;
+                                seek.Max = col.MaxValue;
                                 seek.Progress = data == null ? 50 : (int)data[r, c];
                                 view = seek;
                                 break;
@@ -895,6 +900,8 @@ namespace FamiStudio
 
         public void SetPropertyEnabled(int idx, bool enabled)
         {
+            // MATTT : Make sure grid disables correctly!
+
             var prop = properties[idx];
 
             if (prop.label != null)

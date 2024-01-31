@@ -400,7 +400,7 @@ namespace FamiStudio
         public void SerializeStatePreVer9(ProjectBuffer buffer)
         {
             sourceData = new DPCMSampleDmcSourceData();
-            sourceData.SerializeState(buffer);
+            sourceData.Serialize(buffer);
 
             // At version 8 (FamiStudio 2.3.0) we added an explicit "reverse bit" flag.
             if (buffer.Version >= 8)
@@ -417,7 +417,7 @@ namespace FamiStudio
             Process();
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             if (buffer.IsReading)
                 project = buffer.Project;
@@ -443,7 +443,7 @@ namespace FamiStudio
                         sourceData = new DPCMSampleDmcSourceData();
                 }
 
-                sourceData.SerializeState(buffer);
+                sourceData.Serialize(buffer);
                 buffer.Serialize(ref color);
 
                 // At version 15 (FamiStudio 4.1.0) we added DPCM bankswitching.
@@ -521,7 +521,7 @@ namespace FamiStudio
         public bool OverrideDmcInitialValue { get => overrideDmcInitialValue; set => overrideDmcInitialValue = value; }
         public int  DmcInitialValueDiv2     { get => dmcInitialValueDiv2;     set => dmcInitialValueDiv2 = value; }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref sample);
             buffer.Serialize(ref loop);
@@ -566,7 +566,7 @@ namespace FamiStudio
 
     public interface IDPCMSampleSourceData
     {
-        void SerializeState(ProjectBuffer buffer);
+        void Serialize(ProjectBuffer buffer);
         bool Trim(int sampleStart, int sampleEnd);
         float GetSampleRate(bool pal);
         float GetDuration(bool pal);
@@ -594,7 +594,7 @@ namespace FamiStudio
             sampleRate = rate;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref sampleRate);
             buffer.Serialize(ref wavData);
@@ -633,7 +633,7 @@ namespace FamiStudio
             dmcData = data;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref dmcData);
         }

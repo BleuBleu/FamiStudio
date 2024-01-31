@@ -745,7 +745,7 @@ namespace FamiStudio
                 Array.Resize(ref values, maxTypeLength);
         }
 
-        public void SerializeState(ProjectBuffer buffer, int type)
+        public void Serialize(ProjectBuffer buffer, int type)
         {
             buffer.Serialize(ref length);
             buffer.Serialize(ref loop);

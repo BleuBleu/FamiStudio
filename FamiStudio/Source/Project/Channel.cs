@@ -126,17 +126,10 @@ namespace FamiStudio
                 case Note.EffectNoteDelay: return song.UsesFamiTrackerTempo;
                 case Note.EffectCutDelay: return song.UsesFamiTrackerTempo;
                 case Note.EffectDeltaCounter: return type == ChannelType.Dpcm;
-                case Note.EffectPhaseReset: return false;
-                    // Disabled. The NES emulation code will require some work to support this. It currently can render "ahead" of
-                    // the current time whichs alter the moment where the "reset" happens.
-                    /*
-                    (type == ChannelType.Square1 || type == ChannelType.Square2) || 
-                    (type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2) ||
-                    (type == ChannelType.Vrc6Square1 || type == ChannelType.Vrc6Square2 || type == ChannelType.Vrc6Saw) ||
-                    (type == ChannelType.FdsWave) ||
-                    (type == ChannelType.S5BSquare1 || type == ChannelType.S5BSquare2 || type == ChannelType.S5BSquare1) ||
-                    (type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8);
-                    */
+                case Note.EffectPhaseReset: return 
+                        type == ChannelType.Square1 || type == ChannelType.Square2 || 
+                        type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2 || 
+                        IsVrc6Channel || IsFdsChannel || IsN163Channel;
             }
 
             return true;
@@ -322,6 +315,7 @@ namespace FamiStudio
             return patterns.Find(p => p.Name == name) == null;
         }
 
+        // TODO : We should not reference Settings from here.
         public string GenerateUniquePatternName(string baseName = null)
         {
             if (baseName == null)
@@ -339,6 +333,7 @@ namespace FamiStudio
             }
         }
 
+        // TODO : We should not reference Settings from here.
         public string GenerateUniquePatternNameSmart(string oldName)
         {
             int firstDigit;
@@ -1512,7 +1507,7 @@ namespace FamiStudio
             }
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             if (buffer.IsWriting)
                 DeleteUnusedPatterns();
@@ -1528,7 +1523,7 @@ namespace FamiStudio
 
             buffer.InitializeList(ref patterns, patternCount);
             foreach (var pattern in patterns)
-                pattern.SerializeState(buffer);
+                pattern.Serialize(buffer);
 
             for (int i = 0; i < patternInstances.Length; i++)
                 buffer.Serialize(ref patternInstances[i], this);

@@ -589,9 +589,9 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
+        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None)
         {
-            var grid = new Grid(columnDescs, numRows, true);
+            var grid = new Grid(columnDescs, numRows, !options.HasFlag(GridOptions.NoHeader));
 
             if (data != null)
                 grid.UpdateData(data);
@@ -648,14 +648,21 @@ namespace FamiStudio
             grid.SetRowColor(rowIdx, color);
         }
 
-        public void AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
+        public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<object, string> fmt)
+        {
+            var grid = properties[propIdx].control as Grid;
+            grid.OverrideCellSlider(rowIdx, colIdx, min, max, fmt);  
+        }
+
+        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Grid,
-                    control = CreateGrid(columnDescs, data, numRows, tooltip)
+                    control = CreateGrid(columnDescs, data, numRows, tooltip, options)
                 });
+            return properties.Count - 1;
         }
 
         public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
@@ -679,14 +686,15 @@ namespace FamiStudio
             var prop = properties[idx];
 
             // TODO : I only added support to disable these so far.
-            Debug.Assert(
-                prop.type == PropertyType.Label         ||
-                prop.type == PropertyType.CheckBox      ||
-                prop.type == PropertyType.DropDownList  ||
-                prop.type == PropertyType.NumericUpDown ||
-                prop.type == PropertyType.TextBox       ||
-                prop.type == PropertyType.Slider        ||
-                prop.type == PropertyType.ColoredTextBox);
+            Debug.Assert(                                
+                prop.type == PropertyType.Label          ||
+                prop.type == PropertyType.CheckBox       ||
+                prop.type == PropertyType.DropDownList   ||
+                prop.type == PropertyType.NumericUpDown  ||
+                prop.type == PropertyType.TextBox        ||
+                prop.type == PropertyType.Slider         ||
+                prop.type == PropertyType.ColoredTextBox ||
+                prop.type == PropertyType.Grid);
 
             if (prop.label != null)
                 prop.label.Enabled = enabled;
@@ -829,7 +837,19 @@ namespace FamiStudio
                     break;
             }
         }
-        
+
+        public void SetPropertyValue(int idx, int rowIdx, int colIdx, object value)
+        {
+            var prop = properties[idx];
+
+            switch (prop.type)
+            {
+                case PropertyType.Grid:
+                    (prop.control as Grid).SetData(rowIdx, colIdx, value);
+                    break;
+            }
+        }
+
         public void Build(bool advanced = false)
         {
             var margin = DpiScaling.ScaleForWindow(8);

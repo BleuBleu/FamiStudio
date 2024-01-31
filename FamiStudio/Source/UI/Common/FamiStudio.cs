@@ -63,6 +63,7 @@ namespace FamiStudio
         private string newReleaseUrl = null;
 
         public bool  IsPlaying => songPlayer != null && songPlayer.IsPlaying;
+        public bool  IsSeeking => songPlayer != null && songPlayer.IsSeeking;
         public bool  IsRecording => recordingMode;
         public bool  IsQwertyPianoEnabled => qwertyPiano;
         public bool  IsMetronomeEnabled => metronome;
@@ -139,6 +140,7 @@ namespace FamiStudio
         LocalizedString IncompatibleInstrumentError;
         LocalizedString IncompatibleExpRequiredError;
         LocalizedString AudioDeviceChanged;
+        LocalizedString AudioStreamError;
 
         #endregion
 
@@ -224,6 +226,19 @@ namespace FamiStudio
         { 
             get => songPlayer != null ? songPlayer.Loop : LoopMode.LoopPoint; 
             set => songPlayer.Loop = value; 
+        }
+
+        public bool AccurateSeek
+        {
+            get => Settings.AccurateSeek;
+            set
+            {
+                if (Settings.AccurateSeek != value)
+                {
+                    Settings.AccurateSeek = value;
+                    RecreateAudioPlayers();
+                }
+            }
         }
 
         public Song SelectedSong
@@ -1588,10 +1603,11 @@ namespace FamiStudio
             {
                 songStream = Platform.CreateAudioStream(NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
                 if (songStream == null)
-                    DisplayNotification("Error creating audio stream!", true, true); // MATTT : Localize + better message.
+                    DisplayNotification(AudioStreamError, true, true);
             }
 
-            songPlayer = new SongPlayer(songStream, palPlayback, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.NumBufferedFrames); // MATTT 44100
+            songPlayer = new SongPlayer(songStream, palPlayback, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.NumBufferedFrames);
+            songPlayer.AccurateSeek = Settings.AccurateSeek;
             songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
             songPlayer.SetSelectionRange(min, max);
         }
@@ -1604,7 +1620,7 @@ namespace FamiStudio
             { 
                 instrumentStream = Platform.CreateAudioStream(NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
                 if (instrumentStream == null)
-                    DisplayNotification("Error creating audio stream!", true, true); // MATTT : Localize + better message.
+                    DisplayNotification(AudioStreamError, true, true);
             }
 
             instrumentPlayer = new InstrumentPlayer(instrumentStream, palPlayback, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.NumBufferedFrames); 
@@ -1694,7 +1710,7 @@ namespace FamiStudio
 
                 if (sample.SourceDataIsWav)
                 {
-                    instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolume));
+                    instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolumeDb));
                     return;
                 }
                 else
@@ -1713,7 +1729,7 @@ namespace FamiStudio
             WaveUtils.DpcmToWave(dmcData, sample.DmcInitialValueDiv2, out short[] wave);
 
             if (wave.Length > 0)
-                instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolume));
+                instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolumeDb));
         }
 
         public void PlayRawPcmSample(short[] data, int sampleRate, float volume = 1.0f, int channel = 0)
@@ -2307,8 +2323,8 @@ namespace FamiStudio
 
         private bool AppNeedsRealTimeUpdate()
         {
-            return songPlayer       != null && songPlayer.IsPlaying       || 
-                   instrumentPlayer != null && instrumentPlayer.IsPlayingAnyNotes || 
+            return songPlayer       != null && (songPlayer.IsPlaying || songPlayer.IsSeeking) || 
+                   instrumentPlayer != null && (instrumentPlayer.IsPlayingAnyNotes) || 
                    PianoRoll.IsEditingInstrument || 
                    PianoRoll.IsEditingArpeggio   || 
                    PianoRoll.IsEditingDPCMSample;
@@ -2326,6 +2342,14 @@ namespace FamiStudio
             {
                 songPlayer.ConnectOscilloscope(null);
                 instrumentPlayer.ConnectOscilloscope(oscilloscope);
+            }
+        }
+
+        private void ConditionalEndAccurateSeek()
+        {
+            if (songPlayer != null && songPlayer.IsSeeking)
+            {
+                songPlayer.StartIfSeekComplete();
             }
         }
 
@@ -2384,6 +2408,7 @@ namespace FamiStudio
             ConditionalMarkControlsDirty();
             ConditionalShowTutorial();
             ConditionalReconnectOscilloscope();
+            ConditionalEndAccurateSeek();
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
             CheckStopInstrumentNote(deltaTime);
@@ -2458,7 +2483,7 @@ namespace FamiStudio
             }
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             var oldSong = song;
             var currentFrame = CurrentFrame;
@@ -2470,9 +2495,9 @@ namespace FamiStudio
             buffer.Serialize(ref song);
             buffer.Serialize(ref currentFrame);
 
-            ProjectExplorer.SerializeState(buffer);
-            Sequencer.SerializeState(buffer);
-            PianoRoll.SerializeState(buffer);
+            ProjectExplorer.Serialize(buffer);
+            Sequencer.Serialize(buffer);
+            PianoRoll.Serialize(buffer);
 
             SerializeActiveControl(buffer);
 

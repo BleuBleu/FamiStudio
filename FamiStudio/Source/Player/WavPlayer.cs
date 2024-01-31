@@ -29,22 +29,21 @@ namespace FamiStudio
                 
             samples = new List<short>();
 
-            if (BeginPlaySong(song))
-            {
-                while (PlaySongFrame() && samples.Count < maxSample)
-                {
-                    if (log)
-                    {
-                        if (duration > 0)
-                            Log.ReportProgress(samples.Count / (float)maxSample);
-                        else
-                            Log.ReportProgress(numPlayedPatterns / (float)totalNumPatterns);
-                    }
+            BeginPlaySong(song);
 
-                    if (allowAbort && Log.ShouldAbortOperation)
-                    { 
-                        return new short[0];
-                    }
+            while (PlaySongFrame() && samples.Count < maxSample)
+            {
+                if (log)
+                {
+                    if (duration > 0)
+                        Log.ReportProgress(samples.Count / (float)maxSample);
+                    else
+                        Log.ReportProgress(numPlayedPatterns / (float)totalNumPatterns);
+                }
+
+                if (allowAbort && Log.ShouldAbortOperation)
+                { 
+                    return new short[0];
                 }
             }
 

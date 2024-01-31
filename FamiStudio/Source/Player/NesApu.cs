@@ -216,10 +216,10 @@ namespace FamiStudio
         public const int EPSM_REG_SHAPE         = 0x0d;
         public const int EPSM_REG_IO_A          = 0x0e;
         public const int EPSM_REG_IO_B          = 0x0f;
-        public const int EPSM_REG_RYTHM       = 0x10;
-        public const int EPSM_REG_RYTHM_LEVEL = 0x18;
-        public const int EPSM_REG_FM_LO_A     = 0xA0;
-        public const int EPSM_REG_FM_HI_A     = 0xA4;
+        public const int EPSM_REG_RYTHM         = 0x10;
+        public const int EPSM_REG_RYTHM_LEVEL   = 0x18;
+        public const int EPSM_REG_FM_LO_A       = 0xA0;
+        public const int EPSM_REG_FM_HI_A       = 0xA4;
 
         // See comment in Simple_Apu.h.
         public const int TND_MODE_SINGLE           = 0;
@@ -243,7 +243,7 @@ namespace FamiStudio
         public const int FreqNtsc = 1789773;
         public const int FreqPal  = 1662607;
         public const int FreqEPSM = 8000000;
-
+            
         public const double FreqC1 = 32.7032;
         public const double FreqC0 = 16.3516;
         public const double FreqRegMin = 15.8862;  //The minimum frequency displayed in the registers tab, C0 - 49.9893 cents
@@ -764,11 +764,12 @@ namespace FamiStudio
             return NesApu.MaximumPeriod11Bit;
         }
 
-        public static ThreadLocal<byte[]> CurrentSample = new ThreadLocal<byte[]>();
+        public static byte[][] CurrentSample = new byte[2 + NUM_WAV_EXPORT_APU][];
 
         public static int DmcReadCallback(IntPtr data, int addr)
         {
-            var sample = CurrentSample.Value;
+            var apuIdx = data.ToInt32();
+            var sample = CurrentSample[apuIdx];
             var offset = addr - DPCMSampleAddr;
             if (sample == null || offset < 0 || offset >= sample.Length)
                 return DACDefaultValue;
@@ -776,11 +777,44 @@ namespace FamiStudio
                 return sample[offset];
         }
 
-        // TODO : This part of the app should access the settings directly, they should be passed.
-        public static void InitAndReset(int apuIdx, int sampleRate, bool pal, int seperateTndMode, int expansions, int numNamcoChannels, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
+        public static void InitAndReset(
+            int apuIdx, 
+            int sampleRate,
+            float globalVolumeDb,
+            int bassCutoffHz,
+            ExpansionMixer[] expMixerSettings,
+            bool pal, 
+            bool namcoMix,
+            int seperateTndMode, 
+            int expansions, 
+            int numNamcoChannels, 
+            [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
         {
-            Init(apuIdx, sampleRate, Settings.BassCutoffHz, pal ? 1 : 0, seperateTndMode, expansions, dmcCallback);
+            Init(apuIdx, sampleRate, bassCutoffHz, pal ? 1 : 0, seperateTndMode, expansions, dmcCallback);
             Reset(apuIdx);
+
+            var apuSettings = expMixerSettings[NesApu.APU_EXPANSION_NONE];
+            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.TrebleDb, apuSettings.TrebleRolloffHz, sampleRate);
+            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.VolumeDb + globalVolumeDb));
+
+            if (expansions != APU_EXPANSION_MASK_NONE)
+            {
+                for (int expansion = APU_EXPANSION_FIRST; expansion <= APU_EXPANSION_LAST; expansion++)
+                {
+                    if ((expansions & ExpansionToMask(expansion)) != 0)
+                    {
+                        var expSettings = expMixerSettings[expansion];
+                        TrebleEq(apuIdx, expansion, expSettings.TrebleDb, expSettings.TrebleRolloffHz, sampleRate);
+                        SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.VolumeDb + globalVolumeDb));
+                    }
+                }
+
+                if ((expansions & ExpansionToMask(APU_EXPANSION_NAMCO)) != 0)
+                {
+                    SetN163Mix(apuIdx, namcoMix ? 1 : 0);
+                }
+            }
+
             WriteRegister(apuIdx, APU_SND_CHN,    0x0f); // enable channels, stop DMC
             WriteRegister(apuIdx, APU_TRI_LINEAR, 0x80); // disable triangle length counter
             WriteRegister(apuIdx, APU_NOISE_HI,   0x00); // load noise length
@@ -790,22 +824,12 @@ namespace FamiStudio
             WriteRegister(apuIdx, APU_PL1_SWEEP,  0x08); // no sweep
             WriteRegister(apuIdx, APU_PL2_SWEEP,  0x08);
 
-            var apuSettings = Settings.ExpansionMixerSettings[NesApu.APU_EXPANSION_NONE];
-
-            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.TrebleDb, apuSettings.TrebleRolloffHz, sampleRate);
-            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.VolumeDb + Settings.GlobalVolume));
-
             if (expansions != APU_EXPANSION_MASK_NONE)
             {
                 for (int expansion = APU_EXPANSION_FIRST; expansion <= APU_EXPANSION_LAST; expansion++)
                 {
                     if ((expansions & ExpansionToMask(expansion)) != 0)
                     {
-                        var expSettings = Settings.ExpansionMixerSettings[expansion];
-
-                        TrebleEq(apuIdx, expansion, expSettings.TrebleDb, expSettings.TrebleRolloffHz, sampleRate);
-                        SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.VolumeDb + Settings.GlobalVolume));
-
                         switch (expansion)
                         {
                             case APU_EXPANSION_VRC6:
@@ -830,7 +854,6 @@ namespace FamiStudio
                                 // This is mainly because the instrument player might not update all the channels all the time.
                                 WriteRegister(apuIdx, N163_ADDR, N163_REG_VOLUME);
                                 WriteRegister(apuIdx, N163_DATA, (numNamcoChannels - 1) << 4);
-                                SetN163Mix(apuIdx, Settings.N163Mix ? 1 : 0);
                                 break;
                             case APU_EXPANSION_SUNSOFT:
                                 WriteRegister(apuIdx, S5B_ADDR, S5B_REG_MIXER_SETTING);

@@ -20,6 +20,13 @@ namespace FamiStudio
         public event HeaderCellClickedDelegate HeaderCellClicked;
         public event CellEnabledDelegate CellEnabled;
 
+        private class CellSliderData
+        {
+            public int MinValue;
+            public int MaxValue;
+            public Func<object, string> Formatter;
+        }
+
         private int scroll;
         private int maxScroll;
         private int hoverRow = -1;
@@ -40,6 +47,7 @@ namespace FamiStudio
         private ColumnDesc[] columns;
         private Color[] rowColors;
         private Color foreColor = Theme.LightGreyColor1;
+        private CellSliderData[,] cellSliderData;
 
         private bool draggingScrollbars;
         private bool draggingSlider;
@@ -124,7 +132,7 @@ namespace FamiStudio
 
         public bool IsCellOrColumnEnabled(int row, int col)
         {
-            return IsColumnEnabled(col) && IsCellEnabled(row, col);
+            return IsColumnEnabled(col) && IsCellEnabled(row, col) && enabled;
         }
 
         public void SetRowColor(int row, Color color)
@@ -134,6 +142,30 @@ namespace FamiStudio
 
             rowColors[row] = color;
             foreColor = Color.Black;
+        }
+
+        public void OverrideCellSlider(int row, int col, int min, int max, Func<object, string> fmt)
+        {
+            if (cellSliderData == null)
+                cellSliderData = new CellSliderData[data.GetLength(0), data.GetLength(1)];
+
+            cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, Formatter = fmt };
+        }
+
+        private void GetCellSliderData(int row, int col, out int min, out int max, out Func<object, string> fmt)
+        {
+            if (cellSliderData != null && cellSliderData[row, col] != null)
+            {
+                min = cellSliderData[row, col].MinValue;
+                max = cellSliderData[row, col].MaxValue;
+                fmt = cellSliderData[row, col].Formatter;
+            }
+            else
+            {
+                min = columns[col].MinValue;    
+                max = columns[col].MaxValue;
+                fmt = columns[col].Formatter;
+            }
         }
 
         private void DropDownActive_SelectedIndexChanged(Control sender, int index)
@@ -367,7 +399,8 @@ namespace FamiStudio
                                     draggingSlider = true;
                                     sliderCol = col;
                                     sliderRow = row;
-                                    data[row, col] = (int)Math.Round(Utils.Lerp(0, 100, Utils.Saturate((e.X - columnOffsets[col]) / (float)columnWidths[col])));
+                                    GetCellSliderData(row, col, out var sliderMin, out var sliderMax, out _);
+                                    data[row, col] = (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[col]) / (float)columnWidths[col])));
                                     ValueChanged?.Invoke(this, row, col, data[row, col]);
                                     break;
                                 }
@@ -422,7 +455,8 @@ namespace FamiStudio
         {
             if (draggingSlider)
             {
-                var newSliderVal = (int)Math.Round(Utils.Lerp(0, 100, Utils.Saturate((e.X - columnOffsets[sliderCol]) / (float)columnWidths[sliderCol])));
+                GetCellSliderData(sliderRow, sliderCol, out var sliderMin, out var sliderMax, out _);
+                var newSliderVal = (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[sliderCol]) / (float)columnWidths[sliderCol])));
                 if (newSliderVal != (int)data[sliderRow, sliderCol])
                 {
                     data[sliderRow, sliderCol] = newSliderVal;
@@ -534,8 +568,6 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            Debug.Assert(enabled); // TODO : Add support for disabled state.
-
             var c = g.GetCommandList();
             var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
             var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
@@ -575,7 +607,7 @@ namespace FamiStudio
             if (data != null)
             {
                 // Hovered cell
-                if (hoverCol >= 0 && (hoverRow - scroll) >= 0 && (hoverRow - scroll) < numItemRows && hoverRow < data.GetLength(0))
+                if (enabled && hoverCol >= 0 && (hoverRow - scroll) >= 0 && (hoverRow - scroll) < numItemRows && hoverRow < data.GetLength(0))
                 {
                     var hoverColor = Color.FromArgb(50, Color.White);
 
@@ -584,6 +616,8 @@ namespace FamiStudio
                     else
                         c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
                 }
+
+                var localForeColor = enabled ? foreColor : Theme.MediumGreyColor1;
 
                 for (int i = 0, k = scroll; i < numItemRows && k < data.GetLength(0); i++, k++) // Rows
                 {
@@ -616,10 +650,10 @@ namespace FamiStudio
                             case ColumnType.Button:
                             {
                                 var buttonBaseX = colWidth - rowHeight;
-                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
+                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, localForeColor, TextFlags.MiddleLeft, 0, rowHeight);
                                 c.PushTranslation(buttonBaseX, 0);
-                                c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight, hoverRow == k && hoverCol == j && hoverButton ? Theme.MediumGreyColor1 : Theme.DarkGreyColor3, foreColor);
-                                c.DrawText("...", Fonts.FontMediumBold, 0, 0, foreColor, TextFlags.MiddleCenter, rowHeight, rowHeight);
+                                c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight, hoverRow == k && hoverCol == j && hoverButton ? Theme.MediumGreyColor1 : Theme.DarkGreyColor3, localForeColor);
+                                c.DrawText("...", Fonts.FontMediumBold, 0, 0, localForeColor, TextFlags.MiddleCenter, rowHeight, rowHeight);
                                 c.PopTransform();
                                 break;
                             }
@@ -627,8 +661,9 @@ namespace FamiStudio
                             {
                                 if (cellEnabled)
                                 {
-                                    c.FillRectangle(0, 0, (int)Math.Round((int)val / 100.0f * colWidth), rowHeight, Theme.DarkGreyColor6);
-                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), Fonts.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    GetCellSliderData(k, j, out var sliderMin, out var sliderMax, out var fmt);
+                                    c.FillRectangle(0, 0, (int)Math.Round(((int)val - sliderMin) / (double)(sliderMax - sliderMin) * colWidth), rowHeight, Theme.DarkGreyColor6);
+                                    c.DrawText(fmt(val), Fonts.FontMedium, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
@@ -638,7 +673,7 @@ namespace FamiStudio
                             }
                             case ColumnType.Label:
                             {
-                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, foreColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
+                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, localForeColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
                                 break;
                             }
                             case ColumnType.Radio:
@@ -646,7 +681,7 @@ namespace FamiStudio
                                 var radioBaseX = (colWidth  - bmpRadioOn.ElementSize.Width)  / 2;
                                 var radioBaseY = (rowHeight - bmpRadioOn.ElementSize.Height) / 2;
                                 c.PushTranslation(radioBaseX, radioBaseY);
-                                c.DrawTextureAtlas((bool)val ? bmpRadioOn : bmpRadioOff, 0, 0, 1, 1, foreColor);
+                                c.DrawTextureAtlas((bool)val ? bmpRadioOn : bmpRadioOff, 0, 0, 1, 1, localForeColor);
                                 c.PopTransform();
                                 break;
                             }
@@ -655,24 +690,24 @@ namespace FamiStudio
                                 var checkBaseX = (colWidth  - bmpCheckOn.ElementSize.Width)  / 2;
                                 var checkBaseY = (rowHeight - bmpCheckOn.ElementSize.Height) / 2;
                                 c.PushTranslation(checkBaseX, checkBaseY);
-                                c.DrawRectangle(0, 0, bmpCheckOn.ElementSize.Width - 1, bmpCheckOn.ElementSize.Height - 1, foreColor);
-                                c.DrawTextureAtlas((bool)val ? bmpCheckOn : bmpCheckOff, 0, 0, 1, 1, foreColor);
+                                c.DrawRectangle(0, 0, bmpCheckOn.ElementSize.Width - 1, bmpCheckOn.ElementSize.Height - 1, localForeColor);
+                                c.DrawTextureAtlas((bool)val ? bmpCheckOn : bmpCheckOff, 0, 0, 1, 1, localForeColor);
                                 c.PopTransform();
                                 break;
                             }
                             case ColumnType.Image:
                             {
                                 var bmp = g.GetTextureAtlasRef((string)val);
-                                c.DrawTextureAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, 1, foreColor);
+                                c.DrawTextureAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, 1, localForeColor);
                                 break;
                             }
                             case ColumnType.NumericUpDown:
                             {
                                 if (cellEnabled)
                                 {
-                                    c.DrawTextureAtlasCentered(bmpUpDownMinus, 0, 0, rowHeight, rowHeight, 1, 1, foreColor);
-                                    c.DrawTextureAtlasCentered(bmpUpDownPlus, colWidth - rowHeight, 0, rowHeight, rowHeight, 1, 1, foreColor);
-                                    c.DrawText(val.ToString(), Fonts.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawTextureAtlasCentered(bmpUpDownMinus, 0, 0, rowHeight, rowHeight, 1, 1, localForeColor);
+                                    c.DrawTextureAtlasCentered(bmpUpDownPlus, colWidth - rowHeight, 0, rowHeight, rowHeight, 1, 1, localForeColor);
+                                    c.DrawText(val.ToString(), Fonts.FontMedium, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
@@ -689,8 +724,8 @@ namespace FamiStudio
                 if (hasScrollBar)
                 {
                     c.PushTranslation(width - scrollBarWidth - 1, numHeaderRows * rowHeight);
-                    c.FillAndDrawRectangle(0, 0, scrollBarWidth, rowHeight * numItemRows, Theme.DarkGreyColor4, foreColor);
-                    c.FillAndDrawRectangle(0, scrollBarPos, scrollBarWidth, scrollBarPos + scrollBarSize, Theme.MediumGreyColor1, foreColor);
+                    c.FillAndDrawRectangle(0, 0, scrollBarWidth, rowHeight * numItemRows, Theme.DarkGreyColor4, localForeColor);
+                    c.FillAndDrawRectangle(0, scrollBarPos, scrollBarWidth, scrollBarPos + scrollBarSize, Theme.MediumGreyColor1, localForeColor);
                     c.PopTransform();
                 }
             }

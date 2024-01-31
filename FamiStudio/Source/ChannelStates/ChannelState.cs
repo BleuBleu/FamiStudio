@@ -97,7 +97,7 @@ namespace FamiStudio
             }
 
             if (newNote != null)
-            { 
+            {
                 // We dont delay speed effects. This is not what FamiTracker does, but I dont care.
                 // There is a special place in hell for people who delay speed effect.
                 if (newNote.HasSpeed)
@@ -485,7 +485,12 @@ namespace FamiStudio
             }
         }
 
-        protected void WriteRegister(int reg, int data, int skipCycles = 4, List<int> metadata = null)
+        protected void SkipCycles(int cycles)
+        {
+            NesApu.SkipCycles(apuIdx, cycles);
+        }
+
+        protected void WriteRegister(int reg, int data, int skipCycles = 4, int metadata = 0)
         {
             NesApu.WriteRegister(apuIdx, reg, data);
             player.NotifyRegisterWrite(apuIdx, reg, data, metadata);
@@ -539,6 +544,7 @@ namespace FamiStudio
             forceInstrumentReload = true;
         }
 
+        // TODO : We should not reference settings from here.
         protected int GetPeriod()
         {
             var noteVal = note.Value + envelopeValues[EnvelopeType.Arpeggio];
@@ -581,8 +587,22 @@ namespace FamiStudio
         {
             noteTriggered = false;
             noteReleased = false;
-            resetPhase = false;
             NesApu.SkipCycles(apuIdx, CyclesBetweenChannels);
+        }
+
+        protected virtual void ResetPhase()
+        {
+
+        }
+
+        public virtual void PostUpdate()
+        {
+            NesApu.SkipCycles(apuIdx, resetPhase ? 4 : 5); // lsr/bcc
+            if (resetPhase)
+            {
+                ResetPhase();
+                resetPhase = false;
+            }
         }
 
         public Note CurrentNote

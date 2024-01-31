@@ -817,7 +817,7 @@ namespace FamiStudio
 
         public void SaveChannelScroll()
         {
-            if (Platform.IsMobile && editMode == EditionMode.Channel)
+            if (editMode == EditionMode.Channel)
             {
                 lastChannelScrollX = scrollX;
                 lastChannelScrollY = scrollY;
@@ -833,6 +833,11 @@ namespace FamiStudio
                 scrollY = lastChannelScrollY;
                 zoom = lastChannelZoom;
                 return true;
+            }
+            else if (Platform.IsDesktop && lastChannelZoom > 0)
+            {
+                // Intentionally not returning true so that we still center the scroll.
+                zoom = lastChannelZoom;
             }
 
             return false;
@@ -1220,7 +1225,19 @@ namespace FamiStudio
 
         private Color GetSeekBarColor()
         {
-            return (editMode == EditionMode.Channel && App.IsRecording) ? Theme.DarkRedColor : Theme.YellowColor;
+            if (editMode == EditionMode.Channel)
+            {
+                if (App.IsRecording)
+                {
+                    return Theme.DarkRedColor;
+                }
+                else if (App.IsSeeking)
+                {
+                    return Theme.Lighten(Theme.YellowColor, (int)(Math.Abs(Math.Sin(Platform.TimeSeconds() * 12.0)) * 75));
+                }
+            }
+
+            return Theme.YellowColor;
         }
 
         private void ForEachWaveTimecode(RenderInfo r, Action<float, float, int, int> function)
@@ -9586,7 +9603,7 @@ namespace FamiStudio
         }
 #endif
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             int editModeInt = (int)editMode;
             buffer.Serialize(ref editModeInt);

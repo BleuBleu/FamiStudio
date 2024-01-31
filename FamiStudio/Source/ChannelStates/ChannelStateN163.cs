@@ -101,13 +101,28 @@ namespace FamiStudio
                 WriteN163Register(NesApu.N163_REG_VOLUME   + regOffset, channelMask | volume);
             }
 
-            if (resetPhase)
-            {
-                WriteN163Register(NesApu.N163_REG_PHASE_LO  + regOffset, 0);
-                WriteN163Register(NesApu.N163_REG_PHASE_MID + regOffset, 0);
-                WriteN163Register(NesApu.N163_REG_PHASE_HI  + regOffset, 0);
-            }
-
             base.UpdateAPU();
         }
-    }}
+
+        protected override void ResetPhase()
+        {
+            NesApu.SkipCycles(apuIdx, 6); // ldy/lda
+            WriteN163Register(NesApu.N163_REG_PHASE_LO  + regOffset, 0);
+            NesApu.SkipCycles(apuIdx, 4); // lda
+            WriteN163Register(NesApu.N163_REG_PHASE_MID + regOffset, 0);
+            NesApu.SkipCycles(apuIdx, 4); // lda
+            WriteN163Register(NesApu.N163_REG_PHASE_HI  + regOffset, 0);
+        }
+
+        public override void PostUpdate()
+        {
+            NesApu.SkipCycles(apuIdx, (channelIndex == 0 ? 2 : 0) + (resetPhase ? 10 : 11)); // ldx + lda/and/beq
+            if (resetPhase)
+            {
+                ResetPhase();
+                resetPhase = false;
+            }
+            NesApu.SkipCycles(apuIdx, 7); // inx/cpx/bne
+        }
+    }
+}

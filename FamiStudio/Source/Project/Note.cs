@@ -607,7 +607,7 @@ namespace FamiStudio
             if (vibrato != VibratoInvalid) effectMask |= EffectVibratoMask;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref val);
             buffer.Serialize(ref flags);
@@ -824,8 +824,8 @@ namespace FamiStudio
             "EffectNoteDelay",
             "EffectCutDelay",
             "EffectVolume",
-            "EffectDutyCycle",
-            "EffectDutyCycle",
+            "EffectDAC",
+            "EffectPhaseReset",
         };
 
         static EffectType()

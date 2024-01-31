@@ -89,10 +89,10 @@ namespace FamiStudio
                         }
                         break;
                     case NesApu.APU_DMC_START:
-                        if ((APUStatus[12]) != regWrite.Metadata[0])
+                        if ((APUStatus[12]) != regWrite.Metadata)
                         {   //Compare the sample IDs
                             firstPass.Add(regWrite);
-                            APUStatus[12] = regWrite.Metadata[0];
+                            APUStatus[12] = regWrite.Metadata;
                         }
                         break;
                     case NesApu.APU_DMC_RAW:

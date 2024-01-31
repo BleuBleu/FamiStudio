@@ -572,7 +572,7 @@ namespace FamiStudio
         public uint ComputeCRC(uint crc = 0)
         {
             var serializer = new ProjectCrcBuffer(crc);
-            SerializeState(serializer);
+            Serialize(serializer);
             return serializer.CRC;
         }
 
@@ -836,7 +836,7 @@ namespace FamiStudio
             return name;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             if (buffer.IsReading)
                 project = buffer.Project;
@@ -941,7 +941,7 @@ namespace FamiStudio
                 {
                     if (buffer.IsReading)
                         envelopes[i] = new Envelope(i);
-                    envelopes[i].SerializeState(buffer, i);
+                    envelopes[i].Serialize(buffer, i);
                 }
                 else
                 {
@@ -1008,7 +1008,7 @@ namespace FamiStudio
                         for (var i = 0; i < mappingCount; i++)
                         {
                             var mapping = new DPCMSampleMapping();
-                            mapping.SerializeState(buffer);
+                            mapping.Serialize(buffer);
                             samplesMapping.Add(mappingNotes[i], mapping);
                         }
                     }
@@ -1022,7 +1022,7 @@ namespace FamiStudio
 
                         foreach (var kv in samplesMapping)
                         {
-                            kv.Value.SerializeState(buffer);
+                            kv.Value.Serialize(buffer);
                         }
                     }
                 }

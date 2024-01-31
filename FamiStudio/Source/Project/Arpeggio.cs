@@ -65,7 +65,7 @@ namespace FamiStudio
 #endif
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             if (buffer.IsReading)
                 project = buffer.Project;
@@ -80,7 +80,7 @@ namespace FamiStudio
                 buffer.Serialize(ref folderName);
             }
 
-            envelope.SerializeState(buffer, EnvelopeType.Arpeggio);
+            envelope.Serialize(buffer, EnvelopeType.Arpeggio);
         }
 
         public void ChangeId(int newId)

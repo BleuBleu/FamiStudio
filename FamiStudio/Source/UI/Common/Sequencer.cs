@@ -569,7 +569,21 @@ namespace FamiStudio
 
         private Color GetSeekBarColor()
         {
-            return App.IsRecording ? Theme.DarkRedColor : Theme.YellowColor;
+            if (App.IsRecording)
+            {
+                return Theme.DarkRedColor;
+            }
+            else
+            {
+                if (App.IsSeeking)
+                {
+                    return Theme.Lighten(Theme.YellowColor, (int)(Math.Abs(Math.Sin(Platform.TimeSeconds() * 12.0)) * 75));
+                }
+                else
+                {
+                    return Theme.YellowColor;
+                }
+            }
         }
 
         public int GetSeekFrameToDraw()
@@ -3216,7 +3230,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref scrollX);
             buffer.Serialize(ref zoom);

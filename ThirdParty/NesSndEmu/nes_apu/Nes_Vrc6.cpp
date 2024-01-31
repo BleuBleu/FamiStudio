@@ -40,7 +40,7 @@ void Nes_Vrc6::reset()
 		}
 		osc.delay = 0;
 		osc.last_amp = 0;
-		osc.phase = 1;
+		osc.phase = i == 2 ? 1 : 0;
 		osc.amp = 0;
 		osc.trigger = trigger_hold;
 	}
@@ -81,6 +81,16 @@ void Nes_Vrc6::write_osc( cpu_time_t time, int osc_index, int reg, int data )
 	run_until( time );
 	oscs [osc_index].regs [reg] = data;
 	oscs [osc_index].ages [reg] = 0;
+
+	if (reg == 2 && (data & 0x80) == 0)
+	{
+		// MATTT : This is wrong. VRC6 squares don't do a full cycles the first time 
+		// they run. This is a bug and needs to be fixed. Need to review saw as well,
+		// i doubt it works correctly. Phase is initialized at 1 in constructor + reset,
+		// review that too.
+		oscs[osc_index].phase = osc_index == 2 ? 1 : 0;
+		oscs[osc_index].amp = 0;
+	}
 }
 
 void Nes_Vrc6::write_register(cpu_time_t time, cpu_addr_t addr, int data)

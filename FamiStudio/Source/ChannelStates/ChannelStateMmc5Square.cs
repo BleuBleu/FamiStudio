@@ -38,12 +38,13 @@ namespace FamiStudio
                 WriteRegister(NesApu.MMC5_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
             }
 
-            if (resetPhase)
-            {
-                WriteRegister(NesApu.MMC5_PL1_HI + regOffset, prevPeriodHi);
-            }
-
             base.UpdateAPU();
         }
-    };
+
+        protected override void ResetPhase()
+        {
+            SkipCycles(4); // ldy
+            WriteRegister(NesApu.MMC5_PL1_HI + regOffset, prevPeriodHi);
+        }
+    }
 }

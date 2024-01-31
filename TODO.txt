@@ -21,6 +21,7 @@ x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/8197
 / Latency improvements:
 	- Android : Run short/1-frame tests.
 	- MacOS : Audio device detection change.
+	- device change didn't work with PS4 controller?
 - Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
 	=> MacOS only, GLFWToWindow() uses DpiScaling.Window.
 x Export -> Video settings scrolling area doesnt take scaling into account.
@@ -43,24 +44,26 @@ x Sort button for songs doesnt do shit?
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - Dont publish for chromebooks
-- Finish/fix phase reset support
-	=> See how each channel manages its delay, must never write > time.
-		x 2A03 Squares (+MMC5)
-		x VRC6
-		/ FDS
-		/ N163 (okay-ish, we always do 15-cycle update).
-		=> For FDS/N163, review our use of "delay", a bit sketchy.
-		=> Remove "sprintf(ttt, "%d\n", ticks);" in NotSoFaso.
-	=> Reorganize in-app channel update to mimic ASM more closely.
-	=> option to fully emulation from start.
+/ Finish phase reset
+	- Port to other assemblers.
+	- NesSndEmu : Fix VRC6 square/saw emulation.
+	- NesSndEmu : Check FDS emulation code. There is a big comment explaining the situation.
+	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
+	- Add "Accurate Seek" to config dialog too.
 - Replace an specific instrument by another in selection (A->B), R+CLICK.
 - We should be able to drag/copy samples mappings between instruments.
-/ Ti suggestion: stop non looping song for real with an opcode.
-	=> Done, not tested at all.
-- BUG : First samples of CV2 plays wrong??? Only if at first frame...
+- BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
+- BUG : Non-looping songs dont export correctly.
+- BUG : When reach end of non-looping song, doesnt rewind to previous.
+x BUG : First samples of CV2 plays wrong??? Only if at first frame...
 - S5B Envelope, not from discussion with abstract64:
 	- On the instrument : envelope enable + shape + option to have auto-period (off/on, with option to have some kind of +/- offset/octave from the note pitch)
 	- As a effect : Effect to manually dial the period. Would probably override anything set on the insturment (?), override until turn off?
+- Hold SHIFT+click (also double-click) for multiple delete.
+x Zoom level changes when going env then come back to piano 
+/ Mixer improvements
+	- Make it work on mobile.
+	- Should we store the "AllowMixerOverride" somewhere else? FamiStudio.cs?
 
 4.2.0 Testing/Packaging
 =======================
@@ -201,7 +204,6 @@ Backlog:
 - Full range volume for expansions?
 - Different aspect ratios for video export? Somebody asked for square
 - Improve linux file dialog (Steo feedback)
-- Hold SHIFT+click for multiple delete.
 - Idea from perkka "When an instrument is selected. Have the channels thats not supported by it slightly faded out, or the channel names that support it in bold or something"
 - Do a pass on tooltips for ParamProviders.
 - Left resize to preserve release position?

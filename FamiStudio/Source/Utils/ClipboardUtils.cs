@@ -73,7 +73,7 @@ namespace FamiStudio
             }
 
             foreach (var pat in patterns)
-                pat.SerializeState(serializer);
+                pat.Serialize(serializer);
         }
 
         private static int LoadAndMergePatternList(ProjectLoadBuffer serializer, Song song)
@@ -114,19 +114,19 @@ namespace FamiStudio
                     if (existingPattern != null)
                     {
                         serializer.RemapId(patId, existingPattern.Id);
-                        dummyPattern.SerializeState(serializer); // Skip 
+                        dummyPattern.Serialize(serializer); // Skip 
                     }
                     else
                     {
                         var pattern = song.GetChannelByType(patChannel).CreatePattern(patName);
                         serializer.RemapId(patId, pattern.Id);
-                        pattern.SerializeState(serializer);
+                        pattern.Serialize(serializer);
                     }
                 }
                 else
                 {
                     serializer.RemapId(patId, -1);
-                    dummyPattern.SerializeState(serializer); // Skip 
+                    dummyPattern.Serialize(serializer); // Skip 
                 }
             }
 
@@ -147,7 +147,7 @@ namespace FamiStudio
             }
 
             foreach (var arp in arpeggios)
-                arp.SerializeState(serializer);
+                arp.Serialize(serializer);
         }
 
         private static void SaveInstrumentList(ProjectSaveBuffer serializer, ICollection<Instrument> instruments)
@@ -166,7 +166,7 @@ namespace FamiStudio
             }
 
             foreach (var inst in instruments)
-                inst.SerializeState(serializer);
+                inst.Serialize(serializer);
         }
 
         private static void SaveSampleList(ProjectSaveBuffer serializer, HashSet<Instrument> instruments)
@@ -195,7 +195,7 @@ namespace FamiStudio
                 serializer.Serialize(ref sampleId);
                 serializer.Serialize(ref sampleName);
 
-                sample.SerializeState(serializer);
+                sample.Serialize(serializer);
             }
         }
 
@@ -220,7 +220,7 @@ namespace FamiStudio
                 if (existingSample != null)
                 {
                     serializer.RemapId(sampleId, existingSample.Id);
-                    dummySample.SerializeState(serializer); // Skip
+                    dummySample.Serialize(serializer); // Skip
                 }
                 else
                 {
@@ -230,12 +230,12 @@ namespace FamiStudio
                     {
                         var sample = serializer.Project.CreateDPCMSample(sampleName);
                         serializer.RemapId(sampleId, sample.Id);
-                        sample.SerializeState(serializer);
+                        sample.Serialize(serializer);
                     }
                     else
                     {
                         serializer.RemapId(sampleId, -1);
-                        dummySample.SerializeState(serializer); // Skip
+                        dummySample.Serialize(serializer); // Skip
                     }
                 }
             }
@@ -281,7 +281,7 @@ namespace FamiStudio
                     else
                         serializer.RemapId(instId, -1); // Incompatible expansion type, skip.
 
-                    dummyInstrument.SerializeState(serializer); // Skip
+                    dummyInstrument.Serialize(serializer); // Skip
                 }
                 else
                 {
@@ -291,12 +291,12 @@ namespace FamiStudio
                     {
                         var instrument = serializer.Project.CreateInstrument(instType, instName);
                         serializer.RemapId(instId, instrument.Id);
-                        instrument.SerializeState(serializer);
+                        instrument.Serialize(serializer);
                     }
                     else
                     {
                         serializer.RemapId(instId, -1);
-                        dummyInstrument.SerializeState(serializer); // Skip
+                        dummyInstrument.Serialize(serializer); // Skip
                     }
                 }
             }
@@ -335,7 +335,7 @@ namespace FamiStudio
                 if (existingArpeggio != null)
                 {
                     serializer.RemapId(arpId, existingArpeggio.Id);
-                    dummyArpeggio.SerializeState(serializer); // Skip
+                    dummyArpeggio.Serialize(serializer); // Skip
                 }
                 else
                 {
@@ -345,12 +345,12 @@ namespace FamiStudio
                     {
                         var instrument = serializer.Project.CreateArpeggio(arpName);
                         serializer.RemapId(arpId, instrument.Id);
-                        instrument.SerializeState(serializer);
+                        instrument.Serialize(serializer);
                     }
                     else
                     {
                         serializer.RemapId(arpId, -1);
-                        dummyArpeggio.SerializeState(serializer); // Skip
+                        dummyArpeggio.Serialize(serializer); // Skip
                     }
                 }
             }
@@ -392,9 +392,9 @@ namespace FamiStudio
             foreach (var note in notes)
             {
                 if (note == null)
-                    Note.EmptyNote.SerializeState(serializer);
+                    Note.EmptyNote.Serialize(serializer);
                 else
-                    note.SerializeState(serializer);
+                    note.Serialize(serializer);
             }
             
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
@@ -445,7 +445,7 @@ namespace FamiStudio
             for (int i = 0; i < numNotes; i++)
             {
                 var note = new Note();
-                note.SerializeState(serializer);
+                note.Serialize(serializer);
 
                 if (!note.IsEmpty)
                     notes[i] = note;

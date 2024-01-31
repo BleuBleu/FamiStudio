@@ -51,6 +51,7 @@ namespace FamiStudio
             PlayHalf,
             PlayQuarter,
             Pause,
+            Wait,
             NTSC,
             PAL,
             NTSCToPAL,
@@ -88,6 +89,7 @@ namespace FamiStudio
             "PlayHalf",
             "PlayQuarter",
             "Pause",
+            "Wait",
             "NTSC",
             "PAL",
             "NTSCToPAL",
@@ -341,6 +343,8 @@ namespace FamiStudio
         private LocalizedString HalfSpeedTooltip;
         private LocalizedString QuarterSpeedLabel;
         private LocalizedString QuarterSpeedTooltip;
+        private LocalizedString AccurateSeekLabel;
+        private LocalizedString AccurateSeekTooltip;
 
         #endregion
 
@@ -847,6 +851,7 @@ namespace FamiStudio
                 new ContextMenuOption(RegularSpeedLabel, RegularSpeedTooltip, () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore ),
                 new ContextMenuOption(HalfSpeedLabel,    HalfSpeedTooltip,    () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
                 new ContextMenuOption(QuarterSpeedLabel, QuarterSpeedTooltip, () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                new ContextMenuOption(AccurateSeekLabel, AccurateSeekTooltip, () => { App.AccurateSeek = !App.AccurateSeek; }, () => App.AccurateSeek ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked, ContextMenuSeparator.MobileBefore )
             });
         }
 
@@ -854,7 +859,15 @@ namespace FamiStudio
         {
             if (App.IsPlaying)
             {
-                return ButtonImageIndices.Pause;
+                if (App.IsSeeking)
+                {
+                    tint = Theme.Darken(tint, (int)(Math.Abs(Math.Sin(Platform.TimeSeconds() * 12.0)) * 64));
+                    return ButtonImageIndices.Wait;
+                }
+                else
+                {
+                    return ButtonImageIndices.Pause;
+                }
             }
             else
             {

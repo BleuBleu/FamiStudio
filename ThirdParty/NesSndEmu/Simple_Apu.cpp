@@ -355,6 +355,7 @@ void Simple_Apu::end_frame()
 void Simple_Apu::reset()
 {
 	apu.enable_nonlinear(1.0);
+	tnd_volume = 1.0;
 	seeking = false;
 	prev_nonlinear_tnd = 0;
 	tnd_accum[0] = 0;
@@ -435,6 +436,9 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 
 	if (count)
 	{
+		// Here, even when doing accurate-seek, we still need 
+		// do a bit of work since we need 'prev_nonlinear_tnd' 
+		// to have a valid value after seeking.
 		if (separate_tnd_mode)
 		{
 			Blip_Buffer::buf_t_* p[3];
@@ -501,48 +505,65 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			}
 		}
 
-		// Then mix both blip buffers.
-		Blip_Reader lin;
-		Blip_Reader nonlin;
-
-		int lin_bass = lin.begin(buf);
-		int nonlin_bass = nonlin.begin(tnd[0]);
-
-		if (expansions & expansion_mask_epsm)
+		// NULL buffer is used when seeking, it means we can discard the samples as fast as possible.
+		if (out != NULL)
 		{
-			for (int i = 0; i < count; i++)
+			// Then mix both blip buffers.
+			Blip_Reader lin;
+			Blip_Reader nonlin;
+
+			int lin_bass = lin.begin(buf);
+			int nonlin_bass = nonlin.begin(tnd[0]);
+
+			if (expansions & expansion_mask_epsm)
 			{
-				int s = lin.read() + nonlin.read();
-				lin.next(lin_bass);
-				nonlin.next(nonlin_bass);
-				*out++ = (blip_sample_t)clamp((int)(s + out_left[i]),  -32768, 32767);
-				*out++ = (blip_sample_t)clamp((int)(s + out_right[i]), -32768, 32767);
+				for (int i = 0; i < count; i++)
+				{
+					int s = lin.read() + nonlin.read();
+					lin.next(lin_bass);
+					nonlin.next(nonlin_bass);
+					*out++ = (blip_sample_t)clamp((int)(s + out_left[i]),  -32768, 32767);
+					*out++ = (blip_sample_t)clamp((int)(s + out_right[i]), -32768, 32767);
+				}
+			}
+			else
+			{
+				for (int n = count; n--; )
+				{
+					int s = lin.read() + nonlin.read();
+					lin.next(lin_bass);
+					nonlin.next(nonlin_bass);
+					*out++ = s;
+
+					if ((BOOST::int16_t)s != s)
+						out[-1] = 0x7FFF - (s >> 24);
+				}
+			}
+
+			lin.end(buf);
+			nonlin.end(tnd[0]);
+
+			buf.remove_samples(count);
+			tnd[0].remove_samples(count);
+
+			if (separate_tnd_mode)
+			{
+				tnd[1].remove_samples(count);
+				tnd[2].remove_samples(count);
 			}
 		}
 		else
 		{
-			for (int n = count; n--; )
+			sample_t dummy[1024];
+
+			buf.read_samples(dummy, count);
+			tnd[0].read_samples(dummy, count);
+
+			if (separate_tnd_mode)
 			{
-				int s = lin.read() + nonlin.read();
-				lin.next(lin_bass);
-				nonlin.next(nonlin_bass);
-				*out++ = s;
-
-				if ((BOOST::int16_t)s != s)
-					out[-1] = 0x7FFF - (s >> 24);
+				tnd[1].read_samples(dummy, count);
+				tnd[2].read_samples(dummy, count);
 			}
-		}
-
-		lin.end(buf);
-		nonlin.end(tnd[0]);
-
-		buf.remove_samples(count);
-		tnd[0].remove_samples(count);
-
-		if (separate_tnd_mode)
-		{
-			tnd[1].remove_samples(count);
-			tnd[2].remove_samples(count);
 		}
 	}
 

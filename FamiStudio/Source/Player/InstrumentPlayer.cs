@@ -16,8 +16,6 @@ namespace FamiStudio
         int activeChannel = -1;
         bool lastNoteWasRelease = false;
         DateTime lastReleaseTime = DateTime.Now;
-        int expansionMask = ExpansionType.NoneMask;
-        int numN163Channels = 0;
         int playingNote = Note.NoteInvalid;
         int[] envelopeFrames = new int[EnvelopeType.Count];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
@@ -59,16 +57,14 @@ namespace FamiStudio
             if (audioStream == null)
                 return;
 
-            expansionMask = project.ExpansionAudioMask;
-            numN163Channels = project.ExpansionNumN163Channels;
             palPlayback = pal;
-            channelStates = CreateChannelStates(this, project, apuIndex, numN163Channels, palPlayback);
-
+            channelStates = CreateChannelStates(this, project, apuIndex, project.ExpansionNumN163Channels, palPlayback);
             activeChannel = -1;
             lastNoteWasRelease = false;
             lastReleaseTime = DateTime.Now;
 
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, NesApu.TND_MODE_SINGLE, expansionMask, numN163Channels, dmcCallback);
+            InitAndResetApu(project);
+
             for (int i = 0; i < channelStates.Length; i++)
                 EnableChannelType(channelStates[i].InnerChannelType, false);
 

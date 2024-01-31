@@ -380,7 +380,7 @@ namespace FamiStudio
                     page.AddCheckBox(SeparateChannelFilesLabel.Colon, false, SeperateFilesTooltip); // 8
                     page.AddCheckBox(SeparateIntroFileLabel.Colon, false, SeperateIntroTooltip); // 9
                     page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 10
-                    page.AddGrid(ChannelsLabel, new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.4f), new ColumnDesc(PanColumn, 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(false, false, app.SelectedSong), 7, ChannelGridTooltip); // 11
+                    page.AddGrid(ChannelsLabel, new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc(ChannelColumn, 0.4f), new ColumnDesc(PanColumn, 0.6f, 0, 100, (o) => FormattableString.Invariant($"{o} %")) }, GetDefaultChannelsGridData(false, false, app.SelectedSong), 7, ChannelGridTooltip); // 11
                     page.SetPropertyEnabled( 3, false);
                     page.SetPropertyEnabled( 6, false);
                     page.SetPropertyVisible( 8, Platform.IsDesktop); // No separate files on mobile.
@@ -397,7 +397,7 @@ namespace FamiStudio
                         
                         gridColumns.Add(new ColumnDesc("", 0.0f, ColumnType.CheckBox));
                         gridColumns.Add(new ColumnDesc(ChannelColumn, 0.3f));
-                        gridColumns.Add(new ColumnDesc(PanColumn, Platform.IsDesktop ? 0.2f : 0.7f, ColumnType.Slider, "{0} %"));
+                        gridColumns.Add(new ColumnDesc(PanColumn, Platform.IsDesktop ? 0.2f : 0.7f, 0, 100, (o) => FormattableString.Invariant($"{o} %")));
 
                         if (Platform.IsDesktop)
                         {

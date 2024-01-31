@@ -203,40 +203,17 @@ namespace FamiStudio
         public static bool SquareSmoothVibrato = true;
         public static bool N163Mix = true;
         public static bool ClampPeriods = true;
+        public static bool AccurateSeek = false;
         public static bool NoDragSoungWhenPlaying = false;
         public static int MetronomeVolume = 50;
         public static int SeparateChannelsExportTndMode = NesApu.TND_MODE_SINGLE;
 
         // Mixer section
-        public static float GlobalVolume = -2.0f; // in dB
-        public static int BassCutoffHz = 16; // in Hz
-
-        public struct ExpansionMix
-        {
-            public ExpansionMix(float v, float t, int rf)
-            {
-                VolumeDb = v;
-                TrebleDb = t;
-                TrebleRolloffHz = rf;
-            }
-
-            public float VolumeDb;
-            public float TrebleDb;
-            public int TrebleRolloffHz;
-        }
-
-        public static ExpansionMix[] ExpansionMixerSettings        = new ExpansionMix[ExpansionType.Count];
-        public static ExpansionMix[] DefaultExpansionMixerSettings = new ExpansionMix[ExpansionType.Count]
-        {
-            new ExpansionMix(0.0f,  -5.0f, 12000), // None
-            new ExpansionMix(0.0f,  -5.0f, 12000), // Vrc6
-            new ExpansionMix(0.0f, -15.0f, 12000), // Vrc7
-            new ExpansionMix(0.0f, -40.0f,  2000), // Fds
-            new ExpansionMix(0.0f,  -5.0f, 12000), // Mmc5
-            new ExpansionMix(0.0f, -15.0f, 12000), // N163
-            new ExpansionMix(0.0f,  -5.0f, 12000), // S5B
-            new ExpansionMix(0.0f,  -5.0f, 12000)  // EPSM
-        };
+        public const float DefaultGlobalVolumeDb = -2.0f;
+        public const int DefaultBassCutoffHz = 16;
+        public static float GlobalVolumeDb = DefaultGlobalVolumeDb; // in dB
+        public static int BassCutoffHz = DefaultBassCutoffHz; // in Hz
+        public static ExpansionMixer[] ExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count];
 
         // MIDI section
         public static string MidiDevice = "";
@@ -477,6 +454,7 @@ namespace FamiStudio
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
             N163Mix = ini.GetBool("Audio", "N163Mix", true);
             ClampPeriods = ini.GetBool("Audio", "ClampPeriods", true);
+            AccurateSeek = ini.GetBool("Audio", "AccurateSeek", false);
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
             MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
             SeparateChannelsExportTndMode = ini.GetInt("Audio", "SeparateChannelsExportTndMode", NesApu.TND_MODE_SINGLE);
@@ -512,10 +490,10 @@ namespace FamiStudio
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
             // Mixer.
-            GlobalVolume = ini.GetFloat("Mixer", "GlobalVolume", -3.0f);
+            GlobalVolumeDb = ini.GetFloat("Mixer", "GlobalVolume", -3.0f);
             BassCutoffHz = ini.GetInt("Mixer", "BassCutoffHz", 16);
 
-            Array.Copy(DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
+            Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
 
             // At Version 9 (FamiStudio 4.2.0) we added more filtering options, so reset everything.
             if (Version >= 9)
@@ -524,9 +502,9 @@ namespace FamiStudio
                 {
                     var section = "Mixer" + ExpansionType.InternalNames[i];
 
-                    ExpansionMixerSettings[i].VolumeDb        = ini.GetFloat(section, "VolumeDb",        DefaultExpansionMixerSettings[i].VolumeDb);
-                    ExpansionMixerSettings[i].TrebleDb        = ini.GetFloat(section, "TrebleDb",        DefaultExpansionMixerSettings[i].TrebleDb);
-                    ExpansionMixerSettings[i].TrebleRolloffHz = ini.GetInt(section, "TrebleRolloffHz", DefaultExpansionMixerSettings[i].TrebleRolloffHz);
+                    ExpansionMixerSettings[i].VolumeDb        = ini.GetFloat(section, "VolumeDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].VolumeDb);
+                    ExpansionMixerSettings[i].TrebleDb        = ini.GetFloat(section, "TrebleDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
+                    ExpansionMixerSettings[i].TrebleRolloffHz = ini.GetInt(section, "TrebleRolloffHz", ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleRolloffHz);
                 }
             }
 
@@ -689,12 +667,13 @@ namespace FamiStudio
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
             ini.SetBool("Audio", "N163Mix", N163Mix);
             ini.SetBool("Audio", "ClampPeriods", ClampPeriods);
+            ini.SetBool("Audio", "AccurateSeek", AccurateSeek);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
             ini.SetInt("Audio", "MetronomeVolume", MetronomeVolume);
             ini.SetInt("Audio", "SeparateChannelsExportTndMode", SeparateChannelsExportTndMode);
 
             // Mixer
-            ini.SetFloat("Mixer", "GlobalVolume", GlobalVolume);
+            ini.SetFloat("Mixer", "GlobalVolume", GlobalVolumeDb);
 
             for (int i = 0; i < ExpansionType.Count; i++)
             {
