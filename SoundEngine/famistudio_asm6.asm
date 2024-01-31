@@ -864,9 +864,14 @@ famistudio_chn_vrc7_patch:        .dsb 6
 famistudio_chn_vrc7_trigger:      .dsb 6 ; bit 0 = new note triggered, bit 7 = note released.
 .endif
 .if FAMISTUDIO_EXP_EPSM
+.if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
 famistudio_chn_epsm_rhythm_volume: .dsb FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
 famistudio_chn_epsm_rhythm_stereo: .dsb FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
+.endif
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
 famistudio_chn_epsm_trigger:       .dsb FAMISTUDIO_EXP_EPSM_FM_CHN_CNT + FAMISTUDIO_EXP_EPSM_RHYTHM_CNT ; bit 0 = new note triggered, bit 7 = note released.
+.endif
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
 famistudio_chn_epsm_fm_stereo:     .dsb FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_fm_instrument: .dsb FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_alg:           .dsb FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
@@ -874,6 +879,7 @@ famistudio_chn_epsm_vol_op1:       .dsb FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_vol_op2:       .dsb FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_vol_op3:       .dsb FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 famistudio_chn_epsm_vol_op4:       .dsb FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+.endif
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_instrument:   .dsb FAMISTUDIO_EXP_N163_CHN_CNT
@@ -2353,6 +2359,7 @@ musical_note:
 .if FAMISTUDIO_EXP_EPSM
 FM_ENV_OFFSET = FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT*4
 RHY_ENV_OFFSET = FM_ENV_OFFSET + FAMISTUDIO_EXP_EPSM_FM_CHN_CNT*2
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
 famistudio_epsm_vol_table_op1:
     .byte FAMISTUDIO_EPSM_REG_TL, FAMISTUDIO_EPSM_REG_TL+1, FAMISTUDIO_EPSM_REG_TL+2,FAMISTUDIO_EPSM_REG_TL, FAMISTUDIO_EPSM_REG_TL+1, FAMISTUDIO_EPSM_REG_TL+2
 famistudio_epsm_vol_table_op2:
@@ -2369,10 +2376,14 @@ famistudio_epsm_fm_stereo_reg_table:
 famistudio_channel_epsm_chan_table:
     .byte $00, $01, $02
     .byte $00, $01, $02
+.endif
+.if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
 famistudio_epsm_rhythm_key_table:
     .byte $01,$02,$04,$08,$10,$20
 famistudio_epsm_rhythm_reg_table:
     .byte FAMISTUDIO_EPSM_REG_RHY_BD, FAMISTUDIO_EPSM_REG_RHY_SD, FAMISTUDIO_EPSM_REG_RHY_TC, FAMISTUDIO_EPSM_REG_RHY_HH, FAMISTUDIO_EPSM_REG_RHY_TOM, FAMISTUDIO_EPSM_REG_RHY_RIM
+.endif
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
 famistudio_epsm_reg_table_lo:
     .byte FAMISTUDIO_EPSM_REG_FN_LO, FAMISTUDIO_EPSM_REG_FN_LO2, FAMISTUDIO_EPSM_REG_FN_LO3, FAMISTUDIO_EPSM_REG_FN_LO, FAMISTUDIO_EPSM_REG_FN_LO2, FAMISTUDIO_EPSM_REG_FN_LO3
 famistudio_epsm_reg_table_hi:
@@ -2393,6 +2404,7 @@ famistudio_epsm_register_order: ;changed order for optimized patch loading
 ;    .byte $B0, $B4, $30, $40, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates
 famistudio_epsm_channel_key_table:
     .byte $f0, $f1, $f2, $f4, $f5, $f6
+.endif
 .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
 famistudio_epsm_sqr_reg_table_lo:
     .byte FAMISTUDIO_EPSM_REG_LO_A, FAMISTUDIO_EPSM_REG_LO_B, FAMISTUDIO_EPSM_REG_LO_C
@@ -2505,7 +2517,7 @@ famistudio_update_epsm_square_channel_sound:
     rts
 
 .endif
-
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_FM_CHANNEL_SOUND (internal)
 ;
@@ -2901,7 +2913,7 @@ update_fm_instrument:
         sta famistudio_chn_epsm_vol_op4,x
     @done:
     rts
-
+.endif
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_RHYTHM_CHANNEL_SOUND (internal)
 ;
@@ -3885,11 +3897,13 @@ famistudio_do_epsm_note_attack:
     chan_idx = famistudio_r0
     tmp_y    = famistudio_r1
 
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
     sty tmp_y
     ldy chan_idx
     cpy #FAMISTUDIO_EPSM_CHAN_FM_START
     bcs @fm_or_rhythm_channel
-
+.endif
+.if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
 @square_channel:
     ; Reset mixer/noise envelopes.
     ldx famistudio_channel_env,y
@@ -3901,14 +3915,15 @@ famistudio_do_epsm_note_attack:
     sta famistudio_env_ptr+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
     sta famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
     beq @done
-
+.endif
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
 @fm_or_rhythm_channel:
 
     ; Set trigger flag for FM/rhythm. For rhythm we'll actually write 
     ; out of bounds here, but the rhtyhm key array is immediately after.
     lda #1
     sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CHAN_FM_START,y
-
+.endif
 @done:
     ldx chan_idx
     ldy tmp_y
@@ -4411,6 +4426,7 @@ famistudio_set_epsm_instrument:
     update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
     reg_offset   = famistudio_r3
     
+.if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
     cpy #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
     bcc @process_regular_instrument
         ; We are processing a rhythm instrument, so skip all the fluff.
@@ -4447,11 +4463,14 @@ famistudio_set_epsm_instrument:
         sta famistudio_chn_epsm_rhythm_volume,x
         ldx chan_idx
         rts
+.endif
 @process_regular_instrument:
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
     cpy #FAMISTUDIO_EPSM_CHAN_FM_START
     bcc @skip_fm_instrument
         sta famistudio_chn_epsm_fm_instrument-FAMISTUDIO_EPSM_CHAN_FM_START,y
     @skip_fm_instrument:
+.endif
     jsr famistudio_get_exp_inst_ptr
     bit update_flags
     bpl @load_envelopes
@@ -4464,13 +4483,14 @@ famistudio_set_epsm_instrument:
         jsr famistudio_load_basic_envelopes
 
     @check_square_channel:
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
     ; channels 0-2 (square) do not need any further handling since they do not support patches
     lda chan_idx
     cmp #FAMISTUDIO_EPSM_CHAN_FM_START
     bcs @not_square_channel
         ;lda famistudio_channel_env,x
         ;tax
-
+.endif
         @noise:
         sec
 
@@ -5018,7 +5038,9 @@ famistudio_advance_channel:
 .if FAMISTUDIO_EXP_EPSM
 @opcode_epsm_release_note:
     lda #$80
+	.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
     sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CHAN_FM_START,x ; Set release flag for EPSM
+	.endif
 .endif
 
 @opcode_release_note:
@@ -5327,12 +5349,14 @@ famistudio_advance_channel:
     jmp @note_table_done
 .if FAMISTUDIO_EXP_EPSM
 @note_table_epsm:
+.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
     lda famistudio_epsm_note_table_lsb,y
     sbc famistudio_epsm_note_table_lsb,x
     sta slide_delta_lo
     lda famistudio_epsm_note_table_msb,y
     sbc famistudio_epsm_note_table_msb,x
     jmp @note_table_done
+.endif
 .endif
 @note_table_expansion:
     lda famistudio_exp_note_table_lsb,y
@@ -6106,6 +6130,7 @@ famistudio_vrc7_note_table_msb:
 .endif
 
 .if FAMISTUDIO_EXP_EPSM
+	.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
 famistudio_epsm_note_table_lsb:
     .byte $00
     .byte $9a, $a3, $ad, $b7, $c2, $cd, $da, $e7, $f4, $03, $12, $23 ; Octave 0
@@ -6126,6 +6151,7 @@ famistudio_epsm_note_table_msb:
     .byte $13, $14, $15, $16, $18, $19, $1b, $1c, $1e, $20, $22, $24 ; Octave 5
     .byte $26, $28, $2b, $2d, $30, $33, $36, $39, $3d, $40, $44, $48 ; Octave 6
     .byte $4d, $51, $56, $5b, $61, $66, $6d, $73, $7a, $81, $89, $91 ; Octave 7  
+	.endif
 famistudio_exp_note_table_lsb:
 famistudio_epsm_s_note_table_lsb:
     .byte $00
