@@ -35,7 +35,7 @@ namespace FamiStudio
             values = new sbyte[maxLength];
             canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
             canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform;
-            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.YMNoiseFreq || type == EnvelopeType.YMMixerSettings;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.S5BNoiseFreq || type == EnvelopeType.S5BMixer;
             chunkLength = type == EnvelopeType.N163Waveform ? 16 : 1;
 
             if (canResize)
@@ -95,7 +95,7 @@ namespace FamiStudio
             if (chunkLength > 1)
                 length = chunkLength;
             else if (canResize)
-                length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume ? 1 : 8;
+                length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume || type == EnvelopeType.S5BMixer ? 1 : 8;
 
             for (int i = 0; i < values.Length; i++)
                 values[i] = def;
@@ -542,7 +542,7 @@ namespace FamiStudio
             {
                 case EnvelopeType.Volume:
                     return (sbyte)15;
-                case EnvelopeType.YMMixerSettings:
+                case EnvelopeType.S5BMixer:
                     return (sbyte)2;
                 default:
                     return (sbyte)0;
@@ -576,7 +576,7 @@ namespace FamiStudio
                     return 1;
                 case EnvelopeType.FdsWaveform:
                     return 32;
-                case EnvelopeType.YMMixerSettings:
+                case EnvelopeType.S5BMixer:
                     return 2;
                 default:
                     return 0;
@@ -648,12 +648,12 @@ namespace FamiStudio
                 min = 1;
                 max = 15; // Arbitrary.
             }
-            else if (type == EnvelopeType.YMMixerSettings)
+            else if (type == EnvelopeType.S5BMixer)
             {
                 min = 0;
-                max = 2;
+                max = 3;
             }
-            else if (type == EnvelopeType.YMNoiseFreq)
+            else if (type == EnvelopeType.S5BNoiseFreq)
             {
                 min = 0;
                 max = 31;
@@ -667,16 +667,17 @@ namespace FamiStudio
 
         public static string GetDisplayValue(Instrument instrument, int type, int value)
         {
-            if (type == EnvelopeType.YMMixerSettings)
+            if (type == EnvelopeType.S5BMixer)
             {
                 switch (value)
                 {
                     case 0: return "N+T";
                     case 1: return "N";
                     case 2: return "T";
+                    case 3: return "-";
                 }
             }
-            else if (type == EnvelopeType.YMNoiseFreq)
+            else if (type == EnvelopeType.S5BNoiseFreq)
             {
                 if (value == 0)
                     return "NOP";
@@ -771,8 +772,8 @@ namespace FamiStudio
         public const int FdsModulation  = 5;
         public const int N163Waveform   = 6;
         public const int WaveformRepeat = 7;
-        public const int YMMixerSettings= 8;
-        public const int YMNoiseFreq    = 9;
+        public const int S5BMixer       = 8;
+        public const int S5BNoiseFreq   = 9;
         public const int Count          = 10;
 
         // Use these to display to user

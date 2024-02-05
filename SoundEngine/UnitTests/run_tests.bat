@@ -20,6 +20,8 @@ echo ===========================
 :: Generate random definition include file.
 type NUL > test_defs.inc
 
+@setlocal enabledelayedexpansion
+
 set /a rnd=%random% %%3
 if "%rnd%"=="0" (
 	echo FAMISTUDIO_CFG_NTSC_SUPPORT=1 >> test_defs.inc
@@ -36,7 +38,7 @@ set /a rnd=%random% %%2
 if "%rnd%"=="1" (
 	echo FAMISTUDIO_CFG_SFX_SUPPORT=1 >> test_defs.inc
 	set /a rnd=%random% %%4+1
-	echo FAMISTUDIO_CFG_SFX_STREAMS=%rnd% >> test_defs.inc
+	echo FAMISTUDIO_CFG_SFX_STREAMS=!rnd! >> test_defs.inc
 )
 
 set /a rnd=%random% %%2
@@ -48,15 +50,15 @@ set /a rnd=%random% %%3
 if "%rnd%"=="1" (
 	echo FAMISTUDIO_CFG_DPCM_SUPPORT=1 >> test_defs.inc
 	set /a rnd=%random% %%2
-	if "%rnd%"=="1" (
+	if "!rnd!"=="1" (
 		echo FAMISTUDIO_USE_DELTA_COUNTER=1 >> test_defs.inc
 	)
 	set /a rnd=%random% %%2
-	if "%rnd%"=="1" (
+	if "!rnd!"=="1" (
 		echo FAMISTUDIO_USE_DPCM_BANKSWITCHING=1 >> test_defs.inc
 	)
 	set /a rnd=%random% %%2
-	if "%rnd%"=="1" (
+	if "!rnd!"=="1" (
 		echo FAMISTUDIO_USE_DPCM_EXTENDED_RANGE=1 >> test_defs.inc
 	)
 )
@@ -78,9 +80,9 @@ if "%rnd%"=="0" (
 					echo FAMISTUDIO_EXP_FDS=1 >> test_defs.inc
 				) else (
 					if "%rnd%"=="5" (
-						echo FAMISTUDIO_EXP_N163=1 >> test_defs.inc
-						set /a rnd=%random% %%8+1
-						echo FAMISTUDIO_EXP_N163_CHN_CNT=%rnd% >> test_defs.inc
+							echo FAMISTUDIO_EXP_N163=1 >> test_defs.inc
+							set /a rnd=%random% %%8+1
+							echo FAMISTUDIO_EXP_N163_CHN_CNT=!rnd! >> test_defs.inc
 						) else (
 						if "%rnd%"=="6" (
 							echo FAMISTUDIO_EXP_EPSM=1 >> test_defs.inc
@@ -96,7 +98,7 @@ set /a rnd=%random% %%2
 if "%rnd%"=="1" (
 	echo FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 >> test_defs.inc
 	set /a rnd=%random% %%2
-	if "%rnd%"=="1" (
+	if "!rnd!"=="1" (
 		echo FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1 >> test_defs.inc
 	)
 )
@@ -105,7 +107,7 @@ set /a rnd=%random% %%2
 if "%rnd%"=="1" (
 	echo FAMISTUDIO_USE_VOLUME_TRACK=1 >> test_defs.inc
 	set /a rnd=%random% %%2
-	if "%rnd%"=="1" (
+	if "!rnd!"=="1" (
 		echo FAMISTUDIO_USE_VOLUME_SLIDES=1 >> test_defs.inc
 	)
 )
@@ -124,7 +126,7 @@ set /a rnd=%random% %%2
 if "%rnd%"=="1" (
 	echo FAMISTUDIO_USE_SLIDE_NOTES=1 >> test_defs.inc
 	set /a rnd=%random% %%2
-	if "%rnd%"=="1" (
+	if "!rnd!"=="1" (
 		echo FAMISTUDIO_USE_NOISE_SLIDE_NOTES=1 >> test_defs.inc
 	)
 )

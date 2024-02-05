@@ -45,7 +45,6 @@ x Sort button for songs doesnt do shit?
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - Dont publish for chromebooks
 / Finish phase reset
-	- Port to other assemblers.
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : Check FDS emulation code. There is a big comment explaining the situation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
@@ -55,16 +54,24 @@ x Sort button for songs doesnt do shit?
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - BUG : Non-looping songs dont export correctly.
 - BUG : When reach end of non-looping song, doesnt rewind to previous.
+- BUG : Mouse over project explorer envelope buttons is offset.
+	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
 x BUG : First samples of CV2 plays wrong??? Only if at first frame...
-- S5B Envelope, not from discussion with abstract64:
-	- On the instrument : envelope enable + shape + option to have auto-period (off/on, with option to have some kind of +/- offset/octave from the note pitch)
-	- As a effect : Effect to manually dial the period. Would probably override anything set on the insturment (?), override until turn off?
+- S5B Envelope
+	- Check volume, seems square is very low with low values, might be normal.
+	- Do EPSM version too => Wait on Perkka to free 2 bytes in instrument header.
+	- Test disable attack (C# + AMS), shouldnt reset envelope.
+	- Make sure manual period on an inactive channel behaves the same on ASM/C#
+	- Add to famistudio text.
+- Add a way to type in FX + param values, even if its janky...
+- Logarithmic FX values.
 / Hold SHIFT+click (also double-click) for multiple delete.	
 	- Make it work on mobile.
 x Zoom level changes when going env then come back to piano 
 / Mixer improvements
 	- Make it work on mobile.
 	- Should we store the "AllowMixerOverride" somewhere else? FamiStudio.cs?
+- Simple parameters for instruments (duty, volume)
 
 4.2.0 Testing/Packaging
 =======================
@@ -174,6 +181,8 @@ Discord
 
 Backlog: 
 =========
+- Export selection. 
+	https://discord.com/channels/@me/819772561940152321/1202138717054304306
 - Can we keep undo/redo buttons on screen to 1280px? Like hide metronome, etc.
 - A way to view the preview effect value (grey rectangle). Either draw it on the left edge, or in the piano roll tolltip.
 	https://discord.com/channels/@me/819772561940152321/1157075515199475732
@@ -188,7 +197,6 @@ Backlog:
 	=> Shelved, will need more work.
 - How to add to the "open with" list on Android.
 - Better autosave names?
-- Going in settings unutes all channels.
 - Delete instruments resets play head.
 - Export DMC samples on Mobile.
 - Option to set snapping auto depending on last resize.

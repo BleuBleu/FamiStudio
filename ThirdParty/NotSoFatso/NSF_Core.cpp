@@ -739,16 +739,34 @@ void CNSFCore::WriteMemory_FME07(WORD a,BYTE v)
 		case 0x05:	mWave_FME07[2].nFreqTimer.B.h = v & 0x0F;	break;
 		case 0x06:	mWave_FME07[0].bNoiseFrequency = v;	        break;
 		case 0x07:
-			mWave_FME07[0].bChannelEnabled = (v & 0x09) == 0x09 ? 0 : 1;
-			mWave_FME07[1].bChannelEnabled = (v & 0x12) == 0x12 ? 0 : 1;
-			mWave_FME07[2].bChannelEnabled = (v & 0x24) == 0x24 ? 0 : 1;
 			mWave_FME07[0].bChannelMixer   = (v & 0x09);
 			mWave_FME07[1].bChannelMixer   = (v & 0x12) >> 1;
 			mWave_FME07[2].bChannelMixer   = (v & 0x24) >> 2;
+			mWave_FME07[0].bChannelEnabled = (mWave_FME07[0].bChannelMixer != 0x9) || (mWave_FME07[0].bEnvelopeEnabled) ? 1 : 0;
+			mWave_FME07[1].bChannelEnabled = (mWave_FME07[1].bChannelMixer != 0x9) || (mWave_FME07[1].bEnvelopeEnabled) ? 1 : 0;
+			mWave_FME07[2].bChannelEnabled = (mWave_FME07[2].bChannelMixer != 0x9) || (mWave_FME07[2].bEnvelopeEnabled) ? 1 : 0;
 			break;
-		case 0x08:	mWave_FME07[0].nVolume = v & 0x0F; break;
-		case 0x09:	mWave_FME07[1].nVolume = v & 0x0F; break;
-		case 0x0A:	mWave_FME07[2].nVolume = v & 0x0F; break;
+		case 0x08:	
+			mWave_FME07[0].bEnvelopeEnabled = (v & 0x10) != 0;
+			mWave_FME07[0].bChannelEnabled = (mWave_FME07[0].bChannelMixer != 0x9) || (mWave_FME07[0].bEnvelopeEnabled) ? 1 : 0;
+			mWave_FME07[0].nVolume = v & 0x0F;
+			break;
+		case 0x09:	
+			mWave_FME07[1].bEnvelopeEnabled = (v & 0x10) != 0;
+			mWave_FME07[1].bChannelEnabled = (mWave_FME07[1].bChannelMixer != 0x9) || (mWave_FME07[1].bEnvelopeEnabled) ? 1 : 0;
+			mWave_FME07[1].nVolume = v & 0x0F;
+			break;
+		case 0x0A:	
+			mWave_FME07[2].bEnvelopeEnabled = (v & 0x10) != 0;
+			mWave_FME07[2].bChannelEnabled = (mWave_FME07[2].bChannelMixer != 0x9) || (mWave_FME07[2].bEnvelopeEnabled) ? 1 : 0;
+			mWave_FME07[2].nVolume = v & 0x0F;
+			break;
+		case 0x0B: mWave_FME07[0].nEnvFreq.B.l = v; break;
+		case 0x0C: mWave_FME07[0].nEnvFreq.B.h = v; break;
+		case 0x0D:
+			mWave_FME07[0].nEnvelopeShape = v & 0x0F;
+			mWave_FME07[0].bEnvelopeTriggered = 1;
+			break;
 		}
 	}
 }
@@ -2707,6 +2725,7 @@ void CNSFCore::ResetFrameState()
 {
 	for (int i = 0; i < 6; i++)
 		VRC7Triggered[i] = 0;
+	mWave_FME07[0].bEnvelopeTriggered = 0;
 }
 
 int CNSFCore::GetState(int channel, int state, int sub)
@@ -2889,8 +2908,12 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			{
 				case STATE_PERIOD:				return mWave_FME07[idx].nFreqTimer.W;
 				case STATE_VOLUME:				return mWave_FME07[idx].bChannelEnabled ? mWave_FME07[idx].nVolume : 0;
-				case STATE_YMMIXER:				return mWave_FME07[idx].bChannelMixer;
-				case STATE_YMNOISEFREQUENCY:	return mWave_FME07[0].bNoiseFrequency;
+				case STATE_S5BMIXER:			return mWave_FME07[idx].bChannelMixer;
+				case STATE_S5BNOISEFREQUENCY:	return mWave_FME07[0].bNoiseFrequency;
+				case STATE_S5BENVFREQUENCY:		return mWave_FME07[0].nEnvFreq.W;
+				case STATE_S5BENVSHAPE:			return mWave_FME07[0].nEnvelopeShape;
+				case STATE_S5BENVTRIGGER:		return mWave_FME07[0].bEnvelopeTriggered;
+				case STATE_S5BENVENABLED:		return mWave_FME07[idx].bEnvelopeEnabled;
 			}
 			break;
 		}
@@ -2923,8 +2946,12 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			{
 			case STATE_PERIOD:				return mWave_EPSM[idx].nFreqTimer.W;
 			case STATE_VOLUME:				return mWave_EPSM[idx].bChannelEnabled ? mWave_EPSM[idx].nVolume : 0;
-			case STATE_YMMIXER:				return mWave_EPSM[idx].bChannelMixer;
-			case STATE_YMNOISEFREQUENCY:	return mWave_EPSM[0].bNoiseFrequency;
+			case STATE_S5BMIXER:			return mWave_EPSM[idx].bChannelMixer;
+			case STATE_S5BNOISEFREQUENCY:	return mWave_EPSM[0].bNoiseFrequency;
+			case STATE_S5BENVFREQUENCY:		return 0;
+			case STATE_S5BENVSHAPE:			return 0;
+			case STATE_S5BENVTRIGGER:		return 0;
+			case STATE_S5BENVENABLED:		return 0;
 			}
 			break;
 		}

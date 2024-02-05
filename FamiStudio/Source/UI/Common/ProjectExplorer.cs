@@ -250,6 +250,7 @@ namespace FamiStudio
             ParamSlider,
             ParamList,
             ParamCustomDraw,
+            ParamEmpty,
 
             // Register viewer buttons.
             RegisterExpansionHeader,
@@ -270,8 +271,8 @@ namespace FamiStudio
             FdsWaveformEnvelope     = EnvelopeType.FdsWaveform,
             FdsModulationEnvelope   = EnvelopeType.FdsModulation,
             N163WaveformEnvelope    = EnvelopeType.N163Waveform,
-            YMMixerSettingsEnvelope = EnvelopeType.YMMixerSettings,
-            YMNoiseFreqEnvelope     = EnvelopeType.YMNoiseFreq,
+            YMMixerSettingsEnvelope = EnvelopeType.S5BMixer,
+            YMNoiseFreqEnvelope     = EnvelopeType.S5BNoiseFreq,
             EnvelopeMax             = EnvelopeType.Count,
 
             // Other buttons
@@ -300,8 +301,8 @@ namespace FamiStudio
             EnvelopeType.FdsModulation,
             EnvelopeType.FdsWaveform,
             EnvelopeType.N163Waveform,
-            EnvelopeType.YMMixerSettings,
-            EnvelopeType.YMNoiseFreq
+            EnvelopeType.S5BMixer,
+            EnvelopeType.S5BNoiseFreq
         };
 
         enum CaptureOperation
@@ -567,7 +568,8 @@ namespace FamiStudio
                         type == ButtonType.ParamSlider ||
                         type == ButtonType.ParamCustomDraw ||
                         type == ButtonType.ParamList ||
-                        type == ButtonType.ParamTabs;
+                        type == ButtonType.ParamTabs ||
+                        type == ButtonType.ParamEmpty;
                 }
             }
 
@@ -861,6 +863,8 @@ namespace FamiStudio
 
             if (param.CustomDraw != null)
                 widgetType = ButtonType.ParamCustomDraw;
+            else if (param.IsEmpty)
+                widgetType = ButtonType.ParamEmpty;
             else if (param.IsList)
                 widgetType = ButtonType.ParamList;
             else if (param.GetMaxValue() == 1)
@@ -1462,68 +1466,83 @@ namespace FamiStudio
 
                     if (button.param != null)
                     {
-                        var paramVal = button.param.GetValue();
-                        var paramStr = button.param.GetValueString();
+                        if (button.type != ButtonType.ParamEmpty)
+                        { 
+                            var paramVal = button.param.GetValue();
+                            var paramStr = button.param.GetValueString();
 
-                        if (button.type == ButtonType.ParamSlider)
-                        {
-                            var paramMinValue = button.param.GetMinValue();
-                            var paramMaxValue = button.param.GetMaxValue();
-                            var actualSliderSizeX = sliderSizeX - paramButtonSizeX * 2;
-                            var valSizeX = paramMaxValue == paramMinValue ? 0 : (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * actualSliderSizeX);
-                            var opacityL = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
-                            var opacityR = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
-
-                            c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
-                            c.DrawTextureAtlas(bmpButtonMinus, 0, 0, opacityL, bitmapScale, Color.Black);
-                            c.PushTranslation(paramButtonSizeX, 0);
-                            c.FillRectangle(1, 1, valSizeX, sliderSizeY, sliderFillColor);
-                            c.DrawRectangle(0, 0, actualSliderSizeX, sliderSizeY, enabled ? Theme.BlackColor : disabledColor, 1);
-                            c.DrawText(paramStr, Fonts.FontMedium, 0, -sliderPosY, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
-                            c.PopTransform();
-                            c.DrawTextureAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, opacityR, bitmapScale, Color.Black);
-                            c.PopTransform();
-                        }
-                        else if (button.type == ButtonType.ParamCheckbox)
-                        {
-                            var opacity = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
-
-                            c.PushTranslation(contentSizeX - checkBoxPosX, checkBoxPosY);
-                            c.DrawRectangle(0, 0, bmpCheckBoxYes.ElementSize.Width * bitmapScale - 1, bmpCheckBoxYes.ElementSize.Height * bitmapScale - 1, Color.FromArgb(opacity, Color.Black));
-                            c.DrawTextureAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, 0, 0, opacity, bitmapScale, Color.Black);
-                            c.PopTransform();
-                        }
-                        else if (button.type == ButtonType.ParamList)
-                        {
-                            var paramPrev = button.param.SnapAndClampValue(paramVal - 1);
-                            var paramNext = button.param.SnapAndClampValue(paramVal + 1);
-                            var opacityL = enabled && paramVal != paramPrev ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
-                            var opacityR = enabled && paramVal != paramNext ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
-
-                            c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
-                            c.DrawTextureAtlas(bmpButtonLeft, 0, 0, opacityL, bitmapScale, Color.Black);
-                            c.DrawTextureAtlas(bmpButtonRight, sliderSizeX - paramButtonSizeX, 0, opacityR, bitmapScale, Color.Black);
-                            c.DrawText(paramStr, Fonts.FontMedium, 0, -sliderPosY, Theme.BlackColor, TextFlags.MiddleCenter, sliderSizeX, button.height);
-                            c.PopTransform();
-                        }
-                        else if (button.type == ButtonType.ParamTabs)
-                        {
-                            var tabWidth = Utils.DivideAndRoundUp(contentSizeX - indentContent - paramRightPadX, button.tabNames.Length);
-
-                            for (var j = 0; j < button.tabNames.Length; j++)
+                            if (button.type == ButtonType.ParamSlider)
                             {
-                                var tabName         = button.tabNames[j];
-                                var tabHoverOpacity = hovered && hoverSubButtonTypeOrParamIndex == j ? 0.6f : 1.0f;
-                                var tabSelect       = tabName == selectedInstrumentTab;
-                                var tabLineBrush    = Color.FromArgb((tabSelect ? 1.0f : 0.5f) * tabHoverOpacity, Color.Black);
-                                var tabFont         = tabSelect ? Fonts.FontMediumBold : Fonts.FontMedium;
-                                var tabLine         = tabSelect ? 3 : 1;
+                                var paramMinValue = button.param.GetMinValue();
+                                var paramMaxValue = button.param.GetMaxValue();
+                                var actualSliderSizeX = sliderSizeX - paramButtonSizeX * 2;
+                                var valSizeX = paramMaxValue == paramMinValue ? 0 : (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * actualSliderSizeX);
+                                var opacityL = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
+                                var opacityR = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
 
-                                c.PushTranslation(indentContent + tabWidth * j, 0);
-                                c.DrawText(tabName, tabFont, 0, 0, tabLineBrush, TextFlags.MiddleCenter, tabWidth, button.height);
-                                c.DrawLine(0, button.height - tabLine / 2, tabWidth, button.height - tabLine / 2, tabLineBrush, ScaleLineForWindow(tabLine));
+                                c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
+                                c.DrawTextureAtlas(bmpButtonMinus, 0, 0, opacityL, bitmapScale, Color.Black);
+                                c.PushTranslation(paramButtonSizeX, 0);
+                                c.FillRectangle(1, 1, valSizeX, sliderSizeY, sliderFillColor);
+                                c.DrawRectangle(0, 0, actualSliderSizeX, sliderSizeY, enabled ? Theme.BlackColor : disabledColor, 1);
+                                c.DrawText(paramStr, Fonts.FontMedium, 0, -sliderPosY, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
+                                c.PopTransform();
+                                c.DrawTextureAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, opacityR, bitmapScale, Color.Black);
+                                c.PopTransform();
+                            }
+                            else if (button.type == ButtonType.ParamCheckbox)
+                            {
+                                var opacity = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
+
+                                c.PushTranslation(contentSizeX - checkBoxPosX, checkBoxPosY);
+                                c.DrawRectangle(0, 0, bmpCheckBoxYes.ElementSize.Width * bitmapScale - 1, bmpCheckBoxYes.ElementSize.Height * bitmapScale - 1, Color.FromArgb(opacity, Color.Black));
+                                c.DrawTextureAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, 0, 0, opacity, bitmapScale, Color.Black);
+                                c.PopTransform();
+                            }
+                            else if (button.type == ButtonType.ParamList)
+                            {
+                                var paramPrev = button.param.SnapAndClampValue(paramVal - 1);
+                                var paramNext = button.param.SnapAndClampValue(paramVal + 1);
+                                var opacityL = enabled && paramVal != paramPrev ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
+                                var opacityR = enabled && paramVal != paramNext ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
+
+                                c.PushTranslation(contentSizeX - sliderPosX, 0);
+                                c.PushTranslation(0, sliderPosY);
+                                c.DrawTextureAtlas(bmpButtonLeft, 0, 0, opacityL, bitmapScale, Color.Black);
+                                c.DrawTextureAtlas(bmpButtonRight, sliderSizeX - paramButtonSizeX, 0, opacityR, bitmapScale, Color.Black);
                                 c.PopTransform();
 
+                                if (paramStr.StartsWith("img:"))
+                                {
+                                    var img = c.Graphics.GetTextureAtlasRef(paramStr.Substring(4));
+                                    c.DrawTextureAtlasCentered(img, 0, 0, sliderSizeX, button.height);
+                                }
+                                else
+                                {
+                                    c.DrawText(paramStr, Fonts.FontMedium, 0, 0, Theme.BlackColor, TextFlags.MiddleCenter, sliderSizeX, button.height);
+                                }
+
+                                c.PopTransform();
+                            }
+                            else if (button.type == ButtonType.ParamTabs)
+                            {
+                                var tabWidth = Utils.DivideAndRoundUp(contentSizeX - indentContent - paramRightPadX, button.tabNames.Length);
+
+                                for (var j = 0; j < button.tabNames.Length; j++)
+                                {
+                                    var tabName         = button.tabNames[j];
+                                    var tabHoverOpacity = hovered && hoverSubButtonTypeOrParamIndex == j ? 0.6f : 1.0f;
+                                    var tabSelect       = tabName == selectedInstrumentTab;
+                                    var tabLineBrush    = Color.FromArgb((tabSelect ? 1.0f : 0.5f) * tabHoverOpacity, Color.Black);
+                                    var tabFont         = tabSelect ? Fonts.FontMediumBold : Fonts.FontMedium;
+                                    var tabLine         = tabSelect ? 3 : 1;
+
+                                    c.PushTranslation(indentContent + tabWidth * j, 0);
+                                    c.DrawText(tabName, tabFont, 0, 0, tabLineBrush, TextFlags.MiddleCenter, tabWidth, button.height);
+                                    c.DrawLine(0, button.height - tabLine / 2, tabWidth, button.height - tabLine / 2, tabLineBrush, ScaleLineForWindow(tabLine));
+                                    c.PopTransform();
+
+                                }
                             }
                         }
                     }

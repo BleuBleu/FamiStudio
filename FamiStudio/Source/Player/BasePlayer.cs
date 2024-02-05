@@ -18,8 +18,8 @@ namespace FamiStudio
     public interface IPlayerInterface
     {
         void NotifyInstrumentLoaded(Instrument instrument, long channelTypeMask);
-        void NotifyYMMixerSettingsChanged(int ymMixerSettings, long channelTypeMask);
         void NotifyRegisterWrite(int apuIndex, int reg, int data, int metadata = 0);
+        ChannelState GetChannelByType(int type); // Use sparingly, kind of hacky.
     }
 
     public class BasePlayer : IPlayerInterface
@@ -663,19 +663,13 @@ namespace FamiStudio
             }
         }
 
-        public void NotifyYMMixerSettingsChanged(int ymMixerSettings, long channelTypeMask)
-        {
-            foreach (var channelState in channelStates)
-            {
-                if (((1L << channelState.InnerChannelType) & channelTypeMask) != 0)
-                {
-                    channelState.YMMixerSettingsChangedNotify(ymMixerSettings);
-                }
-            }
-        }
-
         public virtual void NotifyRegisterWrite(int apuIndex, int reg, int data, int metadata = 0)
         {
+        }
+
+        public virtual ChannelState GetChannelByType(int type)
+        {
+            return Array.Find(channelStates, c => c.InnerChannelType == type);
         }
 
         protected void ReadBackRegisterValues()

@@ -2991,7 +2991,7 @@ namespace FamiStudio
             var resampled = editMode == EditionMode.Envelope && 
                            (editInstrument.IsN163 && editEnvelope == EnvelopeType.N163Waveform && editInstrument.N163ResampleWaveData != null && editInstrument.N163WavePreset == WavePresetType.Resample ||
                             editInstrument.IsFds  && editEnvelope == EnvelopeType.FdsWaveform  && editInstrument.FdsResampleWaveData  != null && editInstrument.FdsWavePreset  == WavePresetType.Resample);
-            var spacing = editEnvelope == EnvelopeType.DutyCycle ? 4 : (editEnvelope == EnvelopeType.YMMixerSettings ? 3 : (editEnvelope == EnvelopeType.Arpeggio ? 12 : 16));
+            var spacing = editEnvelope == EnvelopeType.DutyCycle || editEnvelope == EnvelopeType.S5BMixer ? 4 : (editEnvelope == EnvelopeType.Arpeggio ? 12 : 16);
             var color = editMode == EditionMode.Envelope ? editInstrument.Color : editArpeggio.Color;
             var brush = Color.FromArgb(resampled ? 100 : 255, color);
 

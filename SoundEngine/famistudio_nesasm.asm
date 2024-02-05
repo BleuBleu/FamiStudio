@@ -895,6 +895,12 @@ famistudio_chn_n163_instrument:   .rs FAMISTUDIO_EXP_N163_CHN_CNT
 famistudio_chn_n163_wave_index:   .rs FAMISTUDIO_EXP_N163_CHN_CNT
 famistudio_chn_n163_wave_len:     .rs FAMISTUDIO_EXP_N163_CHN_CNT
     .endif
+    .if FAMISTUDIO_EXP_S5B
+famistudio_s5b_env_period_lo:     .rs 1
+famistudio_s5b_env_period_hi:     .rs 1
+famistudio_s5b_chn_env_shape:     .rs 3 ; bit 7 = note attack.
+famistudio_s5b_chn_env_octave:    .rs 3
+    .endif
     .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
 famistudio_duty_cycle:            .rs FAMISTUDIO_NUM_DUTY_CYCLES
     .endif
@@ -990,7 +996,7 @@ famistudio_r3:   .rs 1
 
 famistudio_ptr0: .rs 2
 famistudio_ptr1: .rs 2
-    .if (FAMISTUDIO_EXP_EPSM != 0) | (FAMISTUDIO_EXP_FDS != 0)
+    .if (FAMISTUDIO_EXP_EPSM != 0) | (FAMISTUDIO_EXP_FDS != 0) | (FAMISTUDIO_EXP_S5B != 0)
 famistudio_ptr2: .rs 2
     .endif
 
@@ -1660,6 +1666,18 @@ famistudio_music_play:
         sta famistudio_chn_n163_wave_len, x
         dex
         bpl .clear_n163_loop 
+    .endif
+
+    .if FAMISTUDIO_EXP_S5B
+    lda #0
+    sta famistudio_s5b_env_period_lo
+    sta famistudio_s5b_env_period_hi
+    sta famistudio_s5b_chn_env_shape+0
+    sta famistudio_s5b_chn_env_shape+1
+    sta famistudio_s5b_chn_env_shape+2
+    sta famistudio_s5b_chn_env_octave+0
+    sta famistudio_s5b_chn_env_octave+1
+    sta famistudio_s5b_chn_env_octave+2
     .endif
 
 .skip:
@@ -2403,11 +2421,8 @@ famistudio_epsm_fm_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 6
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 8
     .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 10
-famistudio_epsm_register_order: ;changed order for optimized patch loading
-;    .byte $40, $30, $B4, $B0, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
+famistudio_epsm_register_order:
     .byte $50, $30, $B4, $B0, $60, $70, $80, $90, $38, $58, $68, $78, $88, $98, $34, $54, $64, $74, $84, $94, $3c, $5c, $6c, $7c, $8c, $9c, $40, $48, $44, $4c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
-;famistudio_epsm_register_order:
-;    .byte $B0, $B4, $30, $40, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates
 famistudio_epsm_channel_key_table:
     .byte $f0, $f1, $f2, $f4, $f5, $f6
     .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
@@ -3171,37 +3186,41 @@ famistudio_s5b_env_table:
 ;======================================================================================================================
 
 famistudio_update_s5b_channel_sound:
-    
-.pitch = famistudio_ptr1
 
+.pitch   = famistudio_ptr1
+.env_bit = famistudio_ptr1_lo
+
+; These are shared by all 3 channels.
+.env_period = famistudio_ptr0
+.attack     = famistudio_ptr2
+.env_shape  = famistudio_r1
+.env_octave = famistudio_r2
+.noise_freq = famistudio_r3
+
+    ; First channel will clear these, last channel will write the registers.
+    cpy #0
+    bne .not_first_channel
+    sty <.env_shape
+    sty <.noise_freq
+    sty <.attack
+    lda #$80 ; This mean 'manual pitch'
+    sty <.env_octave
+
+.not_first_channel:
+    ldx #0 ; This will fetch volume 0.
+    stx <.env_bit
     lda famistudio_chn_note+FAMISTUDIO_S5B_CH0_IDX,y
     bne .nocut
-    ldx #0 ; This will fetch volume 0.
-    beq .update_volume_jmp
-    jmp .nocut
-.update_volume_jmp:
     jmp .update_volume
-.nocut:
-    
-    lda #$07
-    sta FAMISTUDIO_S5B_ADDR
-    lda famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    asl a
-    ora famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    asl a
-    ora famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    sta FAMISTUDIO_S5B_DATA
 
+.nocut:
+    ; Store noise if > 0
     ldx famistudio_s5b_env_table,y
     lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
     beq .nonoise
-    lda #$06
-    sta FAMISTUDIO_S5B_ADDR
-    ldx famistudio_s5b_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-    sta FAMISTUDIO_S5B_DATA
-.nonoise:
+    sta <.noise_freq
 
+.nonoise:
     lda famistudio_chn_note+FAMISTUDIO_S5B_CH0_IDX,y
     ; Read note, apply arpeggio 
     clc
@@ -3212,15 +3231,59 @@ famistudio_update_s5b_channel_sound:
     ; Apply pitch envelope, fine pitch & slides
     famistudio_get_note_pitch_macro FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX, 0, famistudio_note_table_lsb, famistudio_note_table_msb
 
-    ; Write pitch
+    ; Write pitch + 1 (pitches on S5B are off by one compared to regular note table)
     lda famistudio_s5b_reg_table_lo,y
     sta FAMISTUDIO_S5B_ADDR
     lda <.pitch+0
+    clc
+    adc #1
     sta FAMISTUDIO_S5B_DATA
+    sta <.pitch+0
     lda famistudio_s5b_reg_table_hi,y
     sta FAMISTUDIO_S5B_ADDR
     lda <.pitch+1
+    adc #0
     sta FAMISTUDIO_S5B_DATA
+    sta <.pitch+1
+
+    ; Store env shape + period if active.
+    lda famistudio_s5b_chn_env_shape,y
+    and #$7f
+    beq .noenv
+    sta <.env_shape
+
+    ; If bit 7 of any channel is on, well reset the envelope.
+    lda famistudio_s5b_chn_env_shape,y
+    ora <.attack 
+    sta <.attack
+    lda famistudio_s5b_chn_env_shape,y
+    and #$7f
+    sta famistudio_s5b_chn_env_shape,y
+
+    ; Store auto-period settings
+    lda famistudio_s5b_chn_env_octave,y
+    cmp #$80 ; This mean 'manual pitch'
+    beq .manual_period
+
+    .auto_period:
+        sta <.env_octave
+        lda <.pitch+0
+        sta <.env_period+0
+        lda <.pitch+1
+        sta <.env_period+1
+        jmp .set_envelope_volume_flag
+
+    .manual_period:
+        lda famistudio_s5b_env_period_lo
+        sta <.env_period+0
+        lda famistudio_s5b_env_period_hi
+        sta <.env_period+1
+
+.set_envelope_volume_flag:
+    lda #$10
+
+.noenv:
+    sta <.env_bit
 
     ; Read/multiply volume
     ldx famistudio_s5b_env_table,y
@@ -3242,10 +3305,93 @@ famistudio_update_s5b_channel_sound:
     sta FAMISTUDIO_S5B_ADDR
     .if FAMISTUDIO_USE_VOLUME_TRACK    
         lda famistudio_volume_table,x 
-        sta FAMISTUDIO_S5B_DATA
+        ora <.env_bit
     .else
-        stx FAMISTUDIO_S5B_DATA
+        txa
+        ora <.env_bit
     .endif
+    sta FAMISTUDIO_S5B_DATA
+
+.write_shared_registers:
+    ; Channel 2 writes all 5 shared registers.
+    cpy #2
+    bne .done
+    lda <.env_shape
+    beq .write_shared_noise
+    ldx <.env_octave
+    cpx #$80
+    beq .write_shared_env_register
+
+.compute_auto_period:
+    cpx #0
+    beq .write_shared_env_register
+    bpl .positive_octave_loop
+    
+    .negative_octave_loop:
+            asl <.env_period+0
+            rol <.env_period+1
+            inx
+            bne .negative_octave_loop
+        beq .write_shared_env_register
+        
+    .positive_octave_loop:
+        cpx #1
+        bne .do_shift
+        .rounding:
+            lda <.env_period+0
+            and #1
+            beq .do_shift
+            lda <.env_period+0
+            clc
+            adc #1
+            sta <.env_period+0
+            bcc .do_shift
+            inc <.env_period+1
+        .do_shift:
+            lsr <.env_period+1
+            ror <.env_period+0
+            dex
+            bne .positive_octave_loop
+
+.write_shared_env_register:    
+
+    ; Envelope period.
+    lda #FAMISTUDIO_S5B_REG_ENV_LO
+    sta FAMISTUDIO_S5B_ADDR
+    lda <.env_period+0
+    sta FAMISTUDIO_S5B_DATA
+    lda #FAMISTUDIO_S5B_REG_ENV_HI
+    sta FAMISTUDIO_S5B_ADDR
+    lda <.env_period+1
+    sta FAMISTUDIO_S5B_DATA
+
+    ; Reset envelope if there was an attack.
+    lda <.attack
+    bpl .write_shared_noise
+        lda #FAMISTUDIO_S5B_REG_SHAPE
+        sta FAMISTUDIO_S5B_ADDR
+        lda <.env_shape
+        sta FAMISTUDIO_S5B_DATA
+
+.write_shared_noise:
+
+    ; Tone/noise enabled.
+    lda #FAMISTUDIO_S5B_REG_TONE
+    sta FAMISTUDIO_S5B_ADDR
+    lda famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    asl a
+    ora famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    asl a
+    ora famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    sta FAMISTUDIO_S5B_DATA
+    
+    ; Noise freq
+    lda #FAMISTUDIO_S5B_REG_NOISE
+    sta FAMISTUDIO_S5B_ADDR
+    lda <.noise_freq
+    sta FAMISTUDIO_S5B_DATA
+
+.done:
     rts
 
     .endif
@@ -4068,6 +4214,11 @@ famistudio_do_s5b_note_attack:
     sta famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
     ldx <.chan_idx
     ldy <.tmp_y
+
+    ; Set hi-bit of envelope shape to remember to reset it.
+    lda #$80
+    ora famistudio_s5b_chn_env_shape-FAMISTUDIO_S5B_CH0_IDX,x
+    sta famistudio_s5b_chn_env_shape-FAMISTUDIO_S5B_CH0_IDX,x
     rts
 
     .endif
@@ -4471,7 +4622,8 @@ famistudio_set_vrc7_instrument:
 
 famistudio_set_s5b_instrument:
 
-.ptr     = famistudio_ptr1
+.chan_idx = famistudio_r0
+.ptr      = famistudio_ptr1
 
     jsr famistudio_get_exp_inst_ptr
     jsr famistudio_load_basic_envelopes
@@ -4486,13 +4638,22 @@ famistudio_set_s5b_instrument:
         iny
         lda [.ptr],y
         sta famistudio_env_addr_hi,x
-        bcc .done
+        bcc .load_env_params
         clc
         inx
         iny
         bcc .loop
 
-    .done:
+    .load_env_params:
+
+    ; Envelope shape + auto-pitch octave
+    ldx <.chan_idx
+    iny
+    lda [.ptr],y
+    sta famistudio_s5b_chn_env_shape-FAMISTUDIO_S5B_CH0_IDX,x
+    iny
+    lda [.ptr],y
+    sta famistudio_s5b_chn_env_octave-FAMISTUDIO_S5B_CH0_IDX,x
 
     rts
     
@@ -5136,6 +5297,17 @@ famistudio_advance_channel:
     jmp .done
     .endif
 
+    .if FAMISTUDIO_EXP_S5B
+.opcode_s5b_manual_env_period:
+    lda [.channel_data_ptr],y
+    iny
+    sta famistudio_s5b_env_period_lo+0
+    lda [.channel_data_ptr],y
+    iny
+    sta famistudio_s5b_env_period_lo+1
+    jmp .read_byte
+    .endif
+
     .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
 .opcode_famitracker_speed:
     lda [.channel_data_ptr],y
@@ -5621,6 +5793,11 @@ famistudio_advance_channel:
     .else
         .byte LOW(.opcode_invalid)                      ; $5c
     .endif
+    .if FAMISTUDIO_EXP_S5B
+        .byte LOW(.opcode_s5b_manual_env_period)        ; $5d
+    .else
+        .byte LOW(.opcode_invalid)                      ; $5d
+    .endif
     .endif
 
 .famistudio_opcode_jmp_hi:
@@ -5739,6 +5916,11 @@ famistudio_advance_channel:
         .byte HIGH(.opcode_epsm_release_note)            ; $5c
     .else
         .byte HIGH(.opcode_invalid)                      ; $5c
+    .endif
+    .if FAMISTUDIO_EXP_S5B
+        .byte HIGH(.opcode_s5b_manual_env_period)        ; $5d
+    .else
+        .byte HIGH(.opcode_invalid)                      ; $5d
     .endif
     .endif
 

@@ -1,13 +1,10 @@
-﻿
-using System;
+﻿using System;
 using System.Diagnostics;
 
 namespace FamiStudio
 {
     public class ChannelStateEPSMBase : ChannelState
     {
-        //protected bool longSkip = true;
-
         public ChannelStateEPSMBase(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
         }
