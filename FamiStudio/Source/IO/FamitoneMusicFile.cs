@@ -70,6 +70,7 @@ namespace FamiStudio
         private const byte OpcodeN163ReleaseNote       = 0x5a; // N163 only
         private const byte OpcodeN163PhaseReset        = 0x5b; // N163 only
         private const byte OpcodeEpsmReleaseNote       = 0x5c; // EPSM only
+        private const byte OpcodeS5BManualEnvPeriod    = 0x5d; // S5B only
 
         private const byte OpcodeSetReferenceFT2       = 0xff; // FT2
         private const byte OpcodeLoopFT2               = 0xfd; // FT2
@@ -416,7 +417,7 @@ namespace FamiStudio
                         case EnvelopeType.FdsWaveform:
                             processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
                             break;
-                        case EnvelopeType.YMMixerSettings:
+                        case EnvelopeType.S5BMixer:
                             processed = ProcessEnvelope(ProcessMixerEnvelope(env), false, false);
                             break;
                         default:
@@ -631,11 +632,14 @@ namespace FamiStudio
                         }
                         else if (instrument.IsS5B)
                         {
-                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMNoiseFreq]]);
-                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMMixerSettings]]);
+                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BNoiseFreq]]);
+                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BMixer]]);
+                            var envShape = instrument.S5BEnvelopeShape > 0 ? instrument.S5BEnvelopeShape + 7 : 0;
+                            var envAutoOctave = instrument.S5BEnvAutoPitch ? instrument.S5BEnvAutoPitchOctave : 0x80; // 0x80 = special code that means "manual"
 
                             lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
-                            lines.Add($"\t{db} $00, $00, $00, $00, $00, $00");
+                            lines.Add($"\t{db} ${envShape:x2}, ${envAutoOctave:x2}");
+                            lines.Add($"\t{db} $00, $00, $00, $00"); 
                         }
                         else if (instrument.IsVrc7)
                         {
@@ -644,8 +648,8 @@ namespace FamiStudio
                         }
                         else if (instrument.IsEpsm)
                         {
-                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMNoiseFreq]]);
-                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMMixerSettings]]);
+                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BNoiseFreq]]);
+                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BMixer]]);
 
                             byte[] epsmPatchRegsReordered = new byte[epsmRegOrder.Length];
                             for (int reg = 0; reg < epsmRegOrder.Length; reg++)
@@ -1230,6 +1234,14 @@ namespace FamiStudio
                             usesDutyCycleEffect = true;
                         }
 
+
+                        if (note.HasEnvelopePeriod)
+                        {
+                            songData.Add($"${OpcodeS5BManualEnvPeriod:x2}+");
+                            songData.Add($"${(note.EnvelopePeriod >> 0) & 0xff:x2}");
+                            songData.Add($"${(note.EnvelopePeriod >> 8) & 0xff:x2}");
+                        }
+
                         if (note.HasFdsModSpeed)
                         {
                             songData.Add($"${OpcodeFdsModSpeed:x2}+");
@@ -1242,7 +1254,6 @@ namespace FamiStudio
                             songData.Add($"${OpcodeFdsModDepth:x2}+");
                             songData.Add($"${note.FdsModDepth:x2}");
                         }
-
                         if (note.HasCutDelay)
                         {
                             songData.Add($"${OpcodeDelayedCut:x2}+");
@@ -1424,17 +1435,18 @@ namespace FamiStudio
 
                                 // TODO: Change this, this is a shit show.
                                 if (numEmptyNotes >= maxRepeatCount || 
-                                    note.IsValid         ||
-                                    note.HasVolume       || 
-                                    note.HasVibrato      ||
-                                    note.HasFinePitch    ||
-                                    note.HasDutyCycle    ||
-                                    note.HasFdsModSpeed  || 
-                                    note.HasFdsModDepth  ||
-                                    note.HasNoteDelay    ||
-                                    note.HasCutDelay     ||
-                                    note.HasDeltaCounter ||
-                                    note.HasPhaseReset   ||
+                                    note.IsValid           ||
+                                    note.HasVolume         || 
+                                    note.HasVibrato        ||
+                                    note.HasFinePitch      ||
+                                    note.HasDutyCycle      ||
+                                    note.HasFdsModSpeed    || 
+                                    note.HasFdsModDepth    ||
+                                    note.HasEnvelopePeriod || 
+                                    note.HasNoteDelay      ||
+                                    note.HasCutDelay       ||
+                                    note.HasDeltaCounter   ||
+                                    note.HasPhaseReset     ||
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
                                 {
                                     break;

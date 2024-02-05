@@ -38,16 +38,24 @@ namespace FamiStudio
         private bool    n163ResampleWavNormalize = true;
         private short[] n163ResampleWavData;
 
+        // S5B
+        private bool   s5bEnvAutoPitch = true;
+        private sbyte  s5bEnvAutoPitchOctave = 3;
+        private byte   s5bEnvShape = 0; // 0 = off, 1...8 maps to 0x8 to 0xf.
+
         // VRC6
         private byte vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Half;
 
         // VRC7
-        private byte vrc7Patch = Vrc7InstrumentPatch.Bell;
+        private byte   vrc7Patch = Vrc7InstrumentPatch.Bell;
         private byte[] vrc7PatchRegs = new byte[8];
 
         // EPSM
-        private byte epsmPatch = EpsmInstrumentPatch.Default;
+        private byte   epsmPatch = EpsmInstrumentPatch.Default;
         private byte[] epsmPatchRegs = new byte[31];
+        private bool   epsmSquareEnvAutoPitch = true;
+        private sbyte  epsmSquareEnvAutoPitchOctave = 3;
+        private byte   epsmSquareEnvShape = 0; // 0 = off, 1...8 maps to 0x8 to 0xf.
 
         // For N163/FDS wav presets.
         public int Id => id;
@@ -78,8 +86,8 @@ namespace FamiStudio
         public Envelope FdsWaveformEnvelope     => envelopes[EnvelopeType.FdsWaveform];
         public Envelope FdsModulationEnvelope   => envelopes[EnvelopeType.FdsModulation];
         public Envelope WaveformRepeatEnvelope  => envelopes[EnvelopeType.WaveformRepeat];
-        public Envelope YMMixerSettingsEnvelope => envelopes[EnvelopeType.YMMixerSettings];
-        public Envelope YMNoiseFreqEnvelope     => envelopes[EnvelopeType.YMNoiseFreq];
+        public Envelope YMMixerSettingsEnvelope => envelopes[EnvelopeType.S5BMixer];
+        public Envelope YMNoiseFreqEnvelope     => envelopes[EnvelopeType.S5BNoiseFreq];
 
         public const int MaxResampleWavSamples = 12000;
 
@@ -153,8 +161,8 @@ namespace FamiStudio
             {
                 return expansion == ExpansionType.N163;
             }
-            else if (envelopeType == EnvelopeType.YMNoiseFreq ||
-                     envelopeType == EnvelopeType.YMMixerSettings)
+            else if (envelopeType == EnvelopeType.S5BNoiseFreq ||
+                     envelopeType == EnvelopeType.S5BMixer)
             {
                 return expansion == ExpansionType.S5B ||
                        expansion == ExpansionType.EPSM;
@@ -318,6 +326,13 @@ namespace FamiStudio
         }
 
         public short[] N163ResampleWaveData => n163ResampleWavData;
+
+        public bool   S5BEnvAutoPitch        { get => s5bEnvAutoPitch;              set => s5bEnvAutoPitch = value; }
+        public sbyte  S5BEnvAutoPitchOctave  { get => s5bEnvAutoPitchOctave;        set => s5bEnvAutoPitchOctave = (sbyte)Utils.Clamp(value, -8, 8); }
+        public byte   S5BEnvelopeShape       { get => s5bEnvShape;                  set => s5bEnvShape = (byte)Utils.Clamp(value, 0, 8); }
+        public bool   EPSMSquareEnvAutoPitch       { get => epsmSquareEnvAutoPitch;       set => epsmSquareEnvAutoPitch = value; }
+        public sbyte  EPSMSquareEnvAutoPitchOctave { get => epsmSquareEnvAutoPitchOctave; set => epsmSquareEnvAutoPitchOctave = (sbyte)Utils.Clamp(value, -8, 8); }
+        public byte   EPSMSquareEnvelopeShape      { get => epsmSquareEnvShape;           set => epsmSquareEnvShape = (byte)Utils.Clamp(value, 0, 8); }
 
         public byte Vrc6SawMasterVolume
         {
@@ -891,6 +906,15 @@ namespace FamiStudio
                             }
                             break;
 
+                        case ExpansionType.S5B:
+                            // At version 16 (FamiStudio 4.2.0), we added basic support for S5B envelope.
+                            if (buffer.Version >= 16)
+                            {
+                                buffer.Serialize(ref s5bEnvAutoPitch);
+                                buffer.Serialize(ref s5bEnvAutoPitchOctave);
+                                buffer.Serialize(ref s5bEnvShape);
+                            }
+                            break;
                         case ExpansionType.Vrc7:
                             buffer.Serialize(ref vrc7Patch);
                             for (int i = 0; i < vrc7PatchRegs.Length; i++)
@@ -901,6 +925,13 @@ namespace FamiStudio
                             buffer.Serialize(ref epsmPatch);
                             for (int i = 0; i < epsmPatchRegs.Length; i++)
                                 buffer.Serialize(ref epsmPatchRegs[i]);
+                            // At version 16 (FamiStudio 4.2.0), we added basic support for S5B envelope.
+                            if (buffer.Version >= 16)
+                            {
+                                buffer.Serialize(ref epsmSquareEnvAutoPitch);
+                                buffer.Serialize(ref epsmSquareEnvAutoPitchOctave);
+                                buffer.Serialize(ref epsmSquareEnvShape);
+                            }
                             break;
                         case ExpansionType.Vrc6:
                             // At version 10 (FamiStudio 3.0.0) we added a master volume to the VRC6 saw.
@@ -1030,8 +1061,8 @@ namespace FamiStudio
 
             if (buffer.Version < 15 && (IsS5B || IsEpsm))
             {
-                envelopes[EnvelopeType.YMMixerSettings] = new Envelope(EnvelopeType.YMMixerSettings);
-                envelopes[EnvelopeType.YMNoiseFreq] = new Envelope(EnvelopeType.YMNoiseFreq);
+                envelopes[EnvelopeType.S5BMixer] = new Envelope(EnvelopeType.S5BMixer);
+                envelopes[EnvelopeType.S5BNoiseFreq] = new Envelope(EnvelopeType.S5BNoiseFreq);
             }
 
             if (buffer.IsReading)
@@ -1170,6 +1201,8 @@ namespace FamiStudio
             // There are specialized conversion functions, well be adding more as we go.
             ConvertMap.Add(new Tuple<int, int>(ExpansionType.Fds,  ExpansionType.N163), ConvertFdsToN163);
             ConvertMap.Add(new Tuple<int, int>(ExpansionType.N163, ExpansionType.Fds),  ConvertN163ToFds);
+            ConvertMap.Add(new Tuple<int, int>(ExpansionType.S5B,  ExpansionType.EPSM), ConvertS5BToEPSM);
+            ConvertMap.Add(new Tuple<int, int>(ExpansionType.EPSM, ExpansionType.S5B),  ConvertEPSMToS5B);
         }
 
         private static void ConvertEnvelopeValues(Instrument srcInst, Instrument dstInst, int srcType, int dstType, Envelope srcEnv, Envelope dstEnv, int srcLen, int dstLen)
@@ -1256,6 +1289,22 @@ namespace FamiStudio
                 dst.FdsWaveformEnvelope,
                 src.N163WaveformEnvelope.ChunkLength, // Only first wave.
                 dst.FdsWaveformEnvelope.Length);
+        }
+
+        private static void ConvertS5BToEPSM(Instrument src, Instrument dst)
+        {
+            dst.EPSMSquareEnvAutoPitch       = src.S5BEnvAutoPitch;
+            dst.EPSMSquareEnvAutoPitchOctave = src.S5BEnvAutoPitchOctave;
+            dst.EPSMSquareEnvelopeShape      = src.S5BEnvelopeShape;
+            ConvertGeneric(src, dst);
+        }
+
+        private static void ConvertEPSMToS5B(Instrument src, Instrument dst)
+        {
+            dst.S5BEnvAutoPitch       = src.EPSMSquareEnvAutoPitch;
+            dst.S5BEnvAutoPitchOctave = src.EPSMSquareEnvAutoPitchOctave;
+            dst.S5BEnvelopeShape      = src.EPSMSquareEnvelopeShape;
+            ConvertGeneric(src, dst);
         }
 
         public static void Convert(Instrument src, Instrument dst)

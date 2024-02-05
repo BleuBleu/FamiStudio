@@ -535,10 +535,6 @@ namespace FamiStudio
         {
         }
 
-        public virtual void YMMixerSettingsChangedNotify(int ymMixerSettings)
-        {
-        }
-
         public void ForceInstrumentReload()
         {
             forceInstrumentReload = true;

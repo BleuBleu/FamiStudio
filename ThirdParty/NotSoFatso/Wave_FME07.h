@@ -44,6 +44,13 @@ public:
 	BYTE		nVolume;
 
 	/////////////////////////////
+	// Envelope
+	TWIN		nEnvFreq;
+	BYTE		bEnvelopeEnabled;
+	BYTE		bEnvelopeTriggered;
+	BYTE		nEnvelopeShape;
+
+	/////////////////////////////
 	// Duty Cycle
 	BYTE		nDutyCount;
 

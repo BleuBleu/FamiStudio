@@ -11,6 +11,7 @@ namespace FamiStudio
         public static IntPtr DragCursor;
         public static IntPtr CopyCursor;
         public static IntPtr Eyedrop;
+        public static IntPtr Eraser;
         public static IntPtr IBeam;
         public static IntPtr PointingHand;
     }

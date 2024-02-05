@@ -657,10 +657,10 @@ namespace FamiStudio
             if (instrument == null)
             {
                 instrument = project.CreateInstrument(ExpansionType.S5B, name);
-                instrument.Envelopes[EnvelopeType.YMNoiseFreq].Length = 1;
-                instrument.Envelopes[EnvelopeType.YMNoiseFreq].Values[0] = (sbyte)noise;
-                instrument.Envelopes[EnvelopeType.YMMixerSettings].Length = 1;
-                instrument.Envelopes[EnvelopeType.YMMixerSettings].Values[0] = (sbyte)mixer;
+                instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Length = 1;
+                instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Values[0] = (sbyte)noise;
+                instrument.Envelopes[EnvelopeType.S5BMixer].Length = 1;
+                instrument.Envelopes[EnvelopeType.S5BMixer].Values[0] = (sbyte)mixer;
             }
 
             return instrument;
@@ -714,10 +714,10 @@ namespace FamiStudio
                     instrument = project.CreateInstrument(ExpansionType.EPSM, name);
 
                     instrument.EpsmPatch = 1;
-                    instrument.Envelopes[EnvelopeType.YMNoiseFreq].Length = 1;
-                    instrument.Envelopes[EnvelopeType.YMNoiseFreq].Values[0] = (sbyte)noise;
-                    instrument.Envelopes[EnvelopeType.YMMixerSettings].Length = 1;
-                    instrument.Envelopes[EnvelopeType.YMMixerSettings].Values[0] = (sbyte)mixer;
+                    instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Length = 1;
+                    instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Values[0] = (sbyte)noise;
+                    instrument.Envelopes[EnvelopeType.S5BMixer].Length = 1;
+                    instrument.Envelopes[EnvelopeType.S5BMixer].Values[0] = (sbyte)mixer;
                 }
                 return instrument;
             }
@@ -920,8 +920,8 @@ namespace FamiStudio
                         {
                             case NotSoFatso.STATE_PERIOD: return s5bRegister[0 + idx * 2] | (s5bRegister[1 + idx * 2] << 8);
                             case NotSoFatso.STATE_VOLUME: return (((s5bRegister[7] >> idx) & 9) != 9) ? s5bRegister[8 + idx] : 0;
-                            case NotSoFatso.STATE_YMMIXER: return ((s5bRegister[7] >> idx) & 9);
-                            case NotSoFatso.STATE_YMNOISEFREQUENCY: return s5bRegister[6];
+                            case NotSoFatso.STATE_S5BMIXER: return ((s5bRegister[7] >> idx) & 9);
+                            case NotSoFatso.STATE_S5BNOISEFREQUENCY: return s5bRegister[6];
                         }
                         break;
                     }
@@ -954,8 +954,8 @@ namespace FamiStudio
                         {
                             case NotSoFatso.STATE_PERIOD: return epsmRegisterLo[0 + idx*2] | (epsmRegisterLo[1 + idx * 2] << 8);
                             case NotSoFatso.STATE_VOLUME: return (((epsmRegisterLo[7] >> idx) & 9 ) != 9)  ? epsmRegisterLo[8 + idx] : 0;
-                            case NotSoFatso.STATE_YMMIXER: return ((epsmRegisterLo[7] >> idx) & 9);
-                            case NotSoFatso.STATE_YMNOISEFREQUENCY: return epsmRegisterLo[6];
+                            case NotSoFatso.STATE_S5BMIXER: return ((epsmRegisterLo[7] >> idx) & 9);
+                            case NotSoFatso.STATE_S5BNOISEFREQUENCY: return epsmRegisterLo[6];
                         }
                         break;
                     }
@@ -1277,8 +1277,8 @@ namespace FamiStudio
                 }
                 else if (channel.Type >= ChannelType.S5BSquare1 && channel.Type <= ChannelType.S5BSquare3)
                 {
-                    var noise = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
-                    var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_YMMIXER, 0);
+                    var noise = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
+                    var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_S5BMIXER, 0);
                     mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
                     instrument = GetS5BInstrument(noise, mixer);
                 }
@@ -1300,8 +1300,8 @@ namespace FamiStudio
                     }
                     else
                     {
-                        var noise = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
-                        var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_YMMIXER, 0);
+                        var noise = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
+                        var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_S5BMIXER, 0);
                         mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
                         instrument = GetEPSMInstrument(0, regs, noise, mixer);
                     }

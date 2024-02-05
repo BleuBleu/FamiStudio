@@ -20,6 +20,8 @@ echo ===========================
 :: Generate random definition include file.
 type NUL > test_defs.inc
 
+@setlocal enabledelayedexpansion
+
 set /a rnd=%random% %%3
 if "%rnd%"=="0" (
 	echo FAMISTUDIO_CFG_NTSC_SUPPORT=1 >> test_defs.inc

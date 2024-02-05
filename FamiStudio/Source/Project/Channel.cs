@@ -130,6 +130,7 @@ namespace FamiStudio
                         type == ChannelType.Square1 || type == ChannelType.Square2 || 
                         type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2 || 
                         IsVrc6Channel || IsFdsChannel || IsN163Channel;
+                case Note.EffectEnvelopePeriod: return IsS5BChannel || IsEPSMSquareChannel;
             }
 
             return true;

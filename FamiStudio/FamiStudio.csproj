@@ -274,6 +274,9 @@
     <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
   </ItemGroup>
   <ItemGroup>    
+    <EmbeddedResource Include="Resources\Cursors\CursorEraser32.tga" />
+    <EmbeddedResource Include="Resources\Cursors\CursorEraser48.tga" />
+    <EmbeddedResource Include="Resources\Cursors\CursorEraser64.tga" />
     <EmbeddedResource Include="Resources\Cursors\CursorEyedrop32.tga" />
     <EmbeddedResource Include="Resources\Cursors\CursorEyedrop48.tga" />
     <EmbeddedResource Include="Resources\Cursors\CursorEyedrop64.tga" />
@@ -424,6 +427,8 @@
     <EmbeddedResource Include="Resources\Atlas\EffectPitch@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectRepeat.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectRepeat@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectEnvelopePeriod.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectEnvelopePeriod@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectSpeed.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectSpeed@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectVibrato.tga" />
@@ -706,6 +711,22 @@
     <EmbeddedResource Include="Resources\Atlas\Reload@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Rewind.tga" />
     <EmbeddedResource Include="Resources\Atlas\Rewind@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope8.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope8@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope9.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope9@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeA.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeA@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeB.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeB@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeC.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeC@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeD.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeD@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeE.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeE@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeF.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeF@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Save.tga" />
     <EmbeddedResource Include="Resources\Atlas\Save@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SaveSmall.tga" />
