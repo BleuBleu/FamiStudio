@@ -173,7 +173,7 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 			int mod = 0;
 			int sweep_gain = osc.regs[4] & 0x3f; // TODO: Sweep envelopes.
 
-			if (sweep_gain)
+			if (sweep_gain && mod_on)
 			{
 				int pos = (osc.mod_pos < 64) ? osc.mod_pos : (osc.mod_pos - 128);
 

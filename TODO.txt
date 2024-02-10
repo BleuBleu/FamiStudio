@@ -21,11 +21,12 @@ x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/8197
 / Latency improvements:
 	- Android : Run short/1-frame tests.
 	- MacOS : Audio device detection change.
-	- device change didn't work with PS4 controller?
+	- Windows : Device change doesnt when switching to TV with PS4 controller
 - Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
 	=> MacOS only, GLFWToWindow() uses DpiScaling.Window.
 x Export -> Video settings scrolling area doesnt take scaling into account.
 x Sort button for songs doesnt do shit?
+x FDS automod
 - Sound engine improvements:
 	x Instrument/attack refactor
 	x Allow no-attack when envelopes are identical (mostly useful for EPSM/VRC7)
@@ -36,14 +37,13 @@ x Sort button for songs doesnt do shit?
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
 	- Dont compress vibrato envelopes.
 	- New opcode "override envelope and reset", call only when speed changes.
-- FDS automod
-	- Review FDS_SWEEP_BIAS usage. Re-read nes dev wiki. 
 - Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - Dont publish for chromebooks
+- Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : Check FDS emulation code. There is a big comment explaining the situation.
@@ -54,6 +54,7 @@ x Sort button for songs doesnt do shit?
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - BUG : Non-looping songs dont export correctly.
 - BUG : When reach end of non-looping song, doesnt rewind to previous.
+- BUG : I cannot drag the NULL arpeggio to clear the arps.
 - BUG : Mouse over project explorer envelope buttons is offset.
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
 x BUG : First samples of CV2 plays wrong??? Only if at first frame...
@@ -80,6 +81,10 @@ x Zoom level changes when going env then come back to piano
 - Make sure PortAudio.dll is included in portable + setup.
 - Compare FDS filter with my FDS once im back home. See how close we can get without adding a dedicated filter.
 - Add new features to unit tests
+
+4.2.0 Change log to mention
+===========================
+- BREAKING CHANGE : FDS mod speed/depth effects will be reset on next note with an attack.
 
 Later
 =====

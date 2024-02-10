@@ -97,6 +97,7 @@ namespace FamiStudio
         private bool usesDeltaCounter = false;
         private bool usesReleaseNotes = false;
         private bool usesPhaseReset = false;
+        private bool usesFdsAutoMod = false;
         static readonly int[] epsmRegOrder = new[] { 0, 1, 2, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 3, 10, 17, 24, 30 };
 
         public FamitoneMusicFile(int kernel, bool outputLog)
@@ -618,8 +619,23 @@ namespace FamiStudio
 
                             lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}");
                             lines.Add($"\t{db} {instrument.FdsMasterVolume}");
-                            lines.Add($"\t{dw} {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
-                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00");
+                            lines.Add($"\t{dw} {ll}env{fdsModEnvIdx}");
+                            lines.Add($"\t{db} {(instrument.FdsAutoMod ? 1 : 0)}");
+
+                            if (instrument.FdsAutoMod)
+                            {
+                                var numer = (int)instrument.FdsAutoModNumer;
+                                var denom = (int)instrument.FdsAutoModDenom;
+                                Utils.SimplifyFraction(ref numer, ref denom); // 2/4 is same as 1/2
+                                lines.Add($"\t{db} {numer}, {denom}");
+                                usesFdsAutoMod = true;
+                            }
+                            else
+                            {
+                                lines.Add($"\t{dw} {instrument.FdsModSpeed}");
+                            }
+
+                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}");
                         }
                         else if (instrument.IsN163)
                         {
@@ -992,6 +1008,16 @@ namespace FamiStudio
             }
         }
 
+        [Flags]
+        enum OverrideFlags
+        {
+            None = 0,
+            Vibrato = 1,
+            Arpeggio = 2,
+            FdsModSpeed = 4,
+            FdsModDepth = 8
+        }
+
         private List<string> GetSongData(Song song, int songIdx, int speedChannel)
         {
             var songData = new List<string>();
@@ -1012,6 +1038,7 @@ namespace FamiStudio
                 var lastVolume = 15;
                 var firstInstrumentInLoop = (Instrument)null;
                 var lastInstrumentInLoop = (Instrument)null;
+                var currentFlags = OverrideFlags.None;
 
                 songData.Add($"{ll}song{songIdx}ch{c}:");
 
@@ -1100,6 +1127,7 @@ namespace FamiStudio
                     {
                         var time = it.CurrentTime;
                         var note = it.CurrentNote;
+                        var frameFlags = OverrideFlags.None;
 
                         if (note == null)
                             note = emptyNote;
@@ -1178,7 +1206,14 @@ namespace FamiStudio
                             songData.Add($"{hi}({vibratoEnvelopeNames[vib]})");
 
                             if (vib == 0)
+                            {
                                 songData.Add($"${OpcodeClearPitchEnvOverride:x2}+");
+                            }
+                            else
+                            {
+                                frameFlags |= OverrideFlags.Vibrato;
+                                currentFlags |= OverrideFlags.Vibrato;
+                            }
 
                             usesVibrato = true;
                         }
@@ -1247,13 +1282,18 @@ namespace FamiStudio
                             songData.Add($"${OpcodeFdsModSpeed:x2}+");
                             songData.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
                             songData.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
+                            frameFlags |= OverrideFlags.FdsModSpeed;
+                            currentFlags |= OverrideFlags.FdsModSpeed;
                         }
 
                         if (note.HasFdsModDepth)
                         {
                             songData.Add($"${OpcodeFdsModDepth:x2}+");
                             songData.Add($"${note.FdsModDepth:x2}");
+                            frameFlags |= OverrideFlags.FdsModDepth;
+                            currentFlags |= OverrideFlags.FdsModDepth;
                         }
+
                         if (note.HasCutDelay)
                         {
                             songData.Add($"${OpcodeDelayedCut:x2}+");
@@ -1281,6 +1321,30 @@ namespace FamiStudio
                                 {
                                     // TODO: Remove note entirely after a slide that matches the next note with no attack.
                                     songData.Add($"${OpcodeDisableAttack:x2}+");
+                                }
+                                else
+                                {
+                                    // If there FDS speed/depth was previously overridden (but is not this frame) and we have an attack,
+                                    // we need to rebind the instrument to set the correct speed/depth again. This is pretty wasteful since
+                                    // this will rebind the entire wave/mod table, but that's the best we can do right now without adding a
+                                    // new opcode or something like that.
+                                    if ((!frameFlags.HasFlag(OverrideFlags.FdsModSpeed) && currentFlags.HasFlag(OverrideFlags.FdsModSpeed)))
+                                    {
+                                        currentFlags &= ~(OverrideFlags.FdsModSpeed);
+                                        instrument = null;
+                                    }
+                                    if ((!frameFlags.HasFlag(OverrideFlags.FdsModDepth) && currentFlags.HasFlag(OverrideFlags.FdsModDepth)))
+                                    {
+                                        currentFlags &= ~(OverrideFlags.FdsModDepth);
+                                        instrument = null;
+                                    }
+
+                                    // Save for vibrator/arps, we need to rebind the instrument at the moment to reset the correct envelopes.
+                                    if ((!frameFlags.HasFlag(OverrideFlags.Vibrato) && currentFlags.HasFlag(OverrideFlags.Vibrato)))
+                                    {
+                                        currentFlags &= ~(OverrideFlags.Vibrato);
+                                        instrument = null;
+                                    }
                                 }
 
                                 if (note.Instrument != instrument)
@@ -2043,8 +2107,10 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.");
                     if (usesPhaseReset)
                         Log.LogMessage(LogSeverity.Info, "Phase Reset effect is used, you must set FAMISTUDIO_USE_PHASE_RESET = 1.");
+                    if (usesFdsAutoMod)
+                        Log.LogMessage(LogSeverity.Info, "FDS auto-modulation is used on at least 1 instrument, you must set FAMISTUDIO_USE_FDS_AUTOMOD = 1.");
                     if (project.SoundEngineUsesDpcmBankSwitching)
-                        Log.LogMessage(LogSeverity.Info, "Project has DPCM bankswitching enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
+                        Log.LogMessage(LogSeverity.Info, "Project has DPCM bank-switching enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
                     else if (project.SoundEngineUsesExtendedDpcm)
                         Log.LogMessage(LogSeverity.Info, $"Project has extended DPCM mode enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1.");
                     if (project.SoundEngineUsesExtendedInstruments)

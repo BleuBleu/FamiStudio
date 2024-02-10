@@ -1052,7 +1052,7 @@ namespace FamiStudio
                 {
                     if (state.volume != volume && (volume != 0 || hasTrigger))
                     {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Volume = (byte)volume;
+                        GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Volume = (byte)volume;
                         state.volume = volume;
                     }
                 }
@@ -1078,21 +1078,6 @@ namespace FamiStudio
                     var masterVolume = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMASTERVOLUME, 0);
 
                     instrument = GetFdsInstrument(wavEnv, modEnv, masterVolume);
-
-                    int modDepth = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONDEPTH, 0);
-                    int modSpeed = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONSPEED, 0);
-
-                    if (state.fdsModDepth != modDepth)
-                    {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModDepth = (byte)modDepth;
-                        state.fdsModDepth = modDepth;
-                    }
-
-                    if (state.fdsModSpeed != modSpeed)
-                    {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModSpeed = (ushort)modSpeed;
-                        state.fdsModSpeed = modSpeed;
-                    }
                 }
                 else if (channel.Type >= ChannelType.N163Wave1 &&
                          channel.Type <= ChannelType.N163Wave8)
@@ -1175,6 +1160,8 @@ namespace FamiStudio
                     instrument = GetDutyInstrument(channel, 0);
                 }
 
+                var hasNoteWithAttack = false;
+
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
@@ -1218,6 +1205,7 @@ namespace FamiStudio
                         if (!attack)
                             newNote.HasAttack = false;
                         hasNote = note != 0;
+                        hasNoteWithAttack = newNote.IsMusical && newNote.HasAttack;
                     }
 
                     if (hasPitch && !stop)
@@ -1232,12 +1220,32 @@ namespace FamiStudio
 
                         if (pitch != state.pitch)
                         {
-                            var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FinePitch = pitch;
+                            GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FinePitch = pitch;
                             state.pitch = pitch;
                         }
                     }
 
                     state.period = period;
+                }
+
+                // Every note with an attack will reset the mod speed/depth to the default (which is zero for FDS). 
+                // If there is mod/speed active here, we need to force it again with an effect.
+                if (channel.IsFdsChannel)
+                {
+                    var modDepth =   (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONDEPTH, 0);
+                    var modSpeed = (ushort)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONSPEED, 0);
+
+                    if (state.fdsModDepth != modDepth || (modDepth != 0 && hasNoteWithAttack))
+                    {
+                        GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModDepth = modDepth;
+                        state.fdsModDepth = modDepth;
+                    }
+
+                    if (state.fdsModSpeed != modSpeed || (modDepth != 0 && hasNoteWithAttack)) // modDepth is intentional here, if depth = 0, we don't care.
+                    {
+                        GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModSpeed = modSpeed;
+                        state.fdsModSpeed = modSpeed;
+                    }
                 }
             }
 

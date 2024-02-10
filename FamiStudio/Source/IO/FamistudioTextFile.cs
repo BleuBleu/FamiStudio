@@ -110,6 +110,12 @@ namespace FamiStudio
                         if (instrument.FdsModSpeed     != 0) instrumentLine += GenerateAttribute("FdsModSpeed", instrument.FdsModSpeed);
                         if (instrument.FdsModDepth     != 0) instrumentLine += GenerateAttribute("FdsModDepth", instrument.FdsModDepth);
                         if (instrument.FdsModDelay     != 0) instrumentLine += GenerateAttribute("FdsModDelay", instrument.FdsModDelay);
+                        if (instrument.FdsAutoMod)
+                        {
+                            instrumentLine += GenerateAttribute("FdsAutoMod", instrument.FdsAutoMod);
+                            instrumentLine += GenerateAttribute("FdsAutoModDenom", instrument.FdsAutoModDenom);
+                            instrumentLine += GenerateAttribute("FdsAutoModNumer", instrument.FdsAutoModNumer);
+                        }
                     }
                     else if (instrument.IsN163)
                     {
@@ -451,11 +457,17 @@ namespace FamiStudio
                             if (instrument.IsFds)
                             {
                                 if (parameters.TryGetValue("FdsWavePreset",   out var wavPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForInternalName(wavPresetStr);
-                                if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForInternalName(modPresetStr);
+                                if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsModPreset    = (byte)WavePresetType.GetValueForInternalName(modPresetStr);
                                 if (parameters.TryGetValue("FdsMasterVolume", out var masterVolumeStr)) instrument.FdsMasterVolume = byte.Parse(masterVolumeStr);
                                 if (parameters.TryGetValue("FdsModSpeed",     out var fdsModSpeedStr))  instrument.FdsModSpeed     = ushort.Parse(fdsModSpeedStr);
                                 if (parameters.TryGetValue("FdsModDepth",     out var fdsModDepthStr))  instrument.FdsModDepth     = byte.Parse(fdsModDepthStr);
                                 if (parameters.TryGetValue("FdsModDelay",     out var fdsModDelayStr))  instrument.FdsModDelay     = byte.Parse(fdsModDelayStr);
+                                if (parameters.TryGetValue("FdsAutoMod",      out var fdsAutoModStr))   instrument.FdsAutoMod      = bool.Parse(fdsAutoModStr);
+                                if (instrument.FdsAutoMod)
+                                {
+                                    if (parameters.TryGetValue("FdsAutoModDenom", out var fdsAutoModDenomStr)) instrument.FdsAutoModDenom = byte.Parse(fdsAutoModDenomStr);
+                                    if (parameters.TryGetValue("FdsAutoModNumer", out var fdsAutoModNumerStr)) instrument.FdsAutoModNumer = byte.Parse(fdsAutoModNumerStr);
+                                }
                             }
                             else if (instrument.IsN163)
                             {

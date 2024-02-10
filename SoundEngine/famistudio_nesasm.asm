@@ -248,6 +248,9 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 ; Must be enabled if your project uses the "Phase Reset" effect.
 ; FAMISTUDIO_USE_PHASE_RESET = 1
 
+; Must be enabled if your project uses the FDS expansion and at least one instrument with FDS Auto-Mod enabled.
+; FAMISTUDIO_USE_FDS_AUTOMOD  = 1
+
 .endif
 
 ; Memory location of the DPCM samples. Must be between $c000 and $ffc0, and a multiple of 64.
@@ -412,6 +415,10 @@ FAMISTUDIO_USE_DELTA_COUNTER = 0
     
     .ifndef FAMISTUDIO_USE_PHASE_RESET
 FAMISTUDIO_USE_PHASE_RESET = 0
+    .endif
+
+    .ifndef FAMISTUDIO_USE_FDS_AUTOMOD
+FAMISTUDIO_USE_FDS_AUTOMOD = 0
     .endif
 
     .ifndef FAMISTUDIO_USE_RELEASE_NOTES
@@ -943,7 +950,12 @@ famistudio_mmc5_pulse2_prev:      .rs 1
 famistudio_fds_mod_speed:         .rs 2
 famistudio_fds_mod_depth:         .rs 1
 famistudio_fds_mod_delay:         .rs 1
+famistudio_fds_mod_delay_counter: .rs 1
 famistudio_fds_override_flags:    .rs 1 ; Bit 7 = mod speed overriden, bit 6 mod depth overriden
+    .if FAMISTUDIO_USE_FDS_AUTOMOD
+famistudio_fds_automod_numer:     .rs 1 ; 0 = auto-mod off.
+famistudio_fds_automod_denom:     .rs 1
+    .endif
     .if FAMISTUDIO_USE_PHASE_RESET
 famistudio_fds_prev_hi:           .rs 1
     .endif
@@ -1652,7 +1664,12 @@ famistudio_music_play:
     sta famistudio_fds_mod_speed+1
     sta famistudio_fds_mod_depth
     sta famistudio_fds_mod_delay
+    sta famistudio_fds_mod_delay_counter
     sta famistudio_fds_override_flags
+    .if FAMISTUDIO_USE_FDS_AUTOMOD    
+        sta famistudio_fds_automod_numer
+        sta famistudio_fds_automod_denom
+    .endif
     .if FAMISTUDIO_USE_PHASE_RESET
         sta famistudio_fds_prev_hi
     .endif
@@ -2127,6 +2144,78 @@ reg_sweep\@ = \7
 
     .if FAMISTUDIO_EXP_FDS
 
+    .if FAMISTUDIO_USE_FDS_AUTOMOD
+
+;======================================================================================================================
+; FAMISTUDIO_MUL (internal)
+;
+; From : https://codebase64.org/doku.php?id=base:8bit_multiplication_16bit_product
+; Using the 16x8 version. May overflow if using too large numbers.
+;
+; [in]  ptr0 : 16-bit number
+; [in]  r1   : 8-bit number
+; [out] x+a  : Result lo-byte
+; [out] y    : Result hi-byte
+;======================================================================================================================
+
+famistudio_mul:
+
+.num1 = famistudio_ptr1
+.num2 = famistudio_r1
+
+    lda #$00
+    tay
+    beq .enter_loop
+.do_add:
+    clc
+    adc <.num1+0
+    tax
+    tya
+    adc <.num1+1
+    tay
+    txa
+.loop:
+    asl <.num1+0
+    rol <.num1+1
+.enter_loop:
+    lsr <.num2
+    bcs .do_add
+    bne .loop
+    rts
+
+;======================================================================================================================
+; FAMISTUDIO_DIV (internal)
+;
+; From : https://forums.nesdev.org/viewtopic.php?p=895&sid=5c263dea8d9e3cf15cd1093856f211a9#p895 (tepples)
+;
+; [in]  ptr0 : 16-bit number
+; [in]  r1   : 8-bit divisor
+; [out] ptr0 : Result
+; [out] a    : Remainder
+;======================================================================================================================
+
+famistudio_div:
+
+.dividend = famistudio_ptr1
+.divisor  = famistudio_r1
+
+    ldx #16
+    lda #0
+.divloop:
+    asl <.dividend
+    rol <.dividend+1
+    rol a
+    cmp <.divisor
+    bcc .no_sub
+    sbc <.divisor
+    inc <.dividend
+.no_sub:
+    dex
+    bne .divloop
+    rts
+
+    .endif
+
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_FDS_CHANNEL_SOUND (internal)
 ;
@@ -2138,6 +2227,8 @@ reg_sweep\@ = \7
 famistudio_update_fds_channel_sound:
 
 .pitch = famistudio_ptr1
+.mul   = famistudio_r1
+.div   = famistudio_r1
 
     lda famistudio_chn_note+FAMISTUDIO_FDS_CH0_IDX
     bne .nocut
@@ -2160,21 +2251,57 @@ famistudio_update_fds_channel_sound:
     .endif
 
 .check_mod_delay:
-    lda famistudio_fds_mod_delay
+    lda famistudio_fds_mod_delay_counter
     beq .zero_delay
-    dec famistudio_fds_mod_delay
+    dec famistudio_fds_mod_delay_counter
     lda #$80
     sta FAMISTUDIO_FDS_MOD_HI
     bne .compute_volume
 
 .zero_delay:
-    lda famistudio_fds_mod_speed+1
-    sta FAMISTUDIO_FDS_MOD_HI
-    lda famistudio_fds_mod_speed+0
-    sta FAMISTUDIO_FDS_MOD_LO
+
     lda famistudio_fds_mod_depth
-    ora #$80
-    sta FAMISTUDIO_FDS_SWEEP_ENV
+    beq .mod_depth
+
+    .if FAMISTUDIO_USE_FDS_AUTOMOD
+        lda famistudio_fds_automod_numer
+        beq .manual_mod
+
+        .auto_mod_mul_div:
+            sta <.mul
+            jsr famistudio_mul
+            stx <.pitch+0
+            sty <.pitch+1
+            lda famistudio_fds_automod_denom
+            sta <.div
+            jsr famistudio_div
+            lda <.pitch+1
+            cmp #$10
+            bcc .write_auto_mod
+           .write_max:
+                lda #$0f
+                sta FAMISTUDIO_FDS_MOD_HI
+                lda #$ff
+                sta FAMISTUDIO_FDS_MOD_LO  
+                jmp .mod_depth
+
+            .write_auto_mod:
+                sta FAMISTUDIO_FDS_MOD_HI
+                lda <.pitch+0
+                sta FAMISTUDIO_FDS_MOD_LO  
+                jmp .mod_depth
+    .endif
+
+    .manual_mod:
+        lda famistudio_fds_mod_speed+1
+        sta FAMISTUDIO_FDS_MOD_HI
+        lda famistudio_fds_mod_speed+0
+        sta FAMISTUDIO_FDS_MOD_LO
+
+    .mod_depth:
+        lda famistudio_fds_mod_depth
+        ora #$80
+        sta FAMISTUDIO_FDS_SWEEP_ENV
 
 .compute_volume:
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -4223,6 +4350,26 @@ famistudio_do_s5b_note_attack:
 
     .endif
 
+    .if FAMISTUDIO_EXP_FDS
+
+famistudio_do_fds_note_attack:
+
+.chan_idx = famistudio_r0
+
+    ; TODO : We used to set the modulation value here, but that's bad.
+    ; https://www.nesdev.org/wiki/FDS_audio#Mod_frequency_high_($4087)
+    ; lda #$80
+    ; sta FAMISTUDIO_FDS_MOD_HI
+    ; lda #0
+    ; sta FAMISTUDIO_FDS_SWEEP_BIAS
+
+    lda famistudio_fds_mod_delay
+    sta famistudio_fds_mod_delay_counter
+    ldx <.chan_idx
+    rts
+
+    .endif
+
 famistudio_do_note_attack:
 
 .chan_idx = famistudio_r0
@@ -4285,7 +4432,7 @@ famistudio_do_note_attack:
 
 .no_pitch:
 
-    .if FAMISTUDIO_EXP_VRC7 | FAMISTUDIO_EXP_N163 | FAMISTUDIO_EXP_EPSM | FAMISTUDIO_EXP_S5B
+    .if FAMISTUDIO_EXP_VRC7 | FAMISTUDIO_EXP_N163 | FAMISTUDIO_EXP_EPSM | FAMISTUDIO_EXP_S5B | FAMISTUDIO_EXP_FDS
     lda <.chan_idx
     cmp #5
     bcc .done
@@ -4300,6 +4447,10 @@ famistudio_do_note_attack:
     .s5b_instrument:
     .if FAMISTUDIO_EXP_S5B
         jmp famistudio_do_s5b_note_attack
+    .endif
+    .fds_instrument:
+    .if FAMISTUDIO_EXP_FDS
+        jmp famistudio_do_fds_note_attack
     .endif
     .epsm_instrument:
     .if FAMISTUDIO_EXP_EPSM
@@ -4778,24 +4929,12 @@ famistudio_set_fds_instrument:
 
 .ptr          = famistudio_ptr1
 .wave_ptr     = famistudio_ptr2
-.update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
 .tmp_y        = famistudio_r3 
 
     jsr famistudio_get_exp_inst_ptr
-    bit <.update_flags
-    bpl .load_envelopes
-
-    .skip_envelopes:
-        skip_exp_basic_envelopes
-        jmp .write_fds_wave
-    .load_envelopes:
-        jsr famistudio_load_basic_envelopes
+    jsr famistudio_load_basic_envelopes
 
     .write_fds_wave:
-
-        ; TODO : This is wrong, mod unit could be running.
-        lda #0
-        sta FAMISTUDIO_FDS_SWEEP_BIAS
 
         ora #$80
         sta FAMISTUDIO_FDS_VOL ; Enable wave RAM write
@@ -4847,7 +4986,29 @@ famistudio_set_fds_instrument:
 
     .load_mod_param:
 
+    .if FAMISTUDIO_USE_FDS_AUTOMOD
+        lda [.ptr],y
+        beq .check_mod_speed
+
+        .auto_mod:
+            iny
+            lda [.ptr],y
+            sta famistudio_fds_automod_numer
+            iny
+            lda [.ptr],y
+            sta famistudio_fds_automod_denom
+            bne .check_mod_depth
+    .else
+        iny
+        iny
+    .endif
+
         .check_mod_speed:
+            iny
+            .if FAMISTUDIO_USE_FDS_AUTOMOD
+                lda #0
+                sta famistudio_fds_automod_numer
+            .endif
             bit famistudio_fds_override_flags
             bmi .mod_speed_overriden
 

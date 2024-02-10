@@ -5,10 +5,10 @@ namespace FamiStudio
 {
     class ChannelStateFds : ChannelState
     {
-        byte   modDelayCounter;
-        ushort modDepth;
-        ushort modSpeed;
-        int    prevPeriodHi;
+        private byte   modDelayCounter;
+        private ushort modDepth;
+        private ushort modSpeed;
+        private int    prevPeriodHi;
 
         public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx) : base(player, apuIdx, channelIdx, false)
         {
@@ -31,14 +31,14 @@ namespace FamiStudio
                     WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
 
                     for (int i = 0; i < 0x40; ++i)
-                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff);
-
+                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff, 16); // 16 cycles to mimic ASM loop.
+                    
                     WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
                     WriteRegister(NesApu.FDS_MOD_HI, 0x80);
                     WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
 
                     for (int i = 0; i < 0x20; ++i)
-                        WriteRegister(NesApu.FDS_MOD_TABLE, mod[i] & 0xff);
+                        WriteRegister(NesApu.FDS_MOD_TABLE, mod[i] & 0xff, 16); // 16 cycles to mimic ASM loop.
                 }
             }
         }
@@ -57,6 +57,21 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
+            var modDepthEffect = false;
+            var modSpeedEffect = false;
+
+            if (note.HasFdsModDepth) 
+            { 
+                modDepth = note.FdsModDepth; 
+                modDepthEffect = true; 
+            }
+
+            if (note.HasFdsModSpeed) 
+            { 
+                modSpeed = note.FdsModSpeed; 
+                modSpeedEffect = true; 
+            }
+
             if (note.IsStop)
             {
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80); // Zero volume
@@ -76,36 +91,43 @@ namespace FamiStudio
 
                 if (noteTriggered)
                 {
-                    // TODO : This is wrong, mod unit could be running.
-                    WriteRegister(NesApu.FDS_SWEEP_BIAS, 0);
+                    // TODO: We used to set the modulation value here, but that's bad.
+                    // https://www.nesdev.org/wiki/FDS_audio#Mod_frequency_high_($4087)
+                    // WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+                    // WriteRegister(NesApu.FDS_SWEEP_BIAS, 0);
 
                     if (note.Instrument != null)
                     {
                         Debug.Assert(note.Instrument.IsFds);
                         modDelayCounter = note.Instrument.FdsModDelay;
-                        modDepth = note.Instrument.FdsModDepth;
-                        modSpeed = note.Instrument.FdsModSpeed;
+                        
+                        // If there was a mod depth/speed this frame, it takes over the instrument.
+                        if (!modDepthEffect)
+                            modDepth = note.Instrument.FdsModDepth;
+                        if (!modSpeedEffect)
+                            modSpeed = note.Instrument.FdsModSpeed;
                     }
                     else
                     {
                         modDelayCounter = 0;
                     }
                 }
-            }
 
-            if (note.HasFdsModDepth) modDepth = note.FdsModDepth;
-            if (note.HasFdsModSpeed) modSpeed = note.FdsModSpeed;
+                if (modDelayCounter == 0)
+                {
+                    var finalModSpeed = note.Instrument.FdsAutoMod && modDepth > 0 ?
+                        (ushort)Math.Min(period * note.Instrument.FdsAutoModNumer / note.Instrument.FdsAutoModDenom, 0xfff) : 
+                        modSpeed;
 
-            if (modDelayCounter == 0)
-            {
-                WriteRegister(NesApu.FDS_MOD_HI, (modSpeed >> 8) & 0xff);
-                WriteRegister(NesApu.FDS_MOD_LO, (modSpeed >> 0) & 0xff);
-                WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80 | modDepth);
-            }
-            else
-            {
-                WriteRegister(NesApu.FDS_MOD_HI, 0x80);
-                modDelayCounter--;
+                    WriteRegister(NesApu.FDS_MOD_HI, (finalModSpeed >> 8) & 0xff);
+                    WriteRegister(NesApu.FDS_MOD_LO, (finalModSpeed >> 0) & 0xff);
+                    WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80 | modDepth);
+                }
+                else
+                {
+                    WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+                    modDelayCounter--;
+                }
             }
 
             base.UpdateAPU();
