@@ -43,7 +43,7 @@ x FDS automod
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - Dont publish for chromebooks
-- Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
+x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : Check FDS emulation code. There is a big comment explaining the situation.
@@ -82,9 +82,24 @@ x Zoom level changes when going env then come back to piano
 - Compare FDS filter with my FDS once im back home. See how close we can get without adding a dedicated filter.
 - Add new features to unit tests
 
-4.2.0 Change log to mention
+4.2.0 Change Log
 ===========================
-- BREAKING CHANGE : FDS mod speed/depth effects will be reset on next note with an attack.
+- Changes:
+	* Folders in Project Explorer
+	* Video export improvements (register overlay, unified piano roll, 3D effect)
+	* Reduced audio latency on all platform and switch to WASAPI on Windows
+	* More filtering options for audio expansions
+	* S5B envelope support
+	* FDS auto-modulation support
+	* Phase reset support
+	* Accurate seek support (fully emulate entire song from start)
+	* Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
+	* Support for up to 256 instruments (for both regular and expansion) in sound engine
+	* Many other small quality of life improvements (eraser mode, etc......... LIST MORE HERE!)
+	* Upgraded to .NET 7.0
+	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)
+-Breaking/Behavior changes:
+	* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
 
 Later
 =====
