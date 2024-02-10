@@ -487,9 +487,10 @@ namespace FamiStudio
             {
                 case "ca65": format = AssemblyFormat.CA65; break;
                 case "asm6": format = AssemblyFormat.ASM6; break;
+                case "sdas": format = AssemblyFormat.SDAS; break;
             }
 
-            var extension = format == AssemblyFormat.CA65 ? ".s" : ".asm";
+            var extension = (format == AssemblyFormat.CA65 || format == AssemblyFormat.SDAS) ? ".s" : ".asm";
             var seperate = HasOption($"{engineName}-asm-seperate-files");
             var generateInclude = HasOption($"{engineName}-asm-generate-list");
             var forceDpcmBankswitch = famistudio && HasOption($"{engineName}-asm-force-dpcm-bankswitch");
@@ -546,6 +547,7 @@ namespace FamiStudio
             {
                 case "ca65": format = AssemblyFormat.CA65; break;
                 case "asm6": format = AssemblyFormat.ASM6; break;
+                case "sdas": format = AssemblyFormat.SDAS; break;
             }
 
             var machineString = ParseOption($"{engineName}-asm-sfx-mode", project.PalMode ? "pal" : "ntsc");
@@ -557,7 +559,7 @@ namespace FamiStudio
                 case "ntsc" : machine = MachineType.NTSC; break;
             }
 
-            var extension = format == AssemblyFormat.CA65 ? ".s" : ".asm";
+            var extension = (format == AssemblyFormat.CA65 || format == AssemblyFormat.SDAS) ? ".s" : ".asm";
 
             if (!ValidateExtension(filename, extension))
                 return;
