@@ -1276,7 +1276,7 @@ namespace FamiStudio
                     if ((captureOperation == CaptureOperation.DragSong       && (button.type == ButtonType.Song       || button.type == ButtonType.SongHeader       || button.type == ButtonType.SongFolder)) ||
                         (captureOperation == CaptureOperation.DragInstrument && (button.type == ButtonType.Instrument || button.type == ButtonType.InstrumentHeader || button.type == ButtonType.InstrumentFolder)) ||
                         (captureOperation == CaptureOperation.DragSample     && (button.type == ButtonType.Dpcm       || button.type == ButtonType.DpcmHeader       || button.type == ButtonType.DpcmFolder)) ||
-                        (captureOperation == CaptureOperation.DragArpeggio   && (button.type == ButtonType.Arpeggio   || button.type == ButtonType.ArpeggioFolder)) || // No header to account for "None" arp.
+                        (captureOperation == CaptureOperation.DragArpeggio   && ((button.type == ButtonType.Arpeggio && draggedArpeggio != null) || button.type == ButtonType.ArpeggioFolder)) || // No header to account for "None" arp.
                         // Folder can be insert : below another folder OR below the last item not in a folder
                         (captureOperation == CaptureOperation.DragFolder     && ((button.folder != null && button.folder.Type == draggedFolder.Type) || (!button.ItemIsInFolder && nextButton != null && nextButton.folder != null && nextButton.folder.Type == draggedFolder.Type))))
                     {
@@ -1591,11 +1591,11 @@ namespace FamiStudio
             // HACK : This is gross. We have logic in the rendering code. This should be done elsewhere.
             if (captureOperation != CaptureOperation.None && captureThresholdMet)
             {
-                if (captureOperation == CaptureOperation.DragSong       ||
-                    captureOperation == CaptureOperation.DragInstrument ||
-                    captureOperation == CaptureOperation.DragSample     ||
-                    captureOperation == CaptureOperation.DragArpeggio   ||
-                    captureOperation == CaptureOperation.DragFolder)
+                if ((captureOperation == CaptureOperation.DragSong)       ||
+                    (captureOperation == CaptureOperation.DragInstrument) ||
+                    (captureOperation == CaptureOperation.DragSample) ||
+                    (captureOperation == CaptureOperation.DragArpeggio && draggedArpeggio != null) ||
+                    (captureOperation == CaptureOperation.DragFolder))
                 {
                     var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
                     var beforeButtonIdx = GetDragCaptureState(pt.X, pt.Y, out var draggedInFolder);
@@ -2112,9 +2112,7 @@ namespace FamiStudio
                 }
                 else if (captureOperation == CaptureOperation.DragArpeggio)
                 {
-                    Debug.Assert(draggedArpeggio != null);
-
-                    if (inside && button != null)
+                    if (inside && button != null && draggedArpeggio != null)
                     {
                         Debug.Assert(button.type == ButtonType.Arpeggio || button.type == ButtonType.ArpeggioFolder);
 
@@ -3632,7 +3630,7 @@ namespace FamiStudio
                     StartCaptureOperation(e.X, e.Y, CaptureOperation.DragArpeggioValues, buttonIdx, buttonRelX, buttonRelY);
                     App.StartEditArpeggio(button.arpeggio);
                 }
-                else if (draggedArpeggio != null)
+                else
                 {
                     StartCaptureOperation(e.X, e.Y, CaptureOperation.DragArpeggio, buttonIdx);
                 }
