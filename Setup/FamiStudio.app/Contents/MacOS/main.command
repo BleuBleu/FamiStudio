@@ -13,10 +13,15 @@ VERSION_TITLE="Cannot launch $APPNAME"
 VERSION_MSG="$APPNAME requires the .NET 6.0 runtime."
 DOWNLOAD_URL="https://famistudio.org/doc/install/#macos"
 
-DOTNET_RUNTIMES="$(/usr/local/share/dotnet/dotnet --list-runtimes)"
+DOTNET_PATH="/usr/local/share/dotnet/dotnet"
+if [ -x "/opt/homebrew/opt/dotnet@6/bin/dotnet" ]; then
+    DOTNET_PATH="/opt/homebrew/opt/dotnet@6/bin/dotnet"
+fi
+
+DOTNET_RUNTIMES="$($DOTNET_PATH --list-runtimes)"
 DOTNET_RUNTIME_GREP="$(echo $DOTNET_RUNTIMES | grep 'Microsoft.NETCore.App 6.0')"
 
-if [ -z "$DOTNET_RUNTIMES" ] || [ -z "$DOTNET_RUNTIME_GREP" ] 
+if [ -z "$DOTNET_RUNTIMES" ] || [ -z "$DOTNET_RUNTIME_GREP" ]
 then
     osascript \
     -e "set question to display dialog \"$VERSION_MSG\" with title \"$VERSION_TITLE\" buttons {\"Cancel\", \"Download...\"} default button 2" \
@@ -27,7 +32,7 @@ then
 fi
 
 # Command line
-DOTNET_EXEC="exec -a \"$PROCESS_NAME\" /usr/local/share/dotnet/dotnet"
+DOTNET_EXEC="exec -a \"$PROCESS_NAME\" $DOTNET_PATH"
 
 # Create log file directory if it doesn't exist
 LOG_FILE="$HOME/Library/Application Support/$APPNAME/$APPNAME.log"
