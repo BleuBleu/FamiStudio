@@ -1,6 +1,5 @@
 4.2.0 Brainstorm
 =================
-x Review OpenGL 3.3 requirements, can we lower this to 3.2, 3.1, 3.0?
 x Upgrade Windows to .NET 7.0
 	- Test MacOS startup script.
 / Switch to .NET for Android too.
@@ -9,25 +8,17 @@ x Upgrade Windows to .NET 7.0
 	- Bring back APK
 / Instrument folders + collapse entire sections (samples, arps, etc.) 
 	- Make it work on mobile.
-x Keep colors on FS.txt
-x When using shy mode, we could make the patterns larger if there is room.
 / Video export improvements:
 	- Test/Make it work on mobile.
-x Rename "Bitmap" to "Texture"
-x Improved FDS filtering.
-x Fix that bug where patterns are modified twice if you select 2 instances
-x When changing note length, we may mess up other pattern. We need to duplicated them + warn user. (https://discord.com/channels/@me/819772561940152321/1157848245352005696)
-x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/819772561940152321/1151930656302051398)
 / Latency improvements:
 	- Android : Run short/1-frame tests.
 	- MacOS : Audio device detection change.
+/ Hold SHIFT+click (also double-click) for multiple delete.	
+	- Make it work on mobile.
+/ Mixer improvements
+	- Make it work on mobile.
 - Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
 	=> MacOS only, GLFWToWindow() uses DpiScaling.Window.
-x Export -> Video settings scrolling area doesnt take scaling into account.
-x Sort button for songs doesnt do shit?
-x FDS automod
-- Sound engine improvements:
-	- At the end, run special unit test with old songs.
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
 	- Dont compress vibrato envelopes.
 	- New opcode "override envelope and reset", call only when speed changes.
@@ -36,15 +27,12 @@ x FDS automod
 - Android media player notification option
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
-- Dont publish for chromebooks
 x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : Check FDS emulation code. There is a big comment explaining the situation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
 	- Add "Accurate Seek" to config dialog too.
-x Replace an specific instrument by another in selection (A->B), R+CLICK.
-- We should be able to drag/copy samples mappings between instruments.
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - BUG : Mouse over project explorer envelope buttons is offset.
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
@@ -56,10 +44,6 @@ x Replace an specific instrument by another in selection (A->B), R+CLICK.
 	- Add to famistudio text.
 - Add a way to type in FX + param values, even if its janky...
 - Logarithmic FX values.
-/ Hold SHIFT+click (also double-click) for multiple delete.	
-	- Make it work on mobile.
-/ Mixer improvements
-	- Make it work on mobile.
 
 4.2.0 Testing/Packaging
 =======================
@@ -68,6 +52,8 @@ x Replace an specific instrument by another in selection (A->B), R+CLICK.
 - Make sure PortAudio.dll is included in portable + setup.
 - Compare FDS filter with my FDS once im back home. See how close we can get without adding a dedicated filter.
 - Add new features to unit tests
+- Run huge sound engine test with old songs.
+- Dont publish for chromebooks
 
 4.2.0 Change Log
 ===========================
@@ -82,7 +68,7 @@ x Replace an specific instrument by another in selection (A->B), R+CLICK.
 	* Accurate seek support (fully emulate entire song from start)
 	* Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
 	* Support for up to 256 instruments (for both regular and expansion) in sound engine
-	* Many other small quality of life improvements (eraser mode, etc......... LIST MORE HERE!)
+	* Many other small quality of life improvements (eraser mode, copy samples, etc......... LIST MORE HERE!)
 	* Upgraded to .NET 7.0
 	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)
 -Breaking/Behavior changes:
