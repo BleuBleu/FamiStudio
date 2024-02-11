@@ -2360,7 +2360,7 @@ namespace FamiStudio
         {
             if (audioDeviceChanged)
             {
-                RecreateAudioPlayers();
+                RecreateAudioPlayers(true);
                 DisplayNotification(AudioDeviceChanged);
                 audioDeviceChanged = false;
             }

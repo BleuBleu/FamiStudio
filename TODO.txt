@@ -21,7 +21,6 @@ x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/8197
 / Latency improvements:
 	- Android : Run short/1-frame tests.
 	- MacOS : Audio device detection change.
-	- Windows : Device change doesnt when switching to TV with PS4 controller
 - Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
 	=> MacOS only, GLFWToWindow() uses DpiScaling.Window.
 x Export -> Video settings scrolling area doesnt take scaling into account.
