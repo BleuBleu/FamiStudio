@@ -17,11 +17,12 @@ famistudio_dpcm_bank_callback:
 .segment "CODE2"
 
 FAMISTUDIO_CFG_EXTERNAL = 1
+FAMISTUDIO_ASSEMBLER_CA65 = 1
 .define FAMISTUDIO_CA65_ZP_SEGMENT   ZEROPAGE
 .define FAMISTUDIO_CA65_RAM_SEGMENT  RAM
 .define FAMISTUDIO_CA65_CODE_SEGMENT CODE2
 .include "test_defs.inc"
-.include "..\famistudio_ca65.s"
+.include "../famistudio.s"
 
 .segment "CHARS"
 .res 8192
