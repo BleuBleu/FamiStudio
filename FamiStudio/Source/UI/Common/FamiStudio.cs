@@ -2342,6 +2342,9 @@ namespace FamiStudio
             {
                 songPlayer.ConnectOscilloscope(null);
                 instrumentPlayer.ConnectOscilloscope(oscilloscope);
+
+                if (Settings.RewindAfterPlay)
+                    SeekSong(lastPlayPosition);
             }
         }
 

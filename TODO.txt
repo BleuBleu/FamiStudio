@@ -52,7 +52,6 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 - Replace an specific instrument by another in selection (A->B), R+CLICK.
 - We should be able to drag/copy samples mappings between instruments.
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
-- BUG : When reach end of non-looping song, doesnt rewind to previous.
 - BUG : Mouse over project explorer envelope buttons is offset.
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
 x BUG : First samples of CV2 plays wrong??? Only if at first frame...
