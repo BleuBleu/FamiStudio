@@ -1528,18 +1528,19 @@ namespace FamiStudio
                 if (song.LoopPoint < 0)
                 {
                     if (kernel == FamiToneKernel.FamiStudio)
-                    {
                         songData.Add($"${OpcodeEndSong:x2}+");
-                    }
                     else
-                    {
                         songData.Add($"{ll}song{songIdx}ch{c}loop:");
-                        songData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}");
-                    }
+
+                    // We still need a stop note after since our 'famistudio_advance_channel' never ends of an opcode.
+                    songData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}*");
                 }
 
-                songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeLoop : OpcodeLoopFT2):x2}");
-                songData.Add($"{ll}song{songIdx}ch{c}loop");
+                if (song.LoopPoint >= 0 || kernel != FamiToneKernel.FamiStudio)
+                {
+                    songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeLoop : OpcodeLoopFT2):x2}+");
+                    songData.Add($"{ll}song{songIdx}ch{c}loop");
+                }
             }
 
             return songData;
@@ -1717,7 +1718,8 @@ namespace FamiStudio
                 }
             }
 
-            Debug.Assert(byteString == null);
+            if (writeLines && byteString != null)
+                lines.Add(byteString);
 
             return size;
         }
