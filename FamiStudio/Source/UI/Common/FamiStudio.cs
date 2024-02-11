@@ -416,7 +416,7 @@ namespace FamiStudio
 
         public void ReplacePianoRollSelectionInstrument(Instrument inst)
         {
-            PianoRoll.ReplaceSelectionInstrument(inst, Point.Empty, true);
+            PianoRoll.ReplaceSelectionInstrument(inst, Point.Empty, null, true);
         }
 
         public void ReplacePianoRollSelectionArpeggio(Arpeggio arp)
@@ -560,7 +560,7 @@ namespace FamiStudio
 
         private void PianoRoll_NoteEyedropped(Note note)
         {
-            if (note != null)
+            if (note != null && note.Instrument != null)
             {
                 selectedInstrument = note.Instrument;
                 selectedArpeggio   = note.Arpeggio;

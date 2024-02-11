@@ -28,12 +28,7 @@ x Export -> Video settings scrolling area doesnt take scaling into account.
 x Sort button for songs doesnt do shit?
 x FDS automod
 - Sound engine improvements:
-	x Instrument/attack refactor
-	x Allow no-attack when envelopes are identical (mostly useful for EPSM/VRC7)
-	x Make project settings a multi-property dialog, add sound engine options for dpcm/inst extended range.
-		- Make real icons.
-	x Extended intrument mode for sound engine, up to 256
-	- At the end, run special unit test with all songs.
+	- At the end, run special unit test with old songs.
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
 	- Dont compress vibrato envelopes.
 	- New opcode "override envelope and reset", call only when speed changes.
@@ -49,12 +44,11 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	- NesSndEmu : Check FDS emulation code. There is a big comment explaining the situation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
 	- Add "Accurate Seek" to config dialog too.
-- Replace an specific instrument by another in selection (A->B), R+CLICK.
+x Replace an specific instrument by another in selection (A->B), R+CLICK.
 - We should be able to drag/copy samples mappings between instruments.
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - BUG : Mouse over project explorer envelope buttons is offset.
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
-x BUG : First samples of CV2 plays wrong??? Only if at first frame...
 - S5B Envelope
 	- Check volume, seems square is very low with low values, might be normal.
 	- Do EPSM version too => Wait on Perkka to free 2 bytes in instrument header.
@@ -65,11 +59,8 @@ x BUG : First samples of CV2 plays wrong??? Only if at first frame...
 - Logarithmic FX values.
 / Hold SHIFT+click (also double-click) for multiple delete.	
 	- Make it work on mobile.
-x Zoom level changes when going env then come back to piano 
 / Mixer improvements
 	- Make it work on mobile.
-	- Should we store the "AllowMixerOverride" somewhere else? FamiStudio.cs?
-- Simple parameters for instruments (duty, volume)
 
 4.2.0 Testing/Packaging
 =======================
@@ -198,6 +189,7 @@ Discord
 
 Backlog: 
 =========
+- Simple parameters for instruments (duty, volume)
 - Export selection. 
 	https://discord.com/channels/@me/819772561940152321/1202138717054304306
 - Can we keep undo/redo buttons on screen to 1280px? Like hide metronome, etc.

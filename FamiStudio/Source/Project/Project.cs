@@ -99,7 +99,7 @@ namespace FamiStudio
         public bool SoundEngineUsesExtendedDpcm        { get => soundEngineUsesExtendedDpcm || soundEngineUsesBankSwitching; set => soundEngineUsesExtendedDpcm = value; }
         public bool SoundEngineUsesDpcmBankSwitching   { get => soundEngineUsesBankSwitching; set => soundEngineUsesBankSwitching = value; }
 
-        public bool AllowMixerOverride   { get => allowMixerOverride;   set => allowMixerOverride   = value; }
+        public bool AllowMixerOverride   { get => allowMixerOverride;   set => allowMixerOverride   = value; } // TODO : This has no business being here. More to FamiStudio class.
         public bool OverrideBassCutoffHz { get => overrideBassCutoffHz; set => overrideBassCutoffHz = value; }
         public int  BassCutoffHz         { get => bassCutoffHz;         set => bassCutoffHz         = value; }
 
