@@ -94,8 +94,8 @@
     <Compile Include="Source\Platform\Desktop\Platform.cs" />
     <Compile Include="Source\Platform\Windows\Platform.cs" />
     <Compile Include="Source\Platform\Windows\MultiMediaNotifications.cs" />
-    <Compile Include="Source\Player\AudioStreamInterface.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
+    <Compile Include="Source\Player\AudioStreamInterface.cs" />
     <Compile Include="Source\Player\BasePlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\NesApu.cs" />
@@ -119,8 +119,8 @@
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
-    <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\Container.cs" />
+    <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\Cursors.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\Dialog.cs" />

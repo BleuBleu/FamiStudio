@@ -6,7 +6,6 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Debug = System.Diagnostics.Debug;
 
 namespace FamiStudio
 {

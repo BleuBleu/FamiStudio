@@ -18,7 +18,6 @@ using Android.Views.InputMethods;
 using Google.Android.Material.Button;
 using Java.Util;
 
-using Debug       = System.Diagnostics.Debug;
 using Orientation = Android.Widget.Orientation;
 using AndroidX.Core.Graphics;
 
@@ -772,7 +771,7 @@ namespace FamiStudio
             Debug.Assert(false); // MATTT : TODO!
         }
 
-        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null)
+        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null, GridOptions options = GridOptions.None)
         {
             // We need initial data on mobile.
             if (data != null)
@@ -1050,6 +1049,18 @@ namespace FamiStudio
                     break;
                 case PropertyType.NumericUpDown:
                     (prop.controls[0] as HorizontalNumberPicker).Value = (int)value;
+                    break;
+            }
+        }
+
+        public void SetPropertyValue(int idx, int rowIdx, int colIdx, object value)
+        {
+            var prop = properties[idx];
+
+            switch (prop.type)
+            {
+                case PropertyType.Grid:
+                    UpdateGrid(idx, rowIdx, colIdx, value);
                     break;
             }
         }

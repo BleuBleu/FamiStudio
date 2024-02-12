@@ -363,7 +363,7 @@ namespace FamiStudio
                     return new TextureAtlasRef(a, idx);
             }
 
-            Debug.Assert(false); // Not found!
+            Debug.Assert(false, $"Error loading texture {name}!"); // Not found!
             return null;
         }
 

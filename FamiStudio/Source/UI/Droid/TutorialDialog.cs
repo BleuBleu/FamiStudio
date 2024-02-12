@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Android.Text;
 using Android.Text.Style;
 using Android.App;
@@ -15,10 +17,7 @@ using Google.Android.Material.AppBar;
 using Java.Lang;
 using Java.Util;
 
-using Debug = System.Diagnostics.Debug;
 using ActionBar = AndroidX.AppCompat.App.ActionBar;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace FamiStudio
 {
