@@ -768,7 +768,16 @@ namespace FamiStudio
 
         public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<object, string> fmt)
         {
-            Debug.Assert(false); // MATTT : TODO!
+            var prop = properties[propIdx];
+            Debug.Assert(prop.type == PropertyType.Grid);
+            Debug.Assert(prop.columns[colIdx].Type == ColumnType.Slider);
+
+            var ctrlIdx = rowIdx * prop.columns.Length + colIdx;
+            var seekBar = prop.controls[ctrlIdx] as SeekBar;
+
+            // MATTT : Formatting!!!
+            seekBar.Min = min;
+            seekBar.Max = max;
         }
 
         public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null, GridOptions options = GridOptions.None)

@@ -595,7 +595,7 @@ namespace FamiStudio
             }
             else if (propIdx == 1) // Song
             {
-                props.UpdateGrid(17, GetDefaultChannelsGridData(Platform.IsDesktop, Platform.IsDesktop, project.Songs[props.GetSelectedIndex(1)]));
+                props.UpdateGrid(18, GetDefaultChannelsGridData(Platform.IsDesktop, Platform.IsDesktop, project.Songs[props.GetSelectedIndex(1)]));
             }
             else if (propIdx == 17) // Stereo
             {

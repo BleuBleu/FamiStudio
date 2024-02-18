@@ -174,9 +174,11 @@ Discord
 
 Backlog: 
 =========
+- Paste FX values from text. 	Kain wanted to change DAC slowly, had values to paste. 
 - Simple parameters for instruments (duty, volume)
 - Export selection. 
 	https://discord.com/channels/@me/819772561940152321/1202138717054304306
+- Wome kind of warning if multiple VRC7 patch-0 instrument overlaps?
 - Can we keep undo/redo buttons on screen to 1280px? Like hide metronome, etc.
 - A way to view the preview effect value (grey rectangle). Either draw it on the left edge, or in the piano roll tolltip.
 	https://discord.com/channels/@me/819772561940152321/1157075515199475732
@@ -232,5 +234,7 @@ Backlog:
 - Length counter support? https://www.youtube.com/watch?v=Fg8B3kiVckY
 - Double-click to edit name of instrument
 - Way to tell if a pattern has other instances, like highlight all instances when mouse over? 
+- There is no vertical scaling in effect. Vertical scaling is done with piano, there is no piano.
+	https://discord.com/channels/747649221879922840/747649222354010173/1206908564262617151
 - Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
 	https://discord.com/channels/@me/819772561940152321/1187597131859636276
