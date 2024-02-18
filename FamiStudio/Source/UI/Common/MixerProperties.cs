@@ -124,7 +124,7 @@ namespace FamiStudio
 
             if (project != null)
                 copyAppSettingsIndex = props.AddButton(null, ResetToAppSettingsLabel);
-            resetDefaultIndex = props.AddButton(null, ResetToDefaultsLabel);
+            resetDefaultIndex = props.AddButton(Platform.IsMobile ? ResetToDefaultsLabel : null, ResetToDefaultsLabel);
 
             page.AddLabel(Platform.IsDesktop ? null : NoteLabel, NoteMessageLabel, true);
 

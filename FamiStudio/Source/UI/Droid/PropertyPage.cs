@@ -20,6 +20,7 @@ using Java.Util;
 
 using Orientation = Android.Widget.Orientation;
 using AndroidX.Core.Graphics;
+using System.Globalization;
 
 namespace FamiStudio
 {
@@ -773,11 +774,12 @@ namespace FamiStudio
             Debug.Assert(prop.columns[colIdx].Type == ColumnType.Slider);
 
             var ctrlIdx = rowIdx * prop.columns.Length + colIdx;
-            var seekBar = prop.controls[ctrlIdx] as SeekBar;
+            //var seekBar = prop.controls[ctrlIdx] as SeekBar;
+            var seekBar = prop.controls[ctrlIdx] as SeekBarWithLabelView;
 
-            // MATTT : Formatting!!!
             seekBar.Min = min;
             seekBar.Max = max;
+            seekBar.Format = fmt;
         }
 
         public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null, GridOptions options = GridOptions.None)
@@ -834,7 +836,8 @@ namespace FamiStudio
                                 view = text;
                                 break;
                             case ColumnType.Slider:
-                                var seek = new SeekBar(new ContextThemeWrapper(context, Resource.Style.LightGraySeekBar));
+                                //var seek = new SeekBar(new ContextThemeWrapper(context, Resource.Style.LightGraySeekBar));
+                                var seek = new SeekBarWithLabelView(context, col.MinValue, col.MaxValue, data == null ? 50 : (int)data[r, c]);
                                 seek.Min = col.MinValue;
                                 seek.Max = col.MaxValue;
                                 seek.Progress = data == null ? 50 : (int)data[r, c];
@@ -846,10 +849,12 @@ namespace FamiStudio
                                 break;
                         }
 
+                        var margin = DroidUtils.DpToPixels(2);
                         var gridLayoutParams = new GridLayout.LayoutParams(
                                 GridLayout.InvokeSpec(r, 1),
                                 GridLayout.InvokeSpec(c, 1, c == maxColIdx ? 1.0f : 0.0f));
                         gridLayoutParams.SetGravity(GravityFlags.CenterVertical);
+                        gridLayoutParams.SetMargins(margin, margin, margin, margin);
                         gridLayout.AddView(view, gridLayoutParams);
 
                         prop.controls.Add(view);
@@ -1344,6 +1349,128 @@ namespace FamiStudio
         }
     }
 
+    public class SeekBarWithLabelView : View
+    {
+        private readonly int LightWidth = 3;
+
+        private Paint borderPaint;
+        private Paint bgPaint;
+        private Paint barPaint;
+        private Paint textPaint;
+
+        private bool changing = false;
+        private float touchDownX;
+        private float touchSlop;
+
+        private int min = 0;
+        private int max = 100;
+        private int progress = 0;
+        private Func<object, string> format;
+
+        public int Min { get => min; set => min = value; }
+        public int Max { get => max; set => max = value; }
+        public int Progress { get => progress; set => progress = value; }
+        public Func<object, string> Format { get => format; set => format = value; }
+
+        public SeekBarWithLabelView(Context context, int min, int max, int progress, Func<object, string> format = null) : base(context)
+        {
+            Initialize(context);
+            this.min = min;
+            this.max = max;
+            this.progress = progress;
+            this.Format = format == null ? (o) => Convert.ToString(o, CultureInfo.InvariantCulture) : format;
+        }
+
+        public SeekBarWithLabelView(Context context, IAttributeSet attrs) : base(context, attrs)
+        {
+            Initialize(context, attrs);
+        }
+
+        protected SeekBarWithLabelView(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
+        {
+        }
+
+        private void Initialize(Context context, IAttributeSet attrs = null)
+        {
+            borderPaint = new Paint();
+            borderPaint.SetStyle(Paint.Style.Stroke);
+            borderPaint.StrokeWidth = LightWidth;
+            borderPaint.Color = Android.Graphics.Color.Black;
+
+            textPaint = new Paint();
+            textPaint.Color = new Android.Graphics.Color(Theme.LightGreyColor1.ToArgb());
+            textPaint.TextSize = DroidUtils.DpToPixels(14);
+            textPaint.TextAlign = Paint.Align.Center;
+
+            bgPaint = new Paint();
+            bgPaint.SetStyle(Paint.Style.Fill);
+            bgPaint.Color = new Android.Graphics.Color(Theme.DarkGreyColor1.ToArgb());
+
+            barPaint = new Paint();
+            barPaint.SetStyle(Paint.Style.Fill);
+            barPaint.Color = new Android.Graphics.Color(Theme.DarkGreyColor6.ToArgb());
+
+            touchSlop = ViewConfiguration.Get(context).ScaledTouchSlop;
+            Touch += SeekBarWithLabelView_Touch;
+        }
+
+        private void SeekBarWithLabelView_Touch(object sender, TouchEventArgs e)
+        {
+            if (e.Event.Action == MotionEventActions.Down)
+            {
+                touchDownX = e.Event.GetX();
+            }
+            else if (e.Event.Action == MotionEventActions.Up)
+            {
+                UpdateProgress(e);
+                changing = false;
+            }
+            else if (e.Event.Action == MotionEventActions.Move)
+            {
+                if (changing)
+                {
+                    UpdateProgress(e);
+                }
+                else if (Math.Abs(touchDownX - e.Event.GetX()) > touchSlop)
+                {
+                    changing = true;
+                    UpdateProgress(e);
+                }
+            }
+            else if (e.Event.Action == MotionEventActions.Cancel)
+            {
+                changing = false;
+            }
+
+            Debug.WriteLine($"{e.Event.Action} {e.Event.GetX()}");
+        }
+
+        private void UpdateProgress(TouchEventArgs e)
+        {
+            var ratio = e.Event.GetX() / (float)MeasuredWidth;
+            progress = Utils.Clamp((int)Math.Round(ratio * (max - min) + min), min, max);
+            Invalidate();
+        }
+
+        protected override void OnDraw(Canvas canvas)
+        {
+            canvas.DrawRect(0, 0, canvas.Width - 1, canvas.Height - 1, bgPaint);
+            canvas.DrawRect(0, 0, (progress - min) / (float)(max - min) * canvas.Width, canvas.Height, barPaint);
+            canvas.DrawText(format(progress), (canvas.Width - 1) * 0.5f, (canvas.Height - (textPaint.Descent() + textPaint.Ascent())) * 0.5f, textPaint);
+            canvas.DrawRect(0, 0, canvas.Width - 1, canvas.Height - 1, borderPaint);
+        }
+
+        protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
+        {
+            int dw = 0;
+            int dh = DroidUtils.DpToPixels(24);
+
+            SetMeasuredDimension(
+                    View.ResolveSizeAndState(dw, widthMeasureSpec,  0),
+                    View.ResolveSizeAndState(dh, heightMeasureSpec, 0));
+        }
+    }
+
     public class ColorPickerView : View
     {
         Paint borderPaint;
@@ -1478,7 +1605,7 @@ namespace FamiStudio
 
         protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
         {
-            var width = MeasureSpec.GetSize(widthMeasureSpec);
+            var width  = MeasureSpec.GetSize(widthMeasureSpec);
             var height = MeasureSpec.GetSize(heightMeasureSpec);
 
             var ratio = Theme.CustomColors.GetLength(1) / (float)Theme.CustomColors.GetLength(0);
