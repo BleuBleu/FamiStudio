@@ -659,7 +659,7 @@ namespace FamiStudio
                             lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
                             lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
                             // we can fit the first 4 bytes of data here to avoid needing to add padding
-                            lines.Add($"\t{db} {String.Join(",", epsmPatchRegsReordered .Take(4).Select(r => $"${r:x2}"))}");
+                            lines.Add($"\t{db} $00, $00, $00, $00");
                         }
 
                         size += 16;
@@ -688,8 +688,8 @@ namespace FamiStudio
                             epsmPatchRegsReordered[reg] = instrument.EpsmPatchRegs[epsmRegOrder[reg]];
                         }
                         lines.Add($"{ll}instrument_epsm_extra_patch{i}:");
-                        lines.Add($"\t{db} {String.Join(",", epsmPatchRegsReordered.Skip(4).Select(r => $"${r:x2}"))}");
-                        size += 27;
+                        lines.Add($"\t{db} {String.Join(",", epsmPatchRegsReordered.Select(r => $"${r:x2}"))}");
+                        size += 31;
                     }
                 }
                 lines.Add("");
