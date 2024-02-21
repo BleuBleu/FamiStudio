@@ -310,6 +310,7 @@ namespace FamiStudio
             None,
             DragInstrument,
             DragInstrumentEnvelope,
+            DragInstrumentSampleMappings,
             DragArpeggio,
             DragArpeggioValues,
             DragSample,
@@ -323,15 +324,16 @@ namespace FamiStudio
 
         static readonly bool[] captureNeedsThreshold = new[]
         {
-            false, // None,
-            true,  // DragInstrument,
-            true,  // DragInstrumentEnvelope,
-            true,  // DragArpeggio,
+            false, // None
+            true,  // DragInstrument
+            true,  // DragInstrumentEnvelope
+            true,  // DragInstrumentSampleMappings
+            true,  // DragArpeggio
             true,  // DragArpeggioValues
-            true,  // DragSample,
-            true,  // DragSong,
-            true,  // DragFolder,
-            false, // MoveSlider,
+            true,  // DragSample
+            true,  // DragSong
+            true,  // DragFolder
+            false, // MoveSlider
             false, // SliderButtons
             false, // ScrollBar
             false  // MobilePan
@@ -339,15 +341,16 @@ namespace FamiStudio
 
         static readonly bool[] captureWantsRealTimeUpdate = new[]
         {
-            false, // None,
-            true,  // DragInstrument,
-            true,  // DragInstrumentEnvelope,
-            true,  // DragArpeggio,
+            false, // None
+            true,  // DragInstrument
+            true,  // DragInstrumentEnvelope
+            true,  // DragInstrumentSampleMappings
+            true,  // DragArpeggio
             false, // DragArpeggioValues
-            true,  // DragSample,
-            true,  // DragSong,
-            true,  // DragFolder,
-            false, // MoveSlider,
+            true,  // DragSample
+            true,  // DragSong
+            true,  // DragFolder
+            false, // MoveSlider
             true,  // SliderButtons
             false, // ScrollBar
             false  // MobilePan
@@ -1276,7 +1279,7 @@ namespace FamiStudio
                     if ((captureOperation == CaptureOperation.DragSong       && (button.type == ButtonType.Song       || button.type == ButtonType.SongHeader       || button.type == ButtonType.SongFolder)) ||
                         (captureOperation == CaptureOperation.DragInstrument && (button.type == ButtonType.Instrument || button.type == ButtonType.InstrumentHeader || button.type == ButtonType.InstrumentFolder)) ||
                         (captureOperation == CaptureOperation.DragSample     && (button.type == ButtonType.Dpcm       || button.type == ButtonType.DpcmHeader       || button.type == ButtonType.DpcmFolder)) ||
-                        (captureOperation == CaptureOperation.DragArpeggio   && (button.type == ButtonType.Arpeggio   || button.type == ButtonType.ArpeggioFolder)) || // No header to account for "None" arp.
+                        (captureOperation == CaptureOperation.DragArpeggio   && ((button.type == ButtonType.Arpeggio && draggedArpeggio != null) || button.type == ButtonType.ArpeggioFolder)) || // No header to account for "None" arp.
                         // Folder can be insert : below another folder OR below the last item not in a folder
                         (captureOperation == CaptureOperation.DragFolder     && ((button.folder != null && button.folder.Type == draggedFolder.Type) || (!button.ItemIsInFolder && nextButton != null && nextButton.folder != null && nextButton.folder.Type == draggedFolder.Type))))
                     {
@@ -1591,11 +1594,11 @@ namespace FamiStudio
             // HACK : This is gross. We have logic in the rendering code. This should be done elsewhere.
             if (captureOperation != CaptureOperation.None && captureThresholdMet)
             {
-                if (captureOperation == CaptureOperation.DragSong       ||
-                    captureOperation == CaptureOperation.DragInstrument ||
-                    captureOperation == CaptureOperation.DragSample     ||
-                    captureOperation == CaptureOperation.DragArpeggio   ||
-                    captureOperation == CaptureOperation.DragFolder)
+                if ((captureOperation == CaptureOperation.DragSong)       ||
+                    (captureOperation == CaptureOperation.DragInstrument) ||
+                    (captureOperation == CaptureOperation.DragSample) ||
+                    (captureOperation == CaptureOperation.DragArpeggio && draggedArpeggio != null) ||
+                    (captureOperation == CaptureOperation.DragFolder))
                 {
                     var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
                     var beforeButtonIdx = GetDragCaptureState(pt.X, pt.Y, out var draggedInFolder);
@@ -1616,15 +1619,17 @@ namespace FamiStudio
                         c.DrawLine(draggedInFolder != null ? expandButtonSizeX : 0, lineY, contentSizeX, lineY, lineColor, draggedLineSizeY);
                     }
                 }
-                else if ((captureOperation == CaptureOperation.DragInstrumentEnvelope || captureOperation == CaptureOperation.DragArpeggioValues) && envelopeDragIdx >= 0)
+                else if ((captureOperation == CaptureOperation.DragInstrumentEnvelope || captureOperation == CaptureOperation.DragArpeggioValues) && envelopeDragIdx >= 0 || 
+                         (captureOperation == CaptureOperation.DragInstrumentSampleMappings))
                 {
                     var pt = Platform.IsDesktop ? ScreenToControl(CursorPosition) : new Point(mouseLastX, mouseLastY);
                     if (ClientRectangle.Contains(pt))
                     {
                         var bx = pt.X - captureButtonRelX;
                         var by = pt.Y - captureButtonRelY - topTabSizeY;
-
-                        c.DrawTextureAtlas(bmpEnvelopes[envelopeDragIdx], bx, by, 0.5f, bitmapScale, Color.Black);
+                        var bmp = captureOperation == CaptureOperation.DragInstrumentSampleMappings ? bmpDPCM : bmpEnvelopes[envelopeDragIdx];
+                        
+                        c.DrawTextureAtlas(bmp, bx, by, 0.5f, bitmapScale, Color.Black);
 
                         if (Platform.IsMobile)
                             c.DrawRectangle(bx, by, bx + iconSize - 4, by + iconSize - 4, Theme.WhiteColor, 3, true, true);
@@ -2112,9 +2117,7 @@ namespace FamiStudio
                 }
                 else if (captureOperation == CaptureOperation.DragArpeggio)
                 {
-                    Debug.Assert(draggedArpeggio != null);
-
-                    if (inside && button != null)
+                    if (inside && button != null && draggedArpeggio != null)
                     {
                         Debug.Assert(button.type == ButtonType.Arpeggio || button.type == ButtonType.ArpeggioFolder);
 
@@ -2224,7 +2227,6 @@ namespace FamiStudio
                 if (ClientRectangle.Contains(x, y))
                 {
                     var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
-
                     var instrumentSrc = draggedInstrument;
                     var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
 
@@ -2266,6 +2268,42 @@ namespace FamiStudio
                         {
                             App.DisplayNotification($"Incompatible audio expansion!"); ;
                         }
+                    }
+                }
+            }
+            else
+            {
+                ScrollIfNearEdge(x, y);
+                MarkDirty();
+            }
+        }
+
+        private void UpdateDragInstrumentSampleMappings(int x, int y, bool final)
+        {
+            if (final)
+            {
+                if (ClientRectangle.Contains(x, y))
+                {
+                    var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
+                    var instrumentSrc = draggedInstrument;
+                    var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
+
+                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null && instrumentDst.Expansion == ExpansionType.None)
+                    {
+                        Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the DPCM sample assignments of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy DPCM Assignemnts", MessageBoxButtons.YesNo, (r) =>
+                        {
+                            if (r == DialogResult.Yes)
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
+                                instrumentDst.SamplesMapping.Clear();
+                                foreach (var mapping in instrumentSrc.SamplesMapping)
+                                    instrumentDst.MapDPCMSample(mapping.Key, mapping.Value.Sample, mapping.Value.Pitch, mapping.Value.Loop);
+                                App.UndoRedoManager.EndTransaction();
+
+                                if (Platform.IsDesktop)
+                                    App.StartEditDPCMMapping(instrumentDst);
+                            }
+                        });
                     }
                 }
             }
@@ -2345,6 +2383,9 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.DragInstrumentEnvelope:
                         UpdateDragInstrumentEnvelope(x, y, false);
+                        break;
+                    case CaptureOperation.DragInstrumentSampleMappings:
+                        UpdateDragInstrumentSampleMappings(x, y, false);
                         break;
                     case CaptureOperation.DragArpeggioValues:
                         UpdateDragArpeggioValues(x, y, false);
@@ -2507,6 +2548,9 @@ namespace FamiStudio
                 {
                     case CaptureOperation.DragInstrumentEnvelope:
                         UpdateDragInstrumentEnvelope(x, y, true);
+                        break;
+                    case CaptureOperation.DragInstrumentSampleMappings:
+                        UpdateDragInstrumentSampleMappings(x, y, true);
                         break;
                     case CaptureOperation.DragArpeggioValues:
                         UpdateDragArpeggioValues(x, y, true);
@@ -3422,6 +3466,8 @@ namespace FamiStudio
                 }
                 else if (subButtonType == SubButtonType.DPCM)
                 {
+                    draggedInstrument = button.instrument;
+                    StartCaptureOperation(e.X, e.Y, CaptureOperation.DragInstrumentSampleMappings, buttonIdx, buttonRelX, buttonRelY);
                     App.StartEditDPCMMapping(button.instrument);
                     return true;
                 }
@@ -3632,7 +3678,7 @@ namespace FamiStudio
                     StartCaptureOperation(e.X, e.Y, CaptureOperation.DragArpeggioValues, buttonIdx, buttonRelX, buttonRelY);
                     App.StartEditArpeggio(button.arpeggio);
                 }
-                else if (draggedArpeggio != null)
+                else
                 {
                     StartCaptureOperation(e.X, e.Y, CaptureOperation.DragArpeggio, buttonIdx);
                 }

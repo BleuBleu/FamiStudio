@@ -382,6 +382,7 @@ namespace FamiStudio
             volumeEnvelope[1] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (1.0f / 3.0f)));
             volumeEnvelope[2] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (2.0f / 3.0f)));
             volumeEnvelope[3] = new SampleVolumePair(SourceNumSamples - 1);
+            Process();
         }
 
         private void ClampVolumeEnvelope()

@@ -23,6 +23,9 @@ namespace FamiStudio
         private ushort  fdsModSpeed;
         private byte    fdsModDepth;
         private byte    fdsModDelay;
+        private bool    fdsAutoMod;
+        private byte    fdsAutoModDenom = 1;
+        private byte    fdsAutoModNumer = 1;
         private int     fdsResampleWavPeriod = 128;
         private int     fdsResampleWavOffset = 0;
         private bool    fdsResampleWavNormalize = true;
@@ -366,6 +369,9 @@ namespace FamiStudio
         public byte   FdsModDepth     { get => fdsModDepth;     set => fdsModDepth = value; }
         public byte   FdsModDelay     { get => fdsModDelay;     set => fdsModDelay = value; } 
         public byte   FdsMasterVolume { get => fdsMasterVolume; set => fdsMasterVolume = value; }
+        public bool   FdsAutoMod      { get => fdsAutoMod;      set => fdsAutoMod = value; }
+        public byte   FdsAutoModDenom { get => fdsAutoModDenom; set => fdsAutoModDenom = (byte)Utils.Clamp(value, 1, 32); }
+        public byte   FdsAutoModNumer { get => fdsAutoModNumer; set => fdsAutoModNumer = (byte)Utils.Clamp(value, 1, 32); }
 
         public void UpdateFdsModulationEnvelope()
         {
@@ -819,6 +825,8 @@ namespace FamiStudio
                 Debug.Assert(N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset));
             if (IsFds && fdsWavPreset != WavePresetType.Custom)
                 Debug.Assert(FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset));
+            if (IsFds && fdsModPreset != WavePresetType.Custom)
+                Debug.Assert(FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsModulation, fdsModPreset));
 
             Debug.Assert(
                 expansion != ExpansionType.None && samplesMapping == null ||
@@ -882,6 +890,13 @@ namespace FamiStudio
                             buffer.Serialize(ref fdsModSpeed);
                             buffer.Serialize(ref fdsModDepth); 
                             buffer.Serialize(ref fdsModDelay);
+                            // At version 16 (FamiStudio 4.2.0), we added FDS auto-modulation
+                            if (buffer.Version >= 16)
+                            {
+                                buffer.Serialize(ref fdsAutoMod);
+                                buffer.Serialize(ref fdsAutoModDenom);
+                                buffer.Serialize(ref fdsAutoModNumer);
+                            }
                             // At version 14 (FamiStudio 4.0.0), we added wav resampling for FDS.
                             if (buffer.Version >= 14)
                             {
@@ -1078,7 +1093,7 @@ namespace FamiStudio
                     n163WavPreset = WavePresetType.Custom;
                 if (IsFds && fdsWavPreset != WavePresetType.Custom && !FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
                     fdsWavPreset = WavePresetType.Custom;
-                if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsModPreset))
+                if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsModulation, fdsModPreset))
                     fdsModPreset = WavePresetType.Custom;
             }
         }

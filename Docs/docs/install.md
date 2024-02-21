@@ -21,7 +21,7 @@ If you are having problems running the portable application, be sure to install 
 
 If you are getting a VS2019 C++ Runtime error message, be sure to install the following package.
 
-* [Visual Studio Runtime](https://aka.ms/vs/16/release/vc_redist.x86.exe)
+* [Visual Studio Runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
 ### Warning on First Launch
 

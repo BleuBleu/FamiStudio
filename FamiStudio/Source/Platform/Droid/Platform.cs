@@ -1,7 +1,10 @@
-﻿using System;
+﻿global using Debug = FamiStudio.AndroidDebug;
+
+using System;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Android.App;
 using Android.Content;
@@ -9,8 +12,6 @@ using Android.Media;
 using Android.OS;
 using Android.Widget;
 using Xamarin.Essentials;
-
-using Debug = System.Diagnostics.Debug;
 
 namespace FamiStudio
 {
@@ -304,5 +305,31 @@ namespace FamiStudio
         public const bool IsWindows = false;
         public const bool IsLinux   = false;
         public const bool IsMacOS   = false;
+    }
+
+    // By default Debug.Assert() doesnt break in the debugger on Android. Workaround.
+    public class AndroidDebug
+    {
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void Write(string message)
+        {
+            Console.Write(message);
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void WriteLine(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void Assert(bool condition, [CallerArgumentExpression("condition")] string message = null)
+        {
+            if (!condition)
+            {
+                Console.WriteLine($"ASSERTION FAILED! {message}");
+                global::System.Diagnostics.Debugger.Break();
+            }
+        }
     }
 }

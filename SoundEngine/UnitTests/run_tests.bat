@@ -78,6 +78,10 @@ if "%rnd%"=="0" (
 			) else (
 				if "%rnd%"=="4" (
 					echo FAMISTUDIO_EXP_FDS=1 >> test_defs.inc
+					set /a rnd=%random% %%2
+					if "!rnd!"=="1" (
+						echo FAMISTUDIO_USE_FDS_AUTOMOD=1 >> test_defs.inc
+					)
 				) else (
 					if "%rnd%"=="5" (
 						echo FAMISTUDIO_EXP_N163=1 >> test_defs.inc

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Collections.Generic;
 using Android.Widget;
 using Android.App;
 using Android.Content;
@@ -17,9 +18,6 @@ using AndroidX.AppCompat.App;
 using AndroidX.Core.Content;
 using Javax.Microedition.Khronos.Opengles;
 using Google.Android.Material.BottomSheet;
-
-using Debug = System.Diagnostics.Debug;
-using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -125,10 +123,6 @@ namespace FamiStudio
 
             EnableFullscreenMode(Window);
             ForceScreenOn(false);
-
-        #if DEBUG
-            System.Diagnostics.Trace.Listeners.Add(new DebuggerBreakListener());
-        #endif
 
             Init.InitializeBaseSystems();
 
@@ -1167,27 +1161,4 @@ namespace FamiStudio
                 callback();
         }
     }
-#if DEBUG
-    // By default Debug.Assert() doesnt break in the debugger on Android. This does that.
-    public class DebuggerBreakListener : System.Diagnostics.TraceListener
-    {
-        bool breakOnFail = true;
-
-        public override void Write(string message)
-        {
-        }
-
-        public override void WriteLine(string message)
-        {
-        }
-
-        public override void Fail(string message, string detailMessage)
-        {
-            base.Fail(message, detailMessage);
-            
-            if (breakOnFail)
-                System.Diagnostics.Debugger.Break();
-        }
-    }
-#endif
 }

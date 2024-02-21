@@ -7,8 +7,6 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 
-using Debug = System.Diagnostics.Debug;
-
 namespace FamiStudio
 {
     public class AndroidAudioStream : IAudioStream

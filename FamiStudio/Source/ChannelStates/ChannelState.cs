@@ -22,6 +22,7 @@ namespace FamiStudio
         protected int dutyCycle = 0;
         protected bool pitchEnvelopeOverride = false;
         protected bool arpeggioEnvelopeOverride = false;
+        protected bool resetInstrumentOnNextAttack = false;
         protected Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         protected int[] envelopeIdx = new int[EnvelopeType.Count];
         protected int[] envelopeValues = new int[EnvelopeType.Count];
@@ -165,8 +166,6 @@ namespace FamiStudio
 
             // Pass on the same effect values if this note doesn't specify them.
             if (!newNote.HasFinePitch      && note.HasFinePitch)       newNote.FinePitch   = note.FinePitch;
-            if (!newNote.HasFdsModDepth    && note.HasFdsModDepth)     newNote.FdsModDepth = note.FdsModDepth;
-            if (!newNote.HasFdsModSpeed    && note.HasFdsModSpeed)     newNote.FdsModSpeed = note.FdsModSpeed;
             if (newNote.Instrument == null && note.Instrument != null) newNote.Instrument  = note.Instrument;
             if (newNote.Arpeggio   == null && note.Arpeggio   != null && !newNote.IsMusical) newNote.Arpeggio = note.Arpeggio;
 
@@ -186,6 +185,23 @@ namespace FamiStudio
 
                 // A new valid note always cancels any delayed cut.
                 delayedCutCounter = 0;
+            }
+
+            if (newNote.HasVibrato)
+            {
+                if (newNote.VibratoDepth != 0 && newNote.VibratoDepth != 0)
+                {
+                    envelopes[EnvelopeType.Pitch] = Envelope.CreateVibratoEnvelope(newNote.VibratoSpeed, newNote.VibratoDepth);
+                    envelopeIdx[EnvelopeType.Pitch] = 0;
+                    envelopeValues[EnvelopeType.Pitch] = 0;
+                    pitchEnvelopeOverride = true;
+                }
+                else
+                {
+                    envelopes[EnvelopeType.Pitch] = null;
+                    pitchEnvelopeOverride = false;
+                    resetInstrumentOnNextAttack = true;
+                }
             }
 
             if (newNote.IsStop)
@@ -247,6 +263,8 @@ namespace FamiStudio
 
                 if (noteHasAttack)
                 {
+                    instrumentChanged |= resetInstrumentOnNextAttack;
+
                     if (instrumentChanged)
                     {
                         for (var j = 0; j < EnvelopeType.Count; j++)
@@ -272,6 +290,7 @@ namespace FamiStudio
                         envelopeValues[EnvelopeType.WaveformRepeat] = envelopes[EnvelopeType.WaveformRepeat].Values[0] + 1;
 
                     noteTriggered = true;
+                    resetInstrumentOnNextAttack = false;
                 }
 
                 if (instrumentChanged)
@@ -288,22 +307,6 @@ namespace FamiStudio
                 note = newNote;
             }
 
-            if (note.HasVibrato)
-            {
-                if (note.VibratoDepth != 0 && note.VibratoDepth != 0)
-                {
-                    envelopes[EnvelopeType.Pitch] = Envelope.CreateVibratoEnvelope(note.VibratoSpeed, note.VibratoDepth);
-                    envelopeIdx[EnvelopeType.Pitch] = 0;
-                    envelopeValues[EnvelopeType.Pitch] = 0;
-                    pitchEnvelopeOverride = true;
-                }
-                else
-                {
-                    envelopes[EnvelopeType.Pitch] = null;
-                    pitchEnvelopeOverride = false;
-                }
-            }
-            
             // Fine pitch will always we read, so make sure it has a value.
             if (!note.HasFinePitch)
             {

@@ -1,6 +1,5 @@
 4.2.0 Brainstorm
 =================
-x Review OpenGL 3.3 requirements, can we lower this to 3.2, 3.1, 3.0?
 x Upgrade Windows to .NET 7.0
 	- Test MacOS startup script.
 / Switch to .NET for Android too.
@@ -9,54 +8,34 @@ x Upgrade Windows to .NET 7.0
 	- Bring back APK
 / Instrument folders + collapse entire sections (samples, arps, etc.) 
 	- Make it work on mobile.
-x Keep colors on FS.txt
-x When using shy mode, we could make the patterns larger if there is room.
 / Video export improvements:
 	- Test/Make it work on mobile.
-x Rename "Bitmap" to "Texture"
-x Improved FDS filtering.
-x Fix that bug where patterns are modified twice if you select 2 instances
-x When changing note length, we may mess up other pattern. We need to duplicated them + warn user. (https://discord.com/channels/@me/819772561940152321/1157848245352005696)
-x Project cleanup doesnt respect sorting? (https://discord.com/channels/@me/819772561940152321/1151930656302051398)
 / Latency improvements:
 	- Android : Run short/1-frame tests.
 	- MacOS : Audio device detection change.
-	- device change didn't work with PS4 controller?
+/ Hold SHIFT+click (also double-click) for multiple delete.	
+	- Make it work on mobile.
+/ Mixer improvements
+	- Make it work on mobile.
 - Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
 	=> MacOS only, GLFWToWindow() uses DpiScaling.Window.
-x Export -> Video settings scrolling area doesnt take scaling into account.
-x Sort button for songs doesnt do shit?
-- Sound engine improvements:
-	x Instrument/attack refactor
-	x Allow no-attack when envelopes are identical (mostly useful for EPSM/VRC7)
-	x Make project settings a multi-property dialog, add sound engine options for dpcm/inst extended range.
-		- Make real icons.
-	x Extended intrument mode for sound engine, up to 256
-	- At the end, run special unit test with all songs.
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
 	- Dont compress vibrato envelopes.
 	- New opcode "override envelope and reset", call only when speed changes.
-- FDS automod
-	- Review FDS_SWEEP_BIAS usage. Re-read nes dev wiki. 
 - Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 - Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
-- Dont publish for chromebooks
+x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : Check FDS emulation code. There is a big comment explaining the situation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
 	- Add "Accurate Seek" to config dialog too.
-- Replace an specific instrument by another in selection (A->B), R+CLICK.
-- We should be able to drag/copy samples mappings between instruments.
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
-- BUG : Non-looping songs dont export correctly.
-- BUG : When reach end of non-looping song, doesnt rewind to previous.
 - BUG : Mouse over project explorer envelope buttons is offset.
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
-x BUG : First samples of CV2 plays wrong??? Only if at first frame...
 - S5B Envelope
 	- Check volume, seems square is very low with low values, might be normal.
 	- Do EPSM version too => Wait on Perkka to free 2 bytes in instrument header.
@@ -65,13 +44,6 @@ x BUG : First samples of CV2 plays wrong??? Only if at first frame...
 	- Add to famistudio text.
 - Add a way to type in FX + param values, even if its janky...
 - Logarithmic FX values.
-/ Hold SHIFT+click (also double-click) for multiple delete.	
-	- Make it work on mobile.
-x Zoom level changes when going env then come back to piano 
-/ Mixer improvements
-	- Make it work on mobile.
-	- Should we store the "AllowMixerOverride" somewhere else? FamiStudio.cs?
-- Simple parameters for instruments (duty, volume)
 
 4.2.0 Testing/Packaging
 =======================
@@ -80,6 +52,27 @@ x Zoom level changes when going env then come back to piano
 - Make sure PortAudio.dll is included in portable + setup.
 - Compare FDS filter with my FDS once im back home. See how close we can get without adding a dedicated filter.
 - Add new features to unit tests
+- Run huge sound engine test with old songs.
+- Dont publish for chromebooks
+
+4.2.0 Change Log
+===========================
+- Changes:
+	* Folders in Project Explorer
+	* Video export improvements : unified piano roll, 3D effect, register overlay & preview mode (desktop only)
+	* Reduced audio latency on all platform and switch to WASAPI on Windows
+	* More filtering options for audio expansions
+	* S5B envelope support (S5B & EPSM)
+	* FDS auto-modulation support
+	* Phase reset support
+	* Accurate seek support (fully emulate entire song from start)
+	* Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
+	* Support for up to 256 instruments (for both regular and expansion) in sound engine
+	* Many other small quality of life improvements (eraser mode, copy samples, etc......... LIST MORE HERE!)
+	* Upgraded to .NET 7.0
+	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)
+-Breaking/Behavior changes:
+	* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
 
 Later
 =====
@@ -181,8 +174,11 @@ Discord
 
 Backlog: 
 =========
+- Paste FX values from text. 	Kain wanted to change DAC slowly, had values to paste. 
+- Simple parameters for instruments (duty, volume)
 - Export selection. 
 	https://discord.com/channels/@me/819772561940152321/1202138717054304306
+- Wome kind of warning if multiple VRC7 patch-0 instrument overlaps?
 - Can we keep undo/redo buttons on screen to 1280px? Like hide metronome, etc.
 - A way to view the preview effect value (grey rectangle). Either draw it on the left edge, or in the piano roll tolltip.
 	https://discord.com/channels/@me/819772561940152321/1157075515199475732
@@ -238,5 +234,7 @@ Backlog:
 - Length counter support? https://www.youtube.com/watch?v=Fg8B3kiVckY
 - Double-click to edit name of instrument
 - Way to tell if a pattern has other instances, like highlight all instances when mouse over? 
+- There is no vertical scaling in effect. Vertical scaling is done with piano, there is no piano.
+	https://discord.com/channels/747649221879922840/747649222354010173/1206908564262617151
 - Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
 	https://discord.com/channels/@me/819772561940152321/1187597131859636276

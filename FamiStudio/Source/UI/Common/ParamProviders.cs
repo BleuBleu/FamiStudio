@@ -98,6 +98,9 @@ namespace FamiStudio
         static LocalizedString ModSpeedLabel;
         static LocalizedString ModDepthLabel;
         static LocalizedString ModDelayLabel;
+        static LocalizedString AutoModLabel;
+        static LocalizedString AutoModNumerLabel;
+        static LocalizedString AutoModDenomLabel;
         static LocalizedString ResamplePeriodLabel;
         static LocalizedString ResampleOffsetLabel;
         static LocalizedString ResampleNormalize;
@@ -217,6 +220,12 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.FdsModDepth; }, SetValue = (v) => { instrument.FdsModDepth = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModDelayLabel, 0, 255, 0)
                         { GetValue = () => { return instrument.FdsModDelay; }, SetValue = (v) => { instrument.FdsModDelay = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, AutoModLabel, 0, 1, 0)
+                        { GetValue = () => { return instrument.FdsAutoMod ? 1 : 0; }, SetValue = (v) => { instrument.FdsAutoMod = v != 0; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, AutoModNumerLabel, 1, 32, 0)
+                        { GetValue = () => { return instrument.FdsAutoModNumer; }, SetValue = (v) => { instrument.FdsAutoModNumer = (byte)v; }, IsEnabled = () => instrument.FdsAutoMod });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, AutoModDenomLabel, 1, 32, 0)
+                        { GetValue = () => { return instrument.FdsAutoModDenom; }, SetValue = (v) => { instrument.FdsAutoModDenom = (byte)v; }, IsEnabled = () => instrument.FdsAutoMod });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ResamplePeriodLabel, 2, 1024, 128)
                         { GetValue = () => { return instrument.FdsResampleWavePeriod; }, SetValue = (v) => { instrument.FdsResampleWavePeriod = v; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ResampleOffsetLabel, 0, 0, 0)

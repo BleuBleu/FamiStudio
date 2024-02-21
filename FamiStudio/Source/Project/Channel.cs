@@ -1491,15 +1491,6 @@ namespace FamiStudio
                 // attack on instrument switch.
                 return false;
             }
-            else if (ChannelType.IsFdsChannel(channelType))
-            {
-                // For FDS, we will allow the wave + modulation envelopes to be different
-                // but there is very little value in this. We dont force a phase reset 
-                // between notes so disabling the attack wont change anything really.
-                return Instrument.AllEnvelopesAreIdentical(i1, i2, 
-                    ~((1 << EnvelopeType.FdsWaveform) |
-                      (1 << EnvelopeType.FdsModulation)));
-            }
             else
             {
                 // For regular and FM instrument, as long as envelopes matches, it 

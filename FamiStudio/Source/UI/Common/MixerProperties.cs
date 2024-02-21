@@ -58,12 +58,12 @@ namespace FamiStudio
             {
                 globalOverrideIndex = props.AddLabelCheckBox(GlobalOverrideLabel, project.OverrideBassCutoffHz);
             }
-            else
+            else if (Platform.IsDesktop)
             {
                 props.AddLabel(null, GlobalLabel);
             }
 
-            globalGridIndex = props.AddGrid("",
+            globalGridIndex = props.AddGrid(Platform.IsMobile ? GlobalLabel : string.Empty,
                 new[]
                 {
                     new ColumnDesc("", 0.4f),
@@ -98,11 +98,12 @@ namespace FamiStudio
                 }
                 else
                 {
-                    props.AddLabel(null, ExpansionType.LocalizedChipNames[i]);
+                    if (Platform.IsDesktop)
+                        props.AddLabel(null, ExpansionType.LocalizedChipNames[i]);
                     chipOverrideIndices[i] = -1;
                 }
 
-                chipGridIndices[i] = props.AddGrid("",
+                chipGridIndices[i] = props.AddGrid(Platform.IsMobile ? ExpansionType.LocalizedChipNames[i] : string.Empty,
                     new[]
                     {
                         new ColumnDesc("", 0.4f),
@@ -123,7 +124,7 @@ namespace FamiStudio
 
             if (project != null)
                 copyAppSettingsIndex = props.AddButton(null, ResetToAppSettingsLabel);
-            resetDefaultIndex = props.AddButton(null, ResetToDefaultsLabel);
+            resetDefaultIndex = props.AddButton(Platform.IsMobile ? ResetToDefaultsLabel : null, ResetToDefaultsLabel);
 
             page.AddLabel(Platform.IsDesktop ? null : NoteLabel, NoteMessageLabel, true);
 

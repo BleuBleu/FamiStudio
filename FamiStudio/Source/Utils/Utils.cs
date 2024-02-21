@@ -384,6 +384,24 @@ namespace FamiStudio
             return sum;
         }
 
+        public static int GCD(int a, int b)
+        {
+            while (b > 0)
+            {
+                int rem = a % b;
+                a = b;
+                b = rem;
+            }
+            return a;
+        }
+
+        public static void SimplifyFraction(ref int numer, ref int denom)
+        {
+            var gcd = GCD(numer, denom);
+            numer /= gcd;
+            denom /= gcd;
+        }
+
         public static int HashCombine(int a, int b)
         {
             return a ^ (b + unchecked((int)0x9e3779b9) + (a << 6) + (a >> 2));
