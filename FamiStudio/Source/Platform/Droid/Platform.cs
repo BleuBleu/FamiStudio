@@ -328,7 +328,7 @@ namespace FamiStudio
             if (!condition)
             {
                 Console.WriteLine($"ASSERTION FAILED! {message}");
-                global::System.Diagnostics.Debugger.Break();
+                global::System.Diagnostics.Debugger.Break(); // This doesnt even work 1/2 the time... Ugh.
             }
         }
     }

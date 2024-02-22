@@ -1,7 +1,5 @@
 @echo off
 
-setlocal EnableDelayedExpansion
-
 :: Compile a bunch of permutations and make sure the NES roms are binary identical across all 3 assemblers.
 set count=0
 :Loop

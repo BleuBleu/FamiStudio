@@ -124,6 +124,12 @@ namespace FamiStudio
                         instrumentLine += GenerateAttribute("N163WavePos", instrument.N163WavePos);
                         instrumentLine += GenerateAttribute("N163WaveCount", instrument.N163WaveCount);
                     }
+                    else if (instrument.IsS5B)
+                    {
+                        instrumentLine += GenerateAttribute("S5BEnvelopeShape", instrument.S5BEnvelopeShape);
+                        instrumentLine += GenerateAttribute("S5BEnvelopeAutoPitch", instrument.S5BEnvAutoPitch);
+                        instrumentLine += GenerateAttribute("S5BEnvelopeAutoPitchOctave", instrument.S5BEnvAutoPitchOctave);
+                    }
                     else if (instrument.IsVrc6)
                     {
                         instrumentLine += GenerateAttribute("Vrc6SawMasterVolume", Vrc6SawMasterVolumeType.Names[instrument.Vrc6SawMasterVolume]);
@@ -147,6 +153,10 @@ namespace FamiStudio
                             for (int i = 0; i < 31; i++)
                                 instrumentLine += GenerateAttribute($"EpsmReg{i}", instrument.EpsmPatchRegs[i]);
                         }
+
+                        instrumentLine += GenerateAttribute("EPSMSquareEnvelopeShape", instrument.EPSMSquareEnvelopeShape);
+                        instrumentLine += GenerateAttribute("EPSMSquareEnvelopeAutoPitch", instrument.EPSMSquareEnvAutoPitch);
+                        instrumentLine += GenerateAttribute("EPSMSquareEnvelopeAutoPitchOctave", instrument.EPSMSquareEnvAutoPitchOctave);
                     }
                 }
 
@@ -480,6 +490,12 @@ namespace FamiStudio
                             {
                                  if (parameters.TryGetValue("Vrc6SawMasterVolume", out var vrc6SawVolumeStr)) instrument.Vrc6SawMasterVolume = (byte)Vrc6SawMasterVolumeType.GetValueForName(vrc6SawVolumeStr);
                             }
+                            else if (instrument.IsS5B)
+                            {
+                                 if (parameters.TryGetValue("S5BEnvelopeShape",           out var s5bEnvShapeStr))     instrument.S5BEnvelopeShape      = byte.Parse(s5bEnvShapeStr);
+                                 if (parameters.TryGetValue("S5BEnvelopeAutoPitch",       out var s5bEnvAutoPitchStr)) instrument.S5BEnvAutoPitch       = bool.Parse(s5bEnvAutoPitchStr);
+                                 if (parameters.TryGetValue("S5BEnvelopeAutoPitchOctave", out var s5bEnvAutoOctStr))   instrument.S5BEnvAutoPitchOctave = sbyte.Parse(s5bEnvAutoOctStr);
+                            }
                             else if (instrument.IsVrc7)
                             {
                                 if (parameters.TryGetValue("Vrc7Patch", out var vrc7PatchStr)) instrument.Vrc7Patch = byte.Parse(vrc7PatchStr);
@@ -505,6 +521,10 @@ namespace FamiStudio
                                            instrument.EpsmPatchRegs[i] = byte.Parse(regStr);
                                     }
                                 }
+
+                                if (parameters.TryGetValue("EPSMSquareEnvelopeShape",           out var epsmEnvShapeStr))     instrument.EPSMSquareEnvelopeShape      = byte.Parse(epsmEnvShapeStr);
+                                if (parameters.TryGetValue("EPSMSquareEnvelopeAutoPitch",       out var epsmEnvAutoPitchStr)) instrument.EPSMSquareEnvAutoPitch       = bool.Parse(epsmEnvAutoPitchStr);
+                                if (parameters.TryGetValue("EPSMSquareEnvelopeAutoPitchOctave", out var epsmEnvAutoOctStr))   instrument.EPSMSquareEnvAutoPitchOctave = sbyte.Parse(epsmEnvAutoOctStr);
                             }
                             else if (instrument.IsRegular)
                             {

@@ -311,10 +311,12 @@ namespace FamiStudio
         float lastChannelZoom = -1;
         int selectedEffectIdx = Platform.IsMobile ? -1 : 0;
         int[] supportedEffects;
+        double captureTime;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
         bool panning = false;
         bool continuouslyFollowing = false;
+        bool deleteNotesToastShown = false;
         bool maximized = false;
         bool showEffectsPanel = false;
         bool snap = true;
@@ -477,6 +479,8 @@ namespace FamiStudio
         LocalizedString EnvelopeRelativeLabel;
         LocalizedString EnvelopeAbsoluteLabel;
         LocalizedString HoldFingersToDrawMessage;
+        LocalizedString HoldFingersToEraseMessage;
+
 
         // DPCM mapping editor
         LocalizedString PitchLabel;
@@ -4466,6 +4470,7 @@ namespace FamiStudio
             captureOffsetX = offsetX;
             captureOffsetY = offsetY;
             canFling = false;
+            captureTime = Platform.TimeSeconds();
 
             if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 GetEnvelopeValueForCoord(x, y, out _, out captureEnvelopeValue);
@@ -4512,6 +4517,13 @@ namespace FamiStudio
                 {
                     captureThresholdMet = true;
                 }
+            }
+
+            if (Platform.IsMobile && !deleteNotesToastShown && captureOperation == CaptureOperation.DeleteNotes && ((Platform.TimeSeconds() - captureTime) > 0.5 || captureThresholdMet))
+            {
+                Platform.VibrateClick();
+                Platform.ShowToast(window, HoldFingersToEraseMessage);
+                deleteNotesToastShown = true;
             }
 
             if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
@@ -6616,7 +6628,10 @@ namespace FamiStudio
 
                 if (note != null)
                 {
+                    AbortCaptureOperation();
                     DeleteSingleNote(noteLocation, mouseLocation, note);
+                    StartCaptureOperation(x, y, CaptureOperation.DeleteNotes);
+                    deleteNotesToastShown = false;
                 }
 
                 return true;
@@ -7160,9 +7175,18 @@ namespace FamiStudio
 
         protected override void OnTouchDown(int x, int y)
         {
+            Debug.WriteLine($"OnTouchDown {x} {y}");
+
             SetFlingVelocity(0, 0);
             SetMouseLastPos(x, y);
             
+            // Special case, this operation is triggered on a double-tap, and a "TouchDown" is emitted
+            // immediately after, so ignore the tap here.
+            if (captureOperation == CaptureOperation.DeleteNotes)
+            {
+                return;
+            }
+
             if (editMode == EditionMode.Channel)
             {
                 if (HandleTouchDownDragSeekBar(x, y)) goto Handled;
@@ -7207,12 +7231,16 @@ namespace FamiStudio
 
         protected override void OnTouchMove(int x, int y)
         {
+            Debug.WriteLine($"OnTouchMove {x} {y} {captureOperation}");
+
             UpdateCaptureOperation(x, y);
             SetMouseLastPos(x, y);
         }
 
         protected override void OnTouchUp(int x, int y)
         {
+            Debug.WriteLine($"OnTouchUp {x} {y} {captureOperation}");
+
             EndCaptureOperation(x, y);
             SetMouseLastPos(x, y);
         }
@@ -7287,6 +7315,8 @@ namespace FamiStudio
 
         protected override void OnTouchDoubleClick(int x, int y)
         {
+            Debug.WriteLine($"OnTouchDoubleClick {x} {y}");
+
             SetMouseLastPos(x, y);
 
             // Ignore double tap if we handled a single tap recently.
@@ -7308,7 +7338,8 @@ namespace FamiStudio
 
         protected override void OnTouchLongPress(int x, int y)
         {
-            if (captureOperation == CaptureOperation.ChangeEnvelopeValue        ||
+            if (captureOperation == CaptureOperation.DeleteNotes                ||
+                captureOperation == CaptureOperation.ChangeEnvelopeValue        ||
                 captureOperation == CaptureOperation.PlayPiano                  ||
                 captureOperation == CaptureOperation.ResizeNoteStart            ||
                 captureOperation == CaptureOperation.ResizeSelectionNoteStart   ||

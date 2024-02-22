@@ -70,7 +70,8 @@ namespace FamiStudio
         private const byte OpcodeN163ReleaseNote       = 0x5a; // N163 only
         private const byte OpcodeN163PhaseReset        = 0x5b; // N163 only
         private const byte OpcodeEpsmReleaseNote       = 0x5c; // EPSM only
-        private const byte OpcodeS5BManualEnvPeriod    = 0x5d; // S5B only
+        private const byte OpcodeEPSMManualEnvPeriod   = 0x5d; // EPSM only
+        private const byte OpcodeS5BManualEnvPeriod    = 0x5e; // S5B only
 
         private const byte OpcodeSetReferenceFT2       = 0xff; // FT2
         private const byte OpcodeLoopFT2               = 0xfd; // FT2
@@ -666,6 +667,8 @@ namespace FamiStudio
                         {
                             var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BNoiseFreq]]);
                             var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BMixer]]);
+                            var envShape = instrument.EPSMSquareEnvelopeShape > 0 ? instrument.EPSMSquareEnvelopeShape + 7 : 0;
+                            var envAutoOctave = instrument.EPSMSquareEnvAutoPitch ? instrument.EPSMSquareEnvAutoPitchOctave : 0x80; // 0x80 = special code that means "manual"
 
                             byte[] epsmPatchRegsReordered = new byte[epsmRegOrder.Length];
                             for (int reg = 0; reg < epsmRegOrder.Length; reg++)
@@ -673,9 +676,9 @@ namespace FamiStudio
                                 epsmPatchRegsReordered[reg] = instrument.EpsmPatchRegs[epsmRegOrder[reg]];
                             }
                             lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
+                            lines.Add($"\t{db} ${envShape:x2}, ${envAutoOctave:x2}");
                             lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
-                            // we can fit the first 4 bytes of data here to avoid needing to add padding
-                            lines.Add($"\t{db} $00, $00, $00, $00");
+                            lines.Add($"\t{db} $00, $00");
                         }
 
                         size += 16;
@@ -1269,10 +1272,9 @@ namespace FamiStudio
                             usesDutyCycleEffect = true;
                         }
 
-
                         if (note.HasEnvelopePeriod)
                         {
-                            songData.Add($"${OpcodeS5BManualEnvPeriod:x2}+");
+                            songData.Add($"${(channel.IsS5BChannel ? OpcodeS5BManualEnvPeriod : OpcodeEPSMManualEnvPeriod):x2}+");
                             songData.Add($"${(note.EnvelopePeriod >> 0) & 0xff:x2}");
                             songData.Add($"${(note.EnvelopePeriod >> 8) & 0xff:x2}");
                         }

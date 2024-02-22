@@ -16,7 +16,8 @@ x Upgrade Windows to .NET 7.0
 / Mixer improvements
 	- Make it work on mobile.
 - Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
-	=> MacOS only, GLFWToWindow() uses DpiScaling.Window.
+	=> MacOS only, GLFWToWindow() uses DpiScaling.Window
+	=> Android too.
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
 	- Dont compress vibrato envelopes.
 	- New opcode "override envelope and reset", call only when speed changes.
@@ -31,27 +32,19 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	- NesSndEmu : Check FDS emulation code. There is a big comment explaining the situation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
 	- Add "Accurate Seek" to config dialog too.
-- BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - BUG : Mouse over project explorer envelope buttons is offset.
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
 - S5B Envelope
 	- Check volume, seems square is very low with low values, might be normal.
-	- Do EPSM version too => Wait on Perkka to free 2 bytes in instrument header.
 	- Test disable attack (C# + AMS), shouldnt reset envelope.
 	- Make sure manual period on an inactive channel behaves the same on ASM/C#
-	- Add to famistudio text.
 - Add a way to type in FX + param values, even if its janky...
 - Logarithmic FX values.
-- Android Grid improvement
-	- Grid always has 2 columns
-	- Change "format" of slider by lambda.
-	- If "NoHeader" flag, then data isnt re-formatted
-	- The array of Views will have to change, use a seperate array or something.
-	- N/A + disabled support for new SeekBar
 
 4.2.0 Testing/Packaging
 =======================
 - Test all project explorer buttons with folders. Make sure no offsets.
+- Make sure double-click delete doesnt create 2 transaction (delete + multiple delete operation)
 - Undo acciental changes to demo songs (shovel, JTS, etc.)
 - Make sure PortAudio.dll is included in portable + setup.
 - Compare FDS filter with my FDS once im back home. See how close we can get without adding a dedicated filter.
@@ -176,6 +169,7 @@ Discord
 
 Backlog: 
 =========
+- BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - Paste FX values from text. 	Kain wanted to change DAC slowly, had values to paste. 
 - Simple parameters for instruments (duty, volume)
 - Export selection. 
