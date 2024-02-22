@@ -1,6 +1,6 @@
 @echo off
 
-setlocal
+setlocal EnableDelayedExpansion
 
 :: Compile a bunch of permutations and make sure the NES roms are binary identical across all 3 assemblers.
 set count=0
@@ -84,12 +84,28 @@ if "%rnd%"=="0" (
 					)
 				) else (
 					if "%rnd%"=="5" (
-							echo FAMISTUDIO_EXP_N163=1 >> test_defs.inc
-							set /a rnd=%random% %%8+1
-							echo FAMISTUDIO_EXP_N163_CHN_CNT=!rnd! >> test_defs.inc
+						echo FAMISTUDIO_EXP_N163=1 >> test_defs.inc
+						set /a rnd=%random% %%8+1
+						echo FAMISTUDIO_EXP_N163_CHN_CNT=!rnd! >> test_defs.inc
 						) else (
 						if "%rnd%"=="6" (
 							echo FAMISTUDIO_EXP_EPSM=1 >> test_defs.inc
+							set /a rnd=%random% %%4
+							echo FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT=!rnd! >> test_defs.inc
+							set /a rnd=%random% %%7
+							echo FAMISTUDIO_EXP_EPSM_FM_CHN_CNT=!rnd! >> test_defs.inc
+							set /a rnd=%random% %%2
+							echo FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE=!rnd! >> test_defs.inc
+							set /a rnd=%random% %%2
+							echo FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE=!rnd! >> test_defs.inc
+							set /a rnd=%random% %%2
+							echo FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE=!rnd! >> test_defs.inc
+							set /a rnd=%random% %%2
+							echo FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE=!rnd! >> test_defs.inc
+							set /a rnd=%random% %%2
+							echo FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE=!rnd! >> test_defs.inc
+							set /a rnd=%random% %%2
+							echo FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE=!rnd! >> test_defs.inc
 						)
 					)
 				)
