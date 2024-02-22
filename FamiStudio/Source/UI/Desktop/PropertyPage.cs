@@ -563,6 +563,11 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        public int AddImageBox(string label, string tooltip = null)
+        {
+            return -1;
+        }
+
         private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
         {
             var slider = new Slider(value, min, max, increment, showLabel, format);

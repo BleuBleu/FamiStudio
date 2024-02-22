@@ -8,8 +8,6 @@ x Upgrade Windows to .NET 7.0
 	- Bring back APK
 / Instrument folders + collapse entire sections (samples, arps, etc.) 
 	- Make it work on mobile.
-/ Video export improvements:
-	- Test/Make it work on mobile.
 / Latency improvements:
 	- Android : Run short/1-frame tests.
 	- MacOS : Audio device detection change.
@@ -44,6 +42,12 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	- Add to famistudio text.
 - Add a way to type in FX + param values, even if its janky...
 - Logarithmic FX values.
+- Android Grid improvement
+	- Grid always has 2 columns
+	- Change "format" of slider by lambda.
+	- If "NoHeader" flag, then data isnt re-formatted
+	- The array of Views will have to change, use a seperate array or something.
+	- N/A + disabled support for new SeekBar
 
 4.2.0 Testing/Packaging
 =======================
@@ -82,10 +86,6 @@ dotnet publish
 ==============
 - dotnet publish /p:Configuration=Release /p:Platform="x64" ../FamiStudio/FamiStudio.csproj -r win-x64 -c Release -f net5.0 --self-contained
 - Copies all the runtime with the build, kind of weird.
-
-Android SDK 12
-==============
-- Java path : C:\Program Files\Microsoft\jdk-11.0.12.7-hotspot
 
 Linux notes 
 =========== 
@@ -141,6 +141,8 @@ Key Store
 - Only full name entered.
 Issues with device monitor not starting:
 - Remove new java (11, the one from Microsoft) from the path. Keep the old one (eclipse, 8).
+
+set Path=C:\Program Files (x86)\SCE\ORBIS SDKs\11.000\host_tools\bin;C:\Program Files (x86)\SCE\Prospero SDKs\8.000\host_tools\bin;C:\Program Files (x86)\SCE\Prospero\Tools\Publishing Tools\bin;C:\Program Files (x86)\SCE\Common\SceVSI-VS17\bin;C:\Program Files (x86)\SCE\Prospero\Tools\Target Manager Server\bin;C:\Program Files (x86)\SCE\ORBIS\Tools\Target Manager Server\bin;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;C:\Program Files (x86)\SCE\Common\SceVSI-VS16\bin;C:\Program Files (x86)\VMware\VMware Player\bin\;C:\Program Files (x86)\SCE\ORBIS\Tools\Publishing Tools\bin;C:\Program Files\Eclipse Foundation\jdk-8.0.302.8-hotspot\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Perforce\;C:\Program Files\dotnet\;C:\Program Files (x86)\SCE\ORBIS\Tools\New Razor GPU\bin\CommandTools\bin;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\SCE\Prospero\Tools\PS4 Razor GPU for Prospero\bin\CommandTools\bin;C:\Program Files (x86)\SCE\Prospero\Tools\Razor GPU\bin\CommandTools\bin;C:\Users\bleub\AppData\Local\Programs\Python\Python311\Scripts\;C:\Users\bleub\AppData\Local\Programs\Python\Python311\;C:\Users\bleub\AppData\Local\Microsoft\WindowsApps;C:\Users\bleub\AppData\Local\GitHubDesktop\bin;C:\Users\bleub\.dotnet\tools;C:\Users\bleub\AppData\Local\gitkraken\bin;C:\Users\bleub\.dotnet\tools
 
 Desktop tutorial GIFs
 =====================
@@ -238,3 +240,5 @@ Backlog:
 	https://discord.com/channels/747649221879922840/747649222354010173/1206908564262617151
 - Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
 	https://discord.com/channels/@me/819772561940152321/1187597131859636276
+- Select all/none for list of songs in export dialog
+	https://discord.com/channels/747649221879922840/747649222354010173/1209404796428357652

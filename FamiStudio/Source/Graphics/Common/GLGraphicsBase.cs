@@ -24,6 +24,7 @@ namespace FamiStudio
         protected byte curDepthValue = 0x80; // -128
         protected byte maxDepthValue = 0x80; // -128
         protected int maxTextureSize;
+        protected int drawFrameCounter;
 
         protected struct ClipRegion
         {
@@ -66,7 +67,7 @@ namespace FamiStudio
         protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
         protected abstract void Initialize(bool clear, Color clearColor);
         protected abstract void DrawCommandList(CommandList list, bool depthTest);
-        protected abstract void DrawDepthPrepass();
+        protected abstract bool DrawDepthPrepass();
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
         protected abstract TextureAtlas CreateTextureAtlasFromResources(string[] names);
         protected abstract void ClearAlpha();
@@ -111,6 +112,7 @@ namespace FamiStudio
 
         public virtual void BeginDrawFrame(Rectangle rect, bool clear, Color clearColor)
         {
+            Debug.Assert(drawFrameCounter++ == 0);
             Debug.Assert(transform.IsEmpty);
             Debug.Assert(clipStack.Count == 0);
 
@@ -132,16 +134,17 @@ namespace FamiStudio
 
         public virtual void EndDrawFrame(bool clearAlpha = false)
         {
+            Debug.Assert(--drawFrameCounter == 0);
             Debug.Assert(transform.IsEmpty);
             Debug.Assert(clipStack.Count == 0);
 
-            DrawDepthPrepass();
+            var useDepth = DrawDepthPrepass();
 
             for (int i = 0; i < layerCommandLists.Length; i++)
             {
                 if (layerCommandLists[i] != null)
                 { 
-                    DrawCommandList(layerCommandLists[i], i < (int)GraphicsLayer.Overlay1);
+                    DrawCommandList(layerCommandLists[i], i < (int)GraphicsLayer.Overlay1 && useDepth);
                 }
             }
 
@@ -212,10 +215,12 @@ namespace FamiStudio
         protected float[] GetBlurKernel(int width, int height, float scale, int numRings = 5)
         {
             var kernel = new List<float>();
-            kernel.Add(0);
-            kernel.Add(0);
-            kernel.Add(0);
-            kernel.Add(0);
+
+            // Center tap is implicit.
+            //kernel.Add(0);
+            //kernel.Add(0);
+            //kernel.Add(0);
+            //kernel.Add(0);
 
             for (var r = 1; r < numRings; r++)
             {
@@ -225,10 +230,10 @@ namespace FamiStudio
                     Utils.ToCartesian(angle, r, out var sx, out var sy);
                     kernel.Add(sx / width  * scale);
                     kernel.Add(sy / height * scale);
-                    kernel.Add(0);
-                    kernel.Add(0);
                 }
             }
+
+            Debug.Assert(kernel.Count % 4 == 0);
 
             return kernel.ToArray();
         }

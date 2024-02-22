@@ -94,6 +94,8 @@
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher.png" />
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher_foreground.png" />
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\drawable\arrow_back.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\drawable\cross.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\colors.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\dimens.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\ic_launcher_background.xml" />
@@ -534,6 +536,7 @@
     <EmbeddedResource Include="Resources\Atlas\GizmoResizeUpDown@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Help@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Instance@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Instrument.tga" />
     <EmbeddedResource Include="Resources\Atlas\Instrument@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Instrument@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentEPSM.tga" />
@@ -541,15 +544,17 @@
     <EmbeddedResource Include="Resources\Atlas\InstrumentEPSM@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentExpand@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentExpanded@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentFds.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentFds@2x.tga" />
-    <EmbeddedResource Include="Resources\Atlas\InstrumentFds@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentNamco.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentNamco@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentNamco@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentOpen@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentSunsoft.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentSunsoft@2x.tga" />
-    <EmbeddedResource Include="Resources\Atlas\InstrumentSunsoft@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentVRC6.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentVRC6@2x.tga" />
-    <EmbeddedResource Include="Resources\Atlas\InstrumentVRC6@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentVRC7.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentVRC7@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentVRC7@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Loop@2x.tga" />
@@ -560,7 +565,7 @@
     <EmbeddedResource Include="Resources\Atlas\Maximize@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Metronome@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MinusSmall@2x.tga" />
-    <EmbeddedResource Include="Resources\Atlas\Mixer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileArpeggio.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileCheckOff.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileCheckOn.tga" />
@@ -603,6 +608,10 @@
     <EmbeddedResource Include="Resources\Atlas\PlaySource@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\PlusSmall@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectExplorer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesExpansion@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesMixer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectExplorer@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties@4x.tga" />

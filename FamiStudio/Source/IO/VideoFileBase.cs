@@ -27,6 +27,7 @@ namespace FamiStudio
         protected Project project;
         protected Song song;
         protected OffscreenGraphics videoGraphics;
+        protected OffscreenGraphics downsampleGraphics;
         protected IVideoEncoder videoEncoder;
         protected VideoChannelState[] channelStates;
         protected VideoFrameMetadata[] metadata;
@@ -206,6 +207,10 @@ namespace FamiStudio
             song = project.GetSong(settings.SongId);
             song.ExtendForLooping(settings.LoopCount);
 
+            var downsampleResX = videoResX / settings.Downsample;
+            var downsampleResY = videoResY / settings.Downsample;
+            var downsampled = settings.Downsample > 1;
+
             // Save audio to temporary file.
             tempAudioFile = Path.Combine(Utils.GetTemporaryDiretory(), "temp.wav");
             AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, -1, false, false, settings.Stereo, settings.ChannelPan, settings.AudioDelay, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
@@ -216,7 +221,7 @@ namespace FamiStudio
             // Start encoder, must be done before any GL calls on Android.
             GetFrameRateInfo(song.Project, halfFrameRate, out var frameRateNumer, out var frameRateDenom);
 
-            if (!videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, settings.VideoBitRate, settings.AudioBitRate, settings.Stereo, tempAudioFile, settings.Filename))
+            if (!videoEncoder.BeginEncoding(downsampleResX, downsampleResY, frameRateNumer, frameRateDenom, settings.VideoBitRate, settings.AudioBitRate, settings.Stereo, tempAudioFile, settings.Filename))
             {
                 Log.LogMessage(LogSeverity.Error, "Error starting video encoder, aborting.");
                 return false;
@@ -289,13 +294,25 @@ namespace FamiStudio
             Platform.AcquireGLContext();
 
             // Create graphics resources.
-            videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, true, settings.PreviewMode);
+            videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, !downsampled, settings.PreviewMode || downsampled);
 
             if (videoGraphics == null)
             {
                 Log.LogMessage(LogSeverity.Error, "Error initializing off-screen graphics, aborting.");
                 DpiScaling.ForceUnitScaling = false;
                 return false;
+            }
+
+            if (settings.Downsample > 1)
+            {
+                downsampleGraphics = OffscreenGraphics.Create(downsampleResX, downsampleResY, true, false);
+
+                if (downsampleGraphics == null)
+                {
+                    Log.LogMessage(LogSeverity.Error, "Error initializing off-screen graphics, aborting.");
+                    DpiScaling.ForceUnitScaling = false;
+                    return false;
+                }
             }
 
             fonts = new Fonts(videoGraphics);
@@ -486,7 +503,6 @@ namespace FamiStudio
                     body(f);
 
                     // Registers + watermark + artist.
-                    videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), false, Theme.DarkGreyColor2);
                     DrawRegisterValues(frame);
                     videoGraphics.OverlayCommandList.DrawTexture(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
                     
@@ -504,8 +520,15 @@ namespace FamiStudio
 
                     videoGraphics.EndDrawFrame();
 
+                    if (downsampleGraphics != null)
+                    {
+                        downsampleGraphics.BeginDrawFrame(new Rectangle(0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY), true, Theme.BlackColor);
+                        downsampleGraphics.DefaultCommandList.DrawTexture(videoGraphics.GetTexture(), 0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY, 1.0f);
+                        downsampleGraphics.EndDrawFrame(false);
+                    }
+
                     // Send to encoder.
-                    if (!videoEncoder.AddFrame(videoGraphics))
+                    if (!videoEncoder.AddFrame(downsampleGraphics != null ? downsampleGraphics : videoGraphics))
                         break;
                 }
 
@@ -520,9 +543,10 @@ namespace FamiStudio
             finally
 #endif
             {
-                fonts.Dispose();
-                watermark.Dispose();
-                videoGraphics.Dispose();
+                Utils.DisposeAndNullify(ref fonts);
+                Utils.DisposeAndNullify(ref watermark);
+                Utils.DisposeAndNullify(ref videoGraphics);
+                Utils.DisposeAndNullify(ref downsampleGraphics);
                 Array.ForEach(channelStates, c => c.icon.Dispose());
                 registerViewerIcons?.ForEach(i => i.Dispose());
                 File.Delete(tempAudioFile);
@@ -740,6 +764,7 @@ namespace FamiStudio
         public string Filename;
         public int ResX;
         public int ResY;
+        public int Downsample;
         public bool HalfFrameRate;
         public long ChannelMask;
         public int AudioDelay;

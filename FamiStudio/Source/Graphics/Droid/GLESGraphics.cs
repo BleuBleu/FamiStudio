@@ -264,9 +264,9 @@ namespace FamiStudio
             GLES20.GlDeleteProgram(depthProgram);
         }
 
-        public override void BeginDrawFrame(Rectangle rect, bool clear, Color color)
+        public override void EndDrawFrame(bool clearAlpha = false)
         {
-            base.BeginDrawFrame(rect, clear, color);
+            base.EndDrawFrame(clearAlpha);
 
             for (int i = 0; i < NumBufferSizes; i++)
             {
@@ -307,22 +307,29 @@ namespace FamiStudio
 
             GLES20.GlDepthFunc(GLES20.GlAlways);
             GLES20.GlUseProgram(blurProgram);
-            GLES20.GlUniform4fv(depthScaleBiasUniform, 1, viewportScaleBias, 0);
+            GLES20.GlUniform4fv(blurScaleBiasUniform, 1, viewportScaleBias, 0);
             GLES20.GlUniform1i(blurTextureUniform, 0);
-            GLES20.GlUniform4fv(blurKernelUniform, kernel.Length, kernel, 0);
+            GLES20.GlUniform4fv(blurKernelUniform, kernel.Length / 4, kernel, 0);
             GLES20.GlActiveTexture(GLES20.GlTexture0 + 0);
             GLES20.GlBindTexture(GLES20.GlTexture2d, textureId);
 
             BindAndUpdateVertexBuffer(0, vtxArray, 8);
-            BindAndUpdateVertexBuffer(1, texArray, 8, 3);
+            BindAndUpdateVertexBuffer(1, texArray, 8, 2);
 
             quadIdxBuffer.Position(0);
             GLES20.GlDrawElements(GLES20.GlTriangles, 6, GLES20.GlUnsignedShort, quadIdxBuffer);
             GLES20.GlDepthFunc(GLES20.GlEqual);
         }
 
-        protected override void DrawDepthPrepass()
+        protected override bool DrawDepthPrepass()
         {
+            if (clipRegions.Count == 0)
+            {
+                GLES20.GlDepthFunc(GLES20.GlAlways);
+                GLES20.GlColorMask(true, true, true, true);
+                return false;
+            }
+
             GLES20.GlDepthMask(true);
             GLES20.GlDepthFunc(GLES20.GlAlways);
             GLES20.GlColorMask(false, false, false, false);
@@ -366,6 +373,8 @@ namespace FamiStudio
             GLES20.GlDepthMask(false);
             GLES20.GlDepthFunc(GLES20.GlEqual);
             GLES20.GlColorMask(true, true, true, true);
+
+            return true;
         }
 
         public void SetViewport(int x, int y, int width, int height)
@@ -437,7 +446,7 @@ namespace FamiStudio
 
         public override int CreateTexture(int width, int height, TextureFormat format, bool filter)
         {
-            Debug.Assert(!Platform.IsInMainThread()); // Must be in GL thread.
+            Debug.Assert(Platform.ThreadOwnsGLContext);
             var id = new int[1];
             GLES20.GlGenTextures(1, id, 0);
             Debug.Assert(id[0] > 0);
@@ -847,18 +856,19 @@ namespace FamiStudio
         protected int resX;
         protected int resY;
 
+        protected ByteBuffer readbackBuffer;
+
         public int Texture => texture;
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback, bool filter) : base(true)
+        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool renderToBackBuffer, bool filter) : base(true)
         {
             resX = imageSizeX;
             resY = imageSizeY;
 
-            // On mobile, if we dont want to read back, it means we are rendering directly to the
-            // backbuffer of the temporary context created for video export.
-            if (!allowReadback)
+            // When renderToBackBuffer = true, we dont create any resources, its all in the current context.
+            if (!renderToBackBuffer)
             {
                 texture = CreateTexture(imageSizeX, imageSizeY, TextureFormat.Rgba, filter);
                 depth   = CreateTexture(imageSizeX, imageSizeY, TextureFormat.Depth, false);
@@ -874,13 +884,13 @@ namespace FamiStudio
             }
         }
 
-        public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback, bool filter = false)
+        public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool renderToBackBuffer, bool filter = false)
         {
 #if !DEBUG
             try
 #endif
-            {
-                return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback, filter);
+            {   
+                return new OffscreenGraphics(imageSizeX, imageSizeY, renderToBackBuffer, filter);
             }
 #if !DEBUG
             catch
@@ -914,7 +924,19 @@ namespace FamiStudio
 
         public unsafe void GetBitmap(byte[] data)
         {
-            // Our rendering is fed directly to the encoder on Android.
+            if (readbackBuffer == null)
+            {
+                readbackBuffer = ByteBuffer.AllocateDirect(resX * resY * sizeof(int));
+            }
+
+            readbackBuffer.Rewind();
+
+            GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, fbo);
+            GLES20.GlReadPixels(0, 0, resX, resY, GLES20.GlRgba, GLES20.GlUnsignedByte, readbackBuffer);
+            GLES20.GlBindFramebuffer(GLES20.GlFramebuffer, 0);
+
+            readbackBuffer.Rewind();
+            readbackBuffer.Get(data);
         }
 
         public override void Dispose()
@@ -922,6 +944,7 @@ namespace FamiStudio
             if (texture != 0) GLES20.GlDeleteTextures(2, new[] { texture, depth }, 0);
             if (fbo     != 0) GLES20.GlDeleteFramebuffers(1, new[] { fbo }, 0);
 
+            Utils.DisposeAndNullify(ref readbackBuffer);
             base.Dispose();
         }
     }}

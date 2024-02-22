@@ -34,6 +34,7 @@ namespace FamiStudio
         private LocalizedString ResetToDefaultsLabel;
         private LocalizedString NoteLabel;
         private LocalizedString NoteMessageLabel;
+        private LocalizedString ChipOverridLabel;
 
         // Tooltips
         private LocalizedString GlobalGridTooltip;
@@ -48,13 +49,15 @@ namespace FamiStudio
             props = page;
             project = proj;
 
+            var projectSettings = project != null;
+
             // TODO : Only allow override for enabled expansions.
-            if (project != null)
+            if (projectSettings)
             {
                 props.AddLabel(null, ProjectOverrideLabel, true);
             }
 
-            if (project != null)
+            if (projectSettings)
             {
                 globalOverrideIndex = props.AddLabelCheckBox(GlobalOverrideLabel, project.OverrideBassCutoffHz);
             }
@@ -69,30 +72,30 @@ namespace FamiStudio
                     new ColumnDesc("", 0.4f),
                     new ColumnDesc("", 0.6f, ColumnType.Slider)
                 },
-                project != null ? 
+                projectSettings ? 
                     new object[,] { { BassFilterLabel.ToString(), project.OverrideBassCutoffHz ? project.BassCutoffHz : Settings.BassCutoffHz } } :
                     new object[,] { { VolumeLabel.ToString(), (int)(Settings.GlobalVolumeDb * 10) }, { BassFilterLabel.ToString(), Settings.BassCutoffHz } 
                 },
-                project != null ? 1 : 2, GlobalGridTooltip, GridOptions.NoHeader);
+                projectSettings ? 1 : 2, GlobalGridTooltip, GridOptions.NoHeader);
 
-            props.SetPropertyEnabled(globalGridIndex, project == null || project.OverrideBassCutoffHz);
+            props.SetPropertyEnabled(globalGridIndex, !projectSettings || project.OverrideBassCutoffHz);
 
             var rowIdx = 0;
-            if (project == null)
+            if (!projectSettings)
                 props.OverrideCellSlider(globalGridIndex, rowIdx++, 1, -100, 30, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
             props.OverrideCellSlider(globalGridIndex, rowIdx, 1, 2, 100, (o) => FormattableString.Invariant($"{(int)o} Hz"));
 
-            var expansionMixerSettings = project != null ? project.ExpansionMixerSettings : Settings.ExpansionMixerSettings;
+            var expansionMixerSettings = projectSettings ? project.ExpansionMixerSettings : Settings.ExpansionMixerSettings;
 
             for (var i = 0; i < ExpansionType.LocalizedChipNames.Length; i++)
             {
                 var mixerSetting = Settings.ExpansionMixerSettings[i];
                 var overridden = false;
 
-                if (project != null)
+                if (projectSettings)
                 {
                     overridden = project.ExpansionMixerSettings[i].Override;
-                    chipOverrideIndices[i] = props.AddLabelCheckBox(ExpansionType.LocalizedChipNames[i], overridden);
+                    chipOverrideIndices[i] = props.AddLabelCheckBox(ChipOverridLabel.Format(ExpansionType.LocalizedChipNames[i]), overridden);
                     if (overridden)
                         mixerSetting = project.ExpansionMixerSettings[i];
                 }
@@ -122,11 +125,11 @@ namespace FamiStudio
                 props.SetPropertyEnabled(chipGridIndices[i], project == null || overridden);
             }
 
-            if (project != null)
+            if (projectSettings)
                 copyAppSettingsIndex = props.AddButton(null, ResetToAppSettingsLabel);
-            resetDefaultIndex = props.AddButton(Platform.IsMobile ? ResetToDefaultsLabel : null, ResetToDefaultsLabel);
+            resetDefaultIndex = props.AddButton(null, ResetToDefaultsLabel);
 
-            page.AddLabel(Platform.IsDesktop ? null : NoteLabel, NoteMessageLabel, true);
+            page.AddLabel(null, NoteMessageLabel, true);
 
             props.PropertyChanged += Props_PropertyChanged;
             props.PropertyClicked += Props_PropertyClicked;

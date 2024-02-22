@@ -546,10 +546,14 @@ namespace FamiStudio
             GL.PopDebugGroup();
         }
 
-        protected unsafe override void DrawDepthPrepass()
+        protected unsafe override bool DrawDepthPrepass()
         {
             if (clipRegions.Count == 0)
-                return;
+            {
+                GL.DepthFunc(GL.Always);
+                GL.ColorMask(true, true, true, true);
+                return false;
+            }
 
             GL.PushDebugGroup("Depth Pre-pass");
             GL.DepthMask(1);
@@ -596,6 +600,8 @@ namespace FamiStudio
             GL.DepthFunc(GL.Equal);
             GL.ColorMask(true, true, true, true);
             GL.PopDebugGroup();
+
+            return true;
         }
 
         protected override void DrawCommandList(CommandList list, bool depthTest)
@@ -739,7 +745,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback, bool filter) : base(true) 
+        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool renderToBackBuffer, bool filter) : base(true) 
         {
             resX = imageSizeX;
             resY = imageSizeY;
@@ -768,9 +774,9 @@ namespace FamiStudio
             GL.BindFramebuffer(GL.Framebuffer, 0);
         }
 
-        public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback, bool filter = false)
+        public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool renderToBackBuffer, bool filter = false)
         {
-            return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback, filter);
+            return new OffscreenGraphics(imageSizeX, imageSizeY, renderToBackBuffer, filter);
         }
 
         public override void BeginDrawFrame(Rectangle rect, bool clear, Color color)
