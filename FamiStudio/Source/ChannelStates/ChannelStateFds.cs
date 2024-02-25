@@ -75,7 +75,6 @@ namespace FamiStudio
             if (note.IsStop)
             {
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80); // Zero volume
-                //WriteRegister(NesApu.FDS_FREQ_HI, 0x80); // Disable wave (we dont do this in NSF).
             }
             else if (note.IsMusical)
             {

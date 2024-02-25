@@ -42,7 +42,7 @@ private:
 
 	struct Fds_Osc
 	{
-		BOOST::int8_t  wave[wave_count];
+		BOOST::uint8_t wave[wave_count];
 		BOOST::uint8_t modt[modt_count];
 		BOOST::uint8_t regs[regs_count];
 		BOOST::uint8_t ages[regs_count];
@@ -52,6 +52,7 @@ private:
 		int delay;
 		int last_amp;
 		int phase;
+		int pending_volume_env;
 		int volume_env;
 		int trigger;
 
@@ -69,6 +70,8 @@ private:
 	Fds_Osc osc;
 	cpu_time_t last_time;
 	Blip_Synth<blip_good_quality,2016> synth;
+
+	static double dac_approx(int level);
 
 	short shadow_regs[shadow_regs_count];
 	BOOST::uint8_t shadow_wave[modt_count];

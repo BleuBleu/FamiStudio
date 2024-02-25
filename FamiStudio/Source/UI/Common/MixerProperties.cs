@@ -133,6 +133,7 @@ namespace FamiStudio
 
             props.PropertyChanged += Props_PropertyChanged;
             props.PropertyClicked += Props_PropertyClicked;
+            props.PropertyCellEnabled += (p, i, r, c) => i != chipGridIndices[ExpansionType.Fds] || r != 1; // No cutoff on special FDS filter.
         }
 
         private void LoadSettings(float globalVolume, int bassCutoffHz, ExpansionMixer[] settings)

@@ -1,10 +1,25 @@
 // Famicom Disk System audio chip emulator for FamiStudio.
 // Added to Nes_Snd_Emu by @NesBleuBleu, mostly adapted from Disch / NotSoFatso
 
+#include <math.h> // MATTT
+#include <stdio.h>  // MATTT
 #include "Nes_Fds.h"
 #include <string.h>
 
 #include BLARGG_SOURCE_BEGIN
+
+// This comes from the NESDEV Discord (plgDavid measurements, cleanup up by Persune):
+// https://discord.com/channels/352252932953079811/601877396857159680/1120732902901157929
+// This is basically the same table, but [0...63] << dac_lookup_bits. Matches my own 
+// FDS measurements pretty closely. 
+const int dac_lookup_bits = 5;
+static int dac_lookup[] = 
+{
+	0, 24, 48, 76, 95, 124, 150, 185, 190, 222, 248, 287, 300, 340, 370, 418, 
+	379, 419, 445, 492, 496, 544, 574, 631, 601, 652, 682, 743, 742, 803, 840, 914,
+	762, 818, 844, 910, 896, 960, 993, 1070, 1002, 1068, 1099, 1179, 1161, 1239, 1279, 1374, 
+	1222, 1295, 1326, 1416, 1388, 1474, 1514, 1619, 1517, 1605, 1644, 1753, 1724, 1829, 1884, 2016
+};
 
 Nes_Fds::Nes_Fds() : vol(1.0f)
 {
@@ -30,6 +45,7 @@ void Nes_Fds::reset()
 	osc.delay = 0;
 	osc.last_amp = 0;
 	osc.phase = 0;
+	osc.pending_volume_env = 0x20;
 	osc.volume_env = 0x20;
 	osc.regs[10] = 0xff;
 	osc.trigger = trigger_hold;
@@ -62,7 +78,7 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 		if (addr >= wave_addr && addr < (wave_addr + wave_count))
 		{
 			if (osc.regs[9] & 0x80)
-				osc.wave[addr - wave_addr] = (data & 0x3f) - 0x20;
+				osc.wave[addr - wave_addr] = (data & 0x3f);
 		}
 		else
 		{
@@ -73,7 +89,7 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			case 0:
 				// TODO: Volume envelope support.
 				require(data & 0x80);
-				osc.volume_env = data & 0x3f;
+				osc.pending_volume_env = data & 0x3f;
 				break;
 			case 3:
 				// Reset phase when turning off wave. See comment below.
@@ -201,7 +217,13 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 			int prev_phase = osc.phase;
 			int f = osc.wav_period() + mod;
 			osc.phase = osc.phase + (sub_step * f);
+			bool passed_zero = osc.phase & (~0x3fffff); // If we overflowed, considered that we passed zero.
 			osc.phase = osc.phase & 0x3fffff;
+
+			// From the wiki, verified on hardware.
+			// "Changes to the volume envelope only take effect while the wavetable pointer (top 6 bits of wave accumulator) is 0."
+			if ((osc.phase & 0x3f0000) == 0 || passed_zero)
+				osc.volume_env = osc.pending_volume_env;
 
 			// Wrapping around the wave is our trigger.
 			if (osc.phase < prev_phase)
@@ -210,23 +232,19 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 		else
 		{
 			osc.trigger = trigger_none;
-		
-			// Need to test on my FDS when im back home:
-			//	- Mesen keeps the phase at zero while the wave is disabled. 
-			//  - NSFPlay resets the phase only when disabling it through 4083
-			//  - NotSoFatso never resets the phase.
-			// From the wiki : 
-			//  "For the wave output, disabling the unit also resets the wave
-			//   position to 0 (i.e. the $4040 value)."
-			
-			//osc.phase = 0;
 		}
 		
+		// From my tests, the DAC lookup needs to be applied before any volume
+		// calculation. If you play a saw-tooth at low volume, you clearly still
+		// see all the same little ripples across the rising edge, even at low 
+		// volume.
 		int volume = min(osc.volume_env, 0x20);
-		int amp = osc.wave[(osc.phase >> 16) & 0x3f] * volume;
+		int wav = osc.wave[(osc.phase >> 16) & 0x3f];
+		int amp = dac_lookup[wav] * volume;
 
 		// Master volume.
 		amp = amp * 2 / ((osc.regs[9] & 0x03) + 2);
+		amp >>= dac_lookup_bits;
 
 		int delta = amp - last_amp;
 		if (delta)

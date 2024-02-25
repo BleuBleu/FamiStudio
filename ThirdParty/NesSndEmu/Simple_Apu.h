@@ -66,7 +66,7 @@ public:
 	void dmc_reader( int (*callback)( void* user_data, cpu_addr_t ), void* user_data = NULL );
 	
 	// Set output sample rate
-	blargg_err_t sample_rate( long rate, bool pal, int tnd_mode );
+	blargg_err_t sample_rate( long sample_rate, bool pal, int tnd_mode );
 	
 	// Write to register (0x4000-0x4017, except 0x4014 and 0x4016)
 	void write_register( cpu_addr_t, int data );
@@ -120,8 +120,10 @@ private:
 	bool pal_mode;
 	bool seeking;
 	float tnd_volume;
-	int  expansions;
-	int  separate_tnd_mode;
+	int expansions;
+	int separate_tnd_mode;
+	int fds_filter_accum;
+	int fds_filter_alpha;
 	bool separate_tnd_channel_enabled[3];
 	long tnd_accum[3];
 	long prev_nonlinear_tnd;
@@ -135,12 +137,15 @@ private:
 	//Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
 	Nes_EPSM epsm;
 	Blip_Buffer buf;
-	Blip_Buffer tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.
+	Blip_Buffer buf_tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.
+	Blip_Buffer buf_fds;
 	Blip_Buffer buf_epsm_left;
 	Blip_Buffer buf_epsm_right;
 	blip_time_t time;
 	blip_time_t frame_length;
 	blip_time_t clock(blip_time_t t = 4) { return time += t; }
+
+	const long fds_filter_bits = 12;
 };
 
 #endif

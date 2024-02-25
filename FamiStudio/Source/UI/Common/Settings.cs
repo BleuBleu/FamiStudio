@@ -678,8 +678,9 @@ namespace FamiStudio
             for (int i = 0; i < ExpansionType.Count; i++)
             {
                 var section = "Mixer" + ExpansionType.InternalNames[i];
-                ini.SetFloat(section, "Volume", ExpansionMixerSettings[i].VolumeDb);
-                ini.SetFloat(section, "Treble", ExpansionMixerSettings[i].TrebleDb);
+                ini.SetFloat(section, "VolumeDb", ExpansionMixerSettings[i].VolumeDb);
+                ini.SetFloat(section, "TrebleDb", ExpansionMixerSettings[i].TrebleDb);
+                ini.SetFloat(section, "TrebleRolloffHz", ExpansionMixerSettings[i].TrebleRolloffHz);
             }
 
             // MIDI
