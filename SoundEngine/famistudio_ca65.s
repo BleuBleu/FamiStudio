@@ -5013,7 +5013,7 @@ famistudio_set_epsm_instrument:
 	
 	lda @reg_offset
     clc
-    adc #10 ; skip over the next 5 pointers to get to the stereo data (second byte of the instrument)
+    adc #12 ; skip over the next 5 pointers to get to the stereo data (second byte of the instrument)
     tay
     lda (@ptr),y
     sta @ex_patch
