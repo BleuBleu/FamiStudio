@@ -77,7 +77,7 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                var period = GetPeriod() + 1; // Unlike the 2A03 and VRC6 pulse channels' frequency formulas, the formula for 5B does not add 1 to the period.
+                var period = GetPeriod(); // While the formula for YM2149 does not add 1 to the period, that is baked into the pitch table
                 var volume = GetVolume();
 
                 var periodHi = (period >> 8) & 0x0f;

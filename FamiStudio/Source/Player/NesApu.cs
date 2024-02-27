@@ -316,7 +316,7 @@ namespace FamiStudio
         {
             double clockNtsc = FreqNtsc / 16.0;
             double clockPal  = FreqPal  / 16.0;
-            double clockEPSM = FreqEPSM / 32.0 * 1.004; //minor adjustment for more accurate square channel frequencies
+            double clockEPSM = FreqEPSM / 32.0;
 
             for (int i = 1; i < NoteTableNTSC.Length; ++i)
             {
@@ -324,7 +324,7 @@ namespace FamiStudio
                 var freq = FreqC1 * Math.Pow(2.0, (i - 1) / 12.0);
                 NoteTableNTSC[i]    = (ushort)(clockNtsc / freq - 0.5);
                 NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
-                NoteTableEPSM[i]    = (ushort)(clockEPSM / freq - 0.5);
+                NoteTableEPSM[i]    = (ushort)Math.Round(clockEPSM / freq);
                 NoteTableEPSMFm[i]  = octave == 0 ? (ushort)((144 * (double)freq * 1048576 / 8000000)/4) : (ushort)((NoteTableEPSMFm[(i - 1) % 12 + 1]) << octave);
                 NoteTableVrc6Saw[i] = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
                 NoteTableFds[i]     = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);

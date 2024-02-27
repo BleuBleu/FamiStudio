@@ -278,7 +278,7 @@ namespace FamiStudio
             {
                 new RegisterViewerRow(PitchLabel,    () => GetPitchString(i.WavePeriod, i.WaveFrequency), true), 
                 new RegisterViewerRow(VolumeLabel,   () => i.Volume.ToString("00"), true),
-                new RegisterViewerRow(ModSpeedLabel, () => $"{i.ModSpeed,-4} ({i.ModFrequency,7:0.00}{HzLabel.ToString()}, {GetPitchString(i.ModSpeed, i.ModFrequency).Substring(0,6)})", true),
+                new RegisterViewerRow(ModSpeedLabel, () => $"{i.ModSpeed,-4} ({i.ModFrequency,7:0.00}{HzLabel.ToString()}, {GetPitchString(i.ModSpeed, i.ModFrequency)[..6]})", true),
                 new RegisterViewerRow(ModDepthLabel, () => i.ModDepth.ToString("00"), true)
             };
         }
@@ -473,11 +473,12 @@ namespace FamiStudio
                 ChannelType.LocalizedNames[ChannelType.S5BSquare1],
                 ChannelType.LocalizedNames[ChannelType.S5BSquare2],
                 ChannelType.LocalizedNames[ChannelType.S5BSquare3],
-                ChannelType.LocalizedNames[ChannelType.Noise]
+                null, null
             };
-            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconSquare, IconNoise };
-            Localization.Localize(this);
+            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconSquare, IconNoise, IconSaw }; //TODO: ACTUAL ENVELOPE ICON
+            Localization.Localize(this); 
             InterpreterLabels[3] = NoiseLabel.ToString();
+            InterpreterLabels[4] = EnvelopeLabel.ToString();
             i = new S5BRegisterIntepreter(r);
             RegisterRows = new[]
             {
@@ -488,7 +489,7 @@ namespace FamiStudio
                 new RegisterViewerRow("$08", 0xE000, 0x08, 0x0a),
                 new RegisterViewerRow("$0B", 0xE000, 0x0B, 0x0D),
             };
-            InterpeterRows = new RegisterViewerRow[4][];
+            InterpeterRows = new RegisterViewerRow[5][];
             for (int j = 0; j < 3; j++)
             {
                 var c = j; // Important, need to make a copy for the lambda.
@@ -497,13 +498,18 @@ namespace FamiStudio
                     new RegisterViewerRow(ToneLabel, () => i.GetMixerSetting(c) ? ToneEnabledLabel : ToneDisabledLabel, true),
                     new RegisterViewerRow(NoiseLabel, () => i.GetMixerSetting(c+3) ? NoiseEnabledLabel : NoiseDisabledLabel, true),
                     new RegisterViewerRow(EnvelopeLabel, () => i.GetEnvelopeEnabled(c) ? EnvelopeEnabledLabel : EnvelopeDisabledLabel, true),
-                    new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c), i.GetToneFrequency(c)), true),
+                    new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
                     new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
                 };
             }
             InterpeterRows[3] = new[]
             {
                 new RegisterViewerRow(PitchLabel, () => i.GetNoiseFrequency().ToString("00"), true)
+            };
+            InterpeterRows[4] = new[]
+            {
+                new RegisterViewerRow(PitchLabel, () => $"{i.GetEnvelopePeriod(),-5} ({i.GetEnvelopeFrequency(),7:0.00}{HzLabel}, {GetPitchString(i.GetEnvelopePeriod(), i.GetEnvelopeFrequency())[..6]})", true)
+                // TODO: Graph of shape
             };
         }
     }
@@ -519,8 +525,8 @@ namespace FamiStudio
 
         public EpsmRegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.EPSM)
         {
-            InterpreterLabels = new string[16];
-            InterpreterIcons = new int[16];
+            InterpreterLabels = new string[17];
+            InterpreterIcons = new int[17];
             Localization.Localize(this);
             i = new EpsmRegisterIntepreter(r);
             RegisterRows = new[]
@@ -568,12 +574,13 @@ namespace FamiStudio
                 new RegisterViewerRow("$A0 A1", 0x401f, 0xa0, 0xa7),
                 new RegisterViewerRow("$B0 A1", 0x401f, 0xb0, 0xb7),
             };
-            InterpeterRows = new RegisterViewerRow[16][];
-            for (int j = 0; j < 16; j++)
+            InterpeterRows = new RegisterViewerRow[17][];
+            for (int j = 0; j < 17; j++)
             {
-                var c = j; // Important, need to make a copy for the lambda.
                 if (j < 3)
                 {
+                    var c = j; // Important, need to make a copy for the lambda.
+
                     InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+j];
                     InterpreterIcons[j] = IconSquare;
                     InterpeterRows[c] = new[]
@@ -585,28 +592,32 @@ namespace FamiStudio
                         new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
                     };
                 }
-                if (j >= 4 && j < 10)
+                if (j >= 5 && j < 11)
                 {
-                    InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+j-1];
+                    var c = j-2; // Important, need to make a copy for the lambda.
+
+                    InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+c];
                     InterpreterIcons[j] = IconFM;
-                    InterpeterRows[c] = new[]
+                    InterpeterRows[j] = new[]
                     {
-                        new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c-1), i.GetFrequency(c-1)), true),
-                        new RegisterViewerRow(StereoLabel, () => i.GetStereo(c-1), true),
-                        new RegisterViewerRow(VolOP1Label, () => i.GetVolume(c-1,0).ToString("00"), true),
-                        new RegisterViewerRow(VolOP2Label, () => i.GetVolume(c-1,2).ToString("00"), true),
-                        new RegisterViewerRow(VolOP3Label, () => i.GetVolume(c-1,1).ToString("00"), true),
-                        new RegisterViewerRow(VolOP4Label, () => i.GetVolume(c-1,3).ToString("00"), true),
+                        new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
+                        new RegisterViewerRow(StereoLabel, () => i.GetStereo(c), true),
+                        new RegisterViewerRow(VolOP1Label, () => i.GetVolume(c,0).ToString("00"), true),
+                        new RegisterViewerRow(VolOP2Label, () => i.GetVolume(c,2).ToString("00"), true),
+                        new RegisterViewerRow(VolOP3Label, () => i.GetVolume(c,1).ToString("00"), true),
+                        new RegisterViewerRow(VolOP4Label, () => i.GetVolume(c,3).ToString("00"), true),
                     };
                 }
-                if (j >= 10)
+                if (j >= 11)
                 {
-                    InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+j-1];
+                    var c = j-2; // Important, need to make a copy for the lambda.
+
+                    InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.EPSMSquare1+c];
                     InterpreterIcons[j] = IconRhythm;
-                    InterpeterRows[c] = new[]
+                    InterpeterRows[j] = new[]
                     {
-                        new RegisterViewerRow(StereoLabel, () => i.GetStereo(c-1), true),
-                        new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c-1).ToString("00"), true),
+                        new RegisterViewerRow(StereoLabel, () => i.GetStereo(c), true),
+                        new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
                     };
                 }
             }
@@ -615,6 +626,13 @@ namespace FamiStudio
             InterpeterRows[3] = new[]
             {
                 new RegisterViewerRow(PitchLabel, () => i.GetNoiseFrequency().ToString("00"), true)
+            };
+            InterpreterLabels[4] = EnvelopeLabel.ToString();
+            InterpreterIcons[4] = IconSaw;  //TODO: ACTUAL ENVELOPE ICON
+            InterpeterRows[4] = new[]
+            {
+                new RegisterViewerRow(PitchLabel, () => $"{i.GetEnvelopePeriod(),-5} ({i.GetEnvelopeFrequency(),7:0.00}{HzLabel}, {GetPitchString(i.GetEnvelopePeriod(), i.GetEnvelopeFrequency())[..6]})", true)
+                // TODO: Graph of shape
             };
         }
     }

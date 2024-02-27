@@ -254,9 +254,10 @@ namespace FamiStudio
             regs = r;
         }
 
-        protected double NesPeriodToFreq(int period, int length)
-        {
-            return regs.CpuFrequency / (period + 1.0) / length;
+        protected double YM2149PeriodToFreq(int period, int length)
+        {   
+            if (period == 0) period = 1;
+            return (double)regs.CpuFrequency / period / length;
         }
 
         public int GetPeriod(int i)
@@ -264,9 +265,10 @@ namespace FamiStudio
             return regs.GetMergedSubRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_LO_A + i * 2, NesApu.S5B_REG_HI_A + i * 2, 0xf);
         }
 
-        public double GetToneFrequency(int i)
+        public double GetFrequency(int i)
         {
-            return NesPeriodToFreq(GetPeriod(i), 32);
+            return YM2149PeriodToFreq(GetPeriod(i), 16 * 2); 
+            // 32 = 16*2, 16 from YM2149 datasheet (page 5), 2 from halved clock speed 
         }
         public int GetNoiseFrequency()
         {
@@ -275,6 +277,24 @@ namespace FamiStudio
         public int GetVolume(int i)
         {
             return regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_VOL_A + i) & 0xf;
+        }
+        public int GetEnvelopeShape()
+        {
+            return regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_SHAPE);
+        }
+        public int GetEnvelopeLength()
+        {
+            return (GetEnvelopeShape() & (0b0001 | 0b0010 | 0b1000)) == 0b1010 ? 64 : 32;
+            // only true when CONT, ALT, HOLD bits set (only actual triangle envelopes)
+        }
+        public int GetEnvelopePeriod()
+        {
+            return regs.GetMergedSubRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_ENV_LO, NesApu.S5B_REG_ENV_HI, 0xff);
+        }
+        public double GetEnvelopeFrequency()
+        {
+            return YM2149PeriodToFreq(GetEnvelopePeriod(), 256/32*2*GetEnvelopeLength());
+            // 256, 32 from YM2149 datasheet (page 7), 2 from halved clock speed 
         }
         public bool GetMixerSetting(int channel)  // channel 0-2 - tone for channels ABC; 3-5 - noise 
         {
@@ -295,9 +315,10 @@ namespace FamiStudio
             regs = r;
         }
 
-        protected double NesPeriodToFreq(int period, int length)
+        protected double YM2149PeriodToFreq(int period, int length)
         {
-            return 1.0044 * 4000000 / (period + 1.0) / length; //adjusted by 1,0044 to get closer to real value
+            if (period == 0) period = 1;
+            return (double)NesApu.FreqEPSM / period / length;
         }
 
         public int GetPeriod(int i)
@@ -319,6 +340,7 @@ namespace FamiStudio
             else
                 return 0;
         }
+        
         public int GetNoiseFrequency()
         {
             return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_NOISE_FREQ) & 0x1f;
@@ -327,7 +349,11 @@ namespace FamiStudio
         public double GetFrequency(int i)
         {
             if (i < 3)
-                return NesPeriodToFreq(GetPeriod(i), 32);
+                return YM2149PeriodToFreq(GetPeriod(i), 64);
+                // 64 from 
+                // 1. YM2608 datasheet (page 37)
+                // 2. YMF288 datasheet (page 14)
+                // TODO: YMF288 datasheet page 14 situation of 0 <= Tp <= 7
             else
                 return EpsmPeriodToFrequency(GetPeriod(i), GetOctave(i));
         }
@@ -351,6 +377,28 @@ namespace FamiStudio
         public bool GetEnvelopeEnabled(int channel)  // channel 0-2 for channels ABC 
         {
             return (regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_VOL_A + channel) & 0x10) != 0;
+        }
+
+        public int GetEnvelopeShape()
+        {
+            return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_SHAPE);
+        }
+        public int GetEnvelopeLength()
+        {
+            return (GetEnvelopeShape() & (0b0001 | 0b0010 | 0b1000)) == 0b1010 ? 64 : 32;
+            // only true when CONT, ALT, HOLD bits set (only actual triangle envelopes)
+        }
+        public int GetEnvelopePeriod()
+        {
+            return regs.GetMergedSubRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_ENV_LO, NesApu.EPSM_REG_ENV_HI, 0xff);
+        }
+        public double GetEnvelopeFrequency()
+        {
+            return YM2149PeriodToFreq(GetEnvelopePeriod(), 1024/32*GetEnvelopeLength());
+            // 1024 from YM2608 datasheet (page 39) 
+            //  (not described in YMF288 datasheet, presumably unchanged),
+            // 32 from YM2149 datasheet (page 7)
+            //  (same term of "envelope repetition frequency")
         }
 
         public string GetStereo(int i)
@@ -399,8 +447,7 @@ namespace FamiStudio
 
         private static double EpsmPeriodToFrequency(int period, int octave)
         {
-            //adjusted by 1.0004 to have the value closer to closer to real value
-            return period * 1.0004 / 144 / 2097152.0 * 8000000 * (1 << octave);
+            return period / 144 / 2097152.0 * NesApu.FreqEPSM * (1 << octave);
         }
 
     }
