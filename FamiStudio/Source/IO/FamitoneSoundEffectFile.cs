@@ -48,7 +48,7 @@ namespace FamiStudio
             var oldSmoothVibrato = Settings.SquareSmoothVibrato;
             Settings.SquareSmoothVibrato = false;
 
-            var writes = regPlayer.GetRegisterValues(song);
+            var writes = regPlayer.GetRegisterValues(song, out _);
 
             Settings.SquareSmoothVibrato = oldSmoothVibrato;
 
