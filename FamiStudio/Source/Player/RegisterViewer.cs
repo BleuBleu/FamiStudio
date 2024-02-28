@@ -456,9 +456,67 @@ namespace FamiStudio
         protected LocalizedString EnvelopeLabel;
         protected LocalizedString EnvelopeEnabledLabel;
         protected LocalizedString EnvelopeDisabledLabel;
+        protected LocalizedString EnvelopeShapeLabel;
+
+        protected static readonly byte[] envTable = 
+        {   // If emulators ever upgrade, change this table
+            0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04,
+            0x05, 0x06, 0x07, 0x09, 0x0B, 0x0D, 0x0F, 0x12,
+            0x16, 0x1A, 0x1F, 0x25, 0x2D, 0x35, 0x3F, 0x4C,
+            0x5A, 0x6A, 0x7F, 0x97, 0xB4, 0xD6, 0xFF, 0xFF
+        };
 
         public YMRegisterViewer(int exp) : base (exp) 
         { 
+        }
+
+        
+        protected void DrawEnvelopeInternal(CommandList c, Fonts res, Rectangle rect, int shape, bool video)
+        {
+            const int reps = 4;
+            const int steps = 32;
+
+            var sx = rect.Width / (float)(reps * steps);
+            var sy = rect.Height / (float)byte.MaxValue;
+            var h = rect.Height;
+
+            if ((shape & 0b1100) == 0b0000) shape = 0b1001;
+            else if ((shape & 0b1100) == 0b0100) shape = 0b1111;
+
+            bool edge =         (shape & 0b0100) != 0;  // The ATT bit; 0 means down, 1 means up
+            bool hold =         (shape & 0b0001) != 0;  // The HOLD bit
+            bool alternate =    (shape & 0b0010) != 0;  // The ALT bit
+
+            var color = Theme.LightGreyColor2;
+            for (int rep = 0; rep < reps; rep++)
+            {
+                if (rep == 0 || !hold){ // If rendering a slope
+                    if (edge) { // Up slope
+                        for (int x = 0; x < steps; x++) {
+                        
+                        float y = (float) Math.Ceiling(envTable[x] * sy);
+
+                        c.FillRectangle((x + rep * steps) * sx, h - y, (x + 1 + rep * steps) * sx, h, color);
+                        }
+                    } else {    // Down slope
+                        for (int x = 0; x < steps; x++) {
+                        
+                        float y = (float) Math.Ceiling(envTable[31-x] * sy);
+
+                        c.FillRectangle((x + rep * steps) * sx, h - y, (x + 1 + rep * steps) * sx, h, color);
+                        }
+                    }
+                    if (alternate) edge = !edge;   // If real triangle, swap edge
+                } else if (edge) {    // Holding the maximum, taking a shortcut here
+                    c.FillRectangle(rep * steps * sx, 0, (rep + 1) * steps * sx, h, color);
+                }
+            }
+
+            if (!video)
+            {
+                c.FillRectangle(reps * steps * sx, 0, reps * steps * sx, rect.Height, Theme.DarkGreyColor3); 
+                c.DrawLine(reps * steps * sx, 0, reps * steps * sx, rect.Height, Theme.BlackColor);
+            }
         }
     }
 
@@ -508,9 +566,13 @@ namespace FamiStudio
             };
             InterpeterRows[4] = new[]
             {
-                new RegisterViewerRow(PitchLabel, () => $"{i.GetEnvelopePeriod(),-5} ({i.GetEnvelopeFrequency(),7:0.00}{HzLabel}, {GetPitchString(i.GetEnvelopePeriod(), i.GetEnvelopeFrequency())[..6]})", true)
-                // TODO: Graph of shape
+                new RegisterViewerRow(PitchLabel, () => $"{i.GetEnvelopePeriod(),-5} ({i.GetEnvelopeFrequency(),7:0.00}{HzLabel}, {GetPitchString(i.GetEnvelopePeriod(), i.GetEnvelopeFrequency())[..6]})", true),
+                new RegisterViewerRow(EnvelopeShapeLabel, DrawEnvelope, 32),
             };
+        }
+
+        void DrawEnvelope (CommandList c, Fonts res, Rectangle rect, bool video){
+            DrawEnvelopeInternal(c, res, rect, i.GetEnvelopeShape(), video);
         }
     }
 
@@ -631,9 +693,13 @@ namespace FamiStudio
             InterpreterIcons[4] = IconSaw;  //TODO: ACTUAL ENVELOPE ICON
             InterpeterRows[4] = new[]
             {
-                new RegisterViewerRow(PitchLabel, () => $"{i.GetEnvelopePeriod(),-5} ({i.GetEnvelopeFrequency(),7:0.00}{HzLabel}, {GetPitchString(i.GetEnvelopePeriod(), i.GetEnvelopeFrequency())[..6]})", true)
-                // TODO: Graph of shape
+                new RegisterViewerRow(PitchLabel, () => $"{i.GetEnvelopePeriod(),-5} ({i.GetEnvelopeFrequency(),7:0.00}{HzLabel}, {GetPitchString(i.GetEnvelopePeriod(), i.GetEnvelopeFrequency())[..6]})", true),
+                new RegisterViewerRow(EnvelopeShapeLabel, DrawEnvelope, 32),
             };
+        }
+
+        void DrawEnvelope (CommandList c, Fonts res, Rectangle rect, bool video){
+            DrawEnvelopeInternal(c, res, rect, i.GetEnvelopeShape(), video);
         }
     }
 
