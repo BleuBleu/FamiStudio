@@ -1352,9 +1352,9 @@ namespace FamiStudio
                     force |= (envTrigger != 0) && envEnabled;
 
                     // All envelope frequency will be on square 1.
+                    envFreq = (int)(envFreq * clockMultiplier[channel.Expansion]);
                     if (state.s5bEnvFreq != envFreq && channel.Type == ChannelType.S5BSquare1)
                     {
-                        envFreq = (int)(envFreq * clockMultiplier[channel.Expansion]);
                         GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
                         state.s5bEnvFreq = envFreq;
                     }
@@ -1388,12 +1388,12 @@ namespace FamiStudio
                         force |= (envTrigger != 0) && envEnabled;
 
                         // All envelope frequency will be on square 1.
+                        if (ym2149AsEPSM && channel.IsEPSMSquareChannel)
+                            envFreq = (int)(envFreq / clockMultiplier[ExpansionType.S5B]);
+                        else
+                            envFreq = (int)(period * clockMultiplier[channel.Expansion]);
                         if (state.s5bEnvFreq != envFreq && channel.Type == ChannelType.EPSMSquare1)
                         {
-                            if (ym2149AsEPSM && channel.IsEPSMSquareChannel)
-                                envFreq = (int)(envFreq / clockMultiplier[ExpansionType.S5B]);
-                            else
-                                envFreq = (int)(period * clockMultiplier[channel.Expansion]);
                             GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
                             state.s5bEnvFreq = envFreq;
                         }
