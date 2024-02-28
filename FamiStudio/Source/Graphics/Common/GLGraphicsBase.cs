@@ -47,17 +47,18 @@ namespace FamiStudio
 
         // These are only used temporarily during text/bmp rendering.
         protected float[] vtxArray = new float[MaxVertexCount * 2];
-        protected float[] texArray = new float[MaxVertexCount * 2];
+        protected float[] texArray = new float[MaxVertexCount * 3];
         protected int[]   colArray = new int[MaxVertexCount];
         protected byte[]  depArray = new byte[MaxVertexCount];
         protected short[] idxArray = new short[MaxIndexCount];
 
         protected static short[] quadIdxArray;
 
-        protected List<float[]> freeVertexArrays = new List<float[]>();
-        protected List<byte[]>  freeByteArrays   = new List<byte[]>();
-        protected List<int[]>   freeColorArrays  = new List<int[]>();
-        protected List<short[]> freeIndexArrays  = new List<short[]>();
+        protected List<float[]> freeVertexArrays   = new List<float[]>();
+        protected List<float[]> freeTexCoordArrays = new List<float[]>();
+        protected List<byte[]>  freeByteArrays     = new List<byte[]>();
+        protected List<int[]>   freeColorArrays    = new List<int[]>();
+        protected List<short[]> freeIndexArrays    = new List<short[]>();
 
         protected List<GlyphCache> glyphCaches = new List<GlyphCache>();
 
@@ -481,6 +482,21 @@ namespace FamiStudio
             }
         }
 
+        public float[] GetTexCoordArray()
+        {
+            if (freeTexCoordArrays.Count > 0)
+            {
+                var lastIdx = freeTexCoordArrays.Count - 1;
+                var arr = freeTexCoordArrays[lastIdx];
+                freeTexCoordArrays.RemoveAt(lastIdx);
+                return arr;
+            }
+            else
+            {
+                return new float[MaxVertexCount * 3];
+            }
+        }
+
         public byte[] GetByteArray()
         {
             if (freeByteArrays.Count > 0)
@@ -531,6 +547,10 @@ namespace FamiStudio
             freeVertexArrays.Add(a);
         }
 
+        public void ReleaseTexCoordArray(float[] a)
+        {
+            freeTexCoordArrays.Add(a);
+        }
 
         public void ReleaseByteArray(byte[] a)
         {
@@ -1434,6 +1454,29 @@ namespace FamiStudio
             public int numIndices;
         };
 
+        public class TextureDrawData
+        {
+            public float[] vtxArray;
+            public float[] texArray;
+            public int[]   colArray;
+            public byte[]  depArray;
+
+            public int vtxArraySize;
+            public int texArraySize;
+            public int colArraySize;
+            public int depArraySize;
+
+            public List<DrawData> draws = new List<DrawData>();
+
+            public void Release(GraphicsBase g)
+            {
+                g.ReleaseVertexArray(vtxArray);
+                g.ReleaseTexCoordArray(texArray);
+                g.ReleaseByteArray(depArray);
+                g.ReleaseColorArray(colArray);
+            }
+        }
+
         public class DrawData
         {
             public int textureId;
@@ -1441,11 +1484,10 @@ namespace FamiStudio
             public int count;
         };
 
-        private LineBatch lineBatch;
+        private List<LineBatch> lineBatches;
         private List<PolyBatch> polyBatches;
         private List<LineSmoothBatch> lineSmoothBatches;
         private List<TextInstance> texts;
-
         private Dictionary<Texture, List<TextureInstance>> textures = new Dictionary<Texture, List<TextureInstance>>();
 
         private GraphicsBase graphics;
@@ -1455,7 +1497,7 @@ namespace FamiStudio
         public GraphicsBase Graphics => graphics;
 
         public bool HasAnyPolygons       => polyBatches != null;
-        public bool HasAnyLines          => lineBatch != null;
+        public bool HasAnyLines          => lineBatches != null;
         public bool HasAnySmoothLines    => lineSmoothBatches != null;
         public bool HasAnyTexts          => texts != null;
         public bool HasAnyTextures       => textures.Count > 0;
@@ -1506,12 +1548,15 @@ namespace FamiStudio
                 }
             }
 
-            if (lineBatch != null)
+            if (lineBatches != null)
             {
-                graphics.ReleaseVertexArray(lineBatch.vtxArray);
-                graphics.ReleaseByteArray(lineBatch.dshArray);
-                graphics.ReleaseColorArray(lineBatch.colArray);
-                graphics.ReleaseByteArray(lineBatch.depArray);
+                foreach (var batch in lineBatches)
+                {
+                    graphics.ReleaseVertexArray(batch.vtxArray);
+                    graphics.ReleaseByteArray(batch.dshArray);
+                    graphics.ReleaseColorArray(batch.colArray);
+                    graphics.ReleaseByteArray(batch.depArray);
+                }
             }
 
             if (lineSmoothBatches != null)
@@ -1527,8 +1572,10 @@ namespace FamiStudio
             }
 
             polyBatches = null;
-            lineBatch = null;
+            lineBatches = null;
             lineSmoothBatches = null;
+            textures.Clear();
+            textures = null;
             texts = null;
         }
 
@@ -1571,18 +1618,32 @@ namespace FamiStudio
             return batch;
         }
 
-        private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, bool dash)
+        private LineBatch GetLineBatch(int numVtxNeeded)
         {
-            if (lineBatch == null)
+            if (lineBatches == null)
             {
-                lineBatch = new LineBatch();
-                lineBatch.vtxArray = graphics.GetVertexArray();
-                lineBatch.dshArray = graphics.GetByteArray();
-                lineBatch.colArray = graphics.GetColorArray();
-                lineBatch.depArray = graphics.GetByteArray();
+                lineBatches = new List<LineBatch>();
             }
 
-            var batch = lineBatch;
+            var batch = lineBatches.Count > 0 ? lineBatches[lineBatches.Count - 1] : null;
+
+            if (batch == null || batch.depIdx + numVtxNeeded >= batch.depArray.Length)
+            {
+                batch = new LineBatch();
+                batch.vtxArray = graphics.GetVertexArray();
+                batch.dshArray = graphics.GetByteArray();
+                batch.colArray = graphics.GetColorArray();
+                batch.depArray = graphics.GetByteArray();
+                lineBatches.Add(batch);
+            }
+
+            return batch;
+
+        }
+
+        private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, bool dash)
+        {
+            var batch = GetLineBatch(4);
             var depth = graphics.DepthValue;
             var dashPattern = dash ? EncodeDashPattern(x0, x1, y0, y1) : (byte)0;
 
@@ -2870,25 +2931,30 @@ namespace FamiStudio
             return draws;
         }
 
-        public LineDrawData GetLineDrawData()
+        public List<LineDrawData> GetLineDrawData()
         {
-            var draw = (LineDrawData)null;
+            var draws = (List<LineDrawData>)null;
 
-            if (lineBatch != null)
+            if (lineBatches != null)
             {
-                draw = new LineDrawData();
-                draw.vtxArray = lineBatch.vtxArray;
-                draw.dshArray = lineBatch.dshArray;
-                draw.colArray = lineBatch.colArray;
-                draw.depArray = lineBatch.depArray;
-                draw.numVertices = lineBatch.vtxIdx / 2;
-                draw.vtxArraySize = lineBatch.vtxIdx;
-                draw.dshArraySize = lineBatch.dshIdx;
-                draw.colArraySize = lineBatch.colIdx;
-                draw.depArraySize = lineBatch.depIdx;
+                draws = new List<LineDrawData>();
+                foreach (var batch in lineBatches)
+                {
+                    var draw = new LineDrawData();
+                    draw.vtxArray = batch.vtxArray;
+                    draw.dshArray = batch.dshArray;
+                    draw.colArray = batch.colArray;
+                    draw.depArray = batch.depArray;
+                    draw.numVertices = batch.vtxIdx / 2;
+                    draw.vtxArraySize = batch.vtxIdx;
+                    draw.dshArraySize = batch.dshIdx;
+                    draw.colArraySize = batch.colIdx;
+                    draw.depArraySize = batch.depIdx;
+                    draws.Add(draw);
+                }
             }
 
-            return draw;
+            return draws;
         }
 
         public IReadOnlyCollection<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize)
@@ -3167,15 +3233,17 @@ namespace FamiStudio
             return orderedDrawData;
         }
 
-        public List<DrawData> GetTextureDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
+        public List<TextureDrawData> GetTextureDrawData()
         {
-            var drawData = new List<DrawData>();
+            var drawDatas = new List<TextureDrawData>();
+            var drawData = new TextureDrawData();
 
-            var vtxIdx = 0;
-            var texIdx = 0;
-            var colIdx = 0;
-            var depIdx = 0;
-            var idxIdx = 0;
+            drawData.vtxArray = graphics.GetVertexArray();
+            drawData.texArray = graphics.GetTexCoordArray();
+            drawData.colArray = graphics.GetColorArray();
+            drawData.depArray = graphics.GetByteArray();
+
+            var idx = 0;
 
             foreach (var kv in textures)
             {
@@ -3184,10 +3252,29 @@ namespace FamiStudio
                 var draw = new DrawData();
 
                 draw.textureId = bmp.Id;
-                draw.start = idxIdx;
+                draw.start = idx;
                 
                 foreach (var inst in list)
                 {
+                    // We are about to overflow, start a new batch.
+                    if (drawData.texArraySize + 12 >= drawData.texArray.Length)
+                    {
+                        if (draw.count > 0)
+                            drawData.draws.Add(draw);
+
+                        drawDatas.Add(drawData);
+                        drawData = new TextureDrawData();
+                        drawData.vtxArray = graphics.GetVertexArray();
+                        drawData.texArray = graphics.GetTexCoordArray();
+                        drawData.colArray = graphics.GetColorArray();
+                        drawData.depArray = graphics.GetByteArray();
+                        idx = 0;
+                        draw = new DrawData();
+                        draw.textureId = bmp.Id;
+                        draw.start = 0;
+
+                    }
+
                     var x0 = inst.x;
                     var y0 = inst.y;
                     var x1 = inst.x + inst.sx;
@@ -3198,45 +3285,45 @@ namespace FamiStudio
 
                     if (!perspective)
                     {
-                        vtxArray[vtxIdx++] = x0;
-                        vtxArray[vtxIdx++] = y0;
-                        vtxArray[vtxIdx++] = x1;
-                        vtxArray[vtxIdx++] = y0;
-                        vtxArray[vtxIdx++] = x1;
-                        vtxArray[vtxIdx++] = y1;
-                        vtxArray[vtxIdx++] = x0;
-                        vtxArray[vtxIdx++] = y1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y1;
 
                         if (!rotated)
                         {
-                            texArray[texIdx++] = inst.u0;
-                            texArray[texIdx++] = inst.v0;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = inst.u1;
-                            texArray[texIdx++] = inst.v0;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = inst.u1;
-                            texArray[texIdx++] = inst.v1;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = inst.u0;
-                            texArray[texIdx++] = inst.v1;
-                            texArray[texIdx++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u0;
+                            drawData.texArray[drawData.texArraySize++] = inst.v0;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u1;
+                            drawData.texArray[drawData.texArraySize++] = inst.v0;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u1;
+                            drawData.texArray[drawData.texArraySize++] = inst.v1;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u0;
+                            drawData.texArray[drawData.texArraySize++] = inst.v1;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
                         }
                         else
                         {
                             // 90 degrees UV rotation.
-                            texArray[texIdx++] = inst.u1;
-                            texArray[texIdx++] = inst.v0;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = inst.u1;
-                            texArray[texIdx++] = inst.v1;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = inst.u0;
-                            texArray[texIdx++] = inst.v1;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = inst.u0;
-                            texArray[texIdx++] = inst.v0;
-                            texArray[texIdx++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u1;
+                            drawData.texArray[drawData.texArraySize++] = inst.v0;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u1;
+                            drawData.texArray[drawData.texArraySize++] = inst.v1;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u0;
+                            drawData.texArray[drawData.texArraySize++] = inst.v1;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u0;
+                            drawData.texArray[drawData.texArraySize++] = inst.v0;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
                         }
                     }
                     else 
@@ -3246,71 +3333,67 @@ namespace FamiStudio
                         // Perspective mode basically ignores the UVs and assumes (0,0) ... (1,1).
                         if (!rotated)
                         {
-                            texArray[texIdx++] = 0.0f;
-                            texArray[texIdx++] = 0.0f;
-                            texArray[texIdx++] = tx;
-                            texArray[texIdx++] = tx;
-                            texArray[texIdx++] = 0.0f;
-                            texArray[texIdx++] = tx;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = 0.0f;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
                         }
                         else
                         {
-                            texArray[texIdx++] = tx;
-                            texArray[texIdx++] = 0.0f;
-                            texArray[texIdx++] = tx;
-                            texArray[texIdx++] = tx;
-                            texArray[texIdx++] = tx;
-                            texArray[texIdx++] = tx;
-                            texArray[texIdx++] = 0.0f;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = 1.0f;
-                            texArray[texIdx++] = 0.0f;
-                            texArray[texIdx++] = 0.0f;
-                            texArray[texIdx++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
                         }
 
                         // Asumes everything is fullscreen.
-                        vtxArray[vtxIdx++] = 0;
-                        vtxArray[vtxIdx++] = 0;
-                        vtxArray[vtxIdx++] = graphics.ScreenWidth;
-                        vtxArray[vtxIdx++] = 0;
-                        vtxArray[vtxIdx++] = x1;
-                        vtxArray[vtxIdx++] = y1;
-                        vtxArray[vtxIdx++] = x0;
-                        vtxArray[vtxIdx++] = y1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = 0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = 0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = graphics.ScreenWidth;
+                        drawData.vtxArray[drawData.vtxArraySize++] = 0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y1;
                     }
-
+                    
                     var packedOpacity = new Color(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)).ToAbgr();
-                    colArray[colIdx++] = packedOpacity;
-                    colArray[colIdx++] = packedOpacity;
-                    colArray[colIdx++] = packedOpacity;
-                    colArray[colIdx++] = packedOpacity;
+                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
+                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
+                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
+                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
 
-                    depArray[depIdx++] = inst.depth;
-                    depArray[depIdx++] = inst.depth;
-                    depArray[depIdx++] = inst.depth;
-                    depArray[depIdx++] = inst.depth;
+                    drawData.depArray[drawData.depArraySize++] = inst.depth;
+                    drawData.depArray[drawData.depArraySize++] = inst.depth;
+                    drawData.depArray[drawData.depArraySize++] = inst.depth;
+                    drawData.depArray[drawData.depArraySize++] = inst.depth;
 
                     draw.count += 6;
-                    idxIdx += 6;
+                    idx += 6;
                 }
 
-                drawData.Add(draw);
+                drawData.draws.Add(draw);
             }
 
-            vtxArraySize = vtxIdx;
-            texArraySize = texIdx;
-            colArraySize = colIdx;
-            depArraySize = depIdx;
-            idxArraySize = idxIdx;
+            drawDatas.Add(drawData);
 
-            return drawData;
+            return drawDatas;
         }
     }
 }
