@@ -709,8 +709,8 @@ namespace FamiStudio
                 envShape = 0;
             }
 
-            var toneEnabled  = (mixer & 2) != 0;
-            var noiseEnabled = (mixer & 1) != 0;
+            var toneEnabled  = (mixer & 1) == 0;
+            var noiseEnabled = (mixer & 2) == 0;
 
             var name = "S5B";
             if (noiseEnabled && noise == 0)
@@ -787,8 +787,8 @@ namespace FamiStudio
                     envShape = 0;
                 }
 
-                var toneEnabled = (mixer & 2) != 0;
-                var noiseEnabled = (mixer & 1) != 0;
+                var toneEnabled = (mixer & 1) == 0;
+                var noiseEnabled = (mixer & 2) == 0;
 
                 name = "EPSM";
                 if (noiseEnabled && noise == 0)
