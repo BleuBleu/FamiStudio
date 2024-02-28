@@ -203,6 +203,8 @@ update_output (PSG * psg)
 
   int i, noise;
   uint32_t incr;
+  uint8_t env_trigger = 0;
+  uint8_t tone_trigger[3] = { 0, 0, 0 };
 
   psg->base_count += psg->base_incr;
   incr = (psg->base_count >> GETA_BITS);
@@ -226,6 +228,7 @@ update_output (PSG * psg)
       {
         if (psg->env_alternate^psg->env_hold) psg->env_face ^= 1;
         if (psg->env_hold) psg->env_pause = 1;
+        else if (psg->env_ptr == 0) env_trigger = 1;
         psg->env_ptr = psg->env_face?0:0x1f;       
       }
       else
@@ -260,7 +263,7 @@ update_output (PSG * psg)
         psg->edge[i] = !psg->edge[i];
         psg->count[i] -= psg->freq[i];
         if (psg->edge[i])
-            psg->trigger_mask |= (1 << i);
+            tone_trigger[i] = 1;
       }
       else
       {
@@ -281,6 +284,16 @@ update_output (PSG * psg)
 
     psg->ch_out[i] >>= 1;
 
+    // If this channel is using envelopes and its repeating (non-hold) envelope, use it as trigger,
+    // otherwise, use square wave.
+    if (psg->env_freq && !psg->env_hold && (psg->volume[i] & 32))
+    {
+        psg->trigger_mask |= (env_trigger << i);
+    }
+    else
+    {
+        psg->trigger_mask |= (tone_trigger[i] << i);
+    }
   }
 
 }

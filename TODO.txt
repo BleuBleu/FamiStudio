@@ -35,8 +35,12 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	- Check volume, seems square is very low with low values, might be normal.
 	- Test disable attack (C# + AMS), shouldnt reset envelope.
 	- Make sure manual period on an inactive channel behaves the same on ASM/C#
+	x If envelope is active, use it as emu trigger.
 - Add a way to type in FX + param values, even if its janky...
 - Logarithmic FX values.
+- BUG : Little warning icon appears at wrong location in projet properties.
+- BUG : Instrument player doesnt play envelopes (we only update on channel 3).
+- Do we need to cancel video preview if app gets suspended on Android?
 
 4.2.0 Testing/Packaging
 =======================
@@ -57,6 +61,7 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	* More filtering options for audio expansions
 	* S5B envelope support (S5B & EPSM)
 	* FDS auto-modulation support
+	* FDS emulation improvements
 	* Phase reset support
 	* Accurate seek support (fully emulate entire song from start)
 	* Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
@@ -66,6 +71,7 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)
 -Breaking/Behavior changes:
 	* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
+	* FDS emulation now matches the hardware much more closely. Some instruments may now sound very different.
 
 Later
 =====
