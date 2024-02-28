@@ -287,12 +287,12 @@ update_output (PSG * psg)
     psg->ch_out[i] >>= 1;
 
     // If this channel is using envelopes and its repeating (non-hold) envelope, use it as trigger,
-    // otherwise, use square wave.
+    // otherwise, use square wave if they are enabled.
     if (psg->env_freq && !psg->env_hold && (psg->volume[i] & 32))
     {
         psg->trigger_mask |= (env_trigger << i);
     }
-    else
+    else if (psg->tmask[i])
     {
         psg->trigger_mask |= (tone_trigger[i] << i);
     }

@@ -1,8 +1,6 @@
 // Famicom Disk System audio chip emulator for FamiStudio.
 // Added to Nes_Snd_Emu by @NesBleuBleu, mostly adapted from Disch / NotSoFatso
 
-#include <math.h> // MATTT
-#include <stdio.h>  // MATTT
 #include "Nes_Fds.h"
 #include <string.h>
 
