@@ -228,7 +228,6 @@ update_output (PSG * psg)
       {
         if (psg->env_alternate^psg->env_hold) psg->env_face ^= 1;
         if (psg->env_hold) psg->env_pause = 1;
-        else if (psg->env_ptr == 0) env_trigger = 1;
         psg->env_ptr = psg->env_face?0:0x1f;       
       }
       else
@@ -237,6 +236,9 @@ update_output (PSG * psg)
         psg->env_ptr = 0;
       }
     }
+
+    if (psg->env_ptr == 0 && !psg->env_hold) 
+        env_trigger = 1;
 
     psg->env_count -= psg->env_freq;
   }
