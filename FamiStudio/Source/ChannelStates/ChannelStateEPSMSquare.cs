@@ -52,11 +52,13 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
-            var lastChannel = player.GetChannelByType(ChannelType.EPSMSquare3) as ChannelStateEPSMSquare;
+            var lastChannel = player.GetChannelByType(instrumentPlayer ? InnerChannelType : ChannelType.EPSMSquare3) as ChannelStateEPSMSquare;
+            var firstChannelIndex = instrumentPlayer ? channelIdx : 0;
+            var lastChannelIndex  = instrumentPlayer ? channelIdx : 2;
 
             // All channels will update the channel 3 variables. This is pretty ugly
             // but mimics what the assemble code does pretty closely.
-            if (channelIdx == 0)
+            if (channelIdx == firstChannelIndex)
             {
                 lastChannel.envAutoPitch = false;
                 lastChannel.envReset = false;
@@ -105,7 +107,7 @@ namespace FamiStudio
             }
 
             // Last channel will be in charge of writing to the shared registers.
-            if (channelIdx == 2)
+            if (channelIdx == lastChannelIndex)
             {
                 if (envAutoPitch)
                 {
