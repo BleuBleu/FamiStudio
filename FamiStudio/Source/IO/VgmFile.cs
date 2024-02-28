@@ -522,6 +522,7 @@ namespace FamiStudio
             public int fdsModSpeed = 0;
 
             public int s5bEnvFreq = 0;
+            public int epsmEnvFreq = 0;
 
             public bool fmTrigger = false;
             public bool fmSustain = false;
@@ -1392,10 +1393,10 @@ namespace FamiStudio
                             envFreq = (int)(envFreq / clockMultiplier[ExpansionType.S5B]);
                         else
                             envFreq = (int)(period * clockMultiplier[channel.Expansion]);
-                        if (state.s5bEnvFreq != envFreq && channel.Type == ChannelType.EPSMSquare1)
+                        if (state.epsmEnvFreq != envFreq && channel.Type == ChannelType.EPSMSquare1)
                         {
                             GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
-                            state.s5bEnvFreq = envFreq;
+                            state.epsmEnvFreq = envFreq;
                         }
                     }
 
