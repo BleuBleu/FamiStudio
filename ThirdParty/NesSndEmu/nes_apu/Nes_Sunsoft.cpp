@@ -30,7 +30,7 @@ void Nes_Sunsoft::reset()
 
 void Nes_Sunsoft::volume(double v)
 {
-	synth.volume(v);
+	synth.volume(v * 0.396887f);
 }
 
 void Nes_Sunsoft::reset_psg()
@@ -93,7 +93,6 @@ long Nes_Sunsoft::run_until(cpu_time_t time)
 	while (t < time)
 	{
 		int sample = PSG_calc(psg);
-		sample = clamp(sample, -7710, 7710);
 
 		int delta = sample - last_amp;
 		if (delta)
