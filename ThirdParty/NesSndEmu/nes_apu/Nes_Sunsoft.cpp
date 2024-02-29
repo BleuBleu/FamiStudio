@@ -30,7 +30,7 @@ void Nes_Sunsoft::reset()
 
 void Nes_Sunsoft::volume(double v)
 {
-	synth.volume(v * 0.396887f);
+	synth.volume(v * 0.793774f);
 }
 
 void Nes_Sunsoft::reset_psg()

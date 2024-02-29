@@ -51,7 +51,10 @@ private:
 	cpu_time_t last_time;
 	int delay;
 	int last_amp;
-	Blip_Synth<blip_med_quality, 6120> synth;
+	// (255<<4)=4080 is the maximum a channel can be. emu2149 takes 50% of the last output
+	// and 50% of the new output, but that's kind of irrelevant. It ultimately sums all 3 
+	// channels = 12240.
+	Blip_Synth<blip_med_quality, 12240> synth; 
 	int triggers[3];
 
 	short shadow_internal_regs[shadow_internal_regs_count];
