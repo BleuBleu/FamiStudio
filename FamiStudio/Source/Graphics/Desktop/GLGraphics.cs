@@ -699,6 +699,8 @@ namespace FamiStudio
                             GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(draw.start * sizeof(short)));
                         }
 
+                        // TODO : Change this so that we build the draw data as we draw stuff, like the other primitives. This way
+                        // we wont need to do this janky release.
                         drawData.Release(this);
                     }
                 }

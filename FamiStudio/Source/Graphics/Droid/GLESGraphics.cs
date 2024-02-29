@@ -827,6 +827,8 @@ namespace FamiStudio
                             GLES20.GlDrawElements(GLES20.GlTriangles, draw.count, GLES20.GlUnsignedShort, quadIdxBuffer);
                         }
 
+                        // TODO : Change this so that we build the draw data as we draw stuff, like the other primitives. This way
+                        // we wont need to do this janky release.
                         drawData.Release(this);
                     }
                 }
