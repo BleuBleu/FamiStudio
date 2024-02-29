@@ -35,12 +35,16 @@ void Nes_Sunsoft::volume(double v)
 
 void Nes_Sunsoft::reset_psg()
 {
-	if (psg)
-		PSG_delete(psg);
-
-	psg = PSG_new(psg_clock, psg_clock / 16);
+	if (psg) {
+		PSG_setClock(psg, psg_clock);
+		PSG_setRate(psg, psg_clock / 16);
+	} else {
+		psg = PSG_new(psg_clock, psg_clock / 16);
+	}
+	PSG_setClockDivider(psg, true);
 	PSG_reset(psg);
 }
+
 
 void Nes_Sunsoft::output(Blip_Buffer* buf)
 {
@@ -93,7 +97,7 @@ long Nes_Sunsoft::run_until(cpu_time_t time)
 	while (t < time)
 	{
 		int sample = PSG_calc(psg);
-		sample = clamp(sample, -7710, 7710);
+		sample = clamp(sample, 0, (255<<4) * 3);
 
 		int delta = sample - last_amp;
 		if (delta)
