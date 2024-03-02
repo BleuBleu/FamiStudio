@@ -892,8 +892,8 @@ namespace FamiStudio
 
         public bool FindNextNoteForVolumeSlide(NoteLocation location, int maxNotes, out NoteLocation nextNoteLocation)
         {
-            var patternLength = song.GetPatternLength(location.PatternIndex);
-            var pattern = patternInstances[location.PatternIndex];
+            var startPatternIndex = location.PatternIndex;
+            var pattern = patternInstances[startPatternIndex];
 
             Debug.Assert(pattern.Notes.ContainsKey(location.NoteIndex));
             Debug.Assert(pattern.Notes[location.NoteIndex].HasVolume);
@@ -902,25 +902,28 @@ namespace FamiStudio
             Song.AdvanceNumberOfNotes(ref maxLocation, maxNotes);
             song.AdvanceNumberOfNotes(ref location, 1);
 
-            // Look in current pattern.
-            var idx = pattern.BinarySearchList(pattern.Notes.Keys, location.NoteIndex, true);
-
-            if (idx >= 0)
+            // Look in current pattern (if we werent the very last note)..
+            if (location.PatternIndex == startPatternIndex)
             {
-                for (; idx < pattern.Notes.Values.Count; idx++)
+                var idx = pattern.BinarySearchList(pattern.Notes.Keys, location.NoteIndex, true);
+
+                if (idx >= 0)
                 {
-                    var note = pattern.Notes.Values[idx];
-                    if (note.MatchesFilter(NoteFilter.EffectVolume))
+                    for (; idx < pattern.Notes.Values.Count; idx++)
                     {
-                        location.NoteIndex = pattern.Notes.Keys[idx];
-                        nextNoteLocation = NoteLocation.Min(maxLocation, location);
-                        return true;
+                        var note = pattern.Notes.Values[idx];
+                        if (note.MatchesFilter(NoteFilter.EffectVolume))
+                        {
+                            location.NoteIndex = pattern.Notes.Keys[idx];
+                            nextNoteLocation = NoteLocation.Min(maxLocation, location);
+                            return true;
+                        }
                     }
                 }
             }
 
             // Then look in the following patterns using the cache.
-            for (var p = location.PatternIndex + 1; p < song.Length; p++)
+            for (var p = startPatternIndex + 1; p < song.Length; p++)
             {
                 var firstNoteIdx = GetCachedFirstVolumeIndex(p);
                 if (firstNoteIdx >= 0)

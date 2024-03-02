@@ -40,7 +40,7 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 - Big bug list:
 	x arpeggio bug from emails (cant change loop point?)
 	x Osc clip region (da line goes over da border)
-	- 
+	x Volume slide issues.
 
 
 4.2.0 Testing/Packaging
