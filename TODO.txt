@@ -55,7 +55,7 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 			3. Stretch out the wave to a few waveforms
 			4. While resizing the waveform, drag the cursor to the left outside of the window
 			5. It fails at PianoRoll.cs:1943 due to a divide by 0, and crashes
-	- MIDI freeze/crash:
+	x MIDI freeze/crash:
 		https://discord.com/channels/747649221879922840/1024388342210642150/1163337527642558505
 	- Quick access bar can be touched when toolbar is expanded?
 		https://discord.com/channels/747649221879922840/1024388342210642150/1163207420970025183

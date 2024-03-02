@@ -157,6 +157,11 @@ namespace FamiStudio
             return idx == 0 ? 0 : int.Parse(s.Substring(start, idx - start)) * sign;
         }
 
+        public static int ParseIntAmongAllSortsOfGarbage(string s)
+        {
+            return ParseIntWithTrailingGarbage(new String(s.Where(char.IsDigit).ToArray()));
+        }
+
         public static int RoundDownAndClamp(int x, int factor, int min)
         {
             return Math.Max(RoundDown(x, factor), min);
