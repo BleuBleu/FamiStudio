@@ -804,8 +804,11 @@ namespace FamiStudio
                         ref Settings.LastExportFolder);
                 }
 
-                ExportWavMp3Action(filename);
-                ShowExportResultToast(FormatAudioMessage);
+                if (filename != null)
+                {
+                    ExportWavMp3Action(filename);
+                    ShowExportResultToast(FormatAudioMessage);
+                }
             }
         }
 

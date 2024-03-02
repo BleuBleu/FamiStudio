@@ -63,7 +63,7 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 		https://discord.com/channels/747649221879922840/1024388342210642150/1153780661967142932
 	- Weird "XXX : YYYZ sample selected" label in env editor?
 		https://discord.com/channels/747649221879922840/1024388342210642150/1151002090416644147
-	- Export wav, cancel save file dialog, "Export successful" (same for video?)
+	x Export wav, cancel save file dialog, "Export successful" (same for video?)
 		https://discord.com/channels/747649221879922840/1024388342210642150/1148661974255816804
 	x "If you copy an envelope to another by clicking and dragging, you can't set a loop point on the new envelope anymore."
 		https://discord.com/channels/747649221879922840/1024388342210642150/1148605200874078208
