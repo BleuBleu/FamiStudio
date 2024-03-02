@@ -593,11 +593,8 @@ namespace FamiStudio
         LocalizedString SamplePropertiesTooltip;
 
         // Bottom-right tooltips
-        LocalizedString SampleSelectedTooltip;
         LocalizedString SamplesSelectedTooltip;
-        LocalizedString ValueSelectedTooltip;
         LocalizedString ValuesSelectedTooltip;
-        LocalizedString FrameSelectedTooltip;
         LocalizedString FramesSelectedTooltip;
         LocalizedString ArpeggioTooltip;
 
@@ -8362,7 +8359,7 @@ namespace FamiStudio
                 if (IsSelectionValid())
                 {
                     tooltip += $"\n{Settings.DeleteShortcut.TooltipString} {DeleteSelectedSampleTooltip}";
-                    newNoteTooltip = (selectionMax == selectionMin ? SampleSelectedTooltip : SamplesSelectedTooltip).Format(selectionMax - selectionMin + 1);
+                    newNoteTooltip = SamplesSelectedTooltip.Format(selectionMax - selectionMin + 1);
                 }
             }
             else if (IsPointInNoteArea(e.X, e.Y))
@@ -8462,19 +8459,18 @@ namespace FamiStudio
                         if (IsSelectionValid())
                         {
                             var numValuesSelected = selectionMax - selectionMin + 1;
-                            var plural = numValuesSelected > 1;
 
                             switch (editEnvelope)
                             {
                                 case EnvelopeType.FdsWaveform:
                                 case EnvelopeType.N163Waveform:
-                                    newNoteTooltip += (plural ? SamplesSelectedTooltip : SampleSelectedTooltip).Format(numValuesSelected);
+                                    newNoteTooltip += $" ({SamplesSelectedTooltip.Format(numValuesSelected)})";
                                     break;
                                 case EnvelopeType.FdsModulation:
-                                    newNoteTooltip += (plural ? ValuesSelectedTooltip : ValueSelectedTooltip).Format(numValuesSelected);
+                                    newNoteTooltip += $" ({ValuesSelectedTooltip.Format(numValuesSelected)})";
                                     break;
                                 default:
-                                    newNoteTooltip += (plural ? FramesSelectedTooltip : FrameSelectedTooltip).Format(numValuesSelected);
+                                    newNoteTooltip += $" ({FramesSelectedTooltip.Format(numValuesSelected)})";
                                     break;
 
                             }

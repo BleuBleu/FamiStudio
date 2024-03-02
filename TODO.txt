@@ -61,7 +61,7 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 		https://discord.com/channels/747649221879922840/1024388342210642150/1163207420970025183
 	- Weird N163 high pitch thing?
 		https://discord.com/channels/747649221879922840/1024388342210642150/1153780661967142932
-	- Weird "XXX : YYYZ sample selected" label in env editor?
+	x Weird "XXX : YYYZ sample selected" label in env editor?
 		https://discord.com/channels/747649221879922840/1024388342210642150/1151002090416644147
 	x Export wav, cancel save file dialog, "Export successful" (same for video?)
 		https://discord.com/channels/747649221879922840/1024388342210642150/1148661974255816804
