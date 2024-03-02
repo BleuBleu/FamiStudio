@@ -2516,6 +2516,7 @@ namespace FamiStudio
                 // When the song changes between undo/redos, must stop the audio.
                 if (oldSong.Id != song.Id)
                 {
+                    StopEverything();
                     ResetSelectedSong();
                 }
             }
