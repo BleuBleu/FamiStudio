@@ -42,6 +42,34 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	x Osc clip region (da line goes over da border)
 	x Volume slide issues.
 	x Android Thai calendar issue.
+	- Echo video issue (export a video with delay enabled and disable atleast one used channel)
+		https://discord.com/channels/747649221879922840/747649222354010173/1168016283959308358
+	- Samples missing from export? 
+		https://discord.com/channels/747649221879922840/1024388342210642150/1167121728829399101
+	- Take a note with arp, convert to stop note, stop note has an arp?
+		https://discord.com/channels/747649221879922840/1024388342210642150/1165509805071421522
+	- Divide zero in piano roll.
+		https://discord.com/channels/747649221879922840/1024388342210642150/1165024218421923980
+			1. Open an N163 waveform
+			2. Open the repeat envelope (!!)
+			3. Stretch out the wave to a few waveforms
+			4. While resizing the waveform, drag the cursor to the left outside of the window
+			5. It fails at PianoRoll.cs:1943 due to a divide by 0, and crashes
+	- MIDI freeze/crash:
+		https://discord.com/channels/747649221879922840/1024388342210642150/1163337527642558505
+	- Quick access bar can be touched when toolbar is expanded?
+		https://discord.com/channels/747649221879922840/1024388342210642150/1163207420970025183
+	- Weird N163 high pitch thing?
+		https://discord.com/channels/747649221879922840/1024388342210642150/1153780661967142932
+	- Weird "XXX : YYYZ sample selected" label in env editor?
+		https://discord.com/channels/747649221879922840/1024388342210642150/1151002090416644147
+	- Export wav, cancel save file dialog, "Export successful" (same for video?)
+		https://discord.com/channels/747649221879922840/1024388342210642150/1148661974255816804
+	- "If you copy an envelope to another by clicking and dragging, you can't set a loop point on the new envelope anymore."
+		https://discord.com/channels/747649221879922840/1024388342210642150/1148605200874078208
+	- "if you highlight the same pattern twice, when trying to change effect values it increases/decreases by 2 instead of 1" (I fixed this right???)
+		https://discord.com/channels/747649221879922840/1024388342210642150/1132250784390721536
+	- 
 
 4.2.0 Testing/Packaging
 =======================
