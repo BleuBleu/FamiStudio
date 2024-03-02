@@ -7022,7 +7022,7 @@ namespace FamiStudio
                 env.Loop = idx;
             }
 
-            editInstrument.NotifyEnvelopeChanged(editEnvelope, false);
+            editInstrument?.NotifyEnvelopeChanged(editEnvelope, false);
             App.UndoRedoManager.EndTransaction();
         }
 
@@ -7040,7 +7040,7 @@ namespace FamiStudio
             else
                 env.Loop = -1;
 
-            editInstrument.NotifyEnvelopeChanged(editEnvelope, false);
+            editInstrument?.NotifyEnvelopeChanged(editEnvelope, false);
             App.UndoRedoManager.EndTransaction();
         }
 
@@ -7055,7 +7055,7 @@ namespace FamiStudio
                 var menu = new List<ContextMenuOption>();
                 var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixelX(x - pianoSizeX), 0, EditEnvelope.Length - 1);
 
-                if (editMode == EditionMode.Envelope && x < lastPixel)
+                if ((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && x < lastPixel)
                 {
                     if (env.CanLoop || (rep != null && rep.CanLoop))
                     {

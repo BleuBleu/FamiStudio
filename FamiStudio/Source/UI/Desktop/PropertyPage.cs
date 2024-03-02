@@ -55,7 +55,7 @@ namespace FamiStudio
                     if (prop.control != null)
                         prop.control.Visible = value;
                     if (prop.warningIcon != null)
-                        prop.warningIcon.Visible = !string.IsNullOrEmpty(prop.warningIcon.ToolTip); ;  
+                        prop.warningIcon.Visible = !string.IsNullOrEmpty(prop.warningIcon.ToolTip) && value;  
                 }
                 if (scrollContainer != null)
                     scrollContainer.Visible = value;

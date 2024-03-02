@@ -23,7 +23,6 @@ x Upgrade Windows to .NET 7.0
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
-- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
@@ -35,12 +34,13 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	- Check volume, seems square is very low with low values, might be normal.
 	- Test disable attack (C# + AMS), shouldnt reset envelope.
 	- Make sure manual period on an inactive channel behaves the same on ASM/C#
-	x If envelope is active, use it as emu trigger.
-- Add a way to type in FX + param values, even if its janky...
-- Logarithmic FX values.
-- BUG : Little warning icon appears at wrong location in projet properties.
-- BUG : Instrument player doesnt play envelopes (we only update on channel 3).
+	- Add manual period on instrument too as convenience.
+	- Add low bound to frequency.
 - Do we need to cancel video preview if app gets suspended on Android?
+- Big bug list:
+	x arpeggio bug from emails (cant change loop point?)
+	- 
+
 
 4.2.0 Testing/Packaging
 =======================
@@ -171,6 +171,7 @@ Discord
 
 Backlog: 
 =========
+- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - Paste FX values from text. 	Kain wanted to change DAC slowly, had values to paste. 
 - Simple parameters for instruments (duty, volume)
