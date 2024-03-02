@@ -74,7 +74,9 @@ namespace FamiStudio
                 var prop = properties[0];
                 prop.control.ClearDialogFocus();
 
-                if (prop.type == PropertyType.TextBox || prop.type == PropertyType.ColoredTextBox)
+                if (prop.type == PropertyType.TextBox || 
+                    prop.type == PropertyType.ColoredTextBox || 
+                    prop.type == PropertyType.NumericUpDown)
                 {
                     (prop.control as TextBox).SelectAll();
                     prop.control.GrabDialogFocus();
@@ -345,7 +347,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddTextBox(string label, string value, int maxLength = 0, string tooltip = null)
+        public int AddTextBox(string label, string value, int maxLength = 0, bool numeric = false, string tooltip = null)
         {
             properties.Add(
                 new Property()

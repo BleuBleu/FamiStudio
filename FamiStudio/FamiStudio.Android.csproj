@@ -250,6 +250,7 @@
     <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Common\ValueInputDialog.cs" />
     <Compile Include="Source\UI\Common\VgmImportDialog.cs" />
     <Compile Include="Source\UI\Droid\DroidUtils.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioWindow.cs" />
@@ -641,6 +642,7 @@
     <EmbeddedResource Include="Resources\Atlas\Sort@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Stop@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Transform@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Type@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Undo@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Wait@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Warning@4x.tga" />

@@ -57,7 +57,7 @@ namespace FamiStudio
             verb = text;
         }
 
-        public void CloseWithResult(DialogResult result)
+        public void Close(DialogResult result)
         {
             CloseRequested?.Invoke(result);
         }

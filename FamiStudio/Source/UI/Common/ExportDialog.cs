@@ -556,8 +556,8 @@ namespace FamiStudio
                     {
                         page.AddDropDownList(FormatLabel.Colon, AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
                         page.AddCheckBox(SeparateFilesLabel.Colon, false, FT2SepFilesTooltip); // 1
-                        page.AddTextBox(SongNamePatternLabel.Colon, "{project}_{song}", 0, FT2SepFilesFmtTooltip); // 2
-                        page.AddTextBox(DmcNamePatternLabel.Colon, "{project}", 0, FT2DmcFmtTooltip); // 3
+                        page.AddTextBox(SongNamePatternLabel.Colon, "{project}_{song}", 0, false, FT2SepFilesFmtTooltip); // 2
+                        page.AddTextBox(DmcNamePatternLabel.Colon, "{project}", 0, false, FT2DmcFmtTooltip); // 3
                         page.AddCheckBox(GenerateSongListIncludeLabel.Colon, false, FT2SongListTooltip); // 4
                         page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 5
                         page.SetPropertyEnabled(2, false);
@@ -577,17 +577,17 @@ namespace FamiStudio
                     if (Platform.IsMobile)
                         VGMWarnID = page.AddLabel(VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & 0b11001)), null, true); // 0
                     int VGMSongSelect = page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SongListTooltip); // 0/1
-                    page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(0), 0, TrackTitleEnglishTooltip); // 1/2
-                    page.AddTextBox(GameNameEnglishLabel.Colon, project.Name, 0, GameNameEnglishTooltip); // 2/3
+                    page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(0), 0, false, TrackTitleEnglishTooltip); // 1/2
+                    page.AddTextBox(GameNameEnglishLabel.Colon, project.Name, 0, false, GameNameEnglishTooltip); // 2/3
                     page.AddTextBox(SystemEnglishLabel.Colon, 
                     (project.PalMode ? "PAL NES" : "NTSC NES/Famicom") + 
                     (project.UsesVrc7Expansion ? $" + {ExpansionType.GetLocalizedName(2)}" : "") + 
                     (project.UsesFdsExpansion ? $" + {ExpansionType.GetLocalizedName(3)}" : "") + 
                     (project.UsesS5BExpansion ? $" + {ExpansionType.GetLocalizedName(6)}" : "") + 
-                    (project.UsesEPSMExpansion ? $" + {ExpansionType.GetLocalizedName(7)}" : ""), 0, SystemNameEnglishTooltip); // 3/4
-                    page.AddTextBox(ComposerEnglishLabel.Colon, project.Author, 0, ComposerEnglishTooltip); // 4/5
-                    page.AddTextBox(ReleaseDateLabel.Colon, DateTime.Now.ToString("yyyy\\/MM\\/dd"), 0, ReleaseDateTooltip); // 5/6
-                    page.AddTextBox(VGMByLabel.Colon, "FamiStudio Export", 0, VGMByTooltip); // 6/7
+                    (project.UsesEPSMExpansion ? $" + {ExpansionType.GetLocalizedName(7)}" : ""), 0, false, SystemNameEnglishTooltip); // 3/4
+                    page.AddTextBox(ComposerEnglishLabel.Colon, project.Author, 0, false, ComposerEnglishTooltip); // 4/5
+                    page.AddTextBox(ReleaseDateLabel.Colon, DateTime.Now.ToString("yyyy\\/MM\\/dd"), 0, false, ReleaseDateTooltip); // 5/6
+                    page.AddTextBox(VGMByLabel.Colon, "FamiStudio Export", 0, false, VGMByTooltip); // 6/7
                     page.AddTextBox(NotesLabel.Colon, project.Copyright, 0); // 7/8
                     page.AddCheckBox(SmoothLoopingLabel.Colon, true, SmoothLoopingTooltip); // 8/9
                     if (Platform.IsDesktop)

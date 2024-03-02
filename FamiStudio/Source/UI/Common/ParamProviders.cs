@@ -207,7 +207,6 @@ namespace FamiStudio
             switch (instrument.Expansion)
             {
                 case ExpansionType.Fds:
-                    paramInfos.Add(relativePitchParam);
                     paramInfos.Add(new InstrumentParamInfo(instrument, MasterVolumeLabel, 0, 3, 0, null, true)
                         { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.CountNoPWM - 1, WavePresetType.Sine, null, true)
@@ -235,7 +234,6 @@ namespace FamiStudio
                     break;
 
                 case ExpansionType.N163:
-                    paramInfos.Add(relativePitchParam);
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePositionLabel, 0, 0, 0, null, false, 2)
@@ -253,7 +251,6 @@ namespace FamiStudio
                     break;
 
                 case ExpansionType.S5B:
-                    paramInfos.Add(relativePitchParam);
                     paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeShapeLabel, 0, 8, 0, null, true)
                         { GetValue = ()  => { return instrument.S5BEnvelopeShape; }, GetValueString = () => { return instrument.S5BEnvelopeShape == 0 ? OffLabel : $"img:S5BEnvelope{instrument.S5BEnvelopeShape + 7:X1}"; }, SetValue = (v) => { instrument.S5BEnvelopeShape = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeAutoLabel, 0, 1, 1)
@@ -263,13 +260,11 @@ namespace FamiStudio
                     break;
 
                 case ExpansionType.Vrc6:
-                    paramInfos.Add(relativePitchParam);
                     paramInfos.Add(new InstrumentParamInfo(instrument, SawMasterVolumeLabel, 0, 2, 0, null, true)
                         { GetValue = ()  => { return instrument.Vrc6SawMasterVolume; }, GetValueString = () => { return Vrc6SawMasterVolumeType.Names[instrument.Vrc6SawMasterVolume]; }, SetValue = (v) => { instrument.Vrc6SawMasterVolume = (byte)v; } });
                     break;
 
                 case ExpansionType.Vrc7:
-                    paramInfos.Add(relativePitchParam);
                     paramInfos.Add(new InstrumentParamInfo(instrument, PatchLabel, 0, 15, 1, null, true)
                         { GetValue = () => { return instrument.Vrc7Patch; }, GetValueString = () => { return Instrument.GetVrc7PatchName(instrument.Vrc7Patch); }, SetValue = (v) => { instrument.Vrc7Patch = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
@@ -399,6 +394,11 @@ namespace FamiStudio
                     }
 
                     break;
+            }
+
+            if (relativePitchParam != null && !paramInfos.Contains(relativePitchParam))
+            {
+                paramInfos.Insert(0, relativePitchParam);
             }
 
             return paramInfos.Count == 0 ? null : paramInfos.ToArray();

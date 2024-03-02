@@ -91,7 +91,7 @@ namespace FamiStudio
 
         protected string FilterString(string s)
         {
-            return numeric ? new string(s.Where(c => char.IsDigit(c)).ToArray()) : s;
+            return numeric ? new string(s.Where(c => char.IsDigit(c) || c == '-').ToArray()) : s;
         }
 
         protected void ClampNumber()
@@ -100,9 +100,8 @@ namespace FamiStudio
             {
                 var val = Utils.ParseIntWithTrailingGarbage(text);
                 var clampedVal = Utils.Clamp(Utils.RoundDown(val, numberInc), numberMin, numberMax);
-                if (clampedVal != val)
+                if (SetAndMarkDirty(ref text, clampedVal.ToString(CultureInfo.InvariantCulture)))
                 {
-                    text = clampedVal.ToString(CultureInfo.InvariantCulture);
                     caretIndex = Utils.Clamp(caretIndex, 0, text.Length);
                     selectionStart = -1;
                     selectionLength = 0;

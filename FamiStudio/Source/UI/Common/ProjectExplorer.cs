@@ -223,6 +223,7 @@ namespace FamiStudio
         LocalizedString PropertiesSongContext;
         LocalizedString ReplaceWithContext;
         LocalizedString ResampleWavContext;
+        LocalizedString EnterValueContext;
         LocalizedString ResetDefaultValueContext;
         LocalizedString CollapseAllContext;
         LocalizedString ExpandAllContext;
@@ -4498,6 +4499,21 @@ namespace FamiStudio
             return true;
         }
 
+        private void EnterParamValue(Button button, int x, int y)
+        {
+            var dlg = new ValueInputDialog(ParentWindow, new Point(left + x, top + y), button.param.Name, button.param.GetValue(), button.param.GetMinValue(), button.param.GetMaxValue(), true);
+            dlg.ShowDialogAsync((r) => 
+            {
+                if (r == DialogResult.OK)
+                {
+                    App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+                    button.param.SetValue(dlg.Value);
+                    App.UndoRedoManager.EndTransaction();
+                    MarkDirty();
+                }
+            });
+        }
+
         private void ResetParamButtonDefaultValue(Button button)
         {
             App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
@@ -4510,10 +4526,13 @@ namespace FamiStudio
         {
             if (button.param.IsEnabled())
             {
-                App.ShowContextMenu(left + x, top + y, new[]
-                {
-                    new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamButtonDefaultValue(button); })
-                });
+                var menu = new List<ContextMenuOption>();
+
+                if (button.type == ButtonType.ParamSlider)
+                    menu.Add(new ContextMenuOption("Type", EnterValueContext, () => { EnterParamValue(button, x, y); }));
+                menu.Add(new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamButtonDefaultValue(button); }));
+
+                App.ShowContextMenu(left + x, top + y, menu.ToArray());
             }
 
             return true;

@@ -305,7 +305,7 @@ namespace FamiStudio
 #if DEBUG
             var dlg = new PropertyDialog(this, "Test Dialog", 200);
 
-            dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
+            dlg.Properties.AddTextBox("TextBox", "Hello1", 0, false, "This is a long tooltip explaining what this property is all about");
             dlg.Properties.AddColorPicker(Color.Pink);
             dlg.Properties.AddButton("Hey", "This is a button", "Button tooltip");
             dlg.Properties.AddNumericUpDown("Integer", 10, 2, 50, 1, "Integer Tooltip");

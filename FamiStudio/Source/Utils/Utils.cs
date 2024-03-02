@@ -137,14 +137,24 @@ namespace FamiStudio
         public static int ParseIntWithTrailingGarbage(string s)
         {
             int idx = 0;
+            int start = 0;
+            int sign = 1;
 
-            for (; idx < s.Length; idx++)
+            s = s.Trim();
+            if (s.Length > 0 && s[0] == '-')
+            {
+                sign = -1;
+                idx = 1;
+                start = 1;
+            }
+
+            for (; idx < Math.Min(s.Length, 7); idx++)
             {
                 if (!char.IsDigit(s[idx]))
                     break;
             }
 
-            return idx == 0 ? 0 : int.Parse(s.Substring(0, idx));
+            return idx == 0 ? 0 : int.Parse(s.Substring(start, idx - start)) * sign;
         }
 
         public static int RoundDownAndClamp(int x, int factor, int min)
