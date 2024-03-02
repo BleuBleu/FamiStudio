@@ -228,6 +228,12 @@ namespace FamiStudio
         LocalizedString CollapseAllContext;
         LocalizedString ExpandAllContext;
 
+        // Message boxes
+        LocalizedString CopyInstrumentEnvelopeMessage;
+        LocalizedString CopyInstrumentEnvelopeTitle;
+        LocalizedString CopyInstrumentSamplesMessage;
+        LocalizedString CopyInstrumentSamplesTitle;
+
         #endregion
 
         enum ButtonType
@@ -2235,7 +2241,7 @@ namespace FamiStudio
                     {
                         if (instrumentSrc.Expansion == instrumentDst.Expansion)
                         {
-                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the {EnvelopeType.LocalizedNames[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
+                            Platform.MessageBoxAsync(ParentWindow, CopyInstrumentEnvelopeMessage.Format(EnvelopeType.LocalizedNames[envelopeDragIdx], instrumentSrc.Name, instrumentDst.Name), CopyInstrumentEnvelopeTitle, MessageBoxButtons.YesNo, (r) =>
                             {
                                 if (r == DialogResult.Yes)
                                 {
@@ -2291,7 +2297,7 @@ namespace FamiStudio
 
                     if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null && instrumentDst.Expansion == ExpansionType.None)
                     {
-                        Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the DPCM sample assignments of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy DPCM Assignemnts", MessageBoxButtons.YesNo, (r) =>
+                        Platform.MessageBoxAsync(ParentWindow, CopyInstrumentSamplesMessage.Format(instrumentSrc.Name, instrumentDst.Name), CopyInstrumentSamplesTitle, MessageBoxButtons.YesNo, (r) =>
                         {
                             if (r == DialogResult.Yes)
                             {

@@ -403,6 +403,7 @@ namespace FamiStudio
         public Envelope ShallowClone()
         {
             var env = new Envelope();
+            env.values = values.Clone() as sbyte[];
             env.length = length;
             env.loop = loop;
             env.release = release;
@@ -410,7 +411,8 @@ namespace FamiStudio
             env.maxLength = maxLength;
             env.chunkLength = chunkLength;
             env.canResize = canResize;
-            env.values = values.Clone() as sbyte[];
+            env.canLoop = canLoop;
+            env.canRelease = canRelease;
             return env;
         }
 
