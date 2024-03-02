@@ -6801,6 +6801,7 @@ namespace FamiStudio
             note.Duration = 1;
             note.IsStop = true;
             note.Instrument = null;
+            note.Arpeggio = null;
             MarkPatternDirty(pattern);
             App.UndoRedoManager.EndTransaction();
         }
