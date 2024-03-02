@@ -110,7 +110,7 @@ long Nes_Sunsoft::run_until(cpu_time_t time)
 		{
 			if (psg->trigger_mask & (1 << i))
 				update_trigger(output_buffer, t, triggers[i]);
-			else if (psg->freq[i] <= 1)
+			else if (psg->freq[i] <= 1 || !psg->tmask[i])
 				triggers[i] = trigger_none;
 		}
 

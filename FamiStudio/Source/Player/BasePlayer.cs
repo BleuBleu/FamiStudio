@@ -289,7 +289,7 @@ namespace FamiStudio
             playLocation = NoteLocation.Invalid; // This means "before the first frame".
             frameNumber = 0;
             famitrackerTempoCounter = 0;
-            channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
+            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
             reachedEnd = false;
             playbackRateCounter = 1;
             tempoEnvelopeCounter = 0;
@@ -594,7 +594,7 @@ namespace FamiStudio
             return null;
         }
 
-        protected ChannelState[] CreateChannelStates(IPlayerInterface player, Project project, int apuIdx, int expNumChannels, bool pal)
+        protected ChannelState[] CreateChannelStates(Project project, int apuIdx, int expNumChannels, bool pal)
         {
             var channelCount = project.GetActiveChannelCount();
             var states = new ChannelState[channelCount];
@@ -623,6 +623,10 @@ namespace FamiStudio
             {
                 NesApu.EndFrame(apuIndex);
                 NesApu.ReadSamples(apuIndex, IntPtr.Zero, NesApu.SamplesAvailable(apuIndex));
+            }
+            else
+            {
+                frameNumber++;
             }
         }
 
