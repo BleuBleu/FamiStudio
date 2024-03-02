@@ -2051,10 +2051,8 @@ namespace FamiStudio
                                 r.c.DrawText(text, r.fonts.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, Theme.BlackColor, TextFlags.Center, sizeX);
                         }
 
-                        if (i != 0)
-                            r.c.DrawLine(0, 0, 0, effectPanelSizeY, Theme.BlackColor, 3);
-
                         r.c.PopTransform();
+                        r.c.DrawLine(x1, 0, x1, effectPanelSizeY, Theme.BlackColor, 3);
                     }
 
                     var gizmos = GetEnvelopeEffectsGizmos();

@@ -48,7 +48,7 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 		https://discord.com/channels/747649221879922840/1024388342210642150/1167121728829399101
 	- Take a note with arp, convert to stop note, stop note has an arp?
 		https://discord.com/channels/747649221879922840/1024388342210642150/1165509805071421522
-	- Divide zero in piano roll.
+	x Divide zero in piano roll.
 		https://discord.com/channels/747649221879922840/1024388342210642150/1165024218421923980
 			1. Open an N163 waveform
 			2. Open the repeat envelope (!!)

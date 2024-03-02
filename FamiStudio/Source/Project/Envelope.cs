@@ -54,7 +54,11 @@ namespace FamiStudio
             set
             {
                 if (canResize)
-                    length = Utils.Clamp(value, 0, maxLength); 
+                {
+                    length = Utils.Clamp(value, 0, maxLength);
+                    if (chunkLength > 1)
+                        length = Math.Max(length, chunkLength);
+                }
                 if (loop >= length)
                     loop = -1;
                 if (release >= length)
