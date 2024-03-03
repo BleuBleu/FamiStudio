@@ -716,7 +716,7 @@ namespace FamiStudio
                                 note.DeltaCounter = byte.Parse(deltaCounterStr);
                             if (parameters.TryGetValue("PhaseReset", out var phaseResetStr) && channel.SupportsEffect(Note.EffectPhaseReset))
                                 note.PhaseReset = byte.Parse(phaseResetStr);
-                            if (parameters.TryGetValue("PhaseReset", out var envPeriodStr) && channel.SupportsEffect(Note.EffectEnvelopePeriod))
+                            if (parameters.TryGetValue("EnvelopePeriod", out var envPeriodStr) && channel.SupportsEffect(Note.EffectEnvelopePeriod))
                                 note.EnvelopePeriod = ushort.Parse(envPeriodStr);
 
                             break;
