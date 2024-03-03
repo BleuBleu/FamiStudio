@@ -5010,10 +5010,9 @@ famistudio_set_epsm_instrument:
     lda (@env_ptr),y
     and #$0F
     sta famistudio_chn_epsm_rhythm_volume,x
-	
-	lda @reg_offset
+    lda @reg_offset
     clc
-    adc #12 ; skip over the next 5 pointers to get to the stereo data (second byte of the instrument)
+    adc #12 ; skip over the next 6 pointers to get to the ex patch pointer (third byte of the instrument)
     tay
     lda (@ptr),y
     sta @ex_patch
