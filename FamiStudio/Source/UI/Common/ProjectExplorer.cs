@@ -1485,8 +1485,10 @@ namespace FamiStudio
                             {
                                 var paramMinValue = button.param.GetMinValue();
                                 var paramMaxValue = button.param.GetMaxValue();
+                                var paramExp = GetSliderExponent(button);
                                 var actualSliderSizeX = sliderSizeX - paramButtonSizeX * 2;
-                                var valSizeX = paramMaxValue == paramMinValue ? 0 : (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * actualSliderSizeX);
+                                var ratio = (paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue);
+                                var valSizeX = paramMaxValue == paramMinValue ? 0 : (int)Math.Round(MathF.Pow(ratio, paramExp) * actualSliderSizeX);
                                 var opacityL = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
                                 var opacityR = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
 
@@ -2620,6 +2622,11 @@ namespace FamiStudio
             ClampScroll();
         }
 
+        private float GetSliderExponent(Button button)
+        {
+            return 1.0f / (button.param.GetMaxValue() >= 4095 ? 4 : 1);
+        }
+
         bool UpdateSliderValue(Button button, int x, int y, bool mustBeInside)
         {
             var buttonIdx = buttons.IndexOf(button);
@@ -2641,6 +2648,7 @@ namespace FamiStudio
 
             var sliderMinX = contentSizeX - sliderPosX + paramButtonSizeX;
             var sliderMaxX = sliderMinX + (sliderSizeX - paramButtonSizeX * 2);
+            var sliderExp = GetSliderExponent(button);
 
             bool insideSlider = (buttonX > (sliderMinX) &&
                                  buttonX < (sliderMaxX) &&
@@ -2663,7 +2671,8 @@ namespace FamiStudio
             }
             else
             {
-                paramVal = (int)Math.Round(Utils.Lerp(button.param.GetMinValue(), button.param.GetMaxValue(), Utils.Clamp((buttonX - sliderMinX) / (float)(sliderMaxX - sliderMinX), 0.0f, 1.0f)));
+                var ratio = Utils.Saturate((buttonX - sliderMinX) / (float)(sliderMaxX - sliderMinX));
+                paramVal = (int)Math.Round(Utils.Lerp(button.param.GetMinValue(), button.param.GetMaxValue(), MathF.Pow(ratio, 1.0f / sliderExp)));
                 captureMouseX = x;
             }
 

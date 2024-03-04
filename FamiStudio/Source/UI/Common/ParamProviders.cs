@@ -109,6 +109,7 @@ namespace FamiStudio
         static LocalizedString EnvelopeShapeLabel;
         static LocalizedString EnvelopeAutoLabel;
         static LocalizedString EnvelopeAutoOctaveLabel;
+        static LocalizedString EnvelopeManualFreqLabel;
 
         // VRC6 labels
         static LocalizedString SawMasterVolumeLabel;
@@ -257,6 +258,8 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.S5BEnvAutoPitch ? 1 : 0; }, SetValue = (v) => { instrument.S5BEnvAutoPitch = v != 0; }, IsEnabled = () => instrument.S5BEnvelopeShape != 0 });
                     paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeAutoOctaveLabel, -8, 8, 0)
                         { GetValue = () => { return instrument.S5BEnvAutoPitchOctave; }, SetValue = (v) => { instrument.S5BEnvAutoPitchOctave = (sbyte)v; }, IsEnabled = () => instrument.S5BEnvelopeShape != 0 && instrument.S5BEnvAutoPitch });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeManualFreqLabel, 0, 65535, 1000)
+                        { GetValue = () => { return instrument.S5BEnvelopePitch; }, SetValue = (v) => { instrument.S5BEnvelopePitch = (ushort)v; }, IsEnabled = () => instrument.S5BEnvelopeShape != 0 && !instrument.S5BEnvAutoPitch });
                     break;
 
                 case ExpansionType.Vrc6:
@@ -348,8 +351,8 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.EPSMSquareEnvAutoPitch ? 1 : 0; }, SetValue = (v) => { instrument.EPSMSquareEnvAutoPitch = v != 0; }, IsEnabled = () => instrument.EPSMSquareEnvelopeShape != 0, TabName = GeneralTab });
                     paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeAutoOctaveLabel, -8, 8, 0)
                         { GetValue = () => { return instrument.EPSMSquareEnvAutoPitchOctave; }, SetValue = (v) => { instrument.EPSMSquareEnvAutoPitchOctave = (sbyte)v; }, IsEnabled = () => instrument.EPSMSquareEnvelopeShape != 0 && instrument.EPSMSquareEnvAutoPitch, TabName = GeneralTab });
-
-                    paramInfos.Add(new InstrumentParamInfo() { TabName = GeneralTab });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeManualFreqLabel, 0, 65535, 1000)
+                        { GetValue = () => { return instrument.EPSMSquareEnvelopePitch; }, SetValue = (v) => { instrument.EPSMSquareEnvelopePitch = (ushort)v; }, IsEnabled = () => instrument.EPSMSquareEnvelopePitch != 0 && !instrument.EPSMSquareEnvAutoPitch, TabName = GeneralTab });
 
                     for (int i = 0; i < 4; i++)
                     {

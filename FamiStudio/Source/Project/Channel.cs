@@ -65,6 +65,13 @@ namespace FamiStudio
             return patterns.Find(p => p.Id == id);
         }
 
+        public Pattern GetOrCreatePattern(int patternIdx)
+        {
+            if (patternInstances[patternIdx] == null)
+                patternInstances[patternIdx] = CreatePattern();
+            return patternInstances[patternIdx];
+        }
+
         public bool SupportsInstrument(Instrument instrument, bool allowNull = true)
         {
             if (instrument == null)

@@ -129,6 +129,7 @@ namespace FamiStudio
                         instrumentLine += GenerateAttribute("S5BEnvelopeShape", instrument.S5BEnvelopeShape);
                         instrumentLine += GenerateAttribute("S5BEnvelopeAutoPitch", instrument.S5BEnvAutoPitch);
                         instrumentLine += GenerateAttribute("S5BEnvelopeAutoPitchOctave", instrument.S5BEnvAutoPitchOctave);
+                        instrumentLine += GenerateAttribute("S5BEnvelopePitch", instrument.S5BEnvelopePitch);
                     }
                     else if (instrument.IsVrc6)
                     {
@@ -496,6 +497,7 @@ namespace FamiStudio
                                  if (parameters.TryGetValue("S5BEnvelopeShape",           out var s5bEnvShapeStr))     instrument.S5BEnvelopeShape      = byte.Parse(s5bEnvShapeStr);
                                  if (parameters.TryGetValue("S5BEnvelopeAutoPitch",       out var s5bEnvAutoPitchStr)) instrument.S5BEnvAutoPitch       = bool.Parse(s5bEnvAutoPitchStr);
                                  if (parameters.TryGetValue("S5BEnvelopeAutoPitchOctave", out var s5bEnvAutoOctStr))   instrument.S5BEnvAutoPitchOctave = sbyte.Parse(s5bEnvAutoOctStr);
+                                 if (parameters.TryGetValue("S5BEnvelopePitch",           out var s5bEnvPitchStr))     instrument.S5BEnvelopePitch      = ushort.Parse(s5bEnvPitchStr);
                             }
                             else if (instrument.IsVrc7)
                             {

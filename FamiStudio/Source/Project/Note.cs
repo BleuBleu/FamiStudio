@@ -866,15 +866,16 @@ namespace FamiStudio
         Stop    = 2,
 
         // All effects are in the upper 16-bit.
-        EffectVolume      = Note.EffectVolumeMask      << 16,
-        EffectVibrato     = Note.EffectVibratoMask     << 16,
-        EffectFinePitch   = Note.EffectFinePitchMask   << 16,
-        EffectSpeed       = Note.EffectSpeedMask       << 16,
-        EffectFdsModDepth = Note.EffectFdsModDepthMask << 16,
-        EffectFdsModSpeed = Note.EffectFdsModSpeedMask << 16,
-        EffectDutyCycle   = Note.EffectDutyCycleMask   << 16,
-        EffectNoteDelay   = Note.EffectNoteDelayMask   << 16,
-        EffectCutDelay    = Note.EffectCutDelayMask    << 16,
+        EffectVolume      = Note.EffectVolumeMask         << 16,
+        EffectVibrato     = Note.EffectVibratoMask        << 16,
+        EffectFinePitch   = Note.EffectFinePitchMask      << 16,
+        EffectSpeed       = Note.EffectSpeedMask          << 16,
+        EffectFdsModDepth = Note.EffectFdsModDepthMask    << 16,
+        EffectFdsModSpeed = Note.EffectFdsModSpeedMask    << 16,
+        EffectDutyCycle   = Note.EffectDutyCycleMask      << 16,
+        EffectNoteDelay   = Note.EffectNoteDelayMask      << 16,
+        EffectCutDelay    = Note.EffectCutDelayMask       << 16,
+        EffectEnvPeriod   = Note.EffectEnvelopePeriodMask << 16,
 
         // There are all the filter that can interrupt the duration of a note.
         CutDurationMask = Musical | Stop | EffectCutDelay,

@@ -550,13 +550,6 @@ namespace FamiStudio
             return bestNote;
         }
 
-        private Pattern GetOrCreatePattern(Channel channel, int patternIdx)
-        {
-            if (channel.PatternInstances[patternIdx] == null)
-                channel.PatternInstances[patternIdx] = channel.CreatePattern();
-            return channel.PatternInstances[patternIdx];
-        }
-
         private Instrument GetDutyInstrument(Channel channel, int duty)
         {
             var expansion = channel.Expansion;
@@ -1160,7 +1153,7 @@ namespace FamiStudio
 
                     if (Note.IsMusicalNote(noteValue))
                     {
-                        var note = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n);
+                        var note = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n);
                         note.Value = (byte)noteValue;
                         note.Instrument = dpcmInst;
                         if (state.dmc != dmc)
@@ -1174,13 +1167,13 @@ namespace FamiStudio
                 }
                 else if (dmc != state.dmc)
                 {
-                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).DeltaCounter = (byte)dmc;
+                    channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).DeltaCounter = (byte)dmc;
                     state.dmc = dmc;
                 }
 
                 if (dmcActive == 0 && state.state == ChannelState.Triggered)
                 {
-                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).IsStop = true;
+                    channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).IsStop = true;
                     state.state = ChannelState.Stopped;
                 }
             }
@@ -1284,7 +1277,7 @@ namespace FamiStudio
                 {
                     if (state.volume != volume && (volume != 0 || hasTrigger))
                     {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Volume = (byte)volume;
+                        var pattern = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).Volume = (byte)volume;
                         state.volume = volume;
                     }
                 }
@@ -1316,13 +1309,13 @@ namespace FamiStudio
 
                     if (state.fdsModDepth != modDepth)
                     {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModDepth = (byte)modDepth;
+                        var pattern = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).FdsModDepth = (byte)modDepth;
                         state.fdsModDepth = modDepth;
                     }
 
                     if (state.fdsModSpeed != modSpeed)
                     {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModSpeed = (ushort)modSpeed;
+                        var pattern = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).FdsModSpeed = (ushort)modSpeed;
                         state.fdsModSpeed = modSpeed;
                     }
                 }
@@ -1356,7 +1349,7 @@ namespace FamiStudio
                     envFreq = (int)(envFreq / clockMultiplier[channel.Expansion]);
                     if (state.s5bEnvFreq != envFreq && channel.Type == ChannelType.S5BSquare1)
                     {
-                        GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
+                        channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
                         state.s5bEnvFreq = envFreq;
                     }
                 }
@@ -1399,7 +1392,7 @@ namespace FamiStudio
                             envFreq = (int)(envFreq / clockMultiplier[channel.Expansion]);
                         if (state.epsmEnvFreq != envFreq && channel.Type == ChannelType.EPSMSquare1)
                         {
-                            GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
+                            channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
                             state.epsmEnvFreq = envFreq;
                         }
                     }
@@ -1453,7 +1446,7 @@ namespace FamiStudio
 
                     if ((state.note != note) || (state.instrument != instrument && instrument != null) || force)
                     {
-                        var pattern = GetOrCreatePattern(channel, p);
+                        var pattern = channel.GetOrCreatePattern(p);
                         var newNote = pattern.GetOrCreateNoteAt(n);
                         newNote.Value = (byte)note;
                         newNote.Instrument = instrument;
@@ -1478,7 +1471,7 @@ namespace FamiStudio
 
                         if (pitch != state.pitch)
                         {
-                            var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FinePitch = pitch;
+                            var pattern = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).FinePitch = pitch;
                             state.pitch = pitch;
                         }
                     }
@@ -1935,7 +1928,7 @@ namespace FamiStudio
             for (int c = 0; c < song.Channels.Length; c++)
             {
                 if (channelStates[c].state != ChannelState.Stopped)
-                GetOrCreatePattern(song.Channels[c], p).GetOrCreateNoteAt(n).IsStop = true;
+                    song.Channels[c].GetOrCreatePattern(p).GetOrCreateNoteAt(n).IsStop = true;
             }
             song.Name = songName;
             song.SetSensibleBeatLength();
