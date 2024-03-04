@@ -37,8 +37,6 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 - Big bug list:
 	- Echo video issue (export a video with delay enabled and disable atleast one used channel)
 		https://discord.com/channels/747649221879922840/747649222354010173/1168016283959308358
-	- Weird N163 high pitch thing?
-		https://discord.com/channels/747649221879922840/1024388342210642150/1153780661967142932
 	- 
 
 4.2.0 Testing/Packaging
@@ -69,7 +67,7 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	* Many other small quality of life improvements (eraser mode, copy samples, type FX values+params, etc......... LIST MORE HERE!)
 	* Upgraded to .NET 7.0
 	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)
--Breaking/Behavior changes:
+- Breaking/Behavior changes:
 	* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
 	* FDS emulation now matches the hardware much more closely. Some instruments may now sound very different.
 
