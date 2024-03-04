@@ -37,8 +37,6 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 - Big bug list:
 	- Echo video issue (export a video with delay enabled and disable atleast one used channel)
 		https://discord.com/channels/747649221879922840/747649222354010173/1168016283959308358
-	- Quick access bar can be touched when toolbar is expanded?
-		https://discord.com/channels/747649221879922840/1024388342210642150/1163207420970025183
 	- Weird N163 high pitch thing?
 		https://discord.com/channels/747649221879922840/1024388342210642150/1153780661967142932
 	- 
