@@ -77,11 +77,6 @@ namespace FamiStudio
                 lastChannel.envPeriodEffect = true;
             }
 
-            if (!IsSeeking)
-            {
-                Debug.WriteLine(0);
-            }
-
             if (note.IsStop)
             {
                 WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_VOL_A + channelIdx);
