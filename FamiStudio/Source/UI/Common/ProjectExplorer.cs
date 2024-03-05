@@ -1527,7 +1527,7 @@ namespace FamiStudio
                                 if (paramStr.StartsWith("img:"))
                                 {
                                     var img = c.Graphics.GetTextureAtlasRef(paramStr.Substring(4));
-                                    c.DrawTextureAtlasCentered(img, 0, 0, sliderSizeX, button.height);
+                                    c.DrawTextureAtlasCentered(img, 0, 0, sliderSizeX, button.height, 1, 1, Color.Black);
                                 }
                                 else
                                 {
