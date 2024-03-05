@@ -465,13 +465,11 @@ namespace FamiStudio
         
         protected void DrawEnvelopeInternal(CommandList c, Fonts res, Rectangle rect, int shape, bool video)
         {
-            c.FillRectangle(rect, Theme.LightGreyColor1);
-
             if ((shape & 0b1100) == 0b0000) shape = 0b1001;         // Shape: \___
             else if ((shape & 0b1100) == 0b0100) shape = 0b1111;    // Shape: /___
 
             var bmp = c.Graphics.GetTextureAtlasRef($"S5BEnvelope{shape:X1}");
-            c.DrawTextureAtlas(bmp, 0, 0);
+            c.DrawTextureAtlas(bmp, 0, 0, 1, 1, Theme.LightGreyColor1);
 
             if (!video)
             {
