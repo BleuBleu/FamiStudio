@@ -35,8 +35,6 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	- Add low bound to frequency.
 - Do we need to cancel video preview if app gets suspended on Android?
 - Big bug list:
-	- Echo video issue (export a video with delay enabled and disable atleast one used channel)
-		https://discord.com/channels/747649221879922840/747649222354010173/1168016283959308358
 	- 
 
 4.2.0 Testing/Packaging
@@ -49,6 +47,11 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 - Run huge sound engine test with old songs.
 - Dont publish for chromebooks
 - Write S5B documentation.
+- Windows 7 x64 notes:
+	- Install vs runtime x64
+	- Install .net 7.0 (follow link when you try to run time, x64 version)
+	- https://www.catalog.update.microsoft.com/Search.aspx?q=KB4457144 (~230MB .msu file)
+	- [Optional] Download mesa and put opengl32.dll in same folder.
 
 4.2.0 Change Log
 ===========================

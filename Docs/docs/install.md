@@ -33,14 +33,25 @@ To bypass the warning, simply click "More Info" and then "Run Anyway".
  
 ![](images/SmartScreen2.png#center)
 
+### Windows 7
+
+Windows 7 is not officially supported. This mean if the app crashes or does not work correctly, you are on your own. Github issues or bug reports on Discord related to Windows 7 will be ignored.
+
+That being said, if you are willing to jump through a few hoops, you may be able to make it work:
+
+1. Install the Visual Studio x64 Runtime, see link above.
+2. Run the app and follow the link to install .NET 7.0, get the x64 version. Install and reboot.
+3. Run the app. If you get a `hostfxr.dll` error, download [this update package](https://www.catalog.update.microsoft.com/Search.aspx?q=KB4457144). Get the Windows 7 x64 version, it should be a `.msu` file of rougly 235MB. Install and reboot.
+4. Run the app. If OpenGL fails to initialize, you may have to use a software renderer. [Mesa](https://fdossena.com/?p=mesa/index.frag) is a popular renderer, simply download the x64 version and put `opengl32.dll` in the same folder as `FamiStudio.exe`. Note that using a software renderer will make the app a lot more sluggish.
+
 ## MacOS
 
 ### Installation
 
 On MacOS, you will need to install the .NET 7.0 Runtime. Here are some direct download links from Microsoft. Pick the architecture that matches your hardware. Installing the correct version for your CPU is important as it will ensure the app runs natively on your Mac.
 
-* [.NET 6.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.14-macos-x64-installer) for x64 (Intel)
-* [.NET 6.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.14-macos-arm64-installer) for ARM64 (M1/M2)
+* [.NET 7.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.14-macos-x64-installer) for x64 (Intel)
+* [.NET 7.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.14-macos-arm64-installer) for ARM64 (M1/M2)
 
 ### Warning on First Launch
 
@@ -64,7 +75,7 @@ The Linux version should work on most x64 ditros. But given the very non-standar
 
 Please install the following dependencies before trying to run the Linux version:
 
-* [.NET 6.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
+* [.NET 7.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
 
 ### Launching
 
