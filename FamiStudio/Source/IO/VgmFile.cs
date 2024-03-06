@@ -1340,17 +1340,14 @@ namespace FamiStudio
                     var envEnabled = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
                     var envShape = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVSHAPE, 0);
                     var envTrigger = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVTRIGGER, 0);
-                    var envFreq = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVFREQUENCY, 0);
                     mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
                     instrument = GetS5BInstrument(noiseFreq, mixer, envEnabled, envShape);
-                    force |= (envTrigger != 0) && envEnabled;
-
-                    // All envelope frequency will be on square 1.
-                    envFreq = (int)(envFreq / clockMultiplier[channel.Expansion]);
-                    if (state.s5bEnvFreq != envFreq && channel.Type == ChannelType.S5BSquare1)
+                    if (envEnabled)
                     {
-                        channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
-                        state.s5bEnvFreq = envFreq;
+                        if (envTrigger != 0)
+                            force = true;
+                        else
+                            attack = false;
                     }
                 }
                 else if (channel.Type >= ChannelType.EPSMSquare1 && channel.Type <= ChannelType.EPSMrythm6)
@@ -1380,20 +1377,14 @@ namespace FamiStudio
                         var envEnabled = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
                         var envShape = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVSHAPE, 0);
                         var envTrigger = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVTRIGGER, 0);
-                        var envFreq = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVFREQUENCY, 0);
                         mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
                         instrument = GetEPSMInstrument(0, regs, noiseFreq, mixer, envEnabled, envShape);
-                        force |= (envTrigger != 0) && envEnabled;
-
-                        // All envelope frequency will be on square 1.
-                        if (ym2149AsEPSM && channel.IsEPSMSquareChannel)
-                            envFreq = (int)(envFreq / clockMultiplier[ExpansionType.S5B]);
-                        else
-                            envFreq = (int)(envFreq / clockMultiplier[channel.Expansion]);
-                        if (state.epsmEnvFreq != envFreq && channel.Type == ChannelType.EPSMSquare1)
+                        if (envEnabled)
                         {
-                            channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
-                            state.epsmEnvFreq = envFreq;
+                            if (envTrigger != 0)
+                                force = true;
+                            else
+                                attack = false;
                         }
                     }
 
@@ -1409,6 +1400,8 @@ namespace FamiStudio
                     period = (int)(period / clockMultiplier[channel.Expansion]);
                 if(ym2149AsEPSM && channel.IsEPSMSquareChannel)
                     period = (int)(period / clockMultiplier[ExpansionType.S5B]);
+
+                var hasNoteWithAttack = false;
 
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
@@ -1457,6 +1450,7 @@ namespace FamiStudio
                         if (!attack)
                             newNote.HasAttack = false;
                         hasNote = note != 0;
+                        hasNoteWithAttack = newNote.IsMusical && newNote.HasAttack;
                     }
 
                     if (hasPitch && !stop)
@@ -1477,6 +1471,29 @@ namespace FamiStudio
                     }
 
                     state.period = period;
+                }
+
+                // Same rule applies for S5B and EPSM with manual envelope period, the only difference with FDS is that 
+                // envelope period effects apply regardless of which channel they are on.
+                if (channel.IsS5BChannel || channel.IsEPSMSquareChannel)
+                {
+                    var envFreq = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVFREQUENCY, 0);
+                    var envEnabled = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
+
+                    // All envelope frequency will be on square 1.
+                    if (ym2149AsEPSM && channel.IsEPSMSquareChannel)
+                        envFreq = (int)(envFreq / clockMultiplier[ExpansionType.S5B]);
+                    else
+                        envFreq = (int)(envFreq / clockMultiplier[channel.Expansion]);
+
+                    // All envelope frequency will be on square 1.
+                    if (state.s5bEnvFreq != envFreq || hasNoteWithAttack && envEnabled)
+                    {
+                        var firstChannelType = channel.IsS5BChannel ? ChannelType.S5BSquare1 : ChannelType.EPSMSquare1;
+                        var firstChannel = song.GetChannelByType(firstChannelType);
+                        firstChannel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
+                        state.s5bEnvFreq = envFreq;
+                    }
                 }
             }
 
@@ -1867,6 +1884,12 @@ namespace FamiStudio
                         }
                         else
                         {
+                            if (vgmData[1] == 0x0D)
+                            {
+                                s5bEnvTrigger[0] = 1;
+                                s5bEnvTrigger[1] = 1;
+                                s5bEnvTrigger[2] = 1;
+                            }
                             s5bRegister[vgmData[1]] = vgmData[2];
                             expansionMask = expansionMask | ExpansionType.S5BMask;
                         }
