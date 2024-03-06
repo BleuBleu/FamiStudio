@@ -159,7 +159,7 @@ namespace FamiStudio
         {
             var wav = new byte[64];
             for (int i = 0; i < 64; i++)
-                wav[i] = (byte)(regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_WAV_START + i) + 0x20);
+                wav[i] = regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_WAV_START + i);
             return wav;
         }
 

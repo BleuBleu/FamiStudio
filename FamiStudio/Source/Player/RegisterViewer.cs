@@ -312,7 +312,7 @@ namespace FamiStudio
 
         void DrawWaveTable(CommandList c, Fonts res, Rectangle rect, bool video)
         {
-            DrawInternal(c, res, rect, i.GetWaveTable(), 63, true, video);
+            DrawInternal(c, res, rect, i.GetWaveTable(), 63, false, video);
         }
 
         void DrawModTable(CommandList c, Fonts res, Rectangle rect, bool video)
