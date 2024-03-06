@@ -283,7 +283,7 @@ void Nes_Fds::write_shadow_register(int addr, int data)
 	if (addr >= wave_addr && addr < (wave_addr + wave_count))
 	{
 		// Ignore write enable.
-		shadow_wave[addr - wave_addr] = (data & 0x3f) - 0x20;
+		shadow_wave[addr - wave_addr] = (data & 0x3f);
 	}
 	else if (addr >= regs_addr && addr < (regs_addr + regs_count))
 	{

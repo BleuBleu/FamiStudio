@@ -252,7 +252,7 @@ namespace FamiStudio
                     page.AddCheckBox(RewindAfterPlayLabel.Colon, Settings.RewindAfterPlay, ReviewAfterPlayTooltip); // 4
                     page.AddCheckBox(OpenLastProjectLabel.Colon, Settings.OpenLastProjectOnStart, OpenLastTooltip); // 5
                     page.AddCheckBox(AutosaveLabel.Colon, Settings.AutoSaveCopy, AutosaveTooltip); // 6
-                    page.AddTextBox(PatternPrefixLabel.Colon, Settings.PatternNamePrefix, 64, PatternNamePrefixTooltip); // 7
+                    page.AddTextBox(PatternPrefixLabel.Colon, Settings.PatternNamePrefix, 64, false, PatternNamePrefixTooltip); // 7
                     page.AddNumericUpDown(PatternDigitsLabel.Colon, Settings.PatternNameNumDigits, 1, 4, 1, PatternNameNumDigitsTooltip); // 8
                     page.AddButton(null, OpenAutosaveFolderLabel, AutosaveFolderTooltip); // 9
                     page.PropertyClicked += GeneralPage_PropertyClicked;

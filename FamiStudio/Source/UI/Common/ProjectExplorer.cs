@@ -223,9 +223,16 @@ namespace FamiStudio
         LocalizedString PropertiesSongContext;
         LocalizedString ReplaceWithContext;
         LocalizedString ResampleWavContext;
+        LocalizedString EnterValueContext;
         LocalizedString ResetDefaultValueContext;
         LocalizedString CollapseAllContext;
         LocalizedString ExpandAllContext;
+
+        // Message boxes
+        LocalizedString CopyInstrumentEnvelopeMessage;
+        LocalizedString CopyInstrumentEnvelopeTitle;
+        LocalizedString CopyInstrumentSamplesMessage;
+        LocalizedString CopyInstrumentSamplesTitle;
 
         #endregion
 
@@ -1478,8 +1485,10 @@ namespace FamiStudio
                             {
                                 var paramMinValue = button.param.GetMinValue();
                                 var paramMaxValue = button.param.GetMaxValue();
+                                var paramExp = GetSliderExponent(button);
                                 var actualSliderSizeX = sliderSizeX - paramButtonSizeX * 2;
-                                var valSizeX = paramMaxValue == paramMinValue ? 0 : (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * actualSliderSizeX);
+                                var ratio = (paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue);
+                                var valSizeX = paramMaxValue == paramMinValue ? 0 : (int)Math.Round(MathF.Pow(ratio, paramExp) * actualSliderSizeX);
                                 var opacityL = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : disabledOpacity;
                                 var opacityR = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f) : disabledOpacity;
 
@@ -1518,7 +1527,7 @@ namespace FamiStudio
                                 if (paramStr.StartsWith("img:"))
                                 {
                                     var img = c.Graphics.GetTextureAtlasRef(paramStr.Substring(4));
-                                    c.DrawTextureAtlasCentered(img, 0, 0, sliderSizeX, button.height);
+                                    c.DrawTextureAtlasCentered(img, 0, 0, sliderSizeX, button.height, 1, 1, Color.Black);
                                 }
                                 else
                                 {
@@ -2234,7 +2243,7 @@ namespace FamiStudio
                     {
                         if (instrumentSrc.Expansion == instrumentDst.Expansion)
                         {
-                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the {EnvelopeType.LocalizedNames[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
+                            Platform.MessageBoxAsync(ParentWindow, CopyInstrumentEnvelopeMessage.Format(EnvelopeType.LocalizedNames[envelopeDragIdx], instrumentSrc.Name, instrumentDst.Name), CopyInstrumentEnvelopeTitle, MessageBoxButtons.YesNo, (r) =>
                             {
                                 if (r == DialogResult.Yes)
                                 {
@@ -2290,7 +2299,7 @@ namespace FamiStudio
 
                     if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null && instrumentDst.Expansion == ExpansionType.None)
                     {
-                        Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the DPCM sample assignments of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy DPCM Assignemnts", MessageBoxButtons.YesNo, (r) =>
+                        Platform.MessageBoxAsync(ParentWindow, CopyInstrumentSamplesMessage.Format(instrumentSrc.Name, instrumentDst.Name), CopyInstrumentSamplesTitle, MessageBoxButtons.YesNo, (r) =>
                         {
                             if (r == DialogResult.Yes)
                             {
@@ -2613,6 +2622,11 @@ namespace FamiStudio
             ClampScroll();
         }
 
+        private float GetSliderExponent(Button button)
+        {
+            return 1.0f / (button.param.GetMaxValue() >= 4095 ? 4 : 1);
+        }
+
         bool UpdateSliderValue(Button button, int x, int y, bool mustBeInside)
         {
             var buttonIdx = buttons.IndexOf(button);
@@ -2634,6 +2648,7 @@ namespace FamiStudio
 
             var sliderMinX = contentSizeX - sliderPosX + paramButtonSizeX;
             var sliderMaxX = sliderMinX + (sliderSizeX - paramButtonSizeX * 2);
+            var sliderExp = GetSliderExponent(button);
 
             bool insideSlider = (buttonX > (sliderMinX) &&
                                  buttonX < (sliderMaxX) &&
@@ -2656,7 +2671,8 @@ namespace FamiStudio
             }
             else
             {
-                paramVal = (int)Math.Round(Utils.Lerp(button.param.GetMinValue(), button.param.GetMaxValue(), Utils.Clamp((buttonX - sliderMinX) / (float)(sliderMaxX - sliderMinX), 0.0f, 1.0f)));
+                var ratio = Utils.Saturate((buttonX - sliderMinX) / (float)(sliderMaxX - sliderMinX));
+                paramVal = (int)Math.Round(Utils.Lerp(button.param.GetMinValue(), button.param.GetMaxValue(), MathF.Pow(ratio, 1.0f / sliderExp)));
                 captureMouseX = x;
             }
 
@@ -4498,6 +4514,21 @@ namespace FamiStudio
             return true;
         }
 
+        private void EnterParamValue(Button button, int x, int y)
+        {
+            var dlg = new ValueInputDialog(ParentWindow, new Point(left + x, top + y), button.param.Name, button.param.GetValue(), button.param.GetMinValue(), button.param.GetMaxValue(), true);
+            dlg.ShowDialogAsync((r) => 
+            {
+                if (r == DialogResult.OK)
+                {
+                    App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+                    button.param.SetValue(dlg.Value);
+                    App.UndoRedoManager.EndTransaction();
+                    MarkDirty();
+                }
+            });
+        }
+
         private void ResetParamButtonDefaultValue(Button button)
         {
             App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
@@ -4510,10 +4541,13 @@ namespace FamiStudio
         {
             if (button.param.IsEnabled())
             {
-                App.ShowContextMenu(left + x, top + y, new[]
-                {
-                    new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamButtonDefaultValue(button); })
-                });
+                var menu = new List<ContextMenuOption>();
+
+                if (button.type == ButtonType.ParamSlider)
+                    menu.Add(new ContextMenuOption("Type", EnterValueContext, () => { EnterParamValue(button, x, y); }));
+                menu.Add(new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamButtonDefaultValue(button); }));
+
+                App.ShowContextMenu(left + x, top + y, menu.ToArray());
             }
 
             return true;

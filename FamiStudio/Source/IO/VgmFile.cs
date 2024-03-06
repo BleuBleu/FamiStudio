@@ -491,10 +491,12 @@ namespace FamiStudio
         int[] epsmRegisterLo = new int[0xff];
         int[] epsmRegisterHi = new int[0xff];
         int[] epsmFmTrigger = new int[0x6];
+        int[] epsmEnvTrigger = new int[0x3];
         int[] epsmFmEnabled = new int[0x6];
         int[] epsmFmKey = new int[0x6];
         int[] epsmFmRegisterOrder = new[] { 0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 };
         int[] s5bRegister = new int[0xff];
+        int[] s5bEnvTrigger = new int[0x3];
         bool dpcmTrigger = false;
         byte[] dpcmData = new byte[0xffff];
         byte[] pcmRAMData = new byte[0xffffff];
@@ -518,6 +520,9 @@ namespace FamiStudio
 
             public int fdsModDepth = 0;
             public int fdsModSpeed = 0;
+
+            public int s5bEnvFreq = 0;
+            public int epsmEnvFreq = 0;
 
             public bool fmTrigger = false;
             public bool fmSustain = false;
@@ -543,13 +548,6 @@ namespace FamiStudio
             finePitch = period - noteTable[bestNote];
 
             return bestNote;
-        }
-
-        private Pattern GetOrCreatePattern(Channel channel, int patternIdx)
-        {
-            if (channel.PatternInstances[patternIdx] == null)
-                channel.PatternInstances[patternIdx] = channel.CreatePattern();
-            return channel.PatternInstances[patternIdx];
         }
 
         private Instrument GetDutyInstrument(Channel channel, int duty)
@@ -645,18 +643,41 @@ namespace FamiStudio
             }
         }
 
-        private Instrument GetS5BInstrument(int noise, int mixer)
+        private Instrument GetS5BInstrument(int noise, int mixer, bool envEnabled, int envShape)
         {
+            if (envEnabled)
+            {
+                if (envShape < 0x4) envShape = 0x9;
+                else
+                if (envShape < 0x8) envShape = 0xf;
+
+                envShape -= 7;
+            }
+            else
+            {
+                envShape = 0;
+            }
+
+            var toneEnabled = (mixer & 1) == 0;
+            var noiseEnabled = (mixer & 2) == 0;
+
             var name = "S5B";
-            if (mixer != 2 && noise == 0)
+            if (noiseEnabled && noise == 0)
                 noise = 1;
-            if (mixer != 2)
-                name = $"S5B Noise {noise} M {mixer}";
+            if (toneEnabled)
+                name += $" Tone";
+            if (noiseEnabled)
+                name += $" Noise {noise}";
+            if (envShape != 0)
+                name += $" Env {envShape + 7:X1}";
 
             var instrument = project.GetInstrument(name);
             if (instrument == null)
             {
                 instrument = project.CreateInstrument(ExpansionType.S5B, name);
+                instrument.S5BEnvAutoPitch = false;
+                instrument.S5BEnvelopeShape = (byte)envShape;
+                instrument.EpsmPatch = 1;
                 instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Length = 1;
                 instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Values[0] = (sbyte)noise;
                 instrument.Envelopes[EnvelopeType.S5BMixer].Length = 1;
@@ -687,7 +708,7 @@ namespace FamiStudio
             }
         }
 
-        private Instrument GetEPSMInstrument(byte chanType, byte[] patchRegs, int noise, int mixer)
+        private Instrument GetEPSMInstrument(byte chanType, byte[] patchRegs, int noise, int mixer, bool envEnabled, int envShape)
         {
             var name = $"EPSM {Instrument.GetEpsmPatchName(1)}";
             var instrument = project.GetInstrument(name);
@@ -703,22 +724,45 @@ namespace FamiStudio
 
             if (chanType == 0)
             {
-                if (mixer != 2 && noise == 0)
+                if (envEnabled)
+                {
+                    if (envShape < 0x4) envShape = 0x9;
+                    else
+                    if (envShape < 0x8) envShape = 0xf;
+
+                    envShape -= 7;
+                }
+                else
+                {
+                    envShape = 0;
+                }
+
+                var toneEnabled = (mixer & 1) == 0;
+                var noiseEnabled = (mixer & 2) == 0;
+
+                name = "EPSM";
+                if (noiseEnabled && noise == 0)
                     noise = 1;
-                if (mixer != 2)
-                    name = $"EPSM Noise {noise} M {mixer}";
+                if (toneEnabled)
+                    name += $" Tone";
+                if (noiseEnabled)
+                    name += $" Noise {noise}";
+                if (envShape != 0)
+                    name += $" Env {envShape + 7:X1}";
 
                 instrument = project.GetInstrument(name);
                 if (instrument == null)
                 {
                     instrument = project.CreateInstrument(ExpansionType.EPSM, name);
-
+                    instrument.EPSMSquareEnvAutoPitch = false;
+                    instrument.EPSMSquareEnvelopeShape = (byte)envShape;
                     instrument.EpsmPatch = 1;
                     instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Length = 1;
                     instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Values[0] = (sbyte)noise;
                     instrument.Envelopes[EnvelopeType.S5BMixer].Length = 1;
                     instrument.Envelopes[EnvelopeType.S5BMixer].Values[0] = (sbyte)mixer;
                 }
+
                 return instrument;
             }
 
@@ -919,9 +963,16 @@ namespace FamiStudio
                         switch (state)
                         {
                             case NotSoFatso.STATE_PERIOD: return s5bRegister[0 + idx * 2] | (s5bRegister[1 + idx * 2] << 8);
-                            case NotSoFatso.STATE_VOLUME: return (((s5bRegister[7] >> idx) & 9) != 9) ? s5bRegister[8 + idx] : 0;
+                            case NotSoFatso.STATE_VOLUME: return (((s5bRegister[7] >> idx) & 9) != 9) || ((s5bRegister[0x8 + idx] & 0x10) != 0) ? s5bRegister[8 + idx] : 0;
                             case NotSoFatso.STATE_S5BMIXER: return ((s5bRegister[7] >> idx) & 9);
                             case NotSoFatso.STATE_S5BNOISEFREQUENCY: return s5bRegister[6];
+                            case NotSoFatso.STATE_S5BENVFREQUENCY: return s5bRegister[0xB] | (s5bRegister[0xC] << 8);
+                            case NotSoFatso.STATE_S5BENVSHAPE: return s5bRegister[0xD] & 0xF;
+                            case NotSoFatso.STATE_S5BENVTRIGGER:
+                                int trigger = s5bEnvTrigger[idx];
+                                s5bEnvTrigger[idx] = 0;
+                                return trigger;
+                            case NotSoFatso.STATE_S5BENVENABLED: return (s5bRegister[0x8 + idx] & 0x10);
                         }
                         break;
                     }
@@ -953,9 +1004,16 @@ namespace FamiStudio
                         switch (state)
                         {
                             case NotSoFatso.STATE_PERIOD: return epsmRegisterLo[0 + idx*2] | (epsmRegisterLo[1 + idx * 2] << 8);
-                            case NotSoFatso.STATE_VOLUME: return (((epsmRegisterLo[7] >> idx) & 9 ) != 9)  ? epsmRegisterLo[8 + idx] : 0;
+                            case NotSoFatso.STATE_VOLUME: return (((epsmRegisterLo[7] >> idx) & 9 ) != 9) || ((epsmRegisterLo[0x8 + idx] & 0x10) != 0) ? epsmRegisterLo[8 + idx] : 0;
                             case NotSoFatso.STATE_S5BMIXER: return ((epsmRegisterLo[7] >> idx) & 9);
                             case NotSoFatso.STATE_S5BNOISEFREQUENCY: return epsmRegisterLo[6];
+                            case NotSoFatso.STATE_S5BENVFREQUENCY: return epsmRegisterLo[0xB] | (epsmRegisterLo[0xC] << 8);
+                            case NotSoFatso.STATE_S5BENVSHAPE: return epsmRegisterLo[0xD] & 0xF;
+                            case NotSoFatso.STATE_S5BENVTRIGGER:
+                                int trigger = epsmEnvTrigger[idx];
+                                epsmEnvTrigger[idx] = 0;
+                                return trigger;
+                            case NotSoFatso.STATE_S5BENVENABLED: return (epsmRegisterLo[0x8 + idx] & 0x10);
                         }
                         break;
                     }
@@ -1095,7 +1153,7 @@ namespace FamiStudio
 
                     if (Note.IsMusicalNote(noteValue))
                     {
-                        var note = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n);
+                        var note = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n);
                         note.Value = (byte)noteValue;
                         note.Instrument = dpcmInst;
                         if (state.dmc != dmc)
@@ -1109,13 +1167,13 @@ namespace FamiStudio
                 }
                 else if (dmc != state.dmc)
                 {
-                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).DeltaCounter = (byte)dmc;
+                    channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).DeltaCounter = (byte)dmc;
                     state.dmc = dmc;
                 }
 
                 if (dmcActive == 0 && state.state == ChannelState.Triggered)
                 {
-                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).IsStop = true;
+                    channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).IsStop = true;
                     state.state = ChannelState.Stopped;
                 }
             }
@@ -1219,7 +1277,7 @@ namespace FamiStudio
                 {
                     if (state.volume != volume && (volume != 0 || hasTrigger))
                     {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Volume = (byte)volume;
+                        var pattern = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).Volume = (byte)volume;
                         state.volume = volume;
                     }
                 }
@@ -1251,13 +1309,13 @@ namespace FamiStudio
 
                     if (state.fdsModDepth != modDepth)
                     {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModDepth = (byte)modDepth;
+                        var pattern = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).FdsModDepth = (byte)modDepth;
                         state.fdsModDepth = modDepth;
                     }
 
                     if (state.fdsModSpeed != modSpeed)
                     {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModSpeed = (ushort)modSpeed;
+                        var pattern = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).FdsModSpeed = (ushort)modSpeed;
                         state.fdsModSpeed = modSpeed;
                     }
                 }
@@ -1277,10 +1335,23 @@ namespace FamiStudio
                 }
                 else if (channel.Type >= ChannelType.S5BSquare1 && channel.Type <= ChannelType.S5BSquare3)
                 {
-                    var noise = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
                     var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_S5BMIXER, 0);
+                    var noiseFreq = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
+                    var envEnabled = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
+                    var envShape = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVSHAPE, 0);
+                    var envTrigger = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVTRIGGER, 0);
+                    var envFreq = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVFREQUENCY, 0);
                     mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
-                    instrument = GetS5BInstrument(noise, mixer);
+                    instrument = GetS5BInstrument(noiseFreq, mixer, envEnabled, envShape);
+                    force |= (envTrigger != 0) && envEnabled;
+
+                    // All envelope frequency will be on square 1.
+                    envFreq = (int)(envFreq / clockMultiplier[channel.Expansion]);
+                    if (state.s5bEnvFreq != envFreq && channel.Type == ChannelType.S5BSquare1)
+                    {
+                        channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
+                        state.s5bEnvFreq = envFreq;
+                    }
                 }
                 else if (channel.Type >= ChannelType.EPSMSquare1 && channel.Type <= ChannelType.EPSMrythm6)
                 {
@@ -1291,19 +1362,39 @@ namespace FamiStudio
                         for (int i = 0; i < 31; i++)
                             regs[i] = (byte)GetState(channel.Type, NotSoFatso.STATE_FMPATCHREG, i);
 
-                        instrument = GetEPSMInstrument(1, regs, 0, 0);
+                        instrument = GetEPSMInstrument(1, regs, 0, 0, false, 0);
                     }
                     else if (channel.Type >= ChannelType.EPSMrythm1 && channel.Type <= ChannelType.EPSMrythm6)
                     {
                         regs[1] = (byte)GetState(channel.Type, NotSoFatso.STATE_STEREO, 0);
-                        instrument = GetEPSMInstrument(2, regs, 0, 0);
+                        instrument = GetEPSMInstrument(2, regs, 0, 0, false, 0);
                     }
                     else
                     {
-                        var noise = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
                         var mixer = (int)GetState(channel.Type, NotSoFatso.STATE_S5BMIXER, 0);
+                        int noiseFreq;
+                        if (ym2149AsEPSM && channel.IsEPSMSquareChannel)
+                            noiseFreq = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[ExpansionType.S5B], 1, 31);
+                        else
+                            noiseFreq = (byte)Utils.Clamp((GetState(channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0) & 0x1f) / clockMultiplier[channel.Expansion], 1, 31);
+                        var envEnabled = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
+                        var envShape = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVSHAPE, 0);
+                        var envTrigger = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVTRIGGER, 0);
+                        var envFreq = (int)GetState(channel.Type, NotSoFatso.STATE_S5BENVFREQUENCY, 0);
                         mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
-                        instrument = GetEPSMInstrument(0, regs, noise, mixer);
+                        instrument = GetEPSMInstrument(0, regs, noiseFreq, mixer, envEnabled, envShape);
+                        force |= (envTrigger != 0) && envEnabled;
+
+                        // All envelope frequency will be on square 1.
+                        if (ym2149AsEPSM && channel.IsEPSMSquareChannel)
+                            envFreq = (int)(envFreq / clockMultiplier[ExpansionType.S5B]);
+                        else
+                            envFreq = (int)(envFreq / clockMultiplier[channel.Expansion]);
+                        if (state.epsmEnvFreq != envFreq && channel.Type == ChannelType.EPSMSquare1)
+                        {
+                            channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
+                            state.epsmEnvFreq = envFreq;
+                        }
                     }
 
                 }
@@ -1355,7 +1446,7 @@ namespace FamiStudio
 
                     if ((state.note != note) || (state.instrument != instrument && instrument != null) || force)
                     {
-                        var pattern = GetOrCreatePattern(channel, p);
+                        var pattern = channel.GetOrCreatePattern(p);
                         var newNote = pattern.GetOrCreateNoteAt(n);
                         newNote.Value = (byte)note;
                         newNote.Instrument = instrument;
@@ -1380,7 +1471,7 @@ namespace FamiStudio
 
                         if (pitch != state.pitch)
                         {
-                            var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FinePitch = pitch;
+                            var pattern = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).FinePitch = pitch;
                             state.pitch = pitch;
                         }
                     }
@@ -1656,11 +1747,18 @@ namespace FamiStudio
                     }
                     else if (vgmCommand == 0x56 || vgmCommand == 0x52 || vgmCommand == 0x58 || vgmCommand == 0x55)
                     {
-                        if(vgmData[1] == 0x10)
+                        if (vgmData[1] == 0x10)
                             epsmRegisterLo[vgmData[1]] = epsmRegisterLo[vgmData[1]] | vgmData[2];
+                        else if (vgmData[1] == 0x0D)
+                        {
+                            epsmEnvTrigger[0] = 1;
+                            epsmEnvTrigger[1] = 1;
+                            epsmEnvTrigger[2] = 1;
+                            epsmRegisterLo[vgmData[1]] = vgmData[2];
+                        }
                         else if (vgmData[1] == 0x28)
                         {
-                            int channel = ((((vgmData[2] & 4) >> 2) + 1) * ((vgmData[2] & 3)+1)) -1;
+                            int channel = ((((vgmData[2] & 4) >> 2) + 1) * ((vgmData[2] & 3) + 1)) - 1;
                             if ((vgmData[2] & 0x7) == 0)
                             {
                                 if ((vgmData[2] & 0xf0) > 0 && epsmFmEnabled[0] == 0)
@@ -1758,6 +1856,12 @@ namespace FamiStudio
                     {
                         if (ym2149AsEpsm)
                         {
+                            if (vgmData[1] == 0x0D)
+                            {
+                                epsmEnvTrigger[0] = 1;
+                                epsmEnvTrigger[1] = 1;
+                                epsmEnvTrigger[2] = 1;
+                            }
                             epsmRegisterLo[vgmData[1]] = vgmData[2];
                             expansionMask = expansionMask | ExpansionType.EPSMMask;
                         }
@@ -1824,7 +1928,7 @@ namespace FamiStudio
             for (int c = 0; c < song.Channels.Length; c++)
             {
                 if (channelStates[c].state != ChannelState.Stopped)
-                GetOrCreatePattern(song.Channels[c], p).GetOrCreateNoteAt(n).IsStop = true;
+                    song.Channels[c].GetOrCreatePattern(p).GetOrCreateNoteAt(n).IsStop = true;
             }
             song.Name = songName;
             song.SetSensibleBeatLength();

@@ -42,14 +42,6 @@ namespace FamiStudio
                 videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), true, Theme.DarkGreyColor2);
                 c.PushClipRegion(0, 0, videoResX, videoResY);
 
-                // Draw gradients.
-                for (int i = 0; i < numRows; i++)
-                {
-                    c.PushTranslation(0, i * channelResY);
-                    c.FillRectangleGradient(0, 0, videoResX, channelResY, Color.Black, Color.Transparent, true, channelResY / 2);
-                    c.PopTransform();
-                }
-
                 // Channel names + oscilloscope
                 for (int i = 0; i < channelStates.Length; i++)
                 {
@@ -63,20 +55,29 @@ namespace FamiStudio
                     var channelPosY0 = (channelY + 0) * channelResY;
                     var channelPosY1 = (channelY + 1) * channelResY;
 
+                    c.PushTranslation(channelPosX0, channelPosY0);
+                    c.PushClipRegion(0, 0, channelResX, channelResY);
+                    
+                    // Gradient
+                    c.FillRectangleGradient(0, 0, channelResX, channelResY, Color.Black, Color.Transparent, true, channelResY / 2);
+
                     // Oscilloscope
                     var oscilloscope = UpdateOscilloscope(s, f);
 
-                    c.PushTransform(channelPosX0, channelPosY0 + channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
+                    c.PushTransform(0, channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
                     c.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, settings.OscLineThickness);
                     c.PopTransform();
 
                     // Icons + text
-                    var channelIconPosX = channelPosX0 + s.icon.Size.Width / 2;
-                    var channelIconPosY = channelPosY0 + s.icon.Size.Height / 2;
+                    var channelIconPosX = s.icon.Size.Width / 2;
+                    var channelIconPosY = s.icon.Size.Height / 2;
 
                     c.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.icon.Size.Width - 1, channelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
                     c.DrawTexture(s.icon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
                     c.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, Theme.LightGreyColor1);
+
+                    c.PopClipRegion();
+                    c.PopTransform();
                 }
 
                 // Grid lines

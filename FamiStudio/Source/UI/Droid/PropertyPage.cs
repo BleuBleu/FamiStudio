@@ -22,6 +22,7 @@ using Orientation = Android.Widget.Orientation;
 using AndroidX.Core.Graphics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using AndroidX.Core.View;
 
 namespace FamiStudio
 {
@@ -68,7 +69,7 @@ namespace FamiStudio
             return label != null ? label.TrimEnd(new[] { ' ', ':' }) : null;
         }
 
-        private EditText CreateEditText(string txt, int maxLength)
+        private EditText CreateEditText(string txt, int maxLength, bool numeric = false)
         {
             var editText = new EditText(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
 
@@ -79,6 +80,8 @@ namespace FamiStudio
             editText.SetMaxLines(1);
             editText.SetOnEditorActionListener(this);
             editText.AfterTextChanged += EditText_AfterTextChanged;
+            if (numeric)
+                editText.InputType = InputTypes.ClassNumber;
 
             if (maxLength > 0)
                 editText.SetFilters(new IInputFilter[] { new InputFilterLengthFilter(maxLength) } );
@@ -202,7 +205,7 @@ namespace FamiStudio
             return lin;
         }
 
-        private TextView CreateTextView(string str, int style)
+        private TextView CreateTextView(string str, int style, bool numeric = false)
         {
             var text = new TextView(new ContextThemeWrapper(context, style));
             text.Text = str;
@@ -286,10 +289,10 @@ namespace FamiStudio
             return false;
         }
 
-        public int AddTextBox(string label, string value, int maxLength = 0, string tooltip = null)
+        public int AddTextBox(string label, string value, int maxLength = 0, bool numeric = false, string tooltip = null)
         {
             var prop = new Property();
-            var editText = CreateEditText(value, maxLength);
+            var editText = CreateEditText(value, maxLength, numeric);
 
             prop.type = PropertyType.TextBox;
             prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
@@ -309,7 +312,7 @@ namespace FamiStudio
 
         public int AddFileTextBox(string label, string value, int maxLength = 0, string tooltip = null)
         {
-            return AddTextBox(label, value, maxLength, tooltip);
+            return AddTextBox(label, value, maxLength, false, tooltip);
         }
 
         public bool OnEditorAction(TextView v, [GeneratedEnum] ImeAction actionId, KeyEvent e)
@@ -1235,6 +1238,46 @@ namespace FamiStudio
                     Debug.Assert(false);
                     break;
             }
+        }
+
+        public void ConditionalSetTextBoxFocus()
+        {
+            if (properties.Count == 1)
+            {
+                var prop = properties[0];
+
+                if (prop.type == PropertyType.TextBox ||
+                    prop.type == PropertyType.ColoredTextBox ||
+                    prop.type == PropertyType.NumericUpDown)
+                {
+                    var textView = prop.controls[0] as TextView;
+                    if (textView != null)
+                    {
+                        textView.EditorAction += TextView_EditorAction;
+                        textView.RequestFocusFromTouch();
+                        var windowInsetsControllerCompat = new WindowInsetsControllerCompat(Activity.Window, textView);
+                        windowInsetsControllerCompat.Show(WindowInsetsCompat.Type.Ime());
+                    }
+                }
+            }
+        }
+
+        private void TextView_EditorAction(object sender, TextView.EditorActionEventArgs e)
+        {
+            e.Handled = false;
+
+            if (e.ActionId == ImeAction.Done)
+            {
+                var idx = GetPropertyIndexForView(sender as View);
+                if (idx >= 0)
+                    PropertyWantsClose?.Invoke(idx);
+            }
+        }
+
+        public override void OnStart()
+        {
+            base.OnStart();
+            ConditionalSetTextBoxFocus();
         }
 
         public void Build(bool advanced = false)

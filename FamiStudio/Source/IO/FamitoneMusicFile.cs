@@ -653,10 +653,12 @@ namespace FamiStudio
                             var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BMixer]]);
                             var envShape = instrument.S5BEnvelopeShape > 0 ? instrument.S5BEnvelopeShape + 7 : 0;
                             var envAutoOctave = instrument.S5BEnvAutoPitch ? instrument.S5BEnvAutoPitchOctave : 0x80; // 0x80 = special code that means "manual"
+                            var envManualPeriod = instrument.S5BEnvelopePitch;
 
                             lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
                             lines.Add($"\t{db} ${envShape:x2}, ${envAutoOctave:x2}");
-                            lines.Add($"\t{db} $00, $00, $00, $00"); 
+                            lines.Add($"\t{dw} {envManualPeriod}");
+                            lines.Add($"\t{db} $00, $00"); 
                         }
                         else if (instrument.IsVrc7)
                         {
@@ -669,6 +671,7 @@ namespace FamiStudio
                             var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BMixer]]);
                             var envShape = instrument.EPSMSquareEnvelopeShape > 0 ? instrument.EPSMSquareEnvelopeShape + 7 : 0;
                             var envAutoOctave = instrument.EPSMSquareEnvAutoPitch ? instrument.EPSMSquareEnvAutoPitchOctave : 0x80; // 0x80 = special code that means "manual"
+                            var envManualPeriod = instrument.EPSMSquareEnvelopePitch; 
 
                             byte[] epsmPatchRegsReordered = new byte[epsmRegOrder.Length];
                             for (int reg = 0; reg < epsmRegOrder.Length; reg++)
@@ -677,8 +680,8 @@ namespace FamiStudio
                             }
                             lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
                             lines.Add($"\t{db} ${envShape:x2}, ${envAutoOctave:x2}");
+                            lines.Add($"\t{dw} {envManualPeriod}");
                             lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
-                            lines.Add($"\t{db} $00, $00");
                         }
 
                         size += 16;
@@ -966,6 +969,20 @@ namespace FamiStudio
             return false;
         }
 
+        private bool Square1HasEnvelopePeriodEffect(Song song, Channel channel, int patternIdx, int noteIdx)
+        {
+            if (channel.IsS5BChannel || channel.IsEPSMSquareChannel)
+            {
+                var sq1Note = song.GetChannelByType(channel.IsS5BChannel ? ChannelType.S5BSquare1 : ChannelType.EPSMSquare1).GetNoteAt(new NoteLocation(patternIdx, noteIdx));
+                if (sq1Note != null && sq1Note.HasEnvelopePeriod)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private int FindEffectParam(Song song, int effect)
         {
             for (int p = 0; p < song.Length; p++)
@@ -1018,7 +1035,8 @@ namespace FamiStudio
             Vibrato = 1,
             Arpeggio = 2,
             FdsModSpeed = 4,
-            FdsModDepth = 8
+            FdsModDepth = 8,
+            EnvPeriod = 16
         }
 
         private List<string> GetSongData(Song song, int songIdx, int speedChannel)
@@ -1130,6 +1148,7 @@ namespace FamiStudio
                     {
                         var time = it.CurrentTime;
                         var note = it.CurrentNote;
+                        var location = new NoteLocation(p, time);
                         var frameFlags = OverrideFlags.None;
 
                         if (note == null)
@@ -1150,6 +1169,12 @@ namespace FamiStudio
                         if (OtherVrc7ChannelUsesCustomPatch(song, channel, instrument, p, time))
                         {
                             instrument = null;
+                        }
+
+                        if (Square1HasEnvelopePeriodEffect(song, channel, p, time))
+                        {
+                            frameFlags   |= OverrideFlags.EnvPeriod;
+                            currentFlags |= OverrideFlags.EnvPeriod;
                         }
 
                         it.Next();
@@ -1173,7 +1198,6 @@ namespace FamiStudio
 
                             if (note.HasVolumeSlide)
                             {
-                                var location = new NoteLocation(p, time);
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizeNtsc, out var _);
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizePal, out var _);
 
@@ -1341,6 +1365,13 @@ namespace FamiStudio
                                         instrument = null;
                                     }
 
+                                    // Same rule for S5B/EPSM square manual envelope period.
+                                    if ((!frameFlags.HasFlag(OverrideFlags.EnvPeriod) && currentFlags.HasFlag(OverrideFlags.EnvPeriod)))
+                                    {
+                                        currentFlags &= ~(OverrideFlags.EnvPeriod);
+                                        instrument = null;
+                                    }
+
                                     // Save for vibrator/arps, we need to rebind the instrument at the moment to reset the correct envelopes.
                                     if ((!frameFlags.HasFlag(OverrideFlags.Vibrato) && currentFlags.HasFlag(OverrideFlags.Vibrato)))
                                     {
@@ -1405,7 +1436,6 @@ namespace FamiStudio
                                 var noteTablePal = NesApu.GetNoteTableForChannelType(channel.Type, true, song.Project.ExpansionNumN163Channels);
 
                                 var found = true;
-                                var location = new NoteLocation(p, time);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTablePal, true, true, out _, out int stepSizePal, out _);
 
@@ -1498,7 +1528,7 @@ namespace FamiStudio
                                 {
                                     instrument = null;
                                 }
-
+                                
                                 // TODO: Change this, this is a shit show.
                                 if (numEmptyNotes >= maxRepeatCount || 
                                     note.IsValid           ||
@@ -1516,6 +1546,11 @@ namespace FamiStudio
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
                                 {
                                     break;
+                                }
+
+                                if (Square1HasEnvelopePeriodEffect(song, channel, p, time))
+                                {
+                                    currentFlags |= OverrideFlags.EnvPeriod;
                                 }
 
                                 numEmptyNotes++;
@@ -1943,6 +1978,25 @@ namespace FamiStudio
             }
         }
 
+        private void MoveAllEnvelopePeriodsOnFirstChannel(Project project, int[] channelTypes)
+        {
+            // Keeping all envelop period effects on channel 1 simplifies the logic quite a bit. This garantee
+            // that all effects will always be processed before any new notes.
+            foreach (var song in project.Songs)
+            {
+                var firstChannel = song.GetChannelByType(channelTypes[0]);
+                foreach (var channelType in channelTypes.Skip(1))
+                {
+                    var channel = song.GetChannelByType(channelType);
+                    for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.EffectEnvPeriod); !it.Done; it.Next())
+                    {
+                        firstChannel.GetOrCreatePattern(it.PatternIndex).GetOrCreateNoteAt(it.NoteIndex).EnvelopePeriod = it.Note.EnvelopePeriod;
+                        it.Note.ClearEffectValue(Note.EffectEnvelopePeriod);
+                    }
+                }
+            }
+        }
+
         private void SetupProject(Project originalProject, int[] songIds)
         {
             // Work on a temporary copy.
@@ -1961,6 +2015,11 @@ namespace FamiStudio
             project.MergeIdenticalInstruments();
             project.RemoveDpcmNotesWithoutMapping();
             project.PermanentlyApplyGrooves();
+
+            if (project.UsesS5BExpansion)
+                MoveAllEnvelopePeriodsOnFirstChannel(project, new[] { ChannelType.S5BSquare1, ChannelType.S5BSquare2, ChannelType.S5BSquare3});
+            if (project.UsesEPSMExpansion)
+                MoveAllEnvelopePeriodsOnFirstChannel(project, new[] { ChannelType.EPSMSquare1, ChannelType.EPSMSquare2, ChannelType.EPSMSquare3 });
 
             if (project.UsesMultipleExpansionAudios)
             {

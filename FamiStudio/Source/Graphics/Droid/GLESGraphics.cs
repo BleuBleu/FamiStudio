@@ -768,18 +768,21 @@ namespace FamiStudio
 
                 if (list.HasAnyLines)
                 {
-                    var draw = list.GetLineDrawData();
+                    var draws = list.GetLineDrawData();
 
                     GLES20.GlUseProgram(lineProgram);
                     GLES20.GlUniform4fv(lineScaleBiasUniform, 1, viewportScaleBias, 0);
                     GLES20.GlUniform1f(lineDashScaleUniform, 1.0f / dashSize);
 
-                    BindAndUpdateVertexBuffer(0, draw.vtxArray, draw.vtxArraySize);
-                    BindAndUpdateColorBuffer(1, draw.colArray, draw.colArraySize);
-                    BindAndUpdateByteBuffer(2, draw.dshArray, draw.dshArraySize, false, false);
-                    BindAndUpdateByteBuffer(3, draw.depArray, draw.depArraySize, true);
+                    foreach (var draw in draws)
+                    {
+                        BindAndUpdateVertexBuffer(0, draw.vtxArray, draw.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, draw.colArray, draw.colArraySize);
+                        BindAndUpdateByteBuffer(2, draw.dshArray, draw.dshArraySize, false, false);
+                        BindAndUpdateByteBuffer(3, draw.depArray, draw.depArraySize, true);
 
-                    GLES20.GlDrawArrays(GLES20.GlLines, 0, draw.numVertices);
+                        GLES20.GlDrawArrays(GLES20.GlLines, 0, draw.numVertices);
+                    }
                 }
 
                 if (list.HasAnySmoothLines)
@@ -803,23 +806,30 @@ namespace FamiStudio
 
                 if (list.HasAnyTextures)
                 {
-                    var drawData = list.GetTextureDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out _);
+                    var drawDatas = list.GetTextureDrawData();
 
                     GLES20.GlUseProgram(bmpProgram);
                     GLES20.GlUniform4fv(bmpScaleBiasUniform, 1, viewportScaleBias, 0);
                     GLES20.GlUniform1i(bmpTextureUniform, 0);
                     GLES20.GlActiveTexture(GLES20.GlTexture0 + 0);
 
-                    BindAndUpdateVertexBuffer(0, vtxArray, vtxSize);
-                    BindAndUpdateColorBuffer(1, colArray, colSize);
-                    BindAndUpdateVertexBuffer(2, texArray, texSize, 3);
-                    BindAndUpdateByteBuffer(3, depArray, depSize, true);
-
-                    foreach (var draw in drawData)
+                    foreach (var drawData in drawDatas)
                     {
-                        quadIdxBuffer.Position(draw.start);
-                        GLES20.GlBindTexture(GLES20.GlTexture2d, draw.textureId);
-                        GLES20.GlDrawElements(GLES20.GlTriangles, draw.count, GLES20.GlUnsignedShort, quadIdxBuffer);
+                        BindAndUpdateVertexBuffer(0, drawData.vtxArray, drawData.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, drawData.colArray, drawData.colArraySize);
+                        BindAndUpdateVertexBuffer(2, drawData.texArray, drawData.texArraySize, 3);
+                        BindAndUpdateByteBuffer(3, drawData.depArray, drawData.depArraySize, true);
+
+                        foreach (var draw in drawData.draws)
+                        {
+                            quadIdxBuffer.Position(draw.start);
+                            GLES20.GlBindTexture(GLES20.GlTexture2d, draw.textureId);
+                            GLES20.GlDrawElements(GLES20.GlTriangles, draw.count, GLES20.GlUnsignedShort, quadIdxBuffer);
+                        }
+
+                        // TODO : Change this so that we build the draw data as we draw stuff, like the other primitives. This way
+                        // we wont need to do this janky release.
+                        drawData.Release(this);
                     }
                 }
 

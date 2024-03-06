@@ -79,7 +79,7 @@ namespace FamiStudio
         {
             MainThread.InvokeOnMainThreadAsync(() =>
             {
-                dialog.CloseWithResult(DialogResult.OK);
+                dialog.Close(DialogResult.OK);
             });
         }
 

@@ -903,6 +903,7 @@ famistudio_chn_epsm_vol_op4:       .res FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
 .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
 famistudio_epsm_env_period_lo:     .res 1
 famistudio_epsm_env_period_hi:     .res 1
+famistudio_epsm_env_override:      .res 1
 famistudio_epsm_chn_env_shape:     .res FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT ; bit 7 = note attack.
 famistudio_epsm_chn_env_octave:    .res FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT
 .endif
@@ -915,7 +916,8 @@ famistudio_chn_n163_wave_len:     .res FAMISTUDIO_EXP_N163_CHN_CNT
 .if FAMISTUDIO_EXP_S5B
 famistudio_s5b_env_period_lo:     .res 1
 famistudio_s5b_env_period_hi:     .res 1
-famistudio_s5b_chn_env_shape:     .res 3 ; bit 7 = note attack.
+famistudio_s5b_env_override:      .res 1 ; if non zero, it means we had an env period effect this frame.
+famistudio_s5b_chn_env_shape:     .res 3 ; bit 7 = note attack
 famistudio_s5b_chn_env_octave:    .res 3
 .endif
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
@@ -1684,6 +1686,7 @@ famistudio_music_play:
     lda #0
     sta famistudio_epsm_env_period_lo
     sta famistudio_epsm_env_period_hi
+    sta famistudio_epsm_env_override
     ldx #(FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT - 1)
     @clear_epsm_sq_loop:
         sta famistudio_epsm_chn_env_shape, x
@@ -1747,6 +1750,7 @@ famistudio_music_play:
     lda #0
     sta famistudio_s5b_env_period_lo
     sta famistudio_s5b_env_period_hi
+    sta famistudio_s5b_env_override
     sta famistudio_s5b_chn_env_shape+0
     sta famistudio_s5b_chn_env_shape+1
     sta famistudio_s5b_chn_env_shape+2
@@ -2690,7 +2694,7 @@ famistudio_update_epsm_square_channel_sound:
 
     ; Store env shape + period if active.
     lda famistudio_epsm_chn_env_shape,y
-    and #$7f
+    and #$0f
     beq @noenv
     sta @env_shape
 
@@ -2699,16 +2703,16 @@ famistudio_update_epsm_square_channel_sound:
     ora @attack 
     sta @attack
     lda famistudio_epsm_chn_env_shape,y
-    and #$7f
+    and #$0f
     sta famistudio_epsm_chn_env_shape,y
 
     ; Store auto-period settings
     lda famistudio_epsm_chn_env_octave,y
+    sta @env_octave
     cmp #$80 ; This mean 'manual pitch'
     beq @manual_period
 
     @auto_period:
-        sta @env_octave
         lda @pitch+0
         sta @env_period+0
         lda @pitch+1
@@ -2840,6 +2844,9 @@ famistudio_update_epsm_square_channel_sound:
     sta FAMISTUDIO_EPSM_ADDR
     lda @noise_freq
     sta FAMISTUDIO_EPSM_DATA
+
+    lda #0
+    sta famistudio_epsm_env_override
 
 @done:
     rts
@@ -3174,7 +3181,7 @@ update_fm_instrument:
     jsr famistudio_get_exp_inst_ptr
     clc 
     tya
-    adc #12
+    adc #14 ; skip over envelopes + square stuff.
     tay
     ; And then read the pointer to the extended instrument patch data
     lda (@ptr),y
@@ -3550,7 +3557,7 @@ famistudio_update_s5b_channel_sound:
 
     ; Store env shape + period if active.
     lda famistudio_s5b_chn_env_shape,y
-    and #$7f
+    and #$0f
     beq @noenv
     sta @env_shape
 
@@ -3559,16 +3566,16 @@ famistudio_update_s5b_channel_sound:
     ora @attack 
     sta @attack
     lda famistudio_s5b_chn_env_shape,y
-    and #$7f
+    and #$0f
     sta famistudio_s5b_chn_env_shape,y
 
     ; Store auto-period settings
     lda famistudio_s5b_chn_env_octave,y
+    sta @env_octave
     cmp #$80 ; This mean 'manual pitch'
     beq @manual_period
 
     @auto_period:
-        sta @env_octave
         lda @pitch+0
         sta @env_period+0
         lda @pitch+1
@@ -3692,6 +3699,9 @@ famistudio_update_s5b_channel_sound:
     sta FAMISTUDIO_S5B_ADDR
     lda @noise_freq
     sta FAMISTUDIO_S5B_DATA
+
+    lda #0
+    sta famistudio_s5b_env_override
 
 @done:
     rts
@@ -4317,11 +4327,12 @@ famistudio_update:
     beq @update_sound_done
     ; [MULTI] END
 .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
-    ldy #FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT - 1
+    ldy #0
     @epsm_square_channel_loop:
         jsr famistudio_update_epsm_square_channel_sound
-        dey
-        bpl @epsm_square_channel_loop
+        iny
+        cpy #FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT
+        bne @epsm_square_channel_loop
 .endif
 .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
     ldy #FAMISTUDIO_EXP_EPSM_FM_CHN_CNT - 1
@@ -5080,7 +5091,23 @@ famistudio_set_s5b_instrument:
     iny
     lda (@ptr),y
     sta famistudio_s5b_chn_env_octave-FAMISTUDIO_S5B_CH0_IDX,x
+    
+    ; Skip if using auto-period
+    cmp #$80
+    bne @done
 
+    ; Skip if effect set manual period this frame.
+    lda famistudio_s5b_env_override
+    bne @done 
+
+    iny
+    lda (@ptr),y
+    sta famistudio_s5b_env_period_lo
+    iny
+    lda (@ptr),y
+    sta famistudio_s5b_env_period_hi
+
+    @done:
     rts
     
 .endif
@@ -5132,10 +5159,9 @@ famistudio_set_epsm_instrument:
     lda (@env_ptr),y
     and #$0F
     sta famistudio_chn_epsm_rhythm_volume,x
-	
-	lda @reg_offset
+    lda @reg_offset
     clc
-    adc #10 ; skip over the next 5 pointers to get to the stereo data (second byte of the instrument)
+    adc #14 ; skip over envelopes + square stuff.
     tay
     lda (@ptr),y
     sta @ex_patch
@@ -5202,6 +5228,24 @@ famistudio_set_epsm_instrument:
         iny
         lda (@ptr),y
         sta famistudio_epsm_chn_env_octave-FAMISTUDIO_EPSM_CH0_IDX,x
+    
+        ; Skip if using auto-period
+        cmp #$80
+        bne @done
+
+        ; Skip if effect set manual period this frame.
+        lda famistudio_epsm_env_override
+        bne @done 
+
+        iny
+        lda (@ptr),y
+        sta famistudio_epsm_env_period_lo
+        iny
+        lda (@ptr),y
+        sta famistudio_epsm_env_period_hi
+
+        @done:
+
 .endif
         rts
 
@@ -5765,10 +5809,12 @@ famistudio_advance_channel:
 @opcode_epsm_manual_env_period:
     lda (@channel_data_ptr),y
     iny
-    sta famistudio_epsm_env_period_lo+0
+    sta famistudio_epsm_env_period_lo
     lda (@channel_data_ptr),y
     iny
-    sta famistudio_epsm_env_period_lo+1
+    sta famistudio_epsm_env_period_hi
+    lda #1
+    sta famistudio_epsm_env_override
     jmp @read_byte
 .endif
 
@@ -5776,10 +5822,12 @@ famistudio_advance_channel:
 @opcode_s5b_manual_env_period:
     lda (@channel_data_ptr),y
     iny
-    sta famistudio_s5b_env_period_lo+0
+    sta famistudio_s5b_env_period_lo
     lda (@channel_data_ptr),y
     iny
-    sta famistudio_s5b_env_period_lo+1
+    sta famistudio_s5b_env_period_hi
+    lda #1
+    sta famistudio_s5b_env_override
     jmp @read_byte
 .endif
 

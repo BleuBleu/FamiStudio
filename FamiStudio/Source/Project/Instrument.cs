@@ -45,6 +45,7 @@ namespace FamiStudio
         private bool   s5bEnvAutoPitch = true;
         private sbyte  s5bEnvAutoPitchOctave = 3;
         private byte   s5bEnvShape = 0; // 0 = off, 1...8 maps to 0x8 to 0xf.
+        private ushort s5bEnvPeriod = 1000; // Only when auto-pitch is off
 
         // VRC6
         private byte vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Half;
@@ -59,6 +60,7 @@ namespace FamiStudio
         private bool   epsmSquareEnvAutoPitch = true;
         private sbyte  epsmSquareEnvAutoPitchOctave = 3;
         private byte   epsmSquareEnvShape = 0; // 0 = off, 1...8 maps to 0x8 to 0xf.
+        private ushort epsmSquareEnvPeriod = 1000; // Only when auto-pitch is off
 
         // For N163/FDS wav presets.
         public int Id => id;
@@ -306,8 +308,8 @@ namespace FamiStudio
             }
         }
 
-        public int N163MaxWaveSize  => project.N163WaveRAMSize * 2 - n163WavPos;
-        public int N163MaxWavePos   => project.N163WaveRAMSize * 2 - 4;
+        public int N163MaxWaveSize  => (project.N163WaveRAMSize * 2 - n163WavPos) & 0xfc; // Needs to be multiple of 4.
+        public int N163MaxWavePos   => (project.N163WaveRAMSize * 2 - 4);
         public int N163MaxWaveCount => Math.Min(64, N163WaveformEnvelope.Values.Length / n163WavSize); 
 
         public int N163ResampleWavePeriod
@@ -333,9 +335,12 @@ namespace FamiStudio
         public bool   S5BEnvAutoPitch        { get => s5bEnvAutoPitch;              set => s5bEnvAutoPitch = value; }
         public sbyte  S5BEnvAutoPitchOctave  { get => s5bEnvAutoPitchOctave;        set => s5bEnvAutoPitchOctave = (sbyte)Utils.Clamp(value, -8, 8); }
         public byte   S5BEnvelopeShape       { get => s5bEnvShape;                  set => s5bEnvShape = (byte)Utils.Clamp(value, 0, 8); }
+        public ushort S5BEnvelopePitch       { get => s5bEnvPeriod;                 set => s5bEnvPeriod = value; }
+        
         public bool   EPSMSquareEnvAutoPitch       { get => epsmSquareEnvAutoPitch;       set => epsmSquareEnvAutoPitch = value; }
         public sbyte  EPSMSquareEnvAutoPitchOctave { get => epsmSquareEnvAutoPitchOctave; set => epsmSquareEnvAutoPitchOctave = (sbyte)Utils.Clamp(value, -8, 8); }
         public byte   EPSMSquareEnvelopeShape      { get => epsmSquareEnvShape;           set => epsmSquareEnvShape = (byte)Utils.Clamp(value, 0, 8); }
+        public ushort EPSMSquareEnvelopePitch      { get => epsmSquareEnvPeriod;          set => epsmSquareEnvPeriod = value; }
 
         public byte Vrc6SawMasterVolume
         {
@@ -928,6 +933,7 @@ namespace FamiStudio
                                 buffer.Serialize(ref s5bEnvAutoPitch);
                                 buffer.Serialize(ref s5bEnvAutoPitchOctave);
                                 buffer.Serialize(ref s5bEnvShape);
+                                buffer.Serialize(ref s5bEnvPeriod);
                             }
                             break;
                         case ExpansionType.Vrc7:
@@ -946,6 +952,7 @@ namespace FamiStudio
                                 buffer.Serialize(ref epsmSquareEnvAutoPitch);
                                 buffer.Serialize(ref epsmSquareEnvAutoPitchOctave);
                                 buffer.Serialize(ref epsmSquareEnvShape);
+                                buffer.Serialize(ref epsmSquareEnvPeriod);
                             }
                             break;
                         case ExpansionType.Vrc6:
@@ -1311,6 +1318,7 @@ namespace FamiStudio
             dst.EPSMSquareEnvAutoPitch       = src.S5BEnvAutoPitch;
             dst.EPSMSquareEnvAutoPitchOctave = src.S5BEnvAutoPitchOctave;
             dst.EPSMSquareEnvelopeShape      = src.S5BEnvelopeShape;
+            dst.EPSMSquareEnvelopePitch      = src.S5BEnvelopePitch;
             ConvertGeneric(src, dst);
         }
 
@@ -1319,6 +1327,7 @@ namespace FamiStudio
             dst.S5BEnvAutoPitch       = src.EPSMSquareEnvAutoPitch;
             dst.S5BEnvAutoPitchOctave = src.EPSMSquareEnvAutoPitchOctave;
             dst.S5BEnvelopeShape      = src.EPSMSquareEnvelopeShape;
+            dst.S5BEnvelopePitch      = src.EPSMSquareEnvelopePitch;
             ConvertGeneric(src, dst);
         }
 

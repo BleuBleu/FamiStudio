@@ -54,7 +54,11 @@ namespace FamiStudio
             set
             {
                 if (canResize)
-                    length = Utils.Clamp(value, 0, maxLength); 
+                {
+                    length = Utils.Clamp(value, 0, maxLength);
+                    if (chunkLength > 1)
+                        length = Math.Max(length, chunkLength);
+                }
                 if (loop >= length)
                     loop = -1;
                 if (release >= length)
@@ -403,6 +407,7 @@ namespace FamiStudio
         public Envelope ShallowClone()
         {
             var env = new Envelope();
+            env.values = values.Clone() as sbyte[];
             env.length = length;
             env.loop = loop;
             env.release = release;
@@ -410,7 +415,8 @@ namespace FamiStudio
             env.maxLength = maxLength;
             env.chunkLength = chunkLength;
             env.canResize = canResize;
-            env.values = values.Clone() as sbyte[];
+            env.canLoop = canLoop;
+            env.canRelease = canRelease;
             return env;
         }
 

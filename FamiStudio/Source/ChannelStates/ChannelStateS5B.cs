@@ -12,6 +12,7 @@ namespace FamiStudio
         private int  toneReg = 0x38;
         private int  envPeriod;
         private int  envShape;
+        private bool envPeriodEffect;
         private bool envAutoPitch;
         private int  envAutoOctave;
         private bool envReset;
@@ -21,6 +22,7 @@ namespace FamiStudio
         private bool instAutoPitch;
         private int  instAutoOctave;
         private int  instEnvShape;
+        private int  instEnvPeriod;
 
         public ChannelStateS5B(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
@@ -41,6 +43,7 @@ namespace FamiStudio
                         instEnvShape   = (byte)(instrument.S5BEnvelopeShape + 7); // 1...8 maps to 0x8...0xf
                         instAutoPitch  = instrument.S5BEnvAutoPitch;
                         instAutoOctave = instrument.S5BEnvAutoPitchOctave;
+                        instEnvPeriod  = instrument.S5BEnvelopePitch;
                     }
                     else
                     {
@@ -63,6 +66,7 @@ namespace FamiStudio
                 lastChannel.envAutoPitch = false;
                 lastChannel.envReset = false;
                 lastChannel.noiseFreq = 0;
+                lastChannel.envPeriodEffect = false;
             }
 
             lastChannel.envReset |= (noteTriggered && instEnvShape > 0);
@@ -70,6 +74,7 @@ namespace FamiStudio
             if (note.HasEnvelopePeriod)
             {
                 lastChannel.envPeriod = note.EnvelopePeriod;
+                lastChannel.envPeriodEffect = true;
             }
 
             if (note.IsStop)
@@ -99,7 +104,7 @@ namespace FamiStudio
 
                 if (instEnvShape != 0)
                 {
-                    lastChannel.envPeriod = instAutoPitch ? period : lastChannel.envPeriod;
+                    lastChannel.envPeriod = instAutoPitch ? period : (lastChannel.envPeriodEffect || !noteTriggered ? lastChannel.envPeriod : instEnvPeriod);
                     lastChannel.envShape = instEnvShape;
                     lastChannel.envAutoOctave = instAutoOctave;
                     lastChannel.envAutoPitch = instAutoPitch;

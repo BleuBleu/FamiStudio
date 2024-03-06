@@ -129,6 +129,7 @@ namespace FamiStudio
                         instrumentLine += GenerateAttribute("S5BEnvelopeShape", instrument.S5BEnvelopeShape);
                         instrumentLine += GenerateAttribute("S5BEnvelopeAutoPitch", instrument.S5BEnvAutoPitch);
                         instrumentLine += GenerateAttribute("S5BEnvelopeAutoPitchOctave", instrument.S5BEnvAutoPitchOctave);
+                        instrumentLine += GenerateAttribute("S5BEnvelopePitch", instrument.S5BEnvelopePitch);
                     }
                     else if (instrument.IsVrc6)
                     {
@@ -282,18 +283,19 @@ namespace FamiStudio
                                     }
                                 }
 
-                                if (!note.HasAttack)      noteLine += GenerateAttribute("Attack", false);
-                                if (note.HasVolume)       noteLine += GenerateAttribute("Volume", note.Volume);
-                                if (note.HasVolumeSlide)  noteLine += GenerateAttribute("VolumeSlideTarget", note.VolumeSlideTarget);
-                                if (note.HasVibrato)      noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
-                                if (note.HasSpeed)        noteLine += GenerateAttribute("Speed", note.Speed);
-                                if (note.HasFinePitch)    noteLine += GenerateAttribute("FinePitch", note.FinePitch);
-                                if (note.HasFdsModSpeed)  noteLine += GenerateAttribute("FdsModSpeed", note.FdsModSpeed);
-                                if (note.HasFdsModDepth)  noteLine += GenerateAttribute("FdsModDepth", note.FdsModDepth);
-                                if (note.HasDutyCycle)    noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
-                                if (note.HasNoteDelay)    noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
-                                if (note.HasCutDelay)     noteLine += GenerateAttribute("CutDelay", note.CutDelay);
-                                if (note.HasDeltaCounter) noteLine += GenerateAttribute("DeltaCounter", note.DeltaCounter);
+                                if (!note.HasAttack)        noteLine += GenerateAttribute("Attack", false);
+                                if (note.HasVolume)         noteLine += GenerateAttribute("Volume", note.Volume);
+                                if (note.HasVolumeSlide)    noteLine += GenerateAttribute("VolumeSlideTarget", note.VolumeSlideTarget);
+                                if (note.HasVibrato)        noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
+                                if (note.HasSpeed)          noteLine += GenerateAttribute("Speed", note.Speed);
+                                if (note.HasFinePitch)      noteLine += GenerateAttribute("FinePitch", note.FinePitch);
+                                if (note.HasFdsModSpeed)    noteLine += GenerateAttribute("FdsModSpeed", note.FdsModSpeed);
+                                if (note.HasFdsModDepth)    noteLine += GenerateAttribute("FdsModDepth", note.FdsModDepth);
+                                if (note.HasDutyCycle)      noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
+                                if (note.HasNoteDelay)      noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
+                                if (note.HasCutDelay)       noteLine += GenerateAttribute("CutDelay", note.CutDelay);
+                                if (note.HasPhaseReset)     noteLine += GenerateAttribute("PhaseReset", note.PhaseReset);
+                                if (note.HasEnvelopePeriod) noteLine += GenerateAttribute("EnvelopePeriod", note.EnvelopePeriod);
 
                                 lines.Add(noteLine);
                             }
@@ -495,6 +497,7 @@ namespace FamiStudio
                                  if (parameters.TryGetValue("S5BEnvelopeShape",           out var s5bEnvShapeStr))     instrument.S5BEnvelopeShape      = byte.Parse(s5bEnvShapeStr);
                                  if (parameters.TryGetValue("S5BEnvelopeAutoPitch",       out var s5bEnvAutoPitchStr)) instrument.S5BEnvAutoPitch       = bool.Parse(s5bEnvAutoPitchStr);
                                  if (parameters.TryGetValue("S5BEnvelopeAutoPitchOctave", out var s5bEnvAutoOctStr))   instrument.S5BEnvAutoPitchOctave = sbyte.Parse(s5bEnvAutoOctStr);
+                                 if (parameters.TryGetValue("S5BEnvelopePitch",           out var s5bEnvPitchStr))     instrument.S5BEnvelopePitch      = ushort.Parse(s5bEnvPitchStr);
                             }
                             else if (instrument.IsVrc7)
                             {
@@ -713,6 +716,10 @@ namespace FamiStudio
                                 note.CutDelay = byte.Parse(cutDelayStr);
                             if (parameters.TryGetValue("DeltaCounter", out var deltaCounterStr) && channel.SupportsEffect(Note.EffectDeltaCounter))
                                 note.DeltaCounter = byte.Parse(deltaCounterStr);
+                            if (parameters.TryGetValue("PhaseReset", out var phaseResetStr) && channel.SupportsEffect(Note.EffectPhaseReset))
+                                note.PhaseReset = byte.Parse(phaseResetStr);
+                            if (parameters.TryGetValue("EnvelopePeriod", out var envPeriodStr) && channel.SupportsEffect(Note.EffectEnvelopePeriod))
+                                note.EnvelopePeriod = ushort.Parse(envPeriodStr);
 
                             break;
                         }

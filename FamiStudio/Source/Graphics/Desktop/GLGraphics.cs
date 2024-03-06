@@ -637,19 +637,22 @@ namespace FamiStudio
 
                 if (list.HasAnyLines)
                 {
-                    var draw = list.GetLineDrawData();
+                    var draws = list.GetLineDrawData();
 
                     GL.UseProgram(lineProgram);
                     GL.BindVertexArray(lineVao);
                     GL.Uniform(lineScaleBiasUniform, viewportScaleBias, 4);
                     GL.Uniform(lineDashScaleUniform, 1.0f / dashSize);
 
-                    BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
-                    BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
-                    BindAndUpdateByteBuffer(2, dashBuffer, draw.dshArray, draw.dshArraySize, false, false);
-                    BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
+                    foreach (var draw in draws)
+                    {
+                        BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
+                        BindAndUpdateByteBuffer(2, dashBuffer, draw.dshArray, draw.dshArraySize, false, false);
+                        BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
 
-                    GL.DrawArrays(GL.Lines, 0, draw.numVertices);
+                        GL.DrawArrays(GL.Lines, 0, draw.numVertices);
+                    }
                 }
 
                 if (list.HasAnySmoothLines)
@@ -674,24 +677,31 @@ namespace FamiStudio
 
                 if (list.HasAnyTextures)
                 {
-                    var drawData = list.GetTextureDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize, out _);
+                    var drawDatas = list.GetTextureDrawData();
 
                     GL.UseProgram(bmpProgram);
                     GL.BindVertexArray(bmpVao);
                     GL.Uniform(bmpScaleBiasUniform, viewportScaleBias, 4);
                     GL.Uniform(bmpTextureUniform, 0);
                     GL.ActiveTexture(GL.Texture0 + 0);
-
-                    BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxSize);
-                    BindAndUpdateColorBuffer(1, colorBuffer, colArray, colSize);
-                    BindAndUpdateVertexBuffer(2, texCoordBuffer, texArray, texSize, 3);
-                    BindAndUpdateByteBuffer(3, depthBuffer, depArray, depSize, true);
                     GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
 
-                    foreach (var draw in drawData)
+                    foreach (var drawData in drawDatas)
                     {
-                        GL.BindTexture(GL.Texture2D, draw.textureId);
-                        GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(draw.start * sizeof(short)));
+                        BindAndUpdateVertexBuffer(0, vertexBuffer, drawData.vtxArray, drawData.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, colorBuffer, drawData.colArray, drawData.colArraySize);
+                        BindAndUpdateVertexBuffer(2, texCoordBuffer, drawData.texArray, drawData.texArraySize, 3);
+                        BindAndUpdateByteBuffer(3, depthBuffer, drawData.depArray, drawData.depArraySize, true);
+
+                        foreach (var draw in drawData.draws)
+                        {
+                            GL.BindTexture(GL.Texture2D, draw.textureId);
+                            GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(draw.start * sizeof(short)));
+                        }
+
+                        // TODO : Change this so that we build the draw data as we draw stuff, like the other primitives. This way
+                        // we wont need to do this janky release.
+                        drawData.Release(this);
                     }
                 }
 

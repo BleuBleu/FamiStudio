@@ -23,7 +23,6 @@ x Upgrade Windows to .NET 7.0
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
 - Android media player notification option
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
-- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
@@ -33,14 +32,10 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
 - S5B Envelope
 	- Check volume, seems square is very low with low values, might be normal.
-	- Test disable attack (C# + AMS), shouldnt reset envelope.
-	- Make sure manual period on an inactive channel behaves the same on ASM/C#
-	x If envelope is active, use it as emu trigger.
-- Add a way to type in FX + param values, even if its janky...
-- Logarithmic FX values.
-- BUG : Little warning icon appears at wrong location in projet properties.
-- BUG : Instrument player doesnt play envelopes (we only update on channel 3).
+	- Add low bound to frequency.
 - Do we need to cancel video preview if app gets suspended on Android?
+- Big bug list:
+	- 
 
 4.2.0 Testing/Packaging
 =======================
@@ -51,6 +46,12 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 - Add new features to unit tests
 - Run huge sound engine test with old songs.
 - Dont publish for chromebooks
+- Write S5B documentation.
+- Windows 7 x64 notes:
+	- Install vs runtime x64
+	- Install .net 7.0 (follow link when you try to run time, x64 version)
+	- https://www.catalog.update.microsoft.com/Search.aspx?q=KB4457144 (~230MB .msu file)
+	- [Optional] Download mesa and put opengl32.dll in same folder.
 
 4.2.0 Change Log
 ===========================
@@ -66,10 +67,10 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	* Accurate seek support (fully emulate entire song from start)
 	* Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
 	* Support for up to 256 instruments (for both regular and expansion) in sound engine
-	* Many other small quality of life improvements (eraser mode, copy samples, etc......... LIST MORE HERE!)
+	* Many other small quality of life improvements (eraser mode, copy samples, type FX values+params, etc......... LIST MORE HERE!)
 	* Upgraded to .NET 7.0
 	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)
--Breaking/Behavior changes:
+- Breaking/Behavior changes:
 	* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
 	* FDS emulation now matches the hardware much more closely. Some instruments may now sound very different.
 
@@ -171,6 +172,7 @@ Discord
 
 Backlog: 
 =========
+- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - Paste FX values from text. 	Kain wanted to change DAC slowly, had values to paste. 
 - Simple parameters for instruments (duty, volume)
