@@ -154,6 +154,7 @@
     <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Common\ValueInputDialog.cs" />
     <Compile Include="Source\UI\Common\VgmImportDialog.cs" />
     <Compile Include="Source\UI\Desktop\ContextMenu.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Button.cs" />
@@ -758,6 +759,8 @@
     <EmbeddedResource Include="Resources\Atlas\Stop@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Transform.tga" />
     <EmbeddedResource Include="Resources\Atlas\Transform@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Type.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Type@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Undo.tga" />
     <EmbeddedResource Include="Resources\Atlas\Undo@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\UpDownMinus.tga" />
