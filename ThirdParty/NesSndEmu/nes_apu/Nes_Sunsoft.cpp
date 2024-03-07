@@ -35,12 +35,16 @@ void Nes_Sunsoft::volume(double v)
 
 void Nes_Sunsoft::reset_psg()
 {
-	if (psg)
-		PSG_delete(psg);
-
-	psg = PSG_new(psg_clock, psg_clock / 16);
+	if (psg) {
+		PSG_setClock(psg, psg_clock);
+		PSG_setRate(psg, psg_clock / 16);
+	} else {
+		psg = PSG_new(psg_clock, psg_clock / 16);
+	}
+	PSG_setClockDivider(psg, true);
 	PSG_reset(psg);
 }
+
 
 void Nes_Sunsoft::output(Blip_Buffer* buf)
 {

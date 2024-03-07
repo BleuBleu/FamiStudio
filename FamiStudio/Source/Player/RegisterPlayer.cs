@@ -20,19 +20,6 @@ namespace FamiStudio
             loopMode = LoopMode.None;
         }
 
-        public RegisterWrite[] GetRegisterValues(Song song)
-        {
-            registerWrites = new List<RegisterWrite>();
-
-            BeginPlaySong(song);
-
-            StartSeeking();
-            while (PlaySongFrameInternal(true));
-            StopSeeking();
-
-            return registerWrites.ToArray();
-        }
-
         public RegisterWrite[] GetRegisterValues(Song song, out int length)
         {
             length = 0;

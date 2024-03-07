@@ -448,18 +448,18 @@ namespace FamiStudio
         {
             //TODO: determine states at frames instead of comparing writes
             int pointer = 0;
-            while (writes[pointer++].FrameNumber != IntroLength) ;
+            while (writes[pointer].FrameNumber < IntroLength) pointer++;
             Debug.WriteLine(" === LoopOpt: Loop pointer " + pointer + " at frame " + writes[pointer].FrameNumber);
             int afterLoopPointer = pointer;
-            while (writes[afterLoopPointer++].FrameNumber != LoopFrame) ;
+            while (writes[afterLoopPointer].FrameNumber < LoopFrame) afterLoopPointer++;
             int finalLoopPointer = afterLoopPointer;
             Debug.WriteLine(" === LoopOpt: Second loop pointer " + afterLoopPointer + " at frame " + writes[afterLoopPointer].FrameNumber);
             int LoopLength = LoopFrame - IntroLength;   //reused a bunch of times
             int frame = IntroLength;
             for (; frame < LoopFrame; frame++)
             {
-                while (writes[afterLoopPointer++].FrameNumber < frame + LoopLength && afterLoopPointer < writes.Length) ;    //Pad afterLoopPointer 
-                while (writes[pointer++].FrameNumber < frame) ;  //To pad pointer 
+                while (writes[afterLoopPointer].FrameNumber < frame + LoopLength && afterLoopPointer < writes.Length) afterLoopPointer++;    //Pad afterLoopPointer 
+                while (writes[pointer].FrameNumber < frame) pointer++;  //Pad pointer 
                 for (; afterLoopPointer < writes.Length && writes[pointer].FrameNumber <= frame && writes[afterLoopPointer].FrameNumber <= frame + LoopFrame; pointer++, afterLoopPointer++)
                 {
                     if (!(writes[pointer].Register == writes[afterLoopPointer].Register &&

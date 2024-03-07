@@ -385,6 +385,8 @@ namespace FamiStudio
             if (!seeking)
                 playPosition = playLocation.ToAbsoluteNoteIndex(song);
 
+            frameNumber++;
+
             return true;
         }
 
@@ -632,8 +634,6 @@ namespace FamiStudio
         {
             NesApu.EndFrame(apuIndex);
             
-            frameNumber++;
-
             var numTotalSamples = NesApu.SamplesAvailable(apuIndex);
             var samples = new short[numTotalSamples * (stereo ? 2 : 1)];
 
