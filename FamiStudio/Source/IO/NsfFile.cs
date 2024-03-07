@@ -1135,7 +1135,13 @@ namespace FamiStudio
                     
                     mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
                     instrument = GetS5BInstrument(noiseFreq, mixer, envEnabled, envShape);
-                    force |= (envTrigger != 0) && envEnabled;
+                    if (envEnabled)
+                    {
+                        if (envTrigger != 0)
+                            force = true;
+                        else
+                            attack = false;
+                    }
                 }
                 else if (channel.Type >= ChannelType.EPSMSquare1 && channel.Type <= ChannelType.EPSMrythm6)
                 {
@@ -1163,7 +1169,13 @@ namespace FamiStudio
 
                         mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
                         instrument = GetEPSMInstrument(0, regs, noiseFreq, mixer, envEnabled, envShape);
-                        force |= (envTrigger != 0) && envEnabled;
+                        if (envEnabled)
+                        {
+                            if (envTrigger != 0)
+                                force = true;
+                            else
+                                attack = false;
+                        }
                     }
 
                 }
