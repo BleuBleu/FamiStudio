@@ -22,7 +22,6 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
-	- Add "Accurate Seek" to config dialog too.
 - BUG : Mouse over project explorer envelope buttons is offset.
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
 - S5B Envelope

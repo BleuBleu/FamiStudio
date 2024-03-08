@@ -127,6 +127,7 @@ namespace FamiStudio
         LocalizedString N163MixerTooltip;
         LocalizedString ClampPeriodsTooltip;
         LocalizedString NoDragSoundTooltip;
+        LocalizedString AccurateSeekTooltip;
         LocalizedString MetronomeVolumeTooltip;
 
         // Sound labels
@@ -137,6 +138,7 @@ namespace FamiStudio
         LocalizedString MixN163Label;
         LocalizedString ClampPeriodsLabel;
         LocalizedString MuteDragSoundsLabel;
+        LocalizedString AccurateSeekLabel;
         LocalizedString MetronomeVolumeLabel;
 
         // MIDI tooltips
@@ -320,7 +322,8 @@ namespace FamiStudio
                     page.AddCheckBox(MixN163Label.Colon, Settings.N163Mix, N163MixerTooltip); // 4
                     page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 5
                     page.AddCheckBox(MuteDragSoundsLabel.Colon, Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 6
-                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 7
+                    page.AddCheckBox(AccurateSeekLabel.Colon, Settings.AccurateSeek, AccurateSeekTooltip); // 7
+                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 8
                     break;
                 }
                 case ConfigSection.Mixer:
@@ -627,7 +630,8 @@ namespace FamiStudio
                     Settings.N163Mix = newN163Mix;
                     Settings.ClampPeriods = pageSound.GetPropertyValue<bool>(5);
                     Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(6);
-                    Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(7);
+                    Settings.AccurateSeek = pageSound.GetPropertyValue<bool>(7);
+                    Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(8);
 
                     // Input
                     Settings.TrackPadControls = pageInput.GetPropertyValue<bool>(0);
