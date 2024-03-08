@@ -47,8 +47,10 @@ namespace FamiStudio
 
         public delegate void PageChangingDelegate(int oldPage, int newPage);
         public delegate void CustomVerbActivatedDelegate();
+        public delegate void AppSuspendedDelegate();
         public event PageChangingDelegate PageChanging;
         public event CustomVerbActivatedDelegate CustomVerbActivated;
+        public event AppSuspendedDelegate AppSuspended;
 
         public MultiPropertyDialog(FamiStudioWindow win, string text, int width, int tabsWidth = 150)
         {
@@ -119,6 +121,11 @@ namespace FamiStudio
         {
             Debug.Assert(tabs[selectedIndex].customVerb != null);
             CustomVerbActivated?.Invoke();
+        }
+
+        public void NotifyAppSuspended()
+        {
+            AppSuspended?.Invoke();
         }
 
         public void ShowDialogAsync(Action<DialogResult> callback)
@@ -222,6 +229,7 @@ namespace FamiStudio
             // running, lets suspend FamiStudio.
             if (!stoppedByUser && !FamiStudioWindow.ActivityRunning)
                 FamiStudio.StaticInstance.Suspend();
+            dlg?.NotifyAppSuspended();
             base.OnPause();
         }
 

@@ -23,8 +23,10 @@ namespace FamiStudio
 
         public delegate void PageChangingDelegate(int oldPage, int newPage);
         public delegate void CustomVerbActivatedDelegate();
+        public delegate void AppSuspendedDelegate();
         public event PageChangingDelegate PageChanging;
         public event CustomVerbActivatedDelegate CustomVerbActivated;
+        public event AppSuspendedDelegate AppSuspended;
 
         public MultiPropertyDialog(FamiStudioWindow win, string title, int width, int tabsWidth = 150) : base(win, title)
         {
@@ -108,6 +110,10 @@ namespace FamiStudio
         }
 
         public void AddPageCustomVerb(int idx, string verb)
+        {
+        }
+
+        public void SwitchToPage(int idx)
         {
         }
 

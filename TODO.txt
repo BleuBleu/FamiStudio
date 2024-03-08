@@ -16,12 +16,8 @@ x Upgrade Windows to .NET 7.0
 - Is export setting DPI scaling at 100% when exporting, does it affect the whole UI? (https://discord.com/channels/747649221879922840/747649222354010173/1185063833266561104)
 	=> MacOS only, GLFWToWindow() uses DpiScaling.Window
 	=> Android too.
-- Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
-	- Dont compress vibrato envelopes.
-	- New opcode "override envelope and reset", call only when speed changes.
 - Size option for mobile piano
 - Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
-- Android media player notification option
 - Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
 / Finish phase reset
@@ -33,7 +29,6 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 - S5B Envelope
 	- Check volume, seems square is very low with low values, might be normal.
 	- Add low bound to frequency.
-- Do we need to cancel video preview if app gets suspended on Android?
 - Big bug list:
 	- 
 
@@ -172,9 +167,13 @@ Discord
 
 Backlog: 
 =========
-- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
+- Android media player notification option
+- Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
+	- Dont compress vibrato envelopes.
+	- New opcode "override envelope and reset", call only when speed changes.
+	- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
-- Paste FX values from text. 	Kain wanted to change DAC slowly, had values to paste. 
+- Paste FX values from text. Kain wanted to change DAC slowly, had values to paste. 
 - Simple parameters for instruments (duty, volume)
 - Export selection. 
 	https://discord.com/channels/@me/819772561940152321/1202138717054304306

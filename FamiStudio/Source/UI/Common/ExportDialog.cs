@@ -291,9 +291,19 @@ namespace FamiStudio
             dialog.AddPageCustomVerb((int)ExportFormat.Video, PreviewLabel);
             dialog.PageChanging += Dialog_PageChanging;
             dialog.CustomVerbActivated += Dialog_CustomVerbActivated;
+            dialog.AppSuspended += Dialog_AppSuspended;
 
             if (Platform.IsDesktop)
                 UpdateMidiInstrumentMapping();
+        }
+
+        private void Dialog_AppSuspended()
+        {
+            // Abort video preview of app is suspended.
+            if (dialog.SelectedIndex == (int)ExportFormat.MobileVideoPreview)
+            {
+                dialog.SwitchToPage((int)ExportFormat.Video);
+            }
         }
 
         private void Dialog_PageChanging(int oldPage, int newPage)
@@ -400,7 +410,7 @@ namespace FamiStudio
                 data[i, j++] = ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]);
                 data[i, j++] = 50;
                 if (tranpose) data[i, j++] = 0;
-                if (trigger)  data[i, j++] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise ? EmulationOption.Value : PeakSpeedOption.Value;
+                if (trigger)  data[i, j++] = channelTypes[i] != ChannelType.Dpcm && channelTypes[i] != ChannelType.Noise && !ChannelType.IsEPSMRythmChannel(channelTypes[i]) ? EmulationOption.Value : PeakSpeedOption.Value;
             }
 
             return data;
