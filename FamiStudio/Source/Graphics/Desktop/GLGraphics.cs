@@ -194,7 +194,7 @@ namespace FamiStudio
                 "#define INTERP_PERSPECTIVE_OUT out\n",
                 "#define TEX texture\n",
                 "#define TEXPROJ textureProj\n",
-                "#define FAMISTUDIO_ANDROID 1\n",
+                "#define FAMISTUDIO_ANDROID 0\n",
                 "#define FRAG_COLOR outColor\n",
                 "#line 1\n",
                 code
