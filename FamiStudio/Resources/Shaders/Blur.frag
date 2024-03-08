@@ -32,6 +32,6 @@ void main()
         blur.a += w;
     }
     
-    gl_FragColor.rgb = blur.rgb / blur.a;
-    gl_FragColor.a = 1.0;
+    FRAG_COLOR.rgb = blur.rgb / blur.a;
+    FRAG_COLOR.a = 1.0;
 }

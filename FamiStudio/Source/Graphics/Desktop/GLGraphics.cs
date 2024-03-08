@@ -186,6 +186,7 @@ namespace FamiStudio
             var source = new []
             {
                 $"#version {glslVersion}\n",
+                type == GL.FragmentShader ? "layout(location = 0) out vec4 outColor;\n" : "\n",
                 "#define ATTRIB_IN in\n",
                 "#define INTERP_IN noperspective in\n",
                 "#define INTERP_OUT noperspective out\n",
@@ -193,6 +194,8 @@ namespace FamiStudio
                 "#define INTERP_PERSPECTIVE_OUT out\n",
                 "#define TEX texture\n",
                 "#define TEXPROJ textureProj\n",
+                "#define FAMISTUDIO_ANDROID 1\n",
+                "#define FRAG_COLOR outColor\n",
                 "#line 1\n",
                 code
             };

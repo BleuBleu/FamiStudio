@@ -139,6 +139,7 @@ namespace FamiStudio
             code += "#define TEX texture2D\n";
             code += "#define TEXPROJ texture2DProj\n";
             code += "#define FAMISTUDIO_ANDROID 1\n";
+            code += "#define FRAG_COLOR gl_FragColor\n",
 
             using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(resourceName))
             using (StreamReader reader = new StreamReader(stream))

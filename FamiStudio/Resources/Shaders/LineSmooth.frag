@@ -5,6 +5,6 @@ void main()
 {   
     float alpha = clamp(lineDistInterp, 0.0, 1.0);
 
-    gl_FragColor = colorInterp;
-    gl_FragColor.a *= alpha;
+    FRAG_COLOR = colorInterp;
+    FRAG_COLOR.a *= alpha;
 }

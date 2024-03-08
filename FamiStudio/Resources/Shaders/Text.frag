@@ -5,6 +5,6 @@ INTERP_IN vec2 texCoordsInterp;
 
 void main()
 {   
-    gl_FragColor.rgb = colorInterp.rgb;
-    gl_FragColor.a = colorInterp.a * TEX(tex, texCoordsInterp).r;
+    FRAG_COLOR.rgb = colorInterp.rgb;
+    FRAG_COLOR.a = colorInterp.a * TEX(tex, texCoordsInterp).r;
 }

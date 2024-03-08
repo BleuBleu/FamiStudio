@@ -8,8 +8,8 @@ void main()
 #if FAMISTUDIO_ANDROID
     float dashAlpha = mod(dashInterp, 2.0) < 1.0 ? 1.0 : 0.0;
 #endif
-    gl_FragColor = colorInterp;
+    FRAG_COLOR = colorInterp;
 #if FAMISTUDIO_ANDROID
-    gl_FragColor.a *= dashAlpha;
+    FRAG_COLOR.a *= dashAlpha;
 #endif
 }
