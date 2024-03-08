@@ -17,7 +17,6 @@ x Upgrade Windows to .NET 7.0
 	=> MacOS only, GLFWToWindow() uses DpiScaling.Window
 	=> Android too.
 / Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
-- Sequencer copy/paste : we dont copy custom pattern settings if selection is empty.
 x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.

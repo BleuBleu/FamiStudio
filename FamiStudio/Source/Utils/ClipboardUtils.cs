@@ -51,82 +51,88 @@ namespace FamiStudio
 
         private static void SavePatternList(ProjectSaveBuffer serializer, ICollection<Pattern> patterns)
         {
-            // Save the original song id so we can patch it when pasting between projects.
-            foreach (var pat in patterns)
-            {
-                int songId = pat.Song.Id;
-                serializer.Serialize(ref songId);
-                break;
-            }
-
             int numUniquePatterns = patterns.Count;
             serializer.Serialize(ref numUniquePatterns);
 
-            foreach (var pat in patterns)
+            if (numUniquePatterns > 0)
             {
-                var patId = pat.Id;
-                var patChannel = pat.ChannelType;
-                var patName = pat.Name;
-                serializer.Serialize(ref patId);
-                serializer.Serialize(ref patChannel);
-                serializer.Serialize(ref patName);
-            }
+                // Save the original song id so we can patch it when pasting between projects.
+                foreach (var pat in patterns)
+                {
+                    int songId = pat.Song.Id;
+                    serializer.Serialize(ref songId);
+                    break;
+                }
 
-            foreach (var pat in patterns)
-                pat.Serialize(serializer);
+                foreach (var pat in patterns)
+                {
+                    var patId = pat.Id;
+                    var patChannel = pat.ChannelType;
+                    var patName = pat.Name;
+                    serializer.Serialize(ref patId);
+                    serializer.Serialize(ref patChannel);
+                    serializer.Serialize(ref patName);
+                }
+
+                foreach (var pat in patterns)
+                    pat.Serialize(serializer);
+            }
         }
 
         private static int LoadAndMergePatternList(ProjectLoadBuffer serializer, Song song)
         {
-            // Remap whatever original song we had to the current one.
-            int songId = -1;
-            serializer.Serialize(ref songId);
-            serializer.RemapId(songId, song.Id);
-
             int numPatterns = 0;
             serializer.Serialize(ref numPatterns);
 
-            var patternIdNameMap = new List<Tuple<int,int, string>>();
-            for (int i = 0; i < numPatterns; i++)
+            if (numPatterns > 0)
             {
-                var patId = 0;
-                var patChannel = 0;
-                var patName = "";
-                serializer.Serialize(ref patId);
-                serializer.Serialize(ref patChannel);
-                serializer.Serialize(ref patName);
-                patternIdNameMap.Add(new Tuple<int, int, string>(patId, patChannel, patName));
-            }
+                // Remap whatever original song we had to the current one.
+                int songId = -1;
+                serializer.Serialize(ref songId);
+                serializer.RemapId(songId, song.Id);
 
-            var dummyPattern = new Pattern();
-
-            // Match patterns by name, create missing ones and remap IDs.
-            for (int i = 0; i < numPatterns; i++)
-            {
-                var patId      = patternIdNameMap[i].Item1;
-                var patChannel = patternIdNameMap[i].Item2;
-                var patName    = patternIdNameMap[i].Item3;
-
-                if (serializer.Project.IsChannelActive(patChannel))
+                var patternIdNameMap = new List<Tuple<int,int, string>>();
+                for (int i = 0; i < numPatterns; i++)
                 {
-                    var existingPattern = song.GetChannelByType(patChannel).GetPattern(patName);
+                    var patId = 0;
+                    var patChannel = 0;
+                    var patName = "";
+                    serializer.Serialize(ref patId);
+                    serializer.Serialize(ref patChannel);
+                    serializer.Serialize(ref patName);
+                    patternIdNameMap.Add(new Tuple<int, int, string>(patId, patChannel, patName));
+                }
 
-                    if (existingPattern != null)
+                var dummyPattern = new Pattern();
+
+                // Match patterns by name, create missing ones and remap IDs.
+                for (int i = 0; i < numPatterns; i++)
+                {
+                    var patId      = patternIdNameMap[i].Item1;
+                    var patChannel = patternIdNameMap[i].Item2;
+                    var patName    = patternIdNameMap[i].Item3;
+
+                    if (serializer.Project.IsChannelActive(patChannel))
                     {
-                        serializer.RemapId(patId, existingPattern.Id);
-                        dummyPattern.Serialize(serializer); // Skip 
+                        var existingPattern = song.GetChannelByType(patChannel).GetPattern(patName);
+
+                        if (existingPattern != null)
+                        {
+                            serializer.RemapId(patId, existingPattern.Id);
+                            dummyPattern.Serialize(serializer); // Skip 
+                        }
+                        else
+                        {
+                            var pattern = song.GetChannelByType(patChannel).CreatePattern(patName);
+                            serializer.RemapId(patId, pattern.Id);
+                            pattern.Serialize(serializer);
+                        }
                     }
                     else
                     {
-                        var pattern = song.GetChannelByType(patChannel).CreatePattern(patName);
-                        serializer.RemapId(patId, pattern.Id);
-                        pattern.Serialize(serializer);
+                        serializer.RemapId(patId, -1);
+                        dummyPattern.Serialize(serializer); // Skip 
                     }
-                }
-                else
-                {
-                    serializer.RemapId(patId, -1);
-                    dummyPattern.Serialize(serializer); // Skip 
                 }
             }
 
@@ -522,11 +528,11 @@ namespace FamiStudio
                 }
             }
 
-            if (uniquePatterns.Count == 0)
-            {
-                Platform.SetClipboardData(null);
-                return;
-            }
+            //if (uniquePatterns.Count == 0)
+            //{
+            //    Platform.SetClipboardData(null);
+            //    return;
+            //}
 
             var serializer = new ProjectSaveBuffer(null);
 
