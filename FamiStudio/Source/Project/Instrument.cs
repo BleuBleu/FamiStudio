@@ -60,7 +60,7 @@ namespace FamiStudio
         private bool   epsmSquareEnvAutoPitch = true;
         private sbyte  epsmSquareEnvAutoPitchOctave = 3;
         private byte   epsmSquareEnvShape = 0; // 0 = off, 1...8 maps to 0x8 to 0xf.
-        private ushort epsmSquareEnvPeriod = 1000; // Only when auto-pitch is off
+        private ushort epsmSquareEnvPeriod = 4000; // Only when auto-pitch is off
 
         // For N163/FDS wav presets.
         public int Id => id;
