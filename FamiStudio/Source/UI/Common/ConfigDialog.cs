@@ -164,10 +164,12 @@ namespace FamiStudio
         // Mobile tooltips
         LocalizedString AllowVibrationTooltip;
         LocalizedString ForceLandscapeTooltip;
+        LocalizedString MobilePianoSizeTooltip;
 
         // Mobile labels
         LocalizedString AllowVibrationLabel;
         LocalizedString ForceLandscapeLabel;
+        LocalizedString MobilePianoSizeLabel;
 
         #endregion
 
@@ -368,6 +370,7 @@ namespace FamiStudio
                 { 
                     page.AddCheckBox(AllowVibrationLabel.Colon, Settings.AllowVibration, AllowVibrationTooltip); // 0
                     page.AddCheckBox(ForceLandscapeLabel.Colon, Settings.ForceLandscape, ForceLandscapeTooltip); // 1
+                    page.AddDropDownList(MobilePianoSizeLabel.Colon, new[] { "25%", "30%", "35%", "40%", "45%", "50%" }, $"{Settings.MobilePianoHeight}%", MobilePianoSizeTooltip); // 2
                     break;
                 }
             }
@@ -658,6 +661,7 @@ namespace FamiStudio
                     // Mobile
                     Settings.AllowVibration = pageMobile.GetPropertyValue<bool>(0);
                     Settings.ForceLandscape = pageMobile.GetPropertyValue<bool>(1);
+                    Settings.MobilePianoHeight = Utils.ParseIntWithTrailingGarbage(pageMobile.GetPropertyValue<string>(2));
 
                     Settings.Save();
                     Settings.NotifyKeyboardShortcutsChanged();

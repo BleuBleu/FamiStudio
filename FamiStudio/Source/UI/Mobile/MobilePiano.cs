@@ -45,19 +45,22 @@ namespace FamiStudio
         private int highlightAbsNote = Note.NoteInvalid;
         private int lastX;
         private int lastY;
-        private int layoutSize;
         private float zoom = 1.0f;
         private float flingVelX;
         private bool canFling = false;
         private CaptureOperation captureOperation = CaptureOperation.None;
         
-        public int LayoutSize => layoutSize;
+        public int LayoutSize
+        {
+            get
+            {
+                var screenSize = Platform.GetScreenResolution();
+                return Math.Min(screenSize.Width, screenSize.Height) * Settings.MobilePianoHeight / 100;
+            }
+        }
 
         protected override void OnAddedToContainer()
         {
-            var screenSize = Platform.GetScreenResolution();
-            layoutSize = Math.Min(screenSize.Width, screenSize.Height) / 4;
-
             var g = ParentWindow.Graphics;
             bmpMobilePianoDrag = g.GetTextureAtlasRef("MobilePianoDrag");
             bmpMobilePianoRest = g.GetTextureAtlasRef("MobilePianoRest");
@@ -173,12 +176,13 @@ namespace FamiStudio
 
         protected void RenderPiano(Graphics g)
         {
-            int minVisibleOctave = Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
-            int maxVisibleOctave = Utils.Clamp((int)Math.Ceiling((scrollX + Width) / (float)octaveSizeX), 0, NumOctaves);
+            var minVisibleOctave = Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
+            var maxVisibleOctave = Utils.Clamp((int)Math.Ceiling((scrollX + Width) / (float)octaveSizeX), 0, NumOctaves);
+            var layoutSize = LayoutSize;
 
             var b = g.BackgroundCommandList;
             var c = g.DefaultCommandList;
-           
+
             // Background (white keys)
             b.FillRectangleGradient(0, 0, Width, Height, Theme.LightGreyColor1, Theme.LightGreyColor2, true, layoutSize);
 
