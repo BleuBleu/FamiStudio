@@ -25,10 +25,9 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
 - S5B Envelope
 	- Add low bound to frequency.
-- Video depth of field is a bit intense at lower res.
 - How2 bug list:
 	- Draw order not respected in unified piano roll. https://discord.com/channels/@me/819772561940152321/1215845334631321712
-	- Cant immediately use ctrl when adding an effect (pixel adjust)
+	- Cant immediately use ctrl when adding an effect (pixel adjust) WORKS ON WINDOWS
 - Big bug list:
 	- 
 
