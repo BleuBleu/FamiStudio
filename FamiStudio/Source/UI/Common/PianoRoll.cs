@@ -4054,7 +4054,7 @@ namespace FamiStudio
                 if (pattern == null)
                     pattern = channel.CreatePatternAndInstance(location.PatternIndex);
 
-                captureEffectValue = GetEffectValueForPixelY(effectPanelSizeY - (y - headerSizeY), min, max, exp);
+                captureEffectValue = GetEffectValueForPixelY(effectPanelSizeY - (captureMouseY - headerSizeY), min, max, exp);
                 note = pattern.GetOrCreateNoteAt(location.NoteIndex);
                 note.SetEffectValue(selectedEffectIdx, captureEffectValue);
             }
