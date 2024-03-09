@@ -1443,7 +1443,8 @@ famistudio_music_play:
         adc #(FAMISTUDIO_NUM_CHANNELS * 2 + 4)
         bcc .song_mult_loop
         inc <.song_list_ptr+1
-        bcs .song_mult_loop
+        clc
+        bcc .song_mult_loop
 
     .song_mult_loop_done:
         sta <.song_list_ptr+0
