@@ -206,10 +206,7 @@ namespace FamiStudio
             song.ExtendForLooping(settings.LoopCount);
 
             if (settings.Encoder == null)
-            {
-                Log.LogMessage(LogSeverity.Error, "Error creating video encoder, aborting.");
                 return false;
-            }
 
             var downsampleResX = videoResX / settings.Downsample;
             var downsampleResY = videoResY / settings.Downsample;
