@@ -345,6 +345,8 @@ namespace FamiStudio
                 }
             }
 
+            DpiScaling.ForceUnitScaling = false;
+
             // Generate metadata
             Log.LogMessage(LogSeverity.Info, "Generating video metadata...");
             metadata = new VideoMetadataPlayer(SampleRate, song.Project.PalMode, song.Project.OutputsStereoAudio, showRegisters, 1).GetVideoMetadata(song, -1);
@@ -477,6 +479,8 @@ namespace FamiStudio
             var success = true;
             var lastTime = DateTime.Now;
 
+            DpiScaling.ForceUnitScaling = false;
+
 #if !DEBUG
             try
 #endif
@@ -499,6 +503,10 @@ namespace FamiStudio
                         continue;
 
                     var frame = metadata[f];
+
+                    // HACK : It was a terrible idea to make the DPI scaling a global thing. It should have remained on the 
+                    // Graphics object like before. Need to keep switching to unit scaling back/forth.
+                    DpiScaling.ForceUnitScaling = true;
 
                     body(f);
 
@@ -526,6 +534,8 @@ namespace FamiStudio
                         downsampleGraphics.DefaultCommandList.DrawTexture(videoGraphics.GetTexture(), 0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY, 1.0f);
                         downsampleGraphics.EndDrawFrame(false);
                     }
+
+                    DpiScaling.ForceUnitScaling = false;
 
                     // Send to encoder.
                     if (!videoEncoder.AddFrame(downsampleGraphics != null ? downsampleGraphics : videoGraphics))
