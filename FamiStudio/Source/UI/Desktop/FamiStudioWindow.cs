@@ -280,6 +280,12 @@ namespace FamiStudio
         {
             if (!quit && (dirty || force))
             {
+                // HACK : We force 1x DPI scaling during video export. Temporarely disable it when we need to render
+                // a frame. It was a terrible idea to move the DPI scaling to a global variable, it should have remained
+                // on the Graphics object.
+                var oldUnitScaling = DpiScaling.ForceUnitScaling;
+                DpiScaling.ForceUnitScaling = false;
+
                 var rect = new Rectangle(Point.Empty, Size);
                 var clearColor = Theme.DarkGreyColor2;
 
@@ -290,6 +296,7 @@ namespace FamiStudio
                 glfwSwapBuffers(window);
 
                 dirty = false;
+                DpiScaling.ForceUnitScaling = oldUnitScaling;
             }
         }
 
