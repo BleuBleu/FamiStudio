@@ -370,8 +370,6 @@ namespace FamiStudio
                     authorText.Add(project.Author);
             }
 
-            DpiScaling.ForceUnitScaling = false;
-
             return true;
         }
 
@@ -478,6 +476,8 @@ namespace FamiStudio
         {
             var success = true;
             var lastTime = DateTime.Now;
+
+            DpiScaling.ForceUnitScaling = false;
 
 #if !DEBUG
             try
