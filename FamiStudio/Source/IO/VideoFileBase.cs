@@ -196,8 +196,6 @@ namespace FamiStudio
             if (settings.ChannelMask == 0 || settings.LoopCount < 1)
                 return false;
 
-            Log.LogMessage(LogSeverity.Info, "Detecting FFmpeg...");
-
             videoEncoder = settings.Encoder;
             videoResX = settings.ResX;
             videoResY = settings.ResY;
@@ -206,6 +204,12 @@ namespace FamiStudio
             project = settings.Project.DeepClone();
             song = project.GetSong(settings.SongId);
             song.ExtendForLooping(settings.LoopCount);
+
+            if (settings.Encoder == null)
+            {
+                Log.LogMessage(LogSeverity.Error, "Error creating video encoder, aborting.");
+                return false;
+            }
 
             var downsampleResX = videoResX / settings.Downsample;
             var downsampleResY = videoResY / settings.Downsample;
