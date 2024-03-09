@@ -853,6 +853,8 @@ namespace FamiStudio
 			container.PopDialog(dialog);
         }
 
+        public Dialog TopDialog => container.TopDialog;
+
         public void ShowToast(string text, bool longDuration = false, Action click = null)
         {
             container.ShowToast(text, longDuration, click);

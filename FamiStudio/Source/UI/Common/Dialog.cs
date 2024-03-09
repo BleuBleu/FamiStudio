@@ -118,7 +118,7 @@ namespace FamiStudio
 
         private bool ShouldDisplayTooltip()
         {
-            return tooltipTimer > ToolTipDelay;
+            return window.TopDialog == this && tooltipTimer > ToolTipDelay;
         }
 
         public void DialogMouseDownNotify(Control control, MouseEventArgs e) 

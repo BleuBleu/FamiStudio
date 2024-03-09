@@ -3322,7 +3322,7 @@ namespace FamiStudio
                 // We will get zero for notes that start a slide and have an immediate delayed cut.
                 var duration = Math.Max(1, slideDuration);
                 var slideSizeX = duration;
-                var slideSizeY = note.SlideNoteTarget - noteValue;
+                var slideSizeY = note.SlideNoteTarget + transpose - noteValue;
 
                 r.c.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), GetPixelXForAbsoluteNoteIndex(slideSizeX, false), -slideSizeY);
                 r.c.FillGeometry(slideNoteGeometry, Color.FromArgb(50, color), true);
