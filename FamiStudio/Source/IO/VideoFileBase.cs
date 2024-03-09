@@ -370,6 +370,8 @@ namespace FamiStudio
                     authorText.Add(project.Author);
             }
 
+            DpiScaling.ForceUnitScaling = false;
+
             return true;
         }
 
