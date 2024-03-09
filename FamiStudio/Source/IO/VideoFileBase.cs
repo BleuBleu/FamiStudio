@@ -500,6 +500,10 @@ namespace FamiStudio
 
                     var frame = metadata[f];
 
+                    // HACK : It was a terrible idea to make the DPI scaling a global thing. It should have remained on the 
+                    // Graphics object like before. Need to keep switching to unit scaling back/forth.
+                    DpiScaling.ForceUnitScaling = true;
+
                     body(f);
 
                     // Registers + watermark + artist.
@@ -526,6 +530,8 @@ namespace FamiStudio
                         downsampleGraphics.DefaultCommandList.DrawTexture(videoGraphics.GetTexture(), 0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY, 1.0f);
                         downsampleGraphics.EndDrawFrame(false);
                     }
+
+                    DpiScaling.ForceUnitScaling = false;
 
                     // Send to encoder.
                     if (!videoEncoder.AddFrame(downsampleGraphics != null ? downsampleGraphics : videoGraphics))
