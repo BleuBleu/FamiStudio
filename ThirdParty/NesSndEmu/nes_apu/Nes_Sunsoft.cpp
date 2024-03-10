@@ -84,8 +84,6 @@ void Nes_Sunsoft::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	run_until(time);
 }
 
-#include <crtdbg.h>
-
 long Nes_Sunsoft::run_until(cpu_time_t time)
 {
 	if (!output_buffer)
