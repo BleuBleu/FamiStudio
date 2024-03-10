@@ -1954,6 +1954,28 @@ namespace FamiStudio
                     song.Channels[c].GetOrCreatePattern(p).GetOrCreateNoteAt(n).IsStop = true;
             }
             song.Name = songName;
+            var factors = Utils.GetFactors(song.PatternLength, FamiStudioTempoUtils.MaxNoteLength);
+            if (factors.Length > 0)
+            {
+                var noteLen = factors[0];
+
+                // Look for a factor that generates a note length < 10 and gives a pattern length that is a multiple of 16.
+                foreach (var factor in factors)
+                {
+                    if (factor <= 10)
+                    {
+                        noteLen = factor;
+                        if (((song.PatternLength / noteLen) % 16) == 0)
+                            break;
+                    }
+                }
+
+                song.ChangeFamiStudioTempoGroove(new[] { noteLen }, false);
+            }
+            else
+            {
+                song.ChangeFamiStudioTempoGroove(new[] { 1 }, false);
+            }
             song.SetSensibleBeatLength();
             song.ConvertToCompoundNotes();
             song.DeleteEmptyPatterns();
