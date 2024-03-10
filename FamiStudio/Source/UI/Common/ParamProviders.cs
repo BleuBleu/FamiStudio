@@ -294,6 +294,8 @@ namespace FamiStudio
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ReleaseLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
+                    paramInfos.Add(new InstrumentParamInfo() { TabName = "Carrier" });
+                    paramInfos.Add(new InstrumentParamInfo() { TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
                         { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument, CustomUserData2 = 0, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, TremoloLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x80) >> 7)

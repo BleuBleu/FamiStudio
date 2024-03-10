@@ -17,9 +17,6 @@ x Upgrade Windows to .NET 7.0
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
-- BUG : Mouse over project explorer envelope buttons is offset.
-	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
-- Project cleanup : organize insturments/folders by expansion
 
 4.2.0 Testing/Packaging
 =======================
@@ -156,6 +153,7 @@ Discord
 
 Backlog: 
 =========
+- Project cleanup : organize insturments/folders by expansion
 - Android media player notification option
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
 	- Dont compress vibrato envelopes.
