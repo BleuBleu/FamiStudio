@@ -252,6 +252,7 @@ namespace FamiStudio
             var scrollBarSize  = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
             var patternZoom    = Song != null ? 128.0f / (float)Utils.NextPowerOfTwo(Song.PatternLength) : 1.0f;
 
+            RebuildChannelMap();
             ComputeDesiredSizeY(out var unscaledChannelSizeY, out allowVerticalScrolling);
 
             channelNameSizeX   = DpiScaling.ScaleForWindow(DefaultChannelNameSizeX);
@@ -378,7 +379,6 @@ namespace FamiStudio
             ClearSelection();
             UpdateRenderCoords();
             InvalidatePatternCache();
-            RebuildChannelMap();
         }
 
         private void RebuildChannelMap()
@@ -3216,7 +3216,6 @@ namespace FamiStudio
         public void SongModified()
         {
             UpdateRenderCoords();
-            RebuildChannelMap();
             InvalidatePatternCache();
             ClearSelection();
             ClampScroll();
@@ -3247,7 +3246,6 @@ namespace FamiStudio
                 // scope on the transaction on the buffer and filter by that.
                 InvalidatePatternCache();
                 UpdateRenderCoords();
-                RebuildChannelMap();
                 CancelDragSelection();
                 MarkDirty();
             }
