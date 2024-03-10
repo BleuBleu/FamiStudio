@@ -3322,7 +3322,7 @@ namespace FamiStudio
                 // We will get zero for notes that start a slide and have an immediate delayed cut.
                 var duration = Math.Max(1, slideDuration);
                 var slideSizeX = duration;
-                var slideSizeY = note.SlideNoteTarget - noteValue;
+                var slideSizeY = note.SlideNoteTarget + transpose - noteValue;
 
                 r.c.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), GetPixelXForAbsoluteNoteIndex(slideSizeX, false), -slideSizeY);
                 r.c.FillGeometry(slideNoteGeometry, Color.FromArgb(50, color), true);
@@ -4054,7 +4054,7 @@ namespace FamiStudio
                 if (pattern == null)
                     pattern = channel.CreatePatternAndInstance(location.PatternIndex);
 
-                captureEffectValue = GetEffectValueForPixelY(effectPanelSizeY - (y - headerSizeY), min, max, exp);
+                captureEffectValue = GetEffectValueForPixelY(effectPanelSizeY - (captureMouseY - headerSizeY), min, max, exp);
                 note = pattern.GetOrCreateNoteAt(location.NoteIndex);
                 note.SetEffectValue(selectedEffectIdx, captureEffectValue);
             }
@@ -5122,7 +5122,7 @@ namespace FamiStudio
                     if (Platform.IsMobile && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo && captureThresholdMet)
                         y = mouseLastY - headerAndEffectSizeY - gizmoSize / 2;
                     else
-                        y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - gizmoSize / 4; 
+                        y = virtualSizeY  - Utils.Clamp((note.SlideNoteTarget + side) * noteSizeY + gizmoSize / 4, gizmoSize, virtualSizeY) - scrollY;
                 }
                 else
                 {
@@ -9644,7 +9644,7 @@ namespace FamiStudio
         private bool GetNoteValueForCoord(int x, int y, out byte noteValue)
         {
             var rawNoteValue = ((y - headerAndEffectSizeY) + scrollY) / noteSizeY;
-            noteValue = (byte)(NumNotes - Utils.Clamp(rawNoteValue, 0, NumNotes));
+            noteValue = (byte)(NumNotes - Utils.Clamp(rawNoteValue, 0, NumNotes - 1));
 
             // Allow to go outside the window when a capture is in progress.
             var captureInProgress = captureOperation != CaptureOperation.None;

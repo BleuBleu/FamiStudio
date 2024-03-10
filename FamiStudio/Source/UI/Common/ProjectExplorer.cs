@@ -434,6 +434,10 @@ namespace FamiStudio
         TextureAtlasRef[] bmpChannels;
         TextureAtlasRef[] bmpRegisters;
 
+        #if DEBUG
+            List<Rectangle> debugRects = new List<Rectangle>();
+        #endif
+
         class Button
         {
             public string text;
@@ -1185,6 +1189,13 @@ namespace FamiStudio
             {
                 g.OverlayCommandList.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
             }
+
+            foreach (var rect in debugRects)
+            {
+                g.OverlayCommandList.FillRectangle(rect, new Color(255, 0, 255, 64));
+            }
+
+            debugRects.Clear();
 #endif
         }
 
@@ -1538,7 +1549,7 @@ namespace FamiStudio
                             }
                             else if (button.type == ButtonType.ParamTabs)
                             {
-                                var tabWidth = Utils.DivideAndRoundUp(contentSizeX - indentContent - paramRightPadX, button.tabNames.Length);
+                                var tabWidth = Utils.DivideAndRoundDown(contentSizeX - indentContent - paramRightPadX, button.tabNames.Length);
 
                                 for (var j = 0; j < button.tabNames.Length; j++)
                                 {
@@ -1770,7 +1781,7 @@ namespace FamiStudio
                         if (subButtons[i] == SubButtonType.Expand)
                             continue;
 
-                        int sx = contentSizeX - subButtonMarginX - (subButtonSpacingX + subButtonSizeX) * (i + 1);
+                        int sx = contentSizeX - subButtonMarginX - subButtonSizeX * (i + 1) - subButtonSpacingX * i;
                         int sy = subButtonPosY;
                         int dx = x - sx;
                         int dy = y - sy;
@@ -3624,7 +3635,7 @@ namespace FamiStudio
 
         private int GetTabIndex(int x, int y, Button button)
         {
-            var tabWidth = Utils.DivideAndRoundUp(contentSizeX - expandButtonSizeX - paramRightPadX, button.tabNames.Length);
+            var tabWidth = Utils.DivideAndRoundDown(contentSizeX - expandButtonSizeX - paramRightPadX, button.tabNames.Length);
             return Utils.Clamp((x - expandButtonSizeX) / tabWidth, 0, button.tabNames.Length - 1);
         }
 

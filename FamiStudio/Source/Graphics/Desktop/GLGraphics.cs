@@ -34,6 +34,7 @@ namespace FamiStudio
         private int blurProgram;
         private int blurScaleBiasUniform;
         private int blurKernelUniform;
+        private int blurCocBiasScaleUniform;
         private int blurTextureUniform;
         private int blurVao;
 
@@ -279,6 +280,7 @@ namespace FamiStudio
             blurProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Blur");
             blurScaleBiasUniform = GL.GetUniformLocation(blurProgram, "screenScaleBias");
             blurKernelUniform = GL.GetUniformLocation(blurProgram, "blurKernel");
+            blurCocBiasScaleUniform = GL.GetUniformLocation(blurProgram, "blurCocBiasScale");
             blurTextureUniform = GL.GetUniformLocation(blurProgram, "tex");
 
             textProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Text");
@@ -525,7 +527,7 @@ namespace FamiStudio
             GL.BufferData(GL.ElementArrayBuffer, array, arraySize, GL.DynamicDraw);
         }
 
-        public void DrawBlur(int textureId, int x, int y, int width, int height, float blurScale = 2.0f)
+        public void DrawBlur(int textureId, int x, int y, int width, int height, int blurStartY, float blurScale = 2.0f)
         {
             var kernel = GetBlurKernel(width, height, blurScale);
 
@@ -538,6 +540,7 @@ namespace FamiStudio
             GL.Uniform(blurScaleBiasUniform, viewportScaleBias, 4);
             GL.Uniform(blurTextureUniform, 0);
             GL.Uniform(blurKernelUniform, kernel, 4, kernel.Length / 4);
+            GL.Uniform(blurCocBiasScaleUniform, -(height - blurStartY) / (float)height, height / (float)blurStartY);
             GL.ActiveTexture(GL.Texture0 + 0);
             GL.BindTexture(GL.Texture2D, textureId);
 

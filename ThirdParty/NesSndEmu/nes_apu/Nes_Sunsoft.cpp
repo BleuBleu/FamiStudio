@@ -109,13 +109,12 @@ long Nes_Sunsoft::run_until(cpu_time_t time)
 		{
 			if (psg->trigger_mask & (1 << i))
 				update_trigger(output_buffer, t, triggers[i]);
-			else if (psg->freq[i] <= 1 || !psg->tmask[i])
+			else if ((psg->trigger_mask & (8 << i)) == 0)
 				triggers[i] = trigger_none;
 		}
 
 		t += 16;
 	}
-
 
 	delay = t - time;
 	last_time = time;

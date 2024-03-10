@@ -1,12 +1,13 @@
 uniform sampler2D tex;
 uniform vec4 blurKernel[30];
+uniform vec2 blurCocBiasScale;
 
 INTERP_IN vec2 texCoordsInterp;
 
 void main()
 {   
     vec4 blur = vec4(0, 0, 0, 0);
-    float scale = clamp(texCoordsInterp.y - 0.5, 0.0, 1.0) * 2.0;
+    float scale = clamp((texCoordsInterp.y + blurCocBiasScale.x) * blurCocBiasScale.y, 0.0, 1.0);
 
     vec3 t;
     float w;

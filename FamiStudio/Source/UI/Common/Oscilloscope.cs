@@ -152,7 +152,8 @@ namespace FamiStudio
                         // If we hit this, it means that the emulation code told us a trigger
                         // was eventually coming, but is evidently not. The longest periods we
                         // have at the moment are very low EPSM notes with periods about 8 frames.
-                        Debug.Assert(holdFrameCount < 10);
+                        if (holdFrameCount >= 10)
+                            Debug.WriteLine($"WARNING, oscilloscope triggers on hold for {holdFrameCount} frames. Check emulation code.");
 
                         if (lastTrigger >= 0)
                         {

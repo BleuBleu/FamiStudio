@@ -527,6 +527,8 @@ namespace FamiStudio
             Debug.Assert(false);
         }
 
+        public Dialog TopDialog => null;
+
         public static FamiStudioWindow CreateWindow(FamiStudio fs)
         {
             Debug.Assert(false);

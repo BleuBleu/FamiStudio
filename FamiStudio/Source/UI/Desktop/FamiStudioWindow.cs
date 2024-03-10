@@ -280,6 +280,8 @@ namespace FamiStudio
         {
             if (!quit && (dirty || force))
             {
+                Debug.Assert(!DpiScaling.ForceUnitScaling);
+
                 var rect = new Rectangle(Point.Empty, Size);
                 var clearColor = Theme.DarkGreyColor2;
 
@@ -398,6 +400,8 @@ namespace FamiStudio
         {
             if (Platform.IsMacOS && DpiScaling.IsInitialized)
             {
+                Debug.Assert(!DpiScaling.ForceUnitScaling);
+
                 x = (int)Math.Round(dx * DpiScaling.Window);
                 y = (int)Math.Round(dy * DpiScaling.Window);
             }
@@ -852,6 +856,8 @@ namespace FamiStudio
         {
 			container.PopDialog(dialog);
         }
+
+        public Dialog TopDialog => container.TopDialog;
 
         public void ShowToast(string text, bool longDuration = false, Action click = null)
         {

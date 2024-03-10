@@ -29,6 +29,7 @@ namespace FamiStudio
         private int blurProgram;
         private int blurScaleBiasUniform;
         private int blurKernelUniform;
+        private int blurCocBiasScaleUniform;
         private int blurTextureUniform;
         
         private int textProgram;
@@ -139,7 +140,7 @@ namespace FamiStudio
             code += "#define TEX texture2D\n";
             code += "#define TEXPROJ texture2DProj\n";
             code += "#define FAMISTUDIO_ANDROID 1\n";
-            code += "#define FRAG_COLOR gl_FragColor\n",
+            code += "#define FRAG_COLOR gl_FragColor\n";
 
             using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(resourceName))
             using (StreamReader reader = new StreamReader(stream))
@@ -244,6 +245,7 @@ namespace FamiStudio
             blurProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Blur");
             blurScaleBiasUniform = GLES20.GlGetUniformLocation(blurProgram, "screenScaleBias");
             blurKernelUniform = GLES20.GlGetUniformLocation(blurProgram, "blurKernel");
+            blurCocBiasScaleUniform = GLES20.GlGetUniformLocation(blurProgram, "blurCocBiasScale");
             blurTextureUniform = GLES20.GlGetUniformLocation(blurProgram, "tex");
 
             textProgram = CompileAndLinkProgram("FamiStudio.Resources.Shaders.Text");
@@ -300,7 +302,7 @@ namespace FamiStudio
             }
         }
 
-        public void DrawBlur(int textureId, int x, int y, int width, int height, float blurScale = 2.0f)
+        public void DrawBlur(int textureId, int x, int y, int width, int height, int blurStartY, float blurScale = 2.0f)
         {
             var kernel = GetBlurKernel(width, height, blurScale);
 
@@ -311,6 +313,7 @@ namespace FamiStudio
             GLES20.GlUniform4fv(blurScaleBiasUniform, 1, viewportScaleBias, 0);
             GLES20.GlUniform1i(blurTextureUniform, 0);
             GLES20.GlUniform4fv(blurKernelUniform, kernel.Length / 4, kernel, 0);
+            GLES20.GlUniform2f(blurCocBiasScaleUniform, -(height - blurStartY) / (float)height, height / (float)blurStartY);
             GLES20.GlActiveTexture(GLES20.GlTexture0 + 0);
             GLES20.GlBindTexture(GLES20.GlTexture2d, textureId);
 

@@ -432,7 +432,7 @@ namespace FamiStudio
             var textOffsetY = smallChannelText ? 1 : 4;
             var channelLineWidth = 3;
             var gradientSizeY = 256 * (videoResY / 1080.0f) / numRows;
-            var blurScale = Utils.Clamp(MathF.Min(channelSizeX / 1000.0f, channelSizeY / 1000.0f) * 2.0f, 0.25f, 2.0f);
+            var blurScale = Utils.Clamp(MathF.Min(channelSizeX / 1080.0f, channelSizeY / 1080.0f) * 1.5f, 0.25f, 2.0f);
 
             LoadChannelIcons(!smallChannelText);
 
@@ -522,7 +522,7 @@ namespace FamiStudio
 
                 if (settings.PianoRollPerspective > 0)
                 {
-                    videoGraphics.DrawBlur(perspective1xTexture.Id, channelPosX, channelPosY, channelSizeX, channelSizeY, blurScale);
+                    videoGraphics.DrawBlur(perspective1xTexture.Id, channelPosX, channelPosY, channelSizeX, channelSizeY, channelSizeY / 3, blurScale);
                 }
                 else
                 {

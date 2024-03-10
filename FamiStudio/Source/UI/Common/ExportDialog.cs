@@ -430,7 +430,7 @@ namespace FamiStudio
                     page.AddDropDownList(ModeLabel.Colon, new string[] { LoopNTimesOption, DurationOption }, LoopNTimesOption, LoopModeTooltip); // 4
                     page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 10, 1, LoopCountTooltip); // 5
                     page.AddNumericUpDown(DurationSecLabel.Colon, 120, 1, 1000, 1, DurationTooltip); // 6
-                    page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 7
+                    page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 100, 1, DelayTooltip); // 7
                     page.AddCheckBox(SeparateChannelFilesLabel.Colon, false, SeperateFilesTooltip); // 8
                     page.AddCheckBox(SeparateIntroFileLabel.Colon, false, SeperateIntroTooltip); // 9
                     page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 10
@@ -460,7 +460,7 @@ namespace FamiStudio
                         page.AddDropDownList(AudioBitRateLabel.Colon, new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 4
                         page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000", "20000", "30000" }, "8000", VideoBitRateTooltip); // 5
                         page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 6
-                        page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 500, 1, DelayTooltip); // 7
+                        page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 100, 1, DelayTooltip); // 7
                         page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 8
                         page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 9
                         page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 10

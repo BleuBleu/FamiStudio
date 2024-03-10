@@ -196,8 +196,6 @@ namespace FamiStudio
             if (settings.ChannelMask == 0 || settings.LoopCount < 1)
                 return false;
 
-            Log.LogMessage(LogSeverity.Info, "Detecting FFmpeg...");
-
             videoEncoder = settings.Encoder;
             videoResX = settings.ResX;
             videoResY = settings.ResY;
@@ -206,6 +204,9 @@ namespace FamiStudio
             project = settings.Project.DeepClone();
             song = project.GetSong(settings.SongId);
             song.ExtendForLooping(settings.LoopCount);
+
+            if (settings.Encoder == null)
+                return false;
 
             var downsampleResX = videoResX / settings.Downsample;
             var downsampleResY = videoResY / settings.Downsample;
@@ -345,6 +346,8 @@ namespace FamiStudio
                 }
             }
 
+            DpiScaling.ForceUnitScaling = false;
+
             // Generate metadata
             Log.LogMessage(LogSeverity.Info, "Generating video metadata...");
             metadata = new VideoMetadataPlayer(SampleRate, song.Project.PalMode, song.Project.OutputsStereoAudio, showRegisters, 1).GetVideoMetadata(song, -1);
@@ -477,6 +480,8 @@ namespace FamiStudio
             var success = true;
             var lastTime = DateTime.Now;
 
+            DpiScaling.ForceUnitScaling = false;
+
 #if !DEBUG
             try
 #endif
@@ -499,6 +504,10 @@ namespace FamiStudio
                         continue;
 
                     var frame = metadata[f];
+
+                    // HACK : It was a terrible idea to make the DPI scaling a global thing. It should have remained on the 
+                    // Graphics object like before. Need to keep switching to unit scaling back/forth.
+                    DpiScaling.ForceUnitScaling = true;
 
                     body(f);
 
@@ -526,6 +535,8 @@ namespace FamiStudio
                         downsampleGraphics.DefaultCommandList.DrawTexture(videoGraphics.GetTexture(), 0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY, 1.0f);
                         downsampleGraphics.EndDrawFrame(false);
                     }
+
+                    DpiScaling.ForceUnitScaling = false;
 
                     // Send to encoder.
                     if (!videoEncoder.AddFrame(downsampleGraphics != null ? downsampleGraphics : videoGraphics))
