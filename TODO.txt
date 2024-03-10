@@ -22,10 +22,7 @@ x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, the
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
 - S5B Envelope
 	- Add low bound to frequency.
-- How2 bug list:
-	- Cant immediately use ctrl when adding an effect (pixel adjust) WORKS ON WINDOWS
-- Big bug list:
-	- 
+- Project cleanup : organize insturments/folders by expansion
 
 4.2.0 Testing/Packaging
 =======================

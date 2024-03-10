@@ -351,8 +351,8 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.EPSMSquareEnvAutoPitch ? 1 : 0; }, SetValue = (v) => { instrument.EPSMSquareEnvAutoPitch = v != 0; }, IsEnabled = () => instrument.EPSMSquareEnvelopeShape != 0, TabName = GeneralTab });
                     paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeAutoOctaveLabel, -8, 8, 0)
                         { GetValue = () => { return instrument.EPSMSquareEnvAutoPitchOctave; }, SetValue = (v) => { instrument.EPSMSquareEnvAutoPitchOctave = (sbyte)v; }, IsEnabled = () => instrument.EPSMSquareEnvelopeShape != 0 && instrument.EPSMSquareEnvAutoPitch, TabName = GeneralTab });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeManualFreqLabel, 0, 65535, 1000)
-                        { GetValue = () => { return instrument.EPSMSquareEnvelopePitch; }, SetValue = (v) => { instrument.EPSMSquareEnvelopePitch = (ushort)v; }, IsEnabled = () => instrument.EPSMSquareEnvelopePitch != 0 && !instrument.EPSMSquareEnvAutoPitch, TabName = GeneralTab });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeManualFreqLabel, 0, 65535, 4000)
+                        { GetValue = () => { return instrument.EPSMSquareEnvelopePitch; }, SetValue = (v) => { instrument.EPSMSquareEnvelopePitch = (ushort)v; }, IsEnabled = () => instrument.EPSMSquareEnvelopeShape != 0 && !instrument.EPSMSquareEnvAutoPitch, TabName = GeneralTab });
 
                     for (int i = 0; i < 4; i++)
                     {
