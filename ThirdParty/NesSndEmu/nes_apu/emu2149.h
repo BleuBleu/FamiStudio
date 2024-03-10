@@ -61,7 +61,9 @@ extern "C"
     /* I/O Ctrl */
     uint8_t adr;
 
-    /* FamiStudio : tells us which channels have had a rising edge this step. */
+    /* FamiStudio : tells us which channels have had a rising edge this step.
+       Bit layout is 00AAABBB where A means we are able to provide trigger for the channel
+       and B means there is was a trigger generated on the last update. */
     uint8_t trigger_mask; 
 
     /* output of channels */

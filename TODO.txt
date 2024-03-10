@@ -14,14 +14,11 @@ x Upgrade Windows to .NET 7.0
 / Hold SHIFT+click (also double-click) for multiple delete.	
 	- Make it work on mobile.
 / Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
-x Make sure attack refactor didnt affect how overriden stuff works (ex: arp, then new note without, or vibrato), may need to re-set instrument
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
 - BUG : Mouse over project explorer envelope buttons is offset.
 	- Also, look at tabs in project explorer (EPSM), they have a padding on left, but not on right.
-- S5B Envelope
-	- Add low bound to frequency.
 - Project cleanup : organize insturments/folders by expansion
 
 4.2.0 Testing/Packaging
