@@ -5122,7 +5122,7 @@ namespace FamiStudio
                     if (Platform.IsMobile && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo && captureThresholdMet)
                         y = mouseLastY - headerAndEffectSizeY - gizmoSize / 2;
                     else
-                        y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - gizmoSize / 4; 
+                        y = virtualSizeY  - Utils.Clamp((note.SlideNoteTarget + side) * noteSizeY + gizmoSize / 4, gizmoSize, virtualSizeY) - scrollY;
                 }
                 else
                 {
@@ -9644,7 +9644,7 @@ namespace FamiStudio
         private bool GetNoteValueForCoord(int x, int y, out byte noteValue)
         {
             var rawNoteValue = ((y - headerAndEffectSizeY) + scrollY) / noteSizeY;
-            noteValue = (byte)(NumNotes - Utils.Clamp(rawNoteValue, 0, NumNotes));
+            noteValue = (byte)(NumNotes - Utils.Clamp(rawNoteValue, 0, NumNotes - 1));
 
             // Allow to go outside the window when a capture is in progress.
             var captureInProgress = captureOperation != CaptureOperation.None;
