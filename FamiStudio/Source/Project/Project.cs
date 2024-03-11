@@ -1168,6 +1168,13 @@ namespace FamiStudio
             return false;
         }
 
+        private void EnsureFolderExist(int type, string name)
+        {
+            if (string.IsNullOrEmpty(name)) 
+                return;
+            CreateFolder(type, name);
+        }
+
         public void MoveFolder(Folder folder, Folder folderBefore)
         {
             Debug.Assert(folders.Contains(folder));
@@ -1544,6 +1551,8 @@ namespace FamiStudio
                         samples.Add(otherSample);
                         otherSample.SetProject(this);
                     }
+
+                    EnsureFolderExist(FolderType.Sample, otherSample.FolderName);
                 }
 
                 ValidateIntegrity();
@@ -1593,6 +1602,8 @@ namespace FamiStudio
                             otherInstrument.SetProject(this);
                             instruments.Add(otherInstrument);
                         }
+
+                        EnsureFolderExist(FolderType.Instrument, otherInstrument.FolderName);
                     }
                     else
                     {
@@ -1626,6 +1637,8 @@ namespace FamiStudio
                         arpeggios.Add(otherArpeggio);
                         otherArpeggio.SetProject(this);
                     }
+
+                    EnsureFolderExist(FolderType.Arpeggio, otherArpeggio.FolderName);
                 }
 
                 ValidateIntegrity();
@@ -1636,6 +1649,8 @@ namespace FamiStudio
             {
                 song.SetProject(this);
                 songs.Add(song);
+
+                EnsureFolderExist(FolderType.Song, song.FolderName);
             }
 
             ConditionalSortEverything();
