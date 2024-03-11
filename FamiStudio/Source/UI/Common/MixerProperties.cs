@@ -32,7 +32,6 @@ namespace FamiStudio
         private LocalizedString TrebleFreqLabel;
         private LocalizedString ResetToAppSettingsLabel;
         private LocalizedString ResetToDefaultsLabel;
-        private LocalizedString NoteLabel;
         private LocalizedString NoteMessageLabel;
         private LocalizedString ChipOverridLabel;
 

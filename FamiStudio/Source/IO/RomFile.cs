@@ -22,6 +22,7 @@ namespace FamiStudio
         const int RomBankSizeVrc6     = 0x4000; // VRC6 uses 16KB banks.
         const int RomPrgAndTocSize    = 0x2000; // 6.5KB of code + TOC + vectors. 
         const int RomTocOffset        = 0x1800; // Table of content is right after the code at F800
+        const int RomTocOffsetEpsm    = 0x1b00; // Table of content is right after the code at FB00 (EPSM)
         const int RomChrSize          = 0x2000; // 8KB CHR data.
         const int MaxSongSize         = 0x4000; // 16KB max per song.
         const int MinRomSizeInKB      = 32;     // 32KB minimum.
@@ -29,7 +30,8 @@ namespace FamiStudio
         const int RomHeaderPrgOffset  = 4;      // Offset of the PRG bank count in INES header.
         const int RomDpcmStart        = 0xc000;
         
-        public const int RomMaxSongs  = 48;
+        public const int RomMaxSongs     = 48;
+        public const int RomMaxSongsEpsm = 32;
 
         public unsafe bool Save(Project originalProject, string filename, int[] songIds, string name, string author, bool pal)
         {
@@ -49,8 +51,10 @@ namespace FamiStudio
                 Debug.Assert(!originalProject.UsesMultipleExpansionAudios);
                 Debug.Assert(!originalProject.UsesAnyExpansionAudio || !pal);
 
-                if (songIds.Length > RomMaxSongs)
-                    Array.Resize(ref songIds, RomMaxSongs);
+                var maxSong = originalProject.UsesEPSMExpansion ? RomMaxSongsEpsm : RomMaxSongs;
+
+                if (songIds.Length > maxSong)
+                    Array.Resize(ref songIds, maxSong);
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
@@ -87,7 +91,7 @@ namespace FamiStudio
 
                 // Build project info + song table of content.
                 var projectInfo = BuildProjectInfo(songIds, name, author);
-                var songTable   = BuildSongTableOfContent(project, RomMaxSongs);
+                var songTable   = BuildSongTableOfContent(project, maxSong);
 
                 // Gather song data.
                 var songBanks = new List<List<byte>>();
@@ -105,9 +109,9 @@ namespace FamiStudio
                 // Export each song individually, build TOC at the same time.
                 for (int i = 0; i < project.Songs.Count; i++)
                 {
-                    if (i == RomMaxSongs)
+                    if (i == maxSong)
                     {
-                        Log.LogMessage(LogSeverity.Warning, $"Too many songs. There is a hard limit of {RomMaxSongs} at the moment. Ignoring any extra songs.");
+                        Log.LogMessage(LogSeverity.Warning, $"Too many songs. There is a hard limit of {maxSong} at the moment. Ignoring any extra songs.");
                         break;
                     }
 
@@ -198,13 +202,15 @@ namespace FamiStudio
                 // VRC6 uses 16KB pages, but we count in 8KB pages, so x2.
                 projectInfo.firstDpcmBank = (byte)(songBanks.Count * (songBankSize / bankSize));
 
-                // Patch in code (project info and song table are after the code, 0xf000).
-                Marshal.Copy(new IntPtr(&projectInfo), prgBytes, RomTocOffset, sizeof(RomProjectInfo));
+                var tocOffset = project.UsesEPSMExpansion ? RomTocOffsetEpsm : RomTocOffset;
 
-                for (int i = 0; i < RomMaxSongs; i++)
+                // Patch in code (project info and song table are after the code, 0xf000).
+                Marshal.Copy(new IntPtr(&projectInfo), prgBytes, tocOffset, sizeof(RomProjectInfo));
+
+                for (int i = 0; i < maxSong; i++)
                 {
                     fixed (RomSongEntry* songEntry = &songTable[i])
-                        Marshal.Copy(new IntPtr(songEntry), prgBytes, RomTocOffset + sizeof(RomProjectInfo) + i * sizeof(RomSongEntry), sizeof(RomSongEntry));
+                        Marshal.Copy(new IntPtr(songEntry), prgBytes, tocOffset + sizeof(RomProjectInfo) + i * sizeof(RomSongEntry), sizeof(RomSongEntry));
                 }
 
                 // Patch header (iNES header always counts in 16KB banks, MMC3 counts in 8KB banks)

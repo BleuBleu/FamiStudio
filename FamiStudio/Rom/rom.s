@@ -10,23 +10,18 @@ FAMISTUDIO_CFG_EXTERNAL                  = 1
 FAMISTUDIO_CFG_SMOOTH_VIBRATO            = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT              = 1
 FAMISTUDIO_CFG_EQUALIZER                 = 1
-
-; FIXME : EPSM is now too big. Disabling a bunch of features until Perkka can reduce size
-; or create a custom config for it.
-.ifndef FAMISTUDIO_EXP_EPSM
-    FAMISTUDIO_USE_VOLUME_TRACK              = 1
-    FAMISTUDIO_USE_VOLUME_SLIDES             = 1
-    FAMISTUDIO_USE_PITCH_TRACK               = 1
-    FAMISTUDIO_USE_SLIDE_NOTES               = 1
-    FAMISTUDIO_USE_NOISE_SLIDE_NOTES         = 1
-    FAMISTUDIO_USE_VIBRATO                   = 1
-    FAMISTUDIO_USE_ARPEGGIO                  = 1
-    FAMISTUDIO_USE_DUTYCYCLE_EFFECT          = 1
-    FAMISTUDIO_USE_DELTA_COUNTER             = 1
-    FAMISTUDIO_USE_RELEASE_NOTES             = 1
-    FAMISTUDIO_USE_PHASE_RESET               = 1
-    FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1
-.endif
+FAMISTUDIO_USE_VOLUME_TRACK              = 1
+FAMISTUDIO_USE_VOLUME_SLIDES             = 1
+FAMISTUDIO_USE_PITCH_TRACK               = 1
+FAMISTUDIO_USE_SLIDE_NOTES               = 1
+FAMISTUDIO_USE_NOISE_SLIDE_NOTES         = 1
+FAMISTUDIO_USE_VIBRATO                   = 1
+FAMISTUDIO_USE_ARPEGGIO                  = 1
+FAMISTUDIO_USE_DUTYCYCLE_EFFECT          = 1
+FAMISTUDIO_USE_DELTA_COUNTER             = 1
+FAMISTUDIO_USE_RELEASE_NOTES             = 1
+FAMISTUDIO_USE_PHASE_RESET               = 1
+FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1
 
 .ifdef FAMISTUDIO_EXP_FDS
     FAMISTUDIO_USE_FDS_AUTOMOD           = 1
@@ -265,6 +260,8 @@ project_author:  .res 28   ; Project author
 
 .if FAMISTUDIO_EXP_FDS
 MAX_SONGS = 12 ; 12 * 32 bytes song header + 64 bytes header = 448 bytes.
+.elseif FAMISTUDIO_EXP_EPSM
+MAX_SONGS = 32 ; 32 * 32 bytes song header + 64 bytes header = 1088 bytes.
 .else
 MAX_SONGS = 48 ; 48 * 32 bytes song header + 64 bytes header = 1600 bytes.
 .endif
