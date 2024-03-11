@@ -408,6 +408,7 @@ namespace FamiStudio
         public bool SnapAllowed       { get => editMode == EditionMode.Channel; }
         public bool SnapEnabled       { get => SnapAllowed && snap; set { if (SnapAllowed) snap = value; MarkDirty(); } }
         public bool SnapEffectEnabled { get => SnapAllowed && snapEffects; set { if (SnapAllowed) snapEffects = value; MarkDirty(); } }
+        public bool SnapTemporarelyDisabled => ModifierKeys.IsAltDown && !Settings.AltLeftForMiddle;
 
         public bool EffectPanelExpanded { get => showEffectsPanel; set => SetShowEffectPanel(value); }
         public int  SnapResolution
@@ -7622,7 +7623,7 @@ namespace FamiStudio
 
             int minSelectionIdx = Math.Min(noteIdx, captureMouseAbsoluteIdx);
             int maxSelectionIdx = Math.Max(noteIdx, captureMouseAbsoluteIdx);
-            int pad = SnapEnabled ? -1 : 0;
+            int pad = SnapEnabled && !SnapTemporarelyDisabled ? -1 : 0;
 
             SetSelection(SnapNote(minSelectionIdx), SnapNote(maxSelectionIdx, true) + pad);
             MarkDirty();
@@ -8531,9 +8532,7 @@ namespace FamiStudio
 
         private int SnapNote(int absoluteNoteIndex, bool roundUp = false, bool forceSnap = false)
         {
-            var snapTemporaryDisabled = ModifierKeys.IsAltDown && !Settings.AltLeftForMiddle;
-
-            if (SnapEnabled && !snapTemporaryDisabled || forceSnap)
+            if (SnapEnabled && !SnapTemporarelyDisabled || forceSnap)
             {
                 var negativeOffset = 0;
                 var firstPatternLen = Song.GetPatternLength(0);

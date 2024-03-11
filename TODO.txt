@@ -16,8 +16,6 @@ x Upgrade Windows to .NET 7.0
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
-- BUG : holding alt to select, then selecting backwards skips the first frame selected
-	https://discord.com/channels/@me/819772561940152321/1216497846467956776
 
 4.2.0 Testing/Packaging
 =======================
