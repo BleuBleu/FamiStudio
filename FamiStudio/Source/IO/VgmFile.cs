@@ -664,6 +664,8 @@ namespace FamiStudio
             var name = "S5B";
             if (noiseEnabled && noise == 0)
                 noise = 1;
+            else if (!noiseEnabled)
+                noise = 0;
             if (toneEnabled)
                 name += $" Tone";
             if (noiseEnabled)
