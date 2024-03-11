@@ -1175,6 +1175,19 @@ namespace FamiStudio
             CreateFolder(type, name);
         }
 
+        private void EnsureAllFoldersExist()
+        {
+            // HACK to fix issues with early 4.2.0 alpha files that didnt merge folders properly.
+            foreach (var s in songs)
+                EnsureFolderExist(FolderType.Song, s.FolderName);
+            foreach (var i in instruments)
+                EnsureFolderExist(FolderType.Instrument, i.FolderName);
+            foreach (var a in arpeggios)
+                EnsureFolderExist(FolderType.Arpeggio, a.FolderName);
+            foreach (var s in samples)
+                EnsureFolderExist(FolderType.Sample, s.FolderName);
+        }
+
         public void MoveFolder(Folder folder, Folder folderBefore)
         {
             Debug.Assert(folders.Contains(folder));
@@ -2277,6 +2290,8 @@ namespace FamiStudio
                 {
                     SortEverything(buffer.Version < 10);
                 }
+
+                EnsureAllFoldersExist();
             }
         }
 
