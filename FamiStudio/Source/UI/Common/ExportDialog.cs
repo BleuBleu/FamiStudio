@@ -327,6 +327,7 @@ namespace FamiStudio
             Debug.Assert(mobileVideoPreviewEncoder == null && mobileVideoPreviewTask == null);
             dialog.SwitchToPage((int)ExportFormat.MobileVideoPreview);
             mobileVideoPreviewEncoder = new AndroidPreviewEncoder(dialog.GetPropertyPage((int)ExportFormat.MobileVideoPreview), 0);
+            Exporting?.Invoke(); // Needed to stop the song.
             Log.SetLogOutput(mobileVideoPreviewEncoder);
             mobileVideoPreviewTask = Task.Factory.StartNew(() =>
             {
@@ -630,6 +631,8 @@ namespace FamiStudio
                 var previewResX = VideoResolution.ResolutionX[resolutionIdx];
                 var previewResY = VideoResolution.ResolutionY[resolutionIdx];
                 var previewDialog = new VideoPreviewDialog(dialog.ParentWindow, previewResX, previewResY, (project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC) * (halfFrameRate ? 0.5f : 1.0f));
+
+                Exporting?.Invoke(); // Needed to stop the song.
 
                 previewDialog.ShowDialogNonModal();
                 Log.SetLogOutput(previewDialog);

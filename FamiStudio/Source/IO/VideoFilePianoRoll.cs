@@ -610,7 +610,7 @@ namespace FamiStudio
                     o.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, textOffsetY, Theme.LightGreyColor1);
                     o.PopTransform();
 
-                    o.PushTransform(channelPosX + oscChannelPadX, channelPosY + oscPosY, channelHeaderSizeXFloat - oscChannelPadX * 2, oscScaleY);
+                    o.PushTransform(channelPosX + oscChannelPadX, channelPosY + oscPosY, channelHeaderSizeXFloat - oscChannelPadX * 2, -oscScaleY);
                     o.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, settings.OscLineThickness);
                     o.PopTransform();
                 }

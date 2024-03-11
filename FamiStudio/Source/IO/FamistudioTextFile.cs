@@ -60,6 +60,18 @@ namespace FamiStudio
 
                 if (project.UsesN163Expansion)
                     projectLine += GenerateAttribute("NumN163Channels", project.ExpansionNumN163Channels);
+
+                for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
+                {
+                    var mixer = project.ExpansionMixerSettings[i];
+                    if (mixer.Override)
+                    {
+                        var expName = ExpansionType.InternalNames[i];
+                        projectLine += GenerateAttribute(expName + "VolumeDb", mixer.VolumeDb);
+                        projectLine += GenerateAttribute(expName + "TrebleDb", mixer.TrebleDb);
+                        projectLine += GenerateAttribute(expName + "TrebleRolloffHz", mixer.TrebleRolloffHz);
+                    }
+                }
             }
 
             lines.Add(projectLine);
@@ -433,6 +445,21 @@ namespace FamiStudio
                                     numN163Channels = int.Parse(numN163ChannelsStr);
 
                                 project.SetExpansionAudioMask(expansionMask, numN163Channels);
+
+                                for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
+                                {
+                                    var expName = ExpansionType.InternalNames[i];
+
+                                    if (parameters.TryGetValue(expName + "VolumeDb", out var volumeDbStr) &&
+                                        parameters.TryGetValue(expName + "TrebleDb", out var trebleDbStr) &&
+                                        parameters.TryGetValue(expName + "TrebleRolloffHz", out var trebleRolloffHzStr))
+                                    {
+                                        project.ExpansionMixerSettings[i].Override = true;
+                                        project.ExpansionMixerSettings[i].VolumeDb = float.Parse(volumeDbStr);
+                                        project.ExpansionMixerSettings[i].TrebleDb = float.Parse(trebleDbStr);
+                                        project.ExpansionMixerSettings[i].TrebleRolloffHz = int.Parse(trebleRolloffHzStr);
+                                    }
+                                }
                             }
 
                             if (!version.StartsWith(currentVersion.Substring(0, 3)))

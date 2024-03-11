@@ -593,7 +593,7 @@ namespace FamiStudio
                 }
             }
 
-            c.DrawRectangle(0, 0, width - 1, height, foreColor);
+            c.DrawRectangle(0, 0, width - 1, height, enabled ? foreColor : Theme.MediumGreyColor1);
 
             // Header
             if (numHeaderRows != 0)

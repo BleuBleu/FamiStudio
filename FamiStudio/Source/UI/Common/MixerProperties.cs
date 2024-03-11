@@ -42,7 +42,7 @@ namespace FamiStudio
 
         #endregion
 
-        public MixerProperties(PropertyPage page, Project proj)
+        public MixerProperties(PropertyPage page, Project proj, int expansionMask = -1)
         {
             Localization.Localize(this);
 
@@ -94,7 +94,9 @@ namespace FamiStudio
 
                 if (projectSettings)
                 {
-                    overridden = project.ExpansionMixerSettings[i].Override;
+                    var bit = 1 << i;
+                    var expEnabled = i == 0 || (bit & (expansionMask << 1)) != 0;
+                    overridden = project.ExpansionMixerSettings[i].Override && expEnabled;
                     chipOverrideIndices[i] = props.AddLabelCheckBox(ChipOverridLabel.Format(ExpansionType.LocalizedChipNames[i]), overridden);
                     if (overridden)
                         mixerSetting = project.ExpansionMixerSettings[i];
@@ -134,6 +136,32 @@ namespace FamiStudio
             props.PropertyChanged += Props_PropertyChanged;
             props.PropertyClicked += Props_PropertyClicked;
             props.PropertyCellEnabled += (p, i, r, c) => i != chipGridIndices[ExpansionType.Fds] || r != 1; // No cutoff on special FDS filter.
+
+            if (projectSettings)
+            {
+                for (var i = 1; i < ExpansionType.LocalizedChipNames.Length; i++)
+                {
+                    var bit = 1 << i;
+                    var expEnabled = (bit & (expansionMask << 1)) != 0;
+                    props.SetPropertyEnabled(chipOverrideIndices[i], expEnabled);
+                    props.SetPropertyEnabled(chipGridIndices[i], expEnabled && props.GetPropertyValue<bool>(chipOverrideIndices[i]));
+                }
+            }
+        }
+
+        public void SetExpansionMask(int expansionMask)
+        {
+            Debug.Assert(project != null);
+
+            for (var i = 1; i < ExpansionType.LocalizedChipNames.Length; i++)
+            {
+                var bit = 1 << i;
+                var expEnabled = (bit & (expansionMask << 1)) != 0;
+                if (!expEnabled)
+                    props.SetPropertyValue(chipOverrideIndices[i], false);
+                props.SetPropertyEnabled(chipOverrideIndices[i], expEnabled);
+                props.SetPropertyEnabled(chipGridIndices[i], expEnabled && props.GetPropertyValue<bool>(chipOverrideIndices[i]));
+            }
         }
 
         private void LoadSettings(float globalVolume, int bassCutoffHz, ExpansionMixer[] settings)

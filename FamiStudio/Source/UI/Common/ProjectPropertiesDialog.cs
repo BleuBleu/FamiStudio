@@ -137,7 +137,7 @@ namespace FamiStudio
                 case ProjectSection.Mixer:
                 {
                     page.SetScrolling(300); // MATTT
-                    mixerProperties = new MixerProperties(page, project);
+                    mixerProperties = new MixerProperties(page, project, project.ExpansionAudioMask);
                     break;
                 }
                 case ProjectSection.SoundEngine:
@@ -207,6 +207,8 @@ namespace FamiStudio
                 // Expansion forces NTSC.
                 infoPage.SetPropertyEnabled(4, infoPage.GetSelectedIndex(3) == TempoType.FamiStudio && expansionMask == 0);
                 infoPage.SetDropDownListIndex(4, expansionMask == 0 && app.Project.PalMode ? 1 : 0);
+
+                mixerProperties.SetExpansionMask(expansionMask);
             }
 
             UpdateExpansionWarnings(props);

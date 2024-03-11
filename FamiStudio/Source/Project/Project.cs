@@ -2189,13 +2189,15 @@ namespace FamiStudio
 
                 if (buffer.IsWriting)
                 {
-                    // Only save the settings if they are overriden AND we are really using
-                    // this expansion. This is in case we want to change the default settings
-                    // later. We wont end up with a bunch of files with outdated settings.
+                    // Only save the settings if they are overriden AND we are really using this
+                    // expansion. This is in case we want to change the default settings later.
+                    // We wont end up with a bunch of files with outdated settings. Note that
+                    // bit 0 is 2A03, so its shifted by 1 compared to regular expansion mask.
                     for (var i = 0; i < mixerSettings.Length; i++)
                     {
                         var bit = 1 << i;
-                        if (mixerSettings[i].Override && (bit & expansionMask) != 0)
+                        var expEnabled = i == 0 || (bit & (expansionMask << 1)) != 0;
+                        if (mixerSettings[i].Override && expEnabled)
                             overrideMask |= bit;
                     }
                 }
@@ -2215,7 +2217,10 @@ namespace FamiStudio
                 for (var i = 0; i < mixerSettings.Length; i++)
                 {
                     if ((overrideMask & (1 << i)) != 0)
+                    {
                         mixerSettings[i].Serialize(buffer);
+                        mixerSettings[i].Override = true;
+                    }
                 }
             }
 
