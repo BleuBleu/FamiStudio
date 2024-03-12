@@ -252,7 +252,7 @@ namespace FamiStudio
 
         protected Song CreateUniquelyNamedSong(string baseName)
         {
-            var name = !string.IsNullOrEmpty(baseName) && project.IsDPCMSampleNameUnique(baseName) ? baseName : project.GenerateUniqueSongName(baseName);
+            var name = !string.IsNullOrEmpty(baseName) && project.IsSongNameUnique(baseName) ? baseName : project.GenerateUniqueSongName(baseName);
             return project.CreateSong(name);
         }
 
