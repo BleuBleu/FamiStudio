@@ -588,10 +588,9 @@ namespace FamiStudio
                             
                             if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Arpeggio, folderName) != null)
                                 arpeggio.FolderName = folderName;
-                            if (parameters.TryGetValue("Loop", out var loopStr))
-                                arpeggio.Envelope.Loop = int.Parse(loopStr);
                             if (parameters.TryGetValue("Color", out var hexColor))
                                 arpeggio.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
+                            arpeggio.Envelope.Loop = parameters.TryGetValue("Loop", out var loopStr) ? int.Parse(loopStr) : -1;
 
                             var values = parameters["Values"].Split(',');
                             for (int j = 0; j < values.Length; j++)
