@@ -165,6 +165,17 @@ namespace FamiStudio
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
+        public struct PaMacCoreStreamInfo
+        {
+            public uint size;
+            public PaHostApiTypeId hostApiType;
+            public uint version;
+            public uint flags;
+            public int* channelMap;
+            public uint channelMapSize; 
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         public struct PaStreamCallbackTimeInfo
         {
             public double inputBufferAdcTime;
@@ -238,6 +249,9 @@ namespace FamiStudio
 
         [DllImport(PortAudioLibName)]
         public static extern int Pa_SetStreamFinishedCallback(IntPtr stream, PaStreamFinishedCallback streamFinishedCallback);
+
+        [DllImport(PortAudioLibName)]
+        public static extern int PaMacCore_GetBufferSizeRange(int device, int* minBufferSizeFrames, int* maxBufferSizeFrames);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void PaStreamFinishedCallback(IntPtr userData);
