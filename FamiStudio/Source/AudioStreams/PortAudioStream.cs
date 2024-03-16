@@ -209,7 +209,7 @@ namespace FamiStudio
         public static extern PaDeviceInfo* Pa_GetDeviceInfo(int device);
 
         [DllImport(PortAudioLibName)]
-        public static extern PaError Pa_OpenStream(out IntPtr stream, IntPtr inputParameters, ref PaStreamParameters outputParameters, double sampleRate, uint framesPerBuffer, uint streamFlags, PaStreamCallback streamCallback, IntPtr userData);
+        public static extern PaError Pa_OpenStream(out IntPtr stream, IntPtr inputParameters, ref PaStreamParameters outputParameters, double sampleRate, int framesPerBuffer, uint streamFlags, PaStreamCallback streamCallback, IntPtr userData);
 
         [DllImport(PortAudioLibName)]
         public static extern PaError Pa_OpenDefaultStream(out IntPtr stream, int numInputChannels, int numOutputChannels, PaSampleFormat sampleFormat, double sampleRate, uint framesPerBuffer, PaStreamCallback streamCallback, IntPtr userData);
@@ -251,7 +251,7 @@ namespace FamiStudio
         public static extern int Pa_SetStreamFinishedCallback(IntPtr stream, PaStreamFinishedCallback streamFinishedCallback);
 
         [DllImport(PortAudioLibName)]
-        public static extern int PaMacCore_GetBufferSizeRange(int device, int* minBufferSizeFrames, int* maxBufferSizeFrames);
+        public static extern PaError PaMacCore_GetBufferSizeRange(int device, int* minBufferSizeFrames, int* maxBufferSizeFrames);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void PaStreamFinishedCallback(IntPtr userData);
@@ -365,15 +365,30 @@ namespace FamiStudio
             streamParams.suggestedLatency = bufferSizeMs / 1000.0; 
             streamParams.hostApiSpecificStreamInfo = Platform.IsWindows ? new IntPtr(&wasapiStreamInfo) : IntPtr.Zero;
 
+            var framesPerBuffer = 0;
+
+            if (Platform.IsMacOS)
+            {
+                int minFrames;
+                int maxFrames;
+
+                // On MacOS, some devices, have a ridiculous low default buffer size (like 15 samples).
+                // Set that to something a bit more reasonable. This fixes crackcling audio with BT headphones,
+                if (PaMacCore_GetBufferSizeRange(deviceIndex, &minFrames, &maxFrames) == PaError.paNoError && minFrames < 128)
+                {
+                    framesPerBuffer = Utils.Clamp(128, minFrames, maxFrames);
+                }
+            }
+
             // First try with the input sample rate.
             // Some low-level APIs such as WASAPI will refuse and force you to use the device sample rate for lower-latency (at least without paWinWasapiAutoConvert).
-            var error = Pa_OpenStream(out portAudioStream.stream, IntPtr.Zero, ref streamParams, portAudioStream.outputSampleRate, 0, paPrimeOutputBuffersUsingStreamCallback, portAudioStream.streamCallback, IntPtr.Zero);
+            var error = Pa_OpenStream(out portAudioStream.stream, IntPtr.Zero, ref streamParams, portAudioStream.outputSampleRate, framesPerBuffer, paPrimeOutputBuffersUsingStreamCallback, portAudioStream.streamCallback, IntPtr.Zero);
 
             if (error == PaError.paInvalidSampleRate)
             {
                 // Use the device rate, well resample the data ourselves.
                 portAudioStream.outputSampleRate = deviceSampleRate;
-                error = Pa_OpenStream(out portAudioStream.stream, IntPtr.Zero, ref streamParams, portAudioStream.outputSampleRate, 0, paPrimeOutputBuffersUsingStreamCallback, portAudioStream.streamCallback, IntPtr.Zero);
+                error = Pa_OpenStream(out portAudioStream.stream, IntPtr.Zero, ref streamParams, portAudioStream.outputSampleRate, framesPerBuffer, paPrimeOutputBuffersUsingStreamCallback, portAudioStream.streamCallback, IntPtr.Zero);
             }
 
             if (error != PaError.paNoError)
