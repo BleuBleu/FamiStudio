@@ -11,23 +11,16 @@ x Upgrade Windows to .NET 7.0
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
-- MATTTs
 
 4.2.0 Testing/Packaging
 =======================
 - Test all project explorer buttons with folders. Make sure no offsets.
 - Make sure double-click delete doesnt create 2 transaction (delete + multiple delete operation)
-- Undo acciental changes to demo songs (shovel, JTS, etc.)
 - Make sure PortAudio.dll is included in portable + setup.
 - Add new features to unit tests
 - Run huge sound engine test with old songs.
 - Dont publish for chromebooks
 - Write S5B documentation.
-- Windows 7 x64 notes:
-	- Install vs runtime x64
-	- Install .net 7.0 (follow link when you try to run time, x64 version)
-	- https://www.catalog.update.microsoft.com/Search.aspx?q=KB4457144 (~230MB .msu file)
-	- [Optional] Download mesa and put opengl32.dll in same folder.
 
 4.2.0 Change Log
 ===========================
