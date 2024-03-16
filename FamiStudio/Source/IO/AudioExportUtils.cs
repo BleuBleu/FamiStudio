@@ -193,6 +193,9 @@ namespace FamiStudio
 
                 if (introDuration > 0)
                 {
+                    // In case someone selects a shorter duration than the intro.
+                    introDuration = Math.Min(samples.Length, introDuration);
+
                     var loopSamples = new short[samples.Length - introDuration];
                     Array.Copy(samples, introDuration, loopSamples, 0, loopSamples.Length);
                     Array.Resize(ref samples, introDuration);
