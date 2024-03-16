@@ -328,8 +328,7 @@ namespace FamiStudio
                 }
                 case ConfigSection.Mixer:
                 {
-                    page.SetScrolling(400); // MATTT
-                    mixerProperties = new MixerProperties(page, null);
+                    mixerProperties = new MixerProperties(page, null, 400);
                     break;
                 }
                 case ConfigSection.MIDI:

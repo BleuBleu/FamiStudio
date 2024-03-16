@@ -41,7 +41,7 @@ namespace FamiStudio
 
         #endregion
 
-        public MixerProperties(PropertyPage page, Project proj, int expansionMask = -1)
+        public MixerProperties(PropertyPage page, Project proj, int scrollHeight, int expansionMask = -1)
         {
             Localization.Localize(this);
 
@@ -146,6 +146,8 @@ namespace FamiStudio
                     props.SetPropertyEnabled(chipGridIndices[i], expEnabled && props.GetPropertyValue<bool>(chipOverrideIndices[i]));
                 }
             }
+
+            props.SetScrolling(scrollHeight);
         }
 
         public void SetExpansionMask(int expansionMask)

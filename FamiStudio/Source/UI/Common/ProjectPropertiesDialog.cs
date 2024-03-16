@@ -136,8 +136,7 @@ namespace FamiStudio
                 }
                 case ProjectSection.Mixer:
                 {
-                    page.SetScrolling(300); // MATTT
-                    mixerProperties = new MixerProperties(page, project, project.ExpansionAudioMask);
+                    mixerProperties = new MixerProperties(page, project, 300, project.ExpansionAudioMask);
                     break;
                 }
                 case ProjectSection.SoundEngine:

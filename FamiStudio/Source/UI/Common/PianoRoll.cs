@@ -5175,7 +5175,7 @@ namespace FamiStudio
             var minValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
             var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
             var exp = GetEffectValueExponent(maxValue);
-            var midValue = (int)(MathF.Pow(minValue + maxValue, exp) * 0.5f); // MATTT : Wrong.
+            var midValue = (int)MathF.Round(Utils.Lerp(minValue, maxValue, MathF.Pow(0.5f, 1.0f / exp)));
             var value    = note.GetEffectValue(selectedEffectIdx);
 
             // Effect values

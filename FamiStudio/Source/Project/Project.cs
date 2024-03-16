@@ -2548,13 +2548,12 @@ namespace FamiStudio
             buffer.Serialize(ref TrebleRolloffHz);
         }
 
-        // MATTT : Do we want to impose these new defaults or not? 
         public static readonly ExpansionMixer[] DefaultExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count]
         {
             new ExpansionMixer(0.0f,  -5.0f, 12000), // None
             new ExpansionMixer(0.0f,  -5.0f, 12000), // Vrc6
             new ExpansionMixer(0.0f, -15.0f, 12000), // Vrc7
-            new ExpansionMixer(0.0f, -40.0f,  2000), // Fds
+            new ExpansionMixer(0.0f,   0.0f,  2000), // Fds
             new ExpansionMixer(0.0f,  -5.0f, 12000), // Mmc5
             new ExpansionMixer(0.0f, -15.0f, 12000), // N163
             new ExpansionMixer(0.0f,  -5.0f, 12000), // S5B

@@ -192,7 +192,6 @@ namespace FamiStudio
         public static Shortcut[] DisplayChannelShortcuts;
 
         // Audio section
-        // MATTT : Tweak and re-test all of this.
         const int DefaultNumBufferedFrames = 2;
         const int DefaultAudioBufferSize = Platform.IsLinux ? 60 : 30;
         const int EmulationThreadCpuScoreThreshold = 100;
@@ -496,7 +495,7 @@ namespace FamiStudio
 
             Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
 
-            // At Version 9 (FamiStudio 4.2.0) we added more filtering options, so reset everything.
+            // At Version 9 (FamiStudio 4.2.0) we added more filtering options.
             if (Version >= 9)
             { 
                 for (int i = 0; i < ExpansionType.Count; i++)
