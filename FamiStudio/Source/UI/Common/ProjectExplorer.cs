@@ -434,9 +434,15 @@ namespace FamiStudio
         TextureAtlasRef[] bmpChannels;
         TextureAtlasRef[] bmpRegisters;
 
-        #if DEBUG
-            List<Rectangle> debugRects = new List<Rectangle>();
-        #endif
+    #if DEBUG
+        struct DebugRect
+        {
+            public Rectangle rect;
+            public double    time;
+        };
+
+        List<DebugRect> debugRects = new List<DebugRect>();
+    #endif
 
         class Button
         {
@@ -1182,21 +1188,38 @@ namespace FamiStudio
             return width == 1 ? 1 : DpiScaling.ScaleForWindow(width) | 1; 
         }
 
+        [System.Diagnostics.Conditional("DEBUG")]
+        private void AddDebugRect(int x, int y, int sx, int sy)
+        {
+        #if false //DEBUG
+            var rc = new Rectangle(x, y, sx, sy);
+            if (debugRects.FindIndex(r => r.rect.X == rc.X && r.rect.Y == rc.Y && r.rect.Width == rc.Width && r.rect.Height == rc.Height) < 0)
+                debugRects.Add(new DebugRect() { rect = new Rectangle(x, y, sx, sy), time = Platform.TimeSeconds() });
+        #endif
+        }
+
         private void RenderDebug(Graphics g)
         {
-#if DEBUG
+        #if DEBUG
             if (Platform.IsMobile)
             {
                 g.OverlayCommandList.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, Theme.WhiteColor);
             }
 
-            foreach (var rect in debugRects)
-            {
-                g.OverlayCommandList.FillRectangle(rect, new Color(255, 0, 255, 64));
-            }
+            var time = Platform.TimeSeconds();
 
-            debugRects.Clear();
-#endif
+            for (var i = 0; i < debugRects.Count; )
+            {
+                var rc = debugRects[i];
+
+                g.OverlayCommandList.FillRectangle(rc.rect, new Color(255, 0, 255, 64));
+
+                if ((time - rc.time) > 3.0)
+                    debugRects.RemoveAt(i);
+                else
+                    i++;
+            }
+        #endif
         }
 
         private void RenderTabs(CommandList c)
@@ -1424,19 +1447,12 @@ namespace FamiStudio
                     }
 
                     var indentContent = 0;
-                    var indentExpandButton = 0;
                     var hasExpandButton = subButtons != null && subButtons.Contains(SubButtonType.Expand);
                     var centered = button.TextCentered;
 
                     if (hasExpandButton || button.IsParam)
                     {
                         indentContent = expandButtonSizeX;
-                    }
-
-                    if (button.IsInFolder && !button.IsParam)
-                    {
-                        indentExpandButton += expandButtonSizeX;
-                        indentContent += indentExpandButton;
                     }
 
                     c.PushTranslation(indentContent, 0);
@@ -1476,7 +1492,16 @@ namespace FamiStudio
                         if (button.bmp != null)
                         {
                             c.DrawTextureAtlas(button.bmp, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, button.imageTint);
-                            if (highlighted && (button.type == ButtonType.Song || button.type == ButtonType.Instrument || button.type == ButtonType.Dpcm || button.type == ButtonType.Arpeggio))
+                            
+                            if (highlighted && (
+                                button.type == ButtonType.Song || 
+                                button.type == ButtonType.Instrument || 
+                                button.type == ButtonType.Dpcm || 
+                                button.type == ButtonType.Arpeggio || 
+                                button.type == ButtonType.SongFolder ||
+                                button.type == ButtonType.InstrumentFolder ||
+                                button.type == ButtonType.ArpeggioFolder ||
+                                button.type == ButtonType.DpcmFolder))
                             { 
                                 c.DrawRectangle(buttonIconPosX, buttonIconPosY, buttonIconPosX + iconSize - 4, buttonIconPosY + iconSize - 4, Theme.WhiteColor, 3, true, true);
                             }
@@ -1575,9 +1600,7 @@ namespace FamiStudio
 
                         if (subButtons != null)
                         {
-                            c.PushTranslation(indentExpandButton, 0);
-
-                            for (int j = 0, x = contentSizeX - subButtonMarginX - subButtonSizeX - indentExpandButton; j < subButtons.Length; j++, x -= (subButtonSpacingX + subButtonSizeX))
+                            for (int j = 0, x = contentSizeX - subButtonMarginX - subButtonSizeX; j < subButtons.Length; j++, x -= (subButtonSpacingX + subButtonSizeX))
                             {
                                 var sub = subButtons[j];
                                 var bmp = button.GetIcon(sub);
@@ -1595,8 +1618,6 @@ namespace FamiStudio
                                         c.DrawRectangle(x, subButtonPosY, x + iconSize - 4, subButtonPosY + iconSize - 4, Theme.WhiteColor, 3, true, true);
                                 }
                             }
-
-                            c.PopTransform();
                         }
                     }
 
@@ -1760,8 +1781,7 @@ namespace FamiStudio
                 var subButtons = button.GetSubButtons(out _);
                 var hasExpandButton = subButtons != null && subButtons.Contains(SubButtonType.Expand);
 
-                if (button.IsInFolder)
-                    expandPosX += expandButtonSizeX;
+                AddDebugRect(expandPosX, buttonBaseY, expandButtonSizeX, buttonSizeY);
 
                 if (hasExpandButton && x < (expandPosX + expandButtonSizeX))
                 {
@@ -1785,6 +1805,8 @@ namespace FamiStudio
                         int sy = subButtonPosY;
                         int dx = x - sx;
                         int dy = y - sy;
+
+                        AddDebugRect(sx, buttonBaseY + sy, (int)(16 * DpiScaling.Window), (int)(16 * DpiScaling.Window));
 
                         if (dx >= 0 && dx < 16 * DpiScaling.Window &&
                             dy >= 0 && dy < 16 * DpiScaling.Window)
@@ -3670,14 +3692,11 @@ namespace FamiStudio
             return true;
         }
 
-        // MATTT : Not called??
         private bool HandleMouseDownArpeggioHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
         {
             if (e.Left)
             {
-                if (subButtonType == SubButtonType.Add)
-                    AskAddArpeggio(e.X, e.Y);
-                else if (subButtonType == SubButtonType.Sort)
+                if (subButtonType == SubButtonType.Sort)
                     SortArpeggios();
             }
 
@@ -3811,6 +3830,8 @@ namespace FamiStudio
                         return HandleMouseDownParamTabs(e, button);
                     case ButtonType.Arpeggio:
                         return HandleMouseDownArpeggioButton(e, button, subButtonType, buttonIdx, buttonRelX, buttonRelY);
+                    case ButtonType.ArpeggioHeader:
+                        return HandleMouseDownArpeggioHeaderButton(e, subButtonType);
                     case ButtonType.DpcmHeader:
                         return HandleMouseDownDpcmHeaderButton(e, subButtonType);
                     case ButtonType.Dpcm:
@@ -3988,6 +4009,24 @@ namespace FamiStudio
             return true;
         }
 
+        private bool HandleTouchClickFolderButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
+        {
+            if (subButtonType == SubButtonType.Expand)
+            {
+                ToggleExpandFolder(button.folder);
+            }
+            else if (subButtonType == SubButtonType.Properties)
+            {
+                EditFolderProperties(new Point(x, y), button.folder);
+            }
+            else if (subButtonType == SubButtonType.Max)
+            {
+                highlightedButtonIdx = highlightedButtonIdx == buttonIdx ? -1 : buttonIdx;
+            }
+
+            return true;
+        }
+
         private bool HandleTouchClickParamCheckboxButton(int x, int y, Button button)
         {
             ClickParamCheckbox(x, y, button);
@@ -4046,7 +4085,11 @@ namespace FamiStudio
                         return HandleTouchClickDpcmHeaderButton(x, y, subButtonType);
                     case ButtonType.Dpcm:
                         return HandleTouchClickDpcmButton(x, y, button, subButtonType, buttonIdx);
-                        
+                    case ButtonType.SongFolder:
+                    case ButtonType.InstrumentFolder:
+                    case ButtonType.ArpeggioFolder:
+                    case ButtonType.DpcmFolder:
+                        return HandleTouchClickFolderButton(x, y, button, subButtonType, buttonIdx);
                 }
 
                 return true;
@@ -4680,12 +4723,15 @@ namespace FamiStudio
             return false;
         }
 
-        private bool IsPointInButtonIcon(Button button, int buttonRelX, int buttonRelY)
+        private bool IsPointInButtonIcon(Button button, int buttonIdx, int buttonRelX, int buttonRelY)
         {
-            // MATTT : Almost certainly wrong.
             var iconSize = DpiScaling.ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
-            var iconRelX = buttonRelX - (buttonIconPosX + expandButtonPosX + expandButtonSizeX); // MATTT : Why 2 ? Check on Android.
-            var iconRelY = buttonRelY - (buttonIconPosY);
+            var iconPosX = buttonIconPosX + expandButtonSizeX;
+            var iconPosY = buttonIconPosY;
+            var iconRelX = buttonRelX - iconPosX;
+            var iconRelY = buttonRelY - iconPosY;
+
+            AddDebugRect(iconPosX, buttonIdx * buttonSizeY + iconPosY, iconSize, iconSize);
 
             if (iconRelX < 0 || iconRelX > iconSize ||
                 iconRelY < 0 || iconRelY > iconSize)
@@ -4712,7 +4758,7 @@ namespace FamiStudio
                         envelopeDragIdx = (int)subButtonType;
                         StartCaptureOperation(x, y, CaptureOperation.DragInstrumentEnvelope, buttonIdx, buttonRelX, buttonRelY);
                     }
-                    else if (subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonRelX, buttonRelY))
+                    else if (subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx, buttonRelX, buttonRelY))
                     {
                         envelopeDragIdx = -1;
                         StartCaptureOperation(x, y, CaptureOperation.DragInstrument, buttonIdx);
@@ -4732,7 +4778,7 @@ namespace FamiStudio
             if (buttonIdx >= 0)
             {
                 var button = buttons[buttonIdx];
-                if (button.song != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonRelX, buttonRelY))
+                if (button.song != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx,  buttonRelX, buttonRelY))
                 {
                     App.SelectedSong = button.song;
                     StartCaptureOperation(x, y, CaptureOperation.DragSong, buttonIdx);
@@ -4751,7 +4797,7 @@ namespace FamiStudio
             if (buttonIdx >= 0)
             {
                 var button = buttons[buttonIdx];
-                if (button.sample != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonRelX, buttonRelY))
+                if (button.sample != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx, buttonRelX, buttonRelY))
                 {
                     StartCaptureOperation(x, y, CaptureOperation.DragSample, buttonIdx);
                     draggedSample = button.sample;
@@ -4762,17 +4808,35 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchDownDragDPCMArpeggio(int x, int y)
+        private bool HandleTouchDownDragArpeggio(int x, int y)
         {
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
 
             if (buttonIdx >= 0)
             {
                 var button = buttons[buttonIdx];
-                if (button.arpeggio != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonRelX, buttonRelY))
+                if (button.arpeggio != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx, buttonRelX, buttonRelY))
                 {
                     StartCaptureOperation(x, y, CaptureOperation.DragArpeggio, buttonIdx);
                     draggedArpeggio = button.arpeggio;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchDownDragFolder(int x, int y)
+        {
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
+
+            if (buttonIdx >= 0)
+            {
+                var button = buttons[buttonIdx];
+                if (button.folder != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx, buttonRelX, buttonRelY))
+                {
+                    StartCaptureOperation(x, y, CaptureOperation.DragFolder, buttonIdx);
+                    draggedFolder = button.folder;
                     return true;
                 }
             }
@@ -4795,7 +4859,8 @@ namespace FamiStudio
             if (HandleTouchDownDragSong(x, y)) goto Handled;
             if (HandleTouchDownDragInstrument(x, y)) goto Handled;
             if (HandleTouchDownDragDPCMSample(x, y)) goto Handled;
-            if (HandleTouchDownDragDPCMArpeggio(x, y)) goto Handled;
+            if (HandleTouchDownDragArpeggio(x, y)) goto Handled;
+            if (HandleTouchDownDragFolder(x, y)) goto Handled;
             if (HandleTouchDownPan(x, y)) goto Handled;
             return;
 
