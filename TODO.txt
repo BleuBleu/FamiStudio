@@ -1,16 +1,13 @@
-4.2.0 Brainstorm
-=================
-x Upgrade Windows to .NET 7.0
-	- Test MacOS startup script.
-/ Switch to .NET for Android too.
-	x Test debug/release 
-	- Setup keystore, etc.
-	- Bring back APK
-/ Latency improvements:
-	- Android : Run short/1-frame tests.
+4.2.0
+=====
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
+- Change the noise/NOP thing.
+- Update localization files and tell localizer to translate.
+/ Switch to .NET for Android too.
+	- Setup keystore, etc.
+	- Bring back APK
 
 4.2.0 Testing/Packaging
 =======================
@@ -21,27 +18,39 @@ x Upgrade Windows to .NET 7.0
 - Run huge sound engine test with old songs.
 - Dont publish for chromebooks
 - Write S5B documentation.
+- Android : Run short/1-frame tests.
+- Test MacOS .NET startup script.
 
 4.2.0 Change Log
 ===========================
 - Changes:
-	* Folders in Project Explorer
-	* Video export improvements : unified piano roll, 3D effect, register overlay & preview mode (desktop only)
-	* Reduced audio latency on all platform and switch to WASAPI on Windows
-	* More filtering options for audio expansions
 	* S5B envelope support (S5B & EPSM)
 	* FDS auto-modulation support
-	* FDS emulation improvements
+	* FDS emulation improvements : Proper filtering, DAC emulation & fixes.
 	* Phase reset support
 	* Accurate seek support (fully emulate entire song from start)
 	* Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
+	* Folders in Project Explorer
+	* More filtering options for audio expansions & ability to store settings in project
 	* Support for up to 256 instruments (for both regular and expansion) in sound engine
-	* Many other small quality of life improvements (eraser mode, copy samples, type FX values+params, etc......... LIST MORE HERE!)
-	* Upgraded to .NET 7.0
-	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)
+	* Reduced audio latency on all platform and switch to WASAPI on Windows
+	* Video export improvements: 
+		* Unified piano roll mode
+		* Piano roll 3D effect
+		* Option to overlay registers
+		* Preview mode
+	* Small quality of life improvements:
+		* Eraser mode
+		* Ability to copy samples between instruments
+		* Ability to type effect values and project explorer parameters
+		* Function to replace specific instruments
+		* Logarithmic sliders for effects and parameters with huge values
 - Breaking/Behavior changes:
 	* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
 	* FDS emulation now matches the hardware much more closely. Some instruments may now sound very different.
+- System requirement changes:		
+	* Upgraded to .NET 7.0
+	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)
 
 Later
 =====
