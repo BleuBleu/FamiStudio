@@ -2750,7 +2750,7 @@ namespace FamiStudio
 
                             var dlg = new PropertyDialog(ParentWindow, ImportSongsTitle, 300);
                             dlg.Properties.AddLabel(null, ImportSongsLabel.Colon); // 0
-                            dlg.Properties.AddCheckBoxList(null, songsNames.ToArray(), null); // 1
+                            dlg.Properties.AddCheckBoxList(null, songsNames.ToArray(), null, null, 15); // 1
                             dlg.Properties.AddButton(null, SelectAllLabel); // 2
                             dlg.Properties.AddButton(null, SelectNoneLabel); // 3
                             dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
@@ -2901,7 +2901,7 @@ namespace FamiStudio
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportInstrumentsTitle, 300);
                                 dlg.Properties.AddLabel(null, ImportInstrumentsLabel.Colon); // 0
-                                dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null); // 1
+                                dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null, null, 15); // 1
                                 dlg.Properties.AddButton(null, SelectAllLabel); // 2
                                 dlg.Properties.AddButton(null, SelectNoneLabel); // 3
                                 dlg.Properties.Build();
@@ -3043,7 +3043,7 @@ namespace FamiStudio
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportSamplesTitle, 300);
                                 dlg.Properties.AddLabel(null, ImportSamplesLabel.Colon); // 0
-                                dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null); // 1
+                                dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null, null, 15); // 1
                                 dlg.Properties.AddButton(null, SelectAllLabel); // 2
                                 dlg.Properties.AddButton(null, SelectNoneLabel); // 3
                                 dlg.Properties.Build();
