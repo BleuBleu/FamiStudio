@@ -152,6 +152,7 @@ namespace FamiStudio
         float[]   slideNoteGeometry;
         float[]   seekGeometry;
         float[]   sampleGeometry;
+        float[]   mobileEraseGeometry;
 
         enum CaptureOperation
         {
@@ -213,7 +214,7 @@ namespace FamiStudio
             ThesholdNormalMobileOnly, // SelectWave
             0,                        // CreateNote
             ThesholdNormal,           // CreateSlideNote
-            ThesholdSmall,            // DeleteNotes
+            ThesholdNormal,           // DeleteNotes
             ThesholdNormal,           // DragSlideNoteTarget
             ThesholdNormal,           // DragSlideNoteTargetGizmo
             0,                        // DragVolumeSlideTarget
@@ -240,42 +241,42 @@ namespace FamiStudio
 
         static readonly bool[] captureWantsRealTimeUpdate = new[]
         {
-            false, // None
-            false, // PlayPiano
-            true,  // ResizeEnvelope
-            false, // DragLoop
-            false, // DragRelease
-            false, // ChangeEffectValue
-            false, // ChangeSelectionEffectValue
-            false, // ChangeEnvelopeRepeatValue
-            true,  // DrawEnvelope
-            true,  // Select
-            true,  // SelectWave
-            true,  // CreateNote
-            true,  // CreateSlideNote
-            false, // DeleteNotes
-            true,  // DragSlideNoteTarget
-            true,  // DragSlideNoteTargetGizmo
-            false, // DragVolumeSlideTarget
-            false, // DragVolumeSlideTargetGizmo
-            true,  // DragNote
-            true,  // DragSelection
-            false, // AltZoom
-            true,  // DragSample
-            true,  // DragSeekBar
-            false, // DragWaveVolumeEnvelope
-            false, // ScrollBarX
-            false, // ScrollBarY
-            true,  // ResizeNoteStart 
-            true,  // ResizeSelectionNoteStart
-            true,  // ResizeNoteEnd
-            true,  // ResizeSelectionNoteEnd
-            false, // MoveNoteRelease
-            false, // MoveSelectionNoteRelease
-            false, // ChangeEnvelopeValue
-            false, // MobileZoom
-            false, // MobileZoomVertical
-            false, // MobilePan
+            false,             // None
+            false,             // PlayPiano
+            true,              // ResizeEnvelope
+            false,             // DragLoop
+            false,             // DragRelease
+            false,             // ChangeEffectValue
+            false,             // ChangeSelectionEffectValue
+            false,             // ChangeEnvelopeRepeatValue
+            true,              // DrawEnvelope
+            true,              // Select
+            true,              // SelectWave
+            true,              // CreateNote
+            true,              // CreateSlideNote
+            Platform.IsMobile, // DeleteNotes
+            true,              // DragSlideNoteTarget
+            true,              // DragSlideNoteTargetGizmo
+            false,             // DragVolumeSlideTarget
+            false,             // DragVolumeSlideTargetGizmo
+            true,              // DragNote
+            true,              // DragSelection
+            false,             // AltZoom
+            true,              // DragSample
+            true,              // DragSeekBar
+            false,             // DragWaveVolumeEnvelope
+            false,             // ScrollBarX
+            false,             // ScrollBarY
+            true,              // ResizeNoteStart 
+            true,              // ResizeSelectionNoteStart
+            true,              // ResizeNoteEnd
+            true,              // ResizeSelectionNoteEnd
+            false,             // MoveNoteRelease
+            false,             // MoveSelectionNoteRelease
+            false,             // ChangeEnvelopeValue
+            false,             // MobileZoom
+            false,             // MobileZoomVertical
+            false,             // MobilePan
         };
 
         enum NoteAttackState
@@ -1185,6 +1186,17 @@ namespace FamiStudio
                 1.0f, 0,
                 1.0f, noteSizeY
             };
+
+            if (Platform.IsMobile)
+            {
+                mobileEraseGeometry = new float[2 * 64];
+                for (var i = 0; i < mobileEraseGeometry.Length / 2; i++)
+                {
+                    var angle = i / 64.0f * MathF.PI * 2.0f;
+                    mobileEraseGeometry[i * 2 + 0] = MathF.Cos(angle) * noteSizeY * 1.5f;
+                    mobileEraseGeometry[i * 2 + 1] = MathF.Sin(angle) * noteSizeY * 1.5f;
+                }
+            }
         }
 
         private bool IsBlackKey(int key)
@@ -2891,7 +2903,6 @@ namespace FamiStudio
                         foreach (var g in gizmos)
                         {
                             var highlighted = IsGizmoHighlighted(g, headerAndEffectSizeY);
-
                             var fillColor = GetNoteColor(Song.Channels[editChannel], gizmoNote.Value, gizmoNote.Instrument);
                             var lineColor = highlighted ? Color.White : Color.Black;
 
@@ -2903,10 +2914,16 @@ namespace FamiStudio
                                 r.f.DrawText(g.GizmoText, r.fonts.FontSmall, g.Rect.X - g.Rect.Width / 8, g.Rect.Y, Theme.WhiteColor, TextFlags.MiddleRight, 0, g.Rect.Height);
                         }
                     }
-                }
 
-                if (editMode == EditionMode.Channel)
-                {
+                    if (Platform.IsMobile && captureOperation == CaptureOperation.DeleteNotes)
+                    {
+                        var touchX = mouseLastX - pianoSizeX;
+                        var touchY = mouseLastY - headerAndEffectSizeY;
+                        r.f.PushTranslation(touchX, touchY);
+                        r.f.FillGeometry(mobileEraseGeometry, new Color(Theme.LightGreyColor1.R, Theme.LightGreyColor1.G, Theme.LightGreyColor1.B, 128), false);
+                        r.f.PopTransform();
+                    }
+
                     var channelType = song.Channels[editChannel].Type;
                     var channelName = song.Channels[editChannel].NameWithExpansion;
 
@@ -8028,6 +8045,9 @@ namespace FamiStudio
                     MarkPatternDirty(noteLocation.PatternIndex);
                 }
             }
+
+            if (Platform.IsMobile)
+                MarkDirty();
         }
 
         private void EndDeleteNotes()

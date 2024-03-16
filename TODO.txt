@@ -9,11 +9,10 @@ x Upgrade Windows to .NET 7.0
 / Latency improvements:
 	- Android : Run short/1-frame tests.
 	- MacOS : Audio device detection change.
-/ Hold SHIFT+click (also double-click) for multiple delete.	
-	- Make it work on mobile.
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
+- MATTTs
 
 4.2.0 Testing/Packaging
 =======================
