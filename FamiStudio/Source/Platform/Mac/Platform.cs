@@ -26,15 +26,22 @@ namespace FamiStudio
         public static bool Initialize(bool commandLine)
         {
             MacUtils.Initialize();
+            MacUtils.AudioDeviceChanged += Platform_AudioDeviceChanged;
 
             if (!InitializeDesktop(commandLine))
                 return false;
+
             return true;
         }
 
         public static void Shutdown()
         {
             ShutdownDesktop();
+        }
+
+        private void Platform_AudioDeviceChanged()
+        {
+            AudioDeviceChanged?.Invoke();
         }
 
         public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
