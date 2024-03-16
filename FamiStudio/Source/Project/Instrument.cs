@@ -66,6 +66,7 @@ namespace FamiStudio
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.InternalNames[expansion]})");
+        public string NameWithExpansionAndFolder => (string.IsNullOrEmpty(folderName) ? "" : $"{folderName}\\") + Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.InternalNames[expansion]})");
         public Color Color { get => color; set => color = value; }
         public int Expansion => expansion;
         public bool IsExpansionInstrument => expansion != ExpansionType.None;

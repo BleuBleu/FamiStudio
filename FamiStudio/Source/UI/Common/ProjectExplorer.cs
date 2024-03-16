@@ -2728,13 +2728,29 @@ namespace FamiStudio
                     {
                         if (otherProject != null)
                         {
-                            var songNames = new List<string>();
-                            foreach (var song in otherProject.Songs)
-                                songNames.Add(song.Name);
+                            var songs = new List<Song>();
+                            var songsNames = new List<string>();
+
+                            otherProject.SortSongs();
+
+                            foreach (var song in otherProject.GetSongsInFolder(null))
+                            {
+                                songs.Add(song);
+                                songsNames.Add(song.NameWithFolder);
+                            }
+
+                            foreach (var folder in otherProject.GetFoldersForType(FolderType.Song))
+                            {
+                                foreach (var song in otherProject.GetSongsInFolder(folder.Name))
+                                {
+                                    songs.Add(song);
+                                    songsNames.Add(song.NameWithFolder);
+                                }
+                            }
 
                             var dlg = new PropertyDialog(ParentWindow, ImportSongsTitle, 300);
                             dlg.Properties.AddLabel(null, ImportSongsLabel.Colon); // 0
-                            dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
+                            dlg.Properties.AddCheckBoxList(null, songsNames.ToArray(), null); // 1
                             dlg.Properties.AddButton(null, SelectAllLabel); // 2
                             dlg.Properties.AddButton(null, SelectNoneLabel); // 3
                             dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
@@ -2752,7 +2768,7 @@ namespace FamiStudio
                                     for (int i = 0; i < selected.Length; i++)
                                     {
                                         if (selected[i])
-                                            songIds.Add(otherProject.Songs[i].Id);
+                                            songIds.Add(songs[i].Id);
                                     }
 
                                     bool success = false;
@@ -2866,10 +2882,21 @@ namespace FamiStudio
                                 var instruments = new List<Instrument>();
                                 var instrumentNames = new List<string>();
 
-                                foreach (var instrument in instrumentProject.Instruments)
+                                instrumentProject.SortInstruments();
+
+                                foreach (var instrument in instrumentProject.GetInstrumentsInFolder(null))
                                 {
                                     instruments.Add(instrument);
-                                    instrumentNames.Add(instrument.NameWithExpansion);
+                                    instrumentNames.Add(instrument.NameWithExpansionAndFolder);
+                                }
+
+                                foreach (var folder in instrumentProject.GetFoldersForType(FolderType.Instrument))
+                                {
+                                    foreach (var instrument in instrumentProject.GetInstrumentsInFolder(folder.Name))
+                                    {
+                                        instruments.Add(instrument);
+                                        instrumentNames.Add(instrument.NameWithExpansionAndFolder);
+                                    }
                                 }
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportInstrumentsTitle, 300);
@@ -2994,10 +3021,25 @@ namespace FamiStudio
                                     return;
                                 }
 
+                                var samples = new List<DPCMSample>();
                                 var samplesNames = new List<string>();
 
-                                foreach (var sample in samplesProject.Samples)
-                                    samplesNames.Add(sample.Name);
+                                samplesProject.SortSamples();
+
+                                foreach (var sample in samplesProject.GetSamplesInFolder(null))
+                                {
+                                    samples.Add(sample);
+                                    samplesNames.Add(sample.NameWithFolder);
+                                }
+
+                                foreach (var folder in samplesProject.GetFoldersForType(FolderType.Sample))
+                                {
+                                    foreach (var sample in samplesProject.GetSamplesInFolder(folder.Name))
+                                    {
+                                        samples.Add(sample);
+                                        samplesNames.Add(sample.NameWithFolder);
+                                    }
+                                }
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportSamplesTitle, 300);
                                 dlg.Properties.AddLabel(null, ImportSamplesLabel.Colon); // 0
@@ -3017,7 +3059,7 @@ namespace FamiStudio
                                         for (int i = 0; i < selected.Length; i++)
                                         {
                                             if (selected[i])
-                                                sampleIdsToMerge.Add(samplesProject.Samples[i].Id);
+                                                sampleIdsToMerge.Add(samples[i].Id);
                                         }
 
                                         // Wipe everything but the instruments we want.

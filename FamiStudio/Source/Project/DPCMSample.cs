@@ -49,6 +49,7 @@ namespace FamiStudio
         public int Bank    { get => bank;  set => bank  = value; }
         public string FolderName { get => folderName; set => folderName = value; }
         public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Sample, folderName);
+        public string NameWithFolder => (string.IsNullOrEmpty(folderName) ? "" : $"{folderName}\\") + name;
 
         public string SourceFilename => sourceFilename;
         public bool SourceDataIsWav { get => sourceData is DPCMSampleWavSourceData; }

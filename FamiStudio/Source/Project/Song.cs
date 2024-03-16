@@ -55,6 +55,7 @@ namespace FamiStudio
         public int FamitrackerSpeed { get => famitrackerSpeed; set => famitrackerSpeed = value; }
         public string FolderName { get => folderName; set => folderName = value; }
         public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Song, folderName);
+        public string NameWithFolder => (string.IsNullOrEmpty(folderName) ? "" : $"{folderName}\\") + name;
 
         public NoteLocation StartLocation => new NoteLocation(0, 0);
         public NoteLocation EndLocation   => new NoteLocation(songLength, 0);
