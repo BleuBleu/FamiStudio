@@ -39,7 +39,7 @@ namespace FamiStudio
             ShutdownDesktop();
         }
 
-        private void Platform_AudioDeviceChanged()
+        private static void Platform_AudioDeviceChanged()
         {
             AudioDeviceChanged?.Invoke();
         }

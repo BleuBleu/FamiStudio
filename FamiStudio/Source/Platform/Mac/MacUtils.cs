@@ -141,15 +141,15 @@ namespace FamiStudio
         extern static IntPtr CFStringGetCharacters(IntPtr handle, CFRange range, IntPtr buffer);
 
         [DllImport("/System/Library/Frameworks/CoreAudio.framework/CoreAudio", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern int AudioObjectAddPropertyListener(uint inObjectID, AudioObjectPropertyAddress* inAddress, AudioObjectPropertyListenerProc inListener, IntPtr inClientData);
+        extern static unsafe int AudioObjectAddPropertyListener(uint inObjectID, AudioObjectPropertyAddress* inAddress, AudioObjectPropertyListenerProc inListener, IntPtr inClientData);
 
-        internal delegate int AudioObjectPropertyListenerProc(uint inObjectID, uint inNumberAddresses, AudioObjectPropertyAddress* inAddresses, IntPtr inClientData)
+        unsafe delegate int AudioObjectPropertyListenerProc(uint inObjectID, uint inNumberAddresses, AudioObjectPropertyAddress* inAddresses, IntPtr inClientData);
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         struct AudioObjectPropertyAddress
         {
             public int element;
-            public int scope
+            public int scope;
             public int selector;
         }
 
@@ -245,19 +245,13 @@ namespace FamiStudio
         static EventDelegate eventDelegate;
         static string lastOpenedDocument;
         static AudioObjectPropertyListenerProc audioDeviceChangeDelegate;
-        static AudioObjectPropertyAddress outputDeviceAddress = new AudioObjectPropertyAddress()
-        {
-            element = kAudioHardwarePropertyDefaultOutputDevice,
-            scope = kAudioObjectPropertyScopeGlobal,
-            selector = 0
-        };
 
         public static IntPtr FoundationLibrary => foundationLib;
         public static IntPtr NSApplication => nsApplication;
         public static IntPtr NSWindow => nsWindow;
         public static float  DoubleClickInterval => doubleClickInterval;
 
-        public static void Initialize()
+        public static unsafe void Initialize()
         {
             appKitLib = LoadLibrary("/System/Library/Frameworks/AppKit.framework/AppKit");
             foundationLib = LoadLibrary("/System/Library/Frameworks/Foundation.framework/Foundation");
@@ -282,6 +276,13 @@ namespace FamiStudio
             eventDelegate = new EventDelegate(HandleOpenDocuments);
             InstallEventHandler(GetApplicationEventTarget(), eventDelegate, 1, new CarbonEventTypeSpec[] { eventType }, IntPtr.Zero, out _);
 
+            var outputDeviceAddress = new AudioObjectPropertyAddress()
+            {
+                element = kAudioHardwarePropertyDefaultOutputDevice,
+                scope = kAudioObjectPropertyScopeGlobal,
+                selector = 0
+            };
+            
             audioDeviceChangeDelegate = new AudioObjectPropertyListenerProc(AudioDeviceChangedCallback);
             AudioObjectAddPropertyListener(kAudioObjectSystemObject, &outputDeviceAddress, audioDeviceChangeDelegate, IntPtr.Zero);
 
@@ -828,7 +829,7 @@ namespace FamiStudio
         }
         // End MonoDevelop code.
 
-        static int AudioDeviceChangedCallback(uint inObjectID, uint inNumberAddresses, AudioObjectPropertyAddress* inAddresses, IntPtr inClientData)
+        static unsafe int AudioDeviceChangedCallback(uint inObjectID, uint inNumberAddresses, AudioObjectPropertyAddress* inAddresses, IntPtr inClientData)
         {
             AudioDeviceChanged?.Invoke();
             return 0;
