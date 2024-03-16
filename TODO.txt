@@ -3,7 +3,6 @@
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
-- Change the noise/NOP thing.
 - Update localization files and tell localizer to translate.
 / Switch to .NET for Android too.
 	- Setup keystore, etc.
@@ -48,6 +47,7 @@
 - Breaking/Behavior changes:
 	* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
 	* FDS emulation now matches the hardware much more closely. Some instruments may now sound very different.
+	* S5B/EPSM noise no longer has a "NOP" frequency, noise frequency will be set if it is enabled by the mixer envelope. 
 - System requirement changes:		
 	* Upgraded to .NET 7.0
 	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)

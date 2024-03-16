@@ -2594,6 +2594,8 @@ famistudio_epsm_square_vol_table:
     .byte FAMISTUDIO_EPSM_REG_VOL_A, FAMISTUDIO_EPSM_REG_VOL_B, FAMISTUDIO_EPSM_REG_VOL_C
 famistudio_epsm_square_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS, FAMISTUDIO_EPSM_CH1_ENVS, FAMISTUDIO_EPSM_CH2_ENVS
+famistudio_epsm_square_noise_mask:
+    .byte $08, $10, $20
     .endif
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_SQUARE_CHANNEL_SOUND (internal)
@@ -2632,10 +2634,11 @@ famistudio_update_epsm_square_channel_sound:
     jmp .update_volume
 
 .nocut:
-    ; Store noise if > 0
+    ; Store noise if mixer has it enabled
     ldx famistudio_epsm_square_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-    beq .nonoise
+    lda famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    and famistudio_epsm_square_noise_mask,x
+    bne .nonoise
     sta <.noise_freq
 
 .nonoise:
@@ -3448,6 +3451,8 @@ famistudio_s5b_vol_table:
     .byte FAMISTUDIO_S5B_REG_VOL_A, FAMISTUDIO_S5B_REG_VOL_B, FAMISTUDIO_S5B_REG_VOL_C
 famistudio_s5b_env_table:
     .byte FAMISTUDIO_S5B_CH0_ENVS, FAMISTUDIO_S5B_CH1_ENVS, FAMISTUDIO_S5B_CH2_ENVS
+famistudio_s5b_noise_mask:
+    .byte $08, $10, $20
 
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_S5B_CHANNEL_SOUND (internal)
@@ -3486,10 +3491,11 @@ famistudio_update_s5b_channel_sound:
     jmp .update_volume
 
 .nocut:
-    ; Store noise if > 0
+    ; Store noise if mixer has it enabled
     ldx famistudio_s5b_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-    beq .nonoise
+    lda famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    and famistudio_s5b_noise_mask,x
+    bne .nonoise
     sta <.noise_freq
 
 .nonoise:

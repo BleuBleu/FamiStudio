@@ -683,11 +683,6 @@ namespace FamiStudio
                     case 3: return "-";
                 }
             }
-            else if (type == EnvelopeType.S5BNoiseFreq)
-            {
-                if (value == 0)
-                    return "NOP";
-            }
             else if (type == EnvelopeType.DutyCycle)
             {
                 if (instrument.IsVrc6)

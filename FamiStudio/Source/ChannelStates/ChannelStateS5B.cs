@@ -99,8 +99,9 @@ namespace FamiStudio
 
                 var mixerEnv  = envelopeValues[EnvelopeType.S5BMixer];
                 var noiseFreq = envelopeValues[EnvelopeType.S5BNoiseFreq];
+                var noiseEnabled = (mixerEnv & 0x2) == 0;
                 lastChannel.toneReg = (lastChannel.toneReg & invToneMask) | (((mixerEnv & 1) | ((mixerEnv & 0x2) << 2)) << channelIdx);
-                lastChannel.noiseFreq = noiseFreq > 0 ? noiseFreq : lastChannel.noiseFreq;
+                lastChannel.noiseFreq = noiseEnabled ? noiseFreq : lastChannel.noiseFreq;
 
                 if (instEnvShape != 0)
                 {
