@@ -8,7 +8,6 @@ x Upgrade Windows to .NET 7.0
 	- Bring back APK
 / Latency improvements:
 	- Android : Run short/1-frame tests.
-	- MacOS : Audio device detection change.
 / Finish phase reset
 	- NesSndEmu : Fix VRC6 square/saw emulation.
 	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
