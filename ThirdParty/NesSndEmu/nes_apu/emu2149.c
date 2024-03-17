@@ -300,7 +300,7 @@ update_output (PSG * psg)
       }
     }
 
-    if (psg->env_ptr == 0 && !psg->env_hold) 
+    if (psg->env_ptr == 0 && !psg->env_hold && psg->env_continue && (!psg->env_alternate || !psg->env_face))
         env_trigger = 1;
 
     if (psg->env_freq >= incr) 
