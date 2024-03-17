@@ -32,9 +32,9 @@ namespace FamiStudio
                     sawMasterVolume = note.Instrument.Vrc6SawMasterVolume;
                 }
 
-                WriteRegister(NesApu.VRC6_SAW_VOL, (volume << (2 - sawMasterVolume))); 
                 WriteRegister(NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
                 WriteRegister(NesApu.VRC6_SAW_HI, periodHi | 0x80);
+                WriteRegister(NesApu.VRC6_SAW_VOL, (volume << (2 - sawMasterVolume)));
             }
 
             base.UpdateAPU();

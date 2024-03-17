@@ -1,8 +1,5 @@
 4.2.0
 =====
-/ Finish phase reset
-	- NesSndEmu : Fix VRC6 square/saw emulation.
-	- NesSndEmu : FDS/N163, review our use of "delay", a bit sketchy.
 - Update localization files and tell localizer to translate.
 / Switch to .NET for Android too.
 	- Setup keystore, etc.

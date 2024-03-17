@@ -84,10 +84,8 @@ void Nes_Vrc6::write_osc( cpu_time_t time, int osc_index, int reg, int data )
 
 	if (reg == 2 && (data & 0x80) == 0)
 	{
-		// MATTT : This is wrong. VRC6 squares don't do a full cycles the first time 
-		// they run. This is a bug and needs to be fixed. Need to review saw as well,
-		// i doubt it works correctly. Phase is initialized at 1 in constructor + reset,
-		// review that too.
+		// I have very low confidence in this code. The blaarg approach is very efficient
+		// but it makes simple things like resetting the phase very annoying to do.
 		oscs[osc_index].phase = osc_index == 2 ? 1 : 0;
 		oscs[osc_index].amp = 0;
 	}
@@ -158,6 +156,17 @@ int Nes_Vrc6::get_channel_trigger(int idx) const
 }
 
 #include BLARGG_ENABLE_OPTIMIZER
+inline cpu_time_t Nes_Vrc6::maintain_square_phase(Vrc6_Osc& osc, cpu_time_t time, cpu_time_t end_time, cpu_time_t period)
+{
+	cpu_time_t remain = end_time - time;
+	if (remain > 0)
+	{
+		int count = (remain + period - 1) / period;
+		osc.phase = (osc.phase + count) & (15);
+		time += (long)count * period;
+	}
+	return time;
+}
 
 void Nes_Vrc6::run_square( Vrc6_Osc& osc, cpu_time_t end_time )
 {
@@ -169,7 +178,8 @@ void Nes_Vrc6::run_square( Vrc6_Osc& osc, cpu_time_t end_time )
 	}
 
 	int volume = osc.regs [0] & 15;
-	if ( !(osc.regs [2] & 0x80) )
+	int enabled = osc.regs [2] & 0x80;
+	if ( !enabled )
 		volume = 0;
 	
 	int gate = osc.regs [0] & 0x80;
@@ -182,11 +192,11 @@ void Nes_Vrc6::run_square( Vrc6_Osc& osc, cpu_time_t end_time )
 		square_synth.offset( time, delta, output );
 	}
 	
-	time += osc.delay;
-	osc.delay = 0;
 	int period = osc.period();
 	if ( volume && !gate && period > 4 )
 	{
+		time += osc.delay;
+
 		if ( time < end_time )
 		{
 			int phase = osc.phase;
@@ -216,6 +226,14 @@ void Nes_Vrc6::run_square( Vrc6_Osc& osc, cpu_time_t end_time )
 	}
 	else
 	{
+		if (osc.last_amp) {
+			square_synth.offset(time, -osc.last_amp, output);
+			osc.last_amp = 0;
+		}
+
+		if (enabled)
+			osc.delay = maintain_square_phase(osc, time + osc.delay, end_time, period) - end_time;
+
 		osc.trigger = trigger_none;
 	}
 }
