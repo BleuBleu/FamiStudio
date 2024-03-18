@@ -444,9 +444,7 @@ namespace FamiStudio
             var oscScaleY = (oscMaxY - oscMinY) / 2;
             var oscChannelPadX = separateChannels ? 0 : 5;
 
-            // If we have an empty channel, put the registers there.
-            var hasEmptyChannel = separateChannels && (channelStates.Length % numCols) != 0;
-            registerPosY = (hasEmptyChannel ? (numRows - 1) * channelSizeY : oscMaxY) + 4;
+            registerPosY += oscMaxY;
 
             var highlightedKeys = new ValueTuple<int, Color>[channelStates.Length];
 

@@ -20,7 +20,7 @@ namespace FamiStudio
         protected bool showRegisters;
         protected string tempAudioFile;
 
-        protected int registerPosY = 0;
+        protected int registerPosY = 4;
         protected int oscFrameWindowSize;
         protected int oscRenderWindowSize;
 

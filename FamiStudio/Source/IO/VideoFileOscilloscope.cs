@@ -29,10 +29,6 @@ namespace FamiStudio
 
             LoadChannelIcons(!smallChannelText);
 
-            // If we have an empty channel, put the registers there.
-            var hasEmptyChannel = (channelStates.Length % numCols) != 0;
-            registerPosY = (hasEmptyChannel ? (numRows - 1) * channelResY : 0) + 4;
-
             return LaunchEncoderLoop((f) =>
             {
                 var frame = metadata[f];
