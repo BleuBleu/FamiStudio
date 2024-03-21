@@ -979,10 +979,26 @@ namespace FamiStudio
                     volume = 15 - volume;
                 }
 
-                // We use the NTSC table for S5B and manually add 1, so compensate for that here.
-                if (channel.IsS5BChannel)
+                if (channel.IsS5BChannel || channel.IsEPSMSquareChannel)
                 {
-                    period -= 1;
+                    // We use the NTSC table for S5B and manually add 1, so compensate for that here.
+                    if (channel.IsS5BChannel && period > 0)
+                    {
+                        period -= 1;
+                    }
+                    else
+                    {
+                        // If envelopes are enabled, we may not have a valid period, since the envelope itself may
+                        // be making sound, without the tone. In this case, well arbitrarely put the note at C4.
+                        // When that happens, well also disable the tone (see comment below near GetS5BInstrument).
+                        var envEnabled = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
+
+                        if (envEnabled)
+                        {
+                            var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
+                            period = noteTable[Note.MusicalNoteC4];
+                        }
+                    }
                 }
 
                 var hasOctave  = channel.IsVrc7Channel || channel.IsEPSMFmChannel;
@@ -1130,9 +1146,17 @@ namespace FamiStudio
                     var envEnabled =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
                     var envShape   =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVSHAPE, 0);
                     var envTrigger =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVTRIGGER, 0);
-                    
+                    var rawPeriod  =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_PERIOD, 0);
+
                     mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
+
+                    // Disable tone when frequency is zero, since when that happens well put the note at C4 and we
+                    // dont really want a C4 to play. The envelope is likely making all the sound.
+                    if (rawPeriod == 0)
+                        mixer |= 1;
+
                     instrument = GetS5BInstrument(noiseFreq, mixer, envEnabled, envShape);
+
                     if (envEnabled)
                     {
                         if (envTrigger != 0)
