@@ -35,7 +35,7 @@ namespace FamiStudio
             values = new sbyte[maxLength];
             canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
             canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform;
-            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.YMNoiseFreq || type == EnvelopeType.YMMixerSettings;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.S5BNoiseFreq || type == EnvelopeType.S5BMixer;
             chunkLength = type == EnvelopeType.N163Waveform ? 16 : 1;
 
             if (canResize)
@@ -54,7 +54,11 @@ namespace FamiStudio
             set
             {
                 if (canResize)
-                    length = Utils.Clamp(value, 0, maxLength); 
+                {
+                    length = Utils.Clamp(value, 0, maxLength);
+                    if (chunkLength > 1)
+                        length = Math.Max(length, chunkLength);
+                }
                 if (loop >= length)
                     loop = -1;
                 if (release >= length)
@@ -95,7 +99,7 @@ namespace FamiStudio
             if (chunkLength > 1)
                 length = chunkLength;
             else if (canResize)
-                length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume ? 1 : 8;
+                length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume || type == EnvelopeType.S5BMixer ? 1 : 8;
 
             for (int i = 0; i < values.Length; i++)
                 values[i] = def;
@@ -327,10 +331,52 @@ namespace FamiStudio
                 values[j] = (sbyte)(values[j] - values[j - 1]);
         }
 
-        public void Truncate()
+        public static bool AreIdentical(int type, Envelope e1, Envelope e2)
         {
-            if (relative || !canResize || length == 0 || release >= 0)
+            if (e1.length    != e2.length   ||
+                e1.loop      != e2.loop     ||
+                e1.release   != e2.release  ||
+                e1.relative  != e2.relative ||
+                e1.maxLength != e2.maxLength)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < e1.length; i++)
+            {
+                if (e1.values[i] != e2.values[i])
+                    return false;
+            }
+            
+            // These are implied by the type, so they should always match.
+            Debug.Assert(
+                e1.maxLength   == e2.maxLength   &&
+                e1.chunkLength == e2.chunkLength &&
+                e1.canResize   == e2.canResize   &&
+                e1.canLoop     == e2.canLoop     &&
+                e1.canRelease  == e2.canRelease);
+
+            return true;
+        }
+
+        public void Optimize()
+        {
+            if (length == 0|| chunkLength > 1 || !canResize)
+            {
                 return;
+            }
+
+            if (AllValuesEqual(values[0]))
+            {
+                loop = -1;
+                release = -1;
+                Length = 1;
+                return;
+            }
+
+            // TODO : We can optimize more here. We should do it in 2 step.
+            // 1) Shorten loop (if any) if its all the same values.
+            // 2) Remove identical trailing values (start at release if any)
 
             if (loop >= 0)
             {
@@ -341,11 +387,12 @@ namespace FamiStudio
                         return;
                 }
 
-                length = 1;
+                Length = 1;
             }
             else
             {
-                // Non looping envelope can be optimized by removing all the trailing values that have the same value.
+                // Non looping envelope (or envelope with releases) can be optimized
+                // by removing all the trailing values that have the same value.
                 int i = length - 2;
                 for (; i >= 0 && i > release; i--)
                 {
@@ -353,13 +400,14 @@ namespace FamiStudio
                         break;
                 }
 
-                length = i + 2;
+                Length = i + 2;
             }
         }
 
         public Envelope ShallowClone()
         {
             var env = new Envelope();
+            env.values = values.Clone() as sbyte[];
             env.length = length;
             env.loop = loop;
             env.release = release;
@@ -367,7 +415,8 @@ namespace FamiStudio
             env.maxLength = maxLength;
             env.chunkLength = chunkLength;
             env.canResize = canResize;
-            env.values = values.Clone() as sbyte[];
+            env.canLoop = canLoop;
+            env.canRelease = canRelease;
             return env;
         }
 
@@ -499,7 +548,7 @@ namespace FamiStudio
             {
                 case EnvelopeType.Volume:
                     return (sbyte)15;
-                case EnvelopeType.YMMixerSettings:
+                case EnvelopeType.S5BMixer:
                     return (sbyte)2;
                 default:
                     return (sbyte)0;
@@ -533,7 +582,7 @@ namespace FamiStudio
                     return 1;
                 case EnvelopeType.FdsWaveform:
                     return 32;
-                case EnvelopeType.YMMixerSettings:
+                case EnvelopeType.S5BMixer:
                     return 2;
                 default:
                     return 0;
@@ -605,12 +654,12 @@ namespace FamiStudio
                 min = 1;
                 max = 15; // Arbitrary.
             }
-            else if (type == EnvelopeType.YMMixerSettings)
+            else if (type == EnvelopeType.S5BMixer)
             {
                 min = 0;
-                max = 2;
+                max = 3;
             }
-            else if (type == EnvelopeType.YMNoiseFreq)
+            else if (type == EnvelopeType.S5BNoiseFreq)
             {
                 min = 0;
                 max = 31;
@@ -624,19 +673,15 @@ namespace FamiStudio
 
         public static string GetDisplayValue(Instrument instrument, int type, int value)
         {
-            if (type == EnvelopeType.YMMixerSettings)
+            if (type == EnvelopeType.S5BMixer)
             {
                 switch (value)
                 {
                     case 0: return "N+T";
                     case 1: return "N";
                     case 2: return "T";
+                    case 3: return "-";
                 }
-            }
-            else if (type == EnvelopeType.YMNoiseFreq)
-            {
-                if (value == 0)
-                    return "NOP";
             }
             else if (type == EnvelopeType.DutyCycle)
             {
@@ -702,7 +747,7 @@ namespace FamiStudio
                 Array.Resize(ref values, maxTypeLength);
         }
 
-        public void SerializeState(ProjectBuffer buffer, int type)
+        public void Serialize(ProjectBuffer buffer, int type)
         {
             buffer.Serialize(ref length);
             buffer.Serialize(ref loop);
@@ -728,8 +773,8 @@ namespace FamiStudio
         public const int FdsModulation  = 5;
         public const int N163Waveform   = 6;
         public const int WaveformRepeat = 7;
-        public const int YMMixerSettings= 8;
-        public const int YMNoiseFreq    = 9;
+        public const int S5BMixer       = 8;
+        public const int S5BNoiseFreq   = 9;
         public const int Count          = 10;
 
         // Use these to display to user

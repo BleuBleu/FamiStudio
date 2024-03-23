@@ -37,14 +37,14 @@ CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMIST
 CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_MMC5=1", nsf_famistudio_mmc5_ntsc
 CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_S5B=1", nsf_famistudio_s5b_ntsc
 CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_FDS=1", nsf_famistudio_fds_ntsc
-CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=1", nsf_famistudio_n163_1ch_ntsc
-CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=2", nsf_famistudio_n163_2ch_ntsc
-CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=3", nsf_famistudio_n163_3ch_ntsc
-CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=4", nsf_famistudio_n163_4ch_ntsc
-CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=5", nsf_famistudio_n163_5ch_ntsc
-CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=6", nsf_famistudio_n163_6ch_ntsc
-CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=7", nsf_famistudio_n163_7ch_ntsc
-CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=8", nsf_famistudio_n163_8ch_ntsc
+CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=1", nsf_famistudio_n163_1ch_ntsc
+CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=2", nsf_famistudio_n163_2ch_ntsc
+CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=3", nsf_famistudio_n163_3ch_ntsc
+CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=4", nsf_famistudio_n163_4ch_ntsc
+CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=5", nsf_famistudio_n163_5ch_ntsc
+CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=6", nsf_famistudio_n163_6ch_ntsc
+CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=7", nsf_famistudio_n163_7ch_ntsc
+CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=1", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=8", nsf_famistudio_n163_8ch_ntsc
 
 :: FamiStudio Multi-expansion Engine (FamiTracker tempo)
 CALL :CompileNsfPermutation nsf.cfg, "{CODEBANKS}=2", "-D FAMISTUDIO=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_MULTI_EXPANSION=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=1", nsf_famistudio_famitracker_multi_n163_1ch_ntsc
@@ -89,6 +89,6 @@ EXIT /B %ERRORLEVEL%
 PatchText %~1 tmp.cfg %~2
 ..\..\Tools\ca65 nsf.s -g -o %~4.o %~3 
 ..\..\Tools\ld65 -C tmp.cfg -o %~4.bin %~4.o --mapfile %~4.map --dbgfile %~4.dbg
-::PrintCodeSize %~4.map
+PrintCodeSize %~4.bin %~2
 del tmp.cfg
 EXIT /B 0

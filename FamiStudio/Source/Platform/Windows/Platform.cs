@@ -21,6 +21,8 @@ namespace FamiStudio
 
         private static float doubleClickTime;
 
+        private static MultiMediaNotificationListener mediaNotificationListener;
+
         public static bool Initialize(bool commandLine)
         {
             if (!DetectRequiredDependencies())
@@ -28,6 +30,12 @@ namespace FamiStudio
 
             if (!InitializeDesktop(commandLine))
                 return false;
+
+            if (!commandLine)
+            {
+                mediaNotificationListener = new MultiMediaNotificationListener();
+                mediaNotificationListener.DefaultDeviceChanged += MmNoticiations_DefaultDeviceChanged;
+            }
 
             clipboardFormat = RegisterClipboardFormat("FamiStudio");
             doubleClickTime = GetDoubleClickTime() / 1000.0f;
@@ -45,10 +53,12 @@ namespace FamiStudio
             ShutdownDesktop();
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
         {
-            return new XAudio2Stream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
+            return PortAudioStream.Create(rate, stereo, bufferSizeMs);
         }
+
+        public static int AudioDeviceSampleRate => PortAudioStream.DeviceSampleRate;
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public class OpenFileName
@@ -284,16 +294,6 @@ namespace FamiStudio
                 return false;
             }
 
-            if (!XAudio2Stream.TryDetectXAudio2())
-            {
-                if (MessageBox(null, "You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                {
-                    OpenUrl("https://famistudio.org/doc/install/#windows");
-                }
-
-                return false;
-            }
-
             return true;
         }
 
@@ -315,6 +315,14 @@ namespace FamiStudio
         public static void Beep()
         {
             MessageBeep(0);
+        }
+
+        [DllImport("kernel32.dll")]
+        public unsafe static extern bool RtlZeroMemory(void* destination, int length);
+
+        public static unsafe void ZeroMemory(IntPtr p, int len)
+        {
+            RtlZeroMemory(p.ToPointer(), len);
         }
 
         [DllImport("user32.dll")]

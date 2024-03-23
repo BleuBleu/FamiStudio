@@ -17,6 +17,7 @@ namespace FamiStudio
         protected int height = 100;
         protected bool visible = true;
         protected bool enabled = true;
+        protected bool canFocus = true;
         protected string tooltip;
 
         protected Control()
@@ -76,7 +77,7 @@ namespace FamiStudio
         public void MouseDoubleClick(MouseEventArgs e) { OnMouseDoubleClick(e); }
         public void MouseMove(MouseEventArgs e) { OnMouseMove(e); DialogMouseDownNotify(e); }
         public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
-        public void MouseWheel(MouseEventArgs e) { OnMouseWheel(e); }
+        public void MouseWheel(MouseEventArgs e) { OnMouseWheel(e); ContainerMouseWheelNotify(e); }
         public void MouseHorizontalWheel(MouseEventArgs e) { OnMouseHorizontalWheel(e); }
         public void KeyDown(KeyEventArgs e) { OnKeyDown(e); }
         public void KeyUp(KeyEventArgs e) { OnKeyUp(e); }
@@ -94,8 +95,9 @@ namespace FamiStudio
         public void LostDialogFocus() { OnLostDialogFocus(); }
         public void AcquiredDialogFocus() { OnAcquiredDialogFocus(); }
         public void AddedToContainer() { OnAddedToContainer(); }
-        
-		public void DialogMouseDownNotify(MouseEventArgs e) { ParentDialog?.DialogMouseDownNotify(this, e); }
+
+        public void ContainerMouseWheelNotify(MouseEventArgs e) { ParentContainer?.ContainerMouseWheelNotify(this, e); } 
+        public void DialogMouseDownNotify(MouseEventArgs e) { ParentDialog?.DialogMouseDownNotify(this, e); }
         public void DialogMouseMoveNotify(MouseEventArgs e) { ParentDialog?.DialogMouseMoveNotify(this, e); }
 
         public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
@@ -115,6 +117,7 @@ namespace FamiStudio
         public void ClearDialogFocus() { if (ParentDialog != null) ParentDialog.FocusedControl = null; }
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
         public bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
+        public bool CanFocus { get => canFocus; }
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
         public void MarkDirty() { window?.MarkDirty(); }
 
@@ -125,10 +128,20 @@ namespace FamiStudio
         public IntPtr Cursor { get => cursor; set { cursor = value; ParentWindow.RefreshCursor(); } }
         public FamiStudioWindow ParentWindow => window;
         public Container ParentContainer => container;
-        public Dialog ParentDialog => container as Dialog;
         public Graphics Graphics => graphics;
         public Fonts Fonts => fonts;
         public Point WindowPosition => ControlToWindow(Point.Empty);
+
+        public Dialog ParentDialog
+        {
+            get
+            {
+                var c = container;
+                while (c != null && !(c is Dialog))
+                    c = c.container;
+                return c as Dialog;
+            }
+        }
 
         public virtual Point ControlToWindow(Point p)
         {
@@ -141,6 +154,8 @@ namespace FamiStudio
             {
                 p.X += c.Left;
                 p.Y += c.Top;
+                p.X -= c.ScrollX;
+                p.Y -= c.ScrollY;
                 c = c.ParentContainer;
             }
 
@@ -155,6 +170,8 @@ namespace FamiStudio
             {
                 p.X -= c.Left;
                 p.Y -= c.Top;
+                p.X += c.ScrollX;
+                p.Y += c.ScrollY;
                 c = c.ParentContainer;
             }
 
@@ -374,6 +391,7 @@ namespace FamiStudio
         private float scrollX;
         private float scrollY;
         private bool delay;
+        private bool handled; // Only use for mousewheel right now. Not fully implemented.
 
         public bool Left   => (buttons & ButtonLeft)   != 0;
         public bool Right  => (buttons & ButtonRight)  != 0;
@@ -384,6 +402,7 @@ namespace FamiStudio
         public float ScrollX => scrollX;
         public float ScrollY => scrollY;
         public bool IsRightClickDelayed => delay;
+        public bool Handled => handled;
 
         public MouseEventArgs(int btns, int x, int y, float sx = 0.0f, float sy = 0.0f)
         {
@@ -392,6 +411,12 @@ namespace FamiStudio
             posY = y;
             scrollX = sx;
             scrollY = sy;
+            handled = false;
+        }
+
+        public void MarkHandled()
+        {
+            handled = true;
         }
 
         public void DelayRightClick()

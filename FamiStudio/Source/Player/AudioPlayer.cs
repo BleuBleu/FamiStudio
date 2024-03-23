@@ -2,10 +2,11 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    public class AudioPlayer : BasePlayer
+    public abstract class AudioPlayer : BasePlayer
     {
         protected const float MetronomeFirstBeatPitch  = 1.375f;
         protected const float MetronomeFirstBeatVolume = 1.5f;
@@ -13,6 +14,7 @@ namespace FamiStudio
         public class FrameAudioData
         {
             public short[] samples;
+            public int   playPosition;
             public int   triggerSample = NesApu.TRIGGER_NONE;
             public int   metronomePosition;
             public float metronomePitch  = 1.0f;
@@ -20,25 +22,56 @@ namespace FamiStudio
         };
 
         protected IAudioStream audioStream;
-        protected Thread playerThread;
-        protected Semaphore bufferSemaphore;
-        protected ManualResetEvent stopEvent = new ManualResetEvent(false);
-        protected ConcurrentQueue<FrameAudioData> sampleQueue = new ConcurrentQueue<FrameAudioData>();
         protected short[] metronomeSound;
         protected int metronomePlayPosition = -1;
         protected int metronomeBeat = -1;
         protected int numBufferedFrames = 3;
         protected IOscilloscope oscilloscope;
 
-        public bool IsOscilloscopeConnected => oscilloscope != null;
+        // These are only used when the number of buffered emulation frame > 0
+        protected Thread emulationThread;
+        protected Semaphore emulationSemaphore;
+        protected ManualResetEvent stopEvent;
+        protected ConcurrentQueue<FrameAudioData> emulationQueue;
 
-        protected AudioPlayer(int apuIndex, bool pal, int sampleRate, bool stereo, int numBuffers) : base(apuIndex, stereo, sampleRate)
+        // Only used when number of buffered emulation frame == 0
+        protected FrameAudioData lastFrameAudioData;
+
+        // Used when accurate seeking.
+        protected volatile bool abortSeek;
+        protected Task seekTask;
+
+        protected abstract bool EmulateFrame();
+
+        public bool IsOscilloscopeConnected => oscilloscope != null;
+        public bool IsPlaying => (UsesEmulationThread ? (emulationThread != null || emulationQueue.Count > 0) : (audioStream != null && audioStream.IsPlaying)) || IsSeeking;
+        public bool IsSeeking => seekTask != null;
+
+        protected bool UsesEmulationThread => numBufferedFrames > 0;
+
+        public override int PlayPosition
         {
-            int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short) * (stereo ? 2 : 1);
-            numBufferedFrames = numBuffers;
-            bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
-            audioStream = Platform.CreateAudioStream(sampleRate, stereo, bufferSize, numBufferedFrames, AudioBufferFillCallback);
-            registerValues.SetPalMode(pal);
+            get 
+            {
+                // Take the oldest frame in the queue as our play position when using emulation thread.
+                if (UsesEmulationThread && emulationQueue.TryPeek(out var data) && data != null)
+                    return Math.Max(0, data.playPosition);
+                else
+                    return base.PlayPosition;
+            }
+        }
+
+        protected AudioPlayer(IAudioStream stream, int apuIndex, bool pal, int sampleRate, bool stereo, int numFrames) : base(apuIndex, pal, stereo, sampleRate) 
+        {
+            numBufferedFrames = numFrames;
+            audioStream = stream;
+            
+            if (UsesEmulationThread)
+            {
+                stopEvent = new ManualResetEvent(false);
+                emulationSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
+                emulationQueue = new ConcurrentQueue<FrameAudioData>();
+            }
         }
 
         protected short[] MixSamples(short[] emulation, short[] metronome, int metronomeIndex, float pitch, float volume)
@@ -76,42 +109,77 @@ namespace FamiStudio
             }
         }
 
-        protected short[] AudioBufferFillCallback()
+        protected short[] AudioBufferFillCallback(out bool done)
         {
             FrameAudioData data;
-            if (sampleQueue.TryDequeue(out data))
+
+            done = false;
+
+            if (UsesEmulationThread)
             {
-                if (oscilloscope != null)
-                    oscilloscope.AddSamples(data.samples, data.triggerSample);
+                if (!emulationQueue.TryDequeue(out data))
+                {
+                    // Trace.WriteLine("Audio is starving!");
+                    return null;
+                }
 
-                // Tell player thread it needs to generate one more frame.
-                bufferSemaphore.Release(); 
-
-                // Mix in metronome if needed.
-                if (data.metronomePosition >= 0)
-                    data.samples = MixSamples(data.samples, metronomeSound, data.metronomePosition, data.metronomePitch, data.metronomeVolume);
-                return data.samples;
+                // Tell emulation thread it should start rendering one more frame.
+                emulationSemaphore.Release();
             }
             else
             {
-                // Trace.WriteLine("Audio is starving!");
+                // First time it wont be null since we call BeginPlaySong.
+                if (lastFrameAudioData == null)
+                    EmulateFrame();
+                data = lastFrameAudioData;
+                lastFrameAudioData = null;
+            }
+
+            // This means we've reached the end of a non-looping song.
+            if (data == null)
+            {
+                done = true;
                 return null;
+            }
+
+            // If we are driving the toolbar oscilloscope, provide samples.
+            if (oscilloscope != null)
+                oscilloscope.AddSamples(data.samples, data.triggerSample);
+
+            // Mix in metronome if needed.
+            if (data.metronomePosition >= 0)
+                data.samples = MixSamples(data.samples, metronomeSound, data.metronomePosition, data.metronomePitch, data.metronomeVolume);
+
+            return data.samples;
+        }
+
+        protected void AudioStreamStartingCallback()
+        {
+            if (UsesEmulationThread)
+            {
+                // Stream is about to start, wait for emulation to pre-fill its buffers.
+                while (emulationQueue.Count < numBufferedFrames && !reachedEnd)
+                    Thread.Sleep(1);
             }
         }
 
         protected void ResetThreadingObjects()
         {
             stopEvent.Reset();
-            bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
+            emulationSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
         }
 
         public override void Shutdown()
         {
-            stopEvent.Set();
-            if (playerThread != null)
-                playerThread.Join();
+            if (UsesEmulationThread)
+            {
+                stopEvent.Set();
+                if (emulationThread != null)
+                    emulationThread.Join();
+            }
 
-            audioStream.Dispose();
+            audioStream?.Stop();
+            audioStream = null;
         }
 
         public void ConnectOscilloscope(IOscilloscope osc)
@@ -136,6 +204,7 @@ namespace FamiStudio
 
             data.samples = base.EndFrame();
             data.metronomePosition = metronomePlayPosition;
+            data.playPosition = playPosition;
 
             if (beatIndex == 0)
             {
@@ -157,15 +226,14 @@ namespace FamiStudio
         {
             var data = GetFrameAudioData();
 
-            sampleQueue.Enqueue(data);
-
-            // Wait until we have queued the maximum number of buffered frames to start
-            // the audio thread, otherwise, we risk starving on the first frame.
-            if (!audioStream.IsStarted && sampleQueue.Count == numBufferedFrames)
+            if (UsesEmulationThread)
             {
-                // Semaphore should be zero by now.
-                Debug.Assert(bufferSemaphore.WaitOne(0) == false);
-                audioStream.Start();
+                emulationQueue.Enqueue(data);
+            }
+            else
+            {
+                Debug.Assert(lastFrameAudioData == null);
+                lastFrameAudioData = data;
             }
 
             return null;

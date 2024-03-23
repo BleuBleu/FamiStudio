@@ -57,7 +57,7 @@ namespace PrintCodeSize
 
         static void Main(string[] args)
         {
-            var expansionDefines = new string[15][]
+            var expansionDefines = new string[19][]
             {
                 new string [] { },
                 new [] { "FAMISTUDIO_EXP_MMC5=1" },
@@ -65,6 +65,10 @@ namespace PrintCodeSize
                 new [] { "FAMISTUDIO_EXP_VRC6=1" },
                 new [] { "FAMISTUDIO_EXP_VRC7=1" },
                 new [] { "FAMISTUDIO_EXP_EPSM=1" },
+                new [] { "FAMISTUDIO_EXP_EPSM=1" , "FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT=3" , "FAMISTUDIO_EXP_EPSM_FM_CHN_CNT=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE=0" },
+                new [] { "FAMISTUDIO_EXP_EPSM=1" , "FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT=0" , "FAMISTUDIO_EXP_EPSM_FM_CHN_CNT=3", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE=0" },
+                new [] { "FAMISTUDIO_EXP_EPSM=1" , "FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT=0" , "FAMISTUDIO_EXP_EPSM_FM_CHN_CNT=6", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE=0", "FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE=0" },
+                new [] { "FAMISTUDIO_EXP_EPSM=1" , "FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT=0" , "FAMISTUDIO_EXP_EPSM_FM_CHN_CNT=0"},
                 new [] { "FAMISTUDIO_EXP_FDS=1"  },
                 new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=1" },
                 new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=2" },
@@ -84,6 +88,10 @@ namespace PrintCodeSize
                 "VRC6",
                 "VRC7",
                 "EPSM",
+                "EPSM SSG Only",
+                "EPSM FM 1-3 Only",
+                "EPSM FM 1-6 Only",
+                "EPSM Rythm Only",
                 "FDS",
                 "N163 (1 channels)",
                 "N163 (2 channels)",

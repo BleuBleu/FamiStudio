@@ -6,14 +6,16 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    public delegate short[] GetBufferDataCallback();
+    public delegate short[] GetBufferDataCallback(out bool done);
+    public delegate void StreamStartingCallback();
 
     public interface IAudioStream : IDisposable
     {
-        bool IsStarted { get; }
+        bool IsPlaying { get; }
+        bool Stereo { get; }
         int ImmediatePlayPosition { get; }
 
-        void Start();
+        void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback);
         void Stop();
         void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0);
     }

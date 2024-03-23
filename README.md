@@ -10,21 +10,21 @@ All releases are available in the [Releases](https://github.com/BleuBleu/FamiStu
 
 ## Compiling
 FamiStudio is composed of a few projects:
-- The main FamiStudio application is written in C#. 
-- NesSndEmu, NotSoFatso, ShineMp3, Vorbis & GifDec are C++ DLLs and are provided as binaries since they rarely change. 
+- The main FamiStudio application is written in C#. We currently target .NET 7.0 on all platforms.
+- NesSndEmu, NotSoFatso, ShineMp3, Vorbis & GifDec are C++ DLLs and binaries are provided since they rarely change. 
 - The Setup project (Windows only)
 
 ### Windows
-On Windows, Visual Studio 2019 is used for development, but VS Code with the C# plugin should work too. We target .NET 5.0, but newer version should work (will migrate to Visual Studio 2022 and .NET 6.0 in the next major version). The project contains everything, including both DLLs and the Setup project. In you plan to recompile the C++ DLLs, you will need to install C++ support in Visual Studio. The Setup project is built using the "Microsoft Visual Studio Installer Projects" extension which can be installed from Visual Studio in the "Extensions and Updates" menu.
+On Windows, Visual Studio 2022 is used for development, but VS Code with the C# plugin should work too. The project contains everything, including both DLLs and the Setup project. In you plan to recompile the C++ DLLs, you will need to install C++ support in Visual Studio. The Setup project is built using the "Microsoft Visual Studio Installer Projects" extension which can be installed from Visual Studio in the "Extensions and Updates" menu.
 
 ### MacOS
-On MacOS, VS Code is used for development, but Visual Studio for Mac might work too. We target .NET 6.0. The C++ DLLs can be compiled using a little shell script "build_macos.sh" that is located in the each of the folders. No fancy makefile here. [PortAudio](http://www.portaudio.com/) and [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/), which are used for audio output and MIDI input respectively have been pre-compiled using Homebrew and are likely not going to change often. The Application bundle is updated manually at each release.
+On MacOS, VS Code is used for development, but Visual Studio for Mac might work too. The C++ DLLs can be compiled using a little shell script "build_macos.sh" that is located in the each of the folders. No fancy makefile here. [PortAudio](http://www.portaudio.com/) and [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/), which are used for audio output and MIDI input respectively have been pre-compiled using Homebrew and are likely not going to change often. The Application bundle is updated manually at each release.
 
 ### Linux.
-On Linux, VS Code is used for development and we target .NET 6.0. Much like MacOS, a little shell script, "build_linux.sh" is provided to compile each of the C++ DLLs. No makefile is provided at the moment. [OpenAL Soft](https://openal-soft.org/) is provided as a precompiled AMD64 binary with ALSA support, if you recompile your own you will need to replace libopenal32.so or edit the [dllmap](https://www.mono-project.com/docs/advanced/pinvoke/dllmap/) (FamiStudio.exe.config) to point to the correct library. Same for [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) which is provided as librtmidi.so.
+On Linux, VS Code is used for development. Much like MacOS, a little shell script, "build_linux.sh" is provided to compile each of the C++ DLLs. No makefile is provided at the moment. [OpenAL Soft](https://openal-soft.org/) is provided as a precompiled AMD64 binary with ALSA support, if you recompile your own you will need to replace libopenal32.so or edit the [dllmap](https://www.mono-project.com/docs/advanced/pinvoke/dllmap/) (FamiStudio.exe.config) to point to the correct library. Same for [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) which is provided as librtmidi.so.
 
 ### Android
-On Android, Visual Studio 2022 is used and we target API level 33 (Android 13.0) and still use Mono here. The C++ DLLs needs to be compiled manually for all 3 architectures (x64, ARM, ARM64) whenever there is a change. We target a minimum version API level of 26 (Android 8.0, Oreo), so make sure to test features on all versions in between. 
+On Android, Visual Studio 2022 is used and we target API level 33 (Android 13.0), but support a minimum version API level of 26 (Android 8.0, Oreo), so make sure to test features on all versions in between. The C++ DLLs needs to be compiled manually for all 3 architectures (x64, ARM, ARM64) whenever there is a change. 
 
 ## Contributing
 I'm hesitant to take unsolicited pull requests. If you want to contribute a feature, please get in touch with me first so we can come up with a plan. This will avoid wasting both your time and mine.

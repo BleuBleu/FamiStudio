@@ -12,14 +12,21 @@ namespace FamiStudio
             public bool visible = true;
         }
 
-        int selectedIndex = 0;
-        List<PropertyPageTab> tabs = new List<PropertyPageTab>();
+        private int selectedIndex = 0;
+        private List<PropertyPageTab> tabs = new List<PropertyPageTab>();
         private int margin = DpiScaling.ScaleForWindow(8);
         private int tabsSizeX;
         private int tabsSizeY = DpiScaling.ScaleForWindow(32);
 
         private Button buttonYes;
         private Button buttonNo;
+
+        public delegate void PageChangingDelegate(int oldPage, int newPage);
+        public delegate void CustomVerbActivatedDelegate();
+        public delegate void AppSuspendedDelegate();
+        public event PageChangingDelegate PageChanging;
+        public event CustomVerbActivatedDelegate CustomVerbActivated;
+        public event AppSuspendedDelegate AppSuspended;
 
         public MultiPropertyDialog(FamiStudioWindow win, string title, int width, int tabsWidth = 150) : base(win, title)
         {
@@ -98,6 +105,18 @@ namespace FamiStudio
             tabs[idx].visible = visible;
         }
 
+        public void SetPageBackPage(int idx, int backIdx)
+        {
+        }
+
+        public void AddPageCustomVerb(int idx, string verb)
+        {
+        }
+
+        public void SwitchToPage(int idx)
+        {
+        }
+
         public int SelectedIndex => selectedIndex;
 
         private Button AddButton(string text, string image)
@@ -130,6 +149,9 @@ namespace FamiStudio
                 var visible = i == idx;
                 tabs[i].button.BoldFont = visible;
                 tabs[i].properties.Visible = visible;
+
+                if (visible)
+                    tabs[i].properties.ConditionalSetTextBoxFocus();
             }
         }
 

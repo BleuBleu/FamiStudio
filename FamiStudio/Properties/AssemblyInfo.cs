@@ -12,7 +12,7 @@ using Android.App;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("BleuBleu")]
 [assembly: AssemblyProduct("FamiStudio")]
-[assembly: AssemblyCopyright("Copyright © 2019-2023")]
+[assembly: AssemblyCopyright("Copyright © 2019-2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -37,8 +37,8 @@ using Android.App;
 
 // The last digit is the BETA version number. When it is non-zero, the build and will be 
 // interpreted as a development version.
-[assembly: AssemblyVersion("4.1.3.0")]
-[assembly: AssemblyFileVersion("4.1.3.0")]
+[assembly: AssemblyVersion("4.2.0.0")]
+[assembly: AssemblyFileVersion("4.2.0.0")]
 
 #if FAMISTUDIO_ANDROID
 // Add some common permissions, these can be removed if not needed

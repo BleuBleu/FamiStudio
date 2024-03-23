@@ -143,6 +143,12 @@ namespace FamiStudio
                 return false;
             }
 
+            // HACK: If you expand the toolbar, you can actually click on the quick access bar.
+            if (toolbar.IsExpanded && c != toolbar)
+            {
+                return false;
+            }
+
             return base.CanInteractWithContainer(c);
         }
 

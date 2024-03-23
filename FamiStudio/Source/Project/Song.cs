@@ -14,6 +14,7 @@ namespace FamiStudio
         private Project project;
         private Channel[] channels;
         private Color color;
+        private string folderName;
         private int patternLength = 96;
         private int songLength = 16;
         private int beatLength = 40;
@@ -52,6 +53,9 @@ namespace FamiStudio
         public bool UsesFamiTrackerTempo => project.UsesFamiTrackerTempo;
         public int FamitrackerTempo { get => famitrackerTempo; set => famitrackerTempo = value; }
         public int FamitrackerSpeed { get => famitrackerSpeed; set => famitrackerSpeed = value; }
+        public string FolderName { get => folderName; set => folderName = value; }
+        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Song, folderName);
+        public string NameWithFolder => (string.IsNullOrEmpty(folderName) ? "" : $"{folderName}\\") + name;
 
         public NoteLocation StartLocation => new NoteLocation(0, 0);
         public NoteLocation EndLocation   => new NoteLocation(songLength, 0);
@@ -505,6 +509,62 @@ namespace FamiStudio
             }
         }
 
+        public bool DuplicatePatternsForNoteLengthChange(int minPatternIdx, int maxPatternIdx, bool ignoreCustomSettings)
+        {
+            var duplicatedAnything = false;
+
+            // Gather all patterns inside/outside the range we will be modifying.
+            foreach (var channel in channels)
+            {
+                var patternsInsideRange  = new HashSet<Pattern>();
+                var patternsOutsideRange = new HashSet<Pattern>();
+
+                for (var p = 0; p < songLength; p++)
+                {
+                    var pattern = channel.PatternInstances[p];
+
+                    if (pattern != null)
+                    {
+                        var inRange = p >= minPatternIdx && p <= maxPatternIdx && (!ignoreCustomSettings || !PatternHasCustomSettings(p));
+
+                        if (inRange)
+                            patternsInsideRange.Add(pattern);
+                        else
+                            patternsOutsideRange.Add(pattern);
+                    }
+                }
+
+                // For all patterns inside the range, see if there are also instances
+                // outside of it. It so, we will need to duplicate the pattenrs to avoid
+                // breaking anything.
+                var oldToNewPattern = new Dictionary<Pattern, Pattern>();
+
+                foreach (var pattern in patternsInsideRange)
+                {
+                    if (patternsOutsideRange.Contains(pattern))
+                    {
+                        oldToNewPattern.Add(pattern, pattern.ShallowClone());
+                        duplicatedAnything = true;
+                    }
+                }
+
+                for (var p = minPatternIdx; p <= maxPatternIdx; p++)
+                {
+                    var inRange = !ignoreCustomSettings || !PatternHasCustomSettings(p);
+                    if (inRange)
+                    {
+                        var oldPattern = channel.PatternInstances[p];
+                        if (oldPattern != null && oldToNewPattern.TryGetValue(oldPattern, out var newPattern))
+                        {
+                            channel.PatternInstances[p] = newPattern;
+                        }
+                    }
+                }
+            }
+
+            return duplicatedAnything;
+        }
+
         public void ChangeFamiStudioTempoGroove(int[] newGroove, bool convert)
         {
             var newNoteLength = Utils.Min(newGroove);
@@ -578,6 +638,19 @@ namespace FamiStudio
             }
         }
 
+        public TimeSpan GetTimeAtLocation(NoteLocation location)
+        {
+            return project.UsesFamiStudioTempo ? TimeSpan.FromMilliseconds(location.ToAbsoluteNoteIndex(this) * 1000.0 / (project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC)) : TimeSpan.Zero;
+        }
+
+        public TimeSpan Duration
+        {
+            get
+            {
+                return GetTimeAtLocation(EndLocation);
+            }
+        }
+
 #if DEBUG
         public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
@@ -585,6 +658,7 @@ namespace FamiStudio
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
             Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
+            Debug.Assert(string.IsNullOrEmpty(folderName) || project.FolderExists(FolderType.Song, folderName));
 
             project.ValidateId(id);
 
@@ -1124,7 +1198,7 @@ namespace FamiStudio
             id = newId;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             lock (songLock)
             {
@@ -1184,6 +1258,12 @@ namespace FamiStudio
                         patternCustomSettings[i].Clear();
                 }
 
+                // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer.
+                if (buffer.Version >= 16)
+                {
+                    buffer.Serialize(ref folderName);
+                }
+
                 if (buffer.IsReading)
                 {
                     CreateChannels();
@@ -1191,7 +1271,7 @@ namespace FamiStudio
                 }
 
                 foreach (var channel in channels)
-                    channel.SerializeState(buffer);
+                    channel.Serialize(buffer);
 
                 if (buffer.IsReading && !buffer.IsForUndoRedo)
                     DeleteNotesPastMaxInstanceLength();

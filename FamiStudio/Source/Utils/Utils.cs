@@ -55,6 +55,23 @@ namespace FamiStudio
             return Lerp(l0, l1, alpha1);
         }
 
+        public static float DegreesToRadians(float angle)
+        {
+            return angle * MathF.PI / 180.0f;
+        }
+
+        public static void RotatePoint2D(float angle, ref float x, ref float y)
+        {
+            var c = MathF.Cos(angle);
+            var s = MathF.Sin(angle);
+
+            float x1 = x * c - y * s;
+            float y1 = x * s + y * c;
+            
+            x = x1;
+            y = y1;
+        }
+
         public static bool IsNearlyEqual(float a, float b, float delta = 1e-5f)
         {
             return MathF.Abs(a - b) < delta;
@@ -73,25 +90,6 @@ namespace FamiStudio
         public static int SignedFloor(float x)
         {
             return (x < 0) ? (int)MathF.Ceiling(x) : (int)MathF.Floor(x);
-        }
-
-        public static float ToHalf(ushort x)    // Will be obsolete once we completely move to .NET 6.0+
-        {
-            bool sign = (x & 0x8000) != 0;
-            int exponent = (x & 0x7C00) >> 10;
-            int significand = x & 0x03FF;
-            if (exponent == 0 && significand == 0){
-                return sign ? -0 : 0;
-            } else if (exponent == 0 && significand != 0){
-                return (float)((sign ? -1 : 1) * Math.Pow(2, -14) * (significand / 1024.0));
-            } else if (exponent == 31 && significand == 0){
-                return sign ? float.NegativeInfinity : float.PositiveInfinity;
-            } else if (exponent == 31 && significand != 0){
-                return float.NaN;
-            } else {
-                return (float)((sign ? -1 : 1) * Math.Pow(2, exponent-15) * (1 + significand / 1024.0));
-            }
-            return 0;
         }
 
         public static float Frac(float x)
@@ -139,14 +137,29 @@ namespace FamiStudio
         public static int ParseIntWithTrailingGarbage(string s)
         {
             int idx = 0;
+            int start = 0;
+            int sign = 1;
 
-            for (; idx < s.Length; idx++)
+            s = s.Trim();
+            if (s.Length > 0 && s[0] == '-')
+            {
+                sign = -1;
+                idx = 1;
+                start = 1;
+            }
+
+            for (; idx < Math.Min(s.Length, 7); idx++)
             {
                 if (!char.IsDigit(s[idx]))
                     break;
             }
 
-            return idx == 0 ? 0 : int.Parse(s.Substring(0, idx));
+            return idx == 0 ? 0 : int.Parse(s.Substring(start, idx - start)) * sign;
+        }
+
+        public static int ParseIntAmongAllSortsOfGarbage(string s)
+        {
+            return ParseIntWithTrailingGarbage(new String(s.Where(char.IsDigit).ToArray()));
         }
 
         public static int RoundDownAndClamp(int x, int factor, int min)
@@ -337,6 +350,12 @@ namespace FamiStudio
             return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
         }
 
+        public static void ToCartesian(float angle, float distance, out float x, out float y)
+        {
+            x = MathF.Cos(angle) * distance;
+            y = MathF.Sin(angle) * distance;
+        }
+
         public static string GetTemporaryDiretory()
         {
             var tempFolder = Path.Combine(Path.GetTempPath(), "FamiStudio");
@@ -378,6 +397,24 @@ namespace FamiStudio
             for (int i = 1; i < array.Length; i++)
                 sum += array[i];
             return sum;
+        }
+
+        public static int GCD(int a, int b)
+        {
+            while (b > 0)
+            {
+                int rem = a % b;
+                a = b;
+                b = rem;
+            }
+            return a;
+        }
+
+        public static void SimplifyFraction(ref int numer, ref int denom)
+        {
+            var gcd = GCD(numer, denom);
+            numer /= gcd;
+            denom /= gcd;
         }
 
         public static int HashCombine(int a, int b)
@@ -533,6 +570,63 @@ namespace FamiStudio
             var invLen = 1.0f / (float)MathF.Sqrt(x * x + y * y);
             x *= invLen;
             y *= invLen;
+        }
+
+        public static int JuliaSet(float zx, float zy)
+        {
+            var startA = -0.56f;
+            var startB = 0.23f;
+            var maxit = 300;
+            var numIterations = 0;
+
+            while (numIterations < maxit)
+            {
+                var x2 = zx * zx;
+                var y2 = zy * zy;
+
+                if (x2 + y2 > 4)
+                    return numIterations;
+
+                zy = 2 * zx * zy + startB;
+                zx = (x2 - y2) + startA;
+
+                numIterations++;
+            }
+
+            return numIterations;
+        }
+
+        public static float BenchmarkCPU()
+        {
+            var bestScore = -float.MaxValue;
+            var rnd = new Random(Guid.NewGuid().GetHashCode());
+
+            for (int i = 0; i < 10; i++)
+            {
+                var sum = 0.0f;
+                var t0 = Platform.TimeSeconds();
+
+                for (var y = 0; y < 64; y++)
+                {
+                    for (var x = 0; x < 64; x++)
+                    {
+                        sum += JuliaSet(x / 32.0f - 1.0f, y / 32.0f - 1.0f) * rnd.Next();
+                    }
+                }
+
+                var t1 = Platform.TimeSeconds();
+                var score = 1.0f / (float)(t1 - t0);
+
+                Console.WriteLine($"CPU benchmark iteration score {score} {sum}");
+
+                bestScore = Math.Max(bestScore, score);
+
+                Thread.Sleep(1);
+            }
+
+            Console.WriteLine($"CPU benchmark best score {bestScore}");
+
+            return bestScore;
         }
     }
 

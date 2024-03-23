@@ -17,14 +17,14 @@ namespace FamiStudio
         protected Rectangle screenRect;
         protected Rectangle screenRectFlip;
         protected TransformStack transform = new TransformStack();
-        protected Dictionary<int, BitmapAtlas> atlases = new Dictionary<int, BitmapAtlas>();
+        protected Dictionary<int, TextureAtlas> atlases = new Dictionary<int, TextureAtlas>();
         protected List<ClipRegion> clipRegions = new List<ClipRegion>();
         protected Stack<ClipRegion> clipStack = new Stack<ClipRegion>();
         protected CommandList[] layerCommandLists = new CommandList[(int)GraphicsLayer.Count];
         protected byte curDepthValue = 0x80; // -128
         protected byte maxDepthValue = 0x80; // -128
-        protected Color clearColor;
         protected int maxTextureSize;
+        protected int drawFrameCounter;
 
         protected struct ClipRegion
         {
@@ -38,6 +38,8 @@ namespace FamiStudio
         public TransformStack Transform => transform;
         public RectangleF CurrentClipRegion => clipStack.Peek().rect;
         public bool IsOffscreen => offscreen;
+        public int ScreenWidth => screenRect.Width;
+        public int ScreenHeight => screenRect.Height;
 
         protected const int MaxAtlasResolution = 1024;
         protected const int MaxVertexCount = 64 * 1024;
@@ -45,29 +47,30 @@ namespace FamiStudio
 
         // These are only used temporarily during text/bmp rendering.
         protected float[] vtxArray = new float[MaxVertexCount * 2];
-        protected float[] texArray = new float[MaxVertexCount * 2];
+        protected float[] texArray = new float[MaxVertexCount * 3];
         protected int[]   colArray = new int[MaxVertexCount];
         protected byte[]  depArray = new byte[MaxVertexCount];
         protected short[] idxArray = new short[MaxIndexCount];
 
         protected static short[] quadIdxArray;
 
-        protected List<float[]> freeVertexArrays = new List<float[]>();
-        protected List<byte[]>  freeByteArrays   = new List<byte[]>();
-        protected List<int[]>   freeColorArrays  = new List<int[]>();
-        protected List<short[]> freeIndexArrays  = new List<short[]>();
+        protected List<float[]> freeVertexArrays   = new List<float[]>();
+        protected List<float[]> freeTexCoordArrays = new List<float[]>();
+        protected List<byte[]>  freeByteArrays     = new List<byte[]>();
+        protected List<int[]>   freeColorArrays    = new List<int[]>();
+        protected List<short[]> freeIndexArrays    = new List<short[]>();
 
         protected List<GlyphCache> glyphCaches = new List<GlyphCache>();
 
-        public abstract int CreateEmptyTexture(int width, int height, TextureFormat format, bool filter);
+        public abstract int CreateTexture(int width, int height, TextureFormat format, bool filter);
         public abstract void DeleteTexture(int id);
         public abstract void UpdateTexture(int id, int x, int y, int width, int height, byte[] data);
         protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
-        protected abstract void Clear();
+        protected abstract void Initialize(bool clear, Color clearColor);
         protected abstract void DrawCommandList(CommandList list, bool depthTest);
-        protected abstract void DrawDepthPrepass();
+        protected abstract bool DrawDepthPrepass();
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
-        protected abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
+        protected abstract TextureAtlas CreateTextureAtlasFromResources(string[] names);
         protected abstract void ClearAlpha();
 
         protected const string AtlasPrefix = "FamiStudio.Resources.Atlas.";
@@ -105,15 +108,15 @@ namespace FamiStudio
 
             // We dont need the atlases when rendering videos.
             if (!offscreen)
-                BuildBitmapAtlases();
+                BuildTextureAtlases();
         }
 
-        public virtual void BeginDrawFrame(Rectangle rect, Color clear)
+        public virtual void BeginDrawFrame(Rectangle rect, bool clear, Color clearColor)
         {
+            Debug.Assert(drawFrameCounter++ == 0);
             Debug.Assert(transform.IsEmpty);
             Debug.Assert(clipStack.Count == 0);
 
-            clearColor = clear;
             clipRegions.Clear();
 
             screenRect = rect;
@@ -126,21 +129,23 @@ namespace FamiStudio
             viewportScaleBias[1] = -2.0f / screenRect.Height;
             viewportScaleBias[2] = -1.0f;
             viewportScaleBias[3] =  1.0f;
+
+            Initialize(clear, clearColor);
         }
 
         public virtual void EndDrawFrame(bool clearAlpha = false)
         {
+            Debug.Assert(--drawFrameCounter == 0);
             Debug.Assert(transform.IsEmpty);
             Debug.Assert(clipStack.Count == 0);
 
-            Clear();
-            DrawDepthPrepass();
+            var useDepth = DrawDepthPrepass();
 
             for (int i = 0; i < layerCommandLists.Length; i++)
             {
                 if (layerCommandLists[i] != null)
                 { 
-                    DrawCommandList(layerCommandLists[i], i < (int)GraphicsLayer.Overlay1);
+                    DrawCommandList(layerCommandLists[i], i < (int)GraphicsLayer.Overlay1 && useDepth);
                 }
             }
 
@@ -177,6 +182,61 @@ namespace FamiStudio
             vtxArray[3] = 0;
             vtxArray[4] = screenRect.Width * 2;
             vtxArray[5] = screenRect.Height * 3;
+        }
+
+        protected void MakeQuad(int x, int y, int width, int height)
+        {
+            var vtxIdx = 0;
+            var texIdx = 0;
+
+            var x0 = x;
+            var y0 = y;
+            var x1 = x + width;
+            var y1 = y + height;
+
+            vtxArray[vtxIdx++] = x0;
+            vtxArray[vtxIdx++] = y0;
+            vtxArray[vtxIdx++] = x1;
+            vtxArray[vtxIdx++] = y0;
+            vtxArray[vtxIdx++] = x1;
+            vtxArray[vtxIdx++] = y1;
+            vtxArray[vtxIdx++] = x0;
+            vtxArray[vtxIdx++] = y1;
+
+            texArray[texIdx++] = 0.0f;
+            texArray[texIdx++] = 1.0f;
+            texArray[texIdx++] = 1.0f;
+            texArray[texIdx++] = 1.0f;
+            texArray[texIdx++] = 1.0f;
+            texArray[texIdx++] = 0.0f;
+            texArray[texIdx++] = 0.0f;
+            texArray[texIdx++] = 0.0f;
+        }
+
+        protected float[] GetBlurKernel(int width, int height, float scale, int numRings = 5)
+        {
+            var kernel = new List<float>();
+
+            // Center tap is implicit.
+            //kernel.Add(0);
+            //kernel.Add(0);
+            //kernel.Add(0);
+            //kernel.Add(0);
+
+            for (var r = 1; r < numRings; r++)
+            {
+                for (var i = 0; i < r * 6; i++)
+                {
+                    var angle = i * 2 * MathF.PI / (r * 6);
+                    Utils.ToCartesian(angle, r, out var sx, out var sy);
+                    kernel.Add(sx / width  * scale);
+                    kernel.Add(sy / height * scale);
+                }
+            }
+
+            Debug.Assert(kernel.Count % 4 == 0);
+
+            return kernel.ToArray();
         }
 
         public virtual void PushClipRegion(Point p, Size s, bool clipParents = true)
@@ -241,7 +301,7 @@ namespace FamiStudio
             return bmp;
         }
 
-        private void BuildBitmapAtlases()
+        private void BuildTextureAtlases()
         {
             // Build atlases.
             var assembly = Assembly.GetExecutingAssembly();
@@ -292,32 +352,32 @@ namespace FamiStudio
             // Build the textures.
             foreach (var kv in atlasImages)
             {
-                var bmp = CreateBitmapAtlasFromResources(kv.Value.ToArray());
+                var bmp = CreateTextureAtlasFromResources(kv.Value.ToArray());
                 atlases.Add(kv.Key, bmp);
             }
 
             builtAtlases = true;
         }
 
-        public BitmapAtlasRef GetBitmapAtlasRef(string name)
+        public TextureAtlasRef GetTextureAtlasRef(string name)
         {
             // Look in all atlases
             foreach (var a in atlases.Values)
             {
                 var idx = a.GetElementIndex(name);
                 if (idx >= 0)
-                    return new BitmapAtlasRef(a, idx);
+                    return new TextureAtlasRef(a, idx);
             }
 
-            Debug.Assert(false); // Not found!
+            Debug.Assert(false, $"Error loading texture {name}!"); // Not found!
             return null;
         }
 
-        public BitmapAtlasRef[] GetBitmapAtlasRefs(string[] name, string prefix = null)
+        public TextureAtlasRef[] GetTextureAtlasRefs(string[] name, string prefix = null)
         {
-            var refs = new BitmapAtlasRef[name.Length];
+            var refs = new TextureAtlasRef[name.Length];
             for (int i = 0; i < refs.Length; i++)
-                refs[i] = GetBitmapAtlasRef(prefix != null ? prefix + name[i] : name[i]);
+                refs[i] = GetTextureAtlasRef(prefix != null ? prefix + name[i] : name[i]);
             return refs;
         }
 
@@ -336,9 +396,9 @@ namespace FamiStudio
             return font.MeasureString(text, mono);
         }
 
-        public Bitmap CreateEmptyBitmap(int width, int height, TextureFormat format, bool filter)
+        public Texture CreateEmptyTexture(int width, int height, TextureFormat format, bool filter)
         {
-            return new Bitmap(this, CreateEmptyTexture(width, height, format, filter), width, height, true, filter);
+            return new Texture(this, CreateTexture(width, height, format, filter), width, height, true, filter);
         }
 
         protected T ReadFontParam<T>(string[] values, string key)
@@ -422,6 +482,21 @@ namespace FamiStudio
             }
         }
 
+        public float[] GetTexCoordArray()
+        {
+            if (freeTexCoordArrays.Count > 0)
+            {
+                var lastIdx = freeTexCoordArrays.Count - 1;
+                var arr = freeTexCoordArrays[lastIdx];
+                freeTexCoordArrays.RemoveAt(lastIdx);
+                return arr;
+            }
+            else
+            {
+                return new float[MaxVertexCount * 3];
+            }
+        }
+
         public byte[] GetByteArray()
         {
             if (freeByteArrays.Count > 0)
@@ -472,6 +547,10 @@ namespace FamiStudio
             freeVertexArrays.Add(a);
         }
 
+        public void ReleaseTexCoordArray(float[] a)
+        {
+            freeTexCoordArrays.Add(a);
+        }
 
         public void ReleaseByteArray(byte[] a)
         {
@@ -531,7 +610,7 @@ namespace FamiStudio
         public GlyphCache(GraphicsBase g, int size, int numSlots)
         {
             graphics = g;
-            texture = g.CreateEmptyTexture(size, size, TextureFormat.R, false);
+            texture = g.CreateTexture(size, size, TextureFormat.R, false);
             textureSize = size;
             pack = StbInitPackRect(size, size, numSlots);
         }
@@ -1039,7 +1118,7 @@ namespace FamiStudio
         }
     }
 
-    public class Bitmap : IDisposable
+    public class Texture : IDisposable
     {
         protected int id;
         protected Size size;
@@ -1053,7 +1132,7 @@ namespace FamiStudio
         public bool Filtering => filter;
         public bool IsAtlas => atlas;
 
-        public Bitmap(GraphicsBase g, int id, int width, int height, bool disp = true, bool filter = false)
+        public Texture(GraphicsBase g, int id, int width, int height, bool disp = true, bool filter = false)
         {
             this.graphics = g;
             this.id = id;
@@ -1075,14 +1154,14 @@ namespace FamiStudio
         }
     }
 
-    public class BitmapAtlas : Bitmap
+    public class TextureAtlas : Texture
     {
         private string[] elementNames;
         private Rectangle[] elementRects;
 
         public Size GetElementSize(int index) => elementRects[index].Size;
 
-        public BitmapAtlas(GraphicsBase g, int id, int atlasSizeX, int atlasSizeY, string[] names, Rectangle[] rects, bool filter = false) :
+        public TextureAtlas(GraphicsBase g, int id, int atlasSizeX, int atlasSizeY, string[] names, Rectangle[] rects, bool filter = false) :
             base(g, id, atlasSizeX, atlasSizeY, true, filter)
         {
             elementNames = names;
@@ -1107,16 +1186,16 @@ namespace FamiStudio
         }
     }
 
-    public class BitmapAtlasRef
+    public class TextureAtlasRef
     {
-        private BitmapAtlas atlas;
+        private TextureAtlas atlas;
         private int index;
 
-        public BitmapAtlas Atlas => atlas;
+        public TextureAtlas Atlas => atlas;
         public int ElementIndex => index;
         public Size ElementSize => atlas.GetElementSize(index);
 
-        public BitmapAtlasRef(BitmapAtlas a, int idx)
+        public TextureAtlasRef(TextureAtlas a, int idx)
         {
             atlas = a;
             index = idx;
@@ -1236,9 +1315,18 @@ namespace FamiStudio
         BottomCenter = Bottom | Center,
         BottomRight  = Bottom | Right,
 
-        Clip      = 1 << 7,
-        Ellipsis  = 1 << 8,
-        Monospace = 1 << 9
+        Clip       = 1 << 7,
+        Ellipsis   = 1 << 8,
+        Monospace  = 1 << 9,
+        DropShadow = 1 << 10
+    }
+
+    [Flags]
+    public enum TextureFlags
+    {
+        Default     = 0,
+        Rotated90   = 1 << 0,
+        Perspective = 1 << 1,
     }
 
     // This is common to both OGL, it only does data packing, no GL calls.
@@ -1298,7 +1386,7 @@ namespace FamiStudio
             public byte depth;
         };
 
-        private class BitmapInstance
+        private class TextureInstance
         {
             public float x;
             public float y;
@@ -1310,7 +1398,7 @@ namespace FamiStudio
             public float v1;
             public float opacity;
             public Color tint;
-            public bool rotated;
+            public TextureFlags flags;
             public byte depth;
         }
 
@@ -1366,6 +1454,29 @@ namespace FamiStudio
             public int numIndices;
         };
 
+        public class TextureDrawData
+        {
+            public float[] vtxArray;
+            public float[] texArray;
+            public int[]   colArray;
+            public byte[]  depArray;
+
+            public int vtxArraySize;
+            public int texArraySize;
+            public int colArraySize;
+            public int depArraySize;
+
+            public List<DrawData> draws = new List<DrawData>();
+
+            public void Release(GraphicsBase g)
+            {
+                g.ReleaseVertexArray(vtxArray);
+                g.ReleaseTexCoordArray(texArray);
+                g.ReleaseByteArray(depArray);
+                g.ReleaseColorArray(colArray);
+            }
+        }
+
         public class DrawData
         {
             public int textureId;
@@ -1373,12 +1484,11 @@ namespace FamiStudio
             public int count;
         };
 
-        private LineBatch lineBatch;
+        private List<LineBatch> lineBatches;
         private List<PolyBatch> polyBatches;
         private List<LineSmoothBatch> lineSmoothBatches;
         private List<TextInstance> texts;
-
-        private Dictionary<Bitmap, List<BitmapInstance>> bitmaps = new Dictionary<Bitmap, List<BitmapInstance>>();
+        private Dictionary<Texture, List<TextureInstance>> textures = new Dictionary<Texture, List<TextureInstance>>();
 
         private GraphicsBase graphics;
         private TransformStack xform;
@@ -1387,11 +1497,11 @@ namespace FamiStudio
         public GraphicsBase Graphics => graphics;
 
         public bool HasAnyPolygons       => polyBatches != null;
-        public bool HasAnyLines          => lineBatch != null;
+        public bool HasAnyLines          => lineBatches != null;
         public bool HasAnySmoothLines    => lineSmoothBatches != null;
         public bool HasAnyTexts          => texts != null;
-        public bool HasAnyBitmaps        => bitmaps.Count > 0;
-        public bool HasAnything          => HasAnyPolygons || HasAnyLines || HasAnySmoothLines || HasAnyTexts || HasAnyBitmaps;
+        public bool HasAnyTextures       => textures.Count > 0;
+        public bool HasAnything          => HasAnyPolygons || HasAnyLines || HasAnySmoothLines || HasAnyTexts || HasAnyTextures;
 
         public CommandList(GraphicsBase g)
         {
@@ -1438,12 +1548,15 @@ namespace FamiStudio
                 }
             }
 
-            if (lineBatch != null)
+            if (lineBatches != null)
             {
-                graphics.ReleaseVertexArray(lineBatch.vtxArray);
-                graphics.ReleaseByteArray(lineBatch.dshArray);
-                graphics.ReleaseColorArray(lineBatch.colArray);
-                graphics.ReleaseByteArray(lineBatch.depArray);
+                foreach (var batch in lineBatches)
+                {
+                    graphics.ReleaseVertexArray(batch.vtxArray);
+                    graphics.ReleaseByteArray(batch.dshArray);
+                    graphics.ReleaseColorArray(batch.colArray);
+                    graphics.ReleaseByteArray(batch.depArray);
+                }
             }
 
             if (lineSmoothBatches != null)
@@ -1459,8 +1572,10 @@ namespace FamiStudio
             }
 
             polyBatches = null;
-            lineBatch = null;
+            lineBatches = null;
             lineSmoothBatches = null;
+            textures.Clear();
+            textures = null;
             texts = null;
         }
 
@@ -1503,18 +1618,32 @@ namespace FamiStudio
             return batch;
         }
 
-        private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, bool dash)
+        private LineBatch GetLineBatch(int numVtxNeeded)
         {
-            if (lineBatch == null)
+            if (lineBatches == null)
             {
-                lineBatch = new LineBatch();
-                lineBatch.vtxArray = graphics.GetVertexArray();
-                lineBatch.dshArray = graphics.GetByteArray();
-                lineBatch.colArray = graphics.GetColorArray();
-                lineBatch.depArray = graphics.GetByteArray();
+                lineBatches = new List<LineBatch>();
             }
 
-            var batch = lineBatch;
+            var batch = lineBatches.Count > 0 ? lineBatches[lineBatches.Count - 1] : null;
+
+            if (batch == null || batch.depIdx + numVtxNeeded >= batch.depArray.Length)
+            {
+                batch = new LineBatch();
+                batch.vtxArray = graphics.GetVertexArray();
+                batch.dshArray = graphics.GetByteArray();
+                batch.colArray = graphics.GetColorArray();
+                batch.depArray = graphics.GetByteArray();
+                lineBatches.Add(batch);
+            }
+
+            return batch;
+
+        }
+
+        private void DrawLineInternal(float x0, float y0, float x1, float y1, Color color, bool dash)
+        {
+            var batch = GetLineBatch(4);
             var depth = graphics.DepthValue;
             var dashPattern = dash ? EncodeDashPattern(x0, x1, y0, y1) : (byte)0;
 
@@ -1854,12 +1983,7 @@ namespace FamiStudio
 
         public void DrawLine(List<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)
         {
-        #if FAMISTUDIO_ANDROID
-            // NET6TODO : When we migrate to .NET 6 on Android, well remove this.
-            DrawLine(points.ToArray(), color, width, smooth, miter);
-        #else
             DrawLine(CollectionsMarshal.AsSpan(points), color, width, smooth, miter);
-        #endif
         }
 
         public void DrawLine(Span<float> points, Color color, int width = 1, bool smooth = false, bool miter = false)
@@ -2604,6 +2728,7 @@ namespace FamiStudio
             Debug.Assert(!flags.HasFlag(TextFlags.Clip) || !flags.HasFlag(TextFlags.Ellipsis));
             Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Ellipsis));
             Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Clip));
+            Debug.Assert(!flags.HasFlag(TextFlags.DropShadow) || !flags.HasFlag(TextFlags.Clip));
             Debug.Assert(!flags.HasFlag(TextFlags.Ellipsis) || width > 0);
             Debug.Assert((flags & TextFlags.HorizontalAlignMask) != TextFlags.Center || width  > 0);
             Debug.Assert((flags & TextFlags.VerticalAlignMask)   == TextFlags.Top    || height > 0);
@@ -2614,6 +2739,22 @@ namespace FamiStudio
             }
 
             xform.TransformPoint(ref x, ref y);
+
+            if ((flags & TextFlags.DropShadow) != 0)
+            {
+                Debug.Assert(clipMinX == 0 && clipMaxX == 0);
+
+                var shadowInst = new TextInstance();
+                shadowInst.layoutRect = new RectangleF(x + 1, y + 1, width, height);
+                shadowInst.clipRect = shadowInst.layoutRect;
+                shadowInst.flags = flags;
+                shadowInst.text = text;
+                shadowInst.font = font;
+                shadowInst.color = Color.Black;
+                shadowInst.depth = graphics.DepthValue;
+
+                texts.Add(shadowInst);
+            }
 
             var inst = new TextInstance();
             inst.layoutRect = new RectangleF(x, y, width, height);
@@ -2638,61 +2779,68 @@ namespace FamiStudio
             texts.Add(inst);
         }
 
-        public void DrawBitmap(Bitmap bmp, float x, float y, float opacity = 1.0f, Color tint = new Color())
+        public void DrawTexture(Texture bmp, float x, float y, float opacity = 1.0f, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
-            DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0, 0, 1, 1, false, tint);
+            DrawTexture(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0, 0, 1, 1, TextureFlags.Default, tint);
         }
 
-        public void DrawBitmapScaled(Bitmap bmp, float x, float y, float sx, float sy)
+        public void DrawTextureScaled(Texture bmp, float x, float y, float sx, float sy, bool flip)
         {
-            DrawBitmap(bmp, x, y, sx, sy, 1, 0, 0, 1, 1);
+            if (flip)
+            {
+                DrawTexture(bmp, x, y, sx, sy, 1, 0, 1, 1, 0);
+            }
+            else
+            {
+                DrawTexture(bmp, x, y, sx, sy, 1, 0, 0, 1, 1);
+            }
         }
 
-        public void DrawBitmapCentered(Bitmap bmp, float x, float y, float width, float height, float opacity = 1.0f, Color tint = new Color())
+        public void DrawTextureCentered(Texture bmp, float x, float y, float width, float height, float opacity = 1.0f, Color tint = new Color())
         {
             x += (width  - bmp.Size.Width)  / 2;
             y += (height - bmp.Size.Height) / 2;
-            DrawBitmap(bmp, x, y, opacity, tint);
+            DrawTexture(bmp, x, y, opacity, tint);
         }
 
-        public void DrawBitmapAtlas(BitmapAtlasRef bmp, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawTextureAtlas(TextureAtlasRef bmp, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             var atlas = bmp.Atlas;
             var elementIndex = bmp.ElementIndex;
             var elementSize = bmp.ElementSize;
             atlas.GetElementUVs(elementIndex, out var u0, out var v0, out var u1, out var v1);
-            DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, false, tint);
+            DrawTexture(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, TextureFlags.Default, tint);
         }
 
-        public void DrawBitmapAtlasCentered(BitmapAtlasRef bmp, float x, float y, float width, float height, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawTextureAtlasCentered(TextureAtlasRef bmp, float x, float y, float width, float height, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
             x += MathF.Floor((width  - bmp.ElementSize.Width)  * 0.5f);
             y += MathF.Floor((height - bmp.ElementSize.Height) * 0.5f);
-            DrawBitmapAtlas(bmp, x, y, opacity, scale, tint);
+            DrawTextureAtlas(bmp, x, y, opacity, scale, tint);
         }
 
-        public void DrawBitmapAtlasCentered(BitmapAtlasRef bmp, Rectangle rect, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawTextureAtlasCentered(TextureAtlasRef bmp, Rectangle rect, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
             float x = rect.Left + (rect.Width  - bmp.ElementSize.Width)  / 2;
             float y = rect.Top  + (rect.Height - bmp.ElementSize.Height) / 2;
-            DrawBitmapAtlas(bmp, x, y, opacity, scale, tint);
+            DrawTextureAtlas(bmp, x, y, opacity, scale, tint);
         }
 
-        public void DrawBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false, Color tint = new Color())
+        public void DrawTexture(Texture bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, TextureFlags flags = TextureFlags.Default, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
-            if (!bitmaps.TryGetValue(bmp, out var list))
+            if (!textures.TryGetValue(bmp, out var list))
             {
-                list = new List<BitmapInstance>();
-                bitmaps.Add(bmp, list);
+                list = new List<TextureInstance>();
+                textures.Add(bmp, list);
             }
 
             xform.TransformPoint(ref x, ref y);
             xform.ScaleSize(ref width, ref height);
 
-            var inst = new BitmapInstance();
+            var inst = new TextureInstance();
             inst.x = x;
             inst.y = y;
             inst.sx = width;
@@ -2720,7 +2868,7 @@ namespace FamiStudio
             }
 
             inst.opacity = opacity;
-            inst.rotated = rotated;
+            inst.flags = flags;
 
             list.Add(inst);
         }
@@ -2783,25 +2931,30 @@ namespace FamiStudio
             return draws;
         }
 
-        public LineDrawData GetLineDrawData()
+        public List<LineDrawData> GetLineDrawData()
         {
-            var draw = (LineDrawData)null;
+            var draws = (List<LineDrawData>)null;
 
-            if (lineBatch != null)
+            if (lineBatches != null)
             {
-                draw = new LineDrawData();
-                draw.vtxArray = lineBatch.vtxArray;
-                draw.dshArray = lineBatch.dshArray;
-                draw.colArray = lineBatch.colArray;
-                draw.depArray = lineBatch.depArray;
-                draw.numVertices = lineBatch.vtxIdx / 2;
-                draw.vtxArraySize = lineBatch.vtxIdx;
-                draw.dshArraySize = lineBatch.dshIdx;
-                draw.colArraySize = lineBatch.colIdx;
-                draw.depArraySize = lineBatch.depIdx;
+                draws = new List<LineDrawData>();
+                foreach (var batch in lineBatches)
+                {
+                    var draw = new LineDrawData();
+                    draw.vtxArray = batch.vtxArray;
+                    draw.dshArray = batch.dshArray;
+                    draw.colArray = batch.colArray;
+                    draw.depArray = batch.depArray;
+                    draw.numVertices = batch.vtxIdx / 2;
+                    draw.vtxArraySize = batch.vtxIdx;
+                    draw.dshArraySize = batch.dshIdx;
+                    draw.colArraySize = batch.colIdx;
+                    draw.depArraySize = batch.depIdx;
+                    draws.Add(draw);
+                }
             }
 
-            return draw;
+            return draws;
         }
 
         public IReadOnlyCollection<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize)
@@ -3080,90 +3233,167 @@ namespace FamiStudio
             return orderedDrawData;
         }
 
-        public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize, out int idxArraySize)
+        public List<TextureDrawData> GetTextureDrawData()
         {
-            var drawData = new List<DrawData>();
+            var drawDatas = new List<TextureDrawData>();
+            var drawData = new TextureDrawData();
 
-            var vtxIdx = 0;
-            var texIdx = 0;
-            var colIdx = 0;
-            var depIdx = 0;
-            var idxIdx = 0;
+            drawData.vtxArray = graphics.GetVertexArray();
+            drawData.texArray = graphics.GetTexCoordArray();
+            drawData.colArray = graphics.GetColorArray();
+            drawData.depArray = graphics.GetByteArray();
 
-            foreach (var kv in bitmaps)
+            var idx = 0;
+
+            foreach (var kv in textures)
             {
                 var bmp = kv.Key;
                 var list = kv.Value;
                 var draw = new DrawData();
 
                 draw.textureId = bmp.Id;
-                draw.start = idxIdx;
+                draw.start = idx;
                 
                 foreach (var inst in list)
                 {
+                    // We are about to overflow, start a new batch.
+                    if (drawData.texArraySize + 12 >= drawData.texArray.Length)
+                    {
+                        if (draw.count > 0)
+                            drawData.draws.Add(draw);
+
+                        drawDatas.Add(drawData);
+                        drawData = new TextureDrawData();
+                        drawData.vtxArray = graphics.GetVertexArray();
+                        drawData.texArray = graphics.GetTexCoordArray();
+                        drawData.colArray = graphics.GetColorArray();
+                        drawData.depArray = graphics.GetByteArray();
+                        idx = 0;
+                        draw = new DrawData();
+                        draw.textureId = bmp.Id;
+                        draw.start = 0;
+
+                    }
+
                     var x0 = inst.x;
                     var y0 = inst.y;
                     var x1 = inst.x + inst.sx;
                     var y1 = inst.y + inst.sy;
                     var tint = inst.tint != Color.Empty ? inst.tint : Color.White;
+                    var rotated = inst.flags.HasFlag(TextureFlags.Rotated90);
+                    var perspective = inst.flags.HasFlag(TextureFlags.Perspective);
 
-                    vtxArray[vtxIdx++] = x0;
-                    vtxArray[vtxIdx++] = y0;
-                    vtxArray[vtxIdx++] = x1;
-                    vtxArray[vtxIdx++] = y0;
-                    vtxArray[vtxIdx++] = x1;
-                    vtxArray[vtxIdx++] = y1;
-                    vtxArray[vtxIdx++] = x0;
-                    vtxArray[vtxIdx++] = y1;
-
-                    if (inst.rotated)
+                    if (!perspective)
                     {
-                        texArray[texIdx++] = inst.u1;
-                        texArray[texIdx++] = inst.v0;
-                        texArray[texIdx++] = inst.u1;
-                        texArray[texIdx++] = inst.v1;
-                        texArray[texIdx++] = inst.u0;
-                        texArray[texIdx++] = inst.v1;
-                        texArray[texIdx++] = inst.u0;
-                        texArray[texIdx++] = inst.v0;
-                    }
-                    else
-                    {
-                        texArray[texIdx++] = inst.u0;
-                        texArray[texIdx++] = inst.v0;
-                        texArray[texIdx++] = inst.u1;
-                        texArray[texIdx++] = inst.v0;
-                        texArray[texIdx++] = inst.u1;
-                        texArray[texIdx++] = inst.v1;
-                        texArray[texIdx++] = inst.u0;
-                        texArray[texIdx++] = inst.v1;
-                    }
+                        drawData.vtxArray[drawData.vtxArraySize++] = x0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y1;
 
+                        if (!rotated)
+                        {
+                            drawData.texArray[drawData.texArraySize++] = inst.u0;
+                            drawData.texArray[drawData.texArraySize++] = inst.v0;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u1;
+                            drawData.texArray[drawData.texArraySize++] = inst.v0;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u1;
+                            drawData.texArray[drawData.texArraySize++] = inst.v1;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u0;
+                            drawData.texArray[drawData.texArraySize++] = inst.v1;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                        }
+                        else
+                        {
+                            // 90 degrees UV rotation.
+                            drawData.texArray[drawData.texArraySize++] = inst.u1;
+                            drawData.texArray[drawData.texArraySize++] = inst.v0;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u1;
+                            drawData.texArray[drawData.texArraySize++] = inst.v1;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u0;
+                            drawData.texArray[drawData.texArraySize++] = inst.v1;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = inst.u0;
+                            drawData.texArray[drawData.texArraySize++] = inst.v0;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                        }
+                    }
+                    else 
+                    {
+                        var tx = graphics.ScreenWidth / (float)inst.sx;
+
+                        // Perspective mode basically ignores the UVs and assumes (0,0) ... (1,1).
+                        if (!rotated)
+                        {
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                        }
+                        else
+                        {
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = tx;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 0.0f;
+                            drawData.texArray[drawData.texArraySize++] = 1.0f;
+                        }
+
+                        // Asumes everything is fullscreen.
+                        drawData.vtxArray[drawData.vtxArraySize++] = 0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = 0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = graphics.ScreenWidth;
+                        drawData.vtxArray[drawData.vtxArraySize++] = 0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y1;
+                        drawData.vtxArray[drawData.vtxArraySize++] = x0;
+                        drawData.vtxArray[drawData.vtxArraySize++] = y1;
+                    }
+                    
                     var packedOpacity = new Color(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)).ToAbgr();
-                    colArray[colIdx++] = packedOpacity;
-                    colArray[colIdx++] = packedOpacity;
-                    colArray[colIdx++] = packedOpacity;
-                    colArray[colIdx++] = packedOpacity;
+                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
+                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
+                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
+                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
 
-                    depArray[depIdx++] = inst.depth;
-                    depArray[depIdx++] = inst.depth;
-                    depArray[depIdx++] = inst.depth;
-                    depArray[depIdx++] = inst.depth;
+                    drawData.depArray[drawData.depArraySize++] = inst.depth;
+                    drawData.depArray[drawData.depArraySize++] = inst.depth;
+                    drawData.depArray[drawData.depArraySize++] = inst.depth;
+                    drawData.depArray[drawData.depArraySize++] = inst.depth;
 
                     draw.count += 6;
-                    idxIdx += 6;
+                    idx += 6;
                 }
 
-                drawData.Add(draw);
+                drawData.draws.Add(draw);
             }
 
-            vtxArraySize = vtxIdx;
-            texArraySize = texIdx;
-            colArraySize = colIdx;
-            depArraySize = depIdx;
-            idxArraySize = idxIdx;
+            drawDatas.Add(drawData);
 
-            return drawData;
+            return drawDatas;
         }
     }
 }

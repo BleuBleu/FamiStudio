@@ -1,7 +1,10 @@
-﻿using System;
+﻿global using Debug = FamiStudio.AndroidDebug;
+
+using System;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Android.App;
 using Android.Content;
@@ -9,8 +12,6 @@ using Android.Media;
 using Android.OS;
 using Android.Widget;
 using Xamarin.Essentials;
-
-using Debug = System.Diagnostics.Debug;
 
 namespace FamiStudio
 {
@@ -20,6 +21,7 @@ namespace FamiStudio
         public static event AudioDeviceChangedDelegate AudioDeviceChanged;
         
         public static bool IsCommandLine => false;
+        public static bool CanExportToVideo => true;
 
         private static Toast    lastToast;
         private static DateTime lastToastTime = DateTime.MinValue;
@@ -33,6 +35,7 @@ namespace FamiStudio
 
         public static bool Initialize(bool commandLine)
         {
+            HackForThaiCalendar();
             return true;
         }
 
@@ -50,9 +53,14 @@ namespace FamiStudio
             return 1.0f;
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
         {
-            return new AndroidAudioStream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
+            return AndroidAudioStream.Create(rate, stereo, bufferSizeMs);
+        }
+
+        public static IVideoEncoder CreateVideoEncoder()
+        {
+            return new VideoEncoderAndroid();
         }
 
         public static string UserProjectsDirectory => Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
@@ -292,11 +300,64 @@ namespace FamiStudio
             glThreadId = Thread.CurrentThread.ManagedThreadId;
         }
 
+        private static void HackForThaiCalendar()
+        {
+            // These classes won't be linked away because of the code,
+            // but we also won't have to construct unnecessarily either,
+            // hence the if statement with (hopefully) impossible
+            // runtime condition.
+            //
+            // This is to resolve crash at CultureInfo.CurrentCulture
+            // when language is set to Thai. See
+            // https://github.com/xamarin/Xamarin.Forms/issues/4037
+            if (Android.OS.Environment.DirectoryDocuments == "\\\\**_never_POSSIBLE_**\\\\")
+            {
+                new System.Globalization.ChineseLunisolarCalendar();
+                new System.Globalization.HebrewCalendar();
+                new System.Globalization.HijriCalendar();
+                new System.Globalization.JapaneseCalendar();
+                new System.Globalization.JapaneseLunisolarCalendar();
+                new System.Globalization.KoreanCalendar();
+                new System.Globalization.KoreanLunisolarCalendar();
+                new System.Globalization.PersianCalendar();
+                new System.Globalization.TaiwanCalendar();
+                new System.Globalization.TaiwanLunisolarCalendar();
+                new System.Globalization.ThaiBuddhistCalendar();
+                new System.Globalization.UmAlQuraCalendar();
+            }
+        }
+
         public const bool IsMobile  = true;
         public const bool IsAndroid = true;
         public const bool IsDesktop = false;
         public const bool IsWindows = false;
         public const bool IsLinux   = false;
         public const bool IsMacOS   = false;
+    }
+
+    // By default Debug.Assert() doesnt break in the debugger on Android. Workaround.
+    public class AndroidDebug
+    {
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void Write(string message)
+        {
+            Console.Write(message);
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void WriteLine(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void Assert(bool condition, [CallerArgumentExpression("condition")] string message = null)
+        {
+            if (!condition)
+            {
+                Console.WriteLine($"ASSERTION FAILED! {message}");
+                global::System.Diagnostics.Debugger.Break(); // This doesnt even work 1/2 the time... Ugh.
+            }
+        }
     }
 }

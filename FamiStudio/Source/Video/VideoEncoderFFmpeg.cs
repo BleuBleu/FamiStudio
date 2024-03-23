@@ -7,32 +7,21 @@ using System.Text;
 
 namespace FamiStudio
 {
-    class VideoEncoderFFmpeg
+    class VideoEncoderFFmpeg : IVideoEncoder
     {
         private Process process;
         private BinaryWriter stream;
+        private byte[] videoImage;
 
-        private VideoEncoderFFmpeg()
+        public VideoEncoderFFmpeg()
         {
-
-        }
-
-        public static VideoEncoderFFmpeg CreateInstance()
-        {
-            if (DetectFFmpeg(Settings.FFmpegExecutablePath))
-            {
-                return new VideoEncoderFFmpeg();
-            }
-            else
-            {
-                return null;
-            }
         }
 
         public bool BeginEncoding(int resX, int resY, int frameRateNumer, int frameRateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
         {
             process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -aac_is disable -b:a {audioBitRate}k \"{outputFile}\"", true, false, true);
             stream = new BinaryWriter(process.StandardInput.BaseStream);
+            videoImage = new byte[resX * resY * 4];
 
             if (Platform.IsWindows)
             {
@@ -43,9 +32,11 @@ namespace FamiStudio
             return true;
         }
 
-        public void AddFrame(byte[] image)
+        public bool AddFrame(OffscreenGraphics graphics)
         {
-            stream.Write(image);
+            graphics.GetBitmap(videoImage);
+            stream.Write(videoImage);
+            return true;
         }
 
         public void EndEncoding(bool abort)
@@ -91,11 +82,11 @@ namespace FamiStudio
             return process;
         }
 
-        private static bool DetectFFmpeg(string ffmpegExecutable)
+        public static bool DetectFFmpeg()
         {
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true, false);
+                var process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-version", false, true, false);
                 var output = process.StandardOutput.ReadToEnd();
 
                 var ret = true;

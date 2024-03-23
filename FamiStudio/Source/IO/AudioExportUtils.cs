@@ -93,8 +93,8 @@ namespace FamiStudio
                     // the raw result of the emulation.
                     if (delay == 0 && centerPan && outputsStereo)
                     {
-                        var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelMask, 0, NesApu.TND_MODE_SEPARATE);
-                        samples = player.GetSongSamples(song, project.PalMode, duration, log);
+                        var player = new WavPlayer(sampleRate, project.PalMode, outputsStereo, loopCount, channelMask, 0, NesApu.TND_MODE_SEPARATE);
+                        samples = player.GetSongSamples(song, duration, log);
                         numChannels = 2;
                     }
                     else
@@ -168,8 +168,8 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelMask);
-                    var stereoSamples = player.GetSongSamples(song, project.PalMode, duration, log);
+                    var player = new WavPlayer(sampleRate, project.PalMode, outputsStereo, loopCount, channelMask);
+                    var stereoSamples = player.GetSongSamples(song, duration, log);
 
                     samples = outputsStereo ? new short[stereoSamples.Length / 2] : stereoSamples;
 
@@ -193,6 +193,9 @@ namespace FamiStudio
 
                 if (introDuration > 0)
                 {
+                    // In case someone selects a shorter duration than the intro.
+                    introDuration = Math.Min(samples.Length, introDuration);
+
                     var loopSamples = new short[samples.Length - introDuration];
                     Array.Copy(samples, introDuration, loopSamples, 0, loopSamples.Length);
                     Array.Resize(ref samples, introDuration);
@@ -223,8 +226,8 @@ namespace FamiStudio
                 var channelBit = 1L << channelIdx;
                 if ((channelBit & channelMask) != 0)
                 {
-                    var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelBit, threadIndex, NesApu.TND_MODE_SEPARATE);
-                    channelSamples[channelIdx] = player.GetSongSamples(song, pal, duration, false, log);
+                    var player = new WavPlayer(sampleRate, pal, outputsStereo, loopCount, channelBit, threadIndex, NesApu.TND_MODE_SEPARATE);
+                    channelSamples[channelIdx] = player.GetSongSamples(song, duration, false, log);
 
                     if (Log.ShouldAbortOperation)
                         return false;
@@ -260,8 +263,8 @@ namespace FamiStudio
 
                 clonedSong.SetLength(song.LoopPoint);
 
-                var player = new WavPlayer(sampleRate, song.Project.OutputsStereoAudio, 1, -1);
-                var samples = player.GetSongSamples(clonedSong, song.Project.PalMode, -1, log);
+                var player = new WavPlayer(sampleRate, song.Project.PalMode, song.Project.OutputsStereoAudio, 1, -1);
+                var samples = player.GetSongSamples(clonedSong, -1, log);
 
                 return samples.Length;
             }

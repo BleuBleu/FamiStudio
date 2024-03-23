@@ -1,0 +1,443 @@
+famistudio_load_basic_envelopes(ptr1/y inst point, r0 = instrument index, x = )
+{
+	famistudio_env_addr[x++] = famistudio_ptr0[y += 2]
+
+	// Only if FAMISTUDIO_USE_ARPEGGIO
+	if ((famistudio_chn_env_override[chan_idx] & 1) == 0)
+	{
+		// @read_arpeggio_ptr
+		famistudio_env_addr[x] = famistudio_ptr0[y++]
+	}
+	else
+	{
+		y++;
+	}
+
+	// Duty cycle envelope
+	if (channel == 2) // Triangle has no duty.
+	{
+		y += 2;
+	}
+	else
+	{
+		famistudio_env_addr[++x] = famistudio_ptr0[++y++];
+		famistudio_env_repeat[x] = 0;	
+		famistudio_env_ptr[x] = 0;
+	}
+
+	if (famistudio_channel_to_pitch_env[chan_idx] >= 0)
+	{
+		// @pitch_env
+		if ((famistudio_chn_env_override & 0x80) == 0)
+		{
+			famistudio_pitch_env_value[x] = 0;
+			famistudio_pitch_env_addr[x] = famistudio_ptr0[++y++];
+		}
+	}	
+}
+
+famistudio_set_instrument(x/r0 = channel index, a = instrument index)
+{
+	x = famistudio_channel_env[x]
+
+	famistudio_ptr0 = a << 1; 
+	famistudio_load_basic_envelopes();
+}
+
+famistudio_do_note_attack(x/r0 = channel index)
+{
+	x = famistudio_channel_env[x];
+
+	famistudio_env_ptr[x] = 1;
+	famistudio_env_ptr[x+1] = 0;
+	famistudio_env_repeat[x] = 0;
+	famistudio_env_repeat[x+1] = 0;
+
+	// Duty cycle envelope
+	if (channel != 2) // Triangle has no duty.
+	{
+		famistudio_env_repeat[x+2] = 0;	
+		famistudio_env_ptr[x+2] = 0;
+	}
+
+	x = famistudio_channel_to_pitch_env[chan_idx]
+	if (x >= 0)
+	{
+		sta famistudio_pitch_env_value[x] = 0
+		sta famistudio_pitch_env_repeat[x] = 0
+		sta famistudio_pitch_env_ptr[x] = 1
+	}
+}
+
+opcode_extended_note()
+{
+	a = channel_data_ptr[y++];
+	// Jumps to @play_note!
+}
+
+opcode_set_reference()
+{
+	// TODO
+}
+
+opcode_loop()
+{
+	// TODO	
+}
+
+opcode_disable_attack()
+{
+	update_flags |= $80;
+}
+
+opcode_vrc7_release_note()
+{
+	// TODO	
+	// Jumps to @done here!
+}
+
+opcode_fds_release_note()
+{
+	// TODO	
+	// Jumps to @done here!
+}
+
+opcode_n163_release_note()
+{
+	// TODO	
+	// Jumps to @done here!
+}
+
+opcode_epsm_release_note()
+{
+	// TODO
+	// Jumps to @done here!
+}
+
+opcode_release_note()
+{
+	// TODO	
+	// Jumps to @done here!
+}
+
+opcode_famitracker_speed()
+{
+	famistudio_song_speed = famistudio_chn_ptr[y++];
+}
+
+opcode_fds_mod_depth()
+{
+	a = 
+	famistudio_fds_mod_depth = famistudio_chn_ptr[y++];
+	famistudio_fds_override_flags |= $40;
+}
+
+opcode_fds_mod_speed()
+{
+	famistudio_fds_mod_speed = famistudio_chn_ptr[y += 2];
+	famistudio_fds_override_flags |= $80;
+}
+
+opcode_vrc6_saw_volume()
+{
+	famistudio_vrc6_saw_volume = famistudio_chn_ptr[y++];
+}
+
+opcode_volume_slide()
+{
+	famistudio_chn_volume_slide_step[x] = famistudio_chn_ptr[y++];
+	famistudio_chn_volume_slide_target[x] = famistudio_chn_ptr[y++];
+}
+
+opcode_dmc_counter()
+{
+	if (famistudio_chn_ptr[y] < 0)
+		FAMISTUDIO_APU_DMC_RAW = famistudio_chn_ptr[y++] & $7f;
+	else
+		famistudio_dmc_delta_counter = famistudio_chn_ptr[y++];
+}
+
+opcode_phase_reset()
+{
+	// TODO 
+}
+
+opcode_n163_phase_reset()
+{
+	// TODO 
+}
+
+opcode_fine_pitch()
+{
+	famistudio_pitch_env_fine_value[famistudio_channel_to_pitch_env[x]] = famistudio_chn_ptr[y++];
+}
+
+opcode_clear_pitch_override_flag()
+{
+	famistudio_chn_env_override[x] &= $7f;
+}
+
+opcode_override_pitch_envelope()
+{
+	famistudio_chn_env_override[x] |= $80;
+	x = famistudio_channel_to_pitch_env[x];
+	famistudio_pitch_env_addr[x] = famistudio_chn_ptr[y += 2];
+	famistudio_pitch_env_repeat[x] = 0;
+	famistudio_pitch_env_ptr[x] = 1;
+
+}
+
+opcode_clear_arpeggio_override_flag()
+{
+	famistudio_chn_env_override[x]& = $fe;
+}
+
+opcode_override_arpeggio_envelope()
+{
+	famistudio_chn_env_override[x] |= $1;
+	x = famistudio_channel_to_arpeggio_env[x];
+	famistudio_pitch_env_addr[x] = famistudio_chn_ptr[y += 2];
+	famistudio_pitch_env_repeat[x] = 0;
+	famistudio_env_value[x] = 0;
+	famistudio_env_ptr[x] = 0;
+}
+
+opcode_reset_arpeggio()
+{
+	x = famistudio_channel_to_arpeggio_env[x];
+	famistudio_pitch_env_repeat[x] = 0;
+	famistudio_env_value[x] = 0;
+	famistudio_env_ptr[x] = 0;
+}
+
+opcode_duty_cycle_effect()
+{
+	x = famistudio_channel_to_dutycycle[x];
+	famistudio_duty_cycle[x] = channel_data_ptr[y];
+	x = famistudio_channel_to_duty_env[tmp_chan_idx];
+	famistudio_env_value[famistudio_channel_to_duty_env[x]] = channel_data_ptr[y++];
+}
+
+opcode_note_delay()
+{
+	famistudio_chn_note_delay[x] = channel_data_ptr[y++];
+	// Jumps to @flush_y!!!
+}
+
+opcode_cut_delay()
+{
+	update_flags |= $40;
+	famistudio_chn_cut_delay[x] = channel_data_ptr[y++];
+}
+
+opcode_set_tempo_envelope()
+{
+	tempo_env_ptr = channel_data_ptr[y += 2];
+	famistudio_tempo_env_ptr = tempo_env_ptr;
+	famistudio_tempo_env_idx = 0;
+	famistudio_tempo_env_counter = *tempo_env_ptr;
+}
+
+opcode_reset_tempo_envelope()
+{
+	tempo_env_ptr = famistudio_tempo_env_ptr;
+	famistudio_tempo_env_idx = 0;
+	famistudio_tempo_env_counter = *tempo_env_ptr;
+}
+
+opcode_slide()
+{
+	if (x == 3)
+	{
+		// @noise_slide
+		famistudio_slide_step[FAMISTUDIO_NOISE_SLIDE_INDEX] = channel_data_ptr[y++];
+		famistudio_slide_pitch[FAMISTUDIO_NOISE_SLIDE_INDEX] = (channel_data_ptr[y++] - channel_data_ptr[y++]) << 4;
+	}
+	else
+	{
+		tmp_slide_idx = famistudio_channel_to_slide[x];
+		famistudio_slide_step[x] = channel_data_ptr[y++];
+		y = tmp_slide_from = channel_data_ptr[y++];
+		x = channel_data_ptr[y]; // Slide to
+
+		if (tmp_chan_idx >= FAMISTUDIO_EXP_NOTE_START)
+		{
+			// @note_table_expansion
+			slide_delta = famistudio_exp_note_table[y] - famistudio_exp_note_table[x];
+		}
+		else
+		{
+			slide_delta = famistudio_note_table[y] - famistudio_note_table[x];
+		}
+		
+		// @note_table_done
+		x = tmp_slide_idx;
+
+		if (x < 3)
+		{
+			// @negative_shift
+			famistudio_slide_pitch[x] = slide_delta << 1;
+		}
+		else // for FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_EPSM
+		{
+			// @positive_shift
+			famistudio_slide_pitch[x] = slide_delta >> FAMISTUDIO_PITCH_SHIFT;
+		}
+
+		// @shift_done
+		famistudio_chn_note[x] = channel_data_ptr[y++];
+
+		// Jumps to @cancel_delayed_cut!!!
+	}
+}
+
+famistudio_update_channel(x = channel index)
+{
+	if (famistudio_chn_repeat[x] != 0)
+	{
+		famistudio_chn_repeat[x]--;
+		return 0;
+	}
+
+	// @no_repeat
+	update_flags = 0;
+	channel_data_ptr = famistudio_chn_ptr[x];
+	y = 0;
+
+	while (true)
+	{
+		// @read_byte
+		a = *channel_data_ptr[y++];
+
+		// @check_negative
+		if (a < 0)
+		{
+			// @empty_notes_or_instrument_change
+			a &= 0x7f;
+			a >>= 1;
+
+			if (c)
+			{
+				// @set_repeat
+				famistudio_chn_repeat[x] = a;
+				break; 
+			}
+			else
+			{
+				famistudio_chn_instrument[x] = (a << 2);
+
+				// Instrument changed logic for:
+				// - FAMISTUDIO_EXP_N163
+				// - FAMISTUDIO_EXP_VRC7
+				// - FAMISTUDIO_EXP_FDS
+				// - FAMISTUDIO_EXP_EPSM
+			}
+		}
+		else if (a < 0x40) // @check_regular_note
+		{
+			// @common_note
+			if (a != 0)
+				a += 11;
+
+			// @play_note (extended note code also jumps here)
+			famistudio_chn_note[x] = a;
+
+			// @clear_previous_slide
+			if (famistudio_channel_to_slide[x] >= 0)
+			{
+				famistudio_slide_step[famistudio_channel_to_slide[x]] = 0
+			}
+
+			// @cancel_delayed_cut
+			if ((update_flags & 0x40) == 0)
+			{
+				famistudio_chn_cut_delay[x] = -1;
+			}
+
+			// @check_dpcm_channel
+			if (x == 4)
+			{
+				if (famistudio_chn_note[x])
+				{
+					famistudio_music_sample_play(famistudio_chn_note[x] - 12);
+				}
+				else
+				{
+					famistudio_sample_stop();
+				}
+			}
+			// @check_stop_note 
+			else if (famistudio_chn_note[x] && (update_flags & 0x80) == 0)
+			{
+
+				// @set_vrc7_triggers (+ same for EPSM)
+				if (x is vrc7 channel) 
+				{
+					famistudio_chn_vrc7_trigger[x] = 1;
+				}
+
+				famistudio_do_note_attack();
+			}
+
+			break;			
+		}
+		else if (a >= 70) // // @check_volume_track
+		{
+			// @volume_track
+			famistudio_chn_volume_track[x] = (a & $f) << 4;
+		}
+		else 
+		{
+			// @jmp_to_opcode
+			tmp_chan_idx = x; // All opcodes will restore x if they change it.
+			(famistudio_opcode_jmp - 1)[a & $f]();
+		}
+	}
+
+	// @done
+	if (famistudio_chn_ref_len[x] != 0 && --famistudio_chn_ref_len[x] != 0)
+	{
+		famistudio_chn_ptr[x] = famistudio_chn_return[x];
+	}
+	else 
+	{
+		// @flush_y
+		famistudio_chn_ptr[x] = channel_data_ptr + y;
+	}
+}
+
+famistudio_update_row(x = channel index)
+{
+	c = famistudio_channel_update(); // Preserves x
+	
+	if (c == 0)
+		return;
+
+	y = x; // Also loads envelope, instrument (in x/a).
+
+	if (y == 4)
+	{
+		// Play or stop sample depending if note is zero or not.
+	}
+	else
+	{
+		if (y < 4) // Or VRC6/MMC5
+		{
+			famistudio_set_instrument(x, y, a);
+		}
+		else
+		{
+			... // Set expansion instrument (FDS, VRC7, N163, S5B, EPSM)
+		}
+	}
+}
+
+
+...
+
+for (x = 0...FAMISTUDIO_NUM_CHANNELS)
+{
+	famistudio_update_row(x); // Preserves x
+}
+
+....

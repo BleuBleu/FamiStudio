@@ -5,101 +5,15 @@ namespace FamiStudio
 {
     class VideoFileOscilloscope : VideoFileBase
     {
-        private void BuildChannelColors(Song song, VideoChannelState[] channels, VideoFrameMetadata[] meta, int colorMode)
+         public bool Save(VideoExportSettings settings)
         {
-            Color[,] colors = new Color[meta.Length, meta[0].channelData.Length];
-
-            // Get the note colors.
-            for (int i = 0; i < meta.Length; i++)
-            {
-                var m = meta[i];
-
-                for (int j = 0; j < channels.Length; j++)
-                {
-                    var note = m.channelData[channels[j].songChannelIndex].note;
-
-                    if (note != null && note.IsMusical)
-                    {
-                        var color = Theme.LightGreyColor1;
-
-                        if (colorMode == OscilloscopeColorType.Channel)
-                        {
-                            var channel = song.Channels[channels[j].songChannelIndex];
-                            for (int p = 0; p < channel.PatternInstances.Length; p++)
-                            {
-                                if (channel.PatternInstances[p] != null)
-                                {
-                                    color = channel.PatternInstances[p].Color;
-                                    break;
-                                }
-                            }
-                        }
-                        else if (colorMode != OscilloscopeColorType.None)
-                        {
-                            if (note.Instrument != null && colorMode == OscilloscopeColorType.Instruments)
-                            {
-                                color = note.Instrument.Color;
-                            }
-                        }
-
-                        colors[i, j] = color;
-                    }
-                }
-            }
-
-            // Extend any color until we hit another one.
-            for (int i = 0; i < colors.GetLength(0) - 1; i++)
-            {
-                for (int j = 0; j < colors.GetLength(1); j++)
-                {
-                    if (colors[i, j].A != 0)
-                    {
-                        if (colors[i + 1, j].A == 0)
-                            colors[i + 1, j] = colors[i, j];
-                    }
-                    else
-                    {
-                        colors[i, j] = Theme.LightGreyColor1;
-                    }
-                }
-            }
-
-            const int ColorBlendTime = 5;
-
-            // Blend the colors.
-            for (int i = 0; i < meta.Length; i++)
-            {
-                var m = meta[i];
-
-                for (int j = 0; j < m.channelData.Length; j++)
-                {
-                    int avgR = 0;
-                    int avgG = 0;
-                    int avgB = 0;
-                    int count = 0;
-
-                    for (int k = i; k < i + ColorBlendTime && k < meta.Length; k++)
-                    {
-                        avgR += colors[k, j].R;
-                        avgG += colors[k, j].G;
-                        avgB += colors[k, j].B;
-                        count++;
-                    }
-
-                    m.channelData[j].color = Color.FromArgb(avgR / count, avgG / count, avgB / count);
-                }
-            }
-        }
-
-        public bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, int lineThickness, int window, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioDelay, int audioBitRate, int videoBitRate, bool stereo, float[] pan, bool[] emuTriggers)
-        {
-            if (!InitializeEncoder(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, window, channelMask, audioDelay, audioBitRate, videoBitRate, stereo, pan, emuTriggers))
+            if (!InitializeEncoder(settings))
                 return false;
 
-            numColumns = Math.Min(numColumns, channelStates.Length);
-            var numRows = (int)Math.Ceiling(channelStates.Length / (float)numColumns);
+            var numCols = Math.Min(settings.OscNumColumns, channelStates.Length);
+            var numRows = (int)Math.Ceiling(channelStates.Length / (float)numCols);
 
-            var channelResXFloat = videoResX / (float)numColumns;
+            var channelResXFloat = videoResX / (float)numCols;
             var channelResYFloat = videoResY / (float)numRows;
 
             var channelResX = (int)channelResXFloat;
@@ -107,14 +21,13 @@ namespace FamiStudio
 
             // Tweak some cosmetic stuff that depends on resolution.
             var smallChannelText = channelResY < 128;
-            var font = lineThickness > 1 ?
+            var font = settings.OscLineThickness > 1 ?
                 (smallChannelText ? fonts.FontMediumBold : fonts.FontVeryLargeBold) : 
                 (smallChannelText ? fonts.FontMedium     : fonts.FontVeryLarge);
             var textOffsetY = smallChannelText ? 1 : 4;
-            var channelLineWidth = resY >= 720 ? 5 : 3;
+            var channelLineWidth = settings.ResY >= 720 ? 5 : 3;
 
             LoadChannelIcons(!smallChannelText);
-            BuildChannelColors(song, channelStates, metadata, colorMode);
 
             return LaunchEncoderLoop((f) =>
             {
@@ -122,49 +35,51 @@ namespace FamiStudio
                 var c = videoGraphics.DefaultCommandList;
                 var o = videoGraphics.OverlayCommandList;
 
+                videoGraphics.BeginDrawFrame(new Rectangle(0, 0, videoResX, videoResY), true, Theme.DarkGreyColor2);
                 c.PushClipRegion(0, 0, videoResX, videoResY);
-
-                // Draw gradients.
-                for (int i = 0; i < numRows; i++)
-                {
-                    c.PushTranslation(0, i * channelResY);
-                    c.FillRectangleGradient(0, 0, videoResX, channelResY, Color.Black, Color.Transparent, true, channelResY / 2);
-                    c.PopTransform();
-                }
 
                 // Channel names + oscilloscope
                 for (int i = 0; i < channelStates.Length; i++)
                 {
                     var s = channelStates[i];
 
-                    var channelX = i % numColumns;
-                    var channelY = i / numColumns;
+                    var channelX = i % numCols;
+                    var channelY = i / numCols;
 
                     var channelPosX0 = (channelX + 0) * channelResX;
                     var channelPosX1 = (channelX + 1) * channelResX;
                     var channelPosY0 = (channelY + 0) * channelResY;
                     var channelPosY1 = (channelY + 1) * channelResY;
 
+                    c.PushTranslation(channelPosX0, channelPosY0);
+                    c.PushClipRegion(0, 0, channelResX, channelResY);
+                    
+                    // Gradient
+                    c.FillRectangleGradient(0, 0, channelResX, channelResY, Color.Black, Color.Transparent, true, channelResY / 2);
+
                     // Oscilloscope
                     var oscilloscope = UpdateOscilloscope(s, f);
 
-                    c.PushTransform(channelPosX0, channelPosY0 + channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
-                    c.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, lineThickness);
+                    c.PushTransform(0, channelResY / 2, channelPosX1 - channelPosX0, (channelPosY0 - channelPosY1) / 2);
+                    c.DrawNiceSmoothLine(oscilloscope, frame.channelData[i].color, settings.OscLineThickness);
                     c.PopTransform();
 
                     // Icons + text
-                    var channelIconPosX = channelPosX0 + s.icon.Size.Width / 2;
-                    var channelIconPosY = channelPosY0 + s.icon.Size.Height / 2;
+                    var channelIconPosX = s.icon.Size.Width / 2;
+                    var channelIconPosY = s.icon.Size.Height / 2;
 
                     c.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.icon.Size.Width - 1, channelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
-                    c.DrawBitmap(s.icon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
+                    c.DrawTexture(s.icon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
                     c.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, Theme.LightGreyColor1);
+
+                    c.PopClipRegion();
+                    c.PopTransform();
                 }
 
                 // Grid lines
                 for (int i = 1; i < numRows; i++)
                     o.DrawLine(0, i * channelResY, videoResX, i * channelResY, Theme.BlackColor, channelLineWidth);
-                for (int i = 1; i < numColumns; i++)
+                for (int i = 1; i < numCols; i++)
                     o.DrawLine(i * channelResX, 0, i * channelResX, videoResY, Theme.BlackColor, channelLineWidth);
 
                 c.PopClipRegion();

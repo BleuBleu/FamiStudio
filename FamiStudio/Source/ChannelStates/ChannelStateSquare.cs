@@ -30,8 +30,12 @@ namespace FamiStudio
                 var periodLo = (period >> 0) & 0xff;
                 int deltaHi  = periodHi - prevPeriodHi;
 
+                // Write low first, this matches the NSF driver.
+                WriteRegister(NesApu.APU_PL1_LO + regOffset, periodLo);
+
                 if (deltaHi != 0) // Avoid resetting the sequence.
                 {
+                    // TODO : We should not reference settings from here.
                     if (Settings.SquareSmoothVibrato && Math.Abs(deltaHi) == 1 && !IsSeeking)
                     {
                         // Blaarg's smooth vibrato technique using the sweep to avoid resetting the phase. Cool stuff.
@@ -42,6 +46,7 @@ namespace FamiStudio
                         WriteRegister(NesApu.APU_PL1_SWEEP + regOffset, deltaHi < 0 ? 0x8f : 0x87); // sweep enabled, shift = 7, set negative flag.
                         WriteRegister(NesApu.APU_FRAME_CNT, 0xc0); // clock sweep immediately
                         WriteRegister(NesApu.APU_PL1_SWEEP + regOffset, 0x08); // disable sweep
+                        WriteRegister(NesApu.APU_PL1_LO + regOffset, periodLo); // Restore correct low.
                     }
                     else
                     {
@@ -51,16 +56,16 @@ namespace FamiStudio
                     prevPeriodHi = periodHi;
                 }
 
-                WriteRegister(NesApu.APU_PL1_LO + regOffset, periodLo);
                 WriteRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
             }
             
-            if (resetPhase)
-            {
-                WriteRegister(NesApu.APU_PL1_HI + regOffset, prevPeriodHi);
-            }
-
             base.UpdateAPU();
         }
-    };
+
+        protected override void ResetPhase()
+        {
+            SkipCycles(4); // ldy
+            WriteRegister(NesApu.APU_PL1_HI + regOffset, prevPeriodHi);
+        }
+    }
 }

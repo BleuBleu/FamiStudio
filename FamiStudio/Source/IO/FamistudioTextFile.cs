@@ -23,12 +23,15 @@ namespace FamiStudio
             CultureInfo.CurrentCulture = oldCulture;
         }
 
-        public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData, bool noVersion = false)
+        public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData, FamiStudioTextFlags flags = FamiStudioTextFlags.None)
         {
             var project = originalProject.DeepClone();
             project.DeleteAllSongsBut(songIds, deleteUnusedData);
 
             SetInvariantCulture();
+
+            var noVersion = flags.HasFlag(FamiStudioTextFlags.NoVersion);
+            var noColors = flags.HasFlag(FamiStudioTextFlags.NoColors);
 
             var lines = new List<string>();
 
@@ -57,6 +60,18 @@ namespace FamiStudio
 
                 if (project.UsesN163Expansion)
                     projectLine += GenerateAttribute("NumN163Channels", project.ExpansionNumN163Channels);
+
+                for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
+                {
+                    var mixer = project.ExpansionMixerSettings[i];
+                    if (mixer.Override)
+                    {
+                        var expName = ExpansionType.InternalNames[i];
+                        projectLine += GenerateAttribute(expName + "VolumeDb", mixer.VolumeDb);
+                        projectLine += GenerateAttribute(expName + "TrebleDb", mixer.TrebleDb);
+                        projectLine += GenerateAttribute(expName + "TrebleRolloffHz", mixer.TrebleRolloffHz);
+                    }
+                }
             }
 
             lines.Add(projectLine);
@@ -79,7 +94,7 @@ namespace FamiStudio
 
                 Debug.Assert(!sample.HasAnyProcessingOptions);
 
-                lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
+                lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{ConditionalGenerateAttribute("Color", sample.Color.ToHexString(), !noColors)}{GenerateAttributeIfNonEmpty("Folder", sample.FolderName)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
             }
 
             // Instruments
@@ -93,7 +108,8 @@ namespace FamiStudio
                     instrument.DeleteN163ResampleWavData();
                 }
 
-                var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}";
+                var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}{ConditionalGenerateAttribute("Color", instrument.Color.ToHexString(), !noColors)}{GenerateAttributeIfNonEmpty("Folder", instrument.FolderName)}";
+
                 if (instrument.IsExpansionInstrument)
                 {
                     instrumentLine += GenerateAttribute("Expansion", ExpansionType.InternalNames[instrument.Expansion]);
@@ -106,6 +122,12 @@ namespace FamiStudio
                         if (instrument.FdsModSpeed     != 0) instrumentLine += GenerateAttribute("FdsModSpeed", instrument.FdsModSpeed);
                         if (instrument.FdsModDepth     != 0) instrumentLine += GenerateAttribute("FdsModDepth", instrument.FdsModDepth);
                         if (instrument.FdsModDelay     != 0) instrumentLine += GenerateAttribute("FdsModDelay", instrument.FdsModDelay);
+                        if (instrument.FdsAutoMod)
+                        {
+                            instrumentLine += GenerateAttribute("FdsAutoMod", instrument.FdsAutoMod);
+                            instrumentLine += GenerateAttribute("FdsAutoModDenom", instrument.FdsAutoModDenom);
+                            instrumentLine += GenerateAttribute("FdsAutoModNumer", instrument.FdsAutoModNumer);
+                        }
                     }
                     else if (instrument.IsN163)
                     {
@@ -113,6 +135,13 @@ namespace FamiStudio
                         instrumentLine += GenerateAttribute("N163WaveSize", instrument.N163WaveSize);
                         instrumentLine += GenerateAttribute("N163WavePos", instrument.N163WavePos);
                         instrumentLine += GenerateAttribute("N163WaveCount", instrument.N163WaveCount);
+                    }
+                    else if (instrument.IsS5B)
+                    {
+                        instrumentLine += GenerateAttribute("S5BEnvelopeShape", instrument.S5BEnvelopeShape);
+                        instrumentLine += GenerateAttribute("S5BEnvelopeAutoPitch", instrument.S5BEnvAutoPitch);
+                        instrumentLine += GenerateAttribute("S5BEnvelopeAutoPitchOctave", instrument.S5BEnvAutoPitchOctave);
+                        instrumentLine += GenerateAttribute("S5BEnvelopePitch", instrument.S5BEnvelopePitch);
                     }
                     else if (instrument.IsVrc6)
                     {
@@ -137,6 +166,10 @@ namespace FamiStudio
                             for (int i = 0; i < 31; i++)
                                 instrumentLine += GenerateAttribute($"EpsmReg{i}", instrument.EpsmPatchRegs[i]);
                         }
+
+                        instrumentLine += GenerateAttribute("EPSMSquareEnvelopeShape", instrument.EPSMSquareEnvelopeShape);
+                        instrumentLine += GenerateAttribute("EPSMSquareEnvelopeAutoPitch", instrument.EPSMSquareEnvAutoPitch);
+                        instrumentLine += GenerateAttribute("EPSMSquareEnvelopeAutoPitchOctave", instrument.EPSMSquareEnvAutoPitchOctave);
                     }
                 }
 
@@ -183,7 +216,7 @@ namespace FamiStudio
             foreach (var arpeggio in project.Arpeggios)
             {
                 var env = arpeggio.Envelope;
-                var arpeggioLine = $"\tArpeggio{GenerateAttribute("Name", arpeggio.Name)}{GenerateAttribute("Length", env.Length)}";
+                var arpeggioLine = $"\tArpeggio{GenerateAttribute("Name", arpeggio.Name)}{ConditionalGenerateAttribute("Color", arpeggio.Color.ToHexString(), !noColors)}{GenerateAttributeIfNonEmpty("Folder", arpeggio.FolderName)}{GenerateAttribute("Length", env.Length)}";
                 if (env.Loop >= 0) arpeggioLine += GenerateAttribute("Loop", env.Loop);
                 arpeggioLine += GenerateAttribute("Values", String.Join(",", env.Values.Take(env.Length)));
                 lines.Add(arpeggioLine);
@@ -192,7 +225,7 @@ namespace FamiStudio
             // Songs
             foreach (var song in project.Songs)
             {
-                var songStr = $"\tSong{GenerateAttribute("Name", song.Name)}{GenerateAttribute("Length", song.Length)}{GenerateAttribute("LoopPoint", song.LoopPoint)}";
+                var songStr = $"\tSong{GenerateAttribute("Name", song.Name)}{ConditionalGenerateAttribute("Color", song.Color.ToHexString(), !noColors)}{GenerateAttributeIfNonEmpty("Folder", song.FolderName)}{GenerateAttribute("Length", song.Length)}{GenerateAttribute("LoopPoint", song.LoopPoint)}";
 
                 if (song.UsesFamiTrackerTempo)
                 {
@@ -233,7 +266,7 @@ namespace FamiStudio
 
                     foreach (var pattern in channel.Patterns)
                     {
-                        lines.Add($"\t\t\tPattern{GenerateAttribute("Name", pattern.Name)}");
+                        lines.Add($"\t\t\tPattern{GenerateAttribute("Name", pattern.Name)}{ConditionalGenerateAttribute("Color", pattern.Color.ToHexString(), !noColors)}");
 
                         foreach (var kv in pattern.Notes)
                         {
@@ -262,18 +295,19 @@ namespace FamiStudio
                                     }
                                 }
 
-                                if (!note.HasAttack)      noteLine += GenerateAttribute("Attack", false);
-                                if (note.HasVolume)       noteLine += GenerateAttribute("Volume", note.Volume);
-                                if (note.HasVolumeSlide)  noteLine += GenerateAttribute("VolumeSlideTarget", note.VolumeSlideTarget);
-                                if (note.HasVibrato)      noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
-                                if (note.HasSpeed)        noteLine += GenerateAttribute("Speed", note.Speed);
-                                if (note.HasFinePitch)    noteLine += GenerateAttribute("FinePitch", note.FinePitch);
-                                if (note.HasFdsModSpeed)  noteLine += GenerateAttribute("FdsModSpeed", note.FdsModSpeed);
-                                if (note.HasFdsModDepth)  noteLine += GenerateAttribute("FdsModDepth", note.FdsModDepth);
-                                if (note.HasDutyCycle)    noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
-                                if (note.HasNoteDelay)    noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
-                                if (note.HasCutDelay)     noteLine += GenerateAttribute("CutDelay", note.CutDelay);
-                                if (note.HasDeltaCounter) noteLine += GenerateAttribute("DeltaCounter", note.DeltaCounter);
+                                if (!note.HasAttack)        noteLine += GenerateAttribute("Attack", false);
+                                if (note.HasVolume)         noteLine += GenerateAttribute("Volume", note.Volume);
+                                if (note.HasVolumeSlide)    noteLine += GenerateAttribute("VolumeSlideTarget", note.VolumeSlideTarget);
+                                if (note.HasVibrato)        noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
+                                if (note.HasSpeed)          noteLine += GenerateAttribute("Speed", note.Speed);
+                                if (note.HasFinePitch)      noteLine += GenerateAttribute("FinePitch", note.FinePitch);
+                                if (note.HasFdsModSpeed)    noteLine += GenerateAttribute("FdsModSpeed", note.FdsModSpeed);
+                                if (note.HasFdsModDepth)    noteLine += GenerateAttribute("FdsModDepth", note.FdsModDepth);
+                                if (note.HasDutyCycle)      noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
+                                if (note.HasNoteDelay)      noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
+                                if (note.HasCutDelay)       noteLine += GenerateAttribute("CutDelay", note.CutDelay);
+                                if (note.HasPhaseReset)     noteLine += GenerateAttribute("PhaseReset", note.PhaseReset);
+                                if (note.HasEnvelopePeriod) noteLine += GenerateAttribute("EnvelopePeriod", note.EnvelopePeriod);
 
                                 lines.Add(noteLine);
                             }
@@ -299,6 +333,16 @@ namespace FamiStudio
         private static string GenerateAttribute(string key, object value)
         {
             return $" {key}=\"{value.ToString().Replace("\"", "\"\"")}\"";
+        }
+
+        private static string GenerateAttributeIfNonEmpty(string key, object value)
+        {
+            return !string.IsNullOrEmpty(value.ToString()) ? GenerateAttribute(key, value) : string.Empty;
+        }
+
+        private static string ConditionalGenerateAttribute(string key, object value, bool condition)
+        {
+            return condition ? GenerateAttribute(key, value) : string.Empty;
         }
 
         private static readonly Regex NameRegex = new Regex("^\\s*([^\"=\\s]+)\\s*(.*)\\s*$", RegexOptions.Compiled);
@@ -401,6 +445,21 @@ namespace FamiStudio
                                     numN163Channels = int.Parse(numN163ChannelsStr);
 
                                 project.SetExpansionAudioMask(expansionMask, numN163Channels);
+
+                                for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
+                                {
+                                    var expName = ExpansionType.InternalNames[i];
+
+                                    if (parameters.TryGetValue(expName + "VolumeDb", out var volumeDbStr) &&
+                                        parameters.TryGetValue(expName + "TrebleDb", out var trebleDbStr) &&
+                                        parameters.TryGetValue(expName + "TrebleRolloffHz", out var trebleRolloffHzStr))
+                                    {
+                                        project.ExpansionMixerSettings[i].Override = true;
+                                        project.ExpansionMixerSettings[i].VolumeDb = float.Parse(volumeDbStr);
+                                        project.ExpansionMixerSettings[i].TrebleDb = float.Parse(trebleDbStr);
+                                        project.ExpansionMixerSettings[i].TrebleRolloffHz = int.Parse(trebleRolloffHzStr);
+                                    }
+                                }
                             }
 
                             if (!version.StartsWith(currentVersion.Substring(0, 3)))
@@ -417,6 +476,10 @@ namespace FamiStudio
                             for (int i = 0; i < data.Length; i++)
                                 data[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
                             var sample = project.CreateDPCMSampleFromDmcData(parameters["Name"], data);
+                            if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Sample, folderName) != null)
+                                sample.FolderName = folderName;
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                sample.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
                             break;
                         }
                         case "Instrument":
@@ -425,15 +488,25 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Expansion", out var instrumentExpStr))
                                 instrumentExp = ExpansionType.GetValueForInternalName(instrumentExpStr);
                             instrument = project.CreateInstrument(instrumentExp, parameters["Name"]);
+                            if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Instrument, folderName) != null)
+                                instrument.FolderName = folderName;
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                instrument.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
 
                             if (instrument.IsFds)
                             {
                                 if (parameters.TryGetValue("FdsWavePreset",   out var wavPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForInternalName(wavPresetStr);
-                                if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForInternalName(modPresetStr);
+                                if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsModPreset    = (byte)WavePresetType.GetValueForInternalName(modPresetStr);
                                 if (parameters.TryGetValue("FdsMasterVolume", out var masterVolumeStr)) instrument.FdsMasterVolume = byte.Parse(masterVolumeStr);
                                 if (parameters.TryGetValue("FdsModSpeed",     out var fdsModSpeedStr))  instrument.FdsModSpeed     = ushort.Parse(fdsModSpeedStr);
                                 if (parameters.TryGetValue("FdsModDepth",     out var fdsModDepthStr))  instrument.FdsModDepth     = byte.Parse(fdsModDepthStr);
                                 if (parameters.TryGetValue("FdsModDelay",     out var fdsModDelayStr))  instrument.FdsModDelay     = byte.Parse(fdsModDelayStr);
+                                if (parameters.TryGetValue("FdsAutoMod",      out var fdsAutoModStr))   instrument.FdsAutoMod      = bool.Parse(fdsAutoModStr);
+                                if (instrument.FdsAutoMod)
+                                {
+                                    if (parameters.TryGetValue("FdsAutoModDenom", out var fdsAutoModDenomStr)) instrument.FdsAutoModDenom = byte.Parse(fdsAutoModDenomStr);
+                                    if (parameters.TryGetValue("FdsAutoModNumer", out var fdsAutoModNumerStr)) instrument.FdsAutoModNumer = byte.Parse(fdsAutoModNumerStr);
+                                }
                             }
                             else if (instrument.IsN163)
                             {
@@ -445,6 +518,13 @@ namespace FamiStudio
                             else if (instrument.IsVrc6)
                             {
                                  if (parameters.TryGetValue("Vrc6SawMasterVolume", out var vrc6SawVolumeStr)) instrument.Vrc6SawMasterVolume = (byte)Vrc6SawMasterVolumeType.GetValueForName(vrc6SawVolumeStr);
+                            }
+                            else if (instrument.IsS5B)
+                            {
+                                 if (parameters.TryGetValue("S5BEnvelopeShape",           out var s5bEnvShapeStr))     instrument.S5BEnvelopeShape      = byte.Parse(s5bEnvShapeStr);
+                                 if (parameters.TryGetValue("S5BEnvelopeAutoPitch",       out var s5bEnvAutoPitchStr)) instrument.S5BEnvAutoPitch       = bool.Parse(s5bEnvAutoPitchStr);
+                                 if (parameters.TryGetValue("S5BEnvelopeAutoPitchOctave", out var s5bEnvAutoOctStr))   instrument.S5BEnvAutoPitchOctave = sbyte.Parse(s5bEnvAutoOctStr);
+                                 if (parameters.TryGetValue("S5BEnvelopePitch",           out var s5bEnvPitchStr))     instrument.S5BEnvelopePitch      = ushort.Parse(s5bEnvPitchStr);
                             }
                             else if (instrument.IsVrc7)
                             {
@@ -471,6 +551,10 @@ namespace FamiStudio
                                            instrument.EpsmPatchRegs[i] = byte.Parse(regStr);
                                     }
                                 }
+
+                                if (parameters.TryGetValue("EPSMSquareEnvelopeShape",           out var epsmEnvShapeStr))     instrument.EPSMSquareEnvelopeShape      = byte.Parse(epsmEnvShapeStr);
+                                if (parameters.TryGetValue("EPSMSquareEnvelopeAutoPitch",       out var epsmEnvAutoPitchStr)) instrument.EPSMSquareEnvAutoPitch       = bool.Parse(epsmEnvAutoPitchStr);
+                                if (parameters.TryGetValue("EPSMSquareEnvelopeAutoPitchOctave", out var epsmEnvAutoOctStr))   instrument.EPSMSquareEnvAutoPitchOctave = sbyte.Parse(epsmEnvAutoOctStr);
                             }
                             else if (instrument.IsRegular)
                             {
@@ -502,8 +586,11 @@ namespace FamiStudio
                             arpeggio = project.CreateArpeggio(parameters["Name"]);
                             arpeggio.Envelope.Length = int.Parse(parameters["Length"]);
                             
-                            if (parameters.TryGetValue("Loop", out var loopStr))
-                                arpeggio.Envelope.Loop = int.Parse(loopStr);
+                            if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Arpeggio, folderName) != null)
+                                arpeggio.FolderName = folderName;
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                arpeggio.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
+                            arpeggio.Envelope.Loop = parameters.TryGetValue("Loop", out var loopStr) ? int.Parse(loopStr) : -1;
 
                             var values = parameters["Values"].Split(',');
                             for (int j = 0; j < values.Length; j++)
@@ -535,6 +622,11 @@ namespace FamiStudio
                             song.SetLength(int.Parse(parameters["Length"]));
                             song.SetBeatLength(int.Parse(parameters["BeatLength"]));
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
+
+                            if (parameters.TryGetValue("Folder", out var folderName) && project.CreateFolder(FolderType.Song, folderName) != null)
+                                song.FolderName = folderName;
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                song.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
 
                             if (song.UsesFamiTrackerTempo)
                             {
@@ -600,6 +692,8 @@ namespace FamiStudio
                         case "Pattern":
                         {
                             pattern = channel.CreatePattern(parameters["Name"]);
+                            if (parameters.TryGetValue("Color", out var hexColor))
+                                pattern.Color = Theme.EnforceThemeColor(Color.FromHexString(hexColor));
                             break;
                         }
                         case "Note":
@@ -648,6 +742,10 @@ namespace FamiStudio
                                 note.CutDelay = byte.Parse(cutDelayStr);
                             if (parameters.TryGetValue("DeltaCounter", out var deltaCounterStr) && channel.SupportsEffect(Note.EffectDeltaCounter))
                                 note.DeltaCounter = byte.Parse(deltaCounterStr);
+                            if (parameters.TryGetValue("PhaseReset", out var phaseResetStr) && channel.SupportsEffect(Note.EffectPhaseReset))
+                                note.PhaseReset = byte.Parse(phaseResetStr);
+                            if (parameters.TryGetValue("EnvelopePeriod", out var envPeriodStr) && channel.SupportsEffect(Note.EffectEnvelopePeriod))
+                                note.EnvelopePeriod = ushort.Parse(envPeriodStr);
 
                             break;
                         }
@@ -685,5 +783,13 @@ namespace FamiStudio
             }
 #endif
         }
+    }
+
+    [Flags]
+    public enum FamiStudioTextFlags
+    {
+        None = 0,
+        NoVersion = 1,
+        NoColors = 2
     }
 }

@@ -27,7 +27,9 @@ namespace FamiStudio
             public string image;
             public LinearLayout button;
             public PropertyPage properties;
+            public string customVerb;
             public bool visible = true;
+            public int backTab = -1;
         }
 
         private string title;
@@ -42,6 +44,13 @@ namespace FamiStudio
         public int PageCount => tabs.Count;
         public int SelectedIndex => selectedIndex;
         public FamiStudioWindow ParentWindow => FamiStudioWindow.Instance;
+
+        public delegate void PageChangingDelegate(int oldPage, int newPage);
+        public delegate void CustomVerbActivatedDelegate();
+        public delegate void AppSuspendedDelegate();
+        public event PageChangingDelegate PageChanging;
+        public event CustomVerbActivatedDelegate CustomVerbActivated;
+        public event AppSuspendedDelegate AppSuspended;
 
         public MultiPropertyDialog(FamiStudioWindow win, string text, int width, int tabsWidth = 150)
         {
@@ -72,7 +81,11 @@ namespace FamiStudio
 
         public void SetSelectedIndex(int idx)
         {
-            selectedIndex = idx;
+            if (selectedIndex != idx)
+            {
+                PageChanging?.Invoke(selectedIndex, idx);
+                selectedIndex = idx;
+            }
         }
 
         public PropertyPage GetPropertyPage(int idx)
@@ -85,6 +98,36 @@ namespace FamiStudio
             return tabs[idx];
         }
 
+        public void SwitchToPage(int idx)
+        {
+            var multiDialogActivity = Xamarin.Essentials.Platform.CurrentActivity as MultiPropertyDialogActivity;
+            if (multiDialogActivity != null && multiDialogActivity.Dialog == this)
+            {
+                multiDialogActivity.SwitchToPage(idx);
+            }
+        }
+
+        public void SetPageBackPage(int idx, int backIdx)
+        {
+            tabs[idx].backTab = backIdx;
+        }
+
+        public void AddPageCustomVerb(int idx, string verb)
+        {
+            tabs[idx].customVerb = verb;
+        }
+
+        public void ActivateCustomVerb()
+        {
+            Debug.Assert(tabs[selectedIndex].customVerb != null);
+            CustomVerbActivated?.Invoke();
+        }
+
+        public void NotifyAppSuspended()
+        {
+            AppSuspended?.Invoke();
+        }
+
         public void ShowDialogAsync(Action<DialogResult> callback)
         {
             FamiStudioWindow.Instance.StartMultiPropertyDialogActivity(callback, this);
@@ -94,8 +137,9 @@ namespace FamiStudio
     [Activity(Theme = "@style/AppTheme.NoActionBar", ResizeableActivity = false, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.UiMode | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden, ScreenOrientation = ScreenOrientation.Behind)]
     public class MultiPropertyDialogActivity : AppCompatActivity, View.IOnClickListener
     {
-        private const int FragmentViewId  = 1008;
-        private const int ApplyMenuItemId = 1009;
+        private const int FragmentViewId       = 1008;
+        private const int ApplyMenuItemId      = 1009;
+        private const int CustomVerbMenuItemId = 1010;
 
         private CoordinatorLayout coordLayout;
         private AppBarLayout appBarLayout;
@@ -108,6 +152,8 @@ namespace FamiStudio
         private bool stoppedByUser;
 
         private int selectedTabIndex = -1; // -1 means in the tab page.
+
+        public MultiPropertyDialog Dialog => dlg;
 
         public MultiPropertyDialogActivity()
         {
@@ -141,7 +187,7 @@ namespace FamiStudio
             {
                 actionBar.SetDisplayHomeAsUpEnabled(true);
                 actionBar.SetHomeButtonEnabled(true);
-                actionBar.SetHomeAsUpIndicator(Android.Resource.Drawable.IcMenuCloseClearCancel);
+                actionBar.SetHomeAsUpIndicator(global::FamiStudio.Resource.Drawable.cross);
                 actionBar.Title = dlg.Title;
             }
 
@@ -183,15 +229,42 @@ namespace FamiStudio
             // running, lets suspend FamiStudio.
             if (!stoppedByUser && !FamiStudioWindow.ActivityRunning)
                 FamiStudio.StaticInstance.Suspend();
+            dlg?.NotifyAppSuspended();
             base.OnPause();
         }
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
-            stoppedByUser = true;
-            SetResult(item != null && item.ItemId == ApplyMenuItemId ? Result.Ok : Result.Canceled);
-            Finish();
+            var customVerbPressed   = item.ItemId == CustomVerbMenuItemId;
+            var applyPressed        = item.ItemId == ApplyMenuItemId;
+            var backOrClosedPressed = !customVerbPressed && !applyPressed;
 
+            if (customVerbPressed)
+            {
+                dlg.ActivateCustomVerb();
+            }
+            else
+            {
+                var finish = true;
+
+                if (backOrClosedPressed && selectedTabIndex >= 0)
+                {
+                    var tab = dlg.GetPropertyPageTab(selectedTabIndex);
+                    if (tab.backTab >= 0)
+                    {
+                        SwitchToPage(tab.backTab);
+                        finish = false;
+                    }
+                }
+
+                if (finish)
+                {
+                    stoppedByUser = true;
+                    SetResult(item != null && applyPressed ? Result.Ok : Result.Canceled);
+                    Finish();
+                }
+            }
+            
             return base.OnOptionsItemSelected(item);
         }
 
@@ -204,20 +277,27 @@ namespace FamiStudio
 
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
-            if (applyMenuItem == null)
+            menu.Clear();
+            applyMenuItem = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, SetMenuItemFont(dlg.Verb, Resource.Style.LightGrayTextMedium));
+
+            var showApplyButton = false;
+
+            if (selectedTabIndex >= 0)
             {
-                menu.Clear();
-                applyMenuItem = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, SetMenuItemFont(dlg.Verb, Resource.Style.LightGrayTextMedium)); 
-                UpdateToolbar(dlg.ShowVerbOnTabPage);
+                var tab = dlg.GetPropertyPageTab(selectedTabIndex);
+                if (tab.customVerb != null)
+                    menu.Add(IMenu.None, CustomVerbMenuItemId, IMenu.None, SetMenuItemFont(tab.customVerb, Resource.Style.LightGrayTextMedium));
+                showApplyButton = tab.backTab < 0;
+            }
+            else
+            {
+                showApplyButton = dlg.ShowVerbOnTabPage;
             }
 
-            return true;
-        }
-
-        public void UpdateToolbar(bool showApplyButton)
-        {
             applyMenuItem.SetShowAsAction(showApplyButton ? ShowAsAction.Always : ShowAsAction.Never);
             applyMenuItem.SetVisible(showApplyButton);
+
+            return true;
         }
 
         public void OnClick(View v)
@@ -229,13 +309,7 @@ namespace FamiStudio
                     var tab = dlg.GetPropertyPageTab(i);
                     if (tab.button == v)
                     {
-                        selectedTabIndex = i;
-                        dlg.SetSelectedIndex(i);
-                        UpdateToolbar(true);
-                        SupportFragmentManager.BeginTransaction()
-                            .SetTransition(AndroidX.Fragment.App.FragmentTransaction.TransitFragmentFade)
-                            .Replace(fragmentView.Id, tab.properties, "MultiPropertyDialog")
-                            .Commit();
+                        SwitchToPage(i);
                         break;
                     }
                 }
@@ -246,19 +320,34 @@ namespace FamiStudio
         {
             if (selectedTabIndex >= 0)
             {
-                selectedTabIndex = -1;
-                dlg.SetSelectedIndex(-1);
-                UpdateToolbar(dlg.ShowVerbOnTabPage);
-                SupportFragmentManager.BeginTransaction()
-                    .SetTransition(AndroidX.Fragment.App.FragmentTransaction.TransitFragmentFade)
-                    .Replace(fragmentView.Id, tabsFragment, "MultiPropertyDialogTabs")
-                    .Commit();
+                var tab = dlg.GetPropertyPageTab(selectedTabIndex);
+                SwitchToPage(tab.backTab);
             }
             else
             {
                 stoppedByUser = true;
                 base.OnBackPressed();
             }
+        }
+
+        public void SwitchToPage(int idx)
+        {
+            var tab = idx >= 0 ? dlg.GetPropertyPageTab(idx) : null;
+            var fragments = tab == null ? tabsFragment as AndroidX.Fragment.App.Fragment : tab.properties as AndroidX.Fragment.App.Fragment;
+
+            if (SupportActionBar != null)
+            {
+                var icon = tab != null && tab.backTab >= 0 ? global::FamiStudio.Resource.Drawable.arrow_back : global::FamiStudio.Resource.Drawable.cross;
+                SupportActionBar.SetHomeAsUpIndicator(icon);
+            }
+
+            selectedTabIndex = idx;
+            dlg.SetSelectedIndex(idx);
+            InvalidateOptionsMenu();
+            SupportFragmentManager.BeginTransaction()
+                .SetTransition(AndroidX.Fragment.App.FragmentTransaction.TransitFragmentFade)
+                .Replace(fragmentView.Id, fragments, "MultiPropertyDialog")
+                .Commit();
         }
 
         private class MultiPropertyTabFragment : AndroidX.Fragment.App.Fragment

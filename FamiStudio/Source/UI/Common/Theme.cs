@@ -203,7 +203,7 @@ namespace FamiStudio
             return (float)MathF.Sqrt(dr * dr + dg * dg + db * db);
         }
 
-        public static void EnforceThemeColor(ref Color color)
+        public static Color EnforceThemeColor(Color color)
         {
             float minDist = 1000.0f;
             Color closestColor = CustomColors[0, 0];
@@ -213,7 +213,7 @@ namespace FamiStudio
                 for (int i = 0; i < CustomColors.GetLength(0); i++)
                 {
                     if (CustomColors[i, j] == color)
-                        return;
+                        return color;
 
                     var dist = ColorDistance(color, CustomColors[i, j]);
                     if (dist < minDist)
@@ -224,7 +224,7 @@ namespace FamiStudio
                 }
             }
 
-            color = closestColor;
+            return closestColor;
         }
 
         public static Color RandomCustomColor()
@@ -271,7 +271,7 @@ namespace FamiStudio
                 );
         }
 
-        public static void SerializeState(ProjectBuffer buffer)
+        public static void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref nextColorIdx);
         }

@@ -26,9 +26,11 @@ namespace FamiStudio
         public static bool Initialize(bool commandLine)
         {
             MacUtils.Initialize();
+            MacUtils.AudioDeviceChanged += Platform_AudioDeviceChanged;
 
             if (!InitializeDesktop(commandLine))
                 return false;
+
             return true;
         }
 
@@ -37,9 +39,14 @@ namespace FamiStudio
             ShutdownDesktop();
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        private static void Platform_AudioDeviceChanged()
         {
-            return new PortAudioStream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
+            AudioDeviceChanged?.Invoke();
+        }
+
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
+        {
+            return PortAudioStream.Create(rate, stereo, bufferSizeMs);
         }
 
         private static string[] GetExtensionList(string str)
@@ -106,6 +113,13 @@ namespace FamiStudio
         public static void Beep()
         {
             MacUtils.Beep();
+        }
+
+        public static unsafe void ZeroMemory(IntPtr p, int len)
+        {
+            byte* pp = (byte*)p.ToPointer();
+            for (var i = 0; i < len; i++)
+                pp[i] = 0;
         }
 
         public static int GetCursorSize(float scaling)

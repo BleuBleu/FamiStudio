@@ -49,6 +49,96 @@ namespace FamiStudio
             }
         }
 
+        static public short[] ResampleStream(short[] prev, short[] curr, int inputRate, int outputRate, bool stereo, ref double sampleIndex)
+        {
+            if (inputRate == outputRate)
+            {
+                return curr;
+            }
+
+            var channelCount = stereo ? 2 : 1;
+            var frameCount = curr.Length / channelCount;
+
+            Debug.Assert(curr.Length % channelCount == 0);
+            Debug.Assert(prev == null || prev.Length % channelCount == 0);
+
+            var ratio = inputRate / (double)outputRate;
+            var outputCount = (int)((frameCount - 1) / ratio);
+
+            // TODO : There has to be a more clever formula...
+            while (Math.Ceiling(sampleIndex + outputCount * ratio) < frameCount)
+                outputCount++;
+
+            var output = new short[outputCount * channelCount];
+
+            for (var i = 0; i < outputCount; i++)
+            {
+                var alpha = (sampleIndex < 0.0 ? 1.0 : 0.0) + Utils.Frac(sampleIndex);
+
+                {
+                    var idx0 = (int)Math.Floor(sampleIndex)   * channelCount;
+                    var idx1 = (int)Math.Ceiling(sampleIndex) * channelCount;
+                    var s0 = idx0 < 0 ? prev[prev.Length + idx0] : curr[idx0];
+                    var s1 = idx1 < 0 ? prev[prev.Length + idx1] : curr[idx1];
+
+                    output[i * channelCount + 0] = (short)Utils.Lerp(s0, s1, alpha);
+                }
+
+                if (stereo)
+                {
+                    var idx0 = (int)Math.Floor(sampleIndex)   * channelCount + 1;
+                    var idx1 = (int)Math.Ceiling(sampleIndex) * channelCount + 1;
+                    var s0 = idx0 < 0 ? prev[prev.Length + idx0] : curr[idx0];
+                    var s1 = idx1 < 0 ? prev[prev.Length + idx1] : curr[idx1];
+
+                    output[i * channelCount + 1] = (short)Utils.Lerp(s0, s1, alpha);
+                }
+
+                sampleIndex += ratio;
+            }
+
+            sampleIndex -= frameCount;
+            
+            return output;
+        }
+
+        static public short[] ResampleBuffer(short[] source, int inputRate, int outputRate, bool stereo)
+        {
+            var ratio = inputRate / (double)outputRate;
+            var sampleIndex = 0.0;
+            var channelCount = stereo ? 2 : 1;
+            var inputFrameCount = source.Length / channelCount;
+            var outputFrameCount = (int)(inputFrameCount / ratio);
+            var output = new short[outputFrameCount * channelCount];
+
+            for (var i = 0; i < outputFrameCount * channelCount; i += channelCount)
+            {
+                var alpha = Math.Abs(Utils.Frac(sampleIndex));
+
+                var idx0 = Math.Min((int)Math.Floor  (sampleIndex), inputFrameCount - 1) * channelCount;
+                var idx1 = Math.Min((int)Math.Ceiling(sampleIndex), inputFrameCount - 1) * channelCount;
+
+                {
+                    var s0 = source[idx0];
+                    var s1 = source[idx1];
+
+                    output[i] = (short)Utils.Lerp(s0, s1, alpha);
+                }
+
+                if (stereo)
+                {
+                    var s0 = source[idx0 + 1];
+                    var s1 = source[idx1 + 1];
+
+                    output[i + 1] = (short)Utils.Lerp(s0, s1, alpha);
+                }
+
+                sampleIndex += ratio;
+            }
+
+            return output;
+        }
+
         static public void Normalize(short[] wav)
         {
             var min = short.MaxValue;
@@ -389,6 +479,8 @@ namespace FamiStudio
 
         // Based off this great article : https://tomroelandts.com/articles/how-to-create-a-simple-low-pass-filter
         // cutoff and transition are expressed as fractions of the sample rate (ex: 1000 / 44100 = 0.22)
+
+        // TODO : Convert all this to biquad filter.
         static public void LowPassFilter(ref short[] wave, float cutoff, float transition, int maxFilterSize = int.MaxValue)
         {
             var n = Math.Min(maxFilterSize, (int)Math.Ceiling(4.6f / transition));

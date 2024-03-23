@@ -144,6 +144,9 @@ namespace FamiStudio
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
+                project.SoundEngineUsesExtendedInstruments = true;
+                project.SoundEngineUsesDpcmBankSwitching = true;
+                project.SoundEngineUsesExtendedDpcm = true;
 
                 // In the multiple expansion driver, with EPSM enabled, we run out of RAM and use MMC5 EXRAM
                 // so we need to force enable it here.
@@ -218,6 +221,8 @@ namespace FamiStudio
                         break;
                 }
 
+                driverActualSize += 6; // Vectors
+
                 // If we hit this, it means the NSF was compiled with the wrong number of banks.
                 Debug.Assert(Utils.RoundUp(driverActualSize, NsfBankSize) == driverSizePadded);
 
@@ -284,7 +289,7 @@ namespace FamiStudio
 
                     var bank = nsfBytes.Count / NsfBankSize;
                     var addr = NsfMemoryStart + (nsfBytes.Count & (NsfBankSize - 1));
-                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, true, dpcmBankSize, dpcmBaseAddr, machine);
+                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, dpcmBaseAddr, machine);
                     var maxSongAddr = project.UsesSamples ? dpcmBaseAddr : codeBaseAddr;
 
                     if (addr + songBytes.Length > maxSongAddr)
@@ -297,7 +302,7 @@ namespace FamiStudio
                     if (songBytes.Length <= driverBankLeft)
                     {
                         addr = codeBaseAddr + driverBankOffset;
-                        songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, true, dpcmBankSize, dpcmBaseAddr, machine);
+                        songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, dpcmBaseAddr, machine);
                         for (var j = 0; j < songBytes.Length; j++)
                             nsfBytes[driverBankOffset + j] = songBytes[j];
                         driverBankOffset += songBytes.Length;
@@ -518,6 +523,8 @@ namespace FamiStudio
             public int fdsModDepth = 0;
             public int fdsModSpeed = 0;
 
+            public int s5bEnvFreq = 0;
+
             public bool fmTrigger = false;
             public bool fmSustain = false;
 
@@ -536,7 +543,7 @@ namespace FamiStudio
             int bestNote = -1;
             int minDiff  = 9999999;
 
-            for (int i = 0; i < noteTable.Length; i++)
+            for (int i = 1; i < noteTable.Length; i++)
             {
                 var diff = Math.Abs(noteTable[i] - period);
                 if (diff < minDiff)
@@ -549,13 +556,6 @@ namespace FamiStudio
             finePitch = period - noteTable[bestNote];
 
             return bestNote;
-        }
-
-        private Pattern GetOrCreatePattern(Channel channel, int patternIdx)
-        {
-            if (channel.PatternInstances[patternIdx] == null)
-                channel.PatternInstances[patternIdx] = channel.CreatePattern();
-            return channel.PatternInstances[patternIdx];
         }
 
         private Instrument GetDutyInstrument(Channel channel, int duty)
@@ -686,22 +686,43 @@ namespace FamiStudio
             }
         }
 
-        private Instrument GetS5BInstrument(int noise, int mixer)
+        private Instrument GetS5BInstrument(int noise, int mixer, bool envEnabled, int envShape)
         {
+            Debug.Assert(envShape >= 0 && envShape < 16);
+
+            if (envEnabled)
+            {
+                if (envShape < 0x4) envShape = 0x9; else 
+                if (envShape < 0x8) envShape = 0xf;
+
+                envShape -= 7;
+            }
+            else
+            {
+                envShape = 0;
+            }
+
+            var toneEnabled  = (mixer & 1) == 0;
+            var noiseEnabled = (mixer & 2) == 0;
+
             var name = "S5B";
-            if (mixer != 2 && noise == 0)
-                noise = 1;
-            if (mixer != 2)
-                name = $"S5B Noise {noise} M {mixer}";
+            if (toneEnabled)
+                name += $" Tone";
+            if (noiseEnabled)
+                name += $" Noise {noise}";
+            if (envShape != 0)
+                name += $" Env {envShape + 7:X1}";
 
             var instrument = project.GetInstrument(name);
             if (instrument == null)
             {
                 instrument = project.CreateInstrument(ExpansionType.S5B, name);
-                instrument.Envelopes[EnvelopeType.YMNoiseFreq].Length = 1;
-                instrument.Envelopes[EnvelopeType.YMNoiseFreq].Values[0] = (sbyte)noise;
-                instrument.Envelopes[EnvelopeType.YMMixerSettings].Length = 1;
-                instrument.Envelopes[EnvelopeType.YMMixerSettings].Values[0] = (sbyte)mixer;
+                instrument.S5BEnvAutoPitch = false;
+                instrument.S5BEnvelopeShape = (byte)envShape;
+                instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Length = 1;
+                instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Values[0] = (sbyte)noise;
+                instrument.Envelopes[EnvelopeType.S5BMixer].Length = 1;
+                instrument.Envelopes[EnvelopeType.S5BMixer].Values[0] = (sbyte)mixer;
             }
 
             return instrument;
@@ -728,34 +749,60 @@ namespace FamiStudio
             }
         }
 
-        private Instrument GetEPSMInstrument(byte chanType, byte[] patchRegs, int noise, int mixer)
-        {            
+        private Instrument GetEPSMInstrument(byte chanType, byte[] patchRegs, int noise, int mixer, bool envEnabled, int envShape)
+        {
             var name = $"EPSM {Instrument.GetEpsmPatchName(1)}";
             var instrument = project.GetInstrument(name);
             var stereo = "";
-            if(patchRegs[1] == 0x80)
+            if ((patchRegs[1] & 0xC0) == 0x80)
                 stereo = " Left";
-            if (patchRegs[1] == 0x40)
+            if ((patchRegs[1] & 0xC0) == 0x40)
                 stereo = " Right";
+            if ((patchRegs[1] & 0xC0) == 0x00 && chanType == 2)
+                stereo = " Stop";
+            if ((patchRegs[1] & 0xC0) == 0x00 && chanType != 2)
+                patchRegs[1] = 0xC0;
 
             if (chanType == 0)
             {
-                if (mixer != 2 && noise == 0)
+                if (envEnabled)
+                {
+                    if (envShape < 0x4) envShape = 0x9; else
+                    if (envShape < 0x8) envShape = 0xf;
+
+                    envShape -= 7;
+                }
+                else
+                {
+                    envShape = 0;
+                }
+
+                var toneEnabled  = (mixer & 1) == 0;
+                var noiseEnabled = (mixer & 2) == 0;
+
+                name = "EPSM";
+                if (noiseEnabled && noise == 0)
                     noise = 1;
-                if (mixer != 2)
-                    name = $"EPSM Noise {noise} M {mixer}";
+                if (toneEnabled)
+                    name += $" Tone";
+                if (noiseEnabled)
+                    name += $" Noise {noise}";
+                if (envShape != 0)
+                    name += $" Env {envShape + 7:X1}";
 
                 instrument = project.GetInstrument(name);
                 if (instrument == null)
                 {
                     instrument = project.CreateInstrument(ExpansionType.EPSM, name);
-
+                    instrument.EPSMSquareEnvAutoPitch = false;
+                    instrument.EPSMSquareEnvelopeShape = (byte)envShape;
                     instrument.EpsmPatch = 1;
-                    instrument.Envelopes[EnvelopeType.YMNoiseFreq].Length = 1;
-                    instrument.Envelopes[EnvelopeType.YMNoiseFreq].Values[0] = (sbyte)noise;
-                    instrument.Envelopes[EnvelopeType.YMMixerSettings].Length = 1;
-                    instrument.Envelopes[EnvelopeType.YMMixerSettings].Values[0] = (sbyte)mixer;
+                    instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Length = 1;
+                    instrument.Envelopes[EnvelopeType.S5BNoiseFreq].Values[0] = (sbyte)noise;
+                    instrument.Envelopes[EnvelopeType.S5BMixer].Length = 1;
+                    instrument.Envelopes[EnvelopeType.S5BMixer].Values[0] = (sbyte)mixer;
                 }
+
                 return instrument;
             }
 
@@ -805,6 +852,7 @@ namespace FamiStudio
         {
             var project = channel.Song.Project;
             var hasNote = false;
+            var invalidPeriodValue = 0;
 
             if (channel.Type == ChannelType.Dpcm)
             {
@@ -879,7 +927,7 @@ namespace FamiStudio
 
                     if (Note.IsMusicalNote(noteValue))
                     {
-                        var note = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n);
+                        var note = channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n);
                         note.Value = (byte)noteValue;
                         note.Instrument = dpcmInst;
                         if (state.dmc != dmc)
@@ -894,7 +942,7 @@ namespace FamiStudio
                 }
                 else if (dmc != state.dmc)
                 {
-                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).DeltaCounter = (byte)dmc;
+                    channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).DeltaCounter = (byte)dmc;
                     state.dmc = dmc;
                 }
 
@@ -903,7 +951,7 @@ namespace FamiStudio
                 // do. (See "Palamedes_SFX.nsfe", first track).
                 if (dmcActive == 0 && state.state == ChannelState.Triggered && !noteTriggeredThisFrame)
                 {
-                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).IsStop = true;
+                    channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).IsStop = true;
                     state.state = ChannelState.Stopped;
                 }
             }
@@ -930,6 +978,31 @@ namespace FamiStudio
                 else if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
                     volume = 15 - volume;
+                }
+
+                if (channel.IsS5BChannel || channel.IsEPSMSquareChannel)
+                {
+                    invalidPeriodValue = -1;
+
+                    // We use the NTSC table for S5B and manually add 1, so compensate for that here.
+                    if (channel.IsS5BChannel && period > 0)
+                    {
+                        period -= 1;
+                    }
+                    else
+                    {
+                        var envEnabled = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
+                        var mixer = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BMIXER, 0);
+                        var toneEnabled = (mixer & 1) == 0;
+
+                        // If envelopes are enabled, we may not have a valid period, since the envelope itself may
+                        // be making sound, without the tone. In this case, well arbitrarely put the note at C4.
+                        if (!toneEnabled && envEnabled)
+                        {
+                            var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
+                            period = noteTable[Note.MusicalNoteC4];
+                        }
+                    }
                 }
 
                 var hasOctave  = channel.IsVrc7Channel || channel.IsEPSMFmChannel;
@@ -998,7 +1071,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var newState = volume != 0 && (channel.Type == ChannelType.Noise || period != 0) ? ChannelState.Triggered : ChannelState.Stopped;
+                    var newState = volume != 0 && (channel.Type == ChannelType.Noise || period != invalidPeriodValue) ? ChannelState.Triggered : ChannelState.Stopped;
 
                     if (newState != state.state)
                     {
@@ -1012,7 +1085,7 @@ namespace FamiStudio
                 {
                     if (state.volume != volume && (volume != 0 || hasTrigger))
                     {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Volume = (byte)volume;
+                        channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).Volume = (byte)volume;
                         state.volume = volume;
                     }
                 }
@@ -1038,21 +1111,6 @@ namespace FamiStudio
                     var masterVolume = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMASTERVOLUME, 0);
 
                     instrument = GetFdsInstrument(wavEnv, modEnv, masterVolume);
-
-                    int modDepth = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONDEPTH, 0);
-                    int modSpeed = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONSPEED, 0);
-
-                    if (state.fdsModDepth != modDepth)
-                    {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModDepth = (byte)modDepth;
-                        state.fdsModDepth = modDepth;
-                    }
-
-                    if (state.fdsModSpeed != modSpeed)
-                    {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModSpeed = (ushort)modSpeed;
-                        state.fdsModSpeed = modSpeed;
-                    }
                 }
                 else if (channel.Type >= ChannelType.N163Wave1 &&
                          channel.Type <= ChannelType.N163Wave8)
@@ -1087,10 +1145,22 @@ namespace FamiStudio
                 }
                 else if (channel.Type >= ChannelType.S5BSquare1 && channel.Type <= ChannelType.S5BSquare3)
                 {
-                    var noise = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0);
-                    var mixer = (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_YMMIXER, 0);
+                    var noiseFreq  = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0);
+                    var mixer      =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BMIXER, 0);
+                    var envEnabled =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
+                    var envShape   =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVSHAPE, 0);
+                    var envTrigger =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVTRIGGER, 0);
+
                     mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
-                    instrument = GetS5BInstrument(noise,mixer);
+                    instrument = GetS5BInstrument(noiseFreq, mixer, envEnabled, envShape);
+
+                    if (envEnabled)
+                    {
+                        if (envTrigger != 0)
+                            force = true;
+                        else
+                            attack = false;
+                    }
                 }
                 else if (channel.Type >= ChannelType.EPSMSquare1 && channel.Type <= ChannelType.EPSMrythm6)
                 {
@@ -1101,19 +1171,30 @@ namespace FamiStudio
                         for (int i = 0; i < 31; i++)
                             regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FMPATCHREG, i);
 
-                        instrument = GetEPSMInstrument(1, regs,0,0);
+                        instrument = GetEPSMInstrument(1, regs,0,0,false,0);
                     }
                     else if (channel.Type >= ChannelType.EPSMrythm1 && channel.Type <= ChannelType.EPSMrythm6)
                     {
                         regs[1] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_STEREO, 0);
-                        instrument = GetEPSMInstrument(2, regs,0,0); 
+                        instrument = GetEPSMInstrument(2, regs,0,0,false,0); 
                     }
                     else
                     {
-                        var noise = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_YMNOISEFREQUENCY, 0);
-                        var mixer = (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_YMMIXER, 0);
+                        var noiseFreq  = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BNOISEFREQUENCY, 0);
+                        var mixer      =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BMIXER, 0);
+                        var envEnabled =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
+                        var envShape   =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVSHAPE, 0);
+                        var envTrigger =  (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVTRIGGER, 0);
+
                         mixer = (mixer & 0x1) + ((mixer & 0x8) >> 2);
-                        instrument = GetEPSMInstrument(0, regs, noise, mixer); 
+                        instrument = GetEPSMInstrument(0, regs, noiseFreq, mixer, envEnabled, envShape);
+                        if (envEnabled)
+                        {
+                            if (envTrigger != 0)
+                                force = true;
+                            else
+                                attack = false;
+                        }
                     }
 
                 }
@@ -1121,6 +1202,8 @@ namespace FamiStudio
                 {
                     instrument = GetDutyInstrument(channel, 0);
                 }
+
+                var hasNoteWithAttack = false;
 
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
@@ -1154,7 +1237,7 @@ namespace FamiStudio
 
                     if ((state.note != note) || (state.instrument != instrument && instrument != null) || force)
                     {
-                        var pattern = GetOrCreatePattern(channel, p);
+                        var pattern = channel.GetOrCreatePattern(p);
                         var newNote = pattern.GetOrCreateNoteAt(n);
                         newNote.Value = (byte)note;
                         newNote.Instrument = instrument;
@@ -1165,6 +1248,7 @@ namespace FamiStudio
                         if (!attack)
                             newNote.HasAttack = false;
                         hasNote = note != 0;
+                        hasNoteWithAttack = newNote.IsMusical && newNote.HasAttack;
                     }
 
                     if (hasPitch && !stop)
@@ -1179,12 +1263,49 @@ namespace FamiStudio
 
                         if (pitch != state.pitch)
                         {
-                            var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FinePitch = pitch;
+                            channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).FinePitch = pitch;
                             state.pitch = pitch;
                         }
                     }
 
                     state.period = period;
+                }
+
+                // Every note with an attack will reset the mod speed/depth to the default (which is zero for FDS). 
+                // If there is mod/speed active here, we need to force it again with an effect.
+                if (channel.IsFdsChannel)
+                {
+                    var modDepth =   (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONDEPTH, 0);
+                    var modSpeed = (ushort)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONSPEED, 0);
+
+                    if (state.fdsModDepth != modDepth || (modDepth != 0 && hasNoteWithAttack))
+                    {
+                        channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).FdsModDepth = modDepth;
+                        state.fdsModDepth = modDepth;
+                    }
+
+                    if (state.fdsModSpeed != modSpeed || (modDepth != 0 && hasNoteWithAttack)) // modDepth is intentional here, if depth = 0, we don't care.
+                    {
+                        channel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).FdsModSpeed = modSpeed;
+                        state.fdsModSpeed = modSpeed;
+                    }
+                }
+
+                // Same rule applies for S5B and EPSM with manual envelope period, the only difference with FDS is that 
+                // envelope period effects apply regardless of which channel they are on.
+                if (channel.IsS5BChannel || channel.IsEPSMSquareChannel)
+                {
+                    var envFreq    = (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVFREQUENCY, 0);
+                    var envEnabled = (int)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_S5BENVENABLED, 0) != 0;
+
+                    // All envelope frequency will be on square 1.
+                    if (state.s5bEnvFreq != envFreq || hasNoteWithAttack && envEnabled)
+                    {
+                        var firstChannelType = channel.IsS5BChannel ? ChannelType.S5BSquare1 : ChannelType.EPSMSquare1;
+                        var firstChannel = song.GetChannelByType(firstChannelType);
+                        firstChannel.GetOrCreatePattern(p).GetOrCreateNoteAt(n).EnvelopePeriod = (ushort)envFreq;
+                        state.s5bEnvFreq = envFreq;
+                    }
                 }
             }
 
@@ -1305,13 +1426,6 @@ namespace FamiStudio
                 NotSoFatso.NsfClose(nsf);
                 return null;
             }
-
-            /*var epsmMask = GetNsfExtensionFlags(ExpansionType.EPSMMask);
-            if ((expansionMask & epsmMask) != 0)
-            {
-                Log.LogMessage(LogSeverity.Warning, "NSF seem to use EPSM, import is still not supported.");
-                expansionMask &= (~ExpansionType.EPSMMask);
-            }*/
 
             var numN163Channels = (expansionMask & ExpansionType.N163Mask) != 0 ? GetNumNamcoChannels(filename, songIndex, numFrames) : 1;
             project.SetExpansionAudioMask(expansionMask, numN163Channels);

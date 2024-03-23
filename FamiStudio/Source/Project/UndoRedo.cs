@@ -21,9 +21,10 @@ namespace FamiStudio
 
     public enum TransactionFlags
     {
-        None              = 0,
-        StopAudio         = 1,
-        ReinitializeAudio = 2
+        None            = 0,
+        StopAudio       = 1,
+        RecreatePlayers = 2,
+        RecreateStreams = 4 // Should only be used along with RecreatePlayers.
     };
 
     public class Transaction
@@ -83,37 +84,37 @@ namespace FamiStudio
             switch (scope)
             {
                 case TransactionScope.Project:
-                    project.SerializeState(buffer);
+                    project.Serialize(buffer);
                     break;
                 case TransactionScope.ProjectNoDPCMSamples:
-                    project.SerializeState(buffer, false);
+                    project.Serialize(buffer, false);
                     break;
                 case TransactionScope.DPCMSample:
-                    project.GetSample(objectId).SerializeState(buffer);
+                    project.GetSample(objectId).Serialize(buffer);
                     break;
                 case TransactionScope.Instrument:
-                    project.GetInstrument(objectId).SerializeState(buffer);
+                    project.GetInstrument(objectId).Serialize(buffer);
                     break;
                 case TransactionScope.Pattern:
-                    project.GetPattern(objectId).SerializeState(buffer);
+                    project.GetPattern(objectId).Serialize(buffer);
                     break;
                 case TransactionScope.Channel:
-                    project.GetSong(objectId).Channels[subIdx].SerializeState(buffer);
+                    project.GetSong(objectId).Channels[subIdx].Serialize(buffer);
                     break;
                 case TransactionScope.Song:
-                    project.GetSong(objectId).SerializeState(buffer);
+                    project.GetSong(objectId).Serialize(buffer);
                     break;
                 case TransactionScope.Arpeggio:
-                    project.GetArpeggio(objectId).SerializeState(buffer);
+                    project.GetArpeggio(objectId).Serialize(buffer);
                     break;
                 case TransactionScope.Application:
                     break;
             }
 
-            Theme.SerializeState(buffer);
+            Theme.Serialize(buffer);
 
             if (serializeAppState)
-                app.SerializeState(buffer);
+                app.Serialize(buffer);
         }
 
         private byte[] CaptureState()

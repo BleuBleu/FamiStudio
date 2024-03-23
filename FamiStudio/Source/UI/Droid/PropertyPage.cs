@@ -18,9 +18,11 @@ using Android.Views.InputMethods;
 using Google.Android.Material.Button;
 using Java.Util;
 
-using Debug       = System.Diagnostics.Debug;
 using Orientation = Android.Widget.Orientation;
 using AndroidX.Core.Graphics;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using AndroidX.Core.View;
 
 namespace FamiStudio
 {
@@ -58,12 +60,16 @@ namespace FamiStudio
             context = ctx;
         }
 
+        public void SetScrolling(int dummy)
+        {
+        }
+
         private string SanitizeLabel(string label)
         {
             return label != null ? label.TrimEnd(new[] { ' ', ':' }) : null;
         }
 
-        private EditText CreateEditText(string txt, int maxLength)
+        private EditText CreateEditText(string txt, int maxLength, bool numeric = false)
         {
             var editText = new EditText(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
 
@@ -74,6 +80,8 @@ namespace FamiStudio
             editText.SetMaxLines(1);
             editText.SetOnEditorActionListener(this);
             editText.AfterTextChanged += EditText_AfterTextChanged;
+            if (numeric)
+                editText.InputType = InputTypes.ClassNumber;
 
             if (maxLength > 0)
                 editText.SetFilters(new IInputFilter[] { new InputFilterLengthFilter(maxLength) } );
@@ -197,7 +205,7 @@ namespace FamiStudio
             return lin;
         }
 
-        private TextView CreateTextView(string str, int style)
+        private TextView CreateTextView(string str, int style, bool numeric = false)
         {
             var text = new TextView(new ContextThemeWrapper(context, style));
             text.Text = str;
@@ -281,10 +289,10 @@ namespace FamiStudio
             return false;
         }
 
-        public int AddTextBox(string label, string value, int maxLength = 0, string tooltip = null)
+        public int AddTextBox(string label, string value, int maxLength = 0, bool numeric = false, string tooltip = null)
         {
             var prop = new Property();
-            var editText = CreateEditText(value, maxLength);
+            var editText = CreateEditText(value, maxLength, numeric);
 
             prop.type = PropertyType.TextBox;
             prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
@@ -304,7 +312,7 @@ namespace FamiStudio
 
         public int AddFileTextBox(string label, string value, int maxLength = 0, string tooltip = null)
         {
-            return AddTextBox(label, value, maxLength, tooltip);
+            return AddTextBox(label, value, maxLength, false, tooltip);
         }
 
         public bool OnEditorAction(TextView v, [GeneratedEnum] ImeAction actionId, KeyEvent e)
@@ -339,11 +347,12 @@ namespace FamiStudio
             var button = CreateButton(value);
 
             prop.type = PropertyType.Button;
-            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
+            prop.label = !string.IsNullOrEmpty(label) ? CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium) : null;
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             prop.controls.Add(button);
             prop.layout = CreateLinearLayout(true, true, false, 10);
-            prop.layout.AddView(prop.label);
+            if (prop.label != null)
+                prop.layout.AddView(prop.label);
             if (prop.tooltip != null)
                 prop.layout.AddView(prop.tooltip);
             prop.layout.AddView(button);
@@ -358,12 +367,13 @@ namespace FamiStudio
             var textView = CreateTextView(value, Resource.Style.LightGrayTextMedium);
 
             prop.type = PropertyType.Label;
-            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
+            prop.label = !string.IsNullOrEmpty(label) ? CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium) : null;
             prop.controls.Add(textView);
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             prop.layout = CreateLinearLayout(true, true, false, 10);
             prop.layout.SetOnTouchListener(this);
-            prop.layout.AddView(prop.label);
+            if (prop.label != null)
+                prop.layout.AddView(prop.label);
             if (prop.tooltip != null)
                 prop.layout.AddView(prop.tooltip);
             prop.layout.AddView(textView);
@@ -745,6 +755,63 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        ImageView CreateImageView()
+        {
+            var imgView = new MaxHeightImageView(context);
+            return imgView;
+        }
+
+        public int AddImageBox(string label, string tooltip = null)
+        {
+            var prop = new Property();
+            var imgView = CreateImageView();
+            
+            var layoutParams = CreateLinearLayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent, GravityFlags.CenterHorizontal, 1.0f);
+            layoutParams.TopMargin = DroidUtils.DpToPixels(8);
+            imgView.LayoutParameters = layoutParams;
+
+            prop.type = PropertyType.ImageBox;
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
+            prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
+            prop.controls.Add(imgView);
+            prop.layout = CreateLinearLayout(true, true, false, 10);
+            prop.layout.AddView(prop.label);
+            if (prop.tooltip != null)
+                prop.layout.AddView(prop.tooltip);
+            prop.layout.AddView(imgView);
+            properties.Add(prop);
+
+            return properties.Count - 1;
+        }
+
+        public void UpdateImageBox(int propIdx, int resX, int resY, byte[] data)
+        {
+            Debug.Assert(resX * resY * 4 == data.Length);
+            var prop = properties[propIdx];
+            Debug.Assert(prop.type == PropertyType.ImageBox);
+            var imgView = prop.controls[0] as MaxHeightImageView;
+            var bmpDrawable = imgView.Drawable as Android.Graphics.Drawables.BitmapDrawable;
+            var bmp = (Android.Graphics.Bitmap)null;
+
+            if (bmpDrawable == null || 
+                bmpDrawable.Bitmap.Width  != resX ||
+                bmpDrawable.Bitmap.Height != resY)
+            {
+                bmp = Android.Graphics.Bitmap.CreateBitmap(resX, resY, Android.Graphics.Bitmap.Config.Argb8888, false);
+                imgView.UpdateSizeConstraints(resY / (float)resX, 0.6f);
+                imgView.SetImageBitmap(bmp);
+            }
+            else
+            {
+                bmp = bmpDrawable.Bitmap;
+            }
+
+            var pixels = bmp.LockPixels();
+            Marshal.Copy(data, 0, pixels, data.Length);
+            bmp.UnlockPixels();
+            imgView.Invalidate();
+        }
+
         public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
         {
             var prop = properties[propIdx];
@@ -763,7 +830,32 @@ namespace FamiStudio
         {
         }
 
-        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null)
+        public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<object, string> fmt)
+        {
+            var prop = properties[propIdx];
+            Debug.Assert(prop.type == PropertyType.Grid);
+            Debug.Assert(prop.columns[colIdx].Type == ColumnType.Slider);
+
+            var ctrlIdx = rowIdx * prop.columns.Length + colIdx;
+            var seekBar = prop.controls[ctrlIdx] as Slider;
+
+            seekBar.Min = min;
+            seekBar.Max = max;
+            seekBar.Format = fmt;
+        }
+
+        private GridLayout.LayoutParams CreateGridLayoutParams(int r, int c, int s = 1)
+        {
+            var margin = DroidUtils.DpToPixels(2);
+            var gridLayoutParams = new GridLayout.LayoutParams(
+                    GridLayout.InvokeSpec(r, 1),
+                    GridLayout.InvokeSpec(c, s, c == 1 ? 1.0f : 0.0f));
+            gridLayoutParams.SetGravity(GravityFlags.CenterVertical);
+            gridLayoutParams.SetMargins(margin, margin, margin, margin);
+            return gridLayoutParams;
+        }
+
+        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null, GridOptions options = GridOptions.None)
         {
             // We need initial data on mobile.
             if (data != null)
@@ -779,23 +871,38 @@ namespace FamiStudio
                 if (prop.tooltip != null)
                     prop.layout.AddView(prop.tooltip);
 
+                var numRows = 0;
+                var noHeader = options.HasFlag(GridOptions.NoHeader);
+                var mergeCheckboxAndLabel = false;
+
+                if (noHeader)
+                {
+                    Debug.Assert(columnDescs.Length == 2);
+                    numRows = data.GetLength(0);
+                }
+                else
+                {
+                    // Special case, if the 2 first columns are checkbox + label, we combine then in something nicer.
+                    if (columnDescs[0].Type == ColumnType.CheckBox && columnDescs[1].Type == ColumnType.Label)
+                    {
+                        numRows = data.GetLength(0) * (data.GetLength(1) - 1);
+                        mergeCheckboxAndLabel = true;
+                    }
+                    else
+                    {
+                        numRows = data.GetLength(0) * data.GetLength(1);
+                    }
+                }
+
                 var gridLayout = new GridLayout(context);
-                gridLayout.ColumnCount = data.GetLength(1);
-                gridLayout.RowCount = data.GetLength(0);
+                gridLayout.ColumnCount = 2;
+                gridLayout.RowCount = numRows;
                 gridLayout.LayoutParameters = CreateLinearLayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
 
                 prop.layout.AddView(gridLayout);
+                prop.controls.AddRange(new View[data.Length]);
 
-                var maxWidth = columnDescs[0].Width;
-                var maxColIdx = 0;
-                for (int c = 1; c < columnDescs.Length; c++)
-                {
-                    if (columnDescs[c].Width > maxWidth)
-                    {
-                        maxWidth = columnDescs[c].Width;
-                        maxColIdx = c;
-                    }
-                }
+                var rowIdx = 0;
 
                 for (int r = 0; r < data.GetLength(0); r++)
                 {
@@ -804,39 +911,78 @@ namespace FamiStudio
                         var view = (View)null;
                         var col = columnDescs[c];
 
+                        if (mergeCheckboxAndLabel && c == 0)
+                        {
+                            var checkBox = new CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
+                            checkBox.Checked = data == null || (bool)data[r, c];
+                            var text = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
+                            text.Text = data == null ? columnDescs[1].Name : (string)data[r, c + 1];
+
+                            var group = CreateLinearLayout(false, true, true, 0);
+                            group.AddView(checkBox);
+                            group.AddView(text);
+
+                            gridLayout.AddView(group, CreateGridLayoutParams(rowIdx, 0, 2));
+
+                            prop.controls[r * prop.columns.Length + 0] = checkBox;
+                            prop.controls[r * prop.columns.Length + 1] = text;
+
+                            c++;
+                            rowIdx++;
+                            continue;
+                        }
+
+                        if (!noHeader)
+                        {
+                            var colText = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
+                            colText.Text = columnDescs[c].Name;
+                            gridLayout.AddView(colText, CreateGridLayoutParams(rowIdx, 0));
+                        }
+
                         switch (col.Type)
                         {
                             case ColumnType.CheckBox:
                                 var checkBox = new CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
-                                checkBox.Checked = data == null || (bool)data[r, c];
+                                checkBox.Checked = (bool)data[r, c];
                                 view = checkBox;
                                 break;
                             case ColumnType.Label:
                                 var text = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
-                                text.Text = data == null ? "" : (string)data[r, c];
+                                text.Text = (string)data[r, c];
                                 view = text;
                                 break;
                             case ColumnType.Slider:
-                                var seek = new SeekBar(new ContextThemeWrapper(context, Resource.Style.LightGraySeekBar));
-                                seek.Min = 0;
-                                seek.Max = 100;
-                                seek.Progress = data == null ? 50 : (int)data[r, c];
+                                var seek = new Slider(context, col.MinValue, col.MaxValue, data == null ? 50 : (int)data[r, c], col.Formatter);
+                                seek.Min = col.MinValue;
+                                seek.Max = col.MaxValue;
+                                seek.Progress = (int)data[r, c];
                                 view = seek;
+                                break;
+                            case ColumnType.NumericUpDown:
+                                var picker = new HorizontalNumberPicker(context, (int)data[r, c], col.MinValue, col.MaxValue, 1, true);
+                                view = picker;
+                                break;
+                            case ColumnType.DropDown:
+                                var spinner = new Spinner(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
+                                var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, col.DropDownValues);
+                                spinner.Adapter = adapter;
+                                spinner.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
+                                spinner.SetSelection(adapter.GetPosition((string)data[r, c]));
+                                view = spinner;
                                 break;
                             default:
                                 Debug.Assert(false);
-                                view = new View(context);
+                                view = new View(context); ;
                                 break;
                         }
 
-                        var gridLayoutParams = new GridLayout.LayoutParams(
-                                GridLayout.InvokeSpec(r, 1),
-                                GridLayout.InvokeSpec(c, 1, c == maxColIdx ? 1.0f : 0.0f));
-                        gridLayoutParams.SetGravity(GravityFlags.CenterVertical);
-                        gridLayout.AddView(view, gridLayoutParams);
+                        gridLayout.AddView(view, CreateGridLayoutParams(rowIdx, noHeader ? c : 1));
+                        prop.controls[r * prop.columns.Length + c] = view;
 
-                        prop.controls.Add(view);
+                        if (!noHeader) rowIdx++;
                     }
+
+                    if (noHeader) rowIdx++;
                 }
 
                 properties.Add(prop);
@@ -881,10 +1027,18 @@ namespace FamiStudio
                     (view as TextView).Text = (string)value;
                     break;
                 case ColumnType.Slider:
-                    (view as SeekBar).Progress = (int)value;
+                    (view as Slider).Progress = (int)value;
+                    break;
+                case ColumnType.NumericUpDown:
+                    (view as HorizontalNumberPicker).Value = (int)value;
+                    break;
+                case ColumnType.DropDown:
+                    var spinner = view as Spinner;
+                    var adapter = spinner.Adapter as ArrayAdapter;
+                    spinner.SetSelection(adapter.GetPosition((string)value));
                     break;
                 default:
-                    Debug.Assert(false);
+                    Debug.Assert(false); 
                     break;
             }
         }
@@ -974,20 +1128,42 @@ namespace FamiStudio
         {
             var prop = properties[idx];
             Debug.Assert(prop.type == PropertyType.Grid);
+            var col = prop.columns[colIdx];
             var ctrlIdx = rowIdx * prop.columns.Length + colIdx;
             var view = prop.controls[ctrlIdx];
 
+            switch (col.Type)
+            {
+                case ColumnType.CheckBox:
+                    return (T)(object)(view as CheckBox).Checked;
+                case ColumnType.Label:
+                    return (T)(object)(view as TextView).Text;
+                case ColumnType.Slider:
+                    return (T)(object)(view as Slider).Progress;
+                case ColumnType.NumericUpDown:
+                    return (T)(object)(view as HorizontalNumberPicker).Value;
+                case ColumnType.DropDown:
+                    var spinner = view as Spinner;
+                    var adapter = spinner.Adapter as ArrayAdapter;
+                    return (T)(object)(spinner.SelectedItemPosition >= 0 ? adapter.GetItem(spinner.SelectedItemPosition).ToString() : "");
+                default:
+                    Debug.Assert(false);
+                    return default(T);
+                    break;
+            }
+
             if (view is CheckBox)
             {
-                return (T)(object)(view as CheckBox).Checked;
             }
             else if (view is TextView)
             {
-                return (T)(object)(view as TextView).Text;
             }
-            else if (view is SeekBar)
+            else if (view is Slider)
             {
-                return (T)(object)(view as SeekBar).Progress;
+            }
+            else if (view is HorizontalNumberPicker)
+            {
+
             }
             else
             {
@@ -1006,6 +1182,9 @@ namespace FamiStudio
                     return (prop.controls[0] as Spinner).SelectedItemPosition;
                 case PropertyType.RadioList:
                     return (prop.layout as RadioGroup).CheckedRadioButtonId;
+                default:
+                    Debug.Assert(false);
+                    break;
             }
 
             return -1;
@@ -1040,7 +1219,65 @@ namespace FamiStudio
                 case PropertyType.NumericUpDown:
                     (prop.controls[0] as HorizontalNumberPicker).Value = (int)value;
                     break;
+                default:
+                    Debug.Assert(false);
+                    break;
             }
+        }
+
+        public void SetPropertyValue(int idx, int rowIdx, int colIdx, object value)
+        {
+            var prop = properties[idx];
+
+            switch (prop.type)
+            {
+                case PropertyType.Grid:
+                    UpdateGrid(idx, rowIdx, colIdx, value);
+                    break;
+                default:
+                    Debug.Assert(false);
+                    break;
+            }
+        }
+
+        public void ConditionalSetTextBoxFocus()
+        {
+            if (properties.Count == 1)
+            {
+                var prop = properties[0];
+
+                if (prop.type == PropertyType.TextBox ||
+                    prop.type == PropertyType.ColoredTextBox ||
+                    prop.type == PropertyType.NumericUpDown)
+                {
+                    var textView = prop.controls[0] as TextView;
+                    if (textView != null)
+                    {
+                        textView.EditorAction += TextView_EditorAction;
+                        textView.RequestFocusFromTouch();
+                        var windowInsetsControllerCompat = new WindowInsetsControllerCompat(Activity.Window, textView);
+                        windowInsetsControllerCompat.Show(WindowInsetsCompat.Type.Ime());
+                    }
+                }
+            }
+        }
+
+        private void TextView_EditorAction(object sender, TextView.EditorActionEventArgs e)
+        {
+            e.Handled = false;
+
+            if (e.ActionId == ImeAction.Done)
+            {
+                var idx = GetPropertyIndexForView(sender as View);
+                if (idx >= 0)
+                    PropertyWantsClose?.Invoke(idx);
+            }
+        }
+
+        public override void OnStart()
+        {
+            base.OnStart();
+            ConditionalSetTextBoxFocus();
         }
 
         public void Build(bool advanced = false)
@@ -1164,9 +1401,9 @@ namespace FamiStudio
         private int increment = 1;
         private int fastScrollDir = 0;
 
-        public HorizontalNumberPicker(Context context, int val, int min, int max, int inc) : base(context)
+        public HorizontalNumberPicker(Context context, int val, int min, int max, int inc, bool thin = false) : base(context)
         {
-            var lp = new LinearLayout.LayoutParams(DroidUtils.DpToPixels(64), DroidUtils.DpToPixels(48));
+            var lp = new LinearLayout.LayoutParams(DroidUtils.DpToPixels(64), DroidUtils.DpToPixels(thin ? 36 : 48));
             lp.Weight = 1;
             lp.Gravity = GravityFlags.CenterHorizontal | GravityFlags.CenterVertical;
 
@@ -1175,12 +1412,14 @@ namespace FamiStudio
             buttonLess.SetTextColor(Android.Graphics.Color.Black);
             buttonLess.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1));
             buttonLess.LayoutParameters = lp;
+            buttonLess.SetIncludeFontPadding(false);
 
             buttonMore = new MaterialButton(context);
             buttonMore.Text = "+";
             buttonMore.SetTextColor(Android.Graphics.Color.Black);
             buttonMore.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1));
             buttonMore.LayoutParameters = lp;
+            buttonMore.SetIncludeFontPadding(false);
 
             textView = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
             textView.Text = "";
@@ -1250,12 +1489,15 @@ namespace FamiStudio
         {
             if (action == MotionEventActions.Down)
             {
-                value += dir;
-                UpdateValue();
                 StartFastScroll(dir);
             }
-            else if (action == MotionEventActions.Up || 
-                     action == MotionEventActions.Cancel)
+            else if (action == MotionEventActions.Up)
+            {
+                value += dir;
+                UpdateValue();
+                CancelFastScroll();
+            }
+            else if (action == MotionEventActions.Cancel)
             {
                 CancelFastScroll();
             }
@@ -1308,8 +1550,137 @@ namespace FamiStudio
 
             public override void Run()
             {
-                (picker.Context as Activity).RunOnUiThread(() => { picker.DoFastScroll(); });
+                (picker.Context as Android.App.Activity).RunOnUiThread(() => { picker.DoFastScroll(); });
             }
+        }
+    }
+
+    public class Slider : View
+    {
+        private readonly int LightWidth = 3;
+
+        private Paint borderPaint;
+        private Paint bgPaint;
+        private Paint barPaint;
+        private Paint textPaint;
+
+        private bool changing = false;
+        private float touchDownX;
+        private float touchSlop;
+
+        private int min = 0;
+        private int max = 100;
+        private int progress = 0;
+        private Func<object, string> format;
+
+        public int Min { get => min; set { min = value; Invalidate(); } }
+        public int Max { get => max; set { max = value; Invalidate(); } }
+        public int Progress { get => progress; set { progress = value; Invalidate(); } }
+        public Func<object, string> Format { get => format; set { format = value; Invalidate(); } }
+
+        public Slider(Context context, int min, int max, int progress, Func<object, string> format = null) : base(context)
+        {
+            Initialize(context);
+            this.min = min;
+            this.max = max;
+            this.progress = progress;
+            this.Format = format == null ? (o) => Convert.ToString(o, CultureInfo.InvariantCulture) : format;
+        }
+
+        public Slider(Context context, IAttributeSet attrs) : base(context, attrs)
+        {
+            Initialize(context, attrs);
+        }
+
+        protected Slider(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
+        {
+        }
+
+        private void Initialize(Context context, IAttributeSet attrs = null)
+        {
+            borderPaint = new Paint();
+            borderPaint.SetStyle(Paint.Style.Stroke);
+            borderPaint.StrokeWidth = LightWidth;
+            borderPaint.Color = Android.Graphics.Color.Black;
+
+            textPaint = new Paint();
+            textPaint.Color = new Android.Graphics.Color(Theme.LightGreyColor1.ToArgb());
+            textPaint.TextSize = DroidUtils.DpToPixels(14);
+            textPaint.TextAlign = Paint.Align.Center;
+
+            bgPaint = new Paint();
+            bgPaint.SetStyle(Paint.Style.Fill);
+            bgPaint.Color = new Android.Graphics.Color(Theme.DarkGreyColor1.ToArgb());
+
+            barPaint = new Paint();
+            barPaint.SetStyle(Paint.Style.Fill);
+            barPaint.Color = new Android.Graphics.Color(Theme.DarkGreyColor6.ToArgb());
+
+            touchSlop = ViewConfiguration.Get(context).ScaledTouchSlop;
+            Touch += SeekBarWithLabelView_Touch;
+        }
+
+        private void SeekBarWithLabelView_Touch(object sender, TouchEventArgs e)
+        {
+            if (e.Event.Action == MotionEventActions.Down)
+            {
+                touchDownX = e.Event.GetX();
+            }
+            else if (e.Event.Action == MotionEventActions.Up)
+            {
+                UpdateProgress(e);
+                changing = false;
+            }
+            else if (e.Event.Action == MotionEventActions.Move)
+            {
+                if (changing)
+                {
+                    UpdateProgress(e);
+                }
+                else if (Math.Abs(touchDownX - e.Event.GetX()) > touchSlop)
+                {
+                    changing = true;
+                    UpdateProgress(e);
+                }
+            }
+            else if (e.Event.Action == MotionEventActions.Cancel)
+            {
+                changing = false;
+            }
+        }
+
+        private void UpdateProgress(TouchEventArgs e)
+        {
+            var ratio = e.Event.GetX() / (float)MeasuredWidth;
+            progress = Utils.Clamp((int)Math.Round(ratio * (max - min) + min), min, max);
+            Invalidate();
+        }
+
+        protected override void OnDraw(Canvas canvas)
+        {
+            canvas.DrawRect(0, 0, canvas.Width - 1, canvas.Height - 1, bgPaint);
+
+            if (Enabled)
+            {
+                canvas.DrawRect(0, 0, (progress - min) / (float)(max - min) * canvas.Width, canvas.Height, barPaint);
+                canvas.DrawText(format(progress), (canvas.Width - 1) * 0.5f, (canvas.Height - (textPaint.Descent() + textPaint.Ascent())) * 0.5f, textPaint);
+            }
+            else
+            {
+                canvas.DrawText("N/A", (canvas.Width - 1) * 0.5f, (canvas.Height - (textPaint.Descent() + textPaint.Ascent())) * 0.5f, textPaint);
+            }
+
+            canvas.DrawRect(0, 0, canvas.Width - 1, canvas.Height - 1, borderPaint);
+        }
+
+        protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
+        {
+            int dw = 0;
+            int dh = DroidUtils.DpToPixels(24);
+
+            SetMeasuredDimension(
+                    View.ResolveSizeAndState(dw, widthMeasureSpec,  0),
+                    View.ResolveSizeAndState(dh, heightMeasureSpec, 0));
         }
     }
 
@@ -1447,7 +1818,7 @@ namespace FamiStudio
 
         protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
         {
-            var width = MeasureSpec.GetSize(widthMeasureSpec);
+            var width  = MeasureSpec.GetSize(widthMeasureSpec);
             var height = MeasureSpec.GetSize(heightMeasureSpec);
 
             var ratio = Theme.CustomColors.GetLength(1) / (float)Theme.CustomColors.GetLength(0);

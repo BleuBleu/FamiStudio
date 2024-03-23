@@ -129,7 +129,7 @@ namespace FamiStudio
         {
             if (callback != null)
             {
-                Debug.Assert(midiIn != null);
+                Debug.Assert(midiIn != IntPtr.Zero);
                 rtmidi_in_cancel_callback(midiIn);
                 rtmidi_close_port(midiIn);
                 callback = null;

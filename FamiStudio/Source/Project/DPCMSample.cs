@@ -12,6 +12,8 @@ namespace FamiStudio
         private int id;
         private string name;
         private Color color;
+        private string folderName;
+        private Project project;
         private int bank = 0;
 
         // Source data
@@ -45,6 +47,9 @@ namespace FamiStudio
         public string Name { get => name;  set => name  = value; }
         public Color Color { get => color; set => color = value; }
         public int Bank    { get => bank;  set => bank  = value; }
+        public string FolderName { get => folderName; set => folderName = value; }
+        public Folder Folder => string.IsNullOrEmpty(folderName) ? null : project.GetFolder(FolderType.Sample, folderName);
+        public string NameWithFolder => (string.IsNullOrEmpty(folderName) ? "" : $"{folderName}\\") + name;
 
         public string SourceFilename => sourceFilename;
         public bool SourceDataIsWav { get => sourceData is DPCMSampleWavSourceData; }
@@ -84,8 +89,9 @@ namespace FamiStudio
             // For serialization.
         }
 
-        public DPCMSample(int id, string name)
+        public DPCMSample(Project project, int id, string name)
         {
+            this.project = project;
             this.id = id;
             this.name = name;
             this.color = Theme.RandomCustomColor();
@@ -335,10 +341,17 @@ namespace FamiStudio
             id = newId;
         }
 
+        public void SetProject(Project newProject)
+        {
+            project = newProject;
+        }
+
         public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
 #if DEBUG
             project.ValidateId(id);
+
+            Debug.Assert(project == this.project);
 
             if (idMap.TryGetValue(id, out var foundObj))
                 Debug.Assert(foundObj == this);
@@ -348,6 +361,7 @@ namespace FamiStudio
             Debug.Assert(project.GetSample(id) == this);
             Debug.Assert(!string.IsNullOrEmpty(name.Trim()));
             Debug.Assert(bank >= 0 && bank < Project.MaxDPCMBanks);
+            Debug.Assert(string.IsNullOrEmpty(folderName) || project.FolderExists(FolderType.Sample, folderName));
 #endif
         }
 
@@ -369,6 +383,7 @@ namespace FamiStudio
             volumeEnvelope[1] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (1.0f / 3.0f)));
             volumeEnvelope[2] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (2.0f / 3.0f)));
             volumeEnvelope[3] = new SampleVolumePair(SourceNumSamples - 1);
+            Process();
         }
 
         private void ClampVolumeEnvelope()
@@ -387,7 +402,7 @@ namespace FamiStudio
         public void SerializeStatePreVer9(ProjectBuffer buffer)
         {
             sourceData = new DPCMSampleDmcSourceData();
-            sourceData.SerializeState(buffer);
+            sourceData.Serialize(buffer);
 
             // At version 8 (FamiStudio 2.3.0) we added an explicit "reverse bit" flag.
             if (buffer.Version >= 8)
@@ -404,8 +419,11 @@ namespace FamiStudio
             Process();
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
+            if (buffer.IsReading)
+                project = buffer.Project;
+
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
 
@@ -427,12 +445,20 @@ namespace FamiStudio
                         sourceData = new DPCMSampleDmcSourceData();
                 }
 
-                sourceData.SerializeState(buffer);
+                sourceData.Serialize(buffer);
                 buffer.Serialize(ref color);
 
                 // At version 15 (FamiStudio 4.1.0) we added DPCM bankswitching.
                 if (buffer.Version >= 15)
+                {
                     buffer.Serialize(ref bank);
+                }
+
+                // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer.
+                if (buffer.Version >= 16)
+                {
+                    buffer.Serialize(ref folderName);
+                }
 
                 // Processing parameters.
                 buffer.Serialize(ref sampleRate);
@@ -497,7 +523,7 @@ namespace FamiStudio
         public bool OverrideDmcInitialValue { get => overrideDmcInitialValue; set => overrideDmcInitialValue = value; }
         public int  DmcInitialValueDiv2     { get => dmcInitialValueDiv2;     set => dmcInitialValueDiv2 = value; }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref sample);
             buffer.Serialize(ref loop);
@@ -542,7 +568,7 @@ namespace FamiStudio
 
     public interface IDPCMSampleSourceData
     {
-        void SerializeState(ProjectBuffer buffer);
+        void Serialize(ProjectBuffer buffer);
         bool Trim(int sampleStart, int sampleEnd);
         float GetSampleRate(bool pal);
         float GetDuration(bool pal);
@@ -570,7 +596,7 @@ namespace FamiStudio
             sampleRate = rate;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref sampleRate);
             buffer.Serialize(ref wavData);
@@ -609,7 +635,7 @@ namespace FamiStudio
             dmcData = data;
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref dmcData);
         }

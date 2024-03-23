@@ -102,7 +102,7 @@ namespace FamiStudio
 
             if (save)
             {
-                dialog.Properties.AddTextBox(NewProjectNameLabel, newProjectName, 0, NewProjectNameTooltip); // 1
+                dialog.Properties.AddTextBox(NewProjectNameLabel, newProjectName, 0, false, NewProjectNameTooltip); // 1
                 dialog.Properties.AddButton(DeleteSelectedProjectLabel, DeleteButton); // 2
                 dialog.Properties.SetPropertyEnabled(1, true);
                 dialog.Properties.SetPropertyEnabled(2, false);
@@ -142,7 +142,7 @@ namespace FamiStudio
                 Platform.MessageBoxAsync(famistudio.Window, OverwriteProjectText, OverwriteProjectTitle, MessageBoxButtons.YesNo, (r) =>
                 {
                     if (r == DialogResult.Yes)
-                        dialog.CloseWithResult(DialogResult.OK);
+                        dialog.Close(DialogResult.OK);
                 });
                 return false;
             }
@@ -203,7 +203,7 @@ namespace FamiStudio
                 // HACK : We dont support nested activities right now, so return
                 // this special code to signal that we should open from storage.
                 storageFilename = "///STORAGE///";
-                dialog.CloseWithResult(DialogResult.OK);
+                dialog.Close(DialogResult.OK);
             }
         }
 

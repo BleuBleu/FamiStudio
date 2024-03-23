@@ -14,6 +14,7 @@ namespace FamiStudio
 
         public static string ApplicationVersion => version;
         public static bool IsCommandLine => !initializedGlfw;
+        public static bool CanExportToVideo => !string.IsNullOrEmpty(Settings.FFmpegExecutablePath);
 
         public const bool ThreadOwnsGLContext = true;
 
@@ -50,6 +51,18 @@ namespace FamiStudio
             }
 
             return true;
+        }
+
+        public static IVideoEncoder CreateVideoEncoder()
+        {
+            if (VideoEncoderFFmpeg.DetectFFmpeg())
+            {
+                return new VideoEncoderFFmpeg();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public static bool IsInMainThread()

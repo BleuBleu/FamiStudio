@@ -35,37 +35,43 @@ namespace FamiStudio
         private const int MaxRepeatCountFT2FS = 63;
         private const int MaxRepeatCountFT2   = 60;
 
+        private const int ExtendedInstrumentStart = 64;
+
         // Matches "famistudio_opcode_jmp" in assembly.
         private const byte OpcodeFirst                 = 0x40;
         private const byte OpcodeExtendedNote          = 0x40;
         private const byte OpcodeSetReference          = 0x41;
         private const byte OpcodeLoop                  = 0x42;
         private const byte OpcodeDisableAttack         = 0x43;
-        private const byte OpcodeReleaseNote           = 0x44;
-        private const byte OpcodeSpeed                 = 0x45; // FamiTracker tempo only
-        private const byte OpcodeDelayedNote           = 0x46; // FamiTracker tempo only
-        private const byte OpcodeDelayedCut            = 0x47; // FamiTracker tempo only
-        private const byte OpcodeSetTempoEnv           = 0x46; // FamiStudio tempo only
-        private const byte OpcodeResetTempoEnv         = 0x47; // FamiStudio tempo only
-        private const byte OpcodeOverridePitchEnv      = 0x48;
-        private const byte OpcodeClearPitchEnvOverride = 0x49;
-        private const byte OpcodeOverridArpEnv         = 0x4a;
-        private const byte OpcodeClearArpEnvOverride   = 0x4b;
-        private const byte OpcodeResetArpEnv           = 0x4c;
-        private const byte OpcodeFinePitch             = 0x4d;
-        private const byte OpcodeDutyCycle             = 0x4e;
-        private const byte OpcodeSlide                 = 0x4f;
-        private const byte OpcodeVolumeSlide           = 0x50;
-        private const byte OpcodeDeltaCounter          = 0x51;
-        private const byte OpcodePhaseReset            = 0x52;
-        private const byte OpcodeVrc6SawMasterVolume   = 0x53; // VRC6 only
-        private const byte OpcodeVrc7ReleaseNote       = 0x54; // VRC7 only
-        private const byte OpcodeFdsModSpeed           = 0x55; // FDS only
-        private const byte OpcodeFdsModDepth           = 0x56; // FDS only
-        private const byte OpcodeFdsReleaseNote        = 0x57; // FDS only
-        private const byte OpcodeN163ReleaseNote       = 0x58; // N163 only
-        private const byte OpcodeN163PhaseReset        = 0x59; // N163 only
-        private const byte OpcodeEpsmReleaseNote       = 0x5a; // EPSM only
+        private const byte OpcodeEndSong               = 0x44;
+        private const byte OpcodeReleaseNote           = 0x45;
+        private const byte OpcodeSpeed                 = 0x46; // FamiTracker tempo only
+        private const byte OpcodeDelayedNote           = 0x47; // FamiTracker tempo only
+        private const byte OpcodeDelayedCut            = 0x48; // FamiTracker tempo only
+        private const byte OpcodeSetTempoEnv           = 0x47; // FamiStudio tempo only
+        private const byte OpcodeResetTempoEnv         = 0x48; // FamiStudio tempo only
+        private const byte OpcodeOverridePitchEnv      = 0x49;
+        private const byte OpcodeClearPitchEnvOverride = 0x4a;
+        private const byte OpcodeOverridArpEnv         = 0x4b;
+        private const byte OpcodeClearArpEnvOverride   = 0x4c;
+        private const byte OpcodeResetArpEnv           = 0x4d;
+        private const byte OpcodeFinePitch             = 0x4e;
+        private const byte OpcodeDutyCycle             = 0x4f;
+        private const byte OpcodeSlide                 = 0x50;
+        private const byte OpcodeVolumeSlide           = 0x51;
+        private const byte OpcodeDeltaCounter          = 0x52;
+        private const byte OpcodePhaseReset            = 0x53;
+        private const byte OpcodeExtendedInstrument    = 0x54;
+        private const byte OpcodeVrc6SawMasterVolume   = 0x55; // VRC6 only
+        private const byte OpcodeVrc7ReleaseNote       = 0x56; // VRC7 only
+        private const byte OpcodeFdsModSpeed           = 0x57; // FDS only
+        private const byte OpcodeFdsModDepth           = 0x58; // FDS only
+        private const byte OpcodeFdsReleaseNote        = 0x59; // FDS only
+        private const byte OpcodeN163ReleaseNote       = 0x5a; // N163 only
+        private const byte OpcodeN163PhaseReset        = 0x5b; // N163 only
+        private const byte OpcodeEpsmReleaseNote       = 0x5c; // EPSM only
+        private const byte OpcodeEPSMManualEnvPeriod   = 0x5d; // EPSM only
+        private const byte OpcodeS5BManualEnvPeriod    = 0x5e; // S5B only
 
         private const byte OpcodeSetReferenceFT2       = 0xff; // FT2
         private const byte OpcodeLoopFT2               = 0xfd; // FT2
@@ -91,9 +97,9 @@ namespace FamiStudio
         private bool usesDelayedNotesOrCuts = false;
         private bool usesDeltaCounter = false;
         private bool usesReleaseNotes = false;
-        private bool usesMultipleDpcmBanks = false;
-        private bool usesExtendedDpcmRange = false;
         private bool usesPhaseReset = false;
+        private bool usesFdsAutoMod = false;
+        static readonly int[] epsmRegOrder = new[] { 0, 1, 2, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 3, 10, 17, 24, 30 };
 
         public FamitoneMusicFile(int kernel, bool outputLog)
         {
@@ -127,7 +133,7 @@ namespace FamiStudio
         {
             if (project.UsesSamples)
             {
-                var maxMappings = kernel == FamiToneKernel.FamiStudio ? MaxDPMCSampleMappingsExt : MaxDPMCSampleMappingsBase;
+                var maxMappings = kernel == FamiToneKernel.FamiStudio && project.SoundEngineUsesExtendedDpcm ? MaxDPMCSampleMappingsExt : MaxDPMCSampleMappingsBase;
 
                 // Gather all unique mappings.
                 // TODO : Sort them by number of uses and favor the most commonly used ones for single-byte notes.
@@ -149,11 +155,6 @@ namespace FamiStudio
                             }
                         }
                     }
-                }
-
-                if (kernel == FamiToneKernel.FamiStudio && sampleMappingIndices.Count > MaxDPMCSampleMappingsBase)
-                {
-                    usesExtendedDpcmRange = true;
                 }
             }
         }
@@ -187,7 +188,7 @@ namespace FamiStudio
                 size += 2;
             }
 
-            lines.Add($"\t{dw} {ll}samples-{(kernel == FamiToneKernel.FamiTone2 ? 3 : (usesMultipleDpcmBanks ? 5 : 4))}");
+            lines.Add($"\t{dw} {ll}samples-{(kernel == FamiToneKernel.FamiTone2 ? 3 : (project.SoundEngineUsesDpcmBankSwitching ? 5 : 4))}");
 
             for (int i = 0; i < project.Songs.Count; i++)
             {
@@ -251,7 +252,7 @@ namespace FamiStudio
             if (env.IsEmpty(EnvelopeType.Count))
                 return null;
 
-            env.Truncate();
+            env.Optimize();
 
             // Special case for envelopes with a single value (like duty often are).
             // Make them 127 in length so that they update less often.
@@ -418,7 +419,7 @@ namespace FamiStudio
                         case EnvelopeType.FdsWaveform:
                             processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
                             break;
-                        case EnvelopeType.YMMixerSettings:
+                        case EnvelopeType.S5BMixer:
                             processed = ProcessEnvelope(ProcessMixerEnvelope(env), false, false);
                             break;
                         default:
@@ -536,6 +537,7 @@ namespace FamiStudio
             lines.Add($"{ll}instruments:");
 
             var instrumentCount = 0;
+            var instrumentLimit = project.SoundEngineUsesExtendedInstruments ? 256 : 64;
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {
@@ -549,7 +551,7 @@ namespace FamiStudio
                 if (!instrument.IsFds  && 
                     !instrument.IsN163 &&
                     !instrument.IsVrc7 &&
-                    !instrument.IsS5B &&
+                    !instrument.IsS5B  &&
                     !instrument.IsEpsm)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
@@ -578,8 +580,8 @@ namespace FamiStudio
                 }
             }
 
-            if (instrumentCount > 64)
-                Log.LogMessage(LogSeverity.Error, $"Number of instrument ({instrumentCount}) exceeds the limit of 64, song will not sound correct.");
+            if (instrumentCount > instrumentLimit)
+                Log.LogMessage(LogSeverity.Error, $"Number of instrument ({instrumentCount}) exceeds the limit of {instrumentLimit}, song will not sound correct.");
 
             lines.Add("");
 
@@ -593,6 +595,7 @@ namespace FamiStudio
                 lines.Add($"{ll}instruments_exp:");
 
                 var instrumentCountExp = 0;
+                var instrumentLimitExp = project.SoundEngineUsesExtendedInstruments ? 256 : 32;
 
                 for (int i = 0; i < project.Instruments.Count; i++)
                 {
@@ -615,9 +618,25 @@ namespace FamiStudio
                             var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
 
+                            lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}");
                             lines.Add($"\t{db} {instrument.FdsMasterVolume}");
-                            lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}, {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
-                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00");
+                            lines.Add($"\t{dw} {ll}env{fdsModEnvIdx}");
+                            lines.Add($"\t{db} {(instrument.FdsAutoMod ? 1 : 0)}");
+
+                            if (instrument.FdsAutoMod)
+                            {
+                                var numer = (int)instrument.FdsAutoModNumer;
+                                var denom = (int)instrument.FdsAutoModDenom;
+                                Utils.SimplifyFraction(ref numer, ref denom); // 2/4 is same as 1/2
+                                lines.Add($"\t{db} {numer}, {denom}");
+                                usesFdsAutoMod = true;
+                            }
+                            else
+                            {
+                                lines.Add($"\t{dw} {instrument.FdsModSpeed}");
+                            }
+
+                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}");
                         }
                         else if (instrument.IsN163)
                         {
@@ -630,11 +649,16 @@ namespace FamiStudio
                         }
                         else if (instrument.IsS5B)
                         {
-                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMNoiseFreq]]);
-                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMMixerSettings]]);
+                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BNoiseFreq]]);
+                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BMixer]]);
+                            var envShape = instrument.S5BEnvelopeShape > 0 ? instrument.S5BEnvelopeShape + 7 : 0;
+                            var envAutoOctave = instrument.S5BEnvAutoPitch ? instrument.S5BEnvAutoPitchOctave : 0x80; // 0x80 = special code that means "manual"
+                            var envManualPeriod = instrument.S5BEnvelopePitch;
 
                             lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
-                            lines.Add($"\t{db} $00, $00, $00, $00, $00, $00");
+                            lines.Add($"\t{db} ${envShape:x2}, ${envAutoOctave:x2}");
+                            lines.Add($"\t{dw} {envManualPeriod}");
+                            lines.Add($"\t{db} $00, $00"); 
                         }
                         else if (instrument.IsVrc7)
                         {
@@ -643,13 +667,21 @@ namespace FamiStudio
                         }
                         else if (instrument.IsEpsm)
                         {
-                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMNoiseFreq]]);
-                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.YMMixerSettings]]);
+                            var noiseEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BNoiseFreq]]);
+                            var mixerEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.S5BMixer]]);
+                            var envShape = instrument.EPSMSquareEnvelopeShape > 0 ? instrument.EPSMSquareEnvelopeShape + 7 : 0;
+                            var envAutoOctave = instrument.EPSMSquareEnvAutoPitch ? instrument.EPSMSquareEnvAutoPitchOctave : 0x80; // 0x80 = special code that means "manual"
+                            var envManualPeriod = instrument.EPSMSquareEnvelopePitch; 
 
+                            byte[] epsmPatchRegsReordered = new byte[epsmRegOrder.Length];
+                            for (int reg = 0; reg < epsmRegOrder.Length; reg++)
+                            {
+                                epsmPatchRegsReordered[reg] = instrument.EpsmPatchRegs[epsmRegOrder[reg]];
+                            }
                             lines.Add($"\t{dw} {ll}env{mixerEnvIdx}, {ll}env{noiseEnvIdx}");
+                            lines.Add($"\t{db} ${envShape:x2}, ${envAutoOctave:x2}");
+                            lines.Add($"\t{dw} {envManualPeriod}");
                             lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
-                            // we can fit the first 4 bytes of data here to avoid needing to add padding
-                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Take(4).Select(r => $"${r:x2}"))}");
                         }
 
                         size += 16;
@@ -657,8 +689,8 @@ namespace FamiStudio
                     }
                 }
 
-                if (instrumentCountExp > 32)
-                    Log.LogMessage(LogSeverity.Error, $"Number of expansion instrument ({instrumentCountExp}) exceeds the limit of 32, song will not sound correct.");
+                if (instrumentCountExp > instrumentLimitExp)
+                    Log.LogMessage(LogSeverity.Error, $"Number of expansion instrument ({instrumentCountExp}) exceeds the limit of {instrumentLimitExp}, song will not sound correct.");
 
                 lines.Add("");
             }
@@ -672,9 +704,14 @@ namespace FamiStudio
                     var instrument = project.Instruments[i];
                     if (instrument.IsEpsm)
                     {
+                        byte[] epsmPatchRegsReordered = new byte[epsmRegOrder.Length];
+                        for (int reg = 0; reg < epsmRegOrder.Length; reg++)
+                        {
+                            epsmPatchRegsReordered[reg] = instrument.EpsmPatchRegs[epsmRegOrder[reg]];
+                        }
                         lines.Add($"{ll}instrument_epsm_extra_patch{i}:");
-                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(4).Select(r => $"${r:x2}"))}");
-                        size += 27;
+                        lines.Add($"\t{db} {String.Join(",", epsmPatchRegsReordered.Select(r => $"${r:x2}"))}");
+                        size += 31;
                     }
                 }
                 lines.Add("");
@@ -767,7 +804,7 @@ namespace FamiStudio
 
                     if (kernel == FamiToneKernel.FamiStudio)
                     {
-                        if (usesMultipleDpcmBanks)
+                        if (project.SoundEngineUsesDpcmBankSwitching)
                         {
                             size += 5;
                             lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FAMISTUDIO_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2},${sampleInitialDmcValue:x2},${sampleBank:x2} ; {i:x2} {mapping.Sample.Name} (Pitch:{mapping.Pitch})");
@@ -855,15 +892,12 @@ namespace FamiStudio
 
             if (project.UsesSamples)
             {
-                usesMultipleDpcmBanks |= project.UsesMultipleDPCMBanks;
-
-                if (usesMultipleDpcmBanks)
+                if (project.SoundEngineUsesDpcmBankSwitching)
                 {
-                    Log.LogMessage(LogSeverity.Info, "Project uses multiple DPCM banks, separate DMC files will be generated for each banks.");
+                    Log.LogMessage(LogSeverity.Info, "Project uses DPCM bank switching, separate DMC files will be generated for each banks.");
                 }
 
-                var maxBank = usesMultipleDpcmBanks ? Project.MaxDPCMBanks : 1;
-
+                var maxBank = project.SoundEngineUsesDpcmBankSwitching ? Project.MaxDPCMBanks : 1;
                 var path = Path.GetDirectoryName(filename);
                 var projectname = Utils.MakeNiceAsmName(project.Name);
 
@@ -877,7 +911,7 @@ namespace FamiStudio
                     if (sampleData.Length == 0)
                         continue;
 
-                    var dmcFilename = usesMultipleDpcmBanks? Utils.AddFileSuffix(baseDmcFilename, $"_bank{i}") : baseDmcFilename;
+                    var dmcFilename = project.SoundEngineUsesDpcmBankSwitching ? Utils.AddFileSuffix(baseDmcFilename, $"_bank{i}") : baseDmcFilename;
                     File.WriteAllBytes(dmcFilename, sampleData);
                     bankSizes.Add(sampleData.Length);
                 }
@@ -935,6 +969,20 @@ namespace FamiStudio
             return false;
         }
 
+        private bool Square1HasEnvelopePeriodEffect(Song song, Channel channel, int patternIdx, int noteIdx)
+        {
+            if (channel.IsS5BChannel || channel.IsEPSMSquareChannel)
+            {
+                var sq1Note = song.GetChannelByType(channel.IsS5BChannel ? ChannelType.S5BSquare1 : ChannelType.EPSMSquare1).GetNoteAt(new NoteLocation(patternIdx, noteIdx));
+                if (sq1Note != null && sq1Note.HasEnvelopePeriod)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private int FindEffectParam(Song song, int effect)
         {
             for (int p = 0; p < song.Length; p++)
@@ -980,6 +1028,17 @@ namespace FamiStudio
             }
         }
 
+        [Flags]
+        enum OverrideFlags
+        {
+            None = 0,
+            Vibrato = 1,
+            Arpeggio = 2,
+            FdsModSpeed = 4,
+            FdsModDepth = 8,
+            EnvPeriod = 16
+        }
+
         private List<string> GetSongData(Song song, int songIdx, int speedChannel)
         {
             var songData = new List<string>();
@@ -1000,6 +1059,7 @@ namespace FamiStudio
                 var lastVolume = 15;
                 var firstInstrumentInLoop = (Instrument)null;
                 var lastInstrumentInLoop = (Instrument)null;
+                var currentFlags = OverrideFlags.None;
 
                 songData.Add($"{ll}song{songIdx}ch{c}:");
 
@@ -1088,6 +1148,8 @@ namespace FamiStudio
                     {
                         var time = it.CurrentTime;
                         var note = it.CurrentNote;
+                        var location = new NoteLocation(p, time);
+                        var frameFlags = OverrideFlags.None;
 
                         if (note == null)
                             note = emptyNote;
@@ -1107,6 +1169,12 @@ namespace FamiStudio
                         if (OtherVrc7ChannelUsesCustomPatch(song, channel, instrument, p, time))
                         {
                             instrument = null;
+                        }
+
+                        if (Square1HasEnvelopePeriodEffect(song, channel, p, time))
+                        {
+                            frameFlags   |= OverrideFlags.EnvPeriod;
+                            currentFlags |= OverrideFlags.EnvPeriod;
                         }
 
                         it.Next();
@@ -1130,7 +1198,6 @@ namespace FamiStudio
 
                             if (note.HasVolumeSlide)
                             {
-                                var location = new NoteLocation(p, time);
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizeNtsc, out var _);
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizePal, out var _);
 
@@ -1166,7 +1233,14 @@ namespace FamiStudio
                             songData.Add($"{hi}({vibratoEnvelopeNames[vib]})");
 
                             if (vib == 0)
+                            {
                                 songData.Add($"${OpcodeClearPitchEnvOverride:x2}+");
+                            }
+                            else
+                            {
+                                frameFlags |= OverrideFlags.Vibrato;
+                                currentFlags |= OverrideFlags.Vibrato;
+                            }
 
                             usesVibrato = true;
                         }
@@ -1222,17 +1296,28 @@ namespace FamiStudio
                             usesDutyCycleEffect = true;
                         }
 
+                        if (note.HasEnvelopePeriod)
+                        {
+                            songData.Add($"${(channel.IsS5BChannel ? OpcodeS5BManualEnvPeriod : OpcodeEPSMManualEnvPeriod):x2}+");
+                            songData.Add($"${(note.EnvelopePeriod >> 0) & 0xff:x2}");
+                            songData.Add($"${(note.EnvelopePeriod >> 8) & 0xff:x2}");
+                        }
+
                         if (note.HasFdsModSpeed)
                         {
                             songData.Add($"${OpcodeFdsModSpeed:x2}+");
                             songData.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
                             songData.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
+                            frameFlags |= OverrideFlags.FdsModSpeed;
+                            currentFlags |= OverrideFlags.FdsModSpeed;
                         }
 
                         if (note.HasFdsModDepth)
                         {
                             songData.Add($"${OpcodeFdsModDepth:x2}+");
                             songData.Add($"${note.FdsModDepth:x2}");
+                            frameFlags |= OverrideFlags.FdsModDepth;
+                            currentFlags |= OverrideFlags.FdsModDepth;
                         }
 
                         if (note.HasCutDelay)
@@ -1256,6 +1341,45 @@ namespace FamiStudio
                             // Instrument change.
                             if (note.IsMusical && note.Instrument != null && !channel.IsDpcmChannel)
                             {
+                                var attack = note.HasAttack || !Channel.CanDisableAttack(channel.Type, instrument, note.Instrument);
+
+                                if (!attack)
+                                {
+                                    // TODO: Remove note entirely after a slide that matches the next note with no attack.
+                                    songData.Add($"${OpcodeDisableAttack:x2}+");
+                                }
+                                else
+                                {
+                                    // If there FDS speed/depth was previously overridden (but is not this frame) and we have an attack,
+                                    // we need to rebind the instrument to set the correct speed/depth again. This is pretty wasteful since
+                                    // this will rebind the entire wave/mod table, but that's the best we can do right now without adding a
+                                    // new opcode or something like that.
+                                    if ((!frameFlags.HasFlag(OverrideFlags.FdsModSpeed) && currentFlags.HasFlag(OverrideFlags.FdsModSpeed)))
+                                    {
+                                        currentFlags &= ~(OverrideFlags.FdsModSpeed);
+                                        instrument = null;
+                                    }
+                                    if ((!frameFlags.HasFlag(OverrideFlags.FdsModDepth) && currentFlags.HasFlag(OverrideFlags.FdsModDepth)))
+                                    {
+                                        currentFlags &= ~(OverrideFlags.FdsModDepth);
+                                        instrument = null;
+                                    }
+
+                                    // Same rule for S5B/EPSM square manual envelope period.
+                                    if ((!frameFlags.HasFlag(OverrideFlags.EnvPeriod) && currentFlags.HasFlag(OverrideFlags.EnvPeriod)))
+                                    {
+                                        currentFlags &= ~(OverrideFlags.EnvPeriod);
+                                        instrument = null;
+                                    }
+
+                                    // Save for vibrator/arps, we need to rebind the instrument at the moment to reset the correct envelopes.
+                                    if ((!frameFlags.HasFlag(OverrideFlags.Vibrato) && currentFlags.HasFlag(OverrideFlags.Vibrato)))
+                                    {
+                                        currentFlags &= ~(OverrideFlags.Vibrato);
+                                        instrument = null;
+                                    }
+                                }
+
                                 if (note.Instrument != instrument)
                                 {
                                     // Change saw volume if needed.
@@ -1268,14 +1392,18 @@ namespace FamiStudio
                                         songData.Add($"${1 - sawVolume:x2}");
                                     }
 
-                                    int idx = instrumentIndices[note.Instrument];
-                                    songData.Add($"${(byte)(0x80 | (idx << 1)):x2}+");
+                                    var idx = instrumentIndices[note.Instrument];
+                                    if (kernel == FamiToneKernel.FamiStudio && idx >= ExtendedInstrumentStart)
+                                    {
+                                        songData.Add($"${OpcodeExtendedInstrument:x2}+");
+                                        songData.Add($"${idx:x2}");
+                                    }
+                                    else
+                                    {
+                                        songData.Add($"${(byte)(0x80 | (idx << 1)):x2}+");
+                                    }
+
                                     instrument = note.Instrument;
-                                }
-                                else if (!note.HasAttack)
-                                {
-                                    // TODO: Remove note entirely after a slide that matches the next note with no attack.
-                                    songData.Add($"${OpcodeDisableAttack:x2}+");
                                 }
                             }
 
@@ -1308,7 +1436,6 @@ namespace FamiStudio
                                 var noteTablePal = NesApu.GetNoteTableForChannelType(channel.Type, true, song.Project.ExpansionNumN163Channels);
 
                                 var found = true;
-                                var location = new NoteLocation(p, time);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTablePal, true, true, out _, out int stepSizePal, out _);
 
@@ -1341,13 +1468,14 @@ namespace FamiStudio
 
                                     // This is a bit overkill but simplifies the asm code. If we every run
                                     // out of opcodes, we could easily go back to a single release opcode.
-                                    switch (channel.Expansion)
-                                    {
-                                        case ExpansionType.Vrc7: opcode = OpcodeVrc7ReleaseNote; break;
-                                        case ExpansionType.Fds: opcode = OpcodeFdsReleaseNote; break;
-                                        case ExpansionType.N163: opcode = OpcodeN163ReleaseNote; break;
-                                        case ExpansionType.EPSM: opcode = OpcodeEpsmReleaseNote; break;
-                                    }
+                                    if (channel.IsVrc7Channel)
+                                        opcode = OpcodeVrc7ReleaseNote;
+                                    else if (channel.IsFdsChannel)
+                                        opcode = OpcodeFdsReleaseNote;
+                                    else if (channel.IsN163Channel)
+                                        opcode = OpcodeN163ReleaseNote;
+                                    else if (channel.IsEPSMFmChannel)
+                                        opcode = OpcodeEpsmReleaseNote;
 
                                     songData.Add($"${opcode:x2}+*");
                                     usesReleaseNotes = true;
@@ -1400,23 +1528,29 @@ namespace FamiStudio
                                 {
                                     instrument = null;
                                 }
-
+                                
                                 // TODO: Change this, this is a shit show.
                                 if (numEmptyNotes >= maxRepeatCount || 
-                                    note.IsValid         ||
-                                    note.HasVolume       || 
-                                    note.HasVibrato      ||
-                                    note.HasFinePitch    ||
-                                    note.HasDutyCycle    ||
-                                    note.HasFdsModSpeed  || 
-                                    note.HasFdsModDepth  ||
-                                    note.HasNoteDelay    ||
-                                    note.HasCutDelay     ||
-                                    note.HasDeltaCounter ||
-                                    note.HasPhaseReset   ||
+                                    note.IsValid           ||
+                                    note.HasVolume         || 
+                                    note.HasVibrato        ||
+                                    note.HasFinePitch      ||
+                                    note.HasDutyCycle      ||
+                                    note.HasFdsModSpeed    || 
+                                    note.HasFdsModDepth    ||
+                                    note.HasEnvelopePeriod || 
+                                    note.HasNoteDelay      ||
+                                    note.HasCutDelay       ||
+                                    note.HasDeltaCounter   ||
+                                    note.HasPhaseReset     ||
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
                                 {
                                     break;
+                                }
+
+                                if (Square1HasEnvelopePeriodEffect(song, channel, p, time))
+                                {
+                                    currentFlags |= OverrideFlags.EnvPeriod;
                                 }
 
                                 numEmptyNotes++;
@@ -1430,12 +1564,20 @@ namespace FamiStudio
 
                 if (song.LoopPoint < 0)
                 {
-                    songData.Add($"{ll}song{songIdx}ch{c}loop:");
-                    songData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}");
+                    if (kernel == FamiToneKernel.FamiStudio)
+                        songData.Add($"${OpcodeEndSong:x2}+");
+                    else
+                        songData.Add($"{ll}song{songIdx}ch{c}loop:");
+
+                    // We still need a stop note after since our 'famistudio_advance_channel' never ends of an opcode.
+                    songData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}*");
                 }
 
-                songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeLoop : OpcodeLoopFT2):x2}");
-                songData.Add($"{ll}song{songIdx}ch{c}loop");
+                if (song.LoopPoint >= 0 || kernel != FamiToneKernel.FamiStudio)
+                {
+                    songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeLoop : OpcodeLoopFT2):x2}+");
+                    songData.Add($"{ll}song{songIdx}ch{c}loop");
+                }
             }
 
             return songData;
@@ -1613,7 +1755,8 @@ namespace FamiStudio
                 }
             }
 
-            Debug.Assert(byteString == null);
+            if (writeLines && byteString != null)
+                lines.Add(byteString);
 
             return size;
         }
@@ -1786,6 +1929,71 @@ namespace FamiStudio
                 }
 
                 project.SetExpansionAudioMask(ExpansionType.NoneMask);
+                project.SoundEngineUsesExtendedInstruments = false;
+                project.SoundEngineUsesDpcmBankSwitching = false;
+                project.SoundEngineUsesExtendedDpcm = false;
+            }
+        }
+
+        private void SortInstruments()
+        {
+            var instrumentChanges = new List<(Instrument, int)>();
+
+            // Roughly estimate the number of times an instrument will trigger and instrument change.
+            foreach (var song in project.Songs)
+            {
+                foreach (var channel in song.Channels)
+                {
+                    // DPCM channel doesn;t actually uses real instruments.
+                    if (channel.IsDpcmChannel)
+                        continue;
+
+                    var prevInstrument = (Instrument)null;
+
+                    for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                    {
+                        var instrument = it.Note.Instrument;
+                        if (instrument != null && instrument != prevInstrument)
+                        {
+                            var idx = instrumentChanges.FindIndex(i => i.Item1 == instrument);
+
+                            if (idx == -1)
+                                instrumentChanges.Add((instrument, 1));
+                            else
+                                instrumentChanges[idx] = (instrument, instrumentChanges[idx].Item2 + 1);
+
+                            prevInstrument = instrument;
+                        }
+                    }
+                }
+            }
+
+            instrumentChanges.Sort((i1, i2) => i2.Item2.CompareTo(i1.Item2));
+
+            // Sort by most common to least common.
+            for (var i = instrumentChanges.Count - 1; i >= 0; i--)
+            {
+                var instrument = instrumentChanges[i].Item1;
+                project.MoveInstrument(instrument, null);
+            }
+        }
+
+        private void MoveAllEnvelopePeriodsOnFirstChannel(Project project, int[] channelTypes)
+        {
+            // Keeping all envelop period effects on channel 1 simplifies the logic quite a bit. This garantee
+            // that all effects will always be processed before any new notes.
+            foreach (var song in project.Songs)
+            {
+                var firstChannel = song.GetChannelByType(channelTypes[0]);
+                foreach (var channelType in channelTypes.Skip(1))
+                {
+                    var channel = song.GetChannelByType(channelType);
+                    for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.EffectEnvPeriod); !it.Done; it.Next())
+                    {
+                        firstChannel.GetOrCreatePattern(it.PatternIndex).GetOrCreateNoteAt(it.NoteIndex).EnvelopePeriod = it.Note.EnvelopePeriod;
+                        it.Note.ClearEffectValue(Note.EffectEnvelopePeriod);
+                    }
+                }
             }
         }
 
@@ -1801,30 +2009,17 @@ namespace FamiStudio
                 project.ConvertToFamiTrackerTempo(false);
             }
 
-            // NULL = All songs.
-            if (songIds != null)
-            {
-                for (int i = 0; i < project.Songs.Count; i++)
-                {
-                    if (!songIds.Contains(project.Songs[i].Id))
-                    {
-                        project.DeleteSong(project.Songs[i]);
-                        i--;
-                    }
-                }
-            }
-
+            project.DeleteAllSongsBut(songIds);
             RemoveUnsupportedFeatures();
-            project.DeleteUnusedInstruments();
+            project.Cleanup();
+            project.MergeIdenticalInstruments();
+            project.RemoveDpcmNotesWithoutMapping();
+            project.PermanentlyApplyGrooves();
 
-            foreach (var song in project.Songs)
-                song.RemoveDpcmNotesWithoutMapping();
-
-            if (project.UsesFamiStudioTempo)
-            {
-                foreach (var song in project.Songs)
-                    song.PermanentlyApplyGrooves();
-            }
+            if (project.UsesS5BExpansion)
+                MoveAllEnvelopePeriodsOnFirstChannel(project, new[] { ChannelType.S5BSquare1, ChannelType.S5BSquare2, ChannelType.S5BSquare3});
+            if (project.UsesEPSMExpansion)
+                MoveAllEnvelopePeriodsOnFirstChannel(project, new[] { ChannelType.EPSMSquare1, ChannelType.EPSMSquare2, ChannelType.EPSMSquare3 });
 
             if (project.UsesMultipleExpansionAudios)
             {
@@ -1835,6 +2030,11 @@ namespace FamiStudio
                     project.SetExpansionAudioMask(ExpansionType.AllMask, 8, false);
                 else
                     project.SetExpansionAudioMask(ExpansionType.AllMask & ~(ExpansionType.EPSMMask), 8, false);
+            }
+
+            if (kernel == FamiToneKernel.FamiStudio)
+            {
+                SortInstruments();
             }
         }
 
@@ -1867,11 +2067,10 @@ namespace FamiStudio
             File.WriteAllLines(includeFilename, includeLines.ToArray());
         }
 
-        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, bool forceMultipleBanks, string filename, string dmcFilename, string includeFilename, int machine)
+        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, string filename, string dmcFilename, string includeFilename, int machine)
         {
             this.machine = machine;
-            this.usesMultipleDpcmBanks |= forceMultipleBanks;
-
+            
             SetupProject(originalProject, songIds);
             SetupFormat(format);
             
@@ -1971,10 +2170,14 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.");
                     if (usesPhaseReset)
                         Log.LogMessage(LogSeverity.Info, "Phase Reset effect is used, you must set FAMISTUDIO_USE_PHASE_RESET = 1.");
-                    if (usesMultipleDpcmBanks)
-                        Log.LogMessage(LogSeverity.Info, "Multiple DPCM banks are used, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
-                    else if (usesExtendedDpcmRange)
-                        Log.LogMessage(LogSeverity.Info, $"More than {MaxDPMCSampleMappingsBase} sample mappings are used. You must set FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1.");
+                    if (usesFdsAutoMod)
+                        Log.LogMessage(LogSeverity.Info, "FDS auto-modulation is used on at least 1 instrument, you must set FAMISTUDIO_USE_FDS_AUTOMOD = 1.");
+                    if (project.SoundEngineUsesDpcmBankSwitching)
+                        Log.LogMessage(LogSeverity.Info, "Project has DPCM bank-switching enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
+                    else if (project.SoundEngineUsesExtendedDpcm)
+                        Log.LogMessage(LogSeverity.Info, $"Project has extended DPCM mode enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1.");
+                    if (project.SoundEngineUsesExtendedInstruments)
+                        Log.LogMessage(LogSeverity.Info, $"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
                 }
             }
 
@@ -2121,13 +2324,13 @@ namespace FamiStudio
         }
 
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
-        public byte[] GetBytes(Project project, int[] songIds, int songOffset, bool forceMultipleBanks, int dpcmBankSize, int dpcmOffset, int machine)
+        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmBankSize, int dpcmOffset, int machine)
         {
             var tempFolder = Utils.GetTemporaryDiretory();
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, forceMultipleBanks, tempAsmFilename, tempDmcFilename, null, machine);
+            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, tempAsmFilename, tempDmcFilename, null, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }

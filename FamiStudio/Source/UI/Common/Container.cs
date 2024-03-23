@@ -6,10 +6,20 @@ namespace FamiStudio
 {
     public class Container : Control
     {
+        // These are only used by scroll container.
+        protected int containerScrollX;
+        protected int containerScrollY;
         protected List<Control> controls = new List<Control>();
+
+        public int ScrollX => containerScrollX;
+        public int ScrollY => containerScrollY;
         public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
         public Container()
+        {
+        }
+
+        public virtual void ContainerMouseWheelNotify(Control control, MouseEventArgs e)
         {
         }
 
@@ -134,7 +144,7 @@ namespace FamiStudio
             {
                 if ((c is Container) == container && c.Visible)
                 {
-                    g.Transform.PushTranslation(c.Left, c.Top);
+                    g.Transform.PushTranslation(c.Left - containerScrollX, c.Top - containerScrollY);
                     c.Render(g);
                     g.Transform.PopTransform();
                 }

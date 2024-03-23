@@ -37,30 +37,33 @@ namespace FamiStudio
         private readonly Color DarkGreyColor4Light = Theme.Lighten(Theme.DarkGreyColor4);
         private readonly Color DarkGreyColor5Light = Theme.Lighten(Theme.DarkGreyColor5);
 
-        private BitmapAtlasRef bmpMobilePianoDrag;
-        private BitmapAtlasRef bmpMobilePianoRest;
+        private TextureAtlasRef bmpMobilePianoDrag;
+        private TextureAtlasRef bmpMobilePianoRest;
 
         private int scrollX = -1;
         private int playAbsNote = -1;
         private int highlightAbsNote = Note.NoteInvalid;
         private int lastX;
         private int lastY;
-        private int layoutSize;
         private float zoom = 1.0f;
         private float flingVelX;
         private bool canFling = false;
         private CaptureOperation captureOperation = CaptureOperation.None;
         
-        public int LayoutSize => layoutSize;
+        public int LayoutSize
+        {
+            get
+            {
+                var screenSize = Platform.GetScreenResolution();
+                return Math.Min(screenSize.Width, screenSize.Height) * Settings.MobilePianoHeight / 100;
+            }
+        }
 
         protected override void OnAddedToContainer()
         {
-            var screenSize = Platform.GetScreenResolution();
-            layoutSize = Math.Min(screenSize.Width, screenSize.Height) / 4;
-
             var g = ParentWindow.Graphics;
-            bmpMobilePianoDrag = g.GetBitmapAtlasRef("MobilePianoDrag");
-            bmpMobilePianoRest = g.GetBitmapAtlasRef("MobilePianoRest");
+            bmpMobilePianoDrag = g.GetTextureAtlasRef("MobilePianoDrag");
+            bmpMobilePianoRest = g.GetTextureAtlasRef("MobilePianoRest");
         }
         
         private void UpdateRenderCoords()
@@ -173,12 +176,13 @@ namespace FamiStudio
 
         protected void RenderPiano(Graphics g)
         {
-            int minVisibleOctave = Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
-            int maxVisibleOctave = Utils.Clamp((int)Math.Ceiling((scrollX + Width) / (float)octaveSizeX), 0, NumOctaves);
+            var minVisibleOctave = Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
+            var maxVisibleOctave = Utils.Clamp((int)Math.Ceiling((scrollX + Width) / (float)octaveSizeX), 0, NumOctaves);
+            var layoutSize = LayoutSize;
 
             var b = g.BackgroundCommandList;
             var c = g.DefaultCommandList;
-           
+
             // Background (white keys)
             b.FillRectangleGradient(0, 0, Width, Height, Theme.LightGreyColor1, Theme.LightGreyColor2, true, layoutSize);
 
@@ -263,7 +267,7 @@ namespace FamiStudio
                         var posX = r.X + r.Width / 2 - (int)(size.Width * scale / 2);
                         var posY = r.Height / 2 - (int)(size.Height * scale / 2);
                         var bmp = App.IsRecording && j == 1 ? bmpMobilePianoRest : bmpMobilePianoDrag;
-                        c.DrawBitmapAtlas(bmp, posX, posY, 0.25f, scale, Color.Black);
+                        c.DrawTextureAtlas(bmp, posX, posY, 0.25f, scale, Color.Black);
                     }
                 }
             }

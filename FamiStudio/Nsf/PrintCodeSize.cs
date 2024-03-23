@@ -9,31 +9,30 @@ namespace PrintCodeSize
         {
             try
             {
-                var lines = File.ReadAllLines(args[0]);
-                var codeSize = 0;
-                var songDataStart = 0;
+                var bytes = File.ReadAllBytes(args[0]);
+                var bankCount = int.Parse(args[1].Substring(12)); // {CODEBANKS}=X
 
-                foreach (var line in lines)
+                var driverSize = bytes.Length;
+
+                for (; driverSize >= 1; driverSize--)
                 {
-                    if (line.StartsWith("CODE "))
-                    {
-                        var splits = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        codeSize = Convert.ToInt32(splits[3], 16);
-                    }
-                    else if (line.StartsWith("SONG_DATA "))
-                    {
-                        var splits = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        songDataStart = Convert.ToInt32(splits[1], 16);
-                    }
+                    if (bytes[driverSize - 1] != 0)
+                        break;
                 }
 
-                var roundedCodeSize = ((codeSize + 127) & ~127);
-                var allocatedCodeSize = (songDataStart - 0x8080);
-                if ((roundedCodeSize % 256) == 0)
-                roundedCodeSize += 128;
-                Console.WriteLine($"    Code size is {codeSize.ToString("X")} (Padded size = {roundedCodeSize.ToString("X")}, Allocated size = {allocatedCodeSize.ToString("X")} {(roundedCodeSize != allocatedCodeSize ? "*** RESIZE NEEDED ***" : "")})");
+                driverSize -= 128; // NSF header.
+                driverSize += 6; // Vectors.
+                driverSize = ((driverSize + 4095) / 4096) * 4096;
+
+                var driverBankCount = driverSize / 4096;
+
+                if (driverBankCount != bankCount)
+                {
+                    Console.WriteLine($"*** BANK COUNT MISMATCH! Banks needed = {driverBankCount}, Banks specified = {bankCount}");            
+                }
             }
             catch {}
         }
     }
 }
+

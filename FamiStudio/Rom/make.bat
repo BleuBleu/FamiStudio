@@ -4,8 +4,6 @@
 ..\..\Tools\ca65 rom.s -g -o rom_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1
 ..\..\Tools\ca65 rom.s -g -o rom_pal.o -D FAMISTUDIO_CFG_PAL_SUPPORT=1
 ..\..\Tools\ca65 rom.s -g -o rom_pal_famitracker.o -D FAMISTUDIO_CFG_PAL_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1
-..\..\Tools\ca65 rom.s -g -o rom_epsm_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_EPSM=1
-..\..\Tools\ca65 rom.s -g -o rom_epsm_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_EPSM=1
 ..\..\Tools\ca65 rom.s -g -o rom_mmc5_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_MMC5=1
 ..\..\Tools\ca65 rom.s -g -o rom_mmc5_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_MMC5=1
 ..\..\Tools\ca65 rom.s -g -o rom_n163_1ch_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=1
@@ -30,6 +28,8 @@
 ..\..\Tools\ca65 rom.s -g -o rom_vrc6_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_VRC6=1
 ..\..\Tools\ca65 rom.s -g -o rom_vrc7_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_VRC7=1
 ..\..\Tools\ca65 rom.s -g -o rom_vrc7_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_VRC7=1
+..\..\Tools\ca65 rom.s -g -o rom_epsm_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_EPSM=1
+..\..\Tools\ca65 rom.s -g -o rom_epsm_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_EPSM=1
 ..\..\Tools\ca65 rom.s -g -o fds.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_FDS=1
 ..\..\Tools\ca65 rom.s -g -o fds_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_FDS=1
 @del *.nes
@@ -39,8 +39,6 @@
 ..\..\Tools\ld65 -C rom.cfg -o rom_ntsc_famitracker.nes rom_ntsc_famitracker.o --mapfile rom_ntsc_famitracker.map --dbgfile rom_ntsc_famitracker.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_pal.nes rom_pal.o --mapfile rom_pal.map --dbgfile rom_pal.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_pal_famitracker.nes rom_pal_famitracker.o --mapfile rom_pal_famitracker.map --dbgfile rom_pal_famitracker.dbg
-..\..\Tools\ld65 -C rom.cfg -o rom_epsm_ntsc.nes rom_epsm_ntsc.o --mapfile rom_epsm_ntsc.map --dbgfile rom_epsm_ntsc.dbg
-..\..\Tools\ld65 -C rom.cfg -o rom_epsm_ntsc_famitracker.nes rom_epsm_ntsc_famitracker.o --mapfile rom_epsm_ntsc_famitracker.map --dbgfile rom_epsm_ntsc_famitracker.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_mmc5_ntsc.nes rom_mmc5_ntsc.o --mapfile rom_mmc5_ntsc.map --dbgfile rom_mmc5_ntsc.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_mmc5_ntsc_famitracker.nes rom_mmc5_ntsc_famitracker.o --mapfile rom_mmc5_ntsc_famitracker.map --dbgfile rom_mmc5_ntsc_famitracker.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_n163_1ch_ntsc.nes rom_n163_1ch_ntsc.o --mapfile rom_n163_1ch_ntsc.map --dbgfile rom_n163_1ch_ntsc.dbg
@@ -65,6 +63,8 @@
 ..\..\Tools\ld65 -C rom.cfg -o rom_vrc6_ntsc_famitracker.nes rom_vrc6_ntsc_famitracker.o --mapfile rom_vrc6_ntsc_famitracker.map --dbgfile rom_vrc6_ntsc_famitracker.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_vrc7_ntsc.nes rom_vrc7_ntsc.o --mapfile rom_vrc7_ntsc.map --dbgfile rom_vrc7_ntsc.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_vrc7_ntsc_famitracker.nes rom_vrc7_ntsc_famitracker.o --mapfile rom_vrc7_ntsc_famitracker.map --dbgfile rom_vrc7_ntsc_famitracker.dbg
+..\..\Tools\ld65 -C rom_epsm.cfg -o rom_epsm_ntsc.nes rom_epsm_ntsc.o --mapfile rom_epsm_ntsc.map --dbgfile rom_epsm_ntsc.dbg
+..\..\Tools\ld65 -C rom_epsm.cfg -o rom_epsm_ntsc_famitracker.nes rom_epsm_ntsc_famitracker.o --mapfile rom_epsm_ntsc_famitracker.map --dbgfile rom_epsm_ntsc_famitracker.dbg
 ..\..\Tools\ld65 -C fds.cfg -o fds.fds fds.o --mapfile fds.map --dbgfile fds.dbg
 ..\..\Tools\ld65 -C fds.cfg -o fds_famitracker.fds fds_famitracker.o --mapfile fds_famitracker.map --dbgfile fds_famitracker.dbg
 

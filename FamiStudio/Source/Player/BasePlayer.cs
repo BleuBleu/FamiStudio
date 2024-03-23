@@ -18,8 +18,8 @@ namespace FamiStudio
     public interface IPlayerInterface
     {
         void NotifyInstrumentLoaded(Instrument instrument, long channelTypeMask);
-        void NotifyYMMixerSettingsChanged(int ymMixerSettings, long channelTypeMask);
-        void NotifyRegisterWrite(int apuIndex, int reg, int data, List<int> metadata = null);
+        void NotifyRegisterWrite(int apuIndex, int reg, int data, int metadata = 0);
+        ChannelState GetChannelByType(int type); // Use sparingly, kind of hacky.
     }
 
     public class BasePlayer : IPlayerInterface
@@ -40,13 +40,15 @@ namespace FamiStudio
         protected bool seeking = false;
         protected bool beat = false;
         protected bool stereo = false;
+        protected bool accurateSeek = false;
+        protected volatile bool reachedEnd = false;
         protected int  tndMode = NesApu.TND_MODE_SINGLE;
         protected int  beatIndex = -1;
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
         protected long channelMask = -1;
-        protected int  playPosition = 0;
+        protected volatile int playPosition = 0;
         protected NoteLocation playLocation = new NoteLocation(0, 0);
         protected NesApu.NesRegisterValues registerValues = new NesApu.NesRegisterValues();
 
@@ -62,12 +64,14 @@ namespace FamiStudio
         protected int tempoEnvelopeIndex;
         protected int tempoEnvelopeCounter;
 
-        protected BasePlayer(int apu, bool stereo, int rate = 44100)
+        protected BasePlayer(int apu, bool pal, bool inStereo, int rate = 44100)
         {
-            this.apuIndex = apu;
-            this.sampleRate = rate;
-            this.dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
-            this.stereo = stereo;
+            apuIndex = apu;
+            sampleRate = rate;
+            dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
+            stereo = inStereo;
+            palPlayback = pal;
+            registerValues.SetPalMode(pal);
         }
 
         public virtual void Shutdown()
@@ -86,10 +90,16 @@ namespace FamiStudio
             set { loopMode = value; }
         }
 
-        public int PlayPosition
+        public bool AccurateSeek
         {
-            get { return Math.Max(0, Thread.VolatileRead(ref playPosition)); }
-            set { Thread.VolatileWrite(ref playPosition, value); }
+            get { return accurateSeek; }
+            set { accurateSeek = value; }
+        }
+
+        public virtual int PlayPosition
+        {
+            get { return Math.Max(0, playPosition); }
+            set { playPosition = value; }
         }
 
         public int PlayRate
@@ -111,7 +121,7 @@ namespace FamiStudio
         // Returns the number of frames to run (0, 1 or 2)
         protected int UpdateFamiStudioTempo()
         {
-            if (famitrackerTempo || song.Project.PalMode == palPlayback)
+            if (!playLocation.IsValid || famitrackerTempo || song.Project.PalMode == palPlayback)
             {
                 return 1;
             }
@@ -163,13 +173,20 @@ namespace FamiStudio
 
         protected bool ShouldAdvanceSong()
         {
-            if (famitrackerTempo)
+            if (!playLocation.IsValid) // Here we are really "before the first frame"
             {
-                return famitrackerTempoCounter <= 0;
+                return true;
             }
             else
             {
-                return !grooveIterator.IsPadFrame;
+                if (famitrackerTempo)
+                {
+                    return famitrackerTempoCounter <= 0;
+                }
+                else
+                {
+                    return !grooveIterator.IsPadFrame;
+                }
             }
         }
 
@@ -205,9 +222,16 @@ namespace FamiStudio
 
         protected void UpdateChannels()
         {
+            // Main channel update, advance song, update APU, etc.
             foreach (var channel in channelStates)
             {
                 channel.Update();
+            }
+
+            // This will do the phase resets (if any) this attempts to mimic the sound engine a bit more closely.
+            foreach (var channel in channelStates)
+            {
+                channel.PostUpdate();
             }
         }
 
@@ -217,6 +241,32 @@ namespace FamiStudio
             var idx = ChannelType.GetExpansionChannelIndexForChannelType(channelType);
 
             NesApu.EnableChannel(apuIndex, exp, idx, enable ? 1 : 0);
+        }
+
+        protected void InitAndResetApu(Project project)
+        {
+            var expMixerSettings = new ExpansionMixer[ExpansionType.Count];
+
+            // Apply project overrides.
+            for (int i = 0; i < expMixerSettings.Length; i++)
+            {
+                expMixerSettings[i] = project.AllowMixerOverride && project.ExpansionMixerSettings[i].Override ?
+                    project.ExpansionMixerSettings[i] :
+                    Settings.ExpansionMixerSettings[i];
+            }
+
+            NesApu.InitAndReset(
+                apuIndex, 
+                sampleRate, 
+                Settings.GlobalVolumeDb,
+                project.OverrideBassCutoffHz ? project.BassCutoffHz : Settings.BassCutoffHz, 
+                expMixerSettings,
+                palPlayback, 
+                Settings.N163Mix,
+                tndMode, 
+                project.ExpansionAudioMask, 
+                project.ExpansionNumN163Channels, 
+                dmcCallback);
         }
 
         protected void UpdateChannelsMuting()
@@ -229,56 +279,54 @@ namespace FamiStudio
             }
         }
 
-        public bool BeginPlaySong(Song s, bool pal, int startNote)
+        public void BeginPlaySong(Song s)
         {
+            Debug.Assert(s.Project.OutputsStereoAudio == stereo);
+
             song = s;
             famitrackerTempo = song.UsesFamiTrackerTempo;
             famitrackerSpeed = song.FamitrackerSpeed;
-            palPlayback = pal;
-            playPosition = startNote;
-            playLocation = new NoteLocation(0, 0);
+            playLocation = NoteLocation.Invalid; // This means "before the first frame".
             frameNumber = 0;
             famitrackerTempoCounter = 0;
-            channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
+            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
+            reachedEnd = false;
+            playbackRateCounter = 1;
+            tempoEnvelopeCounter = 0;
 
-            Debug.Assert(song.Project.OutputsStereoAudio == stereo);
-
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels, dmcCallback);
-
-            ResetFamiStudioTempo();
+            InitAndResetApu(song.Project);
             UpdateChannelsMuting();
+        }
 
-            //Debug.WriteLine($"START SEEKING!!"); 
+        public bool SeekTo(int startNote)
+        {
+            Debug.Assert(startNote > 0);
 
-            if (startNote != 0)
+            StartSeeking();
+
+            var stillSeeking = true;
+
+            while (true)
             {
-                StartSeeking();
-                
-                AdvanceChannels();
-                UpdateChannels();
-                UpdateTempo();
-
-                while (playLocation.ToAbsoluteNoteIndex(song) < startNote - 1)
+                // We 1 frame before the target so that we "advance" to the correct frame on the first PlaySongFrame().
+                var reachedStartNote = playLocation.IsValid && playLocation.ToAbsoluteNoteIndex(song) >= startNote - 1;
+                if (reachedStartNote || !PlaySongFrameInternal(true))
                 {
-                    if (!PlaySongFrameInternal(true))
-                        break;
+                    stillSeeking = false;
+                    break;
                 }
 
-                StopSeeking();
+                // In accurate seek mode, this can be slow, so the caller must call in a loop until we return false.
+                if (accurateSeek)
+                {
+                    EndSeekFrame();
+                    break;
+                }
             }
-            else
-            {
-                AdvanceChannels();
-                UpdateChannels();
-                UpdateTempo();
-            }
 
-            playPosition = playLocation.ToAbsoluteNoteIndex(song);
-            UpdateBeat();
+            StopSeeking();
 
-            EndFrame();
-
-            return true;
+            return stillSeeking;
         }
 
         protected bool PlaybackRateShouldSkipFrame(bool seeking)
@@ -304,9 +352,6 @@ namespace FamiStudio
             if (PlaybackRateShouldSkipFrame(seeking))
                 return true;
 
-            // Increment before for register listeners to get correct frame number.
-            frameNumber++;
-
             int numFramesToRun = UpdateFamiStudioTempo();
 
             for (int i = 0; i < numFramesToRun; i++)
@@ -316,7 +361,10 @@ namespace FamiStudio
                     //Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
 
                     if (!AdvanceSong(song.Length, seeking ? LoopMode.None : loopMode))
+                    {
+                        reachedEnd = true;
                         return false;
+                    }
 
                     AdvanceChannels();
                 }
@@ -337,6 +385,8 @@ namespace FamiStudio
             if (!seeking)
                 playPosition = playLocation.ToAbsoluteNoteIndex(song);
 
+            frameNumber++;
+
             return true;
         }
 
@@ -356,85 +406,92 @@ namespace FamiStudio
         protected void StartSeeking()
         {
             seeking = true;
-            NesApu.StartSeeking(apuIndex);
+            if (!accurateSeek)
+                NesApu.StartSeeking(apuIndex);
         }
 
         protected void StopSeeking()
         {
-            NesApu.StopSeeking(apuIndex);
+            if (!accurateSeek)
+                NesApu.StopSeeking(apuIndex);
             seeking = false;
         }
-
 
         protected bool AdvanceSong(int songLength, LoopMode loopMode)
         {
             bool advancedPattern = false;
 
-            if (++playLocation.NoteIndex >= song.GetPatternLength(playLocation.PatternIndex))
+            // Pretend we "advance" to the first note on the first frame.
+            if (!playLocation.IsValid)
             {
-                playLocation.NoteIndex = 0;
-
-                if (loopMode != LoopMode.Pattern)
-                {
-                    playLocation.PatternIndex++;
-                    advancedPattern = true;
-                }
-                else
-                {
-                    // Make sure the selection is valid, updated on another thread, so could be 
-                    // sketchy.
-                    var minPatternIdx = minSelectedPattern;
-                    var maxPatternIdx = maxSelectedPattern;
-
-                    if (minPatternIdx >= 0 && 
-                        maxPatternIdx >= 0 &&
-                        maxPatternIdx >= minPatternIdx &&
-                        minPatternIdx <  song.Length)
-                    {
-                        if (playLocation.PatternIndex + 1 > maxPatternIdx)
-                        {
-                            playLocation.PatternIndex = minPatternIdx;
-                        }
-                        else
-                        {
-                            playLocation.PatternIndex++;
-                            advancedPattern = true;
-                        }
-                    }
-                }
+                playLocation = new NoteLocation(0, 0);
+                advancedPattern = true;
             }
-
-            if (playLocation.PatternIndex >= songLength)
+            else
             {
-                loopCount++;
-
-                if (maxLoopCount > 0 && loopCount >= maxLoopCount)
+                if (++playLocation.NoteIndex >= song.GetPatternLength(playLocation.PatternIndex))
                 {
-                    return false;
-                }
+                    playLocation.NoteIndex = 0;
 
-                if (loopMode == LoopMode.LoopPoint) // This loop mode is actually unused.
-                {
-                    if (song.LoopPoint >= 0)
+                    if (loopMode != LoopMode.Pattern)
                     {
-                        playLocation.PatternIndex = song.LoopPoint;
-                        playLocation.NoteIndex = 0;
+                        playLocation.PatternIndex++;
                         advancedPattern = true;
                     }
-                    else 
+                    else
+                    {
+                        // Make sure the selection is valid, updated on another thread, so could be sketchy.
+                        var minPatternIdx = minSelectedPattern;
+                        var maxPatternIdx = maxSelectedPattern;
+
+                        if (minPatternIdx >= 0 &&
+                            maxPatternIdx >= 0 &&
+                            maxPatternIdx >= minPatternIdx &&
+                            minPatternIdx < song.Length)
+                        {
+                            if (playLocation.PatternIndex + 1 > maxPatternIdx)
+                            {
+                                playLocation.PatternIndex = minPatternIdx;
+                            }
+                            else
+                            {
+                                playLocation.PatternIndex++;
+                                advancedPattern = true;
+                            }
+                        }
+                    }
+                }
+
+                if (playLocation.PatternIndex >= songLength)
+                {
+                    if (maxLoopCount > 0 && ((loopMode == LoopMode.LoopPoint && song.LoopPoint >= 0) || loopMode == LoopMode.Song) && ++loopCount >= maxLoopCount)
                     {
                         return false;
                     }
-                }
-                else if (loopMode == LoopMode.Song)
-                {
-                    playLocation.PatternIndex = Math.Max(0, song.LoopPoint);
-                    playLocation.NoteIndex = 0;
-                    advancedPattern = true;
-                }
-                else if (loopMode == LoopMode.None)
-                {
-                    return false;
+
+                    if (loopMode == LoopMode.LoopPoint) // This loop mode is actually unused.
+                    {
+                        if (song.LoopPoint >= 0)
+                        {
+                            playLocation.PatternIndex = song.LoopPoint;
+                            playLocation.NoteIndex = 0;
+                            advancedPattern = true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    else if (loopMode == LoopMode.Song)
+                    {
+                        playLocation.PatternIndex = Math.Max(0, song.LoopPoint);
+                        playLocation.NoteIndex = 0;
+                        advancedPattern = true;
+                    }
+                    else if (loopMode == LoopMode.None)
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -537,7 +594,7 @@ namespace FamiStudio
             return null;
         }
 
-        protected ChannelState[] CreateChannelStates(IPlayerInterface player, Project project, int apuIdx, int expNumChannels, bool pal)
+        protected ChannelState[] CreateChannelStates(Project project, int apuIdx, int expNumChannels, bool pal)
         {
             var channelCount = project.GetActiveChannelCount();
             var states = new ChannelState[channelCount];
@@ -560,12 +617,25 @@ namespace FamiStudio
             NesApu.ResetTriggers(apuIndex);
         }
 
+        private unsafe void EndSeekFrame()
+        {
+            if (accurateSeek)
+            {
+                NesApu.EndFrame(apuIndex);
+                NesApu.ReadSamples(apuIndex, IntPtr.Zero, NesApu.SamplesAvailable(apuIndex));
+            }
+            else
+            {
+                frameNumber++;
+            }
+        }
+
         protected virtual unsafe short[] EndFrame()
         {
             NesApu.EndFrame(apuIndex);
-
-            int numTotalSamples = NesApu.SamplesAvailable(apuIndex);
-            short[] samples = new short[numTotalSamples * (stereo ? 2 : 1)];
+            
+            var numTotalSamples = NesApu.SamplesAvailable(apuIndex);
+            var samples = new short[numTotalSamples * (stereo ? 2 : 1)];
 
             fixed (short* ptr = &samples[0])
             {
@@ -597,19 +667,13 @@ namespace FamiStudio
             }
         }
 
-        public void NotifyYMMixerSettingsChanged(int ymMixerSettings, long channelTypeMask)
+        public virtual void NotifyRegisterWrite(int apuIndex, int reg, int data, int metadata = 0)
         {
-            foreach (var channelState in channelStates)
-            {
-                if (((1L << channelState.InnerChannelType) & channelTypeMask) != 0)
-                {
-                    channelState.YMMixerSettingsChangedNotify(ymMixerSettings);
-                }
-            }
         }
 
-        public virtual void NotifyRegisterWrite(int apuIndex, int reg, int data, List<int> metadata = null)
+        public virtual ChannelState GetChannelByType(int type)
         {
+            return Array.Find(channelStates, c => c.InnerChannelType == type);
         }
 
         protected void ReadBackRegisterValues()

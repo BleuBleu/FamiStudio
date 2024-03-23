@@ -8,13 +8,6 @@ namespace FamiStudio
 {
     public static class DroidUtils
     {
-        public static string GetAttributeValue(Android.Content.Res.Resources.Theme theme, int resId)
-        {
-            TypedValue typedValue = new TypedValue();
-            theme.ResolveAttribute(resId, typedValue, true);
-            return typedValue.CoerceToString();
-        }
-
         public static int GetSizeAttributeInPixel(Context context, int resId)
         {
             var att = context.ObtainStyledAttributes(new[] { resId });

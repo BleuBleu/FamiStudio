@@ -96,6 +96,32 @@ In the example below, we can imagine that the notes on the left were all using t
 
 Only features that are supported by FamiStudio will be imported. Things like hardware sweeps & advanced DPCM manipulations will all be ignored.
 
+## VGM Files
+
+It's possible to import VGM/VGZ files containing supported sound chips.
+
+Import options:
+
+* **Pattern Length** : Number of frames in a pattern.
+* **Skip frames at start** : Used to remove frames in the start of the track, can be useful if the song dont start right away.
+* **Reverse DPCM bits** : This will set the "Reverse Bits" flag on all the imported samples. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should.
+* **Preserve DPCM padding bytes** : Force FamiStudio to keep the last byte of every sample, this will make all samples 16 bytes larger simply to keep an extra byte. This could be useful to keep looping samples intact. Should remain off most of the time 
+* **Adjust notes to match chip clock in VGM** : Used to convert notes where the sound chip clock being imported does not match the frequency used on the chip on the NES/Expansion.
+* **Import YM2149 as EPSM** : Imports YM2149/AY-3-8910 As EPSM Squares instead of importing them as S5b that is the default behaviour.
+
+Supported Chips:
+
+* **NES APU** : Imported as 2A03/2A07
+* **FDS** : Imported as FDS
+* **YM2149/AY-3-8910** : Can be imported as S5b or EPSM
+* **YM2203 (OPN)**
+  **YM2608 (OPNA)**
+  **YM2612 (OPN2)**
+  **YM2610 (OPNB)**
+  **YMF288 (OPN3)** : Can be imported as EPSM
+* **VRC7**
+  **YM2413 (OPLL)** : Can be imported as VRC7
+
 # Error Log
 
 When importing/exporting from/to specific format, an error log may appear providing a list of warnings/errors that occurred during the process. Please pay attention to these as they may explain why your song sound differently than intended.

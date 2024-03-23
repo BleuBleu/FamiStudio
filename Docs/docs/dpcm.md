@@ -24,7 +24,7 @@ This second tutorial is more advanced and will teach you how to sample instrumen
 </div>
 <br/>
 
-If you do not wish to use the built-in DPCM sample editor of FamiStudio there are many other alternative : [FamiTracker](http://famitracker.com/), [RJDMC](http://forums.famitracker.com/viewtopic.php?t=95) and [MakeDPCM](https://www.romhacking.net/utilities/1451/). 
+If you do not wish to use the built-in DPCM sample editor of FamiStudio there are many other alternative : [FamiTracker](https://famitracker.org/), [RJDMC](https://forums.nesdev.org/viewtopic.php?t=6975) and [MakeDPCM](https://www.romhacking.net/utilities/1451/). 
 
 ## Loading DPCM Samples
 

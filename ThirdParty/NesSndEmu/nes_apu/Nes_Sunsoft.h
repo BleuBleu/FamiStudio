@@ -51,7 +51,8 @@ private:
 	cpu_time_t last_time;
 	int delay;
 	int last_amp;
-	Blip_Synth<blip_med_quality, 15420> synth;
+	// (255<<4)=4080 is the maximum a channel can be. It sums all 3 channels.
+	Blip_Synth<blip_med_quality, (255<<4) * 3> synth;
 	int triggers[3];
 
 	short shadow_internal_regs[shadow_internal_regs_count];

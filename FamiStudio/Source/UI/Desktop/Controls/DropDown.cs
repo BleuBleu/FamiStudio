@@ -13,7 +13,7 @@ namespace FamiStudio
         public event SelectedIndexChangedDelegate SelectedIndexChanged;
         public event ListClosingDelegate ListClosing;
 
-        private BitmapAtlasRef bmpArrow;
+        private TextureAtlasRef bmpArrow;
         private string[] items;
         private int selectedIndex = 0;
         private bool hover;
@@ -81,7 +81,7 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
-            bmpArrow = Graphics.GetBitmapAtlasRef("DropDownArrow");
+            bmpArrow = Graphics.GetTextureAtlasRef("DropDownArrow");
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -270,6 +270,8 @@ namespace FamiStudio
             {
                 SelectedIndex = Utils.Clamp(selectedIndex + sign, 0, items.Length - 1);
             }
+
+            e.MarkHandled();
         }
 
         protected override void OnRender(Graphics g)
@@ -281,7 +283,7 @@ namespace FamiStudio
             if (!transparent)
                 c.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover && enabled ? Theme.DarkGreyColor3 : Theme.DarkGreyColor1, color);
             
-            c.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyColor2 : color);
+            c.DrawTextureAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyColor2 : color);
 
             if (selectedIndex >= 0)
                 c.DrawText(items[selectedIndex], Fonts.FontMedium, margin, 0, color, TextFlags.MiddleLeft, 0, rowHeight);

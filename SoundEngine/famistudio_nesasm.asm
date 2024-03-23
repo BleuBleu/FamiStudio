@@ -134,6 +134,16 @@ FAMISTUDIO_NESASM_CODE_ORG     = $8000
 
 ; EPSM (Expansion Port Sound Module)
 ; FAMISTUDIO_EXP_EPSM          = 1
+; Fine-tune control for enabling specific channels
+; Default values for the channels are to enable all channels.
+; FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT     = 3
+; FAMISTUDIO_EXP_EPSM_FM_CHN_CNT      = 6
+; FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE = 1
+; FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE = 1
+; FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE = 1
+; FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE = 1
+; FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE = 1
+; FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE = 1
 
 ;======================================================================================================================
 ; 3) GLOBAL ENGINE CONFIGURATION
@@ -231,8 +241,15 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 ; assigned to a note, with a specific pitch/loop, etc.). Implied when using FAMISTUDIO_USE_DPCM_BANKSWITCHING.
 ; FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1
 
+; Allows having up to 256 instrument at the cost of slightly higher CPU usage when switching instrument.
+; When this is off, the limit is 64 for regular instruments and 32 for expansion instrumnets.
+; FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1
+
 ; Must be enabled if your project uses the "Phase Reset" effect.
 ; FAMISTUDIO_USE_PHASE_RESET = 1
+
+; Must be enabled if your project uses the FDS expansion and at least one instrument with FDS Auto-Mod enabled.
+; FAMISTUDIO_USE_FDS_AUTOMOD  = 1
 
 .endif
 
@@ -261,6 +278,36 @@ FAMISTUDIO_EXP_VRC7 = 0
 
     .ifndef FAMISTUDIO_EXP_EPSM
 FAMISTUDIO_EXP_EPSM = 0
+FAMISTUDIO_EXP_EPSM_ENV_CNT = 0
+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT = 0
+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT = 0
+FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT = 0
+FAMISTUDIO_EXP_EPSM_TRIG_CHN = 0
+    .endif
+    .ifndef FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT
+FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT     = 3
+    .endif
+    .ifndef FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT      = 6
+    .endif
+    .ifndef FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE
+FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE = 1
+    .endif
+    .ifndef FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE
+FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE = 1
+    .endif
+    .ifndef FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE
+FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE = 1
+    .endif
+    .ifndef FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE
+FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE = 1
+    .endif
+    .ifndef FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE
+FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE = 1
+    .endif
+    .ifndef FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE
+FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE = 1
+;    .endif
     .endif
 
     .ifndef FAMISTUDIO_EXP_MMC5
@@ -370,12 +417,20 @@ FAMISTUDIO_USE_DELTA_COUNTER = 0
 FAMISTUDIO_USE_PHASE_RESET = 0
     .endif
 
+    .ifndef FAMISTUDIO_USE_FDS_AUTOMOD
+FAMISTUDIO_USE_FDS_AUTOMOD = 0
+    .endif
+
     .ifndef FAMISTUDIO_USE_RELEASE_NOTES
 FAMISTUDIO_USE_RELEASE_NOTES = 0    
     .endif
     
     .ifndef FAMISTUDIO_USE_DPCM_EXTENDED_RANGE
 FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 0
+    .endif
+
+    .ifndef FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 0
     .endif
 
     .ifndef FAMISTUDIO_USE_DPCM_BANKSWITCHING
@@ -449,10 +504,14 @@ FAMISTUDIO_NUM_CHANNELS         = 11
 FAMISTUDIO_NUM_DUTY_CYCLES      = 3
     .endif
     .if FAMISTUDIO_EXP_EPSM
-FAMISTUDIO_EXP_EPSM_CHANNELS    = 15
-FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+(FAMISTUDIO_EXP_EPSM_CHANNELS*2)+2+2+2
-FAMISTUDIO_NUM_PITCH_ENVELOPES  = 18
-FAMISTUDIO_NUM_CHANNELS         = 20
+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT  = FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE
+FAMISTUDIO_EXP_EPSM_ENV_CNT     = FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT + FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+FAMISTUDIO_EXP_EPSM_CHANNELS    = FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT + FAMISTUDIO_EXP_EPSM_FM_CHN_CNT + FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
+FAMISTUDIO_EXP_EPSM_TRIG_CHN    = FAMISTUDIO_EXP_EPSM_FM_CHN_CNT + FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
+
+FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+(FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT * 4) + (FAMISTUDIO_EXP_EPSM_FM_CHN_CNT * 2)
+FAMISTUDIO_NUM_PITCH_ENVELOPES  = 3 + FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT + FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+FAMISTUDIO_NUM_CHANNELS         = 5 + FAMISTUDIO_EXP_EPSM_CHANNELS
 FAMISTUDIO_NUM_DUTY_CYCLES      = 3
     .endif
     .if FAMISTUDIO_EXP_FDS
@@ -540,12 +599,6 @@ FAMISTUDIO_EPSM_CH5_PITCH_ENV_IDX = 8
 FAMISTUDIO_EPSM_CH6_PITCH_ENV_IDX = 9
 FAMISTUDIO_EPSM_CH7_PITCH_ENV_IDX = 10
 FAMISTUDIO_EPSM_CH8_PITCH_ENV_IDX = 11
-FAMISTUDIO_EPSM_CH9_PITCH_ENV_IDX = 12
-FAMISTUDIO_EPSM_CH10_PITCH_ENV_IDX = 13
-FAMISTUDIO_EPSM_CH11_PITCH_ENV_IDX = 14
-FAMISTUDIO_EPSM_CH12_PITCH_ENV_IDX = 15
-FAMISTUDIO_EPSM_CH13_PITCH_ENV_IDX = 16
-FAMISTUDIO_EPSM_CH14_PITCH_ENV_IDX = 17
     .endif
 
 ; TODO: Investigate reshuffling the envelopes to keep them contiguously 
@@ -593,21 +646,30 @@ FAMISTUDIO_S5B_CH1_ENVS = 15
 FAMISTUDIO_S5B_CH2_ENVS = 19
     .endif
     .if FAMISTUDIO_EXP_EPSM
-FAMISTUDIO_EPSM_CH0_ENVS = 11
-FAMISTUDIO_EPSM_CH1_ENVS = 15
-FAMISTUDIO_EPSM_CH2_ENVS = 19
-FAMISTUDIO_EPSM_CH3_ENVS = 23
-FAMISTUDIO_EPSM_CH4_ENVS = 25
-FAMISTUDIO_EPSM_CH5_ENVS = 27
-FAMISTUDIO_EPSM_CH6_ENVS = 29
-FAMISTUDIO_EPSM_CH7_ENVS = 31
-FAMISTUDIO_EPSM_CH8_ENVS = 33
-FAMISTUDIO_EPSM_CH9_ENVS = 35
-FAMISTUDIO_EPSM_CH10_ENVS = 37
-FAMISTUDIO_EPSM_CH11_ENVS = 39
-FAMISTUDIO_EPSM_CH12_ENVS = 41
-FAMISTUDIO_EPSM_CH13_ENVS = 43
-FAMISTUDIO_EPSM_CH14_ENVS = 45
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
+EPSM_ENV_CH1_INCREMENT = 4
+    .else
+EPSM_ENV_CH1_INCREMENT = 2
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 1
+EPSM_ENV_CH2_INCREMENT = 4
+    .else
+EPSM_ENV_CH2_INCREMENT = 2
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 2
+EPSM_ENV_CH3_INCREMENT = 4
+    .else
+EPSM_ENV_CH3_INCREMENT = 2
+    .endif
+FAMISTUDIO_EPSM_CH0_ENVS =  11
+FAMISTUDIO_EPSM_CH1_ENVS =  FAMISTUDIO_EPSM_CH0_ENVS + EPSM_ENV_CH1_INCREMENT
+FAMISTUDIO_EPSM_CH2_ENVS =  FAMISTUDIO_EPSM_CH1_ENVS + EPSM_ENV_CH2_INCREMENT
+FAMISTUDIO_EPSM_CH3_ENVS =  FAMISTUDIO_EPSM_CH2_ENVS + EPSM_ENV_CH3_INCREMENT
+FAMISTUDIO_EPSM_CH4_ENVS =  FAMISTUDIO_EPSM_CH3_ENVS + 2
+FAMISTUDIO_EPSM_CH5_ENVS =  FAMISTUDIO_EPSM_CH4_ENVS + 2
+FAMISTUDIO_EPSM_CH6_ENVS =  FAMISTUDIO_EPSM_CH5_ENVS + 2
+FAMISTUDIO_EPSM_CH7_ENVS =  FAMISTUDIO_EPSM_CH6_ENVS + 2
+FAMISTUDIO_EPSM_CH8_ENVS =  FAMISTUDIO_EPSM_CH7_ENVS + 2
     .endif
 
 FAMISTUDIO_ENV_VOLUME_OFF        = 0
@@ -673,20 +735,20 @@ FAMISTUDIO_S5B_CH2_IDX  = 7
 FAMISTUDIO_EPSM_CH0_IDX = 5
 FAMISTUDIO_EPSM_CH1_IDX = 6
 FAMISTUDIO_EPSM_CH2_IDX = 7
-FAMISTUDIO_EPSM_CHAN_FM_START = 8
 FAMISTUDIO_EPSM_CH3_IDX = 8
 FAMISTUDIO_EPSM_CH4_IDX = 9
 FAMISTUDIO_EPSM_CH5_IDX = 10
 FAMISTUDIO_EPSM_CH6_IDX = 11
 FAMISTUDIO_EPSM_CH7_IDX = 12
 FAMISTUDIO_EPSM_CH8_IDX = 13
-FAMISTUDIO_EPSM_CHAN_RHYTHM_START = 14
 FAMISTUDIO_EPSM_CH9_IDX = 14
 FAMISTUDIO_EPSM_CH10_IDX = 15
 FAMISTUDIO_EPSM_CH11_IDX = 16
 FAMISTUDIO_EPSM_CH12_IDX = 17
 FAMISTUDIO_EPSM_CH13_IDX = 18
 FAMISTUDIO_EPSM_CH14_IDX = 19
+FAMISTUDIO_EPSM_CHAN_FM_START = FAMISTUDIO_EPSM_CH0_IDX + FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT
+FAMISTUDIO_EPSM_CHAN_RHYTHM_START = FAMISTUDIO_EPSM_CHAN_FM_START + FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
     .endif
 
 FAMISTUDIO_VRC7_PITCH_SHIFT = 3
@@ -735,7 +797,7 @@ FAMISTUDIO_SFX_CH3 = FAMISTUDIO_SFX_STRUCT_SIZE * 3
 FAMISTUDIO_FIRST_EXP_INST_CHANNEL = 5
 
     .if FAMISTUDIO_EXP_EPSM
-FAMISTUDIO_FIRST_POSITIVE_SLIDE_CHANNEL = 6
+FAMISTUDIO_FIRST_POSITIVE_SLIDE_CHANNEL = 3 + FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT
     .else
 FAMISTUDIO_FIRST_POSITIVE_SLIDE_CHANNEL = 3
     .endif
@@ -776,7 +838,6 @@ famistudio_slide_pitch_hi:        .rs FAMISTUDIO_NUM_SLIDES
 famistudio_chn_ptr_lo:            .rs FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_ptr_hi:            .rs FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_note:              .rs FAMISTUDIO_NUM_CHANNELS
-famistudio_chn_instrument:        .rs FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_repeat:            .rs FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_return_lo:         .rs FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_return_hi:         .rs FAMISTUDIO_NUM_CHANNELS
@@ -795,16 +856,13 @@ famistudio_chn_env_override:      .rs FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, b
 famistudio_chn_note_delay:        .rs FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_cut_delay:         .rs FAMISTUDIO_NUM_CHANNELS
     .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_FDS != 0) | (FAMISTUDIO_EXP_EPSM != 0)
-famistudio_chn_inst_changed:      .rs FAMISTUDIO_NUM_CHANNELS - FAMISTUDIO_FIRST_EXP_INST_CHANNEL
-    .endif
     .if FAMISTUDIO_CFG_EQUALIZER
 famistudio_chn_note_counter:      .rs FAMISTUDIO_NUM_CHANNELS
     .endif
     .if FAMISTUDIO_USE_PHASE_RESET
-famistudio_phase_reset:           .res 1 ; bit 0/1 = 2a03, bit 2/3/4 = vrc6, 5/6 = mmc5, bit 7 = fds
+famistudio_phase_reset:           .rs 1 ; bit 0/1 = 2a03, bit 2/3/4 = vrc6, 5/6 = mmc5, bit 7 = fds
     .if FAMISTUDIO_EXP_N163
-famistudio_phase_reset_n163:      .res 1 ; bit 0...7 = n163
+famistudio_phase_reset_n163:      .rs 1 ; bit 0...7 = n163
     .endif
     .endif
     .if FAMISTUDIO_USE_DELTA_COUNTER
@@ -812,6 +870,15 @@ famistudio_dmc_delta_counter:     .rs 1
     .endif
     .if FAMISTUDIO_EXP_VRC6
 famistudio_vrc6_saw_volume:       .rs 1 ; -1 = 1/4, 0 = 1/2, 1 = Full
+    .if FAMISTUDIO_USE_PHASE_RESET
+famistudio_vrc6_pulse1_prev_hi:   .rs 1
+famistudio_vrc6_pulse2_prev_hi:   .rs 1
+famistudio_vrc6_saw_prev_hi:      .rs 1
+    .else
+famistudio_vrc6_pulse1_prev_hi = famistudio_vrc6_saw_volume
+famistudio_vrc6_pulse2_prev_hi = famistudio_vrc6_saw_volume
+famistudio_vrc6_saw_prev_hi    = famistudio_vrc6_saw_volume
+    .endif
     .endif
     .if FAMISTUDIO_EXP_VRC7
 famistudio_chn_vrc7_prev_hi:      .rs 6
@@ -819,19 +886,41 @@ famistudio_chn_vrc7_patch:        .rs 6
 famistudio_chn_vrc7_trigger:      .rs 6 ; bit 0 = new note triggered, bit 7 = note released.
     .endif
     .if FAMISTUDIO_EXP_EPSM
-famistudio_chn_epsm_trigger:      .rs 6 ; bit 0 = new note triggered, bit 7 = note released.
-famistudio_chn_epsm_rhythm_key:   .rs 6
-famistudio_chn_epsm_rhythm_stereo: .rs 6
-famistudio_chn_epsm_fm_stereo:    .rs 6
-famistudio_chn_epsm_alg:          .rs 6
-famistudio_chn_epsm_vol_op1:      .rs 6
-famistudio_chn_epsm_vol_op2:      .rs 6
-famistudio_chn_epsm_vol_op3:      .rs 6
-famistudio_chn_epsm_vol_op4:      .rs 6
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
+famistudio_chn_epsm_rhythm_volume: .rs FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
+famistudio_chn_epsm_rhythm_stereo: .rs FAMISTUDIO_EXP_EPSM_RHYTHM_CNT
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
+famistudio_chn_epsm_trigger:       .rs FAMISTUDIO_EXP_EPSM_FM_CHN_CNT + FAMISTUDIO_EXP_EPSM_RHYTHM_CNT ; bit 0 = new note triggered, bit 7 = note released.
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
+famistudio_chn_epsm_fm_stereo:     .rs FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+famistudio_chn_epsm_fm_instrument: .rs FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+famistudio_chn_epsm_alg:           .rs FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+famistudio_chn_epsm_vol_op1:       .rs FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+famistudio_chn_epsm_vol_op2:       .rs FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+famistudio_chn_epsm_vol_op3:       .rs FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+famistudio_chn_epsm_vol_op4:       .rs FAMISTUDIO_EXP_EPSM_FM_CHN_CNT
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
+famistudio_epsm_env_period_lo:     .rs 1
+famistudio_epsm_env_period_hi:     .rs 1
+famistudio_epsm_env_override:      .rs 1
+famistudio_epsm_chn_env_shape:     .rs FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT ; bit 7 = note attack.
+famistudio_epsm_chn_env_octave:    .rs FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT
+    .endif
     .endif
     .if FAMISTUDIO_EXP_N163
+famistudio_chn_n163_instrument:   .rs FAMISTUDIO_EXP_N163_CHN_CNT
 famistudio_chn_n163_wave_index:   .rs FAMISTUDIO_EXP_N163_CHN_CNT
 famistudio_chn_n163_wave_len:     .rs FAMISTUDIO_EXP_N163_CHN_CNT
+    .endif
+    .if FAMISTUDIO_EXP_S5B
+famistudio_s5b_env_period_lo:     .rs 1
+famistudio_s5b_env_period_hi:     .rs 1
+famistudio_s5b_env_override:      .rs 1 ; if non zero, it means we had an env period effect this frame.
+famistudio_s5b_chn_env_shape:     .rs 3 ; bit 7 = note attack.
+famistudio_s5b_chn_env_octave:    .rs 3
     .endif
     .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
 famistudio_duty_cycle:            .rs FAMISTUDIO_NUM_DUTY_CYCLES
@@ -864,18 +953,26 @@ famistudio_dpcm_list_hi:          .rs 1 ; TODO: Not needed if DPCM support is di
 famistudio_dpcm_effect:           .rs 1 ; TODO: Not needed if DPCM support is disabled.
 famistudio_pulse1_prev:           .rs 1
 famistudio_pulse2_prev:           .rs 1
-famistudio_song_speed             = famistudio_chn_instrument+4
+famistudio_song_speed             .rs 1
 
     .if FAMISTUDIO_EXP_MMC5
 famistudio_mmc5_pulse1_prev:      .rs 1
 famistudio_mmc5_pulse2_prev:      .rs 1
-.endif
+    .endif
 
     .if FAMISTUDIO_EXP_FDS
 famistudio_fds_mod_speed:         .rs 2
 famistudio_fds_mod_depth:         .rs 1
 famistudio_fds_mod_delay:         .rs 1
+famistudio_fds_mod_delay_counter: .rs 1
 famistudio_fds_override_flags:    .rs 1 ; Bit 7 = mod speed overriden, bit 6 mod depth overriden
+    .if FAMISTUDIO_USE_FDS_AUTOMOD
+famistudio_fds_automod_numer:     .rs 1 ; 0 = auto-mod off.
+famistudio_fds_automod_denom:     .rs 1
+    .endif
+    .if FAMISTUDIO_USE_PHASE_RESET
+famistudio_fds_prev_hi:           .rs 1
+    .endif
     .endif
 
     .if FAMISTUDIO_EXP_VRC7
@@ -921,9 +1018,13 @@ famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 famistudio_r0:   .rs 1
 famistudio_r1:   .rs 1
 famistudio_r2:   .rs 1
+famistudio_r3:   .rs 1
 
 famistudio_ptr0: .rs 2
 famistudio_ptr1: .rs 2
+    .if (FAMISTUDIO_EXP_EPSM != 0) | (FAMISTUDIO_EXP_FDS != 0) | (FAMISTUDIO_EXP_S5B != 0)
+famistudio_ptr2: .rs 2
+    .endif
 
 famistudio_ptr0_lo = famistudio_ptr0+0
 famistudio_ptr0_hi = famistudio_ptr0+1
@@ -965,7 +1066,6 @@ FAMISTUDIO_APU_DMC_LEN    = $4013
 FAMISTUDIO_APU_SND_CHN    = $4015
 FAMISTUDIO_APU_FRAME_CNT  = $4017
 
-    .if FAMISTUDIO_EXP_VRC6
 FAMISTUDIO_VRC6_PL1_VOL   = $9000
 FAMISTUDIO_VRC6_PL1_LO    = $9001
 FAMISTUDIO_VRC6_PL1_HI    = $9002
@@ -975,9 +1075,7 @@ FAMISTUDIO_VRC6_PL2_HI    = $a002
 FAMISTUDIO_VRC6_SAW_VOL   = $b000
 FAMISTUDIO_VRC6_SAW_LO    = $b001
 FAMISTUDIO_VRC6_SAW_HI    = $b002
-    .endif
 
-    .if FAMISTUDIO_EXP_VRC7
 FAMISTUDIO_VRC7_SILENCE   = $e000
 FAMISTUDIO_VRC7_REG_SEL   = $9010
 FAMISTUDIO_VRC7_REG_WRITE = $9030
@@ -999,9 +1097,7 @@ FAMISTUDIO_VRC7_REG_VOL_3 = $32
 FAMISTUDIO_VRC7_REG_VOL_4 = $33
 FAMISTUDIO_VRC7_REG_VOL_5 = $34
 FAMISTUDIO_VRC7_REG_VOL_6 = $35 
-    .endif
 
-    .if FAMISTUDIO_EXP_EPSM
 FAMISTUDIO_EPSM_REG_SEL0   = $401c
 FAMISTUDIO_EPSM_REG_WRITE0 = $401d
 FAMISTUDIO_EPSM_REG_SEL1   = $401e
@@ -1066,22 +1162,19 @@ FAMISTUDIO_EPSM_REG_ENV_HI = $0c
 FAMISTUDIO_EPSM_REG_SHAPE  = $0d
 FAMISTUDIO_EPSM_REG_IO_A   = $0e
 FAMISTUDIO_EPSM_REG_IO_B   = $0f
-    .endif
 
-    .if FAMISTUDIO_EXP_MMC5
-FAMISTUDIO_MMC5_PL1_VOL   = $5000
-FAMISTUDIO_MMC5_PL1_SWEEP = $5001
-FAMISTUDIO_MMC5_PL1_LO    = $5002
-FAMISTUDIO_MMC5_PL1_HI    = $5003
-FAMISTUDIO_MMC5_PL2_VOL   = $5004
-FAMISTUDIO_MMC5_PL2_SWEEP = $5005
-FAMISTUDIO_MMC5_PL2_LO    = $5006
-FAMISTUDIO_MMC5_PL2_HI    = $5007
-FAMISTUDIO_MMC5_PCM_MODE  = $5010
-FAMISTUDIO_MMC5_SND_CHN   = $5015
-    .endif
+FAMISTUDIO_MMC5_PL1_VOL    = $5000
+FAMISTUDIO_MMC5_PL1_SWEEP  = $5001
+FAMISTUDIO_MMC5_PL1_LO     = $5002
+FAMISTUDIO_MMC5_PL1_HI     = $5003
+FAMISTUDIO_MMC5_PL2_VOL    = $5004
+FAMISTUDIO_MMC5_PL2_SWEEP  = $5005
+FAMISTUDIO_MMC5_PL2_LO     = $5006
+FAMISTUDIO_MMC5_PL2_HI     = $5007
+FAMISTUDIO_MMC5_PCM_MODE   = $5010
+FAMISTUDIO_MMC5_SND_CHN    = $5015
+FAMISTUDIO_MMC5_EXRAM_MODE = $5104
 
-    .if FAMISTUDIO_EXP_N163
 FAMISTUDIO_N163_SILENCE       = $e000
 FAMISTUDIO_N163_ADDR          = $f800
 FAMISTUDIO_N163_DATA          = $4800 
@@ -1093,9 +1186,7 @@ FAMISTUDIO_N163_REG_FREQ_HI   = $7c
 FAMISTUDIO_N163_REG_PHASE_HI  = $7d
 FAMISTUDIO_N163_REG_WAVE      = $7e
 FAMISTUDIO_N163_REG_VOLUME    = $7f
-    .endif
 
-    .if FAMISTUDIO_EXP_S5B
 FAMISTUDIO_S5B_ADDR       = $c000
 FAMISTUDIO_S5B_DATA       = $e000
 FAMISTUDIO_S5B_REG_LO_A   = $00
@@ -1114,9 +1205,7 @@ FAMISTUDIO_S5B_REG_ENV_HI = $0c
 FAMISTUDIO_S5B_REG_SHAPE  = $0d
 FAMISTUDIO_S5B_REG_IO_A   = $0e
 FAMISTUDIO_S5B_REG_IO_B   = $0f
-    .endif
 
-    .if FAMISTUDIO_EXP_FDS
 FAMISTUDIO_FDS_WAV_START  = $4040
 FAMISTUDIO_FDS_VOL_ENV    = $4080
 FAMISTUDIO_FDS_FREQ_LO    = $4082
@@ -1128,7 +1217,6 @@ FAMISTUDIO_FDS_MOD_HI     = $4087
 FAMISTUDIO_FDS_MOD_TABLE  = $4088
 FAMISTUDIO_FDS_VOL        = $4089
 FAMISTUDIO_FDS_ENV_SPEED  = $408A
-    .endif
 
     .if !FAMISTUDIO_CFG_SFX_SUPPORT
 ; Output directly to APU
@@ -1305,7 +1393,6 @@ famistudio_music_stop:
 .set_channels:
 
     sta famistudio_chn_repeat,x
-    sta famistudio_chn_instrument,x
     sta famistudio_chn_note,x
     sta famistudio_chn_ref_len,x
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -1472,7 +1559,6 @@ famistudio_music_play:
 
     lda #0
     sta famistudio_chn_repeat,x
-    sta famistudio_chn_instrument,x
     sta famistudio_chn_note,x
     sta famistudio_chn_ref_len,x
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -1554,17 +1640,36 @@ famistudio_music_play:
     .endif
 
     .if FAMISTUDIO_EXP_EPSM
+    .if FAMISTUDIO_EXP_EPSM_TRIG_CHN > 0
     lda #0
-    ldx #5
+    ldx #FAMISTUDIO_EXP_EPSM_FM_CHN_CNT + FAMISTUDIO_EXP_EPSM_RHYTHM_CNT - 1
     .clear_epsm_loop:
         sta famistudio_chn_epsm_trigger,x
         dex
         bpl .clear_epsm_loop 
     .endif
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
+    lda #0
+    sta famistudio_epsm_env_period_lo
+    sta famistudio_epsm_env_period_hi
+    sta famistudio_epsm_env_override
+    ldx #(FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT - 1)
+    .clear_epsm_sq_loop:
+        sta famistudio_epsm_chn_env_shape, x
+        sta famistudio_epsm_chn_env_octave, x
+        dex
+        bpl .clear_epsm_sq_loop
+    .endif
+    .endif
 
     .if FAMISTUDIO_EXP_VRC6
     lda #0
     sta famistudio_vrc6_saw_volume
+    .if FAMISTUDIO_USE_PHASE_RESET
+        sta famistudio_vrc6_pulse1_prev_hi
+        sta famistudio_vrc6_pulse2_prev_hi
+        sta famistudio_vrc6_saw_prev_hi
+    .endif
     .endif
 
     .if FAMISTUDIO_USE_PHASE_RESET
@@ -1586,16 +1691,15 @@ famistudio_music_play:
     sta famistudio_fds_mod_speed+1
     sta famistudio_fds_mod_depth
     sta famistudio_fds_mod_delay
+    sta famistudio_fds_mod_delay_counter
     sta famistudio_fds_override_flags
+    .if FAMISTUDIO_USE_FDS_AUTOMOD    
+        sta famistudio_fds_automod_numer
+        sta famistudio_fds_automod_denom
     .endif
-
-    .if (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_FDS != 0) | (FAMISTUDIO_EXP_EPSM != 0)
-    lda #0
-    ldx #(FAMISTUDIO_NUM_CHANNELS - FAMISTUDIO_FIRST_EXP_INST_CHANNEL - 1)
-    .clear_inst_changed_loop:
-        sta famistudio_chn_inst_changed, x
-        dex
-        bpl .clear_inst_changed_loop 
+    .if FAMISTUDIO_USE_PHASE_RESET
+        sta famistudio_fds_prev_hi
+    .endif
     .endif
 
     .if FAMISTUDIO_EXP_N163
@@ -1606,6 +1710,19 @@ famistudio_music_play:
         sta famistudio_chn_n163_wave_len, x
         dex
         bpl .clear_n163_loop 
+    .endif
+
+    .if FAMISTUDIO_EXP_S5B
+    lda #0
+    sta famistudio_s5b_env_period_lo
+    sta famistudio_s5b_env_period_hi
+    sta famistudio_s5b_env_override
+    sta famistudio_s5b_chn_env_shape+0
+    sta famistudio_s5b_chn_env_shape+1
+    sta famistudio_s5b_chn_env_shape+2
+    sta famistudio_s5b_chn_env_octave+0
+    sta famistudio_s5b_chn_env_octave+1
+    sta famistudio_s5b_chn_env_octave+2
     .endif
 
 .skip:
@@ -1670,21 +1787,33 @@ famistudio_music_pause:
     sta famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .endif
     .if FAMISTUDIO_EXP_EPSM
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 0
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 1
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 2
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 3
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH3_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 4
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH4_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 5
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 6
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH6_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 7
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH7_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 8
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH8_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_EPSM_CH9_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_EPSM_CH10_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_EPSM_CH11_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_EPSM_CH12_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_EPSM_CH13_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_EPSM_CH14_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
     .endif
     lda famistudio_song_speed ; <= 0 pauses the music
     ora #$80
@@ -1880,7 +2009,7 @@ pulse_lo_is_zp\@ = \6
 ; [in] no input params.
 ;======================================================================================================================
 
-famistudio_update_channel_sound .macro ; idx, env_offset, pulse_prev, reg_hi, reg_lo, reg_vol, reg_sweep, phase_reset_mask
+famistudio_update_channel_sound .macro ; idx, env_offset, pulse_prev, reg_hi, reg_lo, reg_vol, reg_sweep
 
 idx\@ = \1
 env_offset\@ = \2
@@ -1889,17 +2018,12 @@ reg_hi\@ = \4
 reg_lo\@ = \5
 reg_vol\@ = \6
 reg_sweep\@ = \7
-phase_reset_mask\@ = \8
 
 .tmp\@   = famistudio_r0
 .pitch\@ = famistudio_ptr1
 
     lda famistudio_chn_note+idx\@
     bne .nocut\@
-    .if (idx\@ >= FAMISTUDIO_VRC6_CH0_IDX) & (idx\@ <= FAMISTUDIO_VRC6_CH2_IDX) & (FAMISTUDIO_USE_PHASE_RESET != 0) & (phase_reset_mask\@ != 0)
-    lda #0
-    sta <.pitch\@+1
-    .endif
     jmp .set_volume\@
 
 .nocut\@:
@@ -1973,19 +2097,21 @@ phase_reset_mask\@ = \8
     sta reg_lo\@
     lda <.pitch\@+1
 
-    .if (pulse_prev\@ != 0) & ((FAMISTUDIO_CFG_SFX_SUPPORT = 0) | (reg_sweep\@ = 0))
-        .if (reg_sweep\@ != 0) & (FAMISTUDIO_CFG_SMOOTH_VIBRATO != 0)
-            famistudio_smooth_vibrato .pitch\@, pulse_prev\@, reg_hi\@, reg_lo\@, reg_sweep\@, 1
-        .else
-            cmp pulse_prev\@
-            beq .compute_volume\@
-            sta pulse_prev\@
-        .endif
-    .endif
-
-    ; HACK : VRC6 only. We are out of macro param for NESASM.
     .if (idx\@ >= FAMISTUDIO_VRC6_CH0_IDX) & (idx\@ <= FAMISTUDIO_VRC6_CH2_IDX)
+        .if FAMISTUDIO_USE_PHASE_RESET
+            sta pulse_prev\@
+        .endif    
         ora #$80
+    .else
+        .if (pulse_prev\@ != 0) & ((FAMISTUDIO_CFG_SFX_SUPPORT = 0) | (reg_sweep\@ = 0))
+            .if (reg_sweep\@ != 0) & (FAMISTUDIO_CFG_SMOOTH_VIBRATO != 0)
+                famistudio_smooth_vibrato .pitch\@, pulse_prev\@, reg_hi\@, reg_lo\@, reg_sweep\@, 1
+            .else
+                cmp pulse_prev\@
+                beq .compute_volume\@
+                sta pulse_prev\@
+            .endif
+        .endif
     .endif
 
     .endif ; idx = 3
@@ -2042,27 +2168,81 @@ phase_reset_mask\@ = \8
 
     sta reg_vol\@
 
-    .if (FAMISTUDIO_USE_PHASE_RESET != 0) & (phase_reset_mask\@ != 0)
-    lda famistudio_phase_reset
-    and phase_reset_mask
-    beq .phase_reset_done
-    .if idx\@ < 2 | ((FAMISTUDIO_EXP_MMC5 != 0) & (idx\@ >= FAMISTUDIO_MMC5_CH0_IDX) & (idx\@ <= FAMISTUDIO_MMC5_CH1_IDX))
-        lda pulse_prev
-        sta reg_hi
-    .else
-    .if (FAMISTUDIO_EXP_VRC6 != 0) & (idx >= FAMISTUDIO_VRC6_CH0_IDX) & (idx <= FAMISTUDIO_VRC6_CH2_IDX)
-        lda <.pitch\@+1
-        sta reg_hi
-        ora #$80
-        sta reg_hi
-    .endif
-    .endif    
-    .phase_reset_done:
-   .endif
-
     .endm
 
     .if FAMISTUDIO_EXP_FDS
+
+    .if FAMISTUDIO_USE_FDS_AUTOMOD
+
+;======================================================================================================================
+; FAMISTUDIO_MUL (internal)
+;
+; From : https://codebase64.org/doku.php?id=base:8bit_multiplication_16bit_product
+; Using the 16x8 version. May overflow if using too large numbers.
+;
+; [in]  ptr0 : 16-bit number
+; [in]  r1   : 8-bit number
+; [out] x+a  : Result lo-byte
+; [out] y    : Result hi-byte
+;======================================================================================================================
+
+famistudio_mul:
+
+.num1 = famistudio_ptr1
+.num2 = famistudio_r1
+
+    lda #$00
+    tay
+    beq .enter_loop
+.do_add:
+    clc
+    adc <.num1+0
+    tax
+    tya
+    adc <.num1+1
+    tay
+    txa
+.loop:
+    asl <.num1+0
+    rol <.num1+1
+.enter_loop:
+    lsr <.num2
+    bcs .do_add
+    bne .loop
+    rts
+
+;======================================================================================================================
+; FAMISTUDIO_DIV (internal)
+;
+; From : https://forums.nesdev.org/viewtopic.php?p=895&sid=5c263dea8d9e3cf15cd1093856f211a9#p895 (tepples)
+;
+; [in]  ptr0 : 16-bit number
+; [in]  r1   : 8-bit divisor
+; [out] ptr0 : Result
+; [out] a    : Remainder
+;======================================================================================================================
+
+famistudio_div:
+
+.dividend = famistudio_ptr1
+.divisor  = famistudio_r1
+
+    ldx #16
+    lda #0
+.divloop:
+    asl <.dividend
+    rol <.dividend+1
+    rol a
+    cmp <.divisor
+    bcc .no_sub
+    sbc <.divisor
+    inc <.dividend
+.no_sub:
+    dex
+    bne .divloop
+    rts
+
+    .endif
 
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_FDS_CHANNEL_SOUND (internal)
@@ -2075,13 +2255,11 @@ phase_reset_mask\@ = \8
 famistudio_update_fds_channel_sound:
 
 .pitch = famistudio_ptr1
+.mul   = famistudio_r1
+.div   = famistudio_r1
 
     lda famistudio_chn_note+FAMISTUDIO_FDS_CH0_IDX
     bne .nocut
-   .if FAMISTUDIO_USE_PHASE_RESET
-    lda #0
-    sta <.pitch+1
-    .endif    
     jmp .set_volume
 
 .nocut:
@@ -2096,23 +2274,62 @@ famistudio_update_fds_channel_sound:
     sta FAMISTUDIO_FDS_FREQ_LO
     lda <.pitch+1
     sta FAMISTUDIO_FDS_FREQ_HI
+    .if FAMISTUDIO_USE_PHASE_RESET
+        sta famistudio_fds_prev_hi
+    .endif
 
 .check_mod_delay:
-    lda famistudio_fds_mod_delay
+    lda famistudio_fds_mod_delay_counter
     beq .zero_delay
-    dec famistudio_fds_mod_delay
+    dec famistudio_fds_mod_delay_counter
     lda #$80
     sta FAMISTUDIO_FDS_MOD_HI
     bne .compute_volume
 
 .zero_delay:
-    lda famistudio_fds_mod_speed+1
-    sta FAMISTUDIO_FDS_MOD_HI
-    lda famistudio_fds_mod_speed+0
-    sta FAMISTUDIO_FDS_MOD_LO
+
     lda famistudio_fds_mod_depth
-    ora #$80
-    sta FAMISTUDIO_FDS_SWEEP_ENV
+    beq .mod_depth
+
+    .if FAMISTUDIO_USE_FDS_AUTOMOD
+        lda famistudio_fds_automod_numer
+        beq .manual_mod
+
+        .auto_mod_mul_div:
+            sta <.mul
+            jsr famistudio_mul
+            stx <.pitch+0
+            sty <.pitch+1
+            lda famistudio_fds_automod_denom
+            sta <.div
+            jsr famistudio_div
+            lda <.pitch+1
+            cmp #$10
+            bcc .write_auto_mod
+           .write_max:
+                lda #$0f
+                sta FAMISTUDIO_FDS_MOD_HI
+                lda #$ff
+                sta FAMISTUDIO_FDS_MOD_LO  
+                jmp .mod_depth
+
+            .write_auto_mod:
+                sta FAMISTUDIO_FDS_MOD_HI
+                lda <.pitch+0
+                sta FAMISTUDIO_FDS_MOD_LO  
+                jmp .mod_depth
+    .endif
+
+    .manual_mod:
+        lda famistudio_fds_mod_speed+1
+        sta FAMISTUDIO_FDS_MOD_HI
+        lda famistudio_fds_mod_speed+0
+        sta FAMISTUDIO_FDS_MOD_LO
+
+    .mod_depth:
+        lda famistudio_fds_mod_depth
+        ora #$80
+        sta FAMISTUDIO_FDS_SWEEP_ENV
 
 .compute_volume:
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -2134,19 +2351,6 @@ famistudio_update_fds_channel_sound:
     sta FAMISTUDIO_FDS_VOL_ENV
     lda #0
     sta famistudio_fds_override_flags
-
-    .if FAMISTUDIO_USE_PHASE_RESET
-.reset_phase:
-    lda famistudio_phase_reset ; Bit 7 is for FDS.
-    bpl .done
-    lda <.pitch+1
-    ora #$80
-    sta FAMISTUDIO_FDS_FREQ_HI
-    and #$0f
-    sta FAMISTUDIO_FDS_FREQ_HI
-    .endif
-.done:
-
     rts 
 
     .endif
@@ -2190,9 +2394,6 @@ famistudio_update_vrc7_channel_sound:
 
 .tmp   = famistudio_r0
 .pitch = famistudio_ptr1
-
-    lda #0
-    sta famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL+FAMISTUDIO_VRC7_CH0_IDX,y
 
 .check_cut:
     lda famistudio_chn_note+FAMISTUDIO_VRC7_CH0_IDX,y
@@ -2340,6 +2541,9 @@ famistudio_update_vrc7_channel_sound:
     .endif
 
     .if FAMISTUDIO_EXP_EPSM
+FM_ENV_OFFSET = FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT*4
+RHY_ENV_OFFSET = FM_ENV_OFFSET + FAMISTUDIO_EXP_EPSM_FM_CHN_CNT*2
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
 famistudio_epsm_vol_table_op1:
     .byte FAMISTUDIO_EPSM_REG_TL, FAMISTUDIO_EPSM_REG_TL+1, FAMISTUDIO_EPSM_REG_TL+2,FAMISTUDIO_EPSM_REG_TL, FAMISTUDIO_EPSM_REG_TL+1, FAMISTUDIO_EPSM_REG_TL+2
 famistudio_epsm_vol_table_op2:
@@ -2351,15 +2555,19 @@ famistudio_epsm_vol_table_op4:
 famistudio_epsm_fm_vol_table:
     .byte $7e, $65, $50, $3f, $32, $27, $1e, $17, $12, $0d, $09, $06, $04, $02, $01, $00
 famistudio_epsm_fm_stereo_reg_table:
-    .byte $b4,$b5,$b6,$b4,$b5,$b6
+    .byte $b4,$b5,$b6
+    .byte $b4,$b5,$b6
 famistudio_channel_epsm_chan_table:
-    .byte $00, $01, $02, $00, $01, $02
+    .byte $00, $01, $02
+    .byte $00, $01, $02
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
 famistudio_epsm_rhythm_key_table:
     .byte $01,$02,$04,$08,$10,$20
-famistudio_epsm_rhythm_env_table:
-    .byte FAMISTUDIO_EPSM_CH9_ENVS, FAMISTUDIO_EPSM_CH10_ENVS, FAMISTUDIO_EPSM_CH11_ENVS, FAMISTUDIO_EPSM_CH12_ENVS, FAMISTUDIO_EPSM_CH13_ENVS, FAMISTUDIO_EPSM_CH14_ENVS
 famistudio_epsm_rhythm_reg_table:
     .byte FAMISTUDIO_EPSM_REG_RHY_BD, FAMISTUDIO_EPSM_REG_RHY_SD, FAMISTUDIO_EPSM_REG_RHY_TC, FAMISTUDIO_EPSM_REG_RHY_HH, FAMISTUDIO_EPSM_REG_RHY_TOM, FAMISTUDIO_EPSM_REG_RHY_RIM
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
 famistudio_epsm_reg_table_lo:
     .byte FAMISTUDIO_EPSM_REG_FN_LO, FAMISTUDIO_EPSM_REG_FN_LO2, FAMISTUDIO_EPSM_REG_FN_LO3, FAMISTUDIO_EPSM_REG_FN_LO, FAMISTUDIO_EPSM_REG_FN_LO2, FAMISTUDIO_EPSM_REG_FN_LO3
 famistudio_epsm_reg_table_hi:
@@ -2367,11 +2575,18 @@ famistudio_epsm_reg_table_hi:
 famistudio_epsm_vol_table:
     .byte FAMISTUDIO_EPSM_REG_VOL_1, FAMISTUDIO_EPSM_REG_VOL_2, FAMISTUDIO_EPSM_REG_VOL_3, FAMISTUDIO_EPSM_REG_VOL_4, FAMISTUDIO_EPSM_REG_VOL_5, FAMISTUDIO_EPSM_REG_VOL_6
 famistudio_epsm_fm_env_table:
-    .byte FAMISTUDIO_EPSM_CH3_ENVS, FAMISTUDIO_EPSM_CH4_ENVS, FAMISTUDIO_EPSM_CH5_ENVS, FAMISTUDIO_EPSM_CH6_ENVS, FAMISTUDIO_EPSM_CH7_ENVS, FAMISTUDIO_EPSM_CH8_ENVS 
+    .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET
+    .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 2
+    .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 4
+    .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 6
+    .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 8
+    .byte FAMISTUDIO_EPSM_CH0_ENVS + FM_ENV_OFFSET + 10
 famistudio_epsm_register_order:
-    .byte $B0, $B4, $30, $40, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates
+    .byte $B0, $B4, $30, $50, $60, $70, $80, $90, $38, $58, $68, $78, $88, $98, $34, $54, $64, $74, $84, $94, $3c, $5c, $6c, $7c, $8c, $9c, $40, $48, $44, $4c, $22 ;40,48,44,4c replaced for not sending data there during instrument updates,
 famistudio_epsm_channel_key_table:
     .byte $f0, $f1, $f2, $f4, $f5, $f6
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
 famistudio_epsm_sqr_reg_table_lo:
     .byte FAMISTUDIO_EPSM_REG_LO_A, FAMISTUDIO_EPSM_REG_LO_B, FAMISTUDIO_EPSM_REG_LO_C
 famistudio_epsm_sqr_reg_table_hi:
@@ -2380,7 +2595,9 @@ famistudio_epsm_square_vol_table:
     .byte FAMISTUDIO_EPSM_REG_VOL_A, FAMISTUDIO_EPSM_REG_VOL_B, FAMISTUDIO_EPSM_REG_VOL_C
 famistudio_epsm_square_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS, FAMISTUDIO_EPSM_CH1_ENVS, FAMISTUDIO_EPSM_CH2_ENVS
-    
+famistudio_epsm_square_noise_mask:
+    .byte $08, $10, $20
+    .endif
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_SQUARE_CHANNEL_SOUND (internal)
 ;
@@ -2388,42 +2605,44 @@ famistudio_epsm_square_env_table:
 ;
 ; [in] y: EPSM channel idx (0,1,2)
 ;======================================================================================================================
-
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
 famistudio_update_epsm_square_channel_sound:
     
-.pitch = famistudio_ptr1
+.pitch   = famistudio_ptr1
+.env_bit = famistudio_ptr1_lo
 
+; These are shared by all 3 channels.
+.env_period = famistudio_ptr0
+.attack     = famistudio_ptr2
+.env_shape  = famistudio_r1
+.env_octave = famistudio_r2
+.noise_freq = famistudio_r3
+
+    ; First channel will clear these, last channel will write the registers.
+    cpy #0
+    bne .not_first_channel
+    sty <.env_shape
+    sty <.noise_freq
+    sty <.attack
+    lda #$80 ; This mean 'manual pitch'
+    sty <.env_octave
+
+.not_first_channel:
+    ldx #0 ; This will fetch volume 0.
+    stx <.env_bit
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CH0_IDX,y
     bne .nocut
-    ldx #0 ; This will fetch volume 0.
-    beq .update_volume_jmp
-    jmp .nocut
-.update_volume_jmp:
-	jmp .update_volume
+    jmp .update_volume
 
 .nocut:
-    
-    lda #$07
-    sta FAMISTUDIO_EPSM_ADDR
-    lda famistudio_env_value+FAMISTUDIO_EPSM_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    asl a
-    ora famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    asl a
-    ora famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    sta FAMISTUDIO_EPSM_DATA
-
-
-
+    ; Store noise if mixer has it enabled
     ldx famistudio_epsm_square_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-    beq .nonoise
-    lda #$06
-    sta FAMISTUDIO_EPSM_ADDR
-    ldx famistudio_epsm_square_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-    sta FAMISTUDIO_EPSM_DATA
+    lda famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    and famistudio_epsm_square_noise_mask,x
+    bne .nonoise
+    sta <.noise_freq
+
 .nonoise:
-
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CH0_IDX,y
     ; Read note, apply arpeggio 
     clc
@@ -2443,6 +2662,45 @@ famistudio_update_epsm_square_channel_sound:
     sta FAMISTUDIO_EPSM_ADDR
     lda <.pitch+1
     sta FAMISTUDIO_EPSM_DATA
+
+    ; Store env shape + period if active.
+    lda famistudio_epsm_chn_env_shape,y
+    and #$0f
+    beq .noenv
+    sta <.env_shape
+
+    ; If bit 7 of any channel is on, well reset the envelope.
+    lda famistudio_epsm_chn_env_shape,y
+    ora <.attack 
+    sta <.attack
+    lda famistudio_epsm_chn_env_shape,y
+    and #$0f
+    sta famistudio_epsm_chn_env_shape,y
+
+    ; Store auto-period settings
+    lda famistudio_epsm_chn_env_octave,y
+    sta <.env_octave
+    cmp #$80 ; This mean 'manual pitch'
+    beq .manual_period
+
+    .auto_period:
+        lda <.pitch+0
+        sta <.env_period+0
+        lda <.pitch+1
+        sta <.env_period+1
+        jmp .set_envelope_volume_flag
+
+    .manual_period:
+        lda famistudio_epsm_env_period_lo
+        sta <.env_period+0
+        lda famistudio_epsm_env_period_hi
+        sta <.env_period+1
+
+.set_envelope_volume_flag:
+    lda #$10
+
+.noenv:
+    sta <.env_bit
 
     ; Read/multiply volume
     ldx famistudio_epsm_square_env_table,y
@@ -2464,30 +2722,125 @@ famistudio_update_epsm_square_channel_sound:
     sta FAMISTUDIO_EPSM_ADDR
     .if FAMISTUDIO_USE_VOLUME_TRACK    
         lda famistudio_volume_table,x 
-        sta FAMISTUDIO_EPSM_DATA
+        ora <.env_bit
     .else
-        stx FAMISTUDIO_EPSM_DATA
+        txa
+        ora <.env_bit
     .endif
+    sta FAMISTUDIO_EPSM_DATA
+
+.write_shared_registers:
+    ; Channel 2 writes all 5 shared registers.
+    cpy #(FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT - 1)
+    bne .done
+    lda <.env_shape
+    beq .write_shared_noise
+    ldx <.env_octave
+    cpx #$80
+    beq .write_shared_env_register
+
+.compute_auto_period:
+    cpx #0
+    beq .write_shared_env_register
+    bpl .positive_octave_loop
+    
+    .negative_octave_loop:
+            asl <.env_period+0
+            rol <.env_period+1
+            inx
+            bne .negative_octave_loop
+        beq .write_shared_env_register
+        
+    .positive_octave_loop:
+        cpx #1
+        bne .do_shift
+        .rounding:
+            lda <.env_period+0
+            and #1
+            beq .do_shift
+            lda <.env_period+0
+            clc
+            adc #1
+            sta <.env_period+0
+            bcc .do_shift
+            inc <.env_period+1
+        .do_shift:
+            lsr <.env_period+1
+            ror <.env_period+0
+            dex
+            bne .positive_octave_loop
+
+.write_shared_env_register:    
+
+    ; Envelope period.
+    lda #FAMISTUDIO_EPSM_REG_ENV_LO
+    sta FAMISTUDIO_EPSM_ADDR
+    lda <.env_period+0
+    sta FAMISTUDIO_EPSM_DATA
+    lda #FAMISTUDIO_EPSM_REG_ENV_HI
+    sta FAMISTUDIO_EPSM_ADDR
+    lda <.env_period+1
+    sta FAMISTUDIO_EPSM_DATA
+
+    ; Reset envelope if there was an attack.
+    lda <.attack
+    bpl .write_shared_noise
+        lda #FAMISTUDIO_EPSM_REG_SHAPE
+        sta FAMISTUDIO_EPSM_ADDR
+        lda <.env_shape
+        sta FAMISTUDIO_EPSM_DATA
+
+.write_shared_noise:
+
+    ; Tone/noise enabled.
+    lda #FAMISTUDIO_EPSM_REG_TONE
+    sta FAMISTUDIO_EPSM_ADDR
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT = 3
+    lda famistudio_env_value+FAMISTUDIO_EPSM_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    asl a
+    ora famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    asl a
+    ora famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT = 2
+    lda famistudio_env_value+FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    asl a
+    ora famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT = 1
+    lda famistudio_env_value+FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    .endif
+    sta FAMISTUDIO_EPSM_DATA
+    
+    ; Noise freq
+    lda #FAMISTUDIO_EPSM_REG_NOISE
+    sta FAMISTUDIO_EPSM_ADDR
+    lda <.noise_freq
+    sta FAMISTUDIO_EPSM_DATA
+
+    lda #0
+    sta famistudio_epsm_env_override
+
+.done:
     rts
 
-
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
 ;======================================================================================================================
-; FAMISTUDIO_UPDATE_EPSM_CHANNEL_SOUND (internal)
+; FAMISTUDIO_UPDATE_EPSM_FM_CHANNEL_SOUND (internal)
 ;
 ; Updates the EPSM audio registers for a given channel.
 ;
 ; [in] y: EPSM channel idx (0,1,2,3,4,5)
 ;======================================================================================================================
-
 famistudio_update_epsm_fm_channel_sound:
 
 .pitch      = famistudio_ptr1
 .reg_offset = famistudio_r1
 .vol_offset = famistudio_r0
+.chan_idx   = famistudio_r2
 
-    lda #0
-    sta famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL+FAMISTUDIO_EPSM_CHAN_FM_START,y
-
+    sty <.chan_idx
     ; If the writes are done to channels 0-2, use FAMISTUDIO_EPSM_REG_SEL0 if 3-5 use FAMISTUDIO_EPSM_REG_SEL1
     ; This reg_offset stores the difference so we can later load it into x and do sta FAMISTUDIO_EPSM_REG_SEL0, x
     ; to account for the difference
@@ -2522,6 +2875,35 @@ famistudio_update_epsm_fm_channel_sound:
 
 .nocut:
 
+    ; Check if the channel needs to stop the note
+
+    ; Un-trigger previous note if needed.
+    lda famistudio_chn_epsm_trigger,y
+    beq .update_instrument_check
+    .untrigger_prev_note:
+        ; Untrigger note.  
+        lda #FAMISTUDIO_EPSM_REG_KEY
+        sta FAMISTUDIO_EPSM_REG_SEL0
+
+        lda famistudio_epsm_channel_key_table, y
+        and #$0f ; remove trigger
+        sta FAMISTUDIO_EPSM_REG_WRITE0
+;        nop
+;        nop
+;        nop
+        nop
+        nop
+        nop
+;        rts
+    .update_instrument_check:
+    lda famistudio_chn_epsm_fm_instrument,y
+    cmp #$ff
+    beq .no_instrument_update
+    jsr update_fm_instrument
+    ldy <.chan_idx
+    lda #$ff
+    sta famistudio_chn_epsm_fm_instrument,y
+    .no_instrument_update:
     ldx <.reg_offset
     lda famistudio_epsm_fm_stereo_reg_table,y
     sta FAMISTUDIO_EPSM_REG_SEL0,x
@@ -2535,7 +2917,7 @@ famistudio_update_epsm_fm_channel_sound:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    famistudio_get_note_pitch_macro FAMISTUDIO_EPSM_CH3_PITCH_ENV_IDX, FAMISTUDIO_EPSM_PITCH_SHIFT, famistudio_epsm_note_table_lsb, famistudio_epsm_note_table_msb
+    famistudio_get_note_pitch_macro (FAMISTUDIO_EPSM_CH0_PITCH_ENV_IDX + FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT), FAMISTUDIO_EPSM_PITCH_SHIFT, famistudio_epsm_note_table_lsb, famistudio_epsm_note_table_msb
 
     ; Compute octave by dividing by 2 until we are <= 512 (0x100).
     ldx #0
@@ -2555,12 +2937,10 @@ famistudio_update_epsm_fm_channel_sound:
 
     ; 9 bit pitch * 4 to get the pitch back to an 11 bit number
     ; the final 16 bit pitch will look like 00ooohhh llllllll where o = octave, h = pitch bits 8-11, l = pitch bits 0-8
-    lda <.pitch+0
-    asl a
+    asl <.pitch+0
     rol <.pitch+1
-    asl a
+    asl <.pitch+0
     rol <.pitch+1
-    sta <.pitch+0
 
     txa ; x holds the 3 bit octave information. octave = log2(pitch_hi)
     asl a
@@ -2568,27 +2948,6 @@ famistudio_update_epsm_fm_channel_sound:
     asl a
     ora <.pitch+1
     sta <.pitch+1
-    
-    ; Check if the channel needs to stop the note
-
-    ; Un-trigger previous note if needed.
-    lda famistudio_chn_epsm_trigger,y
-    beq .write_hi_period
-    .untrigger_prev_note:
-        ; Untrigger note.  
-        lda #FAMISTUDIO_EPSM_REG_KEY
-        sta FAMISTUDIO_EPSM_REG_SEL0
-
-        lda famistudio_epsm_channel_key_table, y
-        and #$0f ; remove trigger
-        sta FAMISTUDIO_EPSM_REG_WRITE0
-        nop
-        nop
-        nop
-        nop
-        nop
-        nop
-;        rts
 
     .write_hi_period:
 
@@ -2626,75 +2985,60 @@ famistudio_update_epsm_fm_channel_sound:
         sta <.vol_offset
 
     .update_volume:
+    ldx <.vol_offset
+    lda famistudio_epsm_fm_vol_table,x
+    sta <.vol_offset ; store volume level here
     
+    ldx <.reg_offset    
     lda famistudio_chn_epsm_alg,y
-    cmp #7
-    bpl .op_1_2_3_4
-    cmp #5
-    bpl .op_2_3_4
     cmp #4
-    bpl .op_2_4
-    jmp .op_4
-    
-    ; todo
+    bcc .op_4 ; 0-1-2-3
+    beq .op_2_4 ; 4
+    cmp #7 ; 5
+    bcc .op_2_3_4 ; 6
+	           ; 7
     .op_1_2_3_4:
         lda famistudio_epsm_vol_table_op1,y
-        ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-        ldx <.vol_offset
         lda famistudio_chn_epsm_vol_op1,y
         clc
-        adc famistudio_epsm_fm_vol_table,x
-        cmp #127
-        bmi .save_op1
+        adc <.vol_offset
+        bpl .save_op1
         lda #127
     .save_op1:
-        ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_WRITE0,x
     .op_2_3_4:
         lda famistudio_epsm_vol_table_op3,y
-        ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-        ldx <.vol_offset
         lda famistudio_chn_epsm_vol_op3,y
         clc
-        adc famistudio_epsm_fm_vol_table,x
-        cmp #127
-        bmi .save_op3
+        adc <.vol_offset
+        bpl .save_op3
         lda #127
     .save_op3:
-        ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_WRITE0,x
     .op_2_4:
         lda famistudio_epsm_vol_table_op2,y
-        ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-        ldx <.vol_offset
         lda famistudio_chn_epsm_vol_op2,y
         clc
-        adc famistudio_epsm_fm_vol_table,x
-        cmp #127
-        bmi .save_op2
+        adc <.vol_offset
+        bpl .save_op2
         lda #127
     .save_op2:
-        ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_WRITE0,x
     .op_4:
         ; Write volume
-        lda famistudio_epsm_vol_table_op4,y
-        ldx <.reg_offset
-        sta FAMISTUDIO_EPSM_REG_SEL0,x
-        ldx <.vol_offset
-        lda famistudio_chn_epsm_vol_op4,y
-        clc
-        adc famistudio_epsm_fm_vol_table,x
-        cmp #127
-        bmi .save_op4
-        lda #127
+        lda famistudio_epsm_vol_table_op4,y ; 4
+        sta FAMISTUDIO_EPSM_REG_SEL0,x ; 5
+        lda famistudio_chn_epsm_vol_op4,y ; 4
+	clc ; 2
+        adc <.vol_offset ; 3
+        bpl .save_op4 ; 2/3
+        lda #127 ; 2
     .save_op4:
-        ldx <.reg_offset
-        sta FAMISTUDIO_EPSM_REG_WRITE0,x
-        
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x ; 5  = 26/27
+
         nop
         clc
         lda famistudio_chn_epsm_trigger,y
@@ -2720,6 +3064,154 @@ famistudio_update_epsm_fm_channel_sound:
 
     rts
 
+
+;======================================================================================================================
+; FAMISTUDIO_EPSM_WRITE_PATCH_REGISTER (internal)
+;
+; Internal function to set a EPSM instrument for a given channel
+;
+; [in] y/r0: channel index
+; [in] x:    index of first envelope of instrument
+; [in] a:    instrument index.
+;======================================================================================================================
+famistudio_epsm_write_patch_reg .macro ; select, write
+select\@ = \1
+write\@ = \2
+
+    ldy #30-5 ; we skip updating the 4 operators
+    ldx <.reg_offset
+.loop_extra_patch\@:
+        txa	; 2
+        ora famistudio_epsm_register_order,y ; 4
+        sta select\@ ; 4
+        lda [.ex_patch],y ; 5
+        sta write\@ ; 4
+        dey	; 2
+        nop	; 2 DELAY FOR MESEN-X
+        bpl .loop_extra_patch\@ ; 3  ; =26
+    ldx <.chan_idx2
+    lda famistudio_chn_epsm_alg,x
+    cmp #4
+    bcc .alg_0_1_2_3\@ ; 0-1-2-3
+    beq .alg_4\@ ; 4
+    jmp .alg_5_6\@ ; 5
+.alg_0_1_2_3\@:
+    ;3+2+1
+    ldy #27
+    ldx <.reg_offset
+    txa	; 2
+    ora famistudio_epsm_register_order,y ; 4
+    sta select\@ ; 4
+    lda [.ex_patch],y ; 5
+    sta write\@ ; 4
+    nop	; 2 DELAY FOR MESEN-X
+.alg_4\@:
+    ;3+1
+    ldy #28
+    ldx <.reg_offset
+    txa	; 2
+    ora famistudio_epsm_register_order,y ; 4
+    sta select\@ ; 4
+    lda [.ex_patch],y ; 5
+    sta write\@ ; 4
+    nop	; 2 DELAY FOR MESEN-X
+.alg_5_6\@:
+    ;1
+    ldy #26
+    ldx <.reg_offset
+    txa	; 2
+    ora famistudio_epsm_register_order,y ; 4
+    sta select\@ ; 4
+    lda [.ex_patch],y ; 5
+    sta write\@ ; 4
+    nop	; 2 DELAY FOR MESEN-X
+    .endm
+
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_EPSM_FM_INSTRUMENT (internal)
+;
+; Updates the EPSM audio registers for a given channel.
+;
+; [in] y: EPSM channel idx (0,1,2,3,4,5)
+;======================================================================================================================
+    ; Now we are dealing with either a FM or Rhythm instrument. a = channel index
+    ; if we are an FM instrument then there is a offset we need to apply to the register select
+
+    ; Skip over the two SSG specific envelopes by jumping up 4 bytes
+update_fm_instrument:
+.ptr          = famistudio_ptr1
+.env_ptr      = famistudio_ptr2
+.ex_patch     = famistudio_ptr2
+.chan_idx     = famistudio_r0
+.chan_idx2    = famistudio_r2
+.update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
+.reg_offset   = famistudio_r3
+    jsr famistudio_get_exp_inst_ptr
+    clc 
+    tya
+    adc #14 ; skip over envelopes + square stuff.
+    tay
+    ; And then read the pointer to the extended instrument patch data
+    lda [.ptr],y
+    sta <.ex_patch
+    iny
+    lda [.ptr],y
+    sta <.ex_patch+1
+
+    .fm_channel:
+    ldx <.chan_idx2
+    ; FM channel 1-6, we need to look up the register select offset from the table
+    lda famistudio_channel_epsm_chan_table,x
+    sta <.reg_offset
+    ldy #0
+    ; Now we need to store the algorithm and stereo for later use
+    lda [.ex_patch],y
+    and #$07
+    sta famistudio_chn_epsm_alg,x ;store algorithm
+    iny
+    lda [.ex_patch],y
+    sta famistudio_chn_epsm_fm_stereo ,x
+    dey
+
+    ; Now if we are channels 1-3 then we use .reg_set_0, otherwise for 4-6 its reg set 1
+    lda <.chan_idx2
+    cmp #3
+    bpl .reg_set_1
+
+    .reg_set_0:
+        famistudio_epsm_write_patch_reg FAMISTUDIO_EPSM_REG_SEL0, FAMISTUDIO_EPSM_REG_WRITE0
+        jmp .last_reg
+
+    .reg_set_1:
+        famistudio_epsm_write_patch_reg FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
+        nop
+	
+    .last_reg:
+        ldy #30 ; last reg patch ptr
+        lda #$22 ; famistudio_epsm_register_order,x
+        clc
+        adc <.reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0
+        lda [.ex_patch],y
+        sta FAMISTUDIO_EPSM_REG_WRITE0    
+        lda <.chan_idx2
+        tax
+        ldy #26
+        lda [.ex_patch],y
+        sta famistudio_chn_epsm_vol_op1,x
+        iny
+        lda [.ex_patch],y
+        sta famistudio_chn_epsm_vol_op2,x
+        iny
+        lda [.ex_patch],y
+        sta famistudio_chn_epsm_vol_op3,x
+        iny
+        lda [.ex_patch],y
+        sta famistudio_chn_epsm_vol_op4,x
+
+    .done:        
+    rts
+    .endif
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_RHYTHM_CHANNEL_SOUND (internal)
 ;
@@ -2727,41 +3219,33 @@ famistudio_update_epsm_fm_channel_sound:
 ;
 ; [in] y: EPSM channel idx (0,1,2,3,4,5)
 ;======================================================================================================================
-
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
 famistudio_update_epsm_rhythm_channel_sound:
     
 .pitch = famistudio_ptr1
 
-    lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
-    ;bne .note
+    lda famistudio_chn_note+FAMISTUDIO_EPSM_CHAN_RHYTHM_START,y
     bne .nocut
-    sta famistudio_chn_epsm_rhythm_key,y
+    sta famistudio_chn_epsm_trigger+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT,y
     ldx #0 ; This will fetch volume 0.
     beq .noupdate
 .nocut:
-    ; Read note, apply arpeggio 
-    ;clc
-    ;ldx famistudio_epsm_square_env_table,y
-    ;adc famistudio_env_value+FAMISTUDIO_ENV_NOTE_OFF,x
-    ;tax
 
-    lda famistudio_chn_epsm_rhythm_key,y
+    lda famistudio_chn_epsm_trigger+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT,y
     cmp #$10
     beq .noupdate
-    ; Write pitch
 
-    ;lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
     ; Read/multiply volume
-    ldx famistudio_epsm_rhythm_env_table,y
+    ldx famistudio_chn_epsm_rhythm_volume,y
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        lda famistudio_chn_volume_track+FAMISTUDIO_EPSM_CH9_IDX, y
+        lda famistudio_chn_volume_track+FAMISTUDIO_EPSM_CHAN_RHYTHM_START, y
         .if FAMISTUDIO_USE_VOLUME_SLIDES
             ; During a slide, the lower 4 bits are fraction.
             and #$f0
         .endif        
-        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+        ora famistudio_chn_epsm_rhythm_volume,y
     .else
-        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+        lda famistudio_chn_epsm_rhythm_volume,y
     .endif
     tax
 
@@ -2779,9 +3263,9 @@ famistudio_update_epsm_rhythm_channel_sound:
         sta FAMISTUDIO_EPSM_DATA
 
     lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
-    sta famistudio_chn_epsm_rhythm_key,y
+    sta famistudio_chn_epsm_trigger+FAMISTUDIO_EXP_EPSM_FM_CHN_CNT,y
     sta FAMISTUDIO_EPSM_ADDR
-    nop ;Some delay needed before writing the rythm key
+    nop ;Some delay needed before writing the rhythm key
     nop
     lda famistudio_epsm_rhythm_key_table,y
     sta FAMISTUDIO_EPSM_DATA
@@ -2789,7 +3273,8 @@ famistudio_update_epsm_rhythm_channel_sound:
 .noupdate:
     rts
 
-.endif
+    .endif
+    .endif
 
     .if FAMISTUDIO_EXP_N163
 
@@ -2951,26 +3436,6 @@ famistudio_update_n163_channel_sound:
     .endif
     ora #FAMISTUDIO_N163_CHN_MASK
     sta FAMISTUDIO_N163_DATA
-    
-    lda #0
-    sta famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL+FAMISTUDIO_N163_CH0_IDX,y
-
-    .if FAMISTUDIO_USE_PHASE_RESET
-.reset_phase:
-    lda famistudio_channel_to_phase_reset_mask+FAMISTUDIO_N163_CH0_IDX, y
-    and famistudio_phase_reset_n163
-    beq .done
-    ldx #0
-    lda famistudio_n163_phase_table_lo,y
-    sta FAMISTUDIO_N163_ADDR
-    stx FAMISTUDIO_N163_DATA
-    lda famistudio_n163_phase_table_mid,y
-    sta FAMISTUDIO_N163_ADDR
-    stx FAMISTUDIO_N163_DATA
-    lda famistudio_n163_phase_table_hi,y
-    sta FAMISTUDIO_N163_ADDR
-    stx FAMISTUDIO_N163_DATA
-    .endif
 
 .done:
     rts
@@ -2987,6 +3452,8 @@ famistudio_s5b_vol_table:
     .byte FAMISTUDIO_S5B_REG_VOL_A, FAMISTUDIO_S5B_REG_VOL_B, FAMISTUDIO_S5B_REG_VOL_C
 famistudio_s5b_env_table:
     .byte FAMISTUDIO_S5B_CH0_ENVS, FAMISTUDIO_S5B_CH1_ENVS, FAMISTUDIO_S5B_CH2_ENVS
+famistudio_s5b_noise_mask:
+    .byte $08, $10, $20
 
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_S5B_CHANNEL_SOUND (internal)
@@ -2997,39 +3464,42 @@ famistudio_s5b_env_table:
 ;======================================================================================================================
 
 famistudio_update_s5b_channel_sound:
-    
-.pitch = famistudio_ptr1
 
+.pitch   = famistudio_ptr1
+.env_bit = famistudio_ptr1_lo
+
+; These are shared by all 3 channels.
+.env_period = famistudio_ptr0
+.attack     = famistudio_ptr2
+.env_shape  = famistudio_r1
+.env_octave = famistudio_r2
+.noise_freq = famistudio_r3
+
+    ; First channel will clear these, last channel will write the registers.
+    cpy #0
+    bne .not_first_channel
+    sty <.env_shape
+    sty <.noise_freq
+    sty <.attack
+    lda #$80 ; This mean 'manual pitch'
+    sty <.env_octave
+
+.not_first_channel:
+    ldx #0 ; This will fetch volume 0.
+    stx <.env_bit
     lda famistudio_chn_note+FAMISTUDIO_S5B_CH0_IDX,y
     bne .nocut
-    ldx #0 ; This will fetch volume 0.
-    beq .update_volume_jmp
-    jmp .nocut
-.update_volume_jmp:
-	jmp .update_volume
+    jmp .update_volume
+
 .nocut:
-    
-    lda #$07
-    sta FAMISTUDIO_S5B_ADDR
-    lda famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    asl a
-    ora famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    asl a
-    ora famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF ;load mixer envelope
-    sta FAMISTUDIO_S5B_DATA
-
-
-
+    ; Store noise if mixer has it enabled
     ldx famistudio_s5b_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-    beq .nonoise
-    lda #$06
-    sta FAMISTUDIO_S5B_ADDR
-    ldx famistudio_s5b_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
-    sta FAMISTUDIO_S5B_DATA
+    lda famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    and famistudio_s5b_noise_mask,x
+    bne .nonoise
+    sta <.noise_freq
+
 .nonoise:
-
     lda famistudio_chn_note+FAMISTUDIO_S5B_CH0_IDX,y
     ; Read note, apply arpeggio 
     clc
@@ -3040,15 +3510,59 @@ famistudio_update_s5b_channel_sound:
     ; Apply pitch envelope, fine pitch & slides
     famistudio_get_note_pitch_macro FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX, 0, famistudio_note_table_lsb, famistudio_note_table_msb
 
-    ; Write pitch
+    ; Write pitch + 1 (pitches on S5B are off by one compared to regular note table)
     lda famistudio_s5b_reg_table_lo,y
     sta FAMISTUDIO_S5B_ADDR
     lda <.pitch+0
+    clc
+    adc #1
     sta FAMISTUDIO_S5B_DATA
+    sta <.pitch+0
     lda famistudio_s5b_reg_table_hi,y
     sta FAMISTUDIO_S5B_ADDR
     lda <.pitch+1
+    adc #0
     sta FAMISTUDIO_S5B_DATA
+    sta <.pitch+1
+
+    ; Store env shape + period if active.
+    lda famistudio_s5b_chn_env_shape,y
+    and #$0f
+    beq .noenv
+    sta <.env_shape
+
+    ; If bit 7 of any channel is on, well reset the envelope.
+    lda famistudio_s5b_chn_env_shape,y
+    ora <.attack 
+    sta <.attack
+    lda famistudio_s5b_chn_env_shape,y
+    and #$0f
+    sta famistudio_s5b_chn_env_shape,y
+
+    ; Store auto-period settings
+    lda famistudio_s5b_chn_env_octave,y
+    sta <.env_octave
+    cmp #$80 ; This mean 'manual pitch'
+    beq .manual_period
+
+    .auto_period:
+        lda <.pitch+0
+        sta <.env_period+0
+        lda <.pitch+1
+        sta <.env_period+1
+        jmp .set_envelope_volume_flag
+
+    .manual_period:
+        lda famistudio_s5b_env_period_lo
+        sta <.env_period+0
+        lda famistudio_s5b_env_period_hi
+        sta <.env_period+1
+
+.set_envelope_volume_flag:
+    lda #$10
+
+.noenv:
+    sta <.env_bit
 
     ; Read/multiply volume
     ldx famistudio_s5b_env_table,y
@@ -3070,97 +3584,212 @@ famistudio_update_s5b_channel_sound:
     sta FAMISTUDIO_S5B_ADDR
     .if FAMISTUDIO_USE_VOLUME_TRACK    
         lda famistudio_volume_table,x 
+        ora <.env_bit
+    .else
+        txa
+        ora <.env_bit
+    .endif
+    sta FAMISTUDIO_S5B_DATA
+
+.write_shared_registers:
+    ; Channel 2 writes all 5 shared registers.
+    cpy #2
+    bne .done
+    lda <.env_shape
+    beq .write_shared_noise
+    ldx <.env_octave
+    cpx #$80
+    beq .write_shared_env_register
+
+.compute_auto_period:
+    cpx #0
+    beq .write_shared_env_register
+    bpl .positive_octave_loop
+    
+    .negative_octave_loop:
+            asl <.env_period+0
+            rol <.env_period+1
+            inx
+            bne .negative_octave_loop
+        beq .write_shared_env_register
+        
+    .positive_octave_loop:
+        cpx #1
+        bne .do_shift
+        .rounding:
+            lda <.env_period+0
+            and #1
+            beq .do_shift
+            lda <.env_period+0
+            clc
+            adc #1
+            sta <.env_period+0
+            bcc .do_shift
+            inc <.env_period+1
+        .do_shift:
+            lsr <.env_period+1
+            ror <.env_period+0
+            dex
+            bne .positive_octave_loop
+
+.write_shared_env_register:    
+
+    ; Envelope period.
+    lda #FAMISTUDIO_S5B_REG_ENV_LO
+    sta FAMISTUDIO_S5B_ADDR
+    lda <.env_period+0
+    sta FAMISTUDIO_S5B_DATA
+    lda #FAMISTUDIO_S5B_REG_ENV_HI
+    sta FAMISTUDIO_S5B_ADDR
+    lda <.env_period+1
+    sta FAMISTUDIO_S5B_DATA
+
+    ; Reset envelope if there was an attack.
+    lda <.attack
+    bpl .write_shared_noise
+        lda #FAMISTUDIO_S5B_REG_SHAPE
+        sta FAMISTUDIO_S5B_ADDR
+        lda <.env_shape
         sta FAMISTUDIO_S5B_DATA
-    .else
-        stx FAMISTUDIO_S5B_DATA
-    .endif
+
+.write_shared_noise:
+
+    ; Tone/noise enabled.
+    lda #FAMISTUDIO_S5B_REG_TONE
+    sta FAMISTUDIO_S5B_ADDR
+    lda famistudio_env_value+FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    asl a
+    ora famistudio_env_value+FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    asl a
+    ora famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_MIXER_IDX_OFF
+    sta FAMISTUDIO_S5B_DATA
+    
+    ; Noise freq
+    lda #FAMISTUDIO_S5B_REG_NOISE
+    sta FAMISTUDIO_S5B_ADDR
+    lda <.noise_freq
+    sta FAMISTUDIO_S5B_DATA
+
+    lda #0
+    sta famistudio_s5b_env_override
+
+.done:
     rts
 
     .endif
 
+
+    .if FAMISTUDIO_USE_PHASE_RESET
+
 ;======================================================================================================================
-; FAMISTUDIO_UPDATE_ROW (internal)
+; FAMISTUDIO_PROCESS_PHASE_RESETS (internal)
 ;
-; Advance the song for a given channel. Will read any new note or effect (if any) and load any new 
-;
-; [in] x: channel index (also true when leaving the function)
+; Reset phases for channels that requested it this frame. 
 ;======================================================================================================================
 
-famistudio_update_row:
+conditional_phase_reset_regular .macro ; prev_hi, reg_hi 
+prev_hi\@ = \1
+reg_hi\@ = \2
+    lsr a
+    bcc .done\@
+    ldy prev_hi\@
+    sty reg_hi\@
+    .done\@:
+    .endm
 
-    .if !FAMISTUDIO_CFG_DPCM_SUPPORT
-    cpx #4
-    beq .no_new_note
-    .endif
-
-    jsr famistudio_update_channel
-    beq .no_new_note
-
-    ; TODO : See if we keep the instrument in X instead of Y, this is a mess.
+conditional_phase_reset_vrc6 .macro ; prev_hi, reg_hi 
+prev_hi\@ = \1
+reg_hi\@ = \2
+    lsr a
+    bcc .done\@
+    tax
+    lda prev_hi\@
+    sta reg_hi\@
+    ora #$80
+    sta reg_hi\@
     txa
-    tay
-    ldx famistudio_channel_env,y
-    lda famistudio_chn_instrument,y
+    .done\@:
+    .endm
 
-    cpy #4 ; TODO: If samples are disabled, there is no point in doing this test most of the time.
-    .if (FAMISTUDIO_EXP_VRC6 != 0) | (FAMISTUDIO_EXP_MMC5 != 0) 
-    bne .base_instrument
+conditional_phase_reset_fds .macro ; prev_hi, reg_hi 
+prev_hi\@ = \1
+reg_hi\@ = \2
+    lsr a
+    bcc .done\@
+    lda prev_hi\@
+    ora #$80
+    sta reg_hi\@
+    and #$7f
+    sta reg_hi\@
+    .done\@:
+    .endm
+
+famistudio_process_phase_resets:
+
+    ; We group all the phase resets here at the end of the frame to make it easier to replicate in the main app since
+    ; this routine will have very predictable # of cycle between channels, and having channels closers mean its easier 
+    ; to sync 2 channels together. The downside is that we need to keep the previous hi-period for VRC6 (3-bytes) and
+    ; FDS (1-byte).
+
+    lda famistudio_phase_reset
+
+    ; TODO : What about SFX here? A phase reset here will reset the SFX? Or will it?
+    conditional_phase_reset_regular famistudio_pulse1_prev, FAMISTUDIO_APU_PL1_HI
+    conditional_phase_reset_regular famistudio_pulse2_prev, FAMISTUDIO_APU_PL2_HI
+    
+    .if FAMISTUDIO_EXP_VRC6
+        conditional_phase_reset_vrc6 famistudio_vrc6_pulse1_prev_hi, FAMISTUDIO_VRC6_PL1_HI
+        conditional_phase_reset_vrc6 famistudio_vrc6_pulse2_prev_hi, FAMISTUDIO_VRC6_PL2_HI
+        conditional_phase_reset_vrc6 famistudio_vrc6_saw_prev_hi, FAMISTUDIO_VRC6_SAW_HI
     .else
-    bcc .base_instrument
+        lsr a
+        lsr a
+        lsr a
     .endif
-    .if (FAMISTUDIO_EXP_FDS != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_EPSM != 0) | (FAMISTUDIO_EXP_S5B != 0)
-    beq .dpcm
-    .if FAMISTUDIO_EXP_FDS
-    .fds_instrument:
-        jsr famistudio_set_fds_instrument
-        jmp .new_note
+
+    .if FAMISTUDIO_EXP_MMC5
+        conditional_phase_reset_regular famistudio_mmc5_pulse1_prev, FAMISTUDIO_MMC5_PL1_HI
+        conditional_phase_reset_regular famistudio_mmc5_pulse2_prev, FAMISTUDIO_MMC5_PL2_HI
+    .else
+        lsr a
+        lsr a
     .endif
-    .if FAMISTUDIO_EXP_VRC7
-    .vrc7_instrument:
-        jsr famistudio_set_vrc7_instrument
-        jmp .new_note
+
+    .if FAMISTUDIO_EXP_FDS    
+        conditional_phase_reset_fds famistudio_fds_prev_hi, FAMISTUDIO_FDS_FREQ_HI
     .endif
+
     .if FAMISTUDIO_EXP_N163
-    .n163_instrument:
-        jsr famistudio_set_n163_instrument
-        jmp .new_note
-    .endif
-    .if FAMISTUDIO_EXP_S5B
-    .s5b_instrument:
-        jsr famistudio_set_s5b_instrument
-        jmp .new_note
-    .endif
-    .if FAMISTUDIO_EXP_EPSM
-    .epsm_instrument:
-        jsr famistudio_set_epsm_instrument
-        jmp .new_note
-    .endif
-    .endif
-
-    .dpcm:
-    .if FAMISTUDIO_CFG_DPCM_SUPPORT        
-        lda famistudio_chn_note+4
-        bne .play_sample
-        jsr famistudio_sample_stop
-        ldx #4
-        bne .no_new_note
-        .play_sample:
-            sbc #12 ; Carry already set. HACK : Our "notes" for DPCM start at SingleByteNoteMin (12). Need to undo that here. See C# code.
-            jsr famistudio_music_sample_play
-            ldx #4
-            jmp .new_note
+    ldx #0
+    .n163_phase_reset_loop:
+        lda famistudio_channel_to_phase_reset_mask+FAMISTUDIO_N163_CH0_IDX, x 
+        and famistudio_phase_reset_n163
+        beq .next_n163_channel
+            ldy #0    
+            lda famistudio_n163_phase_table_lo,x
+            sta FAMISTUDIO_N163_ADDR
+            sty FAMISTUDIO_N163_DATA
+            lda famistudio_n163_phase_table_mid,x
+            sta FAMISTUDIO_N163_ADDR
+            sty FAMISTUDIO_N163_DATA
+            lda famistudio_n163_phase_table_hi,x
+            sta FAMISTUDIO_N163_ADDR
+            sty FAMISTUDIO_N163_DATA
+        .next_n163_channel:
+            inx
+            cpx #FAMISTUDIO_EXP_N163_CHN_CNT
+            bne .n163_phase_reset_loop
     .endif
 
-    .base_instrument:
-        jsr famistudio_set_instrument
+    .clear_phase_reset_flags:
+        lda #0
+        sta famistudio_phase_reset
+        .if FAMISTUDIO_EXP_N163
+            sta famistudio_phase_reset_n163
+        .endif
+        rts
 
-    .new_note:
-    .if FAMISTUDIO_CFG_EQUALIZER 
-        lda #9
-        sta famistudio_chn_note_counter, x
     .endif
-    .no_new_note:
-    rts
 
     .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
 
@@ -3172,7 +3801,7 @@ famistudio_update_row:
 ; [in] x: channel index (also true when leaving the function)
 ;======================================================================================================================
 
-famistudio_update_row_with_delays:
+famistudio_advance_channel_with_delays:
 
     ; Is the tempo telling us to advance by 1 row?
     lda famistudio_tempo_advance_row
@@ -3186,7 +3815,7 @@ famistudio_update_row_with_delays:
     .clear_delayed_note:
     lda #$ff
     sta famistudio_chn_note_delay,x
-    jsr famistudio_update_row ; This is the update for the de delayed note.
+    jsr famistudio_advance_channel ; This is the update for the de delayed note.
     jmp .advance
 
     ; Tempo said we didnt need to advance, see if there is delayed note with a counter that reached zero.
@@ -3200,7 +3829,7 @@ famistudio_update_row_with_delays:
 
     ; Finally, advance by 1 row.
     .advance:
-    jsr famistudio_update_row
+    jsr famistudio_advance_channel
 
     ; Handle delayed cuts.
     .check_delayed_cut:
@@ -3264,7 +3893,7 @@ famistudio_update:
     .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
         ldx #0
         stx famistudio_tempo_advance_row    
-        bcc .update_row
+        bcc .advance_song
     .else
         bcc .update_envelopes
     .endif
@@ -3313,14 +3942,19 @@ famistudio_update:
     .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
-.update_row:
+.advance_song:
     ldx #0
     .channel_loop:
+        .if !FAMISTUDIO_CFG_DPCM_SUPPORT
+            cpx #4
+            beq .channel_loop_end
+        .endif    
         .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-            jsr famistudio_update_row_with_delays
+            jsr famistudio_advance_channel_with_delays
         .else
-            jsr famistudio_update_row
+            jsr famistudio_advance_channel
         .endif
+        .channel_loop_end:
         inx
         cpx #FAMISTUDIO_NUM_CHANNELS
         bne .channel_loop
@@ -3570,22 +4204,22 @@ famistudio_update:
 ;----------------------------------------------------------------------------------------------------------------------
 .update_sound:
 
-    famistudio_update_channel_sound 0, FAMISTUDIO_CH0_ENVS, famistudio_pulse1_prev, FAMISTUDIO_ALIAS_PL1_HI, FAMISTUDIO_ALIAS_PL1_LO, FAMISTUDIO_ALIAS_PL1_VOL, FAMISTUDIO_APU_PL1_SWEEP, #$01
-    famistudio_update_channel_sound 1, FAMISTUDIO_CH1_ENVS, famistudio_pulse2_prev, FAMISTUDIO_ALIAS_PL2_HI, FAMISTUDIO_ALIAS_PL2_LO, FAMISTUDIO_ALIAS_PL2_VOL, FAMISTUDIO_APU_PL2_SWEEP, #$02
-    famistudio_update_channel_sound 2, FAMISTUDIO_CH2_ENVS, 0, FAMISTUDIO_ALIAS_TRI_HI, FAMISTUDIO_ALIAS_TRI_LO, FAMISTUDIO_ALIAS_TRI_LINEAR, 0, 0
-    famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVS, 0, FAMISTUDIO_ALIAS_NOISE_LO, 0, FAMISTUDIO_ALIAS_NOISE_VOL, 0, 0
+    famistudio_update_channel_sound 0, FAMISTUDIO_CH0_ENVS, famistudio_pulse1_prev, FAMISTUDIO_ALIAS_PL1_HI, FAMISTUDIO_ALIAS_PL1_LO, FAMISTUDIO_ALIAS_PL1_VOL, FAMISTUDIO_APU_PL1_SWEEP
+    famistudio_update_channel_sound 1, FAMISTUDIO_CH1_ENVS, famistudio_pulse2_prev, FAMISTUDIO_ALIAS_PL2_HI, FAMISTUDIO_ALIAS_PL2_LO, FAMISTUDIO_ALIAS_PL2_VOL, FAMISTUDIO_APU_PL2_SWEEP
+    famistudio_update_channel_sound 2, FAMISTUDIO_CH2_ENVS, 0, FAMISTUDIO_ALIAS_TRI_HI, FAMISTUDIO_ALIAS_TRI_LO, FAMISTUDIO_ALIAS_TRI_LINEAR, 0
+    famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVS, 0, FAMISTUDIO_ALIAS_NOISE_LO, 0, FAMISTUDIO_ALIAS_NOISE_VOL, 0
 
     .if FAMISTUDIO_EXP_VRC6
 .update_vrc6_sound:
-    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH0_IDX, FAMISTUDIO_VRC6_CH0_ENVS, 0, FAMISTUDIO_VRC6_PL1_HI, FAMISTUDIO_VRC6_PL1_LO, FAMISTUDIO_VRC6_PL1_VOL, 0, #$04
-    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH1_IDX, FAMISTUDIO_VRC6_CH1_ENVS, 0, FAMISTUDIO_VRC6_PL2_HI, FAMISTUDIO_VRC6_PL2_LO, FAMISTUDIO_VRC6_PL2_VOL, 0, #$08
-    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH2_IDX, FAMISTUDIO_VRC6_CH2_ENVS, 0, FAMISTUDIO_VRC6_SAW_HI, FAMISTUDIO_VRC6_SAW_LO, FAMISTUDIO_VRC6_SAW_VOL, 0, #$10
+    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH0_IDX, FAMISTUDIO_VRC6_CH0_ENVS, famistudio_vrc6_pulse1_prev_hi, FAMISTUDIO_VRC6_PL1_HI, FAMISTUDIO_VRC6_PL1_LO, FAMISTUDIO_VRC6_PL1_VOL, 0
+    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH1_IDX, FAMISTUDIO_VRC6_CH1_ENVS, famistudio_vrc6_pulse2_prev_hi, FAMISTUDIO_VRC6_PL2_HI, FAMISTUDIO_VRC6_PL2_LO, FAMISTUDIO_VRC6_PL2_VOL, 0
+    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH2_IDX, FAMISTUDIO_VRC6_CH2_ENVS, famistudio_vrc6_saw_prev_hi, FAMISTUDIO_VRC6_SAW_HI, FAMISTUDIO_VRC6_SAW_LO, FAMISTUDIO_VRC6_SAW_VOL, 0
     .endif
 
     .if FAMISTUDIO_EXP_MMC5
 .update_mmc5_sound:
-    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH0_IDX, FAMISTUDIO_MMC5_CH0_ENVS, famistudio_mmc5_pulse1_prev, FAMISTUDIO_MMC5_PL1_HI, FAMISTUDIO_MMC5_PL1_LO, FAMISTUDIO_MMC5_PL1_VOL, 0, #$20
-    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH1_IDX, FAMISTUDIO_MMC5_CH1_ENVS, famistudio_mmc5_pulse2_prev, FAMISTUDIO_MMC5_PL2_HI, FAMISTUDIO_MMC5_PL2_LO, FAMISTUDIO_MMC5_PL2_VOL, 0, #$40
+    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH0_IDX, FAMISTUDIO_MMC5_CH0_ENVS, famistudio_mmc5_pulse1_prev, FAMISTUDIO_MMC5_PL1_HI, FAMISTUDIO_MMC5_PL1_LO, FAMISTUDIO_MMC5_PL1_VOL, 0
+    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH1_IDX, FAMISTUDIO_MMC5_CH1_ENVS, famistudio_mmc5_pulse2_prev, FAMISTUDIO_MMC5_PL2_HI, FAMISTUDIO_MMC5_PL2_LO, FAMISTUDIO_MMC5_PL2_VOL, 0
     .endif
 
     .if FAMISTUDIO_EXP_FDS
@@ -3625,30 +4259,38 @@ famistudio_update:
 
     .if FAMISTUDIO_EXP_EPSM
 .update_epsm_sound:
-    ldy #2
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
+    ldy #0
     .epsm_square_channel_loop:
         jsr famistudio_update_epsm_square_channel_sound
-        dey
-        bpl .epsm_square_channel_loop
-    ldy #5
+        iny
+        cpy #FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT
+        bne .epsm_square_channel_loop
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
+    ldy #FAMISTUDIO_EXP_EPSM_FM_CHN_CNT - 1
     .epsm_fm_channel_loop:
         jsr famistudio_update_epsm_fm_channel_sound
         dey
         bpl .epsm_fm_channel_loop
-    ldy #5
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
+.loop_cnt = famistudio_r2
+    lda #5
+    sta <.loop_cnt
     .epsm_rhythm_channel_loop:
+        ldx <.loop_cnt
+        ldy famistudio_rhythm_lut,x
+        bmi .skip_epsm_rhythm_update ; if the value we load is $ff then 
         jsr famistudio_update_epsm_rhythm_channel_sound
-        dey
+    .skip_epsm_rhythm_update:
+        dec <.loop_cnt
         bpl .epsm_rhythm_channel_loop
+    .endif
     .endif
 
     .if FAMISTUDIO_USE_PHASE_RESET
-.clear_phase_reset_flags:
-    lda #0
-    sta famistudio_phase_reset
-    .if FAMISTUDIO_EXP_N163
-        sta famistudio_phase_reset_n163
-    .endif
+    jsr famistudio_process_phase_resets
     .endif
 
 .update_sound_done:
@@ -3667,7 +4309,7 @@ famistudio_update:
     ; See if we need to run a double frame (playing NTSC song on PAL)
     dec famistudio_tempo_frame_cnt
     beq .skip_frame
-    jmp .update_row
+    jmp .advance_song
     .endif
 
 .skip_frame:
@@ -3751,35 +4393,270 @@ famistudio_update:
     rts
 
 ;======================================================================================================================
-; FAMISTUDIO_SET_INSTRUMENT (internal)
+; FAMISTUDIO_DO_NOTE_ATTACK + EXP VARIANTS (internal)
 ;
-; Internal function to set an instrument for a given channel. Will initialize all instrument envelopes.
+; Internal function to reset all the envelopes of a channnel (note attack).
 ;
-; [in] x: first envelope index for this channel.
-; [in] y: channel index
-; [in] a: instrument index.
+; [in] x/r0 : channel index
 ;======================================================================================================================
 
-famistudio_set_instrument:
+    .if FAMISTUDIO_EXP_VRC7
 
-.intrument_ptr = famistudio_ptr0
-.chan_idx      = famistudio_r1
-.tmp_x         = famistudio_r2
+famistudio_do_vrc7_note_attack:
 
-    sty <.chan_idx
-    asl a ; Instrument number is pre multiplied by 4
-    tay
-    lda famistudio_instrument_hi
-    adc #0 ; Use carry to extend range for 64 instruments
-    sta <.intrument_ptr+1
-    lda famistudio_instrument_lo
-    sta <.intrument_ptr+0
+.chan_idx = famistudio_r0
+
+    ; Set trigger flag for VRC7
+    lda #1
+    ldx <.chan_idx
+    sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x 
+    rts
+
+    .endif
+
+    .if FAMISTUDIO_EXP_EPSM
+
+famistudio_do_epsm_note_attack:
+    
+.chan_idx = famistudio_r0
+.tmp_y    = famistudio_r1
+
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
+    sty <.tmp_y
+    ldy <.chan_idx
+    cpy #FAMISTUDIO_EPSM_CHAN_FM_START
+    bcs .fm_or_rhythm_channel
+    .endif
+
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
+.square_channel:
+
+    ; Reset mixer/noise envelopes.
+    ldx famistudio_channel_env,y
+    lda #0
+    sta famistudio_env_repeat+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    sta famistudio_env_ptr+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    sta famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    sta famistudio_env_repeat+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+    sta famistudio_env_ptr+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+    sta famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+
+    ; Set hi-bit of envelope shape to remember to reset it.
+    lda #$80
+    ldx <.chan_idx
+    ora famistudio_epsm_chn_env_shape-FAMISTUDIO_EPSM_CH0_IDX,x
+    sta famistudio_epsm_chn_env_shape-FAMISTUDIO_EPSM_CH0_IDX,x
+
+    beq .done
+    .endif
+
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
+.fm_or_rhythm_channel:
+
+    ; Set trigger flag for FM/rhythm. For rhythm we'll actually write 
+    ; out of bounds here, but the rhtyhm key array is immediately after.
+    lda #1
+    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CHAN_FM_START,y
+    .endif
+
+.done:
+    ldx <.chan_idx
+    ldy <.tmp_y
+    rts
+
+    .endif
+
+    .if FAMISTUDIO_EXP_N163
+
+famistudio_do_n163_note_attack:
+
+.chan_idx = famistudio_r0
+.tmp_y    = famistudio_r1
+
+    ; Reset wave envelope.
+    sty <.tmp_y
+    ldy <.chan_idx
+    ldx famistudio_channel_env,y
+    lda #0
+    sta famistudio_env_repeat+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
+    lda #1 ; Index 0 is release point, so envelope starts at 1.
+    sta famistudio_env_ptr+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
+
+    ; Clear wave index to -1 to force reload.
+    ldx <.chan_idx
+    lda #$ff
+    sta famistudio_chn_n163_wave_index-FAMISTUDIO_N163_CH0_IDX, x
+    ldy <.tmp_y
+    rts
+
+    .endif
+
+    .if FAMISTUDIO_EXP_S5B
+
+famistudio_do_s5b_note_attack:
+
+.chan_idx = famistudio_r0
+.tmp_y    = famistudio_r1
+
+    ; Reset mixer/noise envelopes.
+    sty <.tmp_y
+    ldy <.chan_idx
+    ldx famistudio_channel_env,y
+    lda #0
+    sta famistudio_env_repeat+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    sta famistudio_env_ptr+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    sta famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+    sta famistudio_env_repeat+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+    sta famistudio_env_ptr+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+    sta famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
+    ldx <.chan_idx
+    ldy <.tmp_y
+
+    ; Set hi-bit of envelope shape to remember to reset it.
+    lda #$80
+    ora famistudio_s5b_chn_env_shape-FAMISTUDIO_S5B_CH0_IDX,x
+    sta famistudio_s5b_chn_env_shape-FAMISTUDIO_S5B_CH0_IDX,x
+    rts
+
+    .endif
+
+    .if FAMISTUDIO_EXP_FDS
+
+famistudio_do_fds_note_attack:
+
+.chan_idx = famistudio_r0
+
+    ; TODO : We used to set the modulation value here, but that's bad.
+    ; https://www.nesdev.org/wiki/FDS_audio#Mod_frequency_high_($4087)
+    ; lda #$80
+    ; sta FAMISTUDIO_FDS_MOD_HI
+    ; lda #0
+    ; sta FAMISTUDIO_FDS_SWEEP_BIAS
+
+    lda famistudio_fds_mod_delay
+    sta famistudio_fds_mod_delay_counter
+    ldx <.chan_idx
+    rts
+
+    .endif
+
+famistudio_do_note_attack:
+
+.chan_idx = famistudio_r0
+.tmp_x    = famistudio_r2
+
+    .if FAMISTUDIO_CFG_EQUALIZER 
+    lda #9
+    sta famistudio_chn_note_counter,x
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
+    lda <.chan_idx
+    cmp #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
+    bcs .epsm_instrument
+    .endif
+    lda famistudio_channel_env,x
+    tax
+
+    ; Volume envelope.
+    lda #1
+    sta famistudio_env_ptr,x ; Reset volume envelope pointer to 1 (volume have releases point in index 0)
+    lda #0
+    sta famistudio_env_repeat,x
+
+    ; Arpeggio envelope
+    sta famistudio_env_repeat+FAMISTUDIO_ENV_NOTE_OFF,x
+    sta famistudio_env_ptr+FAMISTUDIO_ENV_NOTE_OFF,x
+
+    ; Duty envelope (optional)
+    lda <.chan_idx
+    cmp #2 ; Triangle has no duty.
+    beq .no_duty
+    .if FAMISTUDIO_EXP_VRC7 | FAMISTUDIO_EXP_S5B | FAMISTUDIO_EXP_FDS | FAMISTUDIO_EXP_N163 | FAMISTUDIO_EXP_EPSM
+    cmp #5
+    bcs .no_duty
+    .endif
+.duty:
+    lda #0
+    sta famistudio_env_repeat+FAMISTUDIO_ENV_DUTY_OFF,x
+    sta famistudio_env_ptr+FAMISTUDIO_ENV_DUTY_OFF,x
+    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+        stx <.tmp_x
+        ldx <.chan_idx
+        lda famistudio_channel_to_dutycycle,x 
+        tax
+        lda famistudio_duty_cycle,x
+        ldx <.tmp_x
+    .endif
+    sta famistudio_env_value+FAMISTUDIO_ENV_DUTY_OFF,x
+
+.no_duty:
+    ; Pitch envelope
+    ldx <.chan_idx
+    lda famistudio_channel_to_pitch_env, x
+    bmi .no_pitch
+    tax
+
+.reset_pitch_env:
+    lda #0
+    sta famistudio_pitch_env_value_lo,x
+    sta famistudio_pitch_env_value_hi,x
+    sta famistudio_pitch_env_repeat,x
+    lda #1
+    sta famistudio_pitch_env_ptr,x     ; Reset pitch envelope pointer to 1 (pitch envelope have relative/absolute flag in the first byte) 
+
+.no_pitch:
+
+    .if FAMISTUDIO_EXP_VRC7 | FAMISTUDIO_EXP_N163 | FAMISTUDIO_EXP_EPSM | FAMISTUDIO_EXP_S5B | FAMISTUDIO_EXP_FDS
+    lda <.chan_idx
+    cmp #5
+    bcc .done
+    .vrc7_instrument:
+    .if FAMISTUDIO_EXP_VRC7
+        jmp famistudio_do_vrc7_note_attack
+    .endif
+    .n163_instrument:
+    .if FAMISTUDIO_EXP_N163
+        jmp famistudio_do_n163_note_attack
+    .endif
+    .s5b_instrument:
+    .if FAMISTUDIO_EXP_S5B
+        jmp famistudio_do_s5b_note_attack
+    .endif
+    .fds_instrument:
+    .if FAMISTUDIO_EXP_FDS
+        jmp famistudio_do_fds_note_attack
+    .endif
+    .epsm_instrument:
+    .if FAMISTUDIO_EXP_EPSM
+        jmp famistudio_do_epsm_note_attack
+    .endif
+    .endif
+
+.done:
+    ldx <.chan_idx
+    rts
+    
+;======================================================================================================================
+; FAMISTUDIO_LOAD_BASIC_ENVELOPES (internal)
+;
+; Internal function to load the most common envelopes (volume, arp, duty (optional) and pitch) for an instrument.
+;
+; [in] x:      first envelope index.
+; [in] r0:     instrument index.
+; [in] ptr1/y: point to instrument data to load.
+;======================================================================================================================
+
+famistudio_load_basic_envelopes:
+
+.instrument_ptr = famistudio_ptr1
+.chan_idx      = famistudio_r0
+.tmp_x         = famistudio_r3
 
     ; Volume envelope
-    lda [.intrument_ptr],y
+    lda [.instrument_ptr],y
     sta famistudio_env_addr_lo,x
     iny
-    lda [.intrument_ptr],y
+    lda [.instrument_ptr],y
     iny
     sta famistudio_env_addr_hi,x
     inx
@@ -3791,201 +4668,213 @@ famistudio_set_instrument:
     lda famistudio_chn_env_override,x ; Check if its overriden by arpeggio.
     lsr a
     ldx <.tmp_x
-    bcc .read_arpeggio_ptr 
+    bcc .arpeggio_envelope 
     iny ; Instrument arpeggio is overriden by arpeggio, dont touch!
-    jmp .init_envelopes
+    jmp .duty_envelope
     .endif
 
-.read_arpeggio_ptr:    
-    lda [.intrument_ptr],y
+.arpeggio_envelope:    
+    lda [.instrument_ptr],y
     sta famistudio_env_addr_lo,x
     iny
-    lda [.intrument_ptr],y
+    lda [.instrument_ptr],y
     sta famistudio_env_addr_hi,x
 
-.init_envelopes:
-    ; Initialize volume + arpeggio envelopes.
-    lda #1
-    sta famistudio_env_ptr-1,x ; Reset volume envelope pointer to 1 (volume have releases point in index 0)
-    lda #0
-    sta famistudio_env_repeat-1,x
-    sta famistudio_env_repeat,x
-    sta famistudio_env_ptr,x
-
+.duty_envelope:
     ; Duty cycle envelope
     lda <.chan_idx
     cmp #2 ; Triangle has no duty.
-    bne .duty
-    .no_duty:
-        iny
-        iny
-        bne .pitch_env
+    beq .no_duty
+    .if FAMISTUDIO_EXP_VRC7 | FAMISTUDIO_EXP_S5B | FAMISTUDIO_EXP_FDS | FAMISTUDIO_EXP_N163 | FAMISTUDIO_EXP_EPSM
+    cmp #5
+    bcs .pitch_envelope
+    .endif
     .duty:
         inx
         iny
-        lda [.intrument_ptr],y
+        lda [.instrument_ptr],y
         sta famistudio_env_addr_lo,x
         iny
-        lda [.intrument_ptr],y
+        lda [.instrument_ptr],y
         sta famistudio_env_addr_hi,x
-        lda #0
-        sta famistudio_env_repeat,x
-        sta famistudio_env_ptr,x
-        .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-            stx <.tmp_x
-            ldx <.chan_idx
-            lda famistudio_channel_to_dutycycle,x 
-            tax
-            lda famistudio_duty_cycle,x
-            ldx <.tmp_x
-        .endif
-        sta famistudio_env_value,x
-    .pitch_env:
+        jmp .pitch_envelope        
+    .no_duty:
+        iny
+        iny
+
+.pitch_envelope:
     ; Pitch envelopes.
+    .if !FAMISTUDIO_EXP_NONE
+    stx <.tmp_x 
+    .endif
     ldx <.chan_idx
     .if FAMISTUDIO_USE_VIBRATO 
     lda famistudio_chn_env_override,x 
     asl a ; Bit-7 tells us if the pitch env is overriden, temporarely store in carry.
     .endif    
     lda famistudio_channel_to_pitch_env, x
-    bmi .no_pitch
+    bmi .done
     tax
     .if FAMISTUDIO_USE_VIBRATO 
     ror a ; Bring back our bit-7 from above.
-    bmi .reset_pitch_env ; Instrument pitch is overriden by vibrato, dont touch!
+    bmi .done ; Instrument pitch is overriden by vibrato, dont touch!
     .endif    
-    lda #0
-    sta famistudio_pitch_env_value_lo,x
-    sta famistudio_pitch_env_value_hi,x
     iny
-    lda [.intrument_ptr],y
+    lda [.instrument_ptr],y
     sta famistudio_pitch_env_addr_lo,x
     iny
-    lda [.intrument_ptr],y
+    lda [.instrument_ptr],y
     sta famistudio_pitch_env_addr_hi,x
-    .reset_pitch_env:
-    lda #0
-    sta famistudio_pitch_env_repeat,x
-    lda #1
-    sta famistudio_pitch_env_ptr,x     ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
-    .no_pitch:
-    ldx <.chan_idx
-    rts
+    .if !FAMISTUDIO_EXP_NONE
+    ; For expansion, preserve X (envelope index) and Y (pointer in instrument data)
+    ; as they may want to load more after.
+    ldx <.tmp_x
+    inx
+    iny
+    .endif
 
-    .if (FAMISTUDIO_EXP_FDS != 0) | (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_EPSM != 0) | (FAMISTUDIO_EXP_S5B != 0)
+.done:
+    rts
+    
+;======================================================================================================================
+; FAMISTUDIO_SET_INSTRUMENT (internal)
+;
+; Internal function to set an instrument for a given channel. Will initialize all instrument envelopes.
+;
+; [in] x/r0: channel index
+; [in] a:    instrument index.
+;======================================================================================================================
+
+famistudio_set_instrument:
+
+.instrument_ptr = famistudio_ptr1
+.chan_idx      = famistudio_r0
+
+    ; Pre-multiply by 4 if not using extended range, faster pointer arithmetic.
+    .if !FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+    asl a
+    asl a
+    .endif
+
+    ldy <.chan_idx
+    ldx famistudio_channel_env,y
+
+    .if FAMISTUDIO_EXP_FDS | FAMISTUDIO_EXP_VRC7 | FAMISTUDIO_EXP_N163 | FAMISTUDIO_EXP_EPSM | FAMISTUDIO_EXP_S5B
+    cpy #5
+    bcc .base_instrument
+    .if FAMISTUDIO_EXP_FDS
+    .fds_instrument:
+        jmp famistudio_set_fds_instrument
+    .endif
+    .if FAMISTUDIO_EXP_VRC7
+    .vrc7_instrument:
+        jmp famistudio_set_vrc7_instrument
+    .endif
+    .if FAMISTUDIO_EXP_N163
+    .n163_instrument:
+        jmp famistudio_set_n163_instrument
+    .endif
+    .if FAMISTUDIO_EXP_S5B
+    .s5b_instrument:
+        jmp famistudio_set_s5b_instrument
+    .endif
+    .if FAMISTUDIO_EXP_EPSM
+    .epsm_instrument:
+        jmp famistudio_set_epsm_instrument
+    .endif
+    .endif
+
+.base_instrument:
+
+    .if !FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+        asl a ; Instrument number is pre multiplied by 4
+        tay
+        lda famistudio_instrument_hi
+        adc #0 ; Use carry to extend range for 64 instruments
+        sta <.instrument_ptr+1
+        lda famistudio_instrument_lo
+        sta <.instrument_ptr+0
+    .else
+        ; Multiply by instrument stride of 8.
+        ldy #0
+        sty <.instrument_ptr+1
+        asl a
+        rol <.instrument_ptr+1 
+        asl a
+        rol <.instrument_ptr+1 
+        asl a
+        rol <.instrument_ptr+1 
+        clc
+        adc famistudio_instrument_lo
+        sta <.instrument_ptr+0
+        lda <.instrument_ptr+1
+        adc famistudio_instrument_hi
+        sta <.instrument_ptr+1
+    .endif
+
+    jmp famistudio_load_basic_envelopes ; Will 'rts'
+
+    .if FAMISTUDIO_EXP_FDS | FAMISTUDIO_EXP_N163 | FAMISTUDIO_EXP_VRC7 | FAMISTUDIO_EXP_EPSM | FAMISTUDIO_EXP_S5B
 
 ;======================================================================================================================
 ; FAMISTUDIO_GET_EXP_INST_PTR (internal)
 ;
-; Internal macro to retrive the instrument pointer for a given index.
+; Retrives the expansion instrument pointer for a given index.
 ;
-; [in]  a: instrument index.
-; [out] r0: the instrument pointer
-; [out] y:  index in the instrument array.
+; [in]  a:      instrument index.
+; [out] ptr1/y: the instrument pointer + offset
 ;======================================================================================================================
 
-famistudio_get_exp_inst_ptr .macro
+famistudio_get_exp_inst_ptr:
 
-.ptr = famistudio_ptr0
+.instrument_ptr = famistudio_ptr1
 
-    asl a ; Instrument number is pre multiplied by 4
-    asl a
-    tay
-    lda famistudio_exp_instrument_hi
-    adc #0  ; Use carry to extend range for 32 expansion instruments
-    sta <.ptr+1
-    lda famistudio_exp_instrument_lo
-    sta <.ptr+0
+    .if !FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+        asl a ; Instrument number is pre multiplied by 4
+        asl a
+        tay
+        lda famistudio_exp_instrument_hi
+        adc #0  ; Use carry to extend range for 32 expansion instruments
+        sta <.instrument_ptr+1
+        lda famistudio_exp_instrument_lo
+        sta <.instrument_ptr+0
+    .else
+        ; Multiply by expansion instrument stride of 16.
+        ldy #0
+        sty <.instrument_ptr+1
+        asl a
+        rol <.instrument_ptr+1 
+        asl a
+        rol <.instrument_ptr+1 
+        asl a
+        rol <.instrument_ptr+1 
+        asl a
+        rol <.instrument_ptr+1 
+        clc
+        adc famistudio_exp_instrument_lo
+        sta <.instrument_ptr+0
+        lda <.instrument_ptr+1
+        adc famistudio_exp_instrument_hi
+        sta <.instrument_ptr+1
+    .endif   
 
-    .endm
+    rts
 
-;======================================================================================================================
-; FAMISTUDIO_SET_EXP_INSTRUMENT_BASE (internal)
-;
-; Internal macro to set an expansion instrument for a given channel. Will initialize all instrument envelopes.
-;
-; [in] x: first envelope index for this channel.
-; [in] y: channel index
-; [in] a: instrument index.
-;======================================================================================================================
-
-famistudio_set_exp_instrument .macro
-
-.chan_idx = famistudio_r1
-.tmp_x    = famistudio_r2
-.ptr      = famistudio_ptr0
-
-    sty <.chan_idx
-
-    famistudio_get_exp_inst_ptr
-
-    ; Volume envelope
-    lda [.ptr],y
-    sta famistudio_env_addr_lo,x
-    iny
-    lda [.ptr],y
-    iny
-    sta famistudio_env_addr_hi,x
-    inx
-
-    ; Arpeggio envelope
-    .if FAMISTUDIO_USE_ARPEGGIO
-    stx <.tmp_x
-    ldx <.chan_idx
-    lda famistudio_chn_env_override,x ; Check if its overriden by arpeggio.
-    lsr a
-    ldx <.tmp_x
-    bcc .read_arpeggio_ptr 
-    iny ; Instrument arpeggio is overriden by arpeggio, dont touch!
-    jmp .init_envelopes
     .endif
 
-.read_arpeggio_ptr:    
-    lda [.ptr],y
-    sta famistudio_env_addr_lo,x
-    iny
-    lda [.ptr],y
-    sta famistudio_env_addr_hi,x
-    jmp .init_envelopes
+    .if FAMISTUDIO_EXP_FDS | FAMISTUDIO_EXP_VRC7 | FAMISTUDIO_EXP_EPSM
 
-.init_envelopes:
-    iny
-    ; Initialize volume + arpeggio envelopes.
-    lda #1
-    sta famistudio_env_ptr-1,x ; Reset volume envelope pointer to 1 (volume have releases point in index 0)
-    lda #0
-    sta famistudio_env_repeat-1,x
-    sta famistudio_env_repeat,x
-    sta famistudio_env_ptr,x
-
-    ; Pitch envelopes.
-    ldx <.chan_idx
-    .if FAMISTUDIO_USE_VIBRATO
-    lda famistudio_chn_env_override,x ; Instrument pitch is overriden by vibrato, dont touch!
-    bpl .pitch_env
-    iny
-    iny
-    bne .pitch_overriden
+skip_exp_basic_envelopes .macro
+    .if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+        ldy #6
+    .else
+        iny
+        iny
+        iny
+        iny
+        iny
+        iny
     .endif
-
-.pitch_env:
-    dex
-    dex ; Noise + DPCM dont have pitch envelopes             
-    lda #1
-    sta famistudio_pitch_env_ptr,x ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
-    lda #0
-    sta famistudio_pitch_env_repeat,x
-    sta famistudio_pitch_env_value_lo,x
-    sta famistudio_pitch_env_value_hi,x
-    lda [.ptr],y
-    sta famistudio_pitch_env_addr_lo,x
-    iny
-    lda [.ptr],y
-    sta famistudio_pitch_env_addr_hi,x
-    iny
-
-.pitch_overriden:
-    ldx <.chan_idx
     .endm
 
     .endif
@@ -3997,23 +4886,31 @@ famistudio_set_exp_instrument .macro
 ;
 ; Internal function to set a VRC7 instrument for a given channel. Will load custom patch if needed.
 ;
-; [in] x: first envelope index for this channel.
-; [in] y: channel index
-; [in] a: instrument index.
+; [in] y/r0: channel index
+; [in] x:    index of first envelope of instrument
+; [in] a:    instrument index.
 ;======================================================================================================================
 
 famistudio_set_vrc7_instrument:
 
-.ptr      = famistudio_ptr0
-.chan_idx = famistudio_r1
+.ptr          = famistudio_ptr1
+.chan_idx     = famistudio_r0
+.update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
+   
+    jsr famistudio_get_exp_inst_ptr
+    bit <.update_flags
+    bpl .load_envelopes
 
-    famistudio_set_exp_instrument
+    .skip_envelopes:
+        skip_exp_basic_envelopes
+        jmp .load_patch
+    .load_envelopes:
+        jsr famistudio_load_basic_envelopes
 
-    lda famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL,x
-    beq .done
-
+    .load_patch:
+    ldx <.chan_idx
     lda [.ptr],y
-    sta famistudio_chn_vrc7_patch-FAMISTUDIO_VRC7_CH0_IDX, x
+    sta famistudio_chn_vrc7_patch-FAMISTUDIO_VRC7_CH0_IDX,x
     bne .done
 
     .read_custom_patch:
@@ -4032,249 +4929,217 @@ famistudio_set_vrc7_instrument:
         bne .read_patch_loop
 
     .done:
-    ldx <.chan_idx
     rts
+
     .endif
 
     .if FAMISTUDIO_EXP_S5B
+    
 ;======================================================================================================================
 ; FAMISTUDIO_SET_S5B_INSTRUMENT (internal)
 ;
 ; Internal function to set a S5B instrument. 
 ;
-; [in] x: first envelope index for this channel.
-; [in] y: channel index
-; [in] a: instrument index.
+; [in] y/r0: channel index
+; [in] x:    index of first envelope of instrument
+; [in] a:    instrument index.
 ;======================================================================================================================
-famistudio_set_s5b_instrument:
-.ptr        = famistudio_ptr0
-.chan_idx   = famistudio_r1
-    famistudio_set_exp_instrument
 
-    lda famistudio_channel_env,x
-    tax
+famistudio_set_s5b_instrument:
+
+.chan_idx = famistudio_r0
+.ptr      = famistudio_ptr1
+
+    jsr famistudio_get_exp_inst_ptr
+    jsr famistudio_load_basic_envelopes
 
     .mixer:
     sec
 
+    ; After 'famistudio_load_basic_envelopes' x should point to the correct envelope.
     .loop:
         lda [.ptr],y
-        sta famistudio_env_addr_lo+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+        sta famistudio_env_addr_lo,x
         iny
         lda [.ptr],y
-        sta famistudio_env_addr_hi+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-        lda #0
-        sta famistudio_env_repeat+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-        sta famistudio_env_ptr+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-        sta famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-        bcc .done
+        sta famistudio_env_addr_hi,x
+        bcc .load_env_params
         clc
         inx
         iny
         bcc .loop
 
-    .done:
+    .load_env_params:
 
+    ; Envelope shape + auto-pitch octave
     ldx <.chan_idx
-    rts
-    .endif
-    .if (FAMISTUDIO_EXP_EPSM)
+    iny
+    lda [.ptr],y
+    sta famistudio_s5b_chn_env_shape-FAMISTUDIO_S5B_CH0_IDX,x
+    iny
+    lda [.ptr],y
+    sta famistudio_s5b_chn_env_octave-FAMISTUDIO_S5B_CH0_IDX,x
+    
+    ; Skip if using auto-period
+    cmp #$80
+    bne .done
 
-;======================================================================================================================
-; FAMISTUDIO_SET_EPSM_INSTRUMENT (internal)
-;
-; Internal function to set a EPSM instrument for a given channel
-;
-; [in] x: first envelope index for this channel.
-; [in] y: channel index
-; [in] a: instrument index.
-;======================================================================================================================
-famistudio_epsm_write_patch_reg .macro ; select, write
-select\@ = \1
-write\@ = \2
-    ldx #0
-.loop_main_patch\@:
-        lda famistudio_epsm_register_order,x
-        clc
-        adc <.reg_offset
-        sta select\@
-        lda [.ptr],y
-        sta write\@
-        iny
-        inx
-        ; we have 4 bytes in the instrument_exp instead of padding. The rest is in ex_patch
-        cpx #4
-        bne .loop_main_patch\@
-    ; load bytes 4-30 from the extra patch data pointer
-    ldy #0
-.loop_extra_patch\@:
-        lda famistudio_epsm_register_order,x
-        clc
-        adc <.reg_offset
-        sta select\@
-        lda [.ex_patch],y
-        sta write\@
-        iny
-        inx
-        cpx #30
-        bne .loop_extra_patch\@
-    .endm
+    ; Skip if effect set manual period this frame.
+    lda famistudio_s5b_env_override
+    bne .done 
+
+    iny
+    lda [.ptr],y
+    sta famistudio_s5b_env_period_lo
+    iny
+    lda [.ptr],y
+    sta famistudio_s5b_env_period_hi
+
+    .done:
+    rts
+    
+    .endif
+
+    .if FAMISTUDIO_EXP_EPSM
 
 ;======================================================================================================================
 ; FAMISTUDIO_SET_EPSM_INSTRUMENT (internal)
 ;
 ; Internal function to set a EPSM instrument. 
 ;
-; [in] x: first envelope index for this channel.
-; [in] y: channel index
-; [in] a: instrument index.
+; [in] x/r0: channel index
+; [in] a:    instrument index.
 ;======================================================================================================================
 
 famistudio_set_epsm_instrument:
 
-.ptr        = famistudio_ptr0
-.ex_patch   = famistudio_ptr1
-.reg_offset = famistudio_r0
-.chan_idx   = famistudio_r1
+.ptr          = famistudio_ptr1
+.env_ptr      = famistudio_ptr2
+.ex_patch     = famistudio_ptr2
+.chan_idx     = famistudio_r0
+.chan_idx2    = famistudio_r0
+.update_flags = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
+.reg_offset   = famistudio_r3
 
-    famistudio_set_exp_instrument
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
+    cpy #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
+    bcc .process_regular_instrument
+        ; We are processing a rhythm instrument, so skip all the fluff.
+        ; We only need to load the volume of the instrument and store it in the attack.
+        ; load the instrument
+        ;sty <.chan_idx
+        jsr famistudio_get_exp_inst_ptr
+        
+        ; Load the offset for the rhythm track and keep it in x
+        ldx <.chan_idx
+        lda famistudio_rhythm_lut-FAMISTUDIO_EPSM_CHAN_RHYTHM_START, x
+        tax
 
-    ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
-	; increase y and go past noise and mixer envelope indexes
-	iny
-	iny
-	iny
-	iny
+        ; Read the first envelope pointer for the volume, we'll use this to get the volume later
+	sty <.reg_offset
+        lda [.ptr],y
+        sta <.env_ptr
+        iny
+        lda [.ptr],y
+        sta <.env_ptr+1
+    ; the first value is the release point, so load the second offset which is the volume
+    ldy #1
+    lda [.env_ptr],y
+    and #$0F
+    sta famistudio_chn_epsm_rhythm_volume,x
+    lda <.reg_offset
+    clc
+    adc #14 ; skip over envelopes + square stuff.
+    tay
     lda [.ptr],y
     sta <.ex_patch
     iny
     lda [.ptr],y
     sta <.ex_patch+1
-    iny
+	ldy #1
+    lda [.ex_patch],y
+        and #$c0
+        sta famistudio_chn_epsm_rhythm_stereo,x
 
+        rts
+    .endif
+.process_regular_instrument:
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
+    cpy #FAMISTUDIO_EPSM_CHAN_FM_START
+    bcc .skip_fm_instrument
+        sta famistudio_chn_epsm_fm_instrument-FAMISTUDIO_EPSM_CHAN_FM_START,y
+    .skip_fm_instrument:
+    .endif
+    jsr famistudio_get_exp_inst_ptr
+    bit <.update_flags
+    bpl .load_envelopes
+
+    ; The exporter will ensure this only happens on FM channels.
+    .skip_envelopes:
+        skip_exp_basic_envelopes
+        jmp .check_square_channel
+    .load_envelopes:
+        jsr famistudio_load_basic_envelopes
+
+    .check_square_channel:
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
     ; channels 0-2 [square] do not need any further handling since they do not support patches
     lda <.chan_idx
     cmp #FAMISTUDIO_EPSM_CHAN_FM_START
     bcs .not_square_channel
-        dey
-        dey
-        dey
-        dey
-        dey
-        dey
-        lda famistudio_channel_env,x
-        tax
-
+        ;lda famistudio_channel_env,x
+        ;tax
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0
         .noise:
         sec
 
         .loop:
         lda [.ptr],y
-        sta famistudio_env_addr_lo+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
+        sta famistudio_env_addr_lo,x
         iny
         lda [.ptr],y
-        sta famistudio_env_addr_hi+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-        lda #0
-        sta famistudio_env_repeat+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-        sta famistudio_env_ptr+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-        sta famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-        bcc .noisedone
+        sta famistudio_env_addr_hi,x
+        bcc .load_env_params
         clc
         inx
         iny
         bcc .loop
 
-        .noisedone:
+    .load_env_params:
 
+        ; Envelope shape + auto-pitch octave
         ldx <.chan_idx
+        iny
+        lda [.ptr],y
+        sta famistudio_epsm_chn_env_shape-FAMISTUDIO_EPSM_CH0_IDX,x
+        iny
+        lda [.ptr],y
+        sta famistudio_epsm_chn_env_octave-FAMISTUDIO_EPSM_CH0_IDX,x
+    
+        ; Skip if using auto-period
+        cmp #$80
+        bne .done
+
+        ; Skip if effect set manual period this frame.
+        lda famistudio_epsm_env_override
+        bne .done 
+
+        iny
+        lda [.ptr],y
+        sta famistudio_epsm_env_period_lo
+        iny
+        lda [.ptr],y
+        sta famistudio_epsm_env_period_hi
+
+        .done:
+
+    .endif
         rts
+
     .not_square_channel:
 
-    ; Now we are dealing with either a FM or Rhythm instrument. a = channel index
-    ; if we are an FM instrument then there is a offset we need to apply to the register select
-    cmp #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
-    bmi .fm_channel
-        lda <.chan_idx
-        sbc #FAMISTUDIO_EPSM_CHAN_RHYTHM_START
-        tax
-        iny
-        lda [.ptr],y
-        and #$c0
-        sta famistudio_chn_epsm_rhythm_stereo,x
-
-        ldx <.chan_idx    
         rts
-    .fm_channel:
-    
-    lda famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL,x
-    bne .continue
-        ldx <.chan_idx
-        rts
-    
-.continue:
-    lda <.chan_idx
-    ; FM channel 1-6, we need to look up the register select offset from the table
-    sec
-    sbc #FAMISTUDIO_EPSM_CHAN_FM_START
-    tax
-    lda famistudio_channel_epsm_chan_table,x
-    sta <.reg_offset
-    
-        lda #FAMISTUDIO_EPSM_REG_KEY
-        sta FAMISTUDIO_EPSM_REG_SEL0
-        lda famistudio_epsm_channel_key_table, x
-        and #$0f ; remove trigger
-        sta FAMISTUDIO_EPSM_REG_WRITE0
-    
-    ; Now we need to store the algorithm and 1st operator volume for later use
-        lda [.ptr],y
-        and #$07
-        sta famistudio_chn_epsm_alg,x ;store algorithm
-        iny
-        lda [.ptr],y
-        sta famistudio_chn_epsm_fm_stereo ,x
-        iny
-        iny
-        lda [.ptr],y
-        sta famistudio_chn_epsm_vol_op1,x
-        dey
-        dey
-        dey
-    ; Now if we are channels 1-3 then we use .reg_set_0, otherwise for 4-6 its reg set 1
-    lda <.chan_idx
-    cmp #FAMISTUDIO_EPSM_CH6_IDX
-    bpl .reg_set_1
-
-    .reg_set_0:
-        famistudio_epsm_write_patch_reg FAMISTUDIO_EPSM_REG_SEL0, FAMISTUDIO_EPSM_REG_WRITE0
-    jmp .last_reg
-
-    .reg_set_1:
-        famistudio_epsm_write_patch_reg FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
-    
-    .last_reg:
-        lda famistudio_epsm_register_order,x
-        clc
-        adc <.reg_offset
-        sta FAMISTUDIO_EPSM_REG_SEL0
-        lda [.ex_patch],y
-        sta FAMISTUDIO_EPSM_REG_WRITE0
-        
-        lda <.chan_idx
-        sbc #(FAMISTUDIO_EPSM_CHAN_FM_START - 1) ; Carry is not set, so - 1.
-        tax
-        ldy #6
-        lda [.ex_patch],y
-        sta famistudio_chn_epsm_vol_op2,x
-        ldy #13
-        lda [.ex_patch],y
-        sta famistudio_chn_epsm_vol_op3,x
-        ldy #20 
-        lda [.ex_patch],y
-        sta famistudio_chn_epsm_vol_op4,x
-    .done:        
-    ldx <.chan_idx
-    rts
     
     .endif
 
@@ -4285,39 +5150,21 @@ famistudio_set_epsm_instrument:
 ;
 ; Internal function to set a FDS instrument. Will upload the wave and modulation envelope if needed.
 ;
-; [in] x: first envelope index for this channel.
-; [in] y: channel index
-; [in] a: instrument index.
+; [in] y/r0: channel index
+; [in] x:    index of first envelope of instrument
+; [in] a:    instrument index.
 ;======================================================================================================================
 
 famistudio_set_fds_instrument:
 
-.ptr        = famistudio_ptr0
-.wave_ptr   = famistudio_ptr1
-.master_vol = famistudio_r1
-.tmp_y      = famistudio_r2
+.ptr          = famistudio_ptr1
+.wave_ptr     = famistudio_ptr2
+.tmp_y        = famistudio_r3 
 
-    famistudio_set_exp_instrument
-
-    lda #0
-    sta FAMISTUDIO_FDS_SWEEP_BIAS
-
-    lda famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL+FAMISTUDIO_FDS_CH0_IDX
-    bne .write_fds_wave
-
-    iny ; Skip master volume + wave + mod envelope.
-    iny
-    iny
-    iny
-    iny
-
-    jmp .load_mod_param
+    jsr famistudio_get_exp_inst_ptr
+    jsr famistudio_load_basic_envelopes
 
     .write_fds_wave:
-
-        lda [.ptr],y
-        sta <.master_vol
-        iny
 
         ora #$80
         sta FAMISTUDIO_FDS_VOL ; Enable wave RAM write
@@ -4339,15 +5186,16 @@ famistudio_set_fds_instrument:
             cpy #64
             bne .wave_loop
 
+        ldy <.tmp_y
         lda #$80
         sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
-        lda <.master_vol
+        lda [.ptr],y ; Read master volume
         sta FAMISTUDIO_FDS_VOL ; Disable RAM write.
         lda #0
         sta FAMISTUDIO_FDS_SWEEP_BIAS
+        iny
 
         ; FDS Modulation
-        ldy <.tmp_y
         lda [.ptr],y
         sta <.wave_ptr+0
         iny
@@ -4364,14 +5212,33 @@ famistudio_set_fds_instrument:
             cpy #32
             bne .mod_loop
 
-        lda #0
-        sta famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL+FAMISTUDIO_FDS_CH0_IDX
-
         ldy <.tmp_y
 
     .load_mod_param:
 
+    .if FAMISTUDIO_USE_FDS_AUTOMOD
+        lda [.ptr],y
+        beq .check_mod_speed
+
+        .auto_mod:
+            iny
+            lda [.ptr],y
+            sta famistudio_fds_automod_numer
+            iny
+            lda [.ptr],y
+            sta famistudio_fds_automod_denom
+            bne .check_mod_depth
+    .else
+        iny
+        iny
+    .endif
+
         .check_mod_speed:
+            iny
+            .if FAMISTUDIO_USE_FDS_AUTOMOD
+                lda #0
+                sta famistudio_fds_automod_numer
+            .endif
             bit famistudio_fds_override_flags
             bmi .mod_speed_overriden
 
@@ -4399,9 +5266,8 @@ famistudio_set_fds_instrument:
                 iny
                 lda [.ptr],y
                 sta famistudio_fds_mod_delay
-
-    ldx #FAMISTUDIO_FDS_CH0_IDX
     rts
+
     .endif
 
     .if FAMISTUDIO_EXP_N163
@@ -4426,9 +5292,8 @@ famistudio_n163_wave_table:
 
 famistudio_update_n163_wave:
     
-.ptr           = famistudio_ptr0
-.wave_ptr      = famistudio_ptr1
-.n163_chan_idx = famistudio_r0 
+.ptr           = famistudio_ptr1
+.wave_ptr      = famistudio_ptr0
 .wave_pos      = famistudio_r1
 .wave_len      = famistudio_r2
 
@@ -4444,8 +5309,8 @@ famistudio_update_n163_wave:
     sta famistudio_chn_n163_wave_index,y
     tya
     tax
-    lda famistudio_chn_instrument+FAMISTUDIO_N163_CH0_IDX,y
-    famistudio_get_exp_inst_ptr
+    lda famistudio_chn_n163_instrument,y
+    jsr famistudio_get_exp_inst_ptr
 
     lda famistudio_n163_wave_table, x
     sta FAMISTUDIO_N163_ADDR
@@ -4512,36 +5377,29 @@ famistudio_update_n163_wave:
 ;
 ; Internal function to set a N163 instrument.
 ;
-; [in] x: first envelope index for this channel.
-; [in] y: channel index
-; [in] a: instrument index.
+; [in] y/r0: channel index
+; [in] x:    index of first envelope of instrument
+; [in] a:    instrument index.
 ;======================================================================================================================
 
 famistudio_set_n163_instrument:
 
-.ptr      = famistudio_ptr0
-.chan_idx = famistudio_r1
+.ptr      = famistudio_ptr1
+.chan_idx = famistudio_r0
 
-    famistudio_set_exp_instrument
+    ; Store instrument number (premultipled by 4 if not using extended range)
+    sta famistudio_chn_n163_instrument-FAMISTUDIO_N163_CH0_IDX,y
+    
+    jsr famistudio_get_exp_inst_ptr
+    jsr famistudio_load_basic_envelopes
 
-    ; Load the wave index envelope, x contains the channel index.
-    lda famistudio_channel_env,x
-    tax
+    ; Load the wave index envelope, x will point to the correct envelope.
     lda [.ptr],y
-    sta famistudio_env_addr_lo+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
+    sta famistudio_env_addr_lo,x
     iny
     lda [.ptr],y
-    sta famistudio_env_addr_hi+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
-    iny
-    lda #0
-    sta famistudio_env_repeat+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
-    lda #1 ; Index 0 is release point, so envelope starts at 1.
-    sta famistudio_env_ptr+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
+    sta famistudio_env_addr_hi,x
 
-    ; Clear wave index to -1 to force reload.
-    lda #$ff
-    ldx <.chan_idx
-    sta famistudio_chn_n163_wave_index-FAMISTUDIO_N163_CH0_IDX, x
     rts
 
     .endif
@@ -4555,15 +5413,16 @@ famistudio_set_n163_instrument:
 ; [out] z: non-zero if we triggered a new note.
 ;======================================================================================================================
 
-famistudio_update_channel:
+famistudio_advance_channel:
 
 .chan_idx         = famistudio_r0
-.tmp_slide_from   = famistudio_r1
-.tmp_slide_idx    = famistudio_r1
-.tmp_duty_cycle   = famistudio_r1
-.tmp_ptr_lo       = famistudio_r1
-.tmp_y1           = famistudio_r1
-.update_flags     = famistudio_r2 ; bit 7 = no attack, bit 6 = has set delayed cut. Non-zero at end if new note.
+.update_flags     = famistudio_r1 ; bit 7 = no attack, bit 6 = has set delayed cut
+.temp_ptr_y       = famistudio_r2
+.tmp_slide_from   = famistudio_r2
+.tmp_slide_idx    = famistudio_r2
+.tmp_duty_cycle   = famistudio_r2
+.tmp_ptr_lo       = famistudio_r2
+.tmp_y1           = famistudio_r2
 .slide_delta_lo   = famistudio_ptr1_hi
 .tmp_y2           = famistudio_ptr1_lo
 .channel_data_ptr = famistudio_ptr0
@@ -4631,16 +5490,14 @@ famistudio_update_channel:
     and #$7f
     lsr a
     bcs .set_repeat
-    asl a
-    asl a
-    sta famistudio_chn_instrument,x ; Store instrument number*4
 
-    .if (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_FDS != 0) | (FAMISTUDIO_EXP_EPSM != 0)
-    cpx #FAMISTUDIO_FIRST_EXP_INST_CHANNEL
-    bcc .read_byte
-    lda #1
-    sta famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL, x
-    .endif
+.instrument_change:
+    ; Set the instrument. `famistudio_set_instrument` (or proc it calls) are not
+    ; allowed to clobber r0/r1/r2 or ptr0.
+    sty <.temp_ptr_y
+    jsr famistudio_set_instrument ; Will clobber x/y, need to save/restore them.
+    ldy <.temp_ptr_y
+    ldx <.chan_idx
     jmp .read_byte 
 
 .set_repeat:
@@ -4669,46 +5526,39 @@ famistudio_update_channel:
     .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
     ; Any note with an attack clears any pending delayed cut, unless it was set during this update (flags bit 6).
     bit <.update_flags
-    bvs .check_stop_note 
+    bvs .check_dpcm_channel 
     lda #$ff
     sta famistudio_chn_cut_delay,x
     .endif
 
-.check_stop_note:
-    lda famistudio_chn_note,x
-    beq .check_dpcm_channel
-.check_no_attack:
-    bit <.update_flags
-    bpl .set_final_update_flags
-    lda #0
-    beq .set_final_update_flags
-.check_dpcm_channel:    
+.check_dpcm_channel:
     .if FAMISTUDIO_CFG_DPCM_SUPPORT
-    cpx #4 ; DPCM always has attack, even on stop notes.
-    bne .set_final_update_flags
-    txa 
+    ; We play/stop DPCM samples immediately.
+    cpx #4 
+    bne .check_attack
+        lda famistudio_chn_note+4
+        bne .play_sample
+        jsr famistudio_sample_stop
+        ldx #4
+        bne .done
+        .play_sample:
+            sbc #12 ; Carry already set. HACK : Our "notes" for DPCM start at SingleByteNoteMin (12). Need to undo that here. See C# code.
+            sty <.tmp_y1
+            jsr famistudio_music_sample_play
+            ldy <.tmp_y1
+            ldx #4
+            bne .done
     .endif
-.set_final_update_flags:
-    sta <.update_flags
 
-    .if (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_EPSM != 0)
-.set_vrc7_triggers:
-    cmp #0
+.check_attack:
+    lda famistudio_chn_note,x
     beq .done
-    .if FAMISTUDIO_EXP_VRC7
-    cpx #FAMISTUDIO_VRC7_CH0_IDX
-    bcc .done
-    lda #1
-    sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set trigger flag for VRC7
-    .endif
-.set_epsm_trigger:
-    .if FAMISTUDIO_EXP_EPSM
-    cpx #FAMISTUDIO_EPSM_CHAN_FM_START
-    bcc .done
-    lda #1
-    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CHAN_FM_START,x ; Set trigger flag for EPSM
-    .endif
-    .endif
+    bit <.update_flags
+    bmi .done
+
+    ; Note attack. `famistudio_do_note_attack` (or any proc it calls) are not
+    ; allowed to clobber r0 or ptr0. They can clobber r1 if they are done using it.
+    jsr famistudio_do_note_attack ; Note attack.
 
 .done:
     lda famistudio_chn_ref_len,x ; Check reference row counter
@@ -4720,7 +5570,6 @@ famistudio_update_channel:
     sta famistudio_chn_ptr_lo,x
     lda famistudio_chn_return_hi,x
     sta famistudio_chn_ptr_hi,x
-    lda <.update_flags ; Reload to get correct flags.
     rts
 
 .flush_y:
@@ -4732,7 +5581,6 @@ famistudio_update_channel:
     lda #0
     adc <.channel_data_ptr+1
     sta famistudio_chn_ptr_hi,x
-    lda <.update_flags ; Reload to get correct flags.
     rts
 
 .opcode_extended_note:
@@ -4779,6 +5627,11 @@ famistudio_update_channel:
     sta <.update_flags
     jmp .read_byte 
 
+.opcode_end_song:
+    lda #$80 ; TODO : Should we stop, or just call famistudio_music_stop here?
+    sta famistudio_song_speed
+    jmp .read_byte
+
     .if FAMISTUDIO_USE_RELEASE_NOTES  
 .jump_to_release_envelope:
     lda famistudio_env_addr_lo,x ; Load envelope data address into temp
@@ -4824,8 +5677,10 @@ famistudio_update_channel:
     .if FAMISTUDIO_EXP_EPSM
 .opcode_epsm_release_note:
     lda #$80
+	.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
     sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CHAN_FM_START,x ; Set release flag for EPSM
     .endif
+.endif
 
 .opcode_release_note:
     lda famistudio_channel_to_volume_env,x ; DPCM(5) will never have releases.
@@ -4833,6 +5688,32 @@ famistudio_update_channel:
     jsr .jump_to_release_envelope
     clc
     jmp .done
+    .endif
+
+    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0)
+.opcode_epsm_manual_env_period:
+    lda [.channel_data_ptr],y
+    iny
+    sta famistudio_epsm_env_period_lo
+    lda [.channel_data_ptr],y
+    iny
+    sta famistudio_epsm_env_period_hi
+    lda #1
+    sta famistudio_epsm_env_override
+    jmp .read_byte
+    .endif
+
+    .if FAMISTUDIO_EXP_S5B
+.opcode_s5b_manual_env_period:
+    lda [.channel_data_ptr],y
+    iny
+    sta famistudio_s5b_env_period_lo
+    lda [.channel_data_ptr],y
+    iny
+    sta famistudio_s5b_env_period_hi
+    lda #1
+    sta famistudio_s5b_env_override
+    jmp .read_byte
     .endif
 
     .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
@@ -4914,6 +5795,13 @@ famistudio_update_channel:
     sta famistudio_phase_reset_n163
     jmp .read_byte     
     .endif    
+    .endif
+
+    .if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+.opcode_extended_instrument:
+    lda [.channel_data_ptr],y
+    iny
+    jmp .instrument_change
     .endif
 
     .if FAMISTUDIO_USE_PITCH_TRACK
@@ -5128,12 +6016,14 @@ famistudio_update_channel:
     jmp .note_table_done
     .if FAMISTUDIO_EXP_EPSM
 .note_table_epsm:
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
     lda famistudio_epsm_note_table_lsb,y
     sbc famistudio_epsm_note_table_lsb,x
     sta <.slide_delta_lo
     lda famistudio_epsm_note_table_msb,y
     sbc famistudio_epsm_note_table_msb,x
     jmp .note_table_done
+    .endif
     .endif
 .note_table_expansion:
     lda famistudio_exp_note_table_lsb,y
@@ -5192,6 +6082,7 @@ famistudio_update_channel:
     ; - use volume slides, but didnt enable "FAMISTUDIO_USE_VOLUME_SLIDES"
     ; - use DMC counter effect, but didnt enable "FAMISTUDIO_USE_DELTA_COUNTER"
     ; - use a Phase Reset efect, but didnt enable the "FAMISTUDIO_USE_PHASE_RESET"
+    ; - use an instrument > 63, but didnt enable "FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE"
 
     brk 
 
@@ -5200,111 +6091,127 @@ famistudio_update_channel:
         .byte LOW(.opcode_set_reference)                ; $41
         .byte LOW(.opcode_loop)                         ; $42
         .byte LOW(.opcode_disable_attack)               ; $43
+        .byte LOW(.opcode_end_song)                     ; $44
     .if FAMISTUDIO_USE_RELEASE_NOTES    
-        .byte LOW(.opcode_release_note)                 ; $44
-    .else
-        .byte LOW(.opcode_invalid)                      ; $44
-    .endif
-    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
-        .byte LOW(.opcode_famitracker_speed)            ; $45
+        .byte LOW(.opcode_release_note)                 ; $45
     .else
         .byte LOW(.opcode_invalid)                      ; $45
     .endif
+    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
+        .byte LOW(.opcode_famitracker_speed)            ; $46
+    .else
+        .byte LOW(.opcode_invalid)                      ; $46
+    .endif
     .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-        .byte LOW(.opcode_note_delay)                   ; $46
-        .byte LOW(.opcode_cut_delay)                    ; $47
+        .byte LOW(.opcode_note_delay)                   ; $47
+        .byte LOW(.opcode_cut_delay)                    ; $48
     .endif
     .if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-        .byte LOW(.opcode_set_tempo_envelope)           ; $46
-        .byte LOW(.opcode_reset_tempo_envelope)         ; $47
+        .byte LOW(.opcode_set_tempo_envelope)           ; $47
+        .byte LOW(.opcode_reset_tempo_envelope)         ; $48
     .endif
     .if (FAMISTUDIO_USE_FAMITRACKER_TEMPO != 0) & (FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 0)
-        .byte LOW(.opcode_invalid)                      ; $46
         .byte LOW(.opcode_invalid)                      ; $47
+        .byte LOW(.opcode_invalid)                      ; $48
     .endif    
     .if FAMISTUDIO_USE_VIBRATO    
-        .byte LOW(.opcode_override_pitch_envelope)      ; $48
-        .byte LOW(.opcode_clear_pitch_override_flag)    ; $49
+        .byte LOW(.opcode_override_pitch_envelope)      ; $49
+        .byte LOW(.opcode_clear_pitch_override_flag)    ; $4a
     .else
-        .byte LOW(.opcode_invalid)                      ; $48
         .byte LOW(.opcode_invalid)                      ; $49
+        .byte LOW(.opcode_invalid)                      ; $4a
     .endif   
     .if FAMISTUDIO_USE_ARPEGGIO
-        .byte LOW(.opcode_override_arpeggio_envelope)   ; $4a
-        .byte LOW(.opcode_clear_arpeggio_override_flag) ; $4b
-        .byte LOW(.opcode_reset_arpeggio)               ; $4c
+        .byte LOW(.opcode_override_arpeggio_envelope)   ; $4b
+        .byte LOW(.opcode_clear_arpeggio_override_flag) ; $4c
+        .byte LOW(.opcode_reset_arpeggio)               ; $4d
     .else
-        .byte LOW(.opcode_invalid)                      ; $4a
         .byte LOW(.opcode_invalid)                      ; $4b
         .byte LOW(.opcode_invalid)                      ; $4c
-    .endif    
-    .if FAMISTUDIO_USE_PITCH_TRACK
-        .byte LOW(.opcode_fine_pitch)                   ; $4d
-    .else
         .byte LOW(.opcode_invalid)                      ; $4d
     .endif    
-    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-        .byte LOW(.opcode_duty_cycle_effect)            ; $4e
+    .if FAMISTUDIO_USE_PITCH_TRACK
+        .byte LOW(.opcode_fine_pitch)                   ; $4e
     .else
         .byte LOW(.opcode_invalid)                      ; $4e
     .endif    
-    .if FAMISTUDIO_USE_SLIDE_NOTES
-        .byte LOW(.opcode_slide)                        ; $4f
+    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+        .byte LOW(.opcode_duty_cycle_effect)            ; $4f
     .else
         .byte LOW(.opcode_invalid)                      ; $4f
     .endif    
-    .if FAMISTUDIO_USE_VOLUME_SLIDES
-        .byte LOW(.opcode_volume_slide)                 ; $50
+    .if FAMISTUDIO_USE_SLIDE_NOTES
+        .byte LOW(.opcode_slide)                        ; $50
     .else
         .byte LOW(.opcode_invalid)                      ; $50
-    .endif
-    .if FAMISTUDIO_USE_DELTA_COUNTER
-        .byte LOW(.opcode_dmc_counter)                  ; $51
+    .endif    
+    .if FAMISTUDIO_USE_VOLUME_SLIDES
+        .byte LOW(.opcode_volume_slide)                 ; $51
     .else
         .byte LOW(.opcode_invalid)                      ; $51
     .endif
-    .if FAMISTUDIO_USE_PHASE_RESET
-        .byte LOW(.opcode_phase_reset)                  ; $52
+    .if FAMISTUDIO_USE_DELTA_COUNTER
+        .byte LOW(.opcode_dmc_counter)                  ; $52
     .else
         .byte LOW(.opcode_invalid)                      ; $52
     .endif
-    .if !FAMISTUDIO_EXP_NONE                            ; Begin expansion-specific opcodes
-    .if FAMISTUDIO_EXP_VRC6
-        .byte LOW(.opcode_vrc6_saw_volume)              ; $53
+    .if FAMISTUDIO_USE_PHASE_RESET
+        .byte LOW(.opcode_phase_reset)                  ; $53
     .else
         .byte LOW(.opcode_invalid)                      ; $53
     .endif
-    .if (FAMISTUDIO_EXP_VRC7 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte LOW(.opcode_vrc7_release_note)            ; $54
+    .if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+        .byte LOW(.opcode_extended_instrument)          ; $54
     .else
         .byte LOW(.opcode_invalid)                      ; $54
     .endif
-    .if FAMISTUDIO_EXP_FDS
-        .byte LOW(.opcode_fds_mod_speed)                ; $55
-        .byte LOW(.opcode_fds_mod_depth)                ; $56
+    .if !FAMISTUDIO_EXP_NONE                            ; Begin expansion-specific opcodes
+    .if FAMISTUDIO_EXP_VRC6
+        .byte LOW(.opcode_vrc6_saw_volume)              ; $55
     .else
         .byte LOW(.opcode_invalid)                      ; $55
+    .endif
+    .if (FAMISTUDIO_EXP_VRC7 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte LOW(.opcode_vrc7_release_note)            ; $56
+    .else
         .byte LOW(.opcode_invalid)                      ; $56
     .endif
-    .if (FAMISTUDIO_EXP_FDS != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte LOW(.opcode_fds_release_note)             ; $57
+    .if FAMISTUDIO_EXP_FDS
+        .byte LOW(.opcode_fds_mod_speed)                ; $57
+        .byte LOW(.opcode_fds_mod_depth)                ; $58
     .else
         .byte LOW(.opcode_invalid)                      ; $57
-    .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte LOW(.opcode_n163_release_note)            ; $58
-    .else
         .byte LOW(.opcode_invalid)                      ; $58
     .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_PHASE_RESET != 0)
-        .byte LOW(.opcode_n163_phase_reset)             ; $59
+    .if (FAMISTUDIO_EXP_FDS != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte LOW(.opcode_fds_release_note)             ; $59
     .else
         .byte LOW(.opcode_invalid)                      ; $59
     .endif
-    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte LOW(.opcode_epsm_release_note)            ; $5a
+    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte LOW(.opcode_n163_release_note)            ; $5a
     .else
         .byte LOW(.opcode_invalid)                      ; $5a
+    .endif
+    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_PHASE_RESET != 0)
+        .byte LOW(.opcode_n163_phase_reset)             ; $5b
+    .else
+        .byte LOW(.opcode_invalid)                      ; $5b
+    .endif
+    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte LOW(.opcode_epsm_release_note)            ; $5c
+    .else
+        .byte LOW(.opcode_invalid)                      ; $5c
+    .endif
+    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0)
+        .byte LOW(.opcode_epsm_manual_env_period)       ; $5d
+    .else
+        .byte LOW(.opcode_invalid)                      ; $5d
+    .endif
+    .if FAMISTUDIO_EXP_S5B
+        .byte LOW(.opcode_s5b_manual_env_period)        ; $5e
+    .else
+        .byte LOW(.opcode_invalid)                      ; $5e
     .endif
     .endif
 
@@ -5313,111 +6220,127 @@ famistudio_update_channel:
         .byte HIGH(.opcode_set_reference)                ; $41
         .byte HIGH(.opcode_loop)                         ; $42
         .byte HIGH(.opcode_disable_attack)               ; $43
+        .byte HIGH(.opcode_end_song)                     ; $44
     .if FAMISTUDIO_USE_RELEASE_NOTES    
-        .byte HIGH(.opcode_release_note)                 ; $44
-    .else
-        .byte HIGH(.opcode_invalid)                      ; $44
-    .endif
-    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
-        .byte HIGH(.opcode_famitracker_speed)            ; $45
+        .byte HIGH(.opcode_release_note)                 ; $45
     .else
         .byte HIGH(.opcode_invalid)                      ; $45
     .endif
+    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
+        .byte HIGH(.opcode_famitracker_speed)            ; $46
+    .else
+        .byte HIGH(.opcode_invalid)                      ; $46
+    .endif
     .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-        .byte HIGH(.opcode_note_delay)                   ; $46
-        .byte HIGH(.opcode_cut_delay)                    ; $47
+        .byte HIGH(.opcode_note_delay)                   ; $47
+        .byte HIGH(.opcode_cut_delay)                    ; $48
     .endif
     .if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-        .byte HIGH(.opcode_set_tempo_envelope)           ; $46
-        .byte HIGH(.opcode_reset_tempo_envelope)         ; $47
+        .byte HIGH(.opcode_set_tempo_envelope)           ; $47
+        .byte HIGH(.opcode_reset_tempo_envelope)         ; $48
     .endif
     .if (FAMISTUDIO_USE_FAMITRACKER_TEMPO != 0) & (FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 0)
-        .byte HIGH(.opcode_invalid)                      ; $46
         .byte HIGH(.opcode_invalid)                      ; $47
+        .byte HIGH(.opcode_invalid)                      ; $48
     .endif    
     .if FAMISTUDIO_USE_VIBRATO    
-        .byte HIGH(.opcode_override_pitch_envelope)      ; $48
-        .byte HIGH(.opcode_clear_pitch_override_flag)    ; $49
+        .byte HIGH(.opcode_override_pitch_envelope)      ; $49
+        .byte HIGH(.opcode_clear_pitch_override_flag)    ; $4a
     .else
-        .byte HIGH(.opcode_invalid)                      ; $48
         .byte HIGH(.opcode_invalid)                      ; $49
+        .byte HIGH(.opcode_invalid)                      ; $4a
     .endif   
     .if FAMISTUDIO_USE_ARPEGGIO
-        .byte HIGH(.opcode_override_arpeggio_envelope)   ; $4a
-        .byte HIGH(.opcode_clear_arpeggio_override_flag) ; $4b
-        .byte HIGH(.opcode_reset_arpeggio)               ; $4c
+        .byte HIGH(.opcode_override_arpeggio_envelope)   ; $4b
+        .byte HIGH(.opcode_clear_arpeggio_override_flag) ; $4c
+        .byte HIGH(.opcode_reset_arpeggio)               ; $4d
     .else
-        .byte HIGH(.opcode_invalid)                      ; $4a
         .byte HIGH(.opcode_invalid)                      ; $4b
         .byte HIGH(.opcode_invalid)                      ; $4c
-    .endif    
-    .if FAMISTUDIO_USE_PITCH_TRACK
-        .byte HIGH(.opcode_fine_pitch)                   ; $4d
-    .else
         .byte HIGH(.opcode_invalid)                      ; $4d
     .endif    
-    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-        .byte HIGH(.opcode_duty_cycle_effect)            ; $4e
+    .if FAMISTUDIO_USE_PITCH_TRACK
+        .byte HIGH(.opcode_fine_pitch)                   ; $4e
     .else
         .byte HIGH(.opcode_invalid)                      ; $4e
     .endif    
-    .if FAMISTUDIO_USE_SLIDE_NOTES
-        .byte HIGH(.opcode_slide)                        ; $4f
+    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+        .byte HIGH(.opcode_duty_cycle_effect)            ; $4f
     .else
         .byte HIGH(.opcode_invalid)                      ; $4f
     .endif    
-    .if FAMISTUDIO_USE_VOLUME_SLIDES
-        .byte HIGH(.opcode_volume_slide)                 ; $50
+    .if FAMISTUDIO_USE_SLIDE_NOTES
+        .byte HIGH(.opcode_slide)                        ; $50
     .else
         .byte HIGH(.opcode_invalid)                      ; $50
-    .endif
-    .if FAMISTUDIO_USE_DELTA_COUNTER
-        .byte HIGH(.opcode_dmc_counter)                  ; $51
+    .endif    
+    .if FAMISTUDIO_USE_VOLUME_SLIDES
+        .byte HIGH(.opcode_volume_slide)                 ; $51
     .else
         .byte HIGH(.opcode_invalid)                      ; $51
     .endif
-    .if FAMISTUDIO_USE_PHASE_RESET
-        .byte HIGH(.opcode_phase_reset)                  ; $52
+    .if FAMISTUDIO_USE_DELTA_COUNTER
+        .byte HIGH(.opcode_dmc_counter)                  ; $52
     .else
         .byte HIGH(.opcode_invalid)                      ; $52
     .endif
-    .if !FAMISTUDIO_EXP_NONE                             ; Begin expansion-specific opcodes
-    .if FAMISTUDIO_EXP_VRC6
-        .byte HIGH(.opcode_vrc6_saw_volume)              ; $53
+    .if FAMISTUDIO_USE_PHASE_RESET
+        .byte HIGH(.opcode_phase_reset)                  ; $53
     .else
         .byte HIGH(.opcode_invalid)                      ; $53
     .endif
-    .if (FAMISTUDIO_EXP_VRC7 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte HIGH(.opcode_vrc7_release_note)            ; $54
+    .if FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE
+        .byte HIGH(.opcode_extended_instrument)          ; $54
     .else
         .byte HIGH(.opcode_invalid)                      ; $54
     .endif
-    .if FAMISTUDIO_EXP_FDS
-        .byte HIGH(.opcode_fds_mod_speed)                ; $55
-        .byte HIGH(.opcode_fds_mod_depth)                ; $56
+    .if !FAMISTUDIO_EXP_NONE                             ; Begin expansion-specific opcodes
+    .if FAMISTUDIO_EXP_VRC6
+        .byte HIGH(.opcode_vrc6_saw_volume)              ; $55
     .else
         .byte HIGH(.opcode_invalid)                      ; $55
+    .endif
+    .if (FAMISTUDIO_EXP_VRC7 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte HIGH(.opcode_vrc7_release_note)            ; $56
+    .else
         .byte HIGH(.opcode_invalid)                      ; $56
     .endif
-    .if (FAMISTUDIO_EXP_FDS != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte HIGH(.opcode_fds_release_note)             ; $57
+    .if FAMISTUDIO_EXP_FDS
+        .byte HIGH(.opcode_fds_mod_speed)                ; $57
+        .byte HIGH(.opcode_fds_mod_depth)                ; $58
     .else
         .byte HIGH(.opcode_invalid)                      ; $57
-    .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte HIGH(.opcode_n163_release_note)            ; $58
-    .else
         .byte HIGH(.opcode_invalid)                      ; $58
     .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_PHASE_RESET != 0)
-        .byte HIGH(.opcode_n163_phase_reset)             ; $59
+    .if (FAMISTUDIO_EXP_FDS != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte HIGH(.opcode_fds_release_note)             ; $59
     .else
         .byte HIGH(.opcode_invalid)                      ; $59
     .endif
-    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
-        .byte HIGH(.opcode_epsm_release_note)            ; $5a
+    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte HIGH(.opcode_n163_release_note)            ; $5a
     .else
         .byte HIGH(.opcode_invalid)                      ; $5a
+    .endif
+    .if (FAMISTUDIO_EXP_N163 != 0) & (FAMISTUDIO_USE_PHASE_RESET != 0)
+        .byte HIGH(.opcode_n163_phase_reset)             ; $5b
+    .else
+        .byte HIGH(.opcode_invalid)                      ; $5b
+    .endif
+    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_USE_RELEASE_NOTES != 0)
+        .byte HIGH(.opcode_epsm_release_note)            ; $5c
+    .else
+        .byte HIGH(.opcode_invalid)                      ; $5c
+    .endif
+    .if (FAMISTUDIO_EXP_EPSM != 0) & (FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > 0)
+        .byte HIGH(.opcode_epsm_manual_env_period)       ; $5d
+    .else
+        .byte HIGH(.opcode_invalid)                      ; $5d
+    .endif
+    .if FAMISTUDIO_EXP_S5B
+        .byte HIGH(.opcode_s5b_manual_env_period)        ; $5e
+    .else
+        .byte HIGH(.opcode_invalid)                      ; $5e
     .endif
     .endif
 
@@ -5453,9 +6376,9 @@ famistudio_sfx_sample_play:
 
 sample_play:
 
-.tmp = famistudio_r0
-.sample_index = famistudio_r0
-.sample_data_ptr = famistudio_ptr0
+.tmp = famistudio_r3
+.sample_index = famistudio_r3
+.sample_data_ptr = famistudio_ptr1
 
     .if (FAMISTUDIO_USE_DPCM_BANKSWITCHING != 0) | (FAMISTUDIO_USE_DPCM_EXTENDED_RANGE != 0)
     ; famistudio_dpcm_list + sample number * (4 or 5)
@@ -5898,6 +6821,7 @@ famistudio_note_table_msb:
     .endif
 
     .if FAMISTUDIO_EXP_EPSM
+	.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
     famistudio_epsm_note_table_lsb:
         .byte $00
         .byte $9a, $a3, $ad, $b7, $c2, $cd, $da, $e7, $f4, $03, $12, $23 ; Octave 0
@@ -5918,6 +6842,7 @@ famistudio_note_table_msb:
         .byte $13, $14, $15, $16, $18, $19, $1b, $1c, $1e, $20, $22, $24 ; Octave 5
         .byte $26, $28, $2b, $2d, $30, $33, $36, $39, $3d, $40, $44, $48 ; Octave 6
         .byte $4d, $51, $56, $5b, $61, $66, $6d, $73, $7a, $81, $89, $91 ; Octave 7  
+	.endif
     famistudio_exp_note_table_lsb:
     famistudio_epsm_s_note_table_lsb:
         .byte $00
@@ -6206,21 +7131,33 @@ famistudio_channel_to_volume_env:
         .byte FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .endif
     .if FAMISTUDIO_EXP_EPSM
-    .byte FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH3_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH4_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH6_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH7_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH8_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH9_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH10_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH11_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH12_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH13_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_EPSM_CH14_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 0
+	    .byte FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 1
+	    .byte FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 2
+	    .byte FAMISTUDIO_EPSM_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 3
+	    .byte FAMISTUDIO_EPSM_CH3_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 4
+	    .byte FAMISTUDIO_EPSM_CH4_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 5
+	    .byte FAMISTUDIO_EPSM_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 6
+	    .byte FAMISTUDIO_EPSM_CH6_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 7
+	    .byte FAMISTUDIO_EPSM_CH7_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 8
+	    .byte FAMISTUDIO_EPSM_CH8_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .endif
     .endif
 
     .if FAMISTUDIO_USE_ARPEGGIO
@@ -6267,23 +7204,35 @@ famistudio_channel_to_arpeggio_env:
         .byte FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     .endif
     .if FAMISTUDIO_EXP_EPSM
-    .byte FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH2_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH3_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH4_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH5_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH6_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH7_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH8_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH9_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH10_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH11_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH12_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH13_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_EPSM_CH14_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 0
+	    .byte FAMISTUDIO_EPSM_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 1
+	    .byte FAMISTUDIO_EPSM_CH1_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 2
+	    .byte FAMISTUDIO_EPSM_CH2_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 3
+	    .byte FAMISTUDIO_EPSM_CH3_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 4
+	    .byte FAMISTUDIO_EPSM_CH4_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 5
+	    .byte FAMISTUDIO_EPSM_CH5_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 6
+	    .byte FAMISTUDIO_EPSM_CH6_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 7
+	    .byte FAMISTUDIO_EPSM_CH7_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 8
+	    .byte FAMISTUDIO_EPSM_CH8_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .endif ; FAMISTUDIO_EXP_EPSM_ENV_CNT > 8
+    .endif ; FAMISTUDIO_EXP_EPSM
+    .endif ; FAMISTUDIO_USE_ARPEGGIO
 
     .if FAMISTUDIO_USE_SLIDE_NOTES
 famistudio_channel_to_slide:
@@ -6330,25 +7279,37 @@ famistudio_channel_to_slide:
     .byte FAMISTUDIO_S5B_CH2_PITCH_ENV_IDX
     .endif
     .if FAMISTUDIO_EXP_EPSM
-    .byte FAMISTUDIO_EPSM_CH0_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH1_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH2_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH3_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH4_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH5_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH6_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH7_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH8_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH9_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH10_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH11_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH12_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH13_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH14_PITCH_ENV_IDX
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 0
+	    .byte FAMISTUDIO_EPSM_CH0_PITCH_ENV_IDX
     .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 1
+	    .byte FAMISTUDIO_EPSM_CH1_PITCH_ENV_IDX
     .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 2
+	    .byte FAMISTUDIO_EPSM_CH2_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 3
+	    .byte FAMISTUDIO_EPSM_CH3_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 4
+	    .byte FAMISTUDIO_EPSM_CH4_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 5
+	    .byte FAMISTUDIO_EPSM_CH5_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 6
+	    .byte FAMISTUDIO_EPSM_CH6_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 7
+	    .byte FAMISTUDIO_EPSM_CH7_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 8
+	    .byte FAMISTUDIO_EPSM_CH8_PITCH_ENV_IDX
+    .endif ; FAMISTUDIO_EXP_EPSM_ENV_CNT > 8
+    .endif ; FAMISTUDIO_EXP_EPSM
+    .endif ; FAMISTUDIO_USE_NOISE_SLIDE_NOTES
 
-    .endif
+    .endif ; FAMISTUDIO_USE_SLIDE_NOTES
 
 ; For a given channel, returns the index of the pitch envelope.
 famistudio_channel_to_pitch_env:
@@ -6393,22 +7354,34 @@ famistudio_channel_to_pitch_env:
         .byte FAMISTUDIO_S5B_CH2_PITCH_ENV_IDX
     .endif
     .if FAMISTUDIO_EXP_EPSM
-    .byte FAMISTUDIO_EPSM_CH0_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH1_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH2_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH3_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH4_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH5_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH6_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH7_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH8_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH9_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH10_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH11_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH12_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH13_PITCH_ENV_IDX
-    .byte FAMISTUDIO_EPSM_CH14_PITCH_ENV_IDX
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 0
+	    .byte FAMISTUDIO_EPSM_CH0_PITCH_ENV_IDX
     .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 1
+	    .byte FAMISTUDIO_EPSM_CH1_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 2
+	    .byte FAMISTUDIO_EPSM_CH2_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 3
+	    .byte FAMISTUDIO_EPSM_CH3_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 4
+	    .byte FAMISTUDIO_EPSM_CH4_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 5
+	    .byte FAMISTUDIO_EPSM_CH5_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 6
+	    .byte FAMISTUDIO_EPSM_CH6_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 7
+	    .byte FAMISTUDIO_EPSM_CH7_PITCH_ENV_IDX
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_ENV_CNT > 8
+	    .byte FAMISTUDIO_EPSM_CH8_PITCH_ENV_IDX
+    .endif ; FAMISTUDIO_EXP_EPSM_ENV_CNT > 8
+    .endif ; FAMISTUDIO_EXP_EPSM
 
     .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
 ; For a given channel, returns the index of the duty cycle in the "famistudio_duty_cycle" array.
@@ -6539,3 +7512,49 @@ famistudio_volume_table:
     .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
 
     .endif
+    .if FAMISTUDIO_EXP_EPSM
+; Mapping for the channel id of the rhythm channel, to the RAM offset for it
+; If the user disables various channels, then we want to save on the ram for them
+; by just not reserving it, so this maps from channel ID to the new RAM offset for the channel
+; The end result should be a table that looks like this if you have channel 2, 3, and 5 enabled
+; .byte $ff, $00, $01, $ff, $02, $ff
+EPSM_CHANNEL1_RHYTHM_OFFSET = -1 + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE
+EPSM_CHANNEL2_RHYTHM_OFFSET = EPSM_CHANNEL1_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE
+EPSM_CHANNEL3_RHYTHM_OFFSET = EPSM_CHANNEL2_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE
+EPSM_CHANNEL4_RHYTHM_OFFSET = EPSM_CHANNEL3_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE
+EPSM_CHANNEL5_RHYTHM_OFFSET = EPSM_CHANNEL4_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE
+EPSM_CHANNEL6_RHYTHM_OFFSET = EPSM_CHANNEL5_RHYTHM_OFFSET + FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE
+
+	famistudio_rhythm_lut:
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN1_ENABLE
+	    .byte LOW(EPSM_CHANNEL1_RHYTHM_OFFSET)
+    .else
+	    .byte $ff
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN2_ENABLE
+	    .byte LOW(EPSM_CHANNEL2_RHYTHM_OFFSET)
+    .else
+	    .byte $ff
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN3_ENABLE
+	    .byte LOW(EPSM_CHANNEL3_RHYTHM_OFFSET)
+    .else
+	    .byte $ff
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN4_ENABLE
+	    .byte LOW(EPSM_CHANNEL4_RHYTHM_OFFSET)
+    .else
+	    .byte $ff
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE
+	    .byte LOW(EPSM_CHANNEL5_RHYTHM_OFFSET)
+    .else
+	    .byte $ff
+    .endif
+    .if FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE
+	    .byte LOW(EPSM_CHANNEL6_RHYTHM_OFFSET)
+    .else
+	    .byte $ff
+    .endif
+    .endif
+    

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace FamiStudio
 {
@@ -13,14 +14,17 @@ namespace FamiStudio
             public Control control;
             public ImageBox warningIcon;
             public bool visible = true;
+            public bool forceKeepSize;
         };
 
         private int baseX;
         private int baseY;
         private int layoutWidth;
         private int layoutHeight;
+        private int scrollingHeight;
         private List<Property> properties = new List<Property>();
         private Dialog dialog;
+        private ScrollContainer scrollContainer;
 
         private readonly static string[] WarningIcons = 
         {
@@ -50,6 +54,32 @@ namespace FamiStudio
                         prop.label.Visible = value;
                     if (prop.control != null)
                         prop.control.Visible = value;
+                    if (prop.warningIcon != null)
+                        prop.warningIcon.Visible = !string.IsNullOrEmpty(prop.warningIcon.ToolTip) && value;  
+                }
+                if (scrollContainer != null)
+                    scrollContainer.Visible = value;
+            }
+        }
+
+        public void SetScrolling(int height)
+        {
+            scrollingHeight = DpiScaling.ScaleForWindow(height);
+        }
+
+        public void ConditionalSetTextBoxFocus()
+        {
+            if (properties.Count > 0)
+            {
+                var prop = properties[0];
+                prop.control.ClearDialogFocus();
+
+                if (prop.type == PropertyType.TextBox || 
+                    prop.type == PropertyType.ColoredTextBox || 
+                    prop.type == PropertyType.NumericUpDown)
+                {
+                    (prop.control as TextBox).SelectAll();
+                    prop.control.GrabDialogFocus();
                 }
             }
         }
@@ -317,7 +347,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddTextBox(string label, string value, int maxLength = 0, string tooltip = null)
+        public int AddTextBox(string label, string value, int maxLength = 0, bool numeric = false, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -351,6 +381,13 @@ namespace FamiStudio
                     control = CreateLogTextBox()
                 });
             return properties.Count - 1;
+        }
+
+        public ImageBox CreateImageBox(Texture bmp, int resX, int resY)
+        {
+            var image = new ImageBox(bmp);
+            image.Resize(resX, resY);
+            return image;
         }
 
         public int AddButton(string label, string value, string tooltip = null)
@@ -528,6 +565,11 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        public int AddImageBox(string label, string tooltip = null)
+        {
+            return -1;
+        }
+
         private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
         {
             var slider = new Slider(value, min, max, increment, showLabel, format);
@@ -554,9 +596,9 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
+        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None)
         {
-            var grid = new Grid(columnDescs, numRows, true);
+            var grid = new Grid(columnDescs, numRows, !options.HasFlag(GridOptions.NoHeader));
 
             if (data != null)
                 grid.UpdateData(data);
@@ -613,14 +655,21 @@ namespace FamiStudio
             grid.SetRowColor(rowIdx, color);
         }
 
-        public void AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null)
+        public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<object, string> fmt)
+        {
+            var grid = properties[propIdx].control as Grid;
+            grid.OverrideCellSlider(rowIdx, colIdx, min, max, fmt);  
+        }
+
+        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Grid,
-                    control = CreateGrid(columnDescs, data, numRows, tooltip)
+                    control = CreateGrid(columnDescs, data, numRows, tooltip, options)
                 });
+            return properties.Count - 1;
         }
 
         public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
@@ -644,14 +693,15 @@ namespace FamiStudio
             var prop = properties[idx];
 
             // TODO : I only added support to disable these so far.
-            Debug.Assert(
-                prop.type == PropertyType.Label         ||
-                prop.type == PropertyType.CheckBox      ||
-                prop.type == PropertyType.DropDownList  ||
-                prop.type == PropertyType.NumericUpDown ||
-                prop.type == PropertyType.TextBox       ||
-                prop.type == PropertyType.Slider        ||
-                prop.type == PropertyType.ColoredTextBox);
+            Debug.Assert(                                
+                prop.type == PropertyType.Label          ||
+                prop.type == PropertyType.CheckBox       ||
+                prop.type == PropertyType.DropDownList   ||
+                prop.type == PropertyType.NumericUpDown  ||
+                prop.type == PropertyType.TextBox        ||
+                prop.type == PropertyType.Slider         ||
+                prop.type == PropertyType.ColoredTextBox ||
+                prop.type == PropertyType.Grid);
 
             if (prop.label != null)
                 prop.label.Enabled = enabled;
@@ -794,7 +844,19 @@ namespace FamiStudio
                     break;
             }
         }
-        
+
+        public void SetPropertyValue(int idx, int rowIdx, int colIdx, object value)
+        {
+            var prop = properties[idx];
+
+            switch (prop.type)
+            {
+                case PropertyType.Grid:
+                    (prop.control as Grid).SetData(rowIdx, colIdx, value);
+                    break;
+            }
+        }
+
         public void Build(bool advanced = false)
         {
             var margin = DpiScaling.ScaleForWindow(8);
@@ -822,8 +884,21 @@ namespace FamiStudio
                 }
             }
 
-            int totalHeight = 0;
-            int warningWidth = showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
+            var totalHeight = 0;
+            var warningWidth = showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
+            var container = dialog as Container;
+            var actualLayoutWidth = layoutWidth;
+
+            if (scrollingHeight > 0)
+            {
+                scrollContainer = new ScrollContainer();
+                scrollContainer.Move(baseX, baseY, actualLayoutWidth, scrollingHeight);
+                dialog.AddControl(scrollContainer);
+                baseX = 0;
+                baseY = 0;
+                container = scrollContainer;
+                actualLayoutWidth -= scrollContainer.ScrollBarSpacing;
+            }
 
             for (int i = 0; i < propertyCount; i++)
             {
@@ -839,24 +914,18 @@ namespace FamiStudio
                 if (prop.label != null)
                 {
                     prop.label.Move(baseX, baseY + totalHeight, maxLabelWidth, prop.label.Height);
-                    prop.control.Move(baseX + maxLabelWidth + margin, baseY + totalHeight, layoutWidth - maxLabelWidth - warningWidth - margin, prop.control.Height);
+                    prop.control.Move(baseX + maxLabelWidth + margin, baseY + totalHeight, actualLayoutWidth - maxLabelWidth - warningWidth - margin, prop.control.Height);
 
-                    dialog.AddControl(prop.label);
-                    dialog.AddControl(prop.control);
+                    container.AddControl(prop.label);
+                    container.AddControl(prop.control);
 
                     height = prop.label.Height;
                 }
                 else
                 {
-                    prop.control.Move(baseX, baseY + totalHeight, layoutWidth, prop.control.Height);
+                    prop.control.Move(baseX, baseY + totalHeight, actualLayoutWidth, prop.control.Height);
 
-                    dialog.AddControl(prop.control);
-                }
-
-                if (prop.type == PropertyType.ColoredTextBox)
-                {
-                    (prop.control as TextBox).SelectAll();
-                    prop.control.GrabDialogFocus();
+                    container.AddControl(prop.control);
                 }
 
                 height = Math.Max(prop.control.Height, height);
@@ -864,15 +933,25 @@ namespace FamiStudio
                 if (prop.warningIcon != null)
                 {
                     prop.warningIcon.Move(
-                        baseX + layoutWidth - prop.warningIcon.Width,
+                        baseX + actualLayoutWidth - prop.warningIcon.Width,
                         baseY + totalHeight + (height - prop.warningIcon.Height) / 2);
-                    dialog.AddControl(prop.warningIcon);
+                    container.AddControl(prop.warningIcon);
                 }
 
                 totalHeight += height;
             }
 
-            layoutHeight = totalHeight;
+            if (scrollingHeight > 0)
+            {
+                scrollContainer.VirtualSizeY = totalHeight + margin;
+                layoutHeight = scrollingHeight; 
+            }
+            else
+            {
+                layoutHeight = totalHeight;
+            }
+
+            ConditionalSetTextBoxFocus();
         }
     }
 }
