@@ -157,7 +157,7 @@ namespace FamiStudio
 
 #if false
                         // Enable to update the .bin files that help debug the ROM.
-                        var songDataPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"..\\..\\Rom\\song{expSuffix}.bin");
+                        var songDataPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"..\\..\\..\\Rom\\song{expSuffix}.bin");
                         File.WriteAllBytes(songDataPath, songBytes);
 #endif
                     }

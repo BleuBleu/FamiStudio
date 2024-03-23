@@ -1055,7 +1055,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var filename = lastExportFilename != null ? null : Platform.ShowSaveFileDialog("Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
+                    var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog("Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
                     if (filename != null)
                     {
                         ExportFdsAction(filename);

@@ -2,7 +2,7 @@
 ; Based off Brad's (rainwarrior.ca) CA65 template, both the regular and FDS version.
 
 FAMISTUDIO_VERSION_MAJOR  = 4
-FAMISTUDIO_VERSION_MINOR  = 1
+FAMISTUDIO_VERSION_MINOR  = 2
 FAMISTUDIO_VERSION_HOTFIX = 0
 
 ; Enable all features.
@@ -253,8 +253,7 @@ FILE_COUNT = 6
 ; General info about the project (author, etc.), 64-bytes.
 max_song:        .byte $00
 first_dpcm_bank: .byte $00 ; Index of the first DPCM bank. 
-fds_file_count:  .byte $06 ; Number of actual file on the disk.
-padding:         .res 5    ; reserved
+padding:         .res 6    ; reserved
 project_name:    .res 28   ; Project name
 project_author:  .res 28   ; Project author
 
@@ -306,7 +305,6 @@ vectors:
 .if FAMISTUDIO_EXP_FDS
 ; FDS BIOS functions
 fds_bios_load_files     = $e1f8
-fds_bios_set_file_count = $e305
 .endif
 
 ; Our single screen.
@@ -598,10 +596,6 @@ default_palette:
             dey
             sta (p0), y
             bne leftover_loop
-
-        lda fds_file_count
-        jsr fds_bios_set_file_count
-        .word disk_id
 
     .endif
 
@@ -992,6 +986,9 @@ version_text: ;
 
 load_file:
     ; Kick off file loading.
+    ; NOTE : In the past ive had issues where the load would never finish if this call
+    ; was near a half-page boundary. This resolved itself, but im leaving this comment
+    ; here in case it happens again.
     jsr fds_bios_load_files
     .word disk_id
     .word load_list

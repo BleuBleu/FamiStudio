@@ -5494,6 +5494,10 @@ famistudio_advance_channel:
             jsr famistudio_music_sample_play
             ldy tmp_y1
             ldx #4
+            .if FAMISTUDIO_CFG_EQUALIZER 
+                lda #9
+                sta famistudio_chn_note_counter,x
+            .endif            
             bne @done
 .endif
 

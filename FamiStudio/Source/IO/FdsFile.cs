@@ -181,12 +181,16 @@ namespace FamiStudio
                 }
 
 #if DUMP_FDSDATA_BIN
-                var songDataPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"..\\..\\Rom\\fdsdata.bin");
+                var songDataPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"..\\..\\..\\Rom\\fdsdata.bin");
                 File.WriteAllBytes(songDataPath, fdsFileBytes.ToArray());
 #endif
 
-                // Use this field for the number of files.
-                projectInfo.fdsFileCount = (byte)fileIndex;
+                // Patch the file count in the header directly. This changes this file count in the header:
+                //  ; block 2
+                //  .byte $02
+                //  .byte FILE_COUNT
+                Debug.Assert(fdsFileBytes[0x49] == FdsFirstFileIndex);
+                fdsFileBytes[0x49] = (byte)fileIndex;
 
                 // Pad rest with zeroes.
                 fdsFileBytes.AddRange(new byte[FdsMaxFileSize - fdsFileBytes.Count]);
@@ -203,7 +207,7 @@ namespace FamiStudio
                 }
 
 #if DUMP_FDSDATA_BIN
-                var tocDataPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"..\\..\\Rom\\fdstoc.bin");
+                var tocDataPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"..\\..\\..\\Rom\\fdstoc.bin");
                 File.WriteAllBytes(tocDataPath, tocBytes);
 #endif
 
