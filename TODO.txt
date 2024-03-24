@@ -8,17 +8,7 @@
 
 4.2.0 Testing/Packaging
 =======================
-- Add new features to unit tests
-	x FDS : Phase reset
-	x FDS : Automod
-	x MMC5 : Phase reset
-	x N163 : Phase reset
-	x 2A03 : Phase reset
-	x VRC6 : Phase reset
-	x VRC7 : No attack
-	- EPSM Square : All envelope features.
-	x EPSM FM : No attack
-	x S5B : All envelope features.
+- Validate unit test results.	
 - Run huge sound engine test with old songs.
 - Dont publish for chromebooks
 - Documentation for all new features
