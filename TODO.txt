@@ -1,6 +1,5 @@
 4.2.0
 =====
-- BUG : Osc thickness VS. mouse wheel
 - Change discord invite link
 / Switch to .NET for Android too.
 	- Setup keystore, etc.
