@@ -306,6 +306,7 @@ namespace FamiStudio
                                 if (note.HasDutyCycle)      noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
                                 if (note.HasNoteDelay)      noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
                                 if (note.HasCutDelay)       noteLine += GenerateAttribute("CutDelay", note.CutDelay);
+                                if (note.HasDeltaCounter)   noteLine += GenerateAttribute("DeltaCounter", note.DeltaCounter);
                                 if (note.HasPhaseReset)     noteLine += GenerateAttribute("PhaseReset", note.PhaseReset);
                                 if (note.HasEnvelopePeriod) noteLine += GenerateAttribute("EnvelopePeriod", note.EnvelopePeriod);
 
