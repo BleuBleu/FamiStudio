@@ -14,7 +14,7 @@
 	x N163 : Phase reset
 	x 2A03 : Phase reset
 	x VRC6 : Phase reset
-	- VRC7 : No attack
+	x VRC7 : No attack
 	- EPSM Square : All envelope features.
 	- EPSM FM : No attack
 	- S5B : All envelope features.
