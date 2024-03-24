@@ -8,8 +8,7 @@
 
 4.2.0 Testing/Packaging
 =======================
-- Validate unit test results.	
-- Run huge sound engine test with old songs.
+- Run/validate NSF unit test.	
 - Dont publish for chromebooks
 - Documentation for all new features
 - Test MacOS .NET startup script.
