@@ -9,7 +9,7 @@
 =======================
 - Add new features to unit tests
 	x FDS : Phase reset
-	- FDS : Automod
+	x FDS : Automod
 	x MMC5 : Phase reset
 	x N163 : Phase reset
 	x 2A03 : Phase reset
