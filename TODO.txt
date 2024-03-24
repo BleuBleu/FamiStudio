@@ -1,5 +1,6 @@
 4.2.0
 =====
+- BUG : Osc thickness VS. mouse wheel
 - Change discord invite link
 / Switch to .NET for Android too.
 	- Setup keystore, etc.
@@ -17,7 +18,7 @@
 	x VRC7 : No attack
 	- EPSM Square : All envelope features.
 	x EPSM FM : No attack
-	- S5B : All envelope features.
+	x S5B : All envelope features.
 - Run huge sound engine test with old songs.
 - Dont publish for chromebooks
 - Documentation for all new features
