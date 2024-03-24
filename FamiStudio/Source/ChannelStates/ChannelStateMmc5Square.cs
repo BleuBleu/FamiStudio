@@ -28,13 +28,15 @@ namespace FamiStudio
                 var periodHi = (period >> 8) & 0x07;
                 var periodLo = (period >> 0) & 0xff;
 
+                // Write low first to match NSF.
+                WriteRegister(NesApu.MMC5_PL1_LO + regOffset, periodLo);
+
                 if (periodHi != prevPeriodHi) // Avoid resetting the sequence.
                 {
                     WriteRegister(NesApu.MMC5_PL1_HI + regOffset, periodHi);
                     prevPeriodHi = periodHi;
                 }
 
-                WriteRegister(NesApu.MMC5_PL1_LO  + regOffset, periodLo);
                 WriteRegister(NesApu.MMC5_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
             }
 
