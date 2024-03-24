@@ -4,17 +4,15 @@
 / Switch to .NET for Android too.
 	- Setup keystore, etc.
 	- Bring back APK
-- BUG : music.nsf (from persune) has period of zero and sounds weird.
 
 4.2.0 Testing/Packaging
 =======================
 - Test all project explorer buttons with folders. Make sure no offsets.
 - Make sure double-click delete doesnt create 2 transaction (delete + multiple delete operation)
-- Make sure PortAudio.dll is included in portable + setup.
 - Add new features to unit tests
 - Run huge sound engine test with old songs.
 - Dont publish for chromebooks
-- Write S5B documentation.
+- Documentation for all new features
 - Android : Run short/1-frame tests.
 - Test MacOS .NET startup script.
 

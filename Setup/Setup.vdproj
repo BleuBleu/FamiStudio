@@ -246,10 +246,10 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.5.0.x64"
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.7.0.x64"
                     {
-                    "Name" = "8:.NET Desktop Runtime 5.0.17 (x64)"
-                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.5.0.x64"
+                    "Name" = "8:.NET Desktop Runtime 7.0.17 (x64)"
+                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.7.0.x64"
                     }
                 }
             }
@@ -956,15 +956,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
-        "ProductCode" = "8:{F5277FED-8EF6-4FAC-9153-0399DCF5C051}"
-        "PackageCode" = "8:{5C27499D-3482-4254-B99F-B1C38D2603F4}"
+        "ProductCode" = "8:{2AD6397A-C59C-4B63-A7DE-8575EC8930D1}"
+        "PackageCode" = "8:{D7BF3408-1B50-4172-BDB0-2769042136FB}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:4.1.3"
+        "ProductVersion" = "8:4.2.0"
         "Manufacturer" = "8:BleuBleu"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1534,7 +1534,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9A9A290F02BD4DF9857CA1EFF73548B4"
             {
-            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\net5.0\\apphost.exe"
+            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\net7.0\\apphost.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
