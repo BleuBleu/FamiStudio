@@ -7,13 +7,11 @@
 
 4.2.0 Testing/Packaging
 =======================
-- Test all project explorer buttons with folders. Make sure no offsets.
-- Make sure double-click delete doesnt create 2 transaction (delete + multiple delete operation)
+- Android : Run short/1-frame tests.
 - Add new features to unit tests
 - Run huge sound engine test with old songs.
 - Dont publish for chromebooks
 - Documentation for all new features
-- Android : Run short/1-frame tests.
 - Test MacOS .NET startup script.
 
 4.2.0 Change Log
