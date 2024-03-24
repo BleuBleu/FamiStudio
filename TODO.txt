@@ -16,7 +16,7 @@
 	x VRC6 : Phase reset
 	x VRC7 : No attack
 	- EPSM Square : All envelope features.
-	- EPSM FM : No attack
+	x EPSM FM : No attack
 	- S5B : All envelope features.
 - Run huge sound engine test with old songs.
 - Dont publish for chromebooks
