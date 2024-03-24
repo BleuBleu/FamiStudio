@@ -19,8 +19,8 @@
 ..\bin\Release\net7.0\FamiStudio.exe TestVRC7.nsf famistudio-txt-export TestVRC7_NsfRef.txt -nsf-import-pattern-length:160 -famistudio-txt-bare
 ..\bin\Release\net7.0\FamiStudio.exe TestFamiTrackerTempo.nsf famistudio-txt-export TestFamiTrackerTempo_NsfRef.txt -nsf-import-pattern-length:160 -famistudio-txt-bare
 ..\bin\Release\net7.0\FamiStudio.exe TestEPSM.nsf famistudio-txt-export TestEPSM_NsfRef.txt -nsf-import-pattern-length:160 -nsf-import-duration:170 -famistudio-txt-bare
-..\bin\Release\net7.0\FamiStudio.exe TestMulti.nsf famistudio-txt-export TestMulti_NsfRef.txt -nsf-import-pattern-length:160 -nsf-import-duration:248 -famistudio-txt-bare
-..\bin\Release\net7.0\FamiStudio.exe TestMultiEPSM.nsf famistudio-txt-export TestMultiEPSM_NsfRef.txt -nsf-import-pattern-length:160 -nsf-import-duration:360 -famistudio-txt-bare
+..\bin\Release\net7.0\FamiStudio.exe TestMulti.nsf famistudio-txt-export TestMulti_NsfRef.txt -nsf-import-pattern-length:160 -nsf-import-duration:260 -famistudio-txt-bare
+..\bin\Release\net7.0\FamiStudio.exe TestMultiEPSM.nsf famistudio-txt-export TestMultiEPSM_NsfRef.txt -nsf-import-pattern-length:160 -nsf-import-duration:380 -famistudio-txt-bare
 
 del /q *_NsfTest.txt
 del /q *.nsf

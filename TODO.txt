@@ -9,6 +9,7 @@
 4.2.0 Testing/Packaging
 =======================
 - Run/validate NSF unit test.	
+	- Listen to each of them to spot mistakes too.
 - Dont publish for chromebooks
 - Documentation for all new features
 - Test MacOS .NET startup script.
