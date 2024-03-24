@@ -204,7 +204,7 @@ namespace FamiStudio
         {
             if (enabled && captureButton < 0 && e.ScrollY != 0 && e.X > GetButtonRect(0).Right && e.X < GetButtonRect(1).Left)
             {
-                Value += e.ScrollY > 0 ? 1 : -1;
+                Value += e.ScrollY > 0 ? inc : -inc;
             }
 
             e.MarkHandled();
