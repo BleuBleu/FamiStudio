@@ -260,7 +260,7 @@ namespace FamiStudio
             clip.depthValue = curDepthValue;
 
             if (clipParents && clipStack.Count > 0)
-                clip.rect = RectangleF.Intersect(clip.rect, clipStack.Peek().rect);
+                clip.rect = RectangleF.Intersection(clip.rect, clipStack.Peek().rect);
 
             clipRegions.Add(clip);
             clipStack.Push(clip);
@@ -1396,7 +1396,6 @@ namespace FamiStudio
             public float v0;
             public float u1;
             public float v1;
-            public float opacity;
             public Color tint;
             public TextureFlags flags;
             public byte depth;
@@ -2779,56 +2778,56 @@ namespace FamiStudio
             texts.Add(inst);
         }
 
-        public void DrawTexture(Texture bmp, float x, float y, float opacity = 1.0f, Color tint = new Color())
+        public void DrawTexture(Texture bmp, float x, float y, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
-            DrawTexture(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0, 0, 1, 1, TextureFlags.Default, tint);
+            DrawTexture(bmp, x, y, bmp.Size.Width, bmp.Size.Height, 0, 0, 1, 1, TextureFlags.Default, tint);
         }
 
         public void DrawTextureScaled(Texture bmp, float x, float y, float sx, float sy, bool flip)
         {
             if (flip)
             {
-                DrawTexture(bmp, x, y, sx, sy, 1, 0, 1, 1, 0);
+                DrawTexture(bmp, x, y, sx, sy, 0, 1, 1, 0);
             }
             else
             {
-                DrawTexture(bmp, x, y, sx, sy, 1, 0, 0, 1, 1);
+                DrawTexture(bmp, x, y, sx, sy, 0, 0, 1, 1);
             }
         }
 
-        public void DrawTextureCentered(Texture bmp, float x, float y, float width, float height, float opacity = 1.0f, Color tint = new Color())
+        public void DrawTextureCentered(Texture bmp, float x, float y, float width, float height, Color tint = new Color())
         {
             x += (width  - bmp.Size.Width)  / 2;
             y += (height - bmp.Size.Height) / 2;
-            DrawTexture(bmp, x, y, opacity, tint);
+            DrawTexture(bmp, x, y, tint);
         }
 
-        public void DrawTextureAtlas(TextureAtlasRef bmp, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawTextureAtlas(TextureAtlasRef bmp, float x, float y, float scale = 1.0f, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             var atlas = bmp.Atlas;
             var elementIndex = bmp.ElementIndex;
             var elementSize = bmp.ElementSize;
             atlas.GetElementUVs(elementIndex, out var u0, out var v0, out var u1, out var v1);
-            DrawTexture(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, TextureFlags.Default, tint);
+            DrawTexture(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, u0, v0, u1, v1, TextureFlags.Default, tint);
         }
 
-        public void DrawTextureAtlasCentered(TextureAtlasRef bmp, float x, float y, float width, float height, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawTextureAtlasCentered(TextureAtlasRef bmp, float x, float y, float width, float height, float scale = 1.0f, Color tint = new Color())
         {
             x += MathF.Floor((width  - bmp.ElementSize.Width)  * 0.5f);
             y += MathF.Floor((height - bmp.ElementSize.Height) * 0.5f);
-            DrawTextureAtlas(bmp, x, y, opacity, scale, tint);
+            DrawTextureAtlas(bmp, x, y, scale, tint);
         }
 
-        public void DrawTextureAtlasCentered(TextureAtlasRef bmp, Rectangle rect, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawTextureAtlasCentered(TextureAtlasRef bmp, Rectangle rect, float scale = 1.0f, Color tint = new Color())
         {
             float x = rect.Left + (rect.Width  - bmp.ElementSize.Width)  / 2;
             float y = rect.Top  + (rect.Height - bmp.ElementSize.Height) / 2;
-            DrawTextureAtlas(bmp, x, y, opacity, scale, tint);
+            DrawTextureAtlas(bmp, x, y, scale, tint);
         }
 
-        public void DrawTexture(Texture bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, TextureFlags flags = TextureFlags.Default, Color tint = new Color())
+        public void DrawTexture(Texture bmp, float x, float y, float width, float height, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, TextureFlags flags = TextureFlags.Default, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             if (!textures.TryGetValue(bmp, out var list))
@@ -2867,7 +2866,6 @@ namespace FamiStudio
                 inst.v1 = v1;
             }
 
-            inst.opacity = opacity;
             inst.flags = flags;
 
             list.Add(inst);
@@ -3373,11 +3371,10 @@ namespace FamiStudio
                         drawData.vtxArray[drawData.vtxArraySize++] = y1;
                     }
                     
-                    var packedOpacity = new Color(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)).ToAbgr();
-                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
-                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
-                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
-                    drawData.colArray[drawData.colArraySize++] = packedOpacity;
+                    drawData.colArray[drawData.colArraySize++] = tint.ToAbgr();
+                    drawData.colArray[drawData.colArraySize++] = tint.ToAbgr();
+                    drawData.colArray[drawData.colArraySize++] = tint.ToAbgr();
+                    drawData.colArray[drawData.colArraySize++] = tint.ToAbgr();
 
                     drawData.depArray[drawData.depArraySize++] = inst.depth;
                     drawData.depArray[drawData.depArraySize++] = inst.depth;

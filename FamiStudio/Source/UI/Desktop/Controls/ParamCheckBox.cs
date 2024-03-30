@@ -1,22 +1,22 @@
 namespace FamiStudio
 {
-    public class CheckBox : Control
+    public class ParamCheckBox : Control
     {
+        // MATTT : What was that again?
+        private float bmpScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
+
         public delegate void CheckedChangedDelegate(Control sender, bool check);
         public event CheckedChangedDelegate CheckedChanged;
 
-        private string text;
         private bool check;
         private bool hover;
-        private int margin = DpiScaling.ScaleForWindow(4);
         private TextureAtlasRef bmpCheckOn;
         private TextureAtlasRef bmpCheckOff;
 
-        public CheckBox(bool chk, string txt = null)
+        public ParamCheckBox(bool chk)
         {
-            text = txt;
             check = chk;
-            height = DpiScaling.ScaleForWindow(24);
+            height = 16;
         }
 
         public bool Checked
@@ -29,20 +29,13 @@ namespace FamiStudio
         {
             bmpCheckOn  = window.Graphics.GetTextureAtlasRef("CheckBoxYes");
             bmpCheckOff = window.Graphics.GetTextureAtlasRef("CheckBoxNo");
-        }
-
-        public bool IsPointInCheckBox(int x, int y)
-        {
-            var bmpSize = bmpCheckOn.ElementSize;
-            var baseY = (height - bmpSize.Height) / 2;
-
-            return x >= 0 && y >= baseY && x < bmpSize.Width && y < baseY + bmpSize.Height;
+            width  = DpiScaling.ScaleCustom(bmpCheckOn.ElementSize.Width,  bmpScale);
+            height = DpiScaling.ScaleCustom(bmpCheckOn.ElementSize.Height, bmpScale);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            if (enabled && IsPointInCheckBox(e.X, e.Y))
-                Checked = !Checked;
+            Checked = !Checked;
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -52,8 +45,8 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            SetAndMarkDirty(ref hover, IsPointInCheckBox(e.X, e.Y));
-       }
+            SetAndMarkDirty(ref hover, true);
+        }
 
         protected override void OnMouseLeave(System.EventArgs e)
         {
@@ -63,15 +56,10 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
-            var bmpSize = bmpCheckOn.ElementSize;
-            var baseY = (height - bmpSize.Height) / 2;
-            var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
+            var color = hover ? Color.Pink : Theme.BlackColor;// MATTT : Hover
 
-            c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, hover && enabled ? Theme.DarkGreyColor3 : Theme.DarkGreyColor1, color);
-            c.DrawTextureAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, color);
-
-            if (!string.IsNullOrEmpty(text))
-                c.DrawText(text, Fonts.FontMedium, bmpSize.Width + margin, 0, color, TextFlags.MiddleLeft, 0, height);
+            c.DrawRectangle(0, 0, width - 1, height - 1, color); 
+            c.DrawTextureAtlas(check ? bmpCheckOn : bmpCheckOff, 0, 0, 1, color);
         }
     }
 }

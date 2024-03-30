@@ -62,6 +62,12 @@ namespace FamiStudio
             }
         }
 
+        public void AutoSizeToImage()
+        {
+            Debug.Assert(bmpAtlas != null);
+            Resize(bmpAtlas.ElementSize.Width, bmpAtlas.ElementSize.Height);
+        }
+
         protected override void OnAddedToContainer()
         {
             UpdateAtlasBitmap();
@@ -81,7 +87,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    c.DrawTextureCentered(bmp, 0, 0, width, height, 1, tint);
+                    c.DrawTextureCentered(bmp, 0, 0, width, height, tint);
                 }
             }
             else if (!string.IsNullOrEmpty(atlasImageName))
@@ -92,7 +98,7 @@ namespace FamiStudio
                     Debug.Assert(bmpAtlas != null);
                 }
 
-                c.DrawTextureAtlasCentered(bmpAtlas, 0, 0, width, height, 1, 1, tint);
+                c.DrawTextureAtlasCentered(bmpAtlas, 0, 0, width, height, 1, tint);
             }
             else
             {

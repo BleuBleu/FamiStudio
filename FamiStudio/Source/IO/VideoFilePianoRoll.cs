@@ -505,11 +505,11 @@ namespace FamiStudio
                 if (settings.PianoRollPerspective > 0)
                 {
                     perspective2xGraphics.BeginDrawFrame(new Rectangle(0, 0, channelSizeX * 2, channelSizeY * 2), false, Theme.DarkGreyColor2);
-                    perspective2xGraphics.DefaultCommandList.DrawTexture(pianoRollTexture, -numPerspectivePixels * 2, 0, renderSizeX * 2, channelSizeY * 2, 1.0f, u, v, 1, 1, TextureFlags.Perspective | TextureFlags.Rotated90);
+                    perspective2xGraphics.DefaultCommandList.DrawTexture(pianoRollTexture, -numPerspectivePixels * 2, 0, renderSizeX * 2, channelSizeY * 2, u, v, 1, 1, TextureFlags.Perspective | TextureFlags.Rotated90);
                     perspective2xGraphics.EndDrawFrame();
 
                     perspective1xGraphics.BeginDrawFrame(new Rectangle(0, 0, channelSizeX, channelSizeY), false, Theme.DarkGreyColor2);
-                    perspective1xGraphics.DefaultCommandList.DrawTexture(perspective2xTexture, 0, 0, channelSizeX, channelSizeY, 1.0f, 0, 1, 1, 0);
+                    perspective1xGraphics.DefaultCommandList.DrawTexture(perspective2xTexture, 0, 0, channelSizeX, channelSizeY, 0, 1, 1, 0);
                     perspective1xGraphics.EndDrawFrame();
                 }
 
@@ -525,7 +525,7 @@ namespace FamiStudio
                 else
                 {
                     videoGraphics.PushClipRegion(channelPosX, channelPosY, channelSizeX, channelSizeY);
-                    videoGraphics.DefaultCommandList.DrawTexture(pianoRollTexture, channelPosX, channelPosY, channelSizeX, channelSizeY, 1, 0, 0, 1, 1, TextureFlags.Rotated90);
+                    videoGraphics.DefaultCommandList.DrawTexture(pianoRollTexture, channelPosX, channelPosY, channelSizeX, channelSizeY, 0, 0, 1, 1, TextureFlags.Rotated90);
                     videoGraphics.PopClipRegion();
                 }
 
@@ -541,7 +541,7 @@ namespace FamiStudio
                     var s = channelStates[i];
                     var volume = frame.channelData[s.songChannelIndex].volume;
                     var note = frame.channelData[s.songChannelIndex].note;
-                    var color = Color.Transparent;
+                    var color = Color.Invisible;
 
                     if (note.IsMusical)
                     {
@@ -579,7 +579,7 @@ namespace FamiStudio
                 for (var i = 0; i < numRows; i++)
                 {
                     var by = i * channelSizeY;
-                    c.FillRectangleGradient(0, by, videoResX, by + gradientSizeY, Color.Black, Color.Transparent, true, gradientSizeY);
+                    c.FillRectangleGradient(0, by, videoResX, by + gradientSizeY, Color.Black, Color.Invisible, true, gradientSizeY);
 
                     if (i > 0)
                         o.DrawLine(0, by, videoResX, by, Theme.BlackColor, channelLineWidth);
@@ -604,7 +604,7 @@ namespace FamiStudio
 
                     o.PushTranslation(channelPosX, channelPosY + ChannelIconPosY);
                     o.FillAndDrawRectangle(channelIconPosX, 0, channelIconPosX + s.icon.Size.Width - 1, s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
-                    o.DrawTexture(s.icon, channelIconPosX, 0, 1, Theme.LightGreyColor1);
+                    o.DrawTexture(s.icon, channelIconPosX, 0, Theme.LightGreyColor1);
                     o.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, textOffsetY, Theme.LightGreyColor1);
                     o.PopTransform();
 

@@ -201,7 +201,7 @@ namespace FamiStudio
 
                 if (bmp != null)
                 {
-                    c.DrawTextureAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
+                    c.DrawTextureAtlas(bmp, iconPos, iconPos, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
                 }
 
                 c.DrawText(option.Text, Fonts.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);

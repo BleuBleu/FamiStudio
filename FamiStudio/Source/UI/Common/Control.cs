@@ -19,6 +19,7 @@ namespace FamiStudio
         protected bool enabled = true;
         protected bool canFocus = true;
         protected string tooltip;
+        protected object userData;
 
         protected Control()
         {
@@ -96,7 +97,16 @@ namespace FamiStudio
         public void AcquiredDialogFocus() { OnAcquiredDialogFocus(); }
         public void AddedToContainer() { OnAddedToContainer(); }
 
-        public void ContainerMouseWheelNotify(MouseEventArgs e) { ParentContainer?.ContainerMouseWheelNotify(this, e); } 
+        public void ContainerMouseWheelNotify(MouseEventArgs e) 
+        { 
+            var c = ParentContainer; 
+            while (c != null) 
+            { 
+                c.ContainerMouseWheelNotify(this, e); 
+                c = c.ParentContainer; 
+            }
+        } 
+
         public void DialogMouseDownNotify(MouseEventArgs e) { ParentDialog?.DialogMouseDownNotify(this, e); }
         public void DialogMouseMoveNotify(MouseEventArgs e) { ParentDialog?.DialogMouseMoveNotify(this, e); }
 
@@ -119,6 +129,7 @@ namespace FamiStudio
         public bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
         public bool CanFocus { get => canFocus; }
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
+        public object UserData { get => userData; set => userData = value; }
         public void MarkDirty() { window?.MarkDirty(); }
 
         public bool HasParent => container != null;

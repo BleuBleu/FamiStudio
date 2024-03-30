@@ -114,7 +114,7 @@ namespace FamiStudio
             var thumbRect = GetThumbRectangle();
 
             c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, Theme.DarkGreyColor1, DpiScaling.ScaleForWindow(3));
-            c.DrawTextureAtlas(bmpThumb, thumbRect.Left, thumbRect.Top, 1, 1, hover || dragging ? Theme.LightGreyColor2 : enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
+            c.DrawTextureAtlas(bmpThumb, thumbRect.Left, thumbRect.Top, 1, hover || dragging ? Theme.LightGreyColor2 : enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
 
             if (label)
             {

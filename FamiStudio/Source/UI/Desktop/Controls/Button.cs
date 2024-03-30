@@ -17,6 +17,8 @@ namespace FamiStudio
         private bool border;
         private bool hover;
         private bool press;
+        private bool transparent;
+        private bool dark;
 
         public Button(string img, string txt) 
         {
@@ -27,31 +29,43 @@ namespace FamiStudio
         public string Text
         {
             get { return text; }
-            set { text = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref text, value); }
         }
 
         public string Image
         {
             get { return imageName; }
-            set { imageName = value; UpdateAtlasBitmap(); MarkDirty(); }
+            set { imageName = value; MarkDirty(); UpdateAtlasBitmap(); }
         }
 
         public bool BoldFont
         {
             get { return bold; }
-            set { bold = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref bold, value); }
         }
 
         public bool Border
         {
             get { return border; }
-            set { border = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref border, value); }
         }
 
         public bool Ellipsis
         {
             get { return ellipsis; }
-            set { ellipsis = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref ellipsis, value); }
+        }
+
+        public bool Transparent
+        {
+            get { return transparent; }
+            set { SetAndMarkDirty(ref transparent, value); }
+        }
+
+        public bool Dark
+        {
+            get { return dark; }
+            set { SetAndMarkDirty(ref dark, value); }   
         }
 
         public void AutosizeWidth()
@@ -106,13 +120,23 @@ namespace FamiStudio
             }
         }
 
+        public void AutoSizeToImage()
+        {
+            Debug.Assert(bmp != null);
+            Resize(bmp.ElementSize.Width, bmp.ElementSize.Height);
+        }
+
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
-            var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
+            var color = dark ? Color.Black : (enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
+            var opacity = dark ? enabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f;
 
-            if (enabled && (border || press || hover))
+            // Debug
+            //c.FillRectangle(ClientRectangle, Color.Pink);
+
+            if (enabled && !transparent && (border || press || hover))
             {
                 var fillBrush = press ? Theme.MediumGreyColor1 :
                                 hover ? Theme.DarkGreyColor6 :
@@ -132,7 +156,7 @@ namespace FamiStudio
 
             if (!hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, 1, color);
+                c.DrawTextureAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, color.Transparent(opacity));
             }
             else if (hasText && bmp == null)
             {
@@ -140,7 +164,7 @@ namespace FamiStudio
             }
             else if (hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, 1, color);
+                c.DrawTextureAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, color);
                 c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, color, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 

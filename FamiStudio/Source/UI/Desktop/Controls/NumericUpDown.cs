@@ -232,7 +232,7 @@ namespace FamiStudio
                 c.FillAndDrawRectangle(rects[i], fillBrush, color);
 
                 c.PushTranslation(0, captureButton == i ? 1 : 0);
-                c.DrawTextureAtlasCentered(bmp[i], rects[i], 1, 1, color);
+                c.DrawTextureAtlasCentered(bmp[i], rects[i], 1, color);
                 c.PopTransform();
             }
         }

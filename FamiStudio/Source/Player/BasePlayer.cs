@@ -692,7 +692,7 @@ namespace FamiStudio
                         var note = state.CurrentNote;
                         var instrument = note != null ? note.Instrument : null;
 
-                        registerValues.InstrumentColors[state.InnerChannelType] = instrument != null ? instrument.Color : Color.Transparent;
+                        registerValues.InstrumentColors[state.InnerChannelType] = instrument != null ? instrument.Color : Color.Invisible;
 
                         if (state.InnerChannelType >= ChannelType.N163Wave1 &&
                             state.InnerChannelType <= ChannelType.N163Wave8)

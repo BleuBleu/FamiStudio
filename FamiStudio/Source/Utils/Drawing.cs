@@ -10,14 +10,14 @@ namespace FamiStudio
     // a bunch of conversions.
     public struct Color
     {
-        private int color; // 0xAABBGGRR
+        private int color = unchecked((int)0xff000000); // 0xAABBGGRR
 
         public static readonly Color Empty = default(Color);
                                         
         public static Color White       => new Color(255, 255, 255);
         public static Color Black       => new Color(0, 0, 0);
         public static Color Azure       => new Color(240, 255, 255);
-        public static Color Transparent => new Color(0, 0, 0, 0);
+        public static Color Invisible   => new Color(0, 0, 0, 0);
         public static Color SpringGreen => new Color(0, 255, 127);
         public static Color Pink        => new Color(255, 192, 203);
 
@@ -98,6 +98,11 @@ namespace FamiStudio
         public Color Scaled(float scale)
         {
             return new Color((int)(R * scale), (int)(G * scale), (int)(B * scale), A);
+        }
+
+        public Color Transparent(float a)
+        {
+            return FromArgb(a, this);
         }
 
         public static bool operator ==(Color left, Color right)
@@ -265,9 +270,28 @@ namespace FamiStudio
             this.y += y;
         }
 
+        public Rectangle Offsetted(int ox, int oy)
+        {
+            return new Rectangle(x + ox, y + oy, width, height);
+        }
+
         public Rectangle Resized(int sx, int sy)
         {
             return new Rectangle(x, y, width + sx, height + sy);
+        }
+
+        public bool Intersects(Rectangle r)
+        {
+            // TODO : Do we want > or >= ?
+            if (Left   > r.Right  ||
+                Right  < r.Left   ||
+                Top    > r.Bottom ||
+                Bottom < r.Top)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public static Rectangle Union(Rectangle a, Rectangle b)
@@ -280,7 +304,7 @@ namespace FamiStudio
             return new Rectangle(minX, minY, maxX - minX, maxY - minY);
         }
 
-        public static Rectangle Intersect(Rectangle a, Rectangle b)
+        public static Rectangle Intersection(Rectangle a, Rectangle b)
         {
             int maxX = Math.Max(a.X, b.X);
             int minX = Math.Min(a.X + a.Width, b.X + b.Width);
@@ -325,7 +349,7 @@ namespace FamiStudio
             this.height = height;
         }
 
-        public static RectangleF Intersect(RectangleF a, RectangleF b)
+        public static RectangleF Intersection(RectangleF a, RectangleF b)
         {
             float maxX = Math.Max(a.X, b.X);
             float minX = Math.Min(a.X + a.Width, b.X + b.Width);

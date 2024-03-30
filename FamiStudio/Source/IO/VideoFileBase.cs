@@ -413,7 +413,7 @@ namespace FamiStudio
                     var regViewer = registerViewers[i];
                     var icon = registerViewerIcons[i];
 
-                    c.DrawTexture(icon, 0, y, 1, Theme.LightGreyColor2);
+                    c.DrawTexture(icon, 0, y, Theme.LightGreyColor2);
                     c.DrawText(ExpansionType.GetLocalizedName(regViewer.Expansion, ExpansionType.LocalizationMode.ChipName), fonts.FontSmallBold, icon.Size.Width + 2, y, Theme.LightGreyColor2, TextFlags.Middle, 0, icon.Size.Height);
                     y += icon.Size.Height;
                     c.DrawLine(0, y, contentSizeX - 4, y, Theme.LightGreyColor2);

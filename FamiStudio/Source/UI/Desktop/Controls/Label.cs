@@ -9,12 +9,11 @@ namespace FamiStudio
         protected int labelOffsetX;
         protected string text;
         protected bool multiline;
-
-        public bool Multiline
-        {
-            get { return multiline; }
-            set { multiline = value; MarkDirty(); }
-        }
+        protected bool bold;
+        protected bool centered;
+        protected bool ellipsis;
+        protected Color color = Theme.LightGreyColor1;
+        protected Color disabledColor = Theme.MediumGreyColor1;
 
         public Label(string txt, bool multi = false)
         {
@@ -23,10 +22,51 @@ namespace FamiStudio
             multiline = multi;
         }
 
+        public bool Multiline
+        {
+            get { return multiline; }
+            set { multiline = value; MarkDirty(); }
+        }
+
+        public bool Bold
+        {
+            get { return bold; }
+            set { bold = value; MarkDirty(); }
+        }
+
+        public bool Centered
+        {
+            get { return centered; }
+            set { centered = value; MarkDirty(); }
+        }
+
+        public bool Ellipsis
+        {
+            get { return ellipsis; }
+            set { ellipsis = value; MarkDirty(); }
+        }
+
+        public Color Color
+        {
+            get { return color; }
+            set { color = value; MarkDirty(); }
+        }
+
+        public Color DisabledColor
+        {
+            get { return disabledColor; }
+            set { disabledColor = value; MarkDirty(); }
+        }
+
+        private Font GetFont()
+        {
+            return bold ? Fonts.FontMediumBold : Fonts.FontMedium;
+        }
+
         public void AutosizeWidth()
         {
             Debug.Assert(!multiline);
-            width = Fonts.FontMedium.MeasureString(text, false);
+            width = GetFont().MeasureString(text, false);
         }
 
         public void AdjustHeightForMultiline()
@@ -37,10 +77,11 @@ namespace FamiStudio
                 var input = text;
                 var output = "";
                 var numLines = 0;
+                var font = GetFont();
 
                 while (true)
                 {
-                    var numCharsWeCanFit = Fonts.FontMedium.GetNumCharactersForSize(input, actualWidth);
+                    var numCharsWeCanFit = font.GetNumCharactersForSize(input, actualWidth);
                     var minimunCharsPerLine = Math.Max((int)(numCharsWeCanFit * 0.62), numCharsWeCanFit - 20);
                     var n = numCharsWeCanFit;
                     var done = n == input.Length;
@@ -81,7 +122,7 @@ namespace FamiStudio
 
                 text = output;
 
-                Resize(width, Fonts.FontMedium.LineHeight * numLines);
+                Resize(width, font.LineHeight * numLines);
             }
         }
 
@@ -93,7 +134,7 @@ namespace FamiStudio
 
         public int MeasureWidth()
         {
-            return Fonts.FontMedium.MeasureString(text, false);
+            return GetFont().MeasureString(text, false);
         }
 
         protected override void OnAddedToContainer()
@@ -104,7 +145,8 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
-            var brush = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
+            var brush = enabled ? color : disabledColor;
+            var font = GetFont();
 
             if (multiline)
             {
@@ -112,12 +154,15 @@ namespace FamiStudio
 
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    c.DrawText(lines[i], Fonts.FontMedium, labelOffsetX, i * Fonts.FontMedium.LineHeight, brush, TextFlags.TopLeft, 0, height);
+                    c.DrawText(lines[i], font, labelOffsetX, i * font.LineHeight, brush, TextFlags.TopLeft, 0, height);
                 }
             }
             else
             {
-                c.DrawText(text, Fonts.FontMedium, labelOffsetX, 0, brush, TextFlags.MiddleLeft, 0, height);
+                var flags = TextFlags.Middle;
+                if (centered) flags |= TextFlags.Center;
+                if (ellipsis) flags |= TextFlags.Ellipsis;
+                c.DrawText(text, font, labelOffsetX, 0, brush, flags, centered ? width : 0, height);
             }
         }
     }

@@ -681,7 +681,7 @@ namespace FamiStudio
                                 var radioBaseX = (colWidth  - bmpRadioOn.ElementSize.Width)  / 2;
                                 var radioBaseY = (rowHeight - bmpRadioOn.ElementSize.Height) / 2;
                                 c.PushTranslation(radioBaseX, radioBaseY);
-                                c.DrawTextureAtlas((bool)val ? bmpRadioOn : bmpRadioOff, 0, 0, 1, 1, localForeColor);
+                                c.DrawTextureAtlas((bool)val ? bmpRadioOn : bmpRadioOff, 0, 0, 1, localForeColor);
                                 c.PopTransform();
                                 break;
                             }
@@ -691,22 +691,22 @@ namespace FamiStudio
                                 var checkBaseY = (rowHeight - bmpCheckOn.ElementSize.Height) / 2;
                                 c.PushTranslation(checkBaseX, checkBaseY);
                                 c.DrawRectangle(0, 0, bmpCheckOn.ElementSize.Width - 1, bmpCheckOn.ElementSize.Height - 1, localForeColor);
-                                c.DrawTextureAtlas((bool)val ? bmpCheckOn : bmpCheckOff, 0, 0, 1, 1, localForeColor);
+                                c.DrawTextureAtlas((bool)val ? bmpCheckOn : bmpCheckOff, 0, 0, 1, localForeColor);
                                 c.PopTransform();
                                 break;
                             }
                             case ColumnType.Image:
                             {
                                 var bmp = g.GetTextureAtlasRef((string)val);
-                                c.DrawTextureAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, 1, localForeColor);
+                                c.DrawTextureAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, localForeColor);
                                 break;
                             }
                             case ColumnType.NumericUpDown:
                             {
                                 if (cellEnabled)
                                 {
-                                    c.DrawTextureAtlasCentered(bmpUpDownMinus, 0, 0, rowHeight, rowHeight, 1, 1, localForeColor);
-                                    c.DrawTextureAtlasCentered(bmpUpDownPlus, colWidth - rowHeight, 0, rowHeight, rowHeight, 1, 1, localForeColor);
+                                    c.DrawTextureAtlasCentered(bmpUpDownMinus, 0, 0, rowHeight, rowHeight, 1, localForeColor);
+                                    c.DrawTextureAtlasCentered(bmpUpDownPlus, colWidth - rowHeight, 0, rowHeight, rowHeight, 1, localForeColor);
                                     c.DrawText(val.ToString(), Fonts.FontMedium, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else

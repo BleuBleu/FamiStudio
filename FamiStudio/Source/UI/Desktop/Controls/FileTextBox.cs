@@ -85,7 +85,7 @@ namespace FamiStudio
 
             c.FillAndDrawRectangle(rect, fillBrush, color);
             c.PushTranslation(0, captureButton ? 1 : 0);
-            c.DrawTextureAtlasCentered(bmp, rect, 1, 1, color);
+            c.DrawTextureAtlasCentered(bmp, rect, 1, color);
             c.PopTransform();
         }
     }

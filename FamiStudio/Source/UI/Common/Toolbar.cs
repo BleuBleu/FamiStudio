@@ -1029,7 +1029,7 @@ namespace FamiStudio
                 if (status != ButtonStatus.Disabled && hover)
                     opacity *= 0.75f;
                 
-                c.DrawTextureAtlas(bmpButtons[(int)bmpIndex], btn.IconPos.X, btn.IconPos.Y, opacity, iconScaleFloat, tint);
+                c.DrawTextureAtlas(bmpButtons[(int)bmpIndex], btn.IconPos.X, btn.IconPos.Y, iconScaleFloat, tint.Transparent(opacity));
             }
         }
 
@@ -1119,7 +1119,7 @@ namespace FamiStudio
 
                             if (specialCharacter.BmpIndex != SpecialCharImageIndices.Count)
                             {
-                                c.DrawTextureAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyColor1);
+                                c.DrawTextureAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, Theme.LightGreyColor1);
                             }
                             else
                             {

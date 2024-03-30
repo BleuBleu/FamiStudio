@@ -11,6 +11,7 @@ namespace FamiStudio
         protected LocalizedString DutyLabel;
 
         // These are really UI specific things... Should be somewhere else.
+        // MATTT Change this for strings with name of icon directly.
         protected int IconSquare = 0;
         protected int IconTriangle = 1;
         protected int IconNoise = 2;
@@ -39,6 +40,7 @@ namespace FamiStudio
         public RegisterViewerRow[] RegisterRows { get; internal set; }
         public RegisterViewerRow[][] InterpeterRows { get; internal set; }
         public int Expansion => expansion;
+        public virtual int GetNumInterpreterRows(Project p) => InterpeterRows.Length;
 
         public delegate object GetRegisterValueDelegate();
         public delegate void DrawRegisterDelegate(CommandList c, Fonts res, Rectangle rect, bool video);
@@ -361,6 +363,8 @@ namespace FamiStudio
     {
         N163RegisterIntepreter i;
 
+        public override int GetNumInterpreterRows(Project p) => p.ExpansionNumN163Channels;
+
         public N163RegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.N163)
         {
             InterpreterLabels = new string[8];
@@ -469,7 +473,7 @@ namespace FamiStudio
             else if ((shape & 0b1100) == 0b0100) shape = 0b1111;    // Shape: /___
 
             var bmp = c.Graphics.GetTextureAtlasRef($"S5BEnvelope{shape:X1}");
-            c.DrawTextureAtlas(bmp, 0, 0, 1, 1, Theme.LightGreyColor1);
+            c.DrawTextureAtlas(bmp, 0, 0, 1, Theme.LightGreyColor1);
 
             if (!video)
             {

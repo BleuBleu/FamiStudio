@@ -442,7 +442,7 @@ namespace FamiStudio
         private void Sequencer_PatternsPasted()
         {
             RefreshLayout();
-            ProjectExplorer.RefreshButtons();
+            ProjectExplorer.RecreateControls();
             ProjectExplorer.MarkDirty();
         }
 
@@ -622,7 +622,7 @@ namespace FamiStudio
 
         private void PianoRoll_NotesPasted()
         {
-            ProjectExplorer.RefreshButtons();
+            ProjectExplorer.RecreateControls();
             ProjectExplorer.MarkDirty();
         }
 
@@ -1259,7 +1259,7 @@ namespace FamiStudio
 
         private void RefreshProjectExplorerButtons()
         {
-            ProjectExplorer.RefreshButtons();
+            ProjectExplorer.RecreateControls();
         }
 
         private void InvalidatePatternCache()
