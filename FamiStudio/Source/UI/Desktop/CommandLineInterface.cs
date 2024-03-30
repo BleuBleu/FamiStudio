@@ -467,10 +467,12 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                var cleanup   = HasOption("famistudio-txt-cleanup");
-                var noVersion = HasOption("famistudio-txt-noversion");
+                var cleanup = HasOption("famistudio-txt-cleanup");
+                var flags   = HasOption("famistudio-txt-bare") ? 
+                        FamiStudioTextFlags.NoVersion | FamiStudioTextFlags.NoColors : 
+                        FamiStudioTextFlags.None;
 
-                new FamistudioTextFile().Save(project, filename, exportSongIds, cleanup, noVersion);
+                new FamistudioTextFile().Save(project, filename, exportSongIds, cleanup, flags);
             }
         }
 
@@ -520,7 +522,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        f.Save(project, new int[] { songId }, format, -1, true, forceDpcmBankswitch, songFilename, dpcmFilename, includeFilename, MachineType.Dual); 
+                        f.Save(project, new int[] { songId }, format, -1, true, songFilename, dpcmFilename, includeFilename, MachineType.Dual); 
                     }
                 }
                 else
@@ -530,7 +532,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    f.Save(project, exportSongIds, format, -1, false, forceDpcmBankswitch, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
+                    f.Save(project, exportSongIds, format, -1, false, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
                 }
             }
         }
@@ -581,7 +583,7 @@ namespace FamiStudio
             Settings.ClampPeriods = true;
             Settings.SquareSmoothVibrato = true;
 
-            new UnitTestPlayer(project.OutputsStereoAudio).GenerateUnitTestOutput(project.Songs[0], filename, HasOption("pal"));
+            new UnitTestPlayer(HasOption("pal"), project.OutputsStereoAudio).GenerateUnitTestOutput(project.Songs[0], filename);
         }
 
         private void RunEpsmUnitTest(string nsf, string filename)

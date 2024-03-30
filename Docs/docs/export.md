@@ -109,6 +109,17 @@ There are 2 ways in which FamiStudio can assign General-MIDI instruments:
 
 At the bottom of the dialog is the instrument table. This is where you can assign instrument to channels or FamiStudio instrument (depending on the Instrument Mode). Double-clicking on a row will allow selecting the instrument.
 
+## MIDI
+
+Songs can be exported to VGM files for supported sound expansions, VGM files are basically a log of the writes being sent to the various sound chips.
+
+The expansions that's supported by the VGM file format is:
+* **NES APU**
+* **FDS**
+* **VRC7**
+* **S5B**
+* **EPSM**
+
 ## FamiTracker Text
 
 You can export songs to FamiTracker using their Text Export format. This is only available in the desktop version.

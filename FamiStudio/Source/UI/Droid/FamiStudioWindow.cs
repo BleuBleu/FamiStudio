@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Collections.Generic;
 using Android.Widget;
 using Android.App;
 using Android.Content;
@@ -17,9 +18,6 @@ using AndroidX.AppCompat.App;
 using AndroidX.Core.Content;
 using Javax.Microedition.Khronos.Opengles;
 using Google.Android.Material.BottomSheet;
-
-using Debug = System.Diagnostics.Debug;
-using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -92,7 +90,7 @@ namespace FamiStudio
         {
             get
             {
-                Android.Graphics.Rect rect = new Android.Graphics.Rect();
+                var rect = new Android.Graphics.Rect();
                 glSurfaceView.GetDrawingRect(rect);
                 return new Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());
             }
@@ -125,10 +123,6 @@ namespace FamiStudio
 
             EnableFullscreenMode(Window);
             ForceScreenOn(false);
-
-        #if DEBUG
-            Debug.Listeners.Add(new DebuggerBreakListener());
-        #endif
 
             Init.InitializeBaseSystems();
 
@@ -311,7 +305,7 @@ namespace FamiStudio
 #if DEBUG
             var dlg = new PropertyDialog(this, "Test Dialog", 200);
 
-            dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
+            dlg.Properties.AddTextBox("TextBox", "Hello1", 0, false, "This is a long tooltip explaining what this property is all about");
             dlg.Properties.AddColorPicker(Color.Pink);
             dlg.Properties.AddButton("Hey", "This is a button", "Button tooltip");
             dlg.Properties.AddNumericUpDown("Integer", 10, 2, 50, 1, "Integer Tooltip");
@@ -422,7 +416,7 @@ namespace FamiStudio
                 var rect = new Rectangle(Point.Empty, Size);
                 var clearColor = global::FamiStudio.Theme.DarkGreyColor2;
 
-                graphics.BeginDrawFrame(rect, clearColor);
+                graphics.BeginDrawFrame(rect, true, clearColor);
                 container.Render(graphics);
                 graphics.EndDrawFrame();
             }
@@ -532,6 +526,8 @@ namespace FamiStudio
         {
             Debug.Assert(false);
         }
+
+        public Dialog TopDialog => null;
 
         public static FamiStudioWindow CreateWindow(FamiStudio fs)
         {
@@ -1167,27 +1163,4 @@ namespace FamiStudio
                 callback();
         }
     }
-#if DEBUG
-    // By default Debug.Assert() doesnt break in the debugger on Android. This does that.
-    public class DebuggerBreakListener : System.Diagnostics.TraceListener
-    {
-        bool breakOnFail = true;
-
-        public override void Write(string message)
-        {
-        }
-
-        public override void WriteLine(string message)
-        {
-        }
-
-        public override void Fail(string message, string detailMessage)
-        {
-            base.Fail(message, detailMessage);
-            
-            if (breakOnFail)
-                System.Diagnostics.Debugger.Break();
-        }
-    }
-#endif
 }

@@ -22,6 +22,7 @@ namespace FamiStudio
         protected int dutyCycle = 0;
         protected bool pitchEnvelopeOverride = false;
         protected bool arpeggioEnvelopeOverride = false;
+        protected bool resetInstrumentOnNextAttack = false;
         protected Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         protected int[] envelopeIdx = new int[EnvelopeType.Count];
         protected int[] envelopeValues = new int[EnvelopeType.Count];
@@ -31,7 +32,7 @@ namespace FamiStudio
         protected bool forceInstrumentReload = false;
         protected ushort[] noteTable = null;
         protected bool palPlayback = false;
-        protected bool skipEmptyEnvelopes = true;
+        protected bool instrumentPlayer = false;
         protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
         protected int slidePitch = 0;
@@ -51,7 +52,7 @@ namespace FamiStudio
             apuIdx = apu;
             channelType = type;
             palPlayback = pal;
-            skipEmptyEnvelopes = apuIdx != NesApu.APU_INSTRUMENT; // HACK : Pass a flag for this.
+            instrumentPlayer = apuIdx == NesApu.APU_INSTRUMENT; // HACK : Pass a flag for this.
             maximumPeriod = NesApu.GetPitchLimitForChannelType(channelType);
             noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
             note.Value = Note.NoteStop;
@@ -97,7 +98,7 @@ namespace FamiStudio
             }
 
             if (newNote != null)
-            { 
+            {
                 // We dont delay speed effects. This is not what FamiTracker does, but I dont care.
                 // There is a special place in hell for people who delay speed effect.
                 if (newNote.HasSpeed)
@@ -165,8 +166,6 @@ namespace FamiStudio
 
             // Pass on the same effect values if this note doesn't specify them.
             if (!newNote.HasFinePitch      && note.HasFinePitch)       newNote.FinePitch   = note.FinePitch;
-            if (!newNote.HasFdsModDepth    && note.HasFdsModDepth)     newNote.FdsModDepth = note.FdsModDepth;
-            if (!newNote.HasFdsModSpeed    && note.HasFdsModSpeed)     newNote.FdsModSpeed = note.FdsModSpeed;
             if (newNote.Instrument == null && note.Instrument != null) newNote.Instrument  = note.Instrument;
             if (newNote.Arpeggio   == null && note.Arpeggio   != null && !newNote.IsMusical) newNote.Arpeggio = note.Arpeggio;
 
@@ -186,6 +185,23 @@ namespace FamiStudio
 
                 // A new valid note always cancels any delayed cut.
                 delayedCutCounter = 0;
+            }
+
+            if (newNote.HasVibrato)
+            {
+                if (newNote.VibratoDepth != 0 && newNote.VibratoDepth != 0)
+                {
+                    envelopes[EnvelopeType.Pitch] = Envelope.CreateVibratoEnvelope(newNote.VibratoSpeed, newNote.VibratoDepth);
+                    envelopeIdx[EnvelopeType.Pitch] = 0;
+                    envelopeValues[EnvelopeType.Pitch] = 0;
+                    pitchEnvelopeOverride = true;
+                }
+                else
+                {
+                    envelopes[EnvelopeType.Pitch] = null;
+                    pitchEnvelopeOverride = false;
+                    resetInstrumentOnNextAttack = true;
+                }
             }
 
             if (newNote.IsStop)
@@ -214,8 +230,10 @@ namespace FamiStudio
             }
             else if (newNote.IsMusical)
             {
-                bool instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentReload;
-                bool arpeggioChanged   = note.Arpeggio   != newNote.Arpeggio;
+                var instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentReload;
+                var arpeggioChanged   = note.Arpeggio   != newNote.Arpeggio;
+
+                var noteHasAttack = newNote.HasAttack || !Channel.CanDisableAttack(channelType, note.Instrument, newNote.Instrument);
 
                 note = newNote;
 
@@ -237,21 +255,30 @@ namespace FamiStudio
                     envelopeValues[EnvelopeType.Arpeggio] = 0;
                 }
                 // If same arpeggio, but note has an attack, reset it.
-                else if (note.HasAttack && arpeggioEnvelopeOverride)
+                else if (noteHasAttack && arpeggioEnvelopeOverride)
                 {
                     envelopeIdx[EnvelopeType.Arpeggio] = 0;
                     envelopeValues[EnvelopeType.Arpeggio] = 0;
                 }
 
-                if (instrumentChanged || note.HasAttack)
+                if (noteHasAttack)
                 {
-                    for (int j = 0; j < EnvelopeType.Count; j++)
+                    instrumentChanged |= resetInstrumentOnNextAttack;
+
+                    if (instrumentChanged)
                     {
-                        if ((j != EnvelopeType.Pitch     || !pitchEnvelopeOverride) &&
-                            (j != EnvelopeType.Arpeggio  || !arpeggioEnvelopeOverride))
+                        for (var j = 0; j < EnvelopeType.Count; j++)
                         {
-                            envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
+                            if ((j != EnvelopeType.Pitch || !pitchEnvelopeOverride) &&
+                                (j != EnvelopeType.Arpeggio || !arpeggioEnvelopeOverride))
+                            {
+                                envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
+                            }
                         }
+                    }
+
+                    for (var j = 0; j < EnvelopeType.Count; j++)
+                    {
                         envelopeIdx[j] = 0;
                     }
 
@@ -263,6 +290,7 @@ namespace FamiStudio
                         envelopeValues[EnvelopeType.WaveformRepeat] = envelopes[EnvelopeType.WaveformRepeat].Values[0] + 1;
 
                     noteTriggered = true;
+                    resetInstrumentOnNextAttack = false;
                 }
 
                 if (instrumentChanged)
@@ -279,22 +307,6 @@ namespace FamiStudio
                 note = newNote;
             }
 
-            if (note.HasVibrato)
-            {
-                if (note.VibratoDepth != 0 && note.VibratoDepth != 0)
-                {
-                    envelopes[EnvelopeType.Pitch] = Envelope.CreateVibratoEnvelope(note.VibratoSpeed, note.VibratoDepth);
-                    envelopeIdx[EnvelopeType.Pitch] = 0;
-                    envelopeValues[EnvelopeType.Pitch] = 0;
-                    pitchEnvelopeOverride = true;
-                }
-                else
-                {
-                    envelopes[EnvelopeType.Pitch] = null;
-                    pitchEnvelopeOverride = false;
-                }
-            }
-            
             // Fine pitch will always we read, so make sure it has a value.
             if (!note.HasFinePitch)
             {
@@ -375,8 +387,8 @@ namespace FamiStudio
                 for (int j = 0; j < EnvelopeType.Count; j++)
                 {
                     if (envelopes[j] == null ||
-                        ( skipEmptyEnvelopes && envelopes[j].IsEmpty(j)) ||
-                        (!skipEmptyEnvelopes && envelopes[j].Length == 0))
+                        (!instrumentPlayer && envelopes[j].IsEmpty(j)) ||
+                        ( instrumentPlayer && envelopes[j].Length == 0))
                     {
                         if (j != EnvelopeType.DutyCycle)
                             envelopeValues[j] = Envelope.GetEnvelopeDefaultValue(j);
@@ -476,7 +488,12 @@ namespace FamiStudio
             }
         }
 
-        protected void WriteRegister(int reg, int data, int skipCycles = 4, List<int> metadata = null)
+        protected void SkipCycles(int cycles)
+        {
+            NesApu.SkipCycles(apuIdx, cycles);
+        }
+
+        protected void WriteRegister(int reg, int data, int skipCycles = 4, int metadata = 0)
         {
             NesApu.WriteRegister(apuIdx, reg, data);
             player.NotifyRegisterWrite(apuIdx, reg, data, metadata);
@@ -521,15 +538,12 @@ namespace FamiStudio
         {
         }
 
-        public virtual void YMMixerSettingsChangedNotify(int ymMixerSettings)
-        {
-        }
-
         public void ForceInstrumentReload()
         {
             forceInstrumentReload = true;
         }
 
+        // TODO : We should not reference settings from here.
         protected int GetPeriod()
         {
             var noteVal = note.Value + envelopeValues[EnvelopeType.Arpeggio];
@@ -572,8 +586,22 @@ namespace FamiStudio
         {
             noteTriggered = false;
             noteReleased = false;
-            resetPhase = false;
             NesApu.SkipCycles(apuIdx, CyclesBetweenChannels);
+        }
+
+        protected virtual void ResetPhase()
+        {
+
+        }
+
+        public virtual void PostUpdate()
+        {
+            NesApu.SkipCycles(apuIdx, resetPhase ? 4 : 5); // lsr/bcc
+            if (resetPhase)
+            {
+                ResetPhase();
+                resetPhase = false;
+            }
         }
 
         public Note CurrentNote

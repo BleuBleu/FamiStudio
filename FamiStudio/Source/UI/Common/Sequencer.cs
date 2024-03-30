@@ -98,15 +98,15 @@ namespace FamiStudio
         Color selectedPatternInvisibleColor = Color.FromArgb(16, Theme.LightGreyColor1);
 
         float[] seekGeometry;
-        BitmapAtlasRef[] bmpExpansions;
-        BitmapAtlasRef[] bmpChannels;
-        BitmapAtlasRef bmpForceDisplay;
-        BitmapAtlasRef bmpLoopPoint;
-        BitmapAtlasRef bmpInstantiate;
-        BitmapAtlasRef bmpDuplicate;
-        BitmapAtlasRef bmpDuplicateMove;
-        BitmapAtlasRef bmpShyOn;
-        BitmapAtlasRef bmpShyOff;
+        TextureAtlasRef[] bmpExpansions;
+        TextureAtlasRef[] bmpChannels;
+        TextureAtlasRef bmpForceDisplay;
+        TextureAtlasRef bmpLoopPoint;
+        TextureAtlasRef bmpInstantiate;
+        TextureAtlasRef bmpDuplicate;
+        TextureAtlasRef bmpDuplicateMove;
+        TextureAtlasRef bmpShyOn;
+        TextureAtlasRef bmpShyOff;
 
         enum CaptureOperation
         {
@@ -252,6 +252,7 @@ namespace FamiStudio
             var scrollBarSize  = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
             var patternZoom    = Song != null ? 128.0f / (float)Utils.NextPowerOfTwo(Song.PatternLength) : 1.0f;
 
+            RebuildChannelMap();
             ComputeDesiredSizeY(out var unscaledChannelSizeY, out allowVerticalScrolling);
 
             channelNameSizeX   = DpiScaling.ScaleForWindow(DefaultChannelNameSizeX);
@@ -345,7 +346,7 @@ namespace FamiStudio
                 var sizeMask = oddWindowScaling ? 0xfffe : 0xffff; // Keep size even at 150%.
                 var idealSequencerHeight = ParentWindow.Height * Settings.IdealSequencerSize / 100;
                 
-                channelSizeY = channelCount > 0 ? Math.Max((idealSequencerHeight / channelCount) & sizeMask, minChannelSize) : minChannelSize;
+                channelSizeY = visibleChannelCount > 0 ? Math.Max((idealSequencerHeight / visibleChannelCount) & sizeMask, minChannelSize) : minChannelSize;
 
                 var actualSequencerHeight = channelSizeY * visibleChannelCount;
 
@@ -378,7 +379,6 @@ namespace FamiStudio
             ClearSelection();
             UpdateRenderCoords();
             InvalidatePatternCache();
-            RebuildChannelMap();
         }
 
         private void RebuildChannelMap()
@@ -509,13 +509,13 @@ namespace FamiStudio
 
             var g = ParentWindow.Graphics;
             patternCache = new PatternBitmapCache(g);
-            bmpExpansions = g.GetBitmapAtlasRefs(ExpansionType.Icons);
-            bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
-            bmpForceDisplay = g.GetBitmapAtlasRef("GhostSmall");
-            bmpLoopPoint = g.GetBitmapAtlasRef("LoopSmallFill");
-            bmpInstantiate = g.GetBitmapAtlasRef("Instance");
-            bmpDuplicate = g.GetBitmapAtlasRef("Duplicate");
-            bmpDuplicateMove = g.GetBitmapAtlasRef("DuplicateMove");
+            bmpExpansions = g.GetTextureAtlasRefs(ExpansionType.Icons);
+            bmpChannels = g.GetTextureAtlasRefs(ChannelType.Icons);
+            bmpForceDisplay = g.GetTextureAtlasRef("GhostSmall");
+            bmpLoopPoint = g.GetTextureAtlasRef("LoopSmallFill");
+            bmpInstantiate = g.GetTextureAtlasRef("Instance");
+            bmpDuplicate = g.GetTextureAtlasRef("Duplicate");
+            bmpDuplicateMove = g.GetTextureAtlasRef("DuplicateMove");
 
             if (Platform.IsMobile)
             {
@@ -524,8 +524,8 @@ namespace FamiStudio
             }
             else
             {
-                bmpShyOn = g.GetBitmapAtlasRef("ShyOn");
-                bmpShyOff = g.GetBitmapAtlasRef("ShyOff");
+                bmpShyOn = g.GetTextureAtlasRef("ShyOn");
+                bmpShyOff = g.GetTextureAtlasRef("ShyOff");
             }
             
             seekGeometry = new float[]
@@ -569,7 +569,21 @@ namespace FamiStudio
 
         private Color GetSeekBarColor()
         {
-            return App.IsRecording ? Theme.DarkRedColor : Theme.YellowColor;
+            if (App.IsRecording)
+            {
+                return Theme.DarkRedColor;
+            }
+            else
+            {
+                if (App.IsSeeking)
+                {
+                    return Theme.Lighten(Theme.YellowColor, (int)(Math.Abs(Math.Sin(Platform.TimeSeconds() * 12.0)) * 75));
+                }
+                else
+                {
+                    return Theme.YellowColor;
+                }
+            }
         }
 
         public int GetSeekFrameToDraw()
@@ -613,7 +627,7 @@ namespace FamiStudio
 
             // Shy
             if (Platform.IsDesktop)
-                c.DrawBitmapAtlasCentered(hideEmptyChannels && !forceShyOff ? bmpShyOn : bmpShyOff, GetShyButtonRect(), 1, 1, hoverShy ? Theme.LightGreyColor1 : Theme.LightGreyColor2);
+                c.DrawTextureAtlasCentered(hideEmptyChannels && !forceShyOff ? bmpShyOn : bmpShyOff, GetShyButtonRect(), 1, 1, hoverShy ? Theme.LightGreyColor1 : Theme.LightGreyColor2);
 
             // Vertical line seperating with the toolbar
             if (Platform.IsMobile && IsLandscape)
@@ -643,7 +657,7 @@ namespace FamiStudio
                     var channel = Song.Channels[i];
                     var bitmapIndex = showExpIcons ? channel.Expansion : channel.Type;
                     var iconHoverOpacity = isHoverRow && (hoverIconMask & 1) != 0 ? 0.75f : 1.0f;
-                    c.DrawBitmapAtlas(atlas[bitmapIndex], channelIconPosX, y + channelIconPosY, ((App.ChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * iconHoverOpacity, channelBitmapScale, Theme.LightGreyColor1);
+                    c.DrawTextureAtlas(atlas[bitmapIndex], channelIconPosX, y + channelIconPosY, ((App.ChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * iconHoverOpacity, channelBitmapScale, Theme.LightGreyColor1);
 
                     // Name
                     var font = i == selectedChannelIndex ? Fonts.FontMediumBold : Fonts.FontMedium;
@@ -652,7 +666,7 @@ namespace FamiStudio
 
                     // Force display icon.
                     var ghostHoverOpacity = isHoverRow && (hoverIconMask & 2) != 0 ? 0.75f : 1.0f;
-                    c.DrawBitmapAtlas(bmpForceDisplay, channelNameSizeX - ghostNoteOffsetX, y + channelSizeY - ghostNoteOffsetY - 1, ((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * ghostHoverOpacity, bitmapScale, Theme.LightGreyColor1);
+                    c.DrawTextureAtlas(bmpForceDisplay, channelNameSizeX - ghostNoteOffsetX, y + channelSizeY - ghostNoteOffsetY - 1, ((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * ghostHoverOpacity, bitmapScale, Theme.LightGreyColor1);
 
                     // Hover
                     if (isHoverRow)
@@ -728,7 +742,7 @@ namespace FamiStudio
                 c.DrawText(text, Fonts.FontMedium, 0, barTextPosY, Theme.LightGreyColor1, TextFlags.Center | TextFlags.Clip, sx);
 
                 if (i == Song.LoopPoint)
-                    c.DrawBitmapAtlas(bmpLoopPoint, headerIconPosX, headerIconPosY, 1.0f, bitmapScale, Theme.LightGreyColor1);
+                    c.DrawTextureAtlas(bmpLoopPoint, headerIconPosX, headerIconPosY, 1.0f, bitmapScale, Theme.LightGreyColor1);
 
                 c.PopTransform();
             }
@@ -809,7 +823,7 @@ namespace FamiStudio
                         var instance = ModifierKeys.IsControlDown;
                         var duplicate = instance && ModifierKeys.IsShiftDown;
 
-                        var bmpCopy = (BitmapAtlasRef)null;
+                        var bmpCopy = (TextureAtlasRef)null;
                         var bmpSize = DpiScaling.ScaleCustom(bmpDuplicate.ElementSize.Width, bitmapScale);
 
                         if (rowIdxDelta != 0)
@@ -821,7 +835,7 @@ namespace FamiStudio
                         c.FillAndDrawRectangle(-anchorOffsetLeftX, 0, -anchorOffsetLeftX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
 
                         if (bmpCopy != null)
-                            c.DrawBitmapAtlas(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
+                            c.DrawTextureAtlas(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
 
                         // Left side
                         for (int p = patternIdx - 1; p >= selectionMin.PatternIndex + patternIdxDelta && p >= 0; p--)
@@ -832,7 +846,7 @@ namespace FamiStudio
                             c.FillAndDrawRectangle(-anchorOffsetLeftX, 0, -anchorOffsetLeftX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
 
                             if (bmpCopy != null)
-                                c.DrawBitmapAtlas(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
+                                c.DrawTextureAtlas(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
                         }
 
                         // Right side
@@ -843,7 +857,7 @@ namespace FamiStudio
                             c.FillAndDrawRectangle(anchorOffsetRightX, 0, anchorOffsetRightX + patternSizeX, channelSizeY, selectedPatternVisibleColor, Theme.BlackColor);
 
                             if (bmpCopy != null)
-                                c.DrawBitmapAtlas(bmpCopy, anchorOffsetRightX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
+                                c.DrawTextureAtlas(bmpCopy, anchorOffsetRightX + patternSizeX / 2 - bmpSize / 2, channelSizeY / 2 - bmpSize / 2, 1.0f, bitmapScale, Theme.LightGreyColor1);
 
                             anchorOffsetRightX += patternSizeX;
                         }
@@ -882,7 +896,7 @@ namespace FamiStudio
                             c.FillRectangleGradient(1, 1, sx, patternHeaderSizeY, pattern.Color, pattern.Color.Scaled(0.8f), true, patternHeaderSizeY);
                             c.FillRectangle(1, patternHeaderSizeY, sx, channelSizeY, Color.FromArgb(75, pattern.Color));
                             c.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, Theme.BlackColor);
-                            c.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1);
+                            c.DrawTexture(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1);
                             c.DrawText(pattern.Name, Fonts.FontSmall, patternNamePosX, 0, Theme.BlackColor, TextFlags.Left | TextFlags.Middle | TextFlags.Clip, sx - patternNamePosX, patternHeaderSizeY + 1);
                             if (IsPatternSelected(location))
                                 c.DrawRectangle(0, 0, sx, channelSizeY, Theme.LightGreyColor1, 3, true, true);
@@ -3202,7 +3216,6 @@ namespace FamiStudio
         public void SongModified()
         {
             UpdateRenderCoords();
-            RebuildChannelMap();
             InvalidatePatternCache();
             ClearSelection();
             ClampScroll();
@@ -3216,7 +3229,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void Serialize(ProjectBuffer buffer)
         {
             buffer.Serialize(ref scrollX);
             buffer.Serialize(ref zoom);
@@ -3233,7 +3246,6 @@ namespace FamiStudio
                 // scope on the transaction on the buffer and filter by that.
                 InvalidatePatternCache();
                 UpdateRenderCoords();
-                RebuildChannelMap();
                 CancelDragSelection();
                 MarkDirty();
             }

@@ -8,49 +8,33 @@ namespace FamiStudio
         public int FrameNumber;
         public int Register;
         public int Value;
-        public List<int> Metadata;  //depends on the register
+        public int Metadata;  //depends on the register
     };
 
     class RegisterPlayer : BasePlayer
     {
         List<RegisterWrite> registerWrites;
 
-        public RegisterPlayer(bool stereo) : base(NesApu.APU_WAV_EXPORT, stereo)
+        public RegisterPlayer(bool pal, bool stereo) : base(NesApu.APU_WAV_EXPORT, pal, stereo)
         {
             loopMode = LoopMode.None;
         }
 
-        public RegisterWrite[] GetRegisterValues(Song song, bool pal)
-        {
-            registerWrites = new List<RegisterWrite>();
-
-            if (BeginPlaySong(song, pal, 0))
-            {
-                StartSeeking();
-                while (PlaySongFrameInternal(true));
-                StopSeeking();
-            }
-
-            return registerWrites.ToArray();
-        }
-
-        public RegisterWrite[] GetRegisterValues(Song song, bool pal, out int length)
+        public RegisterWrite[] GetRegisterValues(Song song, out int length)
         {
             length = 0;
             registerWrites = new List<RegisterWrite>();
 
-            if (BeginPlaySong(song, pal, 0))
-            {
-                StartSeeking();
-                while (PlaySongFrameInternal(true)){length++;};
-                StopSeeking();
-            }
-            length++;
+            BeginPlaySong(song);
+
+            StartSeeking();
+            while (PlaySongFrameInternal(true)){length++;};
+            StopSeeking();
 
             return registerWrites.ToArray();
         }
 
-        public override void NotifyRegisterWrite(int apuIndex, int reg, int data, List<int> metadata = null)
+        public override void NotifyRegisterWrite(int apuIndex, int reg, int data, int metadata = 0)
         {
             if (apuIndex == NesApu.APU_WAV_EXPORT)
             {

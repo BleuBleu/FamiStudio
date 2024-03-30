@@ -8,7 +8,7 @@ namespace FamiStudio
     {
         List<short> samples;
 
-        public WavPlayer(int sampleRate, bool stereo, int maxLoop, long mask, int threadIndex = 0, int tnd = NesApu.TND_MODE_SINGLE) : base(NesApu.APU_WAV_EXPORT + threadIndex, stereo, sampleRate)
+        public WavPlayer(int sampleRate, bool pal, bool stereo, int maxLoop, long mask, int threadIndex = 0, int tnd = NesApu.TND_MODE_SINGLE) : base(NesApu.APU_WAV_EXPORT + threadIndex, pal, stereo, sampleRate)
         {
             Debug.Assert(threadIndex < NesApu.NUM_WAV_EXPORT_APU);
 
@@ -17,7 +17,7 @@ namespace FamiStudio
             tndMode = tnd;
         }
 
-        public short[] GetSongSamples(Song song, bool pal, int duration, bool log = false, bool allowAbort = false)
+        public short[] GetSongSamples(Song song, int duration, bool log = false, bool allowAbort = false)
         {
             int maxSample = int.MaxValue;
 
@@ -29,22 +29,21 @@ namespace FamiStudio
                 
             samples = new List<short>();
 
-            if (BeginPlaySong(song, pal, 0))
-            {
-                while (PlaySongFrame() && samples.Count < maxSample)
-                {
-                    if (log)
-                    {
-                        if (duration > 0)
-                            Log.ReportProgress(samples.Count / (float)maxSample);
-                        else
-                            Log.ReportProgress(numPlayedPatterns / (float)totalNumPatterns);
-                    }
+            BeginPlaySong(song);
 
-                    if (allowAbort && Log.ShouldAbortOperation)
-                    { 
-                        return new short[0];
-                    }
+            while (PlaySongFrame() && samples.Count < maxSample)
+            {
+                if (log)
+                {
+                    if (duration > 0)
+                        Log.ReportProgress(samples.Count / (float)maxSample);
+                    else
+                        Log.ReportProgress(numPlayedPatterns / (float)totalNumPatterns);
+                }
+
+                if (allowAbort && Log.ShouldAbortOperation)
+                { 
+                    return new short[0];
                 }
             }
 

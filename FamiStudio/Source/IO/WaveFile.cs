@@ -166,9 +166,9 @@ namespace FamiStudio
                             fmtOffset = subChunkOffset + 8;
                         }
                         else if (bytes[subChunkOffset + 0] == (byte)'d' &&
-                                    bytes[subChunkOffset + 1] == (byte)'a' &&
-                                    bytes[subChunkOffset + 2] == (byte)'t' &&
-                                    bytes[subChunkOffset + 3] == (byte)'a')
+                                 bytes[subChunkOffset + 1] == (byte)'a' &&
+                                 bytes[subChunkOffset + 2] == (byte)'t' &&
+                                 bytes[subChunkOffset + 3] == (byte)'a')
                         {
                             dataOffset = subChunkOffset + 8;
                             dataSize = subChunkSize;
@@ -227,11 +227,7 @@ namespace FamiStudio
                                     case 16:    // apparently nonexistent, but idc
                                         wavData = new short[dataSize >> 1];
                                         for (int i = 0; i < dataSize; i += 2)
-#if NET6_0_OR_GREATER   // Linux, Mac
                                             wavData[i >> 1] = (short)((float)BitConverter.ToHalf(bytes, dataOffset + i) * 32767);
-#else   // Windows, Android
-                                            wavData[i >> 1] = (short)(Utils.ToHalf(BitConverter.ToUInt16(bytes, dataOffset + i)) * 32767);
-#endif
                                         break;
                                     case 32:
                                         wavData = new short[dataSize >> 2];

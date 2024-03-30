@@ -168,9 +168,13 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_N163WAVESIZE       22
 #define STATE_N163WAVE           23
 #define STATE_N163NUMCHANNELS    24
-#define STATE_YMMIXER           25
-#define STATE_YMNOISEFREQUENCY  26
-#define STATE_STEREO             27
+#define STATE_S5BMIXER           25
+#define STATE_S5BNOISEFREQUENCY  26
+#define STATE_S5BENVFREQUENCY    27
+#define STATE_S5BENVSHAPE        28
+#define STATE_S5BENVTRIGGER      29
+#define STATE_S5BENVENABLED      30
+#define STATE_STEREO             31
 
 #include <math.h>
 

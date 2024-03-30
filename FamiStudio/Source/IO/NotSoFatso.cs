@@ -93,8 +93,12 @@ namespace FamiStudio
         public const int STATE_N163WAVESIZE       = 22;
         public const int STATE_N163WAVE           = 23;
         public const int STATE_N163NUMCHANNELS    = 24;
-        public const int STATE_YMMIXER            = 25;
-        public const int STATE_YMNOISEFREQUENCY   = 26;
-        public const int STATE_STEREO             = 27;
+        public const int STATE_S5BMIXER           = 25;
+        public const int STATE_S5BNOISEFREQUENCY  = 26;
+        public const int STATE_S5BENVFREQUENCY    = 27;
+        public const int STATE_S5BENVSHAPE        = 28;
+        public const int STATE_S5BENVTRIGGER      = 29;
+        public const int STATE_S5BENVENABLED      = 30;
+        public const int STATE_STEREO             = 31;
     }
 }

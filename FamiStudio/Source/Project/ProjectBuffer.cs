@@ -337,7 +337,7 @@ namespace FamiStudio
             c = Color.FromArgb(argb);
 
             if (forceThemeColor && !IsForUndoRedo)
-                Theme.EnforceThemeColor(ref c);
+                c = Theme.EnforceThemeColor(c);
         }
 
         public void Serialize(ref string str)

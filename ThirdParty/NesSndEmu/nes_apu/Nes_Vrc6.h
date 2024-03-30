@@ -76,6 +76,7 @@ private:
 
 	void run_square( Vrc6_Osc& osc, cpu_time_t );
 	void run_saw( cpu_time_t );
+	cpu_time_t maintain_square_phase(Vrc6_Osc& osc, cpu_time_t time, cpu_time_t end_time, cpu_time_t period);
 };
 
 struct vrc6_snapshot_t

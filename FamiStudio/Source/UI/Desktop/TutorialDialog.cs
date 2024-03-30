@@ -27,7 +27,7 @@ namespace FamiStudio
 
         private float gifTimer = 0.0f;
         private IntPtr gif;
-        private Bitmap gifBmp;
+        private Texture gifBmp;
         private int gifSizeX;
         private int gifSizeY;
         private byte[] gifData;
@@ -64,7 +64,7 @@ namespace FamiStudio
             label = new Label("This is a nice label", true);
             label.Move(margin, margin + titleBarSizeY, width - margin, labelSizeY);
 
-            imageBox = new ImageBox((Bitmap)null);
+            imageBox = new ImageBox((Texture)null);
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
             imageBox.ScaleImage = DpiScaling.Window > 1;
 
@@ -100,7 +100,7 @@ namespace FamiStudio
             gifSizeX = Gif.GetWidth(gif);
             gifSizeY = Gif.GetHeight(gif);
             gifBuffer = new byte[gifSizeX * gifSizeY * 3];
-            gifBmp = ParentWindow.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, TextureFormat.Rgb, DpiScaling.Window > 1.0f);
+            gifBmp = ParentWindow.Graphics.CreateEmptyTexture(gifSizeX, gifSizeY, TextureFormat.Rgb, DpiScaling.Window > 1.0f);
             imageBox.Image = gifBmp;
         }
 
@@ -125,7 +125,7 @@ namespace FamiStudio
             Gif.AdvanceFrame(gif);
             fixed (byte* p = &gifBuffer[0])
                 Gif.RenderFrame(gif, new IntPtr(p), gifSizeX * 3, 3);
-            ParentWindow.Graphics.UpdateBitmap(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
+            ParentWindow.Graphics.UpdateTexture(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
 
             var decodeTime = (int)((Platform.TimeSeconds() - decodeStart) * 1000);
 

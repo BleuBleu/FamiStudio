@@ -43,7 +43,7 @@ namespace FamiStudio
                     try
 #endif
                     {
-                        project.SerializeState(serializer);
+                        project.Serialize(serializer);
                     }
 #if !DEBUG
                     catch
@@ -72,7 +72,7 @@ namespace FamiStudio
 #endif
             {
                 var serializer = new ProjectSaveBuffer(project);
-                project.SerializeState(serializer);
+                project.Serialize(serializer);
                 var buffer = serializer.GetBuffer();
 
                 using (var stream = File.Create(filename))

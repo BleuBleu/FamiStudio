@@ -44,10 +44,13 @@ void Nes_EPSM::volume(double v)
 
 void Nes_EPSM::reset_psg()
 {
-	if (psg)
-		PSG_delete(psg);
-
-	psg = PSG_new(psg_clock, (uint32_t)((pal_mode ? pal_clock : ntsc_clock) / 16));
+	if (psg) {
+		PSG_setClock(psg, psg_clock);
+		PSG_setRate(psg, (uint32_t)((pal_mode ? pal_clock : ntsc_clock) / 16));
+	} else {
+		psg = PSG_new(psg_clock, (uint32_t)((pal_mode ? pal_clock : ntsc_clock) / 16));
+	}
+	PSG_setClockDivider(psg, false);	// ¼ prescaler already built into psg_clock
 	PSG_reset(psg);
 }
 
@@ -187,8 +190,9 @@ long Nes_EPSM::run_until(cpu_time_t end_time)
 		{
 			if (psg->trigger_mask & (1 << i))
 				update_trigger(output_buffer_left, psg_time >> epsm_time_precision, triggers[i]);
-			else if (psg->freq[i] <= 1)
+			else if ((psg->trigger_mask & (8 << i)) == 0)
 				triggers[i] = trigger_none;
+
 		}
 
 		psg_time += psg_increment;

@@ -22,7 +22,8 @@ namespace FamiStudio
         // Version 13 = FamiStudio 3.3.0 (EPSM, Delta counter)
         // Version 14 = FamiStudio 4.0.0 (Unicode text).
         // Version 15 = FamiStudio 4.1.0 (DPCM bankswitching)
-        public const int Version = 15;
+        // Version 16 = FamiStudio 4.2.0 (Folders, sound engine options, project mixer settings)
+        public const int Version = 16;
         public const int MaxMappedSampleSize = 0x40000;
         public const int MaxDPCMBanks = 64; 
         public const int MaxSampleAddress = 255 * 64;
@@ -31,6 +32,7 @@ namespace FamiStudio
         private List<Instrument> instruments = new List<Instrument>();
         private List<Arpeggio> arpeggios = new List<Arpeggio>();
         private List<Song> songs = new List<Song>();
+        private List<Folder> folders = new List<Folder>();
         private int nextUniqueId = 100;
         private string filename = "";
         private string name = "Untitled";
@@ -43,6 +45,17 @@ namespace FamiStudio
         private bool sortInstruments = true;
         private bool sortSamples = true;
         private bool sortArpeggios = true;
+
+        // Project mixer overrides;
+        private bool allowMixerOverride = true;
+        private bool overrideBassCutoffHz = false;
+        private int bassCutoffHz = 16; // in Hz (matches Settings.DefaultBassCutoffHz, need to move constant somewhere)
+        private ExpansionMixer[] mixerSettings = new ExpansionMixer[ExpansionType.Count];
+
+        // Sound engine options.
+        private bool soundEngineUsesExtendedInstruments = false;
+        private bool soundEngineUsesExtendedDpcm = false;
+        private bool soundEngineUsesBankSwitching = false;
 
         // This flag has different meaning depending on the tempo mode:
         //  - In FamiStudio  mode, it means the source data is authored on PAL
@@ -62,27 +75,40 @@ namespace FamiStudio
 
         public int N163WaveRAMSize => 128 - 8 * expansionNumN163Channels;
 
-        public bool UsesAnyExpansionAudio => (expansionMask != ExpansionType.NoneMask);
-        public bool UsesSingleExpansionAudio => (Utils.NumberOfSetBits(expansionMask) == 1);
+        public bool UsesAnyExpansionAudio       => (expansionMask != ExpansionType.NoneMask);
+        public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
         public bool UsesMultipleExpansionAudios => (Utils.NumberOfSetBits(expansionMask) > 1);
 
-        public bool UsesFdsExpansion => (expansionMask & ExpansionType.FdsMask) != 0;
-        public bool UsesN163Expansion => (expansionMask & ExpansionType.N163Mask) != 0;
-        public bool UsesVrc6Expansion => (expansionMask & ExpansionType.Vrc6Mask) != 0;
-        public bool UsesVrc7Expansion => (expansionMask & ExpansionType.Vrc7Mask) != 0;
-        public bool UsesMmc5Expansion => (expansionMask & ExpansionType.Mmc5Mask) != 0;
-        public bool UsesS5BExpansion => (expansionMask & ExpansionType.S5BMask) != 0;
-        public bool UsesEPSMExpansion => (expansionMask & ExpansionType.EPSMMask) != 0;
-
+        public bool UsesFdsExpansion   => (expansionMask & ExpansionType.FdsMask) != 0;
+        public bool UsesN163Expansion  => (expansionMask & ExpansionType.N163Mask) != 0;
+        public bool UsesVrc6Expansion  => (expansionMask & ExpansionType.Vrc6Mask) != 0;
+        public bool UsesVrc7Expansion  => (expansionMask & ExpansionType.Vrc7Mask) != 0;
+        public bool UsesMmc5Expansion  => (expansionMask & ExpansionType.Mmc5Mask) != 0;
+        public bool UsesS5BExpansion   => (expansionMask & ExpansionType.S5BMask) != 0;
+        public bool UsesEPSMExpansion  => (expansionMask & ExpansionType.EPSMMask) != 0;
+        
         public bool OutputsStereoAudio => UsesEPSMExpansion;
+        public bool HasAnyFolders => folders.Count > 0;
 
-        public string Filename { get => filename; set => filename = value; }
-        public string Name { get => name; set => name = value; }
-        public string Author { get => author; set => author = value; }
+        public string Filename  { get => filename;  set => filename = value; }
+        public string Name      { get => name;      set => name = value; }
+        public string Author    { get => author;    set => author = value; }
         public string Copyright { get => copyright; set => copyright = value; }
+
+        public bool SoundEngineUsesExtendedInstruments { get => soundEngineUsesExtendedInstruments; set => soundEngineUsesExtendedInstruments = value; }
+        public bool SoundEngineUsesExtendedDpcm        { get => soundEngineUsesExtendedDpcm || soundEngineUsesBankSwitching; set => soundEngineUsesExtendedDpcm = value; }
+        public bool SoundEngineUsesDpcmBankSwitching   { get => soundEngineUsesBankSwitching; set => soundEngineUsesBankSwitching = value; }
+
+        public bool AllowMixerOverride   { get => allowMixerOverride;   set => allowMixerOverride   = value; } // TODO : This has no business being here. More to FamiStudio class.
+        public bool OverrideBassCutoffHz { get => overrideBassCutoffHz; set => overrideBassCutoffHz = value; }
+        public int  BassCutoffHz         { get => bassCutoffHz;         set => bassCutoffHz         = value; }
+
+        public ExpansionMixer[] ExpansionMixerSettings => mixerSettings;
 
         public Project(bool createSongAndInstrument = false)
         {
+            Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, mixerSettings, mixerSettings.Length);
+
             if (createSongAndInstrument)
             {
                 CreateSong();
@@ -289,7 +315,7 @@ namespace FamiStudio
                 return null;
             }
 
-            var sample = new DPCMSample(GenerateUniqueId(), name);
+            var sample = new DPCMSample(this, GenerateUniqueId(), name);
             samples.Add(sample);
             ConditionalSortSamples();
             return sample;
@@ -375,7 +401,7 @@ namespace FamiStudio
         public Song DuplicateSong(Song song)
         {
             var saveSerializer = new ProjectSaveBuffer(this);
-            song.SerializeState(saveSerializer);
+            song.Serialize(saveSerializer);
             var newSong = CreateSong();
             var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
 
@@ -387,7 +413,7 @@ namespace FamiStudio
                     loadSerializer.RemapId(pattern.Id, GenerateUniqueId());
             }
 
-            newSong.SerializeState(loadSerializer);
+            newSong.Serialize(loadSerializer);
             newSong.Name = GenerateUniqueSongName(newSong.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
 
             MoveSong(newSong, song);
@@ -426,7 +452,7 @@ namespace FamiStudio
             else if (arpeggios.Find(arp => arp.Name == name) != null)
                 return null;
 
-            var arpeggio = new Arpeggio(GenerateUniqueId(), name);
+            var arpeggio = new Arpeggio(this, GenerateUniqueId(), name);
             arpeggios.Add(arpeggio);
             ConditionalSortArpeggios();
             return arpeggio;
@@ -435,11 +461,11 @@ namespace FamiStudio
         public Arpeggio DuplicateArpeggio(Arpeggio arpeggio)
         {
             var saveSerializer = new ProjectSaveBuffer(this);
-            arpeggio.SerializeState(saveSerializer);
+            arpeggio.Serialize(saveSerializer);
             var newArpeggio = CreateArpeggio();
             var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
             loadSerializer.RemapId(arpeggio.Id, newArpeggio.Id);
-            newArpeggio.SerializeState(loadSerializer);
+            newArpeggio.Serialize(loadSerializer);
             newArpeggio.Name = GenerateUniqueArpeggioName(newArpeggio.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
             MoveArpeggio(newArpeggio, arpeggio);
             ConditionalSortArpeggios();
@@ -496,11 +522,11 @@ namespace FamiStudio
         public Instrument DuplicateInstrument(Instrument instrument)
         {
             var saveSerializer = new ProjectSaveBuffer(this);
-            instrument.SerializeState(saveSerializer);
+            instrument.Serialize(saveSerializer);
             var newInstrument = CreateInstrument(instrument.Expansion);
             var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
             loadSerializer.RemapId(instrument.Id, newInstrument.Id);
-            newInstrument.SerializeState(loadSerializer);
+            newInstrument.Serialize(loadSerializer);
             newInstrument.Name = GenerateUniqueInstrumentName(newInstrument.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
             MoveInstrument(newInstrument, instrument);
             ConditionalSortInstruments();
@@ -701,6 +727,22 @@ namespace FamiStudio
             }
         }
 
+        public string GenerateUniqueFolderName(int type, string baseName = "Folder")
+        {
+            if (string.IsNullOrEmpty(baseName))
+                baseName = "Folder";
+
+            if (!FolderExists(type, baseName))
+                return baseName;
+
+            for (int i = 1; ; i++)
+            {
+                var name = $"{baseName} {i}";
+                if (!FolderExists(type, name))
+                    return name;
+            }
+        }
+
         public bool RenameInstrument(Instrument instrument, string name)
         {
             if (instrument.Name == name)
@@ -729,6 +771,7 @@ namespace FamiStudio
                 else
                     return AlphaNumericComparer.CompareStatic(i1.Name, i2.Name);
             });
+            SortFolders(FolderType.Instrument);
         }
 
         public void ConditionalSortInstruments()
@@ -771,6 +814,7 @@ namespace FamiStudio
             {
                 return AlphaNumericComparer.CompareStatic(a1.Name, a2.Name);
             });
+            SortFolders(FolderType.Arpeggio);
         }
 
         public void ConditionalSortArpeggios()
@@ -813,6 +857,7 @@ namespace FamiStudio
             {
                 return AlphaNumericComparer.CompareStatic(s1.Name, s2.Name);
             });
+            SortFolders(FolderType.Sample);
         }
 
         public void ConditionalSortSamples()
@@ -854,6 +899,7 @@ namespace FamiStudio
             {
                 return AlphaNumericComparer.CompareStatic(s1.Name, s2.Name);
             });
+            SortFolders(FolderType.Song);
         }
 
         public void ConditionalSortSongs()
@@ -871,6 +917,29 @@ namespace FamiStudio
                 songs.Insert(songs.IndexOf(songBefore) + 1, song);
             else
                 songs.Insert(0, song);
+        }
+
+        public void SortFolders(int type)
+        {
+            var foldersForType    = new List<Folder>();
+            var foldersOtherTypes = new List<Folder>();
+
+            foreach (var f in folders)
+            {
+                if (f.Type == type)
+                    foldersForType.Add(f);
+                else
+                    foldersOtherTypes.Add(f);
+            }
+
+            foldersForType.Sort((f1, f2) =>
+            {
+                return AlphaNumericComparer.CompareStatic(f1.Name, f2.Name);
+            });
+
+            folders.Clear();
+            folders.AddRange(foldersOtherTypes);
+            folders.AddRange(foldersForType);
         }
 
         public void SetExpansionAudioMask(int newExpansionMask, int numChannels = 1, bool resizeN163RAM = true)
@@ -1037,6 +1106,118 @@ namespace FamiStudio
             }
         }
 
+        public Folder CreateFolder(int type, string name = null)
+        {
+            if (name == null)
+                name = GenerateUniqueFolderName(type);
+            else if (FolderExists(type, name))
+                return GetFolder(type, name);
+
+            var folder = new Folder(type, name);
+            folders.Add(folder);
+            ConditionalSortFolders(type);
+            return folder;
+        }
+
+        public void DeleteFolder(int type, string name)
+        {
+            Debug.Assert(
+                (type == FolderType.Song && songs.Find(s => s.FolderName == name) == null) ||
+                (type == FolderType.Instrument && instruments.Find(i => i.FolderName == name) == null) ||
+                (type == FolderType.Arpeggio && arpeggios.Find(a => a.FolderName == name) == null) ||
+                (type == FolderType.Sample && samples.Find(s => s.FolderName == name) == null));
+
+            folders.RemoveAll(f => f.Type == type && f.Name == name);
+        }
+
+        public bool RenameFolder(int type, Folder folder, string name)
+        {
+            if (folder.Name == name)
+                return true;
+            if (string.IsNullOrEmpty(name))
+                return false;
+
+            if (!FolderExists(type, name))
+            {
+                var oldName = folder.Name;
+                folder.Name = name;
+
+                switch (type)
+                {
+                    case FolderType.Song:
+                        songs.ForEach(s => { if (s.FolderName == oldName) s.FolderName = name; });
+                        ConditionalSortSongs();
+                        break;
+                    case FolderType.Instrument:
+                        instruments.ForEach(i => { if (i.FolderName == oldName) i.FolderName = name; });
+                        ConditionalSortInstruments();
+                        break;
+                    case FolderType.Arpeggio:
+                        arpeggios.ForEach(a => { if (a.FolderName == oldName) a.FolderName = name; });
+                        ConditionalSortArpeggios();
+                        break;
+                    case FolderType.Sample:
+                        samples.ForEach(s => { if (s.FolderName == oldName) s.FolderName = name; });
+                        ConditionalSortSamples();
+                        break;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private void EnsureFolderExist(int type, string name)
+        {
+            if (string.IsNullOrEmpty(name)) 
+                return;
+            CreateFolder(type, name);
+        }
+
+        private void EnsureAllFoldersExist()
+        {
+            // HACK to fix issues with early 4.2.0 alpha files that didnt merge folders properly.
+            foreach (var s in songs)
+                EnsureFolderExist(FolderType.Song, s.FolderName);
+            foreach (var i in instruments)
+                EnsureFolderExist(FolderType.Instrument, i.FolderName);
+            foreach (var a in arpeggios)
+                EnsureFolderExist(FolderType.Arpeggio, a.FolderName);
+            foreach (var s in samples)
+                EnsureFolderExist(FolderType.Sample, s.FolderName);
+        }
+
+        public void MoveFolder(Folder folder, Folder folderBefore)
+        {
+            Debug.Assert(folders.Contains(folder));
+            folders.Remove(folder);
+
+            if (folderBefore != null)
+                folders.Insert(folders.IndexOf(folderBefore) + 1, folder);
+            else
+                folders.Insert(0, folder);
+        }
+
+        private void ConditionalSortFolders(int type)
+        {
+            switch (type)
+            {
+                case FolderType.Song:
+                    ConditionalSortSongs(); 
+                    break;
+                case FolderType.Instrument: 
+                    ConditionalSortInstruments(); 
+                    break;
+                case FolderType.Sample:     
+                    ConditionalSortSamples(); 
+                    break;
+                case FolderType.Arpeggio:  
+                    ConditionalSortArpeggios(); 
+                    break;
+            }
+        }
+
         public void DeleteUnmappedSamples()
         {
             var usedSamples = new List<DPCMSample>();
@@ -1046,8 +1227,14 @@ namespace FamiStudio
                 inst.GetTotalMappedSampleSize(usedSamples);
             }
 
-            samples.Clear();
-            samples.AddRange(usedSamples);
+            // Preserve ordering in case sorting isnt enabled.
+            for (var i = samples.Count - 1; i >= 0; i--)
+            {
+                if (!usedSamples.Contains(samples[i]))
+                    samples.RemoveAt(i);
+            }
+
+            ConditionalSortSamples();
         }
 
         public int GetTotalSampleSize()
@@ -1260,13 +1447,16 @@ namespace FamiStudio
 
         public void DeleteAllSongsBut(int[] songIds, bool deleteUnusedData = true)
         {
-            for (int i = songs.Count - 1; i >= 0; i--)
+            if (songIds != null)
             {
-                var song = songs[i];
-
-                if (Array.IndexOf(songIds, song.Id) < 0)
+                for (int i = songs.Count - 1; i >= 0; i--)
                 {
-                    DeleteSong(song);
+                    var song = songs[i];
+
+                    if (Array.IndexOf(songIds, song.Id) < 0)
+                    {
+                        DeleteSong(song);
+                    }
                 }
             }
 
@@ -1367,11 +1557,15 @@ namespace FamiStudio
                         otherProject.ReplaceSampleInAllMappings(otherSample, existingSample);
                         otherProject.samples.Insert(otherProject.samples.IndexOf(otherSample), existingSample); // To pass validation.
                         otherProject.DeleteSample(otherSample);
+                        otherSample.SetProject(this);
                     }
                     else
                     {
                         samples.Add(otherSample);
+                        otherSample.SetProject(this);
                     }
+
+                    EnsureFolderExist(FolderType.Sample, otherSample.FolderName);
                 }
 
                 ValidateIntegrity();
@@ -1421,6 +1615,8 @@ namespace FamiStudio
                             otherInstrument.SetProject(this);
                             instruments.Add(otherInstrument);
                         }
+
+                        EnsureFolderExist(FolderType.Instrument, otherInstrument.FolderName);
                     }
                     else
                     {
@@ -1447,11 +1643,15 @@ namespace FamiStudio
                         otherProject.ReplaceArpeggio(otherArpeggio, existingArpeggio);
                         otherProject.arpeggios.Insert(otherProject.arpeggios.IndexOf(otherArpeggio), existingArpeggio); // To pass validation.
                         otherProject.DeleteArpeggio(otherArpeggio);
+                        otherArpeggio.SetProject(this);
                     }
                     else
                     {
                         arpeggios.Add(otherArpeggio);
+                        otherArpeggio.SetProject(this);
                     }
+
+                    EnsureFolderExist(FolderType.Arpeggio, otherArpeggio.FolderName);
                 }
 
                 ValidateIntegrity();
@@ -1462,6 +1662,8 @@ namespace FamiStudio
             {
                 song.SetProject(this);
                 songs.Add(song);
+
+                EnsureFolderExist(FolderType.Song, song.FolderName);
             }
 
             ConditionalSortEverything();
@@ -1507,6 +1709,18 @@ namespace FamiStudio
                     i++;
                 }
             }
+        }
+
+        public void RemoveDpcmNotesWithoutMapping()
+        {
+            foreach (var song in songs)
+                song.RemoveDpcmNotesWithoutMapping();
+        }
+
+        public void PermanentlyApplyGrooves()
+        {
+            foreach (var song in songs)
+                song.PermanentlyApplyGrooves();
         }
 
         public void ConvertToFamiStudioTempo()
@@ -1585,7 +1799,13 @@ namespace FamiStudio
                 }
             }
 
-            instruments = new List<Instrument>(usedInstruments);
+            // Preserve ordering in case sorting isnt enabled.
+            for (var i = instruments.Count - 1; i >= 0; i--)
+            {
+                if (!usedInstruments.Contains(instruments[i]))
+                    instruments.RemoveAt(i);
+            }
+
             ConditionalSortInstruments();
         }
 
@@ -1676,7 +1896,13 @@ namespace FamiStudio
                 }
             }
 
-            arpeggios = new List<Arpeggio>(usedArpeggios);
+            // Preserve ordering in case sorting isnt enabled.
+            for (var i = arpeggios.Count - 1; i >= 0; i--)
+            {
+                if (!usedArpeggios.Contains(arpeggios[i]))
+                    arpeggios.RemoveAt(i);
+            }
+
             ConditionalSortArpeggios();
         }
 
@@ -1766,6 +1992,46 @@ namespace FamiStudio
 #endif
         }
 
+        public bool FolderExists(int type, string name)
+        {
+            return folders.Exists(f => f.Type == type && f.Name == name);
+        }
+
+        public Folder GetFolder(int type, string name)
+        {
+            return folders.Find(f => f.Type == type && f.Name == name);
+        }
+
+        public List<Folder> GetFoldersForType(int type)
+        {
+            return folders.FindAll(f => f.Type == type);
+        }
+
+        public List<Song> GetSongsInFolder(string name)
+        {
+            return songs.FindAll(s => (name ?? "") == (s.FolderName ?? ""));
+        }
+
+        public List<Instrument> GetInstrumentsInFolder(string name)
+        {
+            return instruments.FindAll(i => (name ?? "") == (i.FolderName ?? ""));
+        }
+
+        public List<Arpeggio> GetArpeggiosInFolder(string name)
+        {
+            return arpeggios.FindAll(a => (name ?? "") == (a.FolderName ?? ""));
+        }
+
+        public List<DPCMSample> GetSamplesInFolder(string name)
+        {
+            return samples.FindAll(s => (name ?? "") == (s.FolderName ?? ""));
+        }
+        
+        public void ExpandAllFolders(int type, bool expand)
+        {
+            folders.ForEach(f => { if (f.Type == type) f.Expanded = expand; });
+        }
+
         public void SerializeDPCMSamples(ProjectBuffer buffer)
         {
             // Samples
@@ -1774,7 +2040,7 @@ namespace FamiStudio
             buffer.InitializeList(ref samples, sampleCount);
 
             foreach (var sample in samples)
-                sample.SerializeState(buffer);
+                sample.Serialize(buffer);
         }
 
         // This is only used for pre-4.1.0 files where we had just 1 global "DPCM instrument".
@@ -1794,7 +2060,7 @@ namespace FamiStudio
                         const int OldDPCMNoteMin = 0x0c;
 
                         var mapping = new DPCMSampleMapping();
-                        mapping.SerializeState(buffer);
+                        mapping.Serialize(buffer);
                         legacyMappings.Add(OldDPCMNoteMin + i, mapping);
                     }
                 }
@@ -1853,7 +2119,7 @@ namespace FamiStudio
             buffer.Serialize(ref instrumentCount);
             buffer.InitializeList(ref instruments, instrumentCount);
             foreach (var instrument in instruments)
-                instrument.SerializeState(buffer);
+                instrument.Serialize(buffer);
         }
 
         public void SerializeArpeggioState(ProjectBuffer buffer)
@@ -1862,11 +2128,11 @@ namespace FamiStudio
             buffer.Serialize(ref arpeggioCount);
             buffer.InitializeList(ref arpeggios, arpeggioCount);
             foreach (var arp in arpeggios)
-                arp.SerializeState(buffer);
+                arp.Serialize(buffer);
         }
 
 
-        public void SerializeState(ProjectBuffer buffer, bool includeSamples = true)
+        public void Serialize(ProjectBuffer buffer, bool includeSamples = true)
         {
             if (!buffer.IsForUndoRedo)
             {
@@ -1926,6 +2192,66 @@ namespace FamiStudio
                 buffer.Serialize(ref pal);
             }
 
+            // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer and
+            // some sound-engine specific options.
+            if (buffer.Version >= 16)
+            {
+                var folderCount = folders.Count;
+                buffer.Serialize(ref folderCount);
+                buffer.InitializeList(ref folders, folderCount);
+                foreach (var folder in folders)
+                {
+                    folder.Serialize(buffer);
+                }
+
+                buffer.Serialize(ref soundEngineUsesExtendedInstruments);
+                buffer.Serialize(ref soundEngineUsesExtendedDpcm);
+                buffer.Serialize(ref soundEngineUsesBankSwitching);
+            }
+
+            // At version 16 (FamiStudio 4.2.0) we added project-specific mixer settings that can
+            // override the app's settings.
+            if (buffer.Version >= 16)
+            {
+                var overrideMask = 0;
+
+                if (buffer.IsWriting)
+                {
+                    // Only save the settings if they are overriden AND we are really using this
+                    // expansion. This is in case we want to change the default settings later.
+                    // We wont end up with a bunch of files with outdated settings. Note that
+                    // bit 0 is 2A03, so its shifted by 1 compared to regular expansion mask.
+                    for (var i = 0; i < mixerSettings.Length; i++)
+                    {
+                        var bit = 1 << i;
+                        var expEnabled = i == 0 || (bit & (expansionMask << 1)) != 0;
+                        if (mixerSettings[i].Override && expEnabled)
+                            overrideMask |= bit;
+                    }
+                }
+
+                if (buffer.IsForUndoRedo)
+                    buffer.Serialize(ref allowMixerOverride);
+                buffer.Serialize(ref overrideBassCutoffHz);
+                if (overrideBassCutoffHz)
+                    buffer.Serialize(ref bassCutoffHz);
+                buffer.Serialize(ref overrideMask);
+
+                if (buffer.IsReading)
+                {
+                    Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, mixerSettings, mixerSettings.Length);
+                }
+
+                for (var i = 0; i < mixerSettings.Length; i++)
+                {
+                    if ((overrideMask & (1 << i)) != 0)
+                    {
+                        mixerSettings[i].Serialize(buffer);
+                        mixerSettings[i].Override = true;
+                    }
+                }
+            }
+
             // DPCM samples
             var legacyMappings = (Dictionary<int, DPCMSampleMapping>)null;
             if (includeSamples)
@@ -1949,7 +2275,7 @@ namespace FamiStudio
             buffer.InitializeList(ref songs, songCount);
             foreach (var song in songs)
             {
-                song.SerializeState(buffer);
+                song.Serialize(buffer);
             }
 
             CreateLegacyDPCMInstrument(legacyMappings);
@@ -1964,21 +2290,59 @@ namespace FamiStudio
                 {
                     SortEverything(buffer.Version < 10);
                 }
+
+                EnsureAllFoldersExist();
             }
         }
 
         public Project DeepClone()
         {
             var saveSerializer = new ProjectSaveBuffer(this);
-            SerializeState(saveSerializer);
+            Serialize(saveSerializer);
             var newProject = new Project();
             var loadSerializer = new ProjectLoadBuffer(newProject, saveSerializer.GetBuffer(), Version);
-            newProject.SerializeState(loadSerializer);
+            newProject.Serialize(loadSerializer);
             newProject.ValidateIntegrity();
             return newProject;
         }
     }
-    
+
+    public static class FolderType
+    {
+        public const int Song       = 0;
+        public const int Instrument = 1;
+        public const int Arpeggio   = 2;
+        public const int Sample     = 3;
+    }
+
+    public class Folder
+    {
+        private int    type;
+        private string name;
+        private bool   expanded = true;
+
+        public int    Type     { get => type;     set => type     = value; }
+        public string Name     { get => name;     set => name     = value; }
+        public bool   Expanded { get => expanded; set => expanded = value; }
+
+        public Folder()
+        {
+        }
+
+        public Folder(int t, string n)
+        {
+            type = t;
+            name = n;
+        }
+
+        public void Serialize(ProjectBuffer buffer)
+        {
+            buffer.Serialize(ref type);
+            buffer.Serialize(ref name);
+            buffer.Serialize(ref expanded);
+        }
+    }
+
     public static class ExpansionType
     {
         public const int None  = 0;
@@ -2006,6 +2370,7 @@ namespace FamiStudio
 
         // Use these to display to user
         public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+        public static LocalizedString[] LocalizedChipNames = new LocalizedString[0];
 
         // Use these to save in files, etc.
         public static readonly string[] InternalNames =
@@ -2039,6 +2404,8 @@ namespace FamiStudio
         static ExpansionType()
         {
             Localization.LocalizeStatic(typeof(ExpansionType));
+            LocalizedChipNames = (LocalizedString[])LocalizedNames.Clone();
+            LocalizedChipNames[0] = NoneName;
         }
 
         public static bool NeedsExpansionInstrument(int value)
@@ -2157,5 +2524,40 @@ namespace FamiStudio
         {
             return Array.IndexOf(Names, str);
         }
+    }
+
+    public struct ExpansionMixer
+    {
+        public ExpansionMixer(float v, float t, int rf)
+        {
+            VolumeDb = v;
+            TrebleDb = t;
+            TrebleRolloffHz = rf;
+        }
+
+        public bool Override;
+        public float VolumeDb;
+        public float TrebleDb;
+        public int TrebleRolloffHz;
+
+        public void Serialize(ProjectBuffer buffer)
+        {
+            // Override flag will be serialized as a bit mask before.
+            buffer.Serialize(ref VolumeDb);
+            buffer.Serialize(ref TrebleDb);
+            buffer.Serialize(ref TrebleRolloffHz);
+        }
+
+        public static readonly ExpansionMixer[] DefaultExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count]
+        {
+            new ExpansionMixer(0.0f,  -5.0f, 12000), // None
+            new ExpansionMixer(0.0f,  -5.0f, 12000), // Vrc6
+            new ExpansionMixer(0.0f, -15.0f, 12000), // Vrc7
+            new ExpansionMixer(0.0f,   0.0f,  2000), // Fds
+            new ExpansionMixer(0.0f,  -5.0f, 12000), // Mmc5
+            new ExpansionMixer(0.0f, -15.0f, 12000), // N163
+            new ExpansionMixer(0.0f,  -5.0f, 12000), // S5B
+            new ExpansionMixer(0.0f,  -5.0f, 12000)  // EPSM
+        };
     }
 }

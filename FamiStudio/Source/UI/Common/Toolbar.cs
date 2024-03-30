@@ -51,6 +51,7 @@ namespace FamiStudio
             PlayHalf,
             PlayQuarter,
             Pause,
+            Wait,
             NTSC,
             PAL,
             NTSCToPAL,
@@ -88,6 +89,7 @@ namespace FamiStudio
             "PlayHalf",
             "PlayQuarter",
             "Pause",
+            "Wait",
             "NTSC",
             "PAL",
             "NTSCToPAL",
@@ -239,7 +241,7 @@ namespace FamiStudio
         bool redTooltip = false;
         new string tooltip = "";
         Font timeCodeFont;
-        BitmapAtlasRef[] bmpSpecialCharacters;
+        TextureAtlasRef[] bmpSpecialCharacters;
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
         private delegate void MouseWheelDelegate(float delta);
@@ -271,7 +273,7 @@ namespace FamiStudio
         private int timecodeOscSizeY;
 
         private Color warningColor = Color.FromArgb(205, 77, 64);
-        private BitmapAtlasRef[] bmpButtons;
+        private TextureAtlasRef[] bmpButtons;
         private Button[] buttons = new Button[(int)ButtonType.Count];
 
         private bool oscilloscopeVisible = true;
@@ -341,6 +343,8 @@ namespace FamiStudio
         private LocalizedString HalfSpeedTooltip;
         private LocalizedString QuarterSpeedLabel;
         private LocalizedString QuarterSpeedTooltip;
+        private LocalizedString AccurateSeekLabel;
+        private LocalizedString AccurateSeekTooltip;
 
         #endregion
 
@@ -356,7 +360,7 @@ namespace FamiStudio
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
             var g = ParentWindow.Graphics;
-            bmpButtons = g.GetBitmapAtlasRefs(ButtonImageNames);
+            bmpButtons = g.GetTextureAtlasRefs(ButtonImageNames);
             timeCodeFont = Fonts.FontHuge;
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
@@ -412,7 +416,7 @@ namespace FamiStudio
                 buttonIconPosY          = DpiScaling.ScaleForWindow(DefaultButtonIconPosY);
                 buttonSize              = DpiScaling.ScaleForWindow(DefaultButtonSize);
 
-                bmpSpecialCharacters = g.GetBitmapAtlasRefs(SpecialCharImageNames);
+                bmpSpecialCharacters = g.GetTextureAtlasRefs(SpecialCharImageNames);
 
                 specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(32) };
                 specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
@@ -847,6 +851,7 @@ namespace FamiStudio
                 new ContextMenuOption(RegularSpeedLabel, RegularSpeedTooltip, () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore ),
                 new ContextMenuOption(HalfSpeedLabel,    HalfSpeedTooltip,    () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
                 new ContextMenuOption(QuarterSpeedLabel, QuarterSpeedTooltip, () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                new ContextMenuOption(AccurateSeekLabel, AccurateSeekTooltip, () => { App.AccurateSeek = !App.AccurateSeek; }, () => App.AccurateSeek ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked, ContextMenuSeparator.MobileBefore )
             });
         }
 
@@ -854,7 +859,15 @@ namespace FamiStudio
         {
             if (App.IsPlaying)
             {
-                return ButtonImageIndices.Pause;
+                if (App.IsSeeking)
+                {
+                    tint = Theme.Darken(tint, (int)(Math.Abs(Math.Sin(Platform.TimeSeconds() * 12.0)) * 64));
+                    return ButtonImageIndices.Wait;
+                }
+                else
+                {
+                    return ButtonImageIndices.Pause;
+                }
             }
             else
             {
@@ -1016,7 +1029,7 @@ namespace FamiStudio
                 if (status != ButtonStatus.Disabled && hover)
                     opacity *= 0.75f;
                 
-                c.DrawBitmapAtlas(bmpButtons[(int)bmpIndex], btn.IconPos.X, btn.IconPos.Y, opacity, iconScaleFloat, tint);
+                c.DrawTextureAtlas(bmpButtons[(int)bmpIndex], btn.IconPos.X, btn.IconPos.Y, opacity, iconScaleFloat, tint);
             }
         }
 
@@ -1106,7 +1119,7 @@ namespace FamiStudio
 
                             if (specialCharacter.BmpIndex != SpecialCharImageIndices.Count)
                             {
-                                c.DrawBitmapAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyColor1);
+                                c.DrawTextureAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyColor1);
                             }
                             else
                             {

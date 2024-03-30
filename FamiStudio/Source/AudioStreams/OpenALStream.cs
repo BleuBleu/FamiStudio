@@ -12,37 +12,51 @@ namespace FamiStudio
         private static IntPtr context;
 
         private GetBufferDataCallback bufferFill;
+        private StreamStartingCallback streamStarting;
         private int freq;
         private bool quit;
         private Task playingTask;
         private bool stereo;
+        private int bufferSizeBytes;
+        private int source;
+        private int[] buffers;
+        private short[] samples;
+        private int samplesOffset;
 
-        int source;
-        int[] buffers;
+        private int[]   immediateSource  = new [] { -1, -1 };
+        private int[][] immediateBuffers = new int[2][];
 
-        int[]   immediateSource  = new [] { -1, -1 };
-        int[][] immediateBuffers = new int[2][];
+        public bool Stereo => stereo;
 
-        public OpenALStream(int rate, bool inStereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        private OpenALStream()
+        {
+        }
+
+        public static OpenALStream Create(int rate, bool stereo, int bufferSizeMs)
         {
             if (device == IntPtr.Zero)
             {
                 device = ALC.OpenDevice(null);
+                if (device == IntPtr.Zero) return null;
                 context = ALC.CreateContext(device, null);
+                if (context == IntPtr.Zero) return null;
                 ALC.MakeContextCurrent(context);
 
                 var deviceName = ALC.GetString(device, ALC.DeviceSpecifier);
                 Console.WriteLine($"Default OpenAL audio device is '{deviceName}'");
             }
 
-            stereo = inStereo;
-            // TODO : We need to decouple the number of emulated buffered frames and the 
-            // size of the low-level audio buffers.
-            freq = rate;
-            source = AL.GenSource();
-            buffers = AL.GenBuffers(numBuffers);
-            bufferFill = bufferFillCallback;
-            quit = false;
+            var numBuffers = Math.Max(4, bufferSizeMs / 25);
+            var stream = new OpenALStream();
+
+            stream.stereo = stereo;
+            stream.freq = rate;
+            stream.source = AL.GenSource();
+            stream.buffers = AL.GenBuffers(numBuffers);
+            stream.bufferSizeBytes = Utils.RoundUp(rate * bufferSizeMs / 1000 * sizeof(short) * (stereo ? 2 : 1) / numBuffers, sizeof(short) * 2);
+            stream.quit = false;
+
+            return stream;
         }
 
         public void Dispose()
@@ -54,25 +68,47 @@ namespace FamiStudio
             AL.DeleteSource(source);
         }
 
-        public bool IsStarted => playingTask != null;
+        public bool IsPlaying => playingTask != null;
 
-        public void Start()
+        public void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
             quit = false;
+            bufferFill = bufferFillCallback;
+            streamStarting = streamStartCallback;
+            samples = null;
+            samplesOffset = 0;
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
 
         public void Stop()
         {
-            if (playingTask != null)
-            {
-                quit = true;
-                playingTask.Wait();
-                playingTask = null;
-            }
+            StopInternal(true);
+        }
 
-            AL.SourceStop(source);
-            AL.Source(source, AL.Buffer, 0);
+        private void StopInternal(bool mainThread)
+        {
+            lock (this)
+            {
+                if (playingTask != null)
+                {
+                    // Stop can be called from the task itself for non-looping song so we 
+                    // need a mutex and we dont want to wait for the task if we are the task.
+                    if (mainThread)
+                    {
+                        quit = true;
+                        playingTask.Wait();
+                    }
+
+                    AL.SourceStop(source);
+                    AL.Source(source, AL.Buffer, 0);
+
+                    playingTask = null;
+                    bufferFill = null;
+                    streamStarting = null;
+                    samples = null;
+                    samplesOffset = 0;
+                }
+            }
         }
 
         private void DebugStream()
@@ -87,43 +123,90 @@ namespace FamiStudio
 
         private unsafe void PlayAsync()
         {
-            int initBufferIdx = buffers.Length - 1;
+            var streamStarted = false;
+            var streamDone = false;
+            var bufferSampleCount = bufferSizeBytes / sizeof(short);
+            var bufferSamples = new short[bufferSampleCount];
 
             while (!quit)
             {
-                int numProcessed = 0;
+                var numBuffersToFill = 0;
 
-                if (initBufferIdx < 0)
+                if (!streamDone)
                 {
-                    do
+                    if (streamStarted)
                     {
-                        AL.GetSource(source, AL.BuffersProcessed, out numProcessed);
-                        if (numProcessed != 0) break;
-                        if (quit) return;
-                        Thread.Sleep(1);
-                    }
-                    while (true);
-                }
-                else
-                {
-                    numProcessed = initBufferIdx + 1;
-                }
-
-                for (int i = 0; i < numProcessed && !quit; )
-                {
-                    var data = bufferFill();
-                    if (data != null)
-                    {
-                        int bufferId = initBufferIdx >= 0 ? buffers[initBufferIdx--] : AL.SourceUnqueueBuffer(source);
-                        fixed (short* p = &data[0])
-                            AL.BufferData(bufferId, stereo ? AL.Stereo16 : AL.Mono16, new IntPtr(p), data.Length * sizeof(short), freq);
-                        AL.SourceQueueBuffer(source, bufferId);
-                        i++;
+                        do
+                        {
+                            AL.GetSource(source, AL.BuffersProcessed, out numBuffersToFill);
+                            if (numBuffersToFill != 0) break;
+                            if (quit) return;
+                            Thread.Sleep(1);
+                        }
+                        while (true);
                     }
                     else
                     {
-                        Thread.Sleep(1);
+                        numBuffersToFill = buffers.Length;
                     }
+            
+                    for (var i = 0; i < numBuffersToFill && !quit && !streamDone; )
+                    {
+                        var bufferId = streamStarted ? AL.SourceUnqueueBuffer(source) : buffers[i];
+                        var bufferSamplesOffset = 0;
+
+                        do
+                        {
+                            if (samplesOffset == 0)
+                            {
+                                while (true)
+                                {
+                                    var newSamples = bufferFill(out streamDone);
+                                    
+                                    // If we are done, pad the last buffer with zeroes so the stream can start
+                                    // for super-short (ex: 1-frame) non-looping songs.
+                                    if (streamDone)
+                                    {
+                                        newSamples = new short[bufferSampleCount - samplesOffset];
+                                    }
+
+                                    if (newSamples != null)
+                                    {
+                                        samples = newSamples;
+                                        break;
+                                    }
+                                    
+                                    if (quit)
+                                    {
+                                        return;
+                                    }
+                                    
+                                    Thread.Sleep(1);
+                                }
+                            }
+
+                            var numSamplesToCopy = samples.Length - samplesOffset;
+                            numSamplesToCopy = Math.Min(bufferSampleCount - bufferSamplesOffset, numSamplesToCopy);
+                            Array.Copy(samples, samplesOffset, bufferSamples, bufferSamplesOffset, numSamplesToCopy);
+                            
+                            samplesOffset += numSamplesToCopy;
+                            if (samplesOffset == samples.Length)
+                                samplesOffset = 0;
+
+                            bufferSamplesOffset += numSamplesToCopy;
+                        }
+                        while (bufferSamplesOffset < bufferSampleCount);
+
+                        fixed (short* p = &bufferSamples[0])
+                            AL.BufferData(bufferId, stereo ? AL.Stereo16 : AL.Mono16, new IntPtr(p), bufferSamples.Length * sizeof(short), freq);
+
+                        AL.SourceQueueBuffer(source, bufferId);
+                        i++;
+                    }
+                }
+                else
+                {
+                    Thread.Sleep(1);
                 }
 
                 //DebugStream();
@@ -132,7 +215,26 @@ namespace FamiStudio
                 if (state != AL.Playing)
                 {
                     Debug.WriteLine("RESTART!");
-                    //DebugStream();
+
+                    if (!streamStarted)
+                    {
+                        streamStarting();
+                        streamStarted = true;
+                    }
+                    else if (streamDone)
+                    {
+                        // If the stream is done, it will stop by itself if we stop queueing buffers but we still
+                        // need to be able to differenciate between starvation and the true end of the stream.
+                        AL.GetSource(source, AL.BuffersProcessed, out var numProcessed);
+                        AL.GetSource(source, AL.BuffersQueued, out var numQueued);
+
+                        if (numQueued == numProcessed)
+                        {
+                            StopInternal(false);
+                            return;
+                        }
+                    }
+                    
                     AL.SourcePlay(source);
                 }
             }

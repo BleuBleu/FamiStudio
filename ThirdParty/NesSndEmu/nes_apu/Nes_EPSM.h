@@ -31,7 +31,7 @@ public:
 	unsigned char regs_a1[184];
 	unsigned char ages_a1[184];
 
-	enum { psg_clock = 4000000 };
+	enum { psg_clock = 2000000 };	// EPSM uses a de facto prescaler of 4 for its SSG
 	enum { epsm_clock = 8000000 };
 	enum { ntsc_clock = 1789773 };
 	enum { pal_clock = 1662607 };

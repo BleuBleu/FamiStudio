@@ -47,9 +47,9 @@ namespace FamiStudio
                                 note.HasDeltaCounter = false; // HACK : Clear so we don't set multiple times.
                             }
 
-                            NesApu.CurrentSample.Value = sample.ProcessedData;
+                            NesApu.CurrentSample[apuIdx] = sample.ProcessedData;
 
-                            WriteRegister(NesApu.APU_DMC_START, 0, 4, new List<int> { sample.Id });
+                            WriteRegister(NesApu.APU_DMC_START, 0, 4, sample.Id);
                             WriteRegister(NesApu.APU_DMC_LEN, sample.ProcessedData.Length >> 4);
                             WriteRegister(NesApu.APU_DMC_FREQ, mapping.Pitch | (mapping.Loop ? 0x40 : 0x00));
                             WriteRegister(NesApu.APU_DMC_RAW, dmcInitialValue);

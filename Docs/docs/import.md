@@ -9,17 +9,19 @@ Import from FamiTracker (official 0.4.6 only) is supported through the text (TXT
 Note that only a small subset of features is supported. Only the following effects are supported. Every other effect will be ignored:
 
 * 0xy (Arpeggio) : Will be converted to arpeggio, name will be based one the xy value.
-* 1xx/2xx (Slide up/down) : Will be converted to slide notes
+* 1xx/2xx (Pitch slide up/down) : Will be converted to slide notes.
 * 3xx (Portamento) : Will be converted to slide notes.
-* 4xy (Vibrato) : Vibrator speed will be slightly modified, see table above for mapping.
+* 4xy (Vibrato) : Vibrato speed will be slightly modified, see table above for mapping.
+* Axx (Volume slide) : Fully supported.
 * Bxx (Jump) : Will be converted to loop point. 
-* Cxx (Half) : Will truncate the song at the location of the effect and remove the loop point.
+* Cxx (Halt) : Will truncate the song at the location of the effect and remove the loop point.
 * Dxx (Skip) : Will be converted to a custom pattern length.
-* Fxx (Speed) : Only speed is supported. Speed changed are not allowed to be delayed with Gxx. 
+* Fxx (Speed) : Only speed is supported. Speed changes are not allowed to be delayed with Gxx. 
 * Gxx (Note delay) : Fully supported.
 * Pxx (Fine pitch) : Fully supported.
 * Hxx (FDS Modulation depth) : Fully supported.
 * Ixx/Jxx (FDS Modulation speed) : Fully supported, but combined in one 16-bit value.
+* Qxx/Rxx (Note slide up/down) : Will be converted to slide notes.
 * Sxx (Delayed cut) : Fully supported. 
 * Vxx (Timbre) : Supported, but only affects the duty cycle of 2A03 and VRC6 square channels. Does not affect Saw or anything else.
 * Zxx (Delta counter) : Fully supported.
@@ -39,7 +41,7 @@ Standard MIDI files can be imported with the desktop version of FamiStudio.
 
 Notes, time signature and tempo changes will be imported. Only blank instruments, named after their GM instrument, will be created. Users should not expect the imported song to sound anything like the original. 
 
-Moreover, since the NES can only play one note at a time for a given channel, any kind of polyphony is not supported. Users are responsible for properly processing their MIDI files before importing them. That being said, this can be a handy feature to bring notes from an old project in FamiStudio.
+Moreover, since the NES can only play one note at a time for a given channel, any kind of polyphony is not supported. Users are responsible for properly processing their MIDI files before importing them. That being said, this can be a handy feature to bring notes from an old project into FamiStudio.
 
 ![](images/ImportMIDI.png#center)
 
@@ -94,10 +96,36 @@ In the example below, we can imagine that the notes on the left were all using t
 
 Only features that are supported by FamiStudio will be imported. Things like hardware sweeps & advanced DPCM manipulations will all be ignored.
 
+## VGM Files
+
+It's possible to import VGM/VGZ files containing supported sound chips.
+
+Import options:
+
+* **Pattern Length** : Number of frames in a pattern.
+* **Skip frames at start** : Used to remove frames in the start of the track, can be useful if the song dont start right away.
+* **Reverse DPCM bits** : This will set the "Reverse Bits" flag on all the imported samples. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should.
+* **Preserve DPCM padding bytes** : Force FamiStudio to keep the last byte of every sample, this will make all samples 16 bytes larger simply to keep an extra byte. This could be useful to keep looping samples intact. Should remain off most of the time 
+* **Adjust notes to match chip clock in VGM** : Used to convert notes where the sound chip clock being imported does not match the frequency used on the chip on the NES/Expansion.
+* **Import YM2149 as EPSM** : Imports YM2149/AY-3-8910 As EPSM Squares instead of importing them as S5b that is the default behaviour.
+
+Supported Chips:
+
+* **NES APU** : Imported as 2A03/2A07
+* **FDS** : Imported as FDS
+* **YM2149/AY-3-8910** : Can be imported as S5b or EPSM
+* **YM2203 (OPN)**
+  **YM2608 (OPNA)**
+  **YM2612 (OPN2)**
+  **YM2610 (OPNB)**
+  **YMF288 (OPN3)** : Can be imported as EPSM
+* **VRC7**
+  **YM2413 (OPLL)** : Can be imported as VRC7
+
 # Error Log
 
 When importing/exporting from/to specific format, an error log may appear providing a list of warnings/errors that occurred during the process. Please pay attention to these as they may explain why your song sound differently than intended.
 
 ![](images/ErrorLog.png#center)
 
-The mobile version does not display these types of errors. So if you encounter a weird behavior, opening the file with the desktop version may help diagnose the issue.
+The mobile version does not display these types of errors, so if you encounter weird behavior, opening the file with the desktop version may help diagnose the issue.

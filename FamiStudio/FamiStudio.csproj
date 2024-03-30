@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>WinExe</OutputType>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -40,16 +40,14 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="SharpDX.XAudio2" Version="4.2.0" />
-  </ItemGroup>
   <ItemGroup>
     <None Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Source\AudioStreams\XAudio2Stream.cs" />
+    <Compile Include="Source\AudioStreams\PortAudioStream.cs" />
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
@@ -95,14 +93,16 @@
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Platform\Desktop\Platform.cs" />
     <Compile Include="Source\Platform\Windows\Platform.cs" />
-    <Compile Include="Source\Player\AudioStreamInterface.cs" />
+    <Compile Include="Source\Platform\Windows\MultiMediaNotifications.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
+    <Compile Include="Source\Player\AudioStreamInterface.cs" />
     <Compile Include="Source\Player\BasePlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\NesApu.cs" />
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\RegisterViewer.cs" />
     <Compile Include="Source\Player\RegisterWriteOptimizer.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
@@ -119,8 +119,8 @@
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
-    <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\Container.cs" />
+    <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\Cursors.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\Dialog.cs" />
@@ -129,6 +129,7 @@
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
     <Compile Include="Source\UI\Common\Init.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
+    <Compile Include="Source\UI\Common\MixerProperties.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
@@ -136,7 +137,9 @@
     <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
+    <Compile Include="Source\UI\Common\ProjectPropertiesDialog.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
+    <Compile Include="Source\UI\Common\ScrollContainer.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\Settings.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
@@ -144,6 +147,7 @@
     <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Common\ValueInputDialog.cs" />
     <Compile Include="Source\UI\Common\VgmImportDialog.cs" />
     <Compile Include="Source\UI\Desktop\ContextMenu.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Button.cs" />
@@ -177,6 +181,7 @@
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
     <Compile Include="Source\UI\Desktop\Toast.cs" />
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
+    <Compile Include="Source\UI\Desktop\VideoPreviewDialog.cs" />
     <Compile Include="Source\UI\Windows\Cursors.cs" />
     <Compile Include="Source\UI\Windows\FamiStudioWindow.cs" />
     <Compile Include="Source\Utils\AlphaNumericSort.cs" />
@@ -196,6 +201,7 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
     <Compile Include="Source\Video\VideoEncoderFFmpeg.cs" />
+    <Compile Include="Source\Video\VideoEncoderInterface.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
@@ -269,6 +275,9 @@
     <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
   </ItemGroup>
   <ItemGroup>    
+    <EmbeddedResource Include="Resources\Cursors\CursorEraser32.tga" />
+    <EmbeddedResource Include="Resources\Cursors\CursorEraser48.tga" />
+    <EmbeddedResource Include="Resources\Cursors\CursorEraser64.tga" />
     <EmbeddedResource Include="Resources\Cursors\CursorEyedrop32.tga" />
     <EmbeddedResource Include="Resources\Cursors\CursorEyedrop48.tga" />
     <EmbeddedResource Include="Resources\Cursors\CursorEyedrop64.tga" />
@@ -403,6 +412,8 @@
     <EmbeddedResource Include="Resources\Atlas\DuplicateMove@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectCutDelay.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectCutDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectDAC.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectDAC@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectDutyCycle.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectDutyCycle@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectFrame.tga" />
@@ -411,10 +422,14 @@
     <EmbeddedResource Include="Resources\Atlas\EffectMod@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectNoteDelay.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectNoteDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectPhaseReset.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectPhaseReset@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectPitch.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectPitch@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectRepeat.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectRepeat@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectEnvelopePeriod.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectEnvelopePeriod@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectSpeed.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectSpeed@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectVibrato.tga" />
@@ -484,6 +499,10 @@
     <EmbeddedResource Include="Resources\Atlas\FileFolder@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\FileHome.tga" />
     <EmbeddedResource Include="Resources\Atlas\FileHome@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Folder.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Folder@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\FolderOpen.tga" />
+    <EmbeddedResource Include="Resources\Atlas\FolderOpen@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\GhostSmall.tga" />
@@ -626,6 +645,9 @@
     <EmbeddedResource Include="Resources\Atlas\Metronome@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MinusSmall.tga" />
     <EmbeddedResource Include="Resources\Atlas\MinusSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\More.tga" />
     <EmbeddedResource Include="Resources\Atlas\More@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MouseLeft.tga" />
@@ -664,6 +686,14 @@
     <EmbeddedResource Include="Resources\Atlas\PlaySource@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\PlusSmall.tga" />
     <EmbeddedResource Include="Resources\Atlas\PlusSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesExpansion.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesExpansion@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesMixer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesMixer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\QwertyPiano.tga" />
@@ -682,6 +712,22 @@
     <EmbeddedResource Include="Resources\Atlas\Reload@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Rewind.tga" />
     <EmbeddedResource Include="Resources\Atlas\Rewind@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope8.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope8@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope9.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope9@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeA.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeA@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeB.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeB@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeC.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeC@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeD.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeD@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeE.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeE@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeF.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeF@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Save.tga" />
     <EmbeddedResource Include="Resources\Atlas\Save@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SaveSmall.tga" />
@@ -705,12 +751,16 @@
     <EmbeddedResource Include="Resources\Atlas\Stop@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Transform.tga" />
     <EmbeddedResource Include="Resources\Atlas\Transform@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Type.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Type@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Undo.tga" />
     <EmbeddedResource Include="Resources\Atlas\Undo@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\UpDownMinus.tga" />
     <EmbeddedResource Include="Resources\Atlas\UpDownMinus@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\UpDownPlus.tga" />
     <EmbeddedResource Include="Resources\Atlas\UpDownPlus@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Wait.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Wait@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Warning.tga" />
     <EmbeddedResource Include="Resources\Atlas\Warning@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\WarningGood.tga" />
@@ -758,18 +808,20 @@
     <EmbeddedResource Include="Rom\rom_vrc7_ntsc_famitracker.nes" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Bitmap.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Bitmap.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Depth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Depth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Line.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Line.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\LineSmooth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\LineSmooth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Poly.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Poly.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Text.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Desktop\Text.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Line.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Line.vert" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Text.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Text.vert" />
   </ItemGroup>  
   <ItemGroup>
     <Content Include="Localization\FamiStudio.deu.ini">
@@ -807,6 +859,9 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="PortAudio.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -816,17 +871,5 @@
     <Content Include="Vorbis.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
   </ItemGroup>
 </Project>

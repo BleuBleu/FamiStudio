@@ -14,22 +14,22 @@ namespace FamiStudio
         };
 
         int activeChannel = -1;
-        int expansionMask = ExpansionType.NoneMask;
-        int numN163Channels = 0;
+        bool lastNoteWasRelease = false;
+        DateTime lastReleaseTime = DateTime.Now;
         int playingNote = Note.NoteInvalid;
         int[] envelopeFrames = new int[EnvelopeType.Count];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
 
-        bool IsRunning => playerThread != null;
-        public int PlayingNote => playingNote;
+        public bool IsPlayingAnyNotes => activeChannel >= 0;
+        public int  PlayingNote => playingNote;
 
-        public InstrumentPlayer(bool pal, int sampleRate, bool stereo) : base(NesApu.APU_INSTRUMENT, pal, sampleRate, stereo, Settings.NumBufferedAudioFrames)
+        public InstrumentPlayer(IAudioStream stream, bool pal, int sampleRate, bool stereo, int numFrames) : base(stream, NesApu.APU_INSTRUMENT, pal, sampleRate, stereo, numFrames)
         {
         }
 
         public void PlayNote(int channel, Note note)
         {
-            if (IsRunning)
+            if (IsPlaying)
             {
                 noteQueue.Enqueue(new PlayerNote() { channel = channel, note = note });
             }
@@ -37,51 +37,70 @@ namespace FamiStudio
 
         public void ReleaseNote(int channel)
         {
-            if (IsRunning)
+            if (IsPlaying)
             {
                 noteQueue.Enqueue(new PlayerNote() { channel = channel, note = new Note() { Value = Note.NoteRelease } });
             }
         }
 
-        public void StopAllNotes(bool wait = false)
+        public void StopAllNotes()
         {
-            if (IsRunning)
+            if (IsPlaying)
             {
-                if (wait)
-                    while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
-
+                noteQueue.Clear(); 
                 noteQueue.Enqueue(new PlayerNote() { channel = -1 });
-
-                if (wait)
-                    while (!noteQueue.IsEmpty) Thread.Sleep(1);
             }
         }
 
         public void Start(Project project, bool pal)
         {
-            expansionMask = project.ExpansionAudioMask;
-            numN163Channels = project.ExpansionNumN163Channels;
-            palPlayback = pal;
-            channelStates = CreateChannelStates(this, project, apuIndex, numN163Channels, palPlayback);
-            
-            ResetThreadingObjects();
+            if (audioStream == null)
+                return;
 
-            playerThread = new Thread(PlayerThread);
-            playerThread.Start();
+            palPlayback = pal;
+            channelStates = CreateChannelStates(project, apuIndex, project.ExpansionNumN163Channels, palPlayback);
+            activeChannel = -1;
+            lastNoteWasRelease = false;
+            lastReleaseTime = DateTime.Now;
+
+            InitAndResetApu(project);
+
+            for (int i = 0; i < channelStates.Length; i++)
+                EnableChannelType(channelStates[i].InnerChannelType, false);
+
+            if (UsesEmulationThread)
+            {
+                Debug.Assert(emulationThread == null);
+                Debug.Assert(emulationQueue.Count == 0);
+
+                ResetThreadingObjects();
+
+                emulationThread = new Thread(EmulationThread);
+                emulationThread.Start();
+            }
+
+            audioStream.Stop(); // Extra safety
+            audioStream.Start(AudioBufferFillCallback, AudioStreamStartingCallback);
         }
 
         public void Stop(bool stopNotes = true)
         {
-            if (IsRunning)
+            if (IsPlaying)
             {
                 if (stopNotes)
-                    StopAllNotes(true);
+                    StopAllNotes();
 
-                stopEvent.Set();
-                playerThread.Join();
-                playerThread = null;
-                channelStates = null;
+                if (UsesEmulationThread)
+                {
+                    stopEvent.Set();
+                    emulationThread.Join();
+                    emulationThread = null;
+                }
             }
+
+            audioStream?.Stop();
+            emulationQueue?.Clear();
+            channelStates = null;
         }
 
         public int GetEnvelopeFrame(int idx)
@@ -100,123 +119,98 @@ namespace FamiStudio
             return data;
         }
 
-        unsafe void PlayerThread(object o)
+        protected override bool EmulateFrame()
         {
-#if !DEBUG
-            try
+            BeginFrame();
+
+            var now = DateTime.Now;
+
+            if (!noteQueue.IsEmpty)
             {
-#endif
-                activeChannel = -1;
-
-                var lastNoteWasRelease = false;
-                var lastReleaseTime = DateTime.Now;
-
-                var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
-
-                NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, NesApu.TND_MODE_SINGLE, expansionMask, numN163Channels, dmcCallback);
-                for (int i = 0; i < channelStates.Length; i++)
-                    EnableChannelType(channelStates[i].InnerChannelType, false);
-
-                while (true)
+                PlayerNote lastNote = new PlayerNote();
+                while (noteQueue.TryDequeue(out PlayerNote note))
                 {
-                    int idx = WaitHandle.WaitAny(waitEvents);
+                    lastNote = note;
+                }
 
-                    if (idx == 0)
+                activeChannel = lastNote.channel;
+                if (activeChannel >= 0)
+                {
+                    if (lastNote.note.IsMusical)
+                        channelStates[activeChannel].ForceInstrumentReload();
+
+                    // HACK : If we played a DPCM sample before, the DAC value
+                    // may not be the default and this will affect the volume
+                    // of the triangle/noise channel. Reset it to the default.
+                    if (activeChannel == ChannelType.Triangle ||
+                        activeChannel == ChannelType.Noise)
                     {
-                        break;
+                        var dacNote = new Note();
+                        dacNote.DeltaCounter = NesApu.DACDefaultValue;
+                        channelStates[ChannelType.Dpcm].PlayNote(dacNote);
                     }
 
-                    BeginFrame();
+                    channelStates[activeChannel].PlayNote(lastNote.note);
 
-                    var now = DateTime.Now;
-
-                    if (!noteQueue.IsEmpty)
+                    if (lastNote.note.IsRelease)
                     {
-                        PlayerNote lastNote = new PlayerNote();
-                        while (noteQueue.TryDequeue(out PlayerNote note))
-                        {
-                            lastNote = note;
-                        }
-
-                        activeChannel = lastNote.channel;
-                        if (activeChannel >= 0)
-                        {
-                            if (lastNote.note.IsMusical)
-                                channelStates[activeChannel].ForceInstrumentReload();
-
-                            // HACK : If we played a DPCM sample before, the DAC value
-                            // may not be the default and this will affect the volume
-                            // of the triangle/noise channel. Reset it to the default.
-                            if (activeChannel == ChannelType.Triangle || 
-                                activeChannel == ChannelType.Noise)
-                            {
-                                var dacNote = new Note();
-                                dacNote.DeltaCounter = NesApu.DACDefaultValue;
-                                channelStates[ChannelType.Dpcm].PlayNote(dacNote);
-                            }
-
-                            channelStates[activeChannel].PlayNote(lastNote.note);
-
-                            if (lastNote.note.IsRelease)
-                            {
-                                lastNoteWasRelease = true;
-                                lastReleaseTime = now;
-                            }
-                            else
-                            {
-                                lastNoteWasRelease = false;
-                            }
-                        }
-
-                        for (int i = 0; i < channelStates.Length; i++)
-                            EnableChannelType(channelStates[i].InnerChannelType, i == activeChannel);
-                    }
-
-                    if (lastNoteWasRelease &&
-                        activeChannel >= 0 &&
-                        now.Subtract(lastReleaseTime).TotalSeconds >= Math.Max(0.01f, Settings.InstrumentStopTime))
-                    {
-                        EnableChannelType(channelStates[activeChannel].InnerChannelType, false);
-                        activeChannel = -1;
-                    }
-
-                    if (activeChannel >= 0)
-                    {
-                        var channel = channelStates[activeChannel];
-                        channel.Update();
-
-                        for (int i = 0; i < EnvelopeType.Count; i++)
-                            envelopeFrames[i] = channel.GetEnvelopeFrame(i);
-
-                        playingNote = channel.CurrentNote != null && channel.CurrentNote.IsMusical ? channel.CurrentNote.Value : Note.NoteInvalid;
+                        lastNoteWasRelease = true;
+                        lastReleaseTime = now;
                     }
                     else
                     {
-                        for (int i = 0; i < EnvelopeType.Count; i++)
-                            envelopeFrames[i] = 0;
-                        foreach (var channel in channelStates)
-                            channel.ClearNote();
-
-                        playingNote = Note.NoteInvalid;
+                        lastNoteWasRelease = false;
                     }
-
-                    EndFrame();
                 }
 
-                audioStream.Stop();
-                while (sampleQueue.TryDequeue(out _)) ;
+                for (int i = 0; i < channelStates.Length; i++)
+                    EnableChannelType(channelStates[i].InnerChannelType, i == activeChannel);
+            }
 
-#if !DEBUG
-            }
-            catch (Exception e)
+            if (lastNoteWasRelease &&
+                activeChannel >= 0 &&
+                now.Subtract(lastReleaseTime).TotalSeconds >= Math.Max(0.01f, Settings.InstrumentStopTime))
             {
-                Debug.WriteLine(e.Message);
-                if (Debugger.IsAttached)
-                    Debugger.Break();
+                EnableChannelType(channelStates[activeChannel].InnerChannelType, false);
+                activeChannel = -1;
             }
-#endif
+
+            if (activeChannel >= 0)
+            {
+                var channel = channelStates[activeChannel];
+                channel.Update();
+
+                for (int i = 0; i < EnvelopeType.Count; i++)
+                    envelopeFrames[i] = channel.GetEnvelopeFrame(i);
+
+                playingNote = channel.CurrentNote != null && channel.CurrentNote.IsMusical ? channel.CurrentNote.Value : Note.NoteInvalid;
+            }
+            else
+            {
+                for (int i = 0; i < EnvelopeType.Count; i++)
+                    envelopeFrames[i] = 0;
+                foreach (var channel in channelStates)
+                    channel.ClearNote();
+
+                playingNote = Note.NoteInvalid;
+            }
+
+            EndFrame();
+            
+            return true;
         }
 
-        public bool IsPlaying => activeChannel >= 0;
+        void EmulationThread(object o)
+        {
+            var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
+
+            while (true)
+            {
+                if (WaitHandle.WaitAny(waitEvents) == 0)
+                    break;
+
+                EmulateFrame();
+            }
+        }
     }
 }

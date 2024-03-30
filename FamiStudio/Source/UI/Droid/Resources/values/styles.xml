@@ -6,6 +6,8 @@
         <item name="colorPrimary">@color/DarkGreyColor1</item>
         <item name="colorPrimaryDark">@color/DarkGreyColor1</item>
         <item name="colorAccent">@color/LightGreyColor1</item>
+        <item name="android:textColorSecondary">@color/LightGreyColor1</item>
+        <item name="popupMenuBackground">@color/DarkGreyColor6</item>
     </style>
 
     <style name="AppTheme.NoActionBar">

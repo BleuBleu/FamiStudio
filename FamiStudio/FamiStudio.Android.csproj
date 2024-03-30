@@ -1,172 +1,66 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <TargetFramework>net7.0-android</TargetFramework>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{B6032B13-111C-45DA-B627-AA9A711AB76B}</ProjectGuid>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <TemplateGuid>{84dd83c5-0fe3-4294-9419-09e7c8ba324f}</TemplateGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <OutputType>Exe</OutputType>
+    <MapFileExtensions>true</MapFileExtensions>
+    <SupportUrl>https://twitter.com/nesbleubleu</SupportUrl>
+    <ProductName>FamiStudio</ProductName>
+    <PublisherName>BleuBleu</PublisherName>
+    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <Nullable>disable</Nullable>
+    <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
+    <EnableNETAnalyzers>False</EnableNETAnalyzers>
+    <AnalysisLevel>6.0</AnalysisLevel>
     <RootNamespace>FamiStudio</RootNamespace>
-    <AssemblyName>FamiStudio.Android</AssemblyName>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>True</Deterministic>
-    <AndroidApplication>True</AndroidApplication>
-    <AndroidResgenFile>Source\UI\Droid\Resources\Resource.designer.cs</AndroidResgenFile>
-    <AndroidResgenClass>Resource</AndroidResgenClass>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
-    <AndroidUseAapt2>true</AndroidUseAapt2>
-    <AndroidHttpClientHandlerType>Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
-    <TargetFrameworkVersion>v13.0</TargetFrameworkVersion>
+    <CheckEolWorkloads>false</CheckEolWorkloads>
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AndroidUseSharedRuntime>True</AndroidUseSharedRuntime>
-    <AndroidLinkMode>None</AndroidLinkMode>
-    <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AotAssemblies>false</AotAssemblies>
-    <EnableLLVM>false</EnableLLVM>
-    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-    <BundleAssemblies>false</BundleAssemblies>
-    <Debugger>Xamarin</Debugger>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
-    <AndroidSupportedAbis>armeabi-v7a;x86_64;arm64-v8a</AndroidSupportedAbis>
+    <AndroidKeyStore>False</AndroidKeyStore>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AndroidManagedSymbols>true</AndroidManagedSymbols>
-    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
-    <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
     <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AotAssemblies>false</AotAssemblies>
-    <EnableLLVM>false</EnableLLVM>
-    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-    <BundleAssemblies>false</BundleAssemblies>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
-    <AndroidPackageFormat>aab</AndroidPackageFormat>
-    <AndroidUseAapt2>true</AndroidUseAapt2>
-    <AndroidCreatePackagePerAbi>false</AndroidCreatePackagePerAbi>
+    <AndroidKeyStore>False</AndroidKeyStore>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>portable</DebugType>
+    <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <PlatformTarget>x64</PlatformTarget>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>portable</DebugType>
+    <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <PlatformTarget>x64</PlatformTarget>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
     <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>portable</DebugType>
+    <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <PlatformTarget>x86</PlatformTarget>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Release\</OutputPath>
     <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseAPK|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\ReleaseAPK\</OutputPath>
-    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <AotAssemblies>false</AotAssemblies>
-    <EnableLLVM>false</EnableLLVM>
-    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-    <BundleAssemblies>false</BundleAssemblies>
-    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseAPK|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\ReleaseAPK\</OutputPath>
-    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseAPK|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\ReleaseAPK\</OutputPath>
-    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>portable</DebugType>
     <PlatformTarget>x86</PlatformTarget>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Mono.Android" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Numerics.Vectors" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.3.1.1" />
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.6.1.3" />
     <PackageReference Include="Xamarin.Google.Android.Material" Version="1.4.0.2" />
     <PackageReference Include="Xamarin.Essentials" Version="1.7.0" />
   </ItemGroup>
@@ -200,6 +94,8 @@
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher.png" />
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher_foreground.png" />
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\drawable\arrow_back.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\drawable\cross.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\colors.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\dimens.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\ic_launcher_background.xml" />
@@ -310,6 +206,7 @@
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\RegisterViewer.cs" />
     <Compile Include="Source\Player\RegisterWriteOptimizer.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
@@ -336,6 +233,7 @@
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
     <Compile Include="Source\UI\Common\Init.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
+    <Compile Include="Source\UI\Common\MixerProperties.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
@@ -343,6 +241,7 @@
     <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
+    <Compile Include="Source\UI\Common\ProjectPropertiesDialog.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\Settings.cs" />
@@ -351,6 +250,7 @@
     <Compile Include="Source\UI\Common\Fonts.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Common\ValueInputDialog.cs" />
     <Compile Include="Source\UI\Common\VgmImportDialog.cs" />
     <Compile Include="Source\UI\Droid\DroidUtils.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioWindow.cs" />
@@ -358,7 +258,6 @@
     <Compile Include="Source\UI\Droid\MultiPropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
-    <Compile Include="Source\UI\Droid\Resources\Resource.designer.cs" />
     <Compile Include="Source\UI\Droid\TutorialDialog.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioContainer.cs" />
     <Compile Include="Source\UI\Mobile\LogDialog.cs" />
@@ -379,6 +278,7 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
     <Compile Include="Source\Video\VideoEncoderAndroid.cs" />
+    <Compile Include="Source\Video\VideoEncoderInterface.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
@@ -387,13 +287,21 @@
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_fds_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_mmc5_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_1ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_2ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_3ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_4ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_5ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_6ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_7ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_8ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_8ch_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_1ch_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_2ch_ntsc.bin" />
@@ -410,13 +318,21 @@
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_vrc7_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_fds_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_mmc5_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_1ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_2ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_3ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_4ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_5ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_6ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_7ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_8ch_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_8ch_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_n163_1ch_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_n163_2ch_ntsc.bin" />
@@ -576,12 +492,15 @@
     <EmbeddedResource Include="Resources\Atlas\Duplicate@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\DuplicateMove@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectCutDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectDAC@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectDutyCycle@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectFrame@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectMod@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectNoteDelay@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectPhaseReset@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectPitch@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectRepeat@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\EffectEnvelopePeriod@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectSpeed@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectVibrato@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectVolume@2x.tga" />
@@ -609,6 +528,8 @@
     <EmbeddedResource Include="Resources\Atlas\ExportVideo@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ExportWav@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\File@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Folder@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\FolderOpen@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\GhostSmall@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\GizmoResizeFill@4x.tga" />
@@ -616,6 +537,7 @@
     <EmbeddedResource Include="Resources\Atlas\GizmoResizeUpDown@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Help@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Instance@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Instrument.tga" />
     <EmbeddedResource Include="Resources\Atlas\Instrument@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Instrument@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentEPSM.tga" />
@@ -623,15 +545,20 @@
     <EmbeddedResource Include="Resources\Atlas\InstrumentEPSM@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentExpand@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentExpanded@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentFds.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentFds@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentFds@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentNamco.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentNamco@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentNamco@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentOpen@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentSunsoft.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentSunsoft@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentSunsoft@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentVRC6.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentVRC6@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentVRC6@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\InstrumentVRC7.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentVRC7@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\InstrumentVRC7@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Loop@2x.tga" />
@@ -642,14 +569,18 @@
     <EmbeddedResource Include="Resources\Atlas\Maximize@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Metronome@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MinusSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Mixer@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileArpeggio.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileCheckOff.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileCheckOn.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileEffectCutDelay.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectDAC.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileEffectDutyCycle.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectEnvelopePeriod.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileEffectMod.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileEffectNone.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileEffectNoteDelay.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileEffectPhaseReset.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileEffectPitch.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileEffectRepeat.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileEffectSpeed.tga" />
@@ -681,6 +612,10 @@
     <EmbeddedResource Include="Resources\Atlas\PlaySource@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\PlusSmall@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectExplorer.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesExpansion@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesInfo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesMixer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ProjectPropertiesSoundEngine@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ProjectExplorer@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties@4x.tga" />
@@ -690,6 +625,14 @@
     <EmbeddedResource Include="Resources\Atlas\ReleaseSmallFill@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Reload@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Rewind@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope8@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelope9@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeA@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeB@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeC@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeD@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeE@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeF@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Save@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SaveSmall@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Sequencer@2x.tga" />
@@ -699,7 +642,9 @@
     <EmbeddedResource Include="Resources\Atlas\Sort@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Stop@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Transform@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Type@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Undo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Wait@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Warning@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\WarningGood@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\WarningYellow@2x.tga" />
@@ -742,18 +687,20 @@
     <EmbeddedResource Include="Rom\rom_vrc7_ntsc_famitracker.nes" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Shaders\Droid\Bitmap.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Bitmap.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Depth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Depth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Line.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Line.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\LineSmooth.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\LineSmooth.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Poly.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Poly.vert" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Text.frag" />
-    <EmbeddedResource Include="Resources\Shaders\Droid\Text.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Bitmap.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Blur.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Depth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Line.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Line.vert" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.frag" />
+    <EmbeddedResource Include="Resources\Shaders\LineSmooth.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Poly.vert" />
+    <EmbeddedResource Include="Resources\Shaders\Text.frag" />
+    <EmbeddedResource Include="Resources\Shaders\Text.vert" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Localization\FamiStudio.deu.ini" />
@@ -793,5 +740,4 @@
     <EmbeddedResource Include="..\Setup\Demo Songs\Tetris (Tutorial Song).fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Tower of Heaven.fms" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace FamiStudio
 {
     public class SongPlayer : AudioPlayer
     {
-        struct SongPlayerStartInfo
-        {
-            public Song song;
-            public int startNote;
-            public bool pal;
-        };
-
-        public SongPlayer(bool pal, int sampleRate, bool stereo) : base(NesApu.APU_SONG, pal, sampleRate, stereo, Settings.NumBufferedAudioFrames)
+        public SongPlayer(IAudioStream stream, bool pal, int sampleRate, bool stereo, int numFrames) : base(stream, NesApu.APU_SONG, pal, sampleRate, stereo, numFrames)
         {
             loopMode = LoopMode.LoopPoint;
         }
@@ -24,34 +18,90 @@ namespace FamiStudio
             base.Shutdown();
         }
 
-        public void Play(Song song, int frame, bool pal)
+        public void Start(Song song)
         {
-            Debug.Assert(playerThread == null);
-            Debug.Assert(sampleQueue.Count == 0);
+            if (audioStream == null)
+                return;
 
-            ResetThreadingObjects();
+            var startNote = playPosition;
 
-            playerThread = new Thread(PlayerThread);
-            playerThread.Start(new SongPlayerStartInfo() { song = song, startNote = frame, pal = pal });
+            BeginPlaySong(song);
+
+            if (startNote > 0)
+            {
+                if (accurateSeek)
+                {
+                    abortSeek = false;
+                    seekTask = Task.Factory.StartNew(() => { while (SeekTo(startNote) && !abortSeek); });
+                    return;
+                }
+                else
+                {
+                    while (SeekTo(startNote));
+                }
+            }
+
+            StartInternal();
+        }
+
+        public void StartIfSeekComplete()
+        {
+            if (IsSeeking && seekTask.IsCompleted)
+            {
+                seekTask = null;
+                StartInternal();
+            }
+        }
+
+        private void StartInternal()
+        {
+            if (UsesEmulationThread)
+            {
+                Debug.Assert(emulationThread == null);
+                Debug.Assert(emulationQueue.Count == 0);
+
+                ResetThreadingObjects();
+
+                emulationThread = new Thread(EmulationThread);
+                emulationThread.Start();
+            }
+
+            audioStream.Stop(); // Extra safety
+            audioStream.Start(AudioBufferFillCallback, AudioStreamStartingCallback);
         }
 
         public void Stop()
         {
-            // Keeping a local variable of the thread since the song may
-            // end naturally and may set playerThread = null after we have set
-            // the stop event.
-            var thread = playerThread;
-            if (thread != null)
+            if (IsSeeking)
             {
-                stopEvent.Set();
-                thread.Join();
-                Debug.Assert(playerThread == null);
+                abortSeek = true;
+                seekTask.Wait();
+                seekTask = null;
             }
-        }
 
-        public bool IsPlaying
-        {
-            get { return playerThread != null; }
+            if (UsesEmulationThread)
+            {
+                // Keeping a local variable of the thread since the song may
+                // end naturally and may set playerThread = null after we have set
+                // the stop event.
+                var thread = emulationThread;
+                if (thread != null)
+                {
+                    stopEvent.Set();
+                    thread.Join();
+                    Debug.Assert(emulationThread == null);
+                }
+            }
+
+            audioStream?.Stop();
+
+            if (UsesEmulationThread)
+            {
+                // When stopping, reset the play position to the first frame in the queue,
+                // this prevent the cursor from jumping ahead when playing/stopping quickly
+                playPosition = PlayPosition;
+                emulationQueue.Clear();
+            }
         }
 
 #if false // Enable to debug oscilloscope triggers for a specific channel of a song.
@@ -63,47 +113,31 @@ namespace FamiStudio
         }
 #endif
 
-        unsafe void PlayerThread(object o)
+        protected override bool EmulateFrame()
         {
-            var startInfo = (SongPlayerStartInfo)o;
+            var advanced = PlaySongFrame();
 
-            // Since BeginPlaySong is not inside the main loop and will
-            // call EndFrame, we need to subtract one immediately so that
-            // the semaphore count is not off by one.
-            bufferSemaphore.WaitOne();
+            // When reaching the end of a non looping song, push a null to signal to stop the stream.
+            if (!advanced && UsesEmulationThread)
+                emulationQueue.Enqueue(null);
 
-            if (BeginPlaySong(startInfo.song, startInfo.pal, startInfo.startNote))
+            return advanced;
+        }
+        
+        private void EmulationThread(object o)
+        {
+            var waitEvents = new WaitHandle[] { stopEvent, emulationSemaphore };
+
+            while (true)
             {
-                var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
+                if (WaitHandle.WaitAny(waitEvents) == 0)
+                    break;
 
-                while (true)
-                {
-                    var idx = WaitHandle.WaitAny(waitEvents);
-
-                    if (idx == 0)
-                        break;
-
-                    var reachedEnd = !PlaySongFrame();
-
-                    // When we reach the end of the song, we will wait for the stream to finished 
-                    // consuming the queued samples. This happens when songs don't have loop points,
-                    // (like SFX) and avoids cutting the last couple frames of audio.
-                    if (reachedEnd)
-                    {
-                        if (audioStream.IsStarted)
-                        {
-                            while (sampleQueue.Count != 0)
-                                Thread.Sleep(1);
-                        }
-                        break;
-                    }
-                }
+                if (!EmulateFrame())
+                    break;
             }
 
-            audioStream.Stop();
-            while (sampleQueue.TryDequeue(out _));
-
-            playerThread = null;
+            emulationThread = null;
         }
     };
 }

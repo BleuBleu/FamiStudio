@@ -2,34 +2,36 @@
 ; Based off Brad's (rainwarrior.ca) CA65 template, both the regular and FDS version.
 
 FAMISTUDIO_VERSION_MAJOR  = 4
-FAMISTUDIO_VERSION_MINOR  = 1
+FAMISTUDIO_VERSION_MINOR  = 2
 FAMISTUDIO_VERSION_HOTFIX = 0
 
 ; Enable all features.
-FAMISTUDIO_CFG_EXTERNAL            = 1
-FAMISTUDIO_CFG_SMOOTH_VIBRATO      = 1
-FAMISTUDIO_CFG_DPCM_SUPPORT        = 1
-FAMISTUDIO_CFG_EQUALIZER           = 1
+FAMISTUDIO_CFG_EXTERNAL                  = 1
+FAMISTUDIO_CFG_SMOOTH_VIBRATO            = 1
+FAMISTUDIO_CFG_DPCM_SUPPORT              = 1
+FAMISTUDIO_CFG_EQUALIZER                 = 1
+FAMISTUDIO_USE_VOLUME_TRACK              = 1
+FAMISTUDIO_USE_VOLUME_SLIDES             = 1
+FAMISTUDIO_USE_PITCH_TRACK               = 1
+FAMISTUDIO_USE_SLIDE_NOTES               = 1
+FAMISTUDIO_USE_NOISE_SLIDE_NOTES         = 1
+FAMISTUDIO_USE_VIBRATO                   = 1
+FAMISTUDIO_USE_ARPEGGIO                  = 1
+FAMISTUDIO_USE_DUTYCYCLE_EFFECT          = 1
+FAMISTUDIO_USE_DELTA_COUNTER             = 1
+FAMISTUDIO_USE_RELEASE_NOTES             = 1
+FAMISTUDIO_USE_PHASE_RESET               = 1
+FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1
 
-FAMISTUDIO_USE_VOLUME_TRACK        = 1
-FAMISTUDIO_USE_VOLUME_SLIDES       = 1
-FAMISTUDIO_USE_PITCH_TRACK         = 1
-FAMISTUDIO_USE_SLIDE_NOTES         = 1
-FAMISTUDIO_USE_NOISE_SLIDE_NOTES   = 1
-FAMISTUDIO_USE_VIBRATO             = 1
-FAMISTUDIO_USE_ARPEGGIO            = 1
-FAMISTUDIO_USE_DUTYCYCLE_EFFECT    = 1
-FAMISTUDIO_USE_DELTA_COUNTER       = 1
-FAMISTUDIO_USE_RELEASE_NOTES       = 1
-FAMISTUDIO_USE_PHASE_RESET         = 1
-
-.ifndef FAMISTUDIO_EXP_FDS
-    FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1
-    FAMISTUDIO_USE_DPCM_BANKSWITCHING  = 1
+.ifdef FAMISTUDIO_EXP_FDS
+    FAMISTUDIO_USE_FDS_AUTOMOD           = 1
+.else
+    FAMISTUDIO_USE_DPCM_EXTENDED_RANGE   = 1
+    FAMISTUDIO_USE_DPCM_BANKSWITCHING    = 1
 .endif
 
 .ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1
+    FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1
 .endif
 
 .define FAMISTUDIO_CA65_ZP_SEGMENT   ZEROPAGE
@@ -251,13 +253,14 @@ FILE_COUNT = 6
 ; General info about the project (author, etc.), 64-bytes.
 max_song:        .byte $00
 first_dpcm_bank: .byte $00 ; Index of the first DPCM bank. 
-fds_file_count:  .byte $06 ; Number of actual file on the disk.
-padding:         .res 5    ; reserved
+padding:         .res 6    ; reserved
 project_name:    .res 28   ; Project name
 project_author:  .res 28   ; Project author
 
 .if FAMISTUDIO_EXP_FDS
 MAX_SONGS = 12 ; 12 * 32 bytes song header + 64 bytes header = 448 bytes.
+.elseif FAMISTUDIO_EXP_EPSM
+MAX_SONGS = 32 ; 32 * 32 bytes song header + 64 bytes header = 1088 bytes.
 .else
 MAX_SONGS = 48 ; 48 * 32 bytes song header + 64 bytes header = 1600 bytes.
 .endif
@@ -302,7 +305,6 @@ vectors:
 .if FAMISTUDIO_EXP_FDS
 ; FDS BIOS functions
 fds_bios_load_files     = $e1f8
-fds_bios_set_file_count = $e305
 .endif
 
 ; Our single screen.
@@ -594,10 +596,6 @@ default_palette:
             dey
             sta (p0), y
             bne leftover_loop
-
-        lda fds_file_count
-        jsr fds_bios_set_file_count
-        .word disk_id
 
     .endif
 
@@ -988,6 +986,9 @@ version_text: ;
 
 load_file:
     ; Kick off file loading.
+    ; NOTE : In the past ive had issues where the load would never finish if this call
+    ; was near a half-page boundary. This resolved itself, but im leaving this comment
+    ; here in case it happens again.
     jsr fds_bios_load_files
     .word disk_id
     .word load_list

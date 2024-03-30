@@ -47,7 +47,6 @@ namespace FamiStudio
         private int lastButtonPress = -1;
         private Point contextMenuPoint = Point.Empty;
         private double lastTickTime = -1.0f;
-        private float magnificationAccum = 0;
         private bool quit = false;
         private int lastCursorX = -1;
         private int lastCursorY = -1;
@@ -166,8 +165,6 @@ namespace FamiStudio
         {
             glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             glfwWindowHint(GLFW_MAXIMIZED, 1);
             glfwWindowHint(GLFW_RESIZABLE, 1);
             glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
@@ -176,12 +173,22 @@ namespace FamiStudio
             glfwWindowHint(GLFW_STENCIL_BITS, 0);
         #if FAMISTUDIO_MACOS
             glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, 1);
-        #endif            
+        #endif
         #if DEBUG
             glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
         #endif
 
-            var window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
+            IntPtr window = IntPtr.Zero;
+
+            // Try 3.3 core first, much more standard. Then try all the way down to 3.0, in compatiblity profile.
+            for (var minor = 3; minor >= 0 && window == IntPtr.Zero; minor--)
+            {
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, minor == 3 ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_ANY_PROFILE);
+
+                window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
+            }
+
             if (window == IntPtr.Zero)
             {
                 glfwTerminate();
@@ -273,10 +280,12 @@ namespace FamiStudio
         {
             if (!quit && (dirty || force))
             {
+                Debug.Assert(!DpiScaling.ForceUnitScaling);
+
                 var rect = new Rectangle(Point.Empty, Size);
                 var clearColor = Theme.DarkGreyColor2;
 
-                graphics.BeginDrawFrame(rect, clearColor);
+                graphics.BeginDrawFrame(rect, true, clearColor);
                 container.Render(graphics);
                 graphics.EndDrawFrame();
 
@@ -391,6 +400,8 @@ namespace FamiStudio
         {
             if (Platform.IsMacOS && DpiScaling.IsInitialized)
             {
+                Debug.Assert(!DpiScaling.ForceUnitScaling);
+
                 x = (int)Math.Round(dx * DpiScaling.Window);
                 y = (int)Math.Round(dy * DpiScaling.Window);
             }
@@ -616,7 +627,7 @@ namespace FamiStudio
             mods = FixKeyboardMods(mods, key, action);
             modifiers.Set(mods);
 
-            Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode} ({Platform.ScancodeToString(scancode)}), Action = {action}, Mods = {mods}");
+            //Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode} ({Platform.ScancodeToString(scancode)}), Action = {action}, Mods = {mods}");
 
             var controls = container.GetControlsForKeyboard(out var mainFamistudioControl);
             var down = action == GLFW_PRESS || action == GLFW_REPEAT;
@@ -845,6 +856,8 @@ namespace FamiStudio
         {
 			container.PopDialog(dialog);
         }
+
+        public Dialog TopDialog => container.TopDialog;
 
         public void ShowToast(string text, bool longDuration = false, Action click = null)
         {

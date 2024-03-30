@@ -117,6 +117,7 @@ namespace FamiStudio
                 return;
 
             SetAndMarkDirty(ref scroll, Utils.Clamp(scroll + sign * 3, 0, maxScroll));
+            e.MarkHandled();
         }
 
         protected override void OnRender(Graphics g)

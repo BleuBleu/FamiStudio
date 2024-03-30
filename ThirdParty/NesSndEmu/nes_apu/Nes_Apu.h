@@ -177,7 +177,7 @@ enum { trigger_hold = -1 }; // A valid trigger should be coming, hold previous v
 
 inline void update_trigger(const Blip_Buffer* output, cpu_time_t time, int& out_trigger)
 {
-	int new_trigger = output->resampled_duration(time) >> BLIP_BUFFER_ACCURACY;
+	int new_trigger = output->resampled_time(time) >> BLIP_BUFFER_ACCURACY;
 
 	if (out_trigger < 0)
 	{

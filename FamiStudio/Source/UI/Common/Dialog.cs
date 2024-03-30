@@ -31,7 +31,7 @@ namespace FamiStudio
             get { return focusedControl; }
             set 
             {
-                if (value == focusedControl)
+                if (value == focusedControl || (value != null && !value.CanFocus))
                     return;
 
                 if (focusedControl != null)
@@ -118,7 +118,7 @@ namespace FamiStudio
 
         private bool ShouldDisplayTooltip()
         {
-            return tooltipTimer > ToolTipDelay;
+            return window.TopDialog == this && tooltipTimer > ToolTipDelay;
         }
 
         public void DialogMouseDownNotify(Control control, MouseEventArgs e) 

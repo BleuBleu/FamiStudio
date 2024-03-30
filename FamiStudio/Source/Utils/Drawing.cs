@@ -125,6 +125,17 @@ namespace FamiStudio
             return color;
         }
 
+        public string ToHexString()
+        {
+            return $"{R:x2}{G:x2}{B:x2}";
+        }
+
+        public static Color FromHexString(string str)
+        {
+            int parsed = Convert.ToInt32(str, 16);
+            return new Color((parsed >> 16) & 0xff, (parsed >> 8) & 0xff, (parsed >> 0) & 0xff);
+        }
+
         public override string ToString()
         {
             return $"R={R} G={G} B={B} A={A}";

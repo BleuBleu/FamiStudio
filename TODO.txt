@@ -1,17 +1,52 @@
-4.2.0 Brainstorm
-=================
-- Review OpenGL 3.3 requirements, can we lower this to 3.2, 3.1, 3.0?
-- Upgrade Windows to .NET 6.0
-- Switch to .NET for Android too.
-- Instrument folders + collapse entire sections (samples, arps, etc.) 
-- Finish/fix phase reset support
-- FDS automod
-- Latency improvements, decouple buffered audio frames VS. buffered emulated frames.
-- Make MacOS icons respect 10% border (https://developer.apple.com/design/human-interface-guidelines/icons)
-- Video export improvements? Unified piano roll, preview, etc?
-- Android media player notification option
-- Fix that bug where patterns are modified twice if you select 2 instances
-- When using shy mode, we could make the patterns larger if there is room.
+4.2.0
+=====
+- Change discord invite link
+/ Switch to .NET for Android too.
+	- Setup keystore, etc.
+	- Bring back APK
+
+4.2.0 Testing/Packaging
+=======================
+- Run/validate NSF unit test.	
+	- Listen to each of them to spot mistakes too.
+- Dont publish for chromebooks
+- Documentation for all new features
+- Test MacOS .NET startup script.
+
+4.2.0 Change Log
+===========================
+- Changes:
+	* S5B envelope support (S5B & EPSM)
+	* FDS auto-modulation support
+	* FDS emulation improvements : Proper filtering, DAC emulation & fixes.
+	* Phase reset support
+	* Accurate seek support (fully emulate entire song from start, useful for phase resets)
+	* Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
+	* Folders support in Project Explorer
+	* More filtering options for audio expansions & ability to store settings in project
+	* Support for up to 256 instruments (for both regular and expansion) in sound engine
+	* Audio backend improvements:
+		* Reduced audio latency on all platform 
+		* Switch to WASAPI on Windows (non-exclusive mode)
+		* Audio device change detection & improved BT headphones support on MacOS
+	* Video export improvements: 
+		* Unified piano roll mode
+		* Piano roll 3D effect
+		* Option to overlay registers
+		* Preview mode
+	* Small quality of life improvements:
+		* Eraser mode
+		* Ability to copy samples between instruments
+		* Ability to type effect values and project explorer parameters
+		* Function to replace specific instruments
+		* Logarithmic sliders for effects and parameters with huge values
+- Breaking/Behavior changes:
+	* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
+	* FDS emulation now matches the hardware much more closely. Some instruments may now sound very different.
+	* S5B/EPSM noise no longer has a "NOP" frequency, noise frequency will be set if it is enabled by the mixer envelope. 
+- System requirement changes:		
+	* Upgraded to .NET 7.0
+	* Minimum OpenGL requirement lowered to OpenGL 3.0 (was 3.3)
 
 Later
 =====
@@ -21,10 +56,6 @@ dotnet publish
 ==============
 - dotnet publish /p:Configuration=Release /p:Platform="x64" ../FamiStudio/FamiStudio.csproj -r win-x64 -c Release -f net5.0 --self-contained
 - Copies all the runtime with the build, kind of weird.
-
-Android SDK 12
-==============
-- Java path : C:\Program Files\Microsoft\jdk-11.0.12.7-hotspot
 
 Linux notes 
 =========== 
@@ -80,6 +111,11 @@ Key Store
 - Only full name entered.
 Issues with device monitor not starting:
 - Remove new java (11, the one from Microsoft) from the path. Keep the old one (eclipse, 8).
+- "C:\Program Files (x86)\Android\android-sdk\tools\lib\monitor-x86_64\monitor.exe"
+
+Article about Famicom volumes
+=============================
+http://nerdlypleasures.blogspot.com/2018/01/famicom-nes-simple-tweaks-to-restore.html?m=1
 
 Desktop tutorial GIFs
 =====================
@@ -113,32 +149,33 @@ Discord
 
 Backlog: 
 =========
-- Dump more stats when exporting to sound engine so artists can optimize instruments, etc. Option to dump a log too maybe?
+- Project cleanup : organize insturments/folders by expansion
+- Android media player notification option
+- Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
+	- Dont compress vibrato envelopes.
+	- New opcode "override envelope and reset", call only when speed changes.
+	- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
+- BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
+- Paste FX values from text. Kain wanted to change DAC slowly, had values to paste. 
+- Simple parameters for instruments (duty, volume)
+- Export selection. 
+	https://discord.com/channels/@me/819772561940152321/1202138717054304306
+- Wome kind of warning if multiple VRC7 patch-0 instrument overlaps?
+- Can we keep undo/redo buttons on screen to 1280px? Like hide metronome, etc.
+- A way to view the preview effect value (grey rectangle). Either draw it on the left edge, or in the piano roll tolltip.
+	https://discord.com/channels/@me/819772561940152321/1157075515199475732
+- Bug import N163 instruments
+	https://discord.com/channels/@me/819772561940152321/1154660603617607741
 - Low slide notes going down + arp going up = glitch. Fix idea : Internally modify the arp to make it less strong based on slide range (ex: div by 4 if doing down 2 octaves).
   https://discord.com/channels/747649221879922840/1024388342210642150/1147714295581388910
-- MacOS sound glitches out after a while (doesnt happen here on BigSur)
-	https://discord.com/channels/@me/819772561940152321/1146697308545753108
 - Android encoder bitrate is messed up.
-- Piano roll video compression issues?
-- "Comment" box in project. Proto DM
 - When multiple VRC7 instrument all use patch 0 at same time (like on first note), they all upload it. Its stupid. Only the first one should, or something like that.
 - OSC trigger assert 
 - Option to keep unused samples when exporting to sound engine. 
 	=> Shelved, will need more work.
-- No-attack refactor:
-	- instrument change:
-		* optional : disable attack
-		* optional : change the instrument, for FM instrument, will look if attack is disabled and not rebind envelopes if disabled.
-		* play a note (if attack, reset envelopes)
-	- problems:
-		* what about the delayed cut thing? 
-		* will likely need a couple more zp variables.
-- Replace an specific instrument by another in selection (A->B), R+CLICK.
 - How to add to the "open with" list on Android.
 - Better autosave names?
-- Going in settings unutes all channels.
 - Delete instruments resets play head.
-- We should be able to drag/copy samples mappings between instruments.
 - Export DMC samples on Mobile.
 - Option to set snapping auto depending on last resize.
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
@@ -152,9 +189,8 @@ Backlog:
 - Weird shift when using an external display with different scaling (ex: 100% vs 150%)
 - Add effect to select N163 wave. How does it react in FT.
 - Full range volume for expansions?
-- Different aspect ratios for video export?
+- Different aspect ratios for video export? Somebody asked for square
 - Improve linux file dialog (Steo feedback)
-- Hold SHIFT+click for multiple delete.
 - Idea from perkka "When an instrument is selected. Have the channels thats not supported by it slightly faded out, or the channel names that support it in bold or something"
 - Do a pass on tooltips for ParamProviders.
 - Left resize to preserve release position?
@@ -171,14 +207,18 @@ Backlog:
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Paste special, option to rename patterns.
-- ffmpeg path on Linux should work on path (Puna on CC discord).
 - Uncompressed envelopes
 - CLI only EXE (Linux only).
 - C0 is hidden by scroll bars
-- C0 is hidden in piano roll video
 - Piano roll scale on desktop?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - Dont reset camera in piano roll when deleting instrument (probably to handle case where you were editing the instrument)
-- Improve no-attack.
-	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
-	- Draw attack as red if user makes a mistake.
+- Length counter support? https://www.youtube.com/watch?v=Fg8B3kiVckY
+- Double-click to edit name of instrument
+- Way to tell if a pattern has other instances, like highlight all instances when mouse over? 
+- There is no vertical scaling in effect. Vertical scaling is done with piano, there is no piano.
+	https://discord.com/channels/747649221879922840/747649222354010173/1206908564262617151
+- Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
+	https://discord.com/channels/@me/819772561940152321/1187597131859636276
+- Select all/none for list of songs in export dialog
+	https://discord.com/channels/747649221879922840/747649222354010173/1209404796428357652

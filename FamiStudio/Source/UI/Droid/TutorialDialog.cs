@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Android.Text;
 using Android.Text.Style;
 using Android.App;
@@ -15,10 +17,7 @@ using Google.Android.Material.AppBar;
 using Java.Lang;
 using Java.Util;
 
-using Debug = System.Diagnostics.Debug;
 using ActionBar = AndroidX.AppCompat.App.ActionBar;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -31,6 +30,40 @@ namespace FamiStudio
         public void ShowDialogAsync(Action<DialogResult> callback)
         {
             FamiStudioWindow.Instance.StartTutorialDialogActivity(callback, this);
+        }
+    }
+
+    public class MaxHeightImageView : ImageView
+    {
+        float ratio;
+        float maxScreenHeight;
+
+        public MaxHeightImageView(Context context, float rat = 1.0f, float max = 0.5f) : base(context)
+        {
+            ratio = rat;
+            maxScreenHeight = max;
+        }
+
+        public void UpdateSizeConstraints(float rat, float max)
+        {
+            ratio = rat;
+            maxScreenHeight = max;
+            Invalidate();
+        }
+
+        protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
+        {
+            var width = MeasureSpec.GetSize(widthMeasureSpec);
+            var height = (int)(width * ratio);
+
+            var percentHeight = height / (float)Context.Resources.DisplayMetrics.HeightPixels;
+            if (percentHeight > maxScreenHeight)
+            {
+                height = (int)(Context.Resources.DisplayMetrics.HeightPixels * maxScreenHeight);
+                width = (int)(height / ratio);
+            }
+
+            SetMeasuredDimension(width, height);
         }
     }
 
@@ -59,31 +92,6 @@ namespace FamiStudio
 
         private int pageIndex = 0;
         private bool stoppedByUser;
-
-        private class MaxHeightImageView : ImageView
-        {
-            public MaxHeightImageView(Context context) : base(context)
-            {
-            }
-
-            protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
-            {
-                var width = MeasureSpec.GetSize(widthMeasureSpec);
-                var ratio = 540.0 / 1100.0;
-                var height = (int)(width * ratio);
-
-                const float MaxHeightScreen = 0.5f;
-
-                var percentHeight = height / (float)Context.Resources.DisplayMetrics.HeightPixels;
-                if (percentHeight > MaxHeightScreen)
-                {
-                    height = (int)(Context.Resources.DisplayMetrics.HeightPixels * MaxHeightScreen);
-                    width = (int)(height / ratio);
-                }
-
-                SetMeasuredDimension(width, height);
-            }
-        }
 
         public TutorialDialogActivity()
         {
@@ -128,7 +136,7 @@ namespace FamiStudio
             textView.Text = TutorialMessages[0];
             textView.LayoutParameters = linearLayoutParams;
 
-            imageView = new MaxHeightImageView(this);
+            imageView = new MaxHeightImageView(this, 540.0f / 1100.0f, 0.5f);
             imageView.LayoutParameters = linearLayoutParams;
 
             var coordLayoutParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent); ;
