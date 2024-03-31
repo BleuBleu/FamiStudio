@@ -21,6 +21,16 @@ namespace FamiStudio
         protected string tooltip;
         protected object userData;
 
+        // TODO : Rename the "MouseDown" functions to something like "FireMouseDown"
+        // or "RaiseMouseDown" and rename those to simply "MouseDown".
+        public delegate void MouseEventDelegate(Control sender, MouseEventArgs e);
+        public event MouseEventDelegate MouseDownEvent;
+        public event MouseEventDelegate MouseUpEvent;
+        public event MouseEventDelegate MouseMoveEvent;
+        public event MouseEventDelegate ContainerMouseDownNotifyEvent;
+        public event MouseEventDelegate ContainerMouseUpNotifyEvent;
+        public event MouseEventDelegate ContainerMouseMoveNotifyEvent;
+
         protected Control()
         {
         }
@@ -72,11 +82,11 @@ namespace FamiStudio
         public virtual void Tick(float delta) { }
 
         public virtual void Render(Graphics g) { OnRender(g); }
-        public void MouseDown(MouseEventArgs e) { OnMouseDown(e); DialogMouseDownNotify(e); }
+        public void MouseDown(MouseEventArgs e) { OnMouseDown(e); MouseDownEvent?.Invoke(this, e); ContainerMouseDownNotify(e); }
         public void MouseDownDelayed(MouseEventArgs e) { OnMouseDownDelayed(e); }
-        public void MouseUp(MouseEventArgs e) { OnMouseUp(e); }
+        public void MouseUp(MouseEventArgs e) { OnMouseUp(e); MouseUpEvent?.Invoke(this, e); ContainerMouseUpNotify(e); }
         public void MouseDoubleClick(MouseEventArgs e) { OnMouseDoubleClick(e); }
-        public void MouseMove(MouseEventArgs e) { OnMouseMove(e); DialogMouseDownNotify(e); }
+        public void MouseMove(MouseEventArgs e) { OnMouseMove(e); MouseMoveEvent?.Invoke(this, e); ContainerMouseMoveNotify(e); }
         public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
         public void MouseWheel(MouseEventArgs e) { OnMouseWheel(e); ContainerMouseWheelNotify(e); }
         public void MouseHorizontalWheel(MouseEventArgs e) { OnMouseHorizontalWheel(e); }
@@ -102,13 +112,51 @@ namespace FamiStudio
             var c = ParentContainer; 
             while (c != null) 
             { 
-                c.ContainerMouseWheelNotify(this, e); 
-                c = c.ParentContainer; 
+                c.ContainerMouseWheelNotify(this, e);
+                if (c is Dialog)
+                    break;
+                c = c.ParentContainer;
             }
         } 
 
-        public void DialogMouseDownNotify(MouseEventArgs e) { ParentDialog?.DialogMouseDownNotify(this, e); }
-        public void DialogMouseMoveNotify(MouseEventArgs e) { ParentDialog?.DialogMouseMoveNotify(this, e); }
+        public void ContainerMouseDownNotify(MouseEventArgs e) 
+        {
+            var c = ParentContainer;
+            while (c != null)
+            {
+                c.ContainerMouseDownNotify(this, e);
+                c.ContainerMouseDownNotifyEvent?.Invoke(c, e);
+                if (c is Dialog)
+                    break;
+                c = c.ParentContainer;
+            }
+        }
+
+        public void ContainerMouseUpNotify(MouseEventArgs e)
+        {
+            var c = ParentContainer;
+            while (c != null)
+            {
+                c.ContainerMouseUpNotify(this, e);
+                c.ContainerMouseUpNotifyEvent?.Invoke(c, e);
+                if (c is Dialog)
+                    break;
+                c = c.ParentContainer;
+            }
+        }
+
+        public void ContainerMouseMoveNotify(MouseEventArgs e)
+        {
+            var c = ParentContainer;
+            while (c != null)
+            {
+                c.ContainerMouseMoveNotify(this, e);
+                c.ContainerMouseMoveNotifyEvent?.Invoke(c, e);
+                if (c is Dialog)
+                    break;
+                c = c.ParentContainer;
+            }
+        }
 
         public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
         public Rectangle WindowRectangle => new Rectangle(WindowPosition, Size);

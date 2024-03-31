@@ -639,6 +639,9 @@ namespace FamiStudio
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
+            if (options == null || options.Length == 0)
+                return;
+            
             Debug.Assert(contextMenuDialog == null);
 
             var bgColor = DroidUtils.ToAndroidColor(global::FamiStudio.Theme.DarkGreyColor4);

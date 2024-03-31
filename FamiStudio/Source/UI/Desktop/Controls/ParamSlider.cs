@@ -22,8 +22,12 @@ namespace FamiStudio
         private float exp = 1.0f;
         private string text = "123"; // MATTT
 
-        public ParamSlider()
+        public ParamSlider(int value, int minValue, int maxValue)
         {
+            val = value;
+            min = minValue;
+            max = maxValue;
+            exp = max >= 4095 ? 4 : 1;
             height = DpiScaling.ScaleForWindow(16);
         }
 

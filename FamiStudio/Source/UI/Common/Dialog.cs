@@ -121,12 +121,12 @@ namespace FamiStudio
             return window.TopDialog == this && tooltipTimer > ToolTipDelay;
         }
 
-        public void DialogMouseDownNotify(Control control, MouseEventArgs e) 
+        public override void ContainerMouseDownNotify(Control control, MouseEventArgs e) 
         {
             ResetToolTip();
         }
 
-        public void DialogMouseMoveNotify(Control control, MouseEventArgs e)
+        public override void ContainerMouseMoveNotify(Control control, MouseEventArgs e)
         {
             ResetToolTip();
         }

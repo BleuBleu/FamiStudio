@@ -24,6 +24,18 @@ namespace FamiStudio
         {
         }
 
+        public virtual void ContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        {
+        }
+
+        public virtual void ContainerMouseDownNotify(Control control, MouseEventArgs e)
+        {
+        }
+
+        public virtual void ContainerMouseUpNotify(Control control, MouseEventArgs e)
+        {
+        }
+
         public void AddControl(Control ctrl)
         {
             if (!controls.Contains(ctrl))

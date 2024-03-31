@@ -2,9 +2,16 @@
 =====
 - UI code cleanup:
 	- Project explorer rewrite
-		- Add top tabs
-		- Make first pass on register viewer
-		- Then start hooking up the functionality.
+		x Hook expand
+		- Hook right click context menus.
+		- Hook tooltips.
+		- Hook folders
+		- Hook add/remove/import buttons, context menus
+		- Hook instrument envelopes
+		- Hook parameters (slider, list, check)
+		- Hook drags (envelope, reorders, folder, etc.)
+		- Show alternal expansion icons
+		- Mobile stuff : white outlines, flings, etc.
 	- Toolbar rewrite
 		- Osc widget
 		- Timecode widget

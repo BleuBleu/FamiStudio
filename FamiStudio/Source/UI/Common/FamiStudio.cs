@@ -675,7 +675,8 @@ namespace FamiStudio
 
         public void ShowContextMenu(ContextMenuOption[] options)
         {
-            ShowContextMenu(0, 0, options);
+            if (options != null && options.Length > 0) 
+                ShowContextMenu(0, 0, options);
         }
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
