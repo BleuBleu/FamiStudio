@@ -60,6 +60,7 @@ namespace FamiStudio
         {
             visible = false;
             Title = t;
+            SetTickEnabled(true);
             win.InitDialog(this);
         }
 
@@ -106,7 +107,9 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
+            // Dont tick non-top dialogs.
+            if (IsTopDialog())
+                base.Tick(delta);
 
             var v1 = ShouldDisplayTooltip();
             tooltipTimer += delta;
@@ -116,9 +119,14 @@ namespace FamiStudio
                 MarkDirty();
         }
 
+        private bool IsTopDialog()
+        {
+            return window.TopDialog == this;
+        }
+
         private bool ShouldDisplayTooltip()
         {
-            return window.TopDialog == this && tooltipTimer > ToolTipDelay;
+            return IsTopDialog() && tooltipTimer > ToolTipDelay;
         }
 
         public override void ContainerMouseDownNotify(Control control, MouseEventArgs e) 

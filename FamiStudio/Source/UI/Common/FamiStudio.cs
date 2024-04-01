@@ -676,9 +676,10 @@ namespace FamiStudio
         public void ShowContextMenu(ContextMenuOption[] options)
         {
             if (options != null && options.Length > 0) 
-                ShowContextMenu(0, 0, options);
+                ShowContextMenu(window.LastMousePosition.X, window.LastMousePosition.Y, options);
         }
 
+        // MATTT : Get rid of this version with explicity coordinates.
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
             Debug.Assert(options.Length > 0);

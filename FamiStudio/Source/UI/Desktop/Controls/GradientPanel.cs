@@ -34,6 +34,7 @@ namespace FamiStudio
         public void Blink()
         {
             blinkTimer = 2.0f;
+            SetTickEnabled(true);
             MarkDirty();
         }
 
@@ -44,6 +45,8 @@ namespace FamiStudio
             if (blinkTimer != 0.0f)
             {
                 blinkTimer = MathF.Max(0.0f, blinkTimer - delta);
+                if (blinkTimer == 0.0f)
+                    SetTickEnabled(false);
                 MarkDirty();
             }
         }

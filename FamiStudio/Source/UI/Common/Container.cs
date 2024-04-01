@@ -11,6 +11,7 @@ namespace FamiStudio
         protected int containerScrollY;
         protected List<Control> controls = new List<Control>();
         protected bool clipRegion = true;
+        protected int numControlsTickEnabled;
 
         public int ScrollX { get => containerScrollX; set => SetAndMarkDirty(ref containerScrollX, value); }
         public int ScrollY { get => containerScrollY; set => SetAndMarkDirty(ref containerScrollY, value); }
@@ -36,6 +37,14 @@ namespace FamiStudio
         {
         }
 
+        public void IncrementControlTickEnabled(int delta)
+        {
+            numControlsTickEnabled += delta;
+            Debug.Assert(numControlsTickEnabled >= 0);
+            if (container != null)
+                container.IncrementControlTickEnabled(delta);
+        }
+
         public void AddControl(Control ctrl)
         {
             if (!controls.Contains(ctrl))
@@ -43,6 +52,11 @@ namespace FamiStudio
                 controls.Add(ctrl);
                 ctrl.SetParentContainer(this);
                 ctrl.AddedToContainer();
+
+                if (ctrl.TickEnabled)
+                    IncrementControlTickEnabled(1);
+                if (ctrl is Container cont)
+                    IncrementControlTickEnabled(cont.numControlsTickEnabled);
             }
         }
 
@@ -50,6 +64,11 @@ namespace FamiStudio
         {
             if (ctrl != null && controls.Contains(ctrl))
             {
+                if (ctrl.TickEnabled)
+                    IncrementControlTickEnabled(-1);
+                if (ctrl is Container cont)
+                    IncrementControlTickEnabled(-cont.numControlsTickEnabled);
+
                 ctrl.SetParentContainer(null);
                 controls.Remove(ctrl);
             }
@@ -70,6 +89,16 @@ namespace FamiStudio
             {
                 if (controls[i].GetType() == type)
                     return controls[i];
+            }
+            return null;
+        }
+
+        public Control FindControlByUserData(object o)
+        {
+            foreach (var c in controls)
+            {
+                if (c.UserData == o)
+                    return c;
             }
             return null;
         }
@@ -161,14 +190,25 @@ namespace FamiStudio
             }
         }
 
-        public override void Tick(float delta)
+        public void TickChildren(float delta)
         {
             foreach (var ctrl in controls)
             {
                 if (ctrl.Visible)
                 {
-                    ctrl.Tick(delta);
+                    if (ctrl.TickEnabled)
+                        ctrl.Tick(delta);
+                    else if (ctrl is Container cont && cont.numControlsTickEnabled > 0)
+                        cont.TickChildren(delta);
                 }
+            }
+        }
+
+        public override void Tick(float delta)
+        {
+            if (numControlsTickEnabled > 0)
+            {
+                TickChildren(delta);
             }
         }
 

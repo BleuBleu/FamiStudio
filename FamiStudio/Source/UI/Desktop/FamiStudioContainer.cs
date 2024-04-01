@@ -47,6 +47,8 @@ namespace FamiStudio
             AddControl(sequencer);
             AddControl(pianoRoll);
             AddControl(projectExplorer);
+
+            SetTickEnabled(true);
         }
 
         protected override void OnResize(EventArgs e)
@@ -163,27 +165,14 @@ namespace FamiStudio
             var newDialogDimming = dialogDimming;
 
             if (IsDialogActive)
-            {
-                TopDialog.Tick(delta);
                 newDialogDimming = Math.Min(1.0f, dialogDimming + delta * 6.0f);
-            }
             else
-            {
                 newDialogDimming = Math.Max(0.0f, dialogDimming - delta * 12.0f);
-            }
 
-            if (newDialogDimming != dialogDimming)
-            {
-                dialogDimming = newDialogDimming;
-                MarkDirty();
-            }
-
-            toast.Tick(delta);
+            SetAndMarkDirty(ref dialogDimming, newDialogDimming);
 
             if (!toast.Visible)
-            {
                 RemoveControl(toast);
-            }
         }
 
         protected override void OnRender(Graphics g)

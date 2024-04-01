@@ -156,10 +156,6 @@ namespace FamiStudio
             App.SetToolTip(hoveredItemIndex >= 0 ? menuOptions[hoveredItemIndex].ToolTip : null);
         }
 
-        public override void Tick(float delta)
-        {
-        }
-
         protected override void OnRender(Graphics g)
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);

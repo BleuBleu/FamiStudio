@@ -18,6 +18,7 @@ namespace FamiStudio
         private bool hover;
         private bool press;
         private bool transparent;
+        private bool dimmed;
         private bool dark;
 
         public Button(string img, string txt) 
@@ -66,6 +67,12 @@ namespace FamiStudio
         {
             get { return dark; }
             set { SetAndMarkDirty(ref dark, value); }   
+        }
+
+        public bool Dimmed
+        {
+            get { return dimmed; }
+            set { SetAndMarkDirty(ref dimmed, value); }
         }
 
         public void AutosizeWidth()
@@ -130,12 +137,15 @@ namespace FamiStudio
         {
             var c = g.GetCommandList();
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
+            var maxOpacity = transparent && dimmed ? 0.25f : 1.0f;
             var color = dark ? Color.Black : (enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
-            var opacity = dark ? enabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f;
+            var opacity = Math.Min(maxOpacity, transparent ? enabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f);
 
             // Debug
             //c.FillRectangle(ClientRectangle, Color.Pink);
 
+            // "Non-transparent" changes the BG on hover
+            // "Transparent" changes the opacity on hover.
             if (enabled && !transparent && (border || press || hover))
             {
                 var fillBrush = press ? Theme.MediumGreyColor1 :

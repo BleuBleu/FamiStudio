@@ -20,6 +20,7 @@ namespace FamiStudio
         protected bool canFocus = true;
         protected string tooltip;
         protected object userData;
+        private bool tickEnabled;
 
         // TODO : Rename the "MouseDown" functions to something like "FireMouseDown"
         // or "RaiseMouseDown" and rename those to simply "MouseDown".
@@ -178,6 +179,7 @@ namespace FamiStudio
         public bool CanFocus { get => canFocus; }
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
         public object UserData { get => userData; set => userData = value; }
+        public bool TickEnabled => tickEnabled;
         public void MarkDirty() { window?.MarkDirty(); }
 
         public bool HasParent => container != null;
@@ -235,6 +237,16 @@ namespace FamiStudio
             }
 
             return p;
+        }
+
+        protected void SetTickEnabled(bool enabled)
+        {
+            if (tickEnabled != enabled)
+            {
+                if (container != null)
+                    container.IncrementControlTickEnabled(enabled ? 1 : -1);
+                tickEnabled = enabled;
+            }
         }
 
         public virtual bool HitTest(int winX, int winY)

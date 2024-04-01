@@ -605,6 +605,7 @@ namespace FamiStudio
         public PianoRoll()
         {
             Localization.Localize(this);
+            SetTickEnabled(true);
         }
 
         private void UpdateRenderCoords()
@@ -9642,6 +9643,8 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
+            base.Tick(delta);
+
             if (App == null)
                 return;
 

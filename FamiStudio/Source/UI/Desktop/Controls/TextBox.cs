@@ -61,6 +61,7 @@ namespace FamiStudio
             height = DpiScaling.ScaleForWindow(24);
             text = txt;
             maxLength = maxLen;
+            SetTickEnabled(true); // TODO : Only enable when we have focus. 
         }
 
         public TextBox(int value, int minVal, int maxVal, int increment)
@@ -71,6 +72,7 @@ namespace FamiStudio
             numberMin = minVal;
             numberMax = maxVal;
             numberInc = increment;
+            SetTickEnabled(true); // TODO : Only enable when we have focus. 
         }
 
         public string Text
@@ -393,6 +395,7 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
+            base.Tick(delta);
             caretBlinkTime += delta;
             SetAndMarkDirty(ref caretBlink, Utils.Frac(caretBlinkTime) < 0.5f);
         }

@@ -21,6 +21,11 @@ namespace FamiStudio
 
         public bool IsClickable => alpha > 0 && action != null;
 
+        public Toast()
+        {
+            SetTickEnabled(true);
+        }
+
         public void Initialize(string text, bool longDuration, Action click = null)
         {
             lines = text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -68,6 +73,8 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
+            base.Tick(delta);
+
             if (timer > 0.0f)
             {
                 timer = Math.Max(0.0f, timer - delta);

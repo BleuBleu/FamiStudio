@@ -172,7 +172,8 @@ namespace FamiStudio
 
         public QuickAccessBar()
         {
-            Localization.Localize(this);        
+            Localization.Localize(this);
+            SetTickEnabled(true);
         }
 
         protected override void OnAddedToContainer()
@@ -291,6 +292,7 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
+            base.Tick(delta);
             TickFling(delta);
 
             if (popupButtonIdx >= 0)

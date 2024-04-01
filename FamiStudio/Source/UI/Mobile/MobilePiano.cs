@@ -59,6 +59,11 @@ namespace FamiStudio
             }
         }
 
+        public MobilePiano()
+        {
+            SetTickEnabled(true);
+        }
+
         protected override void OnAddedToContainer()
         {
             var g = ParentWindow.Graphics;
@@ -101,6 +106,7 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
+            base.Tick(delta);
             TickFling(delta);
         }
 

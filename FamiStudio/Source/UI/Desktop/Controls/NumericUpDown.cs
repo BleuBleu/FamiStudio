@@ -30,6 +30,7 @@ namespace FamiStudio
             Debug.Assert(max % increment == 0);
             height = DpiScaling.ScaleForWindow(24);
             SetTextBoxValue();
+            SetTickEnabled(true); // TODO : Only enable when we are pressing a button.
         }
 
         public int Value
@@ -100,6 +101,8 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
+            base.Tick(delta);
+
             if (captureButton >= 0)
             {
                 var lastDuration = captureDuration;

@@ -57,6 +57,8 @@ namespace FamiStudio
             AddControl(mobilePiano);
             AddControl(toolbar); // Toolbar + quickaccess need to be last, draws on top of everything.
             AddControl(quickAccessBar);
+
+            SetTickEnabled(true);
         }
 
         public void SetActiveControl(Control ctrl, bool animate = true)

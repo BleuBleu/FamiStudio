@@ -227,6 +227,7 @@ namespace FamiStudio
         public Sequencer()
         {
             Localization.Localize(this);
+            SetTickEnabled(true);
         }
 
         private Song Song
@@ -3206,6 +3207,8 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
+            base.Tick(delta);
+
             if (App == null)
                 return;
 

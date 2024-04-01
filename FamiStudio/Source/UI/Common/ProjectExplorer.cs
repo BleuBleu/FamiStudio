@@ -343,6 +343,8 @@ namespace FamiStudio
             registerViewers[ExpansionType.N163] = new N163RegisterViewer(registerValues);
             registerViewers[ExpansionType.S5B]  = new S5BRegisterViewer(registerValues);
             registerViewers[ExpansionType.EPSM] = new EpsmRegisterViewer(registerValues);
+
+            SetTickEnabled(true);
         }
 
         private void UpdateRenderCoords(bool updateVirtualSizeY = true)
@@ -500,17 +502,50 @@ namespace FamiStudio
             var project = App.Project;
             var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
             var panel = CreateGradientPanel(Theme.DarkGreyColor4, project);
-            var propsButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties");
-            var mixerButton = CreateImageButton(panel, propsButton.Left -spacingX - iconSizeX, "Mixer");
+            panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
+            panel.ContainerMouseUpNotifyEvent += ProjectHeader_MouseUp;
+
+            var propsButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties", false);
+            propsButton.ToolTip = $"<MouseLeft> {PropertiesProjectTooltip}";
+            propsButton.Click += (s) => EditProjectProperties();
+
+            var mixerButton = CreateImageButton(panel, propsButton.Left -spacingX - iconSizeX, "Mixer", false);
+            mixerButton.ToolTip = $"<MouseLeft> {AllowProjectMixerSettings}"; 
+            mixerButton.Dimmed = !project.AllowMixerOverride;
+            mixerButton.Click += (s) => mixerButton.Dimmed = !ToggleAllowProjectMixer();
+
             CreateCenteredLabel(panel, projectText, 2 * mixerButton.Left - panel.Width, true);
+        }
+
+        private void ProjectHeader_MouseUp(Control sender, MouseEventArgs e)
+        {
+            if (!e.Handled && e.Right)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuProperties", PropertiesProjectContext, () => { EditProjectProperties(); })
+                });
+                e.MarkHandled();
+            }
         }
 
         private void CreateSongsHeaderControls()
         {
+            var project = App.Project;
             var panel = CreateGradientPanel(Theme.DarkGreyColor4);
-            var addButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Add");
-            var importButton = CreateImageButton(panel, addButton.Left - spacingX - iconSizeX, "InstrumentOpen");
-            var sortButton = CreateImageButton(panel, importButton.Left - spacingX - iconSizeX, "Sort");
+            var addButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Add", false);
+            addButton.ToolTip = $"<MouseLeft> {AddNewSongTooltip}";
+            addButton.Click += (s) => AddSong();
+
+            var importButton = CreateImageButton(panel, addButton.Left - spacingX - iconSizeX, "InstrumentOpen", false);
+            importButton.ToolTip = $"<MouseLeft> {ImportSongsTooltip}";
+            importButton.Click += (s) => ImportSongs();
+
+            var sortButton = CreateImageButton(panel, importButton.Left - spacingX - iconSizeX, "Sort", false);
+            sortButton.ToolTip = $"<MouseLeft> {AutoSortSongsTooltip}";
+            sortButton.Dimmed = !project.AutoSortSongs;
+            sortButton.Click += (s) => SortSongs();
+
             CreateCenteredLabel(panel, SongsHeaderLabel, 2 * sortButton.Left - panel.Width, false);
         }
 
@@ -518,22 +553,44 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(Theme.DarkGreyColor4);
             var addButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Add", false);
-            var importButton = CreateImageButton(panel, addButton.Left - spacingX - iconSizeX, "InstrumentOpen", false);
-            var sortButton = CreateImageButton(panel, importButton.Left - spacingX - iconSizeX, "Sort", false);
-            CreateCenteredLabel(panel, InstrumentHeaderLabel, 2 * sortButton.Left - panel.Width, false);
-
             addButton.Click += (s) => AskAddInstrument();
             addButton.MouseUpEvent += (s, e) => { if (e.Right) AskAddInstrument(); };
+
+            var importButton = CreateImageButton(panel, addButton.Left - spacingX - iconSizeX, "InstrumentOpen", false);
             importButton.Click += (s) => ImportInstruments();
+
+            var sortButton = CreateImageButton(panel, importButton.Left - spacingX - iconSizeX, "Sort", false);
             sortButton.Click += (s) => SortInstruments();
+
+            CreateCenteredLabel(panel, InstrumentHeaderLabel, 2 * sortButton.Left - panel.Width, false);
         }
 
         private void CreateSongControls(Song song)
         {
             var panel = CreateGradientPanel(song.Color, song);
+            panel.ToolTip = $"<MouseLeft> {MakeSongCurrentTooltip} - <MouseLeft><Drag> {ReorderSongsTooltip}\n<MouseRight> {MoreOptionsTooltip}";
+            panel.ContainerMouseUpNotifyEvent += (s, e) => Song_MouseUp(e, song);
+
             var icon = CreateImageButton(panel, marginX + expandSizeX, "Music");
-            CreateImageButton(panel, -marginX, "Properties"); 
+            var propsButton = CreateImageButton(panel, -marginX, "Properties");
+            propsButton.ToolTip = $"<MouseLeft> {PropertiesSongTooltip}";
+            propsButton.Click += (s) => EditSongProperties(song);
+
             CreateLabel(panel, song.Name, true, icon.Right + spacingX, 0, 100); // MATTT : WIdth
+        }
+
+        private void Song_MouseUp(MouseEventArgs e, Song song)
+        {
+            if (!e.Handled && e.Right)
+            {
+                var menu = new List<ContextMenuOption>();
+                if (App.Project.Songs.Count > 1)
+                    menu.Add(new ContextMenuOption("MenuDelete", DeleteSongContext, () => { AskDeleteSong(song); }, ContextMenuSeparator.After));
+                menu.Add(new ContextMenuOption("MenuDuplicate", DuplicateContext, () => { DuplicateSong(song); }));
+                menu.Add(new ContextMenuOption("MenuProperties", PropertiesSongContext, () => { EditSongProperties(song); }, ContextMenuSeparator.Before));
+                App.ShowContextMenu(menu.ToArray());
+                e.MarkHandled();
+            }
         }
 
         private void CreateInstrumentControls(Instrument instrument)
@@ -570,6 +627,7 @@ namespace FamiStudio
                     var env = CreateImageButton(container, -x, EnvelopeType.Icons[idx]);
                     env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
                     env.MouseUpEvent += (s, e) => Instrument_MouseUp(e, instrument, idx);
+                    env.UserData = instrument.Envelopes[idx];
                 }
             }
 
@@ -1006,20 +1064,14 @@ namespace FamiStudio
         {
             if (obj != null)
             {
-                for (int i = 0; i < controls.Count; i++)
+                var c = mainContainer.FindControlByUserData(obj);
+                if (c is GradientPanel p)
                 {
-                    if (controls[i] is GradientPanel c)
-                    {
-                        if (c.UserData == obj)
-                        {
-                            c.Blink();
-                            // MATTT : Scroll to the button.
-                            //scrollY = buttonY - Height / 2;
-                            //ClampScroll();
-                            //MarkDirty();
-                            return;
-                        }
-                    }
+                    // MATTT : Scroll to the button.
+                    //scrollY = buttonY - Height / 2;
+                    //ClampScroll();
+                    //MarkDirty();
+                    p.Blink();
                 }
             }
         }
@@ -3446,7 +3498,7 @@ namespace FamiStudio
         {    
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuProperties", PropertiesProjectContext, () => { EditProjectProperties(new Point(x, y)); })
+                new ContextMenuOption("MenuProperties", PropertiesProjectContext, () => { EditProjectProperties(); })
             });
 
             return true;
@@ -4342,12 +4394,14 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
+            base.Tick(delta);
             TickFling(delta);
             UpdateCaptureOperation(mouseLastX, mouseLastY, true, delta);
         }
 
-        private void EditProjectProperties(Point pt)
+        private void EditProjectProperties()
         {
+            var pt = ParentWindow.LastMousePosition;
             var dlg = new ProjectPropertiesDialog(ParentWindow, App.Project);
 
             dlg.EditProjectPropertiesAsync((r) =>
@@ -4435,20 +4489,21 @@ namespace FamiStudio
             });
         }
 
-        private void ToggleAllowProjectMixer()
+        private bool ToggleAllowProjectMixer()
         {
             var project = App.Project;
 
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.RecreatePlayers);
             project.AllowMixerOverride = !project.AllowMixerOverride;
             App.UndoRedoManager.EndTransaction();
-            
-            RecreateControls();
+
+            return project.AllowMixerOverride;
         }
 
-        private void EditSongProperties(Point pt, Song song)
+        private void EditSongProperties(Song song)
         {
-            var dlg = new PropertyDialog(ParentWindow, SongPropertiesTitle, new Point(left + pt.X, top + pt.Y), 320, true); 
+            var pt = ParentWindow.LastMousePosition;
+            var dlg = new PropertyDialog(ParentWindow, SongPropertiesTitle, new Point(pt.X, pt.Y), 320, true); 
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 

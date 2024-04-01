@@ -352,6 +352,7 @@ namespace FamiStudio
         {
             Localization.Localize(this);
             Settings.KeyboardShortcutsChanged += Settings_KeyboardShortcutsChanged;
+            SetTickEnabled(Platform.IsMobile);
         }
 
         protected override void OnAddedToContainer()
@@ -646,6 +647,8 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
+            base.Tick(delta);
+
             if (Platform.IsMobile)
             {
                 var prevRatio = expandRatio;

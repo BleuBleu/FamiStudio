@@ -45,6 +45,7 @@ namespace FamiStudio
                 imageSizeY + margin * 4 + buttonSize + labelSizeY + titleBarSizeY);
 
             Init();
+            SetTickEnabled(true);
         }
 
         private void Init()
@@ -135,8 +136,9 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            gifTimer -= delta;
+            base.Tick(delta);
 
+            gifTimer -= delta;
             if (gifTimer <= 0)
                 UpdateGif();
         }
