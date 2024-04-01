@@ -83,12 +83,22 @@ namespace FamiStudio
             }
         }
 
-        public Control FindLastControlOfType(Type type)
+        public T FindControlOfType<T>() where T : Control
+        {
+            for (int i = 0; i < controls.Count; i++)
+            {
+                if (controls[i].GetType() == typeof(T))
+                    return controls[i] as T;
+            }
+            return null;
+        }
+
+        public T FindLastControlOfType<T>() where T : Control
         {
             for (int i = controls.Count - 1; i >= 0; i--)
             {
-                if (controls[i].GetType() == type)
-                    return controls[i];
+                if (controls[i].GetType() == typeof(T))
+                    return controls[i] as T;
             }
             return null;
         }

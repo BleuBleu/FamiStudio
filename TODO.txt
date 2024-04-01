@@ -2,19 +2,21 @@
 =====
 - UI code cleanup:
 	- Project explorer rewrite
-		x Buttons : Dimmed vs. Enabled.
-		x Hook expand
-		x How should we handle Tick()
+		- Param list/slider/checkbox
+			- double-click behavior
+			- context menu to reset values, enter, etc.
+		x Selected instrument/arp/etc (make bold)
+		x When drawing envelope, if non-empty, need to undim the button.
 		- Hook right click context menus.
 		- Hook tooltips.
 		- Hook folders
 		- Hook add/remove/import buttons, context menus
-		- Hook instrument envelopes
-		- Hook parameters (slider, list, check)
 		- Hook drags (envelope, reorders, folder, etc.)
-		- Show alternal expansion icons
+		- Show alternate expansion icons
 		- Review all calls to RecreateControls.
 		- Mobile stuff : white outlines, flings, etc.
+			- Look everywhere we used to do highlightedButtonIdx
+		- All "Add" buttons should also respond to right click.
 	- Toolbar rewrite
 		- Osc widget
 		- Timecode widget

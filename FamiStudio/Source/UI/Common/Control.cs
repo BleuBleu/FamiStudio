@@ -22,6 +22,8 @@ namespace FamiStudio
         protected object userData;
         private bool tickEnabled;
 
+        public delegate void ControlDelegate(Control sender);
+
         // TODO : Rename the "MouseDown" functions to something like "FireMouseDown"
         // or "RaiseMouseDown" and rename those to simply "MouseDown".
         public delegate void MouseEventDelegate(Control sender, MouseEventArgs e);

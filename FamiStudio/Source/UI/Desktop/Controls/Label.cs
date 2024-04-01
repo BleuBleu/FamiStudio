@@ -25,25 +25,25 @@ namespace FamiStudio
         public bool Multiline
         {
             get { return multiline; }
-            set { multiline = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref multiline, value); }
         }
 
         public bool Bold
         {
             get { return bold; }
-            set { bold = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref bold, value); }
         }
 
         public bool Centered
         {
             get { return centered; }
-            set { centered = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref centered, value); }
         }
 
         public bool Ellipsis
         {
             get { return ellipsis; }
-            set { ellipsis = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref ellipsis, value); }
         }
 
         public Color Color
@@ -162,7 +162,7 @@ namespace FamiStudio
                 var flags = TextFlags.Middle;
                 if (centered) flags |= TextFlags.Center;
                 if (ellipsis) flags |= TextFlags.Ellipsis;
-                c.DrawText(text, font, labelOffsetX, 0, brush, flags, centered ? width : 0, height);
+                c.DrawText(text, font, labelOffsetX, 0, brush, flags, centered || ellipsis ? width : 0, height);
             }
         }
     }

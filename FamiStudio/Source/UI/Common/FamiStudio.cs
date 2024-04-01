@@ -255,6 +255,7 @@ namespace FamiStudio
 
                     ResetSelectedChannel();
                     RefreshLayout();
+                    ProjectExplorer.SelectedSongChanged();
                     PianoRoll.SongChanged(selectedChannelIndex);
                     Sequencer.Reset();
                     ToolBar.Reset();
@@ -299,6 +300,7 @@ namespace FamiStudio
                         PianoRoll.StartEditInstrument(selectedInstrument, envType);
                     }
 
+                    ProjectExplorer.SelectedInstrumentChanged();
                     MarkEverythingDirty();
                 }
             }
@@ -314,6 +316,7 @@ namespace FamiStudio
                     selectedArpeggio = value;
                     if (Platform.IsMobile && PianoRoll.IsEditingArpeggio && selectedArpeggio != null)
                         PianoRoll.StartEditArpeggio(selectedArpeggio);
+                    ProjectExplorer.SelectedArpeggioChanged();
                     MarkEverythingDirty();
                 }
             }
@@ -442,7 +445,7 @@ namespace FamiStudio
         private void Sequencer_PatternsPasted()
         {
             RefreshLayout();
-            ProjectExplorer.RecreateControls();
+            ProjectExplorer.RecreateAllControls();
             ProjectExplorer.MarkDirty();
         }
 
@@ -538,7 +541,7 @@ namespace FamiStudio
         private void PianoRoll_DPCMSampleMapped(int note)
         {
             Sequencer.InvalidatePatternCache();
-            ProjectExplorer.MarkDirty();
+            ProjectExplorer.NotifyDPCMSampleMapped();
         }
 
         public int GetDPCMSampleMappingNoteAtPos(Point pos, out Instrument instrument)
@@ -622,7 +625,7 @@ namespace FamiStudio
 
         private void PianoRoll_NotesPasted()
         {
-            ProjectExplorer.RecreateControls();
+            ProjectExplorer.RecreateAllControls();
             ProjectExplorer.MarkDirty();
         }
 
@@ -1261,7 +1264,7 @@ namespace FamiStudio
 
         private void RefreshProjectExplorerButtons()
         {
-            ProjectExplorer.RecreateControls();
+            ProjectExplorer.RecreateAllControls();
         }
 
         private void InvalidatePatternCache()
@@ -2458,7 +2461,7 @@ namespace FamiStudio
 
         private void PianoRoll_EnvelopeChanged()
         {
-            ProjectExplorer.MarkDirty();
+            ProjectExplorer.InstrumentEnvelopeChanged();
         }
 
         private void SerializeActiveControl(ProjectBuffer buffer)

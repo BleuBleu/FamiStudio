@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Reflection.Metadata;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace FamiStudio
 {
@@ -12,12 +13,16 @@ namespace FamiStudio
         private TextureAtlasRef bmpLeft;
         private TextureAtlasRef bmpRight;
 
-        private Color fillColor = Color.FromArgb(64, Color.Black);
-        private Color disabledColor = Color.FromArgb(64, Color.Black);
-
         private int buttonSizeX;
         private int buttonSizeY;
+        private int hoverButtonIndex;
+        private bool capture;
+        private int captureButton;
+        private double captureTime;
         private ParamInfo param;
+
+        public event ControlDelegate ValueChangeStart;
+        public event ControlDelegate ValueChangeEnd;
 
         public ParamList(ParamInfo p)
         {
@@ -34,20 +39,97 @@ namespace FamiStudio
             height = DpiScaling.ScaleForWindow(buttonSizeY);
         }
 
+        // -1 = left, 1 = right, 0 = outside
+        private int GetButtonIndex(int x) 
+        {
+            if (x < buttonSizeX)
+                return -1;
+            if (x > width - buttonSizeX)
+                return 1;
+            
+            return 0;
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            if (e.Left && IsParamEnabled())
+            {
+                var buttonIndex = GetButtonIndex(e.X);
+                if (buttonIndex != 0)
+                {
+                    Debug.Assert(!capture);
+                    ValueChangeStart?.Invoke(this);
+                    captureTime = Platform.TimeSeconds();
+                    capture = true;
+                    captureButton = buttonIndex;
+                    ChangeValue(buttonIndex);
+                    SetTickEnabled(true);
+                    Capture = true;
+                }
+            }
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (e.Left && capture)
+            {
+                capture = false;
+                SetTickEnabled(false);
+                ValueChangeEnd?.Invoke(this);
+            }
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            SetAndMarkDirty(ref hoverButtonIndex, enabled ? GetButtonIndex(e.X) : 0);
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            SetAndMarkDirty(ref hoverButtonIndex, 0);
+        }
+
+        private void ChangeValue(int delta)
+        {
+            var oldVal = param.GetValue();
+            var newVal = param.SnapAndClampValue(oldVal + delta);
+            param.SetValue(newVal);
+            MarkDirty();
+        }
+
+        public override void Tick(float delta)
+        {
+            Debug.Assert(capture);
+
+            if (capture)
+            {
+                var captureDuration = Platform.TimeSeconds() - captureTime;
+                if (captureDuration > 0.35)
+                    ChangeValue(captureButton);
+            }
+        }
+
+        private bool IsParamEnabled()
+        {
+            return enabled && (param.IsEnabled == null || param.IsEnabled());
+        }
+
         protected override void OnRender(Graphics g)
         {
-            Debug.Assert(enabled); // TODO : Add support for disabled state.
-
             var c = g.DefaultCommandList;
-            var opacity = 1.0f; // MATTT : Hover + disabled.
-            var sliderWidth = width - buttonSizeX * 2;
+            var paramEnabled = IsParamEnabled();
+            var labelWidth = width - buttonSizeX * 2;
             var buttonOffsetY = Utils.DivideAndRoundUp(height - buttonSizeY, 2);
+            var val = param.GetValue();
+            var valPrev = param.SnapAndClampValue(val - 1);
+            var valNext = param.SnapAndClampValue(val + 1);
+            var opacity = paramEnabled ? 1.0f : 0.25f;
+            var opacityL = paramEnabled && val != valPrev ? (hoverButtonIndex == -1 ? 0.6f : 1.0f) : 0.25f;
+            var opacityR = paramEnabled && val != valNext ? (hoverButtonIndex ==  1 ? 0.6f : 1.0f) : 0.25f;
 
-            c.DrawTextureAtlas(bmpLeft, 0, buttonOffsetY, bmpScale, Color.Black.Transparent(opacity));
-            c.PushTranslation(buttonSizeX, 0);
-            c.DrawText(param.GetValueString(), Fonts.FontMedium, 0, 0, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, sliderWidth, height);
-            c.PopTransform();
-            c.DrawTextureAtlas(bmpRight, buttonSizeX + sliderWidth, buttonOffsetY, bmpScale, Color.Black.Transparent(opacity));
+            c.DrawTextureAtlas(bmpLeft, 0, buttonOffsetY, bmpScale, Color.Black.Transparent(opacityL));
+            c.DrawText(param.GetValueString(), Fonts.FontMedium, buttonSizeX, 0, Color.Black.Transparent(opacity), TextFlags.MiddleCenter, labelWidth, height);
+            c.DrawTextureAtlas(bmpRight, buttonSizeX + labelWidth, buttonOffsetY, bmpScale, Color.Black.Transparent(opacityR));
         }
     }
 }

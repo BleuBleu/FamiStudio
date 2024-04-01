@@ -5,8 +5,7 @@ namespace FamiStudio
 {
     public class Button : Control
     {
-        public delegate void ClickDelegate(Control sender);
-        public event ClickDelegate Click;
+        public event ControlDelegate Click;
 
         private string text;
         private string imageName;

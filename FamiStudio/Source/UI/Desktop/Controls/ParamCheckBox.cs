@@ -13,6 +13,9 @@ namespace FamiStudio
         private TextureAtlasRef bmpCheckOn;
         private TextureAtlasRef bmpCheckOff;
 
+        public event ControlDelegate ValueChangeStart;
+        public event ControlDelegate ValueChangeEnd;
+
         public ParamCheckBox(ParamInfo p)
         {
             param = p;
@@ -29,7 +32,14 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            // Checked = !Checked; // MATTT
+            if (e.Left && IsParamEnabled())
+            {
+                ValueChangeStart?.Invoke(this);
+                param.SetValue(param.GetValue() == 0 ? 1 : 0);
+                ValueChangeEnd?.Invoke(this);
+                CheckedChanged?.Invoke(this, param.GetValue() != 0);
+                MarkDirty();
+            }
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -47,10 +57,17 @@ namespace FamiStudio
             SetAndMarkDirty(ref hover, false);
         }
 
+        private bool IsParamEnabled()
+        {
+            return enabled && (param.IsEnabled == null || param.IsEnabled());
+        }
+
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
-            var color = hover ? Color.Pink : Theme.BlackColor; // MATTT : Hover
+            var paramEnabled = IsParamEnabled();
+            var opacity = paramEnabled ? hover ? 0.6f : 1.0f : 0.25f;
+            var color = Color.Black.Transparent(opacity);
 
             c.DrawRectangle(0, 0, width - 1, height - 1, color); 
             c.DrawTextureAtlas(param.GetValue() != 0 ? bmpCheckOn : bmpCheckOff, 0, 0, 1, color);
