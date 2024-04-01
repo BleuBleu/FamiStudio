@@ -1815,6 +1815,7 @@ namespace FamiStudio
 
         protected void ConditionalShowExpansionIcons(int x, int y)
         {
+            //mainContainer.GetControlAt();
             //var buttonIdx = GetButtonAtCoord(x, y, out _);
             //App.SequencerShowExpansionIcons = buttonIdx >= 0 && (buttons[buttonIdx].type == ButtonType.Instrument || buttons[buttonIdx].type == ButtonType.InstrumentHeader);
         }
@@ -1822,22 +1823,19 @@ namespace FamiStudio
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            /*
+
             bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
-            UpdateHover(e);
 
             if (middle)
                 DoScroll(e.Y - mouseLastY);
 
-            UpdateToolTip(e.X, e.Y);
             ConditionalShowExpansionIcons(e.X, e.Y);
 
             mouseLastX = e.X;
             mouseLastY = e.Y;
-            */
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -1978,6 +1976,7 @@ namespace FamiStudio
                 if (string.IsNullOrEmpty(tooltip))
                     tooltip = ctrl.ParentContainer.ToolTip;
                 App.SetToolTip(tooltip, false);
+                App.SequencerShowExpansionIcons = (ctrl.UserData is Instrument) || (ctrl.ParentContainer.UserData is Instrument);
             }
         }
 

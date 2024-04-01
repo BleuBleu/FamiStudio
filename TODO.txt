@@ -8,11 +8,10 @@
 		x Selected instrument/arp/etc (make bold)
 		x When drawing envelope, if non-empty, need to undim the button.
 		- Hook right click context menus.
-		- Hook tooltips.
+		x Hook tooltips.
 		- Hook folders
-		- Hook add/remove/import buttons, context menus
 		- Hook drags (envelope, reorders, folder, etc.)
-		- Show alternate expansion icons
+		x Show alternate expansion icons
 		- Review all calls to RecreateControls.
 		- Mobile stuff : white outlines, flings, etc.
 			- Look everywhere we used to do highlightedButtonIdx
