@@ -9643,8 +9643,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
-
             if (App == null)
                 return;
 

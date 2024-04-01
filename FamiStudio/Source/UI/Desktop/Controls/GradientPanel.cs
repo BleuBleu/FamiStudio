@@ -6,9 +6,6 @@ namespace FamiStudio
 {
     public class GradientPanel : Container
     {
-        public delegate void ClickDelegate(Control sender);
-        public event ClickDelegate RightClick;
-
         private Color colorTop;
         private Color colorBottom;
 
@@ -26,7 +23,7 @@ namespace FamiStudio
             set 
             {
                 colorTop = value;
-                colorBottom = Theme.Darken(value, 20); // MATT : We used to draw same color, but with alpha = 200
+                colorBottom = Color.FromArgb(200, value);
                 MarkDirty();
             }
         }
@@ -40,8 +37,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
-
             if (blinkTimer != 0.0f)
             {
                 blinkTimer = MathF.Max(0.0f, blinkTimer - delta);
@@ -51,16 +46,17 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            if (e.Right)
-                RightClick?.Invoke(this);
-            base.OnMouseUp(e);
-        }
-
         protected override void OnRender(Graphics g)
         {
-            g.DefaultCommandList.FillAndDrawRectangleGradient(0, 0, width, height, colorTop, colorBottom, Color.Black, true, height);
+            var actualColorBottom = colorBottom;
+
+            if (blinkTimer != 0.0f)
+            {
+                actualColorBottom = Theme.Darken(colorTop, (int)(MathF.Sin(blinkTimer * MathF.PI * 8.0f) * 16 + 16));
+                actualColorBottom = Color.FromArgb(200, actualColorBottom);
+            }
+
+            g.DefaultCommandList.FillAndDrawRectangleGradient(0, 0, width, height, colorTop, actualColorBottom, Color.Black, true, height);
             base.OnRender(g);
         }
     }

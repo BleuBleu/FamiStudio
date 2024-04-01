@@ -107,16 +107,19 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            // Dont tick non-top dialogs.
-            if (IsTopDialog())
-                base.Tick(delta);
-
             var v1 = ShouldDisplayTooltip();
             tooltipTimer += delta;
             var v2 = ShouldDisplayTooltip();
 
             if (!v1 && v2)
                 MarkDirty();
+        }
+
+        public override void TickChildren(float delta)
+        {
+            // Dont tick non-top dialogs.
+            if (IsTopDialog())
+                base.TickChildren(delta);
         }
 
         private bool IsTopDialog()

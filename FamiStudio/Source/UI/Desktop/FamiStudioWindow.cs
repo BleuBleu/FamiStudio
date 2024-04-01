@@ -267,7 +267,7 @@ namespace FamiStudio
             if (!IsAsyncDialogInProgress)
                 famistudio.Tick(deltaTime);
 
-            container.Tick(deltaTime);
+            container.TickWithChildren(deltaTime);
 
             lastTickTime = tickTime;
         }

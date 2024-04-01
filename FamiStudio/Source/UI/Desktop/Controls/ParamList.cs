@@ -17,11 +17,11 @@ namespace FamiStudio
 
         private int buttonSizeX;
         private int buttonSizeY;
-        private float exp = 1.0f;
-        private string text = "123"; // MATTT
+        private ParamInfo param;
 
-        public ParamList()
+        public ParamList(ParamInfo p)
         {
+            param = p;
             height = DpiScaling.ScaleForWindow(16);
         }
 
@@ -38,14 +38,14 @@ namespace FamiStudio
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            var c = g.GetCommandList();
+            var c = g.DefaultCommandList;
             var opacity = 1.0f; // MATTT : Hover + disabled.
             var sliderWidth = width - buttonSizeX * 2;
             var buttonOffsetY = Utils.DivideAndRoundUp(height - buttonSizeY, 2);
 
             c.DrawTextureAtlas(bmpLeft, 0, buttonOffsetY, bmpScale, Color.Black.Transparent(opacity));
             c.PushTranslation(buttonSizeX, 0);
-            c.DrawText(text, Fonts.FontMedium, 0, 0, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, sliderWidth, height);
+            c.DrawText(param.GetValueString(), Fonts.FontMedium, 0, 0, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, sliderWidth, height);
             c.PopTransform();
             c.DrawTextureAtlas(bmpRight, buttonSizeX + sliderWidth, buttonOffsetY, bmpScale, Color.Black.Transparent(opacity));
         }

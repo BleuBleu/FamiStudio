@@ -166,12 +166,7 @@ namespace FamiStudio
         }
 
         public override void Tick(float delta)
-        {
-            base.Tick(delta);
-
-            if (transitionTimer > 0.0f)
-            {
-                var prevTimer = transitionTimer;
+        {                var prevTimer = transitionTimer;
                 transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
 
                 if (prevTimer > 0.5f && transitionTimer <= 0.5f)

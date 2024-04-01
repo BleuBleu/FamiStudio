@@ -16,18 +16,13 @@ namespace FamiStudio
         private Color disabledColor = Color.FromArgb(64, Color.Black);
 
         private int buttonSize;
-        private int min = 0;
-        private int max = 100;
-        private int val = 25;
         private float exp = 1.0f;
-        private string text = "123"; // MATTT
+        private ParamInfo param;
 
-        public ParamSlider(int value, int minValue, int maxValue)
+        public ParamSlider(ParamInfo p)
         {
-            val = value;
-            min = minValue;
-            max = maxValue;
-            exp = max >= 4095 ? 4 : 1;
+            param = p;
+            exp = p.GetMaxValue() >= 4095 ? 4 : 1;
             height = DpiScaling.ScaleForWindow(16);
         }
 
@@ -43,9 +38,13 @@ namespace FamiStudio
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            var c = g.GetCommandList();
+            var c = g.DefaultCommandList;
             var opacity = 1.0f; // MATTT : Hover + disabled.
             var sliderWidth = width - buttonSize * 2;
+
+            var val = param.GetValue();
+            var min = param.GetMinValue();
+            var max = param.GetMaxValue();
             var ratio = (val - min) / (float)(max - min);
             var valWidth = max == min ? 0 : (int)Math.Round(MathF.Pow(ratio, exp) * sliderWidth);
             var buttonOffsetY = Utils.DivideAndRoundUp(height - buttonSize, 2);
@@ -54,7 +53,7 @@ namespace FamiStudio
             c.PushTranslation(buttonSize, 0);
             c.FillRectangle(1, 1, valWidth, height, fillColor);
             c.DrawRectangle(0, 0, sliderWidth, height, enabled ? Theme.BlackColor : disabledColor, 1);
-            c.DrawText(text, Fonts.FontMedium, 0, 0, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, sliderWidth, height);
+            c.DrawText(param.GetValueString(), Fonts.FontMedium, 0, 0, enabled ? Theme.BlackColor : disabledColor, TextFlags.MiddleCenter, sliderWidth, height);
             c.PopTransform();
             c.DrawTextureAtlas(bmpPlus, buttonSize + sliderWidth, buttonOffsetY, bmpScale, Color.Black.Transparent(opacity));
         }

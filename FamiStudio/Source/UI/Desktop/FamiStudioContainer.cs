@@ -160,8 +160,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
-
             var newDialogDimming = dialogDimming;
 
             if (IsDialogActive)

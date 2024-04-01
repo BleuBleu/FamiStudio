@@ -8,21 +8,15 @@ namespace FamiStudio
         public delegate void CheckedChangedDelegate(Control sender, bool check);
         public event CheckedChangedDelegate CheckedChanged;
 
-        private bool check;
         private bool hover;
+        private ParamInfo param;
         private TextureAtlasRef bmpCheckOn;
         private TextureAtlasRef bmpCheckOff;
 
-        public ParamCheckBox(bool chk)
+        public ParamCheckBox(ParamInfo p)
         {
-            check = chk;
+            param = p;
             height = 16;
-        }
-
-        public bool Checked
-        {
-            get { return check; }
-            set { if (SetAndMarkDirty(ref check, value)) CheckedChanged?.Invoke(this, check); }
         }
 
         protected override void OnAddedToContainer()
@@ -35,7 +29,7 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            Checked = !Checked;
+            // Checked = !Checked; // MATTT
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -56,10 +50,10 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
-            var color = hover ? Color.Pink : Theme.BlackColor;// MATTT : Hover
+            var color = hover ? Color.Pink : Theme.BlackColor; // MATTT : Hover
 
             c.DrawRectangle(0, 0, width - 1, height - 1, color); 
-            c.DrawTextureAtlas(check ? bmpCheckOn : bmpCheckOff, 0, 0, 1, color);
+            c.DrawTextureAtlas(param.GetValue() != 0 ? bmpCheckOn : bmpCheckOff, 0, 0, 1, color);
         }
     }
 }

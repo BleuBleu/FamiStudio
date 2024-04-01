@@ -647,8 +647,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
-
             if (Platform.IsMobile)
             {
                 var prevRatio = expandRatio;

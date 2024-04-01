@@ -389,7 +389,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     famistudio.Tick(deltaTime);
-                    container.Tick(deltaTime);
+                    container.TickWithChildren(deltaTime);
                 }
 
                 ConditionalShowDelayedMessageBox();

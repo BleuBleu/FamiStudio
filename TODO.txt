@@ -4,12 +4,7 @@
 	- Project explorer rewrite
 		x Buttons : Dimmed vs. Enabled.
 		x Hook expand
-		- How should we handle Tick()
-			- Ticking everything is kind of nuts
-			- Could have a property that says "WantsTick", increment counter on containers.
-			- Keep a "NumWantsTickControls" that inc/dec when adding/removing controls.
-			- Only tick children if NumWantsTickControls > 0.
-			- Make sure ticks call base.Tick().
+		x How should we handle Tick()
 		- Hook right click context menus.
 		- Hook tooltips.
 		- Hook folders

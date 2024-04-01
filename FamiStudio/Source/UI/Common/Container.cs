@@ -190,26 +190,27 @@ namespace FamiStudio
             }
         }
 
-        public void TickChildren(float delta)
+        public virtual void TickChildren(float delta)
         {
-            foreach (var ctrl in controls)
+            if (numControlsTickEnabled > 0)
             {
-                if (ctrl.Visible)
+                foreach (var ctrl in controls)
                 {
-                    if (ctrl.TickEnabled)
-                        ctrl.Tick(delta);
-                    else if (ctrl is Container cont && cont.numControlsTickEnabled > 0)
-                        cont.TickChildren(delta);
+                    if (ctrl.Visible)
+                    {
+                        if (ctrl.TickEnabled)
+                            ctrl.Tick(delta);
+                        if (ctrl is Container cont)
+                            cont.TickChildren(delta);
+                    }
                 }
             }
         }
 
-        public override void Tick(float delta)
+        public void TickWithChildren(float delta)
         {
-            if (numControlsTickEnabled > 0)
-            {
-                TickChildren(delta);
-            }
+            Tick(delta);
+            TickChildren(delta);
         }
 
         protected void RenderChildControlsAndContainers(Graphics g)

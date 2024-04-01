@@ -395,7 +395,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
             caretBlinkTime += delta;
             SetAndMarkDirty(ref caretBlink, Utils.Frac(caretBlinkTime) < 0.5f);
         }

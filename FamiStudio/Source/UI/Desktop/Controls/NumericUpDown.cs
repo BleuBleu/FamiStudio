@@ -101,8 +101,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
-
             if (captureButton >= 0)
             {
                 var lastDuration = captureDuration;

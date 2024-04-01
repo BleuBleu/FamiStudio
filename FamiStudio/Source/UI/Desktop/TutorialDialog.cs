@@ -18,7 +18,7 @@ namespace FamiStudio
         private Label label;
         private CheckBox checkBoxDontShow;
 
-        private int margin     = DpiScaling.ScaleForWindow(8);
+        private int margin = DpiScaling.ScaleForWindow(8);
         private int imageSizeX = DpiScaling.ScaleForWindow(960);
         private int imageSizeY = DpiScaling.ScaleForWindow(540);
         private int labelSizeY = DpiScaling.ScaleForWindow(36);
@@ -40,8 +40,8 @@ namespace FamiStudio
 
             Title = WelcomeTitle;
 
-            Move(0, 0, 
-                imageSizeX + margin * 2, 
+            Move(0, 0,
+                imageSizeX + margin * 2,
                 imageSizeY + margin * 4 + buttonSize + labelSizeY + titleBarSizeY);
 
             Init();
@@ -136,8 +136,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
-
             gifTimer -= delta;
             if (gifTimer <= 0)
                 UpdateGif();

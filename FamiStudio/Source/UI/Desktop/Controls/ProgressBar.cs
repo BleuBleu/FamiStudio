@@ -32,7 +32,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
             var newVisibleProgress = Utils.Lerp(visibleProgress, progress, 0.1f);
             SetAndMarkDirty(ref visibleProgress, newVisibleProgress);
         }

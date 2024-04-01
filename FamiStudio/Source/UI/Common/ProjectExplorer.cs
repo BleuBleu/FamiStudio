@@ -609,12 +609,14 @@ namespace FamiStudio
             var x = marginX; 
             var props = CreateImageButton(container, -x, "Properties");
             props.ToolTip = $"<MouseLeft> {PropertiesInstrumentTooltip} - <MouseRight> {MoreOptionsTooltip}";
+            props.Click += (s) => EditInstrumentProperties(instrument);
 
             if (instrument.Expansion == ExpansionType.None)
             {
                 x += spacingX + props.Width;
                 var dpcm = CreateImageButton(container, -x, "ChannelDPCM");
                 dpcm.ToolTip = $"<MouseLeft> {EditSamplesTooltip} - <MouseRight> {MoreOptionsTooltip}";
+                dpcm.Click += (s) => App.StartEditDPCMMapping(instrument);
             }
 
             for (var i = 0; i < EnvelopeDisplayOrder.Length; i++)
@@ -623,11 +625,12 @@ namespace FamiStudio
                 if (instrument.Envelopes[idx] != null)
                 {
                     x += spacingX + props.Width;
-                    // var enabled = !instrument.Envelopes[idx].IsEmpty(idx); // MATTT : Envelope enabled.
                     var env = CreateImageButton(container, -x, EnvelopeType.Icons[idx]);
-                    env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
-                    env.MouseUpEvent += (s, e) => Instrument_MouseUp(e, instrument, idx);
+                    env.Dimmed = instrument.Envelopes[idx].IsEmpty(idx);
                     env.UserData = instrument.Envelopes[idx];
+                    env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
+                    env.Click += (s) => App.StartEditInstrument(instrument, idx);
+                    env.MouseUpEvent += (s, e) => Instrument_MouseUp(e, instrument, idx);
                 }
             }
 
@@ -651,8 +654,6 @@ namespace FamiStudio
 
         private void Instrument_RightClick(Instrument inst, int envelopeType = -1)
         {
-            // MATTT : How to get the X/Y for events like this?
-            var pt = ParentWindow.LastMousePosition;
             var menu = new List<ContextMenuOption>();
 
             if (inst != null)
@@ -661,6 +662,7 @@ namespace FamiStudio
 
                 if (envelopeType >= 0)
                 {
+                    // MATTT : Need to grey out button here.
                     menu.Add(new ContextMenuOption("MenuClearEnvelope", ClearEnvelopeContext, () => { ClearInstrumentEnvelope(inst, envelopeType); }, ContextMenuSeparator.After));
                 }
                 else
@@ -700,10 +702,10 @@ namespace FamiStudio
                     }
                 }
 
-                menu.Add(new ContextMenuOption("MenuProperties", PropertiesInstrumentContext, () => { EditInstrumentProperties(pt, inst); }, ContextMenuSeparator.Before));
+                menu.Add(new ContextMenuOption("MenuProperties", PropertiesInstrumentContext, () => { EditInstrumentProperties(inst); }, ContextMenuSeparator.Before));
             }
 
-            App.ShowContextMenu(pt.X, pt.Y, menu.ToArray());
+            App.ShowContextMenu(menu.ToArray());
         }
 
         private void CreateDpcmSampleControls(DPCMSample sample)
@@ -735,46 +737,48 @@ namespace FamiStudio
             CreateLabel(panel, arp.Name, true, icon.Right + spacingX, 0, 100); // MATTT : WIdth
         }
 
-        private void CreateParamTabs(GradientPanel panel, int x, int y, int width, int height, string[] tabNames, int selectedIndex)
+        private void CreateParamTabs(GradientPanel panel, int x, int y, int width, int height, string[] tabNames, string selelectedTabName)
         {
             var tabWidth = width / tabNames.Length;
             for (int i = 0; i < tabNames.Length; i++)
             {
-                var tab = new SimpleTab(tabNames[i], i == selectedIndex);
+                var name = tabNames[i];
+                var tab = new SimpleTab(name, name == selelectedTabName);
                 tab.Move(x + i * tabWidth, y, tabWidth, height);
+                tab.Click += (s) => { selectedInstrumentTab = name; RecreateControls(); }; // HACK : This is only used for instruments right now.
                 panel.AddControl(tab);
             }
         }
 
         private void CreateParamSlider(GradientPanel panel, ParamInfo p, int y, int width)
         {
-            var slider = new ParamSlider(p.GetValue(), p.GetMinValue(), p.GetMaxValue());
+            var slider = new ParamSlider(p);
             panel.AddControl(slider);
             slider.Move(panel.Width - sliderSizeX - spacingX, y + Utils.DivideAndRoundUp(panelSizeY - slider.Height, 2), sliderSizeX, slider.Height); // MATTT : Margin
         }
 
-        private void CreateParamList(GradientPanel panel, int y, int height)
+        private void CreateParamList(GradientPanel panel, ParamInfo p, int y, int height)
         {
-            var list = new ParamList();
+            var list = new ParamList(p);
             panel.AddControl(list);
             list.Move(panel.Width - sliderSizeX - spacingX, y + Utils.DivideAndRoundUp(panelSizeY - list.Height, 2), sliderSizeX, list.Height); // MATTT : margin
         }
 
-        private void CreateParamCheckBox(GradientPanel panel, int y, int height)
+        private void CreateParamCheckBox(GradientPanel panel, ParamInfo p, int y, int height)
         {
-            var check = new ParamCheckBox(true);
+            var check = new ParamCheckBox(p);
             panel.AddControl(check);
             check.Move(panel.Width - check.Width - spacingX, y + Utils.DivideAndRoundUp(panelSizeY - check.Height, 2)); // MATTT : MARGIN
         }
 
-        private void CreateParamCustomDraw(GradientPanel panel, int x, int y, int width, int height, ParamInfo p)
+        private void CreateParamCustomDraw(GradientPanel panel, ParamInfo p, int x, int y, int width, int height)
         {
-            var custom = new ParamCustomDraw(p.CustomDraw, p.CustomUserData1, p.CustomUserData2);
+            var custom = new ParamCustomDraw(p);
             panel.AddControl(custom);
             custom.Move(x, y, width, height);
         }
 
-        private void CreateParamsControls(Color color, object userData, ParamInfo[] parameters, string expandedTabName = null)
+        private void CreateParamsControls(Color color, object userData, ParamInfo[] parameters, string selectedTabName = null)
         {
             if (parameters != null)
             {
@@ -792,8 +796,8 @@ namespace FamiStudio
                     }
                 }
 
-                // MATTT TEST!
-                expandedTabName = tabNames != null ? tabNames[0] : null;
+                if (tabNames != null && (string.IsNullOrEmpty(selectedTabName) || !tabNames.Contains(selectedTabName)))
+                    selectedTabName = tabNames[0];
 
                 var y = 0;
                 var tabCreated = false;
@@ -804,12 +808,12 @@ namespace FamiStudio
                 {
                     if (!tabCreated && param.HasTab)
                     {
-                        CreateParamTabs(panel, indentX, y, panel.Width - indentX - marginX, panelSizeY, tabNames.ToArray(), 0);
+                        CreateParamTabs(panel, indentX, y, panel.Width - indentX - marginX, panelSizeY, tabNames.ToArray(), selectedTabName);
                         y += panelSizeY;
                         tabCreated = true;
                     }
 
-                    if (param.HasTab && !string.IsNullOrEmpty(expandedTabName) && expandedTabName != param.TabName)
+                    if (param.HasTab && selectedTabName != param.TabName)
                     {
                         continue;
                     }
@@ -818,7 +822,7 @@ namespace FamiStudio
                     {
                         Debug.Assert(param.CustomDraw != null);
                         var customHeight = param.CustomHeight * panelSizeY;
-                        CreateParamCustomDraw(panel, indentX, y, panel.Width - indentX - marginX, customHeight, param);
+                        CreateParamCustomDraw(panel, param, indentX, y, panel.Width - indentX - marginX, customHeight);
                         y += customHeight;
                     }
                     else
@@ -829,11 +833,11 @@ namespace FamiStudio
 
                             if (param.IsList)
                             {
-                                CreateParamList(panel, y, panelSizeY);
+                                CreateParamList(panel, param, y, panelSizeY);
                             }
                             else if (param.GetMaxValue() == 1)
                             {
-                                CreateParamCheckBox(panel, y, panelSizeY);
+                                CreateParamCheckBox(panel, param, y, panelSizeY);
                             }
                             else
                             {
@@ -894,7 +898,7 @@ namespace FamiStudio
                 {
                     CreateInstrumentControls(instrument);
                     if (instrument == expandedInstrument)
-                        CreateParamsControls(instrument.Color, instrument, InstrumentParamProvider.GetParams(instrument)); // MATTT : Expanded tab name.
+                        CreateParamsControls(instrument.Color, instrument, InstrumentParamProvider.GetParams(instrument), selectedInstrumentTab);
                 }
             }
         }
@@ -2661,12 +2665,24 @@ namespace FamiStudio
             });
         }
 
+        private GradientPanel FindInstrumentPanel(Instrument inst)
+        {
+            return mainContainer.FindControlByUserData(inst) as GradientPanel;
+        }
+
+        private Button FindInstrumentEnvelopeButton(Instrument inst, Envelope env)
+        {
+            return FindInstrumentPanel(inst).FindControlByUserData(env) as Button;
+        }
+
         private void ClearInstrumentEnvelope(Instrument inst, int envelopeType)
         {
+            var env = inst.Envelopes[envelopeType];
             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
-            inst.Envelopes[envelopeType].ResetToDefault(envelopeType);
+            env.ResetToDefault(envelopeType);
             inst.NotifyEnvelopeChanged(envelopeType, true);
             App.UndoRedoManager.EndTransaction();
+            FindInstrumentEnvelopeButton(inst, env).Dimmed = env.IsEmpty(envelopeType);
             MarkDirty();
         }
 
@@ -4394,7 +4410,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
             TickFling(delta);
             UpdateCaptureOperation(mouseLastX, mouseLastY, true, delta);
         }
@@ -4544,10 +4559,11 @@ namespace FamiStudio
             });
         }
 
-        private void EditInstrumentProperties(Point pt, Instrument instrument)
+        private void EditInstrumentProperties(Instrument instrument)
         {
             // MATTT : Make "pt" window-space.
-            var dlg = new PropertyDialog(ParentWindow, InstrumentPropertiesTitle, new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
+            var pt = ParentWindow.LastMousePosition;
+            var dlg = new PropertyDialog(ParentWindow, InstrumentPropertiesTitle, new Point(pt.X, pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();

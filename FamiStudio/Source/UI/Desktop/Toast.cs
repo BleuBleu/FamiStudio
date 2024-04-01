@@ -73,8 +73,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
-
             if (timer > 0.0f)
             {
                 timer = Math.Max(0.0f, timer - delta);

@@ -292,7 +292,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            base.Tick(delta);
             TickFling(delta);
 
             if (popupButtonIdx >= 0)
