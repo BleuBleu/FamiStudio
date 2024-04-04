@@ -4,6 +4,46 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.2.0
+
+Changes/Fixes:
+
+* S5B envelope support (S5B & EPSM)
+* FDS auto-modulation support
+* FDS emulation improvements : Proper filtering, DAC emulation & fixes.
+* Phase reset support
+* Accurate seek support (fully emulate entire song from start, useful for phase resets)
+* Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
+* Folders support in Project Explorer
+* More filtering options for audio expansions & ability to store settings in project
+* Support for up to 256 instruments (for both regular and expansion) in sound engine
+* Audio backend improvements:
+	* Reduced audio latency on all platform 
+	* Switch to WASAPI on Windows (non-exclusive mode)
+	* Audio device change detection & improved BT headphones support on MacOS
+* Video export improvements: 
+	* Unified piano roll mode
+	* Piano roll 3D effect
+	* Option to overlay registers
+	* Preview mode
+* Small quality of life improvements:
+	* Eraser mode
+	* Ability to copy samples between instruments
+	* Ability to type effect values and project explorer parameters
+	* Function to replace specific instruments
+	* Logarithmic sliders for effects and parameters with huge values
+
+Breaking/Behavior changes:
+
+* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
+* FDS emulation now matches the hardware much more closely. Some instruments may now sound very different.
+* S5B/EPSM noise no longer has a "NOP" frequency, noise frequency will be set if it is enabled by the mixer envelope. 
+
+System Requirement Changes:
+
+* Upgraded to .NET 7.0
+* Minimum OpenGL requirement for Desktop lowered to OpenGL 3.0 (was 3.3)
+
 ## Version 4.1.3 (Hotfix)
 
 Changes/Fixes:
