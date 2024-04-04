@@ -585,25 +585,27 @@ namespace FamiStudio
                     break;
                 case ExportFormat.VGM:
                     int VGMWarnID;
+                    const int unsupportedExpansionMask = ExpansionType.Vrc6Mask | ExpansionType.Mmc5Mask | ExpansionType.N163Mask;
                     if (Platform.IsMobile)
-                        VGMWarnID = page.AddLabel(VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & 0b11001)), null, true); // 0
+                        VGMWarnID = page.AddLabel(VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & unsupportedExpansionMask)), null, true); // 0
                     int VGMSongSelect = page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SongListTooltip); // 0/1
                     page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(0), 0, false, TrackTitleEnglishTooltip); // 1/2
                     page.AddTextBox(GameNameEnglishLabel.Colon, project.Name, 0, false, GameNameEnglishTooltip); // 2/3
-                    page.AddTextBox(SystemEnglishLabel.Colon, 
-                    (project.PalMode ? "PAL NES" : "NTSC NES/Famicom") + 
-                    (project.UsesVrc7Expansion ? $" + {ExpansionType.GetLocalizedName(2)}" : "") + 
-                    (project.UsesFdsExpansion ? $" + {ExpansionType.GetLocalizedName(3)}" : "") + 
-                    (project.UsesS5BExpansion ? $" + {ExpansionType.GetLocalizedName(6)}" : "") + 
-                    (project.UsesEPSMExpansion ? $" + {ExpansionType.GetLocalizedName(7)}" : ""), 0, false, SystemNameEnglishTooltip); // 3/4
+                    page.AddTextBox(SystemEnglishLabel.Colon,
+                    (project.PalMode ? "PAL NES" : "NTSC NES/Famicom") +
+                    (project.UsesVrc7Expansion ? $" + {ExpansionType.GetLocalizedName(ExpansionType.Vrc7)}" : "") +
+                    (project.UsesFdsExpansion ? $" + {ExpansionType.GetLocalizedName(ExpansionType.Fds)}" : "") +
+                    (project.UsesS5BExpansion ? $" + {ExpansionType.GetLocalizedName(ExpansionType.S5B)}" : "") +
+                    (project.UsesEPSMExpansion ? $" + {ExpansionType.GetLocalizedName(ExpansionType.EPSM)}" : ""),
+                    0, false, SystemNameEnglishTooltip); // 3/4
                     page.AddTextBox(ComposerEnglishLabel.Colon, project.Author, 0, false, ComposerEnglishTooltip); // 4/5
                     page.AddTextBox(ReleaseDateLabel.Colon, DateTime.Now.ToString("yyyy\\/MM\\/dd"), 0, false, ReleaseDateTooltip); // 5/6
                     page.AddTextBox(VGMByLabel.Colon, "FamiStudio Export", 0, false, VGMByTooltip); // 6/7
                     page.AddTextBox(NotesLabel.Colon, project.Copyright, 0); // 7/8
                     page.AddCheckBox(SmoothLoopingLabel.Colon, true, SmoothLoopingTooltip); // 8/9
                     if (Platform.IsDesktop)
-                        VGMWarnID = page.AddLabel(null, VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & 0b11001)), true); // 9
-                    page.SetPropertyVisible(VGMWarnID, (project.ExpansionAudioMask & 0b11001) != 0);  // Unsupported expansions
+                        VGMWarnID = page.AddLabel(null, VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & unsupportedExpansionMask)), true); // 9
+                    page.SetPropertyVisible(VGMWarnID, (project.ExpansionAudioMask & unsupportedExpansionMask) != 0);  // Unsupported expansions
                     page.SetPropertyEnabled(VGMSongSelect+8, project.GetSong(page.GetPropertyValue<string>(VGMSongSelect)).LoopPoint >= 0);
                     page.PropertyChanged += VGM_PropertyChanged;
                     break;
