@@ -1,8 +1,13 @@
 4.2.0
 =====
 - Change discord invite link
+- Do a safety rebuild of all 3rd parties, all platforms.
+	x Win
+	x Android
+	- MacOS
+	- Linux
+- Merge alex's PR.
 / Switch to .NET for Android too.
-	- Setup keystore, etc.
 	- Bring back APK
 
 4.2.0 Testing/Packaging
