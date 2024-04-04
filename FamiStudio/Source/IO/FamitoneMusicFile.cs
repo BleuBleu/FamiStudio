@@ -18,6 +18,8 @@ namespace FamiStudio
         private string ll = "@";
         private string lo = ".lobyte";
         private string hi = ".hibyte";
+        private string iff = ".if";
+        private string endif = ".endif";
 
         private int machine = MachineType.NTSC;
         private int assemblyFormat = AssemblyFormat.NESASM;
@@ -193,13 +195,32 @@ namespace FamiStudio
             for (int i = 0; i < project.Songs.Count; i++)
             {
                 var song = project.Songs[i];
-                var line = $"\t{dw} ";
+
+                lines.Add($"; {i:x2} : {song.Name}");
 
                 for (int chn = 0; chn < song.Channels.Length; ++chn)
                 {
-                    if (chn > 0)
-                        line += ",";
-                    line += $"{ll}song{i}ch{chn}";
+                    var channel = song.Channels[chn];
+                    if (channel.IsEPSMSquareChannel)
+                    {
+                        var channel_count = channel.Type - ChannelType.EPSMSquare1;
+                        lines.Add($"\t{iff} FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT > {channel_count}");
+                    }
+                    else if (channel.IsEPSMFmChannel)
+                    {
+                        var channel_count = channel.Type - ChannelType.EPSMFm1;
+                        lines.Add($"\t{iff} FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > {channel_count}");
+                    }
+                    else if (channel.IsEPSMRythmChannel)
+                    {
+                        var channel_id = channel.Type - ChannelType.EPSMrythm1 + 1;
+                        lines.Add($"\t{iff} FAMISTUDIO_EXP_EPSM_RHYTHM_CHN{channel_id}_ENABLE");
+                    }
+                    lines.Add($"\t{dw} {ll}song{i}ch{chn}");
+                    if (channel.IsEPSMChannel)
+                    {
+                        lines.Add($"\t{endif}");
+                    }
                 }
 
                 if (song.UsesFamiTrackerTempo)
@@ -207,16 +228,13 @@ namespace FamiStudio
                     int tempoPal  = 256 * song.FamitrackerTempo / (50 * 60 / 24);
                     int tempoNtsc = 256 * song.FamitrackerTempo / (60 * 60 / 24);
 
-                    line += $",{tempoPal},{tempoNtsc} ; {i:x2} : {song.Name}";
-                    lines.Add(line);
+                    lines.Add($"\t{dw} {tempoPal},{tempoNtsc}");
 
                     usesFamiTrackerTempo = true;
                 }
                 else
                 {
                     var grooveName = GetGrooveAsmName(song.Groove, song.GroovePaddingMode);
-                    line += $" ; {i:x2} : {song.Name}";
-                    lines.Add(line);
                     lines.Add($"\t{db} {lo}({ll}tempo_env_{grooveName}), {hi}({ll}tempo_env_{grooveName}), {(project.PalMode ? 2 : 0)}, 0"); 
                 }
 
