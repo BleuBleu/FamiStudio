@@ -123,12 +123,23 @@ namespace FamiStudio
             var val = param.GetValue();
             var valPrev = param.SnapAndClampValue(val - 1);
             var valNext = param.SnapAndClampValue(val + 1);
+            var valString = param.GetValueString();
             var opacity = paramEnabled ? 1.0f : 0.25f;
             var opacityL = paramEnabled && val != valPrev ? (hoverButtonIndex == -1 ? 0.6f : 1.0f) : 0.25f;
             var opacityR = paramEnabled && val != valNext ? (hoverButtonIndex ==  1 ? 0.6f : 1.0f) : 0.25f;
 
             c.DrawTextureAtlas(bmpLeft, 0, buttonOffsetY, bmpScale, Color.Black.Transparent(opacityL));
-            c.DrawText(param.GetValueString(), Fonts.FontMedium, buttonSizeX, 0, Color.Black.Transparent(opacity), TextFlags.MiddleCenter, labelWidth, height);
+
+            if (valString.StartsWith("img:"))
+            {
+                var img = c.Graphics.GetTextureAtlasRef(valString.Substring(4));
+                c.DrawTextureAtlasCentered(img, buttonSizeX, 0, labelWidth, height, 1, Color.Black);
+            }
+            else
+            {
+                c.DrawText(valString, Fonts.FontMedium, buttonSizeX, 0, Color.Black.Transparent(opacity), TextFlags.MiddleCenter, labelWidth, height);
+            }
+
             c.DrawTextureAtlas(bmpRight, buttonSizeX + labelWidth, buttonOffsetY, bmpScale, Color.Black.Transparent(opacityR));
         }
     }

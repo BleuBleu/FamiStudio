@@ -5,13 +5,11 @@
 		- Param list/slider/checkbox
 			- double-click behavior
 			- context menu to reset values, enter, etc.
-		x Selected instrument/arp/etc (make bold)
-		x When drawing envelope, if non-empty, need to undim the button.
+		- Make top tabs finals
+		- Make scrolling final (move clamping to Container?)
 		- Hook right click context menus.
-		x Hook tooltips.
 		- Hook folders
 		- Hook drags (envelope, reorders, folder, etc.)
-		x Show alternate expansion icons
 		- Review all calls to RecreateControls.
 		- Mobile stuff : white outlines, flings, etc.
 			- Look everywhere we used to do highlightedButtonIdx
@@ -21,13 +19,14 @@
 		- Timecode widget
 		- Special widget for tooltips?
 	- Android convert to our widgets, no more android native widgets.
-	- Misc :
-		-
+	- Add support for more international characeters, switch to Noto.
 	- To test : 
 		- Dialog ticks
 		- Toast tick
-		- 
--
+- Support for japanese/other characters regardless of current languages
+	- Switch all UI to Noto Sans
+	- Have a series of fallback fonts when searching for a glyph.
+- 
 
 Later
 =====

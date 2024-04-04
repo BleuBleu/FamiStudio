@@ -477,21 +477,22 @@ namespace FamiStudio
             }
         }
 
-        private void ConditionalCreateTopTabs()
+        private void CreateTopTabs()
         {
             if (Settings.ShowRegisterViewer)
             {
                 tabPanel = CreateGradientPanel(Theme.DarkGreyColor5, null, false);
-                var buttonProject   = new Button(null, "Hello1");
-                var buttonRegisters = new Button(null, "Hello2");
-                buttonProject.Border = true;
-                buttonProject.Transparent = true;
-                buttonProject.Move(0, 0, width / 2, panelSizeY);
-                buttonRegisters.Border = true;
-                buttonRegisters.Transparent = true;
-                buttonRegisters.Move(buttonProject.Width, 0, width - buttonProject.Width, panelSizeY);
-                tabPanel.AddControl(buttonProject);
-                tabPanel.AddControl(buttonRegisters);
+
+                var tabSizeX = width / (int)TabType.Count;
+                for (var i = 0; i < (int)TabType.Count; i++)
+                {
+                    var button = new Button(null, TabNames[0]);
+                    button.BoldFont = (int)selectedTab == i;
+                    button.Border = true;
+                    button.Transparent = true;
+                    button.Move(i * tabSizeX, 0, i == (int)TabType.Count - 1 ? width - tabSizeX * i : tabSizeX, panelSizeY);
+                    tabPanel.AddControl(button);
+                }
             }
             else
             {
@@ -499,7 +500,7 @@ namespace FamiStudio
             }
         }
 
-        private void ConditionalCreateMainContainer()
+        private void CreateMainContainer()
         {
             var scrollBarWidth = 0;
             var tabHeight = tabPanel != null ? tabPanel.Height : 0;
@@ -1166,8 +1167,8 @@ namespace FamiStudio
 
             RemoveAllControls();
 
-            ConditionalCreateTopTabs();
-            ConditionalCreateMainContainer();
+            CreateTopTabs();
+            CreateMainContainer();
 
             if (selectedTab == TabType.Project)
             {
@@ -1232,7 +1233,7 @@ namespace FamiStudio
                 {
                     for (int i = 0; i < inst.Envelopes.Length; i++)
                     {
-                        if (inst.Envelopes[i] != null)
+                        if (inst.Envelopes[i] != null && inst.IsEnvelopeVisible(i))
                         {
                             var env = inst.Envelopes[i];
                             var button = panel.FindControlByUserData(env) as Button;
