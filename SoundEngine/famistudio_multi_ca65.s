@@ -69,7 +69,7 @@
     FAMISTUDIO_CFG_EXTERNAL = 0
 .endif
 
-; [MULTI] BEGIN : Always enable all expansions (except EPSM), all the following code will assume that they are. 
+; [MULTI] BEGIN : Always enable all expansions (except EPSM and Rainbow), all the following code will assume that they are. 
 ; We dont care about memory/performance here.
 FAMISTUDIO_EXP_VRC6 = 1 
 FAMISTUDIO_EXP_VRC7 = 1 
@@ -266,6 +266,12 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 .ifndef FAMISTUDIO_EXP_VRC6
     FAMISTUDIO_EXP_VRC6 = 0
 .endif
+
+; [MULTI] BEGIN - Don't allow rainbow mapper since its just a VRC6 clone
+.if FAMISTUDIO_EXP_RAINBOW
+.error "Rainbow mapper is not enabled for multi expansion! Just use VRC6"
+.endif
+; [MULTI] END
 
 .ifndef FAMISTUDIO_EXP_VRC7
     FAMISTUDIO_EXP_VRC7 = 0
