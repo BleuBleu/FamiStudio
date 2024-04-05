@@ -2633,8 +2633,9 @@ famistudio_update_epsm_square_channel_sound:
     ; Store noise if mixer has it enabled
     ldx famistudio_epsm_square_env_table,y
     lda famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-    and famistudio_epsm_square_noise_mask,x
+    and famistudio_epsm_square_noise_mask,y
     bne @nonoise
+    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
     sta @noise_freq
 
 @nonoise:
@@ -3494,8 +3495,9 @@ famistudio_update_s5b_channel_sound:
     ; Store noise if mixer has it enabled
     ldx famistudio_s5b_env_table,y
     lda famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-    and famistudio_s5b_noise_mask,x
+    and famistudio_s5b_noise_mask,y
     bne @nonoise
+    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
     sta @noise_freq
 
 @nonoise:
