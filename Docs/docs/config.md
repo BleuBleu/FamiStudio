@@ -96,6 +96,8 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Mute piano roll interactions during playback** : When enabled, dragging/adding notes in the piano roll will not preview the notes when the song is playing. Some users find this distracting.
 
+* **Fully emulates when seeking** : When enabled, pressing Play will fully emulate the song from the very beginning to reach the desired play location, exactly as if it was playing for real. This is useful when using time-sensive effects such as phase resets. When this is disabled, FamiStudio takes a few shortcut to quickly play from the specified location. On CPU-intensive expansions, such as EPSM, it may take a couple of seconds before the song starts playing.
+
 * **Metronome volume** : Volume of the metronome.
 
 ## Mixer

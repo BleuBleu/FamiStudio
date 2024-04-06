@@ -254,30 +254,17 @@ On mobile, the same functionality is accessible by long pressing on the "Delete"
 
 ![](images/MobileDeleteSpecial.png#center)
 
-## Editing volume & effects
+## Editing Effects
 
-The effect panel can be opened by clicking the little triangle at the top-left of the piano roll. 
+The effect panel can be opened by clicking the little triangle at the top-left of the piano roll. On mobile you select the effect you want to edit using the [Quick Access Bar](basics.md#quick-access-bar-mobile-only) when in the Piano Roll.
 
-Here is the list of effects currently supported, note that not every effect is available on every channel:
+Effects are edited by selecting and effect and dragging up or down to change the value. Double-clicking on an effect value deletes it. For effects that have huge values (such as FDS Depth), they may change in a logarithmic way. You can also hold Shift to fine tune the exact value (a movement of 1 pixel will change the value by 1).
 
-* **Volume**: The overall volume of the channel.
-* **Vib Speed**: Vibrato speed, used in conjunction with vibrato depth to create a vibrato effect.
-* **Vib Depth**: Vibrato depth, used in conjunction with vibrato speed to create a vibrato effect.
-* **Pitch**: Allow tweaking the fine-pitch of a channel.
-* **Duty Cycle** : Allow changing the duty cycle of an instrument without using a duty cycle envelope (only instruments with no duty cycle envelopes will use the specified value).
-* **FDS Speed**: Famicom Disk System audio modulation speed (FDS audio expansion only).
-* **FDS Depth**: Famicom Disk System audio modulation depth (FDS audio expansion only).
-* **Speed**: Changes the speed of the song (FamiTracker tempo mode only)
-* **Note Delay**: Number of frames to delay the current note (FamiTracker tempo mode only)
-* **Cut Delay**: Stop the note after the specified number of frames (FamiTracker tempo mode only)
-
-Effects are edited by selecting and effect and dragging up or down to change the value. Right-clicking on an effect value deletes it. 
-
-For effects that have huge values (such as FDS Depth), you can hold Shift to fine tune the exact value (a movement of 1 pixel will change the value by 1).
+Here are all the effects that are supported, note that not every effect is available on every channel. Some are even specific to certain expansions or tempo modes.
 
 ![](images/VolumeTrack.png#center)
 
-### Volume track
+### Volume 
 
 The volume tracks dictates how loud the current channel should play. This volume is combined with volume envelope by multiplication (50% volume track x 50% envelope volume = 25% total volume). It is much more efficient to use volume envelopes wherever possible and only use volume tracks to control the global volume of the song.
 
@@ -293,11 +280,32 @@ On mobile, a volume slide is created by long pressing on a volume value and sele
 
 ![](images/MobileVolumeSlide.gif#center)
 
-### Vibrato depth & speed
+### Vibrato Depth & Speed
 
 Vibrato depth and speed are used to add vibrato to a portion of the song without having to bother creating a new instrument. Please note that vibrato will temporarily override any pitch envelope on the current instrument. When vibrato is disabled (by setting depth or speed, or both to zero), the instrument will essentially have no pitch envelope until a new note is played.
 
-The depth values for the vibrato are identical to FamiTracker but the speeds are slightly different. The way FamiTracker implements vibrato, while clever, is flawed as it undersamples the vibrato curve at high speed, leading to aliasing which ends up with a low-frequency tone that has a "ringing" sound to it. Please see the [Export](export.md) page for a table that maps between FamiStudio and FamiTracker.
+The depth values for the vibrato are identical to FamiTracker but the speeds are slightly different. Please see the [Export](export.md) page for a table that maps between FamiStudio and FamiTracker.
+
+In its current implementation, changing the speed/depth of the vibrato is likely to result in a "pop" since it will restart the vibrato envelope, a sine wave, from the start. That being said, if you want to do it, it is possible if you carefully take the number of frames of a full cycle into account and change it at the exact right time. It will be tedious to setup, but it can be done.
+
+Here is a table the period (in frame) for each value of the vibrato speed effect.
+
+Vibrato Speed | Period (in frames)
+--- | ---
+1 | 64
+2 | 32
+3 | 21
+4 | 16
+5 | 13
+6 | 11
+7 | 9
+8 | 8
+9 | 7
+10 | 6
+11 | 5
+12 | 4
+
+For example, if you start a vibrato at speed 5, you can change it seamlessly every 13 frame since you will be at the beginning of the cycle.
 
 ### Pitch 
 
@@ -314,3 +322,31 @@ This changes the speed parameter of the FamiTracker tempo settings and is only a
 ### Note and Cut delay
 
 Note delays allows delaying the moment a note is played by a few frames while cut delay will stop a note after a few frames. This also is only available in FamiTracker tempo mode. Please refer to the [Editing Songs & Project](song.md) section for more information about tempo management.
+
+### DAC (DPCM channel only)
+
+Unique to the DPCM channel, can be used to manually set the current DAC value. Can be usefull to artifically create "pop" sounds without any samples or to slightly affect the volume of the noise/triangle channels due to the non-linear mixing of the NES/Famicom.
+
+### Phase Reset 
+
+On supported channels, will reset the phase if this effect is present. Can be used to make sure 2 channels have their waveform perfectly aligned and create creative/destructive interference. Note that is recommended to use the [Fully emulate when seeking](config.md#sound-configuration) option when working with phase reset. Note that phase resets are extremely time sensitive and may not sound exactly the same in-app and on real hardware/emulators, and the exact timing may even change in future versions.
+
+### FDS Modulation Speed / Depth (FDS expansion only)
+
+These are only available when using the FDS audio expansion. These can be used to change the modulation speed/depth. Note that instruments that use Auto-Modulation cannot have their speed changed manually. 
+
+Also, instrument will contantly reset their modulation speed/depth to the values of the instrument on every note with an attack. In other words, it will loose its effect on every note attack and will need to be re-set to override the instrument.
+
+### Env Period (Sunsoft 5B and EPSM squares only)
+
+Controls the pitch/period of the envelope for instruments that have it enabled and dont use the Auto-Pitch feature. Note that since envelope is shared accross all 3 channel, this effect may have impact on the other square channels.
+
+Also, instrument with envelope enabled will contantly reset the envelope frequency to the values of the instrument on every note with an attack. In other words, it will loose its effect on every note attack and will need to be re-set to override the instrument.
+
+### Speed (Famitracker-Tempo only)
+
+Changes the "speed" parameter of the FamiTracker tempo.
+
+### Note Delay and Cut Delay (Famitracker-Tempo only)
+
+These 2 effects are used to offset note starts and end respectively, by a specific number of frames. This is the main way to achieve frame granularity when using FamiTracker tempo. For example, a note delay of 2 will trigger that note 2 frames later than normal.
