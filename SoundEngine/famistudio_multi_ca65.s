@@ -108,6 +108,9 @@ FAMISTUDIO_EXP_N163 = 1
 ; Konami VRC6 (2 extra square + saw)
 ; FAMISTUDIO_EXP_VRC6          = 1 
 
+; Rainbow-Net (homebrew clone of VRC6)
+; FAMISTUDIO_EXP_RAINBOW       = 1
+
 ; Konami VRC7 (6 FM channels)
 ; FAMISTUDIO_EXP_VRC7          = 1 
 
@@ -263,15 +266,17 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 ; INTERNAL DEFINES (Do not touch)
 ;======================================================================================================================
 
+.ifndef FAMISTUDIO_EXP_RAINBOW
+    FAMISTUDIO_EXP_RAINBOW = 0
+.endif
+
+.if FAMISTUDIO_EXP_RAINBOW
+    FAMISTUDIO_EXP_VRC6 = 1
+.endif
+
 .ifndef FAMISTUDIO_EXP_VRC6
     FAMISTUDIO_EXP_VRC6 = 0
 .endif
-
-; [MULTI] BEGIN - Don't allow rainbow mapper since its just a VRC6 clone
-.if FAMISTUDIO_EXP_RAINBOW
-.error "Rainbow mapper is not enabled for multi expansion! Just use VRC6"
-.endif
-; [MULTI] END
 
 .ifndef FAMISTUDIO_EXP_VRC7
     FAMISTUDIO_EXP_VRC7 = 0
@@ -1079,6 +1084,17 @@ FAMISTUDIO_APU_DMC_LEN    = $4013
 FAMISTUDIO_APU_SND_CHN    = $4015
 FAMISTUDIO_APU_FRAME_CNT  = $4017
 
+.if FAMISTUDIO_EXP_RAINBOW
+FAMISTUDIO_VRC6_PL1_VOL   = $41a0
+FAMISTUDIO_VRC6_PL1_LO    = $41a1
+FAMISTUDIO_VRC6_PL1_HI    = $41a2
+FAMISTUDIO_VRC6_PL2_VOL   = $41a3
+FAMISTUDIO_VRC6_PL2_LO    = $41a4
+FAMISTUDIO_VRC6_PL2_HI    = $41a5
+FAMISTUDIO_VRC6_SAW_VOL   = $41a6
+FAMISTUDIO_VRC6_SAW_LO    = $41a7
+FAMISTUDIO_VRC6_SAW_HI    = $41a8
+.else
 FAMISTUDIO_VRC6_PL1_VOL   = $9000
 FAMISTUDIO_VRC6_PL1_LO    = $9001
 FAMISTUDIO_VRC6_PL1_HI    = $9002
@@ -1088,6 +1104,7 @@ FAMISTUDIO_VRC6_PL2_HI    = $a002
 FAMISTUDIO_VRC6_SAW_VOL   = $b000
 FAMISTUDIO_VRC6_SAW_LO    = $b001
 FAMISTUDIO_VRC6_SAW_HI    = $b002
+.endif
 
 FAMISTUDIO_VRC7_SILENCE   = $e000
 FAMISTUDIO_VRC7_REG_SEL   = $9010

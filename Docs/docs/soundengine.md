@@ -182,6 +182,9 @@ You can only enable one audio expansion (`FAMISTUDIO_EXP_XXX`). Enabling more th
     ; Konami VRC6 (2 extra square + saw)
     FAMISTUDIO_EXP_VRC6          = 1 
 
+    ; Rainbow-Net mapper (homebrew clone of VRC6)
+    FAMISTUDIO_EXP_RAINBOW       = 1
+
     ; Konami VRC7 (6 FM channels)
     FAMISTUDIO_EXP_VRC7          = 1 
 
@@ -197,6 +200,8 @@ You can only enable one audio expansion (`FAMISTUDIO_EXP_XXX`). Enabling more th
     ; Namco 163 (between 1 and 8 extra wavetable channels) + number of channels.
     FAMISTUDIO_EXP_N163          = 1 
     FAMISTUDIO_EXP_N163_CHN_CNT  = 4
+
+For more information on the Rainbow Mapper, [check the documentation here](https://github.com/BrokeStudio/rainbow-net)
 
 ### 3. Global Engine Configuration
 
