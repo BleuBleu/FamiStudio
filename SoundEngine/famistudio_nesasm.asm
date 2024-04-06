@@ -6852,20 +6852,20 @@ famistudio_note_table_msb:
     famistudio_exp_note_table_lsb:
     famistudio_epsm_s_note_table_lsb:
         .byte $00
-        .byte $fa, $4b, $b5, $35, $cb, $75, $32, $02, $e2, $d3, $d2, $e1 ; Octave 0
-        .byte $fd, $25, $5a, $9a, $e5, $3a, $99, $00, $71, $e9, $69, $f0 ; Octave 1
-        .byte $7e, $12, $ac, $4c, $f2, $9c, $4c, $00, $b8, $74, $34, $f7 ; Octave 2
-        .byte $be, $89, $56, $26, $f8, $ce, $a5, $7f, $5b, $39, $19, $fb ; Octave 3
-        .byte $df, $c4, $aa, $92, $7c, $66, $52, $3f, $2d, $1c, $0c, $fd ; Octave 4
-        .byte $ef, $e1, $d5, $c9, $bd, $b3, $a9, $9f, $96, $8e, $86, $7e ; Octave 5
-        .byte $77, $70, $6a, $64, $5e, $59, $54, $4f, $4b, $46, $42, $3f ; Octave 6
-        .byte $3b, $38, $34, $31, $2f, $2c, $29, $27, $25, $23, $21, $1f ; Octave 7
+        .byte $dd, $2f, $9a, $1c, $b3, $5f, $1d, $ee, $d0, $c1, $c2, $d2 ; Octave 0
+        .byte $ee, $18, $4d, $8e, $da, $2f, $8f, $f7, $68, $e1, $61, $e9 ; Octave 1
+        .byte $77, $0c, $a7, $47, $ed, $98, $47, $fc, $b4, $70, $31, $f4 ; Octave 2
+        .byte $bc, $86, $53, $24, $f6, $cc, $a4, $7e, $5a, $38, $18, $fa ; Octave 3
+        .byte $de, $c3, $aa, $92, $7b, $66, $52, $3f, $2d, $1c, $0c, $fd ; Octave 4
+        .byte $ef, $e1, $d5, $c9, $be, $b3, $a9, $9f, $96, $8e, $86, $7f ; Octave 5
+        .byte $77, $71, $6a, $64, $5f, $59, $54, $50, $4b, $47, $43, $3f ; Octave 6
+       .byte $3c, $38, $35, $32, $2f, $2d, $2a, $28, $26, $24, $22, $20 ; Octave 7
     famistudio_exp_note_table_msb:
     famistudio_epsm_s_note_table_msb:
         .byte $00
-        .byte $1d, $1c, $1a, $19, $17, $16, $15, $14, $12, $11, $10, $0f ; Octave 0
-        .byte $0e, $0e, $0d, $0c, $0b, $0b, $0a, $0a, $09, $08, $08, $07 ; Octave 1
-        .byte $07, $07, $06, $06, $05, $05, $05, $05, $04, $04, $04, $03 ; Octave 2
+        .byte $1d, $1c, $1a, $19, $17, $16, $15, $13, $12, $11, $10, $0f ; Octave 0
+        .byte $0e, $0e, $0d, $0c, $0b, $0b, $0a, $09, $09, $08, $08, $07 ; Octave 1
+        .byte $07, $07, $06, $06, $05, $05, $05, $04, $04, $04, $04, $03 ; Octave 2
         .byte $03, $03, $03, $03, $02, $02, $02, $02, $02, $02, $02, $01 ; Octave 3
         .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $00 ; Octave 4
         .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
