@@ -5,8 +5,7 @@ x FDS auto-modulation support
 x FDS emulation improvements : Proper filtering, DAC emulation & fixes.
 x Phase reset support
 x Accurate seek support (fully emulate entire song from start, useful for phase resets)
-- Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
-	- Be sure to mention the new "hollow" attack icon.
+x Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
 - Folders support in Project Explorer
 - More filtering options for audio expansions & ability to store settings in project
 - Support for up to 256 instruments (for both regular and expansion) in sound engine

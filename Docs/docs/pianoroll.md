@@ -166,11 +166,9 @@ On mobile, the snapping precision is set from the Quick Access Bar, on the right
 
 ## Note attack
 
-By default, notes will have an "attack" which mean they will restart their envelopes (volume, pitch, etc.) from the beginning. This is represented by the little dark rectangle on the left of each note. 
+By default, notes will have an "attack" which mean they will restart their envelopes (volume, pitch, etc.) from the beginning. This is represented by the little dark rectangle on the left of each note. For FM instruments this mean re-triggering their ADSR envelopes.
 
 The attack can be toggled for a particular note by selecting the "Toggle Attack" option from the note context menu. Alternatively, you can hold **A** and click on a note to toggle its attack. Similarly, on mobile, toggling the note attack is done by long pressing on a note and selecting "Toggle Attack".
-
-Note that if a note does not use the same instrument as the previous one, the attack will still play, even if disabled. Also please note that this will generally not carry over to FamiTracker, besides specific use cases around slide notes.
 
 In this example, the first note will have an attack, while the second one will not.
 
@@ -179,6 +177,17 @@ In this example, the first note will have an attack, while the second one will n
 Since envelopes are not reset, this means that if a note was released, it will remain released if the subsequent notes have no attack.
 
 ![](images/NoAttackReleased.png#center)
+
+There are a few rules on when attacks can be disabled:
+
+1. You can disable the attack if the note uses the same instrument as the previous note.
+2. You can disable the attack if the instruments are different, but have **perfectly identical envelopes**. This is useful on FM channels (VRC7 or EPSM) to change patch mid-note. Note that N163 does not support this, instruments must be the same.
+
+Failure to follow these rules will display a "hollow" attack, indicating that you broke one of the 2 rules. In the example below, the green instrument did not have identical envelopes. We will be trying to relax these rules further in future versions to allow more use-cases.
+
+![](images/NoAttackError.png#center)
+
+Finally, please note that this will generally not carry over to FamiTracker when exporting, besides specific use cases around slide notes.
 
 ## Slide notes
 
