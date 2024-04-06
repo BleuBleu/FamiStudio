@@ -140,9 +140,10 @@ The parameters are:
 The Sunsoft 5B expansion adds 3 square channels which can have noise and/or an envelope added to it. 
 
 For each channel, each of those features can be enabled or not:
-* Tone : If enabled, will produce a square wave with 50% duty cycle, other will output a flat value equal to the volume.
-* Noise : If enabled, will add a noise which frequency is driven by the "Noise Frequency" envelope
-* Envelope : If enabled, the volume will be entirely controlled by the envelope. You can choose various envelope shapes, some repeating and some non-repeating.
+
+* **Tone** : If enabled, will produce a square wave with 50% duty cycle, other will output a flat value equal to the volume.
+* **Noise** : If enabled, will add a noise which frequency is driven by the "Noise Frequency" envelope
+* **Envelope** : If enabled, the volume will be entirely controlled by the envelope. You can choose various envelope shapes, some repeating and some non-repeating.
 
 Tone and Noise are enabled in the Mixer envelope, where "N" means "Noise" and "T" means "Tone". Disabling both will output a flat value equal to the volume and will display a dash "-". 
 
