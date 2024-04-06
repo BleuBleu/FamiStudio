@@ -151,11 +151,11 @@ Tone and Noise are enabled in the Mixer envelope, where "N" means "Noise" and "T
 
 Envelope is set on the instrument itself and is considered enabled if it is set to anything other than "Off".
 
-One important thing to understand the noise and envelope features is that they are **shared across all 3 channels**. This mean, for example, that if an 2 instruments on different 5B channels both try to use different envelopes, they will fight against each other. The last channel will always dominate (channel 3 > channel 2 > channel 1). Also, even if 2 channels both use the same envelope with the same settings, the note attacks of either channels will reset the envelopes. 
+One important thing to understand about the noise and envelope features is that they are **shared across all 3 channels**. This mean, for example, that if an 2 instruments on different 5B channels both try to use different envelopes, they will fight against each other. The last channel will always dominate (channel 3 > channel 2 > channel 1). Also, even if 2 channels both use the same envelope with the same settings, the note attacks of either channels will reset the envelopes. 
 
 For noise, the same rule applies when it comes to its frequency. If a channel has the noise feature enable it its mixer envelope, it will set the noise frequency for **all channels that uses noise**. The last channel to be updated will also have the last word.
 
-Non repeating envelope can be used to simulate note attacks, while repeating envelopes can be used to make a crude bass instrument. Instruments can opt-in the **Auto-Pitch** feature which will set the frequency of the envelope relative to the frequency of the note being played. Since the hardware uses very few bits to encode the pitch, repeating envelopes will sound out of tune if you try to play high notes. Instruments that dont opt-in the **Auto-Pitch** feature can control the pich manually on the instrument or with the **Env Period** effect track. 
+Non repeating envelope can be used to simulate note attacks, while repeating envelopes can be used to make a crude bass instrument. Instruments can opt-in the **Auto-Pitch** feature which will set the frequency of the envelope relative to the frequency of the note being played. Since the hardware uses very few bits to encode the pitch, repeating envelopes will sound out of tune if you try to play high pitched notes. Instruments that dont opt-in the **Auto-Pitch** feature can control the pich manually on the instrument or with the **Env Period** effect track. 
 
 ![](images/S5B.png#center)
 
