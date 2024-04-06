@@ -196,6 +196,7 @@ namespace FamiStudio
             }
 
             glfwMakeContextCurrent(window);
+            glfwSetWindowSizeLimits(window, 400, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
             glfwSwapInterval(1);
 
             return new FamiStudioWindow(fs, window);
