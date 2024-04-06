@@ -385,8 +385,8 @@ namespace FamiStudio
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(7 + i2)] & 0x0f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(7 + i2)] = (byte)((instrument.EpsmPatchRegs[(7 + i2)] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvEnLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x08) >> 3)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x08) >> 3; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x08)) | ((v << 3) & 0x08)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x07) >> 0)
-                            { GetValue = () => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; }, TabName = tabName });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x07) >> 0, null, true)
+                            { GetValue = ()  => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x07) >> 0; }, GetValueString = () => { return $"img:S5BEnvelope{((instrument.EpsmPatchRegs[(8 + i2)] & 0x07) >> 0) + 8:X1}"; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         if (i == 0)
                         {
                             paramInfos.Add(new InstrumentParamInfo(instrument, FeedbackLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[0] & 0x38) >> 3)
