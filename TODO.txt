@@ -1,22 +1,12 @@
 4.2.0
 =====
 - Change discord invite link
-/ Switch to .NET for Android too.
-	- Bring back APK
-- NSF/FS comparison bugs:
-	- N163 : Sound OK, but gets out of phase at the first slide note and remains like that. This is normal, this is due to slide notes not being able to be approximated correctly with fine pitch. 
-	- VRC7 : Very slight pitch issue due to pitch shift (3) used on VRC7 and how we look for best matching note.
-	- FT Tempo : The slides are too fast in NSF almost all channels.
 
 4.2.0 Testing/Packaging
 =======================
 - Dont publish for chromebooks
 - Documentation for all new features
 - Test MacOS .NET startup script.
-
-Later
-=====
-- Borrow TNS-HFC3 from forple in sept/oct.
 
 dotnet publish
 ==============
@@ -115,6 +105,10 @@ Discord
 
 Backlog: 
 =========
+- NSF/FS comparison bugs:
+	- N163 : Sound OK, but gets out of phase at the first slide note and remains like that. This is normal, this is due to slide notes not being able to be approximated correctly with fine pitch. 
+	- VRC7 : Very slight pitch issue due to pitch shift (3) used on VRC7 and how we look for best matching note.
+	- FT Tempo : The slides are too fast in NSF almost all channels.
 - Project cleanup : organize insturments/folders by expansion
 - Android media player notification option
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
