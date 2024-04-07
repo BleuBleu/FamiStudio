@@ -33,7 +33,11 @@ On desktop, **Left-clicking** in the piano roll will add a note of the currently
  
 ![](images/CreateNote.gif#center)
 
-Similarly, on mobile, notes are created by a quick tap and deleted by **double-tapping**.
+Another way to delete multiple notes is to use the **Eraser Mode** which is accessed by simply holding and dragging the mouse after a **Double-clicking** or a **Shift+click**. The cursor will turn into a pencil eraser, allowing you to quickly delete notes.
+
+![](images/EraserMode.gif#center)
+
+Similarly, on mobile, notes are created by a quick tap and deleted by **double-tapping**. **Eraser Mode** is activated by holding and dragging your finger after deleting the first note.
 
 ![](images/MobileCreateNote.gif#center)
 
