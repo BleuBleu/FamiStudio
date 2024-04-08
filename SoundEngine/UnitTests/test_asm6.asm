@@ -19,11 +19,12 @@ famistudio_dpcm_bank_callback:
 ; CODE
 .org $8100
 FAMISTUDIO_CFG_EXTERNAL   = 1
+FAMISTUDIO_ASSEMBLER_ASM6F = 1
 FAMISTUDIO_ASM6_ZP_ENUM   = $0000
 FAMISTUDIO_ASM6_BSS_ENUM  = $0300
 FAMISTUDIO_ASM6_CODE_BASE = $8100
 .include "test_defs.inc"
-.include "..\famistudio_asm6.asm"
+.include "../famistudio.s"
 
 ; VECTORS
 .org $fffA
