@@ -2657,7 +2657,7 @@ namespace FamiStudio
 
         private float GetSliderExponent(Button button)
         {
-            return 1.0f / (button.param.GetMaxValue() >= 4095 ? 4 : 1);
+            return 1.0f / (button.param.Logarithmic ? 4 : 1);
         }
 
         bool UpdateSliderValue(Button button, int x, int y, bool mustBeInside)
