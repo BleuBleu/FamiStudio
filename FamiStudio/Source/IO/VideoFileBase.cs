@@ -352,7 +352,9 @@ namespace FamiStudio
             Log.LogMessage(LogSeverity.Info, "Generating video metadata...");
             metadata = new VideoMetadataPlayer(SampleRate, song.Project.PalMode, song.Project.OutputsStereoAudio, showRegisters, 1).GetVideoMetadata(song, -1);
 
-            oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
+            DpiScaling.ForceUnitScaling = true;
+
+            oscFrameWindowSize = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
             oscRenderWindowSize = (int)(oscFrameWindowSize * settings.OscWindow);
 
             BuildChannelColors(song, channelStates, metadata, settings.OscColorMode);
@@ -574,8 +576,6 @@ namespace FamiStudio
 
         protected void LoadChannelIcons(bool large)
         {
-            DpiScaling.ForceUnitScaling = true;
-
             var suffix = large ? "@2x" : "";
 
             foreach (var s in channelStates)
