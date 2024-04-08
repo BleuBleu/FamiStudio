@@ -185,7 +185,7 @@ Since envelopes are not reset, this means that if a note was released, it will r
 There are a few rules on when attacks can be disabled:
 
 1. You can disable the attack if the note uses the same instrument as the previous note.
-2. You can disable the attack if the instruments are different, but have **perfectly identical envelopes**. This is useful on FM channels (VRC7 or EPSM) to change patch mid-note. Note that N163 does not support this, instruments must be the same.
+2. You can disable the attack if the instruments are different, but have **identical envelopes**. This is useful on FM channels (VRC7 or EPSM) to change patch mid-note. Note that N163 does not support this, instruments must be the same.
 
 Failure to follow these rules will display a "hollow" attack, indicating that you broke one of the 2 rules. In the example below, the green instrument did not have identical envelopes. We will be trying to relax these rules further in future versions to allow more use-cases.
 
