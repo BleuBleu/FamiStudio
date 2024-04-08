@@ -574,6 +574,8 @@ namespace FamiStudio
 
         protected void LoadChannelIcons(bool large)
         {
+            DpiScaling.ForceUnitScaling = true;
+
             var suffix = large ? "@2x" : "";
 
             foreach (var s in channelStates)
