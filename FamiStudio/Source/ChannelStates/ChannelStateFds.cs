@@ -80,6 +80,7 @@ namespace FamiStudio
             {
                 var period = GetPeriod();
                 var volume = GetVolume();
+                var instrument = note.Instrument;
 
                 var periodHi = (period >> 8) & 0x0f;
                 prevPeriodHi = periodHi;
@@ -95,16 +96,16 @@ namespace FamiStudio
                     // WriteRegister(NesApu.FDS_MOD_HI, 0x80);
                     // WriteRegister(NesApu.FDS_SWEEP_BIAS, 0);
 
-                    if (note.Instrument != null)
+                    if (instrument != null)
                     {
-                        Debug.Assert(note.Instrument.IsFds);
-                        modDelayCounter = note.Instrument.FdsModDelay;
+                        Debug.Assert(instrument.IsFds);
+                        modDelayCounter = instrument.FdsModDelay;
                         
                         // If there was a mod depth/speed this frame, it takes over the instrument.
                         if (!modDepthEffect)
-                            modDepth = note.Instrument.FdsModDepth;
+                            modDepth = instrument.FdsModDepth;
                         if (!modSpeedEffect)
-                            modSpeed = note.Instrument.FdsModSpeed;
+                            modSpeed = instrument.FdsModSpeed;
                     }
                     else
                     {
@@ -114,8 +115,8 @@ namespace FamiStudio
 
                 if (modDelayCounter == 0)
                 {
-                    var finalModSpeed = note.Instrument.FdsAutoMod && modDepth > 0 ?
-                        (ushort)Math.Min(period * note.Instrument.FdsAutoModNumer / note.Instrument.FdsAutoModDenom, 0xfff) : 
+                    var finalModSpeed = instrument != null && instrument.FdsAutoMod && modDepth > 0 ?
+                        (ushort)Math.Min(period * instrument.FdsAutoModNumer / instrument.FdsAutoModDenom, 0xfff) : 
                         modSpeed;
 
                     WriteRegister(NesApu.FDS_MOD_HI, (finalModSpeed >> 8) & 0xff);

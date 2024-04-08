@@ -495,6 +495,7 @@ namespace FamiStudio
                     else
                     {
                         page.AddLabel(null, RequireFFMpegLabel, true);
+                        canExportToVideo = false;
                     }
                     break;
                 case ExportFormat.Nsf:

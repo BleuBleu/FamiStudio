@@ -1,3 +1,16 @@
+Beta 2 fixes:
+* Fixed crash if trying to export without FFMPEG on desktop
+* Fixed multiple FDS-related crashes
+* Fixed scrolling issue in Piano Roll video export
+* Fixed ugly label in register viewer
+* Fixed overly large icons/piano in videos
+* Fixed EPSM square note table in NSF/ROM.
+* Fixed NSF import of EPSM FM instruments (thanks Perkka)
+* Set minimum window size on desktop.
+* SSG envelope is now graphics (thanks alex)
+* Only FDS mod speed + S5B/EPSM envelope period sliders are now logarithmic
+* Typos & doc fixes
+
 4.2.0 Documentation
 ====================
 x S5B envelope support (S5B & EPSM)

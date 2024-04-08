@@ -21,15 +21,16 @@ namespace FamiStudio
             {
                 var period = GetPeriod();
                 var volume = GetVolume();
+                var instrument = note.Instrument;
                 var sawMasterVolume = Vrc6SawMasterVolumeType.Full;
 
                 var periodHi = ((period >> 8) & 0x0f);
                 prevPeriodHi = periodHi;
 
-                if (note.Instrument != null)
+                if (instrument != null)
                 {
-                    Debug.Assert(note.Instrument.IsVrc6);
-                    sawMasterVolume = note.Instrument.Vrc6SawMasterVolume;
+                    Debug.Assert(instrument.IsVrc6);
+                    sawMasterVolume = instrument.Vrc6SawMasterVolume;
                 }
 
                 WriteRegister(NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
