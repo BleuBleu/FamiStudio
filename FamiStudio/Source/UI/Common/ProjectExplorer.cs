@@ -1269,7 +1269,7 @@ namespace FamiStudio
                     var value = reg.GetValue().ToString();
                     var flags = reg.Monospace ? TextFlags.Middle | TextFlags.Monospace : TextFlags.Middle;
 
-                    c.DrawText(label, Fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle | TextFlags.Monospace, 0, regSizeY);
+                    c.DrawText(label, Fonts.FontSmall, buttonTextNoIconPosX, 0, Theme.LightGreyColor2, TextFlags.Middle, 0, regSizeY);
                     c.DrawText(value, Fonts.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, Theme.LightGreyColor2, flags, 0, regSizeY);
                 }
                 else

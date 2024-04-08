@@ -21,6 +21,7 @@ x Allow disabling attack on notes if all instrument envelopes matches (useful fo
 =====
 - Change discord invite link
 - BUG : Linux warning when quitting that we didnt close the audio device.
+- Double check CA65/Multi diffs for rainbow.
 
 4.2.0 Testing/Packaging
 =======================
