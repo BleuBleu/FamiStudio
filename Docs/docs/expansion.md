@@ -202,6 +202,6 @@ Optionally, the "Normalize" option will adjust the volume to use the full range 
 
 Any manual modification to the waveform will switch the instrument to the "Custom" profile and disable resampling entirely.
 
-Pro-tip : You can hold **Ctrl** while using the sliders in the project explorer more more accurate scrolling.
+Pro-tip : You can hold **Ctrl** while using the sliders in the project explorer to scroll more accurately.
 
 ![](images/Resample.gif#center)
