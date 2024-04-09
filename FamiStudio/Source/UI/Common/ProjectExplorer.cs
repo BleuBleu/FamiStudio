@@ -1614,7 +1614,7 @@ namespace FamiStudio
                                 {
                                     c.DrawTextureAtlas(bmp, x, subButtonPosY, ((activeMask & (1 << j)) != 0 ? 1.0f : 0.2f) * hoverOpacity, bitmapScale, tint);
 
-                                    if (highlighted && sub < SubButtonType.EnvelopeMax)
+                                    if (highlighted && (sub < SubButtonType.EnvelopeMax || sub == SubButtonType.DPCM))
                                         c.DrawRectangle(x, subButtonPosY, x + iconSize - 4, subButtonPosY + iconSize - 4, Theme.WhiteColor, 3, true, true);
                                 }
                             }
@@ -4799,6 +4799,11 @@ namespace FamiStudio
                     {
                         envelopeDragIdx = (int)subButtonType;
                         StartCaptureOperation(x, y, CaptureOperation.DragInstrumentEnvelope, buttonIdx, buttonRelX, buttonRelY);
+                    }
+                    else if (subButtonType == SubButtonType.DPCM)
+                    {
+                        envelopeDragIdx = -1;
+                        StartCaptureOperation(x, y, CaptureOperation.DragInstrumentSampleMappings, buttonIdx, buttonRelX, buttonRelY);
                     }
                     else if (subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx, buttonRelX, buttonRelY))
                     {
