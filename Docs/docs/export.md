@@ -26,17 +26,17 @@ Channels can optionally be muted. This can be used, for example, to create stere
 
 OGG Vorbis is currently only available on the desktop version of FamiStudio.
 
-## Video (Piano Roll and Oscilloscope)
+## Video
 
 Video export is a great way to add a visual element to your songs when sharing them on YouTube/social media. For this to work, you will need to [manually download FFmpeg](ffmpeg.md) and extract it somewhere on your computer. 
 
-Example of the piano roll format:
-![](images/VideoScreenshot.jpg#center)
-
-Example of the oscilloscope format:
-![](images/VideoOscScreenshot.jpg#center)
-
 ![](images/ExportVideo.png#center)
+
+There are 3 main video modes:
+
+* **Oscilloscope** : A grid of oscilloscope, one per channel.
+* **Piano Roll (Separate Channels)** : A grid of piano rolls, one per channel.
+* **Piano Roll (Unified)** : A single piano roll containing all channels.
 
 Besides the audio/video quality settings, there are a few options to control the look and feel of the video:
 
@@ -44,16 +44,35 @@ Besides the audio/video quality settings, there are a few options to control the
 * **Loop count** : Number of times to repeat the looping part of the song.
 * **Stereo** : Same as WAV/MP3/OGG.
 * **Channels** : It is recommended to not export channels that do not have any notes, this will leave more space to the other channels.
+* **Overlay Register Values** : Will draw the register viewer in the top-right corner of the video.
 
 Options specific to piano roll video:
 
-* **Piano roll zoom** : The higher the zoom, the faster notes will scroll by. 
+* **Piano Roll Note Width** : Width of the piano roll keys. 
+* **Piano Roll Zoom** : The higher the zoom, the faster notes will scroll by. 
+* **Piano Roll Rows** : The number of rows to have in separate channel mode.
+* **Piano Roll 3D Perspective** : If > 0, will add a 3D perspective effect with a slight depth-of-field effect.
 
 Options specific to oscilloscope video:
 
 * **Oscilloscope Columns** : Number of columns to split the channels into.
 * **Oscilloscope Thickness** : Thickness of the oscilloscope line, in pixels.
+* **Oscilloscope Window** : The number of frames the oscilloscope should contain.
 * **Oscilloscope Color** : Can color the oscilloscope using the colors of the instruments or samples. Otherwise will use a neutral light grey. 
+
+Example of the piano roll format with 3D effect and overlaid register values.
+![](images/VideoScreenshot.jpg#center)
+
+Example of the oscilloscope format:
+![](images/VideoOscScreenshot.jpg#center)
+
+### Video Preview
+
+On desktop, you can can get a rough preview of the video by pressing the "Preview" button which is located at the bottom of all the video settings.
+
+On mobile, the "Preview" button is accessed by pressing the "..." button 
+
+![](images/MobileVideoPreview.gif#center)
 
 ## Nintendo Sound Format (NSF)
 
@@ -113,7 +132,10 @@ At the bottom of the dialog is the instrument table. This is where you can assig
 
 Songs can be exported to VGM files for supported sound expansions, VGM files are basically a log of the writes being sent to the various sound chips.
 
+![](images/ExportVgm.png#center)
+
 The expansions that's supported by the VGM file format is:
+
 * **NES APU**
 * **FDS**
 * **VRC7**

@@ -32,23 +32,29 @@ The basic feature set that is always available in engine is:
 
 Features that can be toggled on/off depending on the needs of your projects:
 
-* Audio expansions chips (at most one can be enabled) : VRC6, VRC7, FDS, S5B and N163.
-* PAL/NTSC playback support.
-* DPCM sample support
+* Audio expansions chips (at most one can be enabled) : VRC6/Rainbow Mapper, VRC7, FDS, S5B, MMC5, EPSM or N163
+* PAL/NTSC playback
+* DPCM sample
+* DPCM bankswitching
+* DPCM extended range (up to 256 unique DPCM sample mappings)
+* Extended instrument range (up to 256 instruments per export)
 * Sound effect support (with configurable number of streams)
 * Blaarg Smooth Vibrato technique to eliminate "pops" on square channels
-* FamiTracker/FamiStudio tempo mode.
-* Release notes support
-* Volume track support.
+* FamiTracker/FamiStudio tempo mode
+* Release notes
+* Volume track
 * Volume slides
-* Fine pitch track support.
-* Slide notes.
-* Slide notes (noise channel).
-* Vibrato effect.
-* Arpeggios (not to be confused with arpeggio instrument envelopes which are always enabled).
+* Fine pitch track support
+* Slide notes
+* Slide notes (noise channel)
+* Noise slide ntoes
+* Vibrato effect
+* Arpeggios (not to be confused with arpeggio instrument envelopes which are always enabled)
 * Duty cycle effect track
 * Delayed notes/cuts (only when FamiTracker tempo is enabled)
 * Delta counter effect track
+* Phase reset support
+* FDS auto-modulation support
 
 ## RAM/CODE usage
 
@@ -121,12 +127,13 @@ There are 2 main ways of configuring the sound engine:
 * **Internally**: which means modifying the famistudio_xxx assembly file directly. This is the simplest way for small projects.
 * **Externally**: which means that all the configuration is done through defines provided from outside of the famistudio_xxx assembly file, without modifying it. This is the recommended way of using the engine when the code file is shared across multiple projects. This is how the NSF and ROM exported, as well as the demo project uses it, as they all points to the same engine file, but use different settings. To enable this mode, simply define FAMISTUDIO_CFG_EXTERNAL=1 and you will be in charge of providing all the configuration.
 
-There are four main things to configure in the engine:
+There are five main things to configure in the engine:
 
 1. Segments (ZP/RAM/PRG)
 2. Audio expansion
 3. Global engine parameters
 4. Supported features
+5. Per-project export options (In app)
 
 Note that unless specified, the engine uses `if` and not `ifdef` for all boolean values so you need to define these to non-zero values. Undefined values will be assumed to be zero.
 
@@ -229,14 +236,14 @@ These are parameters that configures the engine, but are independent of the data
 
 ### 4. Supported Features Configuration
 
-Every feature supported in FamiStudio is supported by this sound engine. If you know for sure that you are not using specific features in your music, you can disable them to save memory/processing time. Using a feature in your song and failing to enable it will likely lead to crashes (`BRK`), or undefined behavior. They all have the form `FAMISTUDIO_USE_XXX`.
+Every feature supported in FamiStudio is supported by this sound engine. They all have the form `FAMISTUDIO_USE_XXX`. If you know for sure that you are not using specific features in your music, you can disable them to save memory/processing time. Using a feature in your song and failing to enable it will likely lead to crashes (`BRK`), or undefined behavior. The export log in FamiStudio will usually tell you which options you are using and need to enable.
 
-    ; Must be enabled if the songs you will be importing have been created using FamiTracker tempo mode. 
-    ; If you are using FamiStudio tempo mode, this must be undefined. You cannot mix and match tempo modes, 
-    ; the engine can only run in one mode or the other. 
+    ; Must be enabled if the songs you will be importing have been created using FamiTracker tempo mode. If you are using
+    ; FamiStudio tempo mode, this must be undefined. You cannot mix and match tempo modes, the engine can only run in one
+    ; mode or the other. 
     ; More information at: https://famistudio.org/doc/song/#tempo-modes
     FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
-    
+
     ; Must be enabled if the songs uses delayed notes or delayed cuts. This is obviously only available when using
     ; FamiTracker tempo mode as FamiStudio tempo mode does not need this.
     FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1
@@ -244,45 +251,74 @@ Every feature supported in FamiStudio is supported by this sound engine. If you 
     ; Must be enabled if the songs uses release notes. 
     ; More information at: https://famistudio.org/doc/pianoroll/#release-point
     FAMISTUDIO_USE_RELEASE_NOTES = 1
-    
-    ; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track
-    ; level independently from instruments.
+
+    ; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track level
+    ; independently from instruments.
     ; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
-    FAMISTUDIO_USE_VOLUME_TRACK      = 1
-    
+    FAMISTUDIO_USE_VOLUME_TRACK = 1
+
     ; Must be enabled if any song uses slides on the volume track. Volume track must be enabled too.
     ; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
-    FAMISTUDIO_USE_VOLUME_SLIDES     = 1
-    
-    ; Must be enabled if any song uses the pitch track. The pitch track allows manipulating the pitch at the track
-    ; level independently from instruments.
+    FAMISTUDIO_USE_VOLUME_SLIDES = 1
+
+    ; Must be enabled if any song uses the pitch track. The pitch track allows manipulating the pitch at the track level
+    ; independently from instruments.
     ; More information at: https://famistudio.org/doc/pianoroll/#pitch
-    FAMISTUDIO_USE_PITCH_TRACK       = 1
-    
+    FAMISTUDIO_USE_PITCH_TRACK = 1
+
     ; Must be enabled if any song uses slide notes. Slide notes allows portamento and slide effects.
     ; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
-    FAMISTUDIO_USE_SLIDE_NOTES       = 1
+    FAMISTUDIO_USE_SLIDE_NOTES = 1
 
     ; Must be enabled if any song uses slide notes on the noise channel too. 
     ; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
     FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1
-    
+
     ; Must be enabled if any song uses the vibrato speed/depth effect track. 
     ; More information at: https://famistudio.org/doc/pianoroll/#vibrato-depth-speed
-    FAMISTUDIO_USE_VIBRATO           = 1
-    
-    ; Must be enabled if any song uses arpeggios (not to be confused with instrument arpeggio envelopes, those 
-    ; are always supported).
+    FAMISTUDIO_USE_VIBRATO = 1
+
+    ; Must be enabled if any song uses arpeggios (not to be confused with instrument arpeggio envelopes, those are always
+    ; supported).
     ; More information at: (TODO)
-    FAMISTUDIO_USE_ARPEGGIO          = 1
-    
+    FAMISTUDIO_USE_ARPEGGIO = 1
+
     ; Must be enabled if any song uses the "Duty Cycle" effect (equivalent of FamiTracker Vxx, also called "Timbre").  
-    FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
+    FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1
 
     ; Must be enabled if any song uses the DPCM delta counter. Only makes sense if DPCM samples
     ; are enabled (FAMISTUDIO_CFG_DPCM_SUPPORT).
     ; More information at: (TODO)
-    ; FAMISTUDIO_USE_DELTA_COUNTER     = 1
+    FAMISTUDIO_USE_DELTA_COUNTER = 1
+
+    ; Must be enabled if your project uses the "Phase Reset" effect.
+    FAMISTUDIO_USE_PHASE_RESET = 1
+
+    ; Must be enabled if your project uses the FDS expansion and at least one instrument with FDS Auto-Mod enabled.
+    FAMISTUDIO_USE_FDS_AUTOMOD  = 1
+
+### Per-project export options (In app)
+
+In most cases, the app will tell you which of the `FAMISTUDIO_USE_XXX` options you need to enable while exporting based on which features you are using in your project. 
+
+There are few options that you need to manually opt-in in the project properties since they impacts how the data will be exported in a more fundamental way.
+
+![](images/EditProjectSoundEngine.png#center)
+
+These options correspond to these options, respectively. If you enable those in your project, you must enable the corresponding `FAMISTUDIO_USE_XXX` option in assembly too.
+
+    ; Must be enabled if your project uses more than 1 bank of DPCM samples.
+    ; When using this, you must implement the "famistudio_dpcm_bank_callback" callback 
+    ; and switch to the correct bank every time a sample is played.
+    FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1
+
+    ; Must be enabled if your project uses more than 63 unique DPCM mappings (a mapping is DPCM sample
+    ; assigned to a note, with a specific pitch/loop, etc.). Implied when using FAMISTUDIO_USE_DPCM_BANKSWITCHING.
+    FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1
+
+    ; Allows having up to 256 instrument at the cost of slightly higher CPU usage when switching instrument.
+    ; When this is off, the limit is 64 for regular instruments and 32 for expansion instrumnets.
+    FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1
 
 ## Exporting Music/SFX to the engine
 

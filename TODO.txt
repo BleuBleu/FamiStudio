@@ -6,25 +6,22 @@ x FDS emulation improvements : Proper filtering, DAC emulation & fixes.
 x Phase reset support
 x Accurate seek support (fully emulate entire song from start, useful for phase resets)
 x Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
-- Folders support in Project Explorer
-- Video export improvements, Unified piano roll mode, Piano roll 3D effect, Option to overlay registers, Preview mode
+x Video export improvements, Unified piano roll mode, Piano roll 3D effect, Option to overlay registers, Preview mode
 x Eraser mode
 x Ability to copy samples between instruments
-- Ability to type effect values and project explorer parameters
 x Function to replace specific instruments
-/ Mixer settings + explain how overrides work.
+x Mixer settings + explain how overrides work.
+- Folders support in Project Explorer
+- Ability to type effect values and project explorer parameters
 - Sound engine
-	- Support for up to 256 instruments (for both regular and expansion) in sound engine
-	- Sound Engine settings in project settings
-x Settings
-	x More filtering options for audio expansions & ability to store settings in project
-	x Audio latency parameters
+	- Update cycles/RAM usage grid when all done.
 
 4.2.0
 =====
 - Change discord invite link
 - BUG : Linux warning when quitting that we didnt close the audio device.
 - BUG : When in eraser mode, moving over a slide note shows gizmos.
+- BUG : On mobile, there is no white highligh around DPCM mappings to drag them.
 
 4.2.0 Testing/Packaging
 =======================
