@@ -29,8 +29,8 @@ Most instruments also have parameters that can be edited in real-time by clickin
 Parameter(s) that is available on most instruments:
 
 * **Pitch Envelope** : Defines how FamiStudio will interpret the values in the pitch envelope.
-    * **Absolute** : By default, FamiStudio's pitch envelope are absolute. Meaning that the envelope values are the pitch you are going to hear, this is especially useful for vibrato where you can draw a simple sine wave.
-    * **Relative** : It is sometimes useful to have relative pitch envelope to create pitches that rapidly ascend or descend (useful for bass drum sounds). This is how FamiTracker handles pitch envelopes.
+    * **Absolute** : By default, FamiStudio's pitch envelope are absolute. Meaning that the pitch envelope value you enter is the pitch you are going to hear. This is especially useful for vibrato where you can draw a simple sine wave.
+    * **Relative** : Relative pitch envelope will repeatedly add the value of the envelope at each frame. For example, an envelope with a single value of +5 will produce a pitch of 5, 10, 15, etc. on frame 1, 2, 3, etc. In order words, you are controlling the change in pitch, not the pitch itself. This is useful to create pitches that rapidly ascend or descend (ex: bass drum effect). This is how FamiTracker handles pitch envelopes.
      
 ## Adding instruments
 
@@ -85,6 +85,18 @@ You can also copy envelope values as text if you want to use them in another app
 ## Copying envelopes
 
 Clicking on an envelope button and dragging it on another instrument will copy that envelope from the first to the second. Note that unlike FamiTracker, envelopes are not explicitly shared between instruments. Identical envelopes will be combined when exporting to various formats, but it is your responsibility to optimize the content and ensure that you limit the number of unique envelopes.
+
+On mobile, you first need to tap on the instrument once to make the white highlight appears around the envelope, then you can drag them to another instrument.
+
+![](images/CopyEnvelopes.gif#center)
+
+## Copying DPCM sample mappings
+
+You can also copy entire set of DPCM sample assignments (which samples are assigned to which key of the piano) from one instrument to another by dragging the little DPCM icon from one instrument to another.
+
+![](images/CopySampleMappings.gif#center)
+
+On mobile, you will first need to tap the instrument once to make the white highlights appear.
 
 ## Clearing or Deleting envelopes
 

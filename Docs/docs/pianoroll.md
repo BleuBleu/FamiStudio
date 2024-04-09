@@ -219,7 +219,13 @@ To replace the instrument used by a note, you can simply drag the instrument on 
 
 ![](images/ReplaceInstrument.gif#center)
 
-On mobile, you can replace an instrument or arpeggio by first making a selection, then long pressing on an instrument from the Quick Access Bar, then selecting "Replace Selection Instrument".
+To replace just a specific instrument in the selection, you can right click on any note in the selection and the context menu will offer you to replace the note's instrument with the currently selected one.
+
+![](images/ReplaceSpecificInstrument.gif#center)
+
+On mobile, you can replace an instrument or arpeggio by first making a selection, then long pressing on an instrument from the Quick Access Bar, then selecting "Replace Selection Instrument". 
+
+For specific instrument replacement, simply long press on a note that is part of a selection to get the content menu.
 
 ![](images/MobileReplaceInstrument.gif#center)
 
