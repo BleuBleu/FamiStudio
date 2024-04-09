@@ -288,15 +288,22 @@ namespace FamiStudio
                 {
                     selectedInstrument = value;
 
-                    if (Platform.IsMobile && PianoRoll.IsEditingInstrument && selectedInstrument != null)
+                    if (Platform.IsMobile)
                     {
-                        var envType = PianoRoll.EditEnvelopeType;
+                        if (PianoRoll.IsEditingInstrument && selectedInstrument != null)
+                        {
+                            var envType = PianoRoll.EditEnvelopeType;
 
-                        // If new instrument doesnt have this envelope, fallback to volume which is common to all.
-                        if (!selectedInstrument.IsEnvelopeActive(envType))
-                            envType = EnvelopeType.Volume;
+                            // If new instrument doesnt have this envelope, fallback to volume which is common to all.
+                            if (!selectedInstrument.IsEnvelopeActive(envType))
+                                envType = EnvelopeType.Volume;
 
-                        PianoRoll.StartEditInstrument(selectedInstrument, envType);
+                            PianoRoll.StartEditInstrument(selectedInstrument, envType);
+                        }
+                        else if (PianoRoll.IsEditingDPCMSampleMapping && selectedInstrument != null && selectedInstrument.Expansion == ExpansionType.None)
+                        {
+                            PianoRoll.StartEditDPCMMapping(selectedInstrument);
+                        }
                     }
 
                     MarkEverythingDirty();
