@@ -8,6 +8,7 @@
 - Change discord invite link
 - BUG : Linux warning when quitting that we didnt close the audio device.
 - BUG : When in eraser mode, moving over a slide note shows gizmos.
+- Make sure german loc is included in all packages (android, windows setup, etc).
 
 4.2.0 Testing/Packaging
 =======================

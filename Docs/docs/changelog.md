@@ -17,6 +17,7 @@ Changes/Fixes:
 * Folders support in Project Explorer
 * More filtering options for audio expansions & ability to store settings in project
 * Support for up to 256 instruments (for both regular and expansion) in sound engine
+* German translation (thanks Arda & VRC6Lover123!)
 * Audio backend improvements:
 	* Reduced audio latency on all platform 
 	* Switch to WASAPI on Windows (non-exclusive mode)
