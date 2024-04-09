@@ -31,7 +31,11 @@ Parameter(s) that is available on most instruments:
 * **Pitch Envelope** : Defines how FamiStudio will interpret the values in the pitch envelope.
     * **Absolute** : By default, FamiStudio's pitch envelope are absolute. Meaning that the pitch envelope value you enter is the pitch you are going to hear. This is especially useful for vibrato where you can draw a simple sine wave.
     * **Relative** : Relative pitch envelope will repeatedly add the value of the envelope at each frame. For example, an envelope with a single value of +5 will produce a pitch of 5, 10, 15, etc. on frame 1, 2, 3, etc. In order words, you are controlling the change in pitch, not the pitch itself. This is useful to create pitches that rapidly ascend or descend (ex: bass drum effect). This is how FamiTracker handles pitch envelopes.
-     
+
+For some numeric parameters, it is possible to type the value using the keyboard by selecting the "Enter Value..." option from the context menu.
+
+![](images/TypeParam.gif#center)
+
 ## Adding instruments
 
 You can add an instrument by pressing the "+" sign, and you can delete one by right clicking it and selecting "Delete Instrument". Deleting an instrument will delete all notes used by that instrument.
@@ -53,6 +57,14 @@ Also, when importing instruments from another FMS file that uses DPCM samples, y
 ![](images/ImportInstruments.png#center)
 
 Note that instruments that are using incompatible expansion audio will not be able to be imported. Also, instruments with the same names are assumed to be the same. If you project already contains an instrument called "Piano" and you try to import another one called "Piano", nothing will happen. The same happens with songs. You are responsible to uniquely name your instruments if they are different.
+
+## Organizing Instruments
+
+You can create little folder in the Project Explorer by pressing the "+" button. Folders can be created for songs, instruments, DPCM samples and arpeggios. Folders cannot contain other folders, so it is a single-level hierarchy. Items outside of any folders will always be at sorted higher that folders.
+
+To move items inside a folder, simply drag it inside the appropriate folder. Folders themselves can be re-ordered and also obey sorting rules. If sorting is enabled, folder will be sorted, as well as the items inside them. Moving a folder or and item manually will disable auto-sorting.
+
+![](images/MoveFolder.gif#center)
 
 ## Editing instrument envelopes
 
