@@ -48,12 +48,8 @@ namespace FamiStudio
                     case 0x4009:
                     case 0x400D: //Non-existent registers:
                         break;
-                    /* Less bulky versions for when we stop using Mono on Android:
                     case >= NesApu.APU_PL1_VOL and < NesApu.APU_TRI_HI:     //  $4000 - $400A
                     case >= NesApu.APU_NOISE_VOL and < NesApu.APU_NOISE_HI: //  $400C, $400E
-                    */
-                    case int bulky1 when regWrite.Register >= NesApu.APU_PL1_VOL && regWrite.Register < NesApu.APU_TRI_HI:     //  $4000 - $400A
-                    case int bulky2 when regWrite.Register >= NesApu.APU_NOISE_VOL && regWrite.Register < NesApu.APU_NOISE_HI: //  $400C, $400E
                         if ((regWrite.Register & 1) != 0)    //If the register is $4001/03/05/07, which reset stuff on write
                             firstPass.Add(regWrite);
                         else if (regWrite.Value != APUStatus[(regWrite.Register & 0xF) >> 1])
@@ -82,14 +78,14 @@ namespace FamiStudio
                         break;
                     case NesApu.APU_DMC_FREQ:
                     case NesApu.APU_DMC_LEN:
-                        if ((APUStatus[regWrite.Register - 0x4006]) != regWrite.Value)
+                        if (APUStatus[regWrite.Register - 0x4006] != regWrite.Value)
                         {
                             firstPass.Add(regWrite);
                             APUStatus[regWrite.Register - 0x4006] = regWrite.Value;
                         }
                         break;
                     case NesApu.APU_DMC_START:
-                        if ((APUStatus[12]) != regWrite.Metadata)
+                        if (APUStatus[12] != regWrite.Metadata)
                         {   //Compare the sample IDs
                             firstPass.Add(regWrite);
                             APUStatus[12] = regWrite.Metadata;
@@ -119,7 +115,7 @@ namespace FamiStudio
                         }
                         break;
                     case NesApu.VRC7_REG_WRITE:
-                        int index = VRC7Addr - (VRC7StatusLookupTable[VRC7Addr >> 4]);
+                        int index = VRC7Addr - VRC7StatusLookupTable[VRC7Addr >> 4];
                         if (regWrite.Value != VRC7Status[index])
                         {
                             firstPass.Add(regWrite);
@@ -152,7 +148,7 @@ namespace FamiStudio
                         {
                             EPSMA0Addr = regWrite.Value;
                             if ((EPSMA0Addr & 0xF4) != 0xA0)
-                            {
+                            {   // Not low pitch, it's got its own buffering system
                                 firstPass.Add(regWrite);
                             }
                         }
@@ -162,7 +158,7 @@ namespace FamiStudio
                         {
                             EPSMA1Addr = regWrite.Value;
                             if ((EPSMA1Addr & 0xF4) != 0xA0)
-                            {
+                            {   // Not low pitch, it's got its own buffering system
                                 firstPass.Add(regWrite);
                             }
                         }
@@ -173,8 +169,12 @@ namespace FamiStudio
                             firstPass.Add(regWrite);
                             EPSMSSGStatus[EPSMA0Addr] = regWrite.Value;
                         }
+                        else if (EPSMA0Addr == NesApu.EPSM_REG_SHAPE)
+                        {   // Envelope shape
+                            firstPass.Add(regWrite);
+                        }
                         else if (EPSMA0Addr == 0x11 && regWrite.Value != EPSMRhythmStatus[6])
-                        {
+                        {   // Rhythm sound source master volume
                             firstPass.Add(regWrite);
                             EPSMRhythmStatus[6] = regWrite.Value;
                         }
@@ -184,7 +184,7 @@ namespace FamiStudio
                             EPSMRhythmStatus[EPSMA0Addr & 0x07] = regWrite.Value;
                         }
                         else if (EPSMA0Addr == NesApu.EPSM_REG_RYTHM)
-                        {
+                        {   // Plays the rhythm
                             firstPass.Add(regWrite);
                         }
                         else if ((EPSMA0Addr & 0xF4) == 0xA4)
