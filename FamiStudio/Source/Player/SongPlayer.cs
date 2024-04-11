@@ -93,6 +93,10 @@ namespace FamiStudio
                 }
             }
 
+            // This is needed to prevent a deadlock in case we were in the middle priming 
+            //the emulation queue in "AudioStreamStartingCallback". 
+            reachedEnd = true;
+
             audioStream?.Stop();
 
             if (UsesEmulationThread)
