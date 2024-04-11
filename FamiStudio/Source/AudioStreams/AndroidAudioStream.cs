@@ -76,6 +76,7 @@ namespace FamiStudio
             lastSamples = null;
             resampleIndex = 0.0;
             quit = false;
+            streamStartCallback();
             audioTrack.Play();
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }

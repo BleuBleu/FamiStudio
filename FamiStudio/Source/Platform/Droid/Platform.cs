@@ -260,7 +260,7 @@ namespace FamiStudio
 
         public static double TimeSeconds()
         {
-            return SystemClock.UptimeMillis() / 1000.0;
+            return SystemClock.ElapsedRealtimeNanos() / 1.0e9;
         }
 
         public static void Beep()
