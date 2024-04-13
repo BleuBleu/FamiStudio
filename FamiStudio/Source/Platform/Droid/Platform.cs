@@ -106,26 +106,7 @@ namespace FamiStudio
 
         public static void MessageBoxAsync(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
         {
-            AlertDialog.Builder dialog = new AlertDialog.Builder(Xamarin.Essentials.Platform.CurrentActivity);
-            AlertDialog alert = dialog.Create();
-            
-            alert.SetTitle(title);
-            alert.SetMessage(text);
-
-            if (buttons == MessageBoxButtons.YesNo ||
-                buttons == MessageBoxButtons.YesNoCancel)
-            {
-                alert.SetButton("Yes", (c, ev) => { callback?.Invoke(DialogResult.Yes); });
-                alert.SetButton2("No",  (c, ev) => { callback?.Invoke(DialogResult.No); });
-                if (buttons == MessageBoxButtons.YesNoCancel)
-                    alert.SetButton3("Cancel", (c, ev) => { callback?.Invoke(DialogResult.Cancel); });
-            }
-            else
-            {
-                alert.SetButton("OK", (c, ev) => { callback?.Invoke(DialogResult.OK); });
-            }
-
-            alert.Show();
+            win.MessageBoxAsync(text, title, buttons, callback);
         }
 
         public static void DelayedMessageBoxAsync(string text, string title)
