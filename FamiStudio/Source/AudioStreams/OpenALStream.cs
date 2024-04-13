@@ -107,12 +107,17 @@ namespace FamiStudio
         {
             Debug.Assert(Platform.IsInMainThread() == mainThread);
 
-            var acquired = true;
-            
+            var acquired = false;
+
             if (mainThread)
+            {
                 Monitor.Enter(this);
-            else 
+                acquired = true;
+            }
+            else
+            {
                 Monitor.TryEnter(this, ref acquired);
+            }
 
             if (acquired)
             {
