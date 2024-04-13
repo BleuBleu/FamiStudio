@@ -7,15 +7,14 @@
 =====
 - Change discord invite link
 - DOC : Add ways to duplicating notes.
-- BUG : When in eraser mode, moving over a slide note shows gizmos.
-- Make sure german loc is included in all packages (android, windows setup, etc).
-- *** CHANGE FDS WAVE ZOOM LEVEL! (Review others too.)
 
 4.2.0 Testing/Packaging
 =======================
 - Dont publish for chromebooks
 - Documentation for all new features
 - Test MacOS .NET startup script.
+- Make sure german loc is included in all packages (android, windows setup, etc).
+- Make sure XAudio2 is included in all Windows build.
 
 dotnet publish
 ==============
