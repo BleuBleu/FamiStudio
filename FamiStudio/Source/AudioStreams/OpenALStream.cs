@@ -86,6 +86,7 @@ namespace FamiStudio
         }
 
         public bool IsPlaying => playingTask != null;
+        public bool RecreateOnDeviceChanged => false;
 
         public void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
@@ -104,7 +105,16 @@ namespace FamiStudio
 
         private void StopInternal(bool mainThread)
         {
-            lock (this)
+            Debug.Assert(Platform.IsInMainThread() == mainThread);
+
+            var acquired = true;
+            
+            if (mainThread)
+                Monitor.Enter(this);
+            else 
+                Monitor.TryEnter(this, ref acquired);
+
+            if (acquired)
             {
                 if (playingTask != null)
                 {
@@ -125,6 +135,8 @@ namespace FamiStudio
                     samples = null;
                     samplesOffset = 0;
                 }
+
+                Monitor.Exit(this);
             }
         }
 

@@ -6,8 +6,10 @@
 4.2.0
 =====
 - Change discord invite link
+- DOC : Add ways to duplicating notes.
 - BUG : When in eraser mode, moving over a slide note shows gizmos.
 - Make sure german loc is included in all packages (android, windows setup, etc).
+- *** CHANGE FDS WAVE ZOOM LEVEL! (Review others too.)
 
 4.2.0 Testing/Packaging
 =======================

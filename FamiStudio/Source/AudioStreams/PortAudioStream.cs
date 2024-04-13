@@ -289,6 +289,7 @@ namespace FamiStudio
         public int InputSampleRate => inputSampleRate;
         public int OutputSampleRate => outputSampleRate;
         public bool IsPlaying => play;
+        public bool RecreateOnDeviceChanged => true;
         public static int DeviceSampleRate => deviceSampleRate;
 
         private PortAudioStream()

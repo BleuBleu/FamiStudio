@@ -27,37 +27,37 @@ namespace FamiStudio
         private Task playingTask;
         private int bufferPrefillCount;
         private int queuedBufferCount;
-        private int inputSampleRate;
-        private int outputSampleRate;
 
         // Immediate voice for playing raw PCM data (used by DPCM editor).
         private SourceVoice immediateVoice;
         private AudioBuffer immediateAudioBuffer;
         private bool immediateDonePlaying;
 
-        public XAudio2Stream(int rate, bool stereo, int bufferSizeMs)
+        public static XAudio2Stream Create(int rate, bool stereo, int bufferSizeMs)
         {
-            xaudio2 = new XAudio2();
-            masteringVoice = new MasteringVoice(xaudio2, stereo ? 2 : 1, 0);
-            masteringVoice.GetVoiceDetails(out var details);
-            inputSampleRate = rate;
-            outputSampleRate = details.InputSampleRate;
-            waveFormat = new WaveFormat(outputSampleRate, 16, stereo ? 2 : 1);
+            var xaudio2Stream = new XAudio2Stream();
+
+            xaudio2Stream.xaudio2 = new XAudio2();
+            xaudio2Stream.masteringVoice = new MasteringVoice(xaudio2Stream.xaudio2, stereo ? 2 : 1);
+            xaudio2Stream.masteringVoice.GetVoiceDetails(out var details);
+            xaudio2Stream.waveFormat = new WaveFormat(rate, 16, stereo ? 2 : 1);
 
             var numBuffers = Math.Max(4, bufferSizeMs / 25);
-            var bufferSizeBytes = Utils.RoundUp(outputSampleRate * bufferSizeMs / 1000 * sizeof(short) * (stereo ? 2 : 1) / numBuffers, sizeof(short) * 2);
+            var bufferSizeBytes = Utils.RoundUp(rate * bufferSizeMs / 1000 * sizeof(short) * (stereo ? 2 : 1) / numBuffers, sizeof(short) * 2);
 
-            audioBuffersRing = new AudioBuffer[numBuffers];
-            memBuffers = new DataPointer[audioBuffersRing.Length];
+            xaudio2Stream.audioBuffersRing = new AudioBuffer[numBuffers];
+            xaudio2Stream.memBuffers = new DataPointer[xaudio2Stream.audioBuffersRing.Length];
 
-            for (int i = 0; i < audioBuffersRing.Length; i++)
+            for (int i = 0; i < xaudio2Stream.audioBuffersRing.Length; i++)
             {
-                audioBuffersRing[i] = new AudioBuffer();
-                memBuffers[i].Size = bufferSizeBytes;
-                memBuffers[i].Pointer = Utilities.AllocateMemory(memBuffers[i].Size);
+                xaudio2Stream.audioBuffersRing[i] = new AudioBuffer();
+                xaudio2Stream.memBuffers[i].Size = bufferSizeBytes;
+                xaudio2Stream.memBuffers[i].Pointer = Utilities.AllocateMemory(xaudio2Stream.memBuffers[i].Size);
             }
 
-            quitEvent = new ManualResetEvent(false);
+            xaudio2Stream.quitEvent = new ManualResetEvent(false);
+
+            return xaudio2Stream;
         }
 
         private void Xaudio2_CriticalError(object sender, ErrorEventArgs e)
@@ -72,6 +72,8 @@ namespace FamiStudio
         }
 
         public bool IsPlaying => sourceVoice != null;
+        public bool RecreateOnDeviceChanged => false;
+        public bool Stereo => waveFormat.Channels == 2;
 
         public void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
@@ -95,40 +97,64 @@ namespace FamiStudio
 
         public void Stop()
         {
-            StopImmediate();
+            StopInternal(true);
+        }
 
-            if (playingTask != null)
+        private void StopInternal(bool mainThread)
+        {
+            Debug.Assert(Platform.IsInMainThread() == mainThread);
+
+            var acquired = false;
+
+            // If we are on the playing task thread and fail to acquire the lock
+            // it means the main thread is here stopping, so we must exist so that
+            // the main thread doesnt deadlock on "playingTask.Wait()".
+            if (mainThread)
             {
-                quitEvent.Set();
-                playingTask.Wait();
-                playingTask = null;
+                Monitor.Enter(this);
+                acquired = true;
+            }
+            else
+            {
+                Monitor.TryEnter(this, ref acquired);
             }
 
-            if (sourceVoice != null)
+            if (acquired)
             {
-                // Wait until all buffers are consumed on non-looping songs.
-                if (!abort)
+                if (mainThread)
                 {
-                    while (queuedBufferCount > 0)
-                        Thread.Sleep(1);
+                    StopImmediate();
+
+                    if (playingTask != null)
+                    {
+                        quitEvent.Set();
+                        playingTask.Wait();
+                    }
                 }
 
-                sourceVoice.Stop();
-                sourceVoice.FlushSourceBuffers();
-                sourceVoice.DestroyVoice();
-                sourceVoice.BufferEnd -= SourceVoice_BufferEnd;
-                sourceVoice.Dispose();
-                sourceVoice = null;
-            }
+                playingTask = null;
 
-            if (bufferSemaphore != null)
-            {
-                bufferSemaphore.Dispose();
-                bufferSemaphore = null;
-            }
+                if (sourceVoice != null)
+                {
+                    sourceVoice.Stop();
+                    sourceVoice.FlushSourceBuffers();
+                    sourceVoice.DestroyVoice();
+                    sourceVoice.BufferEnd -= SourceVoice_BufferEnd;
+                    sourceVoice.Dispose();
+                    sourceVoice = null;
+                }
 
-            bufferFill = null;
-            streamStarting = null;
+                if (bufferSemaphore != null)
+                {
+                    bufferSemaphore.Dispose();
+                    bufferSemaphore = null;
+                }
+
+                bufferFill = null;
+                streamStarting = null;
+
+                Monitor.Exit(this);
+            }
         }
 
         public void Dispose()
@@ -170,7 +196,7 @@ namespace FamiStudio
                         break;
                     }
 
-                    vaStopr buffer = memBuffers[bufferIndex];
+                    var buffer = memBuffers[bufferIndex];
                     var bufferSampleCount = buffer.Size / sizeof(short);
                     var bufferPtr = buffer.Pointer;
 
@@ -239,6 +265,12 @@ namespace FamiStudio
                     Debugger.Break();
             }
 #endif
+
+            // Wait for all buffers to be consumed.
+            while (queuedBufferCount != 0) 
+                Thread.Sleep(1);
+
+            StopInternal(false);
         }
 
         public void PlayImmediate(short[] data, int sampleRate, float volume, int channel = 0)
