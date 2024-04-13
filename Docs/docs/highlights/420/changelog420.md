@@ -1,0 +1,122 @@
+# FamiStudio 4.2.0 Highlights
+
+FamiStudio was just released! This post is simply going to go over the top #10 most interesting new features and how to use some of them. 
+
+Please visit the [change log](changelog.md#version-420) for a full list of changes, fixes and system requirement changes.
+
+## Sunsoft 5B Envelope Support
+
+In FamiStudio 4.1.0 we added noise support, we now have envelope support. This applies to both 5B and EPSM square channels.
+
+To enable envelope on an instrument, simply select and envelope shape and choose between auto or manual pitch. **Auto-Pitch** will set the envelope period/frequency to a multiple of the note frequency, which is useful to create a bass intrument, for example. Manual pitch is better suited for normal note attacks. 
+
+![](S5BEnvelope.gif#center)
+
+There is also a new **Env Period** effect which can be used to change the period of instrument using Manual pitch. 
+
+Please check out the [Sunsoft 5B documentation](../../expansion.md#sunsoft-5b) for more detail on how to use this audio expansion and the limitations of envelope.
+
+## FDS Auto-Modulation and FDS Emulation Improvements
+
+The Famicom Disk System audio expansion has received some attention.
+
+We added support for **Auto-Modulation** which will set the modulation speed automatically as a fraction of the note's pitch. To enabe, simply check the **Auto-Mod** checkbox on the instrument.
+
+For example, setting the **Numerator** to 1 and **Denomator** to 4 would set the speed to 1/4 of the note's period. 
+
+![](FDSAutoMod.gif#center)
+
+FDS emulation has also received some improvement and will sound much closer to real hardware. That being said, it may now sound different from other emulators. FamiStudio should be considered more accurate here.
+
+Please check out the [FDS documentation](../../expansion.md#famicom-disk-system) for more information.
+
+## Phase Reset Support
+
+We added **Phase Reset** support for all channels where it is physically possible. Resetting the phase allows you manually specify where a waveform restarts and can be used to create intesting effects such as contructive/destructive interference between 2 channels.
+
+![](PhaseReset.png#center)
+
+Is recommended to enable the [Fully emulate when seeking](../../config.md#sound-configuration) option when working with phase resets. This will force FamiStudio to fully emulation the song from the start and ensuring that phase resets are fully taken into account. When this option is off, FamiStudio takes a few shortcuts when seeking.
+
+![](AccurateSeek.png#center)
+
+For more information see the [Phase Reset section](../../pianoroll.md#phase-reset) of the piano roll documentation.
+
+## Improved Ability to Disable Attacks
+
+Disabling note attack prevents envelopes from resetting when playing a new note. Prior to FamiStudio 4.2.0 you only disable the attack when the instrument remained the same.
+
+We've relaxed this rule a bit:
+
+1. You can disable the attack if the note uses the same instrument as the previous note.
+2. You can now disable the attack if the instruments are different, but have **identical envelopes**. 
+
+This new second option is useful on FM channels (VRC7 or EPSM) to change patch mid-note. 
+
+Failure to follow these rules will display a "hollow" attack, indicating that you broke one of the 2 rules. In the example below, the green instrument did not have identical envelopes. 
+
+![](../../images/NoAttackError.png#center)
+
+We will be trying to relax these rules further in future versions to allow more use-cases.
+
+Please visit the [Note Attack documentation](../../pianoroll.md#note-attack) for more information.
+
+## Folders in Project Explorer
+
+You can now create little folder in the Project Explorer by pressing the "+" button. Folders can be created for songs, instruments, DPCM samples and arpeggios.
+
+To move items inside a folder, simply drag it inside the appropriate folder. Folders themselves can be re-ordered and also obey sorting rules. 
+
+![](../../images/MoveFolder.gif#center)
+
+Please visit the [documentation](../../instruments.md#organizing-instruments) for more information on how to use folders.
+
+## Video Export Improvements
+
+Video export has received some love and has more settings than ever. 
+
+![](../../images/ExportVideo.png#center)
+
+There is also a new **Unified** piano roll, complete with optional 3D effect and depth-of-field!
+
+![](../../images/VideoScreenshot.jpg#center)
+
+Please check out the [video export documentation](../../export.md#video) for more detail on video export.
+
+## Eraser Mode
+
+You can now quickly delete multiple notes by holding the mouse after a **Double-Click** or a **Shift+Click**. The mouse cursor will turn into a little eraser and will allow you to delete notes until you release the button.
+
+![](../../images/EraserMode.gif#center)
+
+For more information, including how to use on mobile, please visit the [piano roll documentation](../../pianoroll.md#adding-deleting-notes)
+
+## Copy DPCM Sample Mapping between instruments
+
+You can now copy DPCM sample mappings between instrument by simply drag & drop the little "sample" icon from one to the other. 
+
+![](../../images/CopySampleMappings.gif#center)
+
+For more information, including how to use on mobile, please visit the [documentation](../../instruments.md#copying-dpcm-sample-mappings)
+
+## More Filtering Options and Per-Project Overrides
+
+You now have more audio filtering options in the [Mixer section of the configuration dialog](../../config.md#mixer). 
+
+![](../../images/ConfigMixer.png#center)
+
+Moreover, projects can now override and store their own volume/filtering settings so that `.fms` files you send to your friends sound exactly as you want it to sound. These overrides are set in the [Mixer section of the project properties dialog](../../song.md#mixer-settings). 
+
+You can quickly disable any override that the project has set by clicking the little "mixer" icon next to the project name. When the icon is dimmed, project overrides are not applied.
+
+![](../../images/MixerSettingsOverride.png#center)
+
+For more information, please see the [Project properties documentation](../../song.md#mixer-settings).
+
+## German translation
+
+FamiStudio has been fully translated to German thanks for Arda and VRC6Lover123! You can change the language in the [Configuration Dialog](../../config.md#general-configuration)
+
+![](German.png#center)
+
+

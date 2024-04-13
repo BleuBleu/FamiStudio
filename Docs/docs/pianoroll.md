@@ -348,7 +348,7 @@ Unique to the DPCM channel, can be used to manually set the current DAC value. C
 
 ### Phase Reset 
 
-On supported channels, will reset the phase if this effect is present. Can be used to make sure 2 channels have their waveform perfectly aligned and create creative/destructive interference. Note that is recommended to use the [Fully emulate when seeking](config.md#sound-configuration) option when working with phase reset. Note that phase resets are extremely time sensitive and may not sound exactly the same in-app and on real hardware/emulators, and the exact timing may even change in future versions.
+On supported channels, will reset the phase if this effect is present. Can be used to make sure 2 channels have their waveform perfectly aligned and create creative/destructive interference. Note that is recommended to use the [Fully emulate when seeking](config.md#sound-configuration) option when working with phase reset. Phase resets are extremely time sensitive and may not sound exactly the same in-app and on real hardware/emulators, and the exact timing may even change in future versions.
 
 ### FDS Modulation Speed / Depth (FDS expansion only)
 
