@@ -670,7 +670,7 @@ namespace FamiStudio
             {
                 Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
                 var maxValuesInScreen = editEnvelope == EnvelopeType.FdsWaveform || editEnvelope == EnvelopeType.FdsModulation ? 64 : 16;
-                envelopeValueSizeY = (Height - headerAndEffectSizeY) / Math.Max(maxValuesInScreen, max - min + 1);
+                envelopeValueSizeY = (Height - headerAndEffectSizeY) / Math.Min(maxValuesInScreen, max - min + 1);
                 virtualSizeY = (int)((max - min + 1) * envelopeValueSizeY);
             }
 
