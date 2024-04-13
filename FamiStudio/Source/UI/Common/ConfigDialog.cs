@@ -120,6 +120,7 @@ namespace FamiStudio
         LocalizedString AltRightZoomsInOut;
 
         // Sound tooltips
+        LocalizedString AudioApiTooltip;
         LocalizedString AudioBufferSizeTooltip;
         LocalizedString NumBufferedFramesTooltip;
         LocalizedString StopInstrumentTooltip;
@@ -131,6 +132,7 @@ namespace FamiStudio
         LocalizedString MetronomeVolumeTooltip;
 
         // Sound labels
+        LocalizedString AudioApiLabel;
         LocalizedString AudioBufferSizeLabel;
         LocalizedString NumBufferFramesLabel;
         LocalizedString StopInstrumentAfterLabel;
@@ -315,15 +317,16 @@ namespace FamiStudio
                 }
                 case ConfigSection.Sound:
                 {
-                    page.AddNumericUpDown(AudioBufferSizeLabel.Colon, Settings.AudioBufferSize, 1, 500, 1, AudioBufferSizeTooltip); // 0
-                    page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedFrames, 0, 16, 1, NumBufferedFramesTooltip); // 1
-                    page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 2
-                    page.AddCheckBox(PreventPoppingLabel.Colon, Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 3
-                    page.AddCheckBox(MixN163Label.Colon, Settings.N163Mix, N163MixerTooltip); // 4
-                    page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 5
-                    page.AddCheckBox(MuteDragSoundsLabel.Colon, Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 6
-                    page.AddCheckBox(AccurateSeekLabel.Colon, Settings.AccurateSeek, AccurateSeekTooltip); // 7
-                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 8
+                    page.AddDropDownList(AudioApiLabel.Colon, Platform.GetAvailableAudioAPIs(), Settings.AudioAPI, AudioApiTooltip); // 0
+                    page.AddNumericUpDown(AudioBufferSizeLabel.Colon, Settings.AudioBufferSize, 1, 500, 1, AudioBufferSizeTooltip); // 1
+                    page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedFrames, 0, 16, 1, NumBufferedFramesTooltip); // 2
+                    page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 3
+                    page.AddCheckBox(PreventPoppingLabel.Colon, Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 4
+                    page.AddCheckBox(MixN163Label.Colon, Settings.N163Mix, N163MixerTooltip); // 5
+                    page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 6
+                    page.AddCheckBox(MuteDragSoundsLabel.Colon, Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 7
+                    page.AddCheckBox(AccurateSeekLabel.Colon, Settings.AccurateSeek, AccurateSeekTooltip); // 8
+                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 9
                     break;
                 }
                 case ConfigSection.Mixer:
@@ -525,16 +528,6 @@ namespace FamiStudio
             shortcuts[idx].Modifiers[keyIndex] = e.Modifiers;
         }
 
-        private void MixerPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
-        {
-            if (propIdx == 7 && click == ClickType.Button)
-            {
-                var expansion = props.GetSelectedIndex(3);
-                expansionMixer[expansion] = ExpansionMixer.DefaultExpansionMixerSettings[expansion];
-                RefreshMixerSettings();
-            }
-        }
-
         private void RefreshMixerSettings()
         {
             var props = pages[(int)ConfigSection.Mixer];
@@ -543,28 +536,6 @@ namespace FamiStudio
             props.SetPropertyValue(4, (double)expansionMixer[expansion].VolumeDb);
             props.SetPropertyValue(5, (double)expansionMixer[expansion].TrebleDb);
             props.SetPropertyValue(6, (double)expansionMixer[expansion].TrebleRolloffHz);
-        }
-
-        private void MixerPage_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
-        {
-            var expansion = props.GetSelectedIndex(3);
-
-            if (propIdx == 3)
-            {
-                RefreshMixerSettings();
-            }
-            else if (propIdx == 4)
-            {
-                expansionMixer[expansion].VolumeDb = (float)(double)value;
-            }
-            else if (propIdx == 5)
-            {
-                expansionMixer[expansion].TrebleDb = (float)(double)value;
-            }
-            else if (propIdx == 6)
-            {
-                expansionMixer[expansion].TrebleRolloffHz = (int)(double)value;
-            }
         }
 
         public void ShowDialogAsync(Action<DialogResult> callback)
@@ -610,11 +581,13 @@ namespace FamiStudio
                     Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(11);
 
                     // Sound
-                    var newAudioBufferSize = pageSound.GetPropertyValue<int>(0);
-                    var newNumBufferedFrames = pageSound.GetPropertyValue<int>(1);
-                    var newN163Mix = pageSound.GetPropertyValue<bool>(4);
+                    var newAudioApi = pageSound.GetPropertyValue<string>(0);
+                    var newAudioBufferSize = pageSound.GetPropertyValue<int>(1);
+                    var newNumBufferedFrames = pageSound.GetPropertyValue<int>(2);
+                    var newN163Mix = pageSound.GetPropertyValue<bool>(5);
 
-                    if (Settings.AudioBufferSize   != newAudioBufferSize   ||
+                    if (Settings.AudioAPI          != newAudioApi          || 
+                        Settings.AudioBufferSize   != newAudioBufferSize   ||
                         Settings.NumBufferedFrames != newNumBufferedFrames ||
                         Settings.N163Mix           != newN163Mix)
                     {
@@ -622,15 +595,16 @@ namespace FamiStudio
                         r = DialogResult.Yes;
                     }
 
+                    Settings.AudioAPI = newAudioApi;
                     Settings.AudioBufferSize = newAudioBufferSize;
                     Settings.NumBufferedFrames = newNumBufferedFrames;
-                    Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(2);
-                    Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(3);
+                    Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(3);
+                    Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(4);
                     Settings.N163Mix = newN163Mix;
-                    Settings.ClampPeriods = pageSound.GetPropertyValue<bool>(5);
-                    Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(6);
-                    Settings.AccurateSeek = pageSound.GetPropertyValue<bool>(7);
-                    Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(8);
+                    Settings.ClampPeriods = pageSound.GetPropertyValue<bool>(6);
+                    Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(7);
+                    Settings.AccurateSeek = pageSound.GetPropertyValue<bool>(8);
+                    Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(9);
 
                     // Input
                     Settings.TrackPadControls = pageInput.GetPropertyValue<bool>(0);

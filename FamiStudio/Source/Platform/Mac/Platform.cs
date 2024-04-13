@@ -43,8 +43,12 @@ namespace FamiStudio
         {
             AudioDeviceChanged?.Invoke();
         }
+        public static string[] GetAvailableAudioAPIs()
+        {
+            return new[] { "Core Audio" };
+        }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
+        public static IAudioStream CreateAudioStream(string api, int rate, bool stereo, int bufferSizeMs)
         {
             return PortAudioStream.Create(rate, stereo, bufferSizeMs);
         }

@@ -714,7 +714,10 @@ namespace FamiStudio
 
         private void Platform_AudioDeviceChanged()
         {
-            audioDeviceChanged = true;
+            if (songStream != null && songStream.RecreateOnDeviceChanged)
+            {
+                audioDeviceChanged = true;
+            }
         }
 
         private void InitializeMidi()
@@ -1608,7 +1611,7 @@ namespace FamiStudio
 
             if (songStream == null)
             {
-                songStream = Platform.CreateAudioStream(NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
+                songStream = Platform.CreateAudioStream(Settings.AudioAPI, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
                 if (songStream == null)
                     DisplayNotification(AudioStreamError, true, true);
             }
@@ -1625,13 +1628,13 @@ namespace FamiStudio
 
             if (instrumentStream == null)
             { 
-                instrumentStream = Platform.CreateAudioStream(NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
+                instrumentStream = Platform.CreateAudioStream(Settings.AudioAPI, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
                 if (instrumentStream == null)
                     DisplayNotification(AudioStreamError, true, true);
             }
 
             instrumentPlayer = new InstrumentPlayer(instrumentStream, palPlayback, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.NumBufferedFrames); 
-            instrumentPlayer.Start(project, palPlayback);
+            //instrumentPlayer.Start(project, palPlayback);
         }
 
         private void ShutdownSongPlayer(bool shutdownStream)
@@ -2084,7 +2087,7 @@ namespace FamiStudio
                 Platform.ForceScreenOn(true);
             }
         }
-        
+
         public void PlaySongFromBeginning()
         {
             if (IsPlaying)

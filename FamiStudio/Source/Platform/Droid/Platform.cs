@@ -53,7 +53,12 @@ namespace FamiStudio
             return 1.0f;
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
+        public static string[] GetAvailableAudioAPIs()
+        {
+            return new[] { "Android" };
+        }
+
+        public static IAudioStream CreateAudioStream(string api, int rate, bool stereo, int bufferSizeMs)
         {
             return AndroidAudioStream.Create(rate, stereo, bufferSizeMs);
         }

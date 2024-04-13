@@ -93,7 +93,12 @@ namespace FamiStudio
             return handle;
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
+        public static string[] GetAvailableAudioAPIs()
+        {
+            return new[] { "OpenAL Soft" };
+        }
+
+        public static IAudioStream CreateAudioStream(string api, int rate, bool stereo, int bufferSizeMs)
         {
             return OpenALStream.Create(rate, stereo, bufferSizeMs);
         }

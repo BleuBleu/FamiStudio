@@ -196,6 +196,7 @@ namespace FamiStudio
         const int DefaultAudioBufferSize = Platform.IsLinux ? 60 : 30;
         const int EmulationThreadCpuScoreThreshold = 100;
 
+        public static string AudioAPI = "";
         public static int AudioBufferSize = DefaultAudioBufferSize;
         public static int NumBufferedFrames = DefaultNumBufferedFrames;
         public static int InstrumentStopTime = 1;
@@ -448,6 +449,8 @@ namespace FamiStudio
             }
 
             // Audio
+            var audioAPIs = Platform.GetAvailableAudioAPIs();
+            AudioAPI = ini.GetString("Audio", "AudioAPI", audioAPIs[0]);
             AudioBufferSize = ini.GetInt("Audio", "AudioBufferSize", DefaultAudioBufferSize);
             NumBufferedFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedFrames);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
@@ -458,6 +461,11 @@ namespace FamiStudio
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
             MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
             SeparateChannelsExportTndMode = ini.GetInt("Audio", "SeparateChannelsExportTndMode", NesApu.TND_MODE_SINGLE);
+
+            if (!audioAPIs.Contains(AudioAPI))
+            {
+                AudioAPI = audioAPIs[0];
+            }
 
             // Latency changes, reset to default.
             if (Version < 10)
@@ -666,6 +674,7 @@ namespace FamiStudio
             ini.SetBool("Input", "AltZoomAllowed", AltZoomAllowed);
 
             // Audio
+            ini.SetString("Audio", "AudioAPI", AudioAPI);
             ini.SetInt("Audio", "AudioBufferSize", AudioBufferSize);
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedFrames);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);

@@ -19,6 +19,7 @@ namespace FamiStudio
         public const string DllPrefix = "";
         public const string DllExtension = ".dll";
 
+        private static bool xaudio2Available;
         private static float doubleClickTime;
 
         private static MultiMediaNotificationListener mediaNotificationListener;
@@ -35,6 +36,8 @@ namespace FamiStudio
             {
                 mediaNotificationListener = new MultiMediaNotificationListener();
                 mediaNotificationListener.DefaultDeviceChanged += MmNoticiations_DefaultDeviceChanged;
+
+                xaudio2Available = XAudio2Stream.TryDetectXAudio2();
             }
 
             clipboardFormat = RegisterClipboardFormat("FamiStudio");
@@ -53,9 +56,25 @@ namespace FamiStudio
             ShutdownDesktop();
         }
 
-        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSizeMs)
+        public static string[] GetAvailableAudioAPIs()
         {
-            return PortAudioStream.Create(rate, stereo, bufferSizeMs);
+            var apis = new string[xaudio2Available ? 2 : 1];
+            apis[0] = "WASAPI";
+            if (xaudio2Available) 
+                apis[1] = "XAudio2";
+            return apis;
+        }
+
+        public static IAudioStream CreateAudioStream(string api, int rate, bool stereo, int bufferSizeMs)
+        {
+            if (api == "XAudio2" && xaudio2Available)
+            {
+                return XAudio2Stream.Create(rate, stereo, bufferSizeMs);
+            }
+            else
+            {
+                return PortAudioStream.Create(rate, stereo, bufferSizeMs);
+            }
         }
 
         public static int AudioDeviceSampleRate => PortAudioStream.DeviceSampleRate;
