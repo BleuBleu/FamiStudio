@@ -2291,7 +2291,7 @@ namespace FamiStudio
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
 
-            for (int i = 0; i < repeat; i++)
+            for (int i = 0; i < repeat && IsSelectionValid(); i++)
             {
                 var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument, createMissingArpeggios, createMissingSamples);
 
