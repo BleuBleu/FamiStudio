@@ -1634,7 +1634,7 @@ namespace FamiStudio
             }
 
             instrumentPlayer = new InstrumentPlayer(instrumentStream, palPlayback, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.NumBufferedFrames); 
-            //instrumentPlayer.Start(project, palPlayback);
+            instrumentPlayer.Start(project, palPlayback);
         }
 
         private void ShutdownSongPlayer(bool shutdownStream)
