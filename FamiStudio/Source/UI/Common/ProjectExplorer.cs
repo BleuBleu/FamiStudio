@@ -504,7 +504,7 @@ namespace FamiStudio
                     case ButtonType.DpcmHeader:
                     {
                         var buttons = new[] { SubButtonType.Add, SubButtonType.Load, SubButtonType.Sort };
-                        active = projectExplorer.App.Project.AutoSortSamples ? -1 : 1;
+                        active = projectExplorer.App.Project.AutoSortSamples ? -1 : 3;
                         return buttons;
                     }
                     case ButtonType.ProjectSettings:
