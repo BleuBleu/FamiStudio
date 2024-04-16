@@ -1,8 +1,10 @@
 # FamiStudio 4.2.0 Highlights
 
-FamiStudio was just released! This post is simply going to go over the top #10 most interesting new features and how to use some of them. 
+FamiStudio 4.2.0 was just released! You can downloat it [here](https://famistudio.org/#download).
 
-Please visit the [change log](changelog.md#version-420) for a full list of changes, fixes and system requirement changes.
+This post is simply going to go over the top 10 most interesting new features and how to use some of them. 
+
+Please visit the [change log](../../changelog.md#version-420) for a full list of changes, fixes and system requirement changes.
 
 ## Sunsoft 5B Envelope Support
 
@@ -26,7 +28,7 @@ For example, setting the **Numerator** to 1 and **Denomator** to 4 would set the
 
 ![](FDSAutoMod.gif#center)
 
-FDS emulation has also received some improvement and will sound much closer to real hardware. That being said, it may now sound different from other emulators. FamiStudio should be considered more accurate here.
+FDS emulation has also received some improvement. It features proper 2000KHz filerting and DAC emulation and sounds much closer to real hardware. That being said, it may now sound different from other emulators. FamiStudio should be considered more accurate here.
 
 Please check out the [FDS documentation](../../expansion.md#famicom-disk-system) for more information.
 
