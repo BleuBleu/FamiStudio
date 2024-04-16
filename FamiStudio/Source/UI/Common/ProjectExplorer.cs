@@ -2454,7 +2454,10 @@ namespace FamiStudio
         protected void ConditionalShowExpansionIcons(int x, int y)
         {
             var buttonIdx = GetButtonAtCoord(x, y, out _);
-            App.SequencerShowExpansionIcons = buttonIdx >= 0 && (buttons[buttonIdx].type == ButtonType.Instrument || buttons[buttonIdx].type == ButtonType.InstrumentHeader);
+            App.SequencerShowExpansionIcons = buttonIdx >= 0 && (
+                buttons[buttonIdx].type == ButtonType.Instrument ||
+                buttons[buttonIdx].type == ButtonType.InstrumentHeader ||
+                buttons[buttonIdx].type == ButtonType.InstrumentFolder);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
