@@ -341,12 +341,13 @@ namespace FamiStudio
             }
             else
             {
-                var oddWindowScaling = Utils.Frac(DpiScaling.Window) != 0.0f;
-                var minChannelSize = oddWindowScaling ? 22 : 21;
-                var sizeMask = oddWindowScaling ? 0xfffe : 0xffff; // Keep size even at 150%.
+                // Keep size a multiple of 2 at 150%, multiple of 4 at 125%/175%, etc.
+                var frac = Utils.Frac(DpiScaling.Window);
+                var divider = (frac == 0.25f || frac == 0.75f) ? 4 : (frac == 0.5f) ? 2 : 1;
+                var minChannelSize = Utils.RoundUp(21, divider);
                 var idealSequencerHeight = ParentWindow.Height * Settings.IdealSequencerSize / 100;
                 
-                channelSizeY = visibleChannelCount > 0 ? Math.Max((idealSequencerHeight / visibleChannelCount) & sizeMask, minChannelSize) : minChannelSize;
+                channelSizeY = visibleChannelCount > 0 ? Math.Max(Utils.DivideAndRoundDown(idealSequencerHeight / visibleChannelCount, divider), minChannelSize) : minChannelSize;
 
                 var actualSequencerHeight = channelSizeY * visibleChannelCount;
 
