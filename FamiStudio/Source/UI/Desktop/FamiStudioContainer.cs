@@ -178,8 +178,6 @@ namespace FamiStudio
                 MarkDirty();
             }
 
-            toast.Tick(delta);
-
             if (!toast.Visible)
             {
                 RemoveControl(toast);
