@@ -58,9 +58,10 @@ namespace FamiStudio
         private float averageTickRateMs = 8.0f;
         private DateTime lastAutoSave;
 
-        private bool   newReleaseAvailable = false;
-        private string newReleaseString = null;
-        private string newReleaseUrl = null;
+        private volatile bool   newReleaseCheckDone = false;
+        private volatile bool   newReleaseAvailable = false;
+        private volatile string newReleaseString = null;
+        private volatile string newReleaseUrl = null;
 
         public bool  IsPlaying => songPlayer != null && songPlayer.IsPlaying;
         public bool  IsSeeking => songPlayer != null && songPlayer.IsSeeking;
@@ -137,6 +138,7 @@ namespace FamiStudio
         LocalizedString ProjectChangedExportWarning;
         LocalizedString NewVersionToast;
         LocalizedString NewProjectTitle;
+        LocalizedString NewVersionWelcome;
         LocalizedString IncompatibleInstrumentError;
         LocalizedString IncompatibleExpRequiredError;
         LocalizedString AudioDeviceChanged;
@@ -1374,6 +1376,8 @@ namespace FamiStudio
             catch
             {
             }
+
+            newReleaseCheckDone = true;
         #endif
         }
 
@@ -1485,10 +1489,22 @@ namespace FamiStudio
 
         private void CheckNewReleaseDone()
         {
-            if (newReleaseAvailable)
+            if (newReleaseCheckDone)
             {
-                newReleaseAvailable = false;
-                Platform.ShowToast(window, NewVersionToast.Format(newReleaseString), true, () => Platform.OpenUrl("http://www.famistudio.org"));
+                if (newReleaseAvailable)
+                {
+                    newReleaseAvailable = false;
+                    Platform.ShowToast(window, NewVersionToast.Format(newReleaseString), true, () => Platform.OpenUrl("http://www.famistudio.org"));
+                }
+                else if (Settings.NewVersionCounter > 0)
+                {
+                    var version = Utils.SplitVersionNumber(Platform.ApplicationVersion, out _);
+                    Platform.ShowToast(window, NewVersionWelcome.Format(version), true, () => Platform.OpenUrl("https://famistudio.org/doc/releases/420/"));
+                    Settings.NewVersionCounter--;
+                    Settings.Save();
+                }
+
+                newReleaseCheckDone = false;
             }
         }
 

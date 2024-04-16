@@ -56,6 +56,7 @@ namespace FamiStudio
         public static bool AutoSaveCopy = true;
         public static string PatternNamePrefix = "Pattern ";
         public static int PatternNameNumDigits = 1;
+        public static int NewVersionCounter = 5;
         public static string LastProjectFile;
 
         // User Interface section
@@ -419,6 +420,7 @@ namespace FamiStudio
             AutoSaveCopy = ini.GetBool("General", "AutoSaveCopy", true);
             PatternNamePrefix = ini.GetString("General", "PatternNamePrefix", "Pattern ");
             PatternNameNumDigits = ini.GetInt("General", "PatternNameNumDigits", 1);
+            NewVersionCounter = ini.GetInt("General", "NewVersionCounter", 5);
             LastProjectFile = OpenLastProjectOnStart ? ini.GetString("General", "LastProjectFile", "") : "";
 
             // UI
@@ -648,6 +650,7 @@ namespace FamiStudio
             ini.SetString("General", "LastProjectFile", OpenLastProjectOnStart ? LastProjectFile : "");
             ini.SetString("General", "PatternNamePrefix", PatternNamePrefix);
             ini.SetInt("General", "PatternNameNumDigits", PatternNameNumDigits);
+            ini.SetInt("General", "NewVersionCounter", NewVersionCounter);
             ini.SetBool("General", "AutoSaveCopy", AutoSaveCopy);
 
             // UI

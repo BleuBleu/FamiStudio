@@ -6,8 +6,8 @@ oo4.2.0 Documentation
 4.2.0
 =====
 - Change discord invite link
+- Test 420 highlight link.
 - DOC : Add ways to duplicating notes.
-- Audio API localization 
 
 4.2.0 Testing/Packaging
 =======================
