@@ -1499,7 +1499,13 @@ namespace FamiStudio
                 else if (Settings.NewVersionCounter > 0)
                 {
                     var version = Utils.SplitVersionNumber(Platform.ApplicationVersion, out _);
-                    Platform.ShowToast(window, NewVersionWelcome.Format(version), true, () => Platform.OpenUrl("https://famistudio.org/doc/releases/420/"));
+                    Platform.ShowToast(window, NewVersionWelcome.Format(version), true, () =>
+                    {
+                        Platform.OpenUrl("https://famistudio.org/doc/releases/420/");
+                        Settings.NewVersionCounter = 0;
+                        Settings.Save();
+                    });
+
                     Settings.NewVersionCounter--;
                     Settings.Save();
                 }
