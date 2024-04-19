@@ -6,6 +6,8 @@ To download older versions or view the release dates, please visit the [Github R
 
 ## Version 4.2.0
 
+[![](releases/420/Thumbnail420.png#center)](releases/420.md)
+
 Changes/Fixes:
 
 * S5B envelope support (S5B & EPSM)
