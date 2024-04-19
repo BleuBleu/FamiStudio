@@ -57,6 +57,14 @@ On mobile, notes must be first given a **white highlight** by tapping once befor
 
 ![](images/MobileEditNote.gif#center)
 
+## Quickly duplicating Notes
+
+On desktop, one way to quickly duplicate notes is to hold **Ctrl** while dragging a selection. It will duplicate the select and allow you to place the new notes where you want.
+
+![](images/DuplicateNotes.gif#center)
+
+Another way to achieve similar result is to use [special paste](pianoroll.md#special-paste) with the "Repeat" option.
+
 ## Note duration & priority
 
 FamiStudio is a monophonic app, in other words, only one note can play at a time on a given channel. 

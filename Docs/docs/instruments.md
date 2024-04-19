@@ -64,6 +64,8 @@ You can create little folder in the Project Explorer by pressing the "+" button.
 
 To move items inside a folder, simply drag it inside the appropriate folder. Folders themselves can be re-ordered and also obey sorting rules. If sorting is enabled, folder will be sorted, as well as the items inside them. Moving a folder or and item manually will disable auto-sorting.
 
+There are also shortcuts to collapse/expand all folders if you right-click on a folder. 
+
 ![](images/MoveFolder.gif#center)
 
 ## Editing instrument envelopes
