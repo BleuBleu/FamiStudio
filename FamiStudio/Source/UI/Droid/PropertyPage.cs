@@ -125,7 +125,7 @@ namespace FamiStudio
             seek.Max = (int)(max * 1000);
             seek.Progress = (int)(value * 1000);
             seek.ProgressChanged += Seek_ProgressChanged;
-
+            
             return seek;
         }
 
@@ -1629,6 +1629,7 @@ namespace FamiStudio
             else if (e.Event.Action == MotionEventActions.Up)
             {
                 UpdateProgress(e);
+                Parent?.RequestDisallowInterceptTouchEvent(false);
                 changing = false;
             }
             else if (e.Event.Action == MotionEventActions.Move)
@@ -1641,11 +1642,8 @@ namespace FamiStudio
                 {
                     changing = true;
                     UpdateProgress(e);
+                    Parent?.RequestDisallowInterceptTouchEvent(true);
                 }
-            }
-            else if (e.Event.Action == MotionEventActions.Cancel)
-            {
-                changing = false;
             }
         }
 
