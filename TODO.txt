@@ -1,26 +1,20 @@
-oo4.2.0 Documentation
-====================
-- Sound engine
-	- Update cycles/RAM usage grid when all done.
+4.3.0
+=====
+- Look at michel_iwaniec changes
+- FDS test for Persune
 
 4.2.0
 =====
 - Change discord invite link
-- Test 420 highlight link.
-- DOC : Add ways to duplicating notes.
 
 4.2.0 Testing/Packaging
 =======================
-- Mention video preview in 4.2.0 highlights.
 - Dont publish for chromebooks
-- Test MacOS .NET startup script.
 - Make sure german loc is included in all packages (android, windows setup, etc).
-- Make sure XAudio2 is included in all Windows build.
-
-dotnet publish
-==============
-- dotnet publish /p:Configuration=Release /p:Platform="x64" ../FamiStudio/FamiStudio.csproj -r win-x64 -c Release -f net5.0 --self-contained
-- Copies all the runtime with the build, kind of weird.
+- Make sure XAudio2 is included in all Windows build
+- Flathub:
+	- Update SHA for flathub
+	- Paste HTML change log.
 
 Linux notes 
 =========== 

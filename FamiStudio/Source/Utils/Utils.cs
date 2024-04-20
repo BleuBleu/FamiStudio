@@ -488,6 +488,23 @@ namespace FamiStudio
             return version.Substring(0, dotIdx);
         }
 
+        public static string GetReleaseUrl(string version)
+        {
+            var splits = version.Split('.');
+            Debug.Assert(splits.Length == 4);
+
+            if (splits[2] == "0")
+            {
+                // Major releases have a dedicated "highlights" page.
+                return $"https://famistudio.org/doc/releases/{splits[0]}{splits[1]}0/";
+            }
+            else
+            {
+                // Minor releases just have an "hotfix" entry in the changelog.
+                return $"https://famistudio.org/doc/changelog/#version-{splits[0]}{splits[1]}{splits[2]}-hotfix";
+            }
+        }
+
         public static int InterlockedMax(ref int location, int value)
         {
             int initialValue, newValue;

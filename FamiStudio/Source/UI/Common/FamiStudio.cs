@@ -1501,7 +1501,7 @@ namespace FamiStudio
                     var version = Utils.SplitVersionNumber(Platform.ApplicationVersion, out _);
                     Platform.ShowToast(window, NewVersionWelcome.Format(version), true, () =>
                     {
-                        Platform.OpenUrl("https://famistudio.org/doc/releases/420/");
+                        Platform.OpenUrl(Utils.GetReleaseUrl(Platform.ApplicationVersion));
                         Settings.NewVersionCounter = 0;
                         Settings.Save();
                     });
