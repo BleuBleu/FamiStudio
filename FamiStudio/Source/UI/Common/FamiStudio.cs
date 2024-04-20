@@ -170,9 +170,11 @@ namespace FamiStudio
             else
                 NewProject(true);
 
-#if !DEBUG
+#if !FAMISTUDIO_ANDROID && !DEBUG
             if (Settings.CheckUpdates)
                 Task.Factory.StartNew(CheckForNewRelease);
+            else if (Platform.IsDesktop)
+                newReleaseCheckDone = true;
 #endif
         }
 
