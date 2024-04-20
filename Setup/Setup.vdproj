@@ -45,7 +45,19 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_30B943CCC8374971922B407495D6C456"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_3521C998387149DA926D2D966F10BBE4"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_36DB08DC60DB418DA5DBBEF425380CF4"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -99,6 +111,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_6E65DC17BADB4B6CB244282DFA07DEF0"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_720D9750E68C4FC3AF93C9B4B9FDDE4E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -106,6 +124,12 @@
         "Entry"
         {
         "MsmKey" = "8:_7D24601B46A2452BA60840070D44A972"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_8088A701F3404F5392AC2E1F47524C08"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -390,10 +414,50 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_30B943CCC8374971922B407495D6C456"
+            {
+            "SourcePath" = "8:Demo Songs\\Breaking Through.fms"
+            "TargetName" = "8:Breaking Through.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3521C998387149DA926D2D966F10BBE4"
             {
             "SourcePath" = "8:Demo Songs\\Shovel Knight.fms"
             "TargetName" = "8:Shovel Knight.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_36DB08DC60DB418DA5DBBEF425380CF4"
+            {
+            "SourcePath" = "8:Demo Songs\\Evil Clockwork.fms"
+            "TargetName" = "8:Evil Clockwork.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -570,6 +634,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6E65DC17BADB4B6CB244282DFA07DEF0"
+            {
+            "SourcePath" = "8:Demo Songs\\Pressure Burst.fms"
+            "TargetName" = "8:Pressure Burst.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_720D9750E68C4FC3AF93C9B4B9FDDE4E"
             {
             "SourcePath" = "8:Demo Songs\\Castlevania 2.fms"
@@ -594,6 +678,26 @@
             {
             "SourcePath" = "8:Demo Songs\\Silver Surfer.fms"
             "TargetName" = "8:Silver Surfer.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8088A701F3404F5392AC2E1F47524C08"
+            {
+            "SourcePath" = "8:Demo Songs\\Roar of the Jungle Dragon.fms"
+            "TargetName" = "8:Roar of the Jungle Dragon.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -1560,7 +1664,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9A9A290F02BD4DF9857CA1EFF73548B4"
             {
-            "SourcePath" = "8:..\\FamiStudio\\obj\\Debug\\net7.0\\apphost.exe"
+            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\net7.0\\apphost.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
