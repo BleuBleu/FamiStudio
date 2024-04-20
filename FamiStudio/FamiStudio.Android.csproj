@@ -713,9 +713,11 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Breaking Through.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Castlevania 2.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Dedrecil.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\DuckTales.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Evil Clockwork.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Gimmick.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Gradius 2.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Gyruss.fms" />
@@ -729,6 +731,8 @@
     <EmbeddedResource Include="..\Setup\Demo Songs\Mina the Hollower.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Nice.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Ochame Kinou.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Pressure Burst.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Roar of the Jungle Dragon.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\SCAT.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Seashell Searching.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\SFX.fms" />
