@@ -6686,14 +6686,14 @@ famistudio_sfx_update:
     .if FAMISTUDIO_CFG_SFX_STREAMS > 3
         ldx #FAMISTUDIO_SFX_CH2
         jsr famistudio_sfx_clear_channel
+        ldx @tmp
     .endif
 .endif
 
 @sfx_active:
 .if FAMISTUDIO_CFG_SFX_MIXED = 0
     .if FAMISTUDIO_CFG_SFX_STREAMS > 1
-        ldx @tmp                       ;load effect pointer into temp
-        lda famistudio_sfx_ptr_hi,x
+        lda famistudio_sfx_ptr_hi,x ; Load effect pointer into temp
     .endif
 .endif
     sta @effect_data_ptr+1
