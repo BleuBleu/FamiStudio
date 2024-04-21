@@ -3,19 +3,6 @@
 - Look at michel_iwaniec changes
 - FDS test for Persune
 
-4.2.0
-=====
-- Change discord invite link
-
-4.2.0 Testing/Packaging
-=======================
-- Dont publish for chromebooks
-- Make sure german loc is included in all packages (android, windows setup, etc).
-- Make sure XAudio2 is included in all Windows build
-- Flathub:
-	- Update SHA for flathub
-	- Paste HTML change log.
-
 Linux notes 
 =========== 
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 
