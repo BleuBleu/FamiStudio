@@ -2,6 +2,9 @@
 =====
 - Look at michel_iwaniec changes
 - FDS test for Persune
+- Upgrade to latest GLFW, there is some good stuff in there : menu for for macos, etc.
+- Check out Yxx stuff from Alex.
+	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
 
 Linux notes 
 =========== 
