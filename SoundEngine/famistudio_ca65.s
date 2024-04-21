@@ -6587,57 +6587,84 @@ famistudio_sfx_play:
     tay
 
 .if FAMISTUDIO_CFG_SFX_MIXED = 0 ; Stop being selected and its preceding effects during plays
-    cpx #FAMISTUDIO_SFX_CH3
-    bcs @write_ch3
-    cpx #FAMISTUDIO_SFX_CH2
-    bcs @write_ch2
-    cpx #FAMISTUDIO_SFX_CH1
-    bcs @write_ch1
-    cpx #FAMISTUDIO_SFX_CH0
-    bcs @write_ch0
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+        cpx #FAMISTUDIO_SFX_CH3
+        bcs @write_ch3
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+        cpx #FAMISTUDIO_SFX_CH2
+        bcs @write_ch2
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
+        cpx #FAMISTUDIO_SFX_CH1
+        bcs @write_ch1
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 0
+        jmp @write_ch0
+    .endif
 
-@write_ch3:
-    ldx #FAMISTUDIO_SFX_CH0
-    jsr famistudio_sfx_clear_channel
-    ldx #FAMISTUDIO_SFX_CH1
-    jsr famistudio_sfx_clear_channel
-    ldx #FAMISTUDIO_SFX_CH2
-    jsr famistudio_sfx_clear_channel
-    ldx #FAMISTUDIO_SFX_CH3
-    jsr famistudio_sfx_clear_channel
-    jmp @write_channel
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+    @write_ch3:
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH1
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH2
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH3
+        jsr famistudio_sfx_clear_channel
+        jmp @write_channel
+    .endif
 
-@write_ch2:
-    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
-    bne @ignore_channel
-    ldx #FAMISTUDIO_SFX_CH0
-    jsr famistudio_sfx_clear_channel
-    ldx #FAMISTUDIO_SFX_CH1
-    jsr famistudio_sfx_clear_channel
-    ldx #FAMISTUDIO_SFX_CH2
-    jsr famistudio_sfx_clear_channel
-    jmp @write_channel
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+    @write_ch2:
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3 ; Check if the high priority sound effect stream(s) is playing, ignore if it is playing
+            bne @ignore_channel
+        .endif
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH1
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH2
+        jsr famistudio_sfx_clear_channel
+        jmp @write_channel
+    .endif
 
-@write_ch1:
-    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
-    bne @ignore_channel
-    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH2
-    bne @ignore_channel
-    ldx #FAMISTUDIO_SFX_CH0
-    jsr famistudio_sfx_clear_channel
-    ldx #FAMISTUDIO_SFX_CH1
-    jsr famistudio_sfx_clear_channel
-    jmp @write_channel
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
+    @write_ch1:
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
+            bne @ignore_channel
+        .endif
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH2
+            bne @ignore_channel
+        .endif
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH1
+        jsr famistudio_sfx_clear_channel
+        jmp @write_channel
+    .endif
 
-@write_ch0:
-    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
-    bne @ignore_channel
-    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH2
-    bne @ignore_channel
-    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH1
-    bne @ignore_channel
-    ldx #FAMISTUDIO_SFX_CH0
-    jsr famistudio_sfx_clear_channel
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 0
+    @write_ch0:
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
+            bne @ignore_channel
+        .endif
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH2
+            bne @ignore_channel
+        .endif
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 1
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH1
+            bne @ignore_channel
+        .endif
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_clear_channel
+    .endif
 .else
     jsr famistudio_sfx_clear_channel ; Stops the effect if it plays
 .endif
