@@ -6586,39 +6586,63 @@ famistudio_sfx_play:
     asl a
     tay
 
-.if FAMISTUDIO_CFG_SFX_MIXED = 0
-    .if FAMISTUDIO_CFG_SFX_STREAMS = 4 ; Check if the high priority sound effects is playing
-        cpx #FAMISTUDIO_SFX_CH3
-        beq @write_channel
-    .endif
+.if FAMISTUDIO_CFG_SFX_MIXED = 0 ; Stop being selected and its preceding effects during plays
+    cpx #FAMISTUDIO_SFX_CH3
+    bcs @write_ch3
+    cpx #FAMISTUDIO_SFX_CH2
+    bcs @write_ch2
+    cpx #FAMISTUDIO_SFX_CH1
+    bcs @write_ch1
+    cpx #FAMISTUDIO_SFX_CH0
+    bcs @write_ch0
 
-    .if FAMISTUDIO_CFG_SFX_STREAMS = 3
-        cpx #FAMISTUDIO_SFX_CH2
-        beq @write_channel
-    .endif
+@write_ch3:
+    ldx #FAMISTUDIO_SFX_CH0
+    jsr famistudio_sfx_clear_channel
+    ldx #FAMISTUDIO_SFX_CH1
+    jsr famistudio_sfx_clear_channel
+    ldx #FAMISTUDIO_SFX_CH2
+    jsr famistudio_sfx_clear_channel
+    ldx #FAMISTUDIO_SFX_CH3
+    jsr famistudio_sfx_clear_channel
+    jmp @write_channel
 
-    .if FAMISTUDIO_CFG_SFX_STREAMS = 2
-        cpx #FAMISTUDIO_SFX_CH1
-        beq @write_channel
-    .endif
+@write_ch2:
+    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
+    bne @ignore_channel
+    ldx #FAMISTUDIO_SFX_CH0
+    jsr famistudio_sfx_clear_channel
+    ldx #FAMISTUDIO_SFX_CH1
+    jsr famistudio_sfx_clear_channel
+    ldx #FAMISTUDIO_SFX_CH2
+    jsr famistudio_sfx_clear_channel
+    jmp @write_channel
 
-    .if FAMISTUDIO_CFG_SFX_STREAMS > 3
-        lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
-        bne @ignore_channel
-    .endif
-    .if FAMISTUDIO_CFG_SFX_STREAMS > 2
-        lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH2
-        bne @ignore_channel
-    .endif
-    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
-        lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH1
-        bne @ignore_channel
-    .endif
+@write_ch1:
+    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
+    bne @ignore_channel
+    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH2
+    bne @ignore_channel
+    ldx #FAMISTUDIO_SFX_CH0
+    jsr famistudio_sfx_clear_channel
+    ldx #FAMISTUDIO_SFX_CH1
+    jsr famistudio_sfx_clear_channel
+    jmp @write_channel
+
+@write_ch0:
+    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
+    bne @ignore_channel
+    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH2
+    bne @ignore_channel
+    lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH1
+    bne @ignore_channel
+    ldx #FAMISTUDIO_SFX_CH0
+    jsr famistudio_sfx_clear_channel
+.else
+    jsr famistudio_sfx_clear_channel ; Stops the effect if it plays
 .endif
 
 @write_channel:
-    jsr famistudio_sfx_clear_channel ; Stops the effect if it plays
-
     lda famistudio_sfx_addr_lo
     sta @effect_data_ptr+0
     lda famistudio_sfx_addr_hi
@@ -6653,50 +6677,12 @@ famistudio_sfx_update:
     bne @update_buf ; Just mix with output buffer
 
 @no_repeat:
-.if FAMISTUDIO_CFG_SFX_MIXED = 0
-    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
-        stx @tmp
-    .endif
-.endif
     lda famistudio_sfx_ptr_hi,x ; Check if MSB of the pointer is not zero
-    bne @clear_other_channel
+    bne @sfx_active
     rts ; Return otherwise, no active effect
 
-@clear_other_channel:
-.if FAMISTUDIO_CFG_SFX_MIXED = 0
-    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
-        cpx #FAMISTUDIO_SFX_CH0
-        beq @sfx_active
-
-        ldx #FAMISTUDIO_SFX_CH0
-        jsr famistudio_sfx_clear_channel
-        ldx @tmp
-        cpx #FAMISTUDIO_SFX_CH1
-        beq @sfx_active
-    .endif
-
-    .if FAMISTUDIO_CFG_SFX_STREAMS > 2
-        ldx #FAMISTUDIO_SFX_CH1
-        jsr famistudio_sfx_clear_channel
-        ldx @tmp
-        cpx #FAMISTUDIO_SFX_CH2
-        beq @sfx_active
-    .endif
-
-    .if FAMISTUDIO_CFG_SFX_STREAMS > 3
-        ldx #FAMISTUDIO_SFX_CH2
-        jsr famistudio_sfx_clear_channel
-        ldx @tmp
-    .endif
-.endif
-
 @sfx_active:
-.if FAMISTUDIO_CFG_SFX_MIXED = 0
-    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
-        lda famistudio_sfx_ptr_hi,x ; Load effect pointer into temp
-    .endif
-.endif
-    sta @effect_data_ptr+1
+    sta @effect_data_ptr+1         ;load effect pointer into temp
     lda famistudio_sfx_ptr_lo,x
     sta @effect_data_ptr+0
     ldy famistudio_sfx_offset,x
