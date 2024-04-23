@@ -6540,7 +6540,7 @@ famistudio_sfx_play:
     asl a
     tay
 
-.if FAMISTUDIO_CFG_SFX_MIXED = 0 ; Stop being selected and its preceding effects during plays
+.if (FAMISTUDIO_CFG_SFX_MIXED = 0) && (FAMISTUDIO_CFG_SFX_STREAMS > 1) ; Stop being selected and its preceding effects during plays
     .if FAMISTUDIO_CFG_SFX_STREAMS > 3
         cpx #FAMISTUDIO_SFX_CH3
         bcs @write_ch3
