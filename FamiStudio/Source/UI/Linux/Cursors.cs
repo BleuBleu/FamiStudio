@@ -36,7 +36,7 @@ namespace FamiStudio
         {
             InitializeDesktop(scaling);
 
-            var fleur = CreateGLFWCursorLinux(LoadLinuxCursor(XC_fleur));
+            var fleur = glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
 
             DragCursor = fleur;
             CopyCursor = fleur;
