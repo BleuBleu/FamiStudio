@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using static GLFWDotNet.GLFW;
 
@@ -36,7 +37,10 @@ namespace FamiStudio
         {
             InitializeDesktop(scaling);
 
-            var fleur = glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
+            glfwGetVersion(out _, out var minor, out _);
+            var fleur = minor < 4 
+                ? CreateGLFWCursorLinux(LoadLinuxCursor(XC_fleur))
+                : glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
 
             DragCursor = fleur;
             CopyCursor = fleur;
