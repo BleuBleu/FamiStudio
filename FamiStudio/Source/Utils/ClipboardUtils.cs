@@ -298,6 +298,8 @@ namespace FamiStudio
                         var instrument = serializer.Project.CreateInstrument(instType, instName);
                         serializer.RemapId(instId, instrument.Id);
                         instrument.Serialize(serializer);
+                        if (!string.IsNullOrEmpty(instrument.FolderName)) 
+                            serializer.Project.CreateFolder(FolderType.Instrument, instrument.FolderName);
                     }
                     else
                     {
