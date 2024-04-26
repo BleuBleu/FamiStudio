@@ -75,8 +75,8 @@ namespace FamiStudio
             }
             else if (libraryName.Contains("rtmidi"))
             {
-                // Let's try to load version 4.0 or 5.0 (which are strangely named 5.0.0 and 6.0.0 respectively...)
-                for (var i = 6; i >= 5; i--)
+                // Let's try to load version 4.0, 5.0, or 6.0 (which are strangely named 5.0.0, 6.0.0, and 7.0.0 respectively...)
+                for (var i = 7; i >= 5; i--)
                 {
                     if (NativeLibrary.TryLoad($"librtmidi.so.{i}", assembly, DllImportSearchPath.System32, out handle))
                     {
