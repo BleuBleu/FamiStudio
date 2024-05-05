@@ -1,12 +1,32 @@
+4.2.1 Hotfix
+============
+- MSI points to .NET 5.0
+- Linux Wayland thing.
+- VRC6Lover123 CV3 demo song.
+- Add Share -> Export to documentation.
+- Russian dude email : why is there a "+" button for DPCM sample in mobile version??
+- Pop how2/kawashin (VRC6/2A03)
+	https://discord.com/channels/@me/819772561940152321/1231885934656753704
+- Mixer settings resets on mobile.
+	https://discord.com/channels/747649221879922840/1233290690159706143/1233290690159706143
+- Bass setting always resets to 16KHZ?
+	https://discord.com/channels/@me/1093046594062004286/1236698125905690754
+- Sound engine version comment 4.1.0
+- Kawashin NSF song that stops after 24 sec.
+	https://discord.com/channels/@me/1093046594062004286/1236015569950609568
+- YARN : Small hitch beginning of VRC6 songs? Not sure
+- YARN : Change ini ROM code persune suggestion.
+- YARN : Try VRC7 clarinet + bell, clarinet + flute
+
 4.3.0
 =====
+- Disable NMI during FDS file loading
+	https://discord.com/channels/747649221879922840/798008185977176074/1235154978486878298
 - Look at michel_iwaniec changes
 - FDS test for Persune
 - Upgrade to latest GLFW, there is some good stuff in there : menu for for macos, etc.
 - Check out Yxx stuff from Alex.
 	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
-- Kawashin NSF song that stops after 24 sec.
-	https://discord.com/channels/@me/1093046594062004286/1236015569950609568
 
 Linux notes 
 =========== 
@@ -52,6 +72,10 @@ MacOS notes
 Convert PNG to TGA
 ==================
 "c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png
+
+Discord Invite Link (new as of April 2024)
+==========================================
+https://discord.gg/QRCMe595Pv
 
 Android Notes
 =============
