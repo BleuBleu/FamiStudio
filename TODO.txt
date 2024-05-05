@@ -5,6 +5,8 @@
 - Upgrade to latest GLFW, there is some good stuff in there : menu for for macos, etc.
 - Check out Yxx stuff from Alex.
 	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
+- Kawashin NSF song that stops after 24 sec.
+	https://discord.com/channels/@me/1093046594062004286/1236015569950609568
 
 Linux notes 
 =========== 
