@@ -1,6 +1,6 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (4.1.0)
-; Copyright (c) 2019-2023 Mathieu Gauthier
+; FAMISTUDIO SOUND ENGINE (4.2.0)
+; Copyright (c) 2019-2024 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
 ; modification, are permitted in any medium without royalty provided
@@ -145,6 +145,9 @@ FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 ; Support for sound effects playback + number of SFX that can play at once.
 ; FAMISTUDIO_CFG_SFX_SUPPORT   = 1 
 ; FAMISTUDIO_CFG_SFX_STREAMS   = 2
+
+; Multiple sound effects are overlaid from beginning to end, mixed and played back. For reused channels, some sound effects may sound strange.
+; FAMISTUDIO_CFG_SFX_MIXED = 1
 
 ; Blaarg's smooth vibrato technique. Eliminates phase resets ("pops") on square channels. 
 ; FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1 
@@ -347,10 +350,15 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 .ifndef FAMISTUDIO_CFG_SFX_SUPPORT
     FAMISTUDIO_CFG_SFX_SUPPORT = 0
     FAMISTUDIO_CFG_SFX_STREAMS = 0
+    FAMISTUDIO_CFG_SFX_MIXED = 0
 .endif
 
 .ifndef FAMISTUDIO_CFG_SFX_STREAMS
     FAMISTUDIO_CFG_SFX_STREAMS = 1
+.endif
+
+.ifndef FAMISTUDIO_CFG_SFX_MIXED
+    FAMISTUDIO_CFG_SFX_MIXED = 0
 .endif
 
 .ifndef FAMISTUDIO_CFG_C_BINDINGS
@@ -6578,8 +6586,90 @@ famistudio_sfx_play:
     asl a
     tay
 
-    jsr famistudio_sfx_clear_channel ; Stops the effect if it plays
+.if (FAMISTUDIO_CFG_SFX_MIXED = 0) && (FAMISTUDIO_CFG_SFX_STREAMS > 1) ; Stop being selected and its preceding effects during plays
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+        cpx #FAMISTUDIO_SFX_CH3
+        bcs @write_ch3
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+        cpx #FAMISTUDIO_SFX_CH2
+        bcs @write_ch2
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
+        cpx #FAMISTUDIO_SFX_CH1
+        bcs @write_ch1
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 0
+        jmp @write_ch0
+    .endif
 
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+    @write_ch3:
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH1
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH2
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH3
+        jsr famistudio_sfx_clear_channel
+        jmp @write_channel
+    .endif
+
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+    @write_ch2:
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3 ; Check if the high priority sound effect stream(s) is playing, ignore if it is playing
+            bne @ignore_channel
+        .endif
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH1
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH2
+        jsr famistudio_sfx_clear_channel
+        jmp @write_channel
+    .endif
+
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
+    @write_ch1:
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
+            bne @ignore_channel
+        .endif
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH2
+            bne @ignore_channel
+        .endif
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_clear_channel
+        ldx #FAMISTUDIO_SFX_CH1
+        jsr famistudio_sfx_clear_channel
+        jmp @write_channel
+    .endif
+
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 0
+    @write_ch0:
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH3
+            bne @ignore_channel
+        .endif
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH2
+            bne @ignore_channel
+        .endif
+        .if FAMISTUDIO_CFG_SFX_STREAMS > 1
+            lda famistudio_sfx_ptr_hi+FAMISTUDIO_SFX_CH1
+            bne @ignore_channel
+        .endif
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_clear_channel
+    .endif
+.else
+    jsr famistudio_sfx_clear_channel ; Stops the effect if it plays
+.endif
+
+@write_channel:
     lda famistudio_sfx_addr_lo
     sta @effect_data_ptr+0
     lda famistudio_sfx_addr_hi
@@ -6591,6 +6681,7 @@ famistudio_sfx_play:
     lda (@effect_data_ptr),y
     sta famistudio_sfx_ptr_hi,x ; This write enables the effect
 
+@ignore_channel:
     rts
 
 ;======================================================================================================================
@@ -6661,13 +6752,9 @@ famistudio_sfx_update:
     sta famistudio_sfx_ptr_hi,x ; Mark channel as inactive
 
 @update_buf:
-    lda famistudio_output_buf ; Compare effect output buffer with main output buffer
-    and #$0f ; If volume of pulse 1 of effect is higher than that of the main buffer, overwrite the main buffer value with the new one
-    sta @tmp 
-    lda famistudio_sfx_buffer+0,x
+    lda famistudio_sfx_buffer+0,x ; Overwrite pulse 1 of main output buffer if it is active
     and #$0f
-    cmp @tmp
-    bcc @no_pulse1
+    beq @no_pulse1
     lda famistudio_sfx_buffer+0,x
     sta famistudio_output_buf+0
     lda famistudio_sfx_buffer+1,x
@@ -6676,13 +6763,9 @@ famistudio_sfx_update:
     sta famistudio_output_buf+2
 
 @no_pulse1:
-    lda famistudio_output_buf+3
-    and #$0f
-    sta @tmp
     lda famistudio_sfx_buffer+3,x
     and #$0f
-    cmp @tmp
-    bcc @no_pulse2
+    beq @no_pulse2
     lda famistudio_sfx_buffer+3,x
     sta famistudio_output_buf+3
     lda famistudio_sfx_buffer+4,x
@@ -6691,7 +6774,7 @@ famistudio_sfx_update:
     sta famistudio_output_buf+5
 
 @no_pulse2:
-    lda famistudio_sfx_buffer+6,x ; Overwrite triangle of main output buffer if it is active
+    lda famistudio_sfx_buffer+6,x
     beq @no_triangle
     sta famistudio_output_buf+6
     lda famistudio_sfx_buffer+7,x
@@ -6700,13 +6783,9 @@ famistudio_sfx_update:
     sta famistudio_output_buf+8
 
 @no_triangle:
-    lda famistudio_output_buf+9
-    and #$0f
-    sta @tmp
     lda famistudio_sfx_buffer+9,x
     and #$0f
-    cmp @tmp
-    bcc @no_noise
+    beq @no_noise
     lda famistudio_sfx_buffer+9,x
     sta famistudio_output_buf+9
     lda famistudio_sfx_buffer+10,x
