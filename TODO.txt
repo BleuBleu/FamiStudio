@@ -1,5 +1,15 @@
 4.2.1 Hotfix
 ============
+x Github issue : Sound engine settings not saved.
+- #bug-report : TF74 weird nsf import 
+- #bug-report : craft notes play incorrectly.
+- #bug-report : TF74 can click behind dialog box
+- #bug-report : Test VGM import on phone
+- #bug-report : Juef looping issue
+- #bug-report : Nicolark, cant change pattern name?
+- #bug-report : Steo folder issue. 
+- #bug-report : craft mixer settings dont save.
+- Includes YARN changes to sound engine.
 - MSI points to .NET 5.0
 - Linux Wayland thing.
 - VRC6Lover123 CV3 demo song.
