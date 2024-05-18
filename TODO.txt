@@ -13,19 +13,19 @@ x #bug-report : TF74 can click behind dialog box
 - #bug-report : Steo folder issue. 
 / #bug-report : craft mixer settings dont save. 
 	=> I think this is same issue, Bass filter.
-- Includes YARN changes to sound engine.
+x Includes YARN changes to sound engine.
 x MSI points to .NET 5.0
 - Linux Wayland thing.
 - VRC6Lover123 CV3 demo song.
 - Add Share -> Export to documentation.
-- Russian dude email : why is there a "+" button for DPCM sample in mobile version??
+x Russian dude email : why is there a "+" button for DPCM sample in mobile version??
 - Pop how2/kawashin (VRC6/2A03)
 	https://discord.com/channels/@me/819772561940152321/1231885934656753704
-- Mixer settings resets on mobile.
-	https://discord.com/channels/747649221879922840/1233290690159706143/1233290690159706143
+x Mixer settings resets on mobile.
 x Bass setting always resets to 16KHZ?
-- Sound engine version comment 4.1.0
-- Kawashin NSF song that stops after 24 sec.
+x Sound engine version comment 4.1.0
+x Kawashin NSF song that stops after 24 sec.
+	=> Run famistudio unit tests.
 	https://discord.com/channels/@me/1093046594062004286/1236015569950609568
 - YARN : Small hitch beginning of VRC6 songs? Not sure
 - YARN : Change ini ROM code persune suggestion.
