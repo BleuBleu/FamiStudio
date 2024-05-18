@@ -118,7 +118,7 @@ namespace FamiStudio
             var textBox = new TextBox(txt);
             textBox.BackColor = backColor;
             textBox.ForeColor = Theme.BlackColor;
-            textBox.DisabledColor = Theme.BlackColor;
+            //textBox.DisabledColor = Theme.BlackColor;
             textBox.SelectionColor = Theme.Darken(backColor);
             return textBox;
         }
