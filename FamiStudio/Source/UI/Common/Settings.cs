@@ -696,6 +696,7 @@ namespace FamiStudio
 
             // Mixer
             ini.SetFloat("Mixer", "GlobalVolume", GlobalVolumeDb);
+            ini.SetInt("Mixer", "BassCutoffHz", BassCutoffHz);
 
             for (int i = 0; i < ExpansionType.Count; i++)
             {
