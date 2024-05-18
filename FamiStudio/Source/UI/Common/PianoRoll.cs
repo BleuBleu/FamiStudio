@@ -5074,13 +5074,18 @@ namespace FamiStudio
             return null;
         }
 
+        private bool AllowGizmos()
+        {
+            return  window != null && !window.IsAsyncDialogInProgress;
+        }
+
         private List<Gizmo> GetNoteGizmos(out Note note, out NoteLocation location)
         {
             note = Platform.IsDesktop ? 
                 GetNoteForDesktopNoteGizmos(out location) :
                 GetHighlightedNoteAndLocation(out location);
 
-            if (note == null || !note.IsMusical)
+            if (note == null || !note.IsMusical || !AllowGizmos())
                 return null;
 
             var locationAbsIndex = location.ToAbsoluteNoteIndex(Song);
@@ -5165,7 +5170,7 @@ namespace FamiStudio
                 GetNoteForDesktopEffectGizmos(out location) :
                 GetHighlightedNoteAndLocation(out location);
 
-            if (!showEffectsPanel || selectedEffectIdx < 0 || note == null || !note.HasValidEffectValue(selectedEffectIdx))
+            if (!showEffectsPanel || selectedEffectIdx < 0 || note == null || !note.HasValidEffectValue(selectedEffectIdx) || !AllowGizmos())
                 return null;
 
             var list = new List<Gizmo>();
@@ -5220,7 +5225,7 @@ namespace FamiStudio
 
             var env = EditEnvelope;
 
-            if (highlightNoteAbsIndex < 0 || highlightNoteAbsIndex >= env.Length || highlightRepeatEnvelope)
+            if (highlightNoteAbsIndex < 0 || highlightNoteAbsIndex >= env.Length || highlightRepeatEnvelope || !AllowGizmos())
                 return null;
 
             Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
@@ -5254,7 +5259,7 @@ namespace FamiStudio
             var env = EditEnvelope;
             var rep = EditRepeatEnvelope;
 
-            if (highlightNoteAbsIndex < 0 || highlightNoteAbsIndex >= env.Length || !highlightRepeatEnvelope || rep == null)
+            if (highlightNoteAbsIndex < 0 || highlightNoteAbsIndex >= env.Length || !highlightRepeatEnvelope || rep == null || !AllowGizmos())
                 return null;
 
             Envelope.GetMinMaxValueForType(editInstrument, EnvelopeType.WaveformRepeat, out int min, out int max);
