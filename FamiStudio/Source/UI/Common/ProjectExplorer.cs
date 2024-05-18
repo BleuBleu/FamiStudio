@@ -4025,6 +4025,8 @@ namespace FamiStudio
                 LoadDPCMSample();
             else if (subButtonType == SubButtonType.Sort)
                 SortSamples();
+            else if (subButtonType == SubButtonType.Add)
+                AskAddSampleFolder(x, y);
 
             return true;
         }
