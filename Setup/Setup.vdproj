@@ -244,10 +244,10 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.5.0.x64"
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.7.0.x64"
                     {
-                    "Name" = "8:.NET Desktop Runtime 5.0.17 (x64)"
-                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.5.0.x64"
+                    "Name" = "8:.NET Desktop Runtime 7.0.14 (x64)"
+                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.7.0.x64"
                     }
                 }
             }
@@ -305,7 +305,7 @@
                 "Name" = "8:.NET Core"
                 "Message" = "8:[VSDNETCOREMSG]"
                 "AllowLaterVersions" = "11:FALSE"
-                "InstallUrl" = "8:https://dotnet.microsoft.com/en-us/download/dotnet/5.0"
+                "InstallUrl" = "8:https://dotnet.microsoft.com/en-us/download/dotnet/7.0"
                 "IsNETCore" = "11:TRUE"
                 "Architecture" = "2:0"
                 "Runtime" = "2:0"
@@ -1664,7 +1664,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9A9A290F02BD4DF9857CA1EFF73548B4"
             {
-            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\net7.0\\apphost.exe"
+            "SourcePath" = "8:..\\FamiStudio\\obj\\Debug\\net7.0\\apphost.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
