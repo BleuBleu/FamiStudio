@@ -1,35 +1,33 @@
 4.2.1 Hotfix
 ============
 x Github issue : Sound engine settings not saved.
-- #bug-report : TF74 weird nsf import 
-- #bug-report : craft notes play incorrectly.
 x #bug-report : TF74 can click behind dialog box
-/ #bug-report : Test VGM import on phone
-	=> AsSpan() helps a lot, test a few more VGM to make sure it still works.
-/ #bug-report : Juef looping issue
-	=> Test more, export a view more videos.
-- #bug-report : Nicolark, cant change pattern name?
-	=> Put something in label to make it clear that multiple patterns sel
-- #bug-report : Steo folder issue. 
-/ #bug-report : craft mixer settings dont save. 
-	=> I think this is same issue, Bass filter.
+x #bug-report : craft mixer settings dont save. 
 x Includes YARN changes to sound engine.
 x MSI points to .NET 5.0
-- Linux Wayland thing.
-- VRC6Lover123 CV3 demo song.
-- Add Share -> Export to documentation.
 x Russian dude email : why is there a "+" button for DPCM sample in mobile version??
-- Pop how2/kawashin (VRC6/2A03)
-	https://discord.com/channels/@me/819772561940152321/1231885934656753704
 x Mixer settings resets on mobile.
 x Bass setting always resets to 16KHZ?
 x Sound engine version comment 4.1.0
 x Kawashin NSF song that stops after 24 sec.
 	=> Run famistudio unit tests.
+/ #bug-report : Test VGM import on phone
+	=> Test a few more files to make sure nothing is broken.
+/ #bug-report : Juef looping issue
+	=> Test more, export a view more videos.
+	=> Doesnt work with slide notes, need to add a no-attack note to NEXT pattern. Ugh.
+/ #bug-report : Nicolark, cant change pattern name?
+	=> Put something in label to make it clear that multiple patterns sel.
+- #bug-report : Steo folder issue. 
+/ #bug-report : craft notes play incorrectly.
+	=> Cant hear the problem.
+/ Linux Wayland thing.
+	=> Folder fix for other assets.
+- VRC6Lover123 CV3 demo song.
+- Add Share -> Export to documentation.
+- Pop how2/kawashin (VRC6/2A03)
+	https://discord.com/channels/@me/819772561940152321/1231885934656753704
 	https://discord.com/channels/@me/1093046594062004286/1236015569950609568
-- YARN : Small hitch beginning of VRC6 songs? Not sure
-- YARN : Change ini ROM code persune suggestion.
-- YARN : Try VRC7 clarinet + bell, clarinet + flute
 
 4.3.0
 =====
@@ -40,6 +38,9 @@ x Kawashin NSF song that stops after 24 sec.
 - Upgrade to latest GLFW, there is some good stuff in there : menu for for macos, etc.
 - Check out Yxx stuff from Alex.
 	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
+- YARN : Small hitch beginning of VRC6 songs? Not sure
+- YARN : Change ini ROM code persune suggestion.
+- YARN : Try VRC7 clarinet + bell, clarinet + flute
 
 Linux notes 
 =========== 

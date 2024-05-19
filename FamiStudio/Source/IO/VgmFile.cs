@@ -203,7 +203,7 @@ namespace FamiStudio
                     DPCMDataList.AddRange(project.GetPackedSampleData(i).ToList());
                 }   
                 var sampleData = DPCMDataList.ToArray();
-                bool DPCMUsed = sampleData.Length != 0;
+                var DPCMUsed = sampleData.Length != 0;
                 var writer = new BinaryWriter(file);
                 var fileLength = sizeof(VgmHeader) + initSize + extraHeaderSize 
                 + 1 - 4 + (DPCMUsed ? (sampleData.Length + ( project.UsesMultipleDPCMBanks ? 7 + GetAmountOfBankswitching(sampleBanks, writes) * 12 : 9 )) : 0); 
@@ -1502,13 +1502,15 @@ namespace FamiStudio
             return hasNote;
         }
 
-        public static float BcdToDecimal(IEnumerable<byte> bcd)
+        public static float BcdToDecimal(ReadOnlySpan<byte> bcd)
         {
-            Debug.Assert(bcd != null || bcd.Count() != 0);
+            Debug.Assert(bcd != null || bcd.Length != 0);
 
+            // Assume reversed.
             var result = 0;
-            foreach (byte item in bcd)
+            for (int i = bcd.Length - 1; i >= 0; i--)
             {
+                byte item = bcd[i];
                 Debug.Assert((item >> 4) < 10);
                 Debug.Assert((item % 16) < 10);
                 result *= 100;
@@ -1571,32 +1573,32 @@ namespace FamiStudio
                 channelStates[i] = new ChannelState();
 
 
-            var vgmDataOffset = BitConverter.ToInt32(vgmFile.Skip(0x34).Take(4).ToArray())+0x34;
+            var vgmDataOffset = BitConverter.ToInt32(vgmFile.AsSpan(0x34, 4))+0x34;
 #if DEBUG
-            Log.LogMessage(LogSeverity.Info, "Version : " + (BcdToDecimal(vgmFile.Skip(8).Take(4).Reverse().ToArray()) / 100).ToString("F2"));
+            Log.LogMessage(LogSeverity.Info, "Version : " + (BcdToDecimal(vgmFile.AsSpan(8, 4)) / 100).ToString("F2"));
             Log.LogMessage(LogSeverity.Info, "VGM Data Startoffset: " + vgmDataOffset);
 #endif
-            var vgmData = new byte[3];
+            var vgmData = new ReadOnlySpan<byte>();
             var vgmCommand = vgmFile[vgmDataOffset];
             if (adjustClock)
             {
-                if (BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / (((vgmFile[0x78] & vgmFile[0x79] & 0x10) == 0x10) ? 1789773 : (float)894886.5);
-                if (BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x44).Take(4).ToArray()) / 4000000;
-                if (BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x48).Take(4).ToArray()) / 8000000;
-                if (BitConverter.ToInt32(vgmFile.Skip(0x4C).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x4C).Take(4).ToArray()) / 8000000;
-                if (BitConverter.ToInt32(vgmFile.Skip(0x2c).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.Skip(0x2C).Take(4).ToArray()) / 8000000;
-                if (BitConverter.ToInt32(vgmFile.Skip(0x10).Take(4).ToArray()) > 0)
-                    clockMultiplier[ExpansionType.Vrc7] = (float)BitConverter.ToInt32(vgmFile.Skip(0x10).Take(4).ToArray()) / 3579545;
+                if (BitConverter.ToInt32(vgmFile.AsSpan(0x74, 4)) > 0)
+                    clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x74, 4)) / (((vgmFile[0x78] & vgmFile[0x79] & 0x10) == 0x10) ? 1789773 : (float)894886.5);
+                if (BitConverter.ToInt32(vgmFile.AsSpan(0x44, 4)) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x44, 4)) / 4000000;
+                if (BitConverter.ToInt32(vgmFile.AsSpan(0x48, 4)) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x48, 4)) / 8000000;
+                if (BitConverter.ToInt32(vgmFile.AsSpan(0x4C, 4)) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x4C, 4)) / 8000000;
+                if (BitConverter.ToInt32(vgmFile.AsSpan(0x2c, 4)) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x2C, 4)) / 8000000;
+                if (BitConverter.ToInt32(vgmFile.AsSpan(0x10, 4)) > 0)
+                    clockMultiplier[ExpansionType.Vrc7] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x10, 4)) / 3579545;
 
                 if (ym2149AsEpsm)
                 {
-                    if (BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) > 0)
-                        clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.Skip(0x74).Take(4).ToArray()) / (((vgmFile[0x78] & vgmFile[0x79] & 0x10) == 0x10) ? 4000000 : 2000000);
+                    if (BitConverter.ToInt32(vgmFile.AsSpan(0x74, 4)) > 0)
+                        clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x74, 4)) / (((vgmFile[0x78] & vgmFile[0x79] & 0x10) == 0x10) ? 4000000 : 2000000);
                     ym2149AsEPSM = ym2149AsEpsm;
                 }
             }
@@ -1610,56 +1612,69 @@ namespace FamiStudio
                     project.SetExpansionAudioMask(expansionMask, 0);
                 if (vgmCommand == 0x67)  //DataBlock
                 {
+                    var dataSize = BitConverter.ToInt32(vgmFile.AsSpan(vgmDataOffset + 3, 4));
+                    var dataType = vgmFile[vgmDataOffset + 2];
+                    var dataAddr = BitConverter.ToUInt16(vgmFile.AsSpan(vgmDataOffset + 7, 2));
+
 #if DEBUG
-                    Log.LogMessage(LogSeverity.Info, "DataBlock Size: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 3).Take(4).Reverse().ToArray()).Replace("-", ""));
-                    Log.LogMessage(LogSeverity.Info, "DataBlock Type: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 2).Take(1).Reverse().ToArray()).Replace("-", ""));
-                    Log.LogMessage(LogSeverity.Info, "DataBlock Addr: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).Reverse().ToArray()).Replace("-", ""));
+                    Log.LogMessage(LogSeverity.Info, $"DataBlock Size: {dataSize:x8}");
+                    Log.LogMessage(LogSeverity.Info, $"DataBlock Type: {dataType:x2}");
+                    Log.LogMessage(LogSeverity.Info, $"DataBlock Addr: {dataAddr:x4}");
 #endif
 
                     if (vgmFile.Length < (vgmDataOffset + 3 + 4))
                         break;
 
-                    if (vgmFile.Length < (BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2))
+                    if (vgmFile.Length < dataSize - 2)
                         break;
+
                     if (vgmFile[vgmDataOffset + 2] == 0xC2) //DPCM Data
                     {
-                        var data = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
+                        var data = vgmFile.AsSpan(vgmDataOffset + 9, dataSize - 2);
                         for (int i = 0; i < data.Length; i++)
                         {
-                            if ((i + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()) - 0xc000) >= 0)
-                                dpcmData[i + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 3 + 4).Take(2).ToArray()) - 0xc000] = data[i];
+                            if ((i + dataAddr - 0xc000) >= 0)
+                                dpcmData[i + dataAddr - 0xc000] = data[i];
                         }
-
                     }
                     else if (vgmFile[vgmDataOffset + 2] == 0x07) //PCM RAM Data
                     {
-                        pcmRAMData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
+                        pcmRAMData = vgmFile.AsSpan(vgmDataOffset + 9, dataSize - 2).ToArray();
                     }
                     else
-                        dpcmData = vgmFile.Skip(vgmDataOffset + 3 + 4 + 2).Take(BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) - 2).ToArray();
-                    vgmDataOffset = vgmDataOffset + BitConverter.ToInt32(vgmFile.Skip(vgmDataOffset + 3).Take(4).ToArray()) + 3 + 4;
+                    {
+                        dpcmData = vgmFile.AsSpan(vgmDataOffset + 9, dataSize - 2).ToArray();
+                    }
+                    vgmDataOffset = vgmDataOffset + dataSize + 7;
                 }
                 else if (vgmCommand == 0x68)  //PCM Data Copy
                 {
-                    if (vgmFile.Length < (vgmDataOffset + 3 + 3 + 3 + 3))
+                    if (vgmFile.Length < (vgmDataOffset + 12))
                         break;
-                    var readOffset = vgmFile.Skip(vgmDataOffset + 3).Take(3).ToArray();
-                    var writeOffset = vgmFile.Skip(vgmDataOffset + 3 + 3).Take(3).ToArray();
-                    var copySize = vgmFile.Skip(vgmDataOffset + 3 + 3 + 3).Take(3).ToArray();
+
+                    var readOffset  = Utils.Bytes24BitToInt(vgmFile.AsSpan(vgmDataOffset + 3, 3));
+                    var writeOffset = Utils.Bytes24BitToInt(vgmFile.AsSpan(vgmDataOffset + 6, 3));
+                    var copySize    = Utils.Bytes24BitToInt(vgmFile.AsSpan(vgmDataOffset + 9, 3));
+
 #if DEBUG
-                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Read Offset: " + BitConverter.ToString(readOffset.Reverse().ToArray()).Replace("-", ""));
-                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy Write Offset: " + BitConverter.ToString(writeOffset.Reverse().ToArray()).Replace("-", ""));
-                    Log.LogMessage(LogSeverity.Info, "PCM RAM Copy: " + BitConverter.ToString(vgmFile.Skip(vgmDataOffset + 2).Take(1).Reverse().ToArray()).Replace("-", ""));
-                    Log.LogMessage(LogSeverity.Info, "PCM RAM COPY Size: " + BitConverter.ToString(copySize));
+                    Log.LogMessage(LogSeverity.Info, $"PCM RAM Copy Read Offset: {readOffset:x6}");
+                    Log.LogMessage(LogSeverity.Info, $"PCM RAM Copy Write Offset: {writeOffset:x6}");
+                    Log.LogMessage(LogSeverity.Info, $"PCM RAM Copy: {vgmFile[vgmDataOffset + 2]:x2}");
+                    Log.LogMessage(LogSeverity.Info, $"PCM RAM COPY Size: {copySize:x6}");
 #endif
-                    if (vgmFile.Length < (Utils.Bytes24BitToInt(copySize) + vgmDataOffset))
+
+                    if (vgmFile.Length < (copySize + vgmDataOffset))
                         break;
+
                     if (vgmFile[vgmDataOffset + 2] == 0x07)
                     {
-                        var data = pcmRAMData.Skip(Utils.Bytes24BitToInt(readOffset)).Take(Utils.Bytes24BitToInt(copySize)).ToArray();
+                        // PERKKA/ALEX TODO : There is ia OOB access here with some files. Either a bug in the way we export
+                        // data or some miscalculation when we import.
+                        copySize = Math.Min(copySize, pcmRAMData.Length - readOffset);
+                        var data = pcmRAMData.AsSpan(readOffset, copySize).ToArray();
                         for (int i = 0; i < data.Length; i++)
                         {
-                            dpcmData[i + Utils.Bytes24BitToInt(writeOffset) - 0xc000] = data[i];
+                            dpcmData[i + writeOffset - 0xc000] = data[i];
                         }
 
                     }
@@ -1689,7 +1704,7 @@ namespace FamiStudio
                     {
                         if (vgmFile.Length < (vgmDataOffset + 3))
                             break;
-                        samples = samples + BitConverter.ToInt16(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
+                        samples = samples + BitConverter.ToInt16(vgmFile.AsSpan(vgmDataOffset + 1, 2));
                         vgmDataOffset = vgmDataOffset + 3;
                     }
                     else if (vgmCommand >= 0x80)
@@ -1732,7 +1747,8 @@ namespace FamiStudio
                 {
                     if (vgmFile.Length < (vgmDataOffset + 3))
                         break;
-                    vgmData = vgmFile.Skip(vgmDataOffset).Take(3).ToArray();
+
+                    vgmData = vgmFile.AsSpan(vgmDataOffset, 3);
                     if (vgmCommand == 0xB4)
                     {
 
@@ -1899,7 +1915,7 @@ namespace FamiStudio
                     else
                     {
                         if(unknownChipCommands < 100)
-                        Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + BitConverter.ToString(vgmData.ToArray()).Replace("-", "") + " offset: " + vgmDataOffset + " command " + vgmCommand);
+                            Log.LogMessage(LogSeverity.Info, "Unknown VGM Chip Data: " + BitConverter.ToString(vgmData.ToArray()).Replace("-", "") + " offset: " + vgmDataOffset + " command " + vgmCommand);
                         unknownChipCommands++;
                     }
                     chipCommands++;
@@ -1924,10 +1940,10 @@ namespace FamiStudio
 
             if (vgmFile.Length > (vgmDataOffset + 4))
             {
-                if (vgmFile.Skip(vgmDataOffset).Take(4).SequenceEqual(Encoding.ASCII.GetBytes("Gd3 ")))
+                if (vgmFile.AsSpan(vgmDataOffset, 4).SequenceEqual(Encoding.ASCII.GetBytes("Gd3 ")))
                 {
                     vgmDataOffset = vgmDataOffset + 4 + 4 + 4; // "Gd3 " + version + gd3 length data
-                    var gd3Data = vgmFile.Skip(vgmDataOffset).Take(vgmFile.Length - vgmDataOffset).ToArray();
+                    var gd3Data = vgmFile.AsSpan(vgmDataOffset, vgmFile.Length - vgmDataOffset);
                     var gd3DataArray = System.Text.Encoding.Unicode.GetString(gd3Data).Split("\0");
 #if DEBUG
                     Log.LogMessage(LogSeverity.Info, "Gd3 Data: " + System.Text.Encoding.Unicode.GetString(gd3Data));
