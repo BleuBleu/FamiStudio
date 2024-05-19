@@ -298,9 +298,6 @@ namespace FamiStudio
                         var instrument = serializer.Project.CreateInstrument(instType, instName);
                         serializer.RemapId(instId, instrument.Id);
                         instrument.Serialize(serializer);
-                        
-                        if (instrument.HasFolder) 
-                            serializer.Project.CreateFolder(FolderType.Instrument, instrument.FolderName);
                     }
                     else
                     {
@@ -447,6 +444,8 @@ namespace FamiStudio
             LoadAndMergeSampleList(serializer, false, createMissingSamples);
             LoadAndMergeArpeggioList(serializer, false, createMissingArpeggios);
             LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
+            
+            project.EnsureAllFoldersExist(); 
 
             int numNotes = 0;
             serializer.Serialize(ref numNotes);

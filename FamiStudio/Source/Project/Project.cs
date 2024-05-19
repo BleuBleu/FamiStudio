@@ -1175,17 +1175,17 @@ namespace FamiStudio
             CreateFolder(type, name);
         }
 
-        private void EnsureAllFoldersExist()
+        public void EnsureAllFoldersExist()
         {
-            // HACK to fix issues with early 4.2.0 alpha files that didnt merge folders properly.
-            foreach (var s in songs)
-                EnsureFolderExist(FolderType.Song, s.FolderName);
-            foreach (var i in instruments)
-                EnsureFolderExist(FolderType.Instrument, i.FolderName);
-            foreach (var a in arpeggios)
-                EnsureFolderExist(FolderType.Arpeggio, a.FolderName);
-            foreach (var s in samples)
-                EnsureFolderExist(FolderType.Sample, s.FolderName);
+            // HACK to fix issues with early 4.2.0 alpha files that didn't merge folders properly.
+            for (int s = 0; s < songs.Count; s++)
+                EnsureFolderExist(FolderType.Song, songs[s].FolderName);
+            for (int i = 0; i < instruments.Count; i++)
+                EnsureFolderExist(FolderType.Instrument, instruments[i].FolderName);
+            for (int a = 0; a < arpeggios.Count; a++)
+                EnsureFolderExist(FolderType.Arpeggio, arpeggios[a].FolderName);
+            for (int s = 0; s < samples.Count; s++)
+                EnsureFolderExist(FolderType.Sample, samples[s].FolderName);
         }
 
         public void MoveFolder(Folder folder, Folder folderBefore)
