@@ -4,6 +4,7 @@ x Github issue : Sound engine settings not saved.
 x #bug-report : TF74 can click behind dialog box
 x #bug-report : craft mixer settings dont save. 
 x #bug-report : Nicolark, cant change pattern name?
+x #bug-report : Juef looping issue
 x Includes YARN changes to sound engine.
 x MSI points to .NET 5.0
 x Russian dude email : why is there a "+" button for DPCM sample in mobile version??
@@ -11,12 +12,8 @@ x Mixer settings resets on mobile.
 x Bass setting always resets to 16KHZ?
 x Sound engine version comment 4.1.0
 x Kawashin NSF song that stops after 24 sec.
-	=> Run famistudio unit tests.
 / #bug-report : Test VGM import on phone
 	=> Test a few more files to make sure nothing is broken.
-/ #bug-report : Juef looping issue
-	=> Test more, export a view more videos.
-	=> Doesnt work with slide notes, need to add a no-attack note to NEXT pattern. Ugh.
 - #bug-report : Steo folder issue. 
 / #bug-report : craft notes play incorrectly.
 	=> Cant hear the problem.
