@@ -15,12 +15,9 @@ x Kawashin NSF song that stops after 24 sec.
 / #bug-report : Test VGM import on phone
 	=> Test a few more files to make sure nothing is broken.
 - #bug-report : Steo folder issue. 
-/ #bug-report : craft notes play incorrectly.
-	=> Cant hear the problem.
 / Linux Wayland thing.
 	=> Folder fix for other assets.
 - VRC6Lover123 CV3 demo song.
-- Add Share -> Export to documentation.
 - Pop how2/kawashin (VRC6/2A03)
 	https://discord.com/channels/@me/819772561940152321/1231885934656753704
 	https://discord.com/channels/@me/1093046594062004286/1236015569950609568
