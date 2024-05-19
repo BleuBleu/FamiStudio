@@ -203,7 +203,7 @@ namespace FamiStudio
             showRegisters = settings.ShowRegisters;
             project = settings.Project.DeepClone();
             song = project.GetSong(settings.SongId);
-            song.ExtendForLooping(settings.LoopCount);
+            song.ExtendForLooping(settings.LoopCount, true);
 
             if (settings.Encoder == null)
                 return false;
