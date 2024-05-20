@@ -14,14 +14,13 @@ x Sound engine version comment 4.1.0
 x Kawashin NSF song that stops after 24 sec.
 / #bug-report : Test VGM import on phone
 	=> Test a few more files to make sure nothing is broken.
-- #bug-report : Steo folder issue. 
+x #bug-report : Steo folder issue. 
 / Linux Wayland thing.
-	=> Folder fix for other assets.
+	=> Test on Windows.
 - VRC6Lover123 CV3 demo song.
 - Pop how2/kawashin (VRC6/2A03)
 	https://discord.com/channels/@me/819772561940152321/1231885934656753704
-	https://discord.com/channels/@me/1093046594062004286/1236015569950609568
-- Make sure URL will point to 4.2.1 changelog correctly.
+x Make sure URL will point to 4.2.1 changelog correctly.
 
 4.2.1 Change Log
 ================

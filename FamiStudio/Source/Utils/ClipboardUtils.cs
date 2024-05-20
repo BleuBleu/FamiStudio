@@ -246,6 +246,7 @@ namespace FamiStudio
                 }
             }
 
+            serializer.Project.EnsureAllFoldersExist(FolderType.Sample);
             serializer.Project.ConditionalSortSamples();
 
             return needMerge;
@@ -307,6 +308,7 @@ namespace FamiStudio
                 }
             }
 
+            serializer.Project.EnsureAllFoldersExist(FolderType.Instrument);
             serializer.Project.ConditionalSortInstruments();
 
             return needMerge;
@@ -361,6 +363,7 @@ namespace FamiStudio
                 }
             }
 
+            serializer.Project.EnsureAllFoldersExist(FolderType.Arpeggio);
             serializer.Project.ConditionalSortArpeggios();
 
             return needMerge;
@@ -445,8 +448,6 @@ namespace FamiStudio
             LoadAndMergeArpeggioList(serializer, false, createMissingArpeggios);
             LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
             
-            project.EnsureAllFoldersExist(); 
-
             int numNotes = 0;
             serializer.Serialize(ref numNotes);
             var notes = new Note[numNotes];

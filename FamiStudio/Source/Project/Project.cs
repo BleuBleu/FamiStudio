@@ -1175,17 +1175,41 @@ namespace FamiStudio
             CreateFolder(type, name);
         }
 
+        public void EnsureAllFoldersExist(int type)
+        {
+            // Here we copy the lists since creating folders may re-sort stuff.
+            switch (type)
+            {
+                case FolderType.Song:
+                    var songsCopy = songs.ToArray();
+                    foreach (var s in songsCopy)
+                        EnsureFolderExist(FolderType.Song, s.FolderName);
+                    break;
+                case FolderType.Instrument:
+                    var instrumentsCopy = instruments.ToArray();
+                    foreach (var i in instrumentsCopy)
+                        EnsureFolderExist(FolderType.Instrument, i.FolderName);
+                    break;
+                case FolderType.Arpeggio:
+                    var arpeggiosCopy = arpeggios.ToArray();
+                    foreach (var a in arpeggiosCopy)
+                        EnsureFolderExist(FolderType.Arpeggio, a.FolderName);
+                    break;
+                case FolderType.Sample:
+                    var samplesCopy = samples.ToArray();
+                    foreach (var s in samplesCopy)
+                        EnsureFolderExist(FolderType.Sample, s.FolderName);
+                    break;
+            }
+
+        }
+
         public void EnsureAllFoldersExist()
         {
-            // HACK to fix issues with early 4.2.0 alpha files that didn't merge folders properly.
-            for (int s = 0; s < songs.Count; s++)
-                EnsureFolderExist(FolderType.Song, songs[s].FolderName);
-            for (int i = 0; i < instruments.Count; i++)
-                EnsureFolderExist(FolderType.Instrument, instruments[i].FolderName);
-            for (int a = 0; a < arpeggios.Count; a++)
-                EnsureFolderExist(FolderType.Arpeggio, arpeggios[a].FolderName);
-            for (int s = 0; s < samples.Count; s++)
-                EnsureFolderExist(FolderType.Sample, samples[s].FolderName);
+            EnsureAllFoldersExist(FolderType.Song);
+            EnsureAllFoldersExist(FolderType.Instrument);
+            EnsureAllFoldersExist(FolderType.Arpeggio);
+            EnsureAllFoldersExist(FolderType.Sample);
         }
 
         public void MoveFolder(Folder folder, Folder folderBefore)
