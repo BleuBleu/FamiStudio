@@ -444,6 +444,8 @@ namespace FamiStudio
             LoadAndMergeSampleList(serializer, false, createMissingSamples);
             LoadAndMergeArpeggioList(serializer, false, createMissingArpeggios);
             LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
+            
+            project.EnsureAllFoldersExist(); 
 
             int numNotes = 0;
             serializer.Serialize(ref numNotes);

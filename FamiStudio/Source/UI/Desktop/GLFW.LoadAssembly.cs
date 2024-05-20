@@ -64,8 +64,9 @@ namespace GLFWDotNet
                 string assemblyPath = Path.Combine(
                     assemblyDirectory, 
                     $"libglfw.{extension}");
-
-                IntPtr assembly = Unix.LoadLibrary(assemblyPath);
+                    
+                // Try to load system GLFW, falling back on our own binary if necessary
+                IntPtr assembly = NativeLibrary.TryLoad($"libglfw.so.3", out var handle) ? handle : Unix.LoadLibrary(assemblyPath);
 
                 if (assembly == IntPtr.Zero)
                     throw new InvalidOperationException($"Failed to load GLFW {extension} from path '{assemblyPath}'.");
