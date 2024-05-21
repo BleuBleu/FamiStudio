@@ -59,7 +59,7 @@ namespace PatchBin
             var packedFds = new List<byte>();
             packedFds.AddRange(fds);
             packedFds.AddRange(dat);
-            packedFds.AddRange(new byte[65500 - packedFds.Count]);
+            packedFds.AddRange(new byte[65516 - packedFds.Count]);
             
             File.WriteAllBytes(args[3], packedFds.ToArray());
         }
