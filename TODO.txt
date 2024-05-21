@@ -34,6 +34,7 @@ x Make sure URL will point to 4.2.1 changelog correctly.
 - Fixed the "+" button of DPCM samples in project explorer on mobile
 - Fixed crash when pasting items between projects when using folders
 - Fixed GLFW compatibility issues on Linux (Thanks Steo!)
+- Fixed incorrect size of FDS disks.
 - Made the video looping more consistent with how the audio loops in the app
 - Made it clearer that you cannot rename multiple patterns
 - Optimized VGM import
