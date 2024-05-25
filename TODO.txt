@@ -18,8 +18,12 @@ x #bug-report : Test VGM import on phone
 / Linux Wayland thing.
 	=> Test on Windows + MacOS
 - VRC6Lover123 CV3 demo song.
-- Pop how2/kawashin (VRC6/2A03)
+/ Pop how2/kawashin (VRC6/2A03)
 	https://discord.com/channels/@me/819772561940152321/1231885934656753704
+- Recompile NesSndEmu all platforms
+- Recompile NSF/ROM all platforms
+- Make sure instrument player works.
+- Bump ROM/Demo version to 4.2.1.
 
 4.2.1 Change Log
 ================
@@ -32,6 +36,7 @@ x #bug-report : Test VGM import on phone
 - Fixed crash when pasting items between projects when using folders
 - Fixed GLFW compatibility issues on Linux (Thanks Steo!)
 - Fixed incorrect size of FDS disks.
+- Fixed issue with non-looping relative pitch envelope when exporting to Sound Engine/NSF/ROM.
 - Made the video looping more consistent with how the audio loops in the app
 - Made it clearer that you cannot rename multiple patterns
 - Optimized VGM import
@@ -49,7 +54,6 @@ x #bug-report : Test VGM import on phone
 	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
 - YARN : Small hitch beginning of VRC6 songs? Not sure
 - YARN : Change ini ROM code persune suggestion.
-- YARN : Try VRC7 clarinet + bell, clarinet + flute
 - Review the copy/paste name matching. Maybe add a rename option.
 
 Linux notes 

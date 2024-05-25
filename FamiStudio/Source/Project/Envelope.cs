@@ -361,7 +361,7 @@ namespace FamiStudio
 
         public void Optimize()
         {
-            if (length == 0|| chunkLength > 1 || !canResize)
+            if (length == 0|| chunkLength > 1 || !canResize || relative)
             {
                 return;
             }
