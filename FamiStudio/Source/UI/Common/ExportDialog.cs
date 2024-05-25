@@ -566,7 +566,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        page.AddDropDownList(FormatLabel.Colon, AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
+                        page.AddDropDownList(FormatLabel.Colon, AssemblyFormat.Names, AssemblyFormat.Names[AssemblyFormat.CA65], FT2AssemblyTooltip); // 0
                         page.AddCheckBox(SeparateFilesLabel.Colon, false, FT2SepFilesTooltip); // 1
                         page.AddTextBox(SongNamePatternLabel.Colon, "{project}_{song}", 0, false, FT2SepFilesFmtTooltip); // 2
                         page.AddTextBox(DmcNamePatternLabel.Colon, "{project}", 0, false, FT2DmcFmtTooltip); // 3
@@ -579,7 +579,7 @@ namespace FamiStudio
                     break;
                 case ExportFormat.FamiTone2Sfx:
                 case ExportFormat.FamiStudioSfx:
-                    page.AddDropDownList(FormatLabel.Colon, AssemblyFormat.Names, AssemblyFormat.Names[0], FT2AssemblyTooltip); // 0
+                    page.AddDropDownList(FormatLabel.Colon, AssemblyFormat.Names, AssemblyFormat.Names[AssemblyFormat.CA65], FT2AssemblyTooltip); // 0
                     page.AddDropDownList(ModeLabel.Colon, Localization.ToStringArray(MachineType.LocalizedNames), MachineType.LocalizedNames[project.PalMode ? MachineType.PAL : MachineType.NTSC], MachineTooltip); // 1
                     page.AddCheckBox(GenerateSfxInclude.Colon, false, FT2SfxSongListTooltip); // 2
                     page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 3
