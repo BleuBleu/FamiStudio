@@ -4,6 +4,25 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.2.1 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed MSI installer pointing to .NET 5.0 instead of 7.0
+* Fixed sound engine settings not being saved in project properties
+* Fixed bass filter setting not being saved in app settings
+* Fixed VRC6 initialization in sound engine by writing zero to $9003
+* Fixed issue with vibrato in sound engine that could stall the audio
+* Fixed the "+" button of DPCM samples in project explorer on mobile
+* Fixed crash when pasting items between projects when using folders
+* Fixed GLFW compatibility issues on Linux (Thanks Steo!)
+* Fixed incorrect size of FDS disks
+* Fixed issue with non-looping relative pitch envelope in Sound Engine/NSF/ROM
+* Fixed issue with volume slides and FamiTracker tempo in Sound Engine/NSF/ROM
+* Made the video looping more consistent with how the audio loops in the app
+* Made it clearer that you cannot rename multiple patterns
+* Optimized VGM import
+
 ## Version 4.2.0
 
 [![](releases/420/Thumbnail420.png#center)](releases/420.md)

@@ -16,14 +16,11 @@ x #bug-report : Steo folder issue.
 x Make sure URL will point to 4.2.1 changelog correctly.
 x #bug-report : Test VGM import on phone
 x Weird sound gradius.
-	https://discord.com/channels/@me/1243778742732460093/1243794182569590834
+x Bump ROM/Demo version to 4.2.1.
+x Recompile NSF/ROM all platforms
 / Linux Wayland thing.
 	=> Test on Windows + MacOS
 - VRC6Lover123 CV3 demo song.
-- Recompile NesSndEmu all platforms
-- Recompile NSF/ROM all platforms
-- Make sure instrument player works.
-- Bump ROM/Demo version to 4.2.1.
 
 4.2.1 Change Log
 ================
