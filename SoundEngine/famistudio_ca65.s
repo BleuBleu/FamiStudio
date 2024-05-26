@@ -5502,6 +5502,11 @@ famistudio_advance_channel:
     asl
     asl
     sta famistudio_chn_volume_track,x
+    ; Clear any volume slide.
+    .if FAMISTUDIO_USE_VOLUME_SLIDES
+        lda #0
+        sta famistudio_chn_volume_slide_step,x
+    .endif
     bcc @read_byte
 .endif
 
