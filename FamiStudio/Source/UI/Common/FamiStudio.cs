@@ -1975,14 +1975,6 @@ namespace FamiStudio
                 if (TryClosing())
                     window.Quit();
             }
-            // MATTT DEBUG DONT SUBMIT!!!!!!!!!
-            else if (e.Key == Keys.D)
-            {
-                undoRedoManager.BeginTransaction(TransactionScope.Project);
-                song.ExtendForLooping(3, true); 
-                undoRedoManager.EndTransaction();
-                window.MarkDirty();
-            }
             else if (!recordingMode)
             {
                 for (int i = 0; i < Settings.ActiveChannelShortcuts.Length; i++)
