@@ -30,7 +30,7 @@ namespace FamiStudio
         public ParamSlider(ParamInfo p)
         {
             param = p;
-            exp = 1.0f / (p.GetMaxValue() >= 4095 ? 4 : 1);
+            exp = 1.0f / (p.Logarithmic ? 4 : 1);
             height = DpiScaling.ScaleForWindow(16);
         }
 
