@@ -4,6 +4,68 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.2.1 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed MSI installer pointing to .NET 5.0 instead of 7.0
+* Fixed sound engine settings not being saved in project properties
+* Fixed bass filter setting not being saved in app settings
+* Fixed VRC6 initialization in sound engine by writing zero to $9003
+* Fixed issue with vibrato in sound engine that could stall the audio
+* Fixed the "+" button of DPCM samples in project explorer on mobile
+* Fixed crash when pasting items between projects when using folders
+* Fixed GLFW compatibility issues on Linux (Thanks Steo!)
+* Fixed incorrect size of FDS disks
+* Fixed issue with non-looping relative pitch envelope in Sound Engine/NSF/ROM
+* Fixed issue with volume slides and FamiTracker tempo in Sound Engine/NSF/ROM
+* Made the video looping more consistent with how the audio loops in the app
+* Made it clearer that you cannot rename multiple patterns
+* Optimized VGM import
+
+## Version 4.2.0
+
+[![](releases/420/Thumbnail420.png#center)](releases/420.md)
+
+Changes/Fixes:
+
+* S5B envelope support (S5B & EPSM)
+* FDS auto-modulation support
+* FDS emulation improvements : Proper filtering, DAC emulation & fixes.
+* Phase reset support
+* Accurate seek support (fully emulate entire song from start, useful for phase resets)
+* Allow disabling attack on notes if all instrument envelopes matches (useful for FM channels)
+* Folders support in Project Explorer
+* More filtering options for audio expansions & ability to store settings in project
+* Support for up to 256 instruments (for both regular and expansion) in sound engine
+* German translation (thanks Arda & VRC6Lover123!)
+* Audio backend improvements:
+	* Reduced audio latency on all platform 
+	* Switch to WASAPI on Windows (non-exclusive mode)
+	* Audio device change detection & improved BT headphones support on MacOS
+* Video export improvements: 
+	* Unified piano roll mode
+	* Piano roll 3D effect
+	* Option to overlay registers
+	* Preview mode
+* Small quality of life improvements:
+	* Eraser mode
+	* Ability to copy samples between instruments
+	* Ability to type effect values and project explorer parameters
+	* Function to replace specific instruments
+	* Logarithmic sliders for effects and parameters with huge values
+
+Breaking/Behavior changes:
+
+* FDS mod speed/depth effects will be resetted to the instrument values on notes with an attack.
+* FDS emulation now matches the hardware much more closely. Some instruments may now sound very different.
+* S5B/EPSM noise no longer has a "NOP" frequency, noise frequency will be set if it is enabled by the mixer envelope. 
+
+System Requirement Changes:
+
+* Upgraded to .NET 7.0
+* Minimum OpenGL requirement for Desktop lowered to OpenGL 3.0 (was 3.3)
+
 ## Version 4.1.3 (Hotfix)
 
 Changes/Fixes:

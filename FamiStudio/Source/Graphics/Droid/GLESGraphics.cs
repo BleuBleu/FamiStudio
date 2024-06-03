@@ -824,7 +824,7 @@ namespace FamiStudio
                         BindAndUpdateVertexBuffer(2, drawData.texArray, drawData.texArraySize, 3);
                         BindAndUpdateByteBuffer(3, drawData.depArray, drawData.depArraySize, true);
 
-                        foreach (var draw in drawData.draws)
+                        foreach (var draw in drawData.drawCalls)
                         {
                             quadIdxBuffer.Position(draw.start);
                             GLES20.GlBindTexture(GLES20.GlTexture2d, draw.textureId);
@@ -839,23 +839,30 @@ namespace FamiStudio
 
                 if (list.HasAnyTexts)
                 {
-                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize);
+                    var drawDatas = list.GetTextDrawData();
 
                     GLES20.GlUseProgram(textProgram);
                     GLES20.GlUniform4fv(bmpScaleBiasUniform, 1, viewportScaleBias, 0);
                     GLES20.GlUniform1i(bmpTextureUniform, 0);
                     GLES20.GlActiveTexture(GLES20.GlTexture0 + 0);
 
-                    BindAndUpdateVertexBuffer(0, vtxArray, vtxSize);
-                    BindAndUpdateColorBuffer(1, colArray, colSize);
-                    BindAndUpdateVertexBuffer(2, texArray, texSize);
-                    BindAndUpdateByteBuffer(3, depArray, depSize, true);
-
-                    foreach (var draw in drawData)
+                    foreach (var drawData in drawDatas)
                     {
-                        quadIdxBuffer.Position(draw.start);
-                        GLES20.GlBindTexture(GLES20.GlTexture2d, draw.textureId);
-                        GLES20.GlDrawElements(GLES20.GlTriangles, draw.count, GLES20.GlUnsignedShort, quadIdxBuffer);
+                        BindAndUpdateVertexBuffer(0, drawData.vtxArray, drawData.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, drawData.colArray, drawData.colArraySize);
+                        BindAndUpdateVertexBuffer(2, drawData.texArray, drawData.texArraySize);
+                        BindAndUpdateByteBuffer(3, drawData.depArray, drawData.depArraySize, true);
+
+                        foreach (var draw in drawData.drawCalls)
+                        {
+                            quadIdxBuffer.Position(draw.start);
+                            GLES20.GlBindTexture(GLES20.GlTexture2d, draw.textureId);
+                            GLES20.GlDrawElements(GLES20.GlTriangles, draw.count, GLES20.GlUnsignedShort, quadIdxBuffer);
+                        }
+
+                        // TODO : Change this so that we build the draw data as we draw stuff, like the other primitives. This way
+                        // we wont need to do this janky release.
+                        drawData.Release(this);
                     }
                 }
             }

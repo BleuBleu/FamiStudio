@@ -619,15 +619,10 @@ namespace FamiStudio
 
         private unsafe void EndSeekFrame()
         {
-            if (accurateSeek)
-            {
-                NesApu.EndFrame(apuIndex);
-                NesApu.ReadSamples(apuIndex, IntPtr.Zero, NesApu.SamplesAvailable(apuIndex));
-            }
-            else
-            {
-                frameNumber++;
-            }
+            Debug.Assert(accurateSeek);
+
+            NesApu.EndFrame(apuIndex);
+            NesApu.ReadSamples(apuIndex, IntPtr.Zero, NesApu.SamplesAvailable(apuIndex));
         }
 
         protected virtual unsafe short[] EndFrame()

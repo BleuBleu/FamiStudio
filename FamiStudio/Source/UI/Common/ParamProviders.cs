@@ -14,6 +14,7 @@ namespace FamiStudio
         public int CustomHeight;
         public bool IsList;
         public bool IsEmpty;
+        public bool Logarithmic;
         public string TabName;
         public object CustomUserData1;
         public object CustomUserData2;
@@ -215,7 +216,7 @@ namespace FamiStudio
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModPresetLabel, 0, WavePresetType.CountNoResample - 1, WavePresetType.Flat, null, true )
                         { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModSpeedLabel, 0, 4095, 0)
-                        { GetValue = () => { return instrument.FdsModSpeed; }, SetValue = (v) => { instrument.FdsModSpeed = (ushort)v; } });
+                        { GetValue = () => { return instrument.FdsModSpeed; }, SetValue = (v) => { instrument.FdsModSpeed = (ushort)v; }, Logarithmic = true });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModDepthLabel, 0, 63, 0)
                         { GetValue = () => { return instrument.FdsModDepth; }, SetValue = (v) => { instrument.FdsModDepth = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModDelayLabel, 0, 255, 0)
@@ -259,7 +260,7 @@ namespace FamiStudio
                     paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeAutoOctaveLabel, -8, 8, 0)
                         { GetValue = () => { return instrument.S5BEnvAutoPitchOctave; }, SetValue = (v) => { instrument.S5BEnvAutoPitchOctave = (sbyte)v; }, IsEnabled = () => instrument.S5BEnvelopeShape != 0 && instrument.S5BEnvAutoPitch });
                     paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeManualFreqLabel, 0, 65535, 1000)
-                        { GetValue = () => { return instrument.S5BEnvelopePitch; }, SetValue = (v) => { instrument.S5BEnvelopePitch = (ushort)v; }, IsEnabled = () => instrument.S5BEnvelopeShape != 0 && !instrument.S5BEnvAutoPitch });
+                        { GetValue = () => { return instrument.S5BEnvelopePitch; }, SetValue = (v) => { instrument.S5BEnvelopePitch = (ushort)v; }, IsEnabled = () => instrument.S5BEnvelopeShape != 0 && !instrument.S5BEnvAutoPitch, Logarithmic = true });
                     break;
 
                 case ExpansionType.Vrc6:
@@ -354,7 +355,7 @@ namespace FamiStudio
                     paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeAutoOctaveLabel, -8, 8, 0)
                         { GetValue = () => { return instrument.EPSMSquareEnvAutoPitchOctave; }, SetValue = (v) => { instrument.EPSMSquareEnvAutoPitchOctave = (sbyte)v; }, IsEnabled = () => instrument.EPSMSquareEnvelopeShape != 0 && instrument.EPSMSquareEnvAutoPitch, TabName = GeneralTab });
                     paramInfos.Add(new InstrumentParamInfo(instrument, EnvelopeManualFreqLabel, 0, 65535, 4000)
-                        { GetValue = () => { return instrument.EPSMSquareEnvelopePitch; }, SetValue = (v) => { instrument.EPSMSquareEnvelopePitch = (ushort)v; }, IsEnabled = () => instrument.EPSMSquareEnvelopeShape != 0 && !instrument.EPSMSquareEnvAutoPitch, TabName = GeneralTab });
+                        { GetValue = () => { return instrument.EPSMSquareEnvelopePitch; }, SetValue = (v) => { instrument.EPSMSquareEnvelopePitch = (ushort)v; }, IsEnabled = () => instrument.EPSMSquareEnvelopeShape != 0 && !instrument.EPSMSquareEnvAutoPitch, Logarithmic = true, TabName = GeneralTab });
 
                     for (int i = 0; i < 4; i++)
                     {
@@ -385,8 +386,8 @@ namespace FamiStudio
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(7 + i2)] & 0x0f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(7 + i2)] = (byte)((instrument.EpsmPatchRegs[(7 + i2)] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvEnLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x08) >> 3)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x08) >> 3; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x08)) | ((v << 3) & 0x08)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x07) >> 0)
-                            { GetValue = () => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; }, TabName = tabName });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x07) >> 0, null, true)
+                            { GetValue = ()  => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x07) >> 0; }, GetValueString = () => { return $"img:S5BEnvelope{((instrument.EpsmPatchRegs[(8 + i2)] & 0x07) >> 0) + 8:X1}"; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         if (i == 0)
                         {
                             paramInfos.Add(new InstrumentParamInfo(instrument, FeedbackLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[0] & 0x38) >> 3)

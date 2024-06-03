@@ -3483,6 +3483,10 @@ namespace FamiStudio
                     project.Author = dlg.Author;
                     project.Copyright = dlg.Copyright;
 
+                    project.SoundEngineUsesDpcmBankSwitching = dlg.DPCMBankswitching;
+                    project.SoundEngineUsesExtendedDpcm = dlg.DPCMExtendedRange;
+                    project.SoundEngineUsesExtendedInstruments = dlg.InstrumentExtendedRange;
+
                     if (changedExpansion || changedNumChannels)
                     {
                         App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;

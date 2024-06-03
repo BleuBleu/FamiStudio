@@ -296,6 +296,7 @@ namespace GLFWDotNet
 		public const int GLFW_COCOA_GRAPHICS_SWITCHING = 0x00023003;
 		public const int GLFW_X11_CLASS_NAME = 0x00024001;
 		public const int GLFW_X11_INSTANCE_NAME = 0x00024002;
+		public const int GLFW_WAYLAND_APP_ID = 0x00026001;
 		public const int GLFW_NO_API = 0;
 		public const int GLFW_OPENGL_API = 0x00030001;
 		public const int GLFW_OPENGL_ES_API = 0x00030002;
@@ -322,14 +323,24 @@ namespace GLFWDotNet
 		public const int GLFW_ARROW_CURSOR = 0x00036001;
 		public const int GLFW_IBEAM_CURSOR = 0x00036002;
 		public const int GLFW_CROSSHAIR_CURSOR = 0x00036003;
-		public const int GLFW_HAND_CURSOR = 0x00036004;
-		public const int GLFW_HRESIZE_CURSOR = 0x00036005;
-		public const int GLFW_VRESIZE_CURSOR = 0x00036006;
+		public const int GLFW_POINTING_HAND_CURSOR = 0x00036004;
+		public const int GLFW_RESIZE_EW_CURSOR = 0x00036005;
+		public const int GLFW_RESIZE_NS_CURSOR = 0x00036006;
+		public const int GLFW_RESIZE_NWSE_CURSOR = 0x00036007;
+		public const int GLFW_RESIZE_NESW_CURSOR = 0x00036008;
+		public const int GLFW_RESIZE_ALL_CURSOR = 0x00036009;
 		public const int GLFW_CONNECTED = 0x00040001;
 		public const int GLFW_DISCONNECTED = 0x00040002;
 		public const int GLFW_JOYSTICK_HAT_BUTTONS = 0x00050001;
 		public const int GLFW_COCOA_CHDIR_RESOURCES = 0x00051001;
 		public const int GLFW_COCOA_MENUBAR = 0x00051002;
+		public const int GLFW_PLATFORM = 0x00050003;
+		public const int GLFW_ANY_PLATFORM = 0x00060000;
+		public const int GLFW_PLATFORM_WIN32 = 0x00060001;
+		public const int GLFW_PLATFORM_COCOA = 0x00060002;
+		public const int GLFW_PLATFORM_WAYLAND = 0x00060003;
+		public const int GLFW_PLATFORM_X11 = 0x00060004;
+		public const int GLFW_PLATFORM_NULL = 0x00060005;
 		public const int GLFW_DONT_CARE = -1;
 
 		public struct GLFWvidmode

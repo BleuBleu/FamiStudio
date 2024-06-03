@@ -43,11 +43,15 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="SharpDX.XAudio2" Version="4.2.0" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\AudioStreams\PortAudioStream.cs" />
+    <Compile Include="Source\AudioStreams\XAudio2Stream.cs" />
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />

@@ -10,12 +10,6 @@ Clicking on the little gear icon or selecting the "Project Properties..." option
 
 ![](images/EditProject.png#center)
 
-## Expansion audio
-
-The project properties is also where you select your [Expansion Audio](expansion.md). Expansion will add extra channels on top of the default 5 that the NES supported. Note that remving a expansion audio in a project will delete all data (patterns, notes, instrument) related to the it.
-
-Please visit the [Expansion Audio](expansion.md) section for more detail about each expansion.
-
 ## Tempo modes
 
 FamiStudio supports two tempo modes : **FamiStudio** and **FamiTracker**. 
@@ -55,6 +49,24 @@ You should use FamiTracker tempo mode if:
 * You are OK with using effects tracks (delayed notes, cuts) to finely tune the start/end of each notes.
 * You need compatibility with FamiTracker.
 * You want to have smooth tempo changes during the song, especially in the middle of a pattern.
+
+## Expansion audio
+
+The project properties is also where you select your [Expansion Audio](expansion.md). Expansion will add extra channels on top of the default 5 that the NES supported. Note that removing a expansion audio in a project will delete all data (patterns, notes, instrument) related to the it.
+
+![](images/EditProjectExp.png#center)
+
+Please visit the [Expansion Audio](expansion.md) section for more detail about each expansion.
+
+## Mixer Settings
+
+Projects can also override some audio settings such as expansion volumes and bass/treble filtering. Settings overriden by the project will take precedence over the global settings (the ones in the [settings dialog](config.md#mixer)). Storing mixer settings in the project guaratees that a project you send to someone will sound exactly as you intended, regardless of their global settings. Note that you can only override settings for the audio expansions that you are using in your project.
+
+![](images/EditProjectMixer.png#center)
+
+Setings overriden by the project can be quickly disabled by clicking the little mixer icon next to the project name. When this icon is dimmed, it means that you do no wish to use the settings override by the project in which case the app will use your own global settings. When the icon is lit, you will be using the project's setting, if any.
+
+![](images/MixerSettingsOverride.png#center)
 
 # Editing songs
 

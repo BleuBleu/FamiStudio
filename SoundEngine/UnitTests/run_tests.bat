@@ -61,7 +61,7 @@ if "%rnd%"=="1" (
 	)
 )
 
-set /a rnd=%random% %%7
+set /a rnd=%random% %%8
 if "%rnd%"=="0" (
 	echo FAMISTUDIO_EXP_VRC6=1 >> test_defs.inc
 ) else (
@@ -104,6 +104,10 @@ if "%rnd%"=="0" (
 							echo FAMISTUDIO_EXP_EPSM_RHYTHM_CHN5_ENABLE=!rnd! >> test_defs.inc
 							set /a rnd=%random% %%2
 							echo FAMISTUDIO_EXP_EPSM_RHYTHM_CHN6_ENABLE=!rnd! >> test_defs.inc
+						) else (
+							if "%rnd%"=="7" (
+								echo FAMISTUDIO_EXP_RAINBOW=1 >> test_defs.inc
+							)
 						)
 					)
 				)

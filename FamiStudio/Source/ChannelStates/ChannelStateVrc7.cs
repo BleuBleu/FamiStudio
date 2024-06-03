@@ -54,10 +54,12 @@ namespace FamiStudio
         {
             Debug.Assert(instrument.IsVrc7 && instrument.Vrc7Patch == 0);
 
+            var currentInstrument = note.Instrument;
+
             // This will be called when another channel loads a custom patch.
-            if (note.Instrument != null && 
-                note.Instrument != instrument &&
-                note.Instrument.Vrc7Patch == 0)
+            if (currentInstrument != null && 
+                currentInstrument != instrument &&
+                currentInstrument.Vrc7Patch == 0)
             {
                 forceInstrumentReload = true;
             }

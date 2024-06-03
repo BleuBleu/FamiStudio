@@ -120,6 +120,12 @@ namespace FamiStudio
             return x[0] | (x[1] << 8) | (x[2] << 16);
         }
 
+        public static int Bytes24BitToInt(ReadOnlySpan<byte> x)
+        {
+            Debug.Assert(x.Length == 3);
+            return x[0] | (x[1] << 8) | (x[2] << 16);
+        }
+
         public static int Log2Int(int x)
         {
             if (x == 0)
@@ -486,6 +492,23 @@ namespace FamiStudio
             var dotIdx = version.LastIndexOf('.');
             betaNumber = int.Parse(version.Substring(dotIdx + 1), CultureInfo.InvariantCulture);
             return version.Substring(0, dotIdx);
+        }
+
+        public static string GetReleaseUrl(string version)
+        {
+            var splits = version.Split('.');
+            Debug.Assert(splits.Length == 4);
+
+            if (splits[2] == "0")
+            {
+                // Major releases have a dedicated "highlights" page.
+                return $"https://famistudio.org/doc/releases/{splits[0]}{splits[1]}0/";
+            }
+            else
+            {
+                // Minor releases just have an "hotfix" entry in the changelog.
+                return $"https://famistudio.org/doc/changelog/#version-{splits[0]}{splits[1]}{splits[2]}-hotfix";
+            }
         }
 
         public static int InterlockedMax(ref int location, int value)

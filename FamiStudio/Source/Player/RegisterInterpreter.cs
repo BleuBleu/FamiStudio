@@ -447,7 +447,7 @@ namespace FamiStudio
 
         private static double EpsmPeriodToFrequency(int period, int octave)
         {
-            return period / 144 / 2097152.0 * NesApu.FreqEPSM * (1 << octave);
+            return period / 144.0 / 2097152.0 * NesApu.FreqEPSM * (1 << octave);
         }
 
     }

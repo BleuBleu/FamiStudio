@@ -13,6 +13,7 @@ namespace FamiStudio
     {
         bool IsPlaying { get; }
         bool Stereo { get; }
+        bool RecreateOnDeviceChanged { get; }
         int ImmediatePlayPosition { get; }
 
         void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback);

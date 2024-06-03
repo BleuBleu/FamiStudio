@@ -756,11 +756,38 @@ namespace FamiStudio
             // HACK : We have a weird NULL crash here. No clue how to repro this.
             var tag = (sender as TextView)?.Tag as ContextMenuTag;
 
-            tag?.opt?.Callback();
-            contextMenuDialog?.Dismiss();
-            MarkDirty();
+            lock (renderLock)
+            {
+                tag?.opt?.Callback();
+                contextMenuDialog?.Dismiss();
+                MarkDirty();
+            }
 
             Platform.VibrateTick();
+        }
+
+        public void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
+        {
+            var dialog = new Android.App.AlertDialog.Builder(Xamarin.Essentials.Platform.CurrentActivity);
+            var alert = dialog.Create();
+
+            alert.SetTitle(title);
+            alert.SetMessage(text);
+
+            if (buttons == MessageBoxButtons.YesNo ||
+                buttons == MessageBoxButtons.YesNoCancel)
+            {
+                alert.SetButton("Yes", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Yes); } });
+                alert.SetButton2("No", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.No);  } });
+                if (buttons == MessageBoxButtons.YesNoCancel)
+                    alert.SetButton3("Cancel", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Cancel); } });
+            }
+            else
+            {
+                alert.SetButton("OK", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.OK); } });
+            }
+
+            alert.Show();
         }
 
         private Control GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)

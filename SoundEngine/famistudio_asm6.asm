@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (4.1.0)
+; FAMISTUDIO SOUND ENGINE (4.2.0)
 ; Copyright (c) 2019-2023 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
@@ -96,6 +96,9 @@ FAMISTUDIO_ASM6_CODE_BASE = $8000
 
 ; Konami VRC6 (2 extra square + saw)
 ; FAMISTUDIO_EXP_VRC6          = 1 
+
+; Rainbow-Net (homebrew clone of VRC6)
+; FAMISTUDIO_EXP_RAINBOW       = 1
 
 ; Konami VRC7 (6 FM channels)
 ; FAMISTUDIO_EXP_VRC7          = 1 
@@ -251,6 +254,14 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 ;======================================================================================================================
 ; INTERNAL DEFINES (Do not touch)
 ;======================================================================================================================
+
+.ifndef FAMISTUDIO_EXP_RAINBOW
+    FAMISTUDIO_EXP_RAINBOW = 0
+.endif
+
+.if FAMISTUDIO_EXP_RAINBOW
+    FAMISTUDIO_EXP_VRC6 = 1
+.endif
 
 .ifndef FAMISTUDIO_EXP_VRC6
     FAMISTUDIO_EXP_VRC6 = 0
@@ -1051,15 +1062,29 @@ FAMISTUDIO_APU_DMC_LEN    = $4013
 FAMISTUDIO_APU_SND_CHN    = $4015
 FAMISTUDIO_APU_FRAME_CNT  = $4017
 
+.if FAMISTUDIO_EXP_RAINBOW
+FAMISTUDIO_VRC6_PL1_VOL   = $41a0
+FAMISTUDIO_VRC6_PL1_LO    = $41a1
+FAMISTUDIO_VRC6_PL1_HI    = $41a2
+FAMISTUDIO_VRC6_FREQ_CTRL = $41a0 ; Dummy
+FAMISTUDIO_VRC6_PL2_VOL   = $41a3
+FAMISTUDIO_VRC6_PL2_LO    = $41a4
+FAMISTUDIO_VRC6_PL2_HI    = $41a5
+FAMISTUDIO_VRC6_SAW_VOL   = $41a6
+FAMISTUDIO_VRC6_SAW_LO    = $41a7
+FAMISTUDIO_VRC6_SAW_HI    = $41a8
+.else
 FAMISTUDIO_VRC6_PL1_VOL   = $9000
 FAMISTUDIO_VRC6_PL1_LO    = $9001
 FAMISTUDIO_VRC6_PL1_HI    = $9002
+FAMISTUDIO_VRC6_FREQ_CTRL = $9003
 FAMISTUDIO_VRC6_PL2_VOL   = $a000
 FAMISTUDIO_VRC6_PL2_LO    = $a001
 FAMISTUDIO_VRC6_PL2_HI    = $a002
 FAMISTUDIO_VRC6_SAW_VOL   = $b000
 FAMISTUDIO_VRC6_SAW_LO    = $b001
 FAMISTUDIO_VRC6_SAW_HI    = $b002
+.endif
 
 FAMISTUDIO_VRC7_SILENCE   = $e000
 FAMISTUDIO_VRC7_REG_SEL   = $9010
@@ -1311,6 +1336,12 @@ famistudio_init:
     lda #$08 ; No sweep
     sta FAMISTUDIO_APU_PL1_SWEEP
     sta FAMISTUDIO_APU_PL2_SWEEP
+
+.if FAMISTUDIO_EXP_VRC6
+@init_vrc6:
+    lda #0
+    sta FAMISTUDIO_VRC6_FREQ_CTRL ; NESDEV wiki says to write zero at startup.
+.endif
 
 .if FAMISTUDIO_EXP_VRC7
 @init_vrc7:
@@ -2597,8 +2628,9 @@ famistudio_update_epsm_square_channel_sound:
     ; Store noise if mixer has it enabled
     ldx famistudio_epsm_square_env_table,y
     lda famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-    and famistudio_epsm_square_noise_mask,x
+    and famistudio_epsm_square_noise_mask,y
     bne @nonoise
+    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
     sta noise_freq
 
 @nonoise:
@@ -3451,8 +3483,9 @@ famistudio_update_s5b_channel_sound:
     ; Store noise if mixer has it enabled
     ldx famistudio_s5b_env_table,y
     lda famistudio_env_value+FAMISTUDIO_ENV_MIXER_IDX_OFF,x
-    and famistudio_s5b_noise_mask,x
+    and famistudio_s5b_noise_mask,y
     bne @nonoise
+    lda famistudio_env_value+FAMISTUDIO_ENV_NOISE_IDX_OFF,x
     sta noise_freq
 
 @nonoise:
@@ -4666,7 +4699,11 @@ famistudio_load_basic_envelopes:
     tax
 .if FAMISTUDIO_USE_VIBRATO 
     ror ; Bring back our bit-7 from above.
-    bmi @done ; Instrument pitch is overriden by vibrato, dont touch!
+    bpl @no_vibrato ; In bit 7 is set, instrument pitch is overriden by vibrato, dont touch pitch envelope!
+    iny
+    iny
+    bne @done
+    @no_vibrato:
 .endif    
     iny
     lda (instrument_ptr),y
@@ -4674,6 +4711,7 @@ famistudio_load_basic_envelopes:
     iny
     lda (instrument_ptr),y
     sta famistudio_pitch_env_addr_hi,x
+@done:
 .if !FAMISTUDIO_EXP_NONE
     ; For expansion, preserve X (envelope index) and Y (pointer in instrument data)
     ; as they may want to load more after.
@@ -4681,8 +4719,6 @@ famistudio_load_basic_envelopes:
     inx
     iny
 .endif
-
-@done:
     rts
     
 ;======================================================================================================================
@@ -5420,6 +5456,11 @@ famistudio_advance_channel:
     asl
     asl
     sta famistudio_chn_volume_track,x
+    ; Clear any volume slide.
+    .if FAMISTUDIO_USE_VOLUME_SLIDES
+        lda #0
+        sta famistudio_chn_volume_slide_step,x
+    .endif
     bcc @read_byte
 .endif
 
@@ -6791,20 +6832,20 @@ famistudio_epsm_note_table_msb:
 famistudio_exp_note_table_lsb:
 famistudio_epsm_s_note_table_lsb:
     .byte $00
-    .byte $fa, $4b, $b5, $35, $cb, $75, $32, $02, $e2, $d3, $d2, $e1 ; Octave 0
-    .byte $fd, $25, $5a, $9a, $e5, $3a, $99, $00, $71, $e9, $69, $f0 ; Octave 1
-    .byte $7e, $12, $ac, $4c, $f2, $9c, $4c, $00, $b8, $74, $34, $f7 ; Octave 2
-    .byte $be, $89, $56, $26, $f8, $ce, $a5, $7f, $5b, $39, $19, $fb ; Octave 3
-    .byte $df, $c4, $aa, $92, $7c, $66, $52, $3f, $2d, $1c, $0c, $fd ; Octave 4
-    .byte $ef, $e1, $d5, $c9, $bd, $b3, $a9, $9f, $96, $8e, $86, $7e ; Octave 5
-    .byte $77, $70, $6a, $64, $5e, $59, $54, $4f, $4b, $46, $42, $3f ; Octave 6
-    .byte $3b, $38, $34, $31, $2f, $2c, $29, $27, $25, $23, $21, $1f ; Octave 7
+    .byte $dd, $2f, $9a, $1c, $b3, $5f, $1d, $ee, $d0, $c1, $c2, $d2 ; Octave 0
+    .byte $ee, $18, $4d, $8e, $da, $2f, $8f, $f7, $68, $e1, $61, $e9 ; Octave 1
+    .byte $77, $0c, $a7, $47, $ed, $98, $47, $fc, $b4, $70, $31, $f4 ; Octave 2
+    .byte $bc, $86, $53, $24, $f6, $cc, $a4, $7e, $5a, $38, $18, $fa ; Octave 3
+    .byte $de, $c3, $aa, $92, $7b, $66, $52, $3f, $2d, $1c, $0c, $fd ; Octave 4
+    .byte $ef, $e1, $d5, $c9, $be, $b3, $a9, $9f, $96, $8e, $86, $7f ; Octave 5
+    .byte $77, $71, $6a, $64, $5f, $59, $54, $50, $4b, $47, $43, $3f ; Octave 6
+    .byte $3c, $38, $35, $32, $2f, $2d, $2a, $28, $26, $24, $22, $20 ; Octave 7
 famistudio_exp_note_table_msb:
 famistudio_epsm_s_note_table_msb:
     .byte $00
-    .byte $1d, $1c, $1a, $19, $17, $16, $15, $14, $12, $11, $10, $0f ; Octave 0
-    .byte $0e, $0e, $0d, $0c, $0b, $0b, $0a, $0a, $09, $08, $08, $07 ; Octave 1
-    .byte $07, $07, $06, $06, $05, $05, $05, $05, $04, $04, $04, $03 ; Octave 2
+    .byte $1d, $1c, $1a, $19, $17, $16, $15, $13, $12, $11, $10, $0f ; Octave 0
+    .byte $0e, $0e, $0d, $0c, $0b, $0b, $0a, $09, $09, $08, $08, $07 ; Octave 1
+    .byte $07, $07, $06, $06, $05, $05, $05, $04, $04, $04, $04, $03 ; Octave 2
     .byte $03, $03, $03, $03, $02, $02, $02, $02, $02, $02, $02, $01 ; Octave 3
     .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $00 ; Octave 4
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5

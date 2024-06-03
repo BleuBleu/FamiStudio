@@ -699,7 +699,7 @@ namespace FamiStudio
                         BindAndUpdateVertexBuffer(2, texCoordBuffer, drawData.texArray, drawData.texArraySize, 3);
                         BindAndUpdateByteBuffer(3, depthBuffer, drawData.depArray, drawData.depArraySize, true);
 
-                        foreach (var draw in drawData.draws)
+                        foreach (var draw in drawData.drawCalls)
                         {
                             GL.BindTexture(GL.Texture2D, draw.textureId);
                             GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(draw.start * sizeof(short)));
@@ -713,24 +713,31 @@ namespace FamiStudio
 
                 if (list.HasAnyTexts)
                 {
-                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, depArray, out var vtxSize, out var texSize, out var colSize, out var depSize);
+                    var drawDatas = list.GetTextDrawData();
 
                     GL.UseProgram(textProgram);
                     GL.BindVertexArray(textVao);
                     GL.Uniform(textScaleBiasUniform, viewportScaleBias, 4);
                     GL.Uniform(textTextureUniform, 0);
                     GL.ActiveTexture(GL.Texture0 + 0);
-
-                    BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxSize);
-                    BindAndUpdateColorBuffer(1, colorBuffer, colArray, colSize);
-                    BindAndUpdateVertexBuffer(2, texCoordBuffer, texArray, texSize);
-                    BindAndUpdateByteBuffer(3, depthBuffer, depArray, depSize, true);
                     GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
 
-                    foreach (var draw in drawData)
+                    foreach (var drawData in drawDatas)
                     {
-                        GL.BindTexture(GL.Texture2D, draw.textureId);
-                        GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(draw.start * sizeof(short)));
+                        BindAndUpdateVertexBuffer(0, vertexBuffer, drawData.vtxArray, drawData.vtxArraySize);
+                        BindAndUpdateColorBuffer(1, colorBuffer, drawData.colArray, drawData.colArraySize);
+                        BindAndUpdateVertexBuffer(2, texCoordBuffer, drawData.texArray, drawData.texArraySize);
+                        BindAndUpdateByteBuffer(3, depthBuffer, drawData.depArray, drawData.depArraySize, true);
+
+                        foreach (var draw in drawData.drawCalls)
+                        {
+                            GL.BindTexture(GL.Texture2D, draw.textureId);
+                            GL.DrawElements(GL.Triangles, draw.count, GL.UnsignedShort, new IntPtr(draw.start * sizeof(short)));
+                        }
+
+                        // TODO : Change this so that we build the draw data as we draw stuff, like the other primitives. This way
+                        // we wont need to do this janky release.
+                        drawData.Release(this);
                     }
                 }
 

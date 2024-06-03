@@ -289,6 +289,7 @@ namespace FamiStudio
         public int InputSampleRate => inputSampleRate;
         public int OutputSampleRate => outputSampleRate;
         public bool IsPlaying => play;
+        public bool RecreateOnDeviceChanged => true;
         public static int DeviceSampleRate => deviceSampleRate;
 
         private PortAudioStream()
@@ -406,7 +407,7 @@ namespace FamiStudio
             // - When re-starting a stream, PortAudio will often play the last samples of the last play and i found
             //   no way to work around this. 
             //
-            // Instead will keep the stream running at all time and output zeroe\s where there is nothing to play.
+            // Instead will keep the stream running at all time and output zeroes where there is nothing to play.
 
             Pa_StartStream(portAudioStream.stream);
 

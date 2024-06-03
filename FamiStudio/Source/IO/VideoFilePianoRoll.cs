@@ -72,7 +72,7 @@ namespace FamiStudio
                 }
 
                 // If its the start of a new pattern and we've been not moving for ~10 sec, let's start a new segment.
-                bool forceNewSegment = frame.playNote == 0 && (f - currentSegment.startFrame) > 600;
+                bool forceNewSegment = frame.playNote == 0 && currentSegment.minNote != int.MaxValue && currentSegment.maxNote != int.MinValue && (f - currentSegment.startFrame) > 600;
 
                 var newMinNote = Math.Min(currentSegment.minNote, minNoteValue);
                 var newMaxNote = Math.Max(currentSegment.maxNote, maxNoteValue);
@@ -82,7 +82,7 @@ namespace FamiStudio
                 {
                     currentSegment.endFrame = f;
                     currentSegment = new ScrollSegment();
-                    currentSegment.startFrame = f;
+                    currentSegment.startFrame = segments.Count == 0 ? 0 : f;
                     segments.Add(currentSegment);
 
                     currentSegment.minNote = minNoteValue;

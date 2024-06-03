@@ -203,7 +203,7 @@ namespace FamiStudio
             showRegisters = settings.ShowRegisters;
             project = settings.Project.DeepClone();
             song = project.GetSong(settings.SongId);
-            song.ExtendForLooping(settings.LoopCount);
+            song.ExtendForLooping(settings.LoopCount, true);
 
             if (settings.Encoder == null)
                 return false;
@@ -352,7 +352,9 @@ namespace FamiStudio
             Log.LogMessage(LogSeverity.Info, "Generating video metadata...");
             metadata = new VideoMetadataPlayer(SampleRate, song.Project.PalMode, song.Project.OutputsStereoAudio, showRegisters, 1).GetVideoMetadata(song, -1);
 
-            oscFrameWindowSize  = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
+            DpiScaling.ForceUnitScaling = true;
+
+            oscFrameWindowSize = (int)(SampleRate / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
             oscRenderWindowSize = (int)(oscFrameWindowSize * settings.OscWindow);
 
             BuildChannelColors(song, channelStates, metadata, settings.OscColorMode);

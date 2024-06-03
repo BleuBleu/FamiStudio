@@ -84,7 +84,9 @@ The configuration dialog dialog is accessed from the toolbar.
 
 ![](images/ConfigSound.png#center)
 
-* **Number of buffered frames** : Number of NES/Famicom frames to buffer ahead of time. Higher values help prevent audio starvation, but also raise latency. The minimum is 2 and requires a relatively fast CPU to run without audio starvation.
+* **Audio Buffer Size** : The size of the internal audio buffer, in milliseconds. It is recommended that you set this to the smallest number your computer/phone is able to handle without the audio becoming choppy. On some platforms, the OS may clamp this to the minimum size supported by the hardware, so you may stop seeing a reduction in latency below a certain value.
+
+* **Buffered Emulation Frames** : For systems with relatively slow CPU, the app can optionally emulate additional NES frames ahead of time (16ms in NTSC, 20ms in PAL) on separate threads to prevent the audio from starving. This adds latency but makes the app much more efficient. When this feature is enabled, the total audio latency will be roughly `(Buffered Emulation Frames) x 16ms + (Audio Buffer Size)` on NTSC. If this is zero, this feature is disabled entirely. Set this to zero if your system has good single-core performance, leave to a low value (2 or 3) otherwise.
 
 * **Stop instrument after**: When instruments have release notes, there is no way for FamiStudio to know when to stop the notes. This allows stopping any sound after a specified number of seconds. This only applies to MIDI or when previewing instruments on the piano roll and has no impact on the actual song.
 
@@ -96,17 +98,19 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Mute piano roll interactions during playback** : When enabled, dragging/adding notes in the piano roll will not preview the notes when the song is playing. Some users find this distracting.
 
+* **Fully emulates when seeking** : When enabled, pressing Play will fully emulate the song from the very beginning to reach the desired play location, exactly as if it was playing for real. This is useful when using time-sensive effects such as phase resets. When this is disabled, FamiStudio takes a few shortcut to quickly play from the specified location. On CPU-intensive expansions, such as EPSM, it may take a couple of seconds before the song starts playing.
+
 * **Metronome volume** : Volume of the metronome.
 
 ## Mixer
 
 ![](images/ConfigMixer.png#center)
 
-This section allows adjusting the global volume of FamiStudio and the volume/treble of each audio expansion in the FamiStudio NES sound emulation. The global audio volume may need to be lowered to avoid clipping when using a massive amount of audio expansions at the same time.
+This section allows adjusting the global volume of FamiStudio and the volume/treble of each audio expansion in the FamiStudio NES sound emulation. The global audio volume may need to be lowered slightly to avoid clipping when using a massive amount of audio expansions at the same time.
 
-Audio expansion volume is a tricky subject since even different revisions of the Famicom had different resistor values which dramatically affected the volume of expansion audio. Here you can set any value you want.
+Audio expansion volume is a tricky subject since even different revisions of the Famicom had different resistor values which dramatically affected the volume of expansion audio. Moreover some expansions, such as N163, had multiple different versions with significant volume differences. For this reason, FamiStudio does not even try to be hardware-accurate and lets you set any value you want.
 
-The treble (low-pass filter) has a logarithmic rolloff to treble dB at half sampling rate. Negative values reduce treble, small positive values (0 to 5.0) increase treble. FamiStudio emulates audio at 44.1KHz.
+The treble (low-pass filter) has a logarithmic rolloff to treble dB at the specified sampling rate. In other words, the treble will start to gradually reduce above the specified frequency. Negative values reduce treble while small positive values (0 to 5.0) increase treble.
 
 Note that these settings have no effect outside of FamiStudio.
 

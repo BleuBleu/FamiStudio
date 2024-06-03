@@ -41,11 +41,12 @@ namespace FamiStudio
         public int ScreenWidth => screenRect.Width;
         public int ScreenHeight => screenRect.Height;
 
-        protected const int MaxAtlasResolution = 1024;
-        protected const int MaxVertexCount = 64 * 1024;
-        protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
+        public const int MaxAtlasResolution = 1024;
+        public const int MaxVertexCount = 64 * 1024;
+        public const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
-        // These are only used temporarily during text/bmp rendering.
+        // These are only used temporarily during depth pre-pass, clears, blur, etc.
+        // TODO : Reduce size dramatically.
         protected float[] vtxArray = new float[MaxVertexCount * 2];
         protected float[] texArray = new float[MaxVertexCount * 3];
         protected int[]   colArray = new int[MaxVertexCount];
@@ -1452,6 +1453,29 @@ namespace FamiStudio
 
             public int numIndices;
         };
+        
+        public class TextDrawData
+        {
+            public float[] vtxArray;
+            public float[] texArray;
+            public int[]   colArray;
+            public byte[]  depArray;
+
+            public int vtxArraySize;
+            public int texArraySize;
+            public int colArraySize;
+            public int depArraySize;
+
+            public List<DrawData> drawCalls = new List<DrawData>();
+
+            public void Release(GraphicsBase g)
+            {
+                g.ReleaseVertexArray(vtxArray);
+                g.ReleaseTexCoordArray(texArray);
+                g.ReleaseByteArray(depArray);
+                g.ReleaseColorArray(colArray);
+            }
+        }
 
         public class TextureDrawData
         {
@@ -1465,7 +1489,7 @@ namespace FamiStudio
             public int colArraySize;
             public int depArraySize;
 
-            public List<DrawData> draws = new List<DrawData>();
+            public List<DrawData> drawCalls = new List<DrawData>();
 
             public void Release(GraphicsBase g)
             {
@@ -2955,280 +2979,309 @@ namespace FamiStudio
             return draws;
         }
 
-        public IReadOnlyCollection<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, byte[] depArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int depArraySize)
+        public List<TextDrawData> GetTextDrawData()
         {
-            var drawDatas = new Dictionary<int, DrawData>();
+            var drawDatas = new List<TextDrawData>();
+            var textEndIndex = 0;
 
-            // First, count how many characters well need for each texture/drawdata.
-            foreach (var inst in texts)
+            while (textEndIndex != texts.Count)
             {
-                foreach (var c in inst.text)
+                var textStartIndex = textEndIndex;
+                var charCount = 0;
+                var drawCallsPerTexture = new Dictionary<int, DrawData>();
+
+                var drawData = new TextDrawData();
+                drawData.vtxArray = graphics.GetVertexArray();
+                drawData.texArray = graphics.GetTexCoordArray();
+                drawData.colArray = graphics.GetColorArray();
+                drawData.depArray = graphics.GetByteArray();
+                drawDatas.Add(drawData);
+
+                // First, count how many characters well need for each texture/drawdata.
+                for (textEndIndex = textStartIndex; textEndIndex < texts.Count; textEndIndex++)
                 {
-                    var tex = inst.font.GetCharInfo(c).texture;
-                    if (tex != 0)
+                    var inst = texts[textEndIndex];
+
+                    // We may have applied the ellipsis on last iteration.
+                    if (inst.flags.HasFlag(TextFlags.Ellipsis) && (textEndIndex == 0 || textEndIndex != textStartIndex))
                     {
-                        if (!drawDatas.TryGetValue(tex, out var d))
+                        var mono = inst.flags.HasFlag(TextFlags.Monospace);
+                        var ellipsisSizeX = inst.font.MeasureString("...", mono) * 2; // Leave some padding.
+                        if (inst.font.TruncateString(ref inst.text, (int)(inst.layoutRect.Width - ellipsisSizeX)))
+                            inst.text += "...";
+                    }
+
+                    // If we add this string, we will run out of vertices. Need to stop.
+                    // This assumes the worst case, clipping may actually render less characters.
+                    if (charCount + inst.text.Length > GraphicsBase.MaxVertexCount / 4)
+                    {
+                        break;
+                    }
+
+                    foreach (var c in inst.text)
+                    {
+                        var tex = inst.font.GetCharInfo(c).texture;
+                        if (tex != 0)
                         {
-                            d = new DrawData() { textureId = tex };
-                            drawDatas.Add(tex, d);
-                        }
-                        d.count++;
-                    }
-                }
-            }
-
-            // Setup the offset for each draw call. Temporarely, start/count are in # of char, not indices.
-            var orderedDrawData = drawDatas.Values;
-            var start = 0;
-
-            foreach (var d in orderedDrawData)
-            {
-                d.start = start;
-                start += d.count;
-                d.count = 0; 
-            }
-
-            var draw = (DrawData)null;
-
-            foreach (var inst in texts)
-            {
-                var font = inst.font;
-                var alignmentOffsetX = 0;
-                var alignmentOffsetY = font.OffsetY;
-                var mono = inst.flags.HasFlag(TextFlags.Monospace);
-
-                if (inst.flags.HasFlag(TextFlags.Ellipsis))
-                {
-                    var ellipsisSizeX = font.MeasureString("...", mono) * 2; // Leave some padding.
-                    if (font.TruncateString(ref inst.text, (int)(inst.layoutRect.Width - ellipsisSizeX)))
-                        inst.text += "...";
-                }
-
-                var halign = inst.flags & TextFlags.HorizontalAlignMask;
-                var valign = inst.flags & TextFlags.VerticalAlignMask;
-
-                if (halign != TextFlags.Left)
-                {
-                    var minX = 0;
-                    var maxX = font.MeasureString(inst.text, mono);
-
-                    if (halign == TextFlags.Center)
-                    {
-                        alignmentOffsetX -= minX;
-                        alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX) / 2;
-                    }
-                    else if (halign == TextFlags.Right)
-                    {
-                        alignmentOffsetX -= minX;
-                        alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX);
-                    }
-                }
-
-                if (valign != TextFlags.Top)
-                {
-                    // Use a tall character with no descender as reference.
-                    var charA = font.GetCharInfo('0');
-
-                    // When aligning middle or center, ignore the y offset since it just
-                    // adds extra padding and messes up calculations.
-                    alignmentOffsetY = -charA.yoffset;
-
-                    if (valign == TextFlags.Middle)
-                    {
-                        alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
-                    }
-                    else if (valign == TextFlags.Bottom)
-                    {
-                        alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
-                    }
-                }
-
-                var packedColor = inst.color.ToAbgr();
-                var numVertices = inst.text.Length * 4;
-
-                int x = (int)(inst.layoutRect.X + alignmentOffsetX);
-                int y = (int)(inst.layoutRect.Y + alignmentOffsetY);
-                    
-                if (inst.flags.HasFlag(TextFlags.Clip)) // Slow path when there is clipping.
-                {
-                    var clipMinX = (int)(inst.clipRect.X);
-                    var clipMaxX = (int)(inst.clipRect.X + inst.clipRect.Width);
-
-                    for (int i = 0; i < inst.text.Length; i++)
-                    {
-                        var c0 = inst.text[i];
-                        var info = font.GetCharInfo(c0);
-
-                        if (info.texture != 0)
-                        {
-                            if (draw == null || draw.textureId != info.texture)
-                                draw = drawDatas[info.texture];
-
-                            var x0 = x + info.xoffset;
-                            var y0 = y + info.yoffset;
-                            var x1 = x0 + info.width;
-                            var y1 = y0 + info.height;
-
-                            if (x1 > clipMinX && x0 < clipMaxX)
+                            if (!drawCallsPerTexture.TryGetValue(tex, out var d))
                             {
-                                var u0 = info.u0;
-                                var v0 = info.v0;
-                                var u1 = info.u1;
-                                var v1 = info.v1;
+                                d = new DrawData() { textureId = tex };
+                                drawCallsPerTexture.Add(tex, d);
+                                drawData.drawCalls.Add(d);
+                            }
+                            d.count++;
+                            charCount++;
+                        }
+                    }
+                }
 
-                                var newu0 = u0;
-                                var newu1 = u1;
-                                var newx0 = x0;
-                                var newx1 = x1;
+                // Setup the offset for each draw call. Temporarely, start/count are in # of char, not indices.
+                // Again, this assumes the worst case, clipping may discard characters so they may be holes between draw calls.
+                var orderedDrawData = drawCallsPerTexture.Values;
+                var start = 0;
 
-                                // Left clipping.
-                                if (x0 < clipMinX && x1 > clipMinX)
+                foreach (var d in orderedDrawData)
+                {
+                    d.start = start;
+                    start += d.count;
+                    d.count = 0;
+                }
+
+                var draw = (DrawData)null;
+
+                for (var textIndex = textStartIndex; textIndex < textEndIndex; textIndex++)
+                {
+                    var inst = texts[textIndex];
+                    var font = inst.font;
+                    var alignmentOffsetX = 0;
+                    var alignmentOffsetY = font.OffsetY;
+                    var mono = inst.flags.HasFlag(TextFlags.Monospace);
+                    var halign = inst.flags & TextFlags.HorizontalAlignMask;
+                    var valign = inst.flags & TextFlags.VerticalAlignMask;
+
+                    if (halign != TextFlags.Left)
+                    {
+                        var minX = 0;
+                        var maxX = font.MeasureString(inst.text, mono);
+
+                        if (halign == TextFlags.Center)
+                        {
+                            alignmentOffsetX -= minX;
+                            alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX) / 2;
+                        }
+                        else if (halign == TextFlags.Right)
+                        {
+                            alignmentOffsetX -= minX;
+                            alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX);
+                        }
+                    }
+
+                    if (valign != TextFlags.Top)
+                    {
+                        // Use a tall character with no descender as reference.
+                        var charA = font.GetCharInfo('0');
+
+                        // When aligning middle or center, ignore the y offset since it just
+                        // adds extra padding and messes up calculations.
+                        alignmentOffsetY = -charA.yoffset;
+
+                        if (valign == TextFlags.Middle)
+                        {
+                            alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
+                        }
+                        else if (valign == TextFlags.Bottom)
+                        {
+                            alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
+                        }
+                    }
+
+                    var packedColor = inst.color.ToAbgr();
+                    var numVertices = inst.text.Length * 4;
+
+                    int x = (int)(inst.layoutRect.X + alignmentOffsetX);
+                    int y = (int)(inst.layoutRect.Y + alignmentOffsetY);
+
+                    if (inst.flags.HasFlag(TextFlags.Clip)) // Slow path when there is clipping.
+                    {
+                        var clipMinX = (int)(inst.clipRect.X);
+                        var clipMaxX = (int)(inst.clipRect.X + inst.clipRect.Width);
+
+                        for (int i = 0; i < inst.text.Length; i++)
+                        {
+                            var c0 = inst.text[i];
+                            var info = font.GetCharInfo(c0);
+
+                            if (info.texture != 0)
+                            {
+                                if (draw == null || draw.textureId != info.texture)
+                                    draw = drawCallsPerTexture[info.texture];
+
+                                var x0 = x + info.xoffset;
+                                var y0 = y + info.yoffset;
+                                var x1 = x0 + info.width;
+                                var y1 = y0 + info.height;
+
+                                if (x1 > clipMinX && x0 < clipMaxX)
                                 {
-                                    newu0 = Utils.Lerp(info.u0, info.u1, ((clipMinX - x0) / (float)(x1 - x0)));
-                                    newx0 = clipMinX;
-                                }
+                                    var u0 = info.u0;
+                                    var v0 = info.v0;
+                                    var u1 = info.u1;
+                                    var v1 = info.v1;
 
-                                // Right clipping
-                                if (x0 < clipMaxX && x1 > clipMaxX)
-                                {
-                                    newu1 = Utils.Lerp(info.u0, info.u1, ((clipMaxX - x0) / (float)(x1 - x0)));
-                                    newx1 = clipMaxX;
-                                }
+                                    var newu0 = u0;
+                                    var newu1 = u1;
+                                    var newx0 = x0;
+                                    var newx1 = x1;
 
-                                u0 = newu0;
-                                u1 = newu1;
-                                x0 = newx0;
-                                x1 = newx1;
+                                    // Left clipping.
+                                    if (x0 < clipMinX && x1 > clipMinX)
+                                    {
+                                        newu0 = Utils.Lerp(info.u0, info.u1, ((clipMinX - x0) / (float)(x1 - x0)));
+                                        newx0 = clipMinX;
+                                    }
+
+                                    // Right clipping
+                                    if (x0 < clipMaxX && x1 > clipMaxX)
+                                    {
+                                        newu1 = Utils.Lerp(info.u0, info.u1, ((clipMaxX - x0) / (float)(x1 - x0)));
+                                        newx1 = clipMaxX;
+                                    }
+
+                                    u0 = newu0;
+                                    u1 = newu1;
+                                    x0 = newx0;
+                                    x1 = newx1;
+
+                                    var vtxIdx = (draw.start + draw.count) * 8;
+                                    var texIdx = (draw.start + draw.count) * 8;
+                                    var colIdx = (draw.start + draw.count) * 4;
+                                    var depIdx = (draw.start + draw.count) * 4;
+
+                                    drawData.vtxArray[vtxIdx++] = x0;
+                                    drawData.vtxArray[vtxIdx++] = y0;
+                                    drawData.vtxArray[vtxIdx++] = x1;
+                                    drawData.vtxArray[vtxIdx++] = y0;
+                                    drawData.vtxArray[vtxIdx++] = x1;
+                                    drawData.vtxArray[vtxIdx++] = y1;
+                                    drawData.vtxArray[vtxIdx++] = x0;
+                                    drawData.vtxArray[vtxIdx++] = y1;
+
+                                    drawData.texArray[texIdx++] = u0;
+                                    drawData.texArray[texIdx++] = v0;
+                                    drawData.texArray[texIdx++] = u1;
+                                    drawData.texArray[texIdx++] = v0;
+                                    drawData.texArray[texIdx++] = u1;
+                                    drawData.texArray[texIdx++] = v1;
+                                    drawData.texArray[texIdx++] = u0;
+                                    drawData.texArray[texIdx++] = v1;
+
+                                    drawData.colArray[colIdx++] = packedColor;
+                                    drawData.colArray[colIdx++] = packedColor;
+                                    drawData.colArray[colIdx++] = packedColor;
+                                    drawData.colArray[colIdx++] = packedColor;
+
+                                    drawData.depArray[depIdx++] = inst.depth;
+                                    drawData.depArray[depIdx++] = inst.depth;
+                                    drawData.depArray[depIdx++] = inst.depth;
+                                    drawData.depArray[depIdx++] = inst.depth;
+
+                                    draw.count++;
+                                }
+                            }
+
+                            var advance = info.xadvance;
+                            if (i != inst.text.Length - 1)
+                            {
+                                char c1 = inst.text[i + 1];
+                                advance += font.GetKerning(c0, c1);
+                            }
+                            x += (int)advance;
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < inst.text.Length; i++)
+                        {
+                            var c0 = inst.text[i];
+                            var isMonoChar = mono && Font.IsMonospaceChar(c0);
+                            var info = font.GetCharInfo(c0);
+                            var advanceInfo = isMonoChar ? font.GetCharInfo('0') : info;
+
+                            if (info.texture != 0)
+                            {
+                                if (draw == null || draw.textureId != info.texture)
+                                    draw = drawCallsPerTexture[info.texture];
+
+                                var monoAjustX = isMonoChar ? (advanceInfo.width - info.width + 1) / 2 : 0;
+
+                                var x0 = x + info.xoffset + monoAjustX;
+                                var y0 = y + info.yoffset;
+                                var x1 = x0 + info.width;
+                                var y1 = y0 + info.height;
 
                                 var vtxIdx = (draw.start + draw.count) * 8;
                                 var texIdx = (draw.start + draw.count) * 8;
                                 var colIdx = (draw.start + draw.count) * 4;
                                 var depIdx = (draw.start + draw.count) * 4;
 
-                                vtxArray[vtxIdx++] = x0;
-                                vtxArray[vtxIdx++] = y0;
-                                vtxArray[vtxIdx++] = x1;
-                                vtxArray[vtxIdx++] = y0;
-                                vtxArray[vtxIdx++] = x1;
-                                vtxArray[vtxIdx++] = y1;
-                                vtxArray[vtxIdx++] = x0;
-                                vtxArray[vtxIdx++] = y1;
+                                drawData.vtxArray[vtxIdx++] = x0;
+                                drawData.vtxArray[vtxIdx++] = y0;
+                                drawData.vtxArray[vtxIdx++] = x1;
+                                drawData.vtxArray[vtxIdx++] = y0;
+                                drawData.vtxArray[vtxIdx++] = x1;
+                                drawData.vtxArray[vtxIdx++] = y1;
+                                drawData.vtxArray[vtxIdx++] = x0;
+                                drawData.vtxArray[vtxIdx++] = y1;
 
-                                texArray[texIdx++] = u0;
-                                texArray[texIdx++] = v0;
-                                texArray[texIdx++] = u1;
-                                texArray[texIdx++] = v0;
-                                texArray[texIdx++] = u1;
-                                texArray[texIdx++] = v1;
-                                texArray[texIdx++] = u0;
-                                texArray[texIdx++] = v1;
+                                drawData.texArray[texIdx++] = info.u0;
+                                drawData.texArray[texIdx++] = info.v0;
+                                drawData.texArray[texIdx++] = info.u1;
+                                drawData.texArray[texIdx++] = info.v0;
+                                drawData.texArray[texIdx++] = info.u1;
+                                drawData.texArray[texIdx++] = info.v1;
+                                drawData.texArray[texIdx++] = info.u0;
+                                drawData.texArray[texIdx++] = info.v1;
 
-                                colArray[colIdx++] = packedColor;
-                                colArray[colIdx++] = packedColor;
-                                colArray[colIdx++] = packedColor;
-                                colArray[colIdx++] = packedColor;
+                                drawData.colArray[colIdx++] = packedColor;
+                                drawData.colArray[colIdx++] = packedColor;
+                                drawData.colArray[colIdx++] = packedColor;
+                                drawData.colArray[colIdx++] = packedColor;
 
-                                depArray[depIdx++] = inst.depth;
-                                depArray[depIdx++] = inst.depth;
-                                depArray[depIdx++] = inst.depth;
-                                depArray[depIdx++] = inst.depth;
+                                drawData.depArray[depIdx++] = inst.depth;
+                                drawData.depArray[depIdx++] = inst.depth;
+                                drawData.depArray[depIdx++] = inst.depth;
+                                drawData.depArray[depIdx++] = inst.depth;
 
                                 draw.count++;
                             }
-                        }
 
-                        var advance = info.xadvance;
-                        if (i != inst.text.Length - 1)
-                        {
-                            char c1 = inst.text[i + 1];
-                            advance += font.GetKerning(c0, c1);
+                            var advance = advanceInfo.xadvance;
+                            if (i != inst.text.Length - 1 && !isMonoChar)
+                            {
+                                char c1 = inst.text[i + 1];
+                                advance += font.GetKerning(c0, c1);
+                            }
+                            x += (int)advance;
                         }
-                        x += (int)advance;
                     }
                 }
-                else
+
+                // # of chars -> # of indices
+                var maxCount = 0;
+                foreach (var d in orderedDrawData)
                 {
-                    for (int i = 0; i < inst.text.Length; i++)
-                    {
-                        var c0 = inst.text[i];
-                        var isMonoChar = mono && Font.IsMonospaceChar(c0);
-                        var info = font.GetCharInfo(c0);
-                        var advanceInfo = isMonoChar ? font.GetCharInfo('0') : info;
-
-                        if (info.texture != 0)
-                        {
-                            if (draw == null || draw.textureId != info.texture)
-                                draw = drawDatas[info.texture];
-
-                            var monoAjustX = isMonoChar ? (advanceInfo.width - info.width + 1) / 2 : 0;
-
-                            var x0 = x + info.xoffset + monoAjustX;
-                            var y0 = y + info.yoffset;
-                            var x1 = x0 + info.width;
-                            var y1 = y0 + info.height;
-
-                            var vtxIdx = (draw.start + draw.count) * 8;
-                            var texIdx = (draw.start + draw.count) * 8;
-                            var colIdx = (draw.start + draw.count) * 4;
-                            var depIdx = (draw.start + draw.count) * 4;
-
-                            vtxArray[vtxIdx++] = x0;
-                            vtxArray[vtxIdx++] = y0;
-                            vtxArray[vtxIdx++] = x1;
-                            vtxArray[vtxIdx++] = y0;
-                            vtxArray[vtxIdx++] = x1;
-                            vtxArray[vtxIdx++] = y1;
-                            vtxArray[vtxIdx++] = x0;
-                            vtxArray[vtxIdx++] = y1;
-
-                            texArray[texIdx++] = info.u0;
-                            texArray[texIdx++] = info.v0;
-                            texArray[texIdx++] = info.u1;
-                            texArray[texIdx++] = info.v0;
-                            texArray[texIdx++] = info.u1;
-                            texArray[texIdx++] = info.v1;
-                            texArray[texIdx++] = info.u0;
-                            texArray[texIdx++] = info.v1;
-
-                            colArray[colIdx++] = packedColor;
-                            colArray[colIdx++] = packedColor;
-                            colArray[colIdx++] = packedColor;
-                            colArray[colIdx++] = packedColor;
-
-                            depArray[depIdx++] = inst.depth;
-                            depArray[depIdx++] = inst.depth;
-                            depArray[depIdx++] = inst.depth;
-                            depArray[depIdx++] = inst.depth;
-
-                            draw.count++;
-                        }
-
-                        var advance = advanceInfo.xadvance;
-                        if (i != inst.text.Length - 1 && !isMonoChar)
-                        {
-                            char c1 = inst.text[i + 1];
-                            advance += font.GetKerning(c0, c1);
-                        }
-                        x += (int)advance;
-                    }
+                    maxCount = Math.Max(maxCount, d.start + d.count);
+                    d.count *= 6;
+                    d.start *= 6;
                 }
+
+                drawData.vtxArraySize = maxCount * 8;
+                drawData.texArraySize = maxCount * 8;
+                drawData.colArraySize = maxCount * 4;
+                drawData.depArraySize = maxCount * 4;
             }
 
-            // # of chars -> # of indices
-            var totalCount = 0;
-            foreach (var d in orderedDrawData)
-            {
-                totalCount += d.count;
-                d.count *= 6;
-                d.start *= 6;
-            }
-
-            vtxArraySize = totalCount * 8;
-            texArraySize = totalCount * 8;
-            colArraySize = totalCount * 4;
-            depArraySize = totalCount * 4;
-
-            return orderedDrawData;
+            return drawDatas;
         }
 
         public List<TextureDrawData> GetTextureDrawData()
@@ -3258,7 +3311,7 @@ namespace FamiStudio
                     if (drawData.texArraySize + 12 >= drawData.texArray.Length)
                     {
                         if (draw.count > 0)
-                            drawData.draws.Add(draw);
+                            drawData.drawCalls.Add(draw);
 
                         drawDatas.Add(drawData);
                         drawData = new TextureDrawData();
@@ -3385,7 +3438,7 @@ namespace FamiStudio
                     idx += 6;
                 }
 
-                drawData.draws.Add(draw);
+                drawData.drawCalls.Add(draw);
             }
 
             drawDatas.Add(drawData);

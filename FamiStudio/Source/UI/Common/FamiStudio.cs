@@ -58,9 +58,10 @@ namespace FamiStudio
         private float averageTickRateMs = 8.0f;
         private DateTime lastAutoSave;
 
-        private bool   newReleaseAvailable = false;
-        private string newReleaseString = null;
-        private string newReleaseUrl = null;
+        private volatile bool   newReleaseCheckDone = false;
+        private volatile bool   newReleaseAvailable = false;
+        private volatile string newReleaseString = null;
+        private volatile string newReleaseUrl = null;
 
         public bool  IsPlaying => songPlayer != null && songPlayer.IsPlaying;
         public bool  IsSeeking => songPlayer != null && songPlayer.IsSeeking;
@@ -137,6 +138,7 @@ namespace FamiStudio
         LocalizedString ProjectChangedExportWarning;
         LocalizedString NewVersionToast;
         LocalizedString NewProjectTitle;
+        LocalizedString NewVersionWelcome;
         LocalizedString IncompatibleInstrumentError;
         LocalizedString IncompatibleExpRequiredError;
         LocalizedString AudioDeviceChanged;
@@ -168,9 +170,11 @@ namespace FamiStudio
             else
                 NewProject(true);
 
-#if !DEBUG
+#if !FAMISTUDIO_ANDROID && !DEBUG
             if (Settings.CheckUpdates)
                 Task.Factory.StartNew(CheckForNewRelease);
+            else if (Platform.IsDesktop)
+                newReleaseCheckDone = true;
 #endif
         }
 
@@ -289,15 +293,22 @@ namespace FamiStudio
                 {
                     selectedInstrument = value;
 
-                    if (Platform.IsMobile && PianoRoll.IsEditingInstrument && selectedInstrument != null)
+                    if (Platform.IsMobile)
                     {
-                        var envType = PianoRoll.EditEnvelopeType;
+                        if (PianoRoll.IsEditingInstrument && selectedInstrument != null)
+                        {
+                            var envType = PianoRoll.EditEnvelopeType;
 
-                        // If new instrument doesnt have this envelope, fallback to volume which is common to all.
-                        if (!selectedInstrument.IsEnvelopeActive(envType))
-                            envType = EnvelopeType.Volume;
+                            // If new instrument doesnt have this envelope, fallback to volume which is common to all.
+                            if (!selectedInstrument.IsEnvelopeActive(envType))
+                                envType = EnvelopeType.Volume;
 
-                        PianoRoll.StartEditInstrument(selectedInstrument, envType);
+                            PianoRoll.StartEditInstrument(selectedInstrument, envType);
+                        }
+                        else if (PianoRoll.IsEditingDPCMSampleMapping && selectedInstrument != null && selectedInstrument.Expansion == ExpansionType.None)
+                        {
+                            PianoRoll.StartEditDPCMMapping(selectedInstrument);
+                        }
                     }
 
                     ProjectExplorer.SelectedInstrumentChanged();
@@ -712,7 +723,10 @@ namespace FamiStudio
 
         private void Platform_AudioDeviceChanged()
         {
-            audioDeviceChanged = true;
+            if (songStream != null && songStream.RecreateOnDeviceChanged)
+            {
+                audioDeviceChanged = true;
+            }
         }
 
         private void InitializeMidi()
@@ -1369,6 +1383,8 @@ namespace FamiStudio
             catch
             {
             }
+
+            newReleaseCheckDone = true;
         #endif
         }
 
@@ -1480,10 +1496,28 @@ namespace FamiStudio
 
         private void CheckNewReleaseDone()
         {
-            if (newReleaseAvailable)
+            if (newReleaseCheckDone)
             {
-                newReleaseAvailable = false;
-                Platform.ShowToast(window, NewVersionToast.Format(newReleaseString), true, () => Platform.OpenUrl("http://www.famistudio.org"));
+                if (newReleaseAvailable)
+                {
+                    newReleaseAvailable = false;
+                    Platform.ShowToast(window, NewVersionToast.Format(newReleaseString), true, () => Platform.OpenUrl("http://www.famistudio.org"));
+                }
+                else if (Settings.NewVersionCounter > 0)
+                {
+                    var version = Utils.SplitVersionNumber(Platform.ApplicationVersion, out _);
+                    Platform.ShowToast(window, NewVersionWelcome.Format(version), true, () =>
+                    {
+                        Platform.OpenUrl(Utils.GetReleaseUrl(Platform.ApplicationVersion));
+                        Settings.NewVersionCounter = 0;
+                        Settings.Save();
+                    });
+
+                    Settings.NewVersionCounter--;
+                    Settings.Save();
+                }
+
+                newReleaseCheckDone = false;
             }
         }
 
@@ -1606,7 +1640,7 @@ namespace FamiStudio
 
             if (songStream == null)
             {
-                songStream = Platform.CreateAudioStream(NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
+                songStream = Platform.CreateAudioStream(Settings.AudioAPI, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
                 if (songStream == null)
                     DisplayNotification(AudioStreamError, true, true);
             }
@@ -1623,7 +1657,7 @@ namespace FamiStudio
 
             if (instrumentStream == null)
             { 
-                instrumentStream = Platform.CreateAudioStream(NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
+                instrumentStream = Platform.CreateAudioStream(Settings.AudioAPI, NesApu.EmulationSampleRate, project.OutputsStereoAudio, Settings.AudioBufferSize);
                 if (instrumentStream == null)
                     DisplayNotification(AudioStreamError, true, true);
             }
@@ -2082,7 +2116,7 @@ namespace FamiStudio
                 Platform.ForceScreenOn(true);
             }
         }
-        
+
         public void PlaySongFromBeginning()
         {
             if (IsPlaying)

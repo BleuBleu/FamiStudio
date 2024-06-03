@@ -172,6 +172,7 @@ namespace FamiStudio
             glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, 1);
             glfwWindowHint(GLFW_DEPTH_BITS, 16);
             glfwWindowHint(GLFW_STENCIL_BITS, 0);
+            glfwWindowHintString(GLFW_WAYLAND_APP_ID, "famistudio");
         #if FAMISTUDIO_MACOS
             glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, 1);
         #endif
@@ -197,6 +198,7 @@ namespace FamiStudio
             }
 
             glfwMakeContextCurrent(window);
+            glfwSetWindowSizeLimits(window, 400, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
             glfwSwapInterval(1);
 
             return new FamiStudioWindow(fs, window);

@@ -22,6 +22,7 @@ namespace FamiStudio
         private int[] buffers;
         private short[] samples;
         private int samplesOffset;
+        private static int refCount = 0;
 
         private int[]   immediateSource  = new [] { -1, -1 };
         private int[][] immediateBuffers = new int[2][];
@@ -34,6 +35,8 @@ namespace FamiStudio
 
         public static OpenALStream Create(int rate, bool stereo, int bufferSizeMs)
         {
+            refCount++;
+            
             if (device == IntPtr.Zero)
             {
                 device = ALC.OpenDevice(null);
@@ -66,9 +69,24 @@ namespace FamiStudio
 
             AL.DeleteBuffers(buffers);
             AL.DeleteSource(source);
+
+            if (--refCount == 0)
+            {
+                if (context != IntPtr.Zero)
+                {
+                    ALC.DestroyContext(context);
+                    context = IntPtr.Zero;
+                }
+                if (device != IntPtr.Zero)
+                {
+                    ALC.CloseDevice(device);
+                    device = IntPtr.Zero;
+                }
+            }
         }
 
         public bool IsPlaying => playingTask != null;
+        public bool RecreateOnDeviceChanged => false;
 
         public void Start(GetBufferDataCallback bufferFillCallback, StreamStartingCallback streamStartCallback)
         {
@@ -87,7 +105,21 @@ namespace FamiStudio
 
         private void StopInternal(bool mainThread)
         {
-            lock (this)
+            Debug.Assert(Platform.IsInMainThread() == mainThread);
+
+            var acquired = false;
+
+            if (mainThread)
+            {
+                Monitor.Enter(this);
+                acquired = true;
+            }
+            else
+            {
+                Monitor.TryEnter(this, ref acquired);
+            }
+
+            if (acquired)
             {
                 if (playingTask != null)
                 {
@@ -108,6 +140,8 @@ namespace FamiStudio
                     samples = null;
                     samplesOffset = 0;
                 }
+
+                Monitor.Exit(this);
             }
         }
 

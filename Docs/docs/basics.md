@@ -80,7 +80,7 @@ Icon | Click Action | Additional Actions<br/>(Right click on desktop, long-press
 ![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Redo.png#grey) | Redo | 
 ![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Transform.png#grey) | Transform/cleanup project/songs | 
 ![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Config.png#grey) | Application settings | 
-![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Play.png#grey) | Play song | Opens a context menu to play from different locations or change the playback speed.
+![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Play.png#grey) | Play song | Opens a context menu to play from different locations, change the playback speed or toggle [Fully emulate when seeking](config.md#sound-configuration)
 ![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Rec.png#grey) | Toggle recording mode | 
 ![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Rewind.png#grey) | Rewing to beginning | 
 ![](https://raw.githubusercontent.com/BleuBleu/FamiStudio/3.3.0/FamiStudio/Resources/Loop.png#grey) | Change looping mode | 

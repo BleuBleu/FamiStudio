@@ -116,7 +116,8 @@ namespace PrintCodeSize
                 "FAMISTUDIO_USE_VIBRATO=1",
                 "FAMISTUDIO_USE_ARPEGGIO=1",
                 "FAMISTUDIO_USE_DUTYCYCLE_EFFECT=1",
-                "FAMISTUDIO_USE_DELTA_COUNTER=1"
+                "FAMISTUDIO_USE_DELTA_COUNTER=1",
+                "FAMISTUDIO_USE_PHASE_RESET=1"
             };
 
             var featureDesc = new[]
@@ -131,7 +132,8 @@ namespace PrintCodeSize
                 "Vibrato Effect",
                 "Arpeggio Chords",
                 "Duty Cycle Track",
-                "Delta Counter"
+                "Delta Counter",
+                "Phase Reset"
             };
 
             var codeMatrix = new int[expansionDefines.GetLength(0), featureDefines.Length];

@@ -42,6 +42,6 @@ If you are using the mobile version of FamiStudio, please check out this tutoria
 
 # Discord Server
 
-If you need to talk other users or have a casual conversation with the developer, please come see us on [Discord](https://discord.gg/88UPmxh)!
+If you need to talk other users or have a casual conversation with the developer, please come see us on [Discord](https://discord.gg/QRCMe595Pv)!
 
-[![](images/Discord.png#center)](https://discord.gg/88UPmxh)
+[![](images/Discord.png#center)](https://discord.gg/QRCMe595Pv)

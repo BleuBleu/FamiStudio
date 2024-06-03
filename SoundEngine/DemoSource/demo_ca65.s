@@ -3,8 +3,8 @@
 ; the C version of the demo simply replaces small portions of the code with a c version
 
 FAMISTUDIO_VERSION_MAJOR  = 4
-FAMISTUDIO_VERSION_MINOR  = 1
-FAMISTUDIO_VERSION_HOTFIX = 0
+FAMISTUDIO_VERSION_MINOR  = 2
+FAMISTUDIO_VERSION_HOTFIX = 1
 
 .include "demo_ca65.inc"
 

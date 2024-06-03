@@ -12,17 +12,17 @@ namespace FamiStudio
     static class Settings
     {
         // Version in case we need to do deprecation.
-        // Version 0-1 : Any FamiStudio < 3.0.0
-        // Version 2   : FamiStudio 3.0.0
-        // Version 3   : FamiStudio 3.1.0
-        // Version 4   : FamiStudio 3.2.0
-        // Version 5   : FamiStudio 3.2.3 (Added snapping tutorial)
-        // Version 6   : FamiStudio 3.3.0
-        // Version 7   : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files, dialogs)
-        // Version 8   : FamiStudio 4.1.0 (Configurable keys)
-        // Version 9   : FamiStudio 4.2.0 (Latency improvements, more filtering options)
-        public const int SettingsVersion = 9;
-        public const int NumRecentFiles = 10;
+        // Version 0-1  : Any FamiStudio < 3.0.0
+        // Version 2    : FamiStudio 3.0.0
+        // Version 3    : FamiStudio 3.1.0
+        // Version 4    : FamiStudio 3.2.0
+        // Version 5    : FamiStudio 3.2.3 (Added snapping tutorial)
+        // Version 6    : FamiStudio 3.3.0
+        // Version 7    : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files, dialogs)
+        // Version 8    : FamiStudio 4.1.0 (Configurable keys)
+        // Version 9-10 : FamiStudio 4.2.0 (Latency improvements, more filtering options)
+        public const int SettingsVersion = 10;
+        public const int NumRecentFiles  = 10;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -56,6 +56,7 @@ namespace FamiStudio
         public static bool AutoSaveCopy = true;
         public static string PatternNamePrefix = "Pattern ";
         public static int PatternNameNumDigits = 1;
+        public static int NewVersionCounter = 3;
         public static string LastProjectFile;
 
         // User Interface section
@@ -196,6 +197,7 @@ namespace FamiStudio
         const int DefaultAudioBufferSize = Platform.IsLinux ? 60 : 30;
         const int EmulationThreadCpuScoreThreshold = 100;
 
+        public static string AudioAPI = "";
         public static int AudioBufferSize = DefaultAudioBufferSize;
         public static int NumBufferedFrames = DefaultNumBufferedFrames;
         public static int InstrumentStopTime = 1;
@@ -418,7 +420,12 @@ namespace FamiStudio
             AutoSaveCopy = ini.GetBool("General", "AutoSaveCopy", true);
             PatternNamePrefix = ini.GetString("General", "PatternNamePrefix", "Pattern ");
             PatternNameNumDigits = ini.GetInt("General", "PatternNameNumDigits", 1);
+            NewVersionCounter = ini.GetInt("General", "NewVersionCounter", 3);
             LastProjectFile = OpenLastProjectOnStart ? ini.GetString("General", "LastProjectFile", "") : "";
+
+            // Reset new version counter if last version the user used isnt this one.
+            if (ini.GetString("General", "LastFamiStudioVersion", "0.0.0.0") != Platform.ApplicationVersion)
+                NewVersionCounter = 3;
 
             // UI
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
@@ -448,6 +455,8 @@ namespace FamiStudio
             }
 
             // Audio
+            var audioAPIs = Platform.GetAvailableAudioAPIs();
+            AudioAPI = ini.GetString("Audio", "AudioAPI", audioAPIs[0]);
             AudioBufferSize = ini.GetInt("Audio", "AudioBufferSize", DefaultAudioBufferSize);
             NumBufferedFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedFrames);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
@@ -459,11 +468,20 @@ namespace FamiStudio
             MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
             SeparateChannelsExportTndMode = ini.GetInt("Audio", "SeparateChannelsExportTndMode", NesApu.TND_MODE_SINGLE);
 
-            // Latency changes, reset to default.
-            if (Version < 9)
+            if (!audioAPIs.Contains(AudioAPI))
             {
-                // On first run, if CPU is fast enough, disable emulation thread.
-                if (Utils.BenchmarkCPU() > EmulationThreadCpuScoreThreshold)
+                AudioAPI = audioAPIs[0];
+            }
+
+            // Latency changes, reset to default.
+            if (Version < 10)
+            {
+                // Only enable "NumBufferedFrames" on very crappy mobile devices. Even very old PCs can emulate
+                // a frame of EPSM in 1-3ms. Older phones will need to run emulation threads, thankfully most of
+                // these have  4 to 8 cores. For reference, my Pixel 6a (score 176) emulates EPSM in 6-9ms. 
+                if (Platform.IsMobile && Utils.BenchmarkCPU() < EmulationThreadCpuScoreThreshold)
+                    NumBufferedFrames = 2;
+                else
                     NumBufferedFrames = 0;
 
                 AudioBufferSize = DefaultAudioBufferSize;
@@ -636,7 +654,9 @@ namespace FamiStudio
             ini.SetString("General", "LastProjectFile", OpenLastProjectOnStart ? LastProjectFile : "");
             ini.SetString("General", "PatternNamePrefix", PatternNamePrefix);
             ini.SetInt("General", "PatternNameNumDigits", PatternNameNumDigits);
+            ini.SetInt("General", "NewVersionCounter", NewVersionCounter);
             ini.SetBool("General", "AutoSaveCopy", AutoSaveCopy);
+            ini.SetString("General", "LastFamiStudioVersion", Platform.ApplicationVersion);
 
             // UI
             ini.SetInt("UI", "DpiScaling", DpiScaling);
@@ -662,6 +682,7 @@ namespace FamiStudio
             ini.SetBool("Input", "AltZoomAllowed", AltZoomAllowed);
 
             // Audio
+            ini.SetString("Audio", "AudioAPI", AudioAPI);
             ini.SetInt("Audio", "AudioBufferSize", AudioBufferSize);
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedFrames);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
@@ -675,6 +696,7 @@ namespace FamiStudio
 
             // Mixer
             ini.SetFloat("Mixer", "GlobalVolume", GlobalVolumeDb);
+            ini.SetInt("Mixer", "BassCutoffHz", BassCutoffHz);
 
             for (int i = 0; i < ExpansionType.Count; i++)
             {

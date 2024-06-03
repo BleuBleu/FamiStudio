@@ -821,6 +821,15 @@ namespace FamiStudio
                 return instrument;
             }
 
+            if (instrument == null)
+            {
+                instrument = project.CreateInstrument(ExpansionType.EPSM, name);
+
+                instrument.EpsmPatch = 1;
+                if (instrument.EpsmPatchRegs.SequenceEqual(patchRegs))
+                    return instrument;
+            }
+
             foreach (var inst in project.Instruments)
             {
                 if (inst.IsEpsm)
@@ -840,11 +849,6 @@ namespace FamiStudio
                     Array.Copy(patchRegs, instrument.EpsmPatchRegs, 31);
                     return instrument;
                 }
-            }
-            foreach (var inst in project.Instruments)
-            {
-                if (inst.IsEpsm)
-                    return inst;
             }
         }
 

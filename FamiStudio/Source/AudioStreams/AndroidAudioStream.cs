@@ -5,6 +5,7 @@ using Android.Renderscripts;
 using System;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FamiStudio
@@ -32,6 +33,7 @@ namespace FamiStudio
 
         public bool IsPlaying => playingTask != null;
         public bool Stereo => stereo;
+        public bool RecreateOnDeviceChanged => false;
 
         private AndroidAudioStream()
         {
@@ -76,6 +78,7 @@ namespace FamiStudio
             lastSamples = null;
             resampleIndex = 0.0;
             quit = false;
+            streamStartCallback();
             audioTrack.Play();
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
@@ -87,7 +90,22 @@ namespace FamiStudio
 
         private void StopInternal(bool mainThread)
         {
-            lock (this)
+            var acquired = false;
+
+            // If we are on the playing task thread and fail to acquire the lock
+            // it means the main thread is here stopping, so we must exist so that
+            // the main thread doesnt deadlock on "playingTask.Wait()".
+            if (mainThread)
+            {
+                Monitor.Enter(this);
+                acquired = true;
+            }
+            else
+            {
+                Monitor.TryEnter(this, ref acquired);
+            }
+
+            if (acquired)
             {
                 if (playingTask != null)
                 {
@@ -102,6 +120,8 @@ namespace FamiStudio
                     audioTrack.Stop();
                     playingTask = null;
                 }
+
+                Monitor.Exit(this);
             }
         }
 
