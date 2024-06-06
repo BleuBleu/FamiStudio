@@ -1,12 +1,9 @@
 namespace FamiStudio
 {
-    public class ParamCustomDraw : Control
+    public class ParamCustomDraw : ParamControl
     {
-        private ParamInfo param;
-
-        public ParamCustomDraw(ParamInfo p)
+        public ParamCustomDraw(ParamInfo p) : base (p)
         {
-            param = p;
         }
 
         protected override void OnRender(Graphics g)

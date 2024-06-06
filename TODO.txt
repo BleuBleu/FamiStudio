@@ -20,15 +20,18 @@
 - YARN : Change ini ROM code persune suggestion.
 - Review the copy/paste name matching. Maybe add a rename option.
 - Remove ..\..\Tools\ca65 path in sound engine build scripts (have a normal + dev version)
+
 - UI code cleanup:
 	- Project explorer rewrite
 		- Param list/slider/checkbox
 			- double-click behavior
-			- context menu to reset values, enter, etc.
-		- Make top tabs finals
+			x context menu to reset values, enter, etc.
+		x Make top tabs finals
 		- Make scrolling final (move clamping to Container?)
-		- Hook right click context menus.
-		- Hook folders
+			- Not right now. Too messy
+			x Make scrollbar look good
+		x Hook right click context menus.
+		x Hook folders
 		- Hook drags (envelope, reorders, folder, etc.)
 		- Review all calls to RecreateControls.
 		- Mobile stuff : white outlines, flings, etc.

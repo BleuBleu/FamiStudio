@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace FamiStudio
 {
-    public class ParamSlider : Control
+    public class ParamSlider : ParamControl
     {
         // MATTT : What was that again?
         private float bmpScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
@@ -22,14 +22,9 @@ namespace FamiStudio
         private int captureMouseX;
         private double captureTime;
         private float exp = 1.0f;
-        private ParamInfo param;
 
-        public event ControlDelegate ValueChangeStart;
-        public event ControlDelegate ValueChangeEnd;
-
-        public ParamSlider(ParamInfo p)
+        public ParamSlider(ParamInfo p) : base(p)
         {
-            param = p;
             exp = 1.0f / (p.Logarithmic ? 4 : 1);
             height = DpiScaling.ScaleForWindow(16);
         }
@@ -60,25 +55,28 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            if (e.Left && IsParamEnabled())
+            if (IsParamEnabled())
             {
-                var buttonIndex = GetButtonIndex(e.X);
-                Debug.Assert(!capture);
-                ValueChangeStart?.Invoke(this);
-                captureTime = Platform.TimeSeconds();
-                capture = true;
-                captureButton = buttonIndex;
-                captureMouseX = e.X;
-                Capture = true;
+                if (e.Left)
+                {
+                    var buttonIndex = GetButtonIndex(e.X);
+                    Debug.Assert(!capture);
+                    InvokeValueChangeStart();
+                    captureTime = Platform.TimeSeconds();
+                    capture = true;
+                    captureButton = buttonIndex;
+                    captureMouseX = e.X;
+                    Capture = true;
 
-                if (captureButton != 0)
-                {
-                    IncrementValue(buttonIndex, 0.0);
-                    SetTickEnabled(true);
-                }
-                else
-                {
-                    ChangeValue(e.X);
+                    if (captureButton != 0)
+                    {
+                        IncrementValue(buttonIndex, 0.0);
+                        SetTickEnabled(true);
+                    }
+                    else
+                    {
+                        ChangeValue(e.X);
+                    }
                 }
             }
         }
@@ -89,7 +87,15 @@ namespace FamiStudio
             {
                 capture = false;
                 SetTickEnabled(false);
-                ValueChangeEnd?.Invoke(this);
+                InvokeValueChangeEnd();
+            }
+            else if (e.Right)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("Type",      EnterValueContext,        () => { EnterParamValue(); }),
+                    new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
+                });
             }
         }
 
@@ -195,3 +201,4 @@ namespace FamiStudio
         }
     }
 }
+

@@ -18,7 +18,18 @@ namespace FamiStudio
         private bool press;
         private bool transparent;
         private bool dimmed;
-        private bool dark;
+
+        private Color fgColorEnabled  = Theme.LightGreyColor1;
+        private Color fgColorDisabled = Theme.MediumGreyColor1;
+        private Color bgColor         = Theme.DarkGreyColor5;
+        private Color bgColorPressed  = Theme.MediumGreyColor1;
+        private Color bgColorHover    = Theme.DarkGreyColor6;
+        
+        public Color ForegroundColorEnabled  { get => fgColorEnabled;  set => fgColorEnabled  = value; }
+        public Color ForegroundColorDisabled { get => fgColorDisabled; set => fgColorDisabled = value; }
+        public Color BackgroundColor         { get => bgColor;         set => bgColor         = value; }
+        public Color BackgroundColorPressed  { get => bgColorPressed;  set => bgColorPressed  = value; }
+        public Color BackgroundColorHover    { get => bgColorHover;    set => bgColorHover    = value; }
 
         public Button(string img, string txt) 
         {
@@ -60,12 +71,6 @@ namespace FamiStudio
         {
             get { return transparent; }
             set { SetAndMarkDirty(ref transparent, value); }
-        }
-
-        public bool Dark
-        {
-            get { return dark; }
-            set { SetAndMarkDirty(ref dark, value); }   
         }
 
         public bool Dimmed
@@ -137,7 +142,7 @@ namespace FamiStudio
             var c = g.GetCommandList();
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
             var maxOpacity = transparent && dimmed ? 0.25f : 1.0f;
-            var color = dark ? Color.Black : (enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
+            var fgColor = enabled ? fgColorEnabled : fgColorDisabled;
             var opacity = Math.Min(maxOpacity, transparent ? enabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f);
 
             // Debug
@@ -147,11 +152,8 @@ namespace FamiStudio
             // "Transparent" changes the opacity on hover.
             if (enabled && !transparent && (border || press || hover))
             {
-                var fillBrush = press ? Theme.MediumGreyColor1 :
-                                hover ? Theme.DarkGreyColor6 :
-                                        Theme.DarkGreyColor5;
-
-                c.FillRectangle(ClientRectangle, fillBrush);
+                var bgColor = press ? bgColorPressed : hover ? bgColorHover : this.bgColor;
+                c.FillRectangle(ClientRectangle, bgColor);
             }
 
             if (border)
@@ -165,16 +167,16 @@ namespace FamiStudio
 
             if (!hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, color.Transparent(opacity));
+                c.DrawTextureAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, fgColor.Transparent(opacity));
             }
             else if (hasText && bmp == null)
             {
-                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, 0, 0, color, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
+                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, 0, 0, fgColor, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
             }
             else if (hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, color);
-                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, color, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
+                c.DrawTextureAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, fgColor);
+                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, fgColor, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 
             c.PopTransform();

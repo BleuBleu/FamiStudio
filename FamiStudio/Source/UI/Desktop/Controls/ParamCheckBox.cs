@@ -1,6 +1,6 @@
 namespace FamiStudio
 {
-    public class ParamCheckBox : Control
+    public class ParamCheckBox : ParamControl
     {
         // MATTT : What was that again?
         private float bmpScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
@@ -9,16 +9,11 @@ namespace FamiStudio
         public event CheckedChangedDelegate CheckedChanged;
 
         private bool hover;
-        private ParamInfo param;
         private TextureAtlasRef bmpCheckOn;
         private TextureAtlasRef bmpCheckOff;
 
-        public event ControlDelegate ValueChangeStart;
-        public event ControlDelegate ValueChangeEnd;
-
-        public ParamCheckBox(ParamInfo p)
+        public ParamCheckBox(ParamInfo p) : base(p)
         {
-            param = p;
             height = 16;
         }
 
@@ -34,11 +29,22 @@ namespace FamiStudio
         {
             if (e.Left && IsParamEnabled())
             {
-                ValueChangeStart?.Invoke(this);
+                InvokeValueChangeStart();
                 param.SetValue(param.GetValue() == 0 ? 1 : 0);
-                ValueChangeEnd?.Invoke(this);
+                InvokeValueChangeEnd();
                 CheckedChanged?.Invoke(this, param.GetValue() != 0);
                 MarkDirty();
+            }
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (e.Right)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
+                });
             }
         }
 

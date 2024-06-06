@@ -167,6 +167,7 @@
     <Compile Include="Source\UI\Desktop\Controls\LogTextBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\NumericUpDown.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ParamCheckBox.cs" />
+    <Compile Include="Source\UI\Desktop\Controls\ParamControl.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ParamCustomDraw.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ParamList.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ParamSlider.cs" />

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 
 namespace FamiStudio
 {
@@ -47,6 +48,7 @@ namespace FamiStudio
         LocalizedString AddNewArpeggioTooltip;
         LocalizedString AddNewInstrumentTooltip;
         LocalizedString AddNewSongTooltip;
+        LocalizedString AddNewSampleTooltip;
         LocalizedString AutoSortArpeggiosTooltip;
         LocalizedString AutoSortInstrumentsTooltip;
         LocalizedString AutoSortSamplesTooltip;
@@ -182,8 +184,6 @@ namespace FamiStudio
         LocalizedString PropertiesSongContext;
         LocalizedString ReplaceWithContext;
         LocalizedString ResampleWavContext;
-        LocalizedString EnterValueContext;
-        LocalizedString ResetDefaultValueContext;
         LocalizedString CollapseAllContext;
         LocalizedString ExpandAllContext;
 
@@ -395,42 +395,46 @@ namespace FamiStudio
             return label;
         }
 
-        private Label CreateLabel(GradientPanel panel, string text, bool dark, int x, int y, int width, bool ellipsis = false)
+        private Label CreateLabel(GradientPanel panel, string text, bool black, int x, int y, int width, bool ellipsis = false)
         {
             var label = new Label(text, false);
-            label.Color = dark ? Theme.BlackColor : label.Color;
+            label.Color = black ? Theme.BlackColor : label.Color;
             label.Ellipsis = ellipsis;
             label.Move(x, y, width, panel.Height);
             panel.AddControl(label);
             return label;
         }
 
-        private Button CreateExpandButton(GradientPanel panel, bool dark, bool expanded)
+        private Button CreateExpandButton(GradientPanel panel, bool black, bool expanded)
         {
             Debug.Assert(
                 panel.UserData is Folder     ||
                 panel.UserData is Instrument || 
                 panel.UserData is DPCMSample);
 
-            var expandButton = CreateImageButton(panel, marginX, expanded ? "InstrumentExpanded" : "InstrumentExpand", dark);
+            var expandButton = CreateImageButton(panel, marginX, expanded ? "InstrumentExpanded" : "InstrumentExpand", black);
             return expandButton;
         }
 
-        private ImageBox CreateImageBox(GradientPanel panel, int x, string image, bool dark = false)
+        private ImageBox CreateImageBox(GradientPanel panel, int x, string image, bool black = false)
         {
             var imageBox = new ImageBox(image);
             panel.AddControl(imageBox);
-            imageBox.Tint = dark ? Color.Black : Theme.LightGreyColor2;
+            imageBox.Tint = black ? Color.Black : Theme.LightGreyColor2;
             imageBox.AutoSizeToImage(); // MATTT : Make this built-in functionality in imagebox.
             imageBox.Move(x, Utils.DivideAndRoundUp(panel.Height - imageBox.Height, 2));
             return imageBox;
         }
 
-        private Button CreateImageButton(GradientPanel panel, int x, string image, bool dark = true)
+        private Button CreateImageButton(GradientPanel panel, int x, string image, bool black = true)
         {
             var button = new Button(image, null);
-            button.Dark = dark;
             button.Transparent = true;
+            if (black)
+            {
+                button.ForegroundColorEnabled  = Color.Black;
+                button.ForegroundColorDisabled = Color.Black;
+            }
             panel.AddControl(button);
             button.AutoSizeToImage(); // MATTT : Make this built-in functionality in button.
             
@@ -448,6 +452,7 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(Theme.DarkGreyColor5, folder);
             panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
+            panel.MouseUpEvent += (s, e) => Folder_MouseUp(e, folder);
             panel.ContainerMouseUpNotifyEvent += (s, e) => Folder_MouseUp(e, folder);
 
             var expand = CreateExpandButton(panel, false, folder.Expanded);
@@ -486,11 +491,22 @@ namespace FamiStudio
                 var tabSizeX = width / (int)TabType.Count;
                 for (var i = 0; i < (int)TabType.Count; i++)
                 {
-                    var button = new Button(null, TabNames[0]);
-                    button.BoldFont = (int)selectedTab == i;
+                    var button = new Button(null, TabNames[i]);
                     button.Border = true;
-                    button.Transparent = true;
+                    if ((int)selectedTab == i)
+                    {
+                        button.BoldFont = true;
+                        button.Transparent = true;
+                    }
+                    else
+                    {
+                        button.BackgroundColor        = new Color(0, 0, 0, 128);
+                        button.BackgroundColorHover   = new Color(0, 0, 0, 64);
+                        button.BackgroundColorPressed = new Color(0, 0, 0, 32);
+                    }
                     button.Move(i * tabSizeX, 0, i == (int)TabType.Count - 1 ? width - tabSizeX * i : tabSizeX, panelSizeY);
+                    button.Click += TopTabs_Click;
+                    button.UserData = (TabType)i;
                     tabPanel.AddControl(button);
                 }
             }
@@ -498,6 +514,12 @@ namespace FamiStudio
             {
                 tabPanel = null;
             }
+        }
+
+        private void TopTabs_Click(Control sender)
+        {
+            selectedTab = (TabType)sender.UserData;
+            RecreateAllControls();
         }
 
         private void CreateMainContainer()
@@ -511,7 +533,9 @@ namespace FamiStudio
             if (Settings.ScrollBars != Settings.ScrollBarsNone)
             {
                 scrollBar = new ScrollBar();
-                scrollBar.Move(width - scrollBar.ScrollBarThickness - 1, tabHeight, scrollBar.ScrollBarThickness, height - tabHeight);
+                scrollBar.LineColor = Color.Black;
+                scrollBar.Move(width - scrollBar.ScrollBarThickness, tabHeight, scrollBar.ScrollBarThickness, height - tabHeight - 1);
+                scrollBar.Scrolled += ScrollBar_Scrolled;
                 AddControl(scrollBar);
                 scrollBarWidth = scrollBar.ScrollBarThickness;
             }
@@ -523,13 +547,19 @@ namespace FamiStudio
             mainContainer.Move(0, tabHeight, width - scrollBarWidth, height - tabHeight);
         }
 
+        private void ScrollBar_Scrolled(ScrollBar sender, int pos)
+        {
+            mainContainer.ScrollY = pos;
+        }
+
         private void CreateProjectHeaderControls()
         {
             var project = App.Project;
             var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
             var panel = CreateGradientPanel(Theme.DarkGreyColor4, project);
             panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
-            panel.ContainerMouseUpNotifyEvent += ProjectHeader_MouseUp;
+            panel.MouseUpEvent += (s, e) => ProjectHeader_MouseUp(e);
+            panel.ContainerMouseUpNotifyEvent += (s, e) => ProjectHeader_MouseUp(e);
 
             var propsButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties", false);
             propsButton.ToolTip = $"<MouseLeft> {PropertiesProjectTooltip}";
@@ -543,7 +573,7 @@ namespace FamiStudio
             CreateCenteredLabel(panel, projectText, 2 * mixerButton.Left - panel.Width, true);
         }
 
-        private void ProjectHeader_MouseUp(Control sender, MouseEventArgs e)
+        private void ProjectHeader_MouseUp(MouseEventArgs e)
         {
             if (!e.Handled && e.Right)
             {
@@ -561,7 +591,8 @@ namespace FamiStudio
             var panel = CreateGradientPanel(Theme.DarkGreyColor4);
             var addButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Add", false);
             addButton.ToolTip = $"<MouseLeft> {AddNewSongTooltip}";
-            addButton.Click += (s) => AddSong();
+            addButton.Click += (s) => AskAddSong();
+            addButton.MouseUpEvent += (s, e) => { if (e.Right) AskAddSong(); };
 
             var importButton = CreateImageButton(panel, addButton.Left - spacingX - iconSizeX, "InstrumentOpen", false);
             importButton.ToolTip = $"<MouseLeft> {ImportSongsTooltip}";
@@ -588,8 +619,7 @@ namespace FamiStudio
             importButton.ToolTip = $"<MouseLeft> {ImportInstrumentsTooltip}";
             importButton.Click += (s) => ImportInstruments();
 
-            var sortButton = CreateImageButton
-                (panel, importButton.Left - spacingX - iconSizeX, "Sort", false);
+            var sortButton = CreateImageButton(panel, importButton.Left - spacingX - iconSizeX, "Sort", false);
             sortButton.ToolTip = $"<MouseLeft> {AutoSortInstrumentsTooltip}";
             sortButton.Dimmed = !project.AutoSortInstruments;
             sortButton.Click += (s) => SortInstruments();
@@ -601,6 +631,7 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(song.Color, song);
             panel.ToolTip = $"<MouseLeft> {MakeSongCurrentTooltip} - <MouseLeft><Drag> {ReorderSongsTooltip}\n<MouseRight> {MoreOptionsTooltip}";
+            panel.MouseUpEvent += (s, e) => Song_MouseUp(e, song);
             panel.ContainerMouseUpNotifyEvent += (s, e) => Song_MouseUp(e, song);
 
             var icon = CreateImageBox(panel, marginX + expandSizeX, "Music", true);
@@ -636,26 +667,26 @@ namespace FamiStudio
 
         private void CreateInstrumentControls(Instrument instrument)
         {
-            var container = CreateGradientPanel(instrument.Color, instrument);
-            container.ToolTip = $"<MouseLeft> {SelectInstrumentTooltip} - <MouseLeft><Drag> {CopyReplaceInstrumentTooltip}\n<MouseRight> {MoreOptionsTooltip}";
-            container.MouseUpEvent += (s, e) => Instrument_MouseUp(e, instrument); // MATTT : Needed? If so, replicate to all
-            container.ContainerMouseUpNotifyEvent += (s, e) => Instrument_MouseUp(e, instrument);
+            var panel = CreateGradientPanel(instrument.Color, instrument);
+            panel.ToolTip = $"<MouseLeft> {SelectInstrumentTooltip} - <MouseLeft><Drag> {CopyReplaceInstrumentTooltip}\n<MouseRight> {MoreOptionsTooltip}";
+            panel.MouseUpEvent += (s, e) => Instrument_MouseUp(e, instrument);
+            panel.ContainerMouseUpNotifyEvent += (s, e) => Instrument_MouseUp(e, instrument);
 
-            var expand = CreateExpandButton(container, true, expandedInstrument == instrument);
+            var expand = CreateExpandButton(panel, true, expandedInstrument == instrument);
             expand.ToolTip = $"<MouseLeft> {ExpandTooltip} - <MouseRight> {MoreOptionsTooltip}";
             expand.Click += (s) => InstrumentExpand_Click(instrument);
 
-            var icon = CreateImageBox(container, expand.Right + spacingX, ExpansionType.Icons[instrument.Expansion], true);
+            var icon = CreateImageBox(panel, expand.Right + spacingX, ExpansionType.Icons[instrument.Expansion], true);
 
             var x = marginX; 
-            var props = CreateImageButton(container, -x, "Properties");
+            var props = CreateImageButton(panel, -x, "Properties");
             props.ToolTip = $"<MouseLeft> {PropertiesInstrumentTooltip} - <MouseRight> {MoreOptionsTooltip}";
             props.Click += (s) => EditInstrumentProperties(instrument);
 
             if (instrument.Expansion == ExpansionType.None)
             {
                 x += spacingX + props.Width;
-                var dpcm = CreateImageButton(container, -x, "ChannelDPCM");
+                var dpcm = CreateImageButton(panel, -x, "ChannelDPCM");
                 dpcm.Dimmed = !instrument.HasAnyMappedSamples;
                 dpcm.UserData = "DPCM";
                 dpcm.ToolTip = $"<MouseLeft> {EditSamplesTooltip} - <MouseRight> {MoreOptionsTooltip}";
@@ -669,7 +700,7 @@ namespace FamiStudio
                 if (instrument.Envelopes[idx] != null)
                 {
                     x += spacingX + props.Width;
-                    var env = CreateImageButton(container, -x, EnvelopeType.Icons[idx]);
+                    var env = CreateImageButton(panel, -x, EnvelopeType.Icons[idx]);
                     env.Dimmed = instrument.Envelopes[idx].IsEmpty(idx);
                     env.UserData = instrument.Envelopes[idx];
                     env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
@@ -679,7 +710,7 @@ namespace FamiStudio
                 }
             }
 
-            var label = CreateLabel(container, instrument.Name, true, icon.Right + spacingX, 0, lastEnv.Left - icon.Right - spacingX * 2, true);
+            var label = CreateLabel(panel, instrument.Name, true, icon.Right + spacingX, 0, lastEnv.Left - icon.Right - spacingX * 2, true);
             label.Bold = App.SelectedInstrument == instrument;
         }
 
@@ -764,6 +795,7 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(sample.Color, sample);
             panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
+            panel.MouseUpEvent += (s, e) => DpcmSample_MouseUp(e, sample);
             panel.ContainerMouseUpNotifyEvent += (s, e) => DpcmSample_MouseUp(e, sample);
 
             var expand = CreateExpandButton(panel, true, expandedSample == sample);
@@ -793,12 +825,36 @@ namespace FamiStudio
 
         private void DpcmSample_MouseUp(MouseEventArgs e, DPCMSample sample)
         {
+            if (!e.Handled && e.Right)
+            {
+                var menu = new List<ContextMenuOption>();
+
+                menu.Add(new ContextMenuOption("MenuDelete", DeleteSampleContext, () => { AskDeleteDPCMSample(sample); }, ContextMenuSeparator.After));
+
+                if (Platform.IsDesktop)
+                {
+                    menu.Add(new ContextMenuOption("MenuSave", ExportProcessedDmcDataContext, () => { ExportDPCMSampleProcessedData(sample); }));
+                    menu.Add(new ContextMenuOption("MenuSave", ExportSourceDataContext, () => { ExportDPCMSampleSourceData(sample); }));
+                }
+
+                if (sample.SourceDataIsWav)
+                {
+                    menu.Add(new ContextMenuOption("MenuTrash", DiscardSourceWavDataContext, DiscardSourceWavDataTooltip, () => { DeleteDpcmSourceWavData(sample); }));
+                }
+
+                menu.Add(new ContextMenuOption("MenuBankAssign", AutoAssignBanksContext, () => { AutoAssignSampleBanks(); }, ContextMenuSeparator.Before));
+                menu.Add(new ContextMenuOption("MenuProperties", PropertiesSamplesContext, () => { EditDPCMSampleProperties(sample); }, ContextMenuSeparator.Before));
+
+                App.ShowContextMenu(menu.ToArray());
+                e.MarkHandled();
+            }
         }
 
         private void CreateNoneArpeggioControls()
         {
             noneArpPanel = CreateGradientPanel(Theme.LightGreyColor1);
             noneArpPanel.ToolTip = $"<MouseLeft> {SelectArpeggioTooltip}";
+            noneArpPanel.MouseUpEvent += (s, e) => Arpeggio_MouseUp(e, null);
             noneArpPanel.ContainerMouseUpNotifyEvent += (s, e) => Arpeggio_MouseUp(e, null);
 
             var icon = CreateImageBox(noneArpPanel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
@@ -1022,6 +1078,11 @@ namespace FamiStudio
         {
             var project = App.Project;
             var panel = CreateGradientPanel(Theme.DarkGreyColor4);
+            var addButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Add", false);
+            addButton.ToolTip = $"<MouseLeft> {AddNewSampleTooltip}";
+            addButton.Click += (s) => AskAddSampleFolder();
+            addButton.MouseUpEvent += (s, e) => { if (e.Right) AskAddSampleFolder(); };
+
             var importButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "InstrumentOpen", false);
             importButton.ToolTip = $"<MouseLeft> {ImportSamplesTooltip}";
             importButton.Click += (s) => LoadDPCMSample();
@@ -1066,7 +1127,8 @@ namespace FamiStudio
             var panel = CreateGradientPanel(Theme.DarkGreyColor4);
             var addButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Add", false);
             addButton.ToolTip = $"<MouseLeft> {AddNewArpeggioTooltip}";
-            addButton.Click += (s) => AddArpeggio();
+            addButton.Click += (s) => AskAddArpeggio();
+            addButton.MouseUpEvent += (s, e) => { if (e.Right) AskAddArpeggio(); };
 
             var sortButton = CreateImageButton(panel, addButton.Left - spacingX - iconSizeX, "Sort", false);
             sortButton.ToolTip = $"<MouseLeft> {AutoSortArpeggiosTooltip}";
@@ -1190,6 +1252,8 @@ namespace FamiStudio
             flingVelY = 0.0f;
             highlightedButtonIdx = -1;
             virtualSizeY = mainContainer.GetControlsRect().Bottom;
+            if (scrollBar != null)
+                scrollBar.VirtualSize = virtualSizeY;
             ClampScroll();
         }
 
@@ -1438,14 +1502,6 @@ namespace FamiStudio
             //scrollY += Utils.ComputeScrollAmount(y, maxY, buttonSizeY, App.AverageTickRate * ScrollSpeedFactor, false);
 
             ClampScroll();
-        }
-
-        private void UpdateScrollBar(int x, int y)
-        {
-            // MATTT
-            //scrollY = captureScrollY + ((y - captureMouseY) * virtualSizeY / Height);
-            ClampScroll();
-            MarkDirty();
         }
 
         private void UpdateDrag(int x, int y, bool final)
@@ -1985,7 +2041,11 @@ namespace FamiStudio
         {
             if (mainContainer != null)
             {
-                mainContainer.Resize(mainContainer.Width, height - tabPanel.Height);
+                var tabHeight = tabPanel != null ? tabPanel.Height : 0;
+
+                mainContainer.Resize(mainContainer.Width, height - tabHeight);
+                if (scrollBar != null)
+                    scrollBar.Resize(scrollBar.ScrollBarThickness, height - tabHeight - 1);
             }
         }
 
@@ -2437,12 +2497,13 @@ namespace FamiStudio
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
             App.SelectedSong = App.Project.CreateSong();
             App.SelectedSong.FolderName = folder;
+            EnsureFolderExpanded(FolderType.Song, folder);
             App.UndoRedoManager.EndTransaction();
             RecreateAllControls();
             BlinkButton(App.SelectedSong);
         }
 
-        private void AskAddSong(int x, int y)
+        private void AskAddSong()
         {
             var options = new List<ContextMenuOption>
             {
@@ -2450,7 +2511,7 @@ namespace FamiStudio
                 new ContextMenuOption("Folder", AddFolderContext, () => { AddFolder(FolderType.Song); }, ContextMenuSeparator.Before)
             };
 
-            App.ShowContextMenu(left + x, top + y, options.ToArray());
+            App.ShowContextMenu(options.ToArray());
         }
 
         private void AskDeleteSong(Song song)
@@ -2470,12 +2531,21 @@ namespace FamiStudio
             });
         }
 
+        private void EnsureFolderExpanded(int type, string name)
+        {
+            if (!string.IsNullOrEmpty(name))
+            {
+                App.Project.GetFolder(type, name).Expanded = true;
+            }
+        }
+
         private void AddInstrument(int expansionType)
         {
             var folder = App.SelectedInstrument != null ? App.SelectedInstrument.FolderName : null;
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
             App.SelectedInstrument = App.Project.CreateInstrument(expansionType);
             App.SelectedInstrument.FolderName = folder;
+            EnsureFolderExpanded(FolderType.Instrument, folder);
             App.UndoRedoManager.EndTransaction();
             RecreateAllControls();
             BlinkButton(App.SelectedInstrument);
@@ -2492,7 +2562,6 @@ namespace FamiStudio
 
         private void AskAddInstrument()
         {
-            var pt = ParentWindow.LastMousePosition;
             var activeExpansions = App.Project.GetActiveExpansions();
             var options = new List<ContextMenuOption>
             {
@@ -2511,7 +2580,7 @@ namespace FamiStudio
 
             options.Add(new ContextMenuOption("Folder", AddFolderContext, () => { AddFolder(FolderType.Instrument); }, ContextMenuSeparator.Before));
 
-            App.ShowContextMenu(pt.X, pt.Y, options.ToArray());
+            App.ShowContextMenu(options.ToArray());
         }
 
         private void ToggleExpandInstrument(Instrument inst)
@@ -2573,12 +2642,13 @@ namespace FamiStudio
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
             App.SelectedArpeggio = App.Project.CreateArpeggio();
             App.SelectedArpeggio.FolderName = folder;
+            EnsureFolderExpanded(FolderType.Arpeggio, folder);
             App.UndoRedoManager.EndTransaction();
             RecreateAllControls();
             BlinkButton(App.SelectedArpeggio);
         }
 
-        private void AskAddArpeggio(int x, int y)
+        private void AskAddArpeggio()
         {
             var options = new List<ContextMenuOption>
             {
@@ -2586,7 +2656,7 @@ namespace FamiStudio
                 new ContextMenuOption("Folder", AddFolderContext, () => { AddFolder(FolderType.Arpeggio); }, ContextMenuSeparator.Before)
             };
 
-            App.ShowContextMenu(left + x, top + y, options.ToArray());
+            App.ShowContextMenu(options.ToArray());
         }
 
         private void AskDeleteArpeggio(Arpeggio arpeggio)
@@ -2616,14 +2686,14 @@ namespace FamiStudio
             RecreateAllControls();
         }
 
-        private void AskAddSampleFolder(int x, int y)
+        private void AskAddSampleFolder()
         {
             var options = new List<ContextMenuOption>
             {
                 new ContextMenuOption("Folder", AddFolderContext, () => { AddFolder(FolderType.Sample); }, ContextMenuSeparator.Before)
             };
 
-            App.ShowContextMenu(left + x, top + y, options.ToArray());
+            App.ShowContextMenu(options.ToArray());
         }
 
         private void ReloadDPCMSampleSourceData(DPCMSample sample)
@@ -2873,49 +2943,6 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownDpcmButton(MouseEventArgs e, ProjectExplorerButton button, SubButtonType subButtonType, int buttonIdx)
-        {
-            // MATTT
-            //if (e.Left)
-            //{
-            //    if (subButtonType == SubButtonType.EditWave)
-            //    {
-            //        App.StartEditDPCMSample(button.sample);
-            //    }
-            //    else if (subButtonType == SubButtonType.Reload)
-            //    {
-            //        ReloadDPCMSampleSourceData(button.sample);
-            //    }
-            //    else if (subButtonType == SubButtonType.Play)
-            //    {
-            //        App.PreviewDPCMSample(button.sample, false);
-            //    }
-            //    else if (subButtonType == SubButtonType.Properties)
-            //    {
-            //        EditDPCMSampleProperties(new Point(e.X, e.Y), button.sample);
-            //    }
-            //    else if (subButtonType == SubButtonType.Expand)
-            //    {
-            //        ToggleExpandDPCMSample(button.sample);
-            //    }
-            //    else if (subButtonType == SubButtonType.Max)
-            //    {
-            //        draggedSample = button.sample;
-            //        StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSample, buttonIdx);
-            //        MarkDirty();
-            //    }
-            //}
-            //else if (e.Right)
-            //{
-            //    if (subButtonType == SubButtonType.Play)
-            //    {
-            //        App.PreviewDPCMSample(button.sample, true);
-            //    }
-            //}
-
-            return true;
-        }
-
         private void DuplicateSong(Song s)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
@@ -3136,35 +3163,6 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
         }
 
-        private bool HandleContextMenuDpcmButton(int x, int y, ProjectExplorerButton button, SubButtonType subButtonType, int buttonIdx)
-        {
-            // MATTT
-            //if (subButtonType != SubButtonType.Max)
-            //    return true;
-
-            //var menu = new List<ContextMenuOption>();
-
-            //menu.Add(new ContextMenuOption("MenuDelete", DeleteSampleContext, () => { AskDeleteDPCMSample(button.sample); }, ContextMenuSeparator.After));
-
-            //if (Platform.IsDesktop)
-            //{
-            //    menu.Add(new ContextMenuOption("MenuSave", ExportProcessedDmcDataContext, () => { ExportDPCMSampleProcessedData(button.sample); }));
-            //    menu.Add(new ContextMenuOption("MenuSave", ExportSourceDataContext, () => { ExportDPCMSampleSourceData(button.sample); }));
-            //}
-
-            //if (button.sample.SourceDataIsWav)
-            //{
-            //    menu.Add(new ContextMenuOption("MenuTrash", DiscardSourceWavDataContext, DiscardSourceWavDataTooltip, () => { DeleteDpcmSourceWavData(button.sample); }));
-            //}
-
-            //menu.Add(new ContextMenuOption("MenuBankAssign", AutoAssignBanksContext, () => { AutoAssignSampleBanks(); }, ContextMenuSeparator.Before));
-            //menu.Add(new ContextMenuOption("MenuProperties", PropertiesSamplesContext, () => { EditDPCMSampleProperties(new Point(x, y), button.sample); }, ContextMenuSeparator.Before));
-
-            //App.ShowContextMenu(left + x, top + y, menu.ToArray());
-
-            return true;
-        }
-
         private void ExpandAllFolders(int type, bool expand)
         {
             App.Project.ExpandAllFolders(type, expand);
@@ -3232,62 +3230,6 @@ namespace FamiStudio
                     RecreateAllControls();
                 }
             });
-        }
-
-        private bool HandleContextMenuFolderButton(int x, int y, ProjectExplorerButton button)
-        {
-            // MATTT
-            //var menu = new List<ContextMenuOption>();
-
-            //menu.Add(new ContextMenuOption("MenuDelete", DeleteFolderContext, () => { AskDeleteFolder(button.folder); }, ContextMenuSeparator.After));
-            //menu.Add(new ContextMenuOption("Folder",     CollapseAllContext,  () => { ExpandAllFolders(button.folder.Type, false); }));
-            //menu.Add(new ContextMenuOption("FolderOpen", ExpandAllContext,    () => { ExpandAllFolders(button.folder.Type, true);  }));
-
-            //App.ShowContextMenu(left + x, top + y, menu.ToArray());
-
-            return true;
-        }
-
-        private void EnterParamValue(ProjectExplorerButton button, int x, int y)
-        {
-            // MATTT
-            //var dlg = new ValueInputDialog(ParentWindow, new Point(left + x, top + y), button.param.Name, button.param.GetValue(), button.param.GetMinValue(), button.param.GetMaxValue(), true);
-            //dlg.ShowDialogAsync((r) => 
-            //{
-            //    if (r == DialogResult.OK)
-            //    {
-            //        App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-            //        button.param.SetValue(dlg.Value);
-            //        App.UndoRedoManager.EndTransaction();
-            //        MarkDirty();
-            //    }
-            //});
-        }
-
-        private void ResetParamButtonDefaultValue(ProjectExplorerButton button)
-        {
-            // MATTT
-            //App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-            //button.param.SetValue(button.param.DefaultValue);
-            //App.UndoRedoManager.EndTransaction();
-            MarkDirty();
-        }
-
-        private bool HandleContextMenuParamButton(int x, int y, ProjectExplorerButton button)
-        {
-            // MATTT
-            //if (button.param.IsEnabled())
-            //{
-            //    var menu = new List<ContextMenuOption>();
-
-            //    if (button.type == ButtonType.ParamSlider)
-            //        menu.Add(new ContextMenuOption("Type", EnterValueContext, () => { EnterParamValue(button, x, y); }));
-            //    menu.Add(new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamButtonDefaultValue(button); }));
-
-            //    App.ShowContextMenu(left + x, top + y, menu.ToArray());
-            //}
-
-            return true;
         }
 
         private bool HandleTouchDownDragInstrument(int x, int y)

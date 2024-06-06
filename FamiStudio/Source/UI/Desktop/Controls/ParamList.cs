@@ -5,7 +5,7 @@ using System.Runtime.InteropServices.Marshalling;
 
 namespace FamiStudio
 {
-    public class ParamList : Control
+    public class ParamList : ParamControl
     {
         // MATTT : What was that again?
         private float bmpScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
@@ -19,14 +19,9 @@ namespace FamiStudio
         private bool capture;
         private int captureButton;
         private double captureTime;
-        private ParamInfo param;
 
-        public event ControlDelegate ValueChangeStart;
-        public event ControlDelegate ValueChangeEnd;
-
-        public ParamList(ParamInfo p)
+        public ParamList(ParamInfo p) : base(p)
         {
-            param = p;
             height = DpiScaling.ScaleForWindow(16);
         }
 
@@ -58,7 +53,7 @@ namespace FamiStudio
                 if (buttonIndex != 0)
                 {
                     Debug.Assert(!capture);
-                    ValueChangeStart?.Invoke(this);
+                    InvokeValueChangeStart();
                     captureTime = Platform.TimeSeconds();
                     capture = true;
                     captureButton = buttonIndex;
@@ -75,7 +70,14 @@ namespace FamiStudio
             {
                 capture = false;
                 SetTickEnabled(false);
-                ValueChangeEnd?.Invoke(this);
+                InvokeValueChangeEnd();
+            }
+            else if (e.Right)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
+                });
             }
         }
 
