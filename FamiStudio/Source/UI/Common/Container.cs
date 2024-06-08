@@ -17,6 +17,9 @@ namespace FamiStudio
         public int ScrollY { get => containerScrollY; set => SetAndMarkDirty(ref containerScrollY, value); }
         public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
+        public delegate void RenderingDelegate(Graphics g);
+        public event RenderingDelegate Rendering;
+
         public Container()
         {
         }
@@ -88,6 +91,16 @@ namespace FamiStudio
             for (int i = 0; i < controls.Count; i++)
             {
                 if (controls[i].GetType() == typeof(T))
+                    return controls[i] as T;
+            }
+            return null;
+        }
+
+        public T FindControlOfTypeAt<T>(int winX, int winY) where T : Control
+        {
+            for (int i = 0; i < controls.Count; i++)
+            {
+                if (controls[i].GetType() == typeof(T) && controls[i].HitTest(winX, winY))
                     return controls[i] as T;
             }
             return null;
@@ -263,6 +276,7 @@ namespace FamiStudio
         {
             if (clipRegion) g.PushClipRegion(0, 0, width, height);
             OnRender(g);
+            Rendering?.Invoke(g);
             if (clipRegion) g.PopClipRegion();
         }
     }
