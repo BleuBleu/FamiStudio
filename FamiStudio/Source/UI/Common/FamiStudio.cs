@@ -456,8 +456,7 @@ namespace FamiStudio
         private void Sequencer_PatternsPasted()
         {
             RefreshLayout();
-            ProjectExplorer.RecreateAllControls();
-            ProjectExplorer.MarkDirty();
+            RefreshProjectExplorerButtons();
         }
 
         private void Sequencer_SelectionChanged()
@@ -636,8 +635,7 @@ namespace FamiStudio
 
         private void PianoRoll_NotesPasted()
         {
-            ProjectExplorer.RecreateAllControls();
-            ProjectExplorer.MarkDirty();
+            RefreshProjectExplorerButtons();
         }
 
         private void ProjectExplorer_InstrumentDroppedOutside(Instrument instrument, Point pos)
@@ -1278,7 +1276,7 @@ namespace FamiStudio
 
         private void RefreshProjectExplorerButtons()
         {
-            ProjectExplorer.RecreateAllControls();
+            ProjectExplorer.RecreateAllControls(); // MATTT : Make private.
         }
 
         private void InvalidatePatternCache()

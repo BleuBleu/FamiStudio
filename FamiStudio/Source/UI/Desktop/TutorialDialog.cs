@@ -151,7 +151,7 @@ namespace FamiStudio
             OpenGif($"Tutorial{pageIndex}.gif");
             UpdateGif();
 
-            buttonRight.Image = pageIndex == TutorialMessages.Length - 1 ? "Yes" : "ArrowRight";
+            buttonRight.ImageName = pageIndex == TutorialMessages.Length - 1 ? "Yes" : "ArrowRight";
         }
 
         private void ButtonLeft_Click(Control sender)

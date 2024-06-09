@@ -13,12 +13,14 @@ namespace FamiStudio
         protected bool clipRegion = true;
         protected int numControlsTickEnabled;
 
-        public int ScrollX { get => containerScrollX; set => SetAndMarkDirty(ref containerScrollX, value); }
-        public int ScrollY { get => containerScrollY; set => SetAndMarkDirty(ref containerScrollY, value); }
+        public int ScrollX { get => containerScrollX; set { if (SetAndMarkDirty(ref containerScrollX, value)) Scrolled?.Invoke(this); } }
+        public int ScrollY { get => containerScrollY; set { if (SetAndMarkDirty(ref containerScrollY, value)) Scrolled?.Invoke(this); } }
         public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
         public delegate void RenderingDelegate(Graphics g);
         public event RenderingDelegate Rendering;
+        public delegate void ScrolledDelegate(Container sender);
+        public event ScrolledDelegate Scrolled;
 
         public Container()
         {

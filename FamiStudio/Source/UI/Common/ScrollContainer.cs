@@ -93,8 +93,7 @@ namespace FamiStudio
 
         private void SetScroll(int newScrollY)
         {
-            newScrollY = Utils.Clamp(newScrollY, 0, virtualSizeY - height);
-            SetAndMarkDirty(ref containerScrollY, newScrollY);
+            ScrollY = Utils.Clamp(newScrollY, 0, virtualSizeY - height); 
             ClearDialogFocus(); // This will close drop-downs, etc.
         }
 

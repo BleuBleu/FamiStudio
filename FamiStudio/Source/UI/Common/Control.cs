@@ -46,6 +46,8 @@ namespace FamiStudio
                     return a;
 
                 Container c = container;
+                if (c == null)
+                    return null;
                 while (c.container != null)
                     c = c.container;
 
@@ -90,7 +92,7 @@ namespace FamiStudio
         public void MouseUp(MouseEventArgs e) { OnMouseUp(e); MouseUpEvent?.Invoke(this, e); ContainerMouseUpNotify(e); }
         public void MouseDoubleClick(MouseEventArgs e) { OnMouseDoubleClick(e); }
         public void MouseMove(MouseEventArgs e) { OnMouseMove(e); MouseMoveEvent?.Invoke(this, e); ContainerMouseMoveNotify(e); }
-        public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
+        public void MouseLeave(EventArgs e) { if (IsContainedByMainWindow) OnMouseLeave(e); }
         public void MouseWheel(MouseEventArgs e) { OnMouseWheel(e); ContainerMouseWheelNotify(e); }
         public void MouseHorizontalWheel(MouseEventArgs e) { OnMouseHorizontalWheel(e); }
         public void KeyDown(KeyEventArgs e) { OnKeyDown(e); }
@@ -128,7 +130,7 @@ namespace FamiStudio
             while (c != null)
             {
                 c.ContainerMouseDownNotify(this, e);
-                c.ContainerMouseDownNotifyEvent?.Invoke(c, e);
+                c.ContainerMouseDownNotifyEvent?.Invoke(this, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
@@ -179,6 +181,7 @@ namespace FamiStudio
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
         public bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
         public bool CanFocus { get => canFocus; }
+        public bool IsContainedByMainWindow => ParentTopContainer != null;
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
         public object UserData { get => userData; set => userData = value; }
         public bool TickEnabled => tickEnabled;
@@ -239,6 +242,16 @@ namespace FamiStudio
             }
 
             return p;
+        }
+
+        public Point ControlToWindow(int x, int y)
+        {
+            return ControlToWindow(new Point(x, y));
+        }
+
+        public Point WindowToControl(int x, int y)
+        {
+            return WindowToControl(new Point(x, y));
         }
 
         protected void SetTickEnabled(bool enabled)

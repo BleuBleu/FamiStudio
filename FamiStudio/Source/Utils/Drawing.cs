@@ -167,6 +167,11 @@ namespace FamiStudio
         {
             return new Point(pt.x + sz.Width, pt.y + sz.Height);
         }
+
+        public override string ToString()
+        {
+            return $"({x},{y})";
+        }
     }
 
     public struct PointF

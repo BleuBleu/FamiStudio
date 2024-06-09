@@ -23,6 +23,12 @@
 
 - UI code cleanup:
 	- Project explorer rewrite
+		x Update scrollbar when scroll
+		- Scroll bar doesnt handle double click well.
+		- Expand buttons dont work well.
+			-> We capture mouse on mouse down.
+			-> Also capture coordinates are relative to individual controls, not PE.
+			- *** On MouseUp, we can recreate all controls, so the container MouseUpNotify doesnt reach.
 		- Param list/slider/checkbox
 			- double-click behavior
 			x context menu to reset values, enter, etc.
@@ -32,9 +38,9 @@
 			x Make scrollbar look good
 		x Hook right click context menus.
 		x Hook folders
-		- Hook drags (envelope, reorders, folder, etc.)
+		/ Hook drags (envelope, reorders, folder, etc.)
 		- Review all calls to RecreateControls.
-		- Mobile stuff : white outlines, flings, etc.
+		- Mobile stuff : white outlines, flings, touch, etc.
 			- Look everywhere we used to do highlightedButtonIdx
 		- All "Add" buttons should also respond to right click.
 	- Toolbar rewrite

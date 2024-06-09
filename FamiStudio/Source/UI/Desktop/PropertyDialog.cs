@@ -99,7 +99,7 @@ namespace FamiStudio
 
             advancedPropertiesVisible = !advancedPropertiesVisible;
             propertyPage.Build(advancedPropertiesVisible);
-            buttonAdvanced.Image = advancedPropertiesVisible ? "MinusSmall" : "PlusSmall";
+            buttonAdvanced.ImageName = advancedPropertiesVisible ? "MinusSmall" : "PlusSmall";
             UpdateLayout();
         }
 

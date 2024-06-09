@@ -31,9 +31,11 @@ namespace FamiStudio
         public Color BackgroundColorPressed  { get => bgColorPressed;  set => bgColorPressed  = value; }
         public Color BackgroundColorHover    { get => bgColorHover;    set => bgColorHover    = value; }
 
+        public TextureAtlasRef Image => bmp;
+
         public Button(string img, string txt) 
         {
-            Image = img;
+            ImageName = img;
             text  = txt;
         }
 
@@ -43,7 +45,7 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref text, value); }
         }
 
-        public string Image
+        public string ImageName
         {
             get { return imageName; }
             set { imageName = value; MarkDirty(); UpdateAtlasBitmap(); }
