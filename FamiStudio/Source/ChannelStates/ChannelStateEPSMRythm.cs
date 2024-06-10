@@ -8,7 +8,7 @@ namespace FamiStudio
         int channelIdx = 0;
         int stereoFlags = 0;
 
-        public ChannelStateEPSMRythm(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
+        public ChannelStateEPSMRythm(IPlayerInterface player, int apuIdx, int channelType,int tuning, bool pal) : base(player, apuIdx, channelType, tuning, pal)
         {
             channelIdx = channelType - ChannelType.EPSMrythm1;
         }

@@ -289,7 +289,7 @@ namespace FamiStudio
             playLocation = NoteLocation.Invalid; // This means "before the first frame".
             frameNumber = 0;
             famitrackerTempoCounter = 0;
-            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
+            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.Tuning, palPlayback, song.Project.ExpansionNumN163Channels);
             reachedEnd = false;
             playbackRateCounter = 1;
             tempoEnvelopeCounter = 0;
@@ -527,36 +527,36 @@ namespace FamiStudio
             }
         }
 
-        private ChannelState CreateChannelState(int apuIdx, int channelType, int expNumChannels, bool pal)
+        private ChannelState CreateChannelState(int apuIdx, int channelType, int expNumChannels, int tuning, bool pal)
         {
             switch (channelType)
             {
                 case ChannelType.Square1:
                 case ChannelType.Square2:
-                    return new ChannelStateSquare(this, apuIdx, channelType, pal);
+                    return new ChannelStateSquare(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Triangle:
-                    return new ChannelStateTriangle(this, apuIdx, channelType, pal);
+                    return new ChannelStateTriangle(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Noise:
-                    return new ChannelStateNoise(this, apuIdx, channelType, pal);
+                    return new ChannelStateNoise(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Dpcm:
-                    return new ChannelStateDpcm(this, apuIdx, channelType, pal);
+                    return new ChannelStateDpcm(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Vrc6Square1:
                 case ChannelType.Vrc6Square2:
-                    return new ChannelStateVrc6Square(this, apuIdx, channelType);
+                    return new ChannelStateVrc6Square(this, apuIdx, channelType, tuning);
                 case ChannelType.Vrc6Saw:
-                    return new ChannelStateVrc6Saw(this, apuIdx, channelType);
+                    return new ChannelStateVrc6Saw(this, apuIdx, channelType, tuning);
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:
                 case ChannelType.Vrc7Fm3:
                 case ChannelType.Vrc7Fm4:
                 case ChannelType.Vrc7Fm5:
                 case ChannelType.Vrc7Fm6:
-                    return new ChannelStateVrc7(this, apuIdx, channelType);
+                    return new ChannelStateVrc7(this, apuIdx, channelType, tuning);
                 case ChannelType.FdsWave:
-                    return new ChannelStateFds(this, apuIdx, channelType);
+                    return new ChannelStateFds(this, apuIdx, channelType, tuning);
                 case ChannelType.Mmc5Square1:
                 case ChannelType.Mmc5Square2:
-                    return new ChannelStateMmc5Square(this, apuIdx, channelType);
+                    return new ChannelStateMmc5Square(this, apuIdx, channelType, tuning);
                 case ChannelType.N163Wave1:
                 case ChannelType.N163Wave2:
                 case ChannelType.N163Wave3:
@@ -565,36 +565,36 @@ namespace FamiStudio
                 case ChannelType.N163Wave6:
                 case ChannelType.N163Wave7:
                 case ChannelType.N163Wave8:
-                    return new ChannelStateN163(this, apuIdx, channelType, expNumChannels, pal);
+                    return new ChannelStateN163(this, apuIdx, channelType, tuning, pal, expNumChannels);
                 case ChannelType.S5BSquare1:
                 case ChannelType.S5BSquare2:
                 case ChannelType.S5BSquare3:
-                    return new ChannelStateS5B(this, apuIdx, channelType, pal);
+                    return new ChannelStateS5B(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.EPSMSquare1:
                 case ChannelType.EPSMSquare2:
                 case ChannelType.EPSMSquare3:
-                    return new ChannelStateEPSMSquare(this, apuIdx, channelType, pal);
+                    return new ChannelStateEPSMSquare(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.EPSMFm1:
                 case ChannelType.EPSMFm2:
                 case ChannelType.EPSMFm3:
                 case ChannelType.EPSMFm4:
                 case ChannelType.EPSMFm5:
                 case ChannelType.EPSMFm6:
-                    return new ChannelStateEPSMFm(this, apuIdx, channelType, pal);
+                    return new ChannelStateEPSMFm(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.EPSMrythm1:
                 case ChannelType.EPSMrythm2:
                 case ChannelType.EPSMrythm3:
                 case ChannelType.EPSMrythm4:
                 case ChannelType.EPSMrythm5:
                 case ChannelType.EPSMrythm6:
-                    return new ChannelStateEPSMRythm(this, apuIdx, channelType, pal);
+                    return new ChannelStateEPSMRythm(this, apuIdx, channelType, tuning, pal);
             }
 
             Debug.Assert(false);
             return null;
         }
 
-        protected ChannelState[] CreateChannelStates(Project project, int apuIdx, int expNumChannels, bool pal)
+        protected ChannelState[] CreateChannelStates(Project project, int apuIdx, int tuning, bool pal, int expNumChannels)
         {
             var channelCount = project.GetActiveChannelCount();
             var states = new ChannelState[channelCount];
@@ -604,7 +604,7 @@ namespace FamiStudio
             {
                 if (project.IsChannelActive(i))
                 {
-                    var state = CreateChannelState(apuIdx, i, expNumChannels, pal);
+                    var state = CreateChannelState(apuIdx, i, expNumChannels, tuning, pal);
                     states[idx++] = state;
                 }
             }

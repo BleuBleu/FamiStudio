@@ -5,7 +5,7 @@ namespace FamiStudio
 {
     public class ChannelStateEPSMBase : ChannelState
     {
-        public ChannelStateEPSMBase(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
+        public ChannelStateEPSMBase(IPlayerInterface player, int apuIdx, int channelType, int tuning, bool pal) : base(player, apuIdx, channelType, tuning, pal)
         {
         }
 
@@ -40,7 +40,7 @@ namespace FamiStudio
         private int    algorithm = 0;
         private int[]  opVolume = { 0, 0, 0, 0 };
 
-        public ChannelStateEPSMFm(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
+        public ChannelStateEPSMFm(IPlayerInterface player, int apuIdx, int channelType, int tuning, bool pal) : base(player, apuIdx, channelType, tuning, pal)
         {
             channelIdx = channelType - ChannelType.EPSMFm1;
             channelIdxHigh = channelIdx >= 3 ? channelIdx - 3 : channelIdx;

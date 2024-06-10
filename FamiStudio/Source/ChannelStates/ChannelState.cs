@@ -46,7 +46,7 @@ namespace FamiStudio
 
         public int InnerChannelType => channelType; 
 
-        public ChannelState(IPlayerInterface play, int apu, int type, bool pal, int numN163Channels = 1)
+        public ChannelState(IPlayerInterface play, int apu, int type, int tuning, bool pal = false, int numN163Channels = 1)
         {
             player = play;
             apuIdx = apu;
@@ -54,7 +54,7 @@ namespace FamiStudio
             palPlayback = pal;
             instrumentPlayer = apuIdx == NesApu.APU_INSTRUMENT; // HACK : Pass a flag for this.
             maximumPeriod = NesApu.GetPitchLimitForChannelType(channelType);
-            noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
+            noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels, tuning);
             note.Value = Note.NoteStop;
             note.FinePitch = 0;
             Channel.GetShiftsForType(type, numN163Channels, out pitchShift, out slideShift);

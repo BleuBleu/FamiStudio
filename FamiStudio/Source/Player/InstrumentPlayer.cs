@@ -58,7 +58,7 @@ namespace FamiStudio
                 return;
 
             palPlayback = pal;
-            channelStates = CreateChannelStates(project, apuIndex, project.ExpansionNumN163Channels, palPlayback);
+            channelStates = CreateChannelStates(project, apuIndex, project.Tuning, palPlayback, project.ExpansionNumN163Channels);
             activeChannel = -1;
             lastNoteWasRelease = false;
             lastReleaseTime = DateTime.Now;

@@ -23,7 +23,8 @@ namespace FamiStudio
         // Version 14 = FamiStudio 4.0.0 (Unicode text).
         // Version 15 = FamiStudio 4.1.0 (DPCM bankswitching)
         // Version 16 = FamiStudio 4.2.0 (Folders, sound engine options, project mixer settings)
-        public const int Version = 16;
+        // Version 17 = FamiStudio 4.3.0 (Tuning)
+        public const int Version = 17;
         public const int MaxMappedSampleSize = 0x40000;
         public const int MaxDPCMBanks = 64; 
         public const int MaxSampleAddress = 255 * 64;
@@ -41,6 +42,7 @@ namespace FamiStudio
         private int tempoMode = TempoType.FamiStudio;
         private int expansionMask = ExpansionType.NoneMask;
         private int expansionNumN163Channels = 1; // For N163 only.
+        private int tuning = 440;
         private bool sortSongs = true;
         private bool sortInstruments = true;
         private bool sortSamples = true;
@@ -72,8 +74,9 @@ namespace FamiStudio
 
         public int ExpansionAudioMask => expansionMask;
         public int ExpansionNumN163Channels => expansionNumN163Channels;
-
         public int N163WaveRAMSize => 128 - 8 * expansionNumN163Channels;
+
+        public int Tuning { get => tuning; set => tuning = value; }
 
         public bool UsesAnyExpansionAudio       => (expansionMask != ExpansionType.NoneMask);
         public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
@@ -2214,6 +2217,12 @@ namespace FamiStudio
             if (buffer.Version >= 6)
             {
                 buffer.Serialize(ref pal);
+            }
+
+            // At version 17 (FamiStudio 4.3.0) we added support for tuning frequency (ex: A = 440Hz).
+            if (buffer.Version >= 17)
+            {
+                buffer.Serialize(ref tuning);
             }
 
             // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer and

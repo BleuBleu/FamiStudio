@@ -21,6 +21,15 @@
 - Review the copy/paste name matching. Maybe add a rename option.
 - Remove ..\..\Tools\ca65 path in sound engine build scripts (have a normal + dev version)
 
+4.3.0
+=====
+- Support for custom tuning (ex: where A is not 440Hz).
+- 
+
+4.3.0 Testing
+=============
+- Test detuning with sound, dual NSF, slide notes, etc.
+
 Linux notes 
 =========== 
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 

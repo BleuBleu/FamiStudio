@@ -28,10 +28,12 @@ namespace FamiStudio
         LocalizedString CopyrightLabel;
         LocalizedString TempoModeLabel;
         LocalizedString MachineLabel;
+        LocalizedString TuningLabel;
 
         // Information tooltips
         LocalizedString TempoModeTooltip;
         LocalizedString AuthoringMachineTooltip;
+        LocalizedString TuningTooltip;
 
         // Expansion labels
         LocalizedString N163ChannelsLabel;
@@ -71,7 +73,8 @@ namespace FamiStudio
         public string Copyright => InfoPage.GetPropertyValue<string>(2);
         public int    TempoMode => InfoPage.GetSelectedIndex(3);
         public int    Machine   => InfoPage.GetSelectedIndex(4);
-        
+        public int    Tuning    => InfoPage.GetPropertyValue<int>(5);
+
         public MixerProperties MixerProperties => mixerProperties;
 
         public int ExpansionMask   => GetSelectedExpansionMask();
@@ -111,6 +114,7 @@ namespace FamiStudio
                     page.AddTextBox(CopyrightLabel.Colon, project.Copyright, 31); // 2
                     page.AddDropDownList(TempoModeLabel.Colon, TempoType.Names, TempoType.Names[project.TempoMode], TempoModeTooltip); // 3
                     page.AddDropDownList(MachineLabel.Colon, Localization.ToStringArray(MachineType.LocalizedNames, MachineType.CountNoDual), MachineType.LocalizedNames[project.PalMode ? MachineType.PAL : MachineType.NTSC], AuthoringMachineTooltip); // 4
+                    page.AddNumericUpDown(TuningLabel, project.Tuning, 300, 580, 1, TuningTooltip); // 5
                     page.SetPropertyEnabled(4, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
                     page.PropertyChanged += Info_PropertyChanged;
                     break;

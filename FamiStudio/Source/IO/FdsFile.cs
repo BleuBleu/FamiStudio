@@ -112,6 +112,16 @@ namespace FamiStudio
                 var fdsDiskInitBytes = new byte[fdsDiskBinStream.Length];
                 fdsDiskBinStream.Read(fdsDiskInitBytes, 0, fdsDiskInitBytes.Length);
 
+                // Patch note tables if needed
+                if (project.Tuning != 440) 
+                {
+                    var tblFile = Path.ChangeExtension(fdsDiskName, ".tbl");
+                    if (!FamitoneMusicFile.PatchNoteTable(fdsDiskInitBytes, tblFile, project.Tuning, MachineType.NTSC, project.ExpansionNumN163Channels))
+                    {
+                        return false;
+                    }
+                }
+
                 TruncateToLastFile(ref fdsDiskInitBytes);
 
                 var fdsFileBytes = new List<byte>();

@@ -3,6 +3,7 @@ using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.ComponentModel.Design;
 
 namespace FamiStudio
 {
@@ -5059,16 +5060,18 @@ namespace FamiStudio
                     var tempoMode = dlg.TempoMode;
                     var palAuthoring = dlg.Machine == MachineType.PAL;
                     var numN163Channels = dlg.NumN163Channels;
+                    var tuning = dlg.Tuning;
 
                     var changedTempoMode = tempoMode != project.TempoMode;
                     var changedExpansion = newExpansionMask != project.ExpansionAudioMask;
                     var changedNumChannels = numN163Channels != project.ExpansionNumN163Channels;
                     var changedAuthoringMachine = palAuthoring != project.PalMode;
+                    var changedTuning = tuning != project.Tuning;
                     var changedExpMixer = dlg.MixerProperties.Changed;
 
                     var transFlags = TransactionFlags.None;
 
-                    if (changedAuthoringMachine || changedNumChannels || changedExpMixer)
+                    if (changedAuthoringMachine || changedNumChannels || changedExpMixer || changedTuning)
                         transFlags = TransactionFlags.RecreatePlayers;
                     else if (changedExpansion)
                         transFlags = TransactionFlags.RecreatePlayers | TransactionFlags.RecreateStreams; // Toggling EPSM will change mono/stereo and requires new audiostreams.
@@ -5080,6 +5083,7 @@ namespace FamiStudio
                     project.Name = dlg.Title;
                     project.Author = dlg.Author;
                     project.Copyright = dlg.Copyright;
+                    project.Tuning = tuning;
 
                     project.SoundEngineUsesDpcmBankSwitching = dlg.DPCMBankswitching;
                     project.SoundEngineUsesExtendedDpcm = dlg.DPCMExtendedRange;

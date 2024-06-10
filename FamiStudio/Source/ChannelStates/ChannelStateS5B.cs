@@ -24,7 +24,7 @@ namespace FamiStudio
         private int  instEnvShape;
         private int  instEnvPeriod;
 
-        public ChannelStateS5B(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
+        public ChannelStateS5B(IPlayerInterface player, int apuIdx, int channelType, int tuning, bool pal) : base(player, apuIdx, channelType, tuning, pal)
         {
             channelIdx = channelType - ChannelType.S5BSquare1;
             invToneMask = 0xff - (9 << channelIdx);
