@@ -36,6 +36,7 @@ namespace FamiStudio
         private byte    n163WavSize = 16;
         private byte    n163WavPos = 0;
         private byte    n163WavCount = 1;
+        private bool    n163WavAutoPos = false;
         private int     n163ResampleWavPeriod = 128;
         private int     n163ResampleWavOffset = 0;
         private bool    n163ResampleWavNormalize = true;
@@ -280,7 +281,7 @@ namespace FamiStudio
             {
                 Debug.Assert((value & 0x03) == 0);
                 n163WavSize = (byte)Utils.Clamp(value      & 0xfc, 4, N163MaxWaveSize);
-                n163WavPos  = (byte)Utils.Clamp(n163WavPos & 0xfc, 0, N163MaxWavePos);
+                n163WavPos  = (byte)Utils.Clamp(n163WavPos & 0xfe, 0, N163MaxWavePos);
                 ClampN163WaveCount();
                 UpdateN163WaveEnvelope();
             }
@@ -306,6 +307,20 @@ namespace FamiStudio
             {
                 n163WavCount = (byte)Utils.Clamp(value, 1, N163MaxWaveCount);
                 UpdateN163WaveEnvelope();
+            }
+        }
+
+        public bool N163WaveAutoPos
+        {
+            get { return n163WavAutoPos; }
+            set
+            {
+                n163WavAutoPos = value;
+
+                if (value)
+                {
+                    n163WavPos = 0;
+                }
             }
         }
 
@@ -932,6 +947,11 @@ namespace FamiStudio
                                 buffer.Serialize(ref n163ResampleWavOffset);
                                 buffer.Serialize(ref n163ResampleWavNormalize);
                                 buffer.Serialize(ref n163ResampleWavData);
+                            }
+                            // At version 17 (FamiStudio 4.3.0), we added N163 wave auto position assignment.
+                            if (buffer.Version >= 17)
+                            {
+                                buffer.Serialize(ref n163WavAutoPos);
                             }
                             break;
 

@@ -400,6 +400,8 @@ namespace FamiStudio
             var vibToCrc = new Dictionary<byte, uint>();
             var arpToCrc = new Dictionary<Arpeggio, uint>();
 
+            project.AutoAssignN163WavePositions(out var n163AutoWavPosMap);
+
             uniqueEnvelopes.Add(defaultEnvCRC, defaultEnv);
 
             if (kernel == FamiToneKernel.FamiStudio)
@@ -664,9 +666,13 @@ namespace FamiStudio
                         else if (instrument.IsN163)
                         {
                             var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
+                            var wavePos = (int)instrument.N163WavePos;
+
+                            if (instrument.N163WaveAutoPos)
+                                n163AutoWavPosMap.TryGetValue(instrument.Id, out wavePos);
 
                             lines.Add($"\t{dw} {ll}env{repeatEnvIdx}");
-                            lines.Add($"\t{db} ${instrument.N163WavePos:x2}, ${instrument.N163WaveSize:x2}");
+                            lines.Add($"\t{db} ${wavePos:x2}, ${instrument.N163WaveSize:x2}");
                             lines.Add($"\t{dw} {ll}n163_inst{instrumentCountExp}_waves");
                             lines.Add($"\t{db} $00, $00, $00, $00");
                         }

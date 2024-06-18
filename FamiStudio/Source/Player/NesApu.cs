@@ -475,8 +475,11 @@ namespace FamiStudio
 
         public struct N163InstrumentRange
         {
-            public byte Position;
+            public byte Pos;
             public byte Size;
+            public bool AnyNotePlaying;
+            public int  InstrumentId;
+            public int  LastUpdate; // Higher number = more recently updated.
         }
 
         public unsafe class NesRegisterValues
@@ -491,6 +494,7 @@ namespace FamiStudio
             public EpsmRegisterValues Epsm;
 
             // Extra information for the register viewer.
+            public int[] InstrumentIds = new int[ChannelType.Count];
             public Color[] InstrumentColors = new Color[ChannelType.Count];
             public N163InstrumentRange[]  N163InstrumentRanges = new N163InstrumentRange[8];
 
@@ -511,6 +515,7 @@ namespace FamiStudio
                 other.Epsm = Epsm;
                 other.pal  = pal;
 
+                Array.Copy(InstrumentIds, other.InstrumentIds, InstrumentIds.Length);
                 Array.Copy(InstrumentColors, other.InstrumentColors, InstrumentColors.Length);
                 Array.Copy(N163InstrumentRanges, other.N163InstrumentRanges, N163InstrumentRanges.Length);
             }

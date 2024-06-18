@@ -183,7 +183,8 @@ namespace FamiStudio
                 for (int i = 0; i < EnvelopeType.Count; i++)
                     envelopeFrames[i] = channel.GetEnvelopeFrame(i);
 
-                playingNote = channel.CurrentNote != null && channel.CurrentNote.IsMusical ? channel.CurrentNote.Value : Note.NoteInvalid;
+                var currentNote = channel.CurrentNote;
+                playingNote = currentNote != null && currentNote.IsMusical ? currentNote.Value : Note.NoteInvalid;
             }
             else
             {

@@ -19,6 +19,7 @@ namespace FamiStudio
     {
         void NotifyInstrumentLoaded(Instrument instrument, long channelTypeMask);
         void NotifyRegisterWrite(int apuIndex, int reg, int data, int metadata = 0);
+        int GetN163AutoWavePosition(Instrument instrument);
         ChannelState GetChannelByType(int type); // Use sparingly, kind of hacky.
     }
 
@@ -44,6 +45,7 @@ namespace FamiStudio
         protected volatile bool reachedEnd = false;
         protected int  tndMode = NesApu.TND_MODE_SINGLE;
         protected int  beatIndex = -1;
+        protected Dictionary<int, int> n163AutoWavPosMap;
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
@@ -284,6 +286,7 @@ namespace FamiStudio
             Debug.Assert(s.Project.OutputsStereoAudio == stereo);
 
             song = s;
+            song.Project.AutoAssignN163WavePositions(out n163AutoWavPosMap);
             famitrackerTempo = song.UsesFamiTrackerTempo;
             famitrackerSpeed = song.FamitrackerSpeed;
             playLocation = NoteLocation.Invalid; // This means "before the first frame".
@@ -671,6 +674,16 @@ namespace FamiStudio
             return Array.Find(channelStates, c => c.InnerChannelType == type);
         }
 
+        public int GetN163AutoWavePosition(Instrument instrument)
+        {
+            Debug.Assert(instrument != null && instrument.IsN163 && instrument.N163WaveAutoPos);
+            Debug.Assert(n163AutoWavPosMap != null);
+
+            n163AutoWavPosMap.TryGetValue(instrument.Id, out var pos);
+
+            return pos;
+        }
+
         protected void ReadBackRegisterValues()
         {
             if (Settings.ShowRegisterViewer)
@@ -681,21 +694,9 @@ namespace FamiStudio
 
                     // Read some additionnal information that we may need for the
                     // register viewer, such as instrument colors, etc.
-                    for (int i = 0; i < channelStates.Length; i++)
+                    foreach (var state in channelStates)
                     {
-                        var state = channelStates[i];
-                        var note = state.CurrentNote;
-                        var instrument = note != null ? note.Instrument : null;
-
-                        registerValues.InstrumentColors[state.InnerChannelType] = instrument != null ? instrument.Color : Color.Transparent;
-
-                        if (state.InnerChannelType >= ChannelType.N163Wave1 &&
-                            state.InnerChannelType <= ChannelType.N163Wave8)
-                        {
-                            var idx = state.InnerChannelType - ChannelType.N163Wave1;
-                            registerValues.N163InstrumentRanges[idx].Position = instrument != null ? instrument.N163WavePos : (byte)0;
-                            registerValues.N163InstrumentRanges[idx].Size = instrument != null ? instrument.N163WaveSize : (byte)0;
-                        }
+                        state.AddRegisterValuesExtraData(registerValues);
                     }
                 }
             }

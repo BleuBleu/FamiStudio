@@ -543,6 +543,13 @@ namespace FamiStudio
             forceInstrumentReload = true;
         }
 
+        public virtual void AddRegisterValuesExtraData(NesApu.NesRegisterValues registerValues)
+        {
+            var instrument = note.Instrument;
+            registerValues.InstrumentIds[channelType] = instrument != null ? instrument.Id : 0;
+            registerValues.InstrumentColors[channelType] = instrument != null ? instrument.Color : Color.Transparent;
+        }
+
         // TODO : We should not reference settings from here.
         protected int GetPeriod()
         {
@@ -614,6 +621,7 @@ namespace FamiStudio
                 return n;
             }
         }
+
         public int  CurrentVolume => MultiplyVolumes(volume >> 4, envelopeValues[EnvelopeType.Volume]);
     };
 }
