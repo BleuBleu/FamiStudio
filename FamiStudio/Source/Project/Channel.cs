@@ -2069,5 +2069,14 @@ namespace FamiStudio
         {
             SetCurrentNote(next, nextIdx);
         }
+
+        public void Next(NoteFilter f = NoteFilter.Musical)
+        {
+            do
+            {
+                Next();
+            }
+            while (!Done && !Note.MatchesFilter(f));
+        }
     }
 }

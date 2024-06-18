@@ -361,6 +361,8 @@ namespace FamiStudio
 
     public class N163RegisterViewer : RegisterViewer
     {
+        LocalizedString WavePosLabel;
+        LocalizedString WaveSizeLabel;
         N163RegisterIntepreter i;
 
         public override int GetNumInterpreterRows(Project p) => p.ExpansionNumN163Channels;
@@ -399,13 +401,15 @@ namespace FamiStudio
                 InterpreterIcons[j] = IconWaveTable;
                 InterpeterRows[c] = new[]
                 {
-                    new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
-                    new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
+                    new RegisterViewerRow(PitchLabel,    () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
+                    new RegisterViewerRow(VolumeLabel,   () => i.GetVolume(c).ToString("00"), true),
+                    new RegisterViewerRow(WavePosLabel,  () => i.GetWavePos(c).ToString()),
+                    new RegisterViewerRow(WaveSizeLabel, () => i.GetWaveSize(c).ToString())
                 };
             }
         }
 
-        void DrawRamMap(CommandList c, Fonts res, Rectangle rect, bool video)
+        unsafe void DrawRamMap(CommandList c, Fonts res, Rectangle rect, bool video)
         {
             var ramSize   = 128 - i.NumActiveChannels * 8;
             var numValues = ramSize * 2;
@@ -413,29 +417,90 @@ namespace FamiStudio
             var sx = Math.Max(1, rect.Width  / numValues);
             var sy = rect.Height / 15.0f;
             var h  = rect.Height;
+            var instColors = stackalloc Color[8];
+            var instIds = stackalloc int[8];
 
-            for (int x = 0; x < ramSize; x++)
+            for (var x = 0; x < ramSize; x++)
             {
                 var val = i.Registers.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, x);
                 var lo = ((val >> 0) & 0xf) * sy;
                 var hi = ((val >> 4) & 0xf) * sy;
-                    
-                // See if the RAM address matches any of the instrument.
-                // This isn't very accurate since we don't actually know
-                // which instrument last wrote to RAM at the moment, but
-                // it will work when there is no overlap.
-                var channelIndex = -1;
-                for (int j = 0; j < i.NumActiveChannels; j++)
+
+                // Look at the list of ranges and use the color of the channel that last wrote to that location.
+                var mostRecentUpdate = -1;
+                var mostRecentInstrumentId = 0;
+                var wrongInstrument = false;
+
+                var instCount = 0;
+                instColors[0] = Theme.LightGreyColor2;
+
+                // Find the instrument that last wrote to that RAM location.
+                for (var j = 0; j < i.NumActiveChannels; j++)
                 {
-                    if (x * 2 >= i.Registers.N163InstrumentRanges[j].Position &&
-                        x * 2 <  i.Registers.N163InstrumentRanges[j].Position + i.Registers.N163InstrumentRanges[j].Size)
+                    var range = i.Registers.N163InstrumentRanges[j];
+
+                    if (x >= range.Pos && x < range.Pos + range.Size)
                     {
-                        channelIndex = j;
-                        break;
+                        if (range.LastUpdate > mostRecentUpdate)
+                        {
+                            mostRecentInstrumentId = range.InstrumentId;
+                            mostRecentUpdate = range.LastUpdate;
+                        }
                     }
                 }
 
-                var color = channelIndex >= 0 ? i.Registers.InstrumentColors[ChannelType.N163Wave1 + channelIndex] : Theme.LightGreyColor2;
+                for (var j = 0; j < i.NumActiveChannels; j++)
+                {
+                    var range = i.Registers.N163InstrumentRanges[j];
+                    var instrumentId = i.Registers.N163InstrumentRanges[j].InstrumentId;
+
+                    if (range.AnyNotePlaying && x >= range.Pos && x < range.Pos + range.Size && instrumentId != 0)
+                    {
+                        // Dont show conflicts in video export.
+                        if (!video)
+                        {
+                            var alreadySeenInstrument = false;
+                            for (var k = 0; k < instCount; k++)
+                            {
+                                if (instIds[k] == instrumentId)
+                                {
+                                    alreadySeenInstrument = true;
+                                    break;
+                                }
+                            }
+
+                            if (!alreadySeenInstrument)
+                            {
+                                instIds[instCount] = instrumentId;
+                                instColors[instCount] = i.Registers.InstrumentColors[ChannelType.N163Wave1 + j];
+                                instCount++;
+
+                                // Check if another instrument corrupted our RAM earlier in the song.
+                                if (instrumentId != mostRecentInstrumentId)
+                                    wrongInstrument = true;
+                            }
+                        }
+
+                        if (range.AnyNotePlaying && range.LastUpdate == mostRecentUpdate && video)
+                        {
+                            instColors[0] = i.Registers.InstrumentColors[ChannelType.N163Wave1 + j];
+                        }
+                    }
+                }
+
+                // Blink all conflicting colors if there is a conflict.
+                var colorIndex = video || instCount == 0 ? 0 : (int)(Platform.TimeSeconds() * 15) % instCount;
+                var color = instColors[colorIndex];
+                
+                // MATTT : Localize these.
+                if (instCount > 1)
+                {
+                    c.DrawText("Wave overlap detected!", res.FontSmall, 0, 0, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                }
+                else if (wrongInstrument)
+                {
+                    c.DrawText("Potentially wrong wave playing!", res.FontSmall, 0, 0, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                }
 
                 c.FillRectangle((x * 2 + 0) * sx, h - lo, (x * 2 + 1) * sx, h, color);
                 c.FillRectangle((x * 2 + 1) * sx, h - hi, (x * 2 + 2) * sx, h, color);

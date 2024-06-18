@@ -90,5 +90,6 @@ PatchText %~1 tmp.cfg %~2
 ..\..\Tools\ca65 nsf.s -g -o %~4.o %~3 
 ..\..\Tools\ld65 -C tmp.cfg -o %~4.bin %~4.o --mapfile %~4.map --dbgfile %~4.dbg
 PrintCodeSize %~4.bin %~2
+ExtractNoteTable %~4.dbg %~2
 del tmp.cfg
 EXIT /B 0

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Threading;
 
@@ -128,6 +129,7 @@ namespace FamiStudio
 
         public static int Log2Int(int x)
         {
+            // MATTT : Look at BitOperators.Log2();
             if (x == 0)
                 return int.MinValue;
 
@@ -230,6 +232,7 @@ namespace FamiStudio
 
         public static int NextPowerOfTwo(int v)
         {
+            // MATTT : Look at BitOperators.RoundUpToPowerOf2();
             v--;
             v |= v >> 1;
             v |= v >> 2;
@@ -248,16 +251,12 @@ namespace FamiStudio
 
         public static int NumberOfSetBits(int i)
         {
-            i = i - ((i >> 1) & 0x55555555);
-            i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-            return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+            return BitOperations.PopCount((uint)i);
         }
 
         public static int NumberOfSetBits(long i)
         {
-            i = i - ((i >> 1) & 0x5555555555555555L);
-            i = (i & 0x3333333333333333L) + ((i >> 2) & 0x3333333333333333L);
-            return (int)(unchecked(((i + (i >> 4)) & 0xF0F0F0F0F0F0F0FL) * 0x101010101010101L) >> 56);
+            return BitOperations.PopCount((ulong)i);
         }
 
         static readonly byte[] BitLookups = new byte[]

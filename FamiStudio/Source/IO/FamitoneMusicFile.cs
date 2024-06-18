@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 
 namespace FamiStudio
@@ -399,6 +400,8 @@ namespace FamiStudio
             var vibToCrc = new Dictionary<byte, uint>();
             var arpToCrc = new Dictionary<Arpeggio, uint>();
 
+            project.AutoAssignN163WavePositions(out var n163AutoWavPosMap);
+
             uniqueEnvelopes.Add(defaultEnvCRC, defaultEnv);
 
             if (kernel == FamiToneKernel.FamiStudio)
@@ -663,9 +666,13 @@ namespace FamiStudio
                         else if (instrument.IsN163)
                         {
                             var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
+                            var wavePos = (int)instrument.N163WavePos;
+
+                            if (instrument.N163WaveAutoPos)
+                                n163AutoWavPosMap.TryGetValue(instrument.Id, out wavePos);
 
                             lines.Add($"\t{dw} {ll}env{repeatEnvIdx}");
-                            lines.Add($"\t{db} ${instrument.N163WavePos:x2}, ${instrument.N163WaveSize:x2}");
+                            lines.Add($"\t{db} ${wavePos:x2}, ${instrument.N163WaveSize:x2}");
                             lines.Add($"\t{dw} {ll}n163_inst{instrumentCountExp}_waves");
                             lines.Add($"\t{db} $00, $00, $00, $00");
                         }
@@ -1454,8 +1461,8 @@ namespace FamiStudio
 
                             if (note.IsSlideNote)
                             {
-                                var noteTableNtsc = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumN163Channels);
-                                var noteTablePal = NesApu.GetNoteTableForChannelType(channel.Type, true, song.Project.ExpansionNumN163Channels);
+                                var noteTableNtsc = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumN163Channels, song.Project.Tuning);
+                                var noteTablePal = NesApu.GetNoteTableForChannelType(channel.Type, true, song.Project.ExpansionNumN163Channels, song.Project.Tuning);
 
                                 var found = true;
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
@@ -2200,6 +2207,13 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Project has extended DPCM mode enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1.");
                     if (project.SoundEngineUsesExtendedInstruments)
                         Log.LogMessage(LogSeverity.Info, $"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
+
+                    if (project.Tuning != 440)
+                    {
+                        var noteTableFilename = Path.ChangeExtension(filename, ".notetable.txt"); ;
+                        Log.LogMessage(LogSeverity.Info, $"Project uses non-standard tuning, the note tables where dumped in '{noteTableFilename}'. You will need to manually patch in the sound engine code to hear the correct tuning.");
+                        NesApu.DumpNoteTableSetToFile(project.Tuning, noteTableFilename);
+                    }
                 }
             }
 
@@ -2355,6 +2369,76 @@ namespace FamiStudio
             Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, tempAsmFilename, tempDmcFilename, null, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
+        }
+
+        private static bool PatchNoteTableInternal(byte[] data, string tblFile, int tableOffset, int tuning, bool pal, int numN163Channels)
+        {
+            using (var noteTableStream = typeof(FamitoneMusicFile).Assembly.GetManifestResourceStream(tblFile))
+            using (StreamReader reader = new StreamReader(noteTableStream))
+            {
+                var noteTableLines = reader.ReadToEnd().Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in noteTableLines)
+                {
+                    var pair = line.Split('=', StringSplitOptions.RemoveEmptyEntries);
+                    Debug.Assert(pair.Length == 2);
+
+                    var noteTable = (ushort[])null;
+
+                    if (pair[0].StartsWith("famistudio_s5b_note_table"))
+                        noteTable = NesApu.GetNoteTableForChannelType(ChannelType.S5BSquare1, pal, numN163Channels, tuning);
+                    else if (pair[0].StartsWith("famistudio_n163_note_table"))
+                        noteTable = NesApu.GetNoteTableForChannelType(ChannelType.N163Wave1, pal, numN163Channels, tuning);
+                    else if (pair[0].StartsWith("famistudio_vrc7_note_table"))
+                        noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Vrc7Fm1, pal, numN163Channels, tuning);
+                    else if (pair[0].StartsWith("famistudio_fds_note_table"))
+                        noteTable = NesApu.GetNoteTableForChannelType(ChannelType.FdsWave, pal, numN163Channels, tuning);
+                    else if (pair[0].StartsWith("famistudio_saw_note_table"))
+                        noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Vrc6Saw, pal, numN163Channels, tuning);
+                    else if (pair[0].StartsWith("famistudio_epsm_note_table"))
+                        noteTable = NesApu.GetNoteTableForChannelType(ChannelType.EPSMFm1, pal, numN163Channels, tuning);
+                    else if (pair[0].StartsWith("famistudio_epsm_s_note_table"))
+                        noteTable = NesApu.GetNoteTableForChannelType(ChannelType.EPSMSquare1, pal, numN163Channels, tuning);
+                    else if (pair[0].StartsWith("famistudio_note_table") || pair[0].StartsWith("_FT2NoteTable"))
+                        noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Square1, pal, numN163Channels, tuning);
+
+                    if (noteTable == null)
+                    {
+                        Debug.Assert(false);
+                        Log.LogMessage(LogSeverity.Error, $"Unknown note table '{pair[0]}'.");
+                        return false;
+                    }
+                    
+                    // Patch data in binary.
+                    var msb = pair[0].ToLower().EndsWith("msb");
+                    var offset = tableOffset + int.Parse(pair[1]);
+                    var shift = msb ? 8 : 0;
+
+                    for (int i = 0; i < noteTable.Length; i++)
+                        data[offset + i] = (byte)((noteTable[i] >> shift) & 0xff);
+                }
+            }
+
+            return true;
+        }
+
+        public static bool PatchNoteTable(byte[] data, string tblFile, int tuning, int machine, int numN163Channels)
+        {
+            var pal = machine == MachineType.PAL;
+            if (!PatchNoteTableInternal(data, tblFile, 0, tuning, pal, numN163Channels))
+            {
+                return false;
+            }
+
+            // For dual, we need to patch the 2 note tables that are back to back.
+            if (machine == MachineType.Dual)
+            {
+                if (!PatchNoteTableInternal(data, tblFile, 97, tuning, true, numN163Channels))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 

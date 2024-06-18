@@ -229,14 +229,19 @@ namespace FamiStudio
             return regs.GetMergedSubRegisterValue(ExpansionType.N163, NesApu.N163_DATA, NesApu.N163_REG_FREQ_LO - 8 * i, NesApu.N163_REG_FREQ_MID - 8 * i, NesApu.N163_REG_FREQ_HI - 8 * i, 0x3);
         }
 
-        public int GetWaveLength(int i)
+        public int GetWavePos(int i)
+        {
+            return regs.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, NesApu.N163_REG_WAVE - 8 * i);
+        }
+
+        public int GetWaveSize(int i)
         {
             return 256 - (regs.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, NesApu.N163_REG_FREQ_HI - 8 * i) & 0xfc);
         }
 
         public double GetFrequency(int i)
         {
-            return N163PeriodToFreq(GetPeriod(i), GetWaveLength(i), NumActiveChannels);
+            return N163PeriodToFreq(GetPeriod(i), GetWaveSize(i), NumActiveChannels);
         }
 
         public int GetVolume(int i)

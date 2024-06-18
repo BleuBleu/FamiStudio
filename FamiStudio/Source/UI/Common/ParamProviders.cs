@@ -18,6 +18,7 @@ namespace FamiStudio
         public string TabName;
         public object CustomUserData1;
         public object CustomUserData2;
+        public TransactionFlags TransactionFlags;
 
         public delegate void GetMinMaxValueDelegate(out int min, out int max);
         public delegate int GetValueDelegate();
@@ -92,6 +93,7 @@ namespace FamiStudio
         // FDS/N163 labels
         static LocalizedString MasterVolumeLabel;
         static LocalizedString WavePresetLabel;
+        static LocalizedString WaveAutoPosLabel;
         static LocalizedString WavePositionLabel;
         static LocalizedString WaveSizeLabel;
         static LocalizedString WaveCountLabel;
@@ -238,8 +240,10 @@ namespace FamiStudio
                 case ExpansionType.N163:
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WaveAutoPosLabel, 0, 1, 0)
+                        { GetValue = () => { return instrument.N163WaveAutoPos ? 1 : 0; }, SetValue = (v) => { instrument.N163WaveAutoPos = v != 0;}, TransactionFlags = TransactionFlags.StopAudio });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePositionLabel, 0, 0, 0, null, false, 2)
-                        { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWavePos; } });
+                        { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWavePos; }, IsEnabled = () => { return !instrument.N163WaveAutoPos; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WaveSizeLabel, 4, 4, 16, null, false, 4)
                         { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveSize; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WaveCountLabel, 1, 1, 1) 
