@@ -2116,7 +2116,7 @@ namespace FamiStudio
                         // Was not able to allocate.
                         if (pos1 + inst1.N163WaveSize > maxPos)
                         {
-                            Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size of overlap with other instruments. Setting to 0.");
+                            Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size or minimize overlap with other instruments. Setting to 0.");
                             pos1 = 0;
                             overlapDetected = true;
                             break;
