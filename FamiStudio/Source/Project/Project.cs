@@ -2088,7 +2088,7 @@ namespace FamiStudio
             // TODO : Sort instrument by descending wav size + how much they are used maybe?
             wavePositions = new Dictionary<int, int>(numN163AutoPos);
 
-            var maxPosByte = N163WaveRAMSize * 2;
+            var maxPos = N163WaveRAMSize * 2;
             var overlapDetected = false;
 
             foreach (var kv in instrumentOverlaps)
@@ -2114,7 +2114,7 @@ namespace FamiStudio
                         pos1 = pos2 + inst2.N163WaveSize;
 
                         // Was not able to allocate.
-                        if (pos1 + inst1.N163WaveSize > maxPosByte)
+                        if (pos1 + inst1.N163WaveSize > maxPos)
                         {
                             Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size of overlap with other instruments. Setting to 0.");
                             pos1 = 0;
