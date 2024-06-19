@@ -31,6 +31,7 @@
 4.3.0 Testing
 =============
 - Test detuning with sound, dual NSF, slide notes, etc.
+- Test potential threading issues with N163 auto-assignment.
 
 - UI code cleanup:
 	- Project explorer rewrite

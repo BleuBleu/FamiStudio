@@ -1949,6 +1949,7 @@ namespace FamiStudio
             }
         };
 
+        // MATTT : This will run on the player threads, dangerous. Probably need to a locking mecanism.
         public unsafe bool AutoAssignN163WavePositions(out Dictionary<int, int> wavePositions)
         {
             if (!UsesN163Expansion)
