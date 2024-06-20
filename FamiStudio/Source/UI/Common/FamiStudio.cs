@@ -2491,9 +2491,9 @@ namespace FamiStudio
             }
         }
 
-        private void PianoRoll_EnvelopeChanged()
+        private void PianoRoll_EnvelopeChanged(Instrument instrument, int env)
         {
-            ProjectExplorer.InstrumentEnvelopeChanged();
+            ProjectExplorer.InstrumentEnvelopeChanged(instrument, env);
         }
 
         private void SerializeActiveControl(ProjectBuffer buffer)

@@ -23,6 +23,7 @@ namespace FamiStudio
         private int panelSizeY;
         private int sliderSizeX;
         private int virtualSizeY; // MATTT : Move this functionality to container directly.
+        private int dragLineSizeY;
         private int topTabSizeY;
 
         private enum TabType
@@ -60,6 +61,7 @@ namespace FamiStudio
         LocalizedString EditEnvelopeTooltip;
         LocalizedString EditSamplesTooltip;
         LocalizedString EditWaveformTooltip;
+        LocalizedString EditArpeggioTooltip;
         LocalizedString ImportInstrumentsTooltip;
         LocalizedString ImportSamplesTooltip;
         LocalizedString ImportSongsTooltip;
@@ -182,6 +184,7 @@ namespace FamiStudio
         LocalizedString PropertiesProjectContext;
         LocalizedString PropertiesSamplesContext;
         LocalizedString PropertiesSongContext;
+        LocalizedString PropertiesFolderContext;
         LocalizedString ReplaceWithContext;
         LocalizedString ResampleWavContext;
         LocalizedString CollapseAllContext;
@@ -347,12 +350,13 @@ namespace FamiStudio
 
         private void UpdateRenderCoords()
         {
-            expandSizeX = DpiScaling.ScaleForWindow(DefaultExpandSizeX);
-            spacingX    = DpiScaling.ScaleForWindow(DefaultSpacingX);
-            marginX     = DpiScaling.ScaleForWindow(DefaultMarginX);
-            iconSizeX   = DpiScaling.ScaleForWindow(DefaultIconSizeX);
-            panelSizeY  = DpiScaling.ScaleForWindow(DefaultPanelSizeY);
-            sliderSizeX = DpiScaling.ScaleForWindow(DefaultSliderSizeX);
+            expandSizeX   = DpiScaling.ScaleForWindow(DefaultExpandSizeX);
+            spacingX      = DpiScaling.ScaleForWindow(DefaultSpacingX);
+            marginX       = DpiScaling.ScaleForWindow(DefaultMarginX);
+            iconSizeX     = DpiScaling.ScaleForWindow(DefaultIconSizeX);
+            panelSizeY    = DpiScaling.ScaleForWindow(DefaultPanelSizeY);
+            sliderSizeX   = DpiScaling.ScaleForWindow(DefaultSliderSizeX);
+            dragLineSizeY = DpiScaling.ScaleForWindow(DefaultDraggedLineSizeY);
         }
 
         public void Reset()
@@ -457,7 +461,7 @@ namespace FamiStudio
             var imageBox = new ImageBox(image);
             panel.AddControl(imageBox);
             imageBox.Tint = black ? Color.Black : Theme.LightGreyColor2;
-            imageBox.AutoSizeToImage(); // MATTT : Make this built-in functionality in imagebox.
+            imageBox.AutoSizeToImage();
             imageBox.Move(x, Utils.DivideAndRoundUp(panel.Height - imageBox.Height, 2));
             return imageBox;
         }
@@ -472,14 +476,8 @@ namespace FamiStudio
                 button.ForegroundColorDisabled = Color.Black;
             }
             panel.AddControl(button);
-            button.AutoSizeToImage(); // MATTT : Make this built-in functionality in button.
-            
-            // Negative values are for right aligned buttons.
-            // MATTT : Ugly, remove.
-            if (x >= 0)
-                button.Move(x, Utils.DivideAndRoundUp(panel.Height - button.Height, 2));
-            else
-                button.Move(panel.Width + x - button.Width, Utils.DivideAndRoundUp(panel.Height - button.Height, 2));
+            button.AutoSizeToImage();
+            button.Move(x, Utils.DivideAndRoundUp(panel.Height - button.Height, 2));
 
             return button;
         }
@@ -496,7 +494,7 @@ namespace FamiStudio
             expand.Click += (s) => FolderExpand_Click(folder);
 
             var icon = CreateImageBox(panel, expand.Right + spacingX, folder.Expanded ? "FolderOpen" : "Folder");
-            var propsButton = CreateImageButton(panel, -marginX, "Properties", false);
+            var propsButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties", false);
             propsButton.ToolTip = $"<MouseLeft> {PropertiesFolderTooltip}";
             propsButton.Click += (s) => EditFolderProperties(folder);
 
@@ -518,6 +516,7 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption("MenuDelete", DeleteFolderContext, () => { AskDeleteFolder(folder); }, ContextMenuSeparator.After));
                 menu.Add(new ContextMenuOption("Folder", CollapseAllContext, () => { ExpandAllFolders(folder.Type, false); }));
                 menu.Add(new ContextMenuOption("FolderOpen", ExpandAllContext, () => { ExpandAllFolders(folder.Type, true); }));
+                menu.Add(new ContextMenuOption("MenuProperties", PropertiesFolderContext, () => { EditFolderProperties(folder, true); }));
 
                 App.ShowContextMenu(menu.ToArray());
                 e.MarkHandled();
@@ -569,10 +568,12 @@ namespace FamiStudio
         private void CreateMainContainer()
         {
             var scrollBarWidth = 0;
+            var oldScrollY = mainContainer != null? mainContainer.ScrollY : 0;
 
             mainContainer = new Container();
             mainContainer.Rendering += MainContainer_Rendering;
             mainContainer.Scrolled += MainContainer_Scrolled;
+            mainContainer.ScrollY = oldScrollY;
             AddControl(mainContainer);
 
             if (Settings.ScrollBars != Settings.ScrollBarsNone)
@@ -592,10 +593,15 @@ namespace FamiStudio
             mainContainer.Move(0, topTabSizeY, width - scrollBarWidth, height - topTabSizeY);
         }
 
-        private void MainContainer_Scrolled(Container sender)
+        private void SyncScrollBarToContainer()
         {
             if (scrollBar != null)
                 scrollBar.SetScroll(mainContainer.ScrollY, false);
+        }
+
+        private void MainContainer_Scrolled(Container sender)
+        {
+            SyncScrollBarToContainer();
         }
 
         private void ScrollBar_Scrolled(ScrollBar sender, int pos)
@@ -688,7 +694,7 @@ namespace FamiStudio
             panel.ContainerMouseDownNotifyEvent += (s, e) => Song_MouseDown(s, e, song);
 
             var icon = CreateImageBox(panel, marginX + expandSizeX, "Music", true);
-            var props = CreateImageButton(panel, -marginX, "Properties");
+            var props = CreateImageButton(panel, panel.Width - marginX - iconSizeX, "Properties");
             props.ToolTip = $"<MouseLeft> {PropertiesSongTooltip}";
             props.Click += (s) => EditSongProperties(song);
 
@@ -715,7 +721,7 @@ namespace FamiStudio
                 if (App.Project.Songs.Count > 1)
                     menu.Add(new ContextMenuOption("MenuDelete", DeleteSongContext, () => { AskDeleteSong(song); }, ContextMenuSeparator.After));
                 menu.Add(new ContextMenuOption("MenuDuplicate", DuplicateContext, () => { DuplicateSong(song); }));
-                menu.Add(new ContextMenuOption("MenuProperties", PropertiesSongContext, () => { EditSongProperties(song); }, ContextMenuSeparator.Before));
+                menu.Add(new ContextMenuOption("MenuProperties", PropertiesSongContext, () => { EditSongProperties(song, true); }, ContextMenuSeparator.Before));
                 App.ShowContextMenu(menu.ToArray());
                 e.MarkHandled();
             }
@@ -736,15 +742,15 @@ namespace FamiStudio
 
             var icon = CreateImageBox(panel, expand.Right + spacingX, ExpansionType.Icons[instrument.Expansion], true);
 
-            var x = marginX; 
-            var props = CreateImageButton(panel, -x, "Properties");
+            var x = panel.Width - marginX - iconSizeX; 
+            var props = CreateImageButton(panel, x, "Properties");
             props.ToolTip = $"<MouseLeft> {PropertiesInstrumentTooltip} - <MouseRight> {MoreOptionsTooltip}";
             props.Click += (s) => EditInstrumentProperties(instrument);
 
             if (instrument.Expansion == ExpansionType.None)
             {
-                x += spacingX + props.Width;
-                var dpcm = CreateImageButton(panel, -x, "ChannelDPCM");
+                x -= spacingX + props.Width;
+                var dpcm = CreateImageButton(panel, x, "ChannelDPCM");
                 dpcm.Dimmed = !instrument.HasAnyMappedSamples;
                 //dpcm.UserData = "DPCM";
                 dpcm.ToolTip = $"<MouseLeft> {EditSamplesTooltip} - <MouseRight> {MoreOptionsTooltip}";
@@ -757,10 +763,10 @@ namespace FamiStudio
                 var idx = EnvelopeDisplayOrder[i];
                 if (instrument.Envelopes[idx] != null)
                 {
-                    x += spacingX + props.Width;
-                    var env = CreateImageButton(panel, -x, EnvelopeType.Icons[idx]);
+                    x -= spacingX + props.Width;
+                    var env = CreateImageButton(panel, x, EnvelopeType.Icons[idx]);
                     env.Dimmed = instrument.Envelopes[idx].IsEmpty(idx);
-                    //env.UserData = EnvelopeType.InternalNames[idx];
+                    env.UserData = instrument.Envelopes[idx];
                     env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
                     env.Click += (s) => App.StartEditInstrument(instrument, idx);
                     env.MouseDownEvent += (s, e) => Instrument_MouseDown(s, e, instrument, idx, env.Image);
@@ -814,7 +820,6 @@ namespace FamiStudio
 
                     if (envelopeType >= 0)
                     {
-                        // MATTT : Need to grey out button here.
                         menu.Add(new ContextMenuOption("MenuClearEnvelope", ClearEnvelopeContext, () => { ClearInstrumentEnvelope(inst, envelopeType); }, ContextMenuSeparator.After));
                     }
                     else
@@ -854,7 +859,7 @@ namespace FamiStudio
                         }
                     }
 
-                    menu.Add(new ContextMenuOption("MenuProperties", PropertiesInstrumentContext, () => { EditInstrumentProperties(inst); }, ContextMenuSeparator.Before));
+                    menu.Add(new ContextMenuOption("MenuProperties", PropertiesInstrumentContext, () => { EditInstrumentProperties(inst, true); }, ContextMenuSeparator.Before));
                 }
 
                 App.ShowContextMenu(menu.ToArray());
@@ -888,10 +893,11 @@ namespace FamiStudio
             reload.ToolTip = $"<MouseLeft> {ReloadSourceDataTooltip}";
             reload.Click += (s) => ReloadDPCMSampleSourceData(sample);
 
+            // TODO : A proper right-click even would be nice, but right now we cant mark those events as "handled".
             var play = CreateImageButton(panel, reload.Left - spacingX - iconSizeX, "PlaySource");
             play.ToolTip = $"<MouseLeft> {PreviewProcessedSampleTooltip}\n<MouseRight> {PlaySourceSampleTooltip}";
             play.Click += (s) => App.PreviewDPCMSample(sample, false);
-            //play.RightClick += (s) => App.PreviewDPCMSample(sample, true); // MATTT 
+            play.MouseUpEvent += (s, e) => { if (e.Right) { App.PreviewDPCMSample(sample, true); e.MarkHandled(); } };
 
             CreateLabel(panel, sample.Name, true, icon.Right + spacingX, 0, play.Left - icon.Right - spacingX * 2, true);
         }
@@ -932,7 +938,7 @@ namespace FamiStudio
                 }
 
                 menu.Add(new ContextMenuOption("MenuBankAssign", AutoAssignBanksContext, () => { AutoAssignSampleBanks(); }, ContextMenuSeparator.Before));
-                menu.Add(new ContextMenuOption("MenuProperties", PropertiesSamplesContext, () => { EditDPCMSampleProperties(sample); }, ContextMenuSeparator.Before));
+                menu.Add(new ContextMenuOption("MenuProperties", PropertiesSamplesContext, () => { EditDPCMSampleProperties(sample, true); }, ContextMenuSeparator.Before));
 
                 App.ShowContextMenu(menu.ToArray());
                 e.MarkHandled();
@@ -961,34 +967,39 @@ namespace FamiStudio
             panel.ContainerMouseDownNotifyEvent += (s, e) => Arpeggio_MouseDown(s, e, arp);
 
             var icon = CreateImageBox(panel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
-            var props = CreateImageButton(panel, -marginX, "Properties");
+            var props = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties");
             props.ToolTip = $"<MouseLeft> {PropertiesArpeggioTooltip}";
             props.Click += (s) => EditArpeggioProperties(arp);
 
-            var label = CreateLabel(panel, arp.Name, true, icon.Right + spacingX, 0, props.Left - icon.Right - spacingX * 2);
+            var edit = CreateImageButton(panel, props.Left - spacingX - iconSizeX, "EnvelopeArpeggio");
+            edit.ToolTip = $"<MouseLeft> {EditArpeggioTooltip}";
+            edit.Click += (s) => App.StartEditArpeggio(arp); // MATTT : At end of a drag, we get the "click" event for the old ARP/instrument.
+            edit.MouseDownEvent += (s, e) => Arpeggio_MouseDown(s, e, arp, true, edit.Image);
+            edit.MouseUpEvent += (s, e) => Arpeggio_MouseUp(e, arp);
+
+            var label = CreateLabel(panel, arp.Name, true, icon.Right + spacingX, 0, edit.Left - icon.Right - spacingX * 2);
             label.Bold = App.SelectedArpeggio == arp;
         }
 
-        private void Arpeggio_MouseDown(Control sender, MouseEventArgs e, Arpeggio arp)
+        private void Arpeggio_MouseDown(Control sender, MouseEventArgs e, Arpeggio arp, bool values = false, TextureAtlasRef image = null)
         {
             if (!e.Handled && e.Left)
             {
                 App.SelectedArpeggio = arp;
-                envelopeDragIdx = -1;
                 draggedArpeggio = arp;
-                StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragArpeggio);
+                envelopeDragTexture = image;
 
-                // MATTT : Handle dragging of the arp VALUES.
-                //    if (subButtonType < SubButtonType.EnvelopeMax)
-                //    {
-                //        envelopeDragIdx = (int)subButtonType;
-                //        StartCaptureOperation(e.X, e.Y, CaptureOperation.DragArpeggioValues, buttonIdx, buttonRelX, buttonRelY);
-                //        App.StartEditArpeggio(button.arpeggio);
-                //    }
-                //    else
-                //    {
-                //        StartCaptureOperation(e.X, e.Y, CaptureOperation.DragArpeggio, buttonIdx);
-                //    }
+                if (values)
+                {
+                    envelopeDragIdx = EnvelopeType.Arpeggio;
+                    StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragArpeggioValues);
+                    //App.StartEditArpeggio(arp);
+                }
+                else
+                {
+                    envelopeDragIdx = -1;
+                    StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragArpeggio);
+                }
 
                 e.MarkHandled();
             }
@@ -1002,7 +1013,7 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption("MenuDelete", DeleteArpeggioContext, () => { AskDeleteArpeggio(arp); }, ContextMenuSeparator.After));
                 menu.Add(new ContextMenuOption("MenuDuplicate", DuplicateContext, () => { DuplicateArpeggio(arp); }));
                 menu.Add(new ContextMenuOption("MenuReplace", ReplaceWithContext, () => { AskReplaceArpeggio(arp); }));
-                menu.Add(new ContextMenuOption("MenuProperties", PropertiesArpeggioContext, () => { EditArpeggioProperties(arp); }, ContextMenuSeparator.Before));
+                menu.Add(new ContextMenuOption("MenuProperties", PropertiesArpeggioContext, () => { EditArpeggioProperties(arp, true); }, ContextMenuSeparator.Before));
                 App.ShowContextMenu(menu.ToArray());
                 e.MarkHandled();
             }
@@ -1422,6 +1433,7 @@ namespace FamiStudio
             if (scrollBar != null)
                 scrollBar.VirtualSize = virtualSizeY;
             ClampScroll();
+            SyncScrollBarToContainer();
         }
 
         private void UpdateSelectedItem(Type type, object obj)
@@ -1455,24 +1467,11 @@ namespace FamiStudio
             UpdateSelectedItem(typeof(Arpeggio), App.SelectedArpeggio);
         }
 
-        public void InstrumentEnvelopeChanged()
+        public void InstrumentEnvelopeChanged(Instrument instrument, int envType)
         {
-            // This is a bit overkill. We could restrict to instrument that has changed.
-            foreach (var ctrl in mainContainer.Controls)
-            {
-                if ((ctrl is GradientPanel panel) && (panel.UserData is Instrument inst))
-                {
-                    for (int i = 0; i < inst.Envelopes.Length; i++)
-                    {
-                        if (inst.Envelopes[i] != null && inst.IsEnvelopeVisible(i))
-                        {
-                            var env = inst.Envelopes[i];
-                            var button = panel.FindControlByUserData(env) as Button;
-                            button.Dimmed = env.IsEmpty(i);
-                        }
-                    }
-                }
-            }
+            var env = instrument.Envelopes[envType];
+            var button = FindInstrumentEnvelopeButton(instrument, env);
+            button.Dimmed = env.IsEmpty(envType);
         }
 
         public void NotifyDPCMSampleMapped()
@@ -1495,10 +1494,9 @@ namespace FamiStudio
                 var c = mainContainer.FindControlByUserData(obj);
                 if (c is GradientPanel p)
                 {
-                    // MATTT : Scroll to the button.
-                    //scrollY = buttonY - Height / 2;
-                    //ClampScroll();
-                    //MarkDirty();
+                    mainContainer.ScrollY = (c.Top + c.Bottom) / 2 - mainContainer.Height / 2;
+                    ClampScroll();
+                    MarkDirty();
                     p.Blink();
                 }
             }
@@ -1619,7 +1617,7 @@ namespace FamiStudio
                     insertY -= mainContainer.ScrollY;
 
                     var margin = draggedInFolder != null ? expandSizeX : 0;
-                    c.DrawLine(margin, insertY, mainContainer.Width - margin, insertY, lineColor, 5); // MATTT : Hardocded line width
+                    c.DrawLine(margin, insertY, mainContainer.Width - margin, insertY, lineColor, dragLineSizeY);
                 }
             }
         }
@@ -1685,7 +1683,6 @@ namespace FamiStudio
             ClampScroll();
         }
 
-        // MATTT : Split all these functions with a 'final' parameter, silly, there is zero shared code.
         private void UpdateDragObjectOrFolder(int x, int y)
         {
             ScrollIfNearEdge(x, y);
@@ -2630,10 +2627,10 @@ namespace FamiStudio
                                 }
                             }
 
-                            App.UndoRedoManager.EndTransaction();
                             RecreateAllControls();
                             if (importedSamples.Count != 0)
                                 BlinkButton(importedSamples[0]);
+                            App.UndoRedoManager.EndTransaction();
                         }
                         App.EndLogTask();
                     }
@@ -2658,9 +2655,9 @@ namespace FamiStudio
             App.SelectedSong = App.Project.CreateSong();
             App.SelectedSong.FolderName = folder;
             EnsureFolderExpanded(FolderType.Song, folder);
-            App.UndoRedoManager.EndTransaction();
             RecreateAllControls();
             BlinkButton(App.SelectedSong);
+            App.UndoRedoManager.EndTransaction();
         }
 
         private void AskAddSong()
@@ -2706,18 +2703,18 @@ namespace FamiStudio
             App.SelectedInstrument = App.Project.CreateInstrument(expansionType);
             App.SelectedInstrument.FolderName = folder;
             EnsureFolderExpanded(FolderType.Instrument, folder);
-            App.UndoRedoManager.EndTransaction();
             RecreateAllControls();
             BlinkButton(App.SelectedInstrument);
+            App.UndoRedoManager.EndTransaction();
         }
 
         private void AddFolder(int type)
         {
             App.UndoRedoManager.BeginTransaction(type == FolderType.Sample ? TransactionScope.Project : TransactionScope.ProjectNoDPCMSamples);
             var folder = App.Project.CreateFolder(type);
-            App.UndoRedoManager.EndTransaction();
             RecreateAllControls();
             BlinkButton(folder);
+            App.UndoRedoManager.EndTransaction();
         }
 
         private void AskAddInstrument()
@@ -2803,9 +2800,9 @@ namespace FamiStudio
             App.SelectedArpeggio = App.Project.CreateArpeggio();
             App.SelectedArpeggio.FolderName = folder;
             EnsureFolderExpanded(FolderType.Arpeggio, folder);
-            App.UndoRedoManager.EndTransaction();
             RecreateAllControls();
             BlinkButton(App.SelectedArpeggio);
+            App.UndoRedoManager.EndTransaction();
         }
 
         private void AskAddArpeggio()
@@ -3100,9 +3097,9 @@ namespace FamiStudio
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
             var newInstrument = App.Project.DuplicateConvertInstrument(instrument, exp);
-            App.UndoRedoManager.EndTransaction();
             RecreateAllControls();
             BlinkButton(newInstrument);
+            App.UndoRedoManager.EndTransaction();
         }
 
         private void LoadN163FdsResampleWavFile(Instrument inst)
@@ -3487,7 +3484,6 @@ namespace FamiStudio
 
         private void EditProjectProperties()
         {
-            var pt = ParentWindow.LastMousePosition;
             var dlg = new ProjectPropertiesDialog(ParentWindow, App.Project);
 
             dlg.EditProjectPropertiesAsync((r) =>
@@ -3593,10 +3589,14 @@ namespace FamiStudio
             return project.AllowMixerOverride;
         }
 
-        private void EditSongProperties(Song song)
+        private Point GetPropertiesDialogPosition(bool ctx)
         {
-            var pt = ParentWindow.LastMousePosition;
-            var dlg = new PropertyDialog(ParentWindow, SongPropertiesTitle, new Point(pt.X, pt.Y), 320, true); 
+            return ctx ? ParentWindow.LastContextMenuPosition : ParentWindow.LastMousePosition;
+        }
+
+        private void EditSongProperties(Song song, bool ctx = false)
+        {
+            var dlg = new PropertyDialog(ParentWindow, SongPropertiesTitle, GetPropertiesDialogPosition(ctx), 320, true); 
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 
@@ -3637,11 +3637,10 @@ namespace FamiStudio
             });
         }
 
-        private void EditInstrumentProperties(Instrument instrument)
+        private void EditInstrumentProperties(Instrument instrument, bool ctx = false)
         {
-            // MATTT : Make "pt" window-space.
-            var pt = ParentWindow.LastMousePosition;
-            var dlg = new PropertyDialog(ParentWindow, InstrumentPropertiesTitle, new Point(pt.X, pt.Y), 240, true, pt.Y > ParentWindowSize.Height / 2);
+            var pt = GetPropertiesDialogPosition(ctx);
+            var dlg = new PropertyDialog(ParentWindow, InstrumentPropertiesTitle, pt, 240, true, pt.Y > ParentWindowSize.Height / 2);
             dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();
@@ -3670,10 +3669,10 @@ namespace FamiStudio
             });
         }
 
-        private void EditFolderProperties(Folder folder)
+        private void EditFolderProperties(Folder folder, bool ctx = false)
         {
-            var pt = ParentWindow.LastMousePosition;
-            var dlg = new PropertyDialog(ParentWindow, FolderPropertiesTitle, new Point(pt.X, pt.Y), 240, true, pt.Y > ParentWindowSize.Height / 2);
+            var pt = GetPropertiesDialogPosition(ctx);
+            var dlg = new PropertyDialog(ParentWindow, FolderPropertiesTitle, pt, 240, true, pt.Y > ParentWindowSize.Height / 2);
             dlg.Properties.AddTextBox(null, folder.Name); // 0
             dlg.Properties.Build();
 
@@ -3699,10 +3698,10 @@ namespace FamiStudio
             });
         }
 
-        private void EditArpeggioProperties(Arpeggio arpeggio)
+        private void EditArpeggioProperties(Arpeggio arpeggio, bool ctx = false)
         {
-            var pt = ParentWindow.LastMousePosition;
-            var dlg = new PropertyDialog(ParentWindow, ArpeggioPropertiesTitle, new Point(pt.X, pt.Y), 240, true, pt.Y > ParentWindowSize.Height / 2);
+            var pt = GetPropertiesDialogPosition(ctx);
+            var dlg = new PropertyDialog(ParentWindow, ArpeggioPropertiesTitle, pt, 240, true, pt.Y > ParentWindowSize.Height / 2);
             dlg.Properties.AddColoredTextBox(arpeggio.Name, arpeggio.Color); // 0
             dlg.Properties.AddColorPicker(arpeggio.Color); // 1
             dlg.Properties.Build();
@@ -3731,10 +3730,10 @@ namespace FamiStudio
             });
         }
 
-        private void EditDPCMSampleProperties(DPCMSample sample)
+        private void EditDPCMSampleProperties(DPCMSample sample, bool ctx =false)
         {
-            var pt = ParentWindow.LastMousePosition;
-            var dlg = new PropertyDialog(ParentWindow, SamplePropertiesTitle, new Point(pt.X, pt.Y), 240, true, pt.Y > ParentWindowSize.Height / 2);
+            var pt = GetPropertiesDialogPosition(ctx);
+            var dlg = new PropertyDialog(ParentWindow, SamplePropertiesTitle, pt, 240, true, pt.Y > ParentWindowSize.Height / 2);
             dlg.Properties.AddColoredTextBox(sample.Name, sample.Color); // 0
             dlg.Properties.AddColorPicker(sample.Color); // 1
             dlg.Properties.Build();
@@ -3767,10 +3766,11 @@ namespace FamiStudio
 
         public void Serialize(ProjectBuffer buffer)
         {
+            var scrollY = mainContainer.ScrollY;
+            buffer.Serialize(ref scrollY);
             buffer.Serialize(ref expandedInstrument);
             buffer.Serialize(ref selectedInstrumentTab);
             buffer.Serialize(ref expandedSample);
-            //buffer.Serialize(ref scrollY); // MATTT
 
             if (buffer.IsReading)
             {
@@ -3778,6 +3778,7 @@ namespace FamiStudio
                 lastCaptureOperation = CaptureOperation.None;
                 Capture = false;
                 flingVelY = 0.0f;
+                mainContainer.ScrollY = scrollY;
 
                 ClampScroll();
                 RecreateAllControls();

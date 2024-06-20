@@ -39,6 +39,7 @@ namespace FamiStudio
         public bool IsAsyncDialogInProgress => container.IsDialogActive;
         public bool MobilePianoVisible { get => false; set => value = false; }
         public Point LastMousePosition => new Point(lastCursorX, lastCursorY);
+        public Point LastContextMenuPosition => ScreenToWindow(contextMenuPoint);
         public IntPtr Handle => glfwGetNativeWindow(window);
 
         private Control activeControl = null;

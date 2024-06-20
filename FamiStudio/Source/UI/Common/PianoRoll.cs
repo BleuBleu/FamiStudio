@@ -445,20 +445,21 @@ namespace FamiStudio
         public int        EditEnvelopeType => editEnvelope;
 
         public delegate void EmptyDelegate();
+        public delegate void InstrumentEnvDelegate(Instrument instrument, int env);
         public delegate void PatternDelegate(Pattern pattern);
         public delegate void NoteDelegate(Note note);
         public delegate void DPCMMappingDelegate(int note);
 
-        public event PatternDelegate     PatternChanged;
-        public event EmptyDelegate       MaximizedChanged;
-        public event EmptyDelegate       ManyPatternChanged;
-        public event EmptyDelegate       DPCMSampleChanged;
-        public event EmptyDelegate       EnvelopeChanged;
-        public event EmptyDelegate       NotesPasted;
-        public event EmptyDelegate       ScrollChanged;
-        public event NoteDelegate        NoteEyedropped;
-        public event DPCMMappingDelegate DPCMSampleMapped;
-        public event DPCMMappingDelegate DPCMSampleUnmapped;
+        public event PatternDelegate       PatternChanged;
+        public event EmptyDelegate         MaximizedChanged;
+        public event EmptyDelegate         ManyPatternChanged;
+        public event EmptyDelegate         DPCMSampleChanged;
+        public event EmptyDelegate         NotesPasted;
+        public event EmptyDelegate         ScrollChanged;
+        public event NoteDelegate          NoteEyedropped;
+        public event InstrumentEnvDelegate EnvelopeChanged;
+        public event DPCMMappingDelegate   DPCMSampleMapped;
+        public event DPCMMappingDelegate   DPCMSampleUnmapped;
 
         #region Localization
 
@@ -4017,7 +4018,7 @@ namespace FamiStudio
 
             if (final)
             {
-                EnvelopeChanged?.Invoke();
+                EnvelopeChanged?.Invoke(editInstrument, editEnvelope);
                 App.UndoRedoManager.EndTransaction();
             }
         }
@@ -4309,7 +4310,7 @@ namespace FamiStudio
             if (final)
             {
                 editInstrument?.NotifyEnvelopeChanged(editEnvelope, true);
-                EnvelopeChanged?.Invoke();
+                EnvelopeChanged?.Invoke(editInstrument, editEnvelope);
                 App.UndoRedoManager.EndTransaction();
             }
         }
@@ -4921,7 +4922,7 @@ namespace FamiStudio
                 EditEnvelope.Values[i] = (sbyte)Utils.Clamp(function(EditEnvelope.Values[i], i - startFrameIdx), minVal, maxVal);
 
             editInstrument?.NotifyEnvelopeChanged(editEnvelope, true);
-            EnvelopeChanged?.Invoke();
+            EnvelopeChanged?.Invoke(editInstrument, editEnvelope);
             App.UndoRedoManager.EndTransaction();
             MarkDirty();
         }
