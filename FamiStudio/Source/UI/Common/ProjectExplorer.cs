@@ -13,7 +13,7 @@ namespace FamiStudio
         private const int   DefaultSpacingX         = Platform.IsMobile ? 0 : 2;
         private const int   DefaultPanelSizeY       = 21;
         private const int   DefaultDraggedLineSizeY = 5;
-        private const int   DefaultSliderSizeX      = Platform.IsMobile ? 84 : 104; // MATTT : Review.
+        private const int   DefaultParamSizeX       = Platform.IsMobile ? 84 : 104; // MATTT : Review.
         private const float ScrollSpeedFactor       = Platform.IsMobile ? 2.0f : 1.0f;
 
         private int expandSizeX;
@@ -21,7 +21,7 @@ namespace FamiStudio
         private int marginX;
         private int iconSizeX;
         private int panelSizeY;
-        private int sliderSizeX;
+        private int paramSizeX;
         private int virtualSizeY; // MATTT : Move this functionality to container directly.
         private int dragLineSizeY;
         private int topTabSizeY;
@@ -334,7 +334,7 @@ namespace FamiStudio
             marginX       = DpiScaling.ScaleForWindow(DefaultMarginX);
             iconSizeX     = DpiScaling.ScaleForWindow(DefaultIconSizeX);
             panelSizeY    = DpiScaling.ScaleForWindow(DefaultPanelSizeY);
-            sliderSizeX   = DpiScaling.ScaleForWindow(DefaultSliderSizeX);
+            paramSizeX    = DpiScaling.ScaleForWindow(DefaultParamSizeX);
             dragLineSizeY = DpiScaling.ScaleForWindow(DefaultDraggedLineSizeY);
         }
 
@@ -996,7 +996,7 @@ namespace FamiStudio
                 var name = tabNames[i];
                 var tab = new SimpleTab(name, name == selelectedTabName);
                 tab.Move(x + i * tabWidth, y, tabWidth, height);
-                tab.Click += (s) => { selectedInstrumentTab = name; RecreateAllControls(); }; // HACK : This is only used for instruments right now.
+                tab.Click += (s) => { selectedInstrumentTab = name; RecreateAllControls(); };
                 panel.AddControl(tab);
             }
         }
@@ -1005,7 +1005,7 @@ namespace FamiStudio
         {
             var slider = new ParamSlider(p);
             panel.AddControl(slider);
-            slider.Move(panel.Width - sliderSizeX - marginX, y + Utils.DivideAndRoundUp(panelSizeY - slider.Height, 2), sliderSizeX, slider.Height);
+            slider.Move(panel.Width - paramSizeX - marginX, y + Utils.DivideAndRoundUp(panelSizeY - slider.Height, 2), paramSizeX, slider.Height);
             return slider;
         }
 
@@ -1013,7 +1013,7 @@ namespace FamiStudio
         {
             var list = new ParamList(p);
             panel.AddControl(list);
-            list.Move(panel.Width - sliderSizeX - marginX, y + Utils.DivideAndRoundUp(panelSizeY - list.Height, 2), sliderSizeX, list.Height);
+            list.Move(panel.Width - paramSizeX - marginX, y + Utils.DivideAndRoundUp(panelSizeY - list.Height, 2), paramSizeX, list.Height);
             return list;
         }
 
@@ -2733,13 +2733,13 @@ namespace FamiStudio
             expandedInstrument = expandedInstrument == inst ? null : inst;
             selectedInstrumentTab = null;
             expandedSample = null;
-            DeferRecreateAllControls();
+            RecreateAllControls();
         }
 
         private void ToggleExpandFolder(Folder folder)
         {
             folder.Expanded = !folder.Expanded;
-            DeferRecreateAllControls();
+            RecreateAllControls();
         }
 
         private void AskDeleteInstrument(Instrument inst)
@@ -2945,7 +2945,7 @@ namespace FamiStudio
             expandedSample = expandedSample == sample ? null : sample;
             expandedInstrument = null;
             selectedInstrumentTab = null;
-            DeferRecreateAllControls();
+            RecreateAllControls();
         }
 
         private void AskDeleteDPCMSample(DPCMSample sample)
