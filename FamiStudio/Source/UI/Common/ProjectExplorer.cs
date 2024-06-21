@@ -212,55 +212,37 @@ namespace FamiStudio
             EnvelopeType.S5BNoiseFreq
         };
 
-        // MATTT : Remove
-        private enum SubButtonType
+        private class CaptureOperation
         {
+            private string name;
+            private bool needsThreshold;
+            private bool realTimeUpdate;
+
+            public string Name => name;
+            public bool NeedsThreshold => needsThreshold;
+            public bool RealTimeUpdate => realTimeUpdate;
+
+            public CaptureOperation(string desc, bool realTime = true, bool threshold = true)
+            {
+                name = desc;
+                needsThreshold = threshold;
+                realTimeUpdate = realTime;
+            }
+
+            public override string ToString()
+            {
+                return name;
+            }
         }
 
-        // MATTT : Remove
-        private class ProjectExplorerButton
-        {
-        }
-
-        // MATTT : Create a "CaptureOperation" class or struct.
-        private enum CaptureOperation
-        {
-            None,
-            DragInstrument,
-            DragInstrumentEnvelope,
-            DragInstrumentSampleMappings,
-            DragArpeggio,
-            DragArpeggioValues,
-            DragSample,
-            DragSong,
-            DragFolder
-        };
-
-        private static readonly bool[] captureNeedsThreshold = new[]
-        {
-            false, // None
-            true,  // DragInstrument
-            true,  // DragInstrumentEnvelope
-            true,  // DragInstrumentSampleMappings
-            true,  // DragArpeggio
-            true,  // DragArpeggioValues
-            true,  // DragSample
-            true,  // DragSong
-            true,  // DragFolder
-        };
-
-        private static readonly bool[] captureWantsRealTimeUpdate = new[]
-        {
-            false, // None
-            true,  // DragInstrument
-            true,  // DragInstrumentEnvelope
-            true,  // DragInstrumentSampleMappings
-            true,  // DragArpeggio
-            false, // DragArpeggioValues
-            true,  // DragSample
-            true,  // DragSong
-            true,  // DragFolder
-        };
+        private static readonly CaptureOperation DragInstrument               = new CaptureOperation("DragInstrument");
+        private static readonly CaptureOperation DragInstrumentEnvelope       = new CaptureOperation("DragInstrumentEnvelope");
+        private static readonly CaptureOperation DragInstrumentSampleMappings = new CaptureOperation("DragInstrumentSampleMappings");
+        private static readonly CaptureOperation DragArpeggio                 = new CaptureOperation("DragArpeggio");
+        private static readonly CaptureOperation DragArpeggioValues           = new CaptureOperation("DragArpeggioValues", false);
+        private static readonly CaptureOperation DragSample                   = new CaptureOperation("DragSample");
+        private static readonly CaptureOperation DragSong                     = new CaptureOperation("DragSong");
+        private static readonly CaptureOperation DragFolder                   = new CaptureOperation("DragFolder");
 
         private int mouseLastX = 0;
         private int mouseLastY = 0;
@@ -277,19 +259,16 @@ namespace FamiStudio
         private float bitmapScale = 1.0f;
         private float captureDuration = 0.0f;
         private bool captureThresholdMet = false;
-        private bool captureRealTimeUpdate = false;
         private bool canFling = false;
-        private bool recreateControls = false;
         private TabType selectedTab = TabType.Project;
-        private CaptureOperation captureOperation = CaptureOperation.None;
-        private CaptureOperation lastCaptureOperation = CaptureOperation.None;
+        private CaptureOperation captureOperation;
         private Instrument draggedInstrument = null;
         private Instrument expandedInstrument = null;
         private Folder draggedFolder = null;
         private string selectedInstrumentTab = null;
         private DPCMSample expandedSample = null;
-        private Arpeggio draggedArpeggio = null;
         private DPCMSample draggedSample = null;
+        private Arpeggio draggedArpeggio = null;
         private Song draggedSong = null;
 
         // Global controls
@@ -302,7 +281,7 @@ namespace FamiStudio
         private NesApu.NesRegisterValues registerValues;
         private RegisterViewer[] registerViewers = new RegisterViewer[ExpansionType.Count];
 
-        public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null;
+        public DPCMSample DraggedSample => captureOperation == DragSample ? draggedSample : null;
         public bool IsActiveControl => App != null && App.ActiveControl == this;
 
         public delegate void EmptyDelegate();
@@ -510,7 +489,7 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption("MenuDelete", DeleteFolderContext, () => { AskDeleteFolder(folder); }, ContextMenuSeparator.After));
                 menu.Add(new ContextMenuOption("Folder", CollapseAllContext, () => { ExpandAllFolders(folder.Type, false); }));
                 menu.Add(new ContextMenuOption("FolderOpen", ExpandAllContext, () => { ExpandAllFolders(folder.Type, true); }));
-                menu.Add(new ContextMenuOption("MenuProperties", PropertiesFolderContext, () => { EditFolderProperties(folder, true); }));
+                menu.Add(new ContextMenuOption("MenuProperties", PropertiesFolderContext, () => { EditFolderProperties(folder, true); }, ContextMenuSeparator.Before));
 
                 App.ShowContextMenu(menu.ToArray());
                 e.MarkHandled();
@@ -704,7 +683,7 @@ namespace FamiStudio
             {
                 App.SelectedSong = song;
                 draggedSong = song;
-                StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragSong);
+                StartCaptureOperation(sender, e.X, e.Y, DragSong);
                 e.MarkHandled();
             }
         }
@@ -782,7 +761,7 @@ namespace FamiStudio
         {
             draggedInstrument = instrument;
             envelopeDragTexture = image;
-            StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragInstrumentSampleMappings);
+            StartCaptureOperation(sender, e.X, e.Y, DragInstrumentSampleMappings);
             e.MarkHandled();
         }
 
@@ -796,9 +775,9 @@ namespace FamiStudio
                 envelopeDragTexture = image;
 
                 if (envelopeType >= 0)
-                    StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragInstrumentEnvelope);
+                    StartCaptureOperation(sender, e.X, e.Y, DragInstrumentEnvelope);
                 else
-                    StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragInstrument);
+                    StartCaptureOperation(sender, e.X, e.Y, DragInstrument);
 
                 e.MarkHandled();
             }
@@ -902,7 +881,7 @@ namespace FamiStudio
             if (!e.Handled && e.Left)
             {
                 draggedSample = sample;
-                StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragSample);
+                StartCaptureOperation(sender, e.X, e.Y, DragSample);
                 e.MarkHandled();
             }
         }
@@ -983,12 +962,12 @@ namespace FamiStudio
                 if (values)
                 {
                     envelopeDragIdx = EnvelopeType.Arpeggio;
-                    StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragArpeggioValues);
+                    StartCaptureOperation(sender, e.X, e.Y, DragArpeggioValues);
                 }
                 else
                 {
                     envelopeDragIdx = -1;
-                    StartCaptureOperation(sender, e.X, e.Y, CaptureOperation.DragArpeggio);
+                    StartCaptureOperation(sender, e.X, e.Y, DragArpeggio);
                 }
 
                 e.MarkHandled();
@@ -1367,27 +1346,6 @@ namespace FamiStudio
             }
         }
 
-        private void ConditionalRecreateAllControls()
-        {
-            if (recreateControls)
-            {
-                RecreateAllControls();
-                recreateControls = false;
-            }
-        }
-
-        private void DeferRecreateAllControls()
-        {
-            // Used in tricky situation when a mousedown/up/click needs to recreate the controls and 
-            // we also need to get the container notifications. Not deferring means events are going
-            // to be sent to dead controls, which is bad. An example of this is the "click" to expand
-            // an instrument. The click will want to recreate the controls, but the container (the
-            // project explorer) needs to receive the proper notification to abort the drag capture
-            // operation that was started on "mousedown".
-            Capture = false;
-            recreateControls = true;
-        }
-
         public void RecreateAllControls()
         {
             UpdateRenderCoords();
@@ -1532,19 +1490,32 @@ namespace FamiStudio
             {
                 mainContainerY += mainContainer.ScrollY;
                 
-                if (captureOperation == CaptureOperation.DragFolder)
+                if (captureOperation == DragFolder)
                 {
                     return FindBestInsertionPoint(mainContainerY, folderInsertionPoints[draggedFolder.Type], out insertY);
                 }
 
                 var type = -1;
-                switch (captureOperation)
+
+                if (captureOperation == DragSong)
                 {
-                    case CaptureOperation.DragSong:       type = FolderType.Song;       break;
-                    case CaptureOperation.DragInstrument: type = FolderType.Instrument; break;
-                    case CaptureOperation.DragArpeggio:   type = FolderType.Arpeggio;   break;
-                    case CaptureOperation.DragSample:     type = FolderType.Sample;     break;
-                    default: return null;
+                    type = FolderType.Song;
+                }
+                else if (captureOperation == DragInstrument)
+                {
+                    type = FolderType.Instrument;
+                }
+                else if (captureOperation == DragArpeggio)
+                {
+                    type = FolderType.Arpeggio;
+                }
+                else if (captureOperation == DragSample)
+                {
+                    type = FolderType.Sample;
+                }
+                else
+                {
+                    return null;
                 }
 
                 var ins = FindBestInsertionPoint(mainContainerY, insertionPoints[type], out insertY);
@@ -1565,7 +1536,7 @@ namespace FamiStudio
 
         private void MainContainer_Rendering(Graphics g)
         {
-            if (captureOperation != CaptureOperation.None && captureThresholdMet)
+            if (captureOperation != null && captureThresholdMet)
             {
                 var c = g.DefaultCommandList;
 
@@ -1573,9 +1544,9 @@ namespace FamiStudio
                     mainContainer.ScreenToControl(CursorPosition) :
                     mainContainer.WindowToControl(ControlToWindow(new Point(mouseLastX, mouseLastY)));
 
-                if ((captureOperation == CaptureOperation.DragInstrumentEnvelope || 
-                     captureOperation == CaptureOperation.DragArpeggioValues) && envelopeDragIdx >= 0 ||
-                    (captureOperation == CaptureOperation.DragInstrumentSampleMappings))
+                if ((captureOperation == DragInstrumentEnvelope || 
+                     captureOperation == DragArpeggioValues) && envelopeDragIdx >= 0 ||
+                    (captureOperation == DragInstrumentSampleMappings))
                 {
                     if (mainContainer.ClientRectangle.Contains(mainContainerPos.X, mainContainerPos.Y))
                     {
@@ -1595,13 +1566,21 @@ namespace FamiStudio
                 {
                     var lineColor = Theme.LightGreyColor2;
 
-                    switch (captureOperation)
+                    if (captureOperation == DragSong)
                     {
-                        case CaptureOperation.DragSong:       lineColor = draggedSong.Color;       break;
-                        case CaptureOperation.DragInstrument: lineColor = draggedInstrument.Color; break;
-                        case CaptureOperation.DragSample:     lineColor = draggedSample.Color;     break;
-                        case CaptureOperation.DragArpeggio:   if (draggedArpeggio != null) lineColor = draggedArpeggio.Color; break;
-                        default: return;
+                        lineColor = draggedSong.Color;
+                    }
+                    else if (captureOperation == DragInstrument)
+                    {
+                        lineColor = draggedInstrument.Color;
+                    }
+                    else if (captureOperation == DragSample)
+                    {
+                        lineColor = draggedSample.Color;
+                    }
+                    else if (captureOperation == DragArpeggio && draggedArpeggio != null)
+                    {
+                        lineColor = draggedArpeggio.Color;
                     }
 
                     GetDragInsertLocation(mainContainerPos.X, mainContainerPos.Y, out var draggedInFolder, out var insertY);
@@ -1641,16 +1620,18 @@ namespace FamiStudio
 
         protected void UpdateCursor()
         {
-            if ((captureOperation == CaptureOperation.DragInstrumentEnvelope || captureOperation == CaptureOperation.DragArpeggioValues) && captureThresholdMet)
+            // TODO : Add a cursor field on the capture operation directly?
+            if ((captureOperation == DragInstrumentEnvelope || 
+                 captureOperation == DragArpeggioValues) && captureThresholdMet)
             {
                 Cursor = Cursors.CopyCursor;
             }
             else if (
-                captureOperation == CaptureOperation.DragSong       ||
-                captureOperation == CaptureOperation.DragInstrument ||
-                captureOperation == CaptureOperation.DragArpeggio   ||
-                captureOperation == CaptureOperation.DragSample     ||
-                captureOperation == CaptureOperation.DragFolder)
+                captureOperation == DragSong       ||
+                captureOperation == DragInstrument ||
+                captureOperation == DragArpeggio   ||
+                captureOperation == DragSample     ||
+                captureOperation == DragFolder)
             {
                 Cursor = Cursors.DragCursor;
             }
@@ -1679,7 +1660,7 @@ namespace FamiStudio
             ScrollIfNearEdge(x, y);
             MarkDirty();
 
-            if (Platform.IsDesktop && captureOperation == CaptureOperation.DragSample && !ClientRectangle.Contains(x, y))
+            if (Platform.IsDesktop && captureOperation == DragSample && !ClientRectangle.Contains(x, y))
             {
                 DPCMSampleDraggedOutside?.Invoke(draggedSample, ControlToScreen(new Point(x, y)));
             }
@@ -1691,7 +1672,7 @@ namespace FamiStudio
 
             y -= mainContainer.Top;
 
-            if (captureOperation == CaptureOperation.DragFolder)
+            if (captureOperation == DragFolder)
             {
                 if (inside)
                 {
@@ -1711,7 +1692,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (captureOperation == CaptureOperation.DragSong)
+            else if (captureOperation == DragSong)
             {
                 if (inside)
                 {
@@ -1736,7 +1717,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (captureOperation == CaptureOperation.DragInstrument)
+            else if (captureOperation == DragInstrument)
             {
                 if (inside)
                 {
@@ -1765,7 +1746,7 @@ namespace FamiStudio
                     InstrumentDroppedOutside(draggedInstrument, ControlToScreen(new Point(x, y)));
                 }
             }
-            else if (captureOperation == CaptureOperation.DragArpeggio)
+            else if (captureOperation == DragArpeggio)
             {
                 if (inside && draggedArpeggio != null)
                 {
@@ -1794,7 +1775,7 @@ namespace FamiStudio
                     ArpeggioDroppedOutside(draggedArpeggio, ControlToScreen(new Point(x, y)));
                 }
             }
-            else if (captureOperation == CaptureOperation.DragSample)
+            else if (captureOperation == DragSample)
             {
                 if (inside)
                 {
@@ -1983,7 +1964,7 @@ namespace FamiStudio
         {
             const int CaptureThreshold = Platform.IsDesktop ? 5 : 50;
 
-            if (captureOperation != CaptureOperation.None && !captureThresholdMet)
+            if (captureOperation != null && !captureThresholdMet)
             {
                 if (Math.Abs(x - captureMouseX) >= CaptureThreshold ||
                     Math.Abs(y - captureMouseY) >= CaptureThreshold)
@@ -1992,38 +1973,39 @@ namespace FamiStudio
                 }
             }
 
-            if (captureOperation != CaptureOperation.None && realTime)
+            if (captureOperation != null && realTime)
             {
                 captureDuration += delta;
             }
 
-            if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
+            if (captureOperation != null && captureThresholdMet && (captureOperation.RealTimeUpdate || !realTime))
             {
-                switch (captureOperation)
+                if (captureOperation == DragInstrumentEnvelope)
                 {
-                    case CaptureOperation.DragInstrumentEnvelope:
-                        UpdateDragInstrumentEnvelope(x, y);
-                        break;
-                    case CaptureOperation.DragInstrumentSampleMappings:
-                        UpdateDragInstrumentSampleMappings(x, y);
-                        break;
-                    case CaptureOperation.DragArpeggioValues:
-                        UpdateDragArpeggioValues(x, y);
-                        break;
-                    case CaptureOperation.DragSong:
-                    case CaptureOperation.DragInstrument:
-                    case CaptureOperation.DragArpeggio:
-                    case CaptureOperation.DragSample:
-                    case CaptureOperation.DragFolder:
-                        UpdateDragObjectOrFolder(x, y);
-                        break;
-                    default:
-                        MarkDirty();
-                        break;
+                    UpdateDragInstrumentEnvelope(x, y);
+                }
+                else if (captureOperation == DragInstrumentSampleMappings)
+                {
+                    UpdateDragInstrumentSampleMappings(x, y);
+                }
+                else if (captureOperation == DragArpeggioValues)
+                {
+                    UpdateDragArpeggioValues(x, y);
+                }
+                else if (
+                    captureOperation == DragSong       ||
+                    captureOperation == DragInstrument ||
+                    captureOperation == DragArpeggio   ||
+                    captureOperation == DragSample     ||
+                    captureOperation == DragFolder)
+                {
+                    UpdateDragObjectOrFolder(x, y);
+                }
+                else
+                {
+                    MarkDirty();
                 }
             }
-
-            lastCaptureOperation = CaptureOperation.None;
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -2075,7 +2057,7 @@ namespace FamiStudio
 
         private void StartCaptureOperation(Control control, int x, int y, CaptureOperation op)
         {
-            Debug.Assert(captureOperation == CaptureOperation.None);
+            Debug.Assert(captureOperation == null);
             var ctrlPos = WindowToControl(control.ControlToWindow(x, y));
             mouseLastX = ctrlPos.X;
             mouseLastY = ctrlPos.Y;
@@ -2087,34 +2069,38 @@ namespace FamiStudio
             control.Capture = true;
             canFling = false;
             captureOperation = op;
-            lastCaptureOperation = CaptureOperation.None;
-            captureThresholdMet = !captureNeedsThreshold[(int)op];
-            captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
+            captureThresholdMet = !op.NeedsThreshold;
             captureDuration = 0.0f;
         }
 
         private void EndCaptureOperation(int x, int y)
         {
-            if (captureOperation != CaptureOperation.None && captureThresholdMet)
+            if (captureOperation != null && captureThresholdMet)
             {
-                switch (captureOperation)
+                if (captureOperation == DragInstrumentEnvelope)
                 {
-                    case CaptureOperation.DragInstrumentEnvelope:
-                        EndDragInstrumentEnvelope(x, y);
-                        break;
-                    case CaptureOperation.DragInstrumentSampleMappings:
-                        EndDragInstrumentSampleMappings(x, y);
-                        break;
-                    case CaptureOperation.DragArpeggioValues:
-                        EndDragArpeggioValues(x, y);
-                        break;
-                    case CaptureOperation.DragSong:
-                    case CaptureOperation.DragInstrument:
-                    case CaptureOperation.DragArpeggio:
-                    case CaptureOperation.DragSample:
-                    case CaptureOperation.DragFolder:
-                        EndDragObjectOrFolder(x, y);
-                        break;
+                    EndDragInstrumentEnvelope(x, y);
+                }
+                else if (captureOperation == DragInstrumentSampleMappings)
+                {
+                    EndDragInstrumentSampleMappings(x, y);
+                }
+                else if (captureOperation == DragArpeggioValues)
+                {
+                    EndDragArpeggioValues(x, y);
+                }
+                else if (
+                    captureOperation == DragSong ||
+                    captureOperation == DragInstrument ||
+                    captureOperation == DragArpeggio ||
+                    captureOperation == DragSample ||
+                    captureOperation == DragFolder)
+                {
+                    EndDragObjectOrFolder(x, y);
+                }
+                else
+                {
+                    MarkDirty();
                 }
             }
 
@@ -2123,8 +2109,7 @@ namespace FamiStudio
             draggedSample = null;
             draggedSong = null;
             envelopeDragTexture = null;
-            lastCaptureOperation = captureOperation;
-            captureOperation = CaptureOperation.None;
+            captureOperation = null;
             Capture = false;
             MarkDirty();
         }
@@ -2141,7 +2126,7 @@ namespace FamiStudio
             draggedSample = null;
             draggedSong = null;
             envelopeDragTexture = null;
-            captureOperation = CaptureOperation.None;
+            captureOperation = null;
             Capture = false;
             canFling = false;
         }
@@ -2186,7 +2171,7 @@ namespace FamiStudio
 
         public override void ContainerMouseDownNotify(Control control, MouseEventArgs e)
         {
-            ConditionalRecreateAllControls();
+            //ConditionalRecreateAllControls();
         }
 
         public override void ContainerMouseUpNotify(Control control, MouseEventArgs e)
@@ -2196,7 +2181,7 @@ namespace FamiStudio
                 var ctrlPos = WindowToControl(control.ControlToWindow(e.X, e.Y));
                 EndCaptureOperation(ctrlPos.X, ctrlPos.Y);
             }
-            ConditionalRecreateAllControls();
+            //ConditionalRecreateAllControls();
         }
 
         private void ResizeMainContainer()
@@ -3715,7 +3700,6 @@ namespace FamiStudio
 
         public void ValidateIntegrity()
         {
-            Debug.Assert(!recreateControls);
         }
 
         public void Serialize(ProjectBuffer buffer)
@@ -3728,8 +3712,7 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
-                captureOperation = CaptureOperation.None;
-                lastCaptureOperation = CaptureOperation.None;
+                captureOperation = null;
                 Capture = false;
                 flingVelY = 0.0f;
                 mainContainer.ScrollY = scrollY;
