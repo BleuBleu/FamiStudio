@@ -19,6 +19,8 @@
 - YARN : Small hitch beginning of VRC6 songs? Not sure
 - YARN : Change ini ROM code persune suggestion.
 - Review the copy/paste name matching. Maybe add a rename option.
+- Video looping issue Brette
+	https://discord.com/channels/747649221879922840/747649222354010173/1253697004177985627
 - N163 auto-position.
 	- GUI BRANCH : When changing "Auto Wav Pos", must stop player. => REDO IN GUI BRANCH!
 	- GUI BRANCH : Add button test validate the assignment in instrument settings.

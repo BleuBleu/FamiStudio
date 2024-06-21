@@ -560,7 +560,11 @@ namespace FamiStudio
             {
                 if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
                     hoverControl.MouseLeave(EventArgs.Empty);
+
                 hoverControl = hover;
+                
+                if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
+                    hoverControl.MouseEnter(EventArgs.Empty);
             }
         }
 

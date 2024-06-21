@@ -5,7 +5,11 @@ namespace FamiStudio
 {
     public class Button : Control
     {
+        // This is basically the same as "MouseDown" but can mark the event as handled automatically.
+        // It is fired before the MouseDown. ProjectExplorer uses this to handle clicks and drags of 
+        // instrument envelopes.
         public event ControlDelegate Click;
+        public event ControlDelegate RightClick;
 
         private string text;
         private string imageName;
@@ -18,6 +22,8 @@ namespace FamiStudio
         private bool press;
         private bool transparent;
         private bool dimmed;
+        private bool clickOnMouseUp;
+        private bool handleOnClick = true;
 
         private Color fgColorEnabled  = Theme.LightGreyColor1;
         private Color fgColorDisabled = Theme.MediumGreyColor1;
@@ -30,6 +36,9 @@ namespace FamiStudio
         public Color BackgroundColor         { get => bgColor;         set => bgColor         = value; }
         public Color BackgroundColorPressed  { get => bgColorPressed;  set => bgColorPressed  = value; }
         public Color BackgroundColorHover    { get => bgColorHover;    set => bgColorHover    = value; }
+
+        public bool ClickOnMouseUp     { get => clickOnMouseUp; set => clickOnMouseUp = value; }
+        public bool MarkHandledOnClick { get => handleOnClick;  set => handleOnClick  = value; }
 
         public TextureAtlasRef Image => bmp;
 
@@ -93,27 +102,45 @@ namespace FamiStudio
             UpdateAtlasBitmap();
         }
 
+        private void TriggerClickEvent(MouseEventArgs e)
+        {
+            if (e.Left)
+                Click?.Invoke(this);
+            else
+                RightClick?.Invoke(this);
+
+            if (handleOnClick)
+                e.MarkHandled();
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            if (enabled && e.Left)
+            var canRightClick = RightClick != null;
+
+            if (enabled && (e.Left || (e.Right && canRightClick)))
             {
                 press = true;
+                if (!clickOnMouseUp)
+                    TriggerClickEvent(e);
             }
+
             hover = true;
             MarkDirty();
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            if (enabled && e.Left)
+            var canRightClick = RightClick != null;
+
+            if (enabled && (e.Left || (e.Right && canRightClick)))
             {
-                press = false;
-                Click?.Invoke(this);
+                if (clickOnMouseUp)
+                    TriggerClickEvent(e);
+                SetAndMarkDirty(ref press, false);
             }
-            MarkDirty();
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseEnter(EventArgs e)
         {
             SetAndMarkDirty(ref hover, true);
         }

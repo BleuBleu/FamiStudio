@@ -62,6 +62,7 @@ namespace FamiStudio
         protected virtual void OnMouseDoubleClick(MouseEventArgs e) { }
         protected virtual void OnResize(EventArgs e) { }
         protected virtual void OnMouseMove(MouseEventArgs e) { }
+        protected virtual void OnMouseEnter(EventArgs e) { }
         protected virtual void OnMouseLeave(EventArgs e) { }
         protected virtual void OnMouseWheel(MouseEventArgs e) { }
         protected virtual void OnMouseHorizontalWheel(MouseEventArgs e) { }
@@ -92,6 +93,7 @@ namespace FamiStudio
         public void MouseUp(MouseEventArgs e) { OnMouseUp(e); MouseUpEvent?.Invoke(this, e); ContainerMouseUpNotify(e); }
         public void MouseDoubleClick(MouseEventArgs e) { OnMouseDoubleClick(e); }
         public void MouseMove(MouseEventArgs e) { OnMouseMove(e); MouseMoveEvent?.Invoke(this, e); ContainerMouseMoveNotify(e); }
+        public void MouseEnter(EventArgs e) { if (IsContainedByMainWindow) OnMouseEnter(e); }
         public void MouseLeave(EventArgs e) { if (IsContainedByMainWindow) OnMouseLeave(e); }
         public void MouseWheel(MouseEventArgs e) { OnMouseWheel(e); ContainerMouseWheelNotify(e); }
         public void MouseHorizontalWheel(MouseEventArgs e) { OnMouseHorizontalWheel(e); }

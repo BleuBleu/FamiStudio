@@ -124,7 +124,7 @@ namespace FamiStudio
 
         private bool IsTopDialog()
         {
-            return window.TopDialog == this;
+            return window != null && window.TopDialog == this;
         }
 
         private bool ShouldDisplayTooltip()
