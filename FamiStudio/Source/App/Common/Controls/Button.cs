@@ -161,6 +161,11 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            OnMouseDown(e);
+        }
+
         protected override void OnMouseEnter(EventArgs e)
         {
             SetAndMarkDirty(ref hover, true);
@@ -206,7 +211,7 @@ namespace FamiStudio
             }
 
             var maxOpacity = transparent && localDimmed ? 0.25f : 1.0f;
-            var fgColor = localEnabled ? fgColorEnabled : fgColorDisabled;
+            var fgColor = localEnabled || transparent ? fgColorEnabled : fgColorDisabled;
             var opacity = Math.Min(maxOpacity, transparent ? localEnabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f);
 
             // Debug

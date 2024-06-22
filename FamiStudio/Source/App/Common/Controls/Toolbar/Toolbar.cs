@@ -185,50 +185,14 @@ namespace FamiStudio
 
         // Most of those are for desktop.
         // MATTT : Can we initialize those immediately like we do for controls now?
-        //const int DefaultButtonIconPosX          = Platform.IsMobile ?  12 : 2;
-        //const int DefaultButtonIconPosY          = Platform.IsMobile ?  12 : 4;
         const int DefaultButtonSize              = Platform.IsMobile ? 120 : 36;
         const int DefaultIconSize                = Platform.IsMobile ?  96 : 32; 
         const float ShowExtraButtonsThreshold    = 0.8f;
 
-        //int buttonIconPosX;
-        //int buttonIconPosY;
         int buttonSize;
 
         int lastButtonX = 500;
         int helpButtonX = 500;
-
-        //private delegate void MouseWheelDelegate(float delta);
-        //private delegate void MouseClickDelegate(int x, int y);
-        //private delegate ButtonStatus ButtonStatusDelegate();
-        //private delegate ButtonImageIndices BitmapDelegate(ref Color tint);
-
-        //private class Button
-        //{
-        //    public Rectangle Rect;
-        //    public Point IconPos;
-        //    public bool Visible = true;
-        //    public bool CloseOnClick = true;
-        //    public bool VibrateOnLongPress = true;
-        //    public string ToolTip;
-        //    public ButtonImageIndices BmpAtlasIndex;
-        //    public ButtonStatusDelegate Enabled;
-        //    public MouseClickDelegate Click;
-        //    public MouseClickDelegate RightClick;
-        //    //public MouseWheelDelegate MouseWheel;
-        //    public BitmapDelegate GetBitmap;
-        //};
-
-        //private int timecodePosX;
-        //private int timecodePosY;
-        //private int oscilloscopePosX;
-        //private int oscilloscopePosY;
-        //private int timecodeOscSizeX;
-        //private int timecodeOscSizeY;
-
-        //private bool oscilloscopeVisible = true;
-        //private bool lastOscilloscopeHadNonZeroSample = false;
-        private int  hoverButtonIdx = -1;
 
         // Mobile-only stuff
         private float expandRatio = 0.0f;
@@ -305,14 +269,15 @@ namespace FamiStudio
             SetTickEnabled(Platform.IsMobile);
         }
 
+        // MATTT : Disable color too intense. Review dimmed color too.
         private Button CreateToolbarButton(string image, string userData)
         {
             var button = new Button(image);
             button.UserData = userData;
             button.Visible = false;
-            button.Resize(buttonSize, buttonSize);
             button.ImageScale = iconScaleFloat;
             button.Transparent = true;
+            button.Resize(buttonSize, buttonSize);
             allButtons.Add(button);
             AddControl(button);
             return button;
@@ -366,8 +331,44 @@ namespace FamiStudio
             buttonFollow    = CreateToolbarButton("Follow", "Follow");
             buttonHelp      = CreateToolbarButton("Help", "Help");
 
-            buttonPlay.Click += ButtonPlay_Click;
-            buttonPlay.ImageEvent += ButtonPlay_ImageEvent;
+            buttonNew.Click              += ButtonNew_Click;
+            buttonOpen.Click             += ButtonOpen_Click;
+            buttonOpen.MouseUpEvent      += ButtonOpen_MouseUpEvent;
+            buttonSave.Click             += ButtonSave_Click;
+            buttonSave.MouseUpEvent      += ButtonSave_MouseUpEvent;
+            buttonExport.Click           += ButtonExport_Click;
+            buttonExport.MouseUpEvent    += ButtonExport_MouseUpEvent;
+            buttonCopy.Click             += ButtonCopy_Click;
+            buttonCopy.EnabledEvent      += ButtonCopy_EnabledEvent;
+            buttonCut.Click              += ButtonCut_Click;
+            buttonCut.EnabledEvent       += ButtonCut_EnabledEvent;
+            buttonPaste.Click            += ButtonPaste_Click;
+            buttonPaste.MouseUpEvent     += ButtonPaste_MouseUpEvent;
+            buttonPaste.EnabledEvent     += ButtonPaste_EnabledEvent;
+            buttonUndo.Click             += ButtonUndo_Click;
+            buttonUndo.EnabledEvent      += ButtonUndo_EnabledEvent;
+            buttonRedo.Click             += ButtonRedo_Click;
+            buttonRedo.EnabledEvent      += ButtonRedo_EnabledEvent;
+            buttonTransform.Click        += ButtonTransform_Click;
+            buttonConfig.Click           += ButtonConfig_Click;
+            buttonPlay.Click             += ButtonPlay_Click; // MATTT : VibrateOnLongPress = false, what was that?
+            buttonPlay.MouseUpEvent      += ButtonPlay_MouseUp;
+            buttonPlay.ImageEvent        += ButtonPlay_ImageEvent;
+            buttonRec.Click              += ButtonRec_Click;
+            buttonRec.ImageEvent         += ButtonRec_ImageEvent;
+            buttonRewind.Click           += ButtonRewind_Click;
+            buttonLoop.Click             += ButtonLoop_Click; // MATTT : CloseOnClick = false, what was that?
+            buttonLoop.ImageEvent        += ButtonLoop_ImageEvent;
+            buttonQwerty.Click           += ButtonQwerty_Click;
+            buttonQwerty.EnabledEvent    += ButtonQwerty_EnabledEvent;
+            buttonMetronome.Click        += ButtonMetronome_Click; // MATTT : CloseOnClick = false, what was that?
+            buttonMetronome.EnabledEvent += ButtonMetronome_EnabledEvent;
+            buttonMachine.Click          += ButtonMachine_Click; // MATTT : CloseOnClick = false, what was that?
+            buttonMachine.ImageEvent     += ButtonMachine_ImageEvent;
+            buttonMachine.EnabledEvent   += ButtonMachine_EnabledEvent;
+            buttonFollow.Click           += ButtonFollow_Click; // MATTT : CloseOnClick = false, what was that?
+            buttonFollow.EnabledEvent    += ButtonFollow_EnabledEvent;
+            buttonHelp.Click             += ButtonHelp_Click;
 
             if (Platform.IsMobile)
             {
@@ -390,25 +391,25 @@ namespace FamiStudio
             UpdateButtonLayout();
 
             /*
-            buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
-            buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = Platform.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
-            buttons[(int)ButtonType.Save]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
-            buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = Platform.IsDesktop ? OnRepeatLastExport : (MouseClickDelegate)null };
-            buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
-            buttons[(int)ButtonType.Cut]       = new Button { BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
-            buttons[(int)ButtonType.Paste]     = new Button { BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
-            buttons[(int)ButtonType.Undo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Undo, Click = OnUndo, Enabled = OnUndoEnabled };
-            buttons[(int)ButtonType.Redo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Redo, Click = OnRedo, Enabled = OnRedoEnabled };
-            buttons[(int)ButtonType.Transform] = new Button { BmpAtlasIndex = ButtonImageIndices.Transform, Click = OnTransform };
-            buttons[(int)ButtonType.Config]    = new Button { BmpAtlasIndex = ButtonImageIndices.Config, Click = OnConfig };
-            buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, RightClick = OnPlayWithRate, GetBitmap = OnPlayGetBitmap, VibrateOnLongPress = false };
-            buttons[(int)ButtonType.Rec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
-            buttons[(int)ButtonType.Rewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
-            buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap, CloseOnClick = false };
-            buttons[(int)ButtonType.Metronome] = new Button { BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled, CloseOnClick = false };
-            buttons[(int)ButtonType.Machine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled, CloseOnClick = false };
-            buttons[(int)ButtonType.Follow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled, CloseOnClick = false };
-            buttons[(int)ButtonType.Help]      = new Button { BmpAtlasIndex = ButtonImageIndices.Help, Click = OnHelp };
+            x buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
+            x buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = Platform.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
+            x buttons[(int)ButtonType.Save]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
+            x buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = Platform.IsDesktop ? OnRepeatLastExport : (MouseClickDelegate)null };
+            x buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
+            x buttons[(int)ButtonType.Cut]       = new Button { BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
+            x buttons[(int)ButtonType.Paste]     = new Button { BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
+            x buttons[(int)ButtonType.Undo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Undo, Click = OnUndo, Enabled = OnUndoEnabled };
+            x buttons[(int)ButtonType.Redo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Redo, Click = OnRedo, Enabled = OnRedoEnabled };
+            x buttons[(int)ButtonType.Transform] = new Button { BmpAtlasIndex = ButtonImageIndices.Transform, Click = OnTransform };
+            x buttons[(int)ButtonType.Config]    = new Button { BmpAtlasIndex = ButtonImageIndices.Config, Click = OnConfig };
+            / buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, RightClick = OnPlayWithRate, GetBitmap = OnPlayGetBitmap, VibrateOnLongPress = false };
+            / buttons[(int)ButtonType.Rec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
+            x buttons[(int)ButtonType.Rewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
+            x buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap, CloseOnClick = false };
+            x buttons[(int)ButtonType.Metronome] = new Button { BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled, CloseOnClick = false };
+            x buttons[(int)ButtonType.Machine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled, CloseOnClick = false };
+            x buttons[(int)ButtonType.Follow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled, CloseOnClick = false };
+            x buttons[(int)ButtonType.Help]      = new Button { BmpAtlasIndex = ButtonImageIndices.Help, Click = OnHelp };
 
             if (Platform.IsMobile)
             {
@@ -425,12 +426,159 @@ namespace FamiStudio
 
         }
 
+
+        private void ButtonNew_Click(Control sender)
+        {
+            App.NewProject();
+        }
+
+        private void ButtonOpen_Click(Control sender)
+        {
+            App.OpenProject();
+        }
+
+        private void ButtonOpen_MouseUpEvent(Control sender, MouseEventArgs e)
+        {
+            if (Platform.IsDesktop && !e.Handled && e.Right && Settings.RecentFiles.Count > 0)
+            {
+                var options = new ContextMenuOption[Settings.RecentFiles.Count];
+
+                for (int i = 0; i < Settings.RecentFiles.Count; i++)
+                {
+                    var j = i; // Important, copy for lambda below.
+                    options[i] = new ContextMenuOption("MenuFile", Settings.RecentFiles[i], () => App.OpenProject(Settings.RecentFiles[j]));
+                }
+
+                App.ShowContextMenu(options);
+            }
+        }
+
+        private void ButtonSave_Click(Control sender)
+        {
+            App.SaveProjectAsync();
+        }
+
+        private void ButtonSave_MouseUpEvent(Control sender, MouseEventArgs e)
+        {
+            if (!e.Handled && e.Right)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuSave", SaveAsLabel, $"{SaveAsTooltip} {Settings.FileSaveAsShortcut.TooltipString}", () => { App.SaveProjectAsync(true); }),
+                });
+            }
+        }
+
+        private void ButtonExport_Click(Control sender)
+        {
+            App.Export();
+        }
+
+        private void ButtonExport_MouseUpEvent(Control sender, MouseEventArgs e)
+        {
+            if (Platform.IsDesktop && !e.Handled && e.Right)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuExport", RepeatExportLabel, $"{RepeatExportTooltip} {Settings.FileExportRepeatShortcut.TooltipString}", () => { App.RepeatLastExport(); }),
+                });
+            }
+        }
+
+        private void ButtonCopy_Click(Control sender)
+        {
+            App.Copy();
+        }
+
+        private bool ButtonCopy_EnabledEvent(Control sender)
+        {
+            return App.CanCopy;
+        }
+
+        private void ButtonCut_Click(Control sender)
+        {
+            App.Cut();
+        }
+
+        private bool ButtonCut_EnabledEvent(Control sender)
+        {
+            return App.CanCopy;
+        }
+
+        private void ButtonPaste_Click(Control sender)
+        {
+            App.Paste();
+        }
+
+        private void ButtonPaste_MouseUpEvent(Control sender, MouseEventArgs e)
+        {
+            if (!e.Handled && e.Right)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuStar", PasteSpecialLabel, $"{PasteSpecialTooltip} {Settings.PasteSpecialShortcut.TooltipString}", () => { App.PasteSpecial(); }),
+                });
+            }
+        }
+
+        private bool ButtonPaste_EnabledEvent(Control sender)
+        {
+            return App.CanPaste;
+        }
+
+        private void ButtonUndo_Click(Control sender)
+        {
+            App.UndoRedoManager.Undo();
+        }
+
+        private bool ButtonUndo_EnabledEvent(Control sender)
+        {
+            return App.UndoRedoManager != null && App.UndoRedoManager.UndoScope != TransactionScope.Max;
+        }
+
+        private void ButtonRedo_Click(Control sender)
+        {
+            App.UndoRedoManager.Redo();
+        }
+
+        private bool ButtonRedo_EnabledEvent(Control sender)
+        {
+            return App.UndoRedoManager != null && App.UndoRedoManager.RedoScope != TransactionScope.Max;
+        }
+
+        private void ButtonTransform_Click(Control sender)
+        {
+            App.OpenTransformDialog();
+        }
+
+        private void ButtonConfig_Click(Control sender)
+        {
+            App.OpenConfigDialog();
+        }
+
         private void ButtonPlay_Click(Control sender)
         {
             if (App.IsPlaying)
                 App.StopSong();
             else
                 App.PlaySong();
+        }
+        
+        private void ButtonPlay_MouseUp(Control sender, MouseEventArgs e)
+        {
+            if (!e.Handled && e.Right)
+            { 
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuPlay", PlayBeginSongLabel, $"{PlayBeginSongTooltip} {Settings.PlayFromStartShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
+                    new ContextMenuOption("MenuPlay", PlayBeginPatternLabel, $"{PlayBeginPatternTooltip} {Settings.PlayFromPatternShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
+                    new ContextMenuOption("MenuPlay", PlayLoopPointLabel, $"{PlayLoopPointTooltip} {Settings.PlayFromLoopShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
+                    new ContextMenuOption(RegularSpeedLabel, RegularSpeedTooltip, () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore ),
+                    new ContextMenuOption(HalfSpeedLabel,    HalfSpeedTooltip,    () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                    new ContextMenuOption(QuarterSpeedLabel, QuarterSpeedTooltip, () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                    new ContextMenuOption(AccurateSeekLabel, AccurateSeekTooltip, () => { App.AccurateSeek = !App.AccurateSeek; }, () => App.AccurateSeek ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked, ContextMenuSeparator.MobileBefore )
+                });
+            }
         }
 
         private string ButtonPlay_ImageEvent(Control sender)
@@ -457,6 +605,105 @@ namespace FamiStudio
                     default: return "Play";
                 }
             }
+        }
+
+        private void ButtonRec_Click(Control sender)
+        {
+            App.ToggleRecording();
+        }
+
+        private string ButtonRec_ImageEvent(Control sender)
+        {
+            // MATTT : Tint!
+            //    if (App.IsRecording)
+            //        tint = Theme.DarkRedColor;
+            return "Rec"; 
+        }
+
+        private void ButtonRewind_Click(Control sender)
+        {
+            App.StopSong();
+            App.SeekSong(0);
+        }
+
+        private void ButtonLoop_Click(Control sender)
+        {
+            App.LoopMode = App.LoopMode == LoopMode.LoopPoint ? LoopMode.Pattern : LoopMode.LoopPoint;
+        }
+
+        private string ButtonLoop_ImageEvent(Control sender)
+        {
+            switch (App.LoopMode)
+            {
+                case LoopMode.Pattern:
+                    return App.SequencerHasSelection ? "LoopSelection" : "LoopPattern";
+                default:
+                    return App.SelectedSong.LoopPoint < 0 ? "LoopNone" : "Loop";
+            }
+        }
+
+        private void ButtonQwerty_Click(Control sender)
+        {
+            App.ToggleQwertyPiano();
+        }
+
+        private bool ButtonQwerty_EnabledEvent(Control sender)
+        {
+            return App.IsQwertyPianoEnabled;
+        }
+
+        private void ButtonMetronome_Click(Control sender)
+        {
+            App.ToggleMetronome();
+        }
+
+        private bool ButtonMetronome_EnabledEvent(Control sender)
+        {
+            return App.IsMetronomeEnabled;
+        }
+
+        private void ButtonMachine_Click(Control sender)
+        {
+            App.PalPlayback = !App.PalPlayback;
+        }
+
+        private bool ButtonMachine_EnabledEvent(Control sender)
+        {
+            return App.Project != null && !App.Project.UsesAnyExpansionAudio;
+        }
+
+        private string ButtonMachine_ImageEvent(Control sender)
+        {
+            if (App.Project == null)
+            {
+                return "NTSC";
+            }
+            else if (App.Project.UsesFamiTrackerTempo)
+            {
+                return App.PalPlayback ? "PAL" : "NTSC";
+            }
+            else
+            {
+                if (App.Project.PalMode)
+                    return App.PalPlayback ? "PAL" : "PALToNTSC";
+                else
+                    return App.PalPlayback ? "NTSCToPAL" : "NTSC";
+            }
+        }
+
+        private void ButtonFollow_Click(Control sender)
+        {
+            App.FollowModeEnabled = !App.FollowModeEnabled;
+        }
+
+        private bool ButtonFollow_EnabledEvent(Control sender)
+        {
+            return App.FollowModeEnabled;
+        }
+
+        private void ButtonHelp_Click(Control sender)
+        {
+            App.ShowHelp();
         }
 
         private void Settings_KeyboardShortcutsChanged()
@@ -688,341 +935,55 @@ namespace FamiStudio
             //redTooltip = false;
         }
 
-        public void ValidateIntegrity()
-        {
-            // MATTT : Check the enabled/dimmed status of all buttons here!
-        }
-
-        private void OnNew(int x, int y)
-        {
-            App.NewProject();
-        }
-
-        private void OnOpen(int x, int y)
-        {
-            App.OpenProject();
-        }
-
-        private void OnOpenRecent(int x, int y)
-        {
-            if (Settings.RecentFiles.Count > 0)
-            {
-                var options = new ContextMenuOption[Settings.RecentFiles.Count];
-
-                for (int i = 0; i < Settings.RecentFiles.Count; i++)
-                {
-                    var j = i; // Important, copy for lambda below.
-                    options[i] = new ContextMenuOption("MenuFile", Settings.RecentFiles[i], () => App.OpenProject(Settings.RecentFiles[j]));
-                }
-
-                App.ShowContextMenu(left + x, top + y, options);
-            }
-        }
-
-        private void OnSave(int x, int y)
-        {
-            App.SaveProjectAsync();
-        }
-
-        private void OnSaveAs(int x, int y)
-        {
-            App.ShowContextMenu(left + x, top + y, new[]
-            {
-                new ContextMenuOption("MenuSave", SaveAsLabel, $"{SaveAsTooltip} {Settings.FileSaveAsShortcut.TooltipString}", () => { App.SaveProjectAsync(true); }),
-            });
-        }
-
-        private void OnExport(int x, int y)
-        {
-            App.Export();
-        }
-
-        private void OnRepeatLastExport(int x, int y)
-        {
-            App.ShowContextMenu(left + x, top + y, new[]
-            {
-                new ContextMenuOption("MenuExport", RepeatExportLabel, $"{RepeatExportTooltip} {Settings.FileExportRepeatShortcut.TooltipString}", () => { App.RepeatLastExport(); }),
-            });
-        }
-
-        private void OnCut(int x, int y)
-        {
-            App.Cut();
-        }
-
-        //private ButtonStatus OnCutEnabled()
+        //private void OnDelete(int x, int y)
         //{
-        //    return App.CanCopy ? ButtonStatus.Enabled : ButtonStatus.Disabled;
+        //    App.Delete();
         //}
 
-        private void OnCopy(int x, int y)
-        {
-            App.Copy();
-        }
-
-        // Unused.
-        //private void OnCopyAsText(int x, int y)
+        //private void OnDeleteSpecial(int x, int y)
         //{
-        //    if (App.CanCopyAsText)
+        //    App.ShowContextMenu(left + x, top + y, new[]
         //    {
-        //        App.ShowContextMenu(left + x, top + y, new[]
-        //        {
-        //            new ContextMenuOption("MenuCopy", "Copy as Text", "Copy context as human readable text", () => { App.CopyAsText(); }),
-        //        });
-        //    }
+        //        new ContextMenuOption("MenuStar", DeleteSpecialLabel, () => { App.DeleteSpecial(); }),
+        //    });
         //}
-
-        //private ButtonStatus OnCopyEnabled()
-        //{
-        //    return App.CanCopy ? ButtonStatus.Enabled : ButtonStatus.Disabled;
-        //}
-
-        private void OnPaste(int x, int y)
-        {
-            App.Paste();
-        }
-
-        private void OnPasteSpecial(int x, int y)
-        {
-            App.ShowContextMenu(left + x, top + y, new[]
-            {
-                new ContextMenuOption("MenuStar", PasteSpecialLabel, $"{PasteSpecialTooltip} {Settings.PasteSpecialShortcut.TooltipString}", () => { App.PasteSpecial(); }),
-            });
-        }
-
-        //private ButtonStatus OnPasteEnabled()
-        //{
-        //    return App.CanPaste ? ButtonStatus.Enabled : ButtonStatus.Disabled;
-        //}
-
-        private void OnDelete(int x, int y)
-        {
-            App.Delete();
-        }
-
-        private void OnDeleteSpecial(int x, int y)
-        {
-            App.ShowContextMenu(left + x, top + y, new[]
-            {
-                new ContextMenuOption("MenuStar", DeleteSpecialLabel, () => { App.DeleteSpecial(); }),
-            });
-        }
 
         //private ButtonStatus OnDeleteEnabled()
         //{
         //    return App.CanDelete ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         //}
 
-        private void OnUndo(int x, int y)
-        {
-            App.UndoRedoManager.Undo();
-        }
-
-        //private ButtonStatus OnUndoEnabled()
+        //private void StartClosing()
         //{
-        //    return App.UndoRedoManager != null && App.UndoRedoManager.UndoScope != TransactionScope.Max ? ButtonStatus.Enabled : ButtonStatus.Disabled;
+        //    expanding = false;
+        //    closing   = expandRatio > 0.0f;
         //}
 
-        private void OnRedo(int x, int y)
-        {
-            App.UndoRedoManager.Redo();
-        }
-
-        //private ButtonStatus OnRedoEnabled()
+        //private void OnMore(int x, int y)
         //{
-        //    return App.UndoRedoManager != null && App.UndoRedoManager.RedoScope != TransactionScope.Max ? ButtonStatus.Enabled : ButtonStatus.Disabled;
-        //}
-
-        private void OnTransform(int x, int y)
-        {
-            App.OpenTransformDialog();
-        }
-
-        private void OnConfig(int x, int y)
-        {
-            App.OpenConfigDialog();
-        }
-
-        private void OnPlay(int x, int y)
-        {
-        }
-
-        private void OnPlayWithRate(int x, int y)
-        {
-            App.ShowContextMenu(left + x, top + y, new[]
-            {
-                new ContextMenuOption("MenuPlay", PlayBeginSongLabel, $"{PlayBeginSongTooltip} {Settings.PlayFromStartShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
-                new ContextMenuOption("MenuPlay", PlayBeginPatternLabel, $"{PlayBeginPatternTooltip} {Settings.PlayFromPatternShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
-                new ContextMenuOption("MenuPlay", PlayLoopPointLabel, $"{PlayLoopPointTooltip} {Settings.PlayFromLoopShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
-                new ContextMenuOption(RegularSpeedLabel, RegularSpeedTooltip, () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.MobileBefore ),
-                new ContextMenuOption(HalfSpeedLabel,    HalfSpeedTooltip,    () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
-                new ContextMenuOption(QuarterSpeedLabel, QuarterSpeedTooltip, () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
-                new ContextMenuOption(AccurateSeekLabel, AccurateSeekTooltip, () => { App.AccurateSeek = !App.AccurateSeek; }, () => App.AccurateSeek ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked, ContextMenuSeparator.MobileBefore )
-            });
-        }
-
-        //private ButtonImageIndices OnPlayGetBitmap(ref Color tint)
-        //{
-
-        //}
-
-        private void OnRewind(int x, int y)
-        {
-            App.StopSong();
-            App.SeekSong(0);
-        }
-
-        //private ButtonImageIndices OnRecordGetBitmap(ref Color tint)
-        //{
-        //    if (App.IsRecording)
-        //        tint = Theme.DarkRedColor;
-        //    return ButtonImageIndices.Rec; 
-        //}
-
-        private void OnRecord(int x, int y)
-        {
-            App.ToggleRecording();
-        }
-
-        private void OnLoop(int x, int y)
-        {
-            App.LoopMode = App.LoopMode == LoopMode.LoopPoint ? LoopMode.Pattern : LoopMode.LoopPoint;
-        }
-
-        private void OnQwerty(int x, int y)
-        {
-            App.ToggleQwertyPiano();
-        }
-
-        //private ButtonStatus OnQwertyEnabled()
-        //{
-        //    return App.IsQwertyPianoEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
-        //}
-
-        private void OnMetronome(int x, int y)
-        {
-            App.ToggleMetronome();
-        }
-
-        //private ButtonStatus OnMetronomeEnabled()
-        //{
-        //    return App.IsMetronomeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
-        //}
-
-        //private ButtonImageIndices OnLoopGetBitmap(ref Color tint)
-        //{
-        //    switch (App.LoopMode)
+        //    if (expanding || closing)
         //    {
-        //        case LoopMode.Pattern:
-        //            return App.SequencerHasSelection ? ButtonImageIndices.LoopSelection : ButtonImageIndices.LoopPattern;
-        //        default:
-        //            return App.SelectedSong.LoopPoint < 0 ? ButtonImageIndices.LoopNone : ButtonImageIndices.Loop;
-        //    }
-        //}
-
-        private void OnMachine(int x, int y)
-        {
-            App.PalPlayback = !App.PalPlayback;
-        }
-
-        private void OnFollow(int x, int y)
-        {
-            App.FollowModeEnabled = !App.FollowModeEnabled;
-        }
-
-        //private ButtonStatus OnFollowEnabled()
-        //{
-        //    return App.FollowModeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
-        //}
-
-        //private ButtonStatus OnMachineEnabled()
-        //{
-        //    return App.Project != null && !App.Project.UsesAnyExpansionAudio ? ButtonStatus.Enabled : ButtonStatus.Disabled;
-        //}
-
-        //private ButtonImageIndices OnMachineGetBitmap(ref Color tint)
-        //{
-        //    if (App.Project == null)
-        //    {
-        //        return ButtonImageIndices.NTSC;
-        //    }
-        //    else if (App.Project.UsesFamiTrackerTempo)
-        //    {
-        //        return App.PalPlayback ? ButtonImageIndices.PAL : ButtonImageIndices.NTSC;
+        //        expanding = !expanding;
+        //        closing   = !closing;
         //    }
         //    else
         //    {
-        //        if (App.Project.PalMode)
-        //            return App.PalPlayback ? ButtonImageIndices.PAL : ButtonImageIndices.PALToNTSC;
-        //        else
-        //            return App.PalPlayback ? ButtonImageIndices.NTSCToPAL : ButtonImageIndices.NTSC;
+        //        expanding = expandRatio == 0.0f;
+        //        closing   = expandRatio == 1.0f;
         //    }
+
+        //    MarkDirty();
         //}
 
-        private void OnHelp(int x, int y)
-        {
-            App.ShowHelp();
-        }
-
-        private void StartClosing()
-        {
-            expanding = false;
-            closing   = expandRatio > 0.0f;
-        }
-
-        private void OnMore(int x, int y)
-        {
-            if (expanding || closing)
-            {
-                expanding = !expanding;
-                closing   = !closing;
-            }
-            else
-            {
-                expanding = expandRatio == 0.0f;
-                closing   = expandRatio == 1.0f;
-            }
-
-            MarkDirty();
-        }
-
-        private void OnMobilePiano(int x, int y)
-        {
-            App.MobilePianoVisible = !App.MobilePianoVisible;
-        }
+        //private void OnMobilePiano(int x, int y)
+        //{
+        //    App.MobilePianoVisible = !App.MobilePianoVisible;
+        //}
 
         //private ButtonStatus OnMobilePianoEnabled()
         //{
         //    return App.MobilePianoVisible ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         //}
-
-        //private void RenderButtons(CommandList c)
-        //{
-        //    // Buttons
-        //    for (int i = 0; i < buttons.Length; i++)
-        //    {
-        //        var btn = buttons[i];
-
-        //        if (btn == null || !btn.Visible)
-        //            continue;
-
-        //        var hover = hoverButtonIdx == i;
-        //        var tint = Theme.LightGreyColor1;
-        //        var bmpIndex = btn.GetBitmap != null ? btn.GetBitmap(ref tint) : btn.BmpAtlasIndex;
-        //        var status = btn.Enabled == null ? ButtonStatus.Enabled : btn.Enabled();
-        //        var opacity = status == ButtonStatus.Enabled ? 1.0f : 0.25f;
-
-        //        if (status != ButtonStatus.Disabled && hover)
-        //            opacity *= 0.75f;
-                
-        //        c.DrawTextureAtlas(bmpButtons[(int)bmpIndex], btn.IconPos.X, btn.IconPos.Y, iconScaleFloat, tint.Transparent(opacity));
-        //    }
-        //}
-
-        private void RenderWarningAndTooltip(CommandList c)
-        {
-
-        }
 
         private void RenderShadow(CommandList c)
         {
@@ -1101,11 +1062,6 @@ namespace FamiStudio
             return oscilloscope.Visible && oscilloscope.LastOscilloscopeHadNonZeroSample != hasNonZeroSample;
         }
 
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            SetAndMarkDirty(ref hoverButtonIdx, -1);
-        }
-
         //protected override void OnMouseMove(MouseEventArgs e)
         //{
         //    var newHoverButtonIdx = -1;
@@ -1125,12 +1081,6 @@ namespace FamiStudio
 
         //    SetAndMarkDirty(ref hoverButtonIdx, newHoverButtonIdx);
         //    SetToolTip(newTooltip);
-        //}
-
-        //protected override void OnMouseWheel(MouseEventArgs e)
-        //{
-        //    GetButtonAtCoord(e.X, e.Y)?.MouseWheel?.Invoke(e.ScrollY);
-        //    base.OnMouseWheel(e);
         //}
 
         //protected override void OnMouseDown(MouseEventArgs e)
@@ -1157,27 +1107,6 @@ namespace FamiStudio
         //                btn.Click?.Invoke(e.X, e.Y);
         //                MarkDirty();
         //            }
-        //        }
-        //    }
-        //}
-
-        //protected override void OnMouseDoubleClick(MouseEventArgs e)
-        //{
-        //    OnMouseDown(e);
-        //}
-
-        //protected override void OnMouseUp(MouseEventArgs e)
-        //{
-        //    bool right = e.Right;
-
-        //    if (right)
-        //    {
-        //        var btn = GetButtonAtCoord(e.X, e.Y);
-
-        //        if (btn != null)
-        //        {
-        //            btn.RightClick?.Invoke(e.X, e.Y);
-        //            MarkDirty();
         //        }
         //    }
         //}

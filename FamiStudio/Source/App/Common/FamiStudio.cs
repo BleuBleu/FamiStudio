@@ -831,7 +831,6 @@ namespace FamiStudio
 
             Sequencer.ValidateIntegrity();
             PianoRoll.ValidateIntegrity();
-            ToolBar.ValidateIntegrity();
         #endif
         }
 
@@ -2453,11 +2452,6 @@ namespace FamiStudio
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
             CheckStopInstrumentNote(deltaTime);
-
-#if DEBUG
-            // MATTT : Temporary!
-            ToolBar.ValidateIntegrity();
-#endif
         }
 
         private void Sequencer_PatternClicked(int channelIdx, int patternIdx, bool setActive)
