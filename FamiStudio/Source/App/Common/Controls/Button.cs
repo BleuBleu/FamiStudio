@@ -5,14 +5,23 @@ namespace FamiStudio
 {
     public class Button : Control
     {
+        public delegate string ImageDelegate(Control sender);
+        public delegate bool BoolDelegate(Control sender);
+
         // This is basically the same as "MouseDown" but can mark the event as handled automatically.
         // It is fired before the MouseDown. ProjectExplorer uses this to handle clicks and drags of 
         // instrument envelopes.
         public event ControlDelegate Click;
         public event ControlDelegate RightClick;
 
+        // These are "dynamic" and will take precedence over the regular image/enabled/dimmed flags.
+        public event ImageDelegate ImageEvent;
+        public event BoolDelegate EnabledEvent;
+        public event BoolDelegate DimmedEvent;
+
         private string text;
         private string imageName;
+        private float imageScale;
         private TextureAtlasRef bmp;
         private int margin = DpiScaling.ScaleForWindow(4);
         private bool bold;
@@ -42,10 +51,16 @@ namespace FamiStudio
 
         public TextureAtlasRef Image => bmp;
 
-        public Button(string img, string txt) 
+        public Button(string img, string txt = null) 
         {
             ImageName = img;
             text  = txt;
+        }
+
+        public override bool Enabled 
+        {
+            get { return EnabledEvent != null ? EnabledEvent(this) : enabled; }
+            set { base.Enabled = value; }
         }
 
         public string Text
@@ -58,6 +73,12 @@ namespace FamiStudio
         {
             get { return imageName; }
             set { imageName = value; MarkDirty(); UpdateAtlasBitmap(); }
+        }
+
+        public float ImageScale 
+        {
+            get { return imageScale; } 
+            set { SetAndMarkDirty(ref imageScale, value); }
         }
 
         public bool BoldFont
@@ -86,7 +107,7 @@ namespace FamiStudio
 
         public bool Dimmed
         {
-            get { return dimmed; }
+            get { return DimmedEvent != null ? DimmedEvent(this) : dimmed; }
             set { SetAndMarkDirty(ref dimmed, value); }
         }
 
@@ -170,16 +191,30 @@ namespace FamiStudio
         {
             var c = g.GetCommandList();
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
-            var maxOpacity = transparent && dimmed ? 0.25f : 1.0f;
-            var fgColor = enabled ? fgColorEnabled : fgColorDisabled;
-            var opacity = Math.Min(maxOpacity, transparent ? enabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f);
+
+            var localEnabled = Enabled;
+            var localDimmed  = Dimmed;
+
+            if (ImageEvent != null)
+            {
+                var wantedImageName = ImageEvent(this);
+                if (wantedImageName != imageName)
+                {
+                    imageName = wantedImageName;
+                    UpdateAtlasBitmap();
+                }
+            }
+
+            var maxOpacity = transparent && localDimmed ? 0.25f : 1.0f;
+            var fgColor = localEnabled ? fgColorEnabled : fgColorDisabled;
+            var opacity = Math.Min(maxOpacity, transparent ? localEnabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f);
 
             // Debug
             //c.FillRectangle(ClientRectangle, Color.Pink);
 
             // "Non-transparent" changes the BG on hover
             // "Transparent" changes the opacity on hover.
-            if (enabled && !transparent && (border || press || hover))
+            if (localEnabled && !transparent && (border || press || hover))
             {
                 var bgColor = press ? bgColorPressed : hover ? bgColorHover : this.bgColor;
                 c.FillRectangle(ClientRectangle, bgColor);
@@ -196,7 +231,7 @@ namespace FamiStudio
 
             if (!hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, fgColor.Transparent(opacity));
+                c.DrawTextureAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) * imageScale / 2, imageScale, fgColor.Transparent(opacity));
             }
             else if (hasText && bmp == null)
             {
@@ -204,7 +239,7 @@ namespace FamiStudio
             }
             else if (hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, fgColor);
+                c.DrawTextureAtlas(bmp, margin, (height - bmpSize.Height) * imageScale / 2, imageScale, fgColor);
                 c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, fgColor, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 

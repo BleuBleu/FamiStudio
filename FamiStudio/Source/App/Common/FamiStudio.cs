@@ -26,7 +26,7 @@ namespace FamiStudio
         private InstrumentPlayer instrumentPlayer;
         private IAudioStream songStream;
         private IAudioStream instrumentStream;
-        private Oscilloscope oscilloscope;
+        private OscilloscopeGenerator oscilloscope;
         private UndoRedoManager undoRedoManager;
         private ExportDialog exportDialog;
         private LogDialog logDialog;
@@ -831,6 +831,7 @@ namespace FamiStudio
 
             Sequencer.ValidateIntegrity();
             PianoRoll.ValidateIntegrity();
+            ToolBar.ValidateIntegrity();
         #endif
         }
 
@@ -1703,7 +1704,7 @@ namespace FamiStudio
         {
             Debug.Assert(oscilloscope == null);
 
-            oscilloscope = new Oscilloscope(project.OutputsStereoAudio);
+            oscilloscope = new OscilloscopeGenerator(project.OutputsStereoAudio);
             oscilloscope.Start();
 
             if (instrumentPlayer != null)
@@ -2452,6 +2453,11 @@ namespace FamiStudio
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
             CheckStopInstrumentNote(deltaTime);
+
+#if DEBUG
+            // MATTT : Temporary!
+            ToolBar.ValidateIntegrity();
+#endif
         }
 
         private void Sequencer_PatternClicked(int channelIdx, int patternIdx, bool setActive)

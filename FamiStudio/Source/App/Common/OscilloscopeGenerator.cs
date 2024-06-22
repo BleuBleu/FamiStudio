@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    public class Oscilloscope : IOscilloscope
+    public class OscilloscopeGenerator : IOscilloscope
     {
         private const float SampleScale = 1.9f; 
 
@@ -33,7 +33,7 @@ namespace FamiStudio
         private int bufferPos = 0;
         private short[] sampleBuffer = new short[16384];
 
-        public Oscilloscope(bool stereo)
+        public OscilloscopeGenerator(bool stereo)
         {
             this.stereo = stereo;
             this.triggerFunction = new PeakSpeedTrigger(sampleBuffer, true);

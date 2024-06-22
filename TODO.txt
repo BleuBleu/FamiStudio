@@ -24,6 +24,7 @@
 - N163 auto-position.
 	- GUI BRANCH : When changing "Auto Wav Pos", must stop player. => REDO IN GUI BRANCH!
 	- GUI BRANCH : Add button test validate the assignment in instrument settings.
+- Raw FDS modulation table envelope. 
 
 4.3.0
 =====
@@ -37,39 +38,26 @@
 
 - UI code cleanup:
 	- Project explorer rewrite
-		x Update scrollbar when scroll
 		- Scroll bar doesnt handle double click well.
-		- Expand buttons dont work well.
-			-> We capture mouse on mouse down.
-			-> Also capture coordinates are relative to individual controls, not PE.
-			- *** On MouseUp, we can recreate all controls, so the container MouseUpNotify doesnt reach.
+		- Test double click behavior on expand button
 		- Param list/slider/checkbox
 			- double-click behavior
-			x context menu to reset values, enter, etc.
-		x Make top tabs finals
-		- Make scrolling final (move clamping to Container?)
-			- Not right now. Too messy
-			x Make scrollbar look good
-		x Hook right click context menus.
-		x Hook folders
-		/ Hook drags (envelope, reorders, folder, etc.)
-		- Review all calls to RecreateControls.
+		- Test scroll bars a lot more. 
+		- Middle mouse panning.
 		- Mobile stuff : white outlines, flings, touch, etc.
 			- Look everywhere we used to do highlightedButtonIdx
-		- All "Add" buttons should also respond to right click.
 	- Toolbar rewrite
-		- Osc widget
-		- Timecode widget
-		- Special widget for tooltips?
-	- Android convert to our widgets, no more android native widgets.
+		- Break down in 3 widgets : timecode, osc + tooltip.
+		- Create all the widgets, just move them around/hide them.
 	- Add support for more international characeters, switch to Noto.
 	- To test : 
 		- Dialog ticks
 		- Toast tick
+		- We ficed a double-tick issue in 4.2.1 i think, make sure that's included.
 - Support for japanese/other characters regardless of current languages
-	- Switch all UI to Noto Sans
+	- Switch all UI to Noto Sans?
 	- Have a series of fallback fonts when searching for a glyph.
-- 
+- FUTURE : Android convert to our widgets, no more android native widgets.
 
 Linux notes 
 =========== 
@@ -167,7 +155,6 @@ Discord
 
 Backlog: 
 =========
-- N163 auto positioning 
 - NSF/FS comparison bugs:
 	- N163 : Sound OK, but gets out of phase at the first slide note and remains like that. This is normal, this is due to slide notes not being able to be approximated correctly with fine pitch. 
 	- VRC7 : Very slight pitch issue due to pitch shift (3) used on VRC7 and how we look for best matching note.
@@ -177,7 +164,7 @@ Backlog:
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
 	- Dont compress vibrato envelopes.
 	- New opcode "override envelope and reset", call only when speed changes.
-	- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
+- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - Paste FX values from text. Kain wanted to change DAC slowly, had values to paste. 
 - Simple parameters for instruments (duty, volume)
@@ -224,7 +211,6 @@ Backlog:
 - Overclocking (2x, 3x, 4x would be a good start).
 - Hardware sweep (how to not conflict with smooth vibrato?)
 - Scales
-- Raw FDS modulation table envelope. 
 - Sound output selection?
 - Give better names to auto saves
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
