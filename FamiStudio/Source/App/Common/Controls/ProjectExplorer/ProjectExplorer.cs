@@ -2158,7 +2158,7 @@ namespace FamiStudio
                 var tooltip = ctrl.ToolTip;
                 if (string.IsNullOrEmpty(tooltip))
                     tooltip = ctrl.ParentContainer.ToolTip;
-                App.SetToolTip(tooltip, false);
+                App.SetToolTip(tooltip);
                 App.SequencerShowExpansionIcons = (ctrl.UserData is Instrument) || (ctrl.ParentContainer.UserData is Instrument);
             }
 

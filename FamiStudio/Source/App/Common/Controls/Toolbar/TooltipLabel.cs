@@ -7,12 +7,6 @@ namespace FamiStudio
 {
     public class TooltipLabel : Control
     {
-        const int DefaultTooltipSingleLinePosY = 12;
-        const int DefaultTooltipMultiLinePosY = 4;
-        const int DefaultTooltipLineSizeY = 17;
-        const int DefaultTooltipSpecialCharSizeX = 16;
-        const int DefaultTooltipSpecialCharSizeY = 15;
-
         // MATTT : Review this.
         enum SpecialCharImageIndices
         {
@@ -41,19 +35,14 @@ namespace FamiStudio
             public float OffsetY;
         };
 
-        private int tooltipSingleLinePosY;
-        private int tooltipMultiLinePosY;
-        private int tooltipLineSizeY;
-        private int tooltipSpecialCharSizeX;
-        private int tooltipSpecialCharSizeY;
-
-        private Color warningColor = Color.FromArgb(205, 77, 64);
+        private int tooltipSingleLinePosY   =  DpiScaling.ScaleForWindow(12);
+        private int tooltipMultiLinePosY    =  DpiScaling.ScaleForWindow(4);
+        private int tooltipLineSizeY        =  DpiScaling.ScaleForWindow(17);
+        private int tooltipSpecialCharSizeX =  DpiScaling.ScaleForWindow(16);
+        private int tooltipSpecialCharSizeY =  DpiScaling.ScaleForWindow(15);
 
         private TextureAtlasRef[] bmpSpecialCharacters;
         private Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
-        private bool redTooltip = false;
-
-        public bool RedTooltip { get => redTooltip; set => SetAndMarkDirty(ref redTooltip, value); }
 
         public TooltipLabel()
         {
@@ -63,15 +52,7 @@ namespace FamiStudio
         {
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
-            var g = graphics;
-
-            tooltipSingleLinePosY   = DpiScaling.ScaleForWindow(DefaultTooltipSingleLinePosY);
-            tooltipMultiLinePosY    = DpiScaling.ScaleForWindow(DefaultTooltipMultiLinePosY);
-            tooltipLineSizeY        = DpiScaling.ScaleForWindow(DefaultTooltipLineSizeY);
-            tooltipSpecialCharSizeX = DpiScaling.ScaleForWindow(DefaultTooltipSpecialCharSizeX);
-            tooltipSpecialCharSizeY = DpiScaling.ScaleForWindow(DefaultTooltipSpecialCharSizeY);
-
-            bmpSpecialCharacters = g.GetTextureAtlasRefs(SpecialCharImageNames);
+            bmpSpecialCharacters = graphics.GetTextureAtlasRefs(SpecialCharImageNames);
 
             specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(32) };
             specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
@@ -122,7 +103,7 @@ namespace FamiStudio
 
             var scaling = DpiScaling.Window;
             var message = tooltip;
-            var messageColor = redTooltip ? warningColor : Theme.LightGreyColor2;
+            var messageColor = Theme.LightGreyColor2;
             var messageFont = Fonts.FontMedium;
 
             // Tooltip

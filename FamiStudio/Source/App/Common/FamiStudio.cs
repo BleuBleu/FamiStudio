@@ -470,9 +470,9 @@ namespace FamiStudio
             }
         }
 
-        public void SetToolTip(string msg, bool red = false)
+        public void SetToolTip(string msg)
         {
-            ToolBar.SetToolTip(msg, red);
+            ToolBar.SetToolTip(msg);
         }
 
         public void BeginLogTask(bool progress = false, string title = null, string text = null)

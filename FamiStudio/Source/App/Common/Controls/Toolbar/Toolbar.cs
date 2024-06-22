@@ -715,14 +715,7 @@ namespace FamiStudio
             var winPos = control.ControlToWindow(e.Position);
             var ctrl = GetControlAt(winPos.X, winPos.Y, out _, out _);
 
-            if (ctrl != null && ctrl is Button)
-            {
-                tooltipLabel.ToolTip = ctrl.ToolTip;
-            }
-            else
-            {
-                tooltipLabel.ToolTip = "";
-            }
+            tooltipLabel.ToolTip = ctrl != null && ctrl is Button ? ctrl.ToolTip : "";
         }
 
         private void UpdateTooltips()
@@ -899,16 +892,9 @@ namespace FamiStudio
             return Platform.IsMobile && IsExpanded || base.HitTest(winX, winY);
         }
 
-        public void SetToolTip(string msg, bool red = false)
+        public void SetToolTip(string msg)
         {
-            // MATTT : Pass to ToolbarTooltip.
-            //if (tooltip != msg || red != redTooltip)
-            //{
-            //    Debug.Assert(msg == null || (!msg.Contains('{') && !msg.Contains('}'))); // Temporary until i migrated everything.
-            //    tooltip = msg;
-            //    redTooltip = red;
-            //    MarkDirty();
-            //}
+            tooltipLabel.ToolTip = msg;
         }
 
         public override void Tick(float delta)
