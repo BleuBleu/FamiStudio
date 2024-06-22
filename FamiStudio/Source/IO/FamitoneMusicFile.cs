@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace FamiStudio
 {
@@ -1063,9 +1064,9 @@ namespace FamiStudio
 
         private List<string> GetSongData(Song song, int songIdx, int speedChannel)
         {
-            var songData = new List<string>();
             var emptyPattern = new Pattern(-1, song, 0, "");
             var emptyNote = new Note(Note.NoteInvalid);
+            var allChannelData = new List<List<string>>();
 
             for (int c = 0; c < song.Channels.Length; c++)
             {
@@ -1082,13 +1083,15 @@ namespace FamiStudio
                 var firstInstrumentInLoop = (Instrument)null;
                 var lastInstrumentInLoop = (Instrument)null;
                 var currentFlags = OverrideFlags.None;
+                var channelData = new List<string>();
+                allChannelData.Add(channelData);
 
-                songData.Add($"{ll}song{songIdx}ch{c}:");
+                channelData.Add($"{ll}song{songIdx}ch{c}:");
 
                 if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
-                    songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeSpeed : OpcodeSpeedFT2):x2}+");
-                    songData.Add($"${song.FamitrackerSpeed:x2}");
+                    channelData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeSpeed : OpcodeSpeedFT2):x2}+");
+                    channelData.Add($"${song.FamitrackerSpeed:x2}");
                 }
 
                 // Look at the first/last instrument in the looping section to see if we 
@@ -1119,7 +1122,7 @@ namespace FamiStudio
 
                     if (p == song.LoopPoint)
                     {
-                        songData.Add($"{ll}song{songIdx}ch{c}loop:");
+                        channelData.Add($"{ll}song{songIdx}ch{c}loop:");
 
                         // Only reload the instruments if its different. Setting it to NULL unconditionally
                         // forces re-triggerring attacks on notes that had them disabled.
@@ -1138,7 +1141,7 @@ namespace FamiStudio
                         // If this channel potentially uses any arpeggios, clear the override since the last
                         // note may have overridden it. TODO: Actually check if thats the case!
                         if (channel.UsesArpeggios)
-                            songData.Add($"${OpcodeClearArpEnvOverride:x2}+");
+                            channelData.Add($"${OpcodeClearArpEnvOverride:x2}+");
                     }
 
                     if (isSpeedChannel && project.UsesFamiStudioTempo)
@@ -1151,16 +1154,16 @@ namespace FamiStudio
                         {
                             var grooveName = GetGrooveAsmName(groove, groovePadMode);
 
-                            songData.Add($"${OpcodeSetTempoEnv:x2}+");
-                            songData.Add($"{lo}({ll}tempo_env_{grooveName})");
-                            songData.Add($"{hi}({ll}tempo_env_{grooveName})");
+                            channelData.Add($"${OpcodeSetTempoEnv:x2}+");
+                            channelData.Add($"{lo}({ll}tempo_env_{grooveName})");
+                            channelData.Add($"{hi}({ll}tempo_env_{grooveName})");
                             previousGroove = groove;
                             previousGroovePadMode = groovePadMode;
                         }
                         else if (p != 0)
                         {
                             // Otherwise just reset it so that it realigns to the groove.
-                            songData.Add($"${OpcodeResetTempoEnv:x2}+");
+                            channelData.Add($"${OpcodeResetTempoEnv:x2}+");
                         }
                     }
 
@@ -1183,8 +1186,8 @@ namespace FamiStudio
                             if (speed >= 0)
                             {
                                 currentSpeed = speed;
-                                songData.Add($"${OpcodeSpeed:x2}+");
-                                songData.Add($"${(byte)speed:x2}");
+                                channelData.Add($"${OpcodeSpeed:x2}+");
+                                channelData.Add($"${(byte)speed:x2}");
                             }
                         }
 
@@ -1203,8 +1206,8 @@ namespace FamiStudio
 
                         if (note.HasNoteDelay)
                         {
-                            songData.Add($"${OpcodeDelayedNote:x2}+");
-                            songData.Add($"${note.NoteDelay - 1:x2}");
+                            channelData.Add($"${OpcodeDelayedNote:x2}+");
+                            channelData.Add($"${note.NoteDelay - 1:x2}");
                             usesDelayedNotesOrCuts = true;
                         }
 
@@ -1212,7 +1215,7 @@ namespace FamiStudio
                         {
                             if (note.Volume != lastVolume)
                             {
-                                songData.Add($"${(byte)(OpcodeVolumeBits | note.Volume):x2}+");
+                                channelData.Add($"${(byte)(OpcodeVolumeBits | note.Volume):x2}+");
                                 lastVolume = note.Volume;
                             }
 
@@ -1229,9 +1232,9 @@ namespace FamiStudio
                                     stepSizeNtsc = stepSizePal;
 
                                 var stepSize = Math.Max(Math.Abs(stepSizeNtsc), Math.Abs(stepSizePal)) * Math.Sign(stepSizeNtsc);
-                                songData.Add($"${OpcodeVolumeSlide:x2}+");
-                                songData.Add($"${(byte)stepSize:x2}");
-                                songData.Add($"${note.VolumeSlideTarget << 4:x2}");
+                                channelData.Add($"${OpcodeVolumeSlide:x2}+");
+                                channelData.Add($"${(byte)stepSize:x2}");
+                                channelData.Add($"${note.VolumeSlideTarget << 4:x2}");
 
                                 lastVolume = note.VolumeSlideTarget;
                                 usesVolumeSlide = true;
@@ -1240,8 +1243,8 @@ namespace FamiStudio
 
                         if (note.HasFinePitch)
                         {
-                            songData.Add($"${OpcodeFinePitch:x2}+");
-                            songData.Add($"${note.FinePitch:x2}");
+                            channelData.Add($"${OpcodeFinePitch:x2}+");
+                            channelData.Add($"${note.FinePitch:x2}");
                             usesPitchTrack = true;
                         }
 
@@ -1250,13 +1253,13 @@ namespace FamiStudio
                             var vib = (byte)(note.VibratoSpeed == 0 || note.VibratoDepth == 0 ? 0 : note.RawVibrato);
 
                             // TODO: If note has attack, no point in setting the default vibrato envelope, instrument will do it anyway.
-                            songData.Add($"${OpcodeOverridePitchEnv:x2}+");
-                            songData.Add($"{lo}({vibratoEnvelopeNames[vib]})");
-                            songData.Add($"{hi}({vibratoEnvelopeNames[vib]})");
+                            channelData.Add($"${OpcodeOverridePitchEnv:x2}+");
+                            channelData.Add($"{lo}({vibratoEnvelopeNames[vib]})");
+                            channelData.Add($"{hi}({vibratoEnvelopeNames[vib]})");
 
                             if (vib == 0)
                             {
-                                songData.Add($"${OpcodeClearPitchEnvOverride:x2}+");
+                                channelData.Add($"${OpcodeClearPitchEnvOverride:x2}+");
                             }
                             else
                             {
@@ -1270,9 +1273,9 @@ namespace FamiStudio
                         if (note.HasPhaseReset)
                         {
                             if (channel.IsN163Channel)
-                                songData.Add($"${OpcodeN163PhaseReset:x2}+");
+                                channelData.Add($"${OpcodeN163PhaseReset:x2}+");
                             else
-                                songData.Add($"${OpcodePhaseReset:x2}+");
+                                channelData.Add($"${OpcodePhaseReset:x2}+");
                             usesPhaseReset = true;
                         }
 
@@ -1283,23 +1286,23 @@ namespace FamiStudio
                             {
                                 if (note != null || !note.HasAttack)
                                 {
-                                    songData.Add($"${OpcodeOverridArpEnv:x2}+");
+                                    channelData.Add($"${OpcodeOverridArpEnv:x2}+");
 
                                     if (note.Arpeggio == null)
                                     {
-                                        songData.Add($"{lo}({noArpeggioEnvelopeName})");
-                                        songData.Add($"{hi}({noArpeggioEnvelopeName})");
+                                        channelData.Add($"{lo}({noArpeggioEnvelopeName})");
+                                        channelData.Add($"{hi}({noArpeggioEnvelopeName})");
                                     }
                                     else
                                     {
-                                        songData.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
-                                        songData.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                                        channelData.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                                        channelData.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
                                     }
                                 }
 
                                 // TODO : Shouldnt we only do that when turning off the arp? Dont remember why its like that.
                                 if (note.Arpeggio == null)
-                                    songData.Add($"${OpcodeClearArpEnvOverride:x2}+");
+                                    channelData.Add($"${OpcodeClearArpEnvOverride:x2}+");
 
                                 arpeggio = note.Arpeggio;
                                 usesArpeggio = true;
@@ -1307,45 +1310,45 @@ namespace FamiStudio
                             // If same arpeggio, but note has an attack, reset it.
                             else if (note.HasAttack && arpeggio != null)
                             {
-                                songData.Add($"${OpcodeResetArpEnv:x2}+");
+                                channelData.Add($"${OpcodeResetArpEnv:x2}+");
                             }
                         }
 
                         if (note.HasDutyCycle)
                         {
-                            songData.Add($"${OpcodeDutyCycle:x2}+");
-                            songData.Add($"${note.DutyCycle:x2}");
+                            channelData.Add($"${OpcodeDutyCycle:x2}+");
+                            channelData.Add($"${note.DutyCycle:x2}");
                             usesDutyCycleEffect = true;
                         }
 
                         if (note.HasEnvelopePeriod)
                         {
-                            songData.Add($"${(channel.IsS5BChannel ? OpcodeS5BManualEnvPeriod : OpcodeEPSMManualEnvPeriod):x2}+");
-                            songData.Add($"${(note.EnvelopePeriod >> 0) & 0xff:x2}");
-                            songData.Add($"${(note.EnvelopePeriod >> 8) & 0xff:x2}");
+                            channelData.Add($"${(channel.IsS5BChannel ? OpcodeS5BManualEnvPeriod : OpcodeEPSMManualEnvPeriod):x2}+");
+                            channelData.Add($"${(note.EnvelopePeriod >> 0) & 0xff:x2}");
+                            channelData.Add($"${(note.EnvelopePeriod >> 8) & 0xff:x2}");
                         }
 
                         if (note.HasFdsModSpeed)
                         {
-                            songData.Add($"${OpcodeFdsModSpeed:x2}+");
-                            songData.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
-                            songData.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
+                            channelData.Add($"${OpcodeFdsModSpeed:x2}+");
+                            channelData.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
+                            channelData.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
                             frameFlags |= OverrideFlags.FdsModSpeed;
                             currentFlags |= OverrideFlags.FdsModSpeed;
                         }
 
                         if (note.HasFdsModDepth)
                         {
-                            songData.Add($"${OpcodeFdsModDepth:x2}+");
-                            songData.Add($"${note.FdsModDepth:x2}");
+                            channelData.Add($"${OpcodeFdsModDepth:x2}+");
+                            channelData.Add($"${note.FdsModDepth:x2}");
                             frameFlags |= OverrideFlags.FdsModDepth;
                             currentFlags |= OverrideFlags.FdsModDepth;
                         }
 
                         if (note.HasCutDelay)
                         {
-                            songData.Add($"${OpcodeDelayedCut:x2}+");
-                            songData.Add($"${note.CutDelay:x2}");
+                            channelData.Add($"${OpcodeDelayedCut:x2}+");
+                            channelData.Add($"${note.CutDelay:x2}");
                             usesDelayedNotesOrCuts = true;
                         }
 
@@ -1353,8 +1356,8 @@ namespace FamiStudio
                         {
                             // Use hi-bit to flag if we need to apply it immediately (no samples playing this frame)
                             //or a bit later (when playing the sample, overriding the initial DMC value).
-                            songData.Add($"${OpcodeDeltaCounter:x2}+");
-                            songData.Add($"${((note.IsMusical ? 0x00 : 0x80) | (note.DeltaCounter)):x2}");
+                            channelData.Add($"${OpcodeDeltaCounter:x2}+");
+                            channelData.Add($"${((note.IsMusical ? 0x00 : 0x80) | (note.DeltaCounter)):x2}");
                             usesDeltaCounter = true;
                         }
 
@@ -1368,7 +1371,7 @@ namespace FamiStudio
                                 if (!attack)
                                 {
                                     // TODO: Remove note entirely after a slide that matches the next note with no attack.
-                                    songData.Add($"${OpcodeDisableAttack:x2}+");
+                                    channelData.Add($"${OpcodeDisableAttack:x2}+");
                                 }
                                 else
                                 {
@@ -1410,19 +1413,19 @@ namespace FamiStudio
                                         sawVolume = note.Instrument.Vrc6SawMasterVolume;
                                         sawVolumeChanged = true;
 
-                                        songData.Add($"${OpcodeVrc6SawMasterVolume:x2}+");
-                                        songData.Add($"${1 - sawVolume:x2}");
+                                        channelData.Add($"${OpcodeVrc6SawMasterVolume:x2}+");
+                                        channelData.Add($"${1 - sawVolume:x2}");
                                     }
 
                                     var idx = instrumentIndices[note.Instrument];
                                     if (kernel == FamiToneKernel.FamiStudio && idx >= ExtendedInstrumentStart)
                                     {
-                                        songData.Add($"${OpcodeExtendedInstrument:x2}+");
-                                        songData.Add($"${idx:x2}");
+                                        channelData.Add($"${OpcodeExtendedInstrument:x2}+");
+                                        channelData.Add($"${idx:x2}");
                                     }
                                     else
                                     {
-                                        songData.Add($"${(byte)(0x80 | (idx << 1)):x2}+");
+                                        channelData.Add($"${(byte)(0x80 | (idx << 1)):x2}+");
                                     }
 
                                     instrument = note.Instrument;
@@ -1470,10 +1473,10 @@ namespace FamiStudio
                                 {
                                     // Take the (signed) maximum of both notes so that we are garantee to reach our note.
                                     var stepSize = Math.Max(Math.Abs(stepSizeNtsc), Math.Abs(stepSizePal)) * Math.Sign(stepSizeNtsc);
-                                    songData.Add($"${OpcodeSlide:x2}+");
-                                    songData.Add($"${(byte)stepSize:x2}");
-                                    songData.Add($"${EncodeNoteValue(c, note.Value):x2}");
-                                    songData.Add($"${EncodeNoteValue(c, note.SlideNoteTarget):x2}*");
+                                    channelData.Add($"${OpcodeSlide:x2}+");
+                                    channelData.Add($"${(byte)stepSize:x2}");
+                                    channelData.Add($"${EncodeNoteValue(c, note.Value):x2}");
+                                    channelData.Add($"${EncodeNoteValue(c, note.SlideNoteTarget):x2}*");
                                     usesSlideNotes = true;
                                     emittedSlideNote = true;
 
@@ -1499,7 +1502,7 @@ namespace FamiStudio
                                     else if (channel.IsEPSMFmChannel)
                                         opcode = OpcodeEpsmReleaseNote;
 
-                                    songData.Add($"${opcode:x2}+*");
+                                    channelData.Add($"${opcode:x2}+*");
                                     usesReleaseNotes = true;
                                 }
                                 else
@@ -1524,12 +1527,12 @@ namespace FamiStudio
                                     // "extended note" opcode when it falls outside of that range.
                                     if (requiresExtendedNote)
                                     {
-                                        songData.Add($"${OpcodeExtendedNote:x2}+");
-                                        songData.Add($"${EncodeNoteValue(c, noteValue, false):x2}*");
+                                        channelData.Add($"${OpcodeExtendedNote:x2}+");
+                                        channelData.Add($"${EncodeNoteValue(c, noteValue, false):x2}*");
                                     }
                                     else
                                     {
-                                        songData.Add($"${EncodeNoteValue(c, noteValue, true, numNotes):x2}+*");
+                                        channelData.Add($"${EncodeNoteValue(c, noteValue, true, numNotes):x2}+*");
                                     }
                                 }
                             }
@@ -1579,7 +1582,7 @@ namespace FamiStudio
                                 it.Next();
                             }
 
-                            songData.Add($"${(byte)(0x81 | (numEmptyNotes << 1)):x2}+*");
+                            channelData.Add($"${(byte)(0x81 | (numEmptyNotes << 1)):x2}+*");
                         }
                     }
                 }
@@ -1587,21 +1590,64 @@ namespace FamiStudio
                 if (song.LoopPoint < 0)
                 {
                     if (kernel == FamiToneKernel.FamiStudio)
-                        songData.Add($"${OpcodeEndSong:x2}+");
+                        channelData.Add($"${OpcodeEndSong:x2}+");
                     else
-                        songData.Add($"{ll}song{songIdx}ch{c}loop:");
+                        channelData.Add($"{ll}song{songIdx}ch{c}loop:");
 
                     // We still need a stop note after since our 'famistudio_advance_channel' never ends of an opcode.
-                    songData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}*");
+                    channelData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}*");
                 }
 
                 if (song.LoopPoint >= 0 || kernel != FamiToneKernel.FamiStudio)
                 {
-                    songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeLoop : OpcodeLoopFT2):x2}+");
-                    songData.Add($"{ll}song{songIdx}ch{c}loop");
+                    channelData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeLoop : OpcodeLoopFT2):x2}+");
+                    channelData.Add($"{ll}song{songIdx}ch{c}loop");
                 }
             }
 
+            // Combine any duplicate channels by doing a string comparison of the output.
+            // We need to replace any channel specific strings first with a simple replace
+            var concattedChannelData = new List<string>();
+            var replacePattern = "ch\\d+";
+            foreach (var chn in allChannelData)
+            {
+                var concatted = string.Join("\n", chn);
+                var replaced = Regex.Replace(concatted, replacePattern, "ch");
+                concattedChannelData.Add(replaced);
+            }
+            // Compare each channel data with all of the previous channels to see if there's a match.
+            // if it matches, add the channel pointer to the front of the matched channel
+            // if there is no match, add it to the list of unique channels
+            var uniqueChannels = new List<List<string>>
+            {
+                allChannelData[0]
+            };
+            for (int i = 1; i < allChannelData.Count; i++)
+            {
+                var isUnique = true;
+                for (int j = 0; j < uniqueChannels.Count; j++)
+                {
+                    if (concattedChannelData[i] == concattedChannelData[j])
+                    {
+                        uniqueChannels[j].Insert(0, $"{ll}song{songIdx}ch{i}:");
+                        isUnique = false;
+                        break;
+                    }
+                }
+                if (isUnique)
+                {
+                    uniqueChannels.Add(allChannelData[i]);
+                }
+            }
+
+            var songData = new List<string>();
+            foreach (var chn in uniqueChannels)
+            {
+                foreach (var line in chn)
+                {
+                    songData.Add(line);
+                }
+            }
             return songData;
         }
 
