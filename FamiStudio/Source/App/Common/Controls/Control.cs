@@ -331,7 +331,7 @@ namespace FamiStudio
 
         protected bool SetAndMarkDirty<T>(ref T target, T current) where T : IComparable
         {
-            if (((target == null) != (current == null)) || target.CompareTo(current) != 0)
+            if (((target == null) != (current == null)) || (target != null && target.CompareTo(current) != 0))
             {
                 target = current;
                 MarkDirty();
