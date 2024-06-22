@@ -33,6 +33,7 @@ namespace FamiStudio
 
         private Oscilloscope oscilloscope;
         private Timecode timecode;
+        private TooltipLabel tooltipLabel;
 
         //private enum ButtonStatus
         //{
@@ -191,9 +192,6 @@ namespace FamiStudio
 
         int buttonSize;
 
-        int lastButtonX = 500;
-        int helpButtonX = 500;
-
         // Mobile-only stuff
         private float expandRatio = 0.0f;
         private bool  expanding = false; 
@@ -321,13 +319,13 @@ namespace FamiStudio
             buttonRedo      = CreateToolbarButton("Redo", "Redo");
             buttonTransform = CreateToolbarButton("Transform", "Transform");
             buttonConfig    = CreateToolbarButton("Config", "Config");
-            buttonPlay      = CreateToolbarButton("Play", "Play"); // MATTT : Changes
-            buttonRec       = CreateToolbarButton("Rec", "Rec"); // MATTT : Changes
+            buttonPlay      = CreateToolbarButton("Play", "Play");
+            buttonRec       = CreateToolbarButton("Rec", "Rec");
             buttonRewind    = CreateToolbarButton("Rewind", "Rewind");
-            buttonLoop      = CreateToolbarButton("Loop", "Loop"); // MATTT : Changes
+            buttonLoop      = CreateToolbarButton("Loop", "Loop");
             buttonQwerty    = CreateToolbarButton("QwertyPiano", "Qwerty"); // MATTT : Desktop only.
             buttonMetronome = CreateToolbarButton("Metronome", "Metronome");
-            buttonMachine   = CreateToolbarButton("NTSC", "Machine"); // MATTT : Changes.
+            buttonMachine   = CreateToolbarButton("NTSC", "Machine");
             buttonFollow    = CreateToolbarButton("Follow", "Follow");
             buttonHelp      = CreateToolbarButton("Help", "Help");
 
@@ -384,9 +382,11 @@ namespace FamiStudio
 
             oscilloscope = new Oscilloscope();
             timecode     = new Timecode();
+            tooltipLabel = new TooltipLabel();
 
             AddControl(oscilloscope);
             AddControl(timecode);
+            AddControl(tooltipLabel);
 
             UpdateButtonLayout();
 
@@ -425,7 +425,6 @@ namespace FamiStudio
             */
 
         }
-
 
         private void ButtonNew_Click(Control sender)
         {
@@ -711,6 +710,21 @@ namespace FamiStudio
             UpdateTooltips();
         }
 
+        public override void ContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        {
+            var winPos = control.ControlToWindow(e.Position);
+            var ctrl = GetControlAt(winPos.X, winPos.Y, out _, out _);
+
+            if (ctrl != null && ctrl is Button)
+            {
+                tooltipLabel.ToolTip = ctrl.ToolTip;
+            }
+            else
+            {
+                tooltipLabel.ToolTip = "";
+            }
+        }
+
         private void UpdateTooltips()
         {
             if (Platform.IsDesktop)
@@ -745,6 +759,8 @@ namespace FamiStudio
 
             if (Platform.IsDesktop)
             {
+                var margin = DpiScaling.ScaleForWindow(4);
+
                 // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
                 var hideLessImportantButtons = Width < 1420 * DpiScaling.Window;
                 var hideOscilloscope         = Width < 1250 * DpiScaling.Window;
@@ -756,12 +772,10 @@ namespace FamiStudio
                     if ((string)btn.UserData == "Help")
                     {
                         btn.Move(Width - btn.Width, 0);
-                        helpButtonX = btn.Left;
                     }
                     else
                     {
                         btn.Move(x, 0, btn.Width, Height);
-                        lastButtonX = btn.Right;
                     }
 
                     var isLessImportant =
@@ -781,23 +795,25 @@ namespace FamiStudio
 
                     if ((string)btn.UserData == "Config")
                     {
-                        var timecodeOscMargin = DpiScaling.ScaleForWindow(4);
                         var timecodeOscSizeX  = DpiScaling.ScaleForWindow(140);
 
                         oscilloscope.Visible = !hideOscilloscope;
                         
                         if (oscilloscope.Visible)
                         {
-                            x += timecodeOscMargin;
-                            oscilloscope.Move(x, timecodeOscMargin, timecodeOscSizeX, Height - timecodeOscMargin * 2);
-                            x += timecodeOscSizeX + timecodeOscMargin;
+                            x += margin;
+                            oscilloscope.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
+                            x += timecodeOscSizeX + margin;
                         }
 
-                        x += timecodeOscMargin;
-                        timecode.Move(x, timecodeOscMargin, timecodeOscSizeX, Height - timecodeOscMargin * 2);
-                        x += timecodeOscSizeX + timecodeOscMargin;
+                        x += margin;
+                        timecode.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
+                        x += timecodeOscSizeX + margin;
                     }
                 }
+
+                x += margin;
+                tooltipLabel.Move(x, 0, buttonHelp.Left - x - margin, Height);
             }
             /* MATTT : Mobile!
             else

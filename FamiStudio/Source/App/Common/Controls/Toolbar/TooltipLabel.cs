@@ -52,9 +52,10 @@ namespace FamiStudio
         private TextureAtlasRef[] bmpSpecialCharacters;
         private Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
         private bool redTooltip = false;
-        private new string tooltip = "";
 
-        public TooltipLabel(string txt, bool multi = false)
+        public bool RedTooltip { get => redTooltip; set => SetAndMarkDirty(ref redTooltip, value); }
+
+        public TooltipLabel()
         {
         }
 
@@ -133,7 +134,7 @@ namespace FamiStudio
                 for (int j = 0; j < lines.Length; j++)
                 {
                     var splits = lines[j].Split(new char[] { '<', '>' }, StringSplitOptions.RemoveEmptyEntries);
-                    var posX = Width - 40 * scaling;
+                    var posX = (float)Width;
 
                     for (int i = splits.Length - 1; i >= 0; i--)
                     {

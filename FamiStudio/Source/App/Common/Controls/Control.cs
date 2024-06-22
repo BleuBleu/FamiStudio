@@ -184,7 +184,7 @@ namespace FamiStudio
         public virtual bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
         public bool CanFocus { get => canFocus; }
         public bool IsContainedByMainWindow => ParentTopContainer != null;
-        public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
+        public string ToolTip { get => tooltip; set { SetAndMarkDirty(ref tooltip, value); } }
         public object UserData { get => userData; set => userData = value; }
         public bool TickEnabled => tickEnabled;
         public void MarkDirty() { window?.MarkDirty(); }
@@ -331,7 +331,7 @@ namespace FamiStudio
 
         protected bool SetAndMarkDirty<T>(ref T target, T current) where T : IComparable
         {
-            if (target.CompareTo(current) != 0)
+            if (((target == null) != (current == null)) || target.CompareTo(current) != 0)
             {
                 target = current;
                 MarkDirty();
@@ -487,6 +487,7 @@ namespace FamiStudio
 
         public int X => posX;
         public int Y => posY;
+        public Point Position => new Point(posX, posY);
         public float ScrollX => scrollX;
         public float ScrollY => scrollY;
         public bool IsRightClickDelayed => delay;
