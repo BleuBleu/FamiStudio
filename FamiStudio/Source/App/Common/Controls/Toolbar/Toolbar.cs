@@ -35,88 +35,6 @@ namespace FamiStudio
         private Timecode timecode;
         private TooltipLabel tooltipLabel;
 
-        //private enum ButtonStatus
-        //{
-        //    Enabled,
-        //    Disabled,
-        //    Dimmed
-        //}
-
-        //private enum ButtonImageIndices
-        //{ 
-        //    LoopNone,
-        //    Loop,
-        //    LoopPattern,
-        //    LoopSelection,
-        //    Play,
-        //    PlayHalf,
-        //    PlayQuarter,
-        //    Pause,
-        //    Wait,
-        //    NTSC,
-        //    PAL,
-        //    NTSCToPAL,
-        //    PALToNTSC,
-        //    Rec,
-        //    Metronome,
-        //    File,
-        //    Open,
-        //    Save,
-        //    Export,
-        //    Copy,
-        //    Cut,
-        //    Paste,
-        //    Delete,
-        //    Undo,
-        //    Redo,
-        //    Transform,
-        //    Config,
-        //    Rewind,
-        //    QwertyPiano,
-        //    Follow,
-        //    Help,
-        //    More,
-        //    Piano,
-        //    Count
-        //};
-
-        //private readonly string[] ButtonImageNames = new string[]
-        //{
-        //    "LoopNone",
-        //    "Loop",
-        //    "LoopPattern",
-        //    "LoopSelection",
-        //    "Play",
-        //    "PlayHalf",
-        //    "PlayQuarter",
-        //    "Pause",
-        //    "Wait",
-        //    "NTSC",
-        //    "PAL",
-        //    "NTSCToPAL",
-        //    "PALToNTSC",
-        //    "Rec",
-        //    "Metronome",
-        //    "File",
-        //    "Open",
-        //    "Save",
-        //    "Export",
-        //    "Copy",
-        //    "Cut",
-        //    "Paste",
-        //    "Delete",
-        //    "Undo",
-        //    "Redo",
-        //    "Transform",
-        //    "Config",
-        //    "Rewind",
-        //    "QwertyPiano",
-        //    "Follow",
-        //    "Help",
-        //    "More",
-        //    "Piano"
-        //};
-
         // Mobile-only layout.
         private struct MobileButtonLayoutItem
         {
@@ -186,9 +104,9 @@ namespace FamiStudio
 
         // Most of those are for desktop.
         // MATTT : Can we initialize those immediately like we do for controls now?
-        const int DefaultButtonSize              = Platform.IsMobile ? 120 : 36;
-        const int DefaultIconSize                = Platform.IsMobile ?  96 : 32; 
-        const float ShowExtraButtonsThreshold    = 0.8f;
+        const int DefaultButtonSize           = Platform.IsMobile ? 120 : 36;
+        const int DefaultIconSize             = Platform.IsMobile ?  96 : 32; 
+        const float ShowExtraButtonsThreshold = 0.8f;
 
         int buttonSize;
 
@@ -866,7 +784,6 @@ namespace FamiStudio
                 oscilloscopePosY = buttonIconPosX + oscRow * buttonSize;
             }
             */
-
         }
 
         protected override void OnResize(EventArgs e)

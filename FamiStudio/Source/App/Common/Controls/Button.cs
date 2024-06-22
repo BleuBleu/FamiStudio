@@ -21,7 +21,7 @@ namespace FamiStudio
 
         private string text;
         private string imageName;
-        private float imageScale;
+        private float imageScale = 1.0f;
         private TextureAtlasRef bmp;
         private int margin = DpiScaling.ScaleForWindow(4);
         private bool bold;
