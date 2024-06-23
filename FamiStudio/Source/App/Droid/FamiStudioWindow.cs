@@ -70,6 +70,8 @@ namespace FamiStudio
         public int Width  => glSurfaceView.Width;
         public int Height => glSurfaceView.Height;
         public Size Size => new Size(glSurfaceView.Width, glSurfaceView.Height);
+        public Point LastMousePosition => new Point(0, 0); // MATTT!
+        public Point LastContextMenuPosition => new Point(0, 0); // MATTT!
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
         public bool MobilePianoVisible { get => container.MobilePianoVisible; set => container.MobilePianoVisible = value; }
         public string Text { get; set; }

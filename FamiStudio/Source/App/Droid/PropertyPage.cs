@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Runtime.InteropServices;
 using Android.App;
 using Android.Util;
 using Android.Content.Res;
@@ -11,6 +13,8 @@ using Android.Runtime;
 using Android.Views;
 using Android.Text;
 using Android.Widget;
+using AndroidX.Core.Graphics;
+using AndroidX.Core.View;
 using AndroidX.Core.Widget;
 using AndroidX.AppCompat.Widget;
 using AndroidX.CoordinatorLayout.Widget;
@@ -19,10 +23,6 @@ using Google.Android.Material.Button;
 using Java.Util;
 
 using Orientation = Android.Widget.Orientation;
-using AndroidX.Core.Graphics;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using AndroidX.Core.View;
 
 namespace FamiStudio
 {
@@ -183,7 +183,7 @@ namespace FamiStudio
             var prop = properties[idx];
             Debug.Assert(prop.controls.Count == selected.Length);
             for (int i = 0; i < selected.Length; i++)
-                (prop.controls[i] as CheckBox).Checked = selected[i];
+                (prop.controls[i] as Android.Widget.CheckBox).Checked = selected[i];
         }
 
         public int AddColoredTextBox(string value, Color color)
@@ -212,18 +212,18 @@ namespace FamiStudio
             return text;
         }
 
-        private ProgressBar CreateProgressBar(float value)
+        private Android.Widget.ProgressBar CreateProgressBar(float value)
         {
-            var progress = new ProgressBar(context, null, Android.Resource.Attribute.ProgressBarStyleHorizontal);
+            var progress = new Android.Widget.ProgressBar(context, null, Android.Resource.Attribute.ProgressBarStyleHorizontal);
             progress.Min = 0;
             progress.Max = 1000;
             progress.Progress = (int)Math.Round(value * 1000);
             return progress;
         }
 
-        private RadioButton CreateRadioButton(string str, int style)
+        private Android.Widget.RadioButton CreateRadioButton(string str, int style)
         {
-            var radio = new RadioButton(new ContextThemeWrapper(context, style));
+            var radio = new Android.Widget.RadioButton(new ContextThemeWrapper(context, style));
             radio.Text = str;
             return radio;
         }
@@ -504,7 +504,7 @@ namespace FamiStudio
 
         private void Radio_CheckedChange(object sender, CompoundButton.CheckedChangeEventArgs e)
         {
-            var radio = sender as RadioButton;
+            var radio = sender as Android.Widget.RadioButton;
             var idx = GetPropertyIndexForView(radio);
             if (idx >= 0)
                 PropertyChanged?.Invoke(this, idx, -1, -1, e.IsChecked);
@@ -620,9 +620,9 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private CheckBox CreateCheckBox(string text, bool chk)
+        private Android.Widget.CheckBox CreateCheckBox(string text, bool chk)
         {
-            var checkBox = new CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
+            var checkBox = new Android.Widget.CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
             checkBox.Text = text;
             checkBox.Checked = chk;
             checkBox.CheckedChange += CheckBox_CheckedChange;
@@ -837,7 +837,7 @@ namespace FamiStudio
             Debug.Assert(prop.columns[colIdx].Type == ColumnType.Slider);
 
             var ctrlIdx = rowIdx * prop.columns.Length + colIdx;
-            var seekBar = prop.controls[ctrlIdx] as Slider;
+            var seekBar = prop.controls[ctrlIdx] as DroidSlider;
 
             seekBar.Min = min;
             seekBar.Max = max;
@@ -913,7 +913,7 @@ namespace FamiStudio
 
                         if (mergeCheckboxAndLabel && c == 0)
                         {
-                            var checkBox = new CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
+                            var checkBox = new Android.Widget.CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
                             checkBox.Checked = data == null || (bool)data[r, c];
                             var text = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
                             text.Text = data == null ? columnDescs[1].Name : (string)data[r, c + 1];
@@ -942,7 +942,7 @@ namespace FamiStudio
                         switch (col.Type)
                         {
                             case ColumnType.CheckBox:
-                                var checkBox = new CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
+                                var checkBox = new Android.Widget.CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
                                 checkBox.Checked = (bool)data[r, c];
                                 view = checkBox;
                                 break;
@@ -952,7 +952,7 @@ namespace FamiStudio
                                 view = text;
                                 break;
                             case ColumnType.Slider:
-                                var seek = new Slider(context, col.MinValue, col.MaxValue, data == null ? 50 : (int)data[r, c], col.Formatter);
+                                var seek = new DroidSlider(context, col.MinValue, col.MaxValue, data == null ? 50 : (int)data[r, c], col.Formatter);
                                 seek.Min = col.MinValue;
                                 seek.Max = col.MaxValue;
                                 seek.Progress = (int)data[r, c];
@@ -1021,13 +1021,13 @@ namespace FamiStudio
             switch (prop.columns[colIdx].Type)
             {
                 case ColumnType.CheckBox:
-                    (view as CheckBox).Checked = (bool)value;
+                    (view as Android.Widget.CheckBox).Checked = (bool)value;
                     break;
                 case ColumnType.Label:
                     (view as TextView).Text = (string)value;
                     break;
                 case ColumnType.Slider:
-                    (view as Slider).Progress = (int)value;
+                    (view as DroidSlider).Progress = (int)value;
                     break;
                 case ColumnType.NumericUpDown:
                     (view as HorizontalNumberPicker).Value = (int)value;
@@ -1094,7 +1094,7 @@ namespace FamiStudio
                     return seekbar.Progress / 1000.0 + prop.sliderMin;
                 }
                 case PropertyType.Radio:
-                    return (prop.controls[0] as RadioButton).Checked;
+                    return (prop.controls[0] as Android.Widget.RadioButton).Checked;
                 case PropertyType.CheckBox:
                     return (prop.controls[0] as SwitchCompat).Checked;
                 case PropertyType.ColorPicker:
@@ -1109,7 +1109,7 @@ namespace FamiStudio
                 {
                     var selected = new bool[prop.controls.Count];
                     for (int i = 0; i < prop.controls.Count; i++)
-                        selected[i] = (prop.controls[i] as CheckBox).Checked;
+                        selected[i] = (prop.controls[i] as Android.Widget.CheckBox).Checked;
                     return selected;
                 }
                 case PropertyType.Button:
@@ -1135,11 +1135,11 @@ namespace FamiStudio
             switch (col.Type)
             {
                 case ColumnType.CheckBox:
-                    return (T)(object)(view as CheckBox).Checked;
+                    return (T)(object)(view as Android.Widget.CheckBox).Checked;
                 case ColumnType.Label:
                     return (T)(object)(view as TextView).Text;
                 case ColumnType.Slider:
-                    return (T)(object)(view as Slider).Progress;
+                    return (T)(object)(view as DroidSlider).Progress;
                 case ColumnType.NumericUpDown:
                     return (T)(object)(view as HorizontalNumberPicker).Value;
                 case ColumnType.DropDown:
@@ -1158,7 +1158,7 @@ namespace FamiStudio
             else if (view is TextView)
             {
             }
-            else if (view is Slider)
+            else if (view is DroidSlider)
             {
             }
             else if (view is HorizontalNumberPicker)
@@ -1208,7 +1208,7 @@ namespace FamiStudio
                     (prop.controls[0] as EditText).Text = (string)value;
                     break;
                 case PropertyType.ProgressBar:
-                    (prop.controls[0] as ProgressBar).Progress = (int)Math.Round((float)value * 1000);
+                    (prop.controls[0] as Android.Widget.ProgressBar).Progress = (int)Math.Round((float)value * 1000);
                     break;
                 case PropertyType.Slider:
                     (prop.controls[0] as SeekBar).Progress = (int)(((double)value - prop.sliderMin) * 1000.0);
@@ -1555,7 +1555,7 @@ namespace FamiStudio
         }
     }
 
-    public class Slider : View
+    public class DroidSlider : View
     {
         private readonly int LightWidth = 3;
 
@@ -1578,7 +1578,7 @@ namespace FamiStudio
         public int Progress { get => progress; set { progress = value; Invalidate(); } }
         public Func<object, string> Format { get => format; set { format = value; Invalidate(); } }
 
-        public Slider(Context context, int min, int max, int progress, Func<object, string> format = null) : base(context)
+        public DroidSlider(Context context, int min, int max, int progress, Func<object, string> format = null) : base(context)
         {
             Initialize(context);
             this.min = min;
@@ -1587,12 +1587,12 @@ namespace FamiStudio
             this.Format = format == null ? (o) => Convert.ToString(o, CultureInfo.InvariantCulture) : format;
         }
 
-        public Slider(Context context, IAttributeSet attrs) : base(context, attrs)
+        public DroidSlider(Context context, IAttributeSet attrs) : base(context, attrs)
         {
             Initialize(context, attrs);
         }
 
-        protected Slider(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
+        protected DroidSlider(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
         }
 

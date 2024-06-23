@@ -166,18 +166,18 @@ namespace FamiStudio
         }
 
         public override void Tick(float delta)
-        {                var prevTimer = transitionTimer;
-                transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
+        {
+            var prevTimer = transitionTimer;
+            transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
 
-                if (prevTimer > 0.5f && transitionTimer <= 0.5f)
-                {
-                    activeControl = transitionControl;
-                    transitionControl = null;
-                    UpdateLayout(true);
-                }
-
-                MarkDirty();
+            if (prevTimer > 0.5f && transitionTimer <= 0.5f)
+            {
+                activeControl = transitionControl;
+                transitionControl = null;
+                UpdateLayout(true);
             }
+
+            MarkDirty();
         }
 
         protected override void OnRender(Graphics g)

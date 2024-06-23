@@ -1073,7 +1073,7 @@ namespace FamiStudio
                 if (btn.Visible)
                 {
                     var bmp = btn.GetRenderInfo(out var text, out var tint);
-                    c.DrawTextureAtlas(bmp, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
+                    c.DrawTextureAtlas(bmp, btn.IconX, btn.IconY, iconScaleFloat, tint);
 
                     if (!string.IsNullOrEmpty(text))
                         c.DrawText(text, buttonFont, btn.TextX, btn.TextY, Theme.LightGreyColor1, TextFlags.Center | TextFlags.Ellipsis, buttonSize, 0);
@@ -1094,7 +1094,7 @@ namespace FamiStudio
                 else
                     screenRect.Height -= (screenRect.Height - WindowRectangle.Top);
 
-                screenRect = Rectangle.Intersect(screenRect, listRect);
+                screenRect = Rectangle.Intersection(screenRect, listRect);
 
                 c.PushClipRegion(screenRect.Left, screenRect.Top, screenRect.Width, screenRect.Height, false);
                 c.PushTranslation(listRect.Left, listRect.Top - scrollY);
@@ -1108,13 +1108,13 @@ namespace FamiStudio
                     
                     if (item.Image != null)
                     { 
-                        c.DrawTextureAtlas(item.Image, item.IconX, item.IconY, opacity, iconScaleFloat, Color.Black);
+                        c.DrawTextureAtlas(item.Image, item.IconX, item.IconY, iconScaleFloat, Color.Black.Transparent(opacity));
                     }
 
                     if (item.ExtraImage != null)
                     {
                         var extraOpacity = item.GetExtraImageOpacity != null ? item.GetExtraImageOpacity(item) : 1.0f;
-                        c.DrawTextureAtlas(item.ExtraImage, item.ExtraIconX, item.ExtraIconY, extraOpacity, iconScaleFloat, Color.Black);
+                        c.DrawTextureAtlas(item.ExtraImage, item.ExtraIconX, item.ExtraIconY, iconScaleFloat, Color.Black.Transparent(extraOpacity));
                     }
 
                     c.DrawText(item.Text, i == popupSelectedIdx ? Fonts.FontMediumBold : Fonts.FontMedium, item.TextX, item.TextY, item.TextColor, TextFlags.Middle, 0, listItemSize);
