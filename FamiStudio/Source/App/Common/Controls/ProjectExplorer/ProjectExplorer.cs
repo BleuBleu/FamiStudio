@@ -484,14 +484,13 @@ namespace FamiStudio
         {
             if (!e.Handled && e.Right)
             {
-                var menu = new List<ContextMenuOption>();
-
-                menu.Add(new ContextMenuOption("MenuDelete", DeleteFolderContext, () => { AskDeleteFolder(folder); }, ContextMenuSeparator.After));
-                menu.Add(new ContextMenuOption("Folder", CollapseAllContext, () => { ExpandAllFolders(folder.Type, false); }));
-                menu.Add(new ContextMenuOption("FolderOpen", ExpandAllContext, () => { ExpandAllFolders(folder.Type, true); }));
-                menu.Add(new ContextMenuOption("MenuProperties", PropertiesFolderContext, () => { EditFolderProperties(folder, true); }, ContextMenuSeparator.Before));
-
-                App.ShowContextMenu(menu.ToArray());
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuDelete", DeleteFolderContext, () => { AskDeleteFolder(folder); }, ContextMenuSeparator.After),
+                    new ContextMenuOption("Folder", CollapseAllContext, () => { ExpandAllFolders(folder.Type, false); }),
+                    new ContextMenuOption("FolderOpen", ExpandAllContext, () => { ExpandAllFolders(folder.Type, true); }),
+                    new ContextMenuOption("MenuProperties", PropertiesFolderContext, () => { EditFolderProperties(folder, true); }, ContextMenuSeparator.Before)
+                });
                 e.MarkHandled();
             }
         }
@@ -978,12 +977,13 @@ namespace FamiStudio
         {
             if (!e.Handled && e.Right && arp != null)
             {
-                var menu = new List<ContextMenuOption>();
-                menu.Add(new ContextMenuOption("MenuDelete", DeleteArpeggioContext, () => { AskDeleteArpeggio(arp); }, ContextMenuSeparator.After));
-                menu.Add(new ContextMenuOption("MenuDuplicate", DuplicateContext, () => { DuplicateArpeggio(arp); }));
-                menu.Add(new ContextMenuOption("MenuReplace", ReplaceWithContext, () => { AskReplaceArpeggio(arp); }));
-                menu.Add(new ContextMenuOption("MenuProperties", PropertiesArpeggioContext, () => { EditArpeggioProperties(arp, true); }, ContextMenuSeparator.Before));
-                App.ShowContextMenu(menu.ToArray());
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuDelete", DeleteArpeggioContext, () => { AskDeleteArpeggio(arp); }, ContextMenuSeparator.After),
+                    new ContextMenuOption("MenuDuplicate", DuplicateContext, () => { DuplicateArpeggio(arp); }),
+                    new ContextMenuOption("MenuReplace", ReplaceWithContext, () => { AskReplaceArpeggio(arp); }),
+                    new ContextMenuOption("MenuProperties", PropertiesArpeggioContext, () => { EditArpeggioProperties(arp, true); }, ContextMenuSeparator.Before)
+                });
                 e.MarkHandled();
             }
         }
@@ -2650,13 +2650,11 @@ namespace FamiStudio
 
         private void AskAddSong()
         {
-            var options = new List<ContextMenuOption>
+            App.ShowContextMenu(new[]
             {
                 new ContextMenuOption("Music", AddSongContext, () => { AddSong(); }),
                 new ContextMenuOption("Folder", AddFolderContext, () => { AddFolder(FolderType.Song); }, ContextMenuSeparator.Before)
-            };
-
-            App.ShowContextMenu(options.ToArray());
+            });
         }
 
         private void AskDeleteSong(Song song)
@@ -2800,13 +2798,11 @@ namespace FamiStudio
 
         private void AskAddArpeggio()
         {
-            var options = new List<ContextMenuOption>
+            App.ShowContextMenu(new[]
             {
                 new ContextMenuOption("Music", AddArpeggioContext, () => { AddArpeggio(); }),
                 new ContextMenuOption("Folder", AddFolderContext, () => { AddFolder(FolderType.Arpeggio); }, ContextMenuSeparator.Before)
-            };
-
-            App.ShowContextMenu(options.ToArray());
+            });
         }
 
         private void AskDeleteArpeggio(Arpeggio arpeggio)
@@ -2838,12 +2834,10 @@ namespace FamiStudio
 
         private void AskAddSampleFolder()
         {
-            var options = new List<ContextMenuOption>
+            App.ShowContextMenu(new[]
             {
                 new ContextMenuOption("Folder", AddFolderContext, () => { AddFolder(FolderType.Sample); }, ContextMenuSeparator.Before)
-            };
-
-            App.ShowContextMenu(options.ToArray());
+            });
         }
 
         private void ReloadDPCMSampleSourceData(DPCMSample sample)

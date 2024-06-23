@@ -128,6 +128,16 @@ namespace FamiStudio
             return null;
         }
 
+        public Control FindControlByUserData(IComparable o) // Mostly to ensure strings are compared by value.
+        {
+            foreach (var c in controls)
+            {
+                if (c.UserData != null && ((IComparable)c.UserData).CompareTo(o) == 0)
+                    return c;
+            }
+            return null;
+        }
+
         public Rectangle GetControlsRect()
         {
             var rc = new Rectangle();
