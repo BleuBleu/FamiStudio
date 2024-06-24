@@ -1179,8 +1179,11 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchClick(int x, int y)
+        protected override void OnTouchClick(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             foreach (var btn in buttons)
             {
                 if (btn.Visible && btn.Rect.Contains(x, y))
@@ -1211,38 +1214,41 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnTouchUp(int x, int y)
+        protected override void OnTouchUp(MouseEventArgs e)
         {
-            EndCaptureOperation(x, y);
+            EndCaptureOperation(e.X, e.Y);
         }
 
-        protected override void OnTouchDown(int x, int y)
+        protected override void OnTouchDown(MouseEventArgs e)
         {
             flingVelY = 0;
 
             if (popupRatio == 1.0f)
             {
                 var rect = GetExpandedListRect();
-                if (rect.Contains(x, y))
-                    StartCaptureOperation(x, y, CaptureOperation.MobilePan);
+                if (rect.Contains(e.X, e.Y))
+                    StartCaptureOperation(e.X, e.Y, CaptureOperation.MobilePan);
             }
         }
 
-        protected override void OnTouchFling(int x, int y, float velX, float velY)
+        protected override void OnTouchFling(MouseEventArgs e)
         {
-            EndCaptureOperation(x, y);
-            flingVelY = velY;
+            EndCaptureOperation(e.X, e.Y);
+            flingVelY = e.FlingVelocityY;
         }
 
-        protected override void OnTouchMove(int x, int y)
+        protected override void OnTouchMove(MouseEventArgs e)
         {
-            UpdateCaptureOperation(x, y);
-            lastX = x;
-            lastY = y;
+            UpdateCaptureOperation(e.X, e.Y);
+            lastX = e.X;
+            lastY = e.Y;
         }
 
-        protected override void OnTouchLongPress(int x, int y)
+        protected override void OnTouchLongPress(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             foreach (var btn in buttons)
             {
                 if (btn.Visible && btn.Rect.Contains(x, y))

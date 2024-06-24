@@ -7202,8 +7202,11 @@ namespace FamiStudio
             return HandleContextMenuDPCMMapping(x, y);
         }
 
-        protected override void OnTouchDown(int x, int y)
+        protected override void OnTouchDown(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             Debug.WriteLine($"OnTouchDown {x} {y}");
 
             SetFlingVelocity(0, 0);
@@ -7258,32 +7261,38 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchMove(int x, int y)
+        protected override void OnTouchMove(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             Debug.WriteLine($"OnTouchMove {x} {y} {captureOperation}");
 
             UpdateCaptureOperation(x, y);
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchUp(int x, int y)
+        protected override void OnTouchUp(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             Debug.WriteLine($"OnTouchUp {x} {y} {captureOperation}");
 
             EndCaptureOperation(x, y);
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchFling(int x, int y, float velX, float velY)
+        protected override void OnTouchFling(MouseEventArgs e)
         {
             if (canFling)
             {
-                EndCaptureOperation(x, y);
-                SetFlingVelocity(velX, velY);
+                EndCaptureOperation(e.X, e.Y);
+                SetFlingVelocity(e.FlingVelocityX, e.FlingVelocityY);
             }
         }
 
-        protected override void OnTouchScaleBegin(int x, int y)
+        protected override void OnTouchScaleBegin(MouseEventArgs e)
         {
             if (captureOperation != CaptureOperation.None)
             {
@@ -7291,24 +7300,36 @@ namespace FamiStudio
                 AbortCaptureOperation();
             }
 
+            var x = e.X;
+            var y = e.Y;
+
             StartCaptureOperation(x, y, IsPointInPiano(x, y) ? CaptureOperation.MobileZoomVertical : CaptureOperation.MobileZoom);
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchScale(int x, int y, float scale)
+        protected override void OnTouchScale(MouseEventArgs e)
         {
-            UpdateCaptureOperation(x, y, scale);
+            var x = e.X;
+            var y = e.Y;
+
+            UpdateCaptureOperation(x, y, e.TouchScale);
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchScaleEnd(int x, int y)
+        protected override void OnTouchScaleEnd(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             EndCaptureOperation(x, y);
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchClick(int x, int y)
+        protected override void OnTouchClick(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             SetMouseLastPos(x, y);
 
             if (editMode == EditionMode.Channel)
@@ -7342,8 +7363,11 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchDoubleClick(int x, int y)
+        protected override void OnTouchDoubleClick(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             Debug.WriteLine($"OnTouchDoubleClick {x} {y}");
 
             SetMouseLastPos(x, y);
@@ -7365,8 +7389,11 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchLongPress(int x, int y)
+        protected override void OnTouchLongPress(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             if (captureOperation == CaptureOperation.DeleteNotes                ||
                 captureOperation == CaptureOperation.ChangeEnvelopeValue        ||
                 captureOperation == CaptureOperation.ChangeEffectValue          ||

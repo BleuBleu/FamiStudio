@@ -31,9 +31,11 @@ namespace FamiStudio
         public event MouseEventDelegate MouseDown;
         public event MouseEventDelegate MouseUp;
         public event MouseEventDelegate MouseMove;
+        public event MouseEventDelegate TouchClick;
         public event MouseEventDelegate ContainerMouseDownNotify;
         public event MouseEventDelegate ContainerMouseUpNotify;
         public event MouseEventDelegate ContainerMouseMoveNotify;
+        public event MouseEventDelegate ContainerTouchClickNotify;
 
         protected Control()
         {
@@ -70,16 +72,16 @@ namespace FamiStudio
         protected virtual void OnKeyDown(KeyEventArgs e) { }
         protected virtual void OnKeyUp(KeyEventArgs e) { }
         protected virtual void OnChar(CharEventArgs e) { }
-        protected virtual void OnTouchDown(int x, int y) { }
-        protected virtual void OnTouchUp(int x, int y) { }
-        protected virtual void OnTouchMove(int x, int y) { }
-        protected virtual void OnTouchClick(int x, int y) { }
-        protected virtual void OnTouchDoubleClick(int x, int y) { }
-        protected virtual void OnTouchLongPress(int x, int y) { }
-        protected virtual void OnTouchScaleBegin(int x, int y) { }
-        protected virtual void OnTouchScale(int x, int y, float scale) { }
-        protected virtual void OnTouchScaleEnd(int x, int y) { }
-        protected virtual void OnTouchFling(int x, int y, float velX, float velY) { }
+        protected virtual void OnTouchDown(MouseEventArgs e) { }
+        protected virtual void OnTouchUp(MouseEventArgs e) { }
+        protected virtual void OnTouchMove(MouseEventArgs e) { }
+        protected virtual void OnTouchClick(MouseEventArgs e) { }
+        protected virtual void OnTouchDoubleClick(MouseEventArgs e) { }
+        protected virtual void OnTouchLongPress(MouseEventArgs e) { }
+        protected virtual void OnTouchScaleBegin(MouseEventArgs e) { }
+        protected virtual void OnTouchScale(MouseEventArgs e) { }
+        protected virtual void OnTouchScaleEnd(MouseEventArgs e) { }
+        protected virtual void OnTouchFling(MouseEventArgs e) { }
         protected virtual void OnLostDialogFocus() { }
         protected virtual void OnAcquiredDialogFocus() { }
         protected virtual void OnVisibleChanged() { }
@@ -104,56 +106,55 @@ namespace FamiStudio
         public void SendLostDialogFocus() { OnLostDialogFocus(); }
         public void SendAcquiredDialogFocus() { OnAcquiredDialogFocus(); }
         public void SendAddedToContainer() { OnAddedToContainer(); }
+        public void SendTouchClick(MouseEventArgs e) { OnTouchClick(e); TouchClick?.Invoke(this, e); SendContainerTouchClickNotify(e); }
+        public void SendTouchScaleBegin(MouseEventArgs e) { OnTouchScaleBegin(e); }
+        public void SendTouchScale(MouseEventArgs e) { OnTouchScale(e); }
+        public void SendTouchScaleEnd(MouseEventArgs e) { OnTouchScaleEnd(e); }
+        public void SendTouchFling(MouseEventArgs e) { OnTouchFling(e); }
 
-        public void SendTouchClick(int x, int y) { OnTouchClick(x, y); }
-        public void SendTouchScaleBegin(int x, int y) { OnTouchScaleBegin(x, y); }
-        public void SendTouchScale(int x, int y, float scale) { OnTouchScale(x, y, scale); }
-        public void SendTouchScaleEnd(int x, int y) { OnTouchScaleEnd(x, y); }
-        public void SendTouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
-
-        public void SendTouchMove(int x, int y) 
+        public void SendTouchMove(MouseEventArgs e) 
         {
             if (touchAsMouse)
-                SendMouseMove(new MouseEventArgs(MouseEventArgs.ButtonLeft, x, y)); 
+                SendMouseMove(e); 
             else
-                OnTouchMove(x, y);
+                OnTouchMove(e);
         }
 
-        public void SendTouchDown(int x, int y) 
+        public void SendTouchDown(MouseEventArgs e) 
         {
             if (touchAsMouse)
-                SendMouseDown(new MouseEventArgs(MouseEventArgs.ButtonLeft, x, y));
+                SendMouseDown(e);
             else
-                OnTouchDown(x, y); 
+                OnTouchDown(e); 
         }
 
-        public void SendTouchUp(int x, int y) 
-        { 
-            if (touchAsMouse) 
-                SendMouseUp(new MouseEventArgs(MouseEventArgs.ButtonLeft, x, y)); 
-            else
-                OnTouchUp(x, y); 
-        }
-
-
-        public void SendTouchDoubleClick(int x, int y)
+        public void SendTouchUp(MouseEventArgs e) 
         {
             if (touchAsMouse)
-                SendMouseDoubleClick(new MouseEventArgs(MouseEventArgs.ButtonLeft, x, y));
+                SendMouseUp(e);
             else
-                OnTouchDoubleClick(x, y);
+                OnTouchUp(e); 
         }
 
-        public void SendTouchLongPress(int x, int y)
+
+        public void SendTouchDoubleClick(MouseEventArgs e)
+        {
+            if (touchAsMouse)
+                SendMouseDoubleClick(e);
+            else
+                OnTouchDoubleClick(e);
+        }
+
+        public void SendTouchLongPress(MouseEventArgs e)
         {
             if (touchAsMouse)
             {
-                SendMouseDown(new MouseEventArgs(MouseEventArgs.ButtonRight, x, y));
-                SendMouseUp(new MouseEventArgs(MouseEventArgs.ButtonRight, x, y));
+                SendMouseDown(e);
+                SendMouseUp(e);
             }
             else
             {
-                OnTouchLongPress(x, y);
+                OnTouchLongPress(e);
             }
         }
 
@@ -202,6 +203,19 @@ namespace FamiStudio
             {
                 c.OnContainerMouseMoveNotify(this, e);
                 c.ContainerMouseMoveNotify?.Invoke(c, e);
+                if (c is Dialog)
+                    break;
+                c = c.ParentContainer;
+            }
+        }
+
+        public void SendContainerTouchClickNotify(MouseEventArgs e)
+        {
+            var c = ParentContainer;
+            while (c != null)
+            {
+                c.OnContainerTouchClickNotify(this, e);
+                c.ContainerTouchClickNotify?.Invoke(c, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
@@ -525,6 +539,10 @@ namespace FamiStudio
         private bool delay;
         private bool handled; // Only use for mousewheel right now. Not fully implemented.
 
+        private float touchScale;
+        private float flingVelX;
+        private float flingVelY;
+
         public bool Left   => (buttons & ButtonLeft)   != 0;
         public bool Right  => (buttons & ButtonRight)  != 0;
         public bool Middle => (buttons & ButtonMiddle) != 0;
@@ -534,6 +552,9 @@ namespace FamiStudio
         public Point Position => new Point(posX, posY);
         public float ScrollX => scrollX;
         public float ScrollY => scrollY;
+        public float FlingVelocityX => flingVelX;
+        public float FlingVelocityY => flingVelY;
+        public float TouchScale => touchScale;
         public bool IsRightClickDelayed => delay;
         public bool Handled => handled;
 
@@ -544,7 +565,23 @@ namespace FamiStudio
             posY = y;
             scrollX = sx;
             scrollY = sy;
-            handled = false;
+        }
+
+        public MouseEventArgs(int x, int y, float scale = 1.0f)
+        {
+            buttons = ButtonLeft;
+            posX = x;
+            posY = y;
+            touchScale = scale;
+        }
+
+        public MouseEventArgs(int x, int y, float velX, float velY)
+        {
+            buttons = ButtonLeft;
+            posX = x;
+            posY = y;
+            flingVelX = velX;
+            flingVelY = velY;
         }
 
         public void MarkHandled()

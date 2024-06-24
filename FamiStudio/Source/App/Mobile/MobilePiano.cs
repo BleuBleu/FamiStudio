@@ -407,9 +407,9 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchUp(int x, int y)
+        protected override void OnTouchUp(MouseEventArgs e)
         {
-            EndCaptureOperation(x, y);
+            EndCaptureOperation(e.X, e.Y);
         }
 
         private bool IsPointInPanRectangle(int x, int y)
@@ -441,8 +441,11 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnTouchDown(int x, int y)
+        protected override void OnTouchDown(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             Debug.Assert(captureOperation == CaptureOperation.None);
 
             flingVelX = 0;
@@ -464,48 +467,48 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnTouchFling(int x, int y, float velX, float velY)
+        protected override void OnTouchFling(MouseEventArgs e)
         {
             if (IsPointInPanRectangle(lastX, lastY) && canFling)
             {
-                EndCaptureOperation(x, y);
-                flingVelX = velX;
+                EndCaptureOperation(e.X, e.Y);
+                flingVelX = e.FlingVelocityX;
             }
         }
 
-        protected override void OnTouchScaleBegin(int x, int y)
+        protected override void OnTouchScaleBegin(MouseEventArgs e)
         {
-            lastX = x;
-            lastY = y;
+            lastX = e.X;
+            lastY = e.Y;
 
             if (captureOperation != CaptureOperation.None)
             {
                 Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
-                EndCaptureOperation(x, y);
+                EndCaptureOperation(e.X, e.Y);
             }
 
-            StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
+            StartCaptureOperation(e.X, e.Y, CaptureOperation.MobileZoom);
         }
 
-        protected override void OnTouchScale(int x, int y, float scale)
+        protected override void OnTouchScale(MouseEventArgs e)
         {
-            UpdateCaptureOperation(x, y, scale);
-            lastX = x;
-            lastY = y;
+            UpdateCaptureOperation(e.X, e.Y, e.TouchScale);
+            lastX = e.X;
+            lastY = e.Y;
         }
 
-        protected override void OnTouchScaleEnd(int x, int y)
+        protected override void OnTouchScaleEnd(MouseEventArgs e)
         {
-            EndCaptureOperation(x, y);
-            lastX = x;
-            lastY = y;
+            EndCaptureOperation(e.X, e.Y);
+            lastX = e.X;
+            lastY = e.Y;
         }
 
-        protected override void OnTouchMove(int x, int y)
+        protected override void OnTouchMove(MouseEventArgs e)
         {
-            UpdateCaptureOperation(x, y);
-            lastX = x;
-            lastY = y;
+            UpdateCaptureOperation(e.X, e.Y);
+            lastX = e.X;
+            lastY = e.Y;
         }
     }
 }

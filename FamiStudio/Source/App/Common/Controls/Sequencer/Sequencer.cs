@@ -1848,8 +1848,11 @@ namespace FamiStudio
             return HandleContextMenuPatternArea(x, y);
         }
 
-        protected override void OnTouchDown(int x, int y)
+        protected override void OnTouchDown(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             SetFlingVelocity(0, 0);
             SetMouseLastPos(x, y);
 
@@ -1863,29 +1866,41 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchMove(int x, int y)
+        protected override void OnTouchMove(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             UpdateCaptureOperation(x, y);
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchUp(int x, int y)
+        protected override void OnTouchUp(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             EndCaptureOperation(x, y);
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchFling(int x, int y, float velX, float velY)
+        protected override void OnTouchFling(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             if (canFling)
             {
                 EndCaptureOperation(x, y);
-                SetFlingVelocity(velX, velY);
+                SetFlingVelocity(e.FlingVelocityX, e.FlingVelocityY);
             }
         }
 
-        protected override void OnTouchScaleBegin(int x, int y)
+        protected override void OnTouchScaleBegin(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             if (captureOperation != CaptureOperation.None)
             {
                 Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
@@ -1896,20 +1911,29 @@ namespace FamiStudio
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchScale(int x, int y, float scale)
+        protected override void OnTouchScale(MouseEventArgs e)
         {
-            UpdateCaptureOperation(x, y, scale);
+            var x = e.X;
+            var y = e.Y;
+
+            UpdateCaptureOperation(x, y, e.TouchScale);
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchScaleEnd(int x, int y)
+        protected override void OnTouchScaleEnd(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             EndCaptureOperation(x, y);
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchClick(int x, int y)
+        protected override void OnTouchClick(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             // Header: 
             // - Seek
             // Pattern names:
@@ -1931,8 +1955,11 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchDoubleClick(int x, int y)
+        protected override void OnTouchDoubleClick(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             SetMouseLastPos(x, y);
 
             // Ignore double tap if we handled a single tap recently.
@@ -1949,8 +1976,11 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchLongPress(int x, int y)
+        protected override void OnTouchLongPress(MouseEventArgs e)
         {
+            var x = e.X;
+            var y = e.Y;
+
             // Header:
             // - Context menu : seet loop point, custom settings
             // Pattern names:

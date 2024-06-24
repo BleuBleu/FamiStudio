@@ -42,6 +42,10 @@ namespace FamiStudio
         {
         }
 
+        public virtual void OnContainerTouchClickNotify(Control control, MouseEventArgs e)
+        {
+        }
+
         public void IncrementControlTickEnabled(int delta)
         {
             numControlsTickEnabled += delta;

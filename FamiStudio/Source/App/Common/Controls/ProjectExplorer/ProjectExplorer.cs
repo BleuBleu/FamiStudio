@@ -772,7 +772,7 @@ namespace FamiStudio
 
         private void Instrument_MouseDown(Control sender, MouseEventArgs e, Instrument inst, int envelopeType = -1, TextureAtlasRef image = null)
         {
-            if (!e.Handled && e.Left)
+            if (!e.Handled && e.Left && (Platform.IsDesktop || highlightedObject == inst))
             {
                 App.SelectedInstrument = inst;
                 draggedInstrument = inst;
@@ -3417,26 +3417,26 @@ namespace FamiStudio
             return true;
         }
 
-        protected override void OnTouchMove(int x, int y)
+        protected override void OnTouchMove(MouseEventArgs e)
         {
             UpdateCursor();
-            UpdateCaptureOperation(x, y);
+            UpdateCaptureOperation(e.X, e.Y);
 
-            mouseLastX = x;
-            mouseLastY = y;
+            mouseLastX = e.X;
+            mouseLastY = e.Y;
         }
 
-        protected override void OnTouchUp(int x, int y)
+        protected override void OnTouchUp(MouseEventArgs e)
         {
-            EndCaptureOperation(x, y);
+            EndCaptureOperation(e.X, e.Y);
         }
 
-        protected override void OnTouchFling(int x, int y, float velX, float velY)
+        protected override void OnTouchFling(MouseEventArgs e)
         {
             if (canFling)
             {
-                EndCaptureOperation(x, y);
-                flingVelY = velY;
+                EndCaptureOperation(e.X, e.Y);
+                flingVelY = e.FlingVelocityY;
             }
         }
 
