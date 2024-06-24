@@ -8,7 +8,7 @@ namespace FamiStudio
     // Unlike the System.Drawing.Color, the internal encoding is AABBGGRR as opposed
     // to AARRGGBB. This is done in order to match our OpenGL color packing and avoid
     // a bunch of conversions.
-    public struct Color
+    public struct Color : IEquatable<Color>
     {
         private int color = unchecked((int)0xff000000); // 0xAABBGGRR
 
@@ -144,6 +144,11 @@ namespace FamiStudio
         public override string ToString()
         {
             return $"R={R} G={G} B={B} A={A}";
+        }
+
+        public bool Equals(Color other)
+        {
+            return color.Equals(other.color);
         }
     }
 

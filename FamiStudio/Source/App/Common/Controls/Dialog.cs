@@ -35,12 +35,12 @@ namespace FamiStudio
                     return;
 
                 if (focusedControl != null)
-                    focusedControl.LostDialogFocus();
+                    focusedControl.SendLostDialogFocus();
 
                 focusedControl = value;
                 
                 if (focusedControl != null)
-                    focusedControl.AcquiredDialogFocus();
+                    focusedControl.SendAcquiredDialogFocus();
 
                 MarkDirty();
             }
@@ -132,12 +132,12 @@ namespace FamiStudio
             return IsTopDialog() && tooltipTimer > ToolTipDelay;
         }
 
-        public override void ContainerMouseDownNotify(Control control, MouseEventArgs e) 
+        public override void OnContainerMouseDownNotify(Control control, MouseEventArgs e) 
         {
             ResetToolTip();
         }
 
-        public override void ContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        public override void OnContainerMouseMoveNotify(Control control, MouseEventArgs e)
         {
             ResetToolTip();
         }
@@ -160,14 +160,14 @@ namespace FamiStudio
             DialogKeyDown?.Invoke(this, e);
 
             if (focusedControl != null && focusedControl.Visible)
-               focusedControl.KeyDown(e);
+               focusedControl.SendKeyDown(e);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
             if (focusedControl != null && focusedControl.Visible)
             {
-                focusedControl.KeyUp(e);
+                focusedControl.SendKeyUp(e);
             }
         }
 
@@ -175,7 +175,7 @@ namespace FamiStudio
         {
             if (focusedControl != null && focusedControl.Visible)
             {
-                focusedControl.Char(e);
+                focusedControl.SendChar(e);
             }
         }
 

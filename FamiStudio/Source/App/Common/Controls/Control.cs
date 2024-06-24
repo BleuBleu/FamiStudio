@@ -18,6 +18,7 @@ namespace FamiStudio
         protected bool visible = true;
         protected bool enabled = true;
         protected bool canFocus = true;
+        protected bool touchAsMouse = false;
         protected string tooltip;
         protected object userData;
         private bool tickEnabled;
@@ -27,12 +28,12 @@ namespace FamiStudio
         // TODO : Rename the "MouseDown" functions to something like "FireMouseDown"
         // or "RaiseMouseDown" and rename those to simply "MouseDown".
         public delegate void MouseEventDelegate(Control sender, MouseEventArgs e);
-        public event MouseEventDelegate MouseDownEvent;
-        public event MouseEventDelegate MouseUpEvent;
-        public event MouseEventDelegate MouseMoveEvent;
-        public event MouseEventDelegate ContainerMouseDownNotifyEvent;
-        public event MouseEventDelegate ContainerMouseUpNotifyEvent;
-        public event MouseEventDelegate ContainerMouseMoveNotifyEvent;
+        public event MouseEventDelegate MouseDown;
+        public event MouseEventDelegate MouseUp;
+        public event MouseEventDelegate MouseMove;
+        public event MouseEventDelegate ContainerMouseDownNotify;
+        public event MouseEventDelegate ContainerMouseUpNotify;
+        public event MouseEventDelegate ContainerMouseMoveNotify;
 
         protected Control()
         {
@@ -88,77 +89,119 @@ namespace FamiStudio
         public virtual void Tick(float delta) { }
 
         public virtual void Render(Graphics g) { OnRender(g); }
-        public void MouseDown(MouseEventArgs e) { OnMouseDown(e); MouseDownEvent?.Invoke(this, e); ContainerMouseDownNotify(e); }
-        public void MouseDownDelayed(MouseEventArgs e) { OnMouseDownDelayed(e); }
-        public void MouseUp(MouseEventArgs e) { OnMouseUp(e); MouseUpEvent?.Invoke(this, e); ContainerMouseUpNotify(e); }
-        public void MouseDoubleClick(MouseEventArgs e) { OnMouseDoubleClick(e); }
-        public void MouseMove(MouseEventArgs e) { OnMouseMove(e); MouseMoveEvent?.Invoke(this, e); ContainerMouseMoveNotify(e); }
-        public void MouseEnter(EventArgs e) { if (IsContainedByMainWindow) OnMouseEnter(e); }
-        public void MouseLeave(EventArgs e) { if (IsContainedByMainWindow) OnMouseLeave(e); }
-        public void MouseWheel(MouseEventArgs e) { OnMouseWheel(e); ContainerMouseWheelNotify(e); }
-        public void MouseHorizontalWheel(MouseEventArgs e) { OnMouseHorizontalWheel(e); }
-        public void KeyDown(KeyEventArgs e) { OnKeyDown(e); }
-        public void KeyUp(KeyEventArgs e) { OnKeyUp(e); }
-        public void Char(CharEventArgs e) { OnChar(e); }
-        public void TouchDown(int x, int y) { OnTouchDown(x, y); }
-        public void TouchUp(int x, int y) { OnTouchUp(x, y); }
-        public void TouchMove(int x, int y) { OnTouchMove(x, y); }
-        public void TouchClick(int x, int y) { OnTouchClick(x, y); }
-        public void TouchDoubleClick(int x, int y) { OnTouchDoubleClick(x, y); }
-        public void TouchLongPress(int x, int y) { OnTouchLongPress(x, y); }
-        public void TouchScaleBegin(int x, int y) { OnTouchScaleBegin(x, y); }
-        public void TouchScale(int x, int y, float scale) { OnTouchScale(x, y, scale); }
-        public void TouchScaleEnd(int x, int y) { OnTouchScaleEnd(x, y); }
-        public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
-        public void LostDialogFocus() { OnLostDialogFocus(); }
-        public void AcquiredDialogFocus() { OnAcquiredDialogFocus(); }
-        public void AddedToContainer() { OnAddedToContainer(); }
+        public void SendMouseDown(MouseEventArgs e) { OnMouseDown(e); MouseDown?.Invoke(this, e); SendContainerMouseDownNotify(e); }
+        public void SendMouseDownDelayed(MouseEventArgs e) { OnMouseDownDelayed(e); }
+        public void SendMouseUp(MouseEventArgs e) { OnMouseUp(e); MouseUp?.Invoke(this, e); SendContainerMouseUpNotify(e); }
+        public void SendMouseDoubleClick(MouseEventArgs e) { OnMouseDoubleClick(e); }
+        public void SendMouseMove(MouseEventArgs e) { OnMouseMove(e); MouseMove?.Invoke(this, e); SendContainerMouseMoveNotify(e); }
+        public void SendMouseEnter(EventArgs e) { if (IsContainedByMainWindow) OnMouseEnter(e); }
+        public void SendMouseLeave(EventArgs e) { if (IsContainedByMainWindow) OnMouseLeave(e); }
+        public void SendMouseWheel(MouseEventArgs e) { OnMouseWheel(e); SendContainerMouseWheelNotify(e); }
+        public void SendMouseHorizontalWheel(MouseEventArgs e) { OnMouseHorizontalWheel(e); }
+        public void SendKeyDown(KeyEventArgs e) { OnKeyDown(e); }
+        public void SendKeyUp(KeyEventArgs e) { OnKeyUp(e); }
+        public void SendChar(CharEventArgs e) { OnChar(e); }
+        public void SendLostDialogFocus() { OnLostDialogFocus(); }
+        public void SendAcquiredDialogFocus() { OnAcquiredDialogFocus(); }
+        public void SendAddedToContainer() { OnAddedToContainer(); }
 
-        public void ContainerMouseWheelNotify(MouseEventArgs e) 
+        public void SendTouchClick(int x, int y) { OnTouchClick(x, y); }
+        public void SendTouchScaleBegin(int x, int y) { OnTouchScaleBegin(x, y); }
+        public void SendTouchScale(int x, int y, float scale) { OnTouchScale(x, y, scale); }
+        public void SendTouchScaleEnd(int x, int y) { OnTouchScaleEnd(x, y); }
+        public void SendTouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
+
+        public void SendTouchMove(int x, int y) 
+        {
+            if (touchAsMouse)
+                SendMouseMove(new MouseEventArgs(MouseEventArgs.ButtonLeft, x, y)); 
+            else
+                OnTouchMove(x, y);
+        }
+
+        public void SendTouchDown(int x, int y) 
+        {
+            if (touchAsMouse)
+                SendMouseDown(new MouseEventArgs(MouseEventArgs.ButtonLeft, x, y));
+            else
+                OnTouchDown(x, y); 
+        }
+
+        public void SendTouchUp(int x, int y) 
+        { 
+            if (touchAsMouse) 
+                SendMouseUp(new MouseEventArgs(MouseEventArgs.ButtonLeft, x, y)); 
+            else
+                OnTouchUp(x, y); 
+        }
+
+
+        public void SendTouchDoubleClick(int x, int y)
+        {
+            if (touchAsMouse)
+                SendMouseDoubleClick(new MouseEventArgs(MouseEventArgs.ButtonLeft, x, y));
+            else
+                OnTouchDoubleClick(x, y);
+        }
+
+        public void SendTouchLongPress(int x, int y)
+        {
+            if (touchAsMouse)
+            {
+                SendMouseDown(new MouseEventArgs(MouseEventArgs.ButtonRight, x, y));
+                SendMouseUp(new MouseEventArgs(MouseEventArgs.ButtonRight, x, y));
+            }
+            else
+            {
+                OnTouchLongPress(x, y);
+            }
+        }
+
+        public void SendContainerMouseWheelNotify(MouseEventArgs e) 
         { 
             var c = ParentContainer; 
             while (c != null) 
             { 
-                c.ContainerMouseWheelNotify(this, e);
+                c.OnContainerMouseWheelNotify(this, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
             }
         } 
 
-        public void ContainerMouseDownNotify(MouseEventArgs e) 
+        public void SendContainerMouseDownNotify(MouseEventArgs e) 
         {
             var c = ParentContainer;
             while (c != null)
             {
-                c.ContainerMouseDownNotify(this, e);
-                c.ContainerMouseDownNotifyEvent?.Invoke(this, e);
+                c.OnContainerMouseDownNotify(this, e);
+                c.ContainerMouseDownNotify?.Invoke(this, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
             }
         }
 
-        public void ContainerMouseUpNotify(MouseEventArgs e)
+        public void SendContainerMouseUpNotify(MouseEventArgs e)
         {
             var c = ParentContainer;
             while (c != null)
             {
-                c.ContainerMouseUpNotify(this, e);
-                c.ContainerMouseUpNotifyEvent?.Invoke(c, e);
+                c.OnContainerMouseUpNotify(this, e);
+                c.ContainerMouseUpNotify?.Invoke(c, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
             }
         }
 
-        public void ContainerMouseMoveNotify(MouseEventArgs e)
+        public void SendContainerMouseMoveNotify(MouseEventArgs e)
         {
             var c = ParentContainer;
             while (c != null)
             {
-                c.ContainerMouseMoveNotify(this, e);
-                c.ContainerMouseMoveNotifyEvent?.Invoke(c, e);
+                c.OnContainerMouseMoveNotify(this, e);
+                c.ContainerMouseMoveNotify?.Invoke(c, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
@@ -186,6 +229,7 @@ namespace FamiStudio
         public bool IsContainedByMainWindow => ParentTopContainer != null;
         public string ToolTip { get => tooltip; set { SetAndMarkDirty(ref tooltip, value); } }
         public object UserData { get => userData; set => userData = value; }
+        public bool SendTouchInputAsMouse { get => touchAsMouse; set => touchAsMouse = value; }
         public bool TickEnabled => tickEnabled;
         public void MarkDirty() { window?.MarkDirty(); }
 
@@ -329,9 +373,9 @@ namespace FamiStudio
                  width, height);
         }
 
-        protected bool SetAndMarkDirty<T>(ref T target, T current) where T : IComparable
+        protected bool SetAndMarkDirty<T>(ref T target, T current) where T : IEquatable<T>
         {
-            if (((target == null) != (current == null)) || (target != null && target.CompareTo(current) != 0))
+            if (((target == null) != (current == null)) || (target != null && !target.Equals(current)))
             {
                 target = current;
                 MarkDirty();

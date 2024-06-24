@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Android.Widget;
 
 namespace FamiStudio
 {
@@ -253,7 +254,7 @@ namespace FamiStudio
         private int captureScrollY = -1;
         private int envelopeDragIdx = -1;
         private TextureAtlasRef envelopeDragTexture = null;
-        private int highlightedButtonIdx = -1;
+        private object highlightedObject;
         private int captureButtonSign = 0;
         private float flingVelY = 0.0f;
         private float bitmapScale = 1.0f;
@@ -419,6 +420,7 @@ namespace FamiStudio
             var label = new Label(text, false);
             label.Color = black ? Theme.BlackColor : label.Color;
             label.Ellipsis = ellipsis;
+            label.SendTouchInputAsMouse = true;
             label.Move(x, y, width, panel.Height);
             panel.AddControl(label);
             return label;
@@ -432,6 +434,7 @@ namespace FamiStudio
                 panel.UserData is DPCMSample);
 
             var expandButton = CreateImageButton(panel, marginX, expanded ? "InstrumentExpanded" : "InstrumentExpand", black);
+            expandButton.SendTouchInputAsMouse = true;
             return expandButton;
         }
 
@@ -440,6 +443,7 @@ namespace FamiStudio
             var imageBox = new ImageBox(image);
             panel.AddControl(imageBox);
             imageBox.Tint = black ? Color.Black : Theme.LightGreyColor2;
+            imageBox.ImageScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
             imageBox.AutoSizeToImage();
             imageBox.Move(x, Utils.DivideAndRoundUp(panel.Height - imageBox.Height, 2));
             return imageBox;
@@ -449,6 +453,8 @@ namespace FamiStudio
         {
             var button = new Button(image, null);
             button.Transparent = true;
+            button.SendTouchInputAsMouse = true;
+            button.ImageScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
             if (black)
             {
                 button.ForegroundColorEnabled  = Color.Black;
@@ -465,8 +471,8 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(Theme.DarkGreyColor5, folder);
             panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUpEvent += (s, e) => Folder_MouseUp(e, folder);
-            panel.ContainerMouseUpNotifyEvent += (s, e) => Folder_MouseUp(e, folder);
+            panel.MouseUp += (s, e) => Folder_MouseUp(e, folder);
+            panel.ContainerMouseUpNotify += (s, e) => Folder_MouseUp(e, folder);
 
             var expand = CreateExpandButton(panel, false, folder.Expanded);
             expand.ToolTip = $"<MouseLeft> {ExpandTooltip} - <MouseRight> {MoreOptionsTooltip}";
@@ -587,8 +593,8 @@ namespace FamiStudio
             var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
             var panel = CreateGradientPanel(Theme.DarkGreyColor4, project);
             panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUpEvent += (s, e) => ProjectHeader_MouseUp(e);
-            panel.ContainerMouseUpNotifyEvent += (s, e) => ProjectHeader_MouseUp(e);
+            panel.MouseUp += (s, e) => ProjectHeader_MouseUp(e);
+            panel.ContainerMouseUpNotify += (s, e) => ProjectHeader_MouseUp(e);
 
             var propsButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties", false);
             propsButton.ToolTip = $"<MouseLeft> {PropertiesProjectTooltip}";
@@ -662,10 +668,10 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(song.Color, song);
             panel.ToolTip = $"<MouseLeft> {MakeSongCurrentTooltip} - <MouseLeft><Drag> {ReorderSongsTooltip}\n<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUpEvent += (s, e) => Song_MouseUp(e, song);
-            panel.ContainerMouseUpNotifyEvent += (s, e) => Song_MouseUp(e, song);
-            panel.MouseDownEvent += (s, e) => Song_MouseDown(s, e, song);
-            panel.ContainerMouseDownNotifyEvent += (s, e) => Song_MouseDown(s, e, song);
+            panel.MouseUp += (s, e) => Song_MouseUp(e, song);
+            panel.ContainerMouseUpNotify += (s, e) => Song_MouseUp(e, song);
+            panel.MouseDown += (s, e) => Song_MouseDown(s, e, song);
+            panel.ContainerMouseDownNotify += (s, e) => Song_MouseDown(s, e, song);
 
             var icon = CreateImageBox(panel, marginX + expandSizeX, "Music", true);
             var props = CreateImageButton(panel, panel.Width - marginX - iconSizeX, "Properties");
@@ -705,10 +711,10 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(instrument.Color, instrument);
             panel.ToolTip = $"<MouseLeft> {SelectInstrumentTooltip} - <MouseLeft><Drag> {CopyReplaceInstrumentTooltip}\n<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUpEvent += (s, e) => Instrument_MouseUp(e, instrument);
-            panel.ContainerMouseUpNotifyEvent += (s, e) => Instrument_MouseUp(e, instrument);
-            panel.MouseDownEvent += (s, e) => Instrument_MouseDown(s, e, instrument);
-            panel.ContainerMouseDownNotifyEvent += (s, e) => Instrument_MouseDown(s, e, instrument);
+            panel.MouseUp += (s, e) => Instrument_MouseUp(e, instrument);
+            panel.ContainerMouseUpNotify += (s, e) => Instrument_MouseUp(e, instrument);
+            panel.MouseDown += (s, e) => Instrument_MouseDown(s, e, instrument);
+            panel.ContainerMouseDownNotify += (s, e) => Instrument_MouseDown(s, e, instrument);
 
             var expand = CreateExpandButton(panel, true, expandedInstrument == instrument);
             expand.ToolTip = $"<MouseLeft> {ExpandTooltip} - <MouseRight> {MoreOptionsTooltip}";
@@ -729,7 +735,7 @@ namespace FamiStudio
                 dpcm.UserData = "DPCM";
                 dpcm.ToolTip = $"<MouseLeft> {EditSamplesTooltip} - <MouseRight> {MoreOptionsTooltip}";
                 dpcm.Click += (s) => App.StartEditDPCMMapping(instrument);
-                dpcm.MouseDownEvent += (s, e) => InstrumentDpcm_MouseDown(s, instrument, e, dpcm.Image);
+                dpcm.MouseDown += (s, e) => InstrumentDpcm_MouseDown(s, instrument, e, dpcm.Image);
                 dpcm.MarkHandledOnClick = false;
             }
 
@@ -745,8 +751,8 @@ namespace FamiStudio
                     env.UserData = instrument.Envelopes[idx];
                     env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
                     env.Click += (s) => App.StartEditInstrument(instrument, idx);
-                    env.MouseDownEvent += (s, e) => Instrument_MouseDown(s, e, instrument, idx, env.Image);
-                    env.MouseUpEvent += (s, e) => Instrument_MouseUp(e, instrument, idx);
+                    env.MouseDown += (s, e) => Instrument_MouseDown(s, e, instrument, idx, env.Image);
+                    env.MouseUp += (s, e) => Instrument_MouseUp(e, instrument, idx);
                     env.MarkHandledOnClick = false;
                     lastEnv = env;
                 }
@@ -845,10 +851,10 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(sample.Color, sample);
             panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUpEvent += (s, e) => DpcmSample_MouseUp(e, sample);
-            panel.ContainerMouseUpNotifyEvent += (s, e) => DpcmSample_MouseUp(e, sample);
-            panel.MouseDownEvent += (s, e) => DpcmSample_MouseDown(s, e, sample);
-            panel.ContainerMouseDownNotifyEvent += (s, e) => DpcmSample_MouseDown(s, e, sample);
+            panel.MouseUp += (s, e) => DpcmSample_MouseUp(e, sample);
+            panel.ContainerMouseUpNotify += (s, e) => DpcmSample_MouseUp(e, sample);
+            panel.MouseDown += (s, e) => DpcmSample_MouseDown(s, e, sample);
+            panel.ContainerMouseDownNotify += (s, e) => DpcmSample_MouseDown(s, e, sample);
 
             var expand = CreateExpandButton(panel, true, expandedSample == sample);
             expand.ToolTip = $"<MouseLeft> {ExpandTooltip} - <MouseRight> {MoreOptionsTooltip}";
@@ -916,8 +922,8 @@ namespace FamiStudio
         {
             noneArpPanel = CreateGradientPanel(Theme.LightGreyColor1);
             noneArpPanel.ToolTip = $"<MouseLeft> {SelectArpeggioTooltip}";
-            noneArpPanel.MouseUpEvent += (s, e) => Arpeggio_MouseUp(e, null);
-            noneArpPanel.ContainerMouseUpNotifyEvent += (s, e) => Arpeggio_MouseUp(e, null);
+            noneArpPanel.MouseUp += (s, e) => Arpeggio_MouseUp(e, null);
+            noneArpPanel.ContainerMouseUpNotify += (s, e) => Arpeggio_MouseUp(e, null);
 
             var icon = CreateImageBox(noneArpPanel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
             var label = CreateLabel(noneArpPanel, ArpeggioNoneLabel, true, icon.Right + spacingX, 0, noneArpPanel.Width - icon.Right - spacingX);
@@ -928,10 +934,10 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(arp.Color, arp);
             panel.ToolTip = $"<MouseLeft> {SelectArpeggioTooltip} - <MouseLeft><Drag> {ReplaceArpeggioTooltip}\n<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUpEvent += (s, e) => Arpeggio_MouseUp(e, arp);
-            panel.ContainerMouseUpNotifyEvent += (s, e) => Arpeggio_MouseUp(e, arp);
-            panel.MouseDownEvent += (s, e) => Arpeggio_MouseDown(s, e, arp);
-            panel.ContainerMouseDownNotifyEvent += (s, e) => Arpeggio_MouseDown(s, e, arp);
+            panel.MouseUp += (s, e) => Arpeggio_MouseUp(e, arp);
+            panel.ContainerMouseUpNotify += (s, e) => Arpeggio_MouseUp(e, arp);
+            panel.MouseDown += (s, e) => Arpeggio_MouseDown(s, e, arp);
+            panel.ContainerMouseDownNotify += (s, e) => Arpeggio_MouseDown(s, e, arp);
 
             var icon = CreateImageBox(panel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
             var props = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties");
@@ -942,8 +948,8 @@ namespace FamiStudio
             edit.ToolTip = $"<MouseLeft> {EditArpeggioTooltip}";
             edit.UserData = "Arpeggio";
             edit.Click += (s) => App.StartEditArpeggio(arp);
-            edit.MouseDownEvent += (s, e) => Arpeggio_MouseDown(s, e, arp, true, edit.Image);
-            edit.MouseUpEvent += (s, e) => Arpeggio_MouseUp(e, arp);
+            edit.MouseDown += (s, e) => Arpeggio_MouseDown(s, e, arp, true, edit.Image);
+            edit.MouseUp += (s, e) => Arpeggio_MouseUp(e, arp);
             edit.MarkHandledOnClick = false;
 
             var label = CreateLabel(panel, arp.Name, true, icon.Right + spacingX, 0, edit.Left - icon.Right - spacingX * 2);
@@ -1377,7 +1383,7 @@ namespace FamiStudio
             }
             
             flingVelY = 0.0f;
-            highlightedButtonIdx = -1;
+            highlightedObject = null;
             virtualSizeY = mainContainer.GetControlsRect().Bottom;
             Capture = false;
             if (scrollBar != null)
@@ -1395,6 +1401,37 @@ namespace FamiStudio
                     if (panel.UserData != null && panel.UserData.GetType() == type)
                     {
                         panel.FindControlOfType<Label>().Bold = panel.UserData == obj;
+                    }
+                }
+            }
+        }
+
+        private void UpdateHighlightedItem(Type type, object obj)
+        {
+            if (Platform.IsMobile)
+            {
+                highlightedObject = highlightedObject == obj ? null : obj;
+
+                foreach (var ctrl in mainContainer.Controls)
+                {
+                    if (ctrl is GradientPanel panel)
+                    {
+                        if (panel.UserData != null && panel.UserData.GetType() == type)
+                        {
+                            var highlight = panel.UserData == highlightedObject;
+
+                            foreach (var ctrl2 in panel.Controls)
+                            {
+                                if (ctrl2 is ImageBox img)
+                                {
+                                    img.WhiteHighlight = highlight;
+                                }
+                                else if (ctrl2 is Button btn)
+                                {
+                                    btn.WhiteHighlight = highlight && btn.UserData != null;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2140,12 +2177,12 @@ namespace FamiStudio
             }
         }
 
-        public override void ContainerMouseWheelNotify(Control control, MouseEventArgs e)
+        public override void OnContainerMouseWheelNotify(Control control, MouseEventArgs e)
         {
             OnMouseWheel(e);
         }
 
-        public override void ContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        public override void OnContainerMouseMoveNotify(Control control, MouseEventArgs e)
         {
             var winPos = control.ControlToWindow(new Point(e.X, e.Y));
             var ctrlPos = WindowToControl(winPos);
@@ -2169,12 +2206,12 @@ namespace FamiStudio
             mouseLastY = ctrlPos.Y;
         }
 
-        public override void ContainerMouseDownNotify(Control control, MouseEventArgs e)
+        public override void OnContainerMouseDownNotify(Control control, MouseEventArgs e)
         {
             //ConditionalRecreateAllControls();
         }
 
-        public override void ContainerMouseUpNotify(Control control, MouseEventArgs e)
+        public override void OnContainerMouseUpNotify(Control control, MouseEventArgs e)
         {
             if (!e.Middle)
             {
@@ -2196,9 +2233,16 @@ namespace FamiStudio
 
         protected override void OnResize(EventArgs e)
         {
-            ResizeMainContainer();
-            UpdateRenderCoords();
-            ClampScroll();
+            if (Platform.IsDesktop)
+            {
+                ResizeMainContainer();
+                UpdateRenderCoords();
+                ClampScroll();
+            }
+            else
+            {
+                RecreateAllControls();
+            }
         }
 
         private void ImportSongs()

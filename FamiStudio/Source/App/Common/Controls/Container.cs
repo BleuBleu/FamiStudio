@@ -26,19 +26,19 @@ namespace FamiStudio
         {
         }
 
-        public virtual void ContainerMouseWheelNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerMouseWheelNotify(Control control, MouseEventArgs e)
         {
         }
 
-        public virtual void ContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerMouseMoveNotify(Control control, MouseEventArgs e)
         {
         }
 
-        public virtual void ContainerMouseDownNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerMouseDownNotify(Control control, MouseEventArgs e)
         {
         }
 
-        public virtual void ContainerMouseUpNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerMouseUpNotify(Control control, MouseEventArgs e)
         {
         }
 
@@ -56,7 +56,7 @@ namespace FamiStudio
             {
                 controls.Add(ctrl);
                 ctrl.SetParentContainer(this);
-                ctrl.AddedToContainer();
+                ctrl.SendAddedToContainer();
 
                 if (ctrl.TickEnabled)
                     IncrementControlTickEnabled(1);

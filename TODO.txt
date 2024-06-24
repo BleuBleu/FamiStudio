@@ -45,10 +45,15 @@
 		- Test scroll bars a lot more. 
 		- Middle mouse panning.
 		- Mobile stuff : white outlines, flings, touch, etc.
+			x Icons are too small in PE, or not spaced correctly? Take screenshots of current version.
+			x Top tabs take space even tho they arent there.
 			- Look everywhere we used to do highlightedButtonIdx
+			- Implement "touch-as-mouse" functionality on controls.
+			- *** WILL NEED TO IMPLEMENT CLICK, OTHERWISE CANT SCROLL!!!!
 	- Toolbar rewrite
-		- Break down in 3 widgets : timecode, osc + tooltip.
-		- Create all the widgets, just move them around/hide them.
+		x Break down in 3 widgets : timecode, osc + tooltip.
+		x Create all the widgets, just move them around/hide them.
+		- Android support.
 	- Add support for more international characeters, switch to Noto.
 	- To test : 
 		- Dialog ticks

@@ -28,7 +28,7 @@ namespace FamiStudio
             canFocus = false;
         }
 
-        public override void ContainerMouseWheelNotify(Control control, MouseEventArgs e)
+        public override void OnContainerMouseWheelNotify(Control control, MouseEventArgs e)
         {
             if (!e.Handled)
             {

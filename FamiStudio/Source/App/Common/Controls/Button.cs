@@ -32,6 +32,7 @@ namespace FamiStudio
         private bool transparent;
         private bool dimmed;
         private bool clickOnMouseUp;
+        private bool whiteHighlight;
         private bool handleOnClick = true;
 
         private Color fgColorEnabled  = Theme.LightGreyColor1;
@@ -72,7 +73,7 @@ namespace FamiStudio
         public string ImageName
         {
             get { return imageName; }
-            set { imageName = value; MarkDirty(); UpdateAtlasBitmap(); }
+            set { if (SetAndMarkDirty(ref imageName, value)) UpdateAtlasBitmap(); }
         }
 
         public float ImageScale 
@@ -111,6 +112,12 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref dimmed, value); }
         }
 
+        public bool WhiteHighlight 
+        {
+            get { return whiteHighlight; }
+            set { SetAndMarkDirty(ref whiteHighlight, value); }
+        }
+
         public void AutosizeWidth()
         {
             // Only bothered to support this one use case.
@@ -145,7 +152,7 @@ namespace FamiStudio
                     TriggerClickEvent(e);
             }
 
-            hover = true;
+            hover = Platform.IsDesktop;
             MarkDirty();
         }
 
@@ -189,7 +196,9 @@ namespace FamiStudio
         public void AutoSizeToImage()
         {
             Debug.Assert(bmp != null);
-            Resize(bmp.ElementSize.Width, bmp.ElementSize.Height);
+            Resize(
+                DpiScaling.ScaleCustom(bmp.ElementSize.Width,  imageScale),
+                DpiScaling.ScaleCustom(bmp.ElementSize.Height, imageScale));
         }
 
         protected override void OnRender(Graphics g)
@@ -215,7 +224,7 @@ namespace FamiStudio
             var opacity = Math.Min(maxOpacity, transparent ? localEnabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f);
 
             // Debug
-            //c.FillRectangle(ClientRectangle, Color.Pink);
+            //c.DrawRectangle(ClientRectangle, Color.Pink);
 
             // "Non-transparent" changes the BG on hover
             // "Transparent" changes the opacity on hover.
@@ -225,7 +234,11 @@ namespace FamiStudio
                 c.FillRectangle(ClientRectangle, bgColor);
             }
 
-            if (border)
+            if (whiteHighlight)
+            {
+                c.DrawRectangle(ClientRectangle, Theme.WhiteColor, 3, true, true);
+            }
+            else if (border)
             {
                 c.DrawRectangle(ClientRectangle, Theme.BlackColor);
             }
@@ -236,7 +249,9 @@ namespace FamiStudio
 
             if (!hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) * imageScale / 2, imageScale, fgColor.Transparent(opacity));
+                c.DrawTextureAtlas(bmp, 
+                    (width  - DpiScaling.ScaleCustom(bmpSize.Width,  imageScale)) / 2, 
+                    (height - DpiScaling.ScaleCustom(bmpSize.Height, imageScale)) / 2, imageScale, fgColor.Transparent(opacity));
             }
             else if (hasText && bmp == null)
             {
@@ -244,7 +259,7 @@ namespace FamiStudio
             }
             else if (hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, margin, (height - bmpSize.Height) * imageScale / 2, imageScale, fgColor);
+                c.DrawTextureAtlas(bmp, margin, (height - DpiScaling.ScaleCustom(bmpSize.Height, imageScale)) / 2, imageScale, fgColor);
                 c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, fgColor, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 

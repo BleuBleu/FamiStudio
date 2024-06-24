@@ -8,8 +8,10 @@ namespace FamiStudio
         private Texture bmp;
         private TextureAtlasRef bmpAtlas;
         private Color tint = Color.White;
-        private bool scale;
+        private float imageScale = 1.0f;
+        private bool stretch;
         private bool flip;
+        private bool whiteHighlight;
 
         public ImageBox(string image)
         {
@@ -26,7 +28,7 @@ namespace FamiStudio
         public string AtlasImageName
         {
             get { return atlasImageName; }
-            set { atlasImageName = value; UpdateAtlasBitmap(); MarkDirty(); }
+            set { if (SetAndMarkDirty(ref atlasImageName, value)) UpdateAtlasBitmap(); }
         }
 
         public Texture Image
@@ -35,22 +37,34 @@ namespace FamiStudio
             set { bmp = value; MarkDirty(); }
         }
 
+        public float ImageScale
+        {
+            get { return imageScale; }
+            set { SetAndMarkDirty(ref imageScale, value); }
+        }
+
         public Color Tint
         {
             get { return tint; }
-            set { tint = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref tint, value); }
         }
 
-        public bool ScaleImage
+        public bool StretchImageToFill
         {
-            get { return scale; }
-            set { scale = value; MarkDirty(); }
+            get { return stretch; }
+            set { SetAndMarkDirty(ref stretch, value); }
         }
 
         public bool FlipImage
         {
             get { return flip; }
-            set { flip = value; MarkDirty(); }
+            set { SetAndMarkDirty(ref flip, value); }
+        }
+
+        public bool WhiteHighlight
+        {
+            get { return whiteHighlight; }
+            set { SetAndMarkDirty(ref whiteHighlight, value); }
         }
 
         private void UpdateAtlasBitmap()
@@ -65,7 +79,9 @@ namespace FamiStudio
         public void AutoSizeToImage()
         {
             Debug.Assert(bmpAtlas != null);
-            Resize(bmpAtlas.ElementSize.Width, bmpAtlas.ElementSize.Height);
+            Resize(
+                DpiScaling.ScaleCustom(bmpAtlas.ElementSize.Width, imageScale),
+                DpiScaling.ScaleCustom(bmpAtlas.ElementSize.Height, imageScale));
         }
 
         protected override void OnAddedToContainer()
@@ -79,9 +95,14 @@ namespace FamiStudio
 
             var c = g.GetCommandList();
 
+            if (whiteHighlight)
+            {
+                c.DrawRectangle(ClientRectangle, Theme.WhiteColor, 3, true, true);
+            }
+
             if (bmp != null)
             {
-                if (scale)
+                if (stretch)
                 {
                     c.DrawTextureScaled(bmp, 0, 0, width, height, flip);
                 }
@@ -98,7 +119,9 @@ namespace FamiStudio
                     Debug.Assert(bmpAtlas != null);
                 }
 
-                c.DrawTextureAtlasCentered(bmpAtlas, 0, 0, width, height, 1, tint);
+                c.DrawTextureAtlas(bmpAtlas, 
+                    (width  - DpiScaling.ScaleCustom(bmpAtlas.ElementSize.Width,  imageScale)) / 2, 
+                    (height - DpiScaling.ScaleCustom(bmpAtlas.ElementSize.Height, imageScale)) / 2, imageScale, tint);
             }
             else
             {

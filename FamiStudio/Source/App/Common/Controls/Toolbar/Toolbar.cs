@@ -86,7 +86,7 @@ namespace FamiStudio
             new MobileButtonLayoutItem(2, 5, "Follow"),
             new MobileButtonLayoutItem(2, 6, "Loop"),
             new MobileButtonLayoutItem(2, 7, "Metronome"),
-            new MobileButtonLayoutItem(2, 8, "Count"),
+            new MobileButtonLayoutItem(2, 8, null),
         };
 
         // [portrait/landscape, timecode/oscilloscope]
@@ -104,8 +104,9 @@ namespace FamiStudio
 
         // Most of those are for desktop.
         // MATTT : Can we initialize those immediately like we do for controls now?
-        const int DefaultButtonSize           = Platform.IsMobile ? 120 : 36;
-        const int DefaultIconSize             = Platform.IsMobile ?  96 : 32; 
+        const int DefaultButtonSize     = Platform.IsMobile ? 120 : 36;
+        const int DefaultWantedIconSize = Platform.IsMobile ?  96 : 32;
+        const int DefaultIconSize       = Platform.IsMobile ?  64 : 32;
         const float ShowExtraButtonsThreshold = 0.8f;
 
         int buttonSize;
@@ -193,6 +194,7 @@ namespace FamiStudio
             button.Visible = false;
             button.ImageScale = iconScaleFloat;
             button.Transparent = true;
+            button.SendTouchInputAsMouse = true;
             button.Resize(buttonSize, buttonSize);
             allButtons.Add(button);
             AddControl(button);
@@ -213,8 +215,8 @@ namespace FamiStudio
                 //buttonIconPosX = DpiScaling.ScaleCustom(DefaultButtonIconPosX, scale);
                 //buttonIconPosY = DpiScaling.ScaleCustom(DefaultButtonIconPosY, scale);
                 buttonSize     = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
-                iconScaleFloat = DpiScaling.ScaleCustom(DefaultIconSize, scale) / (float)(DefaultIconSize);
-
+                //iconScaleFloat = DpiScaling.ScaleCustom(DefaultWantedIconSize, scale) / (float)(DefaultIconSize);
+                iconScaleFloat = 1.5f * scale;
             }
             else
             {
@@ -249,17 +251,17 @@ namespace FamiStudio
 
             buttonNew.Click              += ButtonNew_Click;
             buttonOpen.Click             += ButtonOpen_Click;
-            buttonOpen.MouseUpEvent      += ButtonOpen_MouseUpEvent;
+            buttonOpen.MouseUp           += ButtonOpen_MouseUpEvent;
             buttonSave.Click             += ButtonSave_Click;
-            buttonSave.MouseUpEvent      += ButtonSave_MouseUpEvent;
+            buttonSave.MouseUp           += ButtonSave_MouseUpEvent;
             buttonExport.Click           += ButtonExport_Click;
-            buttonExport.MouseUpEvent    += ButtonExport_MouseUpEvent;
+            buttonExport.MouseUp         += ButtonExport_MouseUpEvent;
             buttonCopy.Click             += ButtonCopy_Click;
             buttonCopy.EnabledEvent      += ButtonCopy_EnabledEvent;
             buttonCut.Click              += ButtonCut_Click;
             buttonCut.EnabledEvent       += ButtonCut_EnabledEvent;
             buttonPaste.Click            += ButtonPaste_Click;
-            buttonPaste.MouseUpEvent     += ButtonPaste_MouseUpEvent;
+            buttonPaste.MouseUp          += ButtonPaste_MouseUpEvent;
             buttonPaste.EnabledEvent     += ButtonPaste_EnabledEvent;
             buttonUndo.Click             += ButtonUndo_Click;
             buttonUndo.EnabledEvent      += ButtonUndo_EnabledEvent;
@@ -268,7 +270,7 @@ namespace FamiStudio
             buttonTransform.Click        += ButtonTransform_Click;
             buttonConfig.Click           += ButtonConfig_Click;
             buttonPlay.Click             += ButtonPlay_Click; // MATTT : VibrateOnLongPress = false, what was that?
-            buttonPlay.MouseUpEvent      += ButtonPlay_MouseUp;
+            buttonPlay.MouseUp           += ButtonPlay_MouseUp;
             buttonPlay.ImageEvent        += ButtonPlay_ImageEvent;
             buttonRec.Click              += ButtonRec_Click;
             buttonRec.ImageEvent         += ButtonRec_ImageEvent;
@@ -304,7 +306,8 @@ namespace FamiStudio
 
             AddControl(oscilloscope);
             AddControl(timecode);
-            AddControl(tooltipLabel);
+            if (Platform.IsDesktop)
+                AddControl(tooltipLabel);
 
             UpdateButtonLayout();
 
@@ -628,7 +631,7 @@ namespace FamiStudio
             UpdateTooltips();
         }
 
-        public override void ContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        public override void OnContainerMouseMoveNotify(Control control, MouseEventArgs e)
         {
             var winPos = control.ControlToWindow(e.Position);
             var ctrl = GetControlAt(winPos.X, winPos.Y, out _, out _);
@@ -726,26 +729,23 @@ namespace FamiStudio
                 x += margin;
                 tooltipLabel.Move(x, 0, buttonHelp.Left - x - margin, Height);
             }
-            /* MATTT : Mobile!
             else
             {
                 var landscape = IsLandscape;
 
-                foreach (var btn in buttons)
+                foreach (var btn in allButtons)
                 {
-                    if (btn != null)
-                        btn.Visible = false;
+                    btn.Visible = false;
                 }
 
                 var numRows = expandRatio >= ShowExtraButtonsThreshold ? 3 : 2;
 
                 foreach (var bl in ButtonLayout)
                 {
-                    if (bl.btn == ButtonType.Count)
+                    if (string.IsNullOrEmpty(bl.btn))
                         continue;
 
-                    var btn = buttons[(int)bl.btn];
-                
+                    var btn = allButtons.Find(b => (string)b.UserData == bl.btn);                
                     var col = bl.col;
                     var row = bl.row;
 
@@ -755,8 +755,7 @@ namespace FamiStudio
                     if (landscape)
                         Utils.Swap(ref col, ref row);
 
-                    btn.Rect = new Rectangle(buttonSize * col, buttonSize * row, buttonSize, buttonSize);
-                    btn.IconPos = new Point(btn.Rect.X + buttonIconPosX, btn.Rect.Y + buttonIconPosY);
+                    btn.Move(buttonSize * col, buttonSize * row);
                     btn.Visible = true;
                 }
 
@@ -773,17 +772,16 @@ namespace FamiStudio
                 if (landscape)
                 {
                     Utils.Swap(ref timeCol, ref timeRow);
-                    Utils.Swap(ref oscCol, ref oscRow);
+                    Utils.Swap(ref oscCol,  ref oscRow);
                 }
 
-                timecodeOscSizeX = timeLayout.numCols * buttonSize - buttonIconPosX * 2;
-                timecodeOscSizeY = buttonSize - buttonIconPosX * 2;
-                timecodePosX = buttonIconPosX + timeCol * buttonSize;
-                timecodePosY = buttonIconPosX + timeRow * buttonSize;
-                oscilloscopePosX = buttonIconPosX + oscCol * buttonSize;
-                oscilloscopePosY = buttonIconPosX + oscRow * buttonSize;
+                var margin = buttonSize / 10;
+                var timecodeOscSizeX = timeLayout.numCols * buttonSize - margin * 2;
+                var timecodeOscSizeY = buttonSize - margin * 2;
+
+                timecode.Move(timeCol * buttonSize + margin, timeRow * buttonSize + margin, timecodeOscSizeX, timecodeOscSizeY);
+                oscilloscope.Move(oscCol * buttonSize + margin, oscRow * buttonSize + margin, timecodeOscSizeX, timecodeOscSizeY);
             }
-            */
         }
 
         protected override void OnResize(EventArgs e)

@@ -471,13 +471,13 @@ namespace FamiStudio
                     {
                         Debug.WriteLine($"DOUBLE CLICK!");
 
-                        ctrl.MouseDoubleClick(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
+                        ctrl.SendMouseDoubleClick(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
                     }
                     else
                     {
                         var ex = new MouseEventArgs(MakeButtonFlags(button), cx, cy);
                         ctrl.GrabDialogFocus();
-                        ctrl.MouseDown(ex);
+                        ctrl.SendMouseDown(ex);
                         if (ex.IsRightClickDelayed)
                             DelayRightClick(ctrl, ex);
                     }
@@ -509,7 +509,7 @@ namespace FamiStudio
                         ConditionalEmitDelayedRightClick(true, true, ctrl);
 
                     container.ConditionalHideContextMenu(ctrl);
-                    ctrl.MouseUp(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
+                    ctrl.SendMouseUp(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
                 }
             }
         }
@@ -552,19 +552,19 @@ namespace FamiStudio
             // Dont forward move mouse when a context menu is active.
             if (ctrl != null && (!container.IsContextMenuActive || ctrl == ContextMenu))
             {
-                ctrl.MouseMove(e);
+                ctrl.SendMouseMove(e);
                 RefreshCursor(ctrl);
             }
 
             if (hover != hoverControl)
             {
                 if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
-                    hoverControl.MouseLeave(EventArgs.Empty);
+                    hoverControl.SendMouseLeave(EventArgs.Empty);
 
                 hoverControl = hover;
                 
                 if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
-                    hoverControl.MouseEnter(EventArgs.Empty);
+                    hoverControl.SendMouseEnter(EventArgs.Empty);
             }
         }
 
@@ -579,7 +579,7 @@ namespace FamiStudio
             {
                 if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
                 {
-                    hoverControl.MouseLeave(EventArgs.Empty);
+                    hoverControl.SendMouseLeave(EventArgs.Empty);
                     hoverControl = null;
                 }
             }
@@ -613,18 +613,18 @@ namespace FamiStudio
                 var buttons = MakeButtonFlags();
 
                 if (scrollY != 0.0f)
-                    ctrl.MouseWheel(new MouseEventArgs(buttons, cx, cy, 0, scrollY));
+                    ctrl.SendMouseWheel(new MouseEventArgs(buttons, cx, cy, 0, scrollY));
                 if (scrollX != 0.0f)
-                    ctrl.MouseHorizontalWheel(new MouseEventArgs(buttons, cx, cy, scrollX));
+                    ctrl.SendMouseHorizontalWheel(new MouseEventArgs(buttons, cx, cy, scrollX));
             }
         }
         
         private void SendKeyUpOrDown(Control ctrl, KeyEventArgs e, bool down)
         {
             if (down)
-                ctrl.KeyDown(e);
+                ctrl.SendKeyDown(e);
             else
-                ctrl.KeyUp(e);
+                ctrl.SendKeyUp(e);
         }
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
@@ -667,7 +667,7 @@ namespace FamiStudio
             var e = new CharEventArgs((char)codepoint, modifiers);
 
             foreach (var ctrl in controls)
-                ctrl.Char(e);
+                ctrl.SendChar(e);
         }
 
         private void CharModsCallback(IntPtr window, uint codepoint, int mods)
@@ -754,7 +754,7 @@ namespace FamiStudio
             if (delayedRightClickArgs != null && (delta > DelayedRightClickTime || !checkTime) && (checkCtrl == delayedRightClickControl || checkCtrl == null))
             {
                 Debug.WriteLine($"ConditionalEmitDelayedRightClick delayedRightClickControl={delayedRightClickControl} checkTime={checkTime} deltaMs={delta} forceClear={forceClear}");
-                delayedRightClickControl.MouseDownDelayed(delayedRightClickArgs);
+                delayedRightClickControl.SendMouseDownDelayed(delayedRightClickArgs);
                 clear = true;
             }
 
