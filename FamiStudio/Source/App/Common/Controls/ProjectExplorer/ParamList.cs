@@ -78,10 +78,7 @@ namespace FamiStudio
             }
             else if (e.Right && GetButtonIndex(e.X) == 0)
             {
-                App.ShowContextMenu(new[]
-                {
-                    new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
-                });
+                ShowParamContextMenu();
                 e.MarkHandled();
             }
         }
@@ -94,6 +91,11 @@ namespace FamiStudio
         protected override void OnMouseLeave(EventArgs e)
         {
             SetAndMarkDirty(ref hoverButtonIndex, 0);
+        }
+
+        public override void ShowParamContextMenu()
+        {
+            base.ShowParamContextMenu();
         }
 
         private void ChangeValue(int delta)
