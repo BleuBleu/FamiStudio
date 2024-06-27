@@ -15,6 +15,9 @@ namespace FamiStudio
         public event ControlDelegate ValueChangeStart;
         public event ControlDelegate ValueChangeEnd;
 
+        public virtual void ShowParamContextMenu() { }
+        public override bool SupportsDoubleClick => false;
+
         protected ParamControl(ParamInfo p)
         {
             param = p;

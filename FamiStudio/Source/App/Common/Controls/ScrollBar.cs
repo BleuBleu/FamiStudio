@@ -25,6 +25,7 @@ namespace FamiStudio
         public Color LineColor { get => lineColor; set => lineColor = value; }
         public int VirtualSize { get => virtualSize; set => SetAndMarkDirty(ref virtualSize, value); }
         public int ScrollBarThickness => scrollbarThickness;
+        public override bool SupportsDoubleClick => false;
 
         public delegate void ScrolledDelegate(ScrollBar sender, int pos);
         public event ScrolledDelegate Scrolled;

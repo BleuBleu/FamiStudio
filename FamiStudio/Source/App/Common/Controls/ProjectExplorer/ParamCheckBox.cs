@@ -41,10 +41,7 @@ namespace FamiStudio
         {
             if (e.Right)
             {
-                App.ShowContextMenu(new[]
-                {
-                    new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
-                });
+                ShowParamContextMenu();
             }
         }
 
@@ -68,6 +65,14 @@ namespace FamiStudio
             return enabled && (param.IsEnabled == null || param.IsEnabled());
         }
 
+        public override void ShowParamContextMenu()
+        {
+            App.ShowContextMenu(new[]
+            {
+                new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
+            });
+        }
+
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
@@ -76,7 +81,7 @@ namespace FamiStudio
             var color = Color.Black.Transparent(opacity);
 
             c.DrawRectangle(0, 0, width - 1, height - 1, color); 
-            c.DrawTextureAtlas(param.GetValue() != 0 ? bmpCheckOn : bmpCheckOff, 0, 0, 1, color);
+            c.DrawTextureAtlas(param.GetValue() != 0 ? bmpCheckOn : bmpCheckOff, 0, 0, bmpScale, color);
         }
     }
 }

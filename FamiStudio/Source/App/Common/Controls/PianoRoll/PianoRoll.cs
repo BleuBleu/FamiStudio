@@ -437,6 +437,8 @@ namespace FamiStudio
         public bool CanDelete     => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio || editMode == EditionMode.DPCM);
         public bool IsActiveControl => App != null && App.ActiveControl == this;
 
+        public override bool SendTouchInputAsMouse => false;
+
         public static int DefaultPianoKeyWidth => DefaultNoteSizeY;
 
         public Instrument EditInstrument   => editInstrument;

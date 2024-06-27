@@ -9,8 +9,18 @@ namespace FamiStudio
         private int  lastWidth;
         private Font font;
 
+        public override bool SupportsDoubleClick => false;
+
+        #region Localization
+
+        private LocalizedString FormatMinSecMs;
+        private LocalizedString FormatPatternFrame;
+
+        #endregion
+
         public Timecode()
         {
+            Localization.Localize(this);
         }
 
         protected override void OnAddedToContainer()
@@ -33,12 +43,51 @@ namespace FamiStudio
             }
         }
 
+        private bool ProjectUsesFamitrackerTempo()
+        {
+            return App.Project != null && App.Project.UsesFamiTrackerTempo; ;
+        }
+
+        private void ToggleTimecodeFormat()
+        {
+            if (!ProjectUsesFamitrackerTempo())
+            {
+                Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
+                Platform.VibrateTick();
+                MarkDirty();
+            }
+        }
+
+        protected override void OnTouchClick(MouseEventArgs e)
+        {
+            ToggleTimecodeFormat();
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            if (e.Left && Platform.IsDesktop)
+            {
+                ToggleTimecodeFormat();
+            }
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (e.Right && !ProjectUsesFamitrackerTempo())
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption(FormatMinSecMs,     null, () => { Settings.TimeFormat = 1; MarkDirty(); }, () => Settings.TimeFormat == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                    new ContextMenuOption(FormatPatternFrame, null, () => { Settings.TimeFormat = 0; MarkDirty(); }, () => Settings.TimeFormat == 0 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                });
+            }
+        }
+
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
 
             var frame = App.CurrentFrame;
-            var famitrackerTempo = App.Project != null && App.Project.UsesFamiTrackerTempo;
 
             var zeroSizeX  = c.Graphics.MeasureString("0", font);
             var colonSizeX = c.Graphics.MeasureString(":", font);
@@ -50,7 +99,7 @@ namespace FamiStudio
 
             c.FillAndDrawRectangle(0, 0, sx, sy, Theme.BlackColor, Theme.LightGreyColor2);
 
-            if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
+            if (Settings.TimeFormat == 0 || ProjectUsesFamitrackerTempo()) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
                 var location = NoteLocation.FromAbsoluteNoteIndex(App.SelectedSong, frame);
 

@@ -54,7 +54,7 @@ namespace FamiStudio
 
             imageBox = new ImageBox((Texture)null);
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, previewSizeX, previewSizeY);
-            imageBox.ScaleImage = true;
+            imageBox.StretchImageToFill = true;
             imageBox.FlipImage = true;
 
             buttonYes = new Button("Yes", null);

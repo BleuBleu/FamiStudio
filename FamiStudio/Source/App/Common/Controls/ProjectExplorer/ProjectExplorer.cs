@@ -2,7 +2,8 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Android.Widget;
+using System.Diagnostics.Metrics;
+using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -10,7 +11,7 @@ namespace FamiStudio
     {
         private const int   DefaultExpandSizeX      = 12;
         private const int   DefaultIconSizeX        = 16;
-        private const int   DefaultMarginX          = Platform.IsMobile ? 1 : 2;
+        private const int   DefaultMarginX          = 2;
         private const int   DefaultSpacingX         = Platform.IsMobile ? 0 : 2;
         private const int   DefaultPanelSizeY       = 21;
         private const int   DefaultDraggedLineSizeY = 5;
@@ -18,8 +19,8 @@ namespace FamiStudio
         private const float ScrollSpeedFactor       = Platform.IsMobile ? 2.0f : 1.0f;
 
         private int expandSizeX;
-        private int spacingX;
-        private int marginX;
+        private int spacingX; // Spacing between envelope buttons.
+        private int marginX; // Spacing between other stuff.
         private int iconSizeX;
         private int panelSizeY;
         private int paramSizeX;
@@ -244,10 +245,11 @@ namespace FamiStudio
         private static readonly CaptureOperation DragSample                   = new CaptureOperation("DragSample");
         private static readonly CaptureOperation DragSong                     = new CaptureOperation("DragSong");
         private static readonly CaptureOperation DragFolder                   = new CaptureOperation("DragFolder");
+        private static readonly CaptureOperation MobilePan                    = new CaptureOperation("MobilePan", true, false);
 
-        private int mouseLastX = 0;
+        private int mouseLastX = 0; // MATTT : Make this a pOint
         private int mouseLastY = 0;
-        private int captureMouseX = -1;
+        private int captureMouseX = -1; // MATTT : Make this a pOint
         private int captureMouseY = -1;
         private int captureButtonRelX = -1;
         private int captureButtonRelY = -1;
@@ -257,7 +259,7 @@ namespace FamiStudio
         private object highlightedObject;
         private int captureButtonSign = 0;
         private float flingVelY = 0.0f;
-        private float bitmapScale = 1.0f;
+        private float iconImageScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
         private float captureDuration = 0.0f;
         private bool captureThresholdMet = false;
         private bool canFling = false;
@@ -344,6 +346,7 @@ namespace FamiStudio
             expandedInstrument = null;
             expandedSample = null;
             selectedInstrumentTab = null;
+            highlightedObject = null;
             RecreateAllControls();
             MarkDirty();
         }
@@ -420,7 +423,7 @@ namespace FamiStudio
             var label = new Label(text, false);
             label.Color = black ? Theme.BlackColor : label.Color;
             label.Ellipsis = ellipsis;
-            label.SendTouchInputAsMouse = true;
+            //label.SendTouchInputAsMouse = true;
             label.Move(x, y, width, panel.Height);
             panel.AddControl(label);
             return label;
@@ -434,7 +437,7 @@ namespace FamiStudio
                 panel.UserData is DPCMSample);
 
             var expandButton = CreateImageButton(panel, marginX, expanded ? "InstrumentExpanded" : "InstrumentExpand", black);
-            expandButton.SendTouchInputAsMouse = true;
+            //expandButton.SendTouchInputAsMouse = true;
             return expandButton;
         }
 
@@ -443,7 +446,7 @@ namespace FamiStudio
             var imageBox = new ImageBox(image);
             panel.AddControl(imageBox);
             imageBox.Tint = black ? Color.Black : Theme.LightGreyColor2;
-            imageBox.ImageScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
+            imageBox.ImageScale = iconImageScale;
             imageBox.AutoSizeToImage();
             imageBox.Move(x, Utils.DivideAndRoundUp(panel.Height - imageBox.Height, 2));
             return imageBox;
@@ -453,8 +456,8 @@ namespace FamiStudio
         {
             var button = new Button(image, null);
             button.Transparent = true;
-            button.SendTouchInputAsMouse = true;
-            button.ImageScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
+            //button.SendTouchInputAsMouse = true;
+            button.ImageScale = iconImageScale;
             if (black)
             {
                 button.ForegroundColorEnabled  = Color.Black;
@@ -483,7 +486,7 @@ namespace FamiStudio
             propsButton.ToolTip = $"<MouseLeft> {PropertiesFolderTooltip}";
             propsButton.Click += (s) => EditFolderProperties(folder);
 
-            CreateLabel(panel, folder.Name, false, icon.Right + spacingX, 0, propsButton.Left - icon.Right - spacingX * 2, true);
+            CreateLabel(panel, folder.Name, false, icon.Right + marginX, 0, propsButton.Left - icon.Right - marginX * 2, true);
         }
 
         private void Folder_MouseUp(MouseEventArgs e, Folder folder)
@@ -549,6 +552,9 @@ namespace FamiStudio
             var oldScrollY = mainContainer != null? mainContainer.ScrollY : 0;
 
             mainContainer = new Container();
+            mainContainer.ContainerMouseDownNotify += MainContainer_ContainerMouseDownNotify;
+            mainContainer.ContainerMouseUpNotify += MainContainer_ContainerMouseUpNotify;
+            mainContainer.ContainerTouchFlingNotify += MainContainer_ContainerTouchFlingNotify;
             mainContainer.Rendering += MainContainer_Rendering;
             mainContainer.Scrolled += MainContainer_Scrolled;
             mainContainer.ScrollY = oldScrollY;
@@ -569,6 +575,31 @@ namespace FamiStudio
             }
 
             mainContainer.Move(0, topTabSizeY, width - scrollBarWidth, height - topTabSizeY);
+        }
+
+        private void MainContainer_ContainerMouseDownNotify(Control sender, MouseEventArgs e)
+        {
+            if (Platform.IsMobile && !e.Handled && e.Left)
+            {
+                StartCaptureOperation(sender, e.Position, MobilePan);
+            }
+        }
+
+        private void MainContainer_ContainerMouseUpNotify(Control sender, MouseEventArgs e)
+        {
+            if (Platform.IsMobile && !e.Handled && e.Left)
+            {
+                EndCaptureOperation(e.Position);
+            }
+        }
+
+        private void MainContainer_ContainerTouchFlingNotify(Control sender, MouseEventArgs e)
+        {
+            if (canFling)
+            {
+                EndCaptureOperation(e.Position);
+                flingVelY = e.FlingVelocityY;
+            }
         }
 
         private void SyncScrollBarToContainer()
@@ -678,7 +709,7 @@ namespace FamiStudio
             props.ToolTip = $"<MouseLeft> {PropertiesSongTooltip}";
             props.Click += (s) => EditSongProperties(song);
 
-            var label = CreateLabel(panel, song.Name, true, icon.Right + spacingX, 0, props.Left - icon.Right - spacingX * 2, true);
+            var label = CreateLabel(panel, song.Name, true, icon.Right + marginX, 0, props.Left - icon.Right - marginX * 2, true);
             label.Bold = song == App.SelectedSong;
         }
 
@@ -688,7 +719,7 @@ namespace FamiStudio
             {
                 App.SelectedSong = song;
                 draggedSong = song;
-                StartCaptureOperation(sender, e.X, e.Y, DragSong);
+                StartCaptureOperation(sender, e.Position, DragSong);
                 e.MarkHandled();
             }
         }
@@ -715,12 +746,15 @@ namespace FamiStudio
             panel.ContainerMouseUpNotify += (s, e) => Instrument_MouseUp(e, instrument);
             panel.MouseDown += (s, e) => Instrument_MouseDown(s, e, instrument);
             panel.ContainerMouseDownNotify += (s, e) => Instrument_MouseDown(s, e, instrument);
+            panel.ContainerTouchClickNotify += (s, e) => Instrument_TouchClick(s, e, instrument);
 
             var expand = CreateExpandButton(panel, true, expandedInstrument == instrument);
             expand.ToolTip = $"<MouseLeft> {ExpandTooltip} - <MouseRight> {MoreOptionsTooltip}";
             expand.Click += (s) => ToggleExpandInstrument(instrument);
 
             var icon = CreateImageBox(panel, expand.Right + spacingX, ExpansionType.Icons[instrument.Expansion], true);
+            icon.MouseDown += (s, e) => Instrument_MouseDown(s, e, instrument); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.WhiteHighlight = highlightedObject == instrument;
 
             var x = panel.Width - marginX - iconSizeX; 
             var props = CreateImageButton(panel, x, "Properties");
@@ -732,11 +766,12 @@ namespace FamiStudio
                 x -= spacingX + props.Width;
                 var dpcm = CreateImageButton(panel, x, "ChannelDPCM");
                 dpcm.Dimmed = !instrument.HasAnyMappedSamples;
+                dpcm.WhiteHighlight = highlightedObject == instrument;
                 dpcm.UserData = "DPCM";
                 dpcm.ToolTip = $"<MouseLeft> {EditSamplesTooltip} - <MouseRight> {MoreOptionsTooltip}";
                 dpcm.Click += (s) => App.StartEditDPCMMapping(instrument);
                 dpcm.MouseDown += (s, e) => InstrumentDpcm_MouseDown(s, instrument, e, dpcm.Image);
-                dpcm.MarkHandledOnClick = false;
+                dpcm.MarkHandledOnClick = Platform.IsMobile;
             }
 
             var lastEnv = (Button)null;
@@ -748,41 +783,57 @@ namespace FamiStudio
                     x -= spacingX + props.Width;
                     var env = CreateImageButton(panel, x, EnvelopeType.Icons[idx]);
                     env.Dimmed = instrument.Envelopes[idx].IsEmpty(idx);
+                    env.WhiteHighlight = highlightedObject == instrument;
                     env.UserData = instrument.Envelopes[idx];
                     env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
-                    env.Click += (s) => App.StartEditInstrument(instrument, idx);
+                    env.Click += (s) => InstrumentEnvelope_Click(instrument, idx);
                     env.MouseDown += (s, e) => Instrument_MouseDown(s, e, instrument, idx, env.Image);
                     env.MouseUp += (s, e) => Instrument_MouseUp(e, instrument, idx);
-                    env.MarkHandledOnClick = false;
+                    env.MarkHandledOnClick = Platform.IsMobile;
                     lastEnv = env;
                 }
             }
 
-            var label = CreateLabel(panel, instrument.Name, true, icon.Right + spacingX, 0, lastEnv.Left - icon.Right - spacingX * 2, true);
+            var label = CreateLabel(panel, instrument.Name, true, icon.Right + marginX, 0, lastEnv.Left - icon.Right - marginX * 2, true);
             label.Bold = App.SelectedInstrument == instrument;
+        }
+
+        private void Icon_MouseDown(Control sender, MouseEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void InstrumentDpcm_MouseDown(Control sender, Instrument instrument, MouseEventArgs e, TextureAtlasRef image)
         {
             draggedInstrument = instrument;
             envelopeDragTexture = image;
-            StartCaptureOperation(sender, e.X, e.Y, DragInstrumentSampleMappings);
+            StartCaptureOperation(sender, e.Position, DragInstrumentSampleMappings);
             e.MarkHandled();
+        }
+
+        private void InstrumentEnvelope_Click(Instrument instrument, int envelopeType)
+        {
+            App.SelectedInstrument = instrument;
+            App.StartEditInstrument(instrument, envelopeType);
         }
 
         private void Instrument_MouseDown(Control sender, MouseEventArgs e, Instrument inst, int envelopeType = -1, TextureAtlasRef image = null)
         {
-            if (!e.Handled && e.Left && (Platform.IsDesktop || highlightedObject == inst))
+            var allowDrag = Platform.IsDesktop || (highlightedObject == inst && (envelopeType >= 0 || sender is ImageBox));
+
+            if (!e.Handled && e.Left && allowDrag)
             {
-                App.SelectedInstrument = inst;
+                if (Platform.IsDesktop)
+                    App.SelectedInstrument = inst;
+
                 draggedInstrument = inst;
                 envelopeDragIdx = envelopeType;
                 envelopeDragTexture = image;
 
                 if (envelopeType >= 0)
-                    StartCaptureOperation(sender, e.X, e.Y, DragInstrumentEnvelope);
+                    StartCaptureOperation(sender, e.Position, DragInstrumentEnvelope);
                 else
-                    StartCaptureOperation(sender, e.X, e.Y, DragInstrument);
+                    StartCaptureOperation(sender, e.Position, DragInstrument);
 
                 e.MarkHandled();
             }
@@ -847,6 +898,15 @@ namespace FamiStudio
             }
         }
 
+        private void Instrument_TouchClick(Control sender, MouseEventArgs e, Instrument instrument)
+        {
+            if (!e.Handled)
+            {
+                App.SelectedInstrument = instrument;
+                UpdateHighlightedItem(typeof(Instrument), instrument);
+            }
+        }
+
         private void CreateDpcmSampleControls(DPCMSample sample)
         {
             var panel = CreateGradientPanel(sample.Color, sample);
@@ -878,7 +938,7 @@ namespace FamiStudio
             play.Click += (s) => App.PreviewDPCMSample(sample, false);
             play.RightClick += (s) => App.PreviewDPCMSample(sample, true);
 
-            CreateLabel(panel, sample.Name, true, icon.Right + spacingX, 0, play.Left - icon.Right - spacingX * 2, true);
+            CreateLabel(panel, sample.Name, true, icon.Right + marginX, 0, play.Left - icon.Right - marginX * 2, true);
         }
 
         private void DpcmSample_MouseDown(Control sender, MouseEventArgs e, DPCMSample sample)
@@ -886,7 +946,7 @@ namespace FamiStudio
             if (!e.Handled && e.Left)
             {
                 draggedSample = sample;
-                StartCaptureOperation(sender, e.X, e.Y, DragSample);
+                StartCaptureOperation(sender, e.Position, DragSample);
                 e.MarkHandled();
             }
         }
@@ -926,7 +986,7 @@ namespace FamiStudio
             noneArpPanel.ContainerMouseUpNotify += (s, e) => Arpeggio_MouseUp(e, null);
 
             var icon = CreateImageBox(noneArpPanel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
-            var label = CreateLabel(noneArpPanel, ArpeggioNoneLabel, true, icon.Right + spacingX, 0, noneArpPanel.Width - icon.Right - spacingX);
+            var label = CreateLabel(noneArpPanel, ArpeggioNoneLabel, true, icon.Right + marginX, 0, noneArpPanel.Width - icon.Right - marginX);
             label.Bold = App.SelectedArpeggio == null;
         }
 
@@ -952,7 +1012,7 @@ namespace FamiStudio
             edit.MouseUp += (s, e) => Arpeggio_MouseUp(e, arp);
             edit.MarkHandledOnClick = false;
 
-            var label = CreateLabel(panel, arp.Name, true, icon.Right + spacingX, 0, edit.Left - icon.Right - spacingX * 2);
+            var label = CreateLabel(panel, arp.Name, true, icon.Right + marginX, 0, edit.Left - icon.Right - marginX * 2);
             label.Bold = App.SelectedArpeggio == arp;
         }
 
@@ -967,12 +1027,12 @@ namespace FamiStudio
                 if (values)
                 {
                     envelopeDragIdx = EnvelopeType.Arpeggio;
-                    StartCaptureOperation(sender, e.X, e.Y, DragArpeggioValues);
+                    StartCaptureOperation(sender, e.Position, DragArpeggioValues);
                 }
                 else
                 {
                     envelopeDragIdx = -1;
-                    StartCaptureOperation(sender, e.X, e.Y, DragArpeggio);
+                    StartCaptureOperation(sender, e.Position, DragArpeggio);
                 }
 
                 e.MarkHandled();
@@ -996,12 +1056,14 @@ namespace FamiStudio
 
         private void CreateParamTabs(GradientPanel panel, int x, int y, int width, int height, string[] tabNames, string selelectedTabName)
         {
-            var tabWidth = width / tabNames.Length;
+            var tabWidth = width / (float)tabNames.Length;
             for (int i = 0; i < tabNames.Length; i++)
             {
                 var name = tabNames[i];
                 var tab = new SimpleTab(name, name == selelectedTabName);
-                tab.Move(x + i * tabWidth, y, tabWidth, height);
+                var p0 = (int)Math.Round((i + 0) * tabWidth);
+                var p1 = (int)Math.Round((i + 1) * tabWidth);
+                tab.Move(x + p0, y, p1 - p0, height);
                 tab.Click += (s) => { selectedInstrumentTab = name; RecreateAllControls(); };
                 panel.AddControl(tab);
             }
@@ -1062,7 +1124,8 @@ namespace FamiStudio
                 var y = 0;
                 var tabCreated = false;
                 var panel = CreateGradientPanel(color);
-                var indentX = marginX + expandSizeX;
+                //var indentX = marginX + expandSizeX;
+                var indentX = expandSizeX;
 
                 foreach (var param in parameters)
                 {
@@ -1082,7 +1145,7 @@ namespace FamiStudio
                     {
                         Debug.Assert(param.CustomDraw != null);
                         var customHeight = param.CustomHeight * panelSizeY;
-                        CreateParamCustomDraw(panel, param, indentX, y, panel.Width - indentX - marginX, customHeight);
+                        CreateParamCustomDraw(panel, param, indentX, y, panel.Width - indentX - marginX - 1, customHeight - 1);
                         y += customHeight;
                     }
                     else
@@ -1091,6 +1154,7 @@ namespace FamiStudio
                         {
                             var label = CreateLabel(panel, param.Name, true, indentX, y, panel.Width - indentX);
                             label.ToolTip = param.ToolTip; // TODO : The whole row should display the tooltip.
+                            label.MouseUp += ParamLabel_MouseUp;
 
                             if (param.IsList)
                             {
@@ -1098,6 +1162,7 @@ namespace FamiStudio
                                 paramList.ToolTip = $"<MouseLeft> {ChangeValueTooltip}\n<MouseRight> {MoreOptionsTooltip}";
                                 paramList.ValueChangeStart += (s) => App.UndoRedoManager.BeginTransaction(transScope, transObjectId, -1, param.TransactionFlags);
                                 paramList.ValueChangeEnd   += (s) => App.UndoRedoManager.EndTransaction();
+                                label.UserData = paramList;
                             }
                             else if (param.GetMaxValue() == 1)
                             {
@@ -1105,6 +1170,7 @@ namespace FamiStudio
                                 paramCheck.ToolTip = $"<MouseLeft> {ToggleValueTooltip}\n<MouseRight> {MoreOptionsTooltip}";
                                 paramCheck.ValueChangeStart += (s) => App.UndoRedoManager.BeginTransaction(transScope, transObjectId, -1, param.TransactionFlags);
                                 paramCheck.ValueChangeEnd   += (s) => App.UndoRedoManager.EndTransaction();
+                                label.UserData = paramCheck;
                             }
                             else
                             {
@@ -1112,6 +1178,7 @@ namespace FamiStudio
                                 paramSlider.ToolTip = $"<MouseLeft><Drag> {ChangeValueTooltip} - <Ctrl><MouseLeft><Drag> {ChangeValueFineTooltip}\n<MouseRight> {MoreOptionsTooltip}";
                                 paramSlider.ValueChangeStart += (s) => App.UndoRedoManager.BeginTransaction(transScope, transObjectId, -1, param.TransactionFlags);
                                 paramSlider.ValueChangeEnd   += (s) => App.UndoRedoManager.EndTransaction();
+                                label.UserData = paramSlider;
                             }
                         }
 
@@ -1120,6 +1187,14 @@ namespace FamiStudio
                 }
 
                 panel.Resize(panel.Width, y);
+            }
+        }
+
+        private void ParamLabel_MouseUp(Control sender, MouseEventArgs e)
+        {
+            if (e.Right && !e.Handled)
+            {
+                (sender.UserData as ParamControl).ShowParamContextMenu();
             }
         }
 
@@ -1331,7 +1406,7 @@ namespace FamiStudio
 
                     var regHeader = CreateGradientPanel(Theme.DarkGreyColor5, null, true, lastControl);
                     var regIcon = CreateImageBox(regHeader, marginX, ExpansionType.Icons[e]);
-                    CreateLabel(regHeader, RegistersExpansionHeaderLabel.Format(expName), false, regIcon.Right + spacingX, 0, width);
+                    CreateLabel(regHeader, RegistersExpansionHeaderLabel.Format(expName), false, regIcon.Right + marginX, 0, width);
                     lastControl = CreateRegisterViewerPanel(expRegs.RegisterRows, e);
 
                     // Register interpreters for each channels
@@ -1344,7 +1419,7 @@ namespace FamiStudio
                         {
                             var chanHeader = CreateGradientPanel(Theme.DarkGreyColor5, null, true, lastControl);
                             var chanIcon = CreateImageBox(chanHeader, marginX, RegisterViewer.Icons[expRegs.InterpreterIcons[i]]);
-                            CreateLabel(chanHeader, expRegs.InterpreterLabels[i], false, chanIcon.Right + spacingX, 0, width);
+                            CreateLabel(chanHeader, expRegs.InterpreterLabels[i], false, chanIcon.Right + marginX, 0, width);
                             lastControl = CreateRegisterViewerPanel(chanRegs, e);
                         }
                     }
@@ -1359,6 +1434,7 @@ namespace FamiStudio
             if (ParentWindow == null || App.Project == null)
                 return;
 
+            ValidateIntegrity();
             RemoveAllControls();
             RemoveAllInsertionPoints();
 
@@ -1383,13 +1459,13 @@ namespace FamiStudio
             }
             
             flingVelY = 0.0f;
-            highlightedObject = null;
             virtualSizeY = mainContainer.GetControlsRect().Bottom;
             Capture = false;
             if (scrollBar != null)
                 scrollBar.VirtualSize = virtualSizeY;
             ClampScroll();
             SyncScrollBarToContainer();
+            ValidateIntegrity();
         }
 
         private void UpdateSelectedItem(Type type, object obj)
@@ -1435,6 +1511,22 @@ namespace FamiStudio
                     }
                 }
             }
+        }
+
+        private void ConditionalResetHighlightedObject()
+        {
+
+            //if (highlightedObject != null || App.Project == null)
+            //{
+            //    if (highlightedObject is Song song && !App.Project.SongExists(song))
+            //        UpdateHighlightedItem(typeof(Song), null);
+            //    else if (highlightedObject is Instrument inst && !App.Project.InstrumentExists(inst))
+            //        UpdateHighlightedItem(typeof(Instrument), null);
+            //    else if (highlightedObject is DPCMSample sample && !App.Project.SampleExists(sample))
+            //        UpdateHighlightedItem(typeof(DPCMSample), null);
+            //    else if (highlightedObject is Arpeggio arp && !App.Project.ArpeggioExists(arp))
+            //        UpdateHighlightedItem(typeof(Arpeggio), null);
+            //}
         }
 
         public void SelectedSongChanged()
@@ -1518,18 +1610,18 @@ namespace FamiStudio
 
         // Return value is index of the button after which we should insert.
         // If folder != null, we are inserting inside a folder.
-        private object GetDragInsertLocation(int mainContainerX, int mainContainerY, out Folder folder, out int insertY)
+        private object GetDragInsertLocation(Point mainContainerPos, out Folder folder, out int insertY)
         {
             insertY = int.MinValue;
             folder = null;
 
-            if (mainContainer.ClientRectangle.Contains(mainContainerX, mainContainerY))
+            if (mainContainer.ClientRectangle.Contains(mainContainerPos))
             {
-                mainContainerY += mainContainer.ScrollY;
+                mainContainerPos.Y += mainContainer.ScrollY;
                 
                 if (captureOperation == DragFolder)
                 {
-                    return FindBestInsertionPoint(mainContainerY, folderInsertionPoints[draggedFolder.Type], out insertY);
+                    return FindBestInsertionPoint(mainContainerPos.Y, folderInsertionPoints[draggedFolder.Type], out insertY);
                 }
 
                 var type = -1;
@@ -1555,7 +1647,7 @@ namespace FamiStudio
                     return null;
                 }
 
-                var ins = FindBestInsertionPoint(mainContainerY, insertionPoints[type], out insertY);
+                var ins = FindBestInsertionPoint(mainContainerPos.Y, insertionPoints[type], out insertY);
                 folder = ins.Item2;
                 return ins.Item1;
             }
@@ -1592,11 +1684,14 @@ namespace FamiStudio
                         var bx = mainContainerPos.X - captureButtonRelX;
                         var by = mainContainerPos.Y - captureButtonRelY;
 
-                        c.DrawTextureAtlas(envelopeDragTexture, bx, by, bitmapScale, Color.Black.Transparent(0.5f));
+                        c.DrawTextureAtlas(envelopeDragTexture, bx, by, iconImageScale, Color.Black.Transparent(0.5f));
 
-                        // MATTT
-                        //if (Platform.IsMobile)
-                        //    c.DrawRectangle(bx, by, bx + iconSizeX - 4, by + iconSizeX - 4, Theme.WhiteColor, 3, true, true);
+                        if (Platform.IsMobile)
+                        {
+                            var iconSizeX = envelopeDragTexture.ElementSize.Width  * iconImageScale;
+                            var iconSizeY = envelopeDragTexture.ElementSize.Height * iconImageScale;
+                            c.DrawRectangle(bx, by, bx + iconSizeX, by + iconSizeY, Theme.WhiteColor, 3, true, true);
+                        }
                     }
                 }
                 else
@@ -1620,7 +1715,7 @@ namespace FamiStudio
                         lineColor = draggedArpeggio.Color;
                     }
 
-                    GetDragInsertLocation(mainContainerPos.X, mainContainerPos.Y, out var draggedInFolder, out var insertY);
+                    GetDragInsertLocation(mainContainerPos, out var draggedInFolder, out var insertY);
                     insertY -= mainContainer.ScrollY;
 
                     var margin = draggedInFolder != null ? expandSizeX : 0;
@@ -1649,7 +1744,6 @@ namespace FamiStudio
 
         private bool DoScroll(int deltaY)
         {
-            //scrollY -= deltaY;
             mainContainer.ScrollY -= deltaY;
             MarkDirty();
             return ClampScroll();
@@ -1678,9 +1772,9 @@ namespace FamiStudio
             }
         }
 
-        private void ScrollIfNearEdge(int x, int y)
+        private void ScrollIfNearEdge(Point p)
         {
-            var mainContainerPoint = mainContainer.WindowToControl(ControlToWindow(new Point(x, y)));
+            var mainContainerPoint = mainContainer.WindowToControl(ControlToWindow(p));
 
             int minY = Platform.IsMobile && IsLandscape ? 0 : -panelSizeY;
             int maxY = Platform.IsMobile && IsLandscape ? mainContainer.Height : mainContainer.Height + panelSizeY;
@@ -1692,28 +1786,27 @@ namespace FamiStudio
             ClampScroll();
         }
 
-        private void UpdateDragObjectOrFolder(int x, int y)
+        private void UpdateDragObjectOrFolder(Point p)
         {
-            ScrollIfNearEdge(x, y);
+            ScrollIfNearEdge(p);
             MarkDirty();
 
-            if (Platform.IsDesktop && captureOperation == DragSample && !ClientRectangle.Contains(x, y))
+            if (Platform.IsDesktop && captureOperation == DragSample && !ClientRectangle.Contains(p))
             {
-                DPCMSampleDraggedOutside?.Invoke(draggedSample, ControlToScreen(new Point(x, y)));
+                DPCMSampleDraggedOutside?.Invoke(draggedSample, ControlToScreen(p));
             }
         }
 
-        private void EndDragObjectOrFolder(int x, int y)
+        private void EndDragObjectOrFolder(Point p)
         {
-            var inside = ClientRectangle.Contains(x, y);
-
-            y -= mainContainer.Top;
+            var inside = ClientRectangle.Contains(p);
+            p.Y -= mainContainer.Top;
 
             if (captureOperation == DragFolder)
             {
                 if (inside)
                 {
-                    var folderBefore = GetDragInsertLocation(x, y, out _, out _) as Folder;
+                    var folderBefore = GetDragInsertLocation(p, out _, out _) as Folder;
                     if (folderBefore != draggedFolder)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
@@ -1733,7 +1826,7 @@ namespace FamiStudio
             {
                 if (inside)
                 {
-                    var songBefore = GetDragInsertLocation(x, y, out var draggedInFolder, out _) as Song;
+                    var songBefore = GetDragInsertLocation(p, out var draggedInFolder, out _) as Song;
                     if (songBefore != draggedSong)
                     {
                         var oldFolder = draggedSong.Folder;
@@ -1758,7 +1851,7 @@ namespace FamiStudio
             {
                 if (inside)
                 {
-                    var instrumentBefore = GetDragInsertLocation(x, y, out var draggedInFolder, out _) as Instrument;
+                    var instrumentBefore = GetDragInsertLocation(p, out var draggedInFolder, out _) as Instrument;
                     if (instrumentBefore != draggedInstrument)
                     {
                         var oldFolder = draggedInstrument.Folder;
@@ -1780,14 +1873,14 @@ namespace FamiStudio
                 }
                 else if (Platform.IsDesktop && !inside)
                 {
-                    InstrumentDroppedOutside(draggedInstrument, ControlToScreen(new Point(x, y)));
+                    InstrumentDroppedOutside(draggedInstrument, ControlToScreen(p));
                 }
             }
             else if (captureOperation == DragArpeggio)
             {
                 if (inside && draggedArpeggio != null)
                 {
-                    var arpBefore = GetDragInsertLocation(x, y, out var draggedInFolder, out _) as Arpeggio;
+                    var arpBefore = GetDragInsertLocation(p, out var draggedInFolder, out _) as Arpeggio;
                     if (arpBefore != draggedArpeggio)
                     {
                         var oldFolder = draggedArpeggio.Folder;
@@ -1809,14 +1902,14 @@ namespace FamiStudio
                 }
                 else if (Platform.IsDesktop && !inside)
                 {
-                    ArpeggioDroppedOutside(draggedArpeggio, ControlToScreen(new Point(x, y)));
+                    ArpeggioDroppedOutside(draggedArpeggio, ControlToScreen(p));
                 }
             }
             else if (captureOperation == DragSample)
             {
                 if (inside)
                 {
-                    var sampleBefore = GetDragInsertLocation(x, y, out var draggedInFolder, out _) as DPCMSample;
+                    var sampleBefore = GetDragInsertLocation(p, out var draggedInFolder, out _) as DPCMSample;
                     if (sampleBefore != draggedSample)
                     {
                         var oldFolder = draggedSample.Folder;
@@ -1838,14 +1931,14 @@ namespace FamiStudio
                 }
                 else if (Platform.IsDesktop && !inside)
                 {
-                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(ControlToScreen(new Point(x, y)), out var instrument);
+                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(ControlToScreen(p), out var instrument);
                     if (instrument != null)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id, -1, TransactionFlags.StopAudio);
                         instrument.UnmapDPCMSample(mappingNote);
                         instrument.MapDPCMSample(mappingNote, draggedSample);
                         App.UndoRedoManager.EndTransaction();
-                        DPCMSampleMapped?.Invoke(draggedSample, ControlToScreen(new Point(x, y)));
+                        DPCMSampleMapped?.Invoke(draggedSample, ControlToScreen(p));
                     }
                 }
             }
@@ -1853,15 +1946,15 @@ namespace FamiStudio
             RecreateAllControls();
         }
 
-        private void UpdateDragInstrumentEnvelope(int x, int y)
+        private void UpdateDragInstrumentEnvelope(Point p)
         {
-            ScrollIfNearEdge(x, y);
+            ScrollIfNearEdge(p);
             MarkDirty();
         }
 
-        private void EndDragInstrumentEnvelope(int x, int y)
+        private void EndDragInstrumentEnvelope(Point p)
         {
-            var windowPoint = ControlToWindow(new Point(x, y));
+            var windowPoint = ControlToWindow(p);
             var mainContainerPoint = mainContainer.WindowToControl(windowPoint);
             var panel = mainContainer.FindControlOfTypeAt<GradientPanel>(windowPoint.X, windowPoint.Y);
 
@@ -1919,15 +2012,15 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateDragInstrumentSampleMappings(int x, int y)
+        private void UpdateDragInstrumentSampleMappings(Point p)
         {
-            ScrollIfNearEdge(x, y);
+            ScrollIfNearEdge(p);
             MarkDirty();
         }
 
-        private void EndDragInstrumentSampleMappings(int x, int y)
+        private void EndDragInstrumentSampleMappings(Point p)
         {
-            var windowPoint = ControlToWindow(new Point(x, y));
+            var windowPoint = ControlToWindow(p);
             var mainContainerPoint = mainContainer.WindowToControl(windowPoint);
             var panel = mainContainer.FindControlOfTypeAt<GradientPanel>(windowPoint.X, windowPoint.Y);
 
@@ -1960,15 +2053,15 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateDragArpeggioValues(int x, int y)
+        private void UpdateDragArpeggioValues(Point p)
         {
-            ScrollIfNearEdge(x, y);
+            ScrollIfNearEdge(p);
             MarkDirty();
         }
 
-        private void EndDragArpeggioValues(int x, int y)
+        private void EndDragArpeggioValues(Point p)
         {
-            var windowPoint = ControlToWindow(new Point(x, y));
+            var windowPoint = ControlToWindow(p);
             var mainContainerPoint = mainContainer.WindowToControl(windowPoint);
             var panel = mainContainer.FindControlOfTypeAt<GradientPanel>(windowPoint.X, windowPoint.Y);
 
@@ -1997,14 +2090,14 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateCaptureOperation(int x, int y, bool realTime = false, float delta = 0.0f)
+        private void UpdateCaptureOperation(Point p, bool realTime = false, float delta = 0.0f)
         {
             const int CaptureThreshold = Platform.IsDesktop ? 5 : 50;
 
             if (captureOperation != null && !captureThresholdMet)
             {
-                if (Math.Abs(x - captureMouseX) >= CaptureThreshold ||
-                    Math.Abs(y - captureMouseY) >= CaptureThreshold)
+                if (Math.Abs(p.X - captureMouseX) >= CaptureThreshold ||
+                    Math.Abs(p.Y - captureMouseY) >= CaptureThreshold)
                 {
                     captureThresholdMet = true;
                 }
@@ -2019,15 +2112,15 @@ namespace FamiStudio
             {
                 if (captureOperation == DragInstrumentEnvelope)
                 {
-                    UpdateDragInstrumentEnvelope(x, y);
+                    UpdateDragInstrumentEnvelope(p);
                 }
                 else if (captureOperation == DragInstrumentSampleMappings)
                 {
-                    UpdateDragInstrumentSampleMappings(x, y);
+                    UpdateDragInstrumentSampleMappings(p);
                 }
                 else if (captureOperation == DragArpeggioValues)
                 {
-                    UpdateDragArpeggioValues(x, y);
+                    UpdateDragArpeggioValues(p);
                 }
                 else if (
                     captureOperation == DragSong       ||
@@ -2036,7 +2129,11 @@ namespace FamiStudio
                     captureOperation == DragSample     ||
                     captureOperation == DragFolder)
                 {
-                    UpdateDragObjectOrFolder(x, y);
+                    UpdateDragObjectOrFolder(p);
+                }
+                else if (captureOperation == MobilePan)
+                {
+                    DoScroll(p.Y - mouseLastY);
                 }
                 else
                 {
@@ -2054,7 +2151,7 @@ namespace FamiStudio
             Debug.WriteLine($"MOVE {e.X} {e.Y}");
 
             UpdateCursor();
-            //UpdateCaptureOperation(e.X, e.Y);
+            //UpdateCaptureOperation(e.X, e.Y); // MATTT : Was this active?
 
             // MATTT : This should be event on the "mainContainer".
             if (middle)
@@ -2092,16 +2189,16 @@ namespace FamiStudio
             //}
         }
 
-        private void StartCaptureOperation(Control control, int x, int y, CaptureOperation op)
+        private void StartCaptureOperation(Control control, Point p, CaptureOperation op)
         {
             Debug.Assert(captureOperation == null);
-            var ctrlPos = WindowToControl(control.ControlToWindow(x, y));
+            var ctrlPos = WindowToControl(control.ControlToWindow(p));
             mouseLastX = ctrlPos.X;
             mouseLastY = ctrlPos.Y;
             captureMouseX = ctrlPos.X;
             captureMouseY = ctrlPos.Y;
-            captureButtonRelX = x;
-            captureButtonRelY = y;
+            captureButtonRelX = p.X;
+            captureButtonRelY = p.Y;
             captureScrollY = mainContainer.ScrollY;
             control.Capture = true;
             canFling = false;
@@ -2110,21 +2207,21 @@ namespace FamiStudio
             captureDuration = 0.0f;
         }
 
-        private void EndCaptureOperation(int x, int y)
+        private void EndCaptureOperation(Point p)
         {
             if (captureOperation != null && captureThresholdMet)
             {
                 if (captureOperation == DragInstrumentEnvelope)
                 {
-                    EndDragInstrumentEnvelope(x, y);
+                    EndDragInstrumentEnvelope(p);
                 }
                 else if (captureOperation == DragInstrumentSampleMappings)
                 {
-                    EndDragInstrumentSampleMappings(x, y);
+                    EndDragInstrumentSampleMappings(p);
                 }
                 else if (captureOperation == DragArpeggioValues)
                 {
-                    EndDragArpeggioValues(x, y);
+                    EndDragArpeggioValues(p);
                 }
                 else if (
                     captureOperation == DragSong ||
@@ -2133,7 +2230,11 @@ namespace FamiStudio
                     captureOperation == DragSample ||
                     captureOperation == DragFolder)
                 {
-                    EndDragObjectOrFolder(x, y);
+                    EndDragObjectOrFolder(p);
+                }
+                else if (captureOperation == MobilePan)
+                {
+                    canFling = true;
                 }
                 else
                 {
@@ -2200,7 +2301,7 @@ namespace FamiStudio
             }
 
             UpdateCursor();
-            UpdateCaptureOperation(ctrlPos.X, ctrlPos.Y);
+            UpdateCaptureOperation(ctrlPos);
 
             mouseLastX = ctrlPos.X;
             mouseLastY = ctrlPos.Y;
@@ -2215,8 +2316,8 @@ namespace FamiStudio
         {
             if (!e.Middle)
             {
-                var ctrlPos = WindowToControl(control.ControlToWindow(e.X, e.Y));
-                EndCaptureOperation(ctrlPos.X, ctrlPos.Y);
+                var ctrlPos = WindowToControl(control.ControlToWindow(e.Position));
+                EndCaptureOperation(ctrlPos);
             }
             //ConditionalRecreateAllControls();
         }
@@ -2795,6 +2896,8 @@ namespace FamiStudio
                     App.Project.DeleteInstrument(inst);
                     if (selectNewInstrument)
                         App.SelectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
+                    if (inst == highlightedObject)
+                        highlightedObject = null;
                     InstrumentDeleted?.Invoke(inst);
                     App.UndoRedoManager.EndTransaction();
                     RecreateAllControls();
@@ -3303,124 +3406,10 @@ namespace FamiStudio
             });
         }
 
-        private bool HandleTouchDownDragInstrument(int x, int y)
-        {
-            // MATTT
-            //var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
-
-            //if (buttonIdx >= 0)
-            //{
-            //    var button = buttons[buttonIdx];
-            //    if (button.instrument != null && buttonIdx == highlightedButtonIdx)
-            //    {
-            //        draggedInstrument = button.instrument;
-
-            //        if (subButtonType < SubButtonType.EnvelopeMax)
-            //        {
-            //            envelopeDragIdx = (int)subButtonType;
-            //            StartCaptureOperation(x, y, CaptureOperation.DragInstrumentEnvelope, buttonIdx, buttonRelX, buttonRelY);
-            //        }
-            //        else if (subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx, buttonRelX, buttonRelY))
-            //        {
-            //            envelopeDragIdx = -1;
-            //            StartCaptureOperation(x, y, CaptureOperation.DragInstrument, buttonIdx);
-            //        }
-
-            //        return true;
-            //    }
-            //}
-
-            return false;
-        }
-
-        private bool HandleTouchDownDragSong(int x, int y)
-        {
-            // MATTT
-            //var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
-
-            //if (buttonIdx >= 0)
-            //{
-            //    var button = buttons[buttonIdx];
-            //    if (button.song != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx,  buttonRelX, buttonRelY))
-            //    {
-            //        App.SelectedSong = button.song;
-            //        StartCaptureOperation(x, y, CaptureOperation.DragSong, buttonIdx);
-            //        draggedSong = button.song;
-            //        return true;
-            //    }
-            //}
-
-            return false;
-        }
-
-        private bool HandleTouchDownDragDPCMSample(int x, int y)
-        {
-            // MATTT
-            //var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
-
-            //if (buttonIdx >= 0)
-            //{
-            //    var button = buttons[buttonIdx];
-            //    if (button.sample != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx, buttonRelX, buttonRelY))
-            //    {
-            //        StartCaptureOperation(x, y, CaptureOperation.DragSample, buttonIdx);
-            //        draggedSample = button.sample;
-            //        return true;
-            //    }
-            //}
-
-            return false;
-        }
-
-        private bool HandleTouchDownDragArpeggio(int x, int y)
-        {
-            // MATTT
-            //var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
-
-            //if (buttonIdx >= 0)
-            //{
-            //    var button = buttons[buttonIdx];
-            //    if (button.arpeggio != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx, buttonRelX, buttonRelY))
-            //    {
-            //        StartCaptureOperation(x, y, CaptureOperation.DragArpeggio, buttonIdx);
-            //        draggedArpeggio = button.arpeggio;
-            //        return true;
-            //    }
-            //}
-
-            return false;
-        }
-
-        private bool HandleTouchDownDragFolder(int x, int y)
-        {
-            // MATTT
-            //var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
-
-            //if (buttonIdx >= 0)
-            //{
-            //    var button = buttons[buttonIdx];
-            //    if (button.folder != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonIdx, buttonRelX, buttonRelY))
-            //    {
-            //        StartCaptureOperation(x, y, CaptureOperation.DragFolder, buttonIdx);
-            //        draggedFolder = button.folder;
-            //        return true;
-            //    }
-            //}
-
-            return false;
-        }
-
-        private bool HandleTouchDownPan(int x, int y)
-        {
-            // MATTT
-            //StartCaptureOperation(x, y, CaptureOperation.MobilePan);
-            return true;
-        }
-
         protected override void OnTouchMove(MouseEventArgs e)
         {
             UpdateCursor();
-            UpdateCaptureOperation(e.X, e.Y);
+            UpdateCaptureOperation(e.Position);
 
             mouseLastX = e.X;
             mouseLastY = e.Y;
@@ -3428,16 +3417,7 @@ namespace FamiStudio
 
         protected override void OnTouchUp(MouseEventArgs e)
         {
-            EndCaptureOperation(e.X, e.Y);
-        }
-
-        protected override void OnTouchFling(MouseEventArgs e)
-        {
-            if (canFling)
-            {
-                EndCaptureOperation(e.X, e.Y);
-                flingVelY = e.FlingVelocityY;
-            }
+            EndCaptureOperation(e.Position);
         }
 
         private void TickFling(float delta)
@@ -3456,7 +3436,7 @@ namespace FamiStudio
         {
             ValidateIntegrity();
             TickFling(delta);
-            UpdateCaptureOperation(mouseLastX, mouseLastY, true, delta);
+            UpdateCaptureOperation(new Point(mouseLastX, mouseLastY), true, delta);
         }
 
         private void EditProjectProperties()
@@ -3738,6 +3718,18 @@ namespace FamiStudio
 
         public void ValidateIntegrity()
         {
+            if (highlightedObject != null || App.Project == null)
+            {
+                // TODO : We should properly clear the highlighted object whenever we delete something.
+                if (highlightedObject is Song song)
+                    Debug.Assert(App.Project.SongExists(song));
+                if (highlightedObject is Instrument inst)
+                    Debug.Assert(App.Project.InstrumentExists(inst));
+                if (highlightedObject is DPCMSample sample)
+                    Debug.Assert(App.Project.SampleExists(sample));
+                if (highlightedObject is Arpeggio arp)
+                    Debug.Assert(App.Project.ArpeggioExists(arp));
+            }
         }
 
         public void Serialize(ProjectBuffer buffer)
@@ -3754,6 +3746,7 @@ namespace FamiStudio
                 Capture = false;
                 flingVelY = 0.0f;
                 mainContainer.ScrollY = scrollY;
+                highlightedObject = null;
 
                 ClampScroll();
                 RecreateAllControls();

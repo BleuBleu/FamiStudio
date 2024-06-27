@@ -67,7 +67,7 @@ namespace FamiStudio
 
             imageBox = new ImageBox((Texture)null);
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
-            imageBox.ScaleImage = DpiScaling.Window > 1;
+            imageBox.StretchImageToFill = DpiScaling.Window > 1;
 
             checkBoxDontShow = new CheckBox(false, DoNotShowAgainLabel);
             checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY + titleBarSizeY, width - buttonSize * 3, checkSizeY);

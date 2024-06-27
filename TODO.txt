@@ -38,22 +38,24 @@
 
 - UI code cleanup:
 	- Project explorer rewrite
-		- Scroll bar doesnt handle double click well.
-		- Test double click behavior on expand button
-		- Param list/slider/checkbox
-			- double-click behavior
+		- Convert all x,y to points.
+		- Test double click behavior on mobile.
 		- Test scroll bars a lot more. 
-		- Middle mouse panning.
+			- Scroll bar doesnt goo all the way down if you click in the empty part.
+		- Middle mouse panning (when i get a mouse...)
 		- Mobile stuff : white outlines, flings, touch, etc.
 			x Icons are too small in PE, or not spaced correctly? Take screenshots of current version.
 			x Top tabs take space even tho they arent there.
-			- Look everywhere we used to do highlightedButtonIdx
-			- Implement "touch-as-mouse" functionality on controls.
-			- *** WILL NEED TO IMPLEMENT CLICK, OTHERWISE CANT SCROLL!!!!
-	- Toolbar rewrite
-		x Break down in 3 widgets : timecode, osc + tooltip.
-		x Create all the widgets, just move them around/hide them.
-		- Android support.
+			/ Implement "touch-as-mouse" functionality on controls.
+			x SLiders are a bit thicker now
+			x Left margin too big, right one too small.
+			x Check in checkboxes too small, not centered.
+			- Draggin env on itself ask wrong instrument? Try in roar.
+			x We should be able to long press on the label of a param to reset the value.
+			- Apply our recipe for insturment everywhere.
+	x Toolbar rewrite
+	- Try merging all sln/projects in 1 now that we are all .NET
+		- If that works, try creating a "Win64AsMobile" build.
 	- Add support for more international characeters, switch to Noto.
 	- To test : 
 		- Dialog ticks

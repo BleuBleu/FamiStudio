@@ -20,6 +20,8 @@ namespace FamiStudio
         private int captureButton;
         private double captureTime;
 
+        public override bool SupportsDoubleClick => false;
+
         public ParamList(ParamInfo p) : base(p)
         {
             height = DpiScaling.ScaleForWindow(16);
@@ -31,7 +33,7 @@ namespace FamiStudio
             bmpRight = ParentWindow.Graphics.GetTextureAtlasRef("ButtonRight");
             buttonSizeX = DpiScaling.ScaleCustom(bmpLeft.ElementSize.Width, bmpScale);
             buttonSizeY = DpiScaling.ScaleCustom(bmpLeft.ElementSize.Height, bmpScale);
-            height = DpiScaling.ScaleForWindow(buttonSizeY);
+            height = buttonSizeY;
         }
 
         // -1 = left, 1 = right, 0 = outside
@@ -60,6 +62,7 @@ namespace FamiStudio
                     ChangeValue(buttonIndex);
                     SetTickEnabled(true);
                     Capture = true;
+                    e.MarkHandled();
                 }
             }
         }
@@ -71,13 +74,15 @@ namespace FamiStudio
                 capture = false;
                 SetTickEnabled(false);
                 InvokeValueChangeEnd();
+                e.MarkHandled();
             }
-            else if (e.Right)
+            else if (e.Right && GetButtonIndex(e.X) == 0)
             {
                 App.ShowContextMenu(new[]
                 {
                     new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
                 });
+                e.MarkHandled();
             }
         }
 

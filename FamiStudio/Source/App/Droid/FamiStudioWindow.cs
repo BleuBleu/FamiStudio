@@ -539,7 +539,9 @@ namespace FamiStudio
 
         public void CaptureMouse(Control ctrl)
         {
-            Debug.Assert(captureControl == null);
+            //Debug.Assert(captureControl == null); // MATTT
+            if (captureControl != null)
+                Debug.WriteLine(""); // MATTT
             captureControl = ctrl;
         }
 
@@ -877,7 +879,7 @@ namespace FamiStudio
             {
                 //Debug.WriteLine($"OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
-                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.SendTouchLongPress(new MouseEventArgs(x, y));
+                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.SendTouchLongPress(new MouseEventArgs(MouseEventArgs.ButtonRight, x, y)); // Long presses are always right-clicks.
             }
         }
 

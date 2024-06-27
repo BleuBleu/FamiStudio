@@ -150,6 +150,8 @@ namespace FamiStudio
             false, // MobilePan,
         };
 
+        public override bool SendTouchInputAsMouse => false;
+
         public delegate void PatternClickedDelegate(int channelIdx, int patternIdx, bool setActive);
         public delegate void ChannelDelegate(int channelIdx);
         public delegate void EmptyDelegate();

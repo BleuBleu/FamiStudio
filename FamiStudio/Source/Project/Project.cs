@@ -259,6 +259,11 @@ namespace FamiStudio
             return instruments.Contains(inst);
         }
 
+        public bool SampleExists(DPCMSample sample)
+        {
+            return samples.Contains(sample);
+        }
+
         public bool ArpeggioExists(Arpeggio arp)
         {
             return arpeggios.Contains(arp);
@@ -1984,6 +1989,8 @@ namespace FamiStudio
                 for (var i = 0; i < instruments.Count; i++)
                 {
                     var inst = instruments[i];
+
+                    // MATTT : Lazy allocate those. People sometimes have HUGE projects and only use a handful of instruments.
                     if (inst.IsN163)
                     {
                         instrumentMasks.Add(inst, new N163Mask(numLongs));

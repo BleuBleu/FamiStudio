@@ -49,7 +49,9 @@ namespace FamiStudio
         private float flingVelX;
         private bool canFling = false;
         private CaptureOperation captureOperation = CaptureOperation.None;
-        
+
+        public override bool SendTouchInputAsMouse => false;
+
         public int LayoutSize
         {
             get

@@ -18,7 +18,7 @@ namespace FamiStudio
         protected bool visible = true;
         protected bool enabled = true;
         protected bool canFocus = true;
-        protected bool touchAsMouse = false;
+        //protected bool touchAsMouse = false;
         protected string tooltip;
         protected object userData;
         private bool tickEnabled;
@@ -32,10 +32,12 @@ namespace FamiStudio
         public event MouseEventDelegate MouseUp;
         public event MouseEventDelegate MouseMove;
         public event MouseEventDelegate TouchClick;
+        public event MouseEventDelegate TouchFling;
         public event MouseEventDelegate ContainerMouseDownNotify;
         public event MouseEventDelegate ContainerMouseUpNotify;
         public event MouseEventDelegate ContainerMouseMoveNotify;
         public event MouseEventDelegate ContainerTouchClickNotify;
+        public event MouseEventDelegate ContainerTouchFlingNotify;
 
         protected Control()
         {
@@ -94,7 +96,6 @@ namespace FamiStudio
         public void SendMouseDown(MouseEventArgs e) { OnMouseDown(e); MouseDown?.Invoke(this, e); SendContainerMouseDownNotify(e); }
         public void SendMouseDownDelayed(MouseEventArgs e) { OnMouseDownDelayed(e); }
         public void SendMouseUp(MouseEventArgs e) { OnMouseUp(e); MouseUp?.Invoke(this, e); SendContainerMouseUpNotify(e); }
-        public void SendMouseDoubleClick(MouseEventArgs e) { OnMouseDoubleClick(e); }
         public void SendMouseMove(MouseEventArgs e) { OnMouseMove(e); MouseMove?.Invoke(this, e); SendContainerMouseMoveNotify(e); }
         public void SendMouseEnter(EventArgs e) { if (IsContainedByMainWindow) OnMouseEnter(e); }
         public void SendMouseLeave(EventArgs e) { if (IsContainedByMainWindow) OnMouseLeave(e); }
@@ -110,11 +111,24 @@ namespace FamiStudio
         public void SendTouchScaleBegin(MouseEventArgs e) { OnTouchScaleBegin(e); }
         public void SendTouchScale(MouseEventArgs e) { OnTouchScale(e); }
         public void SendTouchScaleEnd(MouseEventArgs e) { OnTouchScaleEnd(e); }
-        public void SendTouchFling(MouseEventArgs e) { OnTouchFling(e); }
+        public void SendTouchFling(MouseEventArgs e) { OnTouchFling(e); TouchFling?.Invoke(this, e); SendContainerTouchFlingNotify(e); }
+
+        public void SendMouseDoubleClick(MouseEventArgs e)
+        {
+            if (SupportsDoubleClick)
+            {
+                OnMouseDoubleClick(e);
+            }
+            else
+            {
+                OnMouseDown(e);
+                OnMouseUp(e);
+            }
+        }
 
         public void SendTouchMove(MouseEventArgs e) 
         {
-            if (touchAsMouse)
+            if (SendTouchInputAsMouse)
                 SendMouseMove(e); 
             else
                 OnTouchMove(e);
@@ -122,7 +136,7 @@ namespace FamiStudio
 
         public void SendTouchDown(MouseEventArgs e) 
         {
-            if (touchAsMouse)
+            if (SendTouchInputAsMouse)
                 SendMouseDown(e);
             else
                 OnTouchDown(e); 
@@ -130,7 +144,7 @@ namespace FamiStudio
 
         public void SendTouchUp(MouseEventArgs e) 
         {
-            if (touchAsMouse)
+            if (SendTouchInputAsMouse)
                 SendMouseUp(e);
             else
                 OnTouchUp(e); 
@@ -139,15 +153,15 @@ namespace FamiStudio
 
         public void SendTouchDoubleClick(MouseEventArgs e)
         {
-            if (touchAsMouse)
-                SendMouseDoubleClick(e);
-            else
+            if (SupportsDoubleClick)
                 OnTouchDoubleClick(e);
+            else
+                OnTouchClick(e);
         }
 
         public void SendTouchLongPress(MouseEventArgs e)
         {
-            if (touchAsMouse)
+            if (SendTouchInputAsMouse)
             {
                 SendMouseDown(e);
                 SendMouseUp(e);
@@ -222,6 +236,19 @@ namespace FamiStudio
             }
         }
 
+        public void SendContainerTouchFlingNotify(MouseEventArgs e)
+        {
+            var c = ParentContainer;
+            while (c != null)
+            {
+                c.OnContainerTouchFlingNotify(this, e);
+                c.ContainerTouchFlingNotify?.Invoke(c, e);
+                if (c is Dialog)
+                    break;
+                c = c.ParentContainer;
+            }
+        }
+
         public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
         public Rectangle WindowRectangle => new Rectangle(WindowPosition, Size);
         public Size ParentWindowSize => ParentWindow.Size;
@@ -243,7 +270,9 @@ namespace FamiStudio
         public bool IsContainedByMainWindow => ParentTopContainer != null;
         public string ToolTip { get => tooltip; set { SetAndMarkDirty(ref tooltip, value); } }
         public object UserData { get => userData; set => userData = value; }
-        public bool SendTouchInputAsMouse { get => touchAsMouse; set => touchAsMouse = value; }
+        //public bool SendTouchInputAsMouse { get => touchAsMouse; set => touchAsMouse = value; }
+        public virtual bool SendTouchInputAsMouse => true;
+        public virtual bool SupportsDoubleClick => true;
         public bool TickEnabled => tickEnabled;
         public void MarkDirty() { window?.MarkDirty(); }
 

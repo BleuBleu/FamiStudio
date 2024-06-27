@@ -146,6 +146,7 @@ namespace FamiStudio
         public bool  IsExpanded  => popupRatio > 0.001f;
 
         public override bool WantsFullScreenViewport => true;
+        public override bool SendTouchInputAsMouse => false;
 
         #region localization
 

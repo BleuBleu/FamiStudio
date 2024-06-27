@@ -5,7 +5,7 @@ namespace FamiStudio
 {
     public class Button : Control
     {
-        public delegate string ImageDelegate(Control sender);
+        public delegate string ImageDelegate(Control sender, ref Color tint);
         public delegate bool BoolDelegate(Control sender);
 
         // This is basically the same as "MouseDown" but can mark the event as handled automatically.
@@ -34,6 +34,8 @@ namespace FamiStudio
         private bool clickOnMouseUp;
         private bool whiteHighlight;
         private bool handleOnClick = true;
+        private bool vibrateOnClick;
+        private bool vibrateOnRightClick;
 
         private Color fgColorEnabled  = Theme.LightGreyColor1;
         private Color fgColorDisabled = Theme.MediumGreyColor1;
@@ -47,8 +49,10 @@ namespace FamiStudio
         public Color BackgroundColorPressed  { get => bgColorPressed;  set => bgColorPressed  = value; }
         public Color BackgroundColorHover    { get => bgColorHover;    set => bgColorHover    = value; }
 
-        public bool ClickOnMouseUp     { get => clickOnMouseUp; set => clickOnMouseUp = value; }
-        public bool MarkHandledOnClick { get => handleOnClick;  set => handleOnClick  = value; }
+        public bool ClickOnMouseUp      { get => clickOnMouseUp;      set => clickOnMouseUp      = value; }
+        public bool MarkHandledOnClick  { get => handleOnClick;       set => handleOnClick       = value; }
+        public bool VibrateOnClick      { get => vibrateOnClick;      set => vibrateOnClick      = value; }
+        public bool VibrateOnRightClick { get => vibrateOnRightClick; set => vibrateOnRightClick = value; }
 
         public TextureAtlasRef Image => bmp;
 
@@ -130,12 +134,20 @@ namespace FamiStudio
             UpdateAtlasBitmap();
         }
 
-        private void TriggerClickEvent(MouseEventArgs e)
+        private void TriggerClickEvent(MouseEventArgs e, bool left)
         {
-            if (e.Left)
+            if (left)
+            {
+                if (Platform.IsMobile && vibrateOnClick)
+                    Platform.VibrateTick();
                 Click?.Invoke(this);
+            }
             else
+            {
+                if (Platform.IsMobile && vibrateOnRightClick)
+                    Platform.VibrateClick();
                 RightClick?.Invoke(this);
+            }
 
             if (handleOnClick)
                 e.MarkHandled();
@@ -148,8 +160,8 @@ namespace FamiStudio
             if (enabled && (e.Left || (e.Right && canRightClick)))
             {
                 press = true;
-                if (!clickOnMouseUp)
-                    TriggerClickEvent(e);
+                if (Platform.IsDesktop && !clickOnMouseUp)
+                    TriggerClickEvent(e, e.Left);
             }
 
             hover = Platform.IsDesktop;
@@ -160,11 +172,28 @@ namespace FamiStudio
         {
             var canRightClick = RightClick != null;
 
-            if (enabled && (e.Left || (e.Right && canRightClick)))
+            if (Platform.IsDesktop && enabled && (e.Left || (e.Right && canRightClick)))
             {
                 if (clickOnMouseUp)
-                    TriggerClickEvent(e);
-                SetAndMarkDirty(ref press, false);
+                    TriggerClickEvent(e, e.Left);
+            }
+
+            SetAndMarkDirty(ref press, false);
+        }
+
+        protected override void OnTouchClick(MouseEventArgs e)
+        {
+            if (enabled)
+            {
+                TriggerClickEvent(e, true);
+            }
+        }
+
+        protected override void OnTouchLongPress(MouseEventArgs e)
+        {
+            if (enabled)
+            {
+                TriggerClickEvent(e, false);
             }
         }
 
@@ -208,10 +237,11 @@ namespace FamiStudio
 
             var localEnabled = Enabled;
             var localDimmed  = Dimmed;
+            var tint = localEnabled || transparent ? fgColorEnabled : fgColorDisabled;
 
             if (ImageEvent != null)
             {
-                var wantedImageName = ImageEvent(this);
+                var wantedImageName = ImageEvent(this, ref tint);
                 if (wantedImageName != imageName)
                 {
                     imageName = wantedImageName;
@@ -220,7 +250,6 @@ namespace FamiStudio
             }
 
             var maxOpacity = transparent && localDimmed ? 0.25f : 1.0f;
-            var fgColor = localEnabled || transparent ? fgColorEnabled : fgColorDisabled;
             var opacity = Math.Min(maxOpacity, transparent ? localEnabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f);
 
             // Debug
@@ -251,16 +280,16 @@ namespace FamiStudio
             {
                 c.DrawTextureAtlas(bmp, 
                     (width  - DpiScaling.ScaleCustom(bmpSize.Width,  imageScale)) / 2, 
-                    (height - DpiScaling.ScaleCustom(bmpSize.Height, imageScale)) / 2, imageScale, fgColor.Transparent(opacity));
+                    (height - DpiScaling.ScaleCustom(bmpSize.Height, imageScale)) / 2, imageScale, tint.Transparent(opacity));
             }
             else if (hasText && bmp == null)
             {
-                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, 0, 0, fgColor, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
+                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, 0, 0, tint, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
             }
             else if (hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, margin, (height - DpiScaling.ScaleCustom(bmpSize.Height, imageScale)) / 2, imageScale, fgColor);
-                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, fgColor, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
+                c.DrawTextureAtlas(bmp, margin, (height - DpiScaling.ScaleCustom(bmpSize.Height, imageScale)) / 2, imageScale, tint);
+                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, tint, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 
             c.PopTransform();

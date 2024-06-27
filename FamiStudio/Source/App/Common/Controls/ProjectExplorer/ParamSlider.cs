@@ -34,7 +34,8 @@ namespace FamiStudio
             bmpMinus = ParentWindow.Graphics.GetTextureAtlasRef("ButtonMinus");
             bmpPlus  = ParentWindow.Graphics.GetTextureAtlasRef("ButtonPlus");
             buttonSize = DpiScaling.ScaleCustom(bmpMinus.ElementSize.Width, bmpScale);
-            height = DpiScaling.ScaleForWindow(buttonSize);
+            height = buttonSize;
+            // MATTT : Make the rectangle part a bit smaller on mobile.
         }
 
         // -1 = left, 1 = right, 0 = outside
@@ -89,13 +90,9 @@ namespace FamiStudio
                 SetTickEnabled(false);
                 InvokeValueChangeEnd();
             }
-            else if (e.Right)
+            else if (e.Right && GetButtonIndex(e.X) == 0)
             {
-                App.ShowContextMenu(new[]
-                {
-                    new ContextMenuOption("Type",      EnterValueContext,        () => { EnterParamValue(); }),
-                    new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
-                });
+                ShowParamContextMenu();
             }
         }
 
@@ -117,6 +114,15 @@ namespace FamiStudio
         protected override void OnMouseLeave(EventArgs e)
         {
             SetAndMarkDirty(ref hoverButtonIndex, 0);
+        }
+
+        public override void ShowParamContextMenu()
+        {
+            App.ShowContextMenu(new[]
+            {
+                new ContextMenuOption("Type",      EnterValueContext,        () => { EnterParamValue(); }),
+                new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
+            });
         }
 
         private void ChangeValue(int x)

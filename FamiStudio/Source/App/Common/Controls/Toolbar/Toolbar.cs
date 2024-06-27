@@ -36,19 +36,6 @@ namespace FamiStudio
         private TooltipLabel tooltipLabel;
 
         // Mobile-only layout.
-        private struct MobileButtonLayoutItem
-        {
-            public MobileButtonLayoutItem(int r, int c, string b)
-            {
-                row = r;
-                col = c;
-                btn = b;
-            }
-            public int row;
-            public int col;
-            public string btn;
-        };
-
         private struct MobileOscTimeLayoutItem
         {
             public MobileOscTimeLayoutItem(int r, int c, int nc)
@@ -62,35 +49,34 @@ namespace FamiStudio
             public int numCols;
         };
 
-        private readonly MobileButtonLayoutItem[] ButtonLayout = new MobileButtonLayoutItem[]
+        private static readonly Dictionary<string, (int, int)> MobileButtonLayout = new Dictionary<string, (int, int)>
         {
-            new MobileButtonLayoutItem(0, 0, "Open"),
-            new MobileButtonLayoutItem(0, 1, "Copy"),
-            new MobileButtonLayoutItem(0, 2, "Cut"),
-            new MobileButtonLayoutItem(0, 3, "Undo"),
-            new MobileButtonLayoutItem(0, 6, "Play"),
-            new MobileButtonLayoutItem(0, 7, "Rec"),
-            new MobileButtonLayoutItem(0, 8, "Help"),
-            new MobileButtonLayoutItem(1, 0, "Save"),
-            new MobileButtonLayoutItem(1, 1, "Paste"),
-            new MobileButtonLayoutItem(1, 2, "Delete"),
-            new MobileButtonLayoutItem(1, 3, "Redo"),
-            new MobileButtonLayoutItem(1, 6, "Rewind"),
-            new MobileButtonLayoutItem(1, 7, "Piano"),
-            new MobileButtonLayoutItem(1, 8, "More"),
-            new MobileButtonLayoutItem(2, 0, "New"),
-            new MobileButtonLayoutItem(2, 1, "Export"),
-            new MobileButtonLayoutItem(2, 2, "Config"),
-            new MobileButtonLayoutItem(2, 3, "Transform"),
-            new MobileButtonLayoutItem(2, 4, "Machine"),
-            new MobileButtonLayoutItem(2, 5, "Follow"),
-            new MobileButtonLayoutItem(2, 6, "Loop"),
-            new MobileButtonLayoutItem(2, 7, "Metronome"),
-            new MobileButtonLayoutItem(2, 8, null),
+            { "Open",      (0, 0) },
+            { "Copy",      (0, 1) },
+            { "Cut",       (0, 2) },
+            { "Undo",      (0, 3) },
+            { "Play",      (0, 6) },
+            { "Rec",       (0, 7) },
+            { "Help",      (0, 8) },
+            { "Save",      (1, 0) },
+            { "Paste",     (1, 1) },
+            { "Delete",    (1, 2) },
+            { "Redo",      (1, 3) },
+            { "Rewind",    (1, 6) },
+            { "Piano",     (1, 7) },
+            { "More",      (1, 8) },
+            { "New",       (2, 0) },
+            { "Export",    (2, 1) },
+            { "Config",    (2, 2) },
+            { "Transform", (2, 3) },
+            { "Machine",   (2, 4) },
+            { "Follow",    (2, 5) },
+            { "Loop",      (2, 6) },
+            { "Metronome", (2, 7) }
         };
 
         // [portrait/landscape, timecode/oscilloscope]
-        private readonly MobileOscTimeLayoutItem[,] OscTimeLayout = new MobileOscTimeLayoutItem[,]
+        private static readonly MobileOscTimeLayoutItem[,] OscTimeLayout = new MobileOscTimeLayoutItem[,]
         {
             {
                 new MobileOscTimeLayoutItem(0, 4, 2),
@@ -120,9 +106,10 @@ namespace FamiStudio
         public int   LayoutSize  => buttonSize * 2;
         public int   RenderSize  => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio) * 0.5f));
         public float ExpandRatio => expandRatio;
-        public bool  IsExpanded  => expandRatio > 0.0f;
+        public bool  IsExpanded  => Platform.IsMobile && expandRatio > 0.0f;
 
         public override bool WantsFullScreenViewport => Platform.IsMobile;
+        public override bool SupportsDoubleClick => false;
 
         private float iconScaleFloat = 1.0f;
 
@@ -184,9 +171,9 @@ namespace FamiStudio
             Localization.Localize(this);
             Settings.KeyboardShortcutsChanged += Settings_KeyboardShortcutsChanged;
             SetTickEnabled(Platform.IsMobile);
+            clipRegion = Platform.IsDesktop;
         }
 
-        // MATTT : Disable color too intense. Review dimmed color too.
         private Button CreateToolbarButton(string image, string userData)
         {
             var button = new Button(image);
@@ -194,7 +181,8 @@ namespace FamiStudio
             button.Visible = false;
             button.ImageScale = iconScaleFloat;
             button.Transparent = true;
-            button.SendTouchInputAsMouse = true;
+            button.VibrateOnClick = true;
+            button.VibrateOnRightClick = true;
             button.Resize(buttonSize, buttonSize);
             allButtons.Add(button);
             AddControl(button);
@@ -205,95 +193,112 @@ namespace FamiStudio
         {
             var g = ParentWindow.Graphics;
             
-            // MATTT : Review these calculation on mobile.
             if (Platform.IsMobile)
             {
                 // On mobile, everything will scale from 1080p.
                 var screenSize = Platform.GetScreenResolution();
                 var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
-                //buttonIconPosX = DpiScaling.ScaleCustom(DefaultButtonIconPosX, scale);
-                //buttonIconPosY = DpiScaling.ScaleCustom(DefaultButtonIconPosY, scale);
                 buttonSize     = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
-                //iconScaleFloat = DpiScaling.ScaleCustom(DefaultWantedIconSize, scale) / (float)(DefaultIconSize);
                 iconScaleFloat = 1.5f * scale;
             }
             else
             {
-                //timecodePosY     = DpiScaling.ScaleForWindow(DefaultTimecodePosY);
-                //oscilloscopePosY = DpiScaling.ScaleForWindow(DefaultTimecodePosY);
-                //timecodeOscSizeX = DpiScaling.ScaleForWindow(DefaultTimecodeSizeX);
-                //buttonIconPosX   = DpiScaling.ScaleForWindow(DefaultButtonIconPosX);
-                //buttonIconPosY   = DpiScaling.ScaleForWindow(DefaultButtonIconPosY);
                 buttonSize       = DpiScaling.ScaleForWindow(DefaultButtonSize);
             }
 
-            buttonNew       = CreateToolbarButton("File", "New");
-            buttonOpen      = CreateToolbarButton("Open", "Open");
-            buttonSave      = CreateToolbarButton("Save", "Save");
-            buttonExport    = CreateToolbarButton("Export", "Export");
-            buttonCopy      = CreateToolbarButton("Copy", "Copy");
-            buttonCut       = CreateToolbarButton("Cut", "Cut");
-            buttonPaste     = CreateToolbarButton("Paste", "Paste");
-            buttonUndo      = CreateToolbarButton("Undo", "Undo");
-            buttonRedo      = CreateToolbarButton("Redo", "Redo");
-            buttonTransform = CreateToolbarButton("Transform", "Transform");
-            buttonConfig    = CreateToolbarButton("Config", "Config");
-            buttonPlay      = CreateToolbarButton("Play", "Play");
-            buttonRec       = CreateToolbarButton("Rec", "Rec");
-            buttonRewind    = CreateToolbarButton("Rewind", "Rewind");
-            buttonLoop      = CreateToolbarButton("Loop", "Loop");
-            buttonQwerty    = CreateToolbarButton("QwertyPiano", "Qwerty"); // MATTT : Desktop only.
-            buttonMetronome = CreateToolbarButton("Metronome", "Metronome");
-            buttonMachine   = CreateToolbarButton("NTSC", "Machine");
-            buttonFollow    = CreateToolbarButton("Follow", "Follow");
-            buttonHelp      = CreateToolbarButton("Help", "Help");
+            buttonNew = CreateToolbarButton("File", "New");
+            buttonNew.Click += ButtonNew_Click;
 
-            buttonNew.Click              += ButtonNew_Click;
-            buttonOpen.Click             += ButtonOpen_Click;
-            buttonOpen.MouseUp           += ButtonOpen_MouseUpEvent;
-            buttonSave.Click             += ButtonSave_Click;
-            buttonSave.MouseUp           += ButtonSave_MouseUpEvent;
-            buttonExport.Click           += ButtonExport_Click;
-            buttonExport.MouseUp         += ButtonExport_MouseUpEvent;
-            buttonCopy.Click             += ButtonCopy_Click;
-            buttonCopy.EnabledEvent      += ButtonCopy_EnabledEvent;
-            buttonCut.Click              += ButtonCut_Click;
-            buttonCut.EnabledEvent       += ButtonCut_EnabledEvent;
-            buttonPaste.Click            += ButtonPaste_Click;
-            buttonPaste.MouseUp          += ButtonPaste_MouseUpEvent;
-            buttonPaste.EnabledEvent     += ButtonPaste_EnabledEvent;
-            buttonUndo.Click             += ButtonUndo_Click;
-            buttonUndo.EnabledEvent      += ButtonUndo_EnabledEvent;
-            buttonRedo.Click             += ButtonRedo_Click;
-            buttonRedo.EnabledEvent      += ButtonRedo_EnabledEvent;
-            buttonTransform.Click        += ButtonTransform_Click;
-            buttonConfig.Click           += ButtonConfig_Click;
-            buttonPlay.Click             += ButtonPlay_Click; // MATTT : VibrateOnLongPress = false, what was that?
-            buttonPlay.MouseUp           += ButtonPlay_MouseUp;
-            buttonPlay.ImageEvent        += ButtonPlay_ImageEvent;
-            buttonRec.Click              += ButtonRec_Click;
-            buttonRec.ImageEvent         += ButtonRec_ImageEvent;
-            buttonRewind.Click           += ButtonRewind_Click;
-            buttonLoop.Click             += ButtonLoop_Click; // MATTT : CloseOnClick = false, what was that?
-            buttonLoop.ImageEvent        += ButtonLoop_ImageEvent;
-            buttonQwerty.Click           += ButtonQwerty_Click;
-            buttonQwerty.EnabledEvent    += ButtonQwerty_EnabledEvent;
-            buttonMetronome.Click        += ButtonMetronome_Click; // MATTT : CloseOnClick = false, what was that?
+            buttonOpen = CreateToolbarButton("Open", "Open");
+            buttonOpen.Click += ButtonOpen_Click;
+            buttonOpen.MouseUp += ButtonOpen_MouseUpEvent;
+
+            buttonSave = CreateToolbarButton("Save", "Save");
+            buttonSave.Click += ButtonSave_Click;
+            buttonSave.MouseUp += ButtonSave_MouseUpEvent;
+
+            buttonExport = CreateToolbarButton("Export", "Export");
+            buttonExport.Click += ButtonExport_Click;
+            buttonExport.MouseUp += ButtonExport_MouseUpEvent;
+
+            buttonCopy = CreateToolbarButton("Copy", "Copy");
+            buttonCopy.Click += ButtonCopy_Click;
+            buttonCopy.EnabledEvent += ButtonCopy_EnabledEvent;
+
+            buttonCut = CreateToolbarButton("Cut", "Cut");
+            buttonCut.Click += ButtonCut_Click;
+            buttonCut.EnabledEvent += ButtonCut_EnabledEvent;
+
+            buttonPaste = CreateToolbarButton("Paste", "Paste");
+            buttonPaste.Click += ButtonPaste_Click;
+            buttonPaste.MouseUp += ButtonPaste_MouseUpEvent;
+            buttonPaste.EnabledEvent += ButtonPaste_EnabledEvent;
+
+            buttonUndo = CreateToolbarButton("Undo", "Undo");
+            buttonUndo.Click += ButtonUndo_Click;
+            buttonUndo.EnabledEvent += ButtonUndo_EnabledEvent;
+
+            buttonRedo = CreateToolbarButton("Redo", "Redo");
+            buttonRedo.Click += ButtonRedo_Click;
+            buttonRedo.EnabledEvent += ButtonRedo_EnabledEvent;
+
+            buttonTransform = CreateToolbarButton("Transform", "Transform");
+            buttonTransform.Click += ButtonTransform_Click;
+
+            buttonConfig = CreateToolbarButton("Config", "Config");
+            buttonConfig.Click += ButtonConfig_Click;
+
+            buttonPlay = CreateToolbarButton("Play", "Play");
+            buttonPlay.Click += ButtonPlay_Click;
+            buttonPlay.MouseUp += ButtonPlay_MouseUp;
+            buttonPlay.ImageEvent += ButtonPlay_ImageEvent;
+
+            buttonRec = CreateToolbarButton("Rec", "Rec");
+            buttonRec.Click += ButtonRec_Click;
+            buttonRec.ImageEvent += ButtonRec_ImageEvent;
+
+            buttonRewind = CreateToolbarButton("Rewind", "Rewind");
+            buttonRewind.Click += ButtonRewind_Click;
+
+            buttonLoop = CreateToolbarButton("Loop", "Loop");
+            buttonLoop.Click += ButtonLoop_Click;
+            buttonLoop.ImageEvent += ButtonLoop_ImageEvent;
+
+            buttonQwerty = CreateToolbarButton("QwertyPiano", "Qwerty");
+            buttonQwerty.Visible = Platform.IsDesktop;
+            buttonQwerty.Click += ButtonQwerty_Click;
+            buttonQwerty.EnabledEvent += ButtonQwerty_EnabledEvent;
+
+            buttonMetronome = CreateToolbarButton("Metronome", "Metronome");
+            buttonMetronome.Click += ButtonMetronome_Click;
             buttonMetronome.EnabledEvent += ButtonMetronome_EnabledEvent;
-            buttonMachine.Click          += ButtonMachine_Click; // MATTT : CloseOnClick = false, what was that?
-            buttonMachine.ImageEvent     += ButtonMachine_ImageEvent;
-            buttonMachine.EnabledEvent   += ButtonMachine_EnabledEvent;
-            buttonFollow.Click           += ButtonFollow_Click; // MATTT : CloseOnClick = false, what was that?
-            buttonFollow.EnabledEvent    += ButtonFollow_EnabledEvent;
-            buttonHelp.Click             += ButtonHelp_Click;
+
+            buttonMachine = CreateToolbarButton("NTSC", "Machine");
+            buttonMachine.Click += ButtonMachine_Click;
+            buttonMachine.ImageEvent += ButtonMachine_ImageEvent;
+            buttonMachine.EnabledEvent += ButtonMachine_EnabledEvent;
+
+            buttonFollow = CreateToolbarButton("Follow", "Follow");
+            buttonFollow.Click += ButtonFollow_Click;
+            buttonFollow.EnabledEvent += ButtonFollow_EnabledEvent;
+
+            buttonHelp = CreateToolbarButton("Help", "Help");
+            buttonHelp.Click += ButtonHelp_Click;
 
             if (Platform.IsMobile)
             {
                 buttonDelete = CreateToolbarButton("Delete", "Delete");
-                buttonMore   = CreateToolbarButton("More", "More");
-                buttonPiano  = CreateToolbarButton("Piano", "Piano");
-                buttonQwerty.Visible = false;
+                buttonDelete.Click += ButtonDelete_Click;
+                buttonDelete.RightClick += ButtonDelete_RightClick;
+                buttonDelete.EnabledEvent += ButtonDelete_EnabledEvent;
+
+                buttonMore = CreateToolbarButton("More", "More");
+                buttonMore.Click += ButtonMore_Click;
+
+                buttonPiano = CreateToolbarButton("Piano", "Piano");
+                buttonPiano.Click += ButtonPiano_Click;
+                buttonPiano.DimmedEvent += ButtonPiano_DimmedEvent;
             }
             else
             {
@@ -310,46 +315,57 @@ namespace FamiStudio
                 AddControl(tooltipLabel);
 
             UpdateButtonLayout();
+        }
 
-            /*
-            x buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
-            x buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = Platform.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
-            x buttons[(int)ButtonType.Save]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
-            x buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = Platform.IsDesktop ? OnRepeatLastExport : (MouseClickDelegate)null };
-            x buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
-            x buttons[(int)ButtonType.Cut]       = new Button { BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
-            x buttons[(int)ButtonType.Paste]     = new Button { BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
-            x buttons[(int)ButtonType.Undo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Undo, Click = OnUndo, Enabled = OnUndoEnabled };
-            x buttons[(int)ButtonType.Redo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Redo, Click = OnRedo, Enabled = OnRedoEnabled };
-            x buttons[(int)ButtonType.Transform] = new Button { BmpAtlasIndex = ButtonImageIndices.Transform, Click = OnTransform };
-            x buttons[(int)ButtonType.Config]    = new Button { BmpAtlasIndex = ButtonImageIndices.Config, Click = OnConfig };
-            / buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, RightClick = OnPlayWithRate, GetBitmap = OnPlayGetBitmap, VibrateOnLongPress = false };
-            / buttons[(int)ButtonType.Rec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
-            x buttons[(int)ButtonType.Rewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
-            x buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap, CloseOnClick = false };
-            x buttons[(int)ButtonType.Metronome] = new Button { BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled, CloseOnClick = false };
-            x buttons[(int)ButtonType.Machine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled, CloseOnClick = false };
-            x buttons[(int)ButtonType.Follow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled, CloseOnClick = false };
-            x buttons[(int)ButtonType.Help]      = new Button { BmpAtlasIndex = ButtonImageIndices.Help, Click = OnHelp };
 
-            if (Platform.IsMobile)
+        private void ButtonDelete_Click(Control sender)
+        {
+            App.Delete();
+        }
+        
+        private void ButtonDelete_RightClick(Control sender)
+        {
+            App.ShowContextMenu(new[]
             {
-                buttons[(int)ButtonType.Delete] = new Button { BmpAtlasIndex = ButtonImageIndices.Delete, Click = OnDelete, RightClick = OnDeleteSpecial, Enabled = OnDeleteEnabled };
-                buttons[(int)ButtonType.More]   = new Button { BmpAtlasIndex = ButtonImageIndices.More, Click = OnMore };
-                buttons[(int)ButtonType.Piano]  = new Button { BmpAtlasIndex = ButtonImageIndices.Piano, Click = OnMobilePiano, Enabled = OnMobilePianoEnabled };
+                new ContextMenuOption("MenuStar", DeleteSpecialLabel, () => { App.DeleteSpecial(); }),
+            });
+        }
+
+        private bool ButtonDelete_EnabledEvent(Control sender)
+        {
+            return App.CanDelete;
+        }
+
+        private void ButtonMore_Click(Control sender)
+        {
+            if (expanding || closing)
+            {
+                expanding = !expanding;
+                closing   = !closing;
             }
             else
             {
-                buttons[(int)ButtonType.Qwerty] = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
-
+                expanding = expandRatio == 0.0f;
+                closing   = expandRatio == 1.0f;
             }
-            */
 
+            MarkDirty();
+        }
+
+        private void ButtonPiano_Click(Control sender)
+        {
+            App.MobilePianoVisible = !App.MobilePianoVisible;
+        }
+
+        private bool ButtonPiano_DimmedEvent(Control sender)
+        {
+            return !App.MobilePianoVisible;
         }
 
         private void ButtonNew_Click(Control sender)
         {
             App.NewProject();
+            StartClosing();
         }
 
         private void ButtonOpen_Click(Control sender)
@@ -392,6 +408,7 @@ namespace FamiStudio
         private void ButtonExport_Click(Control sender)
         {
             App.Export();
+            StartClosing();
         }
 
         private void ButtonExport_MouseUpEvent(Control sender, MouseEventArgs e)
@@ -469,11 +486,13 @@ namespace FamiStudio
         private void ButtonTransform_Click(Control sender)
         {
             App.OpenTransformDialog();
+            StartClosing();
         }
 
         private void ButtonConfig_Click(Control sender)
         {
             App.OpenConfigDialog();
+            StartClosing();
         }
 
         private void ButtonPlay_Click(Control sender)
@@ -501,14 +520,13 @@ namespace FamiStudio
             }
         }
 
-        private string ButtonPlay_ImageEvent(Control sender)
+        private string ButtonPlay_ImageEvent(Control sender, ref Color tint)
         {
             if (App.IsPlaying)
             {
                 if (App.IsSeeking)
                 {
-                    // MATTT : How do we want to do this?
-                    //tint = Theme.Darken(tint, (int)(Math.Abs(Math.Sin(Platform.TimeSeconds() * 12.0)) * 64));
+                    tint = Theme.Darken(tint, (int)(Math.Abs(Math.Sin(Platform.TimeSeconds() * 12.0)) * 64));
                     return "Wait";
                 }
                 else
@@ -532,11 +550,10 @@ namespace FamiStudio
             App.ToggleRecording();
         }
 
-        private string ButtonRec_ImageEvent(Control sender)
+        private string ButtonRec_ImageEvent(Control sender, ref Color tint)
         {
-            // MATTT : Tint!
-            //    if (App.IsRecording)
-            //        tint = Theme.DarkRedColor;
+            if (App.IsRecording)
+                tint = Theme.DarkRedColor;
             return "Rec"; 
         }
 
@@ -551,7 +568,7 @@ namespace FamiStudio
             App.LoopMode = App.LoopMode == LoopMode.LoopPoint ? LoopMode.Pattern : LoopMode.LoopPoint;
         }
 
-        private string ButtonLoop_ImageEvent(Control sender)
+        private string ButtonLoop_ImageEvent(Control sender, ref Color tint)
         {
             switch (App.LoopMode)
             {
@@ -592,7 +609,7 @@ namespace FamiStudio
             return App.Project != null && !App.Project.UsesAnyExpansionAudio;
         }
 
-        private string ButtonMachine_ImageEvent(Control sender)
+        private string ButtonMachine_ImageEvent(Control sender, ref Color tint)
         {
             if (App.Project == null)
             {
@@ -740,14 +757,13 @@ namespace FamiStudio
 
                 var numRows = expandRatio >= ShowExtraButtonsThreshold ? 3 : 2;
 
-                foreach (var bl in ButtonLayout)
+                foreach (var btn in allButtons)
                 {
-                    if (string.IsNullOrEmpty(bl.btn))
+                    if (!MobileButtonLayout.TryGetValue((string)btn.UserData, out var layout))
                         continue;
 
-                    var btn = allButtons.Find(b => (string)b.UserData == bl.btn);                
-                    var col = bl.col;
-                    var row = bl.row;
+                    var row = layout.Item1;
+                    var col = layout.Item2;
 
                     if (row >= numRows)
                         continue;
@@ -847,49 +863,18 @@ namespace FamiStudio
 
         public void Reset()
         {
-            // MATTT
-            //tooltip = "";
-            //redTooltip = false;
+            tooltipLabel.ToolTip = "";
         }
 
-        //private void OnDelete(int x, int y)
-        //{
-        //    App.Delete();
-        //}
-
-        //private void OnDeleteSpecial(int x, int y)
-        //{
-        //    App.ShowContextMenu(left + x, top + y, new[]
-        //    {
-        //        new ContextMenuOption("MenuStar", DeleteSpecialLabel, () => { App.DeleteSpecial(); }),
-        //    });
-        //}
-
-        //private ButtonStatus OnDeleteEnabled()
-        //{
-        //    return App.CanDelete ? ButtonStatus.Enabled : ButtonStatus.Disabled;
-        //}
-
-        //private void StartClosing()
-        //{
-        //    expanding = false;
-        //    closing   = expandRatio > 0.0f;
-        //}
+        private void StartClosing()
+        {
+            expanding = false;
+            closing = expandRatio > 0.0f;
+        }
 
         //private void OnMore(int x, int y)
         //{
-        //    if (expanding || closing)
-        //    {
-        //        expanding = !expanding;
-        //        closing   = !closing;
-        //    }
-        //    else
-        //    {
-        //        expanding = expandRatio == 0.0f;
-        //        closing   = expandRatio == 1.0f;
-        //    }
 
-        //    MarkDirty();
         //}
 
         //private void OnMobilePiano(int x, int y)
@@ -902,14 +887,26 @@ namespace FamiStudio
         //    return App.MobilePianoVisible ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         //}
 
+        private Rectangle GetMobileShadowRect()
+        {
+            if (IsExpanded)
+            {
+                if (IsLandscape)
+                    return new Rectangle(RenderSize, 0, ParentWindowSize.Width - RenderSize, ParentWindowSize.Height);
+                else
+                    return new Rectangle(0, RenderSize, ParentWindowSize.Width, ParentWindowSize.Height - RenderSize);
+            }
+            else
+            {
+                return Rectangle.Empty;
+            }
+        }
+
         private void RenderShadow(CommandList c)
         {
             if (Platform.IsMobile && IsExpanded)
             {
-                if (IsLandscape)
-                    c.FillRectangle(RenderSize, 0, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
-                else
-                    c.FillRectangle(0, RenderSize, ParentWindowSize.Width, ParentWindowSize.Height, Color.FromArgb(expandRatio * 0.6f, Color.Black));
+                c.FillRectangle(GetMobileShadowRect(), Color.FromArgb(expandRatio * 0.6f, Color.Black));
             }
         }
 
@@ -938,8 +935,6 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            base.OnRender(g);
-            /*
             var c = g.DefaultCommandList;
             var o = g.OverlayCommandList;
 
@@ -953,16 +948,10 @@ namespace FamiStudio
 
             RenderShadow(o);
             RenderBackground(c);
-            //RenderButtons(c);
 
-            if (Platform.IsDesktop)
-            {
-                c.PushClipRegion(lastButtonX, 0, helpButtonX - lastButtonX, Height);
-                RenderBackground(c);
-                RenderWarningAndTooltip(c);
-                c.PopClipRegion();
-            }
-            else
+            base.OnRender(g);
+
+            if (Platform.IsMobile)
             {
                 if (IsLandscape)
                     c.DrawLine(RenderSize - 1, 0, RenderSize - 1, Height, Theme.BlackColor);
@@ -971,7 +960,6 @@ namespace FamiStudio
 
                 c.PopClipRegion();
             }
-            */
         }
 
         public bool ShouldRefreshOscilloscope(bool hasNonZeroSample)
@@ -979,96 +967,13 @@ namespace FamiStudio
             return oscilloscope.Visible && oscilloscope.LastOscilloscopeHadNonZeroSample != hasNonZeroSample;
         }
 
-        //protected override void OnMouseMove(MouseEventArgs e)
-        //{
-        //    var newHoverButtonIdx = -1;
-        //    var newTooltip = "";
-
-        //    for (int i = 0; i < buttons.Length; i++)
-        //    {
-        //        var btn = buttons[i];
-
-        //        if (btn != null && btn.Visible && btn.Rect.Contains(e.X, e.Y))
-        //        {
-        //            newHoverButtonIdx = i;
-        //            newTooltip = btn.ToolTip;
-        //            break;
-        //        }
-        //    }
-
-        //    SetAndMarkDirty(ref hoverButtonIdx, newHoverButtonIdx);
-        //    SetToolTip(newTooltip);
-        //}
-
-        //protected override void OnMouseDown(MouseEventArgs e)
-        //{
-        //    bool left  = e.Left;
-
-        //    if (left)
-        //    {
-        //        if (Platform.IsMobile && !ClientRectangle.Contains(e.X, e.Y))
-        //        {
-        //            StartClosing();
-        //        }
-        //        else if (IsPointInTimeCode(e.X, e.Y))
-        //        {
-        //            Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
-        //            MarkDirty();
-        //        }
-        //        else
-        //        {
-        //            var btn = GetButtonAtCoord(e.X, e.Y);
-
-        //            if (btn != null)
-        //            {
-        //                btn.Click?.Invoke(e.X, e.Y);
-        //                MarkDirty();
-        //            }
-        //        }
-        //    }
-        //}
-
-        //protected override void OnTouchLongPress(int x, int y)
-        //{
-        //    var btn = GetButtonAtCoord(x, y);
-
-        //    if (btn != null && btn.RightClick != null)
-        //    {
-        //        if (btn.VibrateOnLongPress)
-        //            Platform.VibrateClick();
-        //        btn.RightClick(x, y);
-        //        MarkDirty();
-        //        if (btn.CloseOnClick && IsExpanded)
-        //            StartClosing();
-        //    }
-        //}
-
-        //protected override void OnTouchClick(int x, int y)
-        //{
-        //    var btn = GetButtonAtCoord(x, y);
-        //    if (btn != null)
-        //    {
-        //        Platform.VibrateTick();
-        //        btn.Click?.Invoke(x, y);
-        //        MarkDirty();
-        //        if (!btn.CloseOnClick)
-        //            return;
-        //    }
-
-        //    if (IsPointInTimeCode(x, y))
-        //    {
-        //        Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
-        //        Platform.VibrateTick();
-        //        MarkDirty();
-        //        return;
-        //    }
-
-        //    if (IsExpanded)
-        //    {
-        //        if (btn == null)
-        //            Platform.VibrateTick();
-        //        StartClosing();
-        //    }
-        //}
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (!e.Handled && Platform.IsMobile && IsExpanded && GetMobileShadowRect().Contains(e.Position))
+            {
+                Platform.VibrateTick();
+                StartClosing();
+            }
+        }
     }
 }

@@ -469,9 +469,13 @@ namespace FamiStudio
 
                     if (doubleClick)
                     {
-                        Debug.WriteLine($"DOUBLE CLICK!");
+                        // We dont support anything other and double-left click.
+                        if (button == GLFW_MOUSE_BUTTON_LEFT)
+                        {
+                            Debug.WriteLine($"DOUBLE CLICK!");
 
-                        ctrl.SendMouseDoubleClick(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
+                            ctrl.SendMouseDoubleClick(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
+                        }
                     }
                     else
                     {
