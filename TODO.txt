@@ -38,24 +38,17 @@
 
 - UI code cleanup:
 	- Project explorer rewrite
-		- Convert all x,y to points.
+		x Convert all x,y to points.
+		- Button mouse up / long press confusion... Ugh.
 		- Test double click behavior on mobile.
 		- Test scroll bars a lot more. 
-			- Scroll bar doesnt goo all the way down if you click in the empty part.
+			x Scroll bar doesnt goo all the way down if you click in the empty part.
 		- Middle mouse panning (when i get a mouse...)
 		- Mobile stuff : white outlines, flings, touch, etc.
-			x Icons are too small in PE, or not spaced correctly? Take screenshots of current version.
-			x Top tabs take space even tho they arent there.
-			/ Implement "touch-as-mouse" functionality on controls.
-			x SLiders are a bit thicker now
-			x Left margin too big, right one too small.
-			x Check in checkboxes too small, not centered.
-			- Draggin env on itself ask wrong instrument? Try in roar.
+			x Draggin env on itself ask wrong instrument? Try in roar.
 			x We should be able to long press on the label of a param to reset the value.
-			- Apply our recipe for insturment everywhere.
+			/ Apply our recipe for insturment everywhere.
 	x Toolbar rewrite
-	- Try merging all sln/projects in 1 now that we are all .NET
-		- If that works, try creating a "Win64AsMobile" build.
 	- Add support for more international characeters, switch to Noto.
 	- To test : 
 		- Dialog ticks

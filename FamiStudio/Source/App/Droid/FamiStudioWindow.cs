@@ -837,7 +837,10 @@ namespace FamiStudio
                 {
                     //Debug.WriteLine($"Move {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                     lock (renderLock)
-                        GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.SendTouchMove(new MouseEventArgs(x, y));
+                    {
+                        var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                        ctrl?.SendTouchMove(new MouseEventArgs(x, y));
+                    }
                 }
 
                 detector.OnTouchEvent(e);
@@ -857,7 +860,10 @@ namespace FamiStudio
             {
                 //Debug.WriteLine($"OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
-                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.SendTouchDown(new MouseEventArgs(x, y));
+                {
+                    var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                    ctrl?.SendTouchDown(new MouseEventArgs(x, y));
+                }
             }
             return false;
         }
@@ -868,7 +874,10 @@ namespace FamiStudio
             {
                 //Debug.WriteLine($"OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({velocityX}, {velocityY})");
                 lock (renderLock)
-                    GetCapturedControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y)?.SendTouchFling(new MouseEventArgs(x, y, velocityX, velocityY));
+                {
+                    var ctrl = GetCapturedControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y);
+                    ctrl?.SendTouchFling(new MouseEventArgs(x, y, velocityX, velocityY));
+                }
             }
             return false;
         }
@@ -879,7 +888,10 @@ namespace FamiStudio
             {
                 //Debug.WriteLine($"OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
-                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.SendTouchLongPress(new MouseEventArgs(MouseEventArgs.ButtonRight, x, y)); // Long presses are always right-clicks.
+                {
+                    var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                    ctrl?.SendTouchLongPress(new MouseEventArgs(MouseEventArgs.ButtonRight, x, y)); // Long presses are always right-clicks.
+                }
             }
         }
 
@@ -905,7 +917,10 @@ namespace FamiStudio
 
                 //Debug.WriteLine($"{e.PointerCount} OnSingleTapUp ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
-                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.SendTouchClick(new MouseEventArgs(x, y));
+                {
+                    var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                    ctrl?.SendTouchClick(new MouseEventArgs(x, y));
+                }
             }
             return false;
         }
@@ -916,7 +931,10 @@ namespace FamiStudio
             {
                 //Debug.WriteLine($"OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
                 lock (renderLock)
-                    GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.SendTouchScale(new MouseEventArgs(x, y, detector.ScaleFactor));
+                {
+                    var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
+                    ctrl.SendTouchScale(new MouseEventArgs(x, y, detector.ScaleFactor));
+                }
                 return true;
             }
             else
@@ -931,7 +949,10 @@ namespace FamiStudio
             {
                 //Debug.WriteLine($"OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
-                    GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.SendTouchScaleBegin(new MouseEventArgs(x, y));
+                {
+                    var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
+                    ctrl?.SendTouchScaleBegin(new MouseEventArgs(x, y));
+                }
                 return true;
             }
             else
@@ -946,7 +967,10 @@ namespace FamiStudio
             {
                 //Debug.WriteLine($"OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
-                    GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.SendTouchScaleEnd(new MouseEventArgs(x, y));
+                {
+                    var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
+                    ctrl?.SendTouchScaleEnd(new MouseEventArgs(x, y));
+                }
             }
         }
 

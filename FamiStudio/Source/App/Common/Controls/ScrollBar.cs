@@ -43,12 +43,12 @@ namespace FamiStudio
         protected override void OnMouseDown(MouseEventArgs e)
         {
             var coord = horizontal ? e.X : e.Y;
-            GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
-            if (coord < scrollBarPos)
+            GetScrollBarParams(out var scrollBarPos1, out var scrollBarPos2);
+            if (coord < scrollBarPos1)
             {
                 SetScroll(scrollValue - height);
             }
-            else if (coord > (scrollBarPos + scrollBarSize))
+            else if (coord > scrollBarPos2)
             {
                 SetScroll(scrollValue + height);
             }

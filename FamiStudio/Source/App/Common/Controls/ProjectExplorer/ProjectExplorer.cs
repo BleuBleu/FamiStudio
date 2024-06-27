@@ -610,9 +610,10 @@ namespace FamiStudio
 
         private void MainContainer_ContainerMouseUpNotify(Control sender, MouseEventArgs e)
         {
-            if (Platform.IsMobile && !e.Handled && e.Left)
+            if (!e.Handled && e.Left)
             {
-                EndCaptureOperation(e.Position);
+                var ctrlPos = WindowToControl(sender.ControlToWindow(e.Position));
+                EndCaptureOperation(ctrlPos);
             }
         }
 
@@ -2379,15 +2380,15 @@ namespace FamiStudio
             //ConditionalRecreateAllControls();
         }
 
-        public override void OnContainerMouseUpNotify(Control control, MouseEventArgs e)
-        {
-            if (!e.Middle)
-            {
-                var ctrlPos = WindowToControl(control.ControlToWindow(e.Position));
-                EndCaptureOperation(ctrlPos);
-            }
-            //ConditionalRecreateAllControls();
-        }
+        //public override void OnContainerMouseUpNotify(Control control, MouseEventArgs e)
+        //{
+        //    if (!e.Middle)
+        //    {
+        //        var ctrlPos = WindowToControl(control.ControlToWindow(e.Position));
+        //        EndCaptureOperation(ctrlPos);
+        //    }
+        //    //ConditionalRecreateAllControls();
+        //}
 
         private void ResizeMainContainer()
         {

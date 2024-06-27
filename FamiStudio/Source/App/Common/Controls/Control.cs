@@ -203,7 +203,7 @@ namespace FamiStudio
             while (c != null)
             {
                 c.OnContainerMouseUpNotify(this, e);
-                c.ContainerMouseUpNotify?.Invoke(c, e);
+                c.ContainerMouseUpNotify?.Invoke(this, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
@@ -216,7 +216,7 @@ namespace FamiStudio
             while (c != null)
             {
                 c.OnContainerMouseMoveNotify(this, e);
-                c.ContainerMouseMoveNotify?.Invoke(c, e);
+                c.ContainerMouseMoveNotify?.Invoke(this, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
@@ -229,7 +229,7 @@ namespace FamiStudio
             while (c != null)
             {
                 c.OnContainerTouchClickNotify(this, e);
-                c.ContainerTouchClickNotify?.Invoke(c, e);
+                c.ContainerTouchClickNotify?.Invoke(this, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
@@ -242,7 +242,7 @@ namespace FamiStudio
             while (c != null)
             {
                 c.OnContainerTouchFlingNotify(this, e);
-                c.ContainerTouchFlingNotify?.Invoke(c, e);
+                c.ContainerTouchFlingNotify?.Invoke(this, e);
                 if (c is Dialog)
                     break;
                 c = c.ParentContainer;
