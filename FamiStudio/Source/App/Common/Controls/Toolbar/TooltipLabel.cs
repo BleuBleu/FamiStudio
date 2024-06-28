@@ -106,6 +106,8 @@ namespace FamiStudio
             var messageColor = Theme.LightGreyColor2;
             var messageFont = Fonts.FontMedium;
 
+            // MATTT : Add clip region here.
+
             // Tooltip
             if (!string.IsNullOrEmpty(message))
             {

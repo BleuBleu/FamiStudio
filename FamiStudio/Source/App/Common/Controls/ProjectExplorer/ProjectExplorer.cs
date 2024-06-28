@@ -456,10 +456,7 @@ namespace FamiStudio
             button.Transparent = true;
             button.ImageScale = iconImageScale;
             if (black)
-            {
-                button.ForegroundColorEnabled  = Color.Black;
-                button.ForegroundColorDisabled = Color.Black;
-            }
+                button.ForegroundColor = Color.Black;
             panel.AddControl(button);
             button.AutoSizeToImage();
             button.Move(x, Utils.DivideAndRoundUp(panel.Height - button.Height, 2));
@@ -539,17 +536,9 @@ namespace FamiStudio
                     var button = new Button(null, TabNames[i]);
                     button.Border = true;
                     if ((int)selectedTab == i)
-                    {
                         button.Font = fonts.FontMediumBold;
-                        button.Transparent = true;
-                    }
                     else
-                    {
-                        button.BackgroundColor        = new Color(0, 0, 0, 128);
-                        button.BackgroundColorHover   = new Color(0, 0, 0, 64);
-                        button.BackgroundColorPressed = new Color(0, 0, 0, 32);
-                    }
-                    // MATTT  : Last tab overlaps with scroll bar.
+                        button.BackgroundColor = new Color(0, 0, 0, 160);
                     button.Move(i * tabSizeX, 0, i == (int)TabType.Count - 1 ? width - tabSizeX * i : tabSizeX, panelSizeY);
                     button.Click += TopTabs_Click;
                     button.UserData = (TabType)i;

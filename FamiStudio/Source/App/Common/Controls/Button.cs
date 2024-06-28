@@ -8,6 +8,7 @@ namespace FamiStudio
         public delegate string StringDelegate(Control sender);
         public delegate string ImageDelegate(Control sender, ref Color tint);
         public delegate bool BoolDelegate(Control sender);
+        public delegate bool DimmedDelegate(Control sender, ref int dimming);
 
         // This is basically the same as "MouseDown" but can mark the event as handled automatically.
         // It is fired before the MouseDown. ProjectExplorer uses this to handle clicks and drags of 
@@ -18,7 +19,7 @@ namespace FamiStudio
         // These are "dynamic" and will take precedence over the regular image/enabled/dimmed flags.
         public event ImageDelegate ImageEvent;
         public event BoolDelegate EnabledEvent;
-        public event BoolDelegate DimmedEvent;
+        public event DimmedDelegate DimmedEvent;
         public event StringDelegate TextEvent;
 
         public override bool SupportsDoubleClick => false;
@@ -26,34 +27,28 @@ namespace FamiStudio
         private string text;
         private string imageName;
         private float imageScale = 1.0f;
-        private TextureAtlasRef bmp;
-        private int margin = 4; 
         private bool ellipsis;
         private bool border;
         private bool hover;
         private bool press;
-        private bool transparent;
         private bool dimmed;
+        private bool transparent;
         private bool clickOnMouseUp;
         private bool whiteHighlight;
         private bool handleOnClick = true;
         private bool vibrateOnClick;
         private bool vibrateOnRightClick;
         private bool bottomText;
+        private byte dimming = 64;
+        private byte margin = 4;
         private Font font;
+        private TextureAtlasRef bmp;
 
-        // MATTT We shouldnt need all those... THis is *only* for PE tabs.
-        private Color fgColorEnabled  = Theme.LightGreyColor1;
-        private Color fgColorDisabled = Theme.MediumGreyColor1; // Roughly LightGreyColor1 * 0.5
-        private Color bgColor         = Theme.DarkGreyColor5;   // Roughly MediumGreyColor1 * 0.57
-        private Color bgColorPressed  = Theme.MediumGreyColor1; 
-        private Color bgColorHover    = Theme.DarkGreyColor6;   // Roughly MediumGreyColor1 * 0.66
+        private Color fgColor = Theme.LightGreyColor1;
+        private Color bgColor = Theme.DarkGreyColor5; 
 
-        public Color ForegroundColorEnabled  { get => fgColorEnabled;  set => fgColorEnabled  = value; }
-        public Color ForegroundColorDisabled { get => fgColorDisabled; set => fgColorDisabled = value; }
-        public Color BackgroundColor         { get => bgColor;         set => bgColor         = value; }
-        public Color BackgroundColorPressed  { get => bgColorPressed;  set => bgColorPressed  = value; }
-        public Color BackgroundColorHover    { get => bgColorHover;    set => bgColorHover    = value; }
+        public Color ForegroundColor { get => fgColor; set => fgColor = value; }
+        public Color BackgroundColor { get => bgColor; set => bgColor = value; }
 
         public bool ClickOnMouseUp      { get => clickOnMouseUp;      set => clickOnMouseUp      = value; }
         public bool MarkHandledOnClick  { get => handleOnClick;       set => handleOnClick       = value; }
@@ -65,7 +60,7 @@ namespace FamiStudio
         public Button(string img, string txt = null) 
         {
             ImageName = img;
-            text  = txt;
+            text = txt;
         }
 
         public override bool Enabled 
@@ -118,8 +113,14 @@ namespace FamiStudio
 
         public bool Dimmed
         {
-            get { return DimmedEvent != null ? DimmedEvent(this) : dimmed; }
+            get { return dimmed; }
             set { SetAndMarkDirty(ref dimmed, value); }
+        }
+
+        public int Dimming
+        {
+            get { return dimming; }
+            set { SetAndMarkDirty(ref dimming, (byte)value); }
         }
 
         public bool WhiteHighlight 
@@ -137,7 +138,7 @@ namespace FamiStudio
         public int Margin 
         {
             get { return margin; }
-            set { SetAndMarkDirty(ref margin, value); }
+            set { SetAndMarkDirty(ref margin, (byte)value); }
         }
 
         public void AutosizeWidth()
@@ -258,7 +259,6 @@ namespace FamiStudio
         }
 
         // MATTT : Precompute more stuff to keep this as simple as possible at run-time.
-        // MATTT : Cleanup the whole transparent/dimmed thing now that we know what we want. There must be a unified way of doing this.
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
@@ -266,12 +266,13 @@ namespace FamiStudio
 
             var localFont = GetFontInternal();
             var localEnabled = Enabled;
-            var localDimmed  = Dimmed;
-            var tint = localEnabled || transparent ? fgColorEnabled : fgColorDisabled;
+            var localDimmed  = dimmed;
+            var localDimming = (int)dimming;
+            var localFgColor = fgColor;
 
             if (ImageEvent != null)
             {
-                var wantedImageName = ImageEvent(this, ref tint);
+                var wantedImageName = ImageEvent(this, ref localFgColor);
                 if (wantedImageName != imageName)
                 {
                     imageName = wantedImageName;
@@ -279,18 +280,35 @@ namespace FamiStudio
                 }
             }
 
-            var maxOpacity = transparent && localDimmed ? 0.25f : 1.0f;
-            var opacity = Math.Min(maxOpacity, transparent ? localEnabled ? hover ? 0.5f : 1.0f : 0.25f : 1.0f);
-
-            // Debug
-            //c.DrawRectangle(ClientRectangle, Color.Pink);
+            if (DimmedEvent != null)
+            {
+                localDimmed = DimmedEvent.Invoke(this, ref localDimming);
+            }
 
             // "Non-transparent" changes the BG on hover
             // "Transparent" changes the opacity on hover.
+            if (transparent)
+            {
+                var maxOpacity = transparent && localDimmed ? localDimming : 256;
+                var opacity = Math.Min(maxOpacity, transparent ? localEnabled ? hover ? 128 : 256 : 64 : 256);
+
+                localFgColor = localFgColor.Transparent(opacity, true);
+            }
+            else if (!localEnabled)
+            {
+                localFgColor = localFgColor.Scaled(128);
+            }
+
             if (localEnabled && !transparent && (border || press || hover))
             {
-                var bgColor = press ? bgColorPressed : hover ? bgColorHover : this.bgColor;
-                c.FillRectangle(ClientRectangle, bgColor);
+                var localBgColor = bgColor;
+                
+                if (press)
+                    localBgColor = localBgColor.Scaled(384, true);
+                else if (hover)
+                    localBgColor = localBgColor.Scaled(300, true);
+
+                c.FillRectangle(ClientRectangle, localBgColor);
             }
 
             if (whiteHighlight)
@@ -316,17 +334,15 @@ namespace FamiStudio
                 scaledImageHeight = DpiScaling.ScaleCustom(bmpSize.Height, imageScale);
             }
 
-            tint = tint.Transparent(opacity, true);
-
             if (!hasText && bmp != null)
             {
                 c.DrawTextureAtlas(bmp, 
                     (width  - scaledImageWidth)  / 2, 
-                    (height - scaledImageHeight) / 2, imageScale, tint);
+                    (height - scaledImageHeight) / 2, imageScale, localFgColor);
             }
             else if (hasText && bmp == null)
             {
-                c.DrawText(localText, localFont, 0, 0, tint, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
+                c.DrawText(localText, localFont, 0, 0, localFgColor, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
             }
             else if (hasText && bmp != null)
             {
@@ -334,17 +350,20 @@ namespace FamiStudio
 
                 if (bottomText)
                 {
-                    c.DrawTextureAtlas(bmp, (width - scaledImageWidth) / 2, localMargin, imageScale, tint);
-                    c.DrawText(localText, localFont, 0, scaledImageHeight + localMargin, tint, TextFlags.TopCenter | TextFlags.Clip, width, height - scaledImageHeight - localMargin);
+                    c.DrawTextureAtlas(bmp, (width - scaledImageWidth) / 2, localMargin, imageScale, localFgColor);
+                    c.DrawText(localText, localFont, 0, scaledImageHeight + localMargin, localFgColor, TextFlags.TopCenter | TextFlags.Clip, width, height - scaledImageHeight - localMargin);
                 }
                 else
                 {
-                    c.DrawTextureAtlas(bmp, localMargin, (height - scaledImageHeight) / 2, imageScale, tint);
-                    c.DrawText(localText, localFont, scaledImageWidth + localMargin * 2, 0, tint, TextFlags.MiddleLeft | TextFlags.Clip, width - scaledImageWidth - localMargin * 2, height);
+                    c.DrawTextureAtlas(bmp, localMargin, (height - scaledImageHeight) / 2, imageScale, localFgColor);
+                    c.DrawText(localText, localFont, scaledImageWidth + localMargin * 2, 0, localFgColor, TextFlags.MiddleLeft | TextFlags.Clip, width - scaledImageWidth - localMargin * 2, height);
                 }
             }
 
             c.PopTransform();
+
+            // Debug
+            //c.DrawRectangle(ClientRectangle, Color.Pink);
         }
     }
 }

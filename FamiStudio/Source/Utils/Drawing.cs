@@ -100,10 +100,26 @@ namespace FamiStudio
             return new Color((int)(R * scale), (int)(G * scale), (int)(B * scale), A);
         }
 
+        public Color Scaled(int scale, bool alpha = false)
+        {
+            var r = Utils.Clamp((R * scale) >> 8, 0, 255);
+            var g = Utils.Clamp((G * scale) >> 8, 0, 255);
+            var b = Utils.Clamp((B * scale) >> 8, 0, 255);
+            var a = alpha ? Utils.Clamp((A * scale) >> 8, 0, 255) : A;
+            return new Color(r, g, b, a);
+        }
+
         // MATTT : Change this for a byte. No point in having float.
         public Color Transparent(float a, bool multiply = false)
         {
             return multiply ? FromArgb(a * A / 255.0f, this) : FromArgb(a, this);
+        }
+
+        public Color Transparent(int a, bool multiply = false)
+        {
+            if (multiply)
+                a = Utils.Clamp((a * A) >> 8, 0, 255);
+            return FromArgb(a, this);
         }
 
         public static bool operator ==(Color left, Color right)

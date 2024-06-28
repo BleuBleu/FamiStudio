@@ -88,7 +88,7 @@ namespace FamiStudio
 
         public void SetScroll(int newScroll, bool fireEvent = true)
         {
-            newScroll = Utils.Clamp(newScroll, 0, virtualSize - (horizontal ? width : height));
+            newScroll = Utils.Clamp(newScroll, 0, Math.Max(0, virtualSize - (horizontal ? width : height)));
             if (SetAndMarkDirty(ref scrollValue, newScroll) && fireEvent)
             {
                 Scrolled?.Invoke(this, newScroll);

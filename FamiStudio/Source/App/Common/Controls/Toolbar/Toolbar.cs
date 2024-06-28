@@ -357,7 +357,7 @@ namespace FamiStudio
             App.MobilePianoVisible = !App.MobilePianoVisible;
         }
 
-        private bool ButtonPiano_DimmedEvent(Control sender)
+        private bool ButtonPiano_DimmedEvent(Control sender, ref int dimming)
         {
             return !App.MobilePianoVisible;
         }

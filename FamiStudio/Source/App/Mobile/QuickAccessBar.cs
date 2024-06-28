@@ -4,8 +4,6 @@ using System.Collections.Generic;
 
 using Color     = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
-using static Android.App.LauncherActivity;
-using Android.Widget;
 
 namespace FamiStudio
 {
@@ -283,7 +281,7 @@ namespace FamiStudio
             });
         }
 
-        private bool Channel_DimmedEvent(Control sender)
+        private bool Channel_DimmedEvent(Control sender, ref int dimming)
         {
             return !App.IsChannelActive((int)sender.UserData);
         }
@@ -295,7 +293,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool ChannelGhost_DimmedEvent(Control sender)
+        private bool ChannelGhost_DimmedEvent(Control sender, ref int dimming)
         {
             return !App.IsChannelForceDisplay((int)sender.UserData);
         }
@@ -327,7 +325,7 @@ namespace FamiStudio
                 if (!editingChannel || channel.SupportsInstrument(inst))
                 {
                     var btn = CreateListButton(ExpansionType.Icons[inst.Expansion], inst, inst.Name);
-                    btn.ForegroundColorEnabled = inst.Color; // MATTT : panel color, not button!
+                    btn.ForegroundColor = inst.Color; // MATTT : panel color, not button!
                     btn.Font = inst == App.SelectedInstrument ? fonts.FontMediumBold : fonts.FontMedium;
                     btn.Click += Instrument_Click;
                     btn.RightClick += Instrument_RightClick;
