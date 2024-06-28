@@ -4,62 +4,37 @@ using System.Collections.Generic;
 
 using Color     = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
+using static Android.App.LauncherActivity;
+using Android.Widget;
 
 namespace FamiStudio
 {
     public class QuickAccessBar : Container
     {
         // All of these were calibrated at 1080p and will scale up/down from there.
-        const int DefaultNavButtonSize    = 120;
-        const int DefaultButtonSize       = 144;
-        const int DefaultIconSize         = 96;
-        const int DefaultIconPos1         = 12;
-        const int DefaultIconPos2         = 24;
-        const int DefaultTextPosTop       = 108;
-        const int DefaultScrollBarSizeX   = 16;
+        const int DefaultNavButtonSize  = 120;
+        const int DefaultButtonSize     = 144;
+        const int DefaultIconSize       = 96;
+        const int DefaultScrollBarSizeX = 16;
 
-        const int DefaultListItemSize     = 120;
-        const int DefaultListIconPos      = 12;
+        const int DefaultListItemSize      = 120;
+        const int DefaultListExtraIconSize = 120;
 
-        private delegate TextureAtlasRef RenderInfoDelegate(out string text, out Color tint);
-        private delegate void ListItemClickDelegate(int idx);
-        private delegate bool EnabledDelegate();
-        private delegate void EmptyDelegate();
+        private Button buttonSequencer;
+        private Button buttonPianoRoll;
+        private Button buttonProject;
+        private Button buttonChannel;
+        private Button buttonInstrument;
+        private Button buttonEnvelope;
+        private Button buttonArpeggio;
+        private Button buttonSnap;
+        private Button buttonEffect;
+        private Button buttonDPCMEffect;
+        private Button buttonDPCMPlay;
+        private Button buttonWaveformEffect;
+        private List<Button> allButtons = new List<Button>();
 
-        private class Button
-        {
-            public Rectangle Rect;
-            public int IconX;
-            public int IconY;
-            public int TextX;
-            public int TextY;
-            public bool Visible = false;
-            public bool IsNavButton = false;
-            public RenderInfoDelegate GetRenderInfo;
-            public EmptyDelegate Click;
-            public EmptyDelegate LongPress;
-            public ListItemClickDelegate ListItemLongPress;
-            public ListItemClickDelegate ListItemClick;
-        }
-
-        private class ListItem
-        {
-            public Rectangle Rect;
-            public int IconX;
-            public int IconY;
-            public int ExtraIconX;
-            public int ExtraIconY;
-            public int TextX;
-            public int TextY;
-            public Color Color;
-            public TextureAtlasRef Image;
-            public TextureAtlasRef ExtraImage;
-            public Func<ListItem, float> GetImageOpacity;
-            public Func<ListItem, float> GetExtraImageOpacity;
-            public string Text;
-            public Color  TextColor = Theme.BlackColor;
-            public object Data;
-        }
+        private Container listContainer;
 
         enum CaptureOperation
         {
@@ -67,56 +42,18 @@ namespace FamiStudio
             MobilePan
         }
 
-        private enum ButtonType
-        {
-            Sequencer,
-            PianoRoll,
-            Project,
-            Channel,
-            Instrument,
-            Envelope,
-            Arpeggio,
-            Snap,
-            Effect,
-            DPCMEffect,
-            DPCMPlay,
-            WaveformEffect,
-            Count
-        }
-
-        TextureAtlasRef   bmpSequencer;
-        TextureAtlasRef   bmpPianoRoll;
-        TextureAtlasRef   bmpProjectExplorer;
-        TextureAtlasRef   bmpSnapOn;
-        TextureAtlasRef   bmpSnapOff;
-        TextureAtlasRef   bmpCheckOff;
-        TextureAtlasRef   bmpCheckOn;
-        TextureAtlasRef   bmpRadio;
-        TextureAtlasRef   bmpArpeggio;
-        TextureAtlasRef   bmpGhostSmall;
-        TextureAtlasRef   bmpPlay;
-        TextureAtlasRef   bmpEffectNone;
-        TextureAtlasRef   bmpEffectRepeat;
-        TextureAtlasRef[] bmpEffects;
-        TextureAtlasRef[] bmpEnvelopes;
-        TextureAtlasRef[] bmpChannels;
-        TextureAtlasRef[] bmpExpansions;
-
         Font buttonFont;
         Color scrollBarColor = Color.FromArgb(64, Color.Black);
-        Button[] buttons = new Button[(int)ButtonType.Count];
-
+        
         // These are only use for popup menu.
-        private int        popupButtonIdx = -1;
-        private int        popupButtonNextIdx = -1;
-        private int        popupSelectedIdx = -1;
-        private Rectangle  popupRect;
-        private float      popupRatio = 0.0f;
-        private bool       popupOpening;
-        private bool       popupClosing;
-        private ListItem[] listItems;
-
-        // Popup-list scrollong.
+        private Button    popupButton;
+        private Button    popupButtonNext;
+        private Rectangle popupRect;
+        private float     popupRatio = 0.0f;
+        private bool      popupOpening;
+        private bool      popupClosing;
+        
+        // Popup-list scrolling.
         private int scrollY = 0;
         private int minScrollY = 0;
         private int maxScrollY = 0;
@@ -132,13 +69,9 @@ namespace FamiStudio
         // Scaled layout variables.
         private int buttonSize;
         private int buttonSizeNav;
-        private int buttonIconPos1;
-        private int buttonIconPos2;
-        private int textPosTop;
         private int listItemSize;
-        private int listIconPos;
+        private int listExtraIconSize;
         private int scrollBarSizeX;
-
         private float iconScaleFloat = 1.0f;
 
         public int   LayoutSize  => buttonSize;
@@ -148,7 +81,7 @@ namespace FamiStudio
         public override bool WantsFullScreenViewport => true;
         public override bool SendTouchInputAsMouse => false;
 
-        #region localization
+        #region Localization
 
         // Labels
         LocalizedString SnapToBeatLabel;
@@ -177,61 +110,624 @@ namespace FamiStudio
             SetTickEnabled(true);
         }
 
+        private Button CreateBarButton(string image, string userData, string text = " ")
+        {
+            var button = new Button(image);
+            button.UserData = userData;
+            button.Visible = false;
+            button.ImageScale = iconScaleFloat;
+            button.Transparent = true;
+            button.BottomText = true;
+            button.Margin = 1;
+            button.Font = buttonFont;
+            button.Text = text;
+            button.VibrateOnClick = true;
+            button.VibrateOnRightClick = true;
+            button.Resize(buttonSize, buttonSize);
+            allButtons.Add(button);
+            AddControl(button);
+            return button;
+        }
+
+        private Button CreateListButton(string image, object userData, string text = null)
+        {
+            var button = new Button(image);
+            button.Margin = 2;
+            button.UserData = userData;
+            button.ImageScale = iconScaleFloat;
+            button.Transparent = true;
+            button.Text = text;
+            return button;
+        }
+
         protected override void OnAddedToContainer()
         {
-            var g= ParentWindow.Graphics;
-            bmpSequencer = g.GetTextureAtlasRef("Sequencer");
-            bmpPianoRoll = g.GetTextureAtlasRef("PianoRoll");
-            bmpProjectExplorer = g.GetTextureAtlasRef("ProjectExplorer");
-            bmpSnapOn = g.GetTextureAtlasRef("MobileSnapOn");
-            bmpSnapOff = g.GetTextureAtlasRef("MobileSnapOff");
-            bmpCheckOff = g.GetTextureAtlasRef("MobileCheckOff");
-            bmpCheckOn = g.GetTextureAtlasRef("MobileCheckOn");
-            bmpRadio = g.GetTextureAtlasRef("MobileRadio");
-            bmpArpeggio = g.GetTextureAtlasRef("MobileArpeggio");
-            bmpGhostSmall = g.GetTextureAtlasRef("GhostSmall");
-            bmpPlay = g.GetTextureAtlasRef("Play");
-            bmpEffectNone = g.GetTextureAtlasRef("MobileEffectNone");
-            bmpEffectRepeat = g.GetTextureAtlasRef("MobileEffectRepeat");
-            bmpEffects = g.GetTextureAtlasRefs(EffectType.Icons, "Mobile");
-            bmpExpansions = g.GetTextureAtlasRefs(ExpansionType.Icons);
-            bmpEnvelopes = g.GetTextureAtlasRefs(EnvelopeType.Icons);
-            bmpChannels = g.GetTextureAtlasRefs(ChannelType.Icons);
-
-            buttons[(int)ButtonType.Sequencer]      = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
-            buttons[(int)ButtonType.PianoRoll]      = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
-            buttons[(int)ButtonType.Project]        = new Button { GetRenderInfo = GetProjectExplorerInfo, Click = OnProjectExplorer, IsNavButton = true };
-            buttons[(int)ButtonType.Channel]        = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel, ListItemClick = OnChannelItemClick, ListItemLongPress = OnChannelItemLongPress };
-            buttons[(int)ButtonType.Instrument]     = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument, LongPress = OnInstrumentLongPress, ListItemClick = OnInstrumentItemClick, ListItemLongPress = OnInstrumentItemLongPress };
-            buttons[(int)ButtonType.Envelope]       = new Button { GetRenderInfo = GetEnvelopeRenderingInfo, Click = OnEnvelope, ListItemClick = OnEnvelopeItemClick };
-            buttons[(int)ButtonType.Arpeggio]       = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, LongPress = OnArpeggioLongPress, ListItemClick = OnArpeggioItemClick, ListItemLongPress = OnArpeggioItemLongPress };
-            buttons[(int)ButtonType.Snap]           = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap, ListItemClick = OnSnapItemClick };
-            buttons[(int)ButtonType.Effect]         = new Button { GetRenderInfo = GetEffectRenderInfo, Click = OnEffect, ListItemClick = OnEffectItemClick };
-            buttons[(int)ButtonType.DPCMEffect]     = new Button { GetRenderInfo = GetDPCMEffectRenderInfo, Click = OnDPCMEffect, ListItemClick = OnDPCMEffectItemClick };
-            buttons[(int)ButtonType.DPCMPlay]       = new Button { GetRenderInfo = GetDPCMPlayRenderInfo, Click = OnDPCMPlay, LongPress = OnDPCMPlayLongPress };
-            buttons[(int)ButtonType.WaveformEffect] = new Button { GetRenderInfo = GetWaveformEffectRenderInfo, Click = OnWaveformEffect, ListItemClick = OnWaveformEffectItemClick };
-
+            var g = ParentWindow.Graphics;
             var screenSize = Platform.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
+            var refIcon = g.GetTextureAtlasRef("MobileSnapOn");
 
-            buttonFont      = scale > 1.2f ? Fonts.FontSmall : Fonts.FontVerySmall;
-            buttonSize      = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
-            buttonSizeNav   = DpiScaling.ScaleCustom(DefaultNavButtonSize, scale);
-            buttonIconPos1  = DpiScaling.ScaleCustom(DefaultIconPos1, scale);
-            buttonIconPos2  = DpiScaling.ScaleCustom(DefaultIconPos2, scale);
-            textPosTop      = DpiScaling.ScaleCustom(DefaultTextPosTop, scale);
-            listItemSize    = DpiScaling.ScaleCustom(DefaultListItemSize, scale);
-            listIconPos     = DpiScaling.ScaleCustom(DefaultListIconPos, scale);
-            scrollBarSizeX  = DpiScaling.ScaleCustom(DefaultScrollBarSizeX, scale);
-            iconScaleFloat  = DpiScaling.ScaleCustomFloat(DefaultIconSize / (float)bmpSnapOn.ElementSize.Width, scale);
+            buttonFont        = scale > 1.2f ? Fonts.FontSmall : Fonts.FontVerySmall;
+            buttonSize        = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
+            buttonSizeNav     = DpiScaling.ScaleCustom(DefaultNavButtonSize, scale);
+            listItemSize      = DpiScaling.ScaleCustom(DefaultListItemSize, scale);
+            listExtraIconSize = DpiScaling.ScaleCustom(DefaultListExtraIconSize, scale);
+            scrollBarSizeX    = DpiScaling.ScaleCustom(DefaultScrollBarSizeX, scale);
+            iconScaleFloat    = DpiScaling.ScaleCustomFloat(DefaultIconSize / (float)refIcon.ElementSize.Width, scale);
+
+            buttonSequencer = CreateBarButton("Sequencer", "Sequencer");
+            buttonSequencer.Click += ButtonSequencer_Click;
+
+            buttonPianoRoll = CreateBarButton("PianoRoll", "PianoRoll");
+            buttonPianoRoll.Click += ButtonPianoRoll_Click;
+
+            buttonProject = CreateBarButton("ProjectExplorer", "ProjectExplorer");
+            buttonProject.Click += ButtonProject_Click;
+
+            buttonChannel = CreateBarButton(ChannelType.Icons[0], "Channel");
+            buttonChannel.Click += ButtonChannel_Click;
+            buttonChannel.TextEvent += ButtonChannel_TextEvent;
+            buttonChannel.ImageEvent += ButtonChannel_ImageEvent;
+            
+            buttonInstrument = CreateBarButton(ExpansionType.Icons[0], "Instrument");
+            buttonInstrument.Click += ButtonInstrument_Click;
+            buttonInstrument.RightClick += ButtonInstrument_RightClick;
+            buttonInstrument.TextEvent += ButtonInstrument_TextEvent;
+            buttonInstrument.ImageEvent += ButtonInstrument_ImageEvent;
+            
+            buttonEnvelope = CreateBarButton(EnvelopeType.Icons[0], "Envelope");
+            buttonEnvelope.Click += ButtonEnvelope_Click;
+            buttonEnvelope.TextEvent += ButtonEnvelope_TextEvent;
+            buttonEnvelope.ImageEvent += ButtonEnvelope_ImageEvent;
+            
+            buttonArpeggio = CreateBarButton("MobileArpeggio", "Arpeggio");
+            buttonArpeggio.Click += ButtonArpeggio_Click;
+            buttonArpeggio.RightClick += ButtonArpeggio_RightClick;
+            buttonArpeggio.TextEvent += ButtonArpeggio_TextEvent;
+            buttonArpeggio.ImageEvent += ButtonArpeggio_ImageEvent;
+
+            buttonSnap = CreateBarButton("MobileSnapOn", "Snap");
+            buttonSnap.Click += ButtonSnap_Click;
+            buttonSnap.TextEvent += ButtonSnap_TextEvent;
+            buttonSnap.ImageEvent += ButtonSnap_ImageEvent;
+            
+            buttonEffect = CreateBarButton("Mobile" + EffectType.Icons[0], "Effect");
+            buttonEffect.Click += ButtonEffect_Click;
+            buttonEffect.TextEvent += ButtonEffect_TextEvent;
+            buttonEffect.ImageEvent += ButtonEffect_ImageEvent;
+            
+            buttonDPCMEffect = CreateBarButton("Mobile" + EffectType.Icons[Note.EffectVolume], "DPCMEffect");
+            buttonDPCMEffect.Click += ButtonDPCMEffect_Click;
+            buttonDPCMEffect.TextEvent += ButtonDPCMEffect_TextEvent;
+            buttonDPCMEffect.ImageEvent += ButtonDPCMEffect_ImageEvent;
+            
+            buttonDPCMPlay = CreateBarButton("Play", "DPCMPlay", "Play");
+            buttonDPCMPlay.Click += ButtonDPCMPlay_Click;
+            buttonDPCMPlay.ImageEvent += ButtonDPCMPlay_ImageEvent;
+            
+            buttonWaveformEffect = CreateBarButton("MobileEffectRepeat", "WaveformEffect");
+            buttonWaveformEffect.Click += ButtonWaveformEffect_Click;
+            buttonWaveformEffect.TextEvent += ButtonWaveformEffect_TextEvent;
+            buttonWaveformEffect.ImageEvent += ButtonWaveformEffect_ImageEvent;
+
+            listContainer = new Container();
+            listContainer.Visible = false;
+            listContainer.SetupClipRegion(true, false);
+            AddControl(listContainer);
+        }
+
+        private void ButtonSequencer_Click(Control sender)
+        {
+            StartClosingList();
+            App.SetActiveControl(App.Sequencer);
+        }
+
+        private void ButtonPianoRoll_Click(Control sender)
+        {
+            StartClosingList();
+            if (!App.IsEditingChannel)
+                App.StartEditChannel(App.SelectedChannelIndex);
+            App.SetActiveControl(App.PianoRoll);
+        }
+
+        private void ButtonProject_Click(Control sender)
+        {
+            StartClosingList();
+            App.SetActiveControl(App.ProjectExplorer);
+        }
+
+        private void ButtonChannel_Click(Control sender)
+        {
+            if (CheckNeedsClosing(buttonChannel))
+                return;
+
+            var channelTypes   = App.Project.GetActiveChannelList();
+            var channelButtons = new Button[channelTypes.Length];
+            var ghostButtons   = new Button[channelTypes.Length];
+
+            for (int i = 0; i < channelTypes.Length; i++)
+            {
+                var btn = CreateListButton(ChannelType.Icons[channelTypes[i]], i, ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]));
+                btn.Click += Channel_Click;
+                btn.RightClick += Channel_RightClick;
+                btn.DimmedEvent += Channel_DimmedEvent;
+                btn.Font = i == App.SelectedChannelIndex ? fonts.FontMediumBold : fonts.FontMedium;
+                channelButtons[i] = btn;
+
+                // MATTT : Add solo/mute button too!
+                var ghost = CreateListButton("GhostSmall", i);
+                ghost.DimmedEvent += ChannelGhost_DimmedEvent;
+                ghost.Click += ChannelGhost_Click;
+                ghostButtons[i] = ghost;
+            }
+
+            // MATTT : We didnt use to pass the selected index? why?
+            StartExpandingList(buttonChannel, channelButtons, ghostButtons, App.SelectedChannelIndex);
+        }
+
+        private void Channel_Click(Control sender)
+        {
+            App.SelectedChannelIndex = (int)sender.UserData;
+            StartClosingList();
+        }
+
+        private void Channel_RightClick(Control sender)
+        {
+            var idx = (int)sender.UserData;
+
+            App.ShowContextMenu(new[]
+            {
+                new ContextMenuOption("MenuMute", ToggleMuteContext, () => { App.ToggleChannelActive(idx); MarkDirty(); }),
+                new ContextMenuOption("MenuSolo", ToggleSoloContext, () => { App.ToggleChannelSolo(idx); MarkDirty(); }),
+                new ContextMenuOption("MenuForceDisplay", ToggleForceDisplayContext, () => { App.ToggleChannelForceDisplay(idx); MarkDirty(); })
+            });
+        }
+
+        private bool Channel_DimmedEvent(Control sender)
+        {
+            return !App.IsChannelActive((int)sender.UserData);
+        }
+
+        private void ChannelGhost_Click(Control sender)
+        {
+            var idx = (int)sender.UserData;
+            App.ToggleChannelForceDisplay(idx); 
+            MarkDirty();
+        }
+
+        private bool ChannelGhost_DimmedEvent(Control sender)
+        {
+            return !App.IsChannelForceDisplay((int)sender.UserData);
+        }
+
+        private string ButtonChannel_TextEvent(Control sender)
+        {
+            return App.SelectedChannel.NameWithExpansion;
+        }
+
+        private string ButtonChannel_ImageEvent(Control sender, ref Color tint)
+        {
+            return ChannelType.Icons[App.SelectedChannel.Type];
+        }
+
+        private void ButtonInstrument_Click(Control sender)
+        {
+          if (CheckNeedsClosing(buttonInstrument))
+              return;
+
+          var editingChannel = App.IsEditingChannel;
+          var project = App.Project;
+          var channel = App.SelectedChannel;
+          var instButtons = new List<Button>();
+
+            for (int i = 0; i < project.Instruments.Count; i++)
+            {
+                var inst = project.Instruments[i];
+
+                if (!editingChannel || channel.SupportsInstrument(inst))
+                {
+                    var btn = CreateListButton(ExpansionType.Icons[inst.Expansion], inst, inst.Name);
+                    btn.ForegroundColorEnabled = inst.Color; // MATTT : panel color, not button!
+                    btn.Font = inst == App.SelectedInstrument ? fonts.FontMediumBold : fonts.FontMedium;
+                    btn.Click += Instrument_Click;
+                    btn.RightClick += Instrument_RightClick;
+                    instButtons.Add(btn);
+                }
+            }
+
+            if (instButtons.Count == 0)
+              return;
+
+            // MATTT : We dont set the selected instrument?
+            StartExpandingList(buttonInstrument, instButtons.ToArray());
+        }
+
+        private void ButtonInstrument_RightClick(Control sender)
+        {
+            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsInstrument(App.SelectedInstrument))
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(App.SelectedInstrument); MarkDirty(); })
+                });
+            }
+        }
+
+        private void Instrument_Click(Control sender)
+        {
+            var inst = sender.UserData as Instrument;
+            App.SelectedInstrument = inst;
+            StartClosingList();
+        }
+
+        private void Instrument_RightClick(Control sender)
+        {
+            var inst = sender.UserData as Instrument;
+
+            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsInstrument(inst))
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(inst); MarkDirty(); })
+                });
+            }
+        }
+
+        private string ButtonInstrument_TextEvent(Control sender)
+        {
+            var inst = App.SelectedInstrument;
+            return inst != null ? inst.Name : " ";
+        }
+
+        private string ButtonInstrument_ImageEvent(Control sender, ref Color tint)
+        {
+            // MATTT : Tint also tints the text...
+            var inst = App.SelectedInstrument;
+            if (inst != null) tint = inst.Color;
+            var exp = inst != null ? inst.Expansion : ExpansionType.None;
+            return ExpansionType.Icons[exp];
+        }
+
+        private void ButtonEnvelope_Click(Control sender)
+        {
+            if (CheckNeedsClosing(buttonEnvelope))
+                return;
+
+            var inst = App.SelectedInstrument;
+
+            if (inst == null)
+                return;
+
+            var popupSelectedIdx = -1;
+            var buttons = new Button[inst.NumVisibleEnvelopes];
+
+            for (int i = 0, j = 0; i < EnvelopeType.Count; i++)
+            {
+                var env = inst.Envelopes[i];
+
+                if (env != null && inst.IsEnvelopeVisible(i))
+                {
+                    var btn = CreateListButton(EnvelopeType.Icons[i], i, EnvelopeType.LocalizedNames[i]);
+                    btn.Dimmed = env.IsEmpty(i);
+                    btn.Click += Envelope_Click;
+                    buttons[j] = btn;
+
+                    if (i == App.EditEnvelopeType)
+                        popupSelectedIdx = j;
+
+                    j++;
+                }
+            }
+
+            StartExpandingList(buttonEnvelope, buttons, null, popupSelectedIdx);
+        }
+
+        private void Envelope_Click(Control sender)
+        {
+            App.StartEditInstrument(App.SelectedInstrument, (int)sender.UserData);
+            StartClosingList();
+        }
+
+        private string ButtonEnvelope_TextEvent(Control sender)
+        {
+            var envType = App.EditEnvelopeType;
+            return EnvelopeType.LocalizedNames[envType];
+        }
+
+        private string ButtonEnvelope_ImageEvent(Control sender, ref Color tint)
+        {
+            var inst = App.SelectedInstrument;
+            var envType = App.EditEnvelopeType;
+            if (inst != null) tint = inst.Color;
+            return EnvelopeType.Icons[envType];
+        }
+
+        private void ButtonArpeggio_Click(Control sender)
+        {
+            if (CheckNeedsClosing(buttonArpeggio))
+                return;
+
+            var project = App.Project;
+            var buttons = new Button[project.Arpeggios.Count + 1];
+            var arpeggios = project.Arpeggios;
+            var icon = EnvelopeType.Icons[EnvelopeType.Arpeggio];
+            var selIdx = -1;
+
+            if (!App.IsEditingArpeggio)
+            {
+                var btn = CreateListButton(icon, null, NoneLabel);
+                btn.Click += Arpeggio_Click;
+                btn.Font = App.SelectedArpeggio == null ? fonts.FontMediumBold : fonts.FontMedium;
+                buttons[0] = btn;
+            }
+
+            for (int i = 0; i < arpeggios.Count; i++)
+            {
+                var arp = arpeggios[i];
+                var selected = arp == App.SelectedArpeggio;
+                var btn = CreateListButton(icon, arp, arp.Name);
+                btn.Font = selected ? fonts.FontMediumBold : fonts.FontMedium;
+                btn.Click += Arpeggio_Click;
+                btn.RightClick += Arpeggio_RightClick;
+                // btn.Color = arp.Color; // MATTT : Color/tint!
+                buttons[i + 1] = btn;
+                if (selected)
+                    selIdx = i + 1;
+            }
+
+            StartExpandingList(buttonArpeggio, buttons, null, selIdx);
+        }
+
+        private void ButtonArpeggio_RightClick(Control sender)
+        {
+            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsArpeggios)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(App.SelectedArpeggio); MarkDirty(); })
+                });
+            }
+        }
+
+        private void Arpeggio_RightClick(Control sender)
+        {
+            var arp = sender.UserData as Arpeggio;
+
+            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsArpeggios)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(arp); MarkDirty(); })
+                });
+            }
+        }
+
+        private void Arpeggio_Click(Control sender)
+        {
+            App.SelectedArpeggio = sender.UserData as Arpeggio;
+            StartClosingList();
+        }
+
+        private string ButtonArpeggio_TextEvent(Control sender)
+        {
+            var arp = App.SelectedArpeggio;
+            return arp != null ? arp.Name : NoneLabel;
+        }
+
+        private string ButtonArpeggio_ImageEvent(Control sender, ref Color tint)
+        {
+            var arp = App.SelectedArpeggio;
+            if (arp != null) tint = arp.Color;
+            return "MobileArpeggio";
+        }
+
+        private void ButtonSnap_Click(Control sender)
+        {
+            if (CheckNeedsClosing(buttonSnap))
+                return;
+
+            var buttons = new Button[SnapResolutionType.Max + 3];
+
+            for (int i = 0; i < buttons.Length - 2; i++)
+            {
+                var img = App.SnapResolution == i ? "MobileRadioOn" : "MobileRadioOff";
+                var text = (SnapResolutionType.Factors[i] > 1.0 ? SnapToBeatsLabel : SnapToBeatLabel).Format(SnapResolutionType.Names[i]); 
+                var btn = CreateListButton(img, i, text);
+                btn.Dimmed = !App.SnapEnabled;
+                btn.Font = i == App.SnapResolution ? fonts.FontMediumBold : fonts.FontMedium;
+                btn.Click += SnapResolution_Click;
+                buttons[i] = btn;
+            }
+
+            var snapEffectsButton = CreateListButton(App.SnapEffectEnabled ? "MobileCheckOn" : "MobileCheckOff", null, SnapEffectValuesLabel);
+            snapEffectsButton.Dimmed = !App.SnapEnabled;
+            snapEffectsButton.Click += SnapEffects_Click;
+            buttons[buttons.Length - 2] = snapEffectsButton;
+
+            var snapEnableButton = CreateListButton(App.SnapEnabled ? "MobileCheckOn" : "MobileCheckOff", null, SnapEnabledLabel);
+            snapEnableButton.Click += SnapEnable_Click;
+            buttons[buttons.Length - 1] = snapEnableButton;
+
+            StartExpandingList(buttonSnap, buttons, null, buttons.Length - 1);
+        }
+
+        private void SnapResolution_Click(Control sender)
+        {
+            App.SnapResolution = (int)sender.UserData;
+            App.SnapEnabled = true;
+            StartClosingList();
+        }
+
+        private void SnapEffects_Click(Control sender)
+        {
+            App.SnapEffectEnabled = !App.SnapEffectEnabled;
+            StartClosingList();
+        }
+
+        private void SnapEnable_Click(Control sender)
+        {
+            App.SnapEnabled = !App.SnapEnabled;
+            StartClosingList();
+        }
+
+        private string ButtonSnap_TextEvent(Control sender)
+        {
+            var snapEnabled = App.SnapEnabled;
+            return snapEnabled ? SnapResolutionType.Names[App.SnapResolution] + (App.SnapEffectEnabled ? " (FX)" : "") : SnapOffLabel;
+        }
+
+        private string ButtonSnap_ImageEvent(Control sender, ref Color tint)
+        {
+            var snapEnabled = App.SnapEnabled;
+            if (App.IsRecording) tint = Theme.DarkRedColor;
+            return snapEnabled ? "MobileSnapOn" : "MobileSnapOff";
+        }
+
+        private void ButtonEffect_Click(Control sender)
+        {
+            if (CheckNeedsClosing(buttonEffect))
+                return;
+
+            var channel = App.SelectedChannel;
+            var selectedEffect = App.SelectedEffect;
+            var effectPanelExpanded = App.EffectPanelExpanded;
+            var count = 1;
+
+            for (int i = 0; i < Note.EffectCount; i++)
+            {
+                if (channel.ShouldDisplayEffect(i))
+                    count++;
+            }
+
+            var buttons = new Button[count];
+            var none = CreateListButton("MobileEffectNone", -1, NoneLabel); ; ;
+            none.Click += Effect_Click;
+            buttons[0] = none;
+
+            for (int i = 0, j = 1; i < Note.EffectCount; i++)
+            {
+                if (channel.ShouldDisplayEffect(i))
+                {
+                    var btn = CreateListButton("Mobile" + EffectType.Icons[i], i, EffectType.LocalizedNames[i]);
+                    btn.Font = effectPanelExpanded && i == selectedEffect ? fonts.FontMediumBold : fonts.FontMedium;
+                    btn.Click += Effect_Click;
+                    buttons[j] = btn;
+                    j++;
+                }
+            }
+
+            StartExpandingList(buttonEffect, buttons);
+        }
+
+        private void Effect_Click(Control sender)
+        {
+            var effect = (int)sender.UserData;
+            if (effect >= 0)
+            {
+                App.SelectedEffect = effect;
+                App.EffectPanelExpanded = true;
+            }
+            else
+            {
+                App.EffectPanelExpanded = false;
+            }
+            StartClosingList();
+        }
+
+        private string ButtonEffect_TextEvent(Control sender)
+        {
+            var validEffect = App.SelectedEffect >= 0 && App.EffectPanelExpanded;
+            return validEffect ? EffectType.LocalizedNames[App.SelectedEffect] : NoneLabel;
+        }
+
+        private string ButtonEffect_ImageEvent(Control sender, ref Color tint)
+        {
+            var validEffect = App.SelectedEffect >= 0 && App.EffectPanelExpanded;
+            return validEffect ? "Mobile" + EffectType.Icons[App.SelectedEffect] : "MobileEffectNone";
+        }
+
+        private void ButtonDPCMEffect_Click(Control sender)
+        {
+            if (CheckNeedsClosing(buttonDPCMEffect))
+                return;
+
+            var noneButton = CreateListButton("MobileEffectNone", -1, NoneLabel); ;
+            noneButton.Click += DPCMEffect_Click;
+            var volButton  = CreateListButton("Mobile" + EffectType.Icons[Note.EffectVolume], Note.EffectVolume, VolumeEnvelopeLabel);
+            noneButton.Click += DPCMEffect_Click;
+
+            var buttons = new Button[2] { noneButton, volButton };
+            buttons[App.EffectPanelExpanded ? 1 : 0].Font = fonts.FontMediumBold;
+
+            StartExpandingList(buttonDPCMEffect, buttons);
+        }
+
+        private void DPCMEffect_Click(Control sender)
+        {
+            App.EffectPanelExpanded = (int)sender.UserData >= 0;
+            StartClosingList();
+        }
+
+        private string ButtonDPCMEffect_TextEvent(Control sender)
+        {
+            return App.EffectPanelExpanded ? VolumeLabel : NoneLabel;
+        }
+
+        private string ButtonDPCMEffect_ImageEvent(Control sender, ref Color tint)
+        {
+            return App.EffectPanelExpanded ?  "Mobile" + EffectType.Icons[Note.EffectVolume] : "MobileEffectNone";
+        }
+
+        private void ButtonDPCMPlay_Click(Control sender)
+        {
+            App.PreviewDPCMSample(App.EditSample, false);
+        }
+
+        private string ButtonDPCMPlay_ImageEvent(Control sender, ref Color tint)
+        {
+            tint = App.EditSample.Color;
+            return "Play";
+        }
+
+        private void ButtonWaveformEffect_Click(Control sender)
+        {
+            if (CheckNeedsClosing(buttonWaveformEffect))
+                return;
+
+            var noneButton = CreateListButton("MobileEffectNone", -1, NoneLabel);
+            noneButton.Click += WaveformEffect_Click;
+            var repeatButton = CreateListButton("MobileEffectRepeat", 0, RepeatEnvelopeLabel);
+            repeatButton.Click += WaveformEffect_Click;
+
+            var buttons = new Button[2];
+            buttons[App.EffectPanelExpanded ? 1 : 0].Font = fonts.FontMediumBold;
+
+            StartExpandingList(buttonWaveformEffect, buttons);
+        }
+
+        private void WaveformEffect_Click(Control sender)
+        {
+            App.EffectPanelExpanded = (int)sender.UserData >= 0;
+            StartClosingList();
+        }
+
+        private string ButtonWaveformEffect_TextEvent(Control sender)
+        {
+            return App.EffectPanelExpanded ? RepeatLabel : NoneLabel;
+        }
+
+        private string ButtonWaveformEffect_ImageEvent(Control sender, ref Color tint)
+        {
+            return App.EffectPanelExpanded ? "MobileEffectRepeat" : "MobileEffectNone";
         }
 
         protected override void OnResize(EventArgs e)
         {
             UpdateButtonLayout();
 
-            if (popupButtonIdx >= 0)
-                StartExpandingList(popupButtonIdx, listItems);
+            // MATTT
+            //if (popupButtonIdx >= 0)
+            //    StartExpandingList(popupButtonIdx, listItems);
 
             base.OnResize(e);
         }
@@ -254,16 +750,13 @@ namespace FamiStudio
             }
         }
 
-        private bool SetButtonVisible(ButtonType type, bool vis)
+        private bool SetButtonVisible(Button button,  bool vis)
         {
-            var btn = buttons[(int)type];
-
-            if (btn.Visible != vis)
+            if (button.Visible != vis)
             {
-                btn.Visible = vis;
+                button.Visible = vis;
                 return true;
             }
-
             return false;
         }
 
@@ -274,18 +767,18 @@ namespace FamiStudio
 
             var needsLayout = false;
 
-            needsLayout |= SetButtonVisible(ButtonType.Sequencer,      true);
-            needsLayout |= SetButtonVisible(ButtonType.PianoRoll,      true);
-            needsLayout |= SetButtonVisible(ButtonType.Project,        true);
-            needsLayout |= SetButtonVisible(ButtonType.Channel,        true);
-            needsLayout |= SetButtonVisible(ButtonType.Instrument,     true);
-            needsLayout |= SetButtonVisible(ButtonType.Arpeggio,       true);
-            needsLayout |= SetButtonVisible(ButtonType.Snap,           App.IsPianoRollActive && App.IsEditingChannel);
-            needsLayout |= SetButtonVisible(ButtonType.Effect,         App.IsPianoRollActive && App.IsEditingChannel);
-            needsLayout |= SetButtonVisible(ButtonType.DPCMPlay,       App.IsPianoRollActive && App.IsEditingDPCMSample);
-            needsLayout |= SetButtonVisible(ButtonType.DPCMEffect,     App.IsPianoRollActive && App.IsEditingDPCMSample);
-            needsLayout |= SetButtonVisible(ButtonType.Envelope,       App.IsPianoRollActive && App.IsEditingInstrument);
-            needsLayout |= SetButtonVisible(ButtonType.WaveformEffect, App.IsPianoRollActive && App.IsEditingInstrument && Instrument.EnvelopeHasRepeat(App.EditEnvelopeType));
+            needsLayout |= SetButtonVisible(buttonSequencer,      true);
+            needsLayout |= SetButtonVisible(buttonPianoRoll,      true);
+            needsLayout |= SetButtonVisible(buttonProject,        true);
+            needsLayout |= SetButtonVisible(buttonChannel,        true);
+            needsLayout |= SetButtonVisible(buttonInstrument,     true);
+            needsLayout |= SetButtonVisible(buttonArpeggio,       true);
+            needsLayout |= SetButtonVisible(buttonSnap,           App.IsPianoRollActive && App.IsEditingChannel);
+            needsLayout |= SetButtonVisible(buttonEffect,         App.IsPianoRollActive && App.IsEditingChannel);
+            needsLayout |= SetButtonVisible(buttonDPCMPlay,       App.IsPianoRollActive && App.IsEditingDPCMSample);
+            needsLayout |= SetButtonVisible(buttonDPCMEffect,     App.IsPianoRollActive && App.IsEditingDPCMSample);
+            needsLayout |= SetButtonVisible(buttonEnvelope,       App.IsPianoRollActive && App.IsEditingInstrument);
+            needsLayout |= SetButtonVisible(buttonWaveformEffect, App.IsPianoRollActive && App.IsEditingInstrument && Instrument.EnvelopeHasRepeat(App.EditEnvelopeType));
 
             if (needsLayout)
                 UpdateButtonLayout();
@@ -295,8 +788,10 @@ namespace FamiStudio
         {
             TickFling(delta);
 
-            if (popupButtonIdx >= 0)
+            if (popupButton != null)
             {
+                var needResize = false;
+
                 if (popupOpening && popupRatio != 1.0f)
                 {
                     delta *= 6.0f;
@@ -305,7 +800,7 @@ namespace FamiStudio
                     {
                         popupOpening = false;
                     }
-                    MarkDirty();
+                    needResize = true;
                 }
                 else if (popupClosing && popupRatio != 0.0f)
                 {
@@ -313,36 +808,41 @@ namespace FamiStudio
                     popupRatio = Math.Max(popupRatio - delta, 0.0f);
                     if (popupRatio == 0.0f)
                     {
-                        listItems = null;
-                        popupButtonIdx = -1;
+                        listContainer.RemoveAllControls();
+                        listContainer.Visible = true;
+                        popupButton = null;
                         popupClosing = false;
 
-                        if (popupButtonNextIdx >= 0)
+                        if (popupButtonNext != null)
                         {
-                            var btn = buttons[popupButtonNextIdx];
-                            popupButtonNextIdx = -1;
-                            btn.Click();
+                            var btn = popupButtonNext;
+                            popupButtonNext = null;
+                            //btn.Click.Invoke(btn); // MATTT : How to replicate this?
                         }
                     }
-                    MarkDirty();
+                    needResize = true;
+                }
+
+                if (needResize)
+                {
+                    if (IsLandscape)
+                    {
+                        var sx = (int)Math.Round(popupRect.Width * Utils.SmootherStep(popupRatio));
+                        listContainer.Move(popupRect.Left - sx, popupRect.Top, sx, popupRect.Height);
+                    }
+                    else
+                    {
+                        var sy = (int)Math.Round(popupRect.Height * Utils.SmootherStep(popupRatio));
+                        listContainer.Move(popupRect.Left, popupRect.Top - sy, popupRect.Width, sy);
+                    }
+
+                    MarkDirty(); // MATTT : A resize should mark dirty...
                 }
             }
             else
             {
                 UpdateVisibleButtons();
             }
-        }
-
-        private Rectangle GetExpandedListRect()
-        {
-            var rect = popupRect;
-
-            if (IsLandscape)
-                rect.X = -(int)Math.Round(rect.Width * Utils.SmootherStep(popupRatio));
-            else
-                rect.Y = -(int)Math.Round(rect.Height * Utils.SmootherStep(popupRatio));
-
-            return rect;
         }
 
         private void UpdateButtonLayout()
@@ -353,66 +853,83 @@ namespace FamiStudio
             var landscape = IsLandscape;
             var x = 0;
 
-            for (int i = 0; i < (int)ButtonType.Count; i++)
+            foreach (var btn in allButtons)
             {
-                var btn = buttons[i];
-                var size = btn.IsNavButton ? buttonSizeNav : buttonSize;
-
                 if (!btn.Visible)
                     continue;
 
+                var isNavButton =
+                    btn == buttonSequencer ||
+                    btn == buttonPianoRoll ||
+                    btn == buttonProject;
+
+                var size = isNavButton ? buttonSizeNav : buttonSize;
+
                 if (landscape)
-                {
-                    btn.Rect = new Rectangle(0, x, buttonSize, size);
-                    btn.IconX = buttonIconPos2;
-                    btn.IconY = x + buttonIconPos1;
-                    btn.TextX = 0;
-                    btn.TextY = x + textPosTop;
-                }
+                    btn.Move(0, x, buttonSize, size);
                 else
-                {
-                    btn.Rect = new Rectangle(x, 0, size, buttonSize);
-                    btn.IconX = x + buttonIconPos2;
-                    btn.IconY = buttonIconPos1;
-                    btn.TextX = x;
-                    btn.TextY = textPosTop;
-                }
+                    btn.Move(x, 0, size, buttonSize);
 
                 x += size;
             }
         }
 
-        private void StartExpandingList(int idx, ListItem[] items, int scrollItemIdx = -1)
+        // MATTT : Missing border
+        // MATTT : Missing gradient panels.
+        private void StartExpandingList(Button button, Button[] buttons, Button[] iconButtons = null, int scrollItemIdx = -1)
         {
             var landscape = IsLandscape;
 
             var maxWidth  = landscape ? Math.Min(ParentWindowSize.Width, ParentWindowSize.Height) - buttonSize : Width;
             var maxHeight = landscape ? Height : listItemSize * 8;
 
-            popupRect.X = 0;
-            popupRect.Y = 0;
-            popupRect.Width  = 0;
-            popupRect.Height = items.Length * listItemSize + 1;
+            var maxButtonSize = 0;
+            var maxExtraSize  = 0; // MATTT : This is useless if all icons are same size.
 
-            for (int i = 0; i < items.Length; i++)
+            Debug.Assert(listContainer.Controls.Count == 0);
+
+            // Add buttons, keep track of largest one.
+            for (int i = 0; i < buttons.Length; i++)
             {
-                var item = items[i];
-                var size = textPosTop + Fonts.FontMediumBold.MeasureString(item.Text, false) * 5 / 4;
+                var btn = buttons[i];
+                listContainer.AddControl(btn);
+                btn.AutosizeWidth();
+                btn.Move(0, i * listItemSize, btn.Width, listItemSize);
 
-                if (item.ExtraImage != null)
-                    size += DpiScaling.ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
+                maxButtonSize = Math.Max(maxButtonSize, btn.Width);
 
-                popupRect.Width = Math.Max(popupRect.Width, size);
+                if (iconButtons != null)
+                {
+                    var icon = iconButtons[i];
+                    listContainer.AddControl(icon);
+                    icon.Resize(listExtraIconSize, listItemSize);
+                    maxExtraSize = Math.Max(maxExtraSize, icon.Width);
+                }
             }
 
-            popupRect.Width  = Math.Min(popupRect.Width,  maxWidth);
-            popupRect.Height = Math.Min(popupRect.Height, maxHeight);
+            var popupWidth  = maxButtonSize + maxExtraSize;
+            var popupHeight = buttons.Length * listItemSize + 1;
+
+            popupWidth  = Math.Min(popupWidth,  maxWidth);
+            popupHeight = Math.Min(popupHeight, maxHeight);
+
+            // Final resize.
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                buttons[i].Resize(maxButtonSize, buttons[i].Height);
+                if (iconButtons != null)
+                {
+                    iconButtons[i].Move(maxButtonSize, buttons[i].Top, maxExtraSize, iconButtons[i].Height);
+                }
+            }
+
+            popupRect = new Rectangle(0, 0, popupWidth, popupHeight);
 
             if (landscape)
             {
                 if (popupRect.Height != Height)
                 {
-                    popupRect.Y = (buttons[idx].Rect.Top + buttons[idx].Rect.Bottom) / 2 - popupRect.Height / 2;
+                    popupRect.Y = (button.Top + button.Bottom) / 2 - popupRect.Height / 2;
 
                     if (popupRect.Top < 0)
                         popupRect.Y -= popupRect.Top;
@@ -424,7 +941,7 @@ namespace FamiStudio
             {
                 if (popupRect.Width != Width)
                 {
-                    popupRect.X = (buttons[idx].Rect.Left + buttons[idx].Rect.Right) / 2 - popupRect.Width / 2;
+                    popupRect.X = (button.Left + button.Right) / 2 - popupRect.Width / 2;
 
                     if (popupRect.Left < 0)
                         popupRect.X -= popupRect.Left;
@@ -433,49 +950,31 @@ namespace FamiStudio
                 }
             }
 
-            var y = 0;
-
-            for (int i = 0; i < items.Length; i++)
-            {
-                var item = items[i];
-
-                item.Rect = new Rectangle(0, y, popupRect.Width - 1, listItemSize);
-                item.IconX = listIconPos;
-                item.IconY = y + listIconPos;
-                item.TextX = textPosTop;
-                item.TextY = y;
-
-                if (item.ExtraImage != null)
-                {
-                    var extraIconSize = DpiScaling.ScaleCustom(item.ExtraImage.ElementSize.Width, iconScaleFloat);
-                    item.ExtraIconX = popupRect.Width - listIconPos - extraIconSize;
-                    item.ExtraIconY = y + (listItemSize - extraIconSize) / 2;
-                }
-
-                y += listItemSize;
-            }
+            listContainer.Move(popupRect.Left, popupRect.Top, popupRect.Width, popupRect.Height);
+            listContainer.Visible = true;
 
             minScrollY = 0;
-            maxScrollY = y - popupRect.Height;
+            maxScrollY = buttons.Length * listItemSize - popupRect.Height;
 
-            popupButtonIdx = idx;
+            popupButton = button;
             popupRatio = 0.0f;
             popupOpening = true;
             popupClosing = false;
-            listItems = items;
             flingVelY = 0.0f;
 
-            // Try to center selected item.
-            if (scrollItemIdx < 0)
-                scrollItemIdx = popupSelectedIdx;
+            // MATTT
+            //// Try to center selected item.
+            //if (scrollItemIdx < 0)
+            //    scrollItemIdx = popupSelectedIdx;
 
+            // MATTT : Review this.
             scrollY = (int)((scrollItemIdx + 0.5f) * listItemSize - popupRect.Height * 0.5f);
             ClampScroll();
         }
 
         private void StartClosingList()
         {
-            if (popupButtonIdx >= 0)
+            if (popupButton != null)
             {
                 popupOpening = false;
                 popupClosing = popupRatio > 0.0f ? true : false;
@@ -503,15 +1002,15 @@ namespace FamiStudio
             App.SetActiveControl(App.ProjectExplorer);
         }
 
-        private bool CheckNeedsClosing(int idx)
+        private bool CheckNeedsClosing(Button button)
         {
-            if (popupButtonIdx >= 0)
+            if (popupButton != null)
             {
                 StartClosingList();
-                if (popupButtonIdx != idx)
+                if (popupButton != button)
                 {
                     Debug.Assert(popupRatio > 0.0f);
-                    popupButtonNextIdx = idx;
+                    popupButtonNext = button;
                 }
                 return true;
             }
@@ -519,501 +1018,24 @@ namespace FamiStudio
             return false;
         }
 
-        private void OnSnap()
-        {
-            if (CheckNeedsClosing((int)ButtonType.Snap))
-                return;
-
-            var items = new ListItem[SnapResolutionType.Max + 3];
-            var disabledColor = Color.FromArgb(64, Theme.BlackColor);
-
-            for (int i = 0; i < items.Length - 2; i++)
-            {
-                var item = new ListItem();
-                item.Color = Theme.LightGreyColor1;
-                item.Image = App.SnapResolution == i ? bmpRadio : null;
-                item.Text = (SnapResolutionType.Factors[i] > 1.0 ? SnapToBeatsLabel : SnapToBeatLabel).Format(SnapResolutionType.Names[i]);
-                item.TextColor = App.SnapEnabled ? Theme.BlackColor : disabledColor;
-                item.GetImageOpacity = (l) => { return l.TextColor.A / 255.0f; };
-                items[i] = item;
-            }
-
-            var snapEffectsItem = new ListItem();
-            snapEffectsItem.Color = Theme.LightGreyColor1;
-            snapEffectsItem.Image = App.SnapEffectEnabled ? bmpCheckOn : bmpCheckOff;
-            snapEffectsItem.Text = SnapEffectValuesLabel;
-            snapEffectsItem.TextColor = App.SnapEnabled ? Theme.BlackColor : disabledColor;
-            snapEffectsItem.GetImageOpacity = (l) => { return l.TextColor.A / 255.0f; }; 
-            items[items.Length - 2] = snapEffectsItem;
-
-            var snapEnableItem = new ListItem();
-            snapEnableItem.Color = Theme.LightGreyColor1;
-            snapEnableItem.Image = App.SnapEnabled ? bmpCheckOn : bmpCheckOff;
-            snapEnableItem.Text = SnapEnabledLabel;
-            items[items.Length - 1] = snapEnableItem;
-
-            popupSelectedIdx = App.SnapResolution;
-            StartExpandingList((int)ButtonType.Snap, items, items.Length - 1);
-        }
-
-        private void OnEffect()
-        {
-            if (CheckNeedsClosing((int)ButtonType.Effect))
-                return;
-
-            popupSelectedIdx = 0;
-
-            var channel = App.SelectedChannel;
-            var selectedEffect = App.SelectedEffect;
-            var effectPanelExpanded = App.EffectPanelExpanded;
-            var count = 1;
-
-            for (int i = 0;  i < Note.EffectCount; i++)
-            {
-                if (channel.ShouldDisplayEffect(i))
-                    count++;
-            }
-
-            var items = new ListItem[count];
-
-            var item = new ListItem();
-            item.Color = Theme.LightGreyColor1;
-            item.Image = bmpEffectNone;
-            item.Text = "None";
-            item.Data = -1;
-            items[0] = item;
-
-            for (int i = 0, j = 1; i < Note.EffectCount; i++)
-            {
-                if (channel.ShouldDisplayEffect(i))
-                {
-                    item = new ListItem();
-                    item.Color = Theme.LightGreyColor1;
-                    item.Image = bmpEffects[i];
-                    item.Text = EffectType.LocalizedNames[i];
-                    item.Data = i;
-                    items[j] = item;
-
-                    if (effectPanelExpanded && i == selectedEffect)
-                        popupSelectedIdx = j;
-
-                    j++;
-                }
-            }
-
-            StartExpandingList((int)ButtonType.Effect, items);
-        }
-
-        private void OnDPCMEffect()
-        {
-            if (CheckNeedsClosing((int)ButtonType.DPCMEffect))
-                return;
-
-            popupSelectedIdx = App.EffectPanelExpanded ? 1 : 0;
-
-            var items = new ListItem[2];
-
-            items[0] = new ListItem();
-            items[0].Color = Theme.LightGreyColor1;
-            items[0].Image = bmpEffectNone;
-            items[0].Text = NoneLabel;
-
-            items[1] = new ListItem();
-            items[1].Color = Theme.LightGreyColor1;
-            items[1].Image = bmpEffects[Note.EffectVolume];
-            items[1].Text = VolumeEnvelopeLabel;
-
-            StartExpandingList((int)ButtonType.DPCMEffect, items);
-        }
-
-        private void OnDPCMPlay()
-        {
-            App.PreviewDPCMSample(App.EditSample, false);
-        }
-
         private void OnDPCMPlayLongPress()
         {
             App.PreviewDPCMSample(App.EditSample, true);
         }
 
-        private void OnWaveformEffect()
-        {
-            if (CheckNeedsClosing((int)ButtonType.WaveformEffect))
-                return;
-
-            popupSelectedIdx = App.EffectPanelExpanded ? 1 : 0;
-
-            var items = new ListItem[2];
-
-            items[0] = new ListItem();
-            items[0].Color = Theme.LightGreyColor1;
-            items[0].Image = bmpEffectNone;
-            items[0].Text = NoneLabel;
-
-            items[1] = new ListItem();
-            items[1].Color = Theme.LightGreyColor1;
-            items[1].Image = bmpEffectRepeat;
-            items[1].Text = RepeatEnvelopeLabel;
-
-            StartExpandingList((int)ButtonType.WaveformEffect, items);
-        }
-
-        private void OnChannel()
-        {
-            if (CheckNeedsClosing((int)ButtonType.Channel))
-                return;
-
-            var channelTypes = App.Project.GetActiveChannelList();
-            var items = new ListItem[channelTypes.Length];
-
-            for (int i = 0; i < channelTypes.Length; i++)
-            {
-                var item = new ListItem();
-                item.Color = Theme.LightGreyColor1;
-                item.Image = bmpChannels[channelTypes[i]];
-                item.GetImageOpacity = (l) => { return App.IsChannelActive((int)l.Data) ? 1.0f : 0.2f; };
-                item.ExtraImage = bmpGhostSmall;
-                item.GetExtraImageOpacity = (l) => { return App.IsChannelForceDisplay((int)l.Data) ? 1.0f : 0.2f; };
-                item.Text = ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]);
-                item.Data = i;
-                items[i] = item;
-            }
-
-            popupSelectedIdx = App.SelectedChannelIndex;
-
-            StartExpandingList((int)ButtonType.Channel, items);
-        }
-
-        private void OnInstrument()
-        {
-            if (CheckNeedsClosing((int)ButtonType.Instrument))
-                return;
-
-            var editingChannel = App.IsEditingChannel;
-            var project = App.Project;
-            var channel = App.SelectedChannel;
-            var items = new List<ListItem>();
-
-            for (int i = 0; i < project.Instruments.Count; i++)
-            {
-                var inst = project.Instruments[i];
-
-                if (!editingChannel || channel.SupportsInstrument(inst))
-                {
-                    var item = new ListItem();
-                    item.Color = inst.Color;
-                    item.Image = bmpExpansions[inst.Expansion];
-                    item.Text = inst.Name;
-                    item.Data = inst;
-                    items.Add(item);
-                }
-            }
-
-            if (items.Count == 0)
-                return;
-
-            popupSelectedIdx = items.FindIndex(i => i.Data == App.SelectedInstrument);
-
-            StartExpandingList((int)ButtonType.Instrument, items.ToArray());
-        }
-
-        public void OnInstrumentLongPress()
-        {
-            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsInstrument(App.SelectedInstrument))
-            {
-                App.ShowContextMenu(new[]
-                {
-                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(App.SelectedInstrument); MarkDirty(); })
-                });
-            }
-        }
-
-        private void OnEnvelope()
-        {
-            if (CheckNeedsClosing((int)ButtonType.Envelope))
-                return;
-
-            var inst = App.SelectedInstrument;
-
-            if (inst == null)
-                return;
-
-            popupSelectedIdx = -1;
-
-            var items = new ListItem[inst.NumVisibleEnvelopes];
-
-            for (int i = 0, j = 0; i < EnvelopeType.Count; i++)
-            {
-                var env = inst.Envelopes[i];
-                
-                if (env != null && inst.IsEnvelopeVisible(i))
-                {
-                    var item = new ListItem();
-                    item.Color = Theme.LightGreyColor1;
-                    item.Image = bmpEnvelopes[i];
-                    item.GetImageOpacity = (l) => { return env.IsEmpty(i) ? 0.2f : 1.0f; };
-                    item.Text = EnvelopeType.LocalizedNames[i];
-                    item.Data = i;
-                    items[j] = item;
-
-                    if (i == App.EditEnvelopeType)
-                        popupSelectedIdx = j;
-
-                    j++;
-                }
-            }
-
-            StartExpandingList((int)ButtonType.Envelope, items);
-        }
-
-        private void OnArpeggio()
-        {
-            if (CheckNeedsClosing((int)ButtonType.Arpeggio))
-                return;
-
-            var project = App.Project;
-            var items = new List<ListItem>();
-
-            if (!App.IsEditingArpeggio)
-            {
-                var arpNoneItem = new ListItem();
-                arpNoneItem.Color = Theme.LightGreyColor1;
-                arpNoneItem.Image = bmpArpeggio;
-                arpNoneItem.Text = NoneLabel;
-                items.Add(arpNoneItem);
-            }
-
-            for (int i = 0; i < project.Arpeggios.Count; i++)
-            {
-                var arp = project.Arpeggios[i];
-                var item = new ListItem();
-                item.Color = arp.Color;
-                item.Image = bmpArpeggio;
-                item.Text = arp.Name;
-                item.Data = arp;
-                items.Add(item);
-            }
-
-            popupSelectedIdx = items.FindIndex(i => i.Data == App.SelectedArpeggio);
-
-            StartExpandingList((int)ButtonType.Arpeggio, items.ToArray());
-        }
-
-        private void OnArpeggioLongPress()
-        {
-            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsArpeggios)
-            {
-                App.ShowContextMenu(new[]
-                {
-                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(App.SelectedArpeggio); MarkDirty(); }) 
-                });
-            }
-        }
-
-        private TextureAtlasRef GetSequencerRenderInfo(out string text, out Color tint)
-        {
-            text = null;
-            tint = App.ActiveControl == App.Sequencer ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
-            return bmpSequencer;
-        }
-
-        private TextureAtlasRef GetPianoRollRenderInfo(out string text, out Color tint)
-        {
-            text = null;
-            tint = App.ActiveControl == App.PianoRoll && App.IsEditingChannel ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
-            return bmpPianoRoll;
-        }
-
-        private TextureAtlasRef GetProjectExplorerInfo(out string text, out Color tint)
-        {
-            text = null;
-            tint = App.ActiveControl == App.ProjectExplorer || App.ActiveControl == App.PianoRoll && !App.IsEditingChannel ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
-            return bmpProjectExplorer;
-        }
-
-        private TextureAtlasRef GetSnapRenderInfo(out string text, out Color tint)
-        {
-            var snapEnabled = App.SnapEnabled;
-            text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] + (App.SnapEffectEnabled ? " (FX)" : "") : SnapOffLabel;
-            tint = App.IsRecording ? Theme.DarkRedColor : Theme.LightGreyColor1;
-            return snapEnabled ? bmpSnapOn : bmpSnapOff;
-        }
-
-        private TextureAtlasRef GetEffectRenderInfo(out string text, out Color tint)
-        {
-            var validEffect = App.SelectedEffect >= 0 && App.EffectPanelExpanded;
-
-            text = validEffect ? EffectType.LocalizedNames[App.SelectedEffect] : NoneLabel;
-            tint = Theme.LightGreyColor1;
-            return validEffect ? bmpEffects[App.SelectedEffect] : bmpEffectNone;
-        }
-
-        private TextureAtlasRef GetDPCMEffectRenderInfo(out string text, out Color tint)
-        {
-            text = App.EffectPanelExpanded ? VolumeLabel : NoneLabel;
-            tint = Theme.LightGreyColor1;
-            return App.EffectPanelExpanded ? bmpEffects[Note.EffectVolume] : bmpEffectNone;
-        }
-
-        private TextureAtlasRef GetDPCMPlayRenderInfo(out string text, out Color tint)
-        {
-            text = "Play";
-            tint = App.EditSample.Color;
-            return bmpPlay;
-        }
-
-        private TextureAtlasRef GetWaveformEffectRenderInfo(out string text, out Color tint)
-        {
-            text = App.EffectPanelExpanded ? RepeatLabel : NoneLabel;
-            tint = Theme.LightGreyColor1;
-            return App.EffectPanelExpanded ? bmpEffectRepeat : bmpEffectNone;
-        }
-
-        private TextureAtlasRef GetChannelRenderInfo(out string text, out Color tint)
-        {
-            text = App.SelectedChannel.NameWithExpansion;
-            tint = Theme.LightGreyColor1;
-            return bmpChannels[App.SelectedChannel.Type];
-        }
-
-        private TextureAtlasRef GetInstrumentRenderingInfo(out string text, out Color tint)
-        {
-            var inst = App.SelectedInstrument;
-            text = inst != null ? inst.Name : "";
-            tint = inst != null ? inst.Color : Theme.LightGreyColor1;
-            var exp = inst != null ? inst.Expansion : ExpansionType.None;
-            return bmpExpansions[exp];
-        }
-
-        private TextureAtlasRef GetEnvelopeRenderingInfo(out string text, out Color tint)
-        {
-            var envType = App.EditEnvelopeType;
-            var inst = App.SelectedInstrument;
-            text = EnvelopeType.LocalizedNames[envType];
-            tint = inst != null ? inst.Color : Theme.LightGreyColor1;
-            return bmpEnvelopes[envType];
-        }
-
-        private TextureAtlasRef GetArpeggioRenderInfo(out string text, out Color tint)
-        {
-            var arp = App.SelectedArpeggio;
-            text = arp != null ? arp.Name  : NoneLabel;
-            tint = arp != null ? arp.Color : Theme.LightGreyColor1;
-            return bmpArpeggio;
-        }
-
-        private void OnSnapItemClick(int idx)
-        {
-            if (idx <= SnapResolutionType.Max)
-            {
-                App.SnapResolution = idx;
-                App.SnapEnabled = true;
-            }
-            else if (idx == SnapResolutionType.Max + 1)
-            {
-                App.SnapEffectEnabled = !App.SnapEffectEnabled;
-            }
-            else if (idx == SnapResolutionType.Max + 2)
-            {
-                App.SnapEnabled = !App.SnapEnabled;
-            }
-        }
-
-        private void OnEffectItemClick(int idx)
-        {
-            var effect = (int)listItems[idx].Data;
-            if (effect >= 0)
-            {
-                App.SelectedEffect = effect;
-                App.EffectPanelExpanded = true;
-            }
-            else
-            {
-                App.EffectPanelExpanded = false;
-            }
-        }
-
-        private void OnDPCMEffectItemClick(int idx)
-        {
-            App.EffectPanelExpanded = idx == 1;
-        }
-
-        private void OnWaveformEffectItemClick(int idx)
-        {
-            App.EffectPanelExpanded = idx == 1;
-        }
-
-        private void OnChannelItemClick(int idx)
-        {
-            App.SelectedChannelIndex = idx;
-        }
-
-        private void OnInstrumentItemClick(int idx)
-        {
-            var instrument = listItems[idx].Data as Instrument;
-            App.SelectedInstrument = instrument;
-        }
-
-        private void OnEnvelopeItemClick(int idx)
-        {
-            App.StartEditInstrument(App.SelectedInstrument, (int)listItems[idx].Data);
-        }
-
-        private void OnArpeggioItemClick(int idx)
-        {
-            var arpeggio = listItems[idx].Data as Arpeggio;
-            App.SelectedArpeggio = arpeggio;
-        }
-
-        private void OnChannelItemLongPress(int idx)
-        {
-            App.ShowContextMenu(new[]
-            {
-                new ContextMenuOption("MenuMute", ToggleMuteContext, () => { App.ToggleChannelActive(idx); MarkDirty(); }),
-                new ContextMenuOption("MenuSolo", ToggleSoloContext, () => { App.ToggleChannelSolo(idx); MarkDirty(); }),
-                new ContextMenuOption("MenuForceDisplay", ToggleForceDisplayContext, () => { App.ToggleChannelForceDisplay(idx); MarkDirty(); })
-            });
-        }
-
-        private void OnInstrumentItemLongPress(int idx)
-        {
-            var inst = listItems[idx].Data as Instrument;
-
-            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsInstrument(inst))
-            {
-                App.ShowContextMenu(new[]
-                {
-                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(inst); MarkDirty(); })
-                });
-            }
-        }
-
-        private void OnArpeggioItemLongPress(int idx)
-        {
-            var arp = listItems[idx].Data as Arpeggio;
-
-            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsArpeggios)
-            {
-                App.ShowContextMenu(new[]
-                {
-                    new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(arp); MarkDirty(); })
-                });
-            }
-        }
-
         private Rectangle GetScrollBarRect()
         {
-            var visibleSizeY = popupRect.Height;
-            var virtualSizeY = listItems.Length * listItemSize;
+            //var visibleSizeY = popupRect.Height;
+            //var virtualSizeY = listItems.Length * listItemSize;
 
-            if (visibleSizeY < virtualSizeY)
-            {
-                var sizeY = (int)Math.Round(visibleSizeY * (visibleSizeY / (float)virtualSizeY));
-                var posY  = (int)Math.Round(visibleSizeY * (scrollY      / (float)virtualSizeY));
+            //if (visibleSizeY < virtualSizeY)
+            //{
+            //    var sizeY = (int)Math.Round(visibleSizeY * (visibleSizeY / (float)virtualSizeY));
+            //    var posY  = (int)Math.Round(visibleSizeY * (scrollY      / (float)virtualSizeY));
 
-                return new Rectangle(popupRect.Width - scrollBarSizeX, posY, scrollBarSizeX, sizeY);
-            }
-            else
+            //    return new Rectangle(popupRect.Width - scrollBarSizeX, posY, scrollBarSizeX, sizeY);
+            //}
+            //else
             {
                 return Rectangle.Empty;
             }
@@ -1026,7 +1048,7 @@ namespace FamiStudio
 
             c.Transform.GetOrigin(out var ox, out var oy);
 
-            var listRect = GetExpandedListRect();
+            var listRect = listContainer.Rectangle;
             var screenRect = new Rectangle(Point.Empty, ParentWindow.Size);
             screenRect.Offset(-(int)ox, -(int)oy);
 
@@ -1052,34 +1074,16 @@ namespace FamiStudio
             }
 
             // Clear BG.
-            var navBgRect = Rectangle.Empty;
-            
-            for (int i = 0; i < (int)ButtonType.Count; i++)
-            {
-                var btn = buttons[i];
-                if (btn.Visible && btn.IsNavButton)
-                    navBgRect = navBgRect.IsEmpty ? btn.Rect : Rectangle.Union(navBgRect, btn.Rect);
-            }
+            var navBgRect = new Rectangle(
+                buttonSequencer.Left,
+                buttonSequencer.Top,
+                buttonProject.Right  - buttonSequencer.Left,
+                buttonProject.Bottom - buttonSequencer.Top);
 
-            var bgRect = new Rectangle(0, 0, Width, Height);
+            var bgRect = new Rectangle(0, 0, width, height);
             
             c.FillRectangleGradient(bgRect,    Theme.DarkGreyColor4, Theme.DarkGreyColor4.Scaled(0.8f), !IsLandscape, buttonSize);
             c.FillRectangleGradient(navBgRect, Theme.DarkGreyColor1, Theme.DarkGreyColor1.Scaled(0.8f), !IsLandscape, buttonSize);
-
-            // Buttons
-            for (int i = 0; i < (int)ButtonType.Count; i++)
-            {
-                var btn = buttons[i];
-
-                if (btn.Visible)
-                {
-                    var bmp = btn.GetRenderInfo(out var text, out var tint);
-                    c.DrawTextureAtlas(bmp, btn.IconX, btn.IconY, iconScaleFloat, tint);
-
-                    if (!string.IsNullOrEmpty(text))
-                        c.DrawText(text, buttonFont, btn.TextX, btn.TextY, Theme.LightGreyColor1, TextFlags.Center | TextFlags.Ellipsis, buttonSize, 0);
-                }
-            }
 
             // Dividing line.
             if (IsLandscape)
@@ -1087,59 +1091,7 @@ namespace FamiStudio
             else
                 c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
-            // List items.
-            if (popupButtonIdx >= 0)
-            {              
-                if (IsLandscape)
-                    screenRect.Width -= width;
-                else
-                    screenRect.Height -= (screenRect.Height - WindowRectangle.Top);
-
-                screenRect = Rectangle.Intersection(screenRect, listRect);
-
-                c.PushClipRegion(screenRect.Left, screenRect.Top, screenRect.Width, screenRect.Height, false);
-                c.PushTranslation(listRect.Left, listRect.Top - scrollY);
-
-                for (int i = 0; i < listItems.Length; i++)
-                {
-                    var item = listItems[i];
-                    var opacity = item.GetImageOpacity != null ? item.GetImageOpacity(item) : 1.0f;
-
-                    c.FillAndDrawRectangleGradient(item.Rect, item.Color, item.Color.Scaled(0.8f), Theme.BlackColor, true, listItemSize);
-                    
-                    if (item.Image != null)
-                    { 
-                        c.DrawTextureAtlas(item.Image, item.IconX, item.IconY, iconScaleFloat, Color.Black.Transparent(opacity));
-                    }
-
-                    if (item.ExtraImage != null)
-                    {
-                        var extraOpacity = item.GetExtraImageOpacity != null ? item.GetExtraImageOpacity(item) : 1.0f;
-                        c.DrawTextureAtlas(item.ExtraImage, item.ExtraIconX, item.ExtraIconY, iconScaleFloat, Color.Black.Transparent(extraOpacity));
-                    }
-
-                    c.DrawText(item.Text, i == popupSelectedIdx ? Fonts.FontMediumBold : Fonts.FontMedium, item.TextX, item.TextY, item.TextColor, TextFlags.Middle, 0, listItemSize);
-                }
-
-                c.PopTransform();
-
-                var scrollBarRect = GetScrollBarRect();
-
-                if ((Math.Abs(flingVelY) > 0.0f || captureOperation == CaptureOperation.MobilePan) && !scrollBarRect.IsEmpty)
-                {
-                    c.PushTranslation(listRect.Left, listRect.Top);
-                    c.FillRectangle(GetScrollBarRect(), scrollBarColor);
-                    c.PopTransform();
-                }
-
-                if (IsLandscape)
-                    listRect.Width  = -listRect.X;
-                else
-                    listRect.Height = -listRect.Y;
-
-                listRect.Offset((int)Math.Round(ox), (int)Math.Round(oy));
-                c.PopClipRegion();
-            }
+            base.OnRender(g);
         }
 
         private void StartCaptureOperation(int x, int y, CaptureOperation op)
@@ -1180,41 +1132,6 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchClick(MouseEventArgs e)
-        {
-            var x = e.X;
-            var y = e.Y;
-
-            foreach (var btn in buttons)
-            {
-                if (btn.Visible && btn.Rect.Contains(x, y))
-                {
-                    Platform.VibrateTick();
-                    btn.Click();
-                    return;
-                }
-            }
-
-            if (popupRatio > 0.5f)
-            {
-                var rect = GetExpandedListRect();
-
-                if (rect.Contains(x, y))
-                {
-                    var idx = (y - rect.Top + scrollY) / listItemSize;
-
-                    if (idx >= 0 && idx < listItems.Length)
-                    {
-                        Platform.VibrateTick();
-                        buttons[popupButtonIdx].ListItemClick?.Invoke(idx);
-                        popupSelectedIdx = idx;
-                    }
-                }
-
-                StartClosingList();
-            }
-        }
-
         protected override void OnTouchUp(MouseEventArgs e)
         {
             EndCaptureOperation(e.X, e.Y);
@@ -1224,14 +1141,16 @@ namespace FamiStudio
         {
             flingVelY = 0;
 
-            if (popupRatio == 1.0f)
-            {
-                var rect = GetExpandedListRect();
-                if (rect.Contains(e.X, e.Y))
-                    StartCaptureOperation(e.X, e.Y, CaptureOperation.MobilePan);
-            }
+            // MATTT
+            //if (popupRatio == 1.0f)
+            //{
+            //    var rect = GetExpandedListRect();
+            //    if (rect.Contains(e.X, e.Y))
+            //        StartCaptureOperation(e.X, e.Y, CaptureOperation.MobilePan);
+            //}
         }
 
+        // MATTT : listContainer event here!
         protected override void OnTouchFling(MouseEventArgs e)
         {
             EndCaptureOperation(e.X, e.Y);
@@ -1243,38 +1162,6 @@ namespace FamiStudio
             UpdateCaptureOperation(e.X, e.Y);
             lastX = e.X;
             lastY = e.Y;
-        }
-
-        protected override void OnTouchLongPress(MouseEventArgs e)
-        {
-            var x = e.X;
-            var y = e.Y;
-
-            foreach (var btn in buttons)
-            {
-                if (btn.Visible && btn.Rect.Contains(x, y))
-                {
-                    if (btn.LongPress != null)
-                        btn.LongPress();
-                    return;
-                }
-            }
-
-            if (popupRatio > 0.5f)
-            {
-                var rect = GetExpandedListRect();
-
-                if (rect.Contains(x, y))
-                {
-                    var idx = (y - rect.Top + scrollY) / listItemSize;
-
-                    if (idx >= 0 && idx < listItems.Length && buttons[popupButtonIdx].ListItemLongPress != null)
-                        buttons[popupButtonIdx].ListItemLongPress?.Invoke(idx);
-                }
-            }
-
-            lastX = x;
-            lastY = y;
         }
     }
 }

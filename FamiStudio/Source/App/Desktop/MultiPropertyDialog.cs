@@ -147,7 +147,7 @@ namespace FamiStudio
             for (int i = 0; i < tabs.Count; i++)
             {
                 var visible = i == idx;
-                tabs[i].button.BoldFont = visible;
+                tabs[i].button.Font = visible ? fonts.FontMediumBold : fonts.FontMedium;
                 tabs[i].properties.Visible = visible;
 
                 if (visible)

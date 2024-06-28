@@ -540,7 +540,7 @@ namespace FamiStudio
                     button.Border = true;
                     if ((int)selectedTab == i)
                     {
-                        button.BoldFont = true;
+                        button.Font = fonts.FontMediumBold;
                         button.Transparent = true;
                     }
                     else
@@ -549,6 +549,7 @@ namespace FamiStudio
                         button.BackgroundColorHover   = new Color(0, 0, 0, 64);
                         button.BackgroundColorPressed = new Color(0, 0, 0, 32);
                     }
+                    // MATTT  : Last tab overlaps with scroll bar.
                     button.Move(i * tabSizeX, 0, i == (int)TabType.Count - 1 ? width - tabSizeX * i : tabSizeX, panelSizeY);
                     button.Click += TopTabs_Click;
                     button.UserData = (TabType)i;

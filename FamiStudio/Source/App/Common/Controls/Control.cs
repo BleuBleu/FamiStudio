@@ -153,10 +153,10 @@ namespace FamiStudio
 
         public void SendTouchDoubleClick(MouseEventArgs e)
         {
-            if (SupportsDoubleClick)
+            //if (SupportsDoubleClick)
                 OnTouchDoubleClick(e);
-            else
-                OnTouchClick(e);
+            //else
+            //    OnTouchClick(e);
         }
 
         public void SendTouchLongPress(MouseEventArgs e)
@@ -250,6 +250,7 @@ namespace FamiStudio
             }
         }
 
+        public Rectangle Rectangle => new Rectangle(left, top, width, height);
         public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
         public Rectangle WindowRectangle => new Rectangle(WindowPosition, Size);
         public Size ParentWindowSize => ParentWindow.Size;

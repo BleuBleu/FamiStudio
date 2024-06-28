@@ -11,6 +11,7 @@ namespace FamiStudio
         protected int containerScrollY;
         protected List<Control> controls = new List<Control>();
         protected bool clipRegion = true;
+        protected bool clipRegionToParent = true;
         protected int numControlsTickEnabled;
 
         public int ScrollX { get => containerScrollX; set { if (SetAndMarkDirty(ref containerScrollX, value)) Scrolled?.Invoke(this); } }
@@ -48,6 +49,12 @@ namespace FamiStudio
 
         public virtual void OnContainerTouchFlingNotify(Control control, MouseEventArgs e)
         {
+        }
+
+        public void SetupClipRegion(bool clip, bool clipParents = true)
+        {
+            clipRegion = clip;
+            clipRegionToParent = clipParents;
         }
 
         public void IncrementControlTickEnabled(int delta)
@@ -294,7 +301,7 @@ namespace FamiStudio
 
         public override void Render(Graphics g)
         {
-            if (clipRegion) g.PushClipRegion(0, 0, width, height);
+            if (clipRegion) g.PushClipRegion(0, 0, width, height, clipRegionToParent);
             OnRender(g);
             Rendering?.Invoke(g);
             if (clipRegion) g.PopClipRegion();

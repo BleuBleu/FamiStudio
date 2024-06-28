@@ -685,7 +685,8 @@
     <EmbeddedResource Include="Resources\Atlas\MobileEffectVolume.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobilePianoDrag.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobilePianoRest.tga" />
-    <EmbeddedResource Include="Resources\Atlas\MobileRadio.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileRadioOff.tga" />
+    <EmbeddedResource Include="Resources\Atlas\MobileRadioOn.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileSnapOff.tga" />
     <EmbeddedResource Include="Resources\Atlas\MobileSnapOn.tga" />
     <EmbeddedResource Include="Resources\Atlas\More@2x.tga" />

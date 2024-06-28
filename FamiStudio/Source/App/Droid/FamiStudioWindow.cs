@@ -981,8 +981,17 @@ namespace FamiStudio
                 //Debug.WriteLine($"OnDoubleTap ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                 {
+                    // "OnDoubleTap" returns the coordinate of the first tap, so it you tap
+                    // at 2 different locations very quickly, the second tap will still be at
+                    // the first location. This is fine for controls that supports double-tap
+                    // but not for the ones that dont support it. "OnDoubleTapEvent + Down"
+                    // returns the correct new location, so we will use that for controls
+                    // that dont want to deal with double-clicks.
                     var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
-                    ctrl?.SendTouchDoubleClick(new MouseEventArgs(x, y));
+                    if (ctrl != null && ctrl.SupportsDoubleClick)
+                    {
+                        ctrl?.SendTouchDoubleClick(new MouseEventArgs(x, y));
+                    }
                 }
                 return true;
             }
@@ -994,8 +1003,29 @@ namespace FamiStudio
 
         public bool OnDoubleTapEvent(MotionEvent e)
         {
-            //Debug.WriteLine($"OnDoubleTapEvent ({e.GetX()}, {e.GetY()})");
-            return false;
+            if (!IsAsyncDialogInProgress)
+            {
+                lock (renderLock)
+                { 
+                    //Debug.WriteLine($"OnDoubleTapEvent ({e.GetX()}, {e.GetY()})");
+                    if (e.Action == MotionEventActions.Down)
+                    {
+                        // See comment in "OnDoubleTap".
+                        var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                        if (ctrl != null && !ctrl.SupportsDoubleClick)
+                        {
+                            ctrl?.SendTouchClick(new MouseEventArgs(x, y));
+                        }
+
+                    }
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public bool OnSingleTapConfirmed(MotionEvent e)

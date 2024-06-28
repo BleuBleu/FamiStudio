@@ -100,9 +100,10 @@ namespace FamiStudio
             return new Color((int)(R * scale), (int)(G * scale), (int)(B * scale), A);
         }
 
-        public Color Transparent(float a)
+        // MATTT : Change this for a byte. No point in having float.
+        public Color Transparent(float a, bool multiply = false)
         {
-            return FromArgb(a, this);
+            return multiply ? FromArgb(a * A / 255.0f, this) : FromArgb(a, this);
         }
 
         public static bool operator ==(Color left, Color right)

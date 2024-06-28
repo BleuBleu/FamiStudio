@@ -5,6 +5,7 @@ namespace FamiStudio
 {
     public class Button : Control
     {
+        public delegate string StringDelegate(Control sender);
         public delegate string ImageDelegate(Control sender, ref Color tint);
         public delegate bool BoolDelegate(Control sender);
 
@@ -18,13 +19,15 @@ namespace FamiStudio
         public event ImageDelegate ImageEvent;
         public event BoolDelegate EnabledEvent;
         public event BoolDelegate DimmedEvent;
+        public event StringDelegate TextEvent;
+
+        public override bool SupportsDoubleClick => false;
 
         private string text;
         private string imageName;
         private float imageScale = 1.0f;
         private TextureAtlasRef bmp;
-        private int margin = DpiScaling.ScaleForWindow(4);
-        private bool bold;
+        private int margin = 4; 
         private bool ellipsis;
         private bool border;
         private bool hover;
@@ -36,13 +39,16 @@ namespace FamiStudio
         private bool handleOnClick = true;
         private bool vibrateOnClick;
         private bool vibrateOnRightClick;
+        private bool bottomText;
+        private Font font;
 
+        // MATTT We shouldnt need all those... THis is *only* for PE tabs.
         private Color fgColorEnabled  = Theme.LightGreyColor1;
-        private Color fgColorDisabled = Theme.MediumGreyColor1;
-        private Color bgColor         = Theme.DarkGreyColor5;
-        private Color bgColorPressed  = Theme.MediumGreyColor1;
-        private Color bgColorHover    = Theme.DarkGreyColor6;
-        
+        private Color fgColorDisabled = Theme.MediumGreyColor1; // Roughly LightGreyColor1 * 0.5
+        private Color bgColor         = Theme.DarkGreyColor5;   // Roughly MediumGreyColor1 * 0.57
+        private Color bgColorPressed  = Theme.MediumGreyColor1; 
+        private Color bgColorHover    = Theme.DarkGreyColor6;   // Roughly MediumGreyColor1 * 0.66
+
         public Color ForegroundColorEnabled  { get => fgColorEnabled;  set => fgColorEnabled  = value; }
         public Color ForegroundColorDisabled { get => fgColorDisabled; set => fgColorDisabled = value; }
         public Color BackgroundColor         { get => bgColor;         set => bgColor         = value; }
@@ -86,10 +92,10 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref imageScale, value); }
         }
 
-        public bool BoldFont
+        public Font Font
         {
-            get { return bold; }
-            set { SetAndMarkDirty(ref bold, value); }
+            get { return font; }
+            set { font = value; MarkDirty(); }
         }
 
         public bool Border
@@ -122,11 +128,40 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref whiteHighlight, value); }
         }
 
+        public bool BottomText 
+        {
+            get { return bottomText; }
+            set { SetAndMarkDirty(ref bottomText, value); }
+        }
+
+        public int Margin 
+        {
+            get { return margin; }
+            set { SetAndMarkDirty(ref margin, value); }
+        }
+
         public void AutosizeWidth()
         {
             // Only bothered to support this one use case.
-            Debug.Assert(!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(imageName));
-            width = margin * 3 + bmp.ElementSize.Width + ParentWindow.Fonts.FontMedium.MeasureString(text, false);
+            if (!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(imageName))
+            {
+                Debug.Assert(!bottomText);
+                width = GetScaledMargin() * 3 + DpiScaling.ScaleCustom(bmp.ElementSize.Width, imageScale) + GetFontInternal().MeasureString(text, false);
+            }
+            else if (!string.IsNullOrEmpty(imageName))
+            {
+                width = DpiScaling.ScaleCustom(bmp.ElementSize.Width, imageScale);
+            }
+        }
+
+        private Font GetFontInternal()
+        {
+            return font == null ? fonts.FontMedium : font;
+        }
+
+        private int GetScaledMargin()
+        {
+            return DpiScaling.ScaleForWindow(margin);
         }
 
         protected override void OnAddedToContainer()
@@ -222,11 +257,14 @@ namespace FamiStudio
                 DpiScaling.ScaleCustom(bmp.ElementSize.Height, imageScale));
         }
 
+        // MATTT : Precompute more stuff to keep this as simple as possible at run-time.
+        // MATTT : Cleanup the whole transparent/dimmed thing now that we know what we want. There must be a unified way of doing this.
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
 
+            var localFont = GetFontInternal();
             var localEnabled = Enabled;
             var localDimmed  = Dimmed;
             var tint = localEnabled || transparent ? fgColorEnabled : fgColorDisabled;
@@ -264,24 +302,46 @@ namespace FamiStudio
                 c.DrawRectangle(ClientRectangle, Theme.BlackColor);
             }
 
-            var hasText = !string.IsNullOrEmpty(text);
+            var localText = TextEvent != null ? TextEvent.Invoke(this) : text;
+            var hasText = !string.IsNullOrEmpty(localText);
 
             c.PushTranslation(0, press ? 1 : 0);
+
+            var scaledImageWidth  = 0;
+            var scaledImageHeight = 0;
+
+            if (bmp != null)
+            {
+                scaledImageWidth  = DpiScaling.ScaleCustom(bmpSize.Width,  imageScale);
+                scaledImageHeight = DpiScaling.ScaleCustom(bmpSize.Height, imageScale);
+            }
+
+            tint = tint.Transparent(opacity, true);
 
             if (!hasText && bmp != null)
             {
                 c.DrawTextureAtlas(bmp, 
-                    (width  - DpiScaling.ScaleCustom(bmpSize.Width,  imageScale)) / 2, 
-                    (height - DpiScaling.ScaleCustom(bmpSize.Height, imageScale)) / 2, imageScale, tint.Transparent(opacity));
+                    (width  - scaledImageWidth)  / 2, 
+                    (height - scaledImageHeight) / 2, imageScale, tint);
             }
             else if (hasText && bmp == null)
             {
-                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, 0, 0, tint, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
+                c.DrawText(localText, localFont, 0, 0, tint, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
             }
             else if (hasText && bmp != null)
             {
-                c.DrawTextureAtlas(bmp, margin, (height - DpiScaling.ScaleCustom(bmpSize.Height, imageScale)) / 2, imageScale, tint);
-                c.DrawText(text, bold ? Fonts.FontMediumBold : Fonts.FontMedium, bmpSize.Width + margin * 2, 0, tint, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
+                var localMargin = GetScaledMargin();
+
+                if (bottomText)
+                {
+                    c.DrawTextureAtlas(bmp, (width - scaledImageWidth) / 2, localMargin, imageScale, tint);
+                    c.DrawText(localText, localFont, 0, scaledImageHeight + localMargin, tint, TextFlags.TopCenter | TextFlags.Clip, width, height - scaledImageHeight - localMargin);
+                }
+                else
+                {
+                    c.DrawTextureAtlas(bmp, localMargin, (height - scaledImageHeight) / 2, imageScale, tint);
+                    c.DrawText(localText, localFont, scaledImageWidth + localMargin * 2, 0, tint, TextFlags.MiddleLeft | TextFlags.Clip, width - scaledImageWidth - localMargin * 2, height);
+                }
             }
 
             c.PopTransform();

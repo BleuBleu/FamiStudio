@@ -51,6 +51,8 @@
 		- Dialog ticks
 		- Toast tick
 		- We ficed a double-tick issue in 4.2.1 i think, make sure that's included.
+	x Double click issue for controls that dont support it (returns position of 1st click)
+		- Move all "SendTouchInputAsMouse" in FamiStudioWindow.cs.
 - Support for japanese/other characters regardless of current languages
 	- Switch all UI to Noto Sans?
 	- Have a series of fallback fonts when searching for a glyph.
@@ -96,6 +98,10 @@ MacOS notes
 	cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
 - If NAT network doesnt work (problem is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
+
+To take screenshot on android:
+=============================
+"C:\Program Files (x86)\Android\android-sdk\platform-tools\adb" exec-out screencap -p > c:\temp\screen.png
 
 Convert PNG to TGA
 ==================
