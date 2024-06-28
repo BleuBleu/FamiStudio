@@ -890,7 +890,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
-                    ctrl?.SendTouchLongPress(new MouseEventArgs(MouseEventArgs.ButtonRight, x, y)); // Long presses are always right-clicks.
+                    ctrl?.SendTouchLongPress(new MouseEventArgs(x, y)); 
                 }
             }
         }
@@ -933,7 +933,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
-                    ctrl.SendTouchScale(new MouseEventArgs(x, y, detector.ScaleFactor));
+                    ctrl?.SendTouchScale(new MouseEventArgs(x, y, detector.ScaleFactor));
                 }
                 return true;
             }
@@ -980,7 +980,10 @@ namespace FamiStudio
             {
                 //Debug.WriteLine($"OnDoubleTap ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
-                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.SendTouchDoubleClick(new MouseEventArgs(x, y));
+                {
+                    var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                    ctrl?.SendTouchDoubleClick(new MouseEventArgs(x, y));
+                }
                 return true;
             }
             else

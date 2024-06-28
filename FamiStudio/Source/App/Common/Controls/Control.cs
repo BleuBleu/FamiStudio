@@ -163,8 +163,9 @@ namespace FamiStudio
         {
             if (SendTouchInputAsMouse)
             {
-                SendMouseDown(e);
-                SendMouseUp(e);
+                var e2 = e.CloneWithNewButton(MouseEventArgs.ButtonRight); // Pretend right-click.
+                SendMouseDown(e2);
+                SendMouseUp(e2);
             }
             else
             {
@@ -611,6 +612,13 @@ namespace FamiStudio
             posY = y;
             flingVelX = velX;
             flingVelY = velY;
+        }
+
+        public MouseEventArgs CloneWithNewButton(int button)
+        {
+            var copy = MemberwiseClone() as MouseEventArgs;
+            copy.buttons = button;
+            return copy;
         }
 
         public void MarkHandled()

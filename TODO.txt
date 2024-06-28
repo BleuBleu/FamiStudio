@@ -38,17 +38,14 @@
 
 - UI code cleanup:
 	- Project explorer rewrite
-		x Convert all x,y to points.
-		- Button mouse up / long press confusion... Ugh.
 		- Test double click behavior on mobile.
 		- Test scroll bars a lot more. 
-			x Scroll bar doesnt goo all the way down if you click in the empty part.
 		- Middle mouse panning (when i get a mouse...)
-		- Mobile stuff : white outlines, flings, touch, etc.
-			x Draggin env on itself ask wrong instrument? Try in roar.
-			x We should be able to long press on the label of a param to reset the value.
-			/ Apply our recipe for insturment everywhere.
 	x Toolbar rewrite
+	- QuickAccess rewrite
+		- Similar to toolbar
+		- Will need a button with small text underneath.
+		- Will need to make GradientPanel a real control.
 	- Add support for more international characeters, switch to Noto.
 	- To test : 
 		- Dialog ticks

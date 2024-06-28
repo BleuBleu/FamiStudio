@@ -841,10 +841,13 @@ namespace FamiStudio
 
         private void InstrumentDpcm_MouseDown(Control sender, Instrument instrument, MouseEventArgs e, TextureAtlasRef image)
         {
-            draggedInstrument = instrument;
-            envelopeDragTexture = image;
-            StartCaptureOperation(sender, e.Position, DragInstrumentSampleMappings);
-            e.MarkHandled();
+            if (!e.Handled && e.Left)
+            {
+                draggedInstrument = instrument;
+                envelopeDragTexture = image;
+                StartCaptureOperation(sender, e.Position, DragInstrumentSampleMappings);
+                e.MarkHandled();
+            }
         }
 
         private void InstrumentEnvelope_Click(Instrument instrument, int envelopeType)

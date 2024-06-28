@@ -172,9 +172,9 @@ namespace FamiStudio
         {
             var canRightClick = RightClick != null;
 
-            if (Platform.IsDesktop && enabled && (e.Left || (e.Right && canRightClick)))
+            if (enabled && (Platform.IsDesktop && e.Left || (e.Right && canRightClick)))
             {
-                if (clickOnMouseUp)
+                if (clickOnMouseUp || Platform.IsMobile)
                     TriggerClickEvent(e, e.Left);
             }
 
@@ -186,14 +186,6 @@ namespace FamiStudio
             if (enabled)
             {
                 TriggerClickEvent(e, true);
-            }
-        }
-
-        protected override void OnTouchLongPress(MouseEventArgs e)
-        {
-            if (enabled)
-            {
-                TriggerClickEvent(e, false);
             }
         }
 

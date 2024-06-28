@@ -1152,7 +1152,7 @@ namespace FamiStudio
                     break;
             }
 
-            if (view is CheckBox)
+            if (view is Android.Widget.CheckBox)
             {
             }
             else if (view is TextView)

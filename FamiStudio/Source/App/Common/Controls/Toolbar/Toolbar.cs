@@ -700,6 +700,7 @@ namespace FamiStudio
 
                 foreach (var btn in allButtons)
                 {
+                    // MATTT : Compare the buttons pointers, not strings...
                     if ((string)btn.UserData == "Help")
                     {
                         btn.Move(Width - btn.Width, 0);
@@ -709,6 +710,7 @@ namespace FamiStudio
                         btn.Move(x, 0, btn.Width, Height);
                     }
 
+                    // MATTT : Compare the buttons pointers, not strings...
                     var isLessImportant =
                         (string)btn.UserData == "Copy"   ||
                         (string)btn.UserData == "Cut"    ||
@@ -724,6 +726,7 @@ namespace FamiStudio
                         x += btn.Width;
                     }
 
+                    // MATTT : Compare the buttons pointers, not strings...
                     if ((string)btn.UserData == "Config")
                     {
                         var timecodeOscSizeX  = DpiScaling.ScaleForWindow(140);
