@@ -52,15 +52,10 @@ namespace FamiStudio
         private bool      popupClosing;
         
         // Popup-list scrolling.
-        private int scrollY = 0;
-        private int minScrollY = 0;
         private int maxScrollY = 0;
 
         // Mouse tracking.
-        private int lastX;
-        private int lastY;
-        private int captureX;
-        private int captureY;
+        private Point lastPos; // Relative to this entire control.
         private float flingVelY;
         private CaptureOperation captureOperation = CaptureOperation.None;
 
@@ -116,6 +111,7 @@ namespace FamiStudio
             button.ImageScale = iconScaleFloat;
             button.Transparent = true;
             button.BottomText = true;
+            button.Ellipsis = true;
             button.Margin = 1;
             button.Font = buttonFont;
             button.Text = text;
@@ -211,6 +207,10 @@ namespace FamiStudio
             listContainer = new Container();
             listContainer.Visible = false;
             listContainer.SetupClipRegion(true, false);
+            listContainer.ContainerMouseDownNotify += ListContainer_ContainerMouseDownNotify;
+            listContainer.ContainerMouseUpNotify += ListContainer_ContainerMouseUpNotify;
+            listContainer.ContainerTouchFlingNotify += ListContainer_ContainerTouchFlingNotify;
+            listContainer.ContainerMouseMoveNotify += ListContainer_ContainerMouseMoveNotify;
             AddControl(listContainer);
         }
 
@@ -956,7 +956,6 @@ namespace FamiStudio
             listContainer.Move(popupRect.Left, popupRect.Top, popupRect.Width, popupRect.Height);
             listContainer.Visible = true;
 
-            minScrollY = 0;
             maxScrollY = buttons.Length * listItemSize - popupRect.Height;
 
             popupButton = button;
@@ -971,7 +970,7 @@ namespace FamiStudio
             //    scrollItemIdx = popupSelectedIdx;
 
             // MATTT : Review this.
-            scrollY = (int)((scrollItemIdx + 0.5f) * listItemSize - popupRect.Height * 0.5f);
+            listContainer.ScrollY = (int)((scrollItemIdx + 0.5f) * listItemSize - popupRect.Height * 0.5f);
             ClampScroll();
         }
 
@@ -1097,74 +1096,72 @@ namespace FamiStudio
             base.OnRender(g);
         }
 
-        private void StartCaptureOperation(int x, int y, CaptureOperation op)
+        private void StartCaptureOperation(Control control, Point p, CaptureOperation op)
         {
-            lastX = x;
-            lastY = y;
-            captureX = x;
-            captureY = y;
+            lastPos = WindowToControl(control.ControlToWindow(p));
             captureOperation = op;
-            Capture = true;
+            control.Capture = true;
         }
 
         private bool ClampScroll()
         {
             var scrolled = true;
-            if (scrollY < minScrollY) { scrollY = minScrollY; scrolled = false; }
-            if (scrollY > maxScrollY) { scrollY = maxScrollY; scrolled = false; }
+            // TODO : Move this logic in the container itself.
+            if (listContainer.ScrollY < 0) { listContainer.ScrollY = 0; scrolled = false; }
+            if (listContainer.ScrollY > maxScrollY) { listContainer.ScrollY = maxScrollY; scrolled = false; }
             return scrolled;
         }
 
         private bool DoScroll(int deltaY)
         {
-            scrollY += deltaY;
-            MarkDirty();
+            listContainer.ScrollY += deltaY;
+            listContainer.MarkDirty();
             return ClampScroll();
         }
 
-        private void UpdateCaptureOperation(int x, int y)
+        private void UpdateCaptureOperation(Point p)
         {
             if (captureOperation == CaptureOperation.MobilePan)
-                DoScroll(lastY - y);
+            {
+                DoScroll(lastPos.Y - p.Y);
+            }
         }
 
-        private void EndCaptureOperation(int x, int y)
+        private void EndCaptureOperation(Point p)
         {
             captureOperation = CaptureOperation.None;
             Capture = false;
             MarkDirty();
         }
 
-        protected override void OnTouchUp(MouseEventArgs e)
+        private void ListContainer_ContainerTouchFlingNotify(Control sender, MouseEventArgs e)
         {
-            EndCaptureOperation(e.X, e.Y);
-        }
-
-        protected override void OnTouchDown(MouseEventArgs e)
-        {
-            flingVelY = 0;
-
-            // MATTT
-            //if (popupRatio == 1.0f)
-            //{
-            //    var rect = GetExpandedListRect();
-            //    if (rect.Contains(e.X, e.Y))
-            //        StartCaptureOperation(e.X, e.Y, CaptureOperation.MobilePan);
-            //}
-        }
-
-        // MATTT : listContainer event here!
-        protected override void OnTouchFling(MouseEventArgs e)
-        {
-            EndCaptureOperation(e.X, e.Y);
+            EndCaptureOperation(e.Position);
             flingVelY = e.FlingVelocityY;
         }
 
-        protected override void OnTouchMove(MouseEventArgs e)
+        private void ListContainer_ContainerMouseDownNotify(Control sender, MouseEventArgs e)
         {
-            UpdateCaptureOperation(e.X, e.Y);
-            lastX = e.X;
-            lastY = e.Y;
+            flingVelY = 0;
+
+            if (popupRatio == 1.0f)
+            {
+                var listPos = listContainer.WindowToControl(sender.ControlToWindow(e.Position));
+                if (listContainer.ClientRectangle.Contains(listPos))
+                    StartCaptureOperation(sender, e.Position, CaptureOperation.MobilePan);
+            }
+        }
+
+        private void ListContainer_ContainerMouseUpNotify(Control sender, MouseEventArgs e)
+        {
+            EndCaptureOperation(e.Position);
+        }
+
+        private void ListContainer_ContainerMouseMoveNotify(Control sender, MouseEventArgs e)
+        {
+            var quickAccessPos = WindowToControl(sender.ControlToWindow(e.Position));
+            UpdateCaptureOperation(quickAccessPos);
+            lastPos = quickAccessPos;
         }
     }
 }

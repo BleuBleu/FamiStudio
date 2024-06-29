@@ -18,7 +18,6 @@ namespace FamiStudio
         protected bool visible = true;
         protected bool enabled = true;
         protected bool canFocus = true;
-        //protected bool touchAsMouse = false;
         protected string tooltip;
         protected object userData;
         private bool tickEnabled;
@@ -272,7 +271,6 @@ namespace FamiStudio
         public bool IsContainedByMainWindow => ParentTopContainer != null;
         public string ToolTip { get => tooltip; set { SetAndMarkDirty(ref tooltip, value); } }
         public object UserData { get => userData; set => userData = value; }
-        //public bool SendTouchInputAsMouse { get => touchAsMouse; set => touchAsMouse = value; }
         public virtual bool SendTouchInputAsMouse => true;
         public virtual bool SupportsDoubleClick => true;
         public bool TickEnabled => tickEnabled;

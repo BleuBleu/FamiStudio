@@ -53,6 +53,7 @@
 		- We ficed a double-tick issue in 4.2.1 i think, make sure that's included.
 	x Double click issue for controls that dont support it (returns position of 1st click)
 		- Move all "SendTouchInputAsMouse" in FamiStudioWindow.cs.
+	- When everything is ported, unify mousedown/mousemove/mouseup with mobile. Rename to "PointerDown" or something. Add a flag in e.IsTouchEvent.
 - Support for japanese/other characters regardless of current languages
 	- Switch all UI to Noto Sans?
 	- Have a series of fallback fonts when searching for a glyph.

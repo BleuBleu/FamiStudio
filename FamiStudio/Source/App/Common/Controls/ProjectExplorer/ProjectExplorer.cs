@@ -2346,7 +2346,7 @@ namespace FamiStudio
 
         public override void OnContainerMouseMoveNotify(Control control, MouseEventArgs e)
         {
-            var winPos = control.ControlToWindow(new Point(e.X, e.Y));
+            var winPos = control.ControlToWindow(e.Position);
             var ctrlPos = WindowToControl(winPos);
             var ctrl = GetControlAt(winPos.X, winPos.Y, out _, out _);
 

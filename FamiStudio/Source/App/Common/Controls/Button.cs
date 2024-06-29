@@ -351,12 +351,12 @@ namespace FamiStudio
                 if (bottomText)
                 {
                     c.DrawTextureAtlas(bmp, (width - scaledImageWidth) / 2, localMargin, imageScale, localFgColor);
-                    c.DrawText(localText, localFont, 0, scaledImageHeight + localMargin, localFgColor, TextFlags.TopCenter | TextFlags.Clip, width, height - scaledImageHeight - localMargin);
+                    c.DrawText(localText, localFont, 0, scaledImageHeight + localMargin, localFgColor, TextFlags.TopCenter | (ellipsis ? TextFlags.Ellipsis : TextFlags.Clip), width, height - scaledImageHeight - localMargin);
                 }
                 else
                 {
                     c.DrawTextureAtlas(bmp, localMargin, (height - scaledImageHeight) / 2, imageScale, localFgColor);
-                    c.DrawText(localText, localFont, scaledImageWidth + localMargin * 2, 0, localFgColor, TextFlags.MiddleLeft | TextFlags.Clip, width - scaledImageWidth - localMargin * 2, height);
+                    c.DrawText(localText, localFont, scaledImageWidth + localMargin * 2, 0, localFgColor, TextFlags.MiddleLeft | (ellipsis ? TextFlags.Ellipsis : TextFlags.Clip), width - scaledImageWidth - localMargin * 2, height);
                 }
             }
 
