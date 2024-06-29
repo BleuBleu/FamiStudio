@@ -212,15 +212,15 @@ namespace FamiStudio
 
             buttonOpen = CreateToolbarButton("Open", "Open");
             buttonOpen.Click += ButtonOpen_Click;
-            buttonOpen.MouseUp += ButtonOpen_MouseUpEvent;
+            buttonOpen.PointerUp += ButtonOpen_PointerUpEvent;
 
             buttonSave = CreateToolbarButton("Save", "Save");
             buttonSave.Click += ButtonSave_Click;
-            buttonSave.MouseUp += ButtonSave_MouseUpEvent;
+            buttonSave.PointerUp += ButtonSave_PointerUpEvent;
 
             buttonExport = CreateToolbarButton("Export", "Export");
             buttonExport.Click += ButtonExport_Click;
-            buttonExport.MouseUp += ButtonExport_MouseUpEvent;
+            buttonExport.PointerUp += ButtonExport_PointerUpEvent;
 
             buttonCopy = CreateToolbarButton("Copy", "Copy");
             buttonCopy.Click += ButtonCopy_Click;
@@ -232,7 +232,7 @@ namespace FamiStudio
 
             buttonPaste = CreateToolbarButton("Paste", "Paste");
             buttonPaste.Click += ButtonPaste_Click;
-            buttonPaste.MouseUp += ButtonPaste_MouseUpEvent;
+            buttonPaste.PointerUp += ButtonPaste_PointerUpEvent;
             buttonPaste.EnabledEvent += ButtonPaste_EnabledEvent;
 
             buttonUndo = CreateToolbarButton("Undo", "Undo");
@@ -251,7 +251,7 @@ namespace FamiStudio
 
             buttonPlay = CreateToolbarButton("Play", "Play");
             buttonPlay.Click += ButtonPlay_Click;
-            buttonPlay.MouseUp += ButtonPlay_MouseUp;
+            buttonPlay.PointerUp += ButtonPlay_PointerUp;
             buttonPlay.ImageEvent += ButtonPlay_ImageEvent;
 
             buttonRec = CreateToolbarButton("Rec", "Rec");
@@ -373,7 +373,7 @@ namespace FamiStudio
             App.OpenProject();
         }
 
-        private void ButtonOpen_MouseUpEvent(Control sender, MouseEventArgs e)
+        private void ButtonOpen_PointerUpEvent(Control sender, PointerEventArgs e)
         {
             if (Platform.IsDesktop && !e.Handled && e.Right && Settings.RecentFiles.Count > 0)
             {
@@ -394,7 +394,7 @@ namespace FamiStudio
             App.SaveProjectAsync();
         }
 
-        private void ButtonSave_MouseUpEvent(Control sender, MouseEventArgs e)
+        private void ButtonSave_PointerUpEvent(Control sender, PointerEventArgs e)
         {
             if (!e.Handled && e.Right)
             {
@@ -411,7 +411,7 @@ namespace FamiStudio
             StartClosing();
         }
 
-        private void ButtonExport_MouseUpEvent(Control sender, MouseEventArgs e)
+        private void ButtonExport_PointerUpEvent(Control sender, PointerEventArgs e)
         {
             if (Platform.IsDesktop && !e.Handled && e.Right)
             {
@@ -447,7 +447,7 @@ namespace FamiStudio
             App.Paste();
         }
 
-        private void ButtonPaste_MouseUpEvent(Control sender, MouseEventArgs e)
+        private void ButtonPaste_PointerUpEvent(Control sender, PointerEventArgs e)
         {
             if (!e.Handled && e.Right)
             {
@@ -503,7 +503,7 @@ namespace FamiStudio
                 App.PlaySong();
         }
         
-        private void ButtonPlay_MouseUp(Control sender, MouseEventArgs e)
+        private void ButtonPlay_PointerUp(Control sender, PointerEventArgs e)
         {
             if (!e.Handled && e.Right)
             { 
@@ -648,7 +648,7 @@ namespace FamiStudio
             UpdateTooltips();
         }
 
-        public override void OnContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        public override void OnContainerPointerMoveNotify(Control control, PointerEventArgs e)
         {
             var winPos = control.ControlToWindow(e.Position);
             var ctrl = GetControlAt(winPos.X, winPos.Y, out _, out _);
@@ -970,7 +970,7 @@ namespace FamiStudio
             return oscilloscope.Visible && oscilloscope.LastOscilloscopeHadNonZeroSample != hasNonZeroSample;
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (!e.Handled && Platform.IsMobile && IsExpanded && GetMobileShadowRect().Contains(e.Position))
             {

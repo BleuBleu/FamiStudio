@@ -27,27 +27,27 @@ namespace FamiStudio
         {
         }
 
-        public virtual void OnContainerMouseWheelNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerMouseWheelNotify(Control control, PointerEventArgs e)
         {
         }
 
-        public virtual void OnContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerPointerMoveNotify(Control control, PointerEventArgs e)
         {
         }
 
-        public virtual void OnContainerMouseDownNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerPointerDownNotify(Control control, PointerEventArgs e)
         {
         }
 
-        public virtual void OnContainerMouseUpNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerPointerUpNotify(Control control, PointerEventArgs e)
         {
         }
 
-        public virtual void OnContainerTouchClickNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerTouchClickNotify(Control control, PointerEventArgs e)
         {
         }
 
-        public virtual void OnContainerTouchFlingNotify(Control control, MouseEventArgs e)
+        public virtual void OnContainerTouchFlingNotify(Control control, PointerEventArgs e)
         {
         }
 

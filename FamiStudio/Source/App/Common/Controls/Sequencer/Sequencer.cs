@@ -150,8 +150,6 @@ namespace FamiStudio
             false, // MobilePan,
         };
 
-        public override bool SendTouchInputAsMouse => false;
-
         public delegate void PatternClickedDelegate(int channelIdx, int patternIdx, bool setActive);
         public delegate void ChannelDelegate(int channelIdx);
         public delegate void EmptyDelegate();
@@ -1300,7 +1298,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseDownPan(MouseEventArgs e)
+        private bool HandleMouseDownPan(PointerEventArgs e)
         {
             bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
@@ -1314,7 +1312,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownScrollbar(MouseEventArgs e)
+        private bool HandleMouseDownScrollbar(PointerEventArgs e)
         {
             if (e.Left && scrollBarThickness > 0 && e.X > channelNameSizeX && e.Y > headerSizeY)
             {
@@ -1363,7 +1361,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownChannelName(MouseEventArgs e)
+        private bool HandleMouseDownChannelName(PointerEventArgs e)
         {
             if (e.Left && IsMouseInTrackName(e))
             { 
@@ -1385,7 +1383,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownShy(MouseEventArgs e)
+        private bool HandleMouseDownShy(PointerEventArgs e)
         {
             if (e.Left && e.X < channelNameSizeX && e.Y < headerSizeY && IsPointInShyButton(e.X, e.Y))
             {
@@ -1397,22 +1395,22 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseUpChannelName(MouseEventArgs e)
+        private bool HandleMouseUpChannelName(PointerEventArgs e)
         {
             return e.Right && HandleContextMenuChannelName(e.X, e.Y);
         }
 
-        private bool HandleMouseUpHeader(MouseEventArgs e)
+        private bool HandleMouseUpHeader(PointerEventArgs e)
         {
             return e.Right && HandleContextMenuHeader(e.X, e.Y);
         }
 
-        private bool HandleMouseUpPatternArea(MouseEventArgs e)
+        private bool HandleMouseUpPatternArea(PointerEventArgs e)
         {
             return e.Right && HandleContextMenuPatternArea(e.X, e.Y);
         }
 
-        private bool HandleMouseDownSetLoopPoint(MouseEventArgs e)
+        private bool HandleMouseDownSetLoopPoint(PointerEventArgs e)
         {
             bool setLoop = Settings.SetLoopPointShortcut.IsKeyDown(ParentWindow);
 
@@ -1427,7 +1425,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownSeekBar(MouseEventArgs e)
+        private bool HandleMouseDownSeekBar(PointerEventArgs e)
         {
             if (IsMouseInHeader(e) && e.Left)
             {
@@ -1439,7 +1437,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownHeaderSelection(MouseEventArgs e)
+        private bool HandleMouseDownHeaderSelection(PointerEventArgs e)
         {
             if (IsMouseInHeader(e) && e.Right)
             {
@@ -1450,7 +1448,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownChannelChange(MouseEventArgs e)
+        private bool HandleMouseDownChannelChange(PointerEventArgs e)
         {
             if (e.Y > headerSizeY && e.Y < height - scrollBarThickness && e.Left)
                 ChangeChannelForCoord(e.Y);
@@ -1459,7 +1457,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownAltZoom(MouseEventArgs e)
+        private bool HandleMouseDownAltZoom(PointerEventArgs e)
         {
             if (e.Right && ModifierKeys.IsAltDown && Settings.AltZoomAllowed && GetPatternForCoord(e.X, e.Y, out _))
             {
@@ -1477,7 +1475,7 @@ namespace FamiStudio
             StartCaptureOperation(x, y, CaptureOperation.DragSelection);
         }
 
-        private bool HandleMouseDownPatternArea(MouseEventArgs e)
+        private bool HandleMouseDownPatternArea(PointerEventArgs e)
         {
             bool inPatternZone = GetPatternForCoord(e.X, e.Y, out var location);
 
@@ -1526,8 +1524,14 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
+            if (e.IsTouchEvent)
+            {
+                OnTouchDown(e);
+                return;
+            }
+
             if (captureOperation != CaptureOperation.None && (e.Left || e.Right))
                 return;
 
@@ -1550,7 +1554,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseDownDelayedHeaderSelection(MouseEventArgs e)
+        private bool HandleMouseDownDelayedHeaderSelection(PointerEventArgs e)
         {
             if (e.Right && IsMouseInHeader(e))
             {
@@ -1561,7 +1565,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedRectangleSelection(MouseEventArgs e)
+        private bool HandleMouseDownDelayedRectangleSelection(PointerEventArgs e)
         {
             if (e.Right && IsMouseInPatternZone(e))
             {
@@ -1572,7 +1576,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDownDelayed(MouseEventArgs e)
+        protected override void OnPointerDownDelayed(PointerEventArgs e)
         {
             if (HandleMouseDownDelayedHeaderSelection(e)) goto Handled;
             if (HandleMouseDownDelayedRectangleSelection(e)) goto Handled;
@@ -1850,7 +1854,7 @@ namespace FamiStudio
             return HandleContextMenuPatternArea(x, y);
         }
 
-        protected override void OnTouchDown(MouseEventArgs e)
+        protected void OnTouchDown(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -1868,7 +1872,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchMove(MouseEventArgs e)
+        protected void OnTouchMove(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -1877,7 +1881,7 @@ namespace FamiStudio
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchUp(MouseEventArgs e)
+        protected void OnTouchUp(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -1886,7 +1890,7 @@ namespace FamiStudio
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchFling(MouseEventArgs e)
+        protected override void OnTouchFling(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -1898,7 +1902,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnTouchScaleBegin(MouseEventArgs e)
+        protected override void OnTouchScaleBegin(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -1913,7 +1917,7 @@ namespace FamiStudio
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchScale(MouseEventArgs e)
+        protected override void OnTouchScale(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -1922,7 +1926,7 @@ namespace FamiStudio
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchScaleEnd(MouseEventArgs e)
+        protected override void OnTouchScaleEnd(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -1931,7 +1935,7 @@ namespace FamiStudio
             SetMouseLastPos(x, y);
         }
 
-        protected override void OnTouchClick(MouseEventArgs e)
+        protected override void OnTouchClick(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -1957,7 +1961,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchDoubleClick(MouseEventArgs e)
+        protected override void OnTouchDoubleClick(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -1978,7 +1982,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchLongPress(MouseEventArgs e)
+        protected override void OnTouchLongPress(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -2435,8 +2439,14 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
+            if (e.IsTouchEvent)
+            {
+                OnTouchUp(e);
+                return;
+            }
+
             bool middle = e.Middle;
             bool doMouseUp = false;
 
@@ -2702,22 +2712,22 @@ namespace FamiStudio
             }
         }
 
-        private bool IsMouseInPatternZone(MouseEventArgs e)
+        private bool IsMouseInPatternZone(PointerEventArgs e)
         {
             return e.Y > headerSizeY && e.X > channelNameSizeX;
         }
 
-        private bool IsMouseInHeader(MouseEventArgs e)
+        private bool IsMouseInHeader(PointerEventArgs e)
         {
             return e.Y < headerSizeY && e.X > channelNameSizeX;
         }
 
-        private bool IsMouseInTrackName(MouseEventArgs e)
+        private bool IsMouseInTrackName(PointerEventArgs e)
         {
             return e.Y > headerSizeY && e.X < channelNameSizeX;
         }
 
-        private int GetChannelIndexFromIconPos(MouseEventArgs e)
+        private int GetChannelIndexFromIconPos(PointerEventArgs e)
         {
             for (int i = 0; i < rowToChannel.Length; i++)
             {
@@ -2728,7 +2738,7 @@ namespace FamiStudio
             return -1;
         }
 
-        private int GetChannelIndexFromGhostIconPos(MouseEventArgs e)
+        private int GetChannelIndexFromGhostIconPos(PointerEventArgs e)
         {
             for (int i = 0; i < rowToChannel.Length; i++)
             {
@@ -2739,12 +2749,12 @@ namespace FamiStudio
             return -1;
         }
 
-        private void UpdateToolTip(MouseEventArgs e)
+        private void UpdateToolTip(PointerEventArgs e)
         {
             if (e == null)
             {
                 var pt = ScreenToControl(CursorPosition);
-                e = new MouseEventArgs(0, pt.X, pt.Y);
+                e = new PointerEventArgs(0, pt.X, pt.Y);
             }
 
             string tooltip = "";
@@ -2910,8 +2920,14 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
+            if (e.IsTouchEvent)
+            {
+                OnTouchMove(e);
+                return;
+            }
+
             bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
             UpdateCursor();
@@ -2926,7 +2942,7 @@ namespace FamiStudio
             ShowExpansionIcons = false;
         }
 
-        private void UpdateHover(MouseEventArgs e)
+        private void UpdateHover(PointerEventArgs e)
         {
             if (Platform.IsDesktop)
             {
@@ -2955,7 +2971,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        protected override void OnPointerLeave(EventArgs e)
         {
             ClearHover();
         }
@@ -3062,7 +3078,7 @@ namespace FamiStudio
             });
         }
 
-        protected bool HandleMouseDoubleClickPatternArea(MouseEventArgs e)
+        protected bool HandleMouseDoubleClickPatternArea(PointerEventArgs e)
         {
             if (e.Left && IsMouseInPatternZone(e) && GetPatternForCoord(e.X, e.Y, out var location))
             {
@@ -3075,7 +3091,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected bool HandleMouseDoubleClickChannelName(MouseEventArgs e)
+        protected bool HandleMouseDoubleClickChannelName(PointerEventArgs e)
         {
             if (e.Left && IsMouseInTrackName(e))
             {
@@ -3097,7 +3113,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
         {
             if (HandleMouseDoubleClickChannelName(e)) goto Handled;
             if (HandleMouseDoubleClickPatternArea(e)) goto Handled;
@@ -3136,7 +3152,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(PointerEventArgs e)
         {
             if (Settings.TrackPadControls && !ModifierKeys.IsControlDown && !ModifierKeys.IsAltDown)
             {
@@ -3154,7 +3170,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseHorizontalWheel(MouseEventArgs e)
+        protected override void OnMouseHorizontalWheel(PointerEventArgs e)
         {
             scrollX += Utils.SignedCeil(e.ScrollX);
             ClampScroll();

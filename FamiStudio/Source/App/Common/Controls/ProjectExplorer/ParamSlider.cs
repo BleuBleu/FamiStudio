@@ -54,7 +54,7 @@ namespace FamiStudio
             return Utils.Saturate((x - buttonSize) / (float)(width - buttonSize * 2));
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (IsParamEnabled())
             {
@@ -82,7 +82,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (e.Left && capture)
             {
@@ -96,7 +96,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             if (capture)
             {
@@ -111,7 +111,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        protected override void OnPointerLeave(EventArgs e)
         {
             SetAndMarkDirty(ref hoverButtonIndex, 0);
         }

@@ -40,7 +40,7 @@ namespace FamiStudio
             return enabled && GetButtonRect().Contains(x, y);
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (e.Left && IsPointInButton(e.X, e.Y))
             {
@@ -49,26 +49,26 @@ namespace FamiStudio
             }
             else
             {
-                base.OnMouseDown(e);
+                base.OnPointerDown(e);
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             captureButton = false;
-            base.OnMouseUp(e);
+            base.OnPointerUp(e);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
-            base.OnMouseMove(e);
+            base.OnPointerMove(e);
         }
 
-        protected override void OnMouseLeave(System.EventArgs e)
+        protected override void OnPointerLeave(System.EventArgs e)
         {
             SetAndMarkDirty(ref hoverButton, false);
-            base.OnMouseLeave(e);
+            base.OnPointerLeave(e);
         }
 
         protected override void OnRender(Graphics g)

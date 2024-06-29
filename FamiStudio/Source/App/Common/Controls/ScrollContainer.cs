@@ -28,7 +28,7 @@ namespace FamiStudio
             canFocus = false;
         }
 
-        public override void OnContainerMouseWheelNotify(Control control, MouseEventArgs e)
+        public override void OnContainerMouseWheelNotify(Control control, PointerEventArgs e)
         {
             if (!e.Handled)
             {
@@ -36,13 +36,13 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(PointerEventArgs e)
         {
             var deltaY = e.ScrollY > 0 ? scrollStepSize : -scrollStepSize;
             SetScroll(containerScrollY - deltaY);
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (e.X >= width - scrollbarWidth)
             {
@@ -66,7 +66,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (scrolling)
             {
@@ -77,7 +77,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             if (scrolling)
             {

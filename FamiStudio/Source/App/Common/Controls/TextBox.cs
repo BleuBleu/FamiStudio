@@ -122,7 +122,7 @@ namespace FamiStudio
             scrollX = Utils.Clamp(scrollX, 0, maxScrollX);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             Cursor = enabled && e.X > outerMarginLeft && e.X < (width - outerMarginRight) ? Cursors.IBeam : Cursors.Default;
 
@@ -139,7 +139,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (e.Left && enabled)
             {
@@ -156,7 +156,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (e.Left && enabled)
             {
@@ -165,7 +165,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
         {
             if (e.Left && enabled)
             { 

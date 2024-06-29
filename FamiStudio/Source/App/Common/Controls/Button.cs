@@ -23,6 +23,7 @@ namespace FamiStudio
         public event StringDelegate TextEvent;
 
         public override bool SupportsDoubleClick => false;
+        public override bool SupportsLongPress => false;
 
         private string text;
         private string imageName;
@@ -170,7 +171,7 @@ namespace FamiStudio
             UpdateAtlasBitmap();
         }
 
-        private void TriggerClickEvent(MouseEventArgs e, bool left)
+        private void TriggerClickEvent(PointerEventArgs e, bool left)
         {
             if (left)
             {
@@ -189,14 +190,14 @@ namespace FamiStudio
                 e.MarkHandled();
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             var canRightClick = RightClick != null;
 
             if (enabled && (e.Left || (e.Right && canRightClick)))
             {
                 press = true;
-                if (Platform.IsDesktop && !clickOnMouseUp)
+                if (!e.IsTouchEvent && !clickOnMouseUp)
                     TriggerClickEvent(e, e.Left);
             }
 
@@ -204,20 +205,20 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             var canRightClick = RightClick != null;
 
-            if (enabled && (Platform.IsDesktop && e.Left || (e.Right && canRightClick)))
+            if (enabled && (!e.IsTouchEvent && e.Left || (e.Right && canRightClick)))
             {
-                if (clickOnMouseUp || Platform.IsMobile)
+                if (clickOnMouseUp || e.IsTouchEvent)
                     TriggerClickEvent(e, e.Left);
             }
 
             SetAndMarkDirty(ref press, false);
         }
 
-        protected override void OnTouchClick(MouseEventArgs e)
+        protected override void OnTouchClick(PointerEventArgs e)
         {
             if (enabled)
             {
@@ -225,17 +226,17 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
         {
-            OnMouseDown(e);
+            OnPointerDown(e);
         }
 
-        protected override void OnMouseEnter(EventArgs e)
+        protected override void OnPointerEnter(EventArgs e)
         {
             SetAndMarkDirty(ref hover, true);
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        protected override void OnPointerLeave(EventArgs e)
         {
             SetAndMarkDirty(ref hover, false);
             SetAndMarkDirty(ref press, false);

@@ -121,7 +121,7 @@ namespace FamiStudio
             base.Tick(delta);
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             var idx = IsPointInButton(e.X, e.Y);
             if (idx >= 0)
@@ -134,7 +134,7 @@ namespace FamiStudio
             }
             else
             {
-                base.OnMouseDown(e);
+                base.OnPointerDown(e);
             }
         }
 
@@ -162,13 +162,13 @@ namespace FamiStudio
             GetValueFromTextBox();
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
         {
             if (IsPointInButton(e.X, e.Y) >= 0)
             {
                 // Double clicks get triggered if you click quickly, so
                 // treat those as click so that the buttons remain responsive.
-                OnMouseDown(e);
+                OnPointerDown(e);
             }
             else
             {
@@ -176,7 +176,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (captureButton >= 0)
             {
@@ -185,23 +185,23 @@ namespace FamiStudio
             }
             else
             {
-                base.OnMouseUp(e);
+                base.OnPointerUp(e);
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
-            base.OnMouseMove(e);
+            base.OnPointerMove(e);
         }
 
-        protected override void OnMouseLeave(System.EventArgs e)
+        protected override void OnPointerLeave(System.EventArgs e)
         {
             SetAndMarkDirty(ref hoverButton, -1);
-            base.OnMouseLeave(e);
+            base.OnPointerLeave(e);
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(PointerEventArgs e)
         {
             if (enabled && captureButton < 0 && e.ScrollY != 0 && e.X > GetButtonRect(0).Right && e.X < GetButtonRect(1).Left)
             {

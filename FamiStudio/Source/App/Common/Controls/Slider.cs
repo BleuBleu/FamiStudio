@@ -58,7 +58,7 @@ namespace FamiStudio
             return new Rectangle(x, y, thumbSize, thumbSize);
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (enabled)
             {
@@ -80,7 +80,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (dragging)
             {
@@ -89,7 +89,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             if (dragging)
             {
@@ -103,7 +103,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        protected override void OnPointerLeave(EventArgs e)
         {
             SetAndMarkDirty(ref hover, false);
         }

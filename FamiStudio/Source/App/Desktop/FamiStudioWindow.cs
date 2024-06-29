@@ -61,7 +61,7 @@ namespace FamiStudio
         private int lastClickY = -1;
 
         private double delayedRightClickStartTime;
-        private MouseEventArgs delayedRightClickArgs = null;
+        private PointerEventArgs delayedRightClickArgs = null;
         private Control delayedRightClickControl = null;
 
         GLFWerrorfun errorCallback;
@@ -474,14 +474,14 @@ namespace FamiStudio
                         {
                             Debug.WriteLine($"DOUBLE CLICK!");
 
-                            ctrl.SendMouseDoubleClick(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
+                            ctrl.SendMouseDoubleClick(new PointerEventArgs(MakeButtonFlags(button), cx, cy));
                         }
                     }
                     else
                     {
-                        var ex = new MouseEventArgs(MakeButtonFlags(button), cx, cy);
+                        var ex = new PointerEventArgs(MakeButtonFlags(button), cx, cy);
                         ctrl.GrabDialogFocus();
-                        ctrl.SendMouseDown(ex);
+                        ctrl.SendPointerDown(ex);
                         if (ex.IsRightClickDelayed)
                             DelayRightClick(ctrl, ex);
                     }
@@ -513,7 +513,7 @@ namespace FamiStudio
                         ConditionalEmitDelayedRightClick(true, true, ctrl);
 
                     container.ConditionalHideContextMenu(ctrl);
-                    ctrl.SendMouseUp(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
+                    ctrl.SendPointerUp(new PointerEventArgs(MakeButtonFlags(button), cx, cy));
                 }
             }
         }
@@ -546,7 +546,7 @@ namespace FamiStudio
             }
 
             var buttons = MakeButtonFlags();
-            var e = new MouseEventArgs(buttons, cx, cy);
+            var e = new PointerEventArgs(buttons, cx, cy);
 
             if (ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(e, cx, cy, ctrl))
                 return;
@@ -556,19 +556,19 @@ namespace FamiStudio
             // Dont forward move mouse when a context menu is active.
             if (ctrl != null && (!container.IsContextMenuActive || ctrl == ContextMenu))
             {
-                ctrl.SendMouseMove(e);
+                ctrl.SendPointerMove(e);
                 RefreshCursor(ctrl);
             }
 
             if (hover != hoverControl)
             {
                 if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
-                    hoverControl.SendMouseLeave(EventArgs.Empty);
+                    hoverControl.SendPointerLeave(EventArgs.Empty);
 
                 hoverControl = hover;
                 
                 if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
-                    hoverControl.SendMouseEnter(EventArgs.Empty);
+                    hoverControl.SendPointerEnter(EventArgs.Empty);
             }
         }
 
@@ -583,7 +583,7 @@ namespace FamiStudio
             {
                 if (hoverControl != null && (!container.IsContextMenuActive || hoverControl == ContextMenu))
                 {
-                    hoverControl.SendMouseLeave(EventArgs.Empty);
+                    hoverControl.SendPointerLeave(EventArgs.Empty);
                     hoverControl = null;
                 }
             }
@@ -617,9 +617,9 @@ namespace FamiStudio
                 var buttons = MakeButtonFlags();
 
                 if (scrollY != 0.0f)
-                    ctrl.SendMouseWheel(new MouseEventArgs(buttons, cx, cy, 0, scrollY));
+                    ctrl.SendMouseWheel(new PointerEventArgs(buttons, cx, cy, false, 0, scrollY));
                 if (scrollX != 0.0f)
-                    ctrl.SendMouseHorizontalWheel(new MouseEventArgs(buttons, cx, cy, scrollX));
+                    ctrl.SendMouseHorizontalWheel(new PointerEventArgs(buttons, cx, cy, scrollX));
             }
         }
         
@@ -725,13 +725,13 @@ namespace FamiStudio
         private int MakeButtonFlags()
         {
             var flags = 0;
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)   != 0) flags |= MouseEventArgs.ButtonLeft;
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)  != 0) flags |= MouseEventArgs.ButtonRight;
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) != 0) flags |= MouseEventArgs.ButtonMiddle;
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)   != 0) flags |= PointerEventArgs.ButtonLeft;
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)  != 0) flags |= PointerEventArgs.ButtonRight;
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) != 0) flags |= PointerEventArgs.ButtonMiddle;
             return flags;
         }
 
-        protected void DelayRightClick(Control ctrl, MouseEventArgs e)
+        protected void DelayRightClick(Control ctrl, PointerEventArgs e)
         {
             Debug.WriteLine($"DelayRightClick {ctrl}");
 
@@ -758,7 +758,7 @@ namespace FamiStudio
             if (delayedRightClickArgs != null && (delta > DelayedRightClickTime || !checkTime) && (checkCtrl == delayedRightClickControl || checkCtrl == null))
             {
                 Debug.WriteLine($"ConditionalEmitDelayedRightClick delayedRightClickControl={delayedRightClickControl} checkTime={checkTime} deltaMs={delta} forceClear={forceClear}");
-                delayedRightClickControl.SendMouseDownDelayed(delayedRightClickArgs);
+                delayedRightClickControl.SendPointerDownDelayed(delayedRightClickArgs);
                 clear = true;
             }
 
@@ -766,7 +766,7 @@ namespace FamiStudio
                 ClearDelayedRightClick();
         }
 
-        protected bool ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(MouseEventArgs e, int x, int y, Control checkCtrl)
+        protected bool ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(PointerEventArgs e, int x, int y, Control checkCtrl)
         {
             // Surprisingly is pretty common to move by 1 pixel between a right click
             // mouse down/up. Add a small tolerance.

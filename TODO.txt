@@ -43,9 +43,8 @@
 		- Middle mouse panning (when i get a mouse...)
 	x Toolbar rewrite
 	- QuickAccess rewrite
-		- Similar to toolbar
-		- Will need a button with small text underneath.
 		- Will need to make GradientPanel a real control.
+		- Add solo/mute support in instrument panel.
 	- Add support for more international characeters, switch to Noto.
 	- To test : 
 		- Dialog ticks
@@ -53,7 +52,9 @@
 		- We ficed a double-tick issue in 4.2.1 i think, make sure that's included.
 	x Double click issue for controls that dont support it (returns position of 1st click)
 		- Move all "SendTouchInputAsMouse" in FamiStudioWindow.cs.
-	- When everything is ported, unify mousedown/mousemove/mouseup with mobile. Rename to "PointerDown" or something. Add a flag in e.IsTouchEvent.
+	- Sequencer:
+		 - Mobile "force display" icons are ugly, and they arent even clickable... Is there a point in having them there??
+		 - We should be able to solo/mute by clicking icon like PC.
 - Support for japanese/other characters regardless of current languages
 	- Switch all UI to Noto Sans?
 	- Have a series of fallback fonts when searching for a glyph.

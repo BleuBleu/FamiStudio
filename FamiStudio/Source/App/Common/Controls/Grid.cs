@@ -334,7 +334,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             var valid = PixelToCell(e.X, e.Y, out var row, out var col);
 
@@ -451,7 +451,7 @@ namespace FamiStudio
             return buttonX >= 0 && buttonX < rowHeight;
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             if (draggingSlider)
             {
@@ -478,7 +478,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (draggingScrollbars || draggingSlider)
             {
@@ -489,14 +489,14 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        protected override void OnPointerLeave(EventArgs e)
         {
             SetAndMarkDirty(ref hoverRow, -1);
             SetAndMarkDirty(ref hoverCol, -1);
             SetAndMarkDirty(ref hoverButton, false);
         }
 
-        private void UpdateHover(MouseEventArgs e)
+        private void UpdateHover(PointerEventArgs e)
         {
             PixelToCell(e.X, e.Y, out var row, out var col);
             SetAndMarkDirty(ref hoverRow, row);
@@ -504,7 +504,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, row, col));
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(PointerEventArgs e)
         {
             var sign = e.ScrollY < 0 ? 1 : -1;
 
@@ -527,7 +527,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
         {
             if (e.Left && PixelToCell(e.X, e.Y, out var row, out var col) && row < data.GetLength(0))
             {
@@ -540,7 +540,7 @@ namespace FamiStudio
                     if (colDesc.Type == ColumnType.CheckBox ||
                         colDesc.Type == ColumnType.NumericUpDown)
                     {
-                        OnMouseDown(e);
+                        OnPointerDown(e);
                     }
                 }
             }

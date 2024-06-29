@@ -50,8 +50,6 @@ namespace FamiStudio
         private bool canFling = false;
         private CaptureOperation captureOperation = CaptureOperation.None;
 
-        public override bool SendTouchInputAsMouse => false;
-
         public int LayoutSize
         {
             get
@@ -409,7 +407,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnTouchUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             EndCaptureOperation(e.X, e.Y);
         }
@@ -443,7 +441,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnTouchDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             var x = e.X;
             var y = e.Y;
@@ -469,7 +467,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnTouchFling(MouseEventArgs e)
+        protected override void OnTouchFling(PointerEventArgs e)
         {
             if (IsPointInPanRectangle(lastX, lastY) && canFling)
             {
@@ -478,7 +476,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnTouchScaleBegin(MouseEventArgs e)
+        protected override void OnTouchScaleBegin(PointerEventArgs e)
         {
             lastX = e.X;
             lastY = e.Y;
@@ -492,21 +490,21 @@ namespace FamiStudio
             StartCaptureOperation(e.X, e.Y, CaptureOperation.MobileZoom);
         }
 
-        protected override void OnTouchScale(MouseEventArgs e)
+        protected override void OnTouchScale(PointerEventArgs e)
         {
             UpdateCaptureOperation(e.X, e.Y, e.TouchScale);
             lastX = e.X;
             lastY = e.Y;
         }
 
-        protected override void OnTouchScaleEnd(MouseEventArgs e)
+        protected override void OnTouchScaleEnd(PointerEventArgs e)
         {
             EndCaptureOperation(e.X, e.Y);
             lastX = e.X;
             lastY = e.Y;
         }
 
-        protected override void OnTouchMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             UpdateCaptureOperation(e.X, e.Y);
             lastX = e.X;

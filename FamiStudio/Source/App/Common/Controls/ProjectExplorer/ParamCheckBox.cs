@@ -25,7 +25,7 @@ namespace FamiStudio
             height = DpiScaling.ScaleCustom(bmpCheckOn.ElementSize.Height, bmpScale);
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (e.Left && IsParamEnabled())
             {
@@ -37,7 +37,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (e.Right)
             {
@@ -45,17 +45,17 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
         {
-            OnMouseDown(e);
+            OnPointerDown(e);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             SetAndMarkDirty(ref hover, true);
         }
 
-        protected override void OnMouseLeave(System.EventArgs e)
+        protected override void OnPointerLeave(System.EventArgs e)
         {
             SetAndMarkDirty(ref hover, false);
         }

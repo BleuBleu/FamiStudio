@@ -16,14 +16,14 @@ namespace FamiStudio
             height = DpiScaling.ScaleForWindow(24);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             var insideText = e.X >= 0 && e.X < MeasureString();
             Cursor = insideText ? Cursors.PointingHand : Cursors.Default;
             SetAndMarkDirty(ref hover, insideText);
         }
 
-        protected override void OnMouseLeave(System.EventArgs e)
+        protected override void OnPointerLeave(System.EventArgs e)
         {
             Cursor = Cursors.Default;
             SetAndMarkDirty(ref hover, false);
@@ -34,7 +34,7 @@ namespace FamiStudio
             return Fonts.FontMedium.MeasureString(text, false);
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (e.Left)
                 Platform.OpenUrl(url);

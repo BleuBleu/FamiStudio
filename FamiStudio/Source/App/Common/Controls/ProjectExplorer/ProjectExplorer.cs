@@ -468,10 +468,10 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(Theme.DarkGreyColor5, folder);
             panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseDown += (s, e) => Folder_MouseDown(s, e, folder);
-            panel.MouseUp += (s, e) => Folder_MouseUp(e, folder);
-            panel.ContainerMouseDownNotify += (s, e) => Folder_MouseDown(s, e, folder);
-            panel.ContainerMouseUpNotify += (s, e) => Folder_MouseUp(e, folder);
+            panel.PointerDown += (s, e) => Folder_PointerDown(s, e, folder);
+            panel.PointerUp += (s, e) => Folder_PointerUp(e, folder);
+            panel.ContainerPointerDownNotify += (s, e) => Folder_PointerDown(s, e, folder);
+            panel.ContainerPointerUpNotify += (s, e) => Folder_PointerUp(e, folder);
             panel.ContainerTouchClickNotify += (s, e) => Folder_TouchClick(s, e, folder);
 
             var expand = CreateExpandButton(panel, false, folder.Expanded);
@@ -479,7 +479,7 @@ namespace FamiStudio
             expand.Click += (s) => ToggleExpandFolder(folder);
 
             var icon = CreateImageBox(panel, expand.Right + spacingX, folder.Expanded ? "FolderOpen" : "Folder");
-            icon.MouseDown += (s, e) => Folder_MouseDown(s, e, folder); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => Folder_PointerDown(s, e, folder); // MATTT : Test on desktop, shouldnt have any impact.
             icon.WhiteHighlight = highlightedObject == folder;
 
             var propsButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties", false);
@@ -489,7 +489,7 @@ namespace FamiStudio
             CreateLabel(panel, folder.Name, false, icon.Right + marginX, 0, propsButton.Left - icon.Right - marginX * 2, true);
         }
 
-        private void Folder_MouseDown(Control sender, MouseEventArgs e, Folder folder)
+        private void Folder_PointerDown(Control sender, PointerEventArgs e, Folder folder)
         {
             var allowDrag = Platform.IsDesktop || (highlightedObject == folder && sender is ImageBox);
 
@@ -501,7 +501,7 @@ namespace FamiStudio
             }
         }
 
-        private void Folder_MouseUp(MouseEventArgs e, Folder folder)
+        private void Folder_PointerUp(PointerEventArgs e, Folder folder)
         {
             if (!e.Handled && e.Right)
             {
@@ -516,7 +516,7 @@ namespace FamiStudio
             }
         }
 
-        private void Folder_TouchClick(Control sender, MouseEventArgs e, Folder folder)
+        private void Folder_TouchClick(Control sender, PointerEventArgs e, Folder folder)
         {
             if (!e.Handled)
             {
@@ -565,8 +565,8 @@ namespace FamiStudio
             var oldScrollY = mainContainer != null? mainContainer.ScrollY : 0;
 
             mainContainer = new Container();
-            mainContainer.ContainerMouseDownNotify += MainContainer_ContainerMouseDownNotify;
-            mainContainer.ContainerMouseUpNotify += MainContainer_ContainerMouseUpNotify;
+            mainContainer.ContainerPointerDownNotify += MainContainer_ContainerPointerDownNotify;
+            mainContainer.ContainerPointerUpNotify += MainContainer_ContainerPointerUpNotify;
             mainContainer.ContainerTouchFlingNotify += MainContainer_ContainerTouchFlingNotify;
             mainContainer.Rendering += MainContainer_Rendering;
             mainContainer.Scrolled += MainContainer_Scrolled;
@@ -590,7 +590,7 @@ namespace FamiStudio
             mainContainer.Move(0, topTabSizeY, width - scrollBarWidth, height - topTabSizeY);
         }
 
-        private void MainContainer_ContainerMouseDownNotify(Control sender, MouseEventArgs e)
+        private void MainContainer_ContainerPointerDownNotify(Control sender, PointerEventArgs e)
         {
             if (Platform.IsMobile && !e.Handled && e.Left)
             {
@@ -598,7 +598,7 @@ namespace FamiStudio
             }
         }
 
-        private void MainContainer_ContainerMouseUpNotify(Control sender, MouseEventArgs e)
+        private void MainContainer_ContainerPointerUpNotify(Control sender, PointerEventArgs e)
         {
             if (!e.Handled && e.Left)
             {
@@ -607,7 +607,7 @@ namespace FamiStudio
             }
         }
 
-        private void MainContainer_ContainerTouchFlingNotify(Control sender, MouseEventArgs e)
+        private void MainContainer_ContainerTouchFlingNotify(Control sender, PointerEventArgs e)
         {
             if (canFling)
             {
@@ -638,8 +638,8 @@ namespace FamiStudio
             var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
             var panel = CreateGradientPanel(Theme.DarkGreyColor4, project);
             panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUp += (s, e) => ProjectHeader_MouseUp(e);
-            panel.ContainerMouseUpNotify += (s, e) => ProjectHeader_MouseUp(e);
+            panel.PointerUp += (s, e) => ProjectHeader_PointerUp(e);
+            panel.ContainerPointerUpNotify += (s, e) => ProjectHeader_PointerUp(e);
 
             var propsButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties", false);
             propsButton.ToolTip = $"<MouseLeft> {PropertiesProjectTooltip}";
@@ -653,7 +653,7 @@ namespace FamiStudio
             CreateCenteredLabel(panel, projectText, 2 * mixerButton.Left - panel.Width, true);
         }
 
-        private void ProjectHeader_MouseUp(MouseEventArgs e)
+        private void ProjectHeader_PointerUp(PointerEventArgs e)
         {
             if (!e.Handled && e.Right)
             {
@@ -713,14 +713,14 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(song.Color, song);
             panel.ToolTip = $"<MouseLeft> {MakeSongCurrentTooltip} - <MouseLeft><Drag> {ReorderSongsTooltip}\n<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUp += (s, e) => Song_MouseUp(e, song);
-            panel.ContainerMouseUpNotify += (s, e) => Song_MouseUp(e, song);
-            panel.MouseDown += (s, e) => Song_MouseDown(s, e, song);
-            panel.ContainerMouseDownNotify += (s, e) => Song_MouseDown(s, e, song);
+            panel.PointerUp += (s, e) => Song_PointerUp(e, song);
+            panel.ContainerPointerUpNotify += (s, e) => Song_PointerUp(e, song);
+            panel.PointerDown += (s, e) => Song_PointerDown(s, e, song);
+            panel.ContainerPointerDownNotify += (s, e) => Song_PointerDown(s, e, song);
             panel.ContainerTouchClickNotify += (s, e) => Song_TouchClick(s, e, song);
 
             var icon = CreateImageBox(panel, marginX + expandSizeX, "Music", true);
-            icon.MouseDown += (s, e) => Song_MouseDown(s, e, song); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => Song_PointerDown(s, e, song); // MATTT : Test on desktop, shouldnt have any impact.
             icon.WhiteHighlight = highlightedObject == song;
 
             var props = CreateImageButton(panel, panel.Width - marginX - iconSizeX, "Properties");
@@ -731,7 +731,7 @@ namespace FamiStudio
             label.Bold = song == App.SelectedSong;
         }
 
-        private void Song_MouseDown(Control sender, MouseEventArgs e, Song song)
+        private void Song_PointerDown(Control sender, PointerEventArgs e, Song song)
         {
             var allowDrag = Platform.IsDesktop || (highlightedObject == song && sender is ImageBox);
 
@@ -746,7 +746,7 @@ namespace FamiStudio
             }
         }
 
-        private void Song_MouseUp(MouseEventArgs e, Song song)
+        private void Song_PointerUp(PointerEventArgs e, Song song)
         {
             if (!e.Handled && e.Right)
             {
@@ -760,7 +760,7 @@ namespace FamiStudio
             }
         }
 
-        private void Song_TouchClick(Control sender, MouseEventArgs e, Song song)
+        private void Song_TouchClick(Control sender, PointerEventArgs e, Song song)
         {
             if (!e.Handled)
             {
@@ -773,10 +773,10 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(instrument.Color, instrument);
             panel.ToolTip = $"<MouseLeft> {SelectInstrumentTooltip} - <MouseLeft><Drag> {CopyReplaceInstrumentTooltip}\n<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUp += (s, e) => Instrument_MouseUp(e, instrument);
-            panel.ContainerMouseUpNotify += (s, e) => Instrument_MouseUp(e, instrument);
-            panel.MouseDown += (s, e) => Instrument_MouseDown(s, e, instrument);
-            panel.ContainerMouseDownNotify += (s, e) => Instrument_MouseDown(s, e, instrument);
+            panel.PointerUp += (s, e) => Instrument_PointerUp(e, instrument);
+            panel.ContainerPointerUpNotify += (s, e) => Instrument_PointerUp(e, instrument);
+            panel.PointerDown += (s, e) => Instrument_PointerDown(s, e, instrument);
+            panel.ContainerPointerDownNotify += (s, e) => Instrument_PointerDown(s, e, instrument);
             panel.ContainerTouchClickNotify += (s, e) => Instrument_TouchClick(s, e, instrument);
 
             var expand = CreateExpandButton(panel, true, expandedInstrument == instrument);
@@ -784,7 +784,7 @@ namespace FamiStudio
             expand.Click += (s) => ToggleExpandInstrument(instrument);
 
             var icon = CreateImageBox(panel, expand.Right + spacingX, ExpansionType.Icons[instrument.Expansion], true);
-            icon.MouseDown += (s, e) => Instrument_MouseDown(s, e, instrument); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => Instrument_PointerDown(s, e, instrument); // MATTT : Test on desktop, shouldnt have any impact.
             icon.WhiteHighlight = highlightedObject == instrument;
 
             var x = panel.Width - marginX - iconSizeX; 
@@ -801,7 +801,7 @@ namespace FamiStudio
                 dpcm.UserData = "DPCM";
                 dpcm.ToolTip = $"<MouseLeft> {EditSamplesTooltip} - <MouseRight> {MoreOptionsTooltip}";
                 dpcm.Click += (s) => App.StartEditDPCMMapping(instrument);
-                dpcm.MouseDown += (s, e) => InstrumentDpcm_MouseDown(s, instrument, e, dpcm.Image);
+                dpcm.PointerDown += (s, e) => InstrumentDpcm_PointerDown(s, instrument, e, dpcm.Image);
                 dpcm.MarkHandledOnClick = Platform.IsMobile;
             }
 
@@ -818,8 +818,8 @@ namespace FamiStudio
                     env.UserData = instrument.Envelopes[idx];
                     env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
                     env.Click += (s) => InstrumentEnvelope_Click(instrument, idx);
-                    env.MouseDown += (s, e) => Instrument_MouseDown(s, e, instrument, idx, env.Image);
-                    env.MouseUp += (s, e) => Instrument_MouseUp(e, instrument, idx);
+                    env.PointerDown += (s, e) => Instrument_PointerDown(s, e, instrument, idx, env.Image);
+                    env.PointerUp += (s, e) => Instrument_PointerUp(e, instrument, idx);
                     env.MarkHandledOnClick = Platform.IsMobile;
                     lastEnv = env;
                 }
@@ -829,7 +829,7 @@ namespace FamiStudio
             label.Bold = App.SelectedInstrument == instrument;
         }
 
-        private void InstrumentDpcm_MouseDown(Control sender, Instrument instrument, MouseEventArgs e, TextureAtlasRef image)
+        private void InstrumentDpcm_PointerDown(Control sender, Instrument instrument, PointerEventArgs e, TextureAtlasRef image)
         {
             if (!e.Handled && e.Left)
             {
@@ -846,7 +846,7 @@ namespace FamiStudio
             App.StartEditInstrument(instrument, envelopeType);
         }
 
-        private void Instrument_MouseDown(Control sender, MouseEventArgs e, Instrument inst, int envelopeType = -1, TextureAtlasRef image = null)
+        private void Instrument_PointerDown(Control sender, PointerEventArgs e, Instrument inst, int envelopeType = -1, TextureAtlasRef image = null)
         {
             var allowDrag = Platform.IsDesktop || (highlightedObject == inst && (envelopeType >= 0 || sender is ImageBox));
 
@@ -868,7 +868,7 @@ namespace FamiStudio
             }
         }
 
-        private void Instrument_MouseUp(MouseEventArgs e, Instrument inst, int envelopeType = -1)
+        private void Instrument_PointerUp(PointerEventArgs e, Instrument inst, int envelopeType = -1)
         {
             if (!e.Handled && e.Right)
             {
@@ -927,7 +927,7 @@ namespace FamiStudio
             }
         }
 
-        private void Instrument_TouchClick(Control sender, MouseEventArgs e, Instrument instrument)
+        private void Instrument_TouchClick(Control sender, PointerEventArgs e, Instrument instrument)
         {
             if (!e.Handled)
             {
@@ -940,10 +940,10 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(sample.Color, sample);
             panel.ToolTip = $"<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUp += (s, e) => DpcmSample_MouseUp(e, sample);
-            panel.ContainerMouseUpNotify += (s, e) => DpcmSample_MouseUp(e, sample);
-            panel.MouseDown += (s, e) => DpcmSample_MouseDown(s, e, sample);
-            panel.ContainerMouseDownNotify += (s, e) => DpcmSample_MouseDown(s, e, sample);
+            panel.PointerUp += (s, e) => DpcmSample_PointerUp(e, sample);
+            panel.ContainerPointerUpNotify += (s, e) => DpcmSample_PointerUp(e, sample);
+            panel.PointerDown += (s, e) => DpcmSample_PointerDown(s, e, sample);
+            panel.ContainerPointerDownNotify += (s, e) => DpcmSample_PointerDown(s, e, sample);
             panel.ContainerTouchClickNotify += (s, e) => DpcmSample_TouchClick(s, e, sample);
 
             var expand = CreateExpandButton(panel, true, expandedSample == sample);
@@ -951,7 +951,7 @@ namespace FamiStudio
             expand.Click += (s) => ToggleExpandDPCMSample(sample);
 
             var icon = CreateImageBox(panel, expand.Right, "ChannelDPCM", true);
-            icon.MouseDown += (s, e) => DpcmSample_MouseDown(s, e, sample); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => DpcmSample_PointerDown(s, e, sample); // MATTT : Test on desktop, shouldnt have any impact.
             icon.WhiteHighlight = highlightedObject == sample;
 
             var props = CreateImageButton(panel, panel.Width - marginX - iconSizeX, "Properties");
@@ -974,7 +974,7 @@ namespace FamiStudio
             CreateLabel(panel, sample.Name, true, icon.Right + marginX, 0, play.Left - icon.Right - marginX * 2, true);
         }
 
-        private void DpcmSample_MouseDown(Control sender, MouseEventArgs e, DPCMSample sample)
+        private void DpcmSample_PointerDown(Control sender, PointerEventArgs e, DPCMSample sample)
         {
             var allowDrag = Platform.IsDesktop || (highlightedObject == sample && sender is ImageBox);
 
@@ -986,7 +986,7 @@ namespace FamiStudio
             }
         }
 
-        private void DpcmSample_MouseUp(MouseEventArgs e, DPCMSample sample)
+        private void DpcmSample_PointerUp(PointerEventArgs e, DPCMSample sample)
         {
             if (!e.Handled && e.Right)
             {
@@ -1013,7 +1013,7 @@ namespace FamiStudio
             }
         }
 
-        private void DpcmSample_TouchClick(Control sender, MouseEventArgs e, DPCMSample sample)
+        private void DpcmSample_TouchClick(Control sender, PointerEventArgs e, DPCMSample sample)
         {
             if (!e.Handled)
             {
@@ -1025,8 +1025,8 @@ namespace FamiStudio
         {
             noneArpPanel = CreateGradientPanel(Theme.LightGreyColor1);
             noneArpPanel.ToolTip = $"<MouseLeft> {SelectArpeggioTooltip}";
-            noneArpPanel.MouseUp += (s, e) => Arpeggio_MouseUp(e, null);
-            noneArpPanel.ContainerMouseUpNotify += (s, e) => Arpeggio_MouseUp(e, null);
+            noneArpPanel.PointerUp += (s, e) => Arpeggio_PointerUp(e, null);
+            noneArpPanel.ContainerPointerUpNotify += (s, e) => Arpeggio_PointerUp(e, null);
 
             var icon = CreateImageBox(noneArpPanel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
             var label = CreateLabel(noneArpPanel, ArpeggioNoneLabel, true, icon.Right + marginX, 0, noneArpPanel.Width - icon.Right - marginX);
@@ -1037,14 +1037,14 @@ namespace FamiStudio
         {
             var panel = CreateGradientPanel(arp.Color, arp);
             panel.ToolTip = $"<MouseLeft> {SelectArpeggioTooltip} - <MouseLeft><Drag> {ReplaceArpeggioTooltip}\n<MouseRight> {MoreOptionsTooltip}";
-            panel.MouseUp += (s, e) => Arpeggio_MouseUp(e, arp);
-            panel.ContainerMouseUpNotify += (s, e) => Arpeggio_MouseUp(e, arp);
-            panel.MouseDown += (s, e) => Arpeggio_MouseDown(s, e, arp);
-            panel.ContainerMouseDownNotify += (s, e) => Arpeggio_MouseDown(s, e, arp);
+            panel.PointerUp += (s, e) => Arpeggio_PointerUp(e, arp);
+            panel.ContainerPointerUpNotify += (s, e) => Arpeggio_PointerUp(e, arp);
+            panel.PointerDown += (s, e) => Arpeggio_PointerDown(s, e, arp);
+            panel.ContainerPointerDownNotify += (s, e) => Arpeggio_PointerDown(s, e, arp);
             panel.ContainerTouchClickNotify += (s, e) => Arpeggio_TouchClick(s, e, arp);
 
             var icon = CreateImageBox(panel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
-            icon.MouseDown += (s, e) => Arpeggio_MouseDown(s, e, arp); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => Arpeggio_PointerDown(s, e, arp); // MATTT : Test on desktop, shouldnt have any impact.
             icon.WhiteHighlight = highlightedObject == arp;
 
             var props = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties");
@@ -1055,8 +1055,8 @@ namespace FamiStudio
             edit.ToolTip = $"<MouseLeft> {EditArpeggioTooltip}";
             edit.UserData = "Arpeggio";
             edit.Click += (s) => App.StartEditArpeggio(arp);
-            edit.MouseDown += (s, e) => Arpeggio_MouseDown(s, e, arp, true, edit.Image);
-            edit.MouseUp += (s, e) => Arpeggio_MouseUp(e, arp);
+            edit.PointerDown += (s, e) => Arpeggio_PointerDown(s, e, arp, true, edit.Image);
+            edit.PointerUp += (s, e) => Arpeggio_PointerUp(e, arp);
             edit.MarkHandledOnClick = Platform.IsMobile;
             edit.WhiteHighlight = highlightedObject == arp;
 
@@ -1064,7 +1064,7 @@ namespace FamiStudio
             label.Bold = App.SelectedArpeggio == arp;
         }
 
-        private void Arpeggio_MouseDown(Control sender, MouseEventArgs e, Arpeggio arp, bool values = false, TextureAtlasRef image = null)
+        private void Arpeggio_PointerDown(Control sender, PointerEventArgs e, Arpeggio arp, bool values = false, TextureAtlasRef image = null)
         {
             var allowDrag = Platform.IsDesktop || (highlightedObject == arp && (values || sender is ImageBox));
 
@@ -1091,7 +1091,7 @@ namespace FamiStudio
             }
         }
 
-        private void Arpeggio_MouseUp(MouseEventArgs e, Arpeggio arp)
+        private void Arpeggio_PointerUp(PointerEventArgs e, Arpeggio arp)
         {
             if (!e.Handled && e.Right && arp != null)
             {
@@ -1106,7 +1106,7 @@ namespace FamiStudio
             }
         }
 
-        private void Arpeggio_TouchClick(Control sender, MouseEventArgs e, Arpeggio arp)
+        private void Arpeggio_TouchClick(Control sender, PointerEventArgs e, Arpeggio arp)
         {
             if (!e.Handled)
             {
@@ -1215,7 +1215,7 @@ namespace FamiStudio
                         {
                             var label = CreateLabel(panel, param.Name, true, indentX, y, panel.Width - indentX);
                             label.ToolTip = param.ToolTip; // TODO : The whole row should display the tooltip.
-                            label.MouseUp += ParamLabel_MouseUp;
+                            label.PointerUp += ParamLabel_PointerUp;
 
                             if (param.IsList)
                             {
@@ -1251,7 +1251,7 @@ namespace FamiStudio
             }
         }
 
-        private void ParamLabel_MouseUp(Control sender, MouseEventArgs e)
+        private void ParamLabel_PointerUp(Control sender, PointerEventArgs e)
         {
             if (e.Right && !e.Handled)
             {
@@ -2203,9 +2203,15 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
-            base.OnMouseMove(e);
+            if (e.IsTouchEvent)
+            {
+                OnTouchMove(e);
+                return;
+            }
+
+            base.OnPointerMove(e);
 
             bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
@@ -2222,13 +2228,19 @@ namespace FamiStudio
             mouseLastY = e.Y;
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        protected override void OnPointerLeave(EventArgs e)
         {
             App.SequencerShowExpansionIcons = false;
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
+            if (e.IsTouchEvent)
+            {
+                OnTouchUp(e);
+                return;
+            }
+
             bool middle = e.Middle;
             bool doMouseUp = false;
 
@@ -2330,7 +2342,7 @@ namespace FamiStudio
             canFling = false;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(PointerEventArgs e)
         {
             if (!e.Handled)
             {
@@ -2339,12 +2351,12 @@ namespace FamiStudio
             }
         }
 
-        public override void OnContainerMouseWheelNotify(Control control, MouseEventArgs e)
+        public override void OnContainerMouseWheelNotify(Control control, PointerEventArgs e)
         {
             OnMouseWheel(e);
         }
 
-        public override void OnContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        public override void OnContainerPointerMoveNotify(Control control, PointerEventArgs e)
         {
             var winPos = control.ControlToWindow(e.Position);
             var ctrlPos = WindowToControl(winPos);
@@ -2368,12 +2380,12 @@ namespace FamiStudio
             mouseLastY = ctrlPos.Y;
         }
 
-        public override void OnContainerMouseDownNotify(Control control, MouseEventArgs e)
+        public override void OnContainerPointerDownNotify(Control control, PointerEventArgs e)
         {
             //ConditionalRecreateAllControls();
         }
 
-        //public override void OnContainerMouseUpNotify(Control control, MouseEventArgs e)
+        //public override void OnContainerPointerUpNotify(Control control, PointerEventArgs e)
         //{
         //    if (!e.Middle)
         //    {
@@ -3165,7 +3177,7 @@ namespace FamiStudio
             });
         }
 
-        private bool HandleMouseDownPan(MouseEventArgs e)
+        private bool HandleMouseDownPan(PointerEventArgs e)
         {
             bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
 
@@ -3467,7 +3479,7 @@ namespace FamiStudio
             });
         }
 
-        protected override void OnTouchMove(MouseEventArgs e)
+        protected void OnTouchMove(PointerEventArgs e)
         {
             UpdateCursor();
             UpdateCaptureOperation(e.Position);
@@ -3476,7 +3488,7 @@ namespace FamiStudio
             mouseLastY = e.Y;
         }
 
-        protected override void OnTouchUp(MouseEventArgs e)
+        protected void OnTouchUp(PointerEventArgs e)
         {
             EndCaptureOperation(e.Position);
         }

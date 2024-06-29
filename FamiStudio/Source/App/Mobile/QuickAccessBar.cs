@@ -54,7 +54,7 @@ namespace FamiStudio
         // Popup-list scrolling.
         private int maxScrollY = 0;
 
-        // Mouse tracking.
+        // Pointer tracking.
         private Point lastPos; // Relative to this entire control.
         private float flingVelY;
         private CaptureOperation captureOperation = CaptureOperation.None;
@@ -72,7 +72,6 @@ namespace FamiStudio
         public bool  IsExpanded  => popupRatio > 0.001f;
 
         public override bool WantsFullScreenViewport => true;
-        public override bool SendTouchInputAsMouse => false;
 
         #region Localization
 
@@ -207,10 +206,10 @@ namespace FamiStudio
             listContainer = new Container();
             listContainer.Visible = false;
             listContainer.SetupClipRegion(true, false);
-            listContainer.ContainerMouseDownNotify += ListContainer_ContainerMouseDownNotify;
-            listContainer.ContainerMouseUpNotify += ListContainer_ContainerMouseUpNotify;
+            listContainer.ContainerPointerDownNotify += ListContainer_ContainerPointerDownNotify;
+            listContainer.ContainerPointerUpNotify += ListContainer_ContainerPointerUpNotify;
+            listContainer.ContainerPointerMoveNotify += ListContainer_ContainerPointerMoveNotify;
             listContainer.ContainerTouchFlingNotify += ListContainer_ContainerTouchFlingNotify;
-            listContainer.ContainerMouseMoveNotify += ListContainer_ContainerMouseMoveNotify;
             AddControl(listContainer);
         }
 
@@ -1134,13 +1133,13 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void ListContainer_ContainerTouchFlingNotify(Control sender, MouseEventArgs e)
+        private void ListContainer_ContainerTouchFlingNotify(Control sender, PointerEventArgs e)
         {
             EndCaptureOperation(e.Position);
             flingVelY = e.FlingVelocityY;
         }
 
-        private void ListContainer_ContainerMouseDownNotify(Control sender, MouseEventArgs e)
+        private void ListContainer_ContainerPointerDownNotify(Control sender, PointerEventArgs e)
         {
             flingVelY = 0;
 
@@ -1152,12 +1151,12 @@ namespace FamiStudio
             }
         }
 
-        private void ListContainer_ContainerMouseUpNotify(Control sender, MouseEventArgs e)
+        private void ListContainer_ContainerPointerUpNotify(Control sender, PointerEventArgs e)
         {
             EndCaptureOperation(e.Position);
         }
 
-        private void ListContainer_ContainerMouseMoveNotify(Control sender, MouseEventArgs e)
+        private void ListContainer_ContainerPointerMoveNotify(Control sender, PointerEventArgs e)
         {
             var quickAccessPos = WindowToControl(sender.ControlToWindow(e.Position));
             UpdateCaptureOperation(quickAccessPos);

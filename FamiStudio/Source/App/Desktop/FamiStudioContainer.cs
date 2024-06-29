@@ -178,7 +178,7 @@ namespace FamiStudio
             if (dialogDimming != 0.0f)
             {
                 var c = g.OverlayCommandList;
-                var color = Color.FromArgb(Utils.Lerp(0.0f, 0.4f, dialogDimming), Color.Black);
+                var color = Color.FromArgb((int)(dialogDimming * 100), Color.Black);
 
                 if (dialogs.Count != 0)
                 {

@@ -40,7 +40,7 @@ namespace FamiStudio
             UpdateThickness();
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             var coord = horizontal ? e.X : e.Y;
             GetScrollBarParams(out var scrollBarPos1, out var scrollBarPos2);
@@ -62,7 +62,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (scrolling)
             {
@@ -73,7 +73,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             if (scrolling)
             {

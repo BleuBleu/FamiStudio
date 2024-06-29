@@ -132,12 +132,12 @@ namespace FamiStudio
             return IsTopDialog() && tooltipTimer > ToolTipDelay;
         }
 
-        public override void OnContainerMouseDownNotify(Control control, MouseEventArgs e) 
+        public override void OnContainerPointerDownNotify(Control control, PointerEventArgs e) 
         {
             ResetToolTip();
         }
 
-        public override void OnContainerMouseMoveNotify(Control control, MouseEventArgs e)
+        public override void OnContainerPointerMoveNotify(Control control, PointerEventArgs e)
         {
             ResetToolTip();
         }
@@ -149,7 +149,7 @@ namespace FamiStudio
             tooltipTimer = 0;
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             FocusedControl = null;
             ResetToolTip();

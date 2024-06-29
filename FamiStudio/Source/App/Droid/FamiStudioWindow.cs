@@ -829,7 +829,7 @@ namespace FamiStudio
                         {
                             if (captureControl == ctrl)
                                 ReleaseMouse();
-                            ctrl.SendTouchUp(new MouseEventArgs(x, y));
+                            ctrl.SendPointerUp(new PointerEventArgs(x, y));
                         }
                     }
                 }
@@ -839,7 +839,7 @@ namespace FamiStudio
                     lock (renderLock)
                     {
                         var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
-                        ctrl?.SendTouchMove(new MouseEventArgs(x, y));
+                        ctrl?.SendPointerMove(new PointerEventArgs(x, y));
                     }
                 }
 
@@ -862,7 +862,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
-                    ctrl?.SendTouchDown(new MouseEventArgs(x, y));
+                    ctrl?.SendPointerDown(new PointerEventArgs(x, y));
                 }
             }
             return false;
@@ -876,7 +876,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y);
-                    ctrl?.SendTouchFling(new MouseEventArgs(x, y, velocityX, velocityY));
+                    ctrl?.SendTouchFling(new PointerEventArgs(x, y, velocityX, velocityY));
                 }
             }
             return false;
@@ -890,7 +890,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
-                    ctrl?.SendTouchLongPress(new MouseEventArgs(x, y)); 
+                    ctrl?.SendTouchLongPress(new PointerEventArgs(x, y)); 
                 }
             }
         }
@@ -919,7 +919,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
-                    ctrl?.SendTouchClick(new MouseEventArgs(x, y));
+                    ctrl?.SendTouchClick(new PointerEventArgs(x, y));
                 }
             }
             return false;
@@ -933,7 +933,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
-                    ctrl?.SendTouchScale(new MouseEventArgs(x, y, detector.ScaleFactor));
+                    ctrl?.SendTouchScale(new PointerEventArgs(x, y, detector.ScaleFactor));
                 }
                 return true;
             }
@@ -951,7 +951,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
-                    ctrl?.SendTouchScaleBegin(new MouseEventArgs(x, y));
+                    ctrl?.SendTouchScaleBegin(new PointerEventArgs(x, y));
                 }
                 return true;
             }
@@ -969,7 +969,7 @@ namespace FamiStudio
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
-                    ctrl?.SendTouchScaleEnd(new MouseEventArgs(x, y));
+                    ctrl?.SendTouchScaleEnd(new PointerEventArgs(x, y));
                 }
             }
         }
@@ -990,7 +990,7 @@ namespace FamiStudio
                     var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
                     if (ctrl != null && ctrl.SupportsDoubleClick)
                     {
-                        ctrl?.SendTouchDoubleClick(new MouseEventArgs(x, y));
+                        ctrl?.SendTouchDoubleClick(new PointerEventArgs(x, y));
                     }
                 }
                 return true;
@@ -1014,7 +1014,7 @@ namespace FamiStudio
                         var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
                         if (ctrl != null && !ctrl.SupportsDoubleClick)
                         {
-                            ctrl?.SendTouchClick(new MouseEventArgs(x, y));
+                            ctrl?.SendTouchClick(new PointerEventArgs(x, y));
                         }
 
                     }

@@ -58,12 +58,12 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnTouchClick(MouseEventArgs e)
+        protected override void OnTouchClick(PointerEventArgs e)
         {
             ToggleTimecodeFormat();
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (e.Left && Platform.IsDesktop)
             {
@@ -71,7 +71,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (e.Right && !ProjectUsesFamitrackerTempo())
             {

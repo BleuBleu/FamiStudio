@@ -59,7 +59,7 @@ namespace FamiStudio
             posFromBottom = DpiScaling.ScaleForWindow(DefaultPositionFromBottom);
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             action?.Invoke();
         }

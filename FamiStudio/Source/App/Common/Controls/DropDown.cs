@@ -84,7 +84,7 @@ namespace FamiStudio
             bmpArrow = Graphics.GetTextureAtlasRef("DropDownArrow");
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (listOpened && e.Y > rowHeight)
             {
@@ -111,7 +111,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (listJustOpened && isGridChild)
             {
@@ -151,9 +151,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
         {
-            OnMouseDown(e);
+            OnPointerDown(e);
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -200,13 +200,13 @@ namespace FamiStudio
             numItemsInList = Math.Min(items.Length, MaxItemsInList);
         }
 
-        private void UpdateListHover(MouseEventArgs e)
+        private void UpdateListHover(PointerEventArgs e)
         {
             if (listOpened && e.X < width - scrollBarWidth)
                 SetAndMarkDirty(ref listHover, listScroll + (e.Y - rowHeight) / rowHeight);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             if (draggingScrollbars)
             {
@@ -223,7 +223,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        protected override void OnPointerLeave(EventArgs e)
         {
             SetAndMarkDirty(ref hover, false);
             SetAndMarkDirty(ref listHover, -1);
@@ -254,7 +254,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(PointerEventArgs e)
         {
             var sign = e.ScrollY < 0 ? 1 : -1;
 

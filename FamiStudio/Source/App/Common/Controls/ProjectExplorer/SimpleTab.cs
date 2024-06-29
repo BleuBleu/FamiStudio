@@ -25,7 +25,7 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref selected, value); }
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnPointerDown(PointerEventArgs e)
         {
             if (enabled && e.Left)
             {
@@ -35,7 +35,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnPointerUp(PointerEventArgs e)
         {
             if (enabled && e.Left)
             {
@@ -45,12 +45,12 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnPointerMove(PointerEventArgs e)
         {
             SetAndMarkDirty(ref hover, true);
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        protected override void OnPointerLeave(EventArgs e)
         {
             SetAndMarkDirty(ref hover, false);
             SetAndMarkDirty(ref press, false);
