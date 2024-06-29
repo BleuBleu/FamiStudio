@@ -905,6 +905,11 @@ namespace FamiStudio
                 }
             }
 
+            // When there is no icon on right, add a bit of extra padding since images
+            // tend of have padding in them. Looks weird otherwise.
+            if (iconButtons == null)
+                maxButtonSize += DpiScaling.ScaleForWindow(3);
+
             var popupWidth  = maxButtonSize + maxExtraSize;
             var popupHeight = buttons.Length * listItemSize + 1;
 
@@ -1053,7 +1058,7 @@ namespace FamiStudio
             // Background shadow.
             if (IsExpanded)
             {
-                var shadowColor = Color.FromArgb(popupRatio * 0.6f, Color.Black);
+                var shadowColor = Color.FromArgb((int)Utils.Clamp(popupRatio * 0.6f * 255.0f, 0, 255), Color.Black);
 
                 if (IsLandscape)
                 {

@@ -258,7 +258,7 @@ namespace FamiStudio
                 DpiScaling.ScaleCustom(bmp.ElementSize.Height, imageScale));
         }
 
-        // MATTT : Precompute more stuff to keep this as simple as possible at run-time.
+        // MATTT : Precompute more stuff (like scaled image size, etc.) to keep this as simple as possible at run-time.
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
@@ -289,8 +289,8 @@ namespace FamiStudio
             // "Transparent" changes the opacity on hover.
             if (transparent)
             {
-                var maxOpacity = transparent && localDimmed ? localDimming : 256;
-                var opacity = Math.Min(maxOpacity, transparent ? localEnabled ? hover ? 128 : 256 : 64 : 256);
+                var maxOpacity = transparent && localDimmed ? localDimming : 255;
+                var opacity = Math.Min(maxOpacity, transparent ? localEnabled ? hover ? 128 : 255 : 64 : 255);
 
                 localFgColor = localFgColor.Transparent(opacity, true);
             }

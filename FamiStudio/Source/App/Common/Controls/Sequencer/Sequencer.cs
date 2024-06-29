@@ -661,8 +661,8 @@ namespace FamiStudio
                     var isHoverRow = hoverRow == channelToRow[i];
                     var channel = Song.Channels[i];
                     var bitmapIndex = showExpIcons ? channel.Expansion : channel.Type;
-                    var iconHoverOpacity = isHoverRow && (hoverIconMask & 1) != 0 ? 0.75f : 1.0f;
-                    var iconFinalOpacity = ((App.ChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * iconHoverOpacity;
+                    var iconHoverOpacity = isHoverRow && (hoverIconMask & 1) != 0 ? 192 : 255;
+                    var iconFinalOpacity = Utils.ColorMultiply((App.ChannelMask & (1L << i)) != 0 ? 255 : 50, iconHoverOpacity);
                     c.DrawTextureAtlas(atlas[bitmapIndex], channelIconPosX, y + channelIconPosY, channelBitmapScale, Theme.LightGreyColor1.Transparent(iconFinalOpacity));
 
                     // Name
@@ -671,8 +671,8 @@ namespace FamiStudio
                     c.DrawText(Song.Channels[i].LocalizedName, font, channelNamePosX, y + channelIconPosY, Theme.LightGreyColor2, TextFlags.MiddleLeft, 0, iconHeight);
 
                     // Force display icon.
-                    var ghostHoverOpacity = isHoverRow && (hoverIconMask & 2) != 0 ? 0.75f : 1.0f;
-                    var ghostFinalOpacity = ((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f) * ghostHoverOpacity;
+                    var ghostHoverOpacity = isHoverRow && (hoverIconMask & 2) != 0 ? 192 : 255;
+                    var ghostFinalOpacity = Utils.ColorMultiply((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 255 : 50, ghostHoverOpacity);
                     c.DrawTextureAtlas(bmpForceDisplay, channelNameSizeX - ghostNoteOffsetX, y + channelSizeY - ghostNoteOffsetY - 1, bitmapScale, Theme.LightGreyColor1.Transparent(ghostFinalOpacity));
 
                     // Hover

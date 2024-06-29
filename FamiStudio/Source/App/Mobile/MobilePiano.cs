@@ -274,7 +274,7 @@ namespace FamiStudio
                         var posX = r.X + r.Width / 2 - (int)(size.Width * scale / 2);
                         var posY = r.Height / 2 - (int)(size.Height * scale / 2);
                         var bmp = App.IsRecording && j == 1 ? bmpMobilePianoRest : bmpMobilePianoDrag;
-                        c.DrawTextureAtlas(bmp, posX, posY, scale, Color.Black.Transparent(0.25f));
+                        c.DrawTextureAtlas(bmp, posX, posY, scale, Color.Black.Transparent(64));
                     }
                 }
             }

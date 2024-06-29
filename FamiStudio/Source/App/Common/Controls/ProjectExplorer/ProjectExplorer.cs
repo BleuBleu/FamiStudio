@@ -1745,7 +1745,7 @@ namespace FamiStudio
                         var bx = mainContainerPos.X - captureButtonRelX;
                         var by = mainContainerPos.Y - captureButtonRelY;
 
-                        c.DrawTextureAtlas(envelopeDragTexture, bx, by, iconImageScale, Color.Black.Transparent(0.5f));
+                        c.DrawTextureAtlas(envelopeDragTexture, bx, by, iconImageScale, Color.Black.Transparent(128));
 
                         if (Platform.IsMobile)
                         {

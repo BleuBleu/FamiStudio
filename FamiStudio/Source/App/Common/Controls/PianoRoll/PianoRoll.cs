@@ -1519,7 +1519,7 @@ namespace FamiStudio
             if (!Platform.IsMobile && editMode != EditionMode.VideoRecording)
             {
                 var maxRect = GetMaximizeButtonRect();
-                var maxOpacity = (hoverTopLeftButton & 4) != 0 ? 0.75f : 1.0f;
+                var maxOpacity = (hoverTopLeftButton & 4) != 0 ? 192 : 255;
                 r.c.DrawTextureAtlas(bmpMaximize, maxRect.X, maxRect.Y, 1.0f, maximized ? Theme.LightGreyColor1 : Theme.MediumGreyColor1.Transparent(maxOpacity));
             }
 
@@ -1527,14 +1527,14 @@ namespace FamiStudio
             if (editMode == EditionMode.Channel)
             {
                 var toggleRect = GetToggleEffectPanelButtonRect();
-                var toggleOpacity = (hoverTopLeftButton & 1) != 0 ? 0.75f : 1.0f;
+                var toggleOpacity = (hoverTopLeftButton & 1) != 0 ? 192 : 255;
                 r.c.DrawTextureAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, toggleRect.X, toggleRect.Y, bitmapScale, Theme.LightGreyColor1.Transparent(toggleOpacity));
 
                 if (SnapAllowed && !Platform.IsMobile)
                 {
                     var snapBtnRect = GetSnapButtonRect();
                     var snapResRect = GetSnapResolutionRect();
-                    var snapOpacity = (hoverTopLeftButton & 2) != 0 ? 0.75f : 1.0f;
+                    var snapOpacity = (hoverTopLeftButton & 2) != 0 ? 192 : 255;
                     var snapColor = App.IsRecording ? Theme.DarkRedColor : (SnapEnabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
 
                     r.c.DrawTextureAtlas(SnapEnabled || App.IsRecording ? bmpSnap : bmpSnapOff, snapBtnRect.X, snapBtnRect.Y, 1.0f, snapColor.Transparent(snapOpacity));
@@ -2603,7 +2603,7 @@ namespace FamiStudio
             return false;
         }
 
-        private Color GetNoteColor(Channel channel, int noteValue, Instrument instrument, float alphaDim = 1.0f)
+        private Color GetNoteColor(Channel channel, int noteValue, Instrument instrument, int alphaDim = 256)
         {
             var color = Theme.LightGreyColor1;
 
@@ -2827,7 +2827,7 @@ namespace FamiStudio
                             }
                             else if (note.IsStop)
                             {
-                                RenderNoteReleaseOrStop(r, note, GetNoteColor(channel, lastNoteValue, lastInstrument, isActiveChannel ? 1.0f : 0.2f), it.Location.ToAbsoluteNoteIndex(Song), lastNoteValue, false, IsNoteSelected(it.Location, 1), isActiveChannel, true, released);
+                                RenderNoteReleaseOrStop(r, note, GetNoteColor(channel, lastNoteValue, lastInstrument, isActiveChannel ? 256 : 50), it.Location.ToAbsoluteNoteIndex(Song), lastNoteValue, false, IsNoteSelected(it.Location, 1), isActiveChannel, true, released);
                             }
 
                             if (note.HasRelease && note.Release < Math.Min(note.Duration, it.DistanceToNextCut))
@@ -2844,7 +2844,7 @@ namespace FamiStudio
                             }
                             else if (highlightNote.IsStop)
                             {
-                                RenderNoteReleaseOrStop(r, highlightNote, GetNoteColor(channel, highlightLastNoteValue, highlightLastInstrument, isActiveChannel ? 1.0f : 0.2f), highlightLocation.ToAbsoluteNoteIndex(Song), highlightLastNoteValue, true, false, true, true, highlightReleased);
+                                RenderNoteReleaseOrStop(r, highlightNote, GetNoteColor(channel, highlightLastNoteValue, highlightLastInstrument, isActiveChannel ? 256 : 50), highlightLocation.ToAbsoluteNoteIndex(Song), highlightLastNoteValue, true, false, true, true, highlightReleased);
                             }
                         }
                     }
@@ -2893,7 +2893,7 @@ namespace FamiStudio
                                         var iconY = effectPosY + effectIconPosY;
 
                                         r.f.DrawTextureAtlas(bmpEffectFrame, iconX, iconY, effectBitmapScale, drawOpaque ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
-                                        r.f.DrawTextureAtlas(bmpEffects[fx], iconX, iconY, effectBitmapScale, Theme.LightGreyColor1.Transparent(drawOpaque ? 1.0f : 0.4f));
+                                        r.f.DrawTextureAtlas(bmpEffects[fx], iconX, iconY, effectBitmapScale, Theme.LightGreyColor1.Transparent(drawOpaque ? 256 : 100));
                                         effectPosY += effectIconSizeX + effectIconPosY + 1;
                                     }
                                 }
@@ -3445,7 +3445,7 @@ namespace FamiStudio
             var nextAbsoluteIndex = absoluteIndex + distanceToNextNote;
             var duration = Math.Min(distanceToNextNote, note.Duration);
             var slideDuration = note.IsSlideNote ? channel.GetSlideNoteDuration(location) : -1;
-            var color = GetNoteColor(channel, note.Value, note.Instrument, isActiveChannel ? 1.0f : 0.2f);
+            var color = GetNoteColor(channel, note.Value, note.Instrument, isActiveChannel ? 256 : 50);
             var selected = isActiveChannel && IsNoteSelected(location, duration);
             var transpose = videoChannelTranspose != null ? videoChannelTranspose[channelIndex] : 0;
 

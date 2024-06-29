@@ -111,6 +111,13 @@ namespace FamiStudio
             return result;
         }
 
+        // Used for color, basically 8-bit fixed point. 255 = 1.0, 128 = 0.5, etc.
+        public static int ColorMultiply(int  x, int y)
+        {
+            Debug.Assert(x >= 0 && y >= 0);
+            return Math.Min((x * y) / 255, 255);
+        }
+
         public static byte[] IntToBytes24Bit(int x)
         {
             return new byte[] { (byte)(x & 0xff), (byte)(x >> 8 & 0xff), (byte)(x >> 16 & 0xff) };

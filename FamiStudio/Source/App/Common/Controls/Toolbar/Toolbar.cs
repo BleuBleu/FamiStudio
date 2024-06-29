@@ -909,7 +909,7 @@ namespace FamiStudio
         {
             if (Platform.IsMobile && IsExpanded)
             {
-                c.FillRectangle(GetMobileShadowRect(), Color.FromArgb(expandRatio * 0.6f, Color.Black));
+                c.FillRectangle(GetMobileShadowRect(), Color.FromArgb((int)Utils.Clamp(expandRatio * 0.6f * 255.0f, 0, 255), Color.Black));
             }
         }
 

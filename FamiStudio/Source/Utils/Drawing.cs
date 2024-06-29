@@ -68,12 +68,8 @@ namespace FamiStudio
 
         public static Color FromArgb(int a, Color c)
         {
+            Debug.Assert(a >= 0 && a <= 255);
             return new Color((a << 24) | (c.ToAbgr() & 0xffffff));
-        }
-
-        public static Color FromArgb(float a, Color c)
-        {
-            return new Color(((int)(a * 255) << 24) | (c.ToAbgr() & 0xffffff));
         }
 
         public static Color FromArgb(int argb)
@@ -100,34 +96,29 @@ namespace FamiStudio
             return new Color((int)(R * scale), (int)(G * scale), (int)(B * scale), A);
         }
 
+        // Integer math, 255 = no change, 128 = half, etc.
         public Color Scaled(int scale, bool alpha = false)
         {
-            var r = Utils.Clamp((R * scale) >> 8, 0, 255);
-            var g = Utils.Clamp((G * scale) >> 8, 0, 255);
-            var b = Utils.Clamp((B * scale) >> 8, 0, 255);
-            var a = alpha ? Utils.Clamp((A * scale) >> 8, 0, 255) : A;
+            var r = Utils.ColorMultiply(R, scale);
+            var g = Utils.ColorMultiply(G, scale);
+            var b = Utils.ColorMultiply(B, scale);
+            var a = alpha ? Utils.ColorMultiply(A, scale) : A;
             return new Color(r, g, b, a);
-        }
-
-        // MATTT : Change this for a byte. No point in having float.
-        public Color Transparent(float a, bool multiply = false)
-        {
-            return multiply ? FromArgb(a * A / 255.0f, this) : FromArgb(a, this);
         }
 
         public Color Transparent(int a, bool multiply = false)
         {
             if (multiply)
-                a = Utils.Clamp((a * A) >> 8, 0, 255);
+                a = Utils.ColorMultiply(a, A);
             return FromArgb(a, this);
         }
 
-        public static bool operator ==(Color left, Color right)
+        public static bool operator==(Color left, Color right)
         {
             return left.color == right.color;
         }
 
-        public static bool operator !=(Color left, Color right)
+        public static bool operator!=(Color left, Color right)
         {
             return !(left == right);
         }

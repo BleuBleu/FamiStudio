@@ -77,7 +77,7 @@ namespace FamiStudio
         {
             var c = g.GetCommandList();
             var paramEnabled = IsParamEnabled();
-            var opacity = paramEnabled ? hover ? 0.6f : 1.0f : 0.25f;
+            var opacity = paramEnabled ? hover ? 150 : 255 : 64;
             var color = Color.Black.Transparent(opacity);
 
             c.DrawRectangle(0, 0, width - 1, height - 1, color); 
