@@ -25,6 +25,8 @@
 	- GUI BRANCH : When changing "Auto Wav Pos", must stop player. => REDO IN GUI BRANCH!
 	- GUI BRANCH : Add button test validate the assignment in instrument settings.
 - Raw FDS modulation table envelope. 
+- Merge change from github issue where it prints the required defines as comments in the file.
+	- Do same for note tables, no need for external file!
 
 4.3.0
 =====
@@ -53,8 +55,11 @@
 	x Double click issue for controls that dont support it (returns position of 1st click)
 		- Move all "SendTouchInputAsMouse" in FamiStudioWindow.cs.
 	- Sequencer:
-		 - Mobile "force display" icons are ugly, and they arent even clickable... Is there a point in having them there??
-		 - We should be able to solo/mute by clicking icon like PC.
+		- Sequencer.cs
+		- SequencerTimeline.cs
+		- SequencerPatternArea.cs
+		- Mobile "force display" icons are ugly, and they arent even clickable... Is there a point in having them there??
+		- We should be able to solo/mute by clicking icon like PC.
 - Support for japanese/other characters regardless of current languages
 	- Switch all UI to Noto Sans?
 	- Have a series of fallback fonts when searching for a glyph.
