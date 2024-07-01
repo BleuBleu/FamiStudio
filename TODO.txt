@@ -44,6 +44,7 @@
 		- Test scroll bars a lot more. 
 		- Middle mouse panning (when i get a mouse...)
 		- Property buttons get "stuck" when the dialog pops.
+			- Same happens if you right click open menu, open a recent file, open button gets stucks
 	x Toolbar rewrite
 	- QuickAccess rewrite
 		- Will need to make GradientPanel a real control.
@@ -64,6 +65,8 @@
 		6) Add nice to have stuff (force display on mobile, make icons/force display/mute actually work on mobile)
 - Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
 x Support for japanese/other characters regardless of current languages
+	- The language selection can now be written in the actual language!
+	- Try a few variations on Noto (Regular, Condensed, etc.) On mobile in PE we now see less characters.
 - FUTURE : Android convert to our widgets, no more android native widgets.
 
 Linux notes 

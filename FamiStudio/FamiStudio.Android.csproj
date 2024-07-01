@@ -494,14 +494,15 @@
     <EmbeddedResource Include="Resources\Mobile\MobileMenuWave.tga" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Fonts\Quicksand-Regular.ttf" />
-    <EmbeddedResource Include="Resources\Fonts\Quicksand-Bold.ttf" />
-    <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Rg.ttf" />
-    <EmbeddedResource Include="Resources\Fonts\LINESeedKR-Bd.ttf" />
-    <EmbeddedResource Include="Resources\Fonts\Mulish-Light.ttf" />
-    <EmbeddedResource Include="Resources\Fonts\Mulish-Bold.ttf" />
-    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Regular.otf" />
-    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Bold.otf" />
+    <EmbeddedResource Include="Resources\Fonts\GlyphDictionary.bin" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSans-Medium.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSans-ExtraBold.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansJP-Medium.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansJP-ExtraBold.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansKR-Medium.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansKR-ExtraBold.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-Medium.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\NotoSansSC-ExtraBold.ttf" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />

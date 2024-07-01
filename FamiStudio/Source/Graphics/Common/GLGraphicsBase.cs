@@ -763,8 +763,6 @@ namespace FamiStudio
             {
                 var name = fontData[idx].name;
                 var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
-                if (stream == null)
-                    stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.otf");
                 var buffer = new byte[stream.Length];
                 stream.Read(buffer, 0, buffer.Length);
                 stream.Dispose();
@@ -920,10 +918,7 @@ namespace FamiStudio
             for (var f = 0; f < fontList.Length; f++)
             {
                 var name = fontList[f];
-
                 var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
-                if (stream == null)
-                    stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.otf");
                 var buffer = new byte[stream.Length];
                 stream.Read(buffer, 0, buffer.Length);
 
