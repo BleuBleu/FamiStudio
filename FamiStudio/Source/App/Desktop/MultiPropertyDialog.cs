@@ -8,7 +8,9 @@ namespace FamiStudio
         class PropertyPageTab
         {
             public Button button;
+            public Container container;
             public PropertyPage properties;
+            public int scrollHeight;
             public bool visible = true;
         }
 
@@ -55,16 +57,32 @@ namespace FamiStudio
             AddControl(buttonNo);
         }
 
-        public PropertyPage AddPropertyPage(string text, string image)
+        public PropertyPage AddPropertyPage(string text, string image, int scroll = -1)
         {
-            var page = new PropertyPage(this, tabsSizeX + margin * 2, margin + titleBarSizeY, width - tabsSizeX - margin * 3);
-
             var tab = new PropertyPageTab();
+            var scrollBarSize = 0;
+
+            if (scroll > 0)
+            {
+                var scrollContainer = new ScrollContainer();
+                tab.container = scrollContainer;
+                scrollBarSize = scrollContainer.ScrollBarSpacing;
+            }
+            else
+            {
+                tab.container = new Container();
+                tab.container.SetupClipRegion(false);
+            }
+
             tab.button = AddButton(text, image);
-            tab.properties = page;
+            tab.properties = new PropertyPage(tab.container, width - tabsSizeX - margin * 3 - scrollBarSize);
+            tab.scrollHeight = scroll;
+            tab.container.Move(tabsSizeX + margin * 2, margin + titleBarSizeY, width - tabsSizeX - margin * 3, 100); // Final height not known yet.
             tabs.Add(tab);
 
-            return page;
+            AddControl(tab.container);
+
+            return tab.properties;
         }
 
         protected override void OnShowDialog()
@@ -79,13 +97,28 @@ namespace FamiStudio
                 {
                     tab.button.Move(margin, y);
                     y += tab.button.Height;
-                    maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
+
+                    if (tabs[i].scrollHeight > 0)
+                        maxHeight = Math.Max(maxHeight, tabs[i].scrollHeight);
+                    else
+                        maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
                 }
             }
 
             maxHeight = Math.Max(maxHeight, Width / 2);
 
             Resize(width, maxHeight + buttonNo.Height + margin * 3 + titleBarSizeY);
+
+            for (int i = 0; i < tabs.Count; i++)
+            {
+                var tab = tabs[i];
+                tab.container.Resize(tab.container.Width, maxHeight, false);
+
+                if (tab.scrollHeight > 0)
+                {
+                    (tab.container as ScrollContainer).VirtualSizeY = tab.properties.LayoutHeight + margin;
+                }
+            }
 
             var buttonY = maxHeight + margin * 2 + titleBarSizeY;
             buttonYes.Move(Width - buttonYes.Width * 2 - margin * 2, buttonY);
@@ -148,7 +181,7 @@ namespace FamiStudio
             {
                 var visible = i == idx;
                 tabs[i].button.Font = visible ? fonts.FontMediumBold : fonts.FontMedium;
-                tabs[i].properties.Visible = visible;
+                tabs[i].container.Visible = visible;
 
                 if (visible)
                     tabs[i].properties.ConditionalSetTextBoxFocus();

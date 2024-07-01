@@ -17,14 +17,10 @@ namespace FamiStudio
             public bool forceKeepSize;
         };
 
-        private int baseX;
-        private int baseY;
         private int layoutWidth;
         private int layoutHeight;
-        private int scrollingHeight;
         private List<Property> properties = new List<Property>();
-        private Dialog dialog;
-        private ScrollContainer scrollContainer;
+        private Container container;
 
         private readonly static string[] WarningIcons = 
         {
@@ -36,35 +32,10 @@ namespace FamiStudio
         public int LayoutHeight  => layoutHeight;
         public int PropertyCount => properties.Count;
 
-        public PropertyPage(Dialog dlg, int x, int y, int width)
+        public PropertyPage(Container cont, int width)
         {
-            baseX = x;
-            baseY = y;
             layoutWidth = width;
-            dialog = dlg;
-        }
-
-        public bool Visible
-        {
-            set
-            {
-                foreach (var prop in properties)
-                {
-                    if (prop.label != null)
-                        prop.label.Visible = value;
-                    if (prop.control != null)
-                        prop.control.Visible = value;
-                    if (prop.warningIcon != null)
-                        prop.warningIcon.Visible = !string.IsNullOrEmpty(prop.warningIcon.ToolTip) && value;  
-                }
-                if (scrollContainer != null)
-                    scrollContainer.Visible = value;
-            }
-        }
-
-        public void SetScrolling(int height)
-        {
-            scrollingHeight = DpiScaling.ScaleForWindow(height);
+            container = cont;
         }
 
         public void ConditionalSetTextBoxFocus()
@@ -863,14 +834,7 @@ namespace FamiStudio
             var maxLabelWidth = 0;
             var propertyCount = advanced || advancedPropertyStart < 0 ? properties.Count : advancedPropertyStart;
 
-            for (int i = 0; i < properties.Count; i++)
-            {
-                var prop = properties[i];
-
-                dialog.RemoveControl(prop.label);
-                dialog.RemoveControl(prop.control);
-                dialog.RemoveControl(prop.warningIcon);
-            }
+            container.RemoveAllControls();
 
             for (int i = 0; i < propertyCount; i++)
             {
@@ -878,27 +842,18 @@ namespace FamiStudio
                 if (prop.visible && prop.label != null)
                 {
                     // HACK : Control need to be added to measure string.
-                    dialog.AddControl(prop.label);
+                    container.AddControl(prop.label);
                     maxLabelWidth = Math.Max(maxLabelWidth, prop.label.MeasureWidth());
-                    dialog.RemoveControl(prop.label);
+                    container.RemoveControl(prop.label);
                 }
             }
 
             var totalHeight = 0;
             var warningWidth = showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
-            var container = dialog as Container;
             var actualLayoutWidth = layoutWidth;
 
-            if (scrollingHeight > 0)
-            {
-                scrollContainer = new ScrollContainer();
-                scrollContainer.Move(baseX, baseY, actualLayoutWidth, scrollingHeight);
-                dialog.AddControl(scrollContainer);
-                baseX = 0;
-                baseY = 0;
-                container = scrollContainer;
-                actualLayoutWidth -= scrollContainer.ScrollBarSpacing;
-            }
+            var x = 0;
+            var y = 0;
 
             for (int i = 0; i < propertyCount; i++)
             {
@@ -913,8 +868,8 @@ namespace FamiStudio
 
                 if (prop.label != null)
                 {
-                    prop.label.Move(baseX, baseY + totalHeight, maxLabelWidth, prop.label.Height);
-                    prop.control.Move(baseX + maxLabelWidth + margin, baseY + totalHeight, actualLayoutWidth - maxLabelWidth - warningWidth - margin, prop.control.Height);
+                    prop.label.Move(x, y + totalHeight, maxLabelWidth, prop.label.Height);
+                    prop.control.Move(x + maxLabelWidth + margin, y + totalHeight, actualLayoutWidth - maxLabelWidth - warningWidth - margin, prop.control.Height);
 
                     container.AddControl(prop.label);
                     container.AddControl(prop.control);
@@ -923,7 +878,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    prop.control.Move(baseX, baseY + totalHeight, actualLayoutWidth, prop.control.Height);
+                    prop.control.Move(x, y + totalHeight, actualLayoutWidth, prop.control.Height);
 
                     container.AddControl(prop.control);
                 }
@@ -933,23 +888,15 @@ namespace FamiStudio
                 if (prop.warningIcon != null)
                 {
                     prop.warningIcon.Move(
-                        baseX + actualLayoutWidth - prop.warningIcon.Width,
-                        baseY + totalHeight + (height - prop.warningIcon.Height) / 2);
+                        x + actualLayoutWidth - prop.warningIcon.Width,
+                        y + totalHeight + (height - prop.warningIcon.Height) / 2);
                     container.AddControl(prop.warningIcon);
                 }
 
                 totalHeight += height;
             }
 
-            if (scrollingHeight > 0)
-            {
-                scrollContainer.VirtualSizeY = totalHeight + margin;
-                layoutHeight = scrollingHeight; 
-            }
-            else
-            {
-                layoutHeight = totalHeight;
-            }
+            layoutHeight = totalHeight;
 
             ConditionalSetTextBoxFocus();
         }

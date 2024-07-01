@@ -50,7 +50,6 @@
 	- QuickAccess rewrite
 		- Will need to make GradientPanel a real control.
 		- Add solo/mute support in instrument panel.
-	- Add support for more international characeters, switch to Noto.
 	- To test : 
 		- Dialog ticks
 		- Toast tick
@@ -68,7 +67,13 @@
 x Support for japanese/other characters regardless of current languages
 	- The language selection can now be written in the actual language!
 	- Try a few variations on Noto (Regular, Condensed, etc.) On mobile in PE we now see less characters.
-- FUTURE : Android convert to our widgets, no more android native widgets.
+- Android convert to our widgets, no more android native widgets.
+	x Change PropertyPage to create controls in a COntainer, not in Dialog directly.
+	x Show/hide container when switching multi-page, not each control.
+	- Remove all notion of scrolling in PropertyPage, the parent will pass a container or scroll container.
+	- Create a prototype Android version of "PropertyPage.Build". See how it would work.
+	- Will need to rebuild when rotating screen.
+	- 
 
 Linux notes 
 =========== 

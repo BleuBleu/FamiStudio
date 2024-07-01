@@ -96,7 +96,8 @@ namespace FamiStudio
             for (int i = 0; i < (int)ProjectSection.Max; i++)
             {
                 var section = (ProjectSection)i;
-                var page = dialog.AddPropertyPage(SectionNames[i], "ProjectProperties" + section.ToString());
+                var scroll = i == (int)ProjectSection.Mixer ? 300 : 0;
+                var page = dialog.AddPropertyPage(SectionNames[i], "ProjectProperties" + section.ToString(), scroll);
                 CreatePropertyPage(page, section);
             }
 
@@ -140,7 +141,7 @@ namespace FamiStudio
                 }
                 case ProjectSection.Mixer:
                 {
-                    mixerProperties = new MixerProperties(page, project, 300, project.ExpansionAudioMask);
+                    mixerProperties = new MixerProperties(page, project, project.ExpansionAudioMask);
                     break;
                 }
                 case ProjectSection.SoundEngine:

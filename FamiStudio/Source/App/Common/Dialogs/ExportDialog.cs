@@ -30,7 +30,7 @@ namespace FamiStudio
 
         LocalizedString[] ExportFormatNames = new LocalizedString[(int)ExportFormat.Max];
 
-        string[] ExportIcons =
+        private static readonly string[] ExportIcons =
         {
             "ExportWav",
             "ExportVideo",
@@ -47,6 +47,8 @@ namespace FamiStudio
             "ExportShare",
             "ExportVideo",
         };
+
+        //private static readonly int[] ExportScrolling = new[] { 0, 500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
         private Project project;
         private MultiPropertyDialog dialog;
@@ -273,7 +275,8 @@ namespace FamiStudio
             for (int i = 0; i < (int)ExportFormat.Max; i++)
             {
                 var format = (ExportFormat)i;
-                var page = dialog.AddPropertyPage(ExportFormatNames[i], ExportIcons[i]);
+                var scroll = i == (int)ExportFormat.Video ? 400 : 0;
+                var page = dialog.AddPropertyPage(ExportFormatNames[i], ExportIcons[i], DpiScaling.ScaleForWindow(scroll));
                 CreatePropertyPage(page, format);
             }
 
@@ -417,7 +420,7 @@ namespace FamiStudio
             return data;
         }
 
-        private PropertyPage CreatePropertyPage(PropertyPage page, ExportFormat format)
+        private void CreatePropertyPage(PropertyPage page, ExportFormat format)
         {
             var songNames = GetSongNames();
 
@@ -488,7 +491,6 @@ namespace FamiStudio
                         page.SetPropertyVisible(19, Platform.IsDesktop);
                         page.SetColumnEnabled(18, 2, project.OutputsStereoAudio);
                         page.SetColumnEnabled(18, 3, false);
-                        page.SetScrolling(500);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                         page.PropertyClicked += VideoPage_PropertyClicked;
                     }
@@ -620,8 +622,6 @@ namespace FamiStudio
             }
 
             page.Build();
-
-            return page;
         }
 
         private void VideoPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)

@@ -202,7 +202,8 @@ namespace FamiStudio
             for (int i = 0; i < (int)ConfigSection.Max; i++)
             {
                 var section = (ConfigSection)i;
-                var page = dialog.AddPropertyPage(ConfigSectionNames[i], "Config" + section.ToString());
+                var scroll = i == (int)ConfigSection.Mixer ? 400 : 0;
+                var page = dialog.AddPropertyPage(ConfigSectionNames[i], "Config" + section.ToString(), scroll);
                 CreatePropertyPage(page, section);
             }
 
@@ -331,7 +332,7 @@ namespace FamiStudio
                 }
                 case ConfigSection.Mixer:
                 {
-                    mixerProperties = new MixerProperties(page, null, 400);
+                    mixerProperties = new MixerProperties(page, null);
                     break;
                 }
                 case ConfigSection.MIDI:

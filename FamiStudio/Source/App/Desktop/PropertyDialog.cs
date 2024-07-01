@@ -18,6 +18,7 @@ namespace FamiStudio
         private Button buttonNo;
         private Button buttonYes;
         private Button buttonAdvanced;
+        private Container propertyContainer;
         private PropertyPage propertyPage;
 
         private LocalizedString AcceptTooltip;
@@ -51,7 +52,11 @@ namespace FamiStudio
 
         private void Init()
         {
-            propertyPage = new PropertyPage(this, margin, margin + titleBarSizeY, Width - margin * 2);
+            propertyContainer = new Container();
+            propertyContainer.Move(margin, margin + titleBarSizeY, Width - margin * 2, 100); // Height not known yet.
+            propertyContainer.SetupClipRegion(false);
+
+            propertyPage = new PropertyPage(propertyContainer, propertyContainer.Width);
             propertyPage.PropertyWantsClose += PropertyPage_PropertyWantsClose;
 
             buttonYes = new Button("Yes", null);
@@ -73,6 +78,7 @@ namespace FamiStudio
             AddControl(buttonYes);
             AddControl(buttonNo);
             AddControl(buttonAdvanced);
+            AddControl(propertyContainer);
         }
 
         private void PropertyPage_PropertyWantsClose(int idx)
@@ -122,7 +128,8 @@ namespace FamiStudio
 
         private void UpdateLayout()
         {
-            Resize(width, propertyPage.LayoutHeight + buttonNo.Height + margin * 3 + titleBarSizeY); 
+            propertyContainer.Resize(propertyContainer.Width, propertyPage.LayoutHeight);
+            Resize(width, propertyContainer.Bottom + buttonNo.Height + margin * 2); 
 
             var buttonY = propertyPage.LayoutHeight + margin * 2 + titleBarSizeY;
 
