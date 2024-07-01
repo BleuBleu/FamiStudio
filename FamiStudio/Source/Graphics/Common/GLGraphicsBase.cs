@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using static FamiStudio.Font;
 
 namespace FamiStudio
 {
@@ -416,9 +417,14 @@ namespace FamiStudio
             return default(T);
         }
 
-        public Font CreateFontFromResource(string name, int size, int offsetY)
+        public FontCollection CreateFontCollectionFromResource(string[] fontNames)
         {
-            return new Font(this, name, size, offsetY);
+            return new FontCollection(fontNames);
+        }
+
+        public Font CreateFont(FontCollection collection, int size)
+        {
+            return new Font(this, collection, size);
         }
 
         public int CacheGlyph(byte[] data, int w, int h, out float u0, out float v0, out float u1, out float v1)
@@ -658,7 +664,7 @@ namespace FamiStudio
         }
     }
 
-    public class Font : IDisposable
+    public class FontCollection : IDisposable
     {
         private const string StbDll = Platform.DllPrefix + "Stb" + Platform.DllExtension;
 
@@ -707,6 +713,257 @@ namespace FamiStudio
         [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
         extern static int StbFindGlyphIndex(IntPtr info, int codepoint);
 
+        class FontData
+        {
+            public string name;
+            public GCHandle handle;
+            public IntPtr info;
+        };
+
+        private FontData[] fontData;
+        private Dictionary<int, float> kerningPairs = new Dictionary<int, float>(); // Key is a pair of chars.
+        private static Dictionary<char, (byte, ushort)> glyphDictionary;
+
+        public FontCollection(string[] fontNames)
+        {
+            ConditionalLoadGlyphDictionary();
+
+            fontData = new FontData[fontNames.Length];
+            for (var i = 0; i < fontNames.Length; i++)
+            {
+                fontData[i] = new FontData() { name = fontNames[i] };
+            }
+        }
+
+        private void ConditionalLoadGlyphDictionary()
+        {
+            if (glyphDictionary == null)
+            {
+                var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.GlyphDictionary.bin");
+                var buffer = new byte[stream.Length];
+                stream.Read(buffer, 0, buffer.Length);
+                stream.Dispose();
+
+                glyphDictionary = new Dictionary<char, (byte, ushort)>(buffer.Length / 5);
+
+                for (int i = 0; i < buffer.Length; i += 5)
+                {
+                    var c = BitConverter.ToChar(buffer, i + 0);
+                    var f = buffer[i + 2];
+                    var g = BitConverter.ToUInt16(buffer, i + 3);
+
+                    glyphDictionary.Add(c, (f, g));
+                }
+            }
+        }
+
+        private IntPtr GetFontData(int idx)
+        {
+            if (fontData[idx].info == IntPtr.Zero)
+            {
+                var name = fontData[idx].name;
+                var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
+                if (stream == null)
+                    stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.otf");
+                var buffer = new byte[stream.Length];
+                stream.Read(buffer, 0, buffer.Length);
+                stream.Dispose();
+
+                var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+
+                IntPtr pttf = handle.AddrOfPinnedObject();
+                var offset = StbGetFontOffsetForIndex(pttf, 0);
+
+                fontData[idx].handle = handle;
+                fontData[idx].info = StbInitFont(pttf, offset);
+            }
+
+            return fontData[idx].info;
+        }
+
+        public void ReleaseFontData(int startIndex = 0)
+        {
+            for (var i = startIndex; i < fontData.Length; i++)
+            {
+                var data = fontData[i];
+
+                if (data.info != IntPtr.Zero)
+                {
+                    StbFreeFont(data.info);
+
+                    data.handle.Free();
+                    data.info = IntPtr.Zero;
+                }
+            }
+        }
+
+        public bool EnsureCharValid(ref char c)
+        {
+            if (!glyphDictionary.ContainsKey(c))
+            {
+                c = '?';
+                Debug.Assert(glyphDictionary.ContainsKey(c));
+                return false;
+            }
+
+            return true;
+        }
+
+        public float GetFontScale(int size)
+        {
+            return StbScaleForMappingEmToPixels(GetFontData(0), size);
+        }
+
+        private int GetGlyphIndex(char c, out int fontIndex)
+        {
+            if (glyphDictionary.TryGetValue(c, out var pair))
+            {
+                fontIndex = pair.Item1;
+                return pair.Item2;
+            }
+
+            fontIndex = -1;
+            return -1;
+        }
+
+        public void GetCharacterVerticalMetrics(char c, float scale, out int baseValue, out int lineHeight)
+        {
+            if (GetGlyphIndex(c, out var fontIndex) >= 0)
+            {
+                StbGetFontVMetrics(GetFontData(fontIndex), out var ascent, out var descent, out var lineGap);
+
+                baseValue  = (int)(ascent * scale);
+                lineHeight = (int)((ascent - descent + lineGap) * scale);
+            }
+            else
+            {
+                Debug.Assert(false);
+                baseValue = -1;
+                lineHeight = -1;
+            }
+        }
+
+        public void GetCharacterMetrics(char c, float scale, out float xadvance, out int x0, out int y0, out int x1, out int y1)
+        {
+            var glyphIndex = GetGlyphIndex(c, out var fontIndex);
+            var fontData = GetFontData(fontIndex);
+
+            StbGetGlyphHMetrics(fontData, glyphIndex, out var advance, out _);
+            xadvance = advance * scale;
+            StbGetGlyphBitmapBox(fontData, glyphIndex, scale, out x0, out y0, out x1, out y1);
+        }
+
+        public unsafe byte[] RasterizeCharacter(char c, float scale, int width = -1, int height = -1)
+        {
+            Debug.Assert(EnsureCharValid(ref c));
+
+            var glyphIndex = GetGlyphIndex(c, out var fontIndex);
+            var fontData = GetFontData(fontIndex);
+
+            if (width < 0 || height < 0)
+            {
+                StbGetGlyphBitmapBox(fontData, glyphIndex, scale, out var x0, out var y0, out var x1, out var y1);
+                width  = x1 - x0;
+                height = y1 - y0;
+            }
+
+            if (width == 0 || height == 0)
+            {
+                return null;
+            }
+
+            var glyphImage = new byte[width * height];
+
+            fixed (byte* p = &glyphImage[0])
+            {
+                StbMakeGlyphBitmap(fontData, (IntPtr)p, width, height, width, glyphIndex, scale);
+            }
+
+            return glyphImage;
+        }
+
+        public float GetKerning(char c0, char c1, float scale)
+        {
+            EnsureCharValid(ref c0);
+            EnsureCharValid(ref c1);
+
+            var key = c0 | (c1 << 16);
+
+            if (kerningPairs.TryGetValue(key, out float amount))
+            {
+                return amount;
+            }
+            else
+            {
+                GetGlyphIndex(c0, out var f0);
+                GetGlyphIndex(c1, out var f1);
+
+                // Get the max of f0/f1. The logic here is that a Chinese font includes
+                // the latin characters, but not the other way around. 
+                var kern = StbGetGlyphKernAdvance(GetFontData(Math.Max(f0, f1)), c0, c1) * scale;
+
+                kerningPairs.Add(key, kern);
+                return kern;
+            }
+        }
+
+        public void Dispose()
+        {
+            ReleaseFontData(0);
+        }
+
+#if DEBUG
+        public static unsafe void DumpGlyphDictionary(string[] fontList)
+        {
+            var dict = new SortedDictionary<int, (int, int)>();
+
+            for (var f = 0; f < fontList.Length; f++)
+            {
+                var name = fontList[f];
+
+                var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
+                if (stream == null)
+                    stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.otf");
+                var buffer = new byte[stream.Length];
+                stream.Read(buffer, 0, buffer.Length);
+
+                fixed (byte* pttf = buffer)
+                {
+                    var data = new IntPtr(pttf);
+                    var offset = StbGetFontOffsetForIndex(data, 0);
+                    var font = StbInitFont(data, offset);
+
+                    for (int c = char.MinValue; c <= char.MaxValue; c++)
+                    {
+                        if (!dict.ContainsKey(c))
+                        {
+                            var i = StbFindGlyphIndex(font, c);
+                            if (i != 0)
+                            {
+                                Debug.Assert(i <= ushort.MaxValue);
+                                dict.Add(c, (f, i));
+                            }
+                        }
+                    }
+                }
+            }
+
+            var bytes = new List<byte>(dict.Count * 5);
+
+            foreach (var kv in dict)
+            {
+                bytes.AddRange(BitConverter.GetBytes((char)kv.Key));
+                bytes.Add((byte)kv.Value.Item1);
+                bytes.AddRange(BitConverter.GetBytes((ushort)kv.Value.Item2));
+            }
+
+            File.WriteAllBytes("C:\\Temp\\GlyphDictionary.bin", bytes.ToArray());
+        }
+#endif
+    }
+
+    public class Font
+    {
         public class CharInfo
         {
             public int width;
@@ -722,51 +979,32 @@ namespace FamiStudio
             public bool rasterized;
         }
 
-        private Dictionary<char, int>     glyphIndices = new Dictionary<char, int>();     // Unicode -> Glyph index
-        private Dictionary<int, CharInfo> glyphInfos   = new Dictionary<int, CharInfo>(); // Key is glyph index.
-        private Dictionary<int, float>    kerningPairs = new Dictionary<int, float>();    // Key is a pair of glyph indices.
-
-        class SharedFontData
-        {
-            public GCHandle handle;
-            public IntPtr info;
-            public int refCount;
-        };
-
-        private static Dictionary<string, SharedFontData> sharedFontData = new Dictionary<string, SharedFontData>();
+        private Dictionary<char, CharInfo> glyphInfos = new Dictionary<char, CharInfo>(); 
 
         private GraphicsBase graphics;
-        private SharedFontData font;
+        private FontCollection fontCollection;
         private float scale;
-        private float intensity = 1.0f;
         private int size;
         private int baseValue;
         private int lineHeight;
-        private int globalOffsetY;
+
+        // HACK : We seem to have slight font calculation errors. Add a param until I debug this.
+        private int globalOffsetY = -1;
 
         public int Size => size;
         public int OffsetY => size - baseValue; 
         public int LineHeight => lineHeight;
 
-        public Font(GraphicsBase g, string name, int sz, int offsetY)
+        public Font(GraphicsBase g, FontCollection font, int sz)
         {
             graphics = g;
+            fontCollection = font;
             size = sz;
-            globalOffsetY = offsetY;
-            font = GetSharedFontData(name);
-            scale = StbScaleForMappingEmToPixels(font.info, sz);
-            StbGetFontVMetrics(font.info, out var ascent, out var descent, out var lineGap);
+            scale = fontCollection.GetFontScale(sz);
 
-            baseValue  = (int)(ascent * scale);
-            lineHeight = (int)((ascent - descent + lineGap) * scale);
-            intensity  = CalculateGlyphIntensity();
-
-            // If the font has a OS/2 table, use that since it matches the old behavior of bmfont.
-            //if (StbGetFontVMetricsOS2(font.info, out _, out _, out _, out var winAscent, out var winDescent) != 0)
-            //{
-            //    baseValue  = (int)Math.Round(winAscent * scale);
-            //    lineHeight = (int)Math.Round((winAscent + winDescent) * scale);
-            //}
+            // Everything will be based off the font #0 (latin characters). Somehow the other
+            // fonts seem to look great even though they have different ascent/decent values.
+            fontCollection.GetCharacterVerticalMetrics('0', scale, out baseValue, out lineHeight);
         }
 
     #if DEBUG
@@ -780,7 +1018,6 @@ namespace FamiStudio
 
             for (int y = 0; y < h; y++)
             {
-                var pixels = new List<string>();
                 lines.Add(string.Join(' ', glyph.AsSpan(w * y, w).ToArray()));
             }
 
@@ -788,141 +1025,59 @@ namespace FamiStudio
         }
     #endif
 
-        private float CalculateGlyphIntensity()
-        {
-            var charsToTest = new[] { 'a', 'i', 'j' };
-            var minValue = 255;
-
-            // At small sizes, Quicksand is very thin and tends to not cover
-            // entire pixels. We'll renormalize the values so that brightest 
-            // pixels maps to full opacity. Of course if we had hinting, we 
-            // wouldnt need any of this.
-            foreach (var c in charsToTest)
-            {
-                var glyphIndex = GetGlyphIndex(c);
-                var glyphImage = RasterizeGlyph(glyphIndex);
-                var maxValue = 1;
-
-                for (int i = 0; i < glyphImage.Length; i++)
-                {
-                    maxValue = Math.Max(glyphImage[i], maxValue);
-                }
-
-                minValue = Math.Min(minValue, maxValue);
-            }
-
-            const float MaxIntensity = 1.5f;
-
-            return minValue == 0 ? 1.0f : Math.Min(MaxIntensity, 255.0f / minValue);
-        }
-
         public void ClearCachedData()
         {
-            glyphIndices.Clear();
             glyphInfos.Clear();
-            kerningPairs.Clear();
         }
 
-        private static SharedFontData GetSharedFontData(string name)
+        public float GetKerning(char c0, char c1)
         {
-            if (!sharedFontData.TryGetValue(name, out var data))
-            {
-                var stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.ttf");
-                if (stream == null)
-                    stream = typeof(Font).Assembly.GetManifestResourceStream($"FamiStudio.Resources.Fonts.{name}.otf");
-                var buffer = new byte[stream.Length];
-                stream.Read(buffer, 0, buffer.Length);
-
-                var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-
-                IntPtr pttf = handle.AddrOfPinnedObject();
-                var offset = StbGetFontOffsetForIndex(pttf, 0);
-
-                data = new SharedFontData();
-                data.handle = handle;
-                data.info = StbInitFont(pttf, offset);
-                data.refCount = 1;
-
-                sharedFontData[name] = data;
-            }
-            else
-            {
-                data.refCount++;
-            }
-
-            return data;
-        }
-
-        private static void ReleaseSharedFontData(SharedFontData data)
-        {
-            if (--data.refCount == 0)
-            {
-                StbFreeFont(data.info);
-
-                data.handle.Free();
-                data.info = IntPtr.Zero;
-
-                foreach (var kv in sharedFontData)
-                {
-                    if (kv.Value == data)
-                    {
-                        sharedFontData.Remove(kv.Key);
-                        break;
-                    }
-                }
-            }
+            return fontCollection.GetKerning(c0, c1, scale);
         }
 
         public CharInfo GetCharInfo(char c)
         {
-            var glyphIndex = GetGlyphIndex(c);
+            fontCollection.EnsureCharValid(ref c);
 
-            if (glyphInfos.TryGetValue(glyphIndex, out CharInfo glyphInfo))
+            if (glyphInfos.TryGetValue(c, out CharInfo glyphInfo))
             {
                 if (!glyphInfo.rasterized && Platform.ThreadOwnsGLContext)
-                    RasterizeAndCacheGlyph(glyphIndex, glyphInfo);
+                    RasterizeAndCacheCharacter(c, glyphInfo);
 
                 return glyphInfo;
             }
-            else 
+            else
             {
                 glyphInfo = new CharInfo();
 
-                SetupGlyphMetrics(glyphIndex, glyphInfo);
+                fontCollection.GetCharacterMetrics(
+                    c, scale,
+                    out glyphInfo.xadvance,
+                    out var x0, 
+                    out var y0,
+                    out var x1, 
+                    out var y1);
+
+                glyphInfo.width   = x1 - x0;
+                glyphInfo.height  = y1 - y0;
+                glyphInfo.xoffset = x0;
+                glyphInfo.yoffset = baseValue + y0 + globalOffsetY;
 
                 if (Platform.ThreadOwnsGLContext)
-                    RasterizeAndCacheGlyph(glyphIndex, glyphInfo);
+                    RasterizeAndCacheCharacter(c, glyphInfo);
 
-                glyphInfos.Add(glyphIndex, glyphInfo);
+                glyphInfos.Add(c, glyphInfo);
 
                 return glyphInfo;
             }
         }
 
-        private void GetGlyphSize(int glyphIndex, out int width, out int height)
+        public void RasterizeAndCacheCharacter(char c, CharInfo glyphInfo)
         {
-            StbGetGlyphBitmapBox(font.info, glyphIndex, scale, out var x0, out var y0, out var x1, out var y1);
-            width  = x1 - x0;
-            height = y1 - y0;
-        }
-
-        private void SetupGlyphMetrics(int glyphIndex, CharInfo glyphInfo)
-        {
-            StbGetGlyphHMetrics(font.info, glyphIndex, out var advance, out _);
-            glyphInfo.xadvance = advance * scale;
-
-            StbGetGlyphBitmapBox(font.info, glyphIndex, scale, out var x0, out var y0, out var x1, out var y1);
-            glyphInfo.width   = x1 - x0;
-            glyphInfo.height  = y1 - y0;
-            glyphInfo.xoffset = x0;
-            glyphInfo.yoffset = baseValue + y0 + globalOffsetY;
-        }
-
-        private void RasterizeAndCacheGlyph(int glyphIndex, CharInfo glyphInfo)
-        {
+            Debug.Assert(fontCollection.EnsureCharValid(ref c));
             Debug.Assert(!glyphInfo.rasterized);
 
-            var glyphImage = RasterizeGlyph(glyphIndex, glyphInfo.width, glyphInfo.height);
+           var glyphImage = fontCollection.RasterizeCharacter(c, scale, glyphInfo.width, glyphInfo.height);
 
             if (glyphImage != null)
             {
@@ -1043,79 +1198,6 @@ namespace FamiStudio
             }
 
             return x;
-        }
-
-        private unsafe byte[] RasterizeGlyph(int glyphIndex, int width = -1, int height = -1)
-        {
-            if (width < 0 || height < 0)
-            {
-                GetGlyphSize(glyphIndex, out width, out height);
-            }
-
-            if (width == 0 || height == 0)
-            {
-                return null;
-            }
-
-            var glyphImage = new byte[width * height];
-
-            fixed (byte* p = &glyphImage[0])
-            {
-                StbMakeGlyphBitmap(font.info, (IntPtr)p, width, height, width, glyphIndex, scale);
-            }
-
-            if (intensity != 1.0f)
-            {
-                for (int i = 0; i < glyphImage.Length; i++)
-                {
-                    glyphImage[i] = (byte)(Math.Min(glyphImage[i] * intensity, 255.0f));
-                }
-            }
-
-            return glyphImage;
-        }
-
-        private int GetGlyphIndex(char c)
-        {
-            if (glyphIndices.TryGetValue(c, out var glyphIndex))
-            {
-                return glyphIndex;
-            }
-            else
-            {
-                glyphIndex = StbFindGlyphIndex(font.info, c);
-
-                if (glyphIndex == 0)
-                {
-                    return GetGlyphIndex('?');
-                }
-
-                glyphIndices.Add(c, glyphIndex);
-                return glyphIndex;
-            }
-        }
-
-        public float GetKerning(char c0, char c1)
-        {
-            var g0 = GetGlyphIndex(c0);
-            var g1 = GetGlyphIndex(c1);
-            var key = g0 | (g1 << 16);
-         
-            if (kerningPairs.TryGetValue(key, out float amount))
-            {
-                return amount; 
-            }
-            else
-            {
-                var kern = StbGetGlyphKernAdvance(font.info, c0, c1) * scale;
-                kerningPairs.Add(key, kern);
-                return kern; 
-            }
-        }
-
-        public void Dispose()
-        {
-            ReleaseSharedFontData(font);
         }
     }
 

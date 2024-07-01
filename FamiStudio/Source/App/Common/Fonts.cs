@@ -27,7 +27,7 @@ namespace FamiStudio
             public int Size;
         };
 
-        protected static readonly FontDefinition[] FontDefinitions = new FontDefinition[]
+        protected static readonly FontDefinition[] FontDefinitions = new []
         {
             new FontDefinition() { Size =  9              }, // VerySmall
             new FontDefinition() { Size =  9, Bold = true }, // VerySmall (Bold)
@@ -41,6 +41,23 @@ namespace FamiStudio
             new FontDefinition() { Size = 29              }  // Huge
         };
 
+        public static readonly string[] FontListRegular = new []
+        {
+            "NotoSans-Medium",
+            "NotoSansSC-Medium",
+            "NotoSansJP-Medium",
+            "NotoSansKR-Medium"
+        };
+
+        public static readonly string[] FontListBold = new[]
+        {
+            "NotoSans-ExtraBold",
+            "NotoSansSC-ExtraBold",
+            "NotoSansJP-ExtraBold",
+            "NotoSansKR-ExtraBold"
+        };
+
+        protected FontCollection[] fontCollections = new FontCollection[2];
         protected Font[] fonts = new Font[(int)RenderFontStyle.Max];
 
         public Font FontVerySmall     => fonts[0];
@@ -56,33 +73,33 @@ namespace FamiStudio
 
         public Fonts(Graphics g)
         {
+            fontCollections[0] = g.CreateFontCollectionFromResource(FontListRegular);
+            fontCollections[1] = g.CreateFontCollectionFromResource(FontListBold);
+
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
                 var bold = FontDefinitions[i].Bold;
-
-                var font    = bold ? Localization.FontBold        : Localization.Font;
-                var offsetY = bold ? Localization.FontBoldOffsetY : Localization.FontOffsetY;
-
-                fonts[i] = g.CreateFontFromResource(font,
-                    (int)DpiScaling.ScaleForFontFloat(FontDefinitions[i].Size),
-                    (int)DpiScaling.ScaleForFontFloat(offsetY));
+                fonts[i] = g.CreateFont(fontCollections[bold ? 1 : 0], (int)DpiScaling.ScaleForFontFloat(FontDefinitions[i].Size));
             }
         }
 
         public void ClearGlyphCache(Graphics g)
         {
             foreach (var font in fonts)
-            {
                 font.ClearCachedData();
-            }
+
+            // This will release all non-latin fonts when opening a new project.
+            // These fonts can be HUGE (10MB for chinese)
+            foreach (var coll in fontCollections)
+                coll.ReleaseFontData(1);
 
             g.ClearGlyphCache();
         }
 
         public void Dispose()
         {
-            foreach (var font in fonts)
-                font.Dispose();
+            foreach (var coll in fontCollections)
+                coll.Dispose();
         }
 
         public Font GetBestMatchingFontByWidth(string text, int desiredWidth, bool bold)

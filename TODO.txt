@@ -43,6 +43,7 @@
 		- Test double click behavior on mobile.
 		- Test scroll bars a lot more. 
 		- Middle mouse panning (when i get a mouse...)
+		- Property buttons get "stuck" when the dialog pops.
 	x Toolbar rewrite
 	- QuickAccess rewrite
 		- Will need to make GradientPanel a real control.
@@ -55,14 +56,14 @@
 	x Double click issue for controls that dont support it (returns position of 1st click)
 		- Move all "SendTouchInputAsMouse" in FamiStudioWindow.cs.
 	- Sequencer:
-		- Sequencer.cs
-		- SequencerTimeline.cs
-		- SequencerPatternArea.cs
-		- Mobile "force display" icons are ugly, and they arent even clickable... Is there a point in having them there??
-		- We should be able to solo/mute by clicking icon like PC.
-- Support for japanese/other characters regardless of current languages
-	- Switch all UI to Noto Sans?
-	- Have a series of fallback fonts when searching for a glyph.
+		1) Comment out all rendering/input code
+		2) Create basic UI with panels/labels/buttons/scroll bar
+		3) Create a Timeline control + PatternArea control.
+		4) Try to make everything work again on desktop.
+		5) Redo mobile input to minimize code duplication.
+		6) Add nice to have stuff (force display on mobile, make icons/force display/mute actually work on mobile)
+- Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
+x Support for japanese/other characters regardless of current languages
 - FUTURE : Android convert to our widgets, no more android native widgets.
 
 Linux notes 

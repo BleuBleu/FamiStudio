@@ -12,12 +12,6 @@ namespace FamiStudio
         private static IniFile stringsEng = new IniFile();
         private static IniFile strings    = new IniFile();
 
-        public static string Font     { get; private set; }
-        public static string FontBold { get; private set; }
-
-        public static int FontOffsetY     { get; private set; }
-        public static int FontBoldOffsetY { get; private set; }
-
         private static bool Initialized = false;
 
         public static string[] LanguageCodes = new[]
@@ -55,17 +49,6 @@ namespace FamiStudio
                 stringsEng.LoadFromResource("FamiStudio.Localization.FamiStudio.eng.ini");
                 strings.LoadFromResource($"FamiStudio.Localization.FamiStudio.{code}.ini");
             }
-
-            Font     = strings.GetString("Localization", "Font",     "");
-            FontBold = strings.GetString("Localization", "FontBold", "");
-
-            Debug.Assert(!string.IsNullOrEmpty(Font) && !string.IsNullOrEmpty(FontBold));
-
-            // HACK : We seem to have slight font calculation errors. Add a param until I debug this.
-            FontOffsetY     = strings.GetInt("Localization", "FontOffsetY",     -1);
-            FontBoldOffsetY = strings.GetInt("Localization", "FontBoldOffsetY", -1);
-
-            Debug.Assert(Font != null && FontBold != null);
 
             Initialized = true;
         }

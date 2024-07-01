@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace FamiStudio
@@ -613,6 +614,15 @@ namespace FamiStudio
                 RunEpsmUnitTest(args[0], args[2]);
                 return true;
             }
+
+#if DEBUG
+            // Font dictionary
+            if (args.Contains("generate-font-dictionary"))
+            {
+                FontCollection.DumpGlyphDictionary(Fonts.FontListRegular);
+                return true;
+            }
+#endif
 
             if (args.Length >= 3)
             {
