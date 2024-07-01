@@ -43,6 +43,7 @@
 		- Test double click behavior on mobile.
 		- Test scroll bars a lot more. 
 		- Middle mouse panning (when i get a mouse...)
+		- With Noto Sans, on mobile, it seems the ellipsis happens way too early.
 		- Property buttons get "stuck" when the dialog pops.
 			- Same happens if you right click open menu, open a recent file, open button gets stucks
 	x Toolbar rewrite

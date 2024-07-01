@@ -1104,6 +1104,9 @@ namespace FamiStudio
 
                 if (x1 >= maxSizeX)
                 {
+                    // Dont end on whitespace, looks silly.
+                    while (i > 0 && char.IsWhiteSpace(text[i - 1]))
+                        i--;
                     text = text.Substring(0, i);
                     return true;
                 }
@@ -3083,7 +3086,7 @@ namespace FamiStudio
                     if (inst.flags.HasFlag(TextFlags.Ellipsis) && (textEndIndex == 0 || textEndIndex != textStartIndex))
                     {
                         var mono = inst.flags.HasFlag(TextFlags.Monospace);
-                        var ellipsisSizeX = inst.font.MeasureString("...", mono) * 2; // Leave some padding.
+                        var ellipsisSizeX = inst.font.MeasureString("...", mono) * 4 / 3; // Leave some padding.
                         if (inst.font.TruncateString(ref inst.text, (int)(inst.layoutRect.Width - ellipsisSizeX)))
                             inst.text += "...";
                     }
