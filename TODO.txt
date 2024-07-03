@@ -21,6 +21,7 @@
 - Review the copy/paste name matching. Maybe add a rename option.
 - Remove ..\..\Tools\ca65 path in sound engine build scripts (have a normal + dev version)
 - N163 wave pos inconsistency. we sometimes force to multiple of 2/4. it needs to be 2 everywhere.
+- Make ROM export fail if go over limit. Not a warning.
 
 Linux notes 
 =========== 
