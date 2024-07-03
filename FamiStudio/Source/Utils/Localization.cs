@@ -14,6 +14,7 @@ namespace FamiStudio
 
         private static bool Initialized = false;
 
+        public static string LanguageCode = "ENG";
         public static string[] LanguageCodes = new[]
 {
             "ENG",
@@ -50,6 +51,7 @@ namespace FamiStudio
                 strings.LoadFromResource($"FamiStudio.Localization.FamiStudio.{code}.ini");
             }
 
+            LanguageCode = code;
             Initialized = true;
         }
 

@@ -9,9 +9,9 @@ namespace FamiStudio
         protected int labelOffsetX;
         protected string text;
         protected bool multiline;
-        protected bool bold;
         protected bool centered;
         protected bool ellipsis;
+        private Font font;
         protected Color color = Theme.LightGreyColor1;
         protected Color disabledColor = Theme.MediumGreyColor1;
 
@@ -28,10 +28,10 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref multiline, value); }
         }
 
-        public bool Bold
+        public Font Font
         {
-            get { return bold; }
-            set { SetAndMarkDirty(ref bold, value); }
+            get { return font; }
+            set { font = value; MarkDirty(); }
         }
 
         public bool Centered
@@ -58,16 +58,23 @@ namespace FamiStudio
             set { disabledColor = value; MarkDirty(); }
         }
 
-        private Font GetFont()
-        {
-            return bold ? Fonts.FontMediumBold : Fonts.FontMedium;
-        }
-
         public void AutosizeWidth()
         {
             Debug.Assert(!multiline);
-            width = GetFont().MeasureString(text, false);
+            width = font.MeasureString(text, false);
         }
+
+        public void AutoSizeHeight()
+        {
+            Debug.Assert(!multiline);
+            height = font.LineHeight;
+        }
+
+        // MATTT : We really should do this and make the "Ajust" method private.
+        //protected override void OnResize(EventArgs e)
+        //{
+        //    AdjustHeightForMultiline();
+        //}
 
         public void AdjustHeightForMultiline()
         {
@@ -77,27 +84,54 @@ namespace FamiStudio
                 var input = text;
                 var output = "";
                 var numLines = 0;
-                var font = GetFont();
 
                 while (true)
                 {
                     var numCharsWeCanFit = font.GetNumCharactersForSize(input, actualWidth);
-                    var minimunCharsPerLine = Math.Max((int)(numCharsWeCanFit * 0.62), numCharsWeCanFit - 20);
                     var n = numCharsWeCanFit;
                     var done = n == input.Length;
-                    
-                    if (!done)
+                    var newLineIndex = input.IndexOf('\n');
+                    var newLine = false;
+
+                    if (newLineIndex >= 0 && newLineIndex < numCharsWeCanFit)
                     {
-                        while (!char.IsWhiteSpace(input[n]) && input[n] != '\u201C' && char.GetUnicodeCategory(input[n]) != UnicodeCategory.OpenPunctuation)
+                        n = newLineIndex;
+                        done = n == input.Length;
+                        newLine = true;
+                    }
+                    else
+                    {
+                        if (!done)
                         {
-                            n--;
-                            // No whitespace or punctuation found, let's chop in the middle of a word.
-                            if (n <= minimunCharsPerLine)
+                            // This bizarre code was added by the chinese translators. Not touching it.
+                            if (Localization.LanguageCode == "ZHO")
                             {
-                                n = numCharsWeCanFit;
-                                if (char.IsPunctuation(input[n]))
+                                var minimumCharsPerLine = Math.Max((int)(numCharsWeCanFit * 0.62), numCharsWeCanFit - 20);
+                                while (!char.IsWhiteSpace(input[n]) && input[n] != '“' && char.GetUnicodeCategory(input[n]) != UnicodeCategory.OpenPunctuation)
+                                {
                                     n--;
-                                break;
+                                    // No whitespace or punctuation found, let's chop in the middle of a word.
+                                    if (n <= minimumCharsPerLine)
+                                    {
+                                        n = numCharsWeCanFit;
+                                        if (char.IsPunctuation(input[n]))
+                                            n--;
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                while (n >= 0 && !char.IsWhiteSpace(input[n]))
+                                {
+                                    n--;
+                                }
+
+                                // No whitespace found, let's chop in the middle of a word.
+                                if (n < 0)
+                                {
+                                    n = numCharsWeCanFit;
+                                }
                             }
                         }
                     }
@@ -108,8 +142,17 @@ namespace FamiStudio
 
                     if (!done)
                     {
-                        while (char.IsWhiteSpace(input[n]))
+                        // After an intentional new line (one that had a \n right in the string), preserve
+                        // any white space since it may be used for indentation.
+                        if (newLine)
+                        {
                             n++;
+                        }
+                        else
+                        {
+                            while (char.IsWhiteSpace(input[n]))
+                                n++;
+                        }
                     }
 
                     input = input.Substring(n);
@@ -134,11 +177,15 @@ namespace FamiStudio
 
         public int MeasureWidth()
         {
-            return GetFont().MeasureString(text, false);
+            return font.MeasureString(text, false);
         }
 
         protected override void OnAddedToContainer()
         {
+            if (font == null)
+            {
+                font = fonts.FontMedium;
+            }
             AdjustHeightForMultiline();
         }
 
@@ -146,7 +193,6 @@ namespace FamiStudio
         {
             var c = g.GetCommandList();
             var brush = enabled ? color : disabledColor;
-            var font = GetFont();
 
             if (multiline)
             {

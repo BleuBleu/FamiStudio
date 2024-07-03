@@ -229,6 +229,7 @@
     <Compile Include="Source\App\Common\OscilloscopeGenerator.cs" />
     <Compile Include="Source\App\Common\ParamProviders.cs" />
     <Compile Include="Source\App\Common\PatternBitmapCache.cs" />
+    <Compile Include="Source\App\Common\PropertyPage.cs" />
     <Compile Include="Source\App\Common\PropertyPageCommon.cs" />
     <Compile Include="Source\App\Common\Settings.cs" />
     <Compile Include="Source\App\Common\Theme.cs" />
@@ -238,10 +239,10 @@
     <Compile Include="Source\App\Common\Controls\ColorPicker.cs" />
     <Compile Include="Source\App\Common\Controls\Container.cs" />
     <Compile Include="Source\App\Common\Controls\Control.cs" />
-    <Compile Include="Source\App\Common\Controls\Dialog.cs" />
     <Compile Include="Source\App\Common\Controls\DropDown.cs" />
     <Compile Include="Source\App\Common\Controls\FileTextBox.cs" />
     <Compile Include="Source\App\Common\Controls\Grid.cs" />
+    <Compile Include="Source\App\Common\Controls\HorizontalLine.cs" />
     <Compile Include="Source\App\Common\Controls\ImageBox.cs" />
     <Compile Include="Source\App\Common\Controls\Label.cs" />
     <Compile Include="Source\App\Common\Controls\LinkLabel.cs" />
@@ -253,6 +254,7 @@
     <Compile Include="Source\App\Common\Controls\ScrollContainer.cs" />
     <Compile Include="Source\App\Common\Controls\Slider.cs" />
     <Compile Include="Source\App\Common\Controls\TextBox.cs" />
+    <Compile Include="Source\App\Common\Controls\TouchScrollContainer.cs" />
     <Compile Include="Source\App\Common\Controls\PianoRoll\PianoRoll.cs" />
     <Compile Include="Source\App\Common\Controls\ProjectExplorer\GradientPanel.cs" />
     <Compile Include="Source\App\Common\Controls\ProjectExplorer\ParamCheckBox.cs" />
@@ -283,13 +285,13 @@
     <Compile Include="Source\App\Droid\DroidUtils.cs" />
     <Compile Include="Source\App\Droid\FamiStudioWindow.cs" />
     <Compile Include="Source\App\Droid\MobileProjectDialog.cs" />
-    <Compile Include="Source\App\Droid\MultiPropertyDialog.cs" />
-    <Compile Include="Source\App\Droid\PropertyDialog.cs" />
-    <Compile Include="Source\App\Droid\PropertyPage.cs" />
     <Compile Include="Source\App\Droid\TutorialDialog.cs" />
+    <Compile Include="Source\App\Mobile\Dialog.cs" />
     <Compile Include="Source\App\Mobile\FamiStudioContainer.cs" />
     <Compile Include="Source\App\Mobile\LogDialog.cs" />
     <Compile Include="Source\App\Mobile\MobilePiano.cs" />
+    <Compile Include="Source\App\Mobile\MultiPropertyDialog.cs" />
+    <Compile Include="Source\App\Mobile\PropertyDialog.cs" />
     <Compile Include="Source\App\Mobile\QuickAccessBar.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\AlphaNumericSort.cs" />
@@ -587,6 +589,7 @@
     <EmbeddedResource Include="Resources\Atlas\Cut@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Delete@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Drag@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\DropDownArrow@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Duplicate@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\DuplicateMove@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\EffectCutDelay@2x.tga" />
@@ -719,6 +722,8 @@
     <EmbeddedResource Include="Resources\Atlas\Properties.tga" />
     <EmbeddedResource Include="Resources\Atlas\Properties@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\QwertyPiano@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\RadioButtonOff@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\RadioButtonOn@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Rec@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Redo@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ReleaseSmallFill@2x.tga" />
@@ -743,6 +748,8 @@
     <EmbeddedResource Include="Resources\Atlas\Transform@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Type@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Undo@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\UpDownMinus@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\UpDownPlus@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Wait@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Warning@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\WarningGood@2x.tga" />

@@ -17,6 +17,8 @@ namespace FamiStudio
         private List<string> userProjects = new List<string>();
         private string storageFilename;
 
+        #region Localization
+
         private LocalizedString UserProjectsSaveTooltip;
         private LocalizedString UserProjectsLoadTooltip;
         private LocalizedString DemoProjectsLoadTooltip;
@@ -44,6 +46,8 @@ namespace FamiStudio
 
         private LocalizedString SaveToNewProjectRadio;
         private LocalizedString NewProjectPrefix;
+
+        #endregion
 
         public MobileProjectDialog(FamiStudio fami, string title, bool save, bool allowStorage = true)
         {

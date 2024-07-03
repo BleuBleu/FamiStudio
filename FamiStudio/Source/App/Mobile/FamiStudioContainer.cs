@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Android.App;
+using Java.Security.Cert;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -7,8 +11,13 @@ namespace FamiStudio
     {
         private const bool ShowRenderingTimes = false;
 
+        private List<Dialog> dialogs = new List<Dialog>();
+
         private Control transitionControl;
         private Control activeControl;
+        private Dialog  dialogToHide;
+        private bool    dialogTransition;
+        private bool    poppingDialog;
         private float   transitionTimer;
 
         private Toolbar         toolbar;
@@ -25,6 +34,9 @@ namespace FamiStudio
         public QuickAccessBar  QuickAccessBar  => quickAccessBar;
         public MobilePiano     MobilePiano     => mobilePiano;
         public Control         ActiveControl   => activeControl;
+
+        public Dialog TopDialog => dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
+        public bool IsDialogActive => dialogs.Count > 0;
 
         public bool MobilePianoVisible
         {
@@ -61,9 +73,9 @@ namespace FamiStudio
             SetTickEnabled(true);
         }
 
-        public void SetActiveControl(Control ctrl, bool animate = true)
+        public void StartTransition(Control ctrl, bool animate = true, bool dialog = false)
         {
-            if (activeControl != ctrl)
+            if (activeControl != ctrl || dialog)
             {
                 Debug.Assert(transitionTimer == 0.0f && transitionControl == null);
 
@@ -74,14 +86,69 @@ namespace FamiStudio
                 }
                 else
                 {
+                    Debug.Assert(!dialogTransition);
                     activeControl   = ctrl;
                     transitionTimer = 0.0f;
                 }
+
+                dialogTransition = dialog;
             }
+        }
+
+        public void InitDialog(Dialog dialog)
+        {
+            AddControl(dialog);
+        }
+
+        public void PushDialog(Dialog dialog)
+        {
+            dialogToHide = dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
+            AddControl(dialog);
+            dialogs.Add(dialog);
+            dialog.Visible = false;
+            StartTransition(dialog, true, true);
+            poppingDialog = false;
+        }
+
+        public void PopDialog(Dialog dialog, int numLevels)
+        {
+            Debug.Assert(TopDialog == dialog);
+
+            if (numLevels > 1)
+            {
+                Debug.Assert(dialogs.Count >= numLevels);
+                for (var i = 1; i < numLevels; i++)
+                {
+                    RemoveControl(dialogs[dialogs.Count - 2]);
+                    dialogs.RemoveAt(dialogs.Count - 2);
+                }
+
+                Debug.Assert(TopDialog == dialog);
+            }
+
+            dialogs.RemoveAt(dialogs.Count - 1);
+
+            if (dialogs.Count > 0)
+            {
+                StartTransition(TopDialog, true, true);
+            }
+            else
+            {
+                StartTransition(activeControl, true, true);
+            }
+
+            poppingDialog = true;
+            dialogToHide = dialog;
         }
 
         protected override void OnResize(EventArgs e)
         {
+            if (transitionControl != null)
+            {
+                CommitTransitionControl();
+                transitionTimer = 0.0f;
+            }
+
             UpdateLayout(false);
         }
 
@@ -125,9 +192,11 @@ namespace FamiStudio
                     pianoRoll.Move(0, toolbarLayoutSize, width, height - toolbarLayoutSize - quickAccessBarSize - pianoLayoutSize);
             }
 
-            sequencer.Visible = activeControl == sequencer;
-            pianoRoll.Visible = activeControl == pianoRoll;
-            projectExplorer.Visible = activeControl == projectExplorer;
+            var dialogActive = IsDialogActive;
+
+            sequencer.Visible = activeControl == sequencer && !dialogActive;
+            pianoRoll.Visible = activeControl == pianoRoll && !dialogActive;
+            projectExplorer.Visible = activeControl == projectExplorer && !dialogActive;
         }
 
         public bool CanAcceptInput
@@ -141,6 +210,12 @@ namespace FamiStudio
         public override bool CanInteractWithContainer(Container c)
         {
             if (!CanAcceptInput)
+            {
+                return false;
+            }
+
+            // Only top dialog can be interacted with.
+            if (IsDialogActive && c != dialogs.Last())
             {
                 return false;
             }
@@ -161,19 +236,53 @@ namespace FamiStudio
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
                 var color = Color.FromArgb(alpha, Theme.DarkGreyColor4);
 
-                g.OverlayCommandList.FillRectangle(activeControl.WindowRectangle, color);
+                if (dialogTransition)
+                {
+                    g.OverlayCommandList.FillRectangle(WindowRectangle, color);
+                }
+                else
+                {
+                    g.OverlayCommandList.FillRectangle(activeControl.WindowRectangle, color);
+                }
             }
+        }
+
+        private void CommitTransitionControl()
+        {
+            if (dialogTransition)
+            {
+                transitionControl.Visible = true;
+            }
+            else
+            {
+                activeControl = transitionControl;
+            }
+
+            if (dialogToHide != null)
+            {
+                // Only remove the dialogs when popping. Even inactive dialogs need to
+                // remain attached since some of the code can call ParentWindow from them.
+                if (poppingDialog)
+                {
+                    RemoveControl(dialogToHide);
+                    poppingDialog = false;
+                }
+                dialogToHide.Visible = false;
+                dialogToHide = null;
+            }
+
+            transitionControl = null;
         }
 
         public override void Tick(float delta)
         {
             var prevTimer = transitionTimer;
-            transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
+            //transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
+            transitionTimer = Math.Max(0.0f, transitionTimer - delta * 2);
 
             if (prevTimer > 0.5f && transitionTimer <= 0.5f)
             {
-                activeControl = transitionControl;
-                transitionControl = null;
+                CommitTransitionControl();
                 UpdateLayout(true);
             }
 

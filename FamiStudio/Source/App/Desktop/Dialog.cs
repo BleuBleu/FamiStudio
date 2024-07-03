@@ -271,7 +271,7 @@ namespace FamiStudio
                 {
                     var splits = SplitLongTooltip(ctrl.ToolTip);
                     var sizeX = 0;
-                    var sizeY = fonts.FontMedium.LineHeight * splits.Count + tooltipTopMargin * 2;
+                    var sizeY = fonts.FontMedium.LineHeight * splits.Count + tooltipTopMargin * 2 - 1;
 
                     for (int i = 0; i < splits.Count; i++)
                         sizeX = Math.Max(sizeX, fonts.FontMedium.MeasureString(splits[i], false));

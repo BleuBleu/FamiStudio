@@ -590,9 +590,9 @@ namespace FamiStudio
                     int VGMWarnID;
                     const int unsupportedExpansionMask = ExpansionType.Vrc6Mask | ExpansionType.Mmc5Mask | ExpansionType.N163Mask;
                     if (Platform.IsMobile)
-                        VGMWarnID = page.AddLabel(VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & unsupportedExpansionMask)), null, true); // 0
+                        VGMWarnID = page.AddLabel(null, VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & unsupportedExpansionMask)), true); // 0
                     int VGMSongSelect = page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SongListTooltip); // 0/1
-                    page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(0), 0, false, TrackTitleEnglishTooltip); // 1/2
+                    page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(VGMSongSelect), 0, false, TrackTitleEnglishTooltip); // 1/2
                     page.AddTextBox(GameNameEnglishLabel.Colon, project.Name, 0, false, GameNameEnglishTooltip); // 2/3
                     page.AddTextBox(SystemEnglishLabel.Colon,
                     (project.PalMode ? "PAL NES" : "NTSC NES/Famicom") +

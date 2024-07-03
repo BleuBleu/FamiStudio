@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -62,10 +63,15 @@ namespace FamiStudio
             set { max = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
         }
 
+        protected void UpdateOuterMargins()
+        {
+            outerMarginLeft  = GetButtonRect(0).Width + textBoxMargin;
+            outerMarginRight = outerMarginLeft;
+        }
+
         protected override void OnAddedToContainer()
         {
-            outerMarginLeft = GetButtonRect(0).Width + textBoxMargin;
-            outerMarginRight = outerMarginLeft;
+            UpdateOuterMargins();
 
             var g = ParentWindow.Graphics;
             bmp = new[]
@@ -76,6 +82,12 @@ namespace FamiStudio
 
             // "outerMargin" needs to be set before calling this.
             base.OnAddedToContainer();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            UpdateOuterMargins();
+            base.OnResize(e);
         }
 
         private Rectangle GetButtonRect(int idx)

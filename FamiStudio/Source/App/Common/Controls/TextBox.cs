@@ -19,7 +19,7 @@ namespace FamiStudio
             public string text;
         };
 
-        protected string text;
+        protected string text = "";
         protected int scrollX;
         protected int maxScrollX;
         protected int selectionStart = -1;
@@ -58,6 +58,7 @@ namespace FamiStudio
 
         public TextBox(string txt, int maxLen = 0)
         {
+            Debug.Assert(txt != null);
             height = DpiScaling.ScaleForWindow(24);
             text = txt;
             maxLength = maxLen;
@@ -80,6 +81,7 @@ namespace FamiStudio
             get { return text; }
             set 
             {
+                Debug.Assert(value != null);
                 text = FilterString(maxLength > 0 ? value.Substring(0, maxLength) : value);
                 scrollX = 0;
                 caretIndex = 0;
@@ -521,11 +523,22 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnAddedToContainer()
+        protected void UpdateTextAreaSize()
         {
             textAreaWidth = width - (outerMarginLeft + outerMarginRight);
             textAreaWidthNoMargin = textAreaWidth - innerMargin * 2;
             UpdateScrollParams();
+            MarkDirty();
+        }
+
+        protected override void OnAddedToContainer()
+        {
+            UpdateTextAreaSize();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            UpdateTextAreaSize();
         }
 
         protected override void OnRender(Graphics g)

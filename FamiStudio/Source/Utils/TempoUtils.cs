@@ -92,11 +92,13 @@ namespace FamiStudio
             // Sort.
             finalList.Sort((t1, t2) => t1.bpm.CompareTo(t2.bpm));
 
+#if false
             Debug.WriteLine($"{(pal ? "PAL" : "NTSC")} tempo list ({finalList.Count} entries):");
             foreach (var tempo in finalList)
             {
                 Debug.WriteLine($"  * {tempo.bpm.ToString("n1")} = {string.Join("-", tempo.groove)}");
             }
+#endif
 
             return finalList.ToArray();
         }

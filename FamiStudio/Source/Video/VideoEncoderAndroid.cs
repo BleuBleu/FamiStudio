@@ -151,7 +151,8 @@ namespace FamiStudio
             for (int i = 3; i < black.Length; i += 4)
                 black[i] = 0xff;
 
-            MainThread.InvokeOnMainThreadAsync(() => page.UpdateImageBox(propIdx, previewResX, previewResY, black));
+            // MATTT!
+            //MainThread.InvokeOnMainThreadAsync(() => page.UpdateImageBox(propIdx, previewResX, previewResY, black));
 
             return true;
         }
@@ -164,7 +165,8 @@ namespace FamiStudio
             var buffer = new byte[previewResX * previewResY * 4];
             graphics.GetBitmap(buffer); 
             
-            MainThread.InvokeOnMainThreadAsync(() => page.UpdateImageBox(propIdx, previewResX, previewResY, buffer));
+            // MATTT
+            //MainThread.InvokeOnMainThreadAsync(() => page.UpdateImageBox(propIdx, previewResX, previewResY, buffer));
 
             // Throttle to mimic target FPS.
             var currentFrameTime = Platform.TimeSeconds();

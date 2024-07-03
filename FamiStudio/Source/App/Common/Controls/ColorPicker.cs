@@ -28,13 +28,20 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            ChangeColor(e.X, e.Y);
+            if (e.Left)
+            {
+                ChangeColor(e.X, e.Y);
+                e.MarkHandled();
+            }
         }
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
             if (e.Left)
+            {
                 ChangeColor(e.X, e.Y);
+                e.MarkHandled();
+            }
         }
 
         protected override void OnMouseDoubleClick(PointerEventArgs e)
@@ -43,6 +50,7 @@ namespace FamiStudio
             {
                 ChangeColor(e.X, e.Y);
                 DoubleClicked?.Invoke(this);
+                e.MarkHandled();
             }
         }
 

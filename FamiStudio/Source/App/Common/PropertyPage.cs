@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Android.Widget;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection.Emit;
 using System.Xml.Linq;
 
 namespace FamiStudio
@@ -11,6 +13,7 @@ namespace FamiStudio
         {
             public PropertyType type;
             public Label label;
+            public Label tooltipLabel; // Mobile only
             public Control control;
             public ImageBox warningIcon;
             public bool visible = true;
@@ -21,6 +24,15 @@ namespace FamiStudio
         private int layoutHeight;
         private List<Property> properties = new List<Property>();
         private Container container;
+
+        #region Localization
+
+        LocalizedString NameLabel;
+        LocalizedString ColorLabel;
+        LocalizedString AdvancedPropsLabel;
+        LocalizedString AdvancedPropsTooltip;
+
+        #endregion
 
         private readonly static string[] WarningIcons = 
         {
@@ -34,6 +46,7 @@ namespace FamiStudio
 
         public PropertyPage(Container cont, int width)
         {
+            Localization.Localize(this);
             layoutWidth = width;
             container = cont;
         }
@@ -70,7 +83,11 @@ namespace FamiStudio
 
         private Label CreateLabel(string str, string tooltip = null, bool multiline = false)
         {
-            Debug.Assert(!string.IsNullOrEmpty(str));
+            //Debug.Assert(!string.IsNullOrEmpty(str)); // MATTT
+            if (string.IsNullOrEmpty(str))
+            {
+                str = "FIX ME!!!!!!!!!";
+            }
 
             var label = new Label(str, multiline);
             label.ToolTip = tooltip;
@@ -313,6 +330,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.ColoredTextBox,
+                    label = Platform.IsMobile ? CreateLabel(NameLabel) : null,
                     control = CreateColoredTextBox(value, color)
                 });
             return properties.Count - 1;
@@ -403,6 +421,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.ColorPicker,
+                    label = Platform.IsMobile ? CreateLabel(ColorLabel) : null,
                     control = CreateColorPicker(color)
                 });
             return properties.Count - 1;
@@ -530,10 +549,41 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.RadioList,
-                    label = label != null ? CreateLabel(label) : null,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateRadioButtonList(values, selectedIndex, tooltip, numRows)
                 });
             return properties.Count - 1;
+        }
+
+        public void ClearRadioList(int idx)
+        {
+            Debug.Assert(false);
+
+            //var prop = properties[idx];
+            //Debug.Assert(prop.type == PropertyType.RadioList);
+
+            //var group = prop.layout as RadioGroup;
+            //if (group != null)
+            //    group.ClearCheck();
+        }
+
+        public void UpdateRadioButtonList(int idx, string[] values, int selectedIndex)
+        {
+            Debug.Assert(false);
+
+            //var prop = properties[idx];
+            //var radioGroup = prop.layout as RadioGroup;
+
+            //radioGroup.RemoveAllViews();
+
+            //for (int i = 0; i < values.Length; i++)
+            //{
+            //    var radio = CreateRadioButton(values[i], Resource.Style.LightGrayCheckBox);
+            //    radio.Checked = i == selectedIndex;
+            //    radio.Id = i;
+            //    prop.controls.Add(radio);
+            //    prop.layout.AddView(radio);
+            //}
         }
 
         public int AddImageBox(string label, string tooltip = null)
@@ -677,6 +727,10 @@ namespace FamiStudio
             if (prop.label != null)
                 prop.label.Enabled = enabled;
 
+            // MATTT : Also do it when creating the labels, this only works when disabling a property after Build().
+            if (prop.tooltipLabel != null)
+                prop.tooltipLabel.Enabled = enabled;
+
             prop.control.Enabled = enabled;
         }
 
@@ -698,16 +752,20 @@ namespace FamiStudio
 
         public void SetPropertyWarning(int idx, CommentType type, string comment)
         {
-            var prop = properties[idx];
+            // MATTT : Split in desktop/mobile files.
+            if (Platform.IsDesktop)
+            {
+                var prop = properties[idx];
 
-            if (prop.warningIcon == null)
-                prop.warningIcon = CreateImageBox(WarningIcons[(int)type]);
-            else
-                prop.warningIcon.AtlasImageName = WarningIcons[(int)type];
+                if (prop.warningIcon == null)
+                    prop.warningIcon = CreateImageBox(WarningIcons[(int)type]);
+                else
+                    prop.warningIcon.AtlasImageName = WarningIcons[(int)type];
 
-            prop.warningIcon.Resize(DpiScaling.ScaleForWindow(16), DpiScaling.ScaleForWindow(16));
-            prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
-            prop.warningIcon.ToolTip = comment;
+                prop.warningIcon.Resize(DpiScaling.ScaleForWindow(16), DpiScaling.ScaleForWindow(16));
+                prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
+                prop.warningIcon.ToolTip = comment;
+            }
         }
 
         public object GetPropertyValue(int idx)
@@ -827,9 +885,113 @@ namespace FamiStudio
                     break;
             }
         }
+        
+        // MATTT : Move to a separate file.
+        public void BuildMobile()
+        {
+            container.RemoveAllControls();
+
+            var margin = DpiScaling.ScaleForWindow(4);
+            var warningWidth = 0; // MATTT showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
+
+            var x = margin;
+            var y = margin;
+            var actualLayoutWidth = layoutWidth - margin * 2;
+
+            for (int i = 0; i < properties.Count; i++)
+            {
+                var prop = properties[i];
+
+                if (!prop.visible)
+                {
+                    continue;
+                }
+
+                //if (i > 0)
+                //{
+                //    var line = new HorizontalLine();
+                //    line.Move(0, y, layoutWidth, margin);
+                //    container.AddControl(line);
+                //    y += margin;
+                //}
+
+                if (i == advancedPropertyStart)
+                {
+                    var advLabel = new Label(AdvancedPropsLabel);
+                    advLabel.Move(x, y, actualLayoutWidth, 1);
+                    advLabel.Font = container.Fonts.FontMediumBold;
+                    advLabel.AutoSizeHeight();
+                    container.AddControl(advLabel);
+                    y = advLabel.Bottom + margin;
+
+                    var advTooltip = new Label(AdvancedPropsTooltip);
+                    advTooltip.Font = container.Fonts.FontVerySmall;
+                    advTooltip.Multiline = true;
+                    advTooltip.Move(x, y, actualLayoutWidth, 1);
+                    container.AddControl(advTooltip);
+                    y = advTooltip.Bottom + margin;
+                }
+
+                var tooltip = prop.control.ToolTip;
+                if (string.IsNullOrEmpty(tooltip) && prop.label != null && !string.IsNullOrEmpty(prop.label.ToolTip))
+                {
+                    tooltip = prop.label.ToolTip;   
+                }
+
+                if (prop.label != null)
+                {
+                    container.AddControl(prop.label);
+                    container.AddControl(prop.control);
+
+                    prop.label.Move(x, y, actualLayoutWidth, 1);
+                    prop.label.Font = container.Fonts.FontMediumBold;
+                    prop.label.AutoSizeHeight();
+                    y = prop.label.Bottom + margin;
+
+                    if (!string.IsNullOrEmpty(tooltip))
+                    {
+                        if (prop.tooltipLabel == null)
+                        {
+                            prop.tooltipLabel = new Label(tooltip);
+                            prop.tooltipLabel.Font = container.Fonts.FontVerySmall;
+                            prop.tooltipLabel.Multiline = true;
+                            prop.tooltipLabel.Move(x, y, actualLayoutWidth, 1);
+                            container.AddControl(prop.tooltipLabel);
+                            y = prop.tooltipLabel.Bottom + margin;
+                        }
+                    }
+
+                    prop.control.Move(x, y, actualLayoutWidth, prop.control.Height);
+                    y = prop.control.Bottom + margin;
+                }
+                else
+                {
+                    prop.control.Move(x, y, actualLayoutWidth, prop.control.Height);
+                    container.AddControl(prop.control);
+                    y = prop.control.Bottom + margin;
+                }
+
+                //if (prop.warningIcon != null)
+                //{
+                //    prop.warningIcon.Move(
+                //        x + actualLayoutWidth - prop.warningIcon.Width,
+                //        y + totalHeight + (height - prop.warningIcon.Height) / 2);
+                //    container.AddControl(prop.warningIcon);
+                //}
+            }
+
+            layoutHeight = y;
+        }
 
         public void Build(bool advanced = false)
         {
+            // MATTT : Move to a separate file.
+            if (Platform.IsMobile)
+            {
+                BuildMobile();
+                return;
+            }
+
             var margin = DpiScaling.ScaleForWindow(8);
             var maxLabelWidth = 0;
             var propertyCount = advanced || advancedPropertyStart < 0 ? properties.Count : advancedPropertyStart;

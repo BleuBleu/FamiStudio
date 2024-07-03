@@ -67,13 +67,43 @@
 x Support for japanese/other characters regardless of current languages
 	- The language selection can now be written in the actual language!
 	- Try a few variations on Noto (Regular, Condensed, etc.) On mobile in PE we now see less characters.
+- Add light/dark/grey themes.
+	- Ableton live as reference for a "light" theme.
+	- Dark will be even darker than now.
+	- Grey is what we have now.
 - Android convert to our widgets, no more android native widgets.
 	x Change PropertyPage to create controls in a COntainer, not in Dialog directly.
 	x Show/hide container when switching multi-page, not each control.
-	- Remove all notion of scrolling in PropertyPage, the parent will pass a container or scroll container.
-	- Create a prototype Android version of "PropertyPage.Build". See how it would work.
+	x Remove all notion of scrolling in PropertyPage, the parent will pass a container or scroll container.
+	x Add support for dialogs on mobile
+		x Move current dialog in Desktop
+		x Mobile dialog will be pretty much just a container that returns a result.
 	- Will need to rebuild when rotating screen.
-	- 
+	- Do multi-property dialog too.
+		- Simplest would be to have just a list of button, each opening a separate dialog.
+		- Everything would just work.
+	x Fade in/out exactly like the main controls.
+	/ Add some kind of header to apply/cancel, etc.
+	x Create a prototype Android version of "PropertyPage.Build". See how it would work.
+	x Dialogs will still need to remain "async" since we are not in control of the event loop.
+	- If works, see if MIDI import/export can work on mobile.
+	- Add support to "scroll" to a control, when it gets keyboard input, etc. Drops downs, etc.
+	- Remove as many hacks that were added as possible (verbs, back page, secret video preview page, etc.)
+	- Remove TutorialDialogActivity thing.
+	- Merge PropertyPageCommon.cs + PropertyPage.cs
+	- Merge LogDialog if possible.
+	- Fix MobileProjectDialog.
+	- Grey out tooltips too if property is disabled.
+	- Need to display (and respond to) back buttons/gestures.
+	- "Frames per Note" label is thickkkk.
+	- Add proper touch support to all widgets, including typing
+	- Control specific changes:
+		- Textbox : popup a dialog to input. Make thinner on mobile.
+		- NumericUpDown : Create a simple version only for mobile, no text input. Make thinner on mobile.
+		- DropDown : No scroll bar on mobile, open the box towards center of screen. Make thinner on mobile.
+		- ColorPicker : Aspect ratio limits
+		- Grid : Will need a special "MobileGrid" or something.
+	- Context menus should be custom controls too.
 
 Linux notes 
 =========== 

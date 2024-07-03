@@ -18,6 +18,7 @@ using AndroidX.AppCompat.App;
 using AndroidX.Core.Content;
 using Javax.Microedition.Khronos.Opengles;
 using Google.Android.Material.BottomSheet;
+using Org.Apache.Commons.Logging;
 
 namespace FamiStudio
 {
@@ -100,7 +101,7 @@ namespace FamiStudio
 
         public void SetActiveControl(Control ctrl, bool animate = true)
         {
-            container.SetActiveControl(ctrl, animate);
+            container.StartTransition(ctrl, animate);
         }
 
         private void EnableFullscreenMode(Window win)
@@ -215,20 +216,6 @@ namespace FamiStudio
             intent.PutExtra(Intent.ExtraTitle, filename);
             StartActivityForResult(intent, activeDialog.RequestCode);
             ForceScreenOn(true);
-        }
-
-        public void StartPropertyDialogActivity(Action<DialogResult> callback, PropertyDialog dlg)
-        {
-            Debug.Assert(activeDialog == null);
-            activeDialog = new PropertyDialogActivityInfo(dlg, callback);
-            StartActivityForResult(new Intent(this, typeof(PropertyDialogActivity)), activeDialog.RequestCode);
-        }
-
-        public void StartMultiPropertyDialogActivity(Action<DialogResult> callback, MultiPropertyDialog dlg)
-        {
-            Debug.Assert(activeDialog == null && pendingFinishDialog == null);
-            activeDialog = new MultiPropertyDialogActivityInfo(dlg, callback);
-            StartActivityForResult(new Intent(this, typeof(MultiPropertyDialogActivity)), activeDialog.RequestCode);
         }
 
         public void StartTutorialDialogActivity(Action<DialogResult> callback, TutorialDialog dlg)
@@ -511,17 +498,17 @@ namespace FamiStudio
 
         public void InitDialog(Dialog dlg)
         {
-            Debug.Assert(false);
+            container.InitDialog(dlg);
         }
 
         public void PushDialog(Dialog dlg)
         {
-            Debug.Assert(false);
+            container.PushDialog(dlg);
         }
 
-        public void PopDialog(Dialog dlg)
+        public void PopDialog(Dialog dlg, int numLevels = 1)
         {
-            Debug.Assert(false);
+            container.PopDialog(dlg, numLevels);
         }
 
         public void Quit()

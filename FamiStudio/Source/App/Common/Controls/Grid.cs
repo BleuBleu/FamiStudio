@@ -499,9 +499,12 @@ namespace FamiStudio
         private void UpdateHover(PointerEventArgs e)
         {
             PixelToCell(e.X, e.Y, out var row, out var col);
-            SetAndMarkDirty(ref hoverRow, row);
-            SetAndMarkDirty(ref hoverCol, col);
-            SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, row, col));
+            if (!e.IsTouchEvent)
+            {
+                SetAndMarkDirty(ref hoverRow, row);
+                SetAndMarkDirty(ref hoverCol, col);
+                SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, row, col));
+            }
         }
 
         protected override void OnMouseWheel(PointerEventArgs e)
@@ -564,6 +567,12 @@ namespace FamiStudio
             pos = 0;
             size = 0;
             return false;
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            UpdateLayout();
+            MarkDirty();
         }
 
         protected override void OnRender(Graphics g)

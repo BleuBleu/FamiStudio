@@ -410,7 +410,7 @@ namespace FamiStudio
         private Label CreateCenteredLabel(GradientPanel panel, string text, int width, bool ellipsis = false)
         {
             var label = new Label(text, false);
-            label.Bold = true;
+            label.Font = fonts.FontMediumBold;
             label.Centered = true;
             label.Ellipsis = ellipsis;
             label.Move(Utils.DivideAndRoundDown(panel.Width - width, 2), 0, width, panel.Height);
@@ -728,7 +728,7 @@ namespace FamiStudio
             props.Click += (s) => EditSongProperties(song);
 
             var label = CreateLabel(panel, song.Name, true, icon.Right + marginX, 0, props.Left - icon.Right - marginX * 2, true);
-            label.Bold = song == App.SelectedSong;
+            label.Font = song == App.SelectedSong ? fonts.FontMediumBold : fonts.FontMedium;
         }
 
         private void Song_PointerDown(Control sender, PointerEventArgs e, Song song)
@@ -826,7 +826,7 @@ namespace FamiStudio
             }
 
             var label = CreateLabel(panel, instrument.Name, true, icon.Right + marginX, 0, lastEnv.Left - icon.Right - marginX * 2, true);
-            label.Bold = App.SelectedInstrument == instrument;
+            label.Font = App.SelectedInstrument == instrument ? fonts.FontMediumBold : fonts.FontMedium;
         }
 
         private void InstrumentDpcm_PointerDown(Control sender, Instrument instrument, PointerEventArgs e, TextureAtlasRef image)
@@ -1030,7 +1030,8 @@ namespace FamiStudio
 
             var icon = CreateImageBox(noneArpPanel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
             var label = CreateLabel(noneArpPanel, ArpeggioNoneLabel, true, icon.Right + marginX, 0, noneArpPanel.Width - icon.Right - marginX);
-            label.Bold = App.SelectedArpeggio == null;
+            label.Font = App.SelectedArpeggio == null ? fonts.FontMediumBold : fonts.FontMedium;
+
         }
 
         private void CreateArpeggioControls(Arpeggio arp)
@@ -1061,7 +1062,7 @@ namespace FamiStudio
             edit.WhiteHighlight = highlightedObject == arp;
 
             var label = CreateLabel(panel, arp.Name, true, icon.Right + marginX, 0, edit.Left - icon.Right - marginX * 2);
-            label.Bold = App.SelectedArpeggio == arp;
+            label.Font = App.SelectedArpeggio == arp ? fonts.FontMediumBold : fonts.FontMedium;
         }
 
         private void Arpeggio_PointerDown(Control sender, PointerEventArgs e, Arpeggio arp, bool values = false, TextureAtlasRef image = null)
@@ -1537,7 +1538,7 @@ namespace FamiStudio
                 {
                     if (panel.UserData != null && panel.UserData.GetType() == type)
                     {
-                        panel.FindControlOfType<Label>().Bold = panel.UserData == obj;
+                        panel.FindControlOfType<Label>().Font = panel.UserData == obj ? fonts.FontMediumBold : fonts.FontMedium;
                     }
                 }
             }
@@ -1603,7 +1604,7 @@ namespace FamiStudio
         public void SelectedArpeggioChanged()
         {
             // Special case for "None" arpeggio.
-            noneArpPanel.FindControlOfType<Label>().Bold = App.SelectedArpeggio == null;
+            noneArpPanel.FindControlOfType<Label>().Font = App.SelectedArpeggio == null ? fonts.FontMediumBold : fonts.FontMedium;
             UpdateSelectedItem(typeof(Arpeggio), App.SelectedArpeggio);
         }
 
