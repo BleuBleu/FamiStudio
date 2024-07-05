@@ -19,6 +19,7 @@ using AndroidX.Core.Content;
 using Javax.Microedition.Khronos.Opengles;
 using Google.Android.Material.BottomSheet;
 using Org.Apache.Commons.Logging;
+using Android.Views.InputMethods;
 
 namespace FamiStudio
 {
@@ -765,6 +766,7 @@ namespace FamiStudio
             alert.SetTitle(title);
             alert.SetMessage(text);
 
+            // MATTT Localize these.
             if (buttons == MessageBoxButtons.YesNo ||
                 buttons == MessageBoxButtons.YesNoCancel)
             {
@@ -779,6 +781,47 @@ namespace FamiStudio
             }
 
             alert.Show();
+        }
+
+        public class KeyboardFocusEditText : EditText
+        {
+            public KeyboardFocusEditText(Context context) : base(context)
+            {
+            }
+
+            public override void OnWindowFocusChanged(bool hasWindowFocus)
+            {
+                if (hasWindowFocus)
+                {
+                    RequestFocus();
+                    SelectAll();
+                    Post(() =>
+                    {
+                        InputMethodManager inputMethodManager = (InputMethodManager)Application.Context.GetSystemService(Context.InputMethodService);
+                        inputMethodManager.ShowSoftInput(this, 0);
+                    });
+                }
+            }
+        }
+
+        public void EditTextAsync(string prompt, string text, Action<string> callback)
+        {
+            var content = new KeyboardFocusEditText(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
+            content.Text = text;
+            content.Gravity = Android.Views.GravityFlags.Center;
+            content.ImeOptions = ImeAction.Go;
+            content.SetTextColor(Application.Context.GetColorStateList(Resource.Color.light_grey));
+            content.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
+            content.SetSingleLine(true);
+            content.RequestFocus();
+            var builder = new Android.App.AlertDialog.Builder(new ContextThemeWrapper(this, Resource.Style.TextInputDialogStyle));
+            var dialog = builder.Create();
+            dialog.SetTitle(string.IsNullOrEmpty(prompt) ? "Enter Text" : prompt); // MATTT : Localize.
+            dialog.SetView(content);
+            var action = () => { lock (renderLock) { dialog.Dismiss(); callback?.Invoke(content.Text); } };
+            content.EditorAction += (s, e) => { if (e.ActionId == ImeAction.Go) action();  };
+            dialog.SetButton((int)DialogButtonType.Positive, "OK", (c, ev) => action());
+            dialog.Show();
         }
 
         private Control GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)

@@ -58,11 +58,11 @@ namespace FamiStudio
             propertyPage = new PropertyPage(propertyContainer, Width);
         }
 
-        protected override void ButtonYes_Click(Control sender)
+        protected override void ButtonAccept_Click(Control sender)
         {
             if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
             {
-                base.ButtonYes_Click(sender);
+                base.ButtonAccept_Click(sender);
             }
         }
 

@@ -2,6 +2,7 @@ using System;
 
 namespace FamiStudio
 {
+    // MATTT : Add option for a little scroll bar indicator + use that in quick access bar.
     public class TouchScrollContainer : Container
     {
         private bool panning;
@@ -110,6 +111,12 @@ namespace FamiStudio
             {
                 SetTickEnabled(false);
             }
+        }
+
+        protected override void OnRender(Graphics g)
+        {
+            g.DefaultCommandList.FillRectangle(ClientRectangle, Theme.DarkGreyColor4);
+            base.OnRender(g);
         }
     }
 }

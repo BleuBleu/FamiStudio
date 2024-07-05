@@ -111,10 +111,11 @@ namespace FamiStudio
             return textBox;
         }
 
-        private TextBox CreateTextBox(string txt, int maxLength, string tooltip = null)
+        private TextBox CreateTextBox(string prompt, string txt, int maxLength, string tooltip = null)
         {
             var textBox = new TextBox(txt, maxLength);
             textBox.ToolTip = tooltip;
+            textBox.Prompt = prompt;
 
             return textBox;
         }
@@ -343,7 +344,7 @@ namespace FamiStudio
                 {
                     type = PropertyType.TextBox,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateTextBox(value, maxLength, tooltip)
+                    control = CreateTextBox(label, value, maxLength, tooltip)
                 });
             return properties.Count - 1;
         }
@@ -955,6 +956,7 @@ namespace FamiStudio
                             prop.tooltipLabel = new Label(tooltip);
                             prop.tooltipLabel.Font = container.Fonts.FontVerySmall;
                             prop.tooltipLabel.Multiline = true;
+                            prop.tooltipLabel.Enabled = prop.control.Enabled;
                             prop.tooltipLabel.Move(x, y, actualLayoutWidth, 1);
                             container.AddControl(prop.tooltipLabel);
                             y = prop.tooltipLabel.Bottom + margin;

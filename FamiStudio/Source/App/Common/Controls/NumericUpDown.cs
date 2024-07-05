@@ -29,7 +29,8 @@ namespace FamiStudio
             Debug.Assert(val % increment == 0);
             Debug.Assert(min % increment == 0);
             Debug.Assert(max % increment == 0);
-            height = DpiScaling.ScaleForWindow(24);
+            height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
+            allowMobileEdit = false;
             SetTextBoxValue();
             SetTickEnabled(true); // TODO : Only enable when we are pressing a button.
         }
@@ -225,16 +226,23 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            base.OnRender(g);
-
             var c = g.GetCommandList();
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
-            var rects = new []
+            var rects = new[]
             {
                 GetButtonRect(0),
                 GetButtonRect(1)
             };
+
+            if (Platform.IsMobile)
+            {
+                c.DrawText(val.ToString(CultureInfo.InvariantCulture), fonts.FontMedium, rects[0].Right, 0, color, TextFlags.MiddleCenter, rects[1].Left - rects[0].Right, height);
+            }
+            else
+            {
+                base.OnRender(g);
+            }
 
             for (int i = 0; i < 2; i++)
             {

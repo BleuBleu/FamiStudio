@@ -538,6 +538,7 @@
     <EmbeddedResource Include="Resources\Atlas\Algorithm7@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ArrowLeft@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ArrowRight@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\Back@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ButtonLeft@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ButtonMinus@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ButtonPlus@4x.tga" />
@@ -629,6 +630,7 @@
     <EmbeddedResource Include="Resources\Atlas\ExportVideo@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ExportWav@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\File@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\FileFolder@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Folder@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\FolderOpen@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Follow@2x.tga" />
@@ -741,6 +743,7 @@
     <EmbeddedResource Include="Resources\Atlas\SaveSmall@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Sequencer@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Slide@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\SliderThumb@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Snap@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SnapOff@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Sort@4x.tga" />

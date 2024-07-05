@@ -10,6 +10,7 @@ using Android.App;
 using Android.Content;
 using Android.Media;
 using Android.OS;
+using Android.Views.InputMethods;
 using Android.Widget;
 using Xamarin.Essentials;
 
@@ -215,6 +216,7 @@ namespace FamiStudio
             FamiStudioWindow.Instance.ForceScreenOn(on);
         }
 
+        // MATTT : Migrate to our toasts.
         public static void ShowToast(FamiStudioWindow win, string message, bool longDuration = false, Action click = null)
         {
             MainThread.InvokeOnMainThreadAsync(() =>
@@ -242,6 +244,11 @@ namespace FamiStudio
                 lastToastText = message;
                 lastToastTime = now;
             });
+        }
+
+        public static void EditTextAsync(string prompt, string text, Action<string> callback)
+        {
+            FamiStudioWindow.Instance.EditTextAsync(prompt, text, callback);
         }
 
         public static double TimeSeconds()

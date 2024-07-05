@@ -16,8 +16,8 @@ namespace FamiStudio
         protected DialogResult result = DialogResult.None;
 
         protected Container topBarContainer;
-        protected Button buttonNo;
-        protected Button buttonYes;
+        protected Button buttonCancel;
+        protected Button buttonAccept;
         protected Label titleLabel;
         protected Rectangle dialogRect;
 
@@ -38,42 +38,65 @@ namespace FamiStudio
             //SetTickEnabled(true);
         }
 
+        public bool AcceptButtonVisible
+        {
+            get => buttonAccept.Visible;
+            set => buttonAccept.Visible = value;
+        }
+
+        public string AcceptButtonImage
+        {
+            get => buttonAccept.ImageName;
+            set => buttonAccept.ImageName = value;
+        }
+
+        public bool CancelButtonVisible
+        {
+            get => buttonCancel.Visible;
+            set => buttonCancel.Visible = value;
+        }
+
+        public string CancelButtonImage
+        {
+            get => buttonCancel.ImageName;
+            set => buttonCancel.ImageName = value;
+        }
         private void InitTopBar(string title)
         {
             var topBarHeight = DpiScaling.ScaleForWindow(24);
             var margin = DpiScaling.ScaleForWindow(2);
             var buttonSize = topBarHeight - margin * 2;
 
-            topBarContainer = new GradientPanel(Theme.DarkGreyColor1);
+            topBarContainer = new GradientPanel(Theme.DarkGreyColor2);
             topBarContainer.Move(0, 0, ParentWindow.Width, DpiScaling.ScaleForWindow(24));
             AddControl(topBarContainer);
 
-            buttonNo = new Button("No");
-            buttonNo.Transparent = true;
-            buttonNo.Click += ButtonNo_Click;
-            buttonNo.Move(margin, margin, buttonSize, buttonSize);
-            topBarContainer.AddControl(buttonNo);
+            buttonCancel = new Button("No");
+            buttonCancel.Transparent = true;
+            buttonCancel.Click += ButtonCancel_Click;
+            buttonCancel.Move(margin, margin, buttonSize, buttonSize);
+            topBarContainer.AddControl(buttonCancel);
 
-            buttonYes = new Button("Yes");
-            buttonYes.Transparent = true;
-            buttonYes.Click += ButtonYes_Click;
-            buttonYes.Move(topBarContainer.Width - margin - buttonSize, margin, buttonSize, buttonSize);
-            topBarContainer.AddControl(buttonYes);
+            buttonAccept = new Button("Yes");
+            buttonAccept.Transparent = true;
+            buttonAccept.Click += ButtonAccept_Click;
+            buttonAccept.Move(topBarContainer.Width - margin - buttonSize, margin, buttonSize, buttonSize);
+            topBarContainer.AddControl(buttonAccept);
 
             titleLabel = new Label(title);
-            titleLabel.Move(buttonNo.Right + margin, 0, buttonYes.Left - buttonNo.Right - margin * 2, topBarHeight);
+            titleLabel.Move(buttonCancel.Right + margin, 0, buttonAccept.Left - buttonCancel.Right - margin * 2, topBarHeight);
             titleLabel.Font = fonts.FontMediumBold;
             topBarContainer.AddControl(titleLabel);
 
             dialogRect = new Rectangle(0, topBarContainer.Height, ParentWindow.Width, ParentWindow.Height - topBarContainer.Height);
         }
 
-        protected virtual void ButtonYes_Click(Control sender)
+        protected virtual void ButtonAccept_Click(Control sender)
         {
             Close(DialogResult.OK);
         }
 
-        protected void ButtonNo_Click(Control sender)
+        protected void ButtonCancel_Click(Control sender)
         {
             Close(DialogResult.Cancel);
         }

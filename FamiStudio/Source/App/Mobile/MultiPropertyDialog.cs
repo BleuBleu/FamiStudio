@@ -46,6 +46,7 @@ namespace FamiStudio
             // MATTT : Add a "back arrow" mode to the PropertyDialog.
             var tab = new PropertyPageTab();
             tab.dialog = new PropertyDialog(window, text, 0);
+            tab.dialog.CancelButtonImage = "Back";
             tab.dialog.DialogClosing += Dialog_Closing;
             tab.button = AddButton(text, image);
             tabs.Add(tab);

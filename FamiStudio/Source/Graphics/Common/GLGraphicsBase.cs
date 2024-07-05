@@ -889,7 +889,7 @@ namespace FamiStudio
 
             if (kerningPairs.TryGetValue(key, out float amount))
             {
-                return amount;
+                return amount * scale;
             }
             else
             {
@@ -898,10 +898,10 @@ namespace FamiStudio
 
                 // Get the max of f0/f1. The logic here is that a Chinese font includes
                 // the latin characters, but not the other way around. 
-                var kern = StbGetGlyphKernAdvance(GetFontData(Math.Max(f0, f1)), c0, c1) * scale;
+                var kern = StbGetGlyphKernAdvance(GetFontData(Math.Max(f0, f1)), c0, c1);
 
                 kerningPairs.Add(key, kern);
-                return kern;
+                return kern * scale;
             }
         }
 

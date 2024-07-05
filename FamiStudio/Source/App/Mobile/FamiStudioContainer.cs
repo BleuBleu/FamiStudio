@@ -234,7 +234,7 @@ namespace FamiStudio
             if (transitionTimer > 0.0f)
             {
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
-                var color = Color.FromArgb(alpha, Theme.DarkGreyColor4);
+                var color = Color.FromArgb(alpha, Theme.DarkGreyColor2);
 
                 if (dialogTransition)
                 {
@@ -277,8 +277,7 @@ namespace FamiStudio
         public override void Tick(float delta)
         {
             var prevTimer = transitionTimer;
-            //transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
-            transitionTimer = Math.Max(0.0f, transitionTimer - delta * 2);
+            transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
 
             if (prevTimer > 0.5f && transitionTimer <= 0.5f)
             {
