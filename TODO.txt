@@ -3,6 +3,8 @@
 - MIDI Crash
 - #bug-report stuff (cant type "-")
 - Crash if project name is " " + NSF export.
+- Upgrade Android min SDK to make google happy.
+- Russian translation.
 
 4.3.0
 =====
