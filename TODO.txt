@@ -1,3 +1,9 @@
+4.2.2
+=====
+- MIDI Crash
+- #bug-report stuff (cant type "-")
+- Crash if project name is " " + NSF export.
+
 4.3.0
 =====
 - VRC6 square popping how2/kawashin
