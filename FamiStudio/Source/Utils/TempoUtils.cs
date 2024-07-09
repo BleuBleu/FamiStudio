@@ -143,6 +143,8 @@ namespace FamiStudio
         //  - 6-7-6-6
         //  - 6-6-7-6
         //  - 6-6-6-7
+
+        // MATTT : Cache those, this can be like 1/2 seconde on mobile. (ex: 654.5 BPM)
         public static int[][] GetAvailableGrooves(int[] groove)
         {
             ValidateGroove(groove);

@@ -4,7 +4,7 @@ using System;
 
 namespace FamiStudio
 {
-    public class PropertyDialog : Dialog
+    public class PropertyDialog : TopBarDialog
     {
         public delegate bool ValidateDelegate(PropertyPage props);
         public event ValidateDelegate ValidateProperties;

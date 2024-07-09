@@ -1,5 +1,4 @@
-﻿using Android.Widget;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection.Emit;
@@ -13,17 +12,36 @@ namespace FamiStudio
         {
             public PropertyType type;
             public Label label;
-            public Label tooltipLabel; // Mobile only
             public Control control;
             public ImageBox warningIcon;
             public bool visible = true;
             public bool forceKeepSize;
+            public Label tooltipLabel; // Mobile only
+            public ColumnDesc[] columns; // Mobile only
+            public Control[] subControls; // Mobile only
         };
 
         private int layoutWidth;
         private int layoutHeight;
         private List<Property> properties = new List<Property>();
         private Container container;
+
+        public delegate void PropertyChangedDelegate(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value);
+        public event PropertyChangedDelegate PropertyChanged;
+        public delegate void PropertyWantsCloseDelegate(int idx);
+        public event PropertyWantsCloseDelegate PropertyWantsClose;
+        public delegate void PropertyClickedDelegate(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx);
+        public event PropertyClickedDelegate PropertyClicked;
+        public delegate bool PropertyCellEnabledDelegate(PropertyPage props, int propIdx, int rowIdx, int colIdx);
+        public event PropertyCellEnabledDelegate PropertyCellEnabled;
+
+        private object userData;
+        private int advancedPropertyStart = -1;
+        private bool showWarnings = false;
+
+        public object PropertiesUserData { get => userData; set => userData = value; }
+        public bool HasAdvancedProperties { get => advancedPropertyStart > 0; }
+        public bool ShowWarnings { get => showWarnings; set => showWarnings = value; }
 
         #region Localization
 
@@ -33,13 +51,6 @@ namespace FamiStudio
         LocalizedString AdvancedPropsTooltip;
 
         #endregion
-
-        private readonly static string[] WarningIcons = 
-        {
-            "WarningGood",
-            "WarningYellow",
-            "Warning"
-        };
 
         public int LayoutHeight  => layoutHeight;
         public int PropertyCount => properties.Count;
@@ -213,11 +224,12 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, check);
         }
 
-        private DropDown CreateDropDownList(string[] values, string value, string tooltip = null)
+        private DropDown CreateDropDownList(string prompt, string[] values, string value, string tooltip = null)
         {
             var dropDown = new DropDown(values, Array.IndexOf(values, value));
             dropDown.SelectedIndexChanged += DropDown_SelectedIndexChanged;
             dropDown.ToolTip = tooltip;
+            dropDown.Prompt = prompt;
 
             return dropDown;
         }
@@ -228,71 +240,12 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
-        private Grid CreateCheckListBox(string[] values, bool[] selected, string tooltip = null, int numRows = 7)
-        {
-            var columns = new[]
-            {
-                new ColumnDesc("A", 0.0f, ColumnType.CheckBox),
-                new ColumnDesc("B", 1.0f, ColumnType.Label)
-            };
-
-            var grid = new Grid(columns, numRows, false);
-            var data = new object[values.Length, 2];
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                data[i, 0] = selected != null ? selected[i] : true;
-                data[i, 1] = values[i];
-            }
-
-            grid.UpdateData(data);
-            grid.ValueChanged += Grid_ValueChanged;
-            grid.ToolTip = tooltip;
-
-            return grid;
-        }
-
-        private Grid CreateRadioButtonList(string[] values, int selectedIndex, string tooltip = null, int numRows = 7)
-        {
-            var columns = new[]
-            {
-                new ColumnDesc("A", 0.0f, ColumnType.Radio),
-                new ColumnDesc("B", 1.0f, ColumnType.Label)
-            };
-
-            var grid = new Grid(columns, numRows, false);
-            var data = new object[values.Length, 2];
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                data[i, 0] = i == selectedIndex ? true : false;
-                data[i, 1] = values[i];
-            }
-
-            grid.FullRowSelect = true;
-            grid.UpdateData(data);
-            grid.ValueChanged += Grid_ValueChanged;
-            grid.CellClicked += RadioButtonList_CellClicked;
-            grid.ToolTip = tooltip;
-
-            return grid;
-        }
-
-        private void RadioButtonList_CellClicked(Control sender, bool left, int rowIndex, int colIndex)
-        {
-            if (colIndex > 0)
-            {
-                var grid = sender as Grid;
-                grid.SetRadio(rowIndex, 0);
-            }
-        }
-
         private Button CreateButton(string text, string tooltip)
         {
             var button = new Button(null, text);
             button.Border = true;
             button.Click += Button_Click;
-            button.Resize(button.Width, DpiScaling.ScaleForWindow(32));
+            button.Resize(button.Width, DpiScaling.ScaleForWindow(Platform.IsMobile ? 20 : 32));
             button.ToolTip = tooltip;
             button.Ellipsis = true;
             return button;
@@ -302,27 +255,6 @@ namespace FamiStudio
         {
             var propIdx = GetPropertyIndexForControl(sender);
             PropertyClicked?.Invoke(this, ClickType.Button, propIdx, -1, -1);
-        }
-
-        public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
-        {
-            var grid = properties[idx].control as Grid;
-            Debug.Assert(values.Length == grid.ItemCount);
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                grid.UpdateData(i, 0, selected != null ? selected[i] : true);
-                grid.UpdateData(i, 1, values[i]);
-            }
-        }
-
-        public void UpdateCheckBoxList(int idx, bool[] selected)
-        {
-            var grid = properties[idx].control as Grid;
-            Debug.Assert(selected.Length == grid.ItemCount);
-
-            for (int i = 0; i < selected.Length; i++)
-                grid.UpdateData(i, 0, selected[i]);
         }
 
         public int AddColoredTextBox(string value, Color color)
@@ -527,31 +459,7 @@ namespace FamiStudio
                 {
                     type = PropertyType.DropDownList,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateDropDownList(values, value, tooltip)
-                });
-            return properties.Count - 1;
-        }
-
-        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7)
-        {
-            properties.Add(
-                new Property()
-                {
-                    type = PropertyType.CheckBoxList,
-                    label = label != null ? CreateLabel(label) : null,
-                    control = CreateCheckListBox(values, selected, tooltip, numRows)
-                });
-            return properties.Count - 1;
-        }
-
-        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7)
-        {
-            properties.Add(
-                new Property()
-                {
-                    type = PropertyType.RadioList,
-                    label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateRadioButtonList(values, selectedIndex, tooltip, numRows)
+                    control = CreateDropDownList(label, values, value, tooltip)
                 });
             return properties.Count - 1;
         }
@@ -618,98 +526,6 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None)
-        {
-            var grid = new Grid(columnDescs, numRows, !options.HasFlag(GridOptions.NoHeader));
-
-            if (data != null)
-                grid.UpdateData(data);
-
-            grid.ToolTip = tooltip;
-            grid.ValueChanged += Grid_ValueChanged;
-            grid.ButtonPressed += Grid_ButtonPressed;
-            grid.CellDoubleClicked += Grid_CellDoubleClicked;
-            grid.CellClicked += Grid_CellClicked;
-            grid.CellEnabled += Grid_CellEnabled;
-
-            return grid;
-        }
-
-        private bool Grid_CellEnabled(Control sender, int rowIndex, int colIndex)
-        {
-            var propIdx = GetPropertyIndexForControl(sender);
-            return PropertyCellEnabled == null || PropertyCellEnabled.Invoke(this, propIdx, rowIndex, colIndex);
-        }
-
-        private void Grid_CellClicked(Control sender, bool left, int rowIndex, int colIndex)
-        {
-            var propIdx = GetPropertyIndexForControl(sender);
-            PropertyClicked?.Invoke(this, left ? ClickType.Left : ClickType.Right, propIdx, rowIndex, colIndex);
-        }
-
-        private void Grid_CellDoubleClicked(Control sender, int rowIndex, int colIndex)
-        {
-            var propIdx = GetPropertyIndexForControl(sender);
-            PropertyClicked?.Invoke(this, ClickType.Double, propIdx, rowIndex, colIndex);
-        }
-
-        private void Grid_ButtonPressed(Control sender, int rowIndex, int colIndex)
-        {
-            var propIdx = GetPropertyIndexForControl(sender);
-            PropertyClicked?.Invoke(this, ClickType.Button, propIdx, rowIndex, colIndex);
-        }
-
-        private void Grid_ValueChanged(Control sender, int rowIndex, int colIndex, object value)
-        {
-            var propIdx = GetPropertyIndexForControl(sender);
-            PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
-        }
-
-        public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
-        {
-            var grid = properties[propIdx].control as Grid;
-            grid.SetColumnEnabled(colIdx, enabled);
-        }
-
-        public void SetRowColor(int propIdx, int rowIdx, Color color)
-        {
-            var grid = properties[propIdx].control as Grid;
-            grid.SetRowColor(rowIdx, color);
-        }
-
-        public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<object, string> fmt)
-        {
-            var grid = properties[propIdx].control as Grid;
-            grid.OverrideCellSlider(rowIdx, colIdx, min, max, fmt);  
-        }
-
-        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None)
-        {
-            properties.Add(
-                new Property()
-                {
-                    type = PropertyType.Grid,
-                    control = CreateGrid(columnDescs, data, numRows, tooltip, options)
-                });
-            return properties.Count - 1;
-        }
-
-        public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
-        {
-            var list = properties[idx].control as Grid;
-
-            list.UpdateData(data);
-
-            if (columnNames != null)
-                list.RenameColumns(columnNames);
-        }
-
-        public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)
-        {
-            var grid = properties[idx].control as Grid;
-            grid.UpdateData(rowIdx, colIdx, value);
-        }
-
         public void SetPropertyEnabled(int idx, bool enabled)
         {
             var prop = properties[idx];
@@ -751,24 +567,6 @@ namespace FamiStudio
             advancedPropertyStart = properties.Count;
         }
 
-        public void SetPropertyWarning(int idx, CommentType type, string comment)
-        {
-            // MATTT : Split in desktop/mobile files.
-            if (Platform.IsDesktop)
-            {
-                var prop = properties[idx];
-
-                if (prop.warningIcon == null)
-                    prop.warningIcon = CreateImageBox(WarningIcons[(int)type]);
-                else
-                    prop.warningIcon.AtlasImageName = WarningIcons[(int)type];
-
-                prop.warningIcon.Resize(DpiScaling.ScaleForWindow(16), DpiScaling.ScaleForWindow(16));
-                prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
-                prop.warningIcon.ToolTip = comment;
-            }
-        }
-
         public object GetPropertyValue(int idx)
         {
             var prop = properties[idx];
@@ -793,13 +591,7 @@ namespace FamiStudio
                 case PropertyType.DropDownList:
                     return (prop.control as DropDown).Text;
                 case PropertyType.CheckBoxList:
-                {
-                    var grid = prop.control as Grid;
-                    var selected = new bool[grid.ItemCount];
-                    for (int i = 0; i < grid.ItemCount; i++)
-                        selected[i] = (bool)grid.GetData(i, 0);
-                    return selected;
-                }
+                    return GetCheckBoxListValue(idx);
                 case PropertyType.Button:
                     return (prop.control as Button).Text;
             }
@@ -812,14 +604,6 @@ namespace FamiStudio
             return (T)GetPropertyValue(idx);
         }
 
-        public T GetPropertyValue<T>(int idx, int rowIdx, int colIdx)
-        {
-            var prop = properties[idx];
-            Debug.Assert(prop.type == PropertyType.Grid);
-            var grid = prop.control as Grid;
-            return (T)grid.GetData(rowIdx, colIdx);
-        }
-
         public int GetSelectedIndex(int idx)
         {
             var prop = properties[idx];
@@ -829,18 +613,7 @@ namespace FamiStudio
                 case PropertyType.DropDownList:
                     return (prop.control as DropDown).SelectedIndex;
                 case PropertyType.RadioList:
-                {
-                    var grid = prop.control as Grid;
-
-                    for (int i = 0; i < grid.ItemCount; i++)
-                    {
-                        if ((bool)grid.GetData(i, 0) == true)
-                            return i;
-                    }
-
-                    Debug.Assert(false);
-                    return -1;
-                }
+                    return GetRadioListSelectedIndex(idx);
             }
 
             return -1;
@@ -875,194 +648,113 @@ namespace FamiStudio
             }
         }
 
-        public void SetPropertyValue(int idx, int rowIdx, int colIdx, object value)
+    }
+
+
+    public enum PropertyType
+    {
+        TextBox,
+        FileTextBox,
+        ColoredTextBox,
+        NumericUpDown,
+        Slider,
+        CheckBox,
+        DropDownList,
+        CheckBoxList,
+        Grid,
+        ColorPicker,
+        Label,
+        LinkLabel,
+        Button,
+        LogTextBox,
+        ProgressBar,
+        Radio,
+        RadioList,
+        ImageBox
+    };
+
+    public enum CommentType
+    {
+        Good,
+        Warning,
+        Error
+    };
+
+    public enum ColumnType
+    {
+        CheckBox,
+        Radio,
+        Label,
+        Button,
+        DropDown,
+        Slider,
+        Image,
+        NumericUpDown
+    };
+
+    public enum ClickType
+    {
+        Left,
+        Right,
+        Double,
+        Button
+    };
+
+    [Flags]
+    public enum GridOptions
+    {
+        None = 0,
+        NoHeader = 1
+    }
+
+    public class ColumnDesc
+    {
+        public string Name;
+        public bool Enabled = true;
+        public bool Ellipsis;
+        public float Width = 0.0f;
+        public ColumnType Type = ColumnType.Label;
+        public string[] DropDownValues;
+        public Func<object, string> Formatter = DefaultFormat;
+        public int MinValue;
+        public int MaxValue;
+
+        private static string DefaultFormat(object o) => o.ToString();
+
+        public ColumnDesc(string name, float width, ColumnType type = ColumnType.Label)
         {
-            var prop = properties[idx];
+            Debug.Assert(type != ColumnType.CheckBox || width == 0.0f);
 
-            switch (prop.type)
-            {
-                case PropertyType.Grid:
-                    (prop.control as Grid).SetData(rowIdx, colIdx, value);
-                    break;
-            }
-        }
-        
-        // MATTT : Move to a separate file.
-        public void BuildMobile()
-        {
-            container.RemoveAllControls();
-
-            var margin = DpiScaling.ScaleForWindow(4);
-            var warningWidth = 0; // MATTT showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
-
-            var x = margin;
-            var y = margin;
-            var actualLayoutWidth = layoutWidth - margin * 2;
-
-            for (int i = 0; i < properties.Count; i++)
-            {
-                var prop = properties[i];
-
-                if (!prop.visible)
-                {
-                    continue;
-                }
-
-                //if (i > 0)
-                //{
-                //    var line = new HorizontalLine();
-                //    line.Move(0, y, layoutWidth, margin);
-                //    container.AddControl(line);
-                //    y += margin;
-                //}
-
-                if (i == advancedPropertyStart)
-                {
-                    var advLabel = new Label(AdvancedPropsLabel);
-                    advLabel.Move(x, y, actualLayoutWidth, 1);
-                    advLabel.Font = container.Fonts.FontMediumBold;
-                    advLabel.AutoSizeHeight();
-                    container.AddControl(advLabel);
-                    y = advLabel.Bottom + margin;
-
-                    var advTooltip = new Label(AdvancedPropsTooltip);
-                    advTooltip.Font = container.Fonts.FontVerySmall;
-                    advTooltip.Multiline = true;
-                    advTooltip.Move(x, y, actualLayoutWidth, 1);
-                    container.AddControl(advTooltip);
-                    y = advTooltip.Bottom + margin;
-                }
-
-                var tooltip = prop.control.ToolTip;
-                if (string.IsNullOrEmpty(tooltip) && prop.label != null && !string.IsNullOrEmpty(prop.label.ToolTip))
-                {
-                    tooltip = prop.label.ToolTip;   
-                }
-
-                if (prop.label != null)
-                {
-                    container.AddControl(prop.label);
-                    container.AddControl(prop.control);
-
-                    prop.label.Move(x, y, actualLayoutWidth, 1);
-                    prop.label.Font = container.Fonts.FontMediumBold;
-                    prop.label.AutoSizeHeight();
-                    y = prop.label.Bottom + margin;
-
-                    if (!string.IsNullOrEmpty(tooltip))
-                    {
-                        if (prop.tooltipLabel == null)
-                        {
-                            prop.tooltipLabel = new Label(tooltip);
-                            prop.tooltipLabel.Font = container.Fonts.FontVerySmall;
-                            prop.tooltipLabel.Multiline = true;
-                            prop.tooltipLabel.Enabled = prop.control.Enabled;
-                            prop.tooltipLabel.Move(x, y, actualLayoutWidth, 1);
-                            container.AddControl(prop.tooltipLabel);
-                            y = prop.tooltipLabel.Bottom + margin;
-                        }
-                    }
-
-                    prop.control.Move(x, y, actualLayoutWidth, prop.control.Height);
-                    y = prop.control.Bottom + margin;
-                }
-                else
-                {
-                    prop.control.Move(x, y, actualLayoutWidth, prop.control.Height);
-                    container.AddControl(prop.control);
-                    y = prop.control.Bottom + margin;
-                }
-
-                //if (prop.warningIcon != null)
-                //{
-                //    prop.warningIcon.Move(
-                //        x + actualLayoutWidth - prop.warningIcon.Width,
-                //        y + totalHeight + (height - prop.warningIcon.Height) / 2);
-                //    container.AddControl(prop.warningIcon);
-                //}
-            }
-
-            layoutHeight = y;
+            Name = name;
+            Type = type;
+            Width = type == ColumnType.CheckBox || type == ColumnType.Image ? 0.0f : width;
         }
 
-        public void Build(bool advanced = false)
+        public ColumnDesc(string name, float width, string[] values)
         {
-            // MATTT : Move to a separate file.
-            if (Platform.IsMobile)
-            {
-                BuildMobile();
-                return;
-            }
+            Name = name;
+            Type = ColumnType.DropDown;
+            DropDownValues = values;
+            Width = width;
+        }
 
-            var margin = DpiScaling.ScaleForWindow(8);
-            var maxLabelWidth = 0;
-            var propertyCount = advanced || advancedPropertyStart < 0 ? properties.Count : advancedPropertyStart;
+        public ColumnDesc(string name, float width, int min, int max)
+        {
+            Name = name;
+            Type = ColumnType.NumericUpDown;
+            Width = width;
+            MinValue = min;
+            MaxValue = max;
+        }
 
-            container.RemoveAllControls();
-
-            for (int i = 0; i < propertyCount; i++)
-            {
-                var prop = properties[i];
-                if (prop.visible && prop.label != null)
-                {
-                    // HACK : Control need to be added to measure string.
-                    container.AddControl(prop.label);
-                    maxLabelWidth = Math.Max(maxLabelWidth, prop.label.MeasureWidth());
-                    container.RemoveControl(prop.label);
-                }
-            }
-
-            var totalHeight = 0;
-            var warningWidth = showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
-            var actualLayoutWidth = layoutWidth;
-
-            var x = 0;
-            var y = 0;
-
-            for (int i = 0; i < propertyCount; i++)
-            {
-                var prop = properties[i];
-                var height = 0;
-
-                if (!prop.visible)
-                    continue;
-
-                if (i > 0)
-                    totalHeight += margin;
-
-                if (prop.label != null)
-                {
-                    prop.label.Move(x, y + totalHeight, maxLabelWidth, prop.label.Height);
-                    prop.control.Move(x + maxLabelWidth + margin, y + totalHeight, actualLayoutWidth - maxLabelWidth - warningWidth - margin, prop.control.Height);
-
-                    container.AddControl(prop.label);
-                    container.AddControl(prop.control);
-
-                    height = prop.label.Height;
-                }
-                else
-                {
-                    prop.control.Move(x, y + totalHeight, actualLayoutWidth, prop.control.Height);
-
-                    container.AddControl(prop.control);
-                }
-
-                height = Math.Max(prop.control.Height, height);
-
-                if (prop.warningIcon != null)
-                {
-                    prop.warningIcon.Move(
-                        x + actualLayoutWidth - prop.warningIcon.Width,
-                        y + totalHeight + (height - prop.warningIcon.Height) / 2);
-                    container.AddControl(prop.warningIcon);
-                }
-
-                totalHeight += height;
-            }
-
-            layoutHeight = totalHeight;
-
-            ConditionalSetTextBoxFocus();
+        public ColumnDesc(string name, float width, int min, int max, Func<object, string> fmt)
+        {
+            Name = name;
+            Type = ColumnType.Slider;
+            Formatter = fmt;
+            Width = width;
+            MinValue = min;
+            MaxValue = max;
         }
     }
 }

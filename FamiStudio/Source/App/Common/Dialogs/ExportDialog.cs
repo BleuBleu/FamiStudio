@@ -281,7 +281,6 @@ namespace FamiStudio
             }
 
             // Hide a few formats we don't care about on mobile.
-            dialog.SetPageVisible((int)ExportFormat.Midi, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.Text, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiTracker, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, Platform.IsDesktop);
@@ -296,8 +295,7 @@ namespace FamiStudio
             dialog.CustomVerbActivated += Dialog_CustomVerbActivated;
             dialog.AppSuspended += Dialog_AppSuspended;
 
-            if (Platform.IsDesktop)
-                UpdateMidiInstrumentMapping();
+            UpdateMidiInstrumentMapping();
         }
 
         private void Dialog_AppSuspended()
@@ -535,7 +533,7 @@ namespace FamiStudio
                     page.AddCheckBox(ExportSlideAsPitchWheelLabel.Colon, true, MidiPitchTooltip); // 2
                     page.AddNumericUpDown(PitchWheelRangeLabel.Colon, 24, 1, 24, 1, MidiPitchRangeTooltip); // 3
                     page.AddDropDownList(InstrumentModeLabel.Colon, Localization.ToStringArray(MidiExportInstrumentMode.LocalizedNames), MidiExportInstrumentMode.LocalizedNames[0], MidiInstrumentTooltip); // 4
-                    page.AddGrid(InstrumentsLabels, new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14, MidiInstGridTooltip); // 5
+                    page.AddGrid(InstrumentsLabels, new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, GetMidiInstrumentData(MidiExportInstrumentMode.Instrument, out _), 14, MidiInstGridTooltip); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:
@@ -1109,12 +1107,11 @@ namespace FamiStudio
                 UpdateMidiInstrumentMapping();
         }
 
-        private void UpdateMidiInstrumentMapping()
+        private object[,] GetMidiInstrumentData(int mode, out string[] colNames)
         {
-            var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
-            var mode  = props.GetSelectedIndex(4);
-            var data  = (object[,])null;
-            var cols = new[] { "", "MIDI Instrument" };
+            var data = (object[,])null;
+            
+            colNames = new[] { "", "MIDI Instrument" };
 
             if (mode == MidiExportInstrumentMode.Instrument)
             {
@@ -1126,7 +1123,7 @@ namespace FamiStudio
                     data[i, 1] = MidiFileReader.MidiInstrumentNames[0];
                 }
 
-                cols[0] = "FamiStudio Instrument";
+                colNames[0] = "FamiStudio Instrument";
             }
             else
             {
@@ -1139,8 +1136,17 @@ namespace FamiStudio
                     data[i, 1] = MidiFileReader.MidiInstrumentNames[0];
                 }
 
-                cols[0] = "NES Channel";
+                colNames[0] = "NES Channel";
             }
+
+            return data;
+        }
+
+        private void UpdateMidiInstrumentMapping()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
+            var mode  = props.GetSelectedIndex(4);
+            var data  = GetMidiInstrumentData(mode, out var cols);
 
             props.UpdateGrid(5, data, cols);
         }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace FamiStudio
 {
-    public class MultiPropertyDialog : Dialog
+    public class MultiPropertyDialog : TopBarDialog
     {
         class PropertyPageTab
         {

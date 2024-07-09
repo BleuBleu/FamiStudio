@@ -1058,7 +1058,7 @@ namespace FamiStudio
             var txt = extension == ".txt";
             var vgm = extension == ".vgm" || extension == ".vgz";
             var nsf = extension == ".nsf" || extension == ".nsfe";
-            var mid = extension == ".mid" && Platform.IsDesktop;
+            var mid = extension == ".mid";
 
             var requiresDialog = allowComplexFormats && (nsf || mid || vgm);
 

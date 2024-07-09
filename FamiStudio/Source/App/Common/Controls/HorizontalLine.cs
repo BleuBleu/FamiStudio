@@ -2,6 +2,7 @@ using System;
 
 namespace FamiStudio
 {
+    // MATTT : Delete if unused.
     public class HorizontalLine : Control
     {
         private Color color = Theme.LightGreyColor1;

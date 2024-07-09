@@ -129,7 +129,7 @@
     <Compile Include="Source\App\Common\OscilloscopeGenerator.cs" />
     <Compile Include="Source\App\Common\ParamProviders.cs" />
     <Compile Include="Source\App\Common\PatternBitmapCache.cs" />
-    <Compile Include="Source\App\Common\PropertyPageCommon.cs" />
+    <Compile Include="Source\App\Common\PropertyPage.cs" />
     <Compile Include="Source\App\Common\Settings.cs" />
     <Compile Include="Source\App\Common\Theme.cs" />
     <Compile Include="Source\App\Common\Fonts.cs" />

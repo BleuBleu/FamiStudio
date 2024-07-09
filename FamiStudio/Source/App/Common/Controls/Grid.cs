@@ -44,6 +44,8 @@ namespace FamiStudio
         private bool hasAnyDropDowns;
         private bool fullRowSelect;
         private bool isClosingList;
+        private Font font;
+        private Font fontBold;
         private ColumnDesc[] columns;
         private Color[] rowColors;
         private Color foreColor = Theme.LightGreyColor1;
@@ -66,7 +68,7 @@ namespace FamiStudio
         private TextureAtlasRef bmpUpDownPlus;
         private TextureAtlasRef bmpUpDownMinus;
 
-        private int margin         = DpiScaling.ScaleForWindow(4);
+        private int margin         = DpiScaling.ScaleForWindow(Platform.IsMobile ? 2 : 4);
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
         private int rowHeight      = DpiScaling.ScaleForWindow(20);
         private int checkBoxWidth  = DpiScaling.ScaleForWindow(20);
@@ -277,12 +279,16 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             var g = Graphics;
+
             bmpCheckOn     = g.GetTextureAtlasRef("CheckBoxYes");
             bmpCheckOff    = g.GetTextureAtlasRef("CheckBoxNo");
             bmpRadioOn     = g.GetTextureAtlasRef("RadioButtonOn");
             bmpRadioOff    = g.GetTextureAtlasRef("RadioButtonOff");
             bmpUpDownPlus  = g.GetTextureAtlasRef("UpDownPlus");
             bmpUpDownMinus = g.GetTextureAtlasRef("UpDownMinus");
+
+            font     = Platform.IsMobile ? fonts.FontSmall     : fonts.FontMedium;
+            fontBold = Platform.IsMobile ? fonts.FontSmallBold : fonts.FontMediumBold;
 
             UpdateLayout();
 
@@ -577,18 +583,9 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var c = g.GetCommandList();
+            var c = g.DefaultCommandList;
             var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
             var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
-
-            // Grid lines
-            c.DrawLine(0, 0, width, 0, Theme.BlackColor);
-            for (var i = numHeaderRows + 1; i < numRows; i++)
-                c.DrawLine(0, i * rowHeight, width - actualScrollBarWidth, i * rowHeight, Theme.BlackColor);
-            for (var j = 0; j < columnOffsets.Length - 1; j++)
-                c.DrawLine(columnOffsets[j], 0, columnOffsets[j], height, Theme.BlackColor);
-            if (numHeaderRows != 0)
-                c.DrawLine(0, rowHeight, width - 1, rowHeight, foreColor);
 
             // BG
             c.FillRectangle(0, 0, width - 1, height, Theme.DarkGreyColor1);
@@ -602,14 +599,12 @@ namespace FamiStudio
                 }
             }
 
-            c.DrawRectangle(0, 0, width - 1, height, enabled ? foreColor : Theme.MediumGreyColor1);
-
             // Header
             if (numHeaderRows != 0)
             {
                 c.FillRectangle(0, 0, width, rowHeight, Theme.DarkGreyColor3);
                 for (var j = 0; j < columns.Length; j++) 
-                    c.DrawText(columns[j].Name, Fonts.FontMedium, columnOffsets[j] + margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
+                    c.DrawText(columns[j].Name, font, columnOffsets[j] + margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
             }
 
             // Data
@@ -659,10 +654,10 @@ namespace FamiStudio
                             case ColumnType.Button:
                             {
                                 var buttonBaseX = colWidth - rowHeight;
-                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, localForeColor, TextFlags.MiddleLeft, 0, rowHeight);
+                                c.DrawText((string)val, font, margin, 0, localForeColor, TextFlags.MiddleLeft, 0, rowHeight);
                                 c.PushTranslation(buttonBaseX, 0);
                                 c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight, hoverRow == k && hoverCol == j && hoverButton ? Theme.MediumGreyColor1 : Theme.DarkGreyColor3, localForeColor);
-                                c.DrawText("...", Fonts.FontMediumBold, 0, 0, localForeColor, TextFlags.MiddleCenter, rowHeight, rowHeight);
+                                c.DrawText("...", fontBold, 0, 0, localForeColor, TextFlags.MiddleCenter, rowHeight, rowHeight);
                                 c.PopTransform();
                                 break;
                             }
@@ -672,17 +667,17 @@ namespace FamiStudio
                                 {
                                     GetCellSliderData(k, j, out var sliderMin, out var sliderMax, out var fmt);
                                     c.FillRectangle(0, 0, (int)Math.Round(((int)val - sliderMin) / (double)(sliderMax - sliderMin) * colWidth), rowHeight, Theme.DarkGreyColor6);
-                                    c.DrawText(fmt(val), Fonts.FontMedium, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText(fmt(val), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
-                                    c.DrawText("N/A", Fonts.FontMedium, 0, 0, Theme.MediumGreyColor1, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText("N/A", fontBold, 0, 0, Theme.MediumGreyColor1, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 break;
                             }
                             case ColumnType.Label:
                             {
-                                c.DrawText((string)val, Fonts.FontMedium, margin, 0, localForeColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
+                                c.DrawText((string)val, font, margin, 0, localForeColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
                                 break;
                             }
                             case ColumnType.Radio:
@@ -716,11 +711,11 @@ namespace FamiStudio
                                 {
                                     c.DrawTextureAtlasCentered(bmpUpDownMinus, 0, 0, rowHeight, rowHeight, 1, localForeColor);
                                     c.DrawTextureAtlasCentered(bmpUpDownPlus, colWidth - rowHeight, 0, rowHeight, rowHeight, 1, localForeColor);
-                                    c.DrawText(val.ToString(), Fonts.FontMedium, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText(val.ToString(), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
-                                    c.DrawText("N/A", Fonts.FontMedium, 0, 0, Theme.MediumGreyColor1, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText("N/A", font, 0, 0, Theme.MediumGreyColor1, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 break;
                             }
@@ -738,6 +733,18 @@ namespace FamiStudio
                     c.PopTransform();
                 }
             }
+
+            // Border + Grid lines. Draw at end since on mobile these will be drawn as
+            // polygons (thickness will be > 1) and they need to be on top.
+            c.DrawLine(0, 0, width, 0, Theme.BlackColor);
+            for (var i = numHeaderRows + 1; i < numRows; i++)
+                c.DrawLine(0, i * rowHeight, width - actualScrollBarWidth, i * rowHeight, Theme.BlackColor);
+            for (var j = 0; j < columnOffsets.Length - 1; j++)
+                c.DrawLine(columnOffsets[j], 0, columnOffsets[j], height, Theme.BlackColor);
+            if (numHeaderRows != 0)
+                c.DrawLine(0, rowHeight, width - 1, rowHeight, foreColor);
+
+            c.DrawRectangle(0, 0, width - 1, height, enabled ? foreColor : Theme.MediumGreyColor1);
         }
     }
 }

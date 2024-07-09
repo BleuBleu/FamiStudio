@@ -207,7 +207,7 @@ namespace FamiStudio
                 // HACK : We dont support nested activities right now, so return
                 // this special code to signal that we should open from storage.
                 storageFilename = "///STORAGE///";
-                dialog.Close(DialogResult.OK);
+                dialog.Close(DialogResult.OK); 
             }
         }
 

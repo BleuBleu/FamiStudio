@@ -23,10 +23,8 @@ namespace FamiStudio
         private bool tickEnabled;
 
         public delegate void ControlDelegate(Control sender);
-
-        // TODO : Rename the "MouseDown" functions to something like "FireMouseDown"
-        // or "RaiseMouseDown" and rename those to simply "MouseDown".
         public delegate void MouseEventDelegate(Control sender, PointerEventArgs e);
+
         public event MouseEventDelegate PointerDown;
         public event MouseEventDelegate PointerUp;
         public event MouseEventDelegate PointerMove;
@@ -73,9 +71,6 @@ namespace FamiStudio
         protected virtual void OnKeyDown(KeyEventArgs e) { }
         protected virtual void OnKeyUp(KeyEventArgs e) { }
         protected virtual void OnChar(CharEventArgs e) { }
-        //protected virtual void OnTouchDown(PointerEventArgs e) { }
-        //protected virtual void OnTouchUp(PointerEventArgs e) { }
-        //protected virtual void OnTouchMove(PointerEventArgs e) { }
         protected virtual void OnTouchClick(PointerEventArgs e) { }
         protected virtual void OnTouchDoubleClick(PointerEventArgs e) { }
         protected virtual void OnTouchLongPress(PointerEventArgs e) { }
@@ -125,32 +120,6 @@ namespace FamiStudio
                 OnPointerUp(e);
             }
         }
-
-        /*
-        public void SendTouchMove(PointerEventArgs e) 
-        {
-            if (SendTouchInputAsMouse)
-                SendMouseMove(e); 
-            else
-                OnTouchMove(e);
-        }
-
-        public void SendTouchDown(PointerEventArgs e) 
-        {
-            if (SendTouchInputAsMouse)
-                SendMouseDown(e);
-            else
-                OnTouchDown(e); 
-        }
-
-        public void SendTouchUp(PointerEventArgs e) 
-        {
-            if (SendTouchInputAsMouse)
-                SendMouseUp(e);
-            else
-                OnTouchUp(e); 
-        }
-        */
 
         // MATTT : What about this one?
         public void SendTouchDoubleClick(PointerEventArgs e)

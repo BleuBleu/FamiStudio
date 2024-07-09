@@ -16,7 +16,7 @@ namespace FamiStudio
         {
             text = txt;
             check = chk;
-            height = DpiScaling.ScaleForWindow(24);
+            height = DpiScaling.ScaleForWindow(24); // MATTT : Checkbox must scale on mobile. Also, accept click anywhere in its area, even on label.
         }
 
         public bool Checked

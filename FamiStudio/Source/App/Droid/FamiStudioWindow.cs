@@ -56,7 +56,8 @@ namespace FamiStudio
         public static bool ActivityRunning => activityRunning;
         public static FamiStudioWindow Instance { get; private set; }
         public BaseDialogActivityInfo ActiveDialog => activeDialog;
-        public bool IsAsyncDialogInProgress => activeDialog != null;
+        public bool IsAsyncActivityInProgress => activeDialog != null;
+        public bool IsAsyncDialogInProgress => IsAsyncActivityInProgress || container.IsDialogActive;
 
         public FamiStudio FamiStudio => famistudio;
         public Toolbar ToolBar => container.ToolBar;
@@ -370,7 +371,7 @@ namespace FamiStudio
             if (lastFrameTime < 0)
                 lastFrameTime = frameTimeNanos;
 
-            if (glThreadIsRunning && container != null && !IsAsyncDialogInProgress)
+            if (glThreadIsRunning && container != null && !IsAsyncActivityInProgress)
             {
                 var deltaTime = (float)Math.Min(0.25f, (float)((frameTimeNanos - lastFrameTime) / 1000000000.0));
 
@@ -378,7 +379,9 @@ namespace FamiStudio
 
                 lock (renderLock)
                 {
-                    famistudio.Tick(deltaTime);
+                    if (!IsAsyncDialogInProgress)
+                        famistudio.Tick(deltaTime);
+
                     container.TickWithChildren(deltaTime);
                 }
 
@@ -386,7 +389,13 @@ namespace FamiStudio
                 ConditionalProcessDeferDelete();
 
                 if (dirty)
-                { 
+                {
+                    //if (aaa != 0.0)
+                    //{
+                    //    Debug.WriteLine($"Tap to render = {(Platform.TimeSeconds() - aaa) * 1000.0} ms");
+                    //    aaa = 0.0;
+                    //}
+
                     glSurfaceView.RequestRender();
                     dirty = false;
                 }
@@ -847,7 +856,7 @@ namespace FamiStudio
 
         public override bool OnTouchEvent(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 if (e.Action == MotionEventActions.Up)
                 {
@@ -886,7 +895,7 @@ namespace FamiStudio
 
         public bool OnDown(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 //Debug.WriteLine($"OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
@@ -900,7 +909,7 @@ namespace FamiStudio
 
         public bool OnFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 //Debug.WriteLine($"OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({velocityX}, {velocityY})");
                 lock (renderLock)
@@ -914,7 +923,7 @@ namespace FamiStudio
 
         public void OnLongPress(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 //Debug.WriteLine($"OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
@@ -932,7 +941,7 @@ namespace FamiStudio
 
         public void OnShowPress(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 //Debug.WriteLine($"{e.PointerCount} OnShowPress ({e.GetX()}, {e.GetY()})");
             }
@@ -940,7 +949,7 @@ namespace FamiStudio
 
         public bool OnSingleTapUp(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 //DialogTest();
                 //StartSaveFileActivity("audio/mpeg", "Toto.mp3");
@@ -957,7 +966,7 @@ namespace FamiStudio
 
         public bool OnScale(ScaleGestureDetector detector)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 //Debug.WriteLine($"OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
                 lock (renderLock)
@@ -975,7 +984,7 @@ namespace FamiStudio
 
         public bool OnScaleBegin(ScaleGestureDetector detector)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 //Debug.WriteLine($"OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
@@ -993,7 +1002,7 @@ namespace FamiStudio
 
         public void OnScaleEnd(ScaleGestureDetector detector)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 //Debug.WriteLine($"OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
@@ -1006,7 +1015,7 @@ namespace FamiStudio
 
         public bool OnDoubleTap(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 //Debug.WriteLine($"OnDoubleTap ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
@@ -1033,7 +1042,7 @@ namespace FamiStudio
 
         public bool OnDoubleTapEvent(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncActivityInProgress)
             {
                 lock (renderLock)
                 { 

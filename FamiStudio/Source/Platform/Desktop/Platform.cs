@@ -260,6 +260,10 @@ namespace FamiStudio
         {
         }
 
+        public static void EditTextAsync(string prompt, string text, Action<string> callback)
+        {
+        }
+
         public static void ShowToast(FamiStudioWindow win, string text, bool longDuration = false, Action click = null)
         {
             win.ShowToast(text, longDuration, click);

@@ -27,7 +27,7 @@ namespace FamiStudio
             return ClampScroll();
         }
 
-        private bool ClampScroll()
+        public bool ClampScroll()
         {
             var minScrollY = 0;
             var maxScrollY = Math.Max(0, virtualSizeY - height);
@@ -40,6 +40,8 @@ namespace FamiStudio
 
         public override void OnContainerPointerDownNotify(Control control, PointerEventArgs e)
         {
+            flingVelY = 0.0f;
+
             if (!e.Handled)
             {
                 panning = true;
@@ -106,6 +108,8 @@ namespace FamiStudio
                     flingVelY *= (float)Math.Exp(delta * -4.5f);
                 else
                     flingVelY = 0.0f;
+
+                MarkDirty();
             }
             else
             {

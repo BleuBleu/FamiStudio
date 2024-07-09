@@ -32,7 +32,6 @@ namespace FamiStudio
             height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
             allowMobileEdit = false;
             SetTextBoxValue();
-            SetTickEnabled(true); // TODO : Only enable when we are pressing a button.
         }
 
         public int Value
@@ -130,6 +129,10 @@ namespace FamiStudio
                     Value += (captureButton == 0 ? -inc : inc) * (lastDuration >= 1.5f && (Value % (10 * inc)) == 0 ? 10 * inc : 1 * inc);
                 }
             }
+            else
+            {
+                SetTickEnabled(false);
+            }
 
             base.Tick(delta);
         }
@@ -144,6 +147,7 @@ namespace FamiStudio
                 captureDuration = 0;
                 Value += captureButton == 0 ? -inc : inc;
                 Capture = true;
+                SetTickEnabled(true);
             }
             else
             {
@@ -195,6 +199,7 @@ namespace FamiStudio
             {
                 captureButton = -1;
                 Capture = false;
+                SetTickEnabled(false);
             }
             else
             {

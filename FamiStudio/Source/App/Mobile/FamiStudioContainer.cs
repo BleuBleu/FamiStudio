@@ -77,7 +77,7 @@ namespace FamiStudio
         {
             if (activeControl != ctrl || dialog)
             {
-                Debug.Assert(transitionTimer == 0.0f && transitionControl == null);
+                FlushPendingTransition(); // Safety.
 
                 if (animate)
                 {
@@ -102,16 +102,29 @@ namespace FamiStudio
 
         public void PushDialog(Dialog dialog)
         {
+            FlushPendingTransition();
+
             dialogToHide = dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
+
             AddControl(dialog);
             dialogs.Add(dialog);
-            dialog.Visible = false;
-            StartTransition(dialog, true, true);
+
+            if (dialog.Fullscreen)
+            {
+                dialog.Visible = false;
+                StartTransition(dialog, true, true);
+            }
+            else
+            {
+                dialog.Visible = true;
+            }
+
             poppingDialog = false;
         }
 
         public void PopDialog(Dialog dialog, int numLevels)
         {
+            Debug.Assert(transitionTimer == 0.0f && transitionControl == null);
             Debug.Assert(TopDialog == dialog);
 
             if (numLevels > 1)
@@ -128,27 +141,41 @@ namespace FamiStudio
 
             dialogs.RemoveAt(dialogs.Count - 1);
 
-            if (dialogs.Count > 0)
+            if (dialog.Fullscreen)
             {
-                StartTransition(TopDialog, true, true);
+                if (dialogs.Count > 0)
+                {
+                    StartTransition(TopDialog, true, true);
+                }
+                else
+                {
+                    StartTransition(activeControl, true, true);
+                }
+
+                poppingDialog = true;
+                dialogToHide = dialog;
             }
             else
             {
-                StartTransition(activeControl, true, true);
+                RemoveControl(dialog);
             }
+        }
 
-            poppingDialog = true;
-            dialogToHide = dialog;
+        private void FlushPendingTransition()
+        {
+            if (transitionControl != null)
+            {
+                // This should only happen in rare cases, like when going from/to a file load/save activity.
+                Debug.WriteLine("***** FLUSHING PENDING CONTROL TRANSITION!!! *****");
+
+                CommitTransitionControl();
+                transitionTimer = 0.0f;
+            }
         }
 
         protected override void OnResize(EventArgs e)
         {
-            if (transitionControl != null)
-            {
-                CommitTransitionControl();
-                transitionTimer = 0.0f;
-            }
-
+            FlushPendingTransition();
             UpdateLayout(false);
         }
 
@@ -192,11 +219,11 @@ namespace FamiStudio
                     pianoRoll.Move(0, toolbarLayoutSize, width, height - toolbarLayoutSize - quickAccessBarSize - pianoLayoutSize);
             }
 
-            var dialogActive = IsDialogActive;
+            var anyFullscreenDialogActive = dialogs.Find(d => d.Fullscreen) != null;
 
-            sequencer.Visible = activeControl == sequencer && !dialogActive;
-            pianoRoll.Visible = activeControl == pianoRoll && !dialogActive;
-            projectExplorer.Visible = activeControl == projectExplorer && !dialogActive;
+            sequencer.Visible = activeControl == sequencer && !anyFullscreenDialogActive;
+            pianoRoll.Visible = activeControl == pianoRoll && !anyFullscreenDialogActive;
+            projectExplorer.Visible = activeControl == projectExplorer && !anyFullscreenDialogActive;
         }
 
         public bool CanAcceptInput
@@ -277,15 +304,18 @@ namespace FamiStudio
         public override void Tick(float delta)
         {
             var prevTimer = transitionTimer;
-            transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
-
-            if (prevTimer > 0.5f && transitionTimer <= 0.5f)
+            if (prevTimer > 0.0f)
             {
-                CommitTransitionControl();
-                UpdateLayout(true);
-            }
+                transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
 
-            MarkDirty();
+                if (prevTimer > 0.5f && transitionTimer <= 0.5f)
+                {
+                    CommitTransitionControl();
+                    UpdateLayout(true);
+                }
+
+                MarkDirty();
+            }
         }
 
         protected override void OnRender(Graphics g)

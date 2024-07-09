@@ -134,6 +134,8 @@ namespace FamiStudio
 
             props.PropertyChanged += Props_PropertyChanged;
             props.PropertyClicked += Props_PropertyClicked;
+
+            // MATTT : This doesnt work on mobile. We need to remove this event, not needed. Store a bitarray in grid or something.
             props.PropertyCellEnabled += (p, i, r, c) => i != chipGridIndices[ExpansionType.Fds] || r != 1; // No cutoff on special FDS filter.
 
             if (projectSettings)

@@ -562,8 +562,6 @@ namespace FamiStudio
             {
                 var ctrl = bytes[idx++];
                 var val  = bytes[idx++];
-
-                Debug.WriteLine($"Control change {ctrl} = {val}");
             }
 
             // Program change

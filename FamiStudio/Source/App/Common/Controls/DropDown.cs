@@ -15,6 +15,7 @@ namespace FamiStudio
 
         private TextureAtlasRef bmpArrow;
         private string[] items;
+        private string prompt;
         private int selectedIndex = 0;
         private bool hover;
         private bool listOpened;
@@ -32,7 +33,9 @@ namespace FamiStudio
 
         private int margin         = DpiScaling.ScaleForWindow(4);
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
-        private int rowHeight      = DpiScaling.ScaleForWindow(24);
+        private int rowHeight      = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
+
+        public override bool SupportsDoubleClick => false;
 
         public DropDown(string[] list, int index, bool trans = false)
         {
@@ -44,6 +47,7 @@ namespace FamiStudio
         }
 
         public string Text => selectedIndex >= 0 && selectedIndex < items.Length ? items[selectedIndex] : null;
+        public string Prompt { get => prompt; set => prompt = value; }
 
         public int SelectedIndex
         {
@@ -86,7 +90,7 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (listOpened && e.Y > rowHeight)
+            if (listOpened && e.Y > rowHeight && !e.IsTouchEvent)
             {
                 if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
                 {
@@ -113,47 +117,45 @@ namespace FamiStudio
 
         protected override void OnPointerUp(PointerEventArgs e)
         {
-            if (listJustOpened && isGridChild)
+            if (!e.IsTouchEvent)
             {
-                listJustOpened = false;
-                return;
-            }
-
-            if (draggingScrollbars)
-            {
-                draggingScrollbars = false;
-                Capture = false;
-                MarkDirty();
-            }
-            else if (enabled && e.Left)
-            {
-                if (listOpened && e.Y > rowHeight)
+                if (listJustOpened && isGridChild)
                 {
-                    if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
-                    {
-                        var y = e.Y - rowHeight;
-
-                        if (y < scrollBarPos)
-                        {
-                            SetAndMarkDirty(ref listScroll, Math.Max(0, listScroll - largeStepSize));
-                        }
-                        else if (y > (scrollBarPos + scrollBarSize))
-                        {
-                            SetAndMarkDirty(ref listScroll, Math.Min(maxListScroll, listScroll + largeStepSize));
-                        }
-                        return;
-                    }
-
-                    SelectedIndex = listScroll + (e.Y - rowHeight) / rowHeight;
+                    listJustOpened = false;
+                    return;
                 }
 
-                SetListOpened(!listOpened);
-            }
-        }
+                if (draggingScrollbars)
+                {
+                    draggingScrollbars = false;
+                    Capture = false;
+                    MarkDirty();
+                }
+                else if (enabled && e.Left)
+                {
+                    if (listOpened && e.Y > rowHeight)
+                    {
+                        if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
+                        {
+                            var y = e.Y - rowHeight;
 
-        protected override void OnMouseDoubleClick(PointerEventArgs e)
-        {
-            OnPointerDown(e);
+                            if (y < scrollBarPos)
+                            {
+                                SetAndMarkDirty(ref listScroll, Math.Max(0, listScroll - largeStepSize));
+                            }
+                            else if (y > (scrollBarPos + scrollBarSize))
+                            {
+                                SetAndMarkDirty(ref listScroll, Math.Min(maxListScroll, listScroll + largeStepSize));
+                            }
+                            return;
+                        }
+
+                        SelectedIndex = listScroll + (e.Y - rowHeight) / rowHeight;
+                    }
+
+                    SetListOpened(!listOpened);
+                }
+            }
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -165,6 +167,75 @@ namespace FamiStudio
                 e.Handled = true;
             }
         }
+
+#if FAMISTUDIO_ANDROID // MATTT : We use a TouchScrollContainer here. 
+        private void ShowMobileListDialog()
+        {
+            var buttonHeight = DpiScaling.ScaleForWindow(20);
+
+            var dlg = new Dialog(window);
+            var scrollContainer = new TouchScrollContainer();
+
+            scrollContainer.VirtualSizeY = items.Length * buttonHeight;
+
+#if true
+            var maxHeight = Math.Min(window.Width, window.Height) * 4 / 5;
+            var listWidth = Math.Min(window.Width, window.Height) * 4 / 5;
+            var listHeight = Math.Min(listWidth, buttonHeight * (items.Length + 1));
+            dlg.Move((window.Width - listWidth) / 2, (window.Height - listHeight) / 2, listWidth, listHeight);
+
+            // MATTT : Localize.
+            // MATTT : Add a panel here too once we merge the stuff from the sequencer shelve.
+            var title = new Label(string.IsNullOrEmpty(prompt) ? "Select value" : prompt);
+            title.Font = fonts.FontMediumBold;
+            title.Centered = true;
+            title.Move(0, 0, listWidth, buttonHeight);
+            dlg.AddControl(title);
+#else
+            var windowRect = WindowRectangle;
+            if ((windowRect.Top + windowRect.Bottom) / 2 > window.Height / 2)
+            {
+                var listHeight = Math.Min(windowRect.Top * 4 / 5, items.Length * buttonHeight);
+                dlg.Move(windowRect.Left, windowRect.Top - listHeight, width, listHeight);
+            }
+            else
+            {
+                var listHeight = Math.Min((window.Height - windowRect.Bottom) * 4 / 5, items.Length * buttonHeight);
+                dlg.Move(windowRect.Left, windowRect.Bottom, width, listHeight);
+            }
+#endif
+            scrollContainer.Move(0, title.Bottom, dlg.Width, dlg.Height - title.Height);
+            dlg.AddControl(scrollContainer);
+
+            for (var i = 0; i < items.Length; i++)
+            {
+                var j = i; // Important, local copy for lambda below.
+                var button = new Button(selectedIndex == i ? "RadioButtonOn" : "RadioButtonOff", items[i]);
+                button.UserData = i;
+                button.ImageScale = DpiScaling.Window * 0.25f;
+                button.Transparent = true;
+                button.Click += (s) =>
+                {
+                    (scrollContainer.GetControl(selectedIndex) as Button).ImageName = "RadioButtonOff";
+                    SelectedIndex = j;
+                    (scrollContainer.GetControl(selectedIndex) as Button).ImageName = "RadioButtonOn";
+                    dlg.Close(DialogResult.OK);
+                };
+                button.Move(0, i * buttonHeight, listWidth, buttonHeight);
+                scrollContainer.AddControl(button);
+            }
+
+            scrollContainer.ScrollY = (int)Math.Round((selectedIndex + 0.5f) * buttonHeight - scrollContainer.Height * 0.5f);
+            scrollContainer.ClampScroll();
+
+            dlg.ShowDialogAsync();
+        }
+
+        protected override void OnTouchClick(PointerEventArgs e)
+        {
+            ShowMobileListDialog();
+        }
+#endif
 
         public void SetListOpened(bool open)
         {
@@ -208,18 +279,21 @@ namespace FamiStudio
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            if (draggingScrollbars)
+            if (!e.IsTouchEvent)
             {
-                GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
-                var newScrollBarPos = captureScrollBarPos + (e.Y - captureMouseY);
-                var ratio = newScrollBarPos / (float)(numItemsInList * rowHeight - scrollBarSize);
-                var newListScroll = Utils.Clamp((int)Math.Round(ratio * maxListScroll), 0, maxListScroll);
-                SetAndMarkDirty(ref listScroll, newListScroll);
-            }
-            else
-            {
-                SetAndMarkDirty(ref hover, e.Y < rowHeight && !listOpened);
-                UpdateListHover(e);
+                if (draggingScrollbars)
+                {
+                    GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
+                    var newScrollBarPos = captureScrollBarPos + (e.Y - captureMouseY);
+                    var ratio = newScrollBarPos / (float)(numItemsInList * rowHeight - scrollBarSize);
+                    var newListScroll = Utils.Clamp((int)Math.Round(ratio * maxListScroll), 0, maxListScroll);
+                    SetAndMarkDirty(ref listScroll, newListScroll);
+                }
+                else
+                {
+                    SetAndMarkDirty(ref hover, e.Y < rowHeight && !listOpened);
+                    UpdateListHover(e);
+                }
             }
         }
 

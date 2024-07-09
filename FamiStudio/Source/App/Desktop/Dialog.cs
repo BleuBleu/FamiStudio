@@ -115,11 +115,10 @@ namespace FamiStudio
                 MarkDirty();
         }
 
-        public override void TickChildren(float delta)
+        public override void GatherChildrenToTick(float delta, ref List<Control> controlsToTick)
         {
-            // Dont tick non-top dialogs.
             if (IsTopDialog())
-                base.TickChildren(delta);
+                base.GatherChildrenToTick(delta, ref controlsToTick);
         }
 
         private bool IsTopDialog()

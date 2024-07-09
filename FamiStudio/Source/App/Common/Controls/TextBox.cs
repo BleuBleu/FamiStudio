@@ -66,7 +66,7 @@ namespace FamiStudio
             height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 :  24);
             text = txt;
             maxLength = maxLen;
-            SetTickEnabled(true); // TODO : Only enable when we have focus. 
+            SetTickEnabled(Platform.IsDesktop); // TODO : Only enable when we have focus. 
         }
 
         public TextBox(int value, int minVal, int maxVal, int increment)
@@ -77,7 +77,7 @@ namespace FamiStudio
             numberMin = minVal;
             numberMax = maxVal;
             numberInc = increment;
-            SetTickEnabled(true); // TODO : Only enable when we have focus. 
+            SetTickEnabled(Platform.IsDesktop); // TODO : Only enable when we have focus. 
         }
 
         public string Text
