@@ -317,6 +317,16 @@ namespace FamiStudio
                 if (i > 0)
                     totalHeight += margin;
 
+                // These should take the full width, so if there is a label, it will go above.
+                // MATTT : Actually make this work.
+                var putLabelAbove = prop.type == PropertyType.Grid         ||
+                                    prop.type == PropertyType.CheckBoxList ||
+                                    prop.type == PropertyType.RadioList    ||
+                                    prop.type == PropertyType.LogTextBox   ||
+                                    prop.type == PropertyType.ColorPicker  ||
+                                    prop.type == PropertyType.ProgressBar  ||
+                                    prop.type == PropertyType.ImageBox;
+
                 if (prop.label != null)
                 {
                     prop.label.Move(x, y + totalHeight, maxLabelWidth, prop.label.Height);

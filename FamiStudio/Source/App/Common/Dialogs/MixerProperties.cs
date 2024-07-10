@@ -68,14 +68,14 @@ namespace FamiStudio
             globalGridIndex = props.AddGrid(Platform.IsMobile ? GlobalLabel : string.Empty,
                 new[]
                 {
-                    new ColumnDesc("", 0.4f),
-                    new ColumnDesc("", 0.6f, ColumnType.Slider)
+                    new ColumnDesc("", Platform.IsMobile ? 0.25f : 0.4f),
+                    new ColumnDesc("", Platform.IsMobile ? 0.75f : 0.6f, ColumnType.Slider)
                 },
                 projectSettings ? 
                     new object[,] { { BassFilterLabel.ToString(), project.OverrideBassCutoffHz ? project.BassCutoffHz : Settings.BassCutoffHz } } :
                     new object[,] { { VolumeLabel.ToString(), (int)(Settings.GlobalVolumeDb * 10) }, { BassFilterLabel.ToString(), Settings.BassCutoffHz } 
                 },
-                projectSettings ? 1 : 2, GlobalGridTooltip, GridOptions.NoHeader);
+                projectSettings ? 1 : 2, GlobalGridTooltip, GridOptions.NoHeader | GridOptions.MobileTwoColumnLayout);
 
             props.SetPropertyEnabled(globalGridIndex, !projectSettings || project.OverrideBassCutoffHz);
 
@@ -110,15 +110,15 @@ namespace FamiStudio
                 chipGridIndices[i] = props.AddGrid(Platform.IsMobile ? ExpansionType.LocalizedChipNames[i] : string.Empty,
                     new[]
                     {
-                        new ColumnDesc("", 0.4f),
-                        new ColumnDesc("", 0.6f, ColumnType.Slider)
+                        new ColumnDesc("", Platform.IsMobile ? 0.25f : 0.4f),
+                        new ColumnDesc("", Platform.IsMobile ? 0.75f : 0.6f, ColumnType.Slider)
                     },
                     new object[,] {
                         { VolumeLabel.ToString(), (int)(mixerSetting.VolumeDb * 10) },
                         { TrebleLabel.ToString(), (int)(mixerSetting.TrebleDb * 10) },
                         { TrebleFreqLabel.ToString(), (int)(mixerSetting.TrebleRolloffHz / 100) },
                     },
-                    3, ExpansionGridTooltip, GridOptions.NoHeader);
+                    3, ExpansionGridTooltip, GridOptions.NoHeader | GridOptions.MobileTwoColumnLayout);
 
                 props.OverrideCellSlider(chipGridIndices[i], 0, 1, -100, 100, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
                 props.OverrideCellSlider(chipGridIndices[i], 1, 1, -1000, 50, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));

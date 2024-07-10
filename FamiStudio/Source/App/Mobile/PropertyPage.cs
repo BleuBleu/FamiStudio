@@ -71,6 +71,7 @@ namespace FamiStudio
             // We need initial data on mobile.
             Debug.Assert(data != null);
 
+            // MATTT : Grid gets built mostly in constructor, but the layout happens in Build(), what do we do?
             var prop = new Property();
             prop.type = PropertyType.Grid;
             prop.label = label != null ? CreateLabel(label, tooltip) : null;
@@ -249,6 +250,11 @@ namespace FamiStudio
                     var checkBox = prop.control is CheckBox;
                     var topY = y;
 
+                    // MATTT : This is kind of shit. For some controls, we want to add them first
+                    // in order to measure them. For some other, we want to set their size THEN 
+                    // add them (ex: grid). How to gracefully handle this? Best would be to allow
+                    // access to fonts/graphics everywhere? This is also dangerous as for the video
+                    // export we need the piano roll to use the offscreen graphics provided...
                     container.AddControl(prop.label);
                     container.AddControl(prop.control);
 

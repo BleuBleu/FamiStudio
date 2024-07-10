@@ -8,24 +8,30 @@ namespace FamiStudio
     {
         private ColumnDesc[] columns;
         private Control[,] gridControls;
+        private bool[,] gridDisabled;
+        private object[,] data;
         private GridOptions options;
 
-        public Grid(Container parent, ColumnDesc[] cols, object[,] data, GridOptions opts = GridOptions.None)
+        public Grid(Container parent, ColumnDesc[] cols, object[,] d, GridOptions opts = GridOptions.None)
         {
             clipRegion = false;
             columns = cols;
             options = opts;
+            data = d;
             gridControls = new Control[data.GetLength(0), data.GetLength(1)];
+            gridDisabled = new bool[data.GetLength(0), data.GetLength(1)];
+        }
 
-            // HACK : Need to temporarely add to be able to add sub controls.
-            parent.AddControl(this);
+        private void RecreateAllControls()
+        {
+            RemoveAllControls();
 
             var numRows = 0;
-            var noHeader = options.HasFlag(GridOptions.NoHeader);
+            var twoColumnLayout = options.HasFlag(GridOptions.MobileTwoColumnLayout);
             var mergeCheckboxAndLabel = false;
             var firstColumnIsLabel = false;
 
-            if (noHeader)
+            if (twoColumnLayout)
             {
                 Debug.Assert(columns.Length == 2);
                 numRows = data.GetLength(0);
@@ -51,7 +57,6 @@ namespace FamiStudio
 
             var rowMargin = DpiScaling.ScaleForWindow(2);
             var rowHeight = DpiScaling.ScaleForWindow(16);
-            var rowIdx = 0;
             var y = 0;
 
             for (int r = 0; r < data.GetLength(0); r++)
@@ -65,19 +70,19 @@ namespace FamiStudio
                     {
                         var checkBox = new CheckBox((bool)data[r, c], (string)data[r, c + 1]);
                         checkBox.Move(0, y, 1000, rowHeight);
+                        checkBox.Enabled = !gridDisabled[r, 0];
                         AddControl(checkBox);
 
                         gridControls[r, 0] = checkBox;
                         gridControls[r, 1] = checkBox;
 
                         c++;
-                        rowIdx++;
                         y += checkBox.Height;
                         continue;
                     }
 
                     var x = 0;
-                    var noLabel = noHeader || (firstColumnIsLabel && c == 0);
+                    var noLabel = twoColumnLayout || (firstColumnIsLabel && c == 0);
 
                     if (!noLabel)
                     {
@@ -85,6 +90,10 @@ namespace FamiStudio
                         colLabel.Move(0, y, 300, rowHeight); // MATTT : Hardcoded 300, need to measure!
                         AddControl(colLabel);
                         x = colLabel.Right;
+                    }
+                    else if (twoColumnLayout && c == 1)
+                    {
+                        x = (int)(columns[0].Width * width);
                     }
 
                     switch (col.Type)
@@ -96,6 +105,7 @@ namespace FamiStudio
                         case ColumnType.Label:
                             var text = new Label((string)data[r, c]);
                             text.Font = firstColumnIsLabel && c == 0 ? fonts.FontMediumBold : fonts.FontMedium;
+                            text.Ellipsis = twoColumnLayout;
                             ctrl = text;
                             break;
                         case ColumnType.Slider:
@@ -120,30 +130,56 @@ namespace FamiStudio
                             break;
                     }
 
-                    ctrl.Move(x, y, 700, rowHeight);
+                    ctrl.Move(x, y, false);
+
+                    if (twoColumnLayout)
+                    {
+                        ctrl.Resize((int)(col.Width * width), rowHeight);
+                    }
+                    else
+                    {
+                        ctrl.Resize(700, rowHeight); // MATTT
+                    }
+
                     AddControl(ctrl);
-                    y += rowHeight + rowMargin;
 
-                    // MATTT : There was a different layout depending on noheader?
-                    //gridLayout.AddView(view, CreateGridLayoutParams(rowIdx, noHeader ? c : 1));
+                    if (c == 1 || !twoColumnLayout)
+                    {
+                        y += rowHeight + rowMargin;
+                    }
 
+                    ctrl.Enabled = !gridDisabled[r, c];
                     gridControls[r, c] = ctrl;
-
-                    if (!noHeader) rowIdx++;
                 }
-
-                if (noHeader) rowIdx++;
             }
 
-            Resize(1000, y);
-            parent.RemoveControl(this);
+            Resize(width, y);
+        }
+
+        // We will want to Re-run PropertyPage.Build() here, so cant handle it ourselves.
+        //protected override void OnResize(EventArgs e)
+        //{
+        //    if (IsContainedByMainWindow)
+        //    {
+        //        RecreateAllControls();
+        //    }
+        //}
+
+        protected override void OnAddedToContainer()
+        {
+            RecreateAllControls();
         }
 
         public void SetColumnEnabled(int colIdx, bool enabled)
         {
             for (int i = 0; i < gridControls.GetLength(0); i++)
             {
-                gridControls[i, colIdx].Enabled = enabled;
+                gridDisabled[i, colIdx] = !enabled;
+
+                if (gridControls[i, colIdx] != null)
+                {
+                    gridControls[i, colIdx].Enabled = enabled;
+                }
             }
         }
     }

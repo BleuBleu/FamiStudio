@@ -15,8 +15,8 @@ namespace FamiStudio
         private int inc = 1;
         private TextureAtlasRef[] bmp;
         private float captureDuration;
-        private int   captureButton = -1;
-        private int   hoverButton = -1;
+        private int captureButton = -1;
+        private int hoverButton = -1;
 
         protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
@@ -209,7 +209,11 @@ namespace FamiStudio
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
+            if (!e.IsTouchEvent)
+            {
+                SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
+            }
+
             base.OnPointerMove(e);
         }
 

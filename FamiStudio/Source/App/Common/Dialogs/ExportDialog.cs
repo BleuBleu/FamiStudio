@@ -533,7 +533,7 @@ namespace FamiStudio
                     page.AddCheckBox(ExportSlideAsPitchWheelLabel.Colon, true, MidiPitchTooltip); // 2
                     page.AddNumericUpDown(PitchWheelRangeLabel.Colon, 24, 1, 24, 1, MidiPitchRangeTooltip); // 3
                     page.AddDropDownList(InstrumentModeLabel.Colon, Localization.ToStringArray(MidiExportInstrumentMode.LocalizedNames), MidiExportInstrumentMode.LocalizedNames[0], MidiInstrumentTooltip); // 4
-                    page.AddGrid(InstrumentsLabels, new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, GetMidiInstrumentData(MidiExportInstrumentMode.Instrument, out _), 14, MidiInstGridTooltip); // 5
+                    page.AddGrid(InstrumentsLabels, new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, GetMidiInstrumentData(MidiExportInstrumentMode.Instrument, out _), 14, MidiInstGridTooltip, GridOptions.MobileTwoColumnLayout); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:

@@ -171,7 +171,7 @@ namespace FamiStudio
 #if FAMISTUDIO_ANDROID // MATTT : We use a TouchScrollContainer here. Rename to ScrollContainer, have a mobile + desktop version. 
         private void ShowMobileListDialog()
         {
-            var buttonHeight = DpiScaling.ScaleForWindow(20);
+            var buttonHeight = DpiScaling.ScaleForWindow((int)Utils.Lerp(20, 14, Utils.Saturate((items.Length - 4) / 20.0f)));
 
             var dlg = new Dialog(window);
             var scrollContainer = new TouchScrollContainer();

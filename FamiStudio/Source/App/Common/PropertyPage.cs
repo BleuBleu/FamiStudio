@@ -701,7 +701,8 @@ namespace FamiStudio
     public enum GridOptions
     {
         None = 0,
-        NoHeader = 1
+        NoHeader = 1,
+        MobileTwoColumnLayout = 2
     }
 
     public class ColumnDesc
