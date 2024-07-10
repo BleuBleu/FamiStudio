@@ -12,6 +12,8 @@ namespace FamiStudio
         private TextureAtlasRef bmpCheckOn;
         private TextureAtlasRef bmpCheckOff;
 
+        public override bool SupportsDoubleClick => false;
+
         public CheckBox(bool chk, string txt = null)
         {
             text = txt;
@@ -41,13 +43,15 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (enabled && IsPointInCheckBox(e.X, e.Y))
+            if (enabled && IsPointInCheckBox(e.X, e.Y) && !e.IsTouchEvent)
                 Checked = !Checked;
         }
 
-        protected override void OnMouseDoubleClick(PointerEventArgs e)
+        protected override void OnTouchClick(PointerEventArgs e)
         {
-            OnPointerDown(e);
+            // Allow click on label on mobile.
+            if (enabled)
+                Checked = !Checked;
         }
 
         protected override void OnPointerMove(PointerEventArgs e)

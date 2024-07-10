@@ -292,35 +292,32 @@ namespace FamiStudio
             return 0; // MATTT
         }
 
+        private CheckBoxList CreateCheckBoxList(string[] values, bool[] selected, string tooltip = null)
+        {
+            var checkList = new CheckBoxList(values, selected);
+            checkList.ToolTip = tooltip;
+            // MATTT : Hook events.
+            return checkList;
+        }
+
         public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7)
         {
             var prop = new Property();
             prop.type = PropertyType.CheckBoxList;
             prop.label = CreateLabel(label);
-            
-            var listContainer = new Container();
-            listContainer.SetupClipRegion(false);
-
-            prop.control = listContainer;
+            prop.control = CreateCheckBoxList(values, selected, tooltip);
             prop.subControls = new Control[values.Length];
-
-            // Need to add to be able to add sub controls.
-            container.AddControl(listContainer);
-
-            var rowHeight = DpiScaling.ScaleForWindow(16);
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                var checkBox = CreateCheckBox(selected == null ? true : selected[i], values[i]);
-                checkBox.Move(0, i * rowHeight, 1000, rowHeight); // MATTT
-                listContainer.AddControl(checkBox);
-            }
-
-            listContainer.Resize(1000, values.Length * rowHeight); // MATTT
-            container.RemoveControl(listContainer);
             properties.Add(prop);
 
             return properties.Count - 1;
+        }
+
+        private RadioButtonList CreateRadioButtonList(string[] values, int selectedIndex, string tooltip = null)
+        {
+            var radioList = new RadioButtonList(values, selectedIndex);
+            radioList.ToolTip = tooltip;
+            // MATTT : Hook events.
+            return radioList;
         }
 
         public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7)
@@ -328,27 +325,8 @@ namespace FamiStudio
             var prop = new Property();
             prop.type = PropertyType.CheckBoxList;
             prop.label = CreateLabel(label);
-
-            var listContainer = new Container();
-            listContainer.SetupClipRegion(false);
-
-            prop.control = listContainer;
+            prop.control = CreateRadioButtonList(values, selectedIndex, tooltip);
             prop.subControls = new Control[values.Length];
-
-            // Need to add to be able to add sub controls.
-            container.AddControl(listContainer);
-
-            var rowHeight = DpiScaling.ScaleForWindow(16);
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                var checkBox = CreateRadioButton(values[i], i == selectedIndex, false);
-                checkBox.Move(0, i * rowHeight, 1000, rowHeight); // MATTT
-                listContainer.AddControl(checkBox);
-            }
-
-            listContainer.Resize(1000, values.Length * rowHeight); // MATTT
-            container.RemoveControl(listContainer);
             properties.Add(prop);
 
             return properties.Count - 1;

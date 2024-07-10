@@ -284,14 +284,17 @@
     <Compile Include="Source\App\Droid\FamiStudioWindow.cs" />
     <Compile Include="Source\App\Droid\MobileProjectDialog.cs" />
     <Compile Include="Source\App\Droid\TutorialDialog.cs" />
+    <Compile Include="Source\App\Mobile\CheckBoxList.cs" />
     <Compile Include="Source\App\Mobile\Dialog.cs" />
     <Compile Include="Source\App\Mobile\FamiStudioContainer.cs" />
+    <Compile Include="Source\App\Mobile\Grid.cs" />
     <Compile Include="Source\App\Mobile\LogDialog.cs" />
     <Compile Include="Source\App\Mobile\MobilePiano.cs" />
     <Compile Include="Source\App\Mobile\MultiPropertyDialog.cs" />
     <Compile Include="Source\App\Mobile\PropertyDialog.cs" />
     <Compile Include="Source\App\Mobile\PropertyPage.cs" />
     <Compile Include="Source\App\Mobile\QuickAccessBar.cs" />
+    <Compile Include="Source\App\Mobile\RadioButtonList.cs" />
     <Compile Include="Source\App\Mobile\TopbarDialog.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\AlphaNumericSort.cs" />
