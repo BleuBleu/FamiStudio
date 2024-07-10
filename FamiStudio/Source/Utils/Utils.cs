@@ -136,17 +136,12 @@ namespace FamiStudio
 
         public static int Log2Int(int x)
         {
-            // MATTT : Look at BitOperators.Log2();
+            // I dont remember why we return min. But BitOperations.Log2(0) returns 0
+            // and I dont want to break anything.
             if (x == 0)
                 return int.MinValue;
 
-            int bits = 0;
-            while (x > 0)
-            {
-                bits++;
-                x >>= 1;
-            }
-            return bits - 1;
+            return BitOperations.Log2((uint)x);
         }
 
         public static int ParseIntWithTrailingGarbage(string s)
@@ -239,16 +234,7 @@ namespace FamiStudio
 
         public static int NextPowerOfTwo(int v)
         {
-            // MATTT : Look at BitOperators.RoundUpToPowerOf2();
-            v--;
-            v |= v >> 1;
-            v |= v >> 2;
-            v |= v >> 4;
-            v |= v >> 8;
-            v |= v >> 16;
-            v++;
-
-            return v;
+            return (int)BitOperations.RoundUpToPowerOf2((uint)v);
         }
 
         public static int PrevPowerOfTwo(int v)
