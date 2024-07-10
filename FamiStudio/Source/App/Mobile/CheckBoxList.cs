@@ -10,12 +10,13 @@ namespace FamiStudio
         public event CheckedChangedDelegate CheckedChanged;
 
         private int rowHeight = DpiScaling.ScaleForWindow(14);
-        private List<CheckBox> checkList = new List<CheckBox>();
+        private CheckBox[] checkList;
 
         public CheckBoxList(string[] values, bool[] selected)
         {
             clipRegion = false;
             height = rowHeight * values.Length;
+            checkList = new CheckBox[values.Length];
 
             for (int i = 0; i < values.Length; i++)
             {
@@ -23,7 +24,7 @@ namespace FamiStudio
                 checkBox.CheckedChanged += CheckBox_CheckedChanged;
                 checkBox.Move(0, i * rowHeight, width, rowHeight);
                 checkBox.UserData = i;
-                checkList.Add(checkBox);
+                checkList[i] = checkBox;
             }
         }
 
@@ -40,6 +41,17 @@ namespace FamiStudio
             foreach (var check in checkList)
             {
                 check.Resize(width, check.Height);
+            }
+        }
+
+        public bool[] Values
+        {
+            get
+            {
+                var values = new bool[checkList.Length];
+                for (var i = 0; i < checkList.Length; i++)
+                    values[i] = checkList[i].Checked;
+                return values;
             }
         }
 

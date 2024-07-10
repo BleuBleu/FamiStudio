@@ -42,19 +42,8 @@ namespace FamiStudio
 
         public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
         {
-            // MATTT : Need to keep labels too to toggle them.
-            var prop = properties[propIdx];
-            Debug.Assert(prop.type == PropertyType.Grid);
-
-            // MATTT : This is very dump code.
-            for (int i = 0; i < prop.subControls.Length; i++)
-            {
-                var r = i / prop.columns.Length;
-                var c = i % prop.columns.Length;
-
-                if (c == colIdx)
-                    prop.subControls[i].Enabled = enabled;
-            }
+            var grid = properties[propIdx].control as Grid;
+            grid.SetColumnEnabled(colIdx, enabled);
         }
 
         public void SetRowColor(int propIdx, int rowIdx, Color color)
@@ -69,6 +58,14 @@ namespace FamiStudio
             //grid.OverrideCellSlider(rowIdx, colIdx, min, max, fmt);
         }
 
+        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, string tooltip = null, GridOptions options = GridOptions.None)
+        {
+            var grid = new Grid(container, columnDescs, data, options);
+            grid.ToolTip = tooltip;
+            // MATTT : Hook up events.
+            return grid;
+        }
+
         public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null, GridOptions options = GridOptions.None)
         {
             // We need initial data on mobile.
@@ -77,128 +74,7 @@ namespace FamiStudio
             var prop = new Property();
             prop.type = PropertyType.Grid;
             prop.label = label != null ? CreateLabel(label, tooltip) : null;
-            prop.columns = columnDescs;
-
-            var gridContainer = new Container();
-            gridContainer.SetupClipRegion(false);
-
-            prop.control = gridContainer;
-            prop.subControls = new Control[data.Length];
-
-            // Need to add to be able to add sub controls.
-            container.AddControl(gridContainer);
-
-            var numRows = 0;
-            var noHeader = options.HasFlag(GridOptions.NoHeader);
-            var mergeCheckboxAndLabel = false;
-
-            if (noHeader)
-            {
-                Debug.Assert(columnDescs.Length == 2);
-                numRows = data.GetLength(0);
-            }
-            else
-            {
-                // Special case, if the 2 first columns are checkbox + label, we combine then in something nicer.
-                if (columnDescs[0].Type == ColumnType.CheckBox && columnDescs[1].Type == ColumnType.Label)
-                {
-                    numRows = data.GetLength(0) * (data.GetLength(1) - 1);
-                    mergeCheckboxAndLabel = true;
-                }
-                else
-                {
-                    numRows = data.GetLength(0) * data.GetLength(1);
-                }
-            }
-
-            var rowMargin = DpiScaling.ScaleForWindow(2);
-            var rowHeight = DpiScaling.ScaleForWindow(16);
-            var rowIdx = 0;
-            var y = 0;
-
-            for (int r = 0; r < data.GetLength(0); r++)
-            {
-                for (int c = 0; c < columnDescs.Length; c++)
-                {
-                    var ctrl = (Control)null;
-                    var col = columnDescs[c];
-
-                    if (mergeCheckboxAndLabel && c == 0)
-                    {
-                        var checkBox = new CheckBox((bool)data[r, c], (string)data[r, c + 1]);
-                        checkBox.Move(0, y, 1000, rowHeight);
-                        gridContainer.AddControl(checkBox);
-
-                        prop.subControls[r * prop.columns.Length + 0] = checkBox;
-                        prop.subControls[r * prop.columns.Length + 1] = checkBox;
-
-                        c++;
-                        rowIdx++;
-                        y += checkBox.Height;
-                        continue;
-                    }
-
-                    var x = 0;
-
-                    if (!noHeader)
-                    {
-                        var colLabel = new Label(columnDescs[c].Name);
-                        colLabel.Move(0, y, 300, rowHeight); // MATTT : Hardcoded 300, need to measure!
-                        gridContainer.AddControl(colLabel);
-                        x = colLabel.Right;
-                    }
-
-                    switch (col.Type)
-                    {
-                        case ColumnType.CheckBox:
-                            var checkBox = new CheckBox((bool)data[r, c]);
-                            ctrl = checkBox;
-                            break;
-                        case ColumnType.Label:
-                            var text = new Label((string)data[r, c]);
-                            ctrl = text;
-                            break;
-                        case ColumnType.Slider:
-                            var seek = new Slider((int)data[r, c], col.MinValue, col.MaxValue, 1, false /*, col.Formatter*/); // MATTT : Format!
-                            ctrl = seek;
-                            break;
-                        case ColumnType.NumericUpDown:
-                            var upDown = new NumericUpDown((int)data[r, c], col.MinValue, col.MaxValue, 1);
-                            ctrl = upDown;
-                            break;
-                        case ColumnType.DropDown:
-                            var dropDown = new DropDown(col.DropDownValues, Array.IndexOf(col.DropDownValues, (string)data[r, c]));
-                            ctrl = dropDown;
-                            break;
-                        case ColumnType.Button:
-                            var button = new Button(null, "...");
-                            button.Border = true;
-                            ctrl = button;
-                            break;
-                        default:
-                            Debug.Assert(false);
-                            break;
-                    }
-
-                    ctrl.Move(x, y, 700, rowHeight);
-                    gridContainer.AddControl(ctrl);
-                    y += rowHeight + rowMargin;
-
-                    // MATTT : There was a different layout depending on noheader?
-                    //gridLayout.AddView(view, CreateGridLayoutParams(rowIdx, noHeader ? c : 1));
-
-                    prop.subControls[r * prop.columns.Length + c] = ctrl;
-
-                    if (!noHeader) rowIdx++;
-                }
-
-                if (noHeader) rowIdx++;
-            }
-
-            // Will be re-added during build.
-            container.RemoveControl(gridContainer);
-            gridContainer.Resize(1000, y);
-
+            prop.control = CreateGrid(columnDescs, data, tooltip, options);
             properties.Add(prop);
 
             return properties.Count - 1;
@@ -268,12 +144,8 @@ namespace FamiStudio
 
         private object GetCheckBoxListValue(int idx)
         {
-            var prop = properties[idx];
-            var selected = new bool[prop.subControls.Length]; 
-            // MATTT
-            //for (int i = 0; i < grid.ItemCount; i++)
-            //    selected[i] = (bool)grid.GetData(i, 0);
-            return selected;
+            var checkList = properties[idx].control as CheckBoxList;
+            return checkList.Values;
         }
 
         private int GetRadioListSelectedIndex(int idx)
@@ -306,7 +178,6 @@ namespace FamiStudio
             prop.type = PropertyType.CheckBoxList;
             prop.label = CreateLabel(label);
             prop.control = CreateCheckBoxList(values, selected, tooltip);
-            prop.subControls = new Control[values.Length];
             properties.Add(prop);
 
             return properties.Count - 1;
@@ -326,7 +197,6 @@ namespace FamiStudio
             prop.type = PropertyType.CheckBoxList;
             prop.label = CreateLabel(label);
             prop.control = CreateRadioButtonList(values, selectedIndex, tooltip);
-            prop.subControls = new Control[values.Length];
             properties.Add(prop);
 
             return properties.Count - 1;

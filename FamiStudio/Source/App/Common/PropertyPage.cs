@@ -17,8 +17,6 @@ namespace FamiStudio
             public bool visible = true;
             public bool forceKeepSize;
             public Label tooltipLabel; // Mobile only
-            public ColumnDesc[] columns; // Mobile only
-            public Control[] subControls; // Mobile only
         };
 
         private int layoutWidth;
