@@ -5,6 +5,8 @@
 - Crash if project name is " " + NSF export.
 - Upgrade Android min SDK to make google happy.
 - Russian translation.
+- JTS song is too big now? 
+	https://discord.com/channels/@me/1256890811921207330/1260320240986755083
 
 4.3.0
 =====
