@@ -176,9 +176,14 @@ namespace FamiStudio
             this.y = y;
         }
 
-        public static Point operator +(Point pt, Size sz)
+        public static Point operator+(Point pt, Size sz)
         {
             return new Point(pt.x + sz.Width, pt.y + sz.Height);
+        }
+
+        public static Point operator-(Point p1, Point p2)
+        {
+            return new Point(p1.x - p2.x, p1.y - p2.y);
         }
 
         public override string ToString()

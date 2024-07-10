@@ -542,7 +542,6 @@ namespace FamiStudio
             if (prop.label != null)
                 prop.label.Enabled = enabled;
 
-            // MATTT : Also do it when creating the labels, this only works when disabling a property after Build().
             if (prop.tooltipLabel != null)
                 prop.tooltipLabel.Enabled = enabled;
 

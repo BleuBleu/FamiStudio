@@ -23,6 +23,7 @@ namespace FamiStudio
             var numRows = 0;
             var noHeader = options.HasFlag(GridOptions.NoHeader);
             var mergeCheckboxAndLabel = false;
+            var firstColumnIsLabel = false;
 
             if (noHeader)
             {
@@ -37,6 +38,10 @@ namespace FamiStudio
                 {
                     numRows = data.GetLength(0) * (data.GetLength(1) - 1);
                     mergeCheckboxAndLabel = true;
+                }
+                else if (columns[0].Type == ColumnType.Label)
+                {
+                    firstColumnIsLabel = true;
                 }
                 else
                 {
@@ -56,7 +61,7 @@ namespace FamiStudio
                     var ctrl = (Control)null;
                     var col = columns[c];
 
-                    if (mergeCheckboxAndLabel && c == 0)
+                    if (c == 0 && mergeCheckboxAndLabel)
                     {
                         var checkBox = new CheckBox((bool)data[r, c], (string)data[r, c + 1]);
                         checkBox.Move(0, y, 1000, rowHeight);
@@ -72,8 +77,9 @@ namespace FamiStudio
                     }
 
                     var x = 0;
+                    var noLabel = noHeader || (firstColumnIsLabel && c == 0);
 
-                    if (!noHeader)
+                    if (!noLabel)
                     {
                         var colLabel = new Label(columns[c].Name);
                         colLabel.Move(0, y, 300, rowHeight); // MATTT : Hardcoded 300, need to measure!
@@ -89,6 +95,7 @@ namespace FamiStudio
                             break;
                         case ColumnType.Label:
                             var text = new Label((string)data[r, c]);
+                            text.Font = firstColumnIsLabel && c == 0 ? fonts.FontMediumBold : fonts.FontMedium;
                             ctrl = text;
                             break;
                         case ColumnType.Slider:

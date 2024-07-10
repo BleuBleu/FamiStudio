@@ -700,8 +700,7 @@ namespace FamiStudio
 
                 foreach (var btn in allButtons)
                 {
-                    // MATTT : Compare the buttons pointers, not strings...
-                    if ((string)btn.UserData == "Help")
+                    if (btn == buttonHelp)
                     {
                         btn.Move(Width - btn.Width, 0);
                     }
@@ -710,14 +709,12 @@ namespace FamiStudio
                         btn.Move(x, 0, btn.Width, Height);
                     }
 
-                    // MATTT : Compare the buttons pointers, not strings...
-                    var isLessImportant =
-                        (string)btn.UserData == "Copy"   ||
-                        (string)btn.UserData == "Cut"    ||
-                        (string)btn.UserData == "Paste"  ||
-                        (string)btn.UserData == "Delete" ||
-                        (string)btn.UserData == "Undo"   ||
-                        (string)btn.UserData == "Redo";
+                    var isLessImportant = btn == buttonCopy   ||
+                                          btn == buttonCut    ||
+                                          btn == buttonPaste  ||
+                                          btn == buttonDelete ||
+                                          btn == buttonUndo   ||
+                                          btn == buttonRedo;
 
                     btn.Visible = !(hideLessImportantButtons && isLessImportant);
 
@@ -726,8 +723,7 @@ namespace FamiStudio
                         x += btn.Width;
                     }
 
-                    // MATTT : Compare the buttons pointers, not strings...
-                    if ((string)btn.UserData == "Config")
+                    if (btn == buttonConfig)
                     {
                         var timecodeOscSizeX  = DpiScaling.ScaleForWindow(140);
 

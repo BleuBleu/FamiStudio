@@ -247,12 +247,9 @@ namespace FamiStudio
         private static readonly CaptureOperation DragFolder                   = new CaptureOperation("DragFolder");
         private static readonly CaptureOperation MobilePan                    = new CaptureOperation("MobilePan", true, false);
 
-        private int mouseLastX = 0; // MATTT : Make this a pOint
-        private int mouseLastY = 0;
-        private int captureMouseX = -1; // MATTT : Make this a pOint
-        private int captureMouseY = -1;
-        private int captureButtonRelX = -1;
-        private int captureButtonRelY = -1;
+        private Point mouseLastPos;
+        private Point captureMousePos;
+        private Point captureButtonRelPos;
         private int captureScrollY = -1;
         private int envelopeDragIdx = -1;
         private TextureAtlasRef envelopeDragTexture = null;
@@ -1733,7 +1730,7 @@ namespace FamiStudio
 
                 var mainContainerPos = Platform.IsDesktop ?
                     mainContainer.ScreenToControl(CursorPosition) :
-                    mainContainer.WindowToControl(ControlToWindow(new Point(mouseLastX, mouseLastY)));
+                    mainContainer.WindowToControl(ControlToWindow(mouseLastPos));
 
                 if ((captureOperation == DragInstrumentEnvelope || 
                      captureOperation == DragArpeggioValues) && envelopeDragIdx >= 0 ||
@@ -1743,16 +1740,15 @@ namespace FamiStudio
                     {
                         Debug.Assert(envelopeDragTexture != null);
                         
-                        var bx = mainContainerPos.X - captureButtonRelX;
-                        var by = mainContainerPos.Y - captureButtonRelY;
+                        var bp = mainContainerPos - captureButtonRelPos;
 
-                        c.DrawTextureAtlas(envelopeDragTexture, bx, by, iconImageScale, Color.Black.Transparent(128));
+                        c.DrawTextureAtlas(envelopeDragTexture, bp.X, bp.Y, iconImageScale, Color.Black.Transparent(128));
 
                         if (Platform.IsMobile)
                         {
                             var iconSizeX = envelopeDragTexture.ElementSize.Width  * iconImageScale;
                             var iconSizeY = envelopeDragTexture.ElementSize.Height * iconImageScale;
-                            c.DrawRectangle(bx, by, bx + iconSizeX, by + iconSizeY, Theme.WhiteColor, 3, true, true);
+                            c.DrawRectangle(bp.X, bp.Y, bp.X + iconSizeX, bp.Y + iconSizeY, Theme.WhiteColor, 3, true, true);
                         }
                     }
                 }
@@ -2158,8 +2154,10 @@ namespace FamiStudio
 
             if (captureOperation != null && !captureThresholdMet)
             {
-                if (Math.Abs(p.X - captureMouseX) >= CaptureThreshold ||
-                    Math.Abs(p.Y - captureMouseY) >= CaptureThreshold)
+                var mouseDelta = p - captureMousePos;
+
+                if (Math.Abs(mouseDelta.X) >= CaptureThreshold ||
+                    Math.Abs(mouseDelta.Y) >= CaptureThreshold)
                 {
                     captureThresholdMet = true;
                 }
@@ -2195,7 +2193,7 @@ namespace FamiStudio
                 }
                 else if (captureOperation == MobilePan)
                 {
-                    DoScroll(p.Y - mouseLastY);
+                    DoScroll(p.Y - mouseLastPos.Y);
                 }
                 else
                 {
@@ -2223,10 +2221,9 @@ namespace FamiStudio
 
             // MATTT : This should be event on the "mainContainer".
             if (middle)
-                DoScroll(e.Y - mouseLastY);
+                DoScroll(e.Y - mouseLastPos.Y);
 
-            mouseLastX = e.X;
-            mouseLastY = e.Y;
+            mouseLastPos = e.Position;
         }
 
         protected override void OnPointerLeave(EventArgs e)
@@ -2267,12 +2264,9 @@ namespace FamiStudio
         {
             Debug.Assert(captureOperation == null);
             var ctrlPos = WindowToControl(control.ControlToWindow(p));
-            mouseLastX = ctrlPos.X;
-            mouseLastY = ctrlPos.Y;
-            captureMouseX = ctrlPos.X;
-            captureMouseY = ctrlPos.Y;
-            captureButtonRelX = p.X;
-            captureButtonRelY = p.Y;
+            mouseLastPos = ctrlPos;
+            captureMousePos = ctrlPos;
+            captureButtonRelPos = p;
             captureScrollY = mainContainer.ScrollY;
             control.Capture = true;
             canFling = false;
@@ -2377,8 +2371,7 @@ namespace FamiStudio
             UpdateCursor();
             UpdateCaptureOperation(ctrlPos);
 
-            mouseLastX = ctrlPos.X;
-            mouseLastY = ctrlPos.Y;
+            mouseLastPos = ctrlPos;
         }
 
         public override void OnContainerPointerDownNotify(Control control, PointerEventArgs e)
@@ -3184,7 +3177,7 @@ namespace FamiStudio
 
             if (middle)
             {
-                mouseLastY = e.Y;
+                mouseLastPos = e.Position;
                 return true;
             }
 
@@ -3484,9 +3477,7 @@ namespace FamiStudio
         {
             UpdateCursor();
             UpdateCaptureOperation(e.Position);
-
-            mouseLastX = e.X;
-            mouseLastY = e.Y;
+            mouseLastPos = e.Position;
         }
 
         protected void OnTouchUp(PointerEventArgs e)
@@ -3510,7 +3501,7 @@ namespace FamiStudio
         {
             ValidateIntegrity();
             TickFling(delta);
-            UpdateCaptureOperation(new Point(mouseLastX, mouseLastY), true, delta);
+            UpdateCaptureOperation(mouseLastPos, true, delta);
         }
 
         private void EditProjectProperties()

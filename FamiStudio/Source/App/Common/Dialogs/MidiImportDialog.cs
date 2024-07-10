@@ -67,7 +67,7 @@ namespace FamiStudio
                 dialog.Properties.AddCheckBox(ImportVelocityAsVolume.Colon, true); // 2
                 dialog.Properties.AddCheckBox(CreatePALProject.Colon, false); // 3
                 dialog.Properties.AddCheckBoxList(ExpansionsLabel.Colon, expNames, new bool[expNames.Length], null); // 4
-                dialog.Properties.AddLabel(null, ChannelMappingLabel.Colon); // 5
+                dialog.Properties.AddLabel(null, ChannelMappingLabel.Colon); // 5 // MATTT : Remove this. Make desktop handle labels with grid automatically.
                 dialog.Properties.AddGrid(ChannelsLabel, new[] { new ColumnDesc(NESChannelColumn, 0.25f), new ColumnDesc(MIDISourceColumn, 0.45f, GetSourceNames()), new ColumnDesc(Channel10KeysColumn, 0.3f, ColumnType.Button) }, GetChannelListData(0)); // 6
                 dialog.Properties.AddLabel(null, MIDIDisclaimerLabel, true);
                 dialog.Properties.Build();
