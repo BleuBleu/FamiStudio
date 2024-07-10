@@ -250,11 +250,6 @@ namespace FamiStudio
                     var checkBox = prop.control is CheckBox;
                     var topY = y;
 
-                    // MATTT : This is kind of shit. For some controls, we want to add them first
-                    // in order to measure them. For some other, we want to set their size THEN 
-                    // add them (ex: grid). How to gracefully handle this? Best would be to allow
-                    // access to fonts/graphics everywhere? This is also dangerous as for the video
-                    // export we need the piano roll to use the offscreen graphics provided...
                     container.AddControl(prop.label);
                     container.AddControl(prop.control);
 
@@ -302,14 +297,6 @@ namespace FamiStudio
                     container.AddControl(prop.control);
                     y = prop.control.Bottom + margin;
                 }
-
-                //if (prop.warningIcon != null)
-                //{
-                //    prop.warningIcon.Move(
-                //        x + actualLayoutWidth - prop.warningIcon.Width,
-                //        y + totalHeight + (height - prop.warningIcon.Height) / 2);
-                //    container.AddControl(prop.warningIcon);
-                //}
             }
 
             layoutHeight = y;

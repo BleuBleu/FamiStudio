@@ -25,6 +25,7 @@ namespace FamiStudio
         private void RecreateAllControls()
         {
             RemoveAllControls();
+            gridControls = new Control[data.GetLength(0), data.GetLength(1)];
 
             var numRows = 0;
             var twoColumnLayout = options.HasFlag(GridOptions.MobileTwoColumnLayout);
@@ -153,17 +154,16 @@ namespace FamiStudio
                 }
             }
 
-            Resize(width, y);
+            Resize(width, y, false);
         }
 
-        // We will want to Re-run PropertyPage.Build() here, so cant handle it ourselves.
-        //protected override void OnResize(EventArgs e)
-        //{
-        //    if (IsContainedByMainWindow)
-        //    {
-        //        RecreateAllControls();
-        //    }
-        //}
+        protected override void OnResize(EventArgs e)
+        {
+            if (HasParent)
+            {
+                RecreateAllControls();
+            }
+        }
 
         protected override void OnAddedToContainer()
         {
