@@ -15,6 +15,7 @@ namespace FamiStudio
         private string db = ".byte";
         private string dw = ".word";
         private string ll = "@";
+        private string hexp = "$";
 
         private void SetupFormat(int format)
         {
@@ -24,16 +25,25 @@ namespace FamiStudio
                     db = ".db";
                     dw = ".dw";
                     ll = ".";
+                    hexp = "$";
                     break;
                 case AssemblyFormat.CA65:
                     db = ".byte";
                     dw = ".word";
                     ll = "@";
+                    hexp = "$";
                     break;
                 case AssemblyFormat.ASM6:
                     db = "db";
                     dw = "dw";
                     ll = "@";
+                    hexp = "$";
+                    break;
+                case AssemblyFormat.SDAS:
+                    db = ".db";
+                    dw = ".dw";
+                    ll = ".";
+                    hexp = "0x";
                     break;
             }
         }
@@ -85,17 +95,36 @@ namespace FamiStudio
             }
 
             lines.Add($"sounds:");
+            string llp = ll;
+            if (format == AssemblyFormat.SDAS)
+            {
+                // For SDAS we have no support for named local labels. So we have to expand
+                // the local label prefix with a globally unique name to avoid name collisions.
+                llp += $"sounds_";
+            }
+            lines.Add($"\t{dw} {llp}{modeStrings[0]}");
+            lines.Add($"\t{dw} {llp}{modeStrings[1 % modeStrings.Count]}");
 
-            lines.Add($"\t{dw} {ll}{modeStrings[0]}");
-            lines.Add($"\t{dw} {ll}{modeStrings[1 % modeStrings.Count]}");
+            if (format == AssemblyFormat.SDAS)
+            {
+                // For SDAS we add a re-export of the symbol prefixed with _ for the C code to see
+                // For some reason we can only do this after the symbol is defined.
+                // Doing it earlier will compile without errors, but results in an incorrect address.
+                lines.Add("");
+                lines.Add(".if FAMISTUDIO_CFG_C_BINDINGS");
+                lines.Add($"_sounds=sounds");
+                lines.Add($".globl _sounds");
+                lines.Add(".endif");
+                lines.Add("");
+            }
 
             foreach (var str in modeStrings)
             {
-                lines.Add($"{ll}{str}:");
+                lines.Add($"{llp}{str}:");
                 foreach (var songId in songIds)
                 {
                     var song = project.GetSong(songId);
-                    lines.Add($"\t{dw} {ll}sfx_{str}_{Utils.MakeNiceAsmName(song.Name)}");
+                    lines.Add($"\t{dw} {llp}sfx_{str}_{Utils.MakeNiceAsmName(song.Name)}");
                 }
                 lines.Add("");
             }
@@ -211,10 +240,10 @@ namespace FamiStudio
 
                     effect.Add(0);
 
-                    lines.Add($"{ll}sfx_{str}_{Utils.MakeNiceAsmName(song.Name)}:");
+                    lines.Add($"{llp}sfx_{str}_{Utils.MakeNiceAsmName(song.Name)}:");
 
                     for (int i = 0; i < (effect.Count + 15) / 16; i++)
-                        lines.Add($"\t{db} {string.Join(",", effect.Skip(i * 16).Take(Math.Min(16, effect.Count - i * 16)).Select(x => $"${x:x2}"))}");
+                        lines.Add($"\t{db} {string.Join(",", effect.Skip(i * 16).Take(Math.Min(16, effect.Count - i * 16)).Select(x => $"{hexp}{x:x2}"))}");
 
                     Log.LogMessage(LogSeverity.Info, $"Effect ({song.Name}): {effect.Count} bytes.");
                 }

@@ -187,10 +187,16 @@ REM ..\..\Tools\asm6 test_asm6.asm test_asm6.nes
 ..\..\Tools\asm6_fixed test_asm6.asm test_asm6.nes
 ..\..\Tools\NESASM3 test_nesasm.asm
 
+..\..\Tools\sdas6500 -pogn -I"." -y -s -l test_sdas.o test_sdas.s
+..\..\Tools\sdld6808 -n -i -j -y -w -u -w -b _ZP=0x0000 -b _BSS=0x300 -b _CODE=0x8000 test_sdas.ihx test_sdas.o
+..\..\Tools\makebin -s 73728 -o 32752 test_sdas.ihx test_sdas.nes
+
 :: Binary comparison of all 3 ROMs.
 fc /b test_ca65.nes test_asm6.nes > nul
 @if errorlevel 1 exit /b 1
 fc /b test_ca65.nes test_nesasm.nes > nul
+@if errorlevel 1 exit /b 1
+fc /b test_ca65.nes test_sdas.nes > nul
 @if errorlevel 1 exit /b 1
 
 :: Cleanup.
@@ -199,6 +205,9 @@ del /q *.fns
 rem del /q *.nes
 del /q *.map
 del /q *.dbg
+del /q *.lst
+del /q *.rst
+del /q *.ihx
 
 exit /b 0
 
