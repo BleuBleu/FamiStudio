@@ -73,7 +73,7 @@ void Nes_Apu::enable_nonlinear( double v )
 	// and FamiStudio. So I wonder if we put too much trust in the equations on the 
 	// wiki. Or if my NES is broken!
 
-	square_synth.volume(0.00955 * 15 * v);
+	square_synth.volume( 0.5 );
 	
 	const double tnd = 1.0 / 202;
 	triangle.synth.volume( 3 * tnd * 15.0 );

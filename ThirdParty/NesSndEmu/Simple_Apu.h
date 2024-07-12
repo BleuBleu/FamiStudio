@@ -126,7 +126,9 @@ private:
 	int fds_filter_alpha;
 	bool separate_tnd_channel_enabled[3];
 	long tnd_accum[3];
+	long sq_accum;
 	long prev_nonlinear_tnd;
+	long prev_sq_mix;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;
 	Nes_Vrc7 vrc7;
@@ -139,6 +141,7 @@ private:
 	Blip_Buffer buf;
 	Blip_Buffer buf_tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.
 	Blip_Buffer buf_fds;
+	Blip_Buffer buf_exp;
 	Blip_Buffer buf_epsm_left;
 	Blip_Buffer buf_epsm_right;
 	blip_time_t time;
