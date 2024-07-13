@@ -231,6 +231,31 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        public override bool Enabled 
+        {
+            get { return base.Enabled; }
+            set
+            {
+                base.Enabled = value;
+
+                if (gridControls != null)
+                {
+                    for (int r = 0; r < gridControls.GetLength(0); r++)
+                    {
+                        for (int c = 0; c < gridControls.GetLength(1); c++)
+                        {
+                            var ctrl = gridControls[r, c];
+                            if (ctrl != null)
+                            {
+                                ctrl.Enabled = value;
+                            }
+                            gridDisabled[r, c] = !value;
+                        }
+                    }
+                }
+            }
+        }
+
         public void OverrideCellSlider(int row, int col, int min, int max, Func<object, string> fmt)
         {
             if (cellSliderData == null)

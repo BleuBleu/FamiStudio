@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    // NATTT : Add the same logic we had to prevent changing the slider while scrolling.
+    // MATTT : Add the same logic we had to prevent changing the slider while scrolling.
     // We only started the capture/dragging when the movement in X exceeded a certain 
     // threshold. Otherwise we would let the input go to the parent container.
     public class GridSlider : Control
@@ -70,10 +70,17 @@ namespace FamiStudio
         {
             var c = g.GetCommandList();
 
+            var foreColor = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
+
             c.FillRectangle(0, 0, width, height, Theme.DarkGreyColor1);
-            c.FillRectangle(0, 0, (int)Math.Round((val - min) / (double)(max - min) * width), height, Theme.DarkGreyColor6);
-            c.DrawRectangle(0, 0, width, height, Theme.LightGreyColor1);
-            c.DrawText(format(val), fonts.FontMedium, 0, 0, Theme.LightGreyColor1, TextFlags.MiddleCenter, width, height);
+            
+            if (enabled)
+            {
+                c.FillRectangle(0, 0, (int)Math.Round((val - min) / (double)(max - min) * width), height, Theme.DarkGreyColor6);
+            }
+
+            c.DrawRectangle(0, 0, width, height, foreColor);
+            c.DrawText(format(val), fonts.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, width, height);
         }
     }
 }
