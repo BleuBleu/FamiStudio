@@ -744,6 +744,8 @@
     <EmbeddedResource Include="Resources\Atlas\S5BEnvelopeF@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Save@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SaveSmall@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\SelectAll@4x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\SelectNone@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Sequencer@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Slide@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SliderThumb@2x.tga" />

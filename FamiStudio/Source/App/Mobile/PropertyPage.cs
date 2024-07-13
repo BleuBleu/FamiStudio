@@ -66,7 +66,7 @@ namespace FamiStudio
             return grid;
         }
 
-        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null, GridOptions options = GridOptions.None)
+        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null, GridOptions options = GridOptions.None, PropertyFlags flags = PropertyFlags.ForceFullWidth)
         {
             // We need initial data on mobile.
             Debug.Assert(data != null);
@@ -173,7 +173,7 @@ namespace FamiStudio
             return checkList;
         }
 
-        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7)
+        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7, PropertyFlags flags = PropertyFlags.ForceFullWidth)
         {
             var prop = new Property();
             prop.type = PropertyType.CheckBoxList;
@@ -192,7 +192,7 @@ namespace FamiStudio
             return radioList;
         }
 
-        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7)
+        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7, PropertyFlags flags = PropertyFlags.ForceFullWidth)
         {
             var prop = new Property();
             prop.type = PropertyType.CheckBoxList;
