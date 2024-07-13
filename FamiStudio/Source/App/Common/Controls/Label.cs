@@ -67,8 +67,10 @@ namespace FamiStudio
 
         public void AutoSizeHeight()
         {
-            Debug.Assert(!multiline);
-            height = font.LineHeight;
+            if (!multiline)
+            {
+                height = font.LineHeight;
+            }
         }
 
         protected override void OnResize(EventArgs e)
@@ -78,7 +80,7 @@ namespace FamiStudio
 
         private void AdjustHeightForMultiline()
         {
-            if (multiline)
+            if (multiline && fonts != null)
             {
                 var actualWidth = width - labelOffsetX;
                 var input = text;

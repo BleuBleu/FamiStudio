@@ -289,6 +289,7 @@
     <Compile Include="Source\App\Mobile\Dialog.cs" />
     <Compile Include="Source\App\Mobile\FamiStudioContainer.cs" />
     <Compile Include="Source\App\Mobile\Grid.cs" />
+    <Compile Include="Source\App\Mobile\GridSlider.cs" />
     <Compile Include="Source\App\Mobile\LogDialog.cs" />
     <Compile Include="Source\App\Mobile\MobilePiano.cs" />
     <Compile Include="Source\App\Mobile\MultiPropertyDialog.cs" />

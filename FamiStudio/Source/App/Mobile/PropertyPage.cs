@@ -54,8 +54,8 @@ namespace FamiStudio
 
         public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<object, string> fmt)
         {
-            //var grid = properties[propIdx].control as Grid;
-            //grid.OverrideCellSlider(rowIdx, colIdx, min, max, fmt);
+            var grid = properties[propIdx].control as Grid;
+            grid.OverrideCellSlider(rowIdx, colIdx, min, max, fmt);
         }
 
         private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, string tooltip = null, GridOptions options = GridOptions.None)
@@ -137,8 +137,7 @@ namespace FamiStudio
             switch (prop.type)
             {
                 case PropertyType.Grid:
-                    //(prop.control as Grid).SetData(rowIdx, colIdx, value);
-                    // MATTT
+                    (prop.control as Grid).SetData(rowIdx, colIdx, value);
                     break;
             }
         }

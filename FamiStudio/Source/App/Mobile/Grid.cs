@@ -8,9 +8,17 @@ namespace FamiStudio
     {
         private ColumnDesc[] columns;
         private Control[,] gridControls;
+        private CellSliderData[,] cellSliderData;
         private bool[,] gridDisabled;
         private object[,] data;
         private GridOptions options;
+
+        private class CellSliderData
+        {
+            public int MinValue;
+            public int MaxValue;
+            public Func<object, string> Formatter;
+        }
 
         public Grid(Container parent, ColumnDesc[] cols, object[,] d, GridOptions opts = GridOptions.None)
         {
@@ -66,6 +74,7 @@ namespace FamiStudio
                 {
                     var ctrl = (Control)null;
                     var col = columns[c];
+                    var localRowHeight = rowHeight;
 
                     if (c == 0 && mergeCheckboxAndLabel)
                     {
@@ -100,53 +109,79 @@ namespace FamiStudio
                     switch (col.Type)
                     {
                         case ColumnType.CheckBox:
+                        {
                             var checkBox = new CheckBox((bool)data[r, c]);
                             ctrl = checkBox;
                             break;
+                        }
                         case ColumnType.Label:
+                        {
                             var text = new Label((string)data[r, c]);
                             //text.Font = firstColumnIsLabel && c == 0 ? fonts.FontMediumBold : fonts.FontMedium;
                             text.Ellipsis = twoColumnLayout;
                             ctrl = text;
                             break;
+                        }
                         case ColumnType.Slider:
-                            var seek = new Slider((int)data[r, c], col.MinValue, col.MaxValue, 1, false /*, col.Formatter*/); // MATTT : Format!
+                        {
+                            var min = col.MinValue;
+                            var max = col.MaxValue;
+                            var fmt = col.Formatter;
+
+                            if (cellSliderData != null && cellSliderData[r, c] != null)
+                            {
+                                min = cellSliderData[r, c].MinValue;
+                                max = cellSliderData[r, c].MaxValue;
+                                fmt = cellSliderData[r, c].Formatter;
+                            }
+
+                            var seek = new GridSlider((int)data[r, c], min, max, fmt);
+                            localRowHeight = seek.Height;
                             ctrl = seek;
                             break;
+                        }
                         case ColumnType.NumericUpDown:
+                        {
                             var upDown = new NumericUpDown((int)data[r, c], col.MinValue, col.MaxValue, 1);
                             ctrl = upDown;
                             break;
+                        }
                         case ColumnType.DropDown:
+                        {
                             var dropDown = new DropDown(col.DropDownValues, Array.IndexOf(col.DropDownValues, (string)data[r, c]));
                             ctrl = dropDown;
                             break;
+                        }
                         case ColumnType.Button:
+                        {
                             var button = new Button(null, "...");
                             button.Border = true;
                             ctrl = button;
                             break;
+                        }
                         default:
+                        {
                             Debug.Assert(false);
                             break;
+                        }
                     }
 
                     ctrl.Move(x, y, false);
 
                     if (twoColumnLayout)
                     {
-                        ctrl.Resize((int)(col.Width * width), rowHeight);
+                        ctrl.Resize((int)(col.Width * width), localRowHeight);
                     }
                     else
                     {
-                        ctrl.Resize(700, rowHeight); // MATTT
+                        ctrl.Resize(700, localRowHeight); // MATTT
                     }
 
                     AddControl(ctrl);
 
                     if (c == 1 || !twoColumnLayout)
                     {
-                        y += rowHeight + rowMargin;
+                        y += localRowHeight + rowMargin;
                     }
 
                     ctrl.Enabled = !gridDisabled[r, c];
@@ -155,6 +190,62 @@ namespace FamiStudio
             }
 
             Resize(width, y, false);
+        }
+
+        public void SetData(int row, int col, object d)
+        {
+            data[row, col] = d;
+
+            var ctrl = gridControls[row, col];
+
+            switch (columns[col].Type)
+            {
+                case ColumnType.CheckBox:
+                {
+                    (ctrl as CheckBox).Checked = (bool)d;
+                    break;
+                }
+                case ColumnType.Label:
+                {
+                    (ctrl as Label).Text = (string)d;
+                    break;
+                }
+                case ColumnType.Slider:
+                {
+                    (ctrl as GridSlider).Value = (int)d;
+                    break;
+                }
+                case ColumnType.NumericUpDown:
+                {
+                    (ctrl as NumericUpDown).Value = (int)d;
+                    break;
+                }
+                case ColumnType.DropDown:
+                {
+                    Debug.Assert(false);
+                    //(ctrl as DropDown).Value = (string)d; // MATTT
+                    break;
+                }
+            }
+
+            MarkDirty();
+        }
+
+        public void OverrideCellSlider(int row, int col, int min, int max, Func<object, string> fmt)
+        {
+            if (cellSliderData == null)
+                cellSliderData = new CellSliderData[data.GetLength(0), data.GetLength(1)];
+
+            cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, Formatter = fmt };
+
+            var slider = gridControls[row, col] as GridSlider;
+
+            if (slider != null)
+            {
+                slider.Min = min;
+                slider.Max = max;
+                slider.Format = fmt;
+            }
         }
 
         protected override void OnResize(EventArgs e)
