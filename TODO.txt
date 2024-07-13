@@ -33,6 +33,8 @@ Today:
 - Ability to select a folder, instruments gets added to that. (problem : how would we unselect a folder?)
 - Could we import DMC initial values from NSF?
 - Set multiple colums/rows by default for videos with TONS of channels. 
+- BUG : When moving releases in a selection, it applies multiple times.
+	https://discord.com/channels/@me/819772561940152321/1261610994673778730
 
 4.3.0
 =====
@@ -43,7 +45,8 @@ Today:
 =============
 - Test detuning with sound, dual NSF, slide notes, etc.
 - Test potential threading issues with N163 auto-assignment.
-
+- BUG : If not using OS dialogs, the drop down overflows. Need to add clipping or ellipsis.
+- BUG : Import instrument dialog, text overflow if too big.
 - BUG : Expand toolbar on mobile, click on open, weird shadow.
 - UI code cleanup:
 	- Project explorer rewrite
