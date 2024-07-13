@@ -7967,10 +7967,9 @@ namespace FamiStudio
                 var pitchStrings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
 
                 var dlg = new PropertyDialog(ParentWindow, AssignDPCMSampleTitle, 300);
-                dlg.Properties.AddLabel(null, SelectSampleToAssignLabel.Colon); // 0
-                dlg.Properties.AddDropDownList(Platform.IsMobile ? SelectSampleToAssignLabel : null, sampleNames.ToArray(), sampleNames[0]); // 1
-                dlg.Properties.AddDropDownList(PitchLabel.Colon, pitchStrings, pitchStrings[pitchStrings.Length - 1]); // 2
-                dlg.Properties.AddCheckBox(LoopLabel.Colon, false); // 3
+                dlg.Properties.AddDropDownList(SelectSampleToAssignLabel.Colon, sampleNames.ToArray(), sampleNames[0], null, PropertyFlags.ForceFullWidth); // 0
+                dlg.Properties.AddDropDownList(PitchLabel.Colon, pitchStrings, pitchStrings[pitchStrings.Length - 1]); // 1
+                dlg.Properties.AddCheckBox(LoopLabel.Colon, false); // 2
                 dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 dlg.Properties.Build();
 
@@ -7979,10 +7978,10 @@ namespace FamiStudio
                     if (r == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id, -1, TransactionFlags.StopAudio);
-                        var sampleName = dlg.Properties.GetPropertyValue<string>(1);
+                        var sampleName = dlg.Properties.GetPropertyValue<string>(0);
                         var mapping = editInstrument.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
-                        mapping.Pitch = dlg.Properties.GetSelectedIndex(2);
-                        mapping.Loop = dlg.Properties.GetPropertyValue<bool>(3);
+                        mapping.Pitch = dlg.Properties.GetSelectedIndex(1);
+                        mapping.Loop = dlg.Properties.GetPropertyValue<bool>(2);
                         App.UndoRedoManager.EndTransaction();
                         DPCMSampleMapped?.Invoke(noteValue);
                     }

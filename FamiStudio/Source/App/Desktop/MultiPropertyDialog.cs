@@ -116,7 +116,7 @@ namespace FamiStudio
 
                 if (tab.scrollHeight > 0)
                 {
-                    (tab.container as ScrollContainer).VirtualSizeY = tab.properties.LayoutHeight + margin;
+                    (tab.container as ScrollContainer).VirtualSizeY = tab.properties.LayoutHeight;
                 }
             }
 

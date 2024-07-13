@@ -8,6 +8,7 @@ namespace FamiStudio
     {
         protected int labelOffsetX;
         protected string text;
+        protected string multilineSplitText;
         protected bool multiline;
         protected bool centered;
         protected bool ellipsis;
@@ -25,7 +26,7 @@ namespace FamiStudio
         public bool Multiline
         {
             get { return multiline; }
-            set { SetAndMarkDirty(ref multiline, value); }
+            set { if (SetAndMarkDirty(ref multiline, value)) AdjustHeightForMultiline(); }
         }
 
         public Font Font
@@ -70,13 +71,12 @@ namespace FamiStudio
             height = font.LineHeight;
         }
 
-        // MATTT : We really should do this and make the "Ajust" method private.
-        //protected override void OnResize(EventArgs e)
-        //{
-        //    AdjustHeightForMultiline();
-        //}
+        protected override void OnResize(EventArgs e)
+        {
+            AdjustHeightForMultiline();
+        }
 
-        public void AdjustHeightForMultiline()
+        private void AdjustHeightForMultiline()
         {
             if (multiline)
             {
@@ -163,16 +163,16 @@ namespace FamiStudio
                     }
                 }
 
-                text = output;
+                multilineSplitText = output;
 
-                Resize(width, font.LineHeight * numLines);
+                Resize(width, font.LineHeight * numLines, false);
             }
         }
 
         public string Text
         {
             get { return text; }
-            set { text = value; MarkDirty(); }
+            set { if (SetAndMarkDirty(ref text, value)) AdjustHeightForMultiline(); }
         }
 
         public int MeasureWidth()
@@ -196,7 +196,7 @@ namespace FamiStudio
 
             if (multiline)
             {
-                var lines = text.Split('\n');
+                var lines = multilineSplitText.Split('\n');
 
                 for (int i = 0; i < lines.Length; i++)
                 {

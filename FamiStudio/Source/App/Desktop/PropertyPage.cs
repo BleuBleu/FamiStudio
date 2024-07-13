@@ -244,37 +244,41 @@ namespace FamiStudio
             return -1;
         }
 
-        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7)
+        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7, PropertyFlags flags = PropertyFlags.ForceFullWidth)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
-                    label = label != null ? CreateLabel(label) : null,
-                    control = CreateCheckListBox(values, selected, tooltip, numRows)
+                    label = label != null ? CreateLabel(label, tooltip, flags.HasFlag(PropertyFlags.MultiLineLabel)) : null,
+                    control = CreateCheckListBox(values, selected, tooltip, numRows),
+                    flags = flags
                 });
             return properties.Count - 1;
         }
 
-        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7)
+        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7, PropertyFlags flags = PropertyFlags.ForceFullWidth)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.RadioList,
-                    label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateRadioButtonList(values, selectedIndex, tooltip, numRows)
+                    label = label != null ? CreateLabel(label, tooltip, flags.HasFlag(PropertyFlags.MultiLineLabel)) : null,
+                    control = CreateRadioButtonList(values, selectedIndex, tooltip, numRows),
+                    flags = flags
                 });
             return properties.Count - 1;
         }
 
-        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None)
+        public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int numRows = 7, string tooltip = null, GridOptions options = GridOptions.None, PropertyFlags flags = PropertyFlags.ForceFullWidth)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Grid,
-                    control = CreateGrid(columnDescs, data, numRows, tooltip, options)
+                    label = label != null ? CreateLabel(label, tooltip, flags.HasFlag(PropertyFlags.MultiLineLabel)) : null,
+                    control = CreateGrid(columnDescs, data, numRows, tooltip, options),
+                    flags = flags
                 });
             return properties.Count - 1;
         }
@@ -299,7 +303,6 @@ namespace FamiStudio
                 }
             }
 
-            var totalHeight = 0;
             var warningWidth = showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
             var actualLayoutWidth = layoutWidth;
 
@@ -309,55 +312,58 @@ namespace FamiStudio
             for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
-                var height = 0;
+                var rowHeight = 0;
 
                 if (!prop.visible)
                     continue;
 
-                if (i > 0)
-                    totalHeight += margin;
-
-                // These should take the full width, so if there is a label, it will go above.
-                // MATTT : Actually make this work.
-                var putLabelAbove = prop.type == PropertyType.Grid         ||
-                                    prop.type == PropertyType.CheckBoxList ||
-                                    prop.type == PropertyType.RadioList    ||
-                                    prop.type == PropertyType.LogTextBox   ||
-                                    prop.type == PropertyType.ColorPicker  ||
-                                    prop.type == PropertyType.ProgressBar  ||
-                                    prop.type == PropertyType.ImageBox;
-
                 if (prop.label != null)
                 {
-                    prop.label.Move(x, y + totalHeight, maxLabelWidth, prop.label.Height);
-                    prop.control.Move(x + maxLabelWidth + margin, y + totalHeight, actualLayoutWidth - maxLabelWidth - warningWidth - margin, prop.control.Height);
-
                     container.AddControl(prop.label);
                     container.AddControl(prop.control);
 
-                    height = prop.label.Height;
+                    // These should take the full width, so if there is a label, it will go above.
+                    var multilineLabel = prop.flags.HasFlag(PropertyFlags.MultiLineLabel);
+                    var putLabelAbove  = prop.flags.HasFlag(PropertyFlags.ForceFullWidth) || multilineLabel;
+
+                    if (putLabelAbove)
+                    {
+                        Debug.Assert(multilineLabel == prop.label.Multiline);
+
+                        prop.label.Move(x, y, actualLayoutWidth, prop.label.Height);
+                        prop.control.Move(x, y + prop.label.Height + (multilineLabel ? margin : 0), actualLayoutWidth, prop.control.Height);
+                        rowHeight = prop.control.Bottom - y;
+                    }
+                    else
+                    {
+                        prop.label.Move(x, y, maxLabelWidth, prop.label.Height);
+                        prop.control.Move(x + maxLabelWidth + margin, y, actualLayoutWidth - maxLabelWidth - warningWidth - margin, prop.control.Height);
+                    }
+
+                    if (!putLabelAbove)
+                    {
+                        rowHeight = Math.Max(prop.control.Height, prop.label.Height);
+                    }
                 }
                 else
                 {
-                    prop.control.Move(x, y + totalHeight, actualLayoutWidth, prop.control.Height);
-
                     container.AddControl(prop.control);
+                    prop.control.Move(x, y, actualLayoutWidth, prop.control.Height);
+                    rowHeight = prop.control.Height;
                 }
-
-                height = Math.Max(prop.control.Height, height);
 
                 if (prop.warningIcon != null)
                 {
                     prop.warningIcon.Move(
                         x + actualLayoutWidth - prop.warningIcon.Width,
-                        y + totalHeight + (height - prop.warningIcon.Height) / 2);
+                        y + (rowHeight - prop.warningIcon.Height) / 2);
                     container.AddControl(prop.warningIcon);
                 }
 
-                totalHeight += height;
+                y += rowHeight + margin;
             }
 
-            layoutHeight = totalHeight;
+            layoutHeight = y;
 
             ConditionalSetTextBoxFocus();
         }

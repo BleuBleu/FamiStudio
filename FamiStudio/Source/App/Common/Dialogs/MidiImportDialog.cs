@@ -67,8 +67,7 @@ namespace FamiStudio
                 dialog.Properties.AddCheckBox(ImportVelocityAsVolume.Colon, true); // 2
                 dialog.Properties.AddCheckBox(CreatePALProject.Colon, false); // 3
                 dialog.Properties.AddCheckBoxList(ExpansionsLabel.Colon, expNames, new bool[expNames.Length], null); // 4
-                dialog.Properties.AddLabel(null, ChannelMappingLabel.Colon); // 5 // MATTT : Remove this. Make desktop handle labels with grid automatically.
-                dialog.Properties.AddGrid(ChannelsLabel, new[] { new ColumnDesc(NESChannelColumn, 0.25f), new ColumnDesc(MIDISourceColumn, 0.45f, GetSourceNames()), new ColumnDesc(Channel10KeysColumn, 0.3f, ColumnType.Button) }, GetChannelListData(0)); // 6
+                dialog.Properties.AddGrid(ChannelMappingLabel.Colon, new[] { new ColumnDesc(NESChannelColumn, 0.25f), new ColumnDesc(MIDISourceColumn, 0.45f, GetSourceNames()), new ColumnDesc(Channel10KeysColumn, 0.3f, ColumnType.Button) }, GetChannelListData(0)); // 5
                 dialog.Properties.AddLabel(null, MIDIDisclaimerLabel, true);
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
@@ -120,7 +119,7 @@ namespace FamiStudio
                 if (!allowPal)
                     dialog.Properties.SetPropertyValue(3, false);
             }
-            else if (propIdx == 6)
+            else if (propIdx == 5)
             {
                 Debug.Assert(colIdx == 1);
 
@@ -157,10 +156,9 @@ namespace FamiStudio
                 if (src.type == MidiSourceType.Channel && src.index == 9)
                 {
                     var dlg = new PropertyDialog(dialog.ParentWindow, MIDISourceTitle, 300, true, true);
-                    dlg.Properties.AddLabel(null, Channel10KeysLabel.Colon); // 0
-                    dlg.Properties.AddCheckBoxList(null, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 1
-                    dlg.Properties.AddButton(null, SelectAllLabel); // 2
-                    dlg.Properties.AddButton(null, SelectNoneLabel); // 3
+                    dlg.Properties.AddCheckBoxList(Channel10KeysLabel.Colon, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // -
+                    dlg.Properties.AddButton(null, SelectAllLabel); // 1
+                    dlg.Properties.AddButton(null, SelectNoneLabel); // 2
                     dlg.Properties.Build();
                     dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
 
@@ -168,7 +166,7 @@ namespace FamiStudio
                     {
                         if (r == DialogResult.OK)
                         {
-                            var keysBool = dlg.Properties.GetPropertyValue<bool[]>(1);
+                            var keysBool = dlg.Properties.GetPropertyValue<bool[]>(0);
 
                             src.keys = 0ul;
                             for (int i = 0; i < keysBool.Length; i++)
@@ -190,17 +188,17 @@ namespace FamiStudio
 
         private void MappingProperties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (click == ClickType.Button && (propIdx == 2 || propIdx == 3))
+            if (click == ClickType.Button && (propIdx == 1 || propIdx == 2))
             {
                 var keys = new bool[MidiFileReader.MidiDrumKeyNames.Length];
 
-                if (propIdx == 2)
+                if (propIdx == 1)
                 {
                     for (int i = 0; i < keys.Length; i++)
                         keys[i] = true;
                 }
 
-                props.UpdateCheckBoxList(1, keys);
+                props.UpdateCheckBoxList(0, keys);
             }
         }
 
@@ -282,7 +280,7 @@ namespace FamiStudio
         private void UpdateChannelList()
         {
             var expansionMask = GetExpansionMask(dialog.Properties.GetPropertyValue<bool[]>(4));
-            dialog.Properties.UpdateGrid(6, GetChannelListData(expansionMask));
+            dialog.Properties.UpdateGrid(5, GetChannelListData(expansionMask));
         }
 
         public void ShowDialogAsync(FamiStudioWindow parent, Action<Project> action)

@@ -60,12 +60,8 @@ namespace FamiStudio
             {
                 globalOverrideIndex = props.AddLabelCheckBox(GlobalOverrideLabel, project.OverrideBassCutoffHz);
             }
-            else if (Platform.IsDesktop)
-            {
-                props.AddLabel(null, GlobalLabel);
-            }
 
-            globalGridIndex = props.AddGrid(Platform.IsMobile ? GlobalLabel : string.Empty,
+            globalGridIndex = props.AddGrid(GlobalLabel,
                 new[]
                 {
                     new ColumnDesc("", Platform.IsMobile ? 0.25f : 0.4f),
@@ -102,12 +98,10 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (Platform.IsDesktop)
-                        props.AddLabel(null, ExpansionType.LocalizedChipNames[i]);
                     chipOverrideIndices[i] = -1;
                 }
 
-                chipGridIndices[i] = props.AddGrid(Platform.IsMobile ? ExpansionType.LocalizedChipNames[i] : string.Empty,
+                chipGridIndices[i] = props.AddGrid(ExpansionType.LocalizedChipNames[i],
                     new[]
                     {
                         new ColumnDesc("", Platform.IsMobile ? 0.25f : 0.4f),

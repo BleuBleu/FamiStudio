@@ -29,11 +29,6 @@ namespace FamiStudio
         {
             Localization.Localize(this);
 
-            dialog = new PropertyDialog(win, PasteSpecialTitle, 260);
-            dialog.Properties.AddLabelCheckBox(MixWithExistingLabel.Colon, mix, 0, MixWithExistingTooltip); // 0
-            dialog.Properties.AddLabelCheckBox(PasteNotesLabel.Colon, notes, 0, PasteNotesTooltip); // 1
-            dialog.Properties.AddLabel(null, EffectsToPasteLabel.Colon); // 2
-
             var effectList  = new List<string>();
             var checkedList = new List<bool>();
 
@@ -47,23 +42,25 @@ namespace FamiStudio
                 }
             }
 
-            dialog.Properties.AddCheckBoxList(Platform.IsMobile ? EffectsToPasteLabel : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to paste."); // 3
-            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectAllLabel  : null, SelectAllLabel); // 4
-            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectNoneLabel : null, SelectNoneLabel); // 5
-            dialog.Properties.AddNumericUpDown(RepeatLabel.Colon, 1, 1, 32, 1, RepeatTooltip); // 6
-            dialog.Properties.SetPropertyVisible(2, Platform.IsDesktop);
+            dialog = new PropertyDialog(win, PasteSpecialTitle, 260);
+            dialog.Properties.AddLabelCheckBox(MixWithExistingLabel.Colon, mix, 0, MixWithExistingTooltip); // 0
+            dialog.Properties.AddLabelCheckBox(PasteNotesLabel.Colon, notes, 0, PasteNotesTooltip); // 1
+            dialog.Properties.AddCheckBoxList(EffectsToPasteLabel.Colon, effectList.ToArray(), checkedList.ToArray(), "Select the effects to paste."); // 2
+            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectAllLabel  : null, SelectAllLabel); // 3 // MATTT : Use the "_Mobile" feature in localization.
+            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectNoneLabel : null, SelectNoneLabel); // 4
+            dialog.Properties.AddNumericUpDown(RepeatLabel.Colon, 1, 1, 32, 1, RepeatTooltip); // 5
             dialog.Properties.Build();
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;
         }
 
         private void Properties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (click == ClickType.Button && (propIdx == 4 || propIdx == 5))
+            if (click == ClickType.Button && (propIdx == 3 || propIdx == 4))
             {
                 var keys = new bool[checkToEffect.Count];
                 for (int i = 0; i < keys.Length; i++)
-                    keys[i] = propIdx == 4;
-                props.UpdateCheckBoxList(3, keys);
+                    keys[i] = propIdx == 3;
+                props.UpdateCheckBoxList(2, keys);
             }
         }
 
@@ -79,7 +76,7 @@ namespace FamiStudio
             get
             {
                 int mask = 0;
-                var checks = dialog.Properties.GetPropertyValue<bool[]>(3);
+                var checks = dialog.Properties.GetPropertyValue<bool[]>(2);
 
                 for (int i = 0; i < checkToEffect.Count; i++)
                 {

@@ -40,7 +40,7 @@ namespace FamiStudio
             else
             {
                 // Special case, if the 2 first columns are checkbox + label, we combine then in something nicer.
-                // MATTT : MIDI import as another trivial use case we need to handle.
+                // MATTT : Should those be GridOptions.xxx flags?
                 if (columns[0].Type == ColumnType.CheckBox && columns[1].Type == ColumnType.Label)
                 {
                     numRows = data.GetLength(0) * (data.GetLength(1) - 1);
@@ -105,7 +105,7 @@ namespace FamiStudio
                             break;
                         case ColumnType.Label:
                             var text = new Label((string)data[r, c]);
-                            text.Font = firstColumnIsLabel && c == 0 ? fonts.FontMediumBold : fonts.FontMedium;
+                            //text.Font = firstColumnIsLabel && c == 0 ? fonts.FontMediumBold : fonts.FontMedium;
                             text.Ellipsis = twoColumnLayout;
                             ctrl = text;
                             break;

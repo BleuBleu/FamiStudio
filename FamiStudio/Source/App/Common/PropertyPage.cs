@@ -17,6 +17,7 @@ namespace FamiStudio
             public bool visible = true;
             public bool forceKeepSize;
             public Label tooltipLabel; // Mobile only
+            public PropertyFlags flags;
         };
 
         private int layoutWidth;
@@ -279,14 +280,15 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddFileTextBox(string label, string value, int maxLength = 0, string tooltip = null)
+        public int AddFileTextBox(string label, string value, int maxLength = 0, string tooltip = null, PropertyFlags flags = PropertyFlags.None)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.TextBox,
-                    label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateFileTextBox(value, maxLength, tooltip)
+                    label = label != null ? CreateLabel(label, tooltip, flags.HasFlag(PropertyFlags.MultiLineLabel)) : null,
+                    control = CreateFileTextBox(value, maxLength, tooltip),
+                    flags = flags
                 });
             return properties.Count - 1;
         }
@@ -298,7 +300,8 @@ namespace FamiStudio
                 {
                     type = PropertyType.LogTextBox,
                     label = label != null ? CreateLabel(label) : null,
-                    control = CreateLogTextBox()
+                    control = CreateLogTextBox(),
+                    flags = PropertyFlags.ForceFullWidth
                 });
             return properties.Count - 1;
         }
@@ -353,7 +356,8 @@ namespace FamiStudio
                 {
                     type = PropertyType.ColorPicker,
                     label = Platform.IsMobile ? CreateLabel(ColorLabel) : null,
-                    control = CreateColorPicker(color)
+                    control = CreateColorPicker(color),
+                    flags = PropertyFlags.ForceFullWidth
                 });
             return properties.Count - 1;
         }
@@ -382,14 +386,15 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddRadioButton(string label, string text, bool check, bool multiline = false)
+        public int AddRadioButton(string label, string text, bool check, bool multiline = false, PropertyFlags flags = PropertyFlags.ForceFullWidth)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Radio,
-                    label = label != null ? CreateLabel(label) : null,
-                    control = CreateRadioButton(text, check, multiline)
+                    label = label != null ? CreateLabel(label, null, flags.HasFlag(PropertyFlags.MultiLineLabel)) : null,
+                    control = CreateRadioButton(text, check, multiline),
+                    flags = flags
                 });
             return properties.Count - 1;
         }
@@ -450,14 +455,15 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddDropDownList(string label, string[] values, string value, string tooltip = null)
+        public int AddDropDownList(string label, string[] values, string value, string tooltip = null, PropertyFlags flags = PropertyFlags.None)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.DropDownList,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateDropDownList(label, values, value, tooltip)
+                    control = CreateDropDownList(label, values, value, tooltip),
+                    flags = flags
                 });
             return properties.Count - 1;
         }
@@ -754,5 +760,13 @@ namespace FamiStudio
             MinValue = min;
             MaxValue = max;
         }
+    }
+
+    [Flags]
+    public enum PropertyFlags
+    {
+        None = 0,
+        ForceFullWidth = 1, // (Desktop only) Forces the control to be full-width by putting the label above.
+        MultiLineLabel = 2, // (Desktop only) Will allow multiline on the label, implies "ForceFullWidth".
     }
 }

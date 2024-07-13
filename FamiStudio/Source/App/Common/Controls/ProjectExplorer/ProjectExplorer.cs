@@ -2445,10 +2445,9 @@ namespace FamiStudio
                             }
 
                             var dlg = new PropertyDialog(ParentWindow, ImportSongsTitle, 300);
-                            dlg.Properties.AddLabel(null, ImportSongsLabel.Colon); // 0
-                            dlg.Properties.AddCheckBoxList(null, songsNames.ToArray(), null, null, 15); // 1
-                            dlg.Properties.AddButton(null, SelectAllLabel); // 2
-                            dlg.Properties.AddButton(null, SelectNoneLabel); // 3
+                            dlg.Properties.AddCheckBoxList(ImportSongsLabel.Colon, songsNames.ToArray(), null, null, 15); // 0
+                            dlg.Properties.AddButton(null, SelectAllLabel); // 1
+                            dlg.Properties.AddButton(null, SelectNoneLabel); // 2
                             dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
                             dlg.Properties.Build();
 
@@ -2458,7 +2457,7 @@ namespace FamiStudio
                                 {
                                     App.UndoRedoManager.BeginTransaction(TransactionScope.Project, TransactionFlags.StopAudio);
 
-                                    var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                    var selected = dlg.Properties.GetPropertyValue<bool[]>(0);
                                     var songIds = new List<int>();
 
                                     for (int i = 0; i < selected.Length; i++)
@@ -2523,15 +2522,15 @@ namespace FamiStudio
         {
             if (click == ClickType.Button)
             {
-                var newValues = new bool[props.GetPropertyValue<bool[]>(1).Length];
+                var newValues = new bool[props.GetPropertyValue<bool[]>(0).Length];
 
-                if (propIdx == 2)
+                if (propIdx == 1)
                 {
                     for (int i = 0; i < newValues.Length; i++)
                         newValues[i] = true;
                 }
 
-                props.UpdateCheckBoxList(1, newValues);
+                props.UpdateCheckBoxList(0, newValues);
             }
         }
 
@@ -2596,10 +2595,9 @@ namespace FamiStudio
                                 }
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportInstrumentsTitle, 300);
-                                dlg.Properties.AddLabel(null, ImportInstrumentsLabel.Colon); // 0
-                                dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null, null, 15); // 1
-                                dlg.Properties.AddButton(null, SelectAllLabel); // 2
-                                dlg.Properties.AddButton(null, SelectNoneLabel); // 3
+                                dlg.Properties.AddCheckBoxList(ImportInstrumentsLabel.Colon, instrumentNames.ToArray(), null, null, 15); // 0
+                                dlg.Properties.AddButton(null, SelectAllLabel); // 1
+                                dlg.Properties.AddButton(null, SelectNoneLabel); // 2
                                 dlg.Properties.Build();
                                 dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
@@ -2607,7 +2605,7 @@ namespace FamiStudio
                                 {
                                     if (r == DialogResult.OK)
                                     {
-                                        var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                        var selected = dlg.Properties.GetPropertyValue<bool[]>(0);
                                         var instrumentsIdsToMerge = new List<int>();
 
                                         for (int i = 0; i < selected.Length; i++)
@@ -2660,15 +2658,15 @@ namespace FamiStudio
         {
             if (click == ClickType.Button)
             {
-                var newValues = new bool[props.GetPropertyValue<bool[]>(1).Length];
+                var newValues = new bool[props.GetPropertyValue<bool[]>(0).Length];
 
-                if (propIdx == 2)
+                if (propIdx == 1)
                 {
                     for (int i = 0; i < newValues.Length; i++)
                         newValues[i] = true;
                 }
 
-                props.UpdateCheckBoxList(1, newValues);
+                props.UpdateCheckBoxList(0, newValues);
             }
         }
 
@@ -2738,10 +2736,9 @@ namespace FamiStudio
                                 }
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportSamplesTitle, 300);
-                                dlg.Properties.AddLabel(null, ImportSamplesLabel.Colon); // 0
-                                dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null, null, 15); // 1
-                                dlg.Properties.AddButton(null, SelectAllLabel); // 2
-                                dlg.Properties.AddButton(null, SelectNoneLabel); // 3
+                                dlg.Properties.AddCheckBoxList(ImportSamplesLabel.Colon, samplesNames.ToArray(), null, null, 15); // 0
+                                dlg.Properties.AddButton(null, SelectAllLabel); // 1
+                                dlg.Properties.AddButton(null, SelectNoneLabel); // 2
                                 dlg.Properties.Build();
                                 dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
@@ -2749,7 +2746,7 @@ namespace FamiStudio
                                 {
                                     if (r == DialogResult.OK)
                                     {
-                                        var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                        var selected = dlg.Properties.GetPropertyValue<bool[]>(0);
                                         var sampleIdsToMerge = new List<int>();
 
                                         for (int i = 0; i < selected.Length; i++)
@@ -3131,8 +3128,7 @@ namespace FamiStudio
         private void AutoAssignSampleBanks()
         {
             var dlg = new PropertyDialog(ParentWindow, AutoAssignBanksTitle, 250, true, true);
-            dlg.Properties.AddLabel(null, TargetBankSizeLabel.Colon); // 0
-            dlg.Properties.AddDropDownList(null, new[] { "4KB", "8KB", "16KB" }, "4KB", null); // 1
+            dlg.Properties.AddDropDownList(TargetBankSizeLabel.Colon, new[] { "4KB", "8KB", "16KB" }, "4KB", null, PropertyFlags.ForceFullWidth); // 0
             dlg.Properties.Build();
 
             dlg.ShowDialogAsync((r) =>
@@ -3140,7 +3136,7 @@ namespace FamiStudio
                 if (r == DialogResult.OK)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                    var bankSize = Utils.ParseIntWithTrailingGarbage(dlg.Properties.GetPropertyValue<string>(1)) * 1024;
+                    var bankSize = Utils.ParseIntWithTrailingGarbage(dlg.Properties.GetPropertyValue<string>(0)) * 1024;
                     App.Project.AutoAssignSamplesBanks(bankSize, out _);
                     App.UndoRedoManager.EndTransaction();
                     MarkDirty();
@@ -3219,19 +3215,18 @@ namespace FamiStudio
             if (instrumentNames.Count > 0)
             {                               
                 var dlg = new PropertyDialog(ParentWindow, AskReplaceInstrumentTitle, 250, true, true);
-                dlg.Properties.AddLabel(null, AskReplaceInstrumentMessage.Format(inst.Name), true); // 0
-                dlg.Properties.AddRadioButtonList(null, instrumentNames.ToArray(), 0, null, 12); // 1
+                dlg.Properties.AddRadioButtonList(AskReplaceInstrumentMessage.Format(inst.Name), instrumentNames.ToArray(), 0, null, 12, PropertyFlags.MultiLineLabel); // 0
                 dlg.Properties.Build();
 
                 for (int i = 0; i < instrumentColors.Count; i++)
-                    dlg.Properties.SetRowColor(1, i, instrumentColors[i]);
+                    dlg.Properties.SetRowColor(0, i, instrumentColors[i]);
 
                 dlg.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                        App.Project.ReplaceInstrument(inst, App.Project.GetInstrument(instrumentNames[dlg.Properties.GetSelectedIndex(1)]));
+                        App.Project.ReplaceInstrument(inst, App.Project.GetInstrument(instrumentNames[dlg.Properties.GetSelectedIndex(0)]));
                         App.UndoRedoManager.EndTransaction();
                         RecreateAllControls();
                         InstrumentReplaced?.Invoke(inst);
@@ -3376,19 +3371,18 @@ namespace FamiStudio
             if (arpeggioNames.Count > 0)
             {
                 var dlg = new PropertyDialog(ParentWindow, AskReplaceArpeggioTitle, 250, true, true);
-                dlg.Properties.AddLabel(null, AskReplaceArpeggioMessage.Format(arp.Name), true); // 0
-                dlg.Properties.AddRadioButtonList(null, arpeggioNames.ToArray(), 0, null, 12); // 1
+                dlg.Properties.AddRadioButtonList(AskReplaceArpeggioMessage.Format(arp.Name), arpeggioNames.ToArray(), 0, null, 12, PropertyFlags.MultiLineLabel); // 0
                 dlg.Properties.Build();
 
                 for (int i = 0; i < arpeggioColors.Count; i++)
-                    dlg.Properties.SetRowColor(1, i, arpeggioColors[i]);
+                    dlg.Properties.SetRowColor(0, i, arpeggioColors[i]);
 
                 dlg.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                        App.Project.ReplaceArpeggio(arp, App.Project.GetArpeggio(arpeggioNames[dlg.Properties.GetSelectedIndex(1)]));
+                        App.Project.ReplaceArpeggio(arp, App.Project.GetArpeggio(arpeggioNames[dlg.Properties.GetSelectedIndex(0)]));
                         App.UndoRedoManager.EndTransaction();
                         RecreateAllControls();
                         InstrumentReplaced?.Invoke(null);

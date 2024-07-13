@@ -357,19 +357,19 @@ namespace FamiStudio
                     break;
                 }
                 case ConfigSection.FFmpeg:
-                    page.AddLabel(null, FFmpegRequiredLabel, true); // 0
-                    page.AddFileTextBox(null, Settings.FFmpegExecutablePath, 0, FFmpegPathTooltip); // 1
-                    page.AddLinkLabel(null, FFmpegDownloadLabel, "https://famistudio.org/doc/ffmpeg/"); // 3
+                {
+                    page.AddFileTextBox(FFmpegRequiredLabel, Settings.FFmpegExecutablePath, 0, FFmpegPathTooltip, PropertyFlags.MultiLineLabel); // 0
+                    page.AddLinkLabel(null, FFmpegDownloadLabel, "https://famistudio.org/doc/ffmpeg/"); // 1
                     page.PropertyClicked += FFmpegPage_PropertyClicked;
                     break;
+                }
                 case ConfigSection.Keys:
                 {
-                    page.AddLabel(null, DoubleClickLabel, true); // 0
-                    page.AddGrid("Keys", new[] { new ColumnDesc(ActionColumn, 0.4f), new ColumnDesc(KeyColumn, 0.3f), new ColumnDesc(KeyAltColumn, 0.3f) }, GetKeyboardShortcutStrings(), 14); // 1
-                    page.AddButton(null, ResetDefaultLabel);
+                    page.AddGrid(DoubleClickLabel, new[] { new ColumnDesc(ActionColumn, 0.4f), new ColumnDesc(KeyColumn, 0.3f), new ColumnDesc(KeyAltColumn, 0.3f) }, GetKeyboardShortcutStrings(), 14, null, GridOptions.None, PropertyFlags.MultiLineLabel); // 0
+                    page.AddButton(null, ResetDefaultLabel); // 1
                     page.PropertyClicked += KeyboardPage_PropertyClicked;
                     page.PropertyCellEnabled += KeyboardPage_PropertyCellEnabled;
-                    page.SetColumnEnabled(1, 0, false);
+                    page.SetColumnEnabled(0, 0, false);
                     break;
                 }
                 case ConfigSection.Mobile:
@@ -410,7 +410,7 @@ namespace FamiStudio
         {
             if (click == ClickType.Button)
             {
-                if (propIdx == 1)
+                if (propIdx == 0)
                 {
                     var ffmpegExeFilter = Platform.IsWindows ? "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe" : "FFmpeg Executable (ffmpeg)|*.*";
                     var dummy = "";
@@ -421,7 +421,7 @@ namespace FamiStudio
                         props.SetPropertyValue(propIdx, filename);
                     }
                 }
-                else if (propIdx == 2)
+                else if (propIdx == 1)
                 {
                     Platform.OpenUrl("https://famistudio.org/doc/ffmpeg/");
                 }
@@ -430,7 +430,7 @@ namespace FamiStudio
 
         private void KeyboardPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (propIdx == 1 && colIdx >= 1)
+            if (propIdx == 0 && colIdx >= 1)
             {
                 if (click == ClickType.Double)
                 {
@@ -450,10 +450,10 @@ namespace FamiStudio
                     pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
                 }
             }
-            else if (propIdx == 2 && click == ClickType.Button)
+            else if (propIdx == 1 && click == ClickType.Button)
             {
                 shortcuts = Shortcut.CloneList(Settings.DefaultShortcuts);
-                pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
+                pages[(int)ConfigSection.Keys].UpdateGrid(0, GetKeyboardShortcutStrings());
             }
         }
 
@@ -482,7 +482,7 @@ namespace FamiStudio
                     e = new KeyEventArgs(e.Key, new ModifierKeys(0), false, 0);
 
                 AssignKeyboardKey(keysRowIndex, keysColIndex - 1, e);
-                pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
+                pages[(int)ConfigSection.Keys].UpdateGrid(0, GetKeyboardShortcutStrings());
                 dlg.Close(DialogResult.OK);
             }
 

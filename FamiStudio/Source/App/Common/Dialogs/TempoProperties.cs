@@ -285,17 +285,15 @@ namespace FamiStudio
             if (conversionNeeded)
             {
                 var messageDlg = new PropertyDialog(win, TempoConversionTitle, 400, true, false);
-                messageDlg.Properties.AddLabel(null, ConvertMobileLabel, true); // 0
-                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? ConvertMobileLabel : null, ConvertResizeNotes, true, true); // 1
-                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? ConvertMobileLabel : null, ConvertLeaveNotes, false, true); // 2
-                messageDlg.Properties.AddLabelCheckBox(DuplicateLabel, true); // 3
-                messageDlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
+                messageDlg.Properties.AddRadioButton(ConvertMobileLabel.Colon, ConvertResizeNotes, true, true, PropertyFlags.MultiLineLabel); // 0
+                messageDlg.Properties.AddRadioButton(null, ConvertLeaveNotes, false, true); // 1
+                messageDlg.Properties.AddLabelCheckBox(DuplicateLabel, true); // 2
                 messageDlg.Properties.Build();
                 messageDlg.ShowDialogAsync((r) =>
                 {
                     callback(
-                        messageDlg.Properties.GetPropertyValue<bool>(1),
-                        messageDlg.Properties.GetPropertyValue<bool>(3));
+                        messageDlg.Properties.GetPropertyValue<bool>(0),
+                        messageDlg.Properties.GetPropertyValue<bool>(2));
                 });
             }
             else
