@@ -6,9 +6,6 @@ namespace FamiStudio
     // TODO : This should simply be a list of buttons.
     public class ContextMenu : Container
     {
-        const int DefaultItemSizeY    = 22;
-        const int DefaultMenuMinSizeX = 100;
-
         private int margin    = DpiScaling.ScaleForWindow(3);
         private int minSizeX  = DpiScaling.ScaleForWindow(Platform.IsDesktop ? 100 : 1);
 
@@ -33,6 +30,7 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             var g = ParentWindow.Graphics;
+
             bmpMenuCheckOn  = g.GetTextureAtlasRef("MenuCheckOn");
             bmpMenuCheckOff = g.GetTextureAtlasRef("MenuCheckOff");
             bmpMenuRadio    = g.GetTextureAtlasRef("MenuRadio");
@@ -74,16 +72,25 @@ namespace FamiStudio
                         bmpContextMenu[i] = img;
                         iconSizeX = Math.Max(img.ElementSize.Width, iconSizeX);
                     }
+                    else if (option.CheckState != null)
+                    {
+                        iconSizeX = Math.Max(bmpMenuCheckOn.ElementSize.Width, iconSizeX);
+                    }
                 }
 
-                itemSizeY = iconSizeX + margin * 2; // We assume square icons.
 
                 if (iconSizeX > 0)
                 {
                     iconSizeX += margin;
+                    textSizeX += margin; // We do this since images tend to have borders in the image.
+                    itemSizeY = iconSizeX + margin * 2; // We assume square icons.
+                }
+                else
+                {
+                    itemSizeY = DpiScaling.ScaleForWindow(22);
                 }
 
-                width = Math.Max(minSizeX, margin + iconSizeX + textSizeX + margin + 1);
+                width = Math.Max(minSizeX, margin + iconSizeX + textSizeX + margin);
                 height = menuOptions.Length * itemSizeY;
             }
         }
@@ -226,7 +233,7 @@ namespace FamiStudio
 
                 if (bmp != null)
                 {
-                    o.DrawTextureAtlas(bmp, margin, margin, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
+                    o.DrawTextureAtlasCentered(bmp, margin, 0, bmp.ElementSize.Width, itemSizeY, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
                 }
 
                 o.DrawText(option.Text, Fonts.FontMedium, margin + iconSizeX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
