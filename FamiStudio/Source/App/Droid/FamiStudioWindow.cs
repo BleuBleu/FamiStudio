@@ -35,9 +35,6 @@ namespace FamiStudio
         private Fonts fonts;
         private bool dirty = true;
 
-        // For context menus.
-        BottomSheetDialog contextMenuDialog;
-
         // For property or multi-property dialogs.
         private bool appWasAlreadyRunning;
         private bool glThreadIsRunning;
@@ -640,131 +637,12 @@ namespace FamiStudio
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
-            if (options == null || options.Length == 0)
-                return;
-            
-            Debug.Assert(contextMenuDialog == null);
-
-            var bgColor = DroidUtils.ToAndroidColor(global::FamiStudio.Theme.DarkGreyColor4);
-
-            var linearLayout = new LinearLayout(this);
-            linearLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
-            linearLayout.Orientation = Orientation.Vertical;
-            linearLayout.SetBackgroundColor(bgColor);
-
-            var prevWantedSeparator = false;
-
-            var imagePad  = DroidUtils.DpToPixels(2);
-            var imageSize = DroidUtils.DpToPixels(32);
-
-            for (int i = 0; i < options.Length; i++)
-            {
-                var opt = options[i];
-
-                if (i > 0 && (opt.Separator.HasFlag(ContextMenuSeparator.MobileBefore) || prevWantedSeparator))
-                {
-                    var lineView = new View(this);
-                    lineView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-                    lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1));
-                    linearLayout.AddView(lineView);
-                    prevWantedSeparator = false;
-                }
-
-                var imageName = opt.Image;
-
-                if (string.IsNullOrEmpty(imageName))
-                {
-                    var checkState = opt.CheckState();
-                    switch (checkState)
-                    {
-                        case ContextMenuCheckState.Checked:   imageName = "MenuCheckOn";  break;
-                        case ContextMenuCheckState.Unchecked: imageName = "MenuCheckOff"; break;
-                        case ContextMenuCheckState.Radio:     imageName = "MenuRadio";    break;
-                    }
-                }
-
-                if (string.IsNullOrEmpty(imageName))
-                    imageName = "MenuBlank";
-
-                var resName1 = $"FamiStudio.Resources.Mobile.Mobile{imageName}.tga";
-                var resName2 = $"FamiStudio.Resources.Atlas.{imageName}@4x.tga";
-                var resName = Utils.ResourceExists(resName1) ? resName1 : resName2;
-
-                var bmp = new BitmapDrawable(Resources, DroidUtils.LoadTgaBitmapFromResource(resName));
-                bmp.SetBounds(0, 0, imageSize, imageSize);
-                bmp.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
-
-                var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
-                textView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
-                textView.CompoundDrawablePadding = imagePad;
-                textView.SetPadding(imagePad, imagePad, imagePad, imagePad);
-                textView.Gravity = GravityFlags.CenterVertical;
-                textView.Text = opt.Text;
-                textView.Tag = new ContextMenuTag(opt);
-                textView.Click += ContextMenuDialog_Click;
-                textView.SetCompoundDrawables(bmp, null, null, null);
-
-                linearLayout.AddView(textView);
-
-                prevWantedSeparator = opt.Separator.HasFlag(ContextMenuSeparator.MobileAfter);
-            }
-
-            DisplayMetrics metrics = new DisplayMetrics();
-            Window.WindowManager.DefaultDisplay.GetMetrics(metrics);
-
-            contextMenuDialog = new BottomSheetDialog(this);
-            EnableFullscreenMode(contextMenuDialog.Window);
-            contextMenuDialog.Window.AddFlags(WindowManagerFlags.NotFocusable); // Prevents nav bar from appearing.
-            contextMenuDialog.SetContentView(linearLayout);
-            contextMenuDialog.Behavior.MaxWidth = Math.Min(metrics.HeightPixels, metrics.WidthPixels);
-            contextMenuDialog.Behavior.State = BottomSheetBehavior.StateExpanded;
-            contextMenuDialog.DismissEvent += ContextMenuDialog_DismissEvent;
-
-            // In portrait mode, add a bit of padding to cover the navigation bar.
-            if (metrics.HeightPixels != glSurfaceView.Height)
-            {
-                // Needs to match the dialog.
-                GradientDrawable invisible = new GradientDrawable();
-                GradientDrawable navBar = new GradientDrawable();
-                navBar.SetColor(bgColor);
-
-                LayerDrawable windowBackground = new LayerDrawable(new Drawable[] { invisible, navBar });
-                windowBackground.SetLayerInsetTop(1, metrics.HeightPixels);
-                windowBackground.SetLayerWidth(1, contextMenuDialog.Behavior.MaxWidth);
-                windowBackground.SetLayerGravity(1, GravityFlags.Center);
-                contextMenuDialog.Window.SetBackgroundDrawable(windowBackground);
-            }
-
-            contextMenuDialog.Show();
-
-            Platform.VibrateClick();
+            container.ShowContextMenu(options);
         }
 
         public void HideContextMenu()
         {
-            // Only used on desktop.
-            Debug.Assert(false);
-        }
-
-        private void ContextMenuDialog_DismissEvent(object sender, EventArgs e)
-        {
-            contextMenuDialog = null;
-            MarkDirty();
-        }
-
-        private void ContextMenuDialog_Click(object sender, EventArgs e)
-        {
-            // HACK : We have a weird NULL crash here. No clue how to repro this.
-            var tag = (sender as TextView)?.Tag as ContextMenuTag;
-
-            lock (renderLock)
-            {
-                tag?.opt?.Callback();
-                contextMenuDialog?.Dismiss();
-                MarkDirty();
-            }
-
-            Platform.VibrateTick();
+            container.HideContextMenu();
         }
 
         public void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)

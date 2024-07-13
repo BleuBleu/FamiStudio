@@ -134,6 +134,8 @@ namespace FamiStudio
 
                 o.DrawRectangle(ClientRectangle, Theme.BlackColor, 1);
 
+                // MATTT : Move all that garbage to FamiStudioContainer. Dialogs shouldnt know 
+                // that they have a shadow or anything.
                 if (fade != 0.0f)
                 {
                     g.Transform.GetOrigin(out var ox, out var oy);

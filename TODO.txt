@@ -44,7 +44,6 @@ Today:
 - Test detuning with sound, dual NSF, slide notes, etc.
 - Test potential threading issues with N163 auto-assignment.
 
-- "curated" in MIDI dialog. That's not a word.
 - BUG : Expand toolbar on mobile, click on open, weird shadow.
 - UI code cleanup:
 	- Project explorer rewrite
@@ -74,7 +73,6 @@ Today:
 - Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
 - Review things with tick enabled. I see weird things ticking. Add debug to print them all!
 x Support for japanese/other characters regardless of current languages
-	- The language selection can now be written in the actual language!
 	- Try a few variations on Noto (Regular, Condensed, etc.) On mobile in PE we now see less characters.
 - Add light/dark/grey themes.
 	- Ableton live as reference for a "light" theme.
@@ -82,28 +80,22 @@ x Support for japanese/other characters regardless of current languages
 	- Grey is what we have now.
 - Android convert to our widgets, no more android native widgets.
 	- Will need to rebuild when rotating screen.
-	- Do multi-property dialog too.
-		- Simplest would be to have just a list of button, each opening a separate dialog.
-		- Everything would just work.
 	/ Add some kind of header to apply/cancel, etc.
-	- If works, see if MIDI import/export can work on mobile.
 	- Add support to "scroll" to a control, when it gets keyboard input, etc. Drops downs, etc.
 	- Remove as many hacks that were added as possible (verbs, back page, secret video preview page, etc.)
-	- Also remove a lot of custom stuff like desktop-only labels before grids. The layout code should take care of this.
 	- Remove TutorialDialogActivity thing.
-	- Merge PropertyPageCommon.cs + PropertyPage.cs
 	- Merge LogDialog if possible.
-	- Fix MobileProjectDialog.
-	- Grey out tooltips too if property is disabled.
 	- Need to display (and respond to) back buttons/gestures.
-	- Add proper touch support to all widgets, including typing
+	/ Add proper touch support to all widgets, including typing
 	- Control specific changes:
 		x Textbox : popup a dialog to input. Make thinner on mobile.
 		x NumericUpDown : Create a simple version only for mobile, no text input. Make thinner on mobile.
 		/ DropDown : No scroll bar on mobile, open the box towards center of screen. Make thinner on mobile.
 		- ColorPicker : Aspect ratio limits
-		- Grid : Will need a special "MobileGrid" or something.
+		/ Grid : Will need a special "MobileGrid" or something.
 	- Context menus should be custom controls too.
+	- Toast too.
+- Remove the special context menu icons on Android, they should be in Atlas too.
 
 Linux notes 
 =========== 

@@ -124,7 +124,8 @@ namespace FamiStudio
 
         public void PopDialog(Dialog dialog, int numLevels)
         {
-            Debug.Assert(transitionTimer == 0.0f && transitionControl == null);
+            FlushPendingTransition();
+
             Debug.Assert(TopDialog == dialog);
 
             if (numLevels > 1)
@@ -299,6 +300,62 @@ namespace FamiStudio
             }
 
             transitionControl = null;
+        }
+
+        public void ShowContextMenu(ContextMenuOption[] options)
+        {
+            if (options == null || options.Length == 0)
+                return;
+
+            var dialogSize = Math.Min(window.Width, window.Height);
+
+            var contextMenu = new ContextMenu();
+            contextMenu.Initialize(options);
+            contextMenu.Visible = true;
+
+            var scrollContainer = new TouchScrollContainer();
+            var dlg = new Dialog(window);
+            dlg.AddControl(scrollContainer);
+
+            scrollContainer.AddControl(contextMenu);
+            scrollContainer.Move(0, 0, dialogSize, Math.Min(dialogSize, contextMenu.Height));
+            scrollContainer.VirtualSizeY = contextMenu.Height;
+            contextMenu.Resize(dialogSize, contextMenu.Height);
+
+            dlg.Move(
+                (window.Width  - scrollContainer.Width)  / 2,
+                (window.Height - scrollContainer.Height) / 2,
+                scrollContainer.Width,
+                scrollContainer.Height);
+            dlg.ShowDialogAsync();
+
+            Platform.VibrateClick();
+        }
+
+        public void HideContextMenu()
+        {
+            Debug.Assert(TopDialogIsContextMenu());
+            TopDialog.Close(DialogResult.OK);
+            MarkDirty();
+        }
+
+        public void ConditionalHideContextMenu(Control ctrl)
+        {
+            if (TopDialogIsContextMenu())
+            {
+                HideContextMenu();
+            }
+        }
+
+        private bool TopDialogIsContextMenu()
+        {
+            var dlg = TopDialog;
+            if (dlg != null)
+            {
+                var scroll = dlg.FindControlOfType<TouchScrollContainer>();
+                return scroll != null && scroll.FindControlOfType<ContextMenu>() != null;
+            }
+            return false;
         }
 
         public override void Tick(float delta)

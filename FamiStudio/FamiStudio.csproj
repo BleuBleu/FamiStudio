@@ -137,6 +137,7 @@
     <Compile Include="Source\App\Common\Controls\CheckBox.cs" />
     <Compile Include="Source\App\Common\Controls\ColorPicker.cs" />
     <Compile Include="Source\App\Common\Controls\Container.cs" />
+    <Compile Include="Source\App\Common\Controls\ContextMenu.cs" />
     <Compile Include="Source\App\Common\Controls\Control.cs" />
     <Compile Include="Source\App\Common\Controls\DropDown.cs" />
     <Compile Include="Source\App\Common\Controls\FileTextBox.cs" />
@@ -180,7 +181,6 @@
     <Compile Include="Source\App\Common\Dialogs\VgmImportDialog.cs" />
     <Compile Include="Source\App\Common\Dialogs\MixerProperties.cs" />
     <Compile Include="Source\App\Desktop\CommandLineInterface.cs" />
-    <Compile Include="Source\App\Desktop\ContextMenu.cs" />
     <Compile Include="Source\App\Desktop\Cursors.cs" />
     <Compile Include="Source\App\Desktop\Dialog.cs" />
     <Compile Include="Source\App\Desktop\FamiStudioContainer.cs" />
