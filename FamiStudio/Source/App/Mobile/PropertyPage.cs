@@ -151,18 +151,8 @@ namespace FamiStudio
 
         private int GetRadioListSelectedIndex(int idx)
         {
-            //var grid = prop.control as Grid;
-
-            //for (int i = 0; i < grid.ItemCount; i++)
-            //{
-            //    if ((bool)grid.GetData(i, 0) == true)
-            //        return i;
-            //}
-
-            //Debug.Assert(false);
-            //return -1;
-            
-            return 0; // MATTT
+            var prop = properties[idx];
+            return (prop.control as RadioButtonList).SelectedIndex;
         }
 
         private CheckBoxList CreateCheckBoxList(string[] values, bool[] selected, string tooltip = null)
@@ -188,14 +178,20 @@ namespace FamiStudio
         {
             var radioList = new RadioButtonList(values, selectedIndex);
             radioList.ToolTip = tooltip;
-            // MATTT : Hook events.
+            radioList.RadioChanged += RadioList_RadioChanged;
             return radioList;
+        }
+
+        private void RadioList_RadioChanged(Control sender, int index)
+        {
+            var propIdx = GetPropertyIndexForControl(sender);
+            PropertyChanged?.Invoke(this, propIdx, index, 0, true);
         }
 
         public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7, PropertyFlags flags = PropertyFlags.ForceFullWidth)
         {
             var prop = new Property();
-            prop.type = PropertyType.CheckBoxList;
+            prop.type = PropertyType.RadioList;
             prop.label = CreateLabel(label);
             prop.control = CreateRadioButtonList(values, selectedIndex, tooltip);
             properties.Add(prop);

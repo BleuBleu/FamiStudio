@@ -9,13 +9,29 @@ namespace FamiStudio
         public delegate void RadioChangedDelegate(Control sender, int index);
         public event RadioChangedDelegate RadioChanged;
 
+        private int selectedIndex;
         private int rowHeight = DpiScaling.ScaleForWindow(14);
         private List<RadioButton> radioButtons = new List<RadioButton>();
 
-        public RadioButtonList(string[] values, int selectedIndex)
+        public int SelectedIndex
+        {
+            get { return selectedIndex; }
+            set
+            {
+                selectedIndex = value;
+                for (var i = 0; i < radioButtons.Count; i++)
+                {
+                    radioButtons[i].Checked = i == selectedIndex;
+                }
+                MarkDirty();
+            }
+        }
+
+        public RadioButtonList(string[] values, int idx)
         {
             clipRegion = false;
             height = rowHeight * values.Length;
+            selectedIndex = idx;
 
             for (int i = 0; i < values.Length; i++)
             {
@@ -44,6 +60,7 @@ namespace FamiStudio
 
         private void Radio_RadioChanged(Control sender, int index)
         {
+            selectedIndex = index;
             RadioChanged?.Invoke(this, index);
         }
     }

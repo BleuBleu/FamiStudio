@@ -470,14 +470,8 @@ namespace FamiStudio
 
         public void ClearRadioList(int idx)
         {
-            Debug.Assert(false);
-
-            //var prop = properties[idx];
-            //Debug.Assert(prop.type == PropertyType.RadioList);
-
-            //var group = prop.layout as RadioGroup;
-            //if (group != null)
-            //    group.ClearCheck();
+            var prop = properties[idx];
+            (prop.control as RadioButtonList).SelectedIndex = -1;
         }
 
         public void UpdateRadioButtonList(int idx, string[] values, int selectedIndex)
@@ -543,7 +537,8 @@ namespace FamiStudio
                 prop.type == PropertyType.TextBox        ||
                 prop.type == PropertyType.Slider         ||
                 prop.type == PropertyType.ColoredTextBox ||
-                prop.type == PropertyType.Grid);
+                prop.type == PropertyType.Grid           ||
+                prop.type == PropertyType.Button);
 
             if (prop.label != null)
                 prop.label.Enabled = enabled;
@@ -650,7 +645,6 @@ namespace FamiStudio
                     break;
             }
         }
-
     }
 
 
