@@ -283,7 +283,6 @@
     <Compile Include="Source\App\Common\Dialogs\MixerProperties.cs" />
     <Compile Include="Source\App\Droid\DroidUtils.cs" />
     <Compile Include="Source\App\Droid\FamiStudioWindow.cs" />
-    <Compile Include="Source\App\Droid\MobileProjectDialog.cs" />
     <Compile Include="Source\App\Droid\TutorialDialog.cs" />
     <Compile Include="Source\App\Mobile\CheckBoxList.cs" />
     <Compile Include="Source\App\Mobile\Dialog.cs" />
@@ -292,6 +291,7 @@
     <Compile Include="Source\App\Mobile\GridSlider.cs" />
     <Compile Include="Source\App\Mobile\LogDialog.cs" />
     <Compile Include="Source\App\Mobile\MobilePiano.cs" />
+    <Compile Include="Source\App\Mobile\MobileProjectDialog.cs" />
     <Compile Include="Source\App\Mobile\MultiPropertyDialog.cs" />
     <Compile Include="Source\App\Mobile\PropertyDialog.cs" />
     <Compile Include="Source\App\Mobile\PropertyPage.cs" />
