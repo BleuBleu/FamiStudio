@@ -113,8 +113,6 @@ namespace FamiStudio
         // Import songs dialog
         LocalizedString ImportSongsTitle;
         LocalizedString ImportSongsLabel;
-        LocalizedString SelectAllLabel;
-        LocalizedString SelectNoneLabel ;
 
         // Import instruments dialog
         LocalizedString ImportInstrumentsTitle;
@@ -2446,9 +2444,6 @@ namespace FamiStudio
 
                             var dlg = new PropertyDialog(ParentWindow, ImportSongsTitle, 300);
                             dlg.Properties.AddCheckBoxList(ImportSongsLabel.Colon, songsNames.ToArray(), null, null, 15); // 0
-                            dlg.Properties.AddButton(null, SelectAllLabel); // 1
-                            dlg.Properties.AddButton(null, SelectNoneLabel); // 2
-                            dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
                             dlg.Properties.Build();
 
                             dlg.ShowDialogAsync((r) =>
@@ -2518,22 +2513,6 @@ namespace FamiStudio
             RecreateAllControls();
         }
 
-        private void ImportSongs_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
-        {
-            if (click == ClickType.Button)
-            {
-                var newValues = new bool[props.GetPropertyValue<bool[]>(0).Length];
-
-                if (propIdx == 1)
-                {
-                    for (int i = 0; i < newValues.Length; i++)
-                        newValues[i] = true;
-                }
-
-                props.UpdateCheckBoxList(0, newValues);
-            }
-        }
-
         private void ImportInstruments()
         {
             Action<string> ImportInstrumentsAction = (filename) =>
@@ -2596,10 +2575,7 @@ namespace FamiStudio
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportInstrumentsTitle, 300);
                                 dlg.Properties.AddCheckBoxList(ImportInstrumentsLabel.Colon, instrumentNames.ToArray(), null, null, 15); // 0
-                                dlg.Properties.AddButton(null, SelectAllLabel); // 1
-                                dlg.Properties.AddButton(null, SelectNoneLabel); // 2
                                 dlg.Properties.Build();
-                                dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
                                 dlg.ShowDialogAsync((r) =>
                                 {
@@ -2651,22 +2627,6 @@ namespace FamiStudio
             {
                 var filename = Platform.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti;*.opni)|*.fti;*.fms;*.txt;*.ftm;*.bti;*.opni|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|OPN Instrument File (*.opni)|*.opni|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
                 ImportInstrumentsAction(filename);
-            }
-        }
-
-        private void ImportInstrument_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
-        {
-            if (click == ClickType.Button)
-            {
-                var newValues = new bool[props.GetPropertyValue<bool[]>(0).Length];
-
-                if (propIdx == 1)
-                {
-                    for (int i = 0; i < newValues.Length; i++)
-                        newValues[i] = true;
-                }
-
-                props.UpdateCheckBoxList(0, newValues);
             }
         }
 
@@ -2737,10 +2697,7 @@ namespace FamiStudio
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportSamplesTitle, 300);
                                 dlg.Properties.AddCheckBoxList(ImportSamplesLabel.Colon, samplesNames.ToArray(), null, null, 15); // 0
-                                dlg.Properties.AddButton(null, SelectAllLabel); // 1
-                                dlg.Properties.AddButton(null, SelectNoneLabel); // 2
                                 dlg.Properties.Build();
-                                dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
                                 dlg.ShowDialogAsync((r) =>
                                 {

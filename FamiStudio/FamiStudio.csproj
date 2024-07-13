@@ -818,6 +818,10 @@
     <EmbeddedResource Include="Resources\Atlas\Save@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SaveSmall.tga" />
     <EmbeddedResource Include="Resources\Atlas\SaveSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\SelectAll.tga" />
+    <EmbeddedResource Include="Resources\Atlas\SelectAll@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\SelectNone.tga" />
+    <EmbeddedResource Include="Resources\Atlas\SelectNone@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ShyOn.tga" />
     <EmbeddedResource Include="Resources\Atlas\ShyOn@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\ShyOff.tga" />

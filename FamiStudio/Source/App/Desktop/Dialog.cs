@@ -123,7 +123,7 @@ namespace FamiStudio
 
         private bool IsTopDialog()
         {
-            return window != null && window.TopDialog == this;
+            return window != null && window.TopDialog == this && !window.IsContextMenuActive;
         }
 
         private bool ShouldDisplayTooltip()

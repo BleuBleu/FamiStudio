@@ -37,6 +37,7 @@ namespace FamiStudio
         public string Text { set => glfwSetWindowTitle(window, value); }
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => container.IsDialogActive;
+        public bool IsContextMenuActive => container.IsContextMenuActive;
         public bool MobilePianoVisible { get => false; set => value = false; }
         public Point LastMousePosition => new Point(lastCursorX, lastCursorY);
         public Point LastContextMenuPosition => ScreenToWindow(contextMenuPoint);

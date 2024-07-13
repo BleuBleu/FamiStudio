@@ -1,22 +1,5 @@
 Today:
-- "Full width" layout on Desktop
-	- Config keys may need to keep a label + the keyboard page that pops.
-	- Require ffmpeg page needs label.
-	- ROM multiple expansion audio.
-	- FT export multiple exp warning
-	- FT2 export label
-	- Cleanup the VGM mess.
-	- MIDI import disclaimer.
-	- Mixer project override
-		- Project override label is ok
-		- Mixer message (no effect on ROM/NSF etx.)
-	- Sound engine settings.
-	- BMP/Frames per note
-	- Storage note label
-	- LogProcess
-- Add a select all/none context menu on checkboxlist/grid.
-- Remove "Select all/none" buttons on dialogs if that works.
-- 
+	- Desktop done, mobile todo.
 
 4.3.0
 =====
@@ -63,7 +46,6 @@ Today:
 
 - "curated" in MIDI dialog. That's not a word.
 - BUG : Expand toolbar on mobile, click on open, weird shadow.
-- BUG : On desktop, MIDI export, grid + scrollbar has sorting issues.
 - UI code cleanup:
 	- Project explorer rewrite
 		- Test double click behavior on mobile.

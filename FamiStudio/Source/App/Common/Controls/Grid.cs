@@ -42,6 +42,7 @@ namespace FamiStudio
         private int[] columnOffsets;
         private byte columnEnabledMask;
         private bool hasAnyDropDowns;
+        private bool hasAnyCheckBoxes;
         private bool fullRowSelect;
         private bool isClosingList;
         private Font font;
@@ -76,8 +77,17 @@ namespace FamiStudio
         public int ItemCount => data.GetLength(0);
         public bool FullRowSelect { get => fullRowSelect; set => fullRowSelect = value; }
 
+        #region Localization
+
+        LocalizedString SelectAllLabel;
+        LocalizedString SelectNoneLabel;
+    
+        #endregion
+
         public Grid(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
         {
+            Localization.Localize(this);
+
             Debug.Assert(columnDescs.Length <= 8); // We use a byte for masks.
 
             columns = columnDescs;
@@ -91,7 +101,10 @@ namespace FamiStudio
                 if (col.Type == ColumnType.DropDown)
                 {
                     hasAnyDropDowns = true;
-                    break;
+                }
+                else if (col.Type == ColumnType.CheckBox)
+                {
+                    hasAnyCheckBoxes = true;
                 }
             }
 
@@ -493,6 +506,31 @@ namespace FamiStudio
                 Capture = false;
                 MarkDirty();
             }
+            else if (e.Right && hasAnyCheckBoxes)
+            {
+                App.ShowContextMenu(new[]
+{
+                    new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
+                    new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
+                });
+                e.MarkHandled();
+            }
+        }
+
+        private void SelectAllCheckBoxes(bool check)
+        {
+            for (var i = 0; i < columns.Length; i++)
+            {
+                if (columns[i].Type == ColumnType.CheckBox)
+                {
+                    for (var j = 0; j < ItemCount; j++)
+                    {
+                        data[j, i] = check;
+                    }
+                }
+            }
+
+            MarkDirty();
         }
 
         protected override void OnPointerLeave(EventArgs e)
@@ -607,6 +645,8 @@ namespace FamiStudio
                     c.DrawText(columns[j].Name, font, columnOffsets[j] + margin, 0, foreColor, TextFlags.MiddleLeft, 0, rowHeight);
             }
 
+            var localForeColor = enabled ? foreColor : Theme.MediumGreyColor1;
+
             // Data
             if (data != null)
             {
@@ -620,8 +660,6 @@ namespace FamiStudio
                     else
                         c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
                 }
-
-                var localForeColor = enabled ? foreColor : Theme.MediumGreyColor1;
 
                 for (int i = 0, k = scroll; i < numItemRows && k < data.GetLength(0); i++, k++) // Rows
                 {
@@ -724,14 +762,6 @@ namespace FamiStudio
                         c.PopTransform();
                     }
                 }
-
-                if (hasScrollBar)
-                {
-                    c.PushTranslation(width - scrollBarWidth - 1, numHeaderRows * rowHeight);
-                    c.FillAndDrawRectangle(0, 0, scrollBarWidth, rowHeight * numItemRows, Theme.DarkGreyColor4, localForeColor);
-                    c.FillAndDrawRectangle(0, scrollBarPos, scrollBarWidth, scrollBarPos + scrollBarSize, Theme.MediumGreyColor1, localForeColor);
-                    c.PopTransform();
-                }
             }
 
             // Border + Grid lines. Draw at end since on mobile these will be drawn as
@@ -743,6 +773,14 @@ namespace FamiStudio
                 c.DrawLine(columnOffsets[j], 0, columnOffsets[j], height, Theme.BlackColor);
             if (numHeaderRows != 0)
                 c.DrawLine(0, rowHeight, width - 1, rowHeight, foreColor);
+
+            if (hasScrollBar)
+            {
+                c.PushTranslation(width - scrollBarWidth - 1, numHeaderRows * rowHeight);
+                c.FillAndDrawRectangle(0, 0, scrollBarWidth, rowHeight * numItemRows, Theme.DarkGreyColor4, localForeColor);
+                c.FillAndDrawRectangle(0, scrollBarPos, scrollBarWidth, scrollBarPos + scrollBarSize, Theme.MediumGreyColor1, localForeColor);
+                c.PopTransform();
+            }
 
             c.DrawRectangle(0, 0, width - 1, height, enabled ? foreColor : Theme.MediumGreyColor1);
         }

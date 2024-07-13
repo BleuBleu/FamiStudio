@@ -160,25 +160,25 @@ namespace FamiStudio
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
-            var c = g.DefaultCommandList;
+            var o = g.OverlayCommandList;
             var prevWantedSeparator = false;
 
-            c.DrawRectangle(0, 0, Width - 1, Height - 1, Theme.LightGreyColor1);
+            o.FillAndDrawRectangle(0, 0, Width - 1, Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
 
             for (int i = 0, y = 0; i < menuOptions.Length; i++, y += itemSizeY)
             {
                 ContextMenuOption option = menuOptions[i];
 
-                c.PushTranslation(0, y);
+                o.PushTranslation(0, y);
 
                 var hover = i == hoveredItemIndex;
 
                 if (hover)
-                    c.FillRectangle(0, 0, Width, itemSizeY, Theme.MediumGreyColor1);
+                    o.FillRectangle(0, 0, Width, itemSizeY, Theme.MediumGreyColor1);
 
                 if (i > 0 && (option.Separator.HasFlag(ContextMenuSeparator.Before) || prevWantedSeparator))
                 {
-                    c.DrawLine(0, 0, Width, 0, Theme.LightGreyColor1);
+                    o.DrawLine(0, 0, Width, 0, Theme.LightGreyColor1);
                     prevWantedSeparator = false;
                 }
 
@@ -197,11 +197,11 @@ namespace FamiStudio
 
                 if (bmp != null)
                 {
-                    c.DrawTextureAtlas(bmp, iconPos, iconPos, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
+                    o.DrawTextureAtlas(bmp, iconPos, iconPos, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
                 }
 
-                c.DrawText(option.Text, Fonts.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
-                c.PopTransform();
+                o.DrawText(option.Text, Fonts.FontMedium, textPosX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
+                o.PopTransform();
 
                 prevWantedSeparator = option.Separator.HasFlag(ContextMenuSeparator.After);
             }

@@ -14,10 +14,6 @@ namespace FamiStudio
         LocalizedString DeleteNotesLabel;
         LocalizedString DeleteNotesTooltip;
         LocalizedString EffectsToDeleteLabel;
-        LocalizedString MobileSelectAllLabel;
-        LocalizedString SelectAllLabel;
-        LocalizedString MobileSelectNoneLabel;
-        LocalizedString SelectNoneLabel;
 
         #endregion
 
@@ -42,21 +38,7 @@ namespace FamiStudio
             dialog = new PropertyDialog(win, DeleteSpecialTitle, 260);
             dialog.Properties.AddLabelCheckBox(DeleteNotesLabel, notes, 0, DeleteNotesTooltip); // 0
             dialog.Properties.AddCheckBoxList(EffectsToDeleteLabel.Colon, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete.", 7, PropertyFlags.ForceFullWidth); // 1
-            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectAllLabel  : null, SelectAllLabel); // 2
-            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectNoneLabel : null, SelectNoneLabel); // 3
             dialog.Properties.Build();
-            dialog.Properties.PropertyClicked += Properties_PropertyClicked;
-        }
-
-        private void Properties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
-        {
-            if (click == ClickType.Button && (propIdx == 2 || propIdx == 3))
-            {
-                var keys = new bool[checkToEffect.Count];
-                for (int i = 0; i < keys.Length; i++)
-                    keys[i] = propIdx == 2;
-                props.UpdateCheckBoxList(1, keys);
-            }
         }
 
         public void ShowDialogAsync(Action<DialogResult> callback)
