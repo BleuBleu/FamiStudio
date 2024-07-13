@@ -7,7 +7,6 @@ namespace FamiStudio
 {
     public class ParamSlider : ParamControl
     {
-        // MATTT : What was that again?
         private float bmpScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
 
         private TextureAtlasRef bmpMinus;

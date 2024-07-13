@@ -1475,7 +1475,7 @@ namespace FamiStudio
                         if (chanRegs != null && chanRegs.Length > 0)
                         {
                             var chanHeader = CreateGradientPanel(Theme.DarkGreyColor5, null, true, lastControl);
-                            var chanIcon = CreateImageBox(chanHeader, marginX, RegisterViewer.Icons[expRegs.InterpreterIcons[i]]);
+                            var chanIcon = CreateImageBox(chanHeader, marginX, expRegs.InterpreterIcons[i]);
                             CreateLabel(chanHeader, expRegs.InterpreterLabels[i], false, chanIcon.Right + marginX, 0, width);
                             lastControl = CreateRegisterViewerPanel(chanRegs, e);
                         }

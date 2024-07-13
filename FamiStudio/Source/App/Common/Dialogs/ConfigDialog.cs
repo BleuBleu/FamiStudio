@@ -228,7 +228,7 @@ namespace FamiStudio
 
         private string[] BuildLanguageList()
         {
-            var languages = Localization.ToStringArray(LanguageType.LocalizedNames);
+            var languages = Localization.LanguageNames;
             var list = new string[languages.Length + 1];
 
             list[0] = SystemOption;

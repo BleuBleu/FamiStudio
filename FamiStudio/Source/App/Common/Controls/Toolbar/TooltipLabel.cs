@@ -7,29 +7,9 @@ namespace FamiStudio
 {
     public class TooltipLabel : Control
     {
-        // MATTT : Review this.
-        enum SpecialCharImageIndices
-        {
-            Drag,
-            MouseLeft,
-            MouseRight,
-            MouseWheel,
-            Warning,
-            Count
-        };
-
-        readonly string[] SpecialCharImageNames = new string[]
-        {
-            "Drag",
-            "MouseLeft",
-            "MouseRight",
-            "MouseWheel",
-            "Warning"
-        };
-
         class TooltipSpecialCharacter
         {
-            public SpecialCharImageIndices BmpIndex = SpecialCharImageIndices.Count;
+            public TextureAtlasRef Texture;
             public int Width;
             public int Height;
             public float OffsetY;
@@ -41,7 +21,6 @@ namespace FamiStudio
         private int tooltipSpecialCharSizeX =  DpiScaling.ScaleForWindow(16);
         private int tooltipSpecialCharSizeY =  DpiScaling.ScaleForWindow(15);
 
-        private TextureAtlasRef[] bmpSpecialCharacters;
         private Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
         public TooltipLabel()
@@ -50,10 +29,6 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
-            Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
-
-            bmpSpecialCharacters = graphics.GetTextureAtlasRefs(SpecialCharImageNames);
-
             specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(32) };
             specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
             specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(38) };
@@ -76,11 +51,11 @@ namespace FamiStudio
             specialCharacters["F10"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
             specialCharacters["F11"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
             specialCharacters["F12"]        = new TooltipSpecialCharacter { Width = DpiScaling.ScaleForWindow(24) };
-            specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = DpiScaling.ScaleForWindow(2) };
-            specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = DpiScaling.ScaleForWindow(2) };
-            specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = DpiScaling.ScaleForWindow(2) };
-            specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = DpiScaling.ScaleForWindow(2) };
-            specialCharacters["Warning"]    = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Warning };
+            specialCharacters["Drag"]       = new TooltipSpecialCharacter { Texture = graphics.GetTextureAtlasRef("Drag"),       OffsetY = DpiScaling.ScaleForWindow(2) };
+            specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Texture = graphics.GetTextureAtlasRef("MouseLeft"), OffsetY = DpiScaling.ScaleForWindow(2) };
+            specialCharacters["MouseRight"] = new TooltipSpecialCharacter { Texture = graphics.GetTextureAtlasRef("MouseRight"), OffsetY = DpiScaling.ScaleForWindow(2) };
+            specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { Texture = graphics.GetTextureAtlasRef("MouseWheel"), OffsetY = DpiScaling.ScaleForWindow(2) };
+            specialCharacters["Warning"]    = new TooltipSpecialCharacter { Texture = graphics.GetTextureAtlasRef("Warning") };
 
             for (char i = 'A'; i <= 'Z'; i++)
                 specialCharacters[i.ToString()] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
@@ -91,26 +66,27 @@ namespace FamiStudio
 
             foreach (var c in specialCharacters.Values)
             {
-                if (c.BmpIndex != SpecialCharImageIndices.Count)
-                    c.Width = bmpSpecialCharacters[(int)c.BmpIndex].ElementSize.Width;
+                if (c.Texture != null)
+                    c.Width = c.Texture.ElementSize.Width;
                 c.Height = tooltipSpecialCharSizeY;
             }
         }
 
         protected override void OnRender(Graphics g)
         {
-            var c = g.DefaultCommandList;
-
             var scaling = DpiScaling.Window;
             var message = tooltip;
             var messageColor = Theme.LightGreyColor2;
             var messageFont = Fonts.FontMedium;
 
-            // MATTT : Add clip region here.
-
             // Tooltip
-            if (!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message) && width > 1)
             {
+                var c = g.DefaultCommandList;
+
+                c.PushClipRegion(0, 0, width, height);
+                c.FillRectangleGradient(0, 0, Width, Height, Theme.DarkGreyColor5, Theme.DarkGreyColor4, true, Height); // Same as toolbar.
+
                 var lines = message.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 var posY = lines.Length == 1 ? tooltipSingleLinePosY : tooltipMultiLinePosY;
 
@@ -127,9 +103,9 @@ namespace FamiStudio
                         {
                             posX -= specialCharacter.Width;
 
-                            if (specialCharacter.BmpIndex != SpecialCharImageIndices.Count)
+                            if (specialCharacter.Texture != null)
                             {
-                                c.DrawTextureAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, Theme.LightGreyColor1);
+                                c.DrawTextureAtlas(specialCharacter.Texture, posX, posY + specialCharacter.OffsetY, 1.0f, Theme.LightGreyColor1);
                             }
                             else
                             {
@@ -148,6 +124,8 @@ namespace FamiStudio
 
                     posY += tooltipLineSizeY;
                 }
+
+                c.PopClipRegion();
             }
         }
     }

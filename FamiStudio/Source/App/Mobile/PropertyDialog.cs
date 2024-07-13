@@ -56,6 +56,13 @@ namespace FamiStudio
             AddControl(propertyContainer);
 
             propertyPage = new PropertyPage(propertyContainer, Width);
+            propertyPage.LayoutChanged += PropertyPage_LayoutChanged;
+        }
+
+        private void PropertyPage_LayoutChanged(PropertyPage props)
+        {
+            propertyContainer.VirtualSizeY = props.LayoutHeight;
+            propertyContainer.ClampScroll();
         }
 
         protected override void ButtonAccept_Click(Control sender)
@@ -64,11 +71,6 @@ namespace FamiStudio
             {
                 base.ButtonAccept_Click(sender);
             }
-        }
-
-        protected override void OnShowDialog()
-        {
-            propertyContainer.VirtualSizeY = propertyPage.LayoutHeight;
         }
     }
 }

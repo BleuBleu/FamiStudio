@@ -2,7 +2,6 @@ namespace FamiStudio
 {
     public class ParamCheckBox : ParamControl
     {
-        // MATTT : What was that again?
         private float bmpScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
 
         public delegate void CheckedChangedDelegate(Control sender, bool check);

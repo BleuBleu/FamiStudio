@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -22,6 +22,15 @@ namespace FamiStudio
             "POR",
             "ZHO",
             "DEU",
+        };
+
+        public static string[] LanguageNames = new[]
+        {
+            "English",
+            "Español",
+            "Português",
+            "中文 (简体)",
+            "Deutsch"
         };
 
         static Localization()
@@ -160,21 +169,5 @@ namespace FamiStudio
         public string Period => Value + ".";
         public override string ToString() { return Value; }
         public string Format(params object[] args) => string.Format(ToString(), args);
-    }
-
-    public class LanguageType
-    {
-        // Must match with Localization.Codes
-        public static LocalizedString[] LocalizedNames = new LocalizedString[5];
-
-        public static string GetLocalizedNameForCode(string code)
-        {
-            return LocalizedNames[Localization.GetIndexForLanguageCode(code)];
-        }
-
-        static LanguageType()
-        {
-            Localization.LocalizeStatic(typeof(LanguageType));
-        }
     }
 }

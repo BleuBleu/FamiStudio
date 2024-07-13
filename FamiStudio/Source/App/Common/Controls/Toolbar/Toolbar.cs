@@ -697,6 +697,7 @@ namespace FamiStudio
                 var hideOscilloscope         = Width < 1250 * DpiScaling.Window;
 
                 var x = 0;
+                var lastVisibleButton = (Button)null;
 
                 foreach (var btn in allButtons)
                 {
@@ -721,6 +722,11 @@ namespace FamiStudio
                     if (btn.Visible)
                     {
                         x += btn.Width;
+
+                        if (btn != buttonHelp)
+                        {
+                            lastVisibleButton = btn;
+                        }
                     }
 
                     if (btn == buttonConfig)
@@ -742,8 +748,7 @@ namespace FamiStudio
                     }
                 }
 
-                x += margin;
-                tooltipLabel.Move(x, 0, buttonHelp.Left - x - margin, Height);
+                tooltipLabel.Move(lastVisibleButton.Right + margin, 0, buttonHelp.Left - lastVisibleButton.Right - margin * 2, Height);
             }
             else
             {

@@ -33,6 +33,8 @@ namespace FamiStudio
         public event PropertyClickedDelegate PropertyClicked;
         public delegate bool PropertyCellEnabledDelegate(PropertyPage props, int propIdx, int rowIdx, int colIdx);
         public event PropertyCellEnabledDelegate PropertyCellEnabled;
+        public delegate void LayoutChangedDelegate(PropertyPage props);
+        public event LayoutChangedDelegate LayoutChanged;
 
         private object userData;
         private int advancedPropertyStart = -1;
@@ -93,12 +95,7 @@ namespace FamiStudio
 
         private Label CreateLabel(string str, string tooltip = null, bool multiline = false)
         {
-            //Debug.Assert(!string.IsNullOrEmpty(str)); // MATTT
-            if (string.IsNullOrEmpty(str))
-            {
-                str = "FIX ME!!!!!!!!!";
-            }
-
+            Debug.Assert(!string.IsNullOrEmpty(str));
             var label = new Label(str, multiline);
             label.ToolTip = tooltip;
             return label;
@@ -466,31 +463,6 @@ namespace FamiStudio
                     flags = flags
                 });
             return properties.Count - 1;
-        }
-
-        public void ClearRadioList(int idx)
-        {
-            var prop = properties[idx];
-            (prop.control as RadioButtonList).SelectedIndex = -1;
-        }
-
-        public void UpdateRadioButtonList(int idx, string[] values, int selectedIndex)
-        {
-            Debug.Assert(false);
-
-            //var prop = properties[idx];
-            //var radioGroup = prop.layout as RadioGroup;
-
-            //radioGroup.RemoveAllViews();
-
-            //for (int i = 0; i < values.Length; i++)
-            //{
-            //    var radio = CreateRadioButton(values[i], Resource.Style.LightGrayCheckBox);
-            //    radio.Checked = i == selectedIndex;
-            //    radio.Id = i;
-            //    prop.controls.Add(radio);
-            //    prop.layout.AddView(radio);
-            //}
         }
 
         public int AddImageBox(string label, string tooltip = null)

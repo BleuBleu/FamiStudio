@@ -155,6 +155,19 @@ namespace FamiStudio
             return (prop.control as RadioButtonList).SelectedIndex;
         }
 
+        public void ClearRadioList(int idx)
+        {
+            var prop = properties[idx];
+            (prop.control as RadioButtonList).SelectedIndex = -1;
+        }
+
+        public void UpdateRadioButtonList(int idx, string[] values, int selectedIndex)
+        {
+            var prop = properties[idx];
+            prop.control = CreateRadioButtonList(values, selectedIndex);
+            Build();
+        }
+
         private CheckBoxList CreateCheckBoxList(string[] values, bool[] selected, string tooltip = null)
         {
             var checkList = new CheckBoxList(values, selected);
@@ -185,7 +198,7 @@ namespace FamiStudio
         private void RadioList_RadioChanged(Control sender, int index)
         {
             var propIdx = GetPropertyIndexForControl(sender);
-            PropertyChanged?.Invoke(this, propIdx, index, 0, true);
+            PropertyChanged?.Invoke(this, propIdx, index, 0, index);
         }
 
         public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7, PropertyFlags flags = PropertyFlags.ForceFullWidth)
@@ -296,6 +309,7 @@ namespace FamiStudio
             }
 
             layoutHeight = y;
+            LayoutChanged?.Invoke(this);
         }
     }
 }
