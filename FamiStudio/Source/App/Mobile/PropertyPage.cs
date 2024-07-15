@@ -179,7 +179,7 @@ namespace FamiStudio
         {
             var prop = new Property();
             prop.type = PropertyType.CheckBoxList;
-            prop.label = CreateLabel(label);
+            prop.label = label != null ? CreateLabel(label) : null;
             prop.control = CreateCheckBoxList(values, selected, tooltip);
             properties.Add(prop);
 

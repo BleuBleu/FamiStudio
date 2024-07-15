@@ -35,6 +35,10 @@ Today:
 - Set multiple colums/rows by default for videos with TONS of channels. 
 - BUG : When moving releases in a selection, it applies multiple times.
 	https://discord.com/channels/@me/819772561940152321/1261610994673778730
+- Crash quitting when in dpcm editor. (audioStream is null)
+	FamiStudio.dll!FamiStudio.AudioPlayer.RawPcmSamplePlayPosition.get() Line 247	C#
+ 	FamiStudio.dll!FamiStudio.FamiStudio.PreviewDPCMWavPosition.get() Line 117	C#
+ 	FamiStudio.dll!FamiStudio.PianoRoll.RenderWaveform(FamiStudio.PianoRoll.RenderInfo r) Line 3725	C#
 
 4.3.0
 =====
@@ -48,6 +52,7 @@ Today:
 - BUG : If not using OS dialogs, the drop down overflows. Need to add clipping or ellipsis.
 - BUG : Import instrument dialog, text overflow if too big.
 - BUG : Expand toolbar on mobile, click on open, weird shadow.
+- BUG : Right click to play source sample pops up the context menu
 - UI code cleanup:
 	- Project explorer rewrite
 		- Test double click behavior on mobile.

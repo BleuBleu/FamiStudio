@@ -590,6 +590,15 @@ namespace FamiStudio
             }
         }
 
+        private void ClearHoverControl()
+        {
+            if (hoverControl != null)
+            {
+                hoverControl.SendPointerLeave(EventArgs.Empty);
+                hoverControl = null;
+            }
+        }
+
         private void ScrollCallback(IntPtr window, double xoffset, double yoffset)
         {
             if (quit)
@@ -848,11 +857,13 @@ namespace FamiStudio
             contextMenuPoint = WindowToScreen(new Point(x, y));
             container.ShowContextMenu(x, y, options);
             RefreshCursor(container.ContextMenu);
+            ClearHoverControl();
         }
 
         public void HideContextMenu()
         {
             container.HideContextMenu();
+            ClearHoverControl();
         }
 
         public void InitDialog(Dialog dialog)
@@ -862,12 +873,14 @@ namespace FamiStudio
 
         public void PushDialog(Dialog dialog)
 		{
+            ClearHoverControl();
             container.PushDialog(dialog);
         }
 
         public void PopDialog(Dialog dialog)
         {
-			container.PopDialog(dialog);
+            ClearHoverControl();
+            container.PopDialog(dialog);
         }
 
         public Dialog TopDialog => container.TopDialog;
