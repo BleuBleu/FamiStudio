@@ -363,7 +363,7 @@ void Simple_Apu::end_frame()
 		buf_fds.end_frame(frame_length);
 	}
 
-	if (expansions & expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_vrc6 | expansion_mask_sunsoft | expansion_mask_vrc7)
+	if (expansions & expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft)
 	{
 		buf_exp.end_frame(frame_length);
 	}
@@ -386,6 +386,7 @@ void Simple_Apu::reset()
 	apu.enable_nonlinear(1.0);
 	tnd_volume = 1.0;
 	seeking = false;
+	skipped_first_sample = false;
 	prev_sq_mix = 0;
 	sq_accum = 0;
 	prev_nonlinear_tnd = 0;
@@ -549,14 +550,16 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			for (unsigned n = count; n--; )
 			{
 				tnd_accum[0] += (long)*p;
-				long nonlinear_tnd = pack_sample(nonlinearize(unpack_sample(tnd_accum[0])) * tnd_volume);
+				long nonlinear_tnd = pack_sample((nonlinearize(unpack_sample(tnd_accum[0])) - tnd_offset) * tnd_volume);
 				*p++ = (nonlinear_tnd - prev_nonlinear_tnd);
 				prev_nonlinear_tnd = nonlinear_tnd;
+
+				//printf("%f", nonlinearize(unpack_sample(tnd_accum[0])) - 0.2495740);
 			}
 		}
 
 		// NULL buffer is used when seeking, it means we can discard the samples as fast as possible.
-		if (out != NULL)
+		if (out != NULL && skipped_first_sample)
 		{
 			// Then mix both blip buffers.
 			Blip_Reader lin;
@@ -616,6 +619,8 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 				buf_tnd[1].read_samples(dummy, count);
 				buf_tnd[2].read_samples(dummy, count);
 			}
+
+			skipped_first_sample = true;
 		}
 	}
 
@@ -646,7 +651,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 		}
 	}
 
-	if (expansions & expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_vrc6 | expansion_mask_sunsoft | expansion_mask_vrc7)
+	if (expansions & expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft)
 	{
 		assert(buf_exp.samples_avail() == count);
 
@@ -684,14 +689,14 @@ void Simple_Apu::remove_samples(long s)
 		buf_tnd[2].remove_samples(s);
 	}
 
-	if (expansions & expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_vrc6 | expansion_mask_sunsoft | expansion_mask_vrc7)
-	{
-		buf_exp.remove_samples(s);
-	}
-
 	if (expansions & expansion_mask_fds)
 	{
 		buf_fds.remove_samples(s);
+	}
+
+	if (expansions & expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft)
+	{
+		buf_exp.remove_samples(s);
 	}
 
 	if (expansions & expansion_mask_epsm)

@@ -93,7 +93,12 @@ struct Nes_Triangle : Nes_Osc
 	void clock_linear_counter();
 	void reset() {
 		linear_counter = 0;
-		phase = phase_range;
+		// According to NESDev, the triangle actually initialises on 
+		// level 15 after a reset, which is phase 1 here. This means 
+		// TND starts on 45, not 0. Songs with no triangle would be 
+		// affected if we start on 0 (louder DPCM and Noise than hardware).
+		// TODO: Workaround the initial pop caused by this.
+		phase = 1;
 		Nes_Osc::reset();
 	}
 	cpu_time_t maintain_phase( cpu_time_t time, cpu_time_t end_time,
@@ -105,7 +110,7 @@ struct Nes_Noise : Nes_Envelope
 {
 	int noise;
 	bool pal_mode;
-	Blip_Synth<blip_med_quality,15> synth;
+	Blip_Synth<blip_good_quality,15> synth;
 	
 	void run( cpu_time_t, cpu_time_t );
 	void reset() {
