@@ -553,8 +553,6 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 				long nonlinear_tnd = pack_sample((nonlinearize(unpack_sample(tnd_accum[0])) - tnd_offset) * tnd_volume);
 				*p++ = (nonlinear_tnd - prev_nonlinear_tnd);
 				prev_nonlinear_tnd = nonlinear_tnd;
-
-				//printf("%f", nonlinearize(unpack_sample(tnd_accum[0])) - 0.2495740);
 			}
 		}
 
@@ -574,7 +572,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			{
 				for (int i = 0; i < count; i++)
 				{
-					int s = skipped_init_samples || i > 10 ? lin.read() + nonlin.read() : 0;
+					int s = skipped_init_samples || i >= 10 ? lin.read() + nonlin.read() : 0;
 					lin.next(lin_bass);
 					nonlin.next(nonlin_bass);
 					*p++ = (blip_sample_t)clamp((int)(s + out_left[i]), -32768, 32767);
