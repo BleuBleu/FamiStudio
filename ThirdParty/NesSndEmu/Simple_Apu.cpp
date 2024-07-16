@@ -386,7 +386,7 @@ void Simple_Apu::reset()
 	apu.enable_nonlinear(1.0);
 	tnd_volume = 1.0;
 	seeking = false;
-	skipped_first_sample = false;
+	skipped_init_samples = false;
 	prev_sq_mix = 0;
 	sq_accum = 0;
 	prev_nonlinear_tnd = 0;
@@ -559,7 +559,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 		}
 
 		// NULL buffer is used when seeking, it means we can discard the samples as fast as possible.
-		if (out != NULL && skipped_first_sample)
+		if (out != NULL)
 		{
 			// Then mix both blip buffers.
 			Blip_Reader lin;
@@ -574,7 +574,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			{
 				for (int i = 0; i < count; i++)
 				{
-					int s = lin.read() + nonlin.read();
+					int s = skipped_init_samples || i > 10 ? lin.read() + nonlin.read() : 0;
 					lin.next(lin_bass);
 					nonlin.next(nonlin_bass);
 					*p++ = (blip_sample_t)clamp((int)(s + out_left[i]), -32768, 32767);
@@ -583,9 +583,9 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			}
 			else
 			{
-				for (int n = count; n--; )
+				for (int i = 0; i < count; i++)
 				{
-					int s = lin.read() + nonlin.read();
+					int s = skipped_init_samples || i >= 10 ? lin.read() + nonlin.read() : 0;
 					lin.next(lin_bass);
 					nonlin.next(nonlin_bass);
 					*p++ = s;
@@ -619,8 +619,6 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 				buf_tnd[1].read_samples(dummy, count);
 				buf_tnd[2].read_samples(dummy, count);
 			}
-
-			skipped_first_sample = true;
 		}
 	}
 
@@ -675,6 +673,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 		}
 	}
 
+	skipped_init_samples = true;
 	return count;
 }
 

@@ -119,7 +119,7 @@ public:
 private:
 	bool pal_mode;
 	bool seeking;
-	bool skipped_first_sample; // Skips a tiny pop caused by triangle initialising
+	bool skipped_init_samples; // Skips a tiny pop caused by triangle initialising
 	float tnd_volume;
 	const float tnd_offset = 0.2495740f; // Prevents initial pop from triangle, without throwing off the mixing volumes
 	int expansions;
