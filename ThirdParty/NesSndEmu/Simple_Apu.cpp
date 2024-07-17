@@ -551,18 +551,11 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			{
 				tnd_accum[0] += (long)*p;
     			long nonlinear_tnd = pack_sample((nonlinearize(unpack_sample(tnd_accum[0]))) * tnd_volume);
+				*p++ = tnd_skip > 0 ? 0 : nonlinear_tnd - prev_nonlinear_tnd;
+				prev_nonlinear_tnd = nonlinear_tnd;
 
 				if (tnd_skip > 0)
-				{
-					*p++ = 0;
 					tnd_skip--;
-				}
-				else
-				{
-					*p++ = nonlinear_tnd - prev_nonlinear_tnd;
-				}
-
-				prev_nonlinear_tnd = nonlinear_tnd;
 			}
 		}
 
