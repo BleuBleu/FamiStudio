@@ -386,7 +386,7 @@ void Simple_Apu::reset()
 	apu.enable_nonlinear(1.0);
 	tnd_volume = 1.0;
 	seeking = false;
-	skipped_init_samples = false;
+	tnd_skip = 12;
 	prev_sq_mix = 0;
 	sq_accum = 0;
 	prev_nonlinear_tnd = 0;
@@ -550,8 +550,18 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			for (unsigned n = count; n--; )
 			{
 				tnd_accum[0] += (long)*p;
-				long nonlinear_tnd = pack_sample((nonlinearize(unpack_sample(tnd_accum[0])) - tnd_offset) * tnd_volume);
-				*p++ = (nonlinear_tnd - prev_nonlinear_tnd);
+    			long nonlinear_tnd = pack_sample((nonlinearize(unpack_sample(tnd_accum[0]))) * tnd_volume);
+
+				if (tnd_skip > 0)
+				{
+					*p++ = 0;
+					tnd_skip--;
+				}
+				else
+				{
+					*p++ = nonlinear_tnd - prev_nonlinear_tnd;
+				}
+
 				prev_nonlinear_tnd = nonlinear_tnd;
 			}
 		}
@@ -572,7 +582,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			{
 				for (int i = 0; i < count; i++)
 				{
-					int s = skipped_init_samples || i >= 10 ? lin.read() + nonlin.read() : 0;
+					int s = lin.read() + nonlin.read();
 					lin.next(lin_bass);
 					nonlin.next(nonlin_bass);
 					*p++ = (blip_sample_t)clamp((int)(s + out_left[i]), -32768, 32767);
@@ -581,9 +591,9 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			}
 			else
 			{
-				for (int i = 0; i < count; i++)
+				for (int n = count; n--; )
 				{
-					int s = skipped_init_samples || i >= 10 ? lin.read() + nonlin.read() : 0;
+					int s = lin.read() + nonlin.read();
 					lin.next(lin_bass);
 					nonlin.next(nonlin_bass);
 					*p++ = s;
@@ -671,7 +681,6 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 		}
 	}
 
-	skipped_init_samples = true;
 	return count;
 }
 
