@@ -119,9 +119,8 @@ public:
 private:
 	bool pal_mode;
 	bool seeking;
-	bool skipped_init_samples; // Skips a tiny pop caused by triangle initialising
+	bool skipped_init_samples; // Skips a tiny pop caused by triangle initialising. Channels will not be affected, as it takes place before output.
 	float tnd_volume;
-	const float tnd_offset = 0.2495740f; // Prevents initial pop from triangle, without throwing off the mixing volumes
 	int expansions;
 	int separate_tnd_mode;
 	int fds_filter_accum;
@@ -151,6 +150,8 @@ private:
 	blip_time_t clock(blip_time_t t = 4) { return time += t; }
 
 	const long fds_filter_bits = 12;
+
+	const float tnd_offset = 0.249574f; // Prevents initial pop from triangle, without throwing off volume mixing.
 };
 
 #endif
