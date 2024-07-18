@@ -540,6 +540,9 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 				 p[2]++;
 
 				prev_nonlinear_tnd = nonlinear_tnd;
+
+				if (tnd_skip > 0)
+					tnd_skip--;
 			}
 		}
 		else
