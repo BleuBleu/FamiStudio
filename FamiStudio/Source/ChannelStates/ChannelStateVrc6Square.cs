@@ -7,7 +7,7 @@ namespace FamiStudio
         int regOffset = 0;
         int prevPeriodHi = 0;
 
-        public ChannelStateVrc6Square(IPlayerInterface player, int apuIdx, int channelType) : base(player, apuIdx, channelType, false)
+        public ChannelStateVrc6Square(IPlayerInterface player, int apuIdx, int channelType, int tuning) : base(player, apuIdx, channelType, tuning)
         {
             regOffset = (channelType - ChannelType.Vrc6Square1) * 0x1000;
         }

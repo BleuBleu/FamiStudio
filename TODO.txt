@@ -1,13 +1,3 @@
-4.2.2
-=====
-- MIDI Crash
-- #bug-report stuff (cant type "-")
-- Crash if project name is " " + NSF export.
-- Upgrade Android min SDK to make google happy.
-- Russian translation.
-- JTS song is too big now? 
-	https://discord.com/channels/@me/1256890811921207330/1260320240986755083
-
 4.3.0
 =====
 - VRC6 square popping how2/kawashin
@@ -29,9 +19,18 @@
 - YARN : Small hitch beginning of VRC6 songs? Not sure
 - YARN : Change ini ROM code persune suggestion.
 - Review the copy/paste name matching. Maybe add a rename option.
-- Remove ..\..\Tools\ca65 path in sound engine build scripts (have a normal + dev version)
-- N163 wave pos inconsistency. we sometimes force to multiple of 2/4. it needs to be 2 everywhere.
-- Make ROM export fail if go over limit. Not a warning.
+- N163 auto-position.
+	- GUI BRANCH : When changing "Auto Wav Pos", must stop player. => REDO IN GUI BRANCH!
+	- GUI BRANCH : Add button test validate the assignment in instrument settings.
+
+4.3.0
+=====
+- Support for custom tuning (ex: where A is not 440Hz).
+- N163 auto position assignment
+
+4.3.0 Testing
+=============
+- Test detuning with sound, dual NSF, slide notes, etc.
 
 Linux notes 
 =========== 

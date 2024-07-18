@@ -3,6 +3,7 @@ using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.ComponentModel.Design;
 
 namespace FamiStudio
 {
@@ -467,6 +468,7 @@ namespace FamiStudio
 
             public ParamInfo param;
             public TransactionScope paramScope;
+            public TransactionFlags paramFlags;
             public int paramObjectId;
 
             public Button(ProjectExplorer pe)
@@ -1007,7 +1009,7 @@ namespace FamiStudio
                                     }
 
                                     var sizeY = param.CustomHeight > 0 ? param.CustomHeight * buttonSizeY : buttonSizeY;
-                                    buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textColor = Theme.BlackColor, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, height = sizeY });
+                                    buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textColor = Theme.BlackColor, paramScope = TransactionScope.Instrument, paramFlags = param.TransactionFlags, paramObjectId = instrument.Id, height = sizeY });
                                 }
                             }
                         }
@@ -3665,7 +3667,7 @@ namespace FamiStudio
         {
             if (IsPointInCheckbox(x, y))
             {
-                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId, -1, button.paramFlags);
                 button.param.SetValue(button.param.GetValue() == 0 ? 1 : 0);
                 App.UndoRedoManager.EndTransaction();
                 MarkDirty();
@@ -5059,16 +5061,18 @@ namespace FamiStudio
                     var tempoMode = dlg.TempoMode;
                     var palAuthoring = dlg.Machine == MachineType.PAL;
                     var numN163Channels = dlg.NumN163Channels;
+                    var tuning = dlg.Tuning;
 
                     var changedTempoMode = tempoMode != project.TempoMode;
                     var changedExpansion = newExpansionMask != project.ExpansionAudioMask;
                     var changedNumChannels = numN163Channels != project.ExpansionNumN163Channels;
                     var changedAuthoringMachine = palAuthoring != project.PalMode;
+                    var changedTuning = tuning != project.Tuning;
                     var changedExpMixer = dlg.MixerProperties.Changed;
 
                     var transFlags = TransactionFlags.None;
 
-                    if (changedAuthoringMachine || changedNumChannels || changedExpMixer)
+                    if (changedAuthoringMachine || changedNumChannels || changedExpMixer || changedTuning)
                         transFlags = TransactionFlags.RecreatePlayers;
                     else if (changedExpansion)
                         transFlags = TransactionFlags.RecreatePlayers | TransactionFlags.RecreateStreams; // Toggling EPSM will change mono/stereo and requires new audiostreams.
@@ -5080,6 +5084,7 @@ namespace FamiStudio
                     project.Name = dlg.Title;
                     project.Author = dlg.Author;
                     project.Copyright = dlg.Copyright;
+                    project.Tuning = tuning;
 
                     project.SoundEngineUsesDpcmBankSwitching = dlg.DPCMBankswitching;
                     project.SoundEngineUsesExtendedDpcm = dlg.DPCMExtendedRange;

@@ -17,8 +17,6 @@
                 Theme.Initialize();
             }
 
-            NesApu.Initialize();
-
             return true;
         }
 

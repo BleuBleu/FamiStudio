@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace FamiStudio
 {
@@ -23,7 +27,8 @@ namespace FamiStudio
         // Version 14 = FamiStudio 4.0.0 (Unicode text).
         // Version 15 = FamiStudio 4.1.0 (DPCM bankswitching)
         // Version 16 = FamiStudio 4.2.0 (Folders, sound engine options, project mixer settings)
-        public const int Version = 16;
+        // Version 17 = FamiStudio 4.3.0 (Tuning)
+        public const int Version = 17;
         public const int MaxMappedSampleSize = 0x40000;
         public const int MaxDPCMBanks = 64; 
         public const int MaxSampleAddress = 255 * 64;
@@ -41,6 +46,7 @@ namespace FamiStudio
         private int tempoMode = TempoType.FamiStudio;
         private int expansionMask = ExpansionType.NoneMask;
         private int expansionNumN163Channels = 1; // For N163 only.
+        private int tuning = 440;
         private bool sortSongs = true;
         private bool sortInstruments = true;
         private bool sortSamples = true;
@@ -72,8 +78,9 @@ namespace FamiStudio
 
         public int ExpansionAudioMask => expansionMask;
         public int ExpansionNumN163Channels => expansionNumN163Channels;
-
         public int N163WaveRAMSize => 128 - 8 * expansionNumN163Channels;
+
+        public int Tuning { get => tuning; set => tuning = value; }
 
         public bool UsesAnyExpansionAudio       => (expansionMask != ExpansionType.NoneMask);
         public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
@@ -1930,6 +1937,202 @@ namespace FamiStudio
             ConditionalSortArpeggios();
         }
 
+        class N163Mask
+        {
+            public ulong[] Bits;
+            public int MinIndex = int.MaxValue;
+            public int MaxIndex = int.MinValue;
+
+            public N163Mask(int numLongs)
+            {
+                Bits = new ulong[numLongs];
+            }
+        };
+
+        public unsafe bool AutoAssignN163WavePositions(out Dictionary<int, int> wavePositions)
+        {
+            if (!UsesN163Expansion)
+            {
+                wavePositions = null;
+                return true;
+            }
+
+            var numN163Instruments = instruments.Count(i => i.IsN163);
+            var numN163AutoPos = instruments.Count(i => i.IsN163 && i.N163WaveAutoPos);
+
+            if (numN163AutoPos == 0)
+            {
+                wavePositions = null;
+                return true;
+            }
+
+            //var A = Platform.TimeSeconds();
+
+            const int numBitsPerLong = sizeof(ulong) * 8;
+
+            var instrumentOverlaps = new Dictionary<Instrument, HashSet<Instrument>>(numN163AutoPos);
+            
+            foreach (var song in songs)
+            {
+                var numFrames = song.EndLocation.ToAbsoluteNoteIndex(song);
+                var numLongs = Utils.DivideAndRoundUp(numFrames, numBitsPerLong);
+                var instrumentMasks = new Dictionary<Instrument, N163Mask>(numN163Instruments);
+
+                // Buld a huge bitmask that tells us which frame each instrument is used.
+                // This is a bit overkill, but is very simple.
+                for (var i = 0; i < instruments.Count; i++)
+                {
+                    var inst = instruments[i];
+                    if (inst.IsN163)
+                    {
+                        instrumentMasks.Add(inst, new N163Mask(numLongs));
+                    }
+                }
+
+                for (var i = 0; i < expansionNumN163Channels; i++)
+                {
+                    var channel = song.GetChannelByType(ChannelType.N163Wave1 + i);
+
+                    // TODO : This ignores FamiTracker delayed cuts, so it may generate sub-optimal results when they are used.
+                    for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                    {
+                        var note = it.Note;
+
+                        if (note.Instrument != null)
+                        {
+                            var mask = instrumentMasks[note.Instrument];
+                            
+                            // Start + end of this note, in frame.
+                            var idx1 = it.Location.ToAbsoluteNoteIndex(song);
+                            var idx2 = Math.Min(idx1 + Math.Min(note.Duration, it.DistanceToNextNote), numFrames - 1);
+
+                            var long1 = idx1 / numBitsPerLong;
+                            var long2 = idx2 / numBitsPerLong;
+                            var bit1  = idx1 % numBitsPerLong;
+                            var bit2  = idx2 % numBitsPerLong;
+
+                            var mask1 = ~((1ul << bit1) - 1ul);
+                            var mask2 =  ((1ul << bit2) - 1ul);
+
+                            mask.MinIndex = Math.Min(long1, mask.MinIndex);
+                            mask.MaxIndex = Math.Max(long2, mask.MaxIndex);
+
+                            if (long1 == long2)
+                            {
+                                mask.Bits[long1] |= (mask1 & mask2);
+                            }
+                            else
+                            {
+                                mask.Bits[long1] |= mask1;
+                                mask.Bits[long2] |= mask2;
+
+                                for (var j = long1 + 1; j < long2; j++)
+                                    mask.Bits[j] = ulong.MaxValue;
+                            }
+                        }
+                    }
+                }
+
+                // Then "AND" these masks to figure out which instruments overlap, update the map of overlaps.
+                // We create overlaps both ways, so this is O(N^2/2) i guess.
+                var it1 = instrumentMasks.GetEnumerator();
+                while (it1.MoveNext())
+                {
+                    var inst1 = it1.Current.Key;
+                    var mask1 = it1.Current.Value;
+
+                    var it2 = it1;
+                    while (it2.MoveNext())
+                    {
+                        var inst2 = it2.Current.Key;
+                        var mask2 = it2.Current.Value;
+
+                        if ((inst1.N163WaveAutoPos || inst2.N163WaveAutoPos) &&
+                            (mask1.MaxIndex >= mask1.MinIndex) &&
+                            (mask2.MaxIndex >= mask2.MinIndex))
+                        {
+                            var idx1 = Math.Max(mask1.MinIndex, mask2.MinIndex);
+                            var idx2 = Math.Min(mask1.MaxIndex, mask2.MaxIndex);
+
+                            for (var i = idx1; i <= idx2; i++)
+                            {
+                                if ((mask1.Bits[i] & mask2.Bits[i]) != 0)
+                                {
+                                    if (inst1.N163WaveAutoPos)
+                                    {
+                                        if (!instrumentOverlaps.TryGetValue(inst1, out var set1))
+                                        {
+                                            set1 = new HashSet<Instrument>(numN163Instruments);
+                                            instrumentOverlaps.Add(inst1, set1);
+                                        }
+                                        set1.Add(inst2);
+                                    }
+                                    if (inst2.N163WaveAutoPos)
+                                    {
+                                        if (!instrumentOverlaps.TryGetValue(inst2, out var set2))
+                                        {
+                                            set2 = new HashSet<Instrument>(numN163Instruments);
+                                            instrumentOverlaps.Add(inst2, set2);
+                                        }
+                                        set2.Add(inst1);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Finally, try to assign the wave positions without generating overlap.
+            // TODO : Sort instrument by descending wav size + how much they are used maybe?
+            wavePositions = new Dictionary<int, int>(numN163AutoPos);
+
+            var maxPosByte = N163WaveRAMSize * 2;
+            var overlapDetected = false;
+
+            foreach (var kv in instrumentOverlaps)
+            {
+                var inst1 = kv.Key;
+                var pos1 = 0;
+                var overlapInstruments = kv.Value;
+
+                foreach (var inst2 in overlapInstruments)
+                {
+                    var pos2 = (int)inst2.N163WavePos;
+
+                    // No position assigned yet, will be done later.
+                    if (inst2.N163WaveAutoPos && !wavePositions.TryGetValue(inst2.Id, out pos2))
+                    {
+                        continue;
+                    }
+
+                    // If overlap, try again right after this instrument.
+                    if (pos1 + inst1.N163WaveSize > pos2 &&
+                        pos2 + inst2.N163WaveSize > pos1)
+                    {
+                        pos1 = pos2 + inst2.N163WaveSize;
+
+                        // Was not able to allocate.
+                        if (pos1 + inst1.N163WaveSize > maxPosByte)
+                        {
+                            Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size of overlap with other instruments. Setting to 0.");
+                            pos1 = 0;
+                            overlapDetected = true;
+                            break;
+                        }
+                    }
+                }
+
+                wavePositions.Add(inst1.Id, pos1);
+            }
+
+            //var B = Platform.TimeSeconds();
+            //Trace.WriteLine($"ASSIGN TIME! {(B - A) * 1000} ms");
+
+            return !overlapDetected;
+        }
+
         public int FindLargestUniqueId()
         {
             var largestUniqueId = 0;
@@ -2214,6 +2417,12 @@ namespace FamiStudio
             if (buffer.Version >= 6)
             {
                 buffer.Serialize(ref pal);
+            }
+
+            // At version 17 (FamiStudio 4.3.0) we added support for tuning frequency (ex: A = 440Hz).
+            if (buffer.Version >= 17)
+            {
+                buffer.Serialize(ref tuning);
             }
 
             // At version 16 (FamiStudio 4.2.0) we added little folders in the project explorer and
