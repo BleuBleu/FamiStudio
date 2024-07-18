@@ -535,7 +535,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 				long nonlinear_tnd = pack_sample(enabled_channels_non_linear_mix * tnd_volume);
 
 				// Write final result in tnd[0] so that the remaining code can proceed as usual.
-				*p[0]++ = (nonlinear_tnd - prev_nonlinear_tnd);
+				*p[0]++ = (tnd_skip > 0 ? 0 : nonlinear_tnd - prev_nonlinear_tnd);
 				 p[1]++;
 				 p[2]++;
 
