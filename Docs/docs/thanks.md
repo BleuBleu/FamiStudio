@@ -36,14 +36,12 @@ Created by the [Xiph.Org Foundation](https://xiph.org/). Used for the OGG/Vorbis
 
 ## Demo Songs
 
-Several demo songs are also provided with FamiStudio. Unless mentioned, the demo songs are my re-creations, done by reverse-engineering the NSF. Many thanks to the contributors.
+A few demo songs are also provided with FamiStudio. Unless mentioned, the demo songs are my re-creations, done by reverse-engineering the NSF. Many thanks to the contributors.
 
 * Another Winter - Anamanaguchi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
-* Breaking Through - Zabutom (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * Castlevania 2 - Bloody Tears
 * Dedrecil - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * DuckTales! - The Moon
-* Evil Clockwork - Original (by <a href='https://www.youtube.com/channel/UC5ttIE37dv2BFPzbaSBdrXQ'>Kawashin</a>)
 * Gimmick - Strange Memories of Death (Improvements contributed by [marklincadet](https://youtube.com/@marklincadet))
 * Gradius II - Farewell
 * Gyruss - Stage 2
@@ -57,13 +55,11 @@ Several demo songs are also provided with FamiStudio. Unless mentioned, the demo
 * Mina the Hollower - Crypt Road (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * Ochame Kinou - (cover by <a href='https://www.youtube.com/channel/UC5ttIE37dv2BFPzbaSBdrXQ'>Kawashin</a>)
-* Pressure Burst - Original (by <a href='https://www.youtube.com/channel/UC5ttIE37dv2BFPzbaSBdrXQ'>Kawashin</a> & H-mister)
-* Roar of the Jungle Dragon - DM DOKURO (cover by NicolARark)
 * SCAT - Stage 1 (Contributed by [marklincadet](https://youtube.com/@marklincadet))
 * Seashell Searching - Original (by Rei8bit)
 * Shatterhand - Final Stage
 * Shovel Knight - Strike the Earth! (Plains of Passage) & The Schemer
-* Silver Surfer - BGM2
+* Silver Surfer : BGM2
 * Sonic 1 - Partial Soundtrack (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * Sonic 3 - Special Stage (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * Tetris Theme A - FamiStudio Tutorial Song (song created in tutorial)

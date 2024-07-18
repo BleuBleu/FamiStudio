@@ -83,7 +83,7 @@ Every feature supported by FamiStudio can be used in an NSF.
 Options:
 
 * **Format** : You can choose between NSF/NSFe. NSF is more widely support, NSFe adds support for per-track names and durations.
-* **Mode** : Song that do not use any audio expansion can export as PAL and Dual mode, where as only NTSC is available for expansion audio.
+* **Mode** : Songs can be exported as PAL, NTSC, or Dual mode.
 
 The maximum song size is approximately 28KB minus the size of the DPCM samples used. Note that this size are not printed anywhere and are not related to the size of the \*.fms file. Best to simply try and see if it works.
 

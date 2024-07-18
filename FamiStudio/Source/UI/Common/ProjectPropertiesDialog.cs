@@ -115,7 +115,7 @@ namespace FamiStudio
                     page.AddDropDownList(TempoModeLabel.Colon, TempoType.Names, TempoType.Names[project.TempoMode], TempoModeTooltip); // 3
                     page.AddDropDownList(MachineLabel.Colon, Localization.ToStringArray(MachineType.LocalizedNames, MachineType.CountNoDual), MachineType.LocalizedNames[project.PalMode ? MachineType.PAL : MachineType.NTSC], AuthoringMachineTooltip); // 4
                     page.AddNumericUpDown(TuningLabel, project.Tuning, 300, 580, 1, TuningTooltip); // 5
-                    page.SetPropertyEnabled(4, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
+                    page.SetPropertyEnabled(4, project.UsesFamiStudioTempo);
                     page.PropertyChanged += Info_PropertyChanged;
                     break;
                 }
@@ -181,8 +181,8 @@ namespace FamiStudio
         {
             if (propIdx == 3) // Tempo Mode
             {
-                // Machine setting only makes sense in FamiStudio tempo and we force NTSC with expansions.
-                props.SetPropertyEnabled(4, (string)value == TempoType.Names[TempoType.FamiStudio] && GetSelectedExpansionMask() == 0);
+                // Machine setting only makes sense in FamiStudio tempo.
+                props.SetPropertyEnabled(4, (string)value == TempoType.Names[TempoType.FamiStudio]);
             }
         }
 
@@ -207,9 +207,8 @@ namespace FamiStudio
 
                 props.SetPropertyEnabled(1, (expansionMask & ExpansionType.N163Mask) != 0);
 
-                // Expansion forces NTSC.
-                infoPage.SetPropertyEnabled(4, infoPage.GetSelectedIndex(3) == TempoType.FamiStudio && expansionMask == 0);
-                infoPage.SetDropDownListIndex(4, expansionMask == 0 && app.Project.PalMode ? 1 : 0);
+                infoPage.SetPropertyEnabled(4, infoPage.GetSelectedIndex(3) == TempoType.FamiStudio);
+                infoPage.SetDropDownListIndex(4, app.Project.PalMode ? 1 : 0);
 
                 mixerProperties.SetExpansionMask(expansionMask);
             }

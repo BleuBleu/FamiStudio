@@ -508,7 +508,6 @@ namespace FamiStudio
 #if DEBUG
                     page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 6
 #endif
-                    page.SetPropertyEnabled(4, !project.UsesAnyExpansionAudio);
                     break;
                 case ExportFormat.Rom:
                     if (!project.UsesMultipleExpansionAudios)
@@ -519,7 +518,6 @@ namespace FamiStudio
                         page.AddDropDownList(ModeLabel.Colon, new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC", MachineTooltip); // 3
                         page.AddCheckBoxList(Platform.IsDesktop ? null : SongsLabel, songNames, null, SongListTooltip, 12); // 4
                         page.SetPropertyEnabled(0, project.UsesFdsExpansion);
-                        page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     }
                     else
                     {
@@ -1042,7 +1040,8 @@ namespace FamiStudio
                         fds.Save(
                             project, filename, songIds,
                             props.GetPropertyValue<string>(1),
-                            props.GetPropertyValue<string>(2));
+                            props.GetPropertyValue<string>(2),
+                            props.GetPropertyValue<string>(3) == "PAL");
 
                         lastExportFilename = filename;
                     }

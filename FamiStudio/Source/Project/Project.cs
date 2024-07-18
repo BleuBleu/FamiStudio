@@ -136,8 +136,7 @@ namespace FamiStudio
             }
             set
             {
-                Debug.Assert(value == false || !UsesAnyExpansionAudio);
-                pal = value && !UsesAnyExpansionAudio;
+                pal = value;
             }
         }
 
@@ -982,9 +981,6 @@ namespace FamiStudio
                     inst.NotifyN163RAMSizeChanged();
                 }
             }
-
-            if (UsesAnyExpansionAudio)
-                pal = false;
         }
 
         public int GetActiveChannelCount()
@@ -2214,7 +2210,6 @@ namespace FamiStudio
             foreach (var song in Songs)
                 song.ValidateIntegrity(this, idMap);
 
-            Debug.Assert(!UsesAnyExpansionAudio || pal == false);
             Debug.Assert(Note.EmptyNote.IsEmpty);
 #endif
         }

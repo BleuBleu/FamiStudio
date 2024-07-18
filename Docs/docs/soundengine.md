@@ -60,7 +60,7 @@ Features that can be toggled on/off depending on the needs of your projects:
 
 Enabling more features will make the sound engine code larger and use more RAM. The zeropage usage is 7 bytes and can be easily aliased with some of your ZP variables as they are only used as temporary variables inside the famistudio_xxx subroutines.
 
-Here is a table to give a rough idea of the best/worst case of RAM/CODE usage. Note that each column includes all features of the columns on the left. So the rightmost column has every feature enabled. In reality, you can toggle features individually. These tables where generated with only NTSC support, DPCM support enabled and no SFX streams.
+Here is a table to give a rough idea of the best/worst case of RAM/CODE usage. Note that each column includes all features of the columns on the left. So the rightmost column has every feature enabled. In reality, you can toggle features individually. These tables were generated with only NTSC support, DPCM support enabled, and no SFX streams.
 
 **Code size**
 
@@ -215,7 +215,6 @@ For more information on the Rainbow Mapper, [check the documentation here](https
 These are parameters that configures the engine, but are independent of the data you will be importing, such as which platform (`PAL`/`NTSC`) you want to support playback for, whether SFX are enabled or not, etc. They all have the form `FAMISTUDIO_CFG_XXX`.
 
     ; One of these MUST be defined (PAL or NTSC playback). 
-    ; Note that only NTSC support is supported when using any of the audio expansions.
     FAMISTUDIO_CFG_PAL_SUPPORT   = 1
     FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 
