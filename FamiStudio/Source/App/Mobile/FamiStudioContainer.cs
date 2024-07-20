@@ -519,7 +519,6 @@ namespace FamiStudio
             Debug.Assert(timer >= 0.0f);
 
             timer = Math.Max(0, timer - delta * 6);
-            //timer = Math.Max(0, timer - delta);
 
             if (timer == 0.0f && popping)
             {
@@ -529,7 +528,7 @@ namespace FamiStudio
 
             if (contextMenu)
             {
-                dialog.Move((container.Width - dialog.Width) / 2, container.Height - (int)(dialog.Height  * (popping ? timer : 1.0f - timer)));
+                dialog.Move((container.Width - dialog.Width) / 2, container.Height - (int)(dialog.Height * (popping ? timer : 1.0f - timer)));
             }
 
             container.SetTransitionShadowRect(dialog.WindowRectangle, popping ? timer : 1.0f - timer);

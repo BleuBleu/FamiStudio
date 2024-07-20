@@ -195,25 +195,26 @@ namespace FamiStudio
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
-            var o = g.Overlay2CommandList;
+            // On mobile, the context menu is embedded in a dialog, so its always on top anyways.
+            var c = Platform.IsDesktop ? g.Overlay2CommandList : g.DefaultCommandList;
             var prevWantedSeparator = false;
 
-            o.FillAndDrawRectangle(0, 0, Width - 1, Height - 1, Theme.DarkGreyColor2, Platform.IsMobile ? Theme.BlackColor : Theme.LightGreyColor1);
+            c.FillAndDrawRectangle(0, 0, Width - 1, Height - 1, Theme.DarkGreyColor2, Platform.IsMobile ? Theme.BlackColor : Theme.LightGreyColor1);
 
             for (int i = 0, y = 0; i < menuOptions.Length; i++, y += itemSizeY)
             {
                 ContextMenuOption option = menuOptions[i];
 
-                o.PushTranslation(0, y);
+                c.PushTranslation(0, y);
 
                 var hover = i == hoveredItemIndex;
 
                 if (hover)
-                    o.FillRectangle(0, 0, Width, itemSizeY, Theme.MediumGreyColor1);
+                    c.FillRectangle(0, 0, Width, itemSizeY, Theme.MediumGreyColor1);
 
                 if (i > 0 && (option.Separator.HasFlag(flagBefore) || prevWantedSeparator))
                 {
-                    o.DrawLine(0, 0, Width, 0, Theme.LightGreyColor1);
+                    c.DrawLine(0, 0, Width, 0, Theme.LightGreyColor1);
                     prevWantedSeparator = false;
                 }
 
@@ -233,11 +234,11 @@ namespace FamiStudio
 
                 if (bmp != null)
                 {
-                    o.DrawTextureAtlasCentered(bmp, margin, 0, bmp.ElementSize.Width, itemSizeY, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
+                    c.DrawTextureAtlasCentered(bmp, margin, 0, bmp.ElementSize.Width, itemSizeY, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
                 }
 
-                o.DrawText(option.Text, Fonts.FontMedium, margin + iconSizeX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
-                o.PopTransform();
+                c.DrawText(option.Text, Fonts.FontMedium, margin + iconSizeX, 0, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1, TextFlags.MiddleLeft, Width, itemSizeY);
+                c.PopTransform();
 
                 prevWantedSeparator = option.Separator.HasFlag(flagAfter);
             }

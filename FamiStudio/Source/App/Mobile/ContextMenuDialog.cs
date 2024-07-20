@@ -15,7 +15,7 @@ namespace FamiStudio
 
             // MATTT : Review this. How much should be done here vs. OnShowDialog?
             var dialogWidth = Math.Min(window.Width, window.Height);
-            var dialogHeight = dialogWidth * 6 / 10;
+            var dialogHeight = dialogWidth * 8 / 10;
 
             var contextMenu = new ContextMenu();
             contextMenu.Initialize(options);
