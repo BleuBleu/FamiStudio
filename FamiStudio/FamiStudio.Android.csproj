@@ -285,6 +285,7 @@
     <Compile Include="Source\App\Droid\FamiStudioWindow.cs" />
     <Compile Include="Source\App\Droid\TutorialDialog.cs" />
     <Compile Include="Source\App\Mobile\CheckBoxList.cs" />
+    <Compile Include="Source\App\Mobile\ContextMenuDialog.cs" />
     <Compile Include="Source\App\Mobile\Dialog.cs" />
     <Compile Include="Source\App\Mobile\FamiStudioContainer.cs" />
     <Compile Include="Source\App\Mobile\Grid.cs" />

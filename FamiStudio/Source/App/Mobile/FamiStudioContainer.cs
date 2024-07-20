@@ -1,6 +1,4 @@
-﻿using Android.App;
-using Java.Security.Cert;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -13,12 +11,14 @@ namespace FamiStudio
 
         private List<Dialog> dialogs = new List<Dialog>();
 
-        private Control transitionControl;
         private Control activeControl;
-        private Dialog  dialogToHide;
-        private bool    dialogTransition;
-        private bool    poppingDialog;
-        private float   transitionTimer;
+        private List<ControlTransition> transitions = new List<ControlTransition>();
+
+        private Rectangle transitionOverlayRect;
+        private Color     transitionOverlayColor;
+
+        private Rectangle transitionShadowRect;
+        private float     transitionShadowIntensity;
 
         private Toolbar         toolbar;
         private Sequencer       sequencer;
@@ -37,6 +37,7 @@ namespace FamiStudio
 
         public Dialog TopDialog => dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
         public bool IsDialogActive => dialogs.Count > 0;
+        public bool AnyFullScreenDialogVisible => controls.Find((c) => (c is Dialog d) && d.Fullscreen && d.Visible) != null;
 
         public bool MobilePianoVisible
         {
@@ -73,25 +74,25 @@ namespace FamiStudio
             SetTickEnabled(true);
         }
 
-        public void StartTransition(Control ctrl, bool animate = true, bool dialog = false)
+        public void SwitchToControl(Control ctrl, bool animate = true)
         {
-            if (activeControl != ctrl || dialog)
+            Debug.Assert(ctrl == pianoRoll || ctrl == projectExplorer || ctrl == sequencer);
+            
+            if (activeControl != ctrl)
             {
-                FlushPendingTransition(); // Safety.
+                FlushPendingTransitions(true);
+
+                var trans = new FullscreenOverlayTransition(this, ctrl);
 
                 if (animate)
                 {
-                    transitionControl = ctrl;
-                    transitionTimer   = 1.0f;
+                    transitions.Add(trans);
                 }
                 else
                 {
-                    Debug.Assert(!dialogTransition);
-                    activeControl   = ctrl;
-                    transitionTimer = 0.0f;
+                    trans.Start();
+                    trans.Tick(1000.0f);
                 }
-
-                dialogTransition = dialog;
             }
         }
 
@@ -102,29 +103,30 @@ namespace FamiStudio
 
         public void PushDialog(Dialog dialog)
         {
-            FlushPendingTransition();
-
-            dialogToHide = dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
+            if (dialog.Fullscreen)
+            {
+                FlushPendingTransitions(true);
+            }
 
             AddControl(dialog);
             dialogs.Add(dialog);
 
             if (dialog.Fullscreen)
             {
-                dialog.Visible = false;
-                StartTransition(dialog, true, true);
+                transitions.Add(new FullscreenOverlayTransition(this, dialog, false));
             }
             else
             {
-                dialog.Visible = true;
+                transitions.Add(new DialogShadowTransition(this, dialog, false));
             }
-
-            poppingDialog = false;
         }
 
         public void PopDialog(Dialog dialog, int numLevels)
         {
-            FlushPendingTransition();
+            if (dialog.Fullscreen)
+            {
+                FlushPendingTransitions(true);
+            }
 
             Debug.Assert(TopDialog == dialog);
 
@@ -144,39 +146,37 @@ namespace FamiStudio
 
             if (dialog.Fullscreen)
             {
-                if (dialogs.Count > 0)
-                {
-                    StartTransition(TopDialog, true, true);
-                }
-                else
-                {
-                    StartTransition(activeControl, true, true);
-                }
-
-                poppingDialog = true;
-                dialogToHide = dialog;
+                transitions.Add(new FullscreenOverlayTransition(this, dialog, true));
             }
             else
             {
-                RemoveControl(dialog);
+                transitions.Add(new DialogShadowTransition(this, dialog, true));
             }
         }
 
-        private void FlushPendingTransition()
+        private void FlushPendingTransitions(bool overlay)
         {
-            if (transitionControl != null)
+            for (var i = 0; i < transitions.Count; i++)
             {
-                // This should only happen in rare cases, like when going from/to a file load/save activity.
-                Debug.WriteLine("***** FLUSHING PENDING CONTROL TRANSITION!!! *****");
+                var trans = transitions[i];
 
-                CommitTransitionControl();
-                transitionTimer = 0.0f;
+                if (trans.IsOverlay == overlay)
+                {
+                    if (!trans.Started)
+                    {
+                        trans.Start();
+                    }
+
+                    trans.Tick(1000.0f);
+                    transitions.RemoveAt(i);
+                }
             }
         }
 
         protected override void OnResize(EventArgs e)
         {
-            FlushPendingTransition();
+            FlushPendingTransitions(true);
+            FlushPendingTransitions(false);
             UpdateLayout(false);
         }
 
@@ -220,18 +220,24 @@ namespace FamiStudio
                     pianoRoll.Move(0, toolbarLayoutSize, width, height - toolbarLayoutSize - quickAccessBarSize - pianoLayoutSize);
             }
 
-            var anyFullscreenDialogActive = dialogs.Find(d => d.Fullscreen) != null;
+            var anyFullscreenDialogVisible = AnyFullScreenDialogVisible;
 
-            sequencer.Visible = activeControl == sequencer && !anyFullscreenDialogActive;
-            pianoRoll.Visible = activeControl == pianoRoll && !anyFullscreenDialogActive;
-            projectExplorer.Visible = activeControl == projectExplorer && !anyFullscreenDialogActive;
+            sequencer.Visible = activeControl == sequencer && !anyFullscreenDialogVisible;
+            pianoRoll.Visible = activeControl == pianoRoll && !anyFullscreenDialogVisible;
+            projectExplorer.Visible = activeControl == projectExplorer && !anyFullscreenDialogVisible;
+        }
+
+        public void SetActiveControl(Control ctrl)
+        {
+            activeControl = ctrl;
+            UpdateLayout();
         }
 
         public bool CanAcceptInput
         {
             get
             {
-                return transitionTimer == 0.0f && transitionControl == null;
+                return transitions.Count == 0;
             }
         }
 
@@ -257,49 +263,40 @@ namespace FamiStudio
             return base.CanInteractWithContainer(c);
         }
 
+        public void SetTransitionOverlay(Rectangle rect, Color color)
+        {
+            transitionOverlayRect  = rect;
+            transitionOverlayColor = color;
+        }
+
+        public void SetTransitionShadowRect(Rectangle rect, float intensity)
+        {
+            transitionShadowRect = rect;
+            transitionShadowIntensity = intensity;
+        }
+
         private void RenderTransitionOverlay(Graphics g)
         {
-            if (transitionTimer > 0.0f)
+            if (transitionOverlayColor.A != 0)
             {
-                var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
-                var color = Color.FromArgb(alpha, Theme.DarkGreyColor2);
-
-                if (dialogTransition)
-                {
-                    g.OverlayCommandList.FillRectangle(WindowRectangle, color);
-                }
-                else
-                {
-                    g.OverlayCommandList.FillRectangle(activeControl.WindowRectangle, color);
-                }
+                g.OverlayCommandList.FillRectangle(transitionOverlayRect, transitionOverlayColor);
             }
         }
 
-        private void CommitTransitionControl()
+        private void RenderTransitionShadowRect(Graphics g)
         {
-            if (dialogTransition)
+            if (transitionShadowIntensity != 0.0f)
             {
-                transitionControl.Visible = true;
-            }
-            else
-            {
-                activeControl = transitionControl;
-            }
+                var screenRect = new Rectangle(Point.Empty, ParentWindow.Size);
+                var shadowRect = transitionShadowRect;
+                var shadowColor = Color.FromArgb((int)Utils.Clamp(transitionShadowIntensity * 0.6f * 255.0f, 0, 255), Color.Black);
 
-            if (dialogToHide != null)
-            {
-                // Only remove the dialogs when popping. Even inactive dialogs need to
-                // remain attached since some of the code can call ParentWindow from them.
-                if (poppingDialog)
-                {
-                    RemoveControl(dialogToHide);
-                    poppingDialog = false;
-                }
-                dialogToHide.Visible = false;
-                dialogToHide = null;
+                var o = g.OverlayCommandList;
+                o.FillRectangle(screenRect.Left, screenRect.Top, shadowRect.Left, screenRect.Bottom, shadowColor);
+                o.FillRectangle(shadowRect.Left, screenRect.Top, shadowRect.Right, shadowRect.Top, shadowColor);
+                o.FillRectangle(shadowRect.Left, shadowRect.Bottom, shadowRect.Right, screenRect.Bottom, shadowColor);
+                o.FillRectangle(shadowRect.Right, screenRect.Top, screenRect.Right, screenRect.Bottom, shadowColor);
             }
-
-            transitionControl = null;
         }
 
         public void ShowContextMenu(ContextMenuOption[] options)
@@ -307,26 +304,7 @@ namespace FamiStudio
             if (options == null || options.Length == 0)
                 return;
 
-            var dialogSize = Math.Min(window.Width, window.Height);
-
-            var contextMenu = new ContextMenu();
-            contextMenu.Initialize(options);
-            contextMenu.Visible = true;
-
-            var scrollContainer = new TouchScrollContainer();
-            var dlg = new Dialog(window);
-            dlg.AddControl(scrollContainer);
-
-            scrollContainer.AddControl(contextMenu);
-            scrollContainer.Move(0, 0, dialogSize, Math.Min(dialogSize, contextMenu.Height));
-            scrollContainer.VirtualSizeY = contextMenu.Height;
-            contextMenu.Resize(dialogSize, contextMenu.Height);
-
-            dlg.Move(
-                (window.Width  - scrollContainer.Width)  / 2,
-                (window.Height - scrollContainer.Height) / 2,
-                scrollContainer.Width,
-                scrollContainer.Height);
+            var dlg = new ContextMenuDialog(window, options);
             dlg.ShowDialogAsync();
 
             Platform.VibrateClick();
@@ -358,27 +336,205 @@ namespace FamiStudio
             return false;
         }
 
-        public override void Tick(float delta)
+        private void TickTransitions(float delta)
         {
-            var prevTimer = transitionTimer;
-            if (prevTimer > 0.0f)
+            if (transitions.Count > 0)
             {
-                transitionTimer = Math.Max(0.0f, transitionTimer - delta * 6);
-
-                if (prevTimer > 0.5f && transitionTimer <= 0.5f)
-                {
-                    CommitTransitionControl();
-                    UpdateLayout(true);
-                }
-
                 MarkDirty();
             }
+
+            var numOverlayTransistions = 0;
+            var numShadowTransitions = 0;
+
+            for (var i = 0; i < transitions.Count;)
+            {
+                var trans = transitions[i];
+
+                if (trans.IsOverlay && numOverlayTransistions > 0)
+                {
+                    Debug.Assert(false); 
+                }
+
+                if (!trans.IsOverlay && numShadowTransitions > 0)
+                {
+                    i++;
+                    continue;
+                }
+
+                if (!trans.Started)
+                {
+                    trans.Start();
+                }
+
+                var done = trans.Tick(delta);
+
+                if (done)
+                {
+                    transitions.RemoveAt(i);
+                }
+                else
+                {
+                    if (trans.IsOverlay)
+                    {
+                        numOverlayTransistions++;
+                    }
+                    else
+                    {
+                        numShadowTransitions++;
+                    }
+
+                    i++;
+                }
+            }
+        }
+
+        public override void Tick(float delta)
+        {
+            TickTransitions(delta);
         }
 
         protected override void OnRender(Graphics g)
         {
             RenderTransitionOverlay(g);
+            RenderTransitionShadowRect(g);
             base.OnRender(g);
+        }
+    }
+
+    abstract class ControlTransition
+    {
+        protected bool started = false;
+        protected FamiStudioContainer container;
+
+        protected ControlTransition(FamiStudioContainer cont)
+        {
+            container = cont;
+        }
+
+        public bool Started => started;
+        public virtual bool IsOverlay => true;
+        public virtual void Start() { started = true; }
+        public virtual bool Tick(float delta) { Debug.Assert(started); return true; }
+    }
+
+    class FullscreenOverlayTransition : ControlTransition
+    {
+        private Control target;
+        private float timer = -1.0f;
+        private bool dialog;
+        private bool popping;
+
+        public FullscreenOverlayTransition(FamiStudioContainer cont, Control control) : base(cont)
+        {
+            target = control;
+        }
+
+        public FullscreenOverlayTransition(FamiStudioContainer cont, Dialog dlg, bool pop) : base(cont)
+        {
+            target = dlg;
+            dialog = true;
+            popping = pop;
+            target.Visible = popping;
+        }
+
+        public override void Start()
+        {
+            base.Start();
+            timer = 1.0f;
+        }
+
+        public override bool Tick(float delta)
+        {
+            base.Tick(delta);
+            var prevTimer = timer;
+            timer = Math.Max(0.0f, timer - delta * 6);
+            
+            if (prevTimer > 0.5f && timer <= 0.5f)
+            {
+                if (dialog)
+                {
+                    var dlg = target as Dialog;
+
+                    if (popping)
+                    {
+                        dlg.Visible = false;
+                        container.RemoveControl(dlg);
+                    }
+                    else
+                    {
+                        // MATTT : Hide the other visible dialogs underneath too.
+                        dlg.Visible = true;
+                    }
+                }
+                else
+                {
+                    container.SetActiveControl(target);
+                }
+
+                container.UpdateLayout();
+            }
+
+            var alpha = (byte)((1.0f - Math.Abs(timer - 0.5f) * 2) * 255);
+            var color = Color.FromArgb(alpha, Theme.DarkGreyColor2);
+
+            if (dialog)
+            {
+                container.SetTransitionOverlay(container.WindowRectangle, color);
+            }
+            else
+            {
+                container.SetTransitionOverlay(container.ActiveControl.WindowRectangle, color);
+            }
+
+            return timer <= 0.0f;
+        }
+    }
+
+    class DialogShadowTransition : ControlTransition
+    {
+        private Dialog dialog;
+        private bool popping;
+        private bool contextMenu;
+        private float timer = -1.0f;
+
+        public override bool IsOverlay => false;
+
+        public DialogShadowTransition(FamiStudioContainer cont, Dialog dlg, bool pop) : base(cont)
+        {
+            dialog = dlg;
+            popping = pop;
+            contextMenu = dlg is ContextMenuDialog;
+        }
+
+        public override void Start()
+        {
+            base.Start();
+            timer = 1.0f;
+            dialog.Visible = true;
+        }
+
+        public override bool Tick(float delta)
+        {
+            base.Tick(delta);
+            Debug.Assert(timer >= 0.0f);
+
+            timer = Math.Max(0, timer - delta * 6);
+            //timer = Math.Max(0, timer - delta);
+
+            if (timer == 0.0f && popping)
+            {
+                dialog.Visible = false;
+                container.RemoveControl(dialog);
+            }
+
+            if (contextMenu)
+            {
+                dialog.Move((container.Width - dialog.Width) / 2, container.Height - (int)(dialog.Height  * (popping ? timer : 1.0f - timer)));
+            }
+
+            container.SetTransitionShadowRect(dialog.WindowRectangle, popping ? timer : 1.0f - timer);
+
+            return timer <= 0.0f;
         }
     }
 }

@@ -3613,7 +3613,7 @@ namespace FamiStudio
         private void EditInstrumentProperties(Instrument instrument, bool ctx = false)
         {
             var pt = GetPropertiesDialogPosition(ctx);
-            var dlg = new PropertyDialog(ParentWindow, InstrumentPropertiesTitle, pt, 240, true, pt.Y > ParentWindowSize.Height / 2);
+            var dlg = new PropertyDialog(ParentWindow, InstrumentPropertiesTitle, pt, 240, true, pt.Y > ParentWindowSize.Height / 2, false);
             dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();

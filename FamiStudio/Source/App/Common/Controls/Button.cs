@@ -196,12 +196,11 @@ namespace FamiStudio
 
             if (enabled && (e.Left || (e.Right && canRightClick)))
             {
-                press = true;
                 if (!e.IsTouchEvent && !clickOnMouseUp)
                     TriggerClickEvent(e, e.Left);
+                press = true;
             }
 
-            hover = Platform.IsDesktop;
             MarkDirty();
         }
 

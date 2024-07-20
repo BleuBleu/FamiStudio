@@ -15,7 +15,6 @@ namespace FamiStudio
 
         public TopBarDialog(FamiStudioWindow win, string t = "") : base(win, t)
         {
-            fullscreen = true;
             InitTopBar(t);
         }
 

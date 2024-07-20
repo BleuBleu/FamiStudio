@@ -16,6 +16,7 @@ namespace FamiStudio
         private float tooltipTimer;
         private string title = "";
         private Control focusedControl;
+        private Action<DialogResult> callback;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForWindow(2);
         private int tooltipSideMargin = DpiScaling.ScaleForWindow(4);
@@ -77,6 +78,7 @@ namespace FamiStudio
             ShowDialogInternal();
         }
 
+        // MATTT : Remove!
         public DialogResult ShowDialog()
         {
             ShowDialogInternal();
@@ -87,18 +89,19 @@ namespace FamiStudio
             return result;
         }
 
-        public void ShowDialogAsync(Action<DialogResult> cb)
+        public void ShowDialogAsync(Action<DialogResult> cb = null)
         {
-            // Dialogs are not async on desktop.
-            cb(ShowDialog());
+            callback = cb;
+            ShowDialogInternal();
         }
 
         public void Close(DialogResult res)
         {
             FocusedControl = null;
-            window.PopDialog(this);
             result = res;
+            window.PopDialog(this);
             visible = false;
+            callback?.Invoke(result);
         }
 
         protected virtual void OnShowDialog()

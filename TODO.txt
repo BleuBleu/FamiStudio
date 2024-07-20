@@ -39,6 +39,8 @@ Today:
 	FamiStudio.dll!FamiStudio.AudioPlayer.RawPcmSamplePlayPosition.get() Line 247	C#
  	FamiStudio.dll!FamiStudio.FamiStudio.PreviewDPCMWavPosition.get() Line 117	C#
  	FamiStudio.dll!FamiStudio.PianoRoll.RenderWaveform(FamiStudio.PianoRoll.RenderInfo r) Line 3725	C#
+- S5B + VRC7 interfecence?? even when s5b is muted, it still affects vrc7
+	https://discord.com/channels/@me/819772561940152321/1263722786128400414
 
 4.3.0
 =====
@@ -104,6 +106,7 @@ x Support for japanese/other characters regardless of current languages
 	- Context menus should be custom controls too.
 	- Toast too.
 - Remove the special context menu icons on Android, they should be in Atlas too.
+- Unify mobile/desktop file operations. Remove all if {} there.
 
 Linux notes 
 =========== 

@@ -481,10 +481,23 @@ namespace FamiStudio
                     else
                     {
                         var ex = new PointerEventArgs(MakeButtonFlags(button), cx, cy);
+                        
                         ctrl.GrabDialogFocus();
+                        var dlgBefore = TopDialog;
                         ctrl.SendPointerDown(ex);
+                        var dlgAfter = TopDialog;
+
                         if (ex.IsRightClickDelayed)
+                        {
                             DelayRightClick(ctrl, ex);
+                        }
+                        else if (dlgAfter != dlgBefore)
+                        {
+                            // If a mouse down happens to pop a dialog, send a mouse up immediate. Clears
+                            // the "press" status on button. The real fix would be to have a focus system 
+                            // that works on more than just dialogs. LostFocus would then clear the status.
+                            ctrl.SendPointerUp(ex);
+                        }
                     }
                 }
             }

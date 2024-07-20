@@ -447,7 +447,7 @@ namespace FamiStudio
                 else if (click == ClickType.Right)
                 {
                     shortcuts[rowIdx].Clear(colIdx - 1);
-                    pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
+                    pages[(int)ConfigSection.Keys].UpdateGrid(0, GetKeyboardShortcutStrings());
                 }
             }
             else if (propIdx == 1 && click == ClickType.Button)

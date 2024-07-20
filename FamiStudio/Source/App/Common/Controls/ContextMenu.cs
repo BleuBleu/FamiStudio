@@ -198,7 +198,7 @@ namespace FamiStudio
             var o = g.Overlay2CommandList;
             var prevWantedSeparator = false;
 
-            o.FillAndDrawRectangle(0, 0, Width - 1, Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
+            o.FillAndDrawRectangle(0, 0, Width - 1, Height - 1, Theme.DarkGreyColor2, Platform.IsMobile ? Theme.BlackColor : Theme.LightGreyColor1);
 
             for (int i = 0, y = 0; i < menuOptions.Length; i++, y += itemSizeY)
             {

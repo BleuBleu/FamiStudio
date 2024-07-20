@@ -100,7 +100,7 @@ namespace FamiStudio
 
         public void SetActiveControl(Control ctrl, bool animate = true)
         {
-            container.StartTransition(ctrl, animate);
+            container.SwitchToControl(ctrl, animate);
         }
 
         private void EnableFullscreenMode(Window win)
@@ -533,9 +533,6 @@ namespace FamiStudio
 
         public void CaptureMouse(Control ctrl)
         {
-            //Debug.Assert(captureControl == null); // MATTT
-            if (captureControl != null)
-                Debug.WriteLine(""); // MATTT
             captureControl = ctrl;
         }
 
