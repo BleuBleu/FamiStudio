@@ -2210,9 +2210,47 @@ namespace FamiStudio
 
                     if (project.Tuning != 440)
                     {
-                        var noteTableFilename = Path.ChangeExtension(filename, ".notetable.txt"); ;
-                        Log.LogMessage(LogSeverity.Info, $"Project uses non-standard tuning, the note tables where dumped in '{noteTableFilename}'. You will need to manually patch in the sound engine code to hear the correct tuning.");
-                        NesApu.DumpNoteTableSetToFile(project.Tuning, noteTableFilename);
+                        List<string> tables = new()
+                        {
+                            "famistudio_note_table",
+                            "famistudio_note_table_pal"
+                        };
+                        if (project.UsesVrc6Expansion)
+                        {
+                            tables.Add("famistudio_saw_note_table");
+                            tables.Add("famistudio_saw_note_table_pal");
+                        }
+                        if (project.UsesVrc7Expansion)
+                        {
+                            tables.Add("famistudio_vrc7_note_table");
+                        }
+                        if (project.UsesFdsExpansion)
+                        {
+                            tables.Add("famistudio_fds_note_table");
+                            tables.Add("famistudio_fds_note_table_pal");
+                        }
+                        if (project.UsesN163Expansion)
+                        {
+                            tables.Add($"famistudio_n163_note_table_{project.ExpansionNumN163Channels}ch");
+                            tables.Add($"famistudio_n163_note_table_pal_{project.ExpansionNumN163Channels}ch");
+                        }
+                        if (project.UsesEPSMExpansion)
+                        {
+                            tables.Add("famistudio_epsm_note_table");
+                            tables.Add("famistudio_epsm_s_note_table");
+                        }
+
+                        Log.LogMessage(LogSeverity.Info, "Project uses non-standard tuning, the following note tables will be dumped:");
+                        
+                        foreach (var t in tables)
+                        {
+                            Log.LogMessage(LogSeverity.Info, $"{t}_lsb.bin");
+                            Log.LogMessage(LogSeverity.Info, $"{t}_msb.bin");
+                        }
+
+                        Log.LogMessage(LogSeverity.Info, "You will need to use these in the sound engine to hear the correct tuning.");
+
+                        NesApu.DumpNoteTableBin(project.Tuning, tables);
                     }
                 }
             }

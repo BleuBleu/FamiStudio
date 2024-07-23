@@ -318,6 +318,29 @@ namespace FamiStudio
             return exp == APU_EXPANSION_NONE ? APU_EXPANSION_MASK_NONE : 1 << (exp - 1);
         }
 
+        private static ushort[] TableLookup(string table, NoteTableSet tableSet)
+        {
+            if (table.StartsWith("famistudio_n163_note_table")) 
+            {
+                var ch = int.Parse(table[^3].ToString());
+                return table.Contains("_pal") ? tableSet.NoteTableN163PAL[ch] : tableSet.NoteTableN163[ch];
+            }
+            return table switch
+            {
+                "famistudio_note_table"          => tableSet.NoteTableNTSC,
+                "famistudio_note_table_pal"      => tableSet.NoteTablePAL,
+                "famistudio_saw_note_table"      => tableSet.NoteTableVrc6Saw,
+                "famistudio_saw_note_table_pal"  => tableSet.NoteTableVrc6SawPAL,
+                "famistudio_vrc7_note_table"     => tableSet.NoteTableVrc7,
+                "famistudio_fds_note_table"      => tableSet.NoteTableFds,
+                "famistudio_fds_note_table_pal"  => tableSet.NoteTableFdsPAL,
+                "famistudio_epsm_note_table"     => tableSet.NoteTableEPSMFm,
+                "famistudio_epsm_s_note_table"   => tableSet.NoteTableEPSM,
+
+                _ => throw new ArgumentException($"Unknown note table: {table}.")
+            };
+        }
+
         private static void DumpNoteTableSetToFile(NoteTableSet tableSet, string filename)
         {
             using (var stream = new StreamWriter(filename))
@@ -349,10 +372,37 @@ namespace FamiStudio
                 DumpNoteTable(stream, tableSet.NoteTableEPSM, "famistudio_epsm_s_note_table", "EPSM Square");
             }
         }
+
+        private static void DumpNoteTableBin(NoteTableSet tableSet, List<string> tables)
+        {
+            foreach (var t in tables)
+            {
+                using var lsbStream = new StreamWriter($"{t}_lsb.bin");
+                CreateNoteTable(lsbStream, TableLookup(t, tableSet), false);
+                
+                using var msbStream = new StreamWriter($"{t}_msb.bin");
+                CreateNoteTable(msbStream, TableLookup(t, tableSet), true);
+            }
+        }
         
         public static void DumpNoteTableSetToFile(int tuning, string filename)
         {
             DumpNoteTableSetToFile(GetOrCreateNoteTableSet(tuning), filename);
+        }
+
+        public static void DumpNoteTableBin(int tuning, List<string> tables)
+        {
+            DumpNoteTableBin(GetOrCreateNoteTableSet(tuning), tables);
+        }
+
+        private static void CreateNoteTable(StreamWriter stream, ushort[] noteTable, bool msb)
+        {
+            var type = msb ? "msb" : "lsb";
+            var bits = msb ? 8 : 0;
+
+            stream.WriteLine($"\t.byte $00");
+            for (int j = 0; j < 8; j++)
+                stream.WriteLine($"\t.byte {String.Join(", ", noteTable.Select(i => $"${(byte)(i >> bits):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
         }
 
         private static void DumpNoteTable(StreamWriter stream, ushort[] noteTable, string name, string comment = null)
@@ -361,14 +411,10 @@ namespace FamiStudio
                 stream.WriteLine($"; {comment}");
 
             stream.WriteLine($"{name}_lsb:");
-            stream.WriteLine($"\t.byte $00");
-            for (int j = 0; j < 8; j++)
-                stream.WriteLine($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 0):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+            CreateNoteTable(stream, noteTable, false);
 
             stream.WriteLine($"{name}_msb:");
-            stream.WriteLine($"\t.byte $00");
-            for (int j = 0; j < 8; j++)
-                stream.WriteLine($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 8):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+            CreateNoteTable(stream, noteTable, true);
         }
 
         private static NoteTableSet GetOrCreateNoteTableSet(int tuning)
