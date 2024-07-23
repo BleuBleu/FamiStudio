@@ -6849,108 +6849,108 @@ famistudio_exp_note_table_lsb:
 famistudio_n163_note_table_lsb:
     .if FAMISTUDIO_CFG_PAL_SUPPORT
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 1
-            .include "NoteTables/famistudio_n163_1ch_note_table_pal_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_1ch_pal_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 2
-            .include "NoteTables/famistudio_n163_2ch_note_table_pal_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_2ch_pal_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 3
-            .include "NoteTables/famistudio_n163_3ch_note_table_pal_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_3ch_pal_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 4
-            .include "NoteTables/famistudio_n163_4ch_note_table_pal_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_4ch_pal_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 5
-            .include "NoteTables/famistudio_n163_5ch_note_table_pal_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_5ch_pal_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 6
-            .include "NoteTables/famistudio_n163_6ch_note_table_pal_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_6ch_pal_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 7
-            .include "NoteTables/famistudio_n163_7ch_note_table_pal_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_7ch_pal_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 8
-            .include "NoteTables/famistudio_n163_8ch_note_table_pal_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_8ch_pal_lsb.bin"
         .endif
     .endif
     .if FAMISTUDIO_CFG_NTSC_SUPPORT
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 1
-            .include "NoteTables/famistudio_n163_1ch_note_table_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_1ch_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 2
-            .include "NoteTables/famistudio_n163_2ch_note_table_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_2ch_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 3
-            .include "NoteTables/famistudio_n163_3ch_note_table_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_3ch_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 4
-            .include "NoteTables/famistudio_n163_4ch_note_table_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_4ch_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 5
-            .include "NoteTables/famistudio_n163_5ch_note_table_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_5ch_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 6
-            .include "NoteTables/famistudio_n163_6ch_note_table_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_6ch_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 7
-            .include "NoteTables/famistudio_n163_7ch_note_table_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_7ch_lsb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 8
-            .include "NoteTables/famistudio_n163_8ch_note_table_lsb.bin"
+            .include "NoteTables/famistudio_n163_note_table_8ch_lsb.bin"
         .endif
     .endif
 famistudio_exp_note_table_msb:
 famistudio_n163_note_table_msb:
     .if FAMISTUDIO_CFG_PAL_SUPPORT
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 1
-            .include "NoteTables/famistudio_n163_1ch_note_table_pal_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_1ch_pal_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 2
-            .include "NoteTables/famistudio_n163_2ch_note_table_pal_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_2ch_pal_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 3
-            .include "NoteTables/famistudio_n163_3ch_note_table_pal_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_3ch_pal_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 4
-            .include "NoteTables/famistudio_n163_4ch_note_table_pal_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_4ch_pal_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 5
-            .include "NoteTables/famistudio_n163_5ch_note_table_pal_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_5ch_pal_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 6
-            .include "NoteTables/famistudio_n163_6ch_note_table_pal_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_6ch_pal_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 7
-            .include "NoteTables/famistudio_n163_7ch_note_table_pal_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_7ch_pal_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 8
-            .include "NoteTables/famistudio_n163_8ch_note_table_pal_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_8ch_pal_msb.bin"
         .endif
     .endif
     .if FAMISTUDIO_CFG_NTSC_SUPPORT
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 1
-            .include "NoteTables/famistudio_n163_1ch_note_table_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_1ch_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 2
-            .include "NoteTables/famistudio_n163_2ch_note_table_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_2ch_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 3
-            .include "NoteTables/famistudio_n163_3ch_note_table_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_3ch_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 4
-            .include "NoteTables/famistudio_n163_4ch_note_table_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_4ch_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 5
-            .include "NoteTables/famistudio_n163_5ch_note_table_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_5ch_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 6
-            .include "NoteTables/famistudio_n163_6ch_note_table_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_6ch_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 7
-            .include "NoteTables/famistudio_n163_7ch_note_table_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_7ch_msb.bin"
         .endif
         .if FAMISTUDIO_EXP_N163_CHN_CNT = 8
-            .include "NoteTables/famistudio_n163_8ch_note_table_msb.bin"
+            .include "NoteTables/famistudio_n163_note_table_8ch_msb.bin"
         .endif
     .endif
 .endif
