@@ -397,12 +397,11 @@ namespace FamiStudio
 
         private static void CreateNoteTable(StreamWriter stream, ushort[] noteTable, bool msb)
         {
-            var type = msb ? "msb" : "lsb";
-            var bits = msb ? 8 : 0;
+            var shift = msb ? 8 : 0;
 
             stream.WriteLine($"\t.byte $00");
             for (int j = 0; j < 8; j++)
-                stream.WriteLine($"\t.byte {String.Join(", ", noteTable.Select(i => $"${(byte)(i >> bits):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+                stream.WriteLine($"\t.byte {String.Join(", ", noteTable.Select(i => $"${(byte)(i >> shift):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
         }
 
         private static void DumpNoteTable(StreamWriter stream, ushort[] noteTable, string name, string comment = null)
