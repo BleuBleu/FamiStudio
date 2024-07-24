@@ -377,11 +377,13 @@ namespace FamiStudio
         {
             foreach (var t in tables)
             {
+                var table = NoteTableLookup(t, tableSet);
+
                 using var lsbStream = new StreamWriter($"{t}_lsb{ext}");
-                CreateNoteTable(lsbStream, NoteTableLookup(t, tableSet), false);
+                CreateNoteTable(lsbStream, table, false);
 
                 using var msbStream = new StreamWriter($"{t}_msb{ext}");
-                CreateNoteTable(msbStream, NoteTableLookup(t, tableSet), true);
+                CreateNoteTable(msbStream, table, true);
             }
         }
         

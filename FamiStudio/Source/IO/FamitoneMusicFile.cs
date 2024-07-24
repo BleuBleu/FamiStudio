@@ -2208,8 +2208,10 @@ namespace FamiStudio
                     if (project.SoundEngineUsesExtendedInstruments)
                         Log.LogMessage(LogSeverity.Info, $"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
 
+                    // Non-standard tuning
                     if (project.Tuning != 440)
                     {
+                        Log.LogMessage(LogSeverity.Info, "Project uses non-standard tuning, the following note tables will be dumped:");
                         List<string> tables = new() { "famistudio_note_table", "famistudio_note_table_pal" };
                         if (project.UsesVrc6Expansion)
                             tables.AddRange(new[] { "famistudio_saw_note_table", "famistudio_saw_note_table_pal" });
@@ -2221,15 +2223,14 @@ namespace FamiStudio
                             tables.AddRange(new[] { $"famistudio_n163_note_table_{project.ExpansionNumN163Channels}ch", $"famistudio_n163_note_table_pal_{project.ExpansionNumN163Channels}ch" });
                         if (project.UsesEPSMExpansion)
                             tables.AddRange(new[] { "famistudio_epsm_note_table", "famistudio_epsm_s_note_table" });
-
-                        Log.LogMessage(LogSeverity.Info, "Project uses non-standard tuning, the following note tables will be dumped:");
+                            
                         foreach (var t in tables)
                         {
                             Log.LogMessage(LogSeverity.Info, $"{t}_lsb.bin");
                             Log.LogMessage(LogSeverity.Info, $"{t}_msb.bin");
                         }
+
                         Log.LogMessage(LogSeverity.Info, "You will need to use these in the sound engine to hear the correct tuning.");
-                        
                         NesApu.DumpNoteTableToFile(project.Tuning, tables.ToArray(), ".bin");
                     }
                 }
