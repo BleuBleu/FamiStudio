@@ -373,14 +373,14 @@ namespace FamiStudio
             }
         }
 
-        private static void DumpNoteTableBin(NoteTableSet tableSet, List<string> tables)
+        private static void DumpNoteTableToFile(NoteTableSet tableSet, string[] tables, string ext)
         {
             foreach (var t in tables)
             {
-                using var lsbStream = new StreamWriter($"{t}_lsb.bin");
+                using var lsbStream = new StreamWriter($"{t}_lsb{ext}");
                 CreateNoteTable(lsbStream, NoteTableLookup(t, tableSet), false);
-                
-                using var msbStream = new StreamWriter($"{t}_msb.bin");
+
+                using var msbStream = new StreamWriter($"{t}_msb{ext}");
                 CreateNoteTable(msbStream, NoteTableLookup(t, tableSet), true);
             }
         }
@@ -390,9 +390,9 @@ namespace FamiStudio
             DumpNoteTableSetToFile(GetOrCreateNoteTableSet(tuning), filename);
         }
 
-        public static void DumpNoteTableBin(int tuning, List<string> tables)
+        public static void DumpNoteTableToFile(int tuning, string[] tables, string ext = null)
         {
-            DumpNoteTableBin(GetOrCreateNoteTableSet(tuning), tables);
+            DumpNoteTableToFile(GetOrCreateNoteTableSet(tuning), tables, ext);
         }
 
         private static void CreateNoteTable(StreamWriter stream, ushort[] noteTable, bool msb)
