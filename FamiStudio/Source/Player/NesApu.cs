@@ -318,7 +318,7 @@ namespace FamiStudio
             return exp == APU_EXPANSION_NONE ? APU_EXPANSION_MASK_NONE : 1 << (exp - 1);
         }
 
-        private static ushort[] TableLookup(string table, NoteTableSet tableSet)
+        private static ushort[] NoteTableLookup(string table, NoteTableSet tableSet)
         {
             if (table.StartsWith("famistudio_n163_note_table")) 
             {
@@ -378,10 +378,10 @@ namespace FamiStudio
             foreach (var t in tables)
             {
                 using var lsbStream = new StreamWriter($"{t}_lsb.bin");
-                CreateNoteTable(lsbStream, TableLookup(t, tableSet), false);
+                CreateNoteTable(lsbStream, NoteTableLookup(t, tableSet), false);
                 
                 using var msbStream = new StreamWriter($"{t}_msb.bin");
-                CreateNoteTable(msbStream, TableLookup(t, tableSet), true);
+                CreateNoteTable(msbStream, NoteTableLookup(t, tableSet), true);
             }
         }
         
