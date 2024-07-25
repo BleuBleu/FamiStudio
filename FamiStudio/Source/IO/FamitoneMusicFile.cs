@@ -2442,16 +2442,17 @@ namespace FamiStudio
 
         public static bool PatchNoteTable(byte[] data, string tblFile, int tuning, int machine, int numN163Channels)
         {
-            var pal = machine == MachineType.PAL;
-            if (!PatchNoteTableInternal(data, tblFile, 0, tuning, pal, numN163Channels))
+            var pal  = machine == MachineType.PAL;
+            var dual = machine == MachineType.Dual;
+            if (!PatchNoteTableInternal(data, tblFile, 0, tuning, pal || dual, numN163Channels))
             {
                 return false;
             }
 
             // For dual, we need to patch the 2 note tables that are back to back.
-            if (machine == MachineType.Dual)
+            if (dual)
             {
-                if (!PatchNoteTableInternal(data, tblFile, 97, tuning, true, numN163Channels))
+                if (!PatchNoteTableInternal(data, tblFile, 97, tuning, false, numN163Channels))
                 {
                     return false;
                 }
