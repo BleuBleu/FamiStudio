@@ -318,12 +318,14 @@ namespace FamiStudio
             return exp == APU_EXPANSION_NONE ? APU_EXPANSION_MASK_NONE : 1 << (exp - 1);
         }
 
-        private static ushort[] NoteTableLookup(string table, NoteTableSet tableSet)
+        private static ushort[] NoteTableLookup(NoteTableSet tableSet, string table)
         {
             var pal = table.Contains("_pal");
             if (table.StartsWith("famistudio_n163_note_table")) 
             {
-                var ch = int.Parse(table[^3].ToString());
+                if (!int.TryParse(table[^3].ToString(), out var ch))
+                    return null; // Parsing error => unknown table
+
                 return pal ? tableSet.NoteTableN163PAL[ch] : tableSet.NoteTableN163[ch];
             }
             return table switch
@@ -338,7 +340,7 @@ namespace FamiStudio
                 "famistudio_epsm_note_table"     => tableSet.NoteTableEPSMFm,
                 "famistudio_epsm_s_note_table"   => tableSet.NoteTableEPSM,
 
-                _ => null // This should never happen unless something goes wrong
+                _ => null // Unknown table
             };
         }
 
@@ -378,7 +380,7 @@ namespace FamiStudio
         {
             foreach (var t in tables)
             {
-                var table = NoteTableLookup(t, tableSet);
+                var table = NoteTableLookup(tableSet, t);
                 if (table == null)
                     return $"Unknown note table: \"{t}\". Aborting!"; // Abort if table is unknown to prevent a crash
 
