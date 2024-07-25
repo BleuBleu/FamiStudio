@@ -320,10 +320,11 @@ namespace FamiStudio
 
         private static ushort[] NoteTableLookup(string table, NoteTableSet tableSet)
         {
+            var pal = table.Contains("_pal");
             if (table.StartsWith("famistudio_n163_note_table")) 
             {
                 var ch = int.Parse(table[^3].ToString());
-                return table.Contains("_pal") ? tableSet.NoteTableN163PAL[ch] : tableSet.NoteTableN163[ch];
+                return pal ? tableSet.NoteTableN163PAL[ch] : tableSet.NoteTableN163[ch];
             }
             return table switch
             {
@@ -337,7 +338,7 @@ namespace FamiStudio
                 "famistudio_epsm_note_table"     => tableSet.NoteTableEPSMFm,
                 "famistudio_epsm_s_note_table"   => tableSet.NoteTableEPSM,
 
-                _ => throw new ArgumentException($"Unknown note table: {table}.")
+                _ => null // This should never happen unless something goes wrong
             };
         }
 
@@ -373,18 +374,22 @@ namespace FamiStudio
             }
         }
 
-        private static void DumpNoteTableToFile(NoteTableSet tableSet, string[] tables, string ext)
+        private static string DumpNoteTableToFile(NoteTableSet tableSet, string[] tables, string ext)
         {
             foreach (var t in tables)
             {
                 var table = NoteTableLookup(t, tableSet);
+                if (table == null)
+                    return $"Unknown note table: \"{t}\". Aborting!"; // Abort if table is unknown to prevent a crash
 
                 using var lsbStream = new StreamWriter($"{t}_lsb{ext}");
                 CreateNoteTable(lsbStream, table, false);
-
+                
                 using var msbStream = new StreamWriter($"{t}_msb{ext}");
                 CreateNoteTable(msbStream, table, true);
             }
+
+            return "You will need to use these in the sound engine to hear the correct tuning.";
         }
         
         public static void DumpNoteTableSetToFile(int tuning, string filename)
@@ -392,9 +397,9 @@ namespace FamiStudio
             DumpNoteTableSetToFile(GetOrCreateNoteTableSet(tuning), filename);
         }
 
-        public static void DumpNoteTableToFile(int tuning, string[] tables, string ext = null)
+        public static string DumpNoteTableToFile(int tuning, string[] tables, string ext = ".bin")
         {
-            DumpNoteTableToFile(GetOrCreateNoteTableSet(tuning), tables, ext);
+            return DumpNoteTableToFile(GetOrCreateNoteTableSet(tuning), tables, ext);
         }
 
         private static void CreateNoteTable(StreamWriter stream, ushort[] noteTable, bool msb)

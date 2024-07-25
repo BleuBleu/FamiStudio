@@ -2212,6 +2212,7 @@ namespace FamiStudio
                     if (project.Tuning != 440)
                     {
                         Log.LogMessage(LogSeverity.Info, "Project uses non-standard tuning, the following note tables will be dumped:");
+
                         List<string> tables = new() { "famistudio_note_table", "famistudio_note_table_pal" };
                         if (project.UsesVrc6Expansion)
                             tables.AddRange(new[] { "famistudio_saw_note_table", "famistudio_saw_note_table_pal" });
@@ -2230,8 +2231,9 @@ namespace FamiStudio
                             Log.LogMessage(LogSeverity.Info, $"{t}_msb.bin");
                         }
 
-                        Log.LogMessage(LogSeverity.Info, "You will need to use these in the sound engine to hear the correct tuning.");
-                        NesApu.DumpNoteTableToFile(project.Tuning, tables.ToArray(), ".bin");
+                        var res = NesApu.DumpNoteTableToFile(project.Tuning, tables.ToArray());
+                        var err = res.StartsWith("Unknown");
+                        Log.LogMessage(err ? LogSeverity.Error : LogSeverity.Info, res); 
                     }
                 }
             }
