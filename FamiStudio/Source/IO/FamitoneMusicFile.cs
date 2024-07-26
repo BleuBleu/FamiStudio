@@ -2211,29 +2211,10 @@ namespace FamiStudio
                     // Non-standard tuning
                     if (project.Tuning != 440)
                     {
-                        Log.LogMessage(LogSeverity.Info, "Project uses non-standard tuning, the following note tables will be dumped:");
+                        Log.LogMessage(LogSeverity.Info, "Project uses non-standard tuning, the note tables will be dumped.");
+                        Log.LogMessage(LogSeverity.Info, "You will need to use these in the sound engine to hear the correct tuning:");
 
-                        List<string> tables = new() { "famistudio_note_table", "famistudio_note_table_pal" };
-                        if (project.UsesVrc6Expansion)
-                            tables.AddRange(new[] { "famistudio_saw_note_table", "famistudio_saw_note_table_pal" });
-                        if (project.UsesVrc7Expansion)
-                            tables.Add("famistudio_vrc7_note_table");
-                        if (project.UsesFdsExpansion)
-                            tables.AddRange(new[] { "famistudio_fds_note_table", "famistudio_fds_note_table_pal" });
-                        if (project.UsesN163Expansion)
-                            tables.AddRange(new[] { $"famistudio_n163_note_table_{project.ExpansionNumN163Channels}ch", $"famistudio_n163_note_table_pal_{project.ExpansionNumN163Channels}ch" });
-                        if (project.UsesEPSMExpansion)
-                            tables.AddRange(new[] { "famistudio_epsm_note_table", "famistudio_epsm_s_note_table" });
-                            
-                        foreach (var t in tables)
-                        {
-                            Log.LogMessage(LogSeverity.Info, $"{t}_lsb.bin");
-                            Log.LogMessage(LogSeverity.Info, $"{t}_msb.bin");
-                        }
-
-                        var res = NesApu.DumpNoteTableToFile(project.Tuning, tables.ToArray());
-                        var err = res.StartsWith("Unknown");
-                        Log.LogMessage(err ? LogSeverity.Error : LogSeverity.Info, res); 
+                        NesApu.DumpNoteTableToFile(project.Tuning, NesApu.GetActiveNoteTableNames(project));
                     }
                 }
             }
@@ -2405,21 +2386,21 @@ namespace FamiStudio
 
                     var noteTable = (ushort[])null;
 
-                    if (pair[0].StartsWith("famistudio_s5b_note_table"))
+                    if (pair[0].StartsWith(NesApu.NoteTableNames.S5B))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.S5BSquare1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_n163_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.N163Prefix))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.N163Wave1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_vrc7_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.Vrc7))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Vrc7Fm1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_fds_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.Fds))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.FdsWave, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_saw_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.Saw))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Vrc6Saw, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_epsm_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.Epsm))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.EPSMFm1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_epsm_s_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.EpsmS))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.EPSMSquare1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_note_table") || pair[0].StartsWith("_FT2NoteTable"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.NTSC) || pair[0].StartsWith("_FT2NoteTable"))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Square1, pal, numN163Channels, tuning);
 
                     if (noteTable == null)

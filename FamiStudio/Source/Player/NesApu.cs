@@ -276,6 +276,24 @@ namespace FamiStudio
         public const int EpsmCycleDataSkipShort = 10;
         public const int EpsmCycleKeyOnSkip = 36;
 
+        // Note Table Names
+        public static class NoteTableNames
+        {
+            public const string NTSC          = "famistudio_note_table";
+            public const string PAL           = "famistudio_note_table_pal";
+            public const string S5B           = "famistudio_s5b_note_table";
+            public const string S5BPAL        = "famistudio_s5b_note_table_pal";
+            public const string Saw           = "famistudio_saw_note_table";
+            public const string SawPAL        = "famistudio_saw_note_table_pal";
+            public const string Vrc7          = "famistudio_vrc7_note_table";
+            public const string Fds           = "famistudio_fds_note_table";
+            public const string FdsPAL        = "famistudio_fds_note_table_pal";
+            public const string Epsm          = "famistudio_epsm_note_table";
+            public const string EpsmS         = "famistudio_epsm_s_note_table";
+            public const string N163Prefix    = "famistudio_n163_note_table";
+            public const string N163PALPrefix = "famistudio_n163_note_table_pal";
+        }
+
         private class NoteTableSet
         {
             public readonly ushort[]   NoteTableNTSC       = new ushort[97];
@@ -318,27 +336,56 @@ namespace FamiStudio
             return exp == APU_EXPANSION_NONE ? APU_EXPANSION_MASK_NONE : 1 << (exp - 1);
         }
 
+        public static string[] GetActiveNoteTableNames(Project project)
+        {
+            List<string> tables = new() { NoteTableNames.NTSC, NoteTableNames.PAL };
+
+            if (project.UsesN163Expansion)
+            {
+                var c = project.ExpansionNumN163Channels;
+                tables.AddRange(new[] { $"{NoteTableNames.N163Prefix}_{c}ch", $"{NoteTableNames.N163PALPrefix}_{c}ch" });
+            }
+            
+            if (project.UsesVrc6Expansion)
+                tables.AddRange(new[] { NoteTableNames.Saw, NoteTableNames.SawPAL });
+
+            if (project.UsesVrc7Expansion)
+                tables.Add(NoteTableNames.Vrc7);
+
+            if (project.UsesFdsExpansion)
+                tables.AddRange(new[] { NoteTableNames.Fds, NoteTableNames.FdsPAL });
+
+            if (project.UsesEPSMExpansion)
+                tables.AddRange(new[] { NoteTableNames.Epsm, NoteTableNames.EpsmS });
+
+            return tables.ToArray();
+        }
+
         private static ushort[] NoteTableLookup(NoteTableSet tableSet, string table)
         {
-            var pal = table.Contains("_pal");
-            if (table.StartsWith("famistudio_n163_note_table")) 
+            // N163 (needs to parse channel count)
+            if (table.StartsWith(NoteTableNames.N163Prefix)) 
             {
                 if (!int.TryParse(table[^3].ToString(), out var ch))
                     return null; // Parsing error => unknown table
 
-                return pal ? tableSet.NoteTableN163PAL[ch] : tableSet.NoteTableN163[ch];
+                return table.Contains("_pal") ? tableSet.NoteTableN163PAL[ch] : tableSet.NoteTableN163[ch];
             }
+
+            // All other chips
             return table switch
             {
-                "famistudio_note_table"          => tableSet.NoteTableNTSC,
-                "famistudio_note_table_pal"      => tableSet.NoteTablePAL,
-                "famistudio_saw_note_table"      => tableSet.NoteTableVrc6Saw,
-                "famistudio_saw_note_table_pal"  => tableSet.NoteTableVrc6SawPAL,
-                "famistudio_vrc7_note_table"     => tableSet.NoteTableVrc7,
-                "famistudio_fds_note_table"      => tableSet.NoteTableFds,
-                "famistudio_fds_note_table_pal"  => tableSet.NoteTableFdsPAL,
-                "famistudio_epsm_note_table"     => tableSet.NoteTableEPSMFm,
-                "famistudio_epsm_s_note_table"   => tableSet.NoteTableEPSM,
+                NoteTableNames.NTSC   => tableSet.NoteTableNTSC,
+                NoteTableNames.PAL    => tableSet.NoteTablePAL,
+                NoteTableNames.S5B    => tableSet.NoteTableNTSC, // Not sure if S5B is needed here, adding it in case
+                NoteTableNames.S5BPAL => tableSet.NoteTablePAL,
+                NoteTableNames.Saw    => tableSet.NoteTableVrc6Saw,
+                NoteTableNames.SawPAL => tableSet.NoteTableVrc6SawPAL,
+                NoteTableNames.Vrc7   => tableSet.NoteTableVrc7,
+                NoteTableNames.Fds    => tableSet.NoteTableFds,
+                NoteTableNames.FdsPAL => tableSet.NoteTableFdsPAL,
+                NoteTableNames.Epsm   => tableSet.NoteTableEPSMFm,
+                NoteTableNames.EpsmS  => tableSet.NoteTableEPSM,
 
                 _ => null // Unknown table
             };
@@ -348,50 +395,47 @@ namespace FamiStudio
         {
             using (var stream = new StreamWriter(filename))
             {
-                DumpNoteTable(stream, tableSet.NoteTableNTSC, "famistudio_note_table", "NTSC version");
-                DumpNoteTable(stream, tableSet.NoteTablePAL, "famistudio_note_table", "PAL version");
-                DumpNoteTable(stream, tableSet.NoteTableVrc6Saw, "famistudio_saw_note_table", "VRC6 Saw");
-                DumpNoteTable(stream, tableSet.NoteTableVrc6SawPAL, "famistudio_saw_note_table", "VRC6 Saw PAL");
-                DumpNoteTable(stream, tableSet.NoteTableVrc7, "famistudio_vrc7_note_table", "VRC7");
-                DumpNoteTable(stream, tableSet.NoteTableFds, "famistudio_fds_note_table", "FDS");
-                DumpNoteTable(stream, tableSet.NoteTableFdsPAL, "famistudio_fds_note_table", "FDS PAL");
-                DumpNoteTable(stream, tableSet.NoteTableN163[0], "famistudio_n163_note_table", "N163 (1 channel)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[1], "famistudio_n163_note_table", "N163 (2 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[2], "famistudio_n163_note_table", "N163 (3 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[3], "famistudio_n163_note_table", "N163 (4 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[4], "famistudio_n163_note_table", "N163 (5 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[5], "famistudio_n163_note_table", "N163 (6 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[6], "famistudio_n163_note_table", "N163 (7 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[7], "famistudio_n163_note_table", "N163 (8 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163PAL[0], "famistudio_n163_note_table", "N163 PAL (1 channel)");
-                DumpNoteTable(stream, tableSet.NoteTableN163PAL[1], "famistudio_n163_note_table", "N163 PAL (2 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163PAL[2], "famistudio_n163_note_table", "N163 PAL (3 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163PAL[3], "famistudio_n163_note_table", "N163 PAL (4 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163PAL[4], "famistudio_n163_note_table", "N163 PAL (5 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163PAL[5], "famistudio_n163_note_table", "N163 PAL (6 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163PAL[6], "famistudio_n163_note_table", "N163 PAL (7 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163PAL[7], "famistudio_n163_note_table", "N163 PAL (8 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableEPSMFm, "famistudio_epsm_note_table_lsb", "EPSM FM");
-                DumpNoteTable(stream, tableSet.NoteTableEPSM, "famistudio_epsm_s_note_table", "EPSM Square");
+                // PAL names are not used here, they are only used for the .bin files
+                DumpNoteTable(stream, tableSet.NoteTableNTSC, NoteTableNames.NTSC, "NTSC version");
+                DumpNoteTable(stream, tableSet.NoteTablePAL, NoteTableNames.NTSC, "PAL version");
+                DumpNoteTable(stream, tableSet.NoteTableVrc6Saw, NoteTableNames.Saw, "VRC6 Saw");
+                DumpNoteTable(stream, tableSet.NoteTableVrc6SawPAL, NoteTableNames.Saw, "VRC6 Saw PAL");
+                DumpNoteTable(stream, tableSet.NoteTableVrc7, NoteTableNames.Vrc7, "VRC7");
+                DumpNoteTable(stream, tableSet.NoteTableFds, NoteTableNames.Fds, "FDS");
+                DumpNoteTable(stream, tableSet.NoteTableFdsPAL, NoteTableNames.Fds, "FDS PAL");
+                DumpNoteTable(stream, tableSet.NoteTableEPSMFm, NoteTableNames.Epsm, "EPSM FM");
+                DumpNoteTable(stream, tableSet.NoteTableEPSM, NoteTableNames.EpsmS, "EPSM Square");
+
+                for (var i = 0; i < 8; i++)
+                {
+                    DumpNoteTable(stream, tableSet.NoteTableN163[i], NoteTableNames.N163Prefix, $"N163 ({i + 1} channel)");
+                    DumpNoteTable(stream, tableSet.NoteTableN163PAL[i], NoteTableNames.N163Prefix, $"N163 PAL ({i + 1} channel)");
+                }
             }
         }
 
-        private static string DumpNoteTableToFile(NoteTableSet tableSet, string[] tables, string ext)
+        private static void DumpNoteTableToFile(NoteTableSet tableSet, string[] tables, string ext)
         {
             foreach (var t in tables)
             {
                 var table = NoteTableLookup(tableSet, t);
                 if (table == null)
-                    return $"Unknown note table: \"{t}\". Aborting!"; // Abort if table is unknown to prevent a crash
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Unknown note table \"{t}\", skipping!");
+                    continue;
+                }
 
-                using var lsbStream = new StreamWriter($"{t}_lsb{ext}");
+                var lsb = $"{t}_lsb.{ext}";
+                var msb = $"{t}_msb.{ext}";
+
+                using var lsbStream = new StreamWriter(lsb);
                 CreateNoteTable(lsbStream, table, false);
+                Log.LogMessage(LogSeverity.Info, lsb);
                 
-                using var msbStream = new StreamWriter($"{t}_msb{ext}");
+                using var msbStream = new StreamWriter(msb);
                 CreateNoteTable(msbStream, table, true);
+                Log.LogMessage(LogSeverity.Info, msb);
             }
-
-            return "You will need to use these in the sound engine to hear the correct tuning.";
         }
         
         public static void DumpNoteTableSetToFile(int tuning, string filename)
@@ -399,9 +443,9 @@ namespace FamiStudio
             DumpNoteTableSetToFile(GetOrCreateNoteTableSet(tuning), filename);
         }
 
-        public static string DumpNoteTableToFile(int tuning, string[] tables, string ext = ".bin")
+        public static void DumpNoteTableToFile(int tuning, string[] tables, string ext = ".bin")
         {
-            return DumpNoteTableToFile(GetOrCreateNoteTableSet(tuning), tables, ext);
+            DumpNoteTableToFile(GetOrCreateNoteTableSet(tuning), tables, ext);
         }
 
         private static void CreateNoteTable(StreamWriter stream, ushort[] noteTable, bool msb)
@@ -464,7 +508,7 @@ namespace FamiStudio
                     }
                 }
 
-                #if FALSE // For debugging
+                #if TRUE // For debugging
                     DumpNoteTableSetToFile(noteTableSet, $"NoteTables{tuning}.txt");
                 #endif
 
