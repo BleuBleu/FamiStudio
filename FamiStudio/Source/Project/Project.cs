@@ -55,7 +55,7 @@ namespace FamiStudio
         // Project mixer overrides;
         private bool allowMixerOverride = true;
         private bool overrideBassCutoffHz = false;
-        private int bassCutoffHz = 16; // in Hz (matches Settings.DefaultBassCutoffHz, need to move constant somewhere)
+        private int bassCutoffHz = 24; // in Hz (matches Settings.DefaultBassCutoffHz, need to move constant somewhere)
         private ExpansionMixer[] mixerSettings = new ExpansionMixer[ExpansionType.Count];
 
         // Sound engine options.
