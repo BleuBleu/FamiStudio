@@ -55,6 +55,7 @@ Today:
 - BUG : Import instrument dialog, text overflow if too big.
 - BUG : Expand toolbar on mobile, click on open, weird shadow.
 - BUG : Right click to play source sample pops up the context menu
+- BUG : On mobile you can edit the text when it says [Multiple pattern selected]. Check for enabled!
 - UI code cleanup:
 	- Project explorer rewrite
 		- Test double click behavior on mobile.

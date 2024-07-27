@@ -1059,6 +1059,7 @@ namespace FamiStudio
                 var shadowColor = Color.FromArgb((int)Utils.Clamp(popupRatio * 0.6f * 255.0f, 0, 255), Color.Black);
 
                 // MATTT : Why do we darken the quick access bar? Its still usable.
+                // MATTT : This fights with the context menu shadow, need to change render order.
                 if (IsLandscape)
                 {
                     o.FillRectangle(screenRect.Left, screenRect.Top, listRect.Left, screenRect.Bottom, shadowColor);
