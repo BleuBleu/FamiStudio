@@ -508,7 +508,7 @@ namespace FamiStudio
                     }
                 }
 
-                #if TRUE // For debugging
+                #if FALSE // For debugging
                     DumpNoteTableSetToFile(noteTableSet, $"NoteTables{tuning}.txt");
                 #endif
 
