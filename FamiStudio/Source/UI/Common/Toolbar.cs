@@ -951,7 +951,7 @@ namespace FamiStudio
 
         private ButtonStatus OnMachineEnabled()
         {
-            return App.Project != null && !App.Project.UsesAnyExpansionAudio ? ButtonStatus.Enabled : ButtonStatus.Disabled;
+            return App.Project != null ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
         private ButtonImageIndices OnMachineGetBitmap(ref Color tint)

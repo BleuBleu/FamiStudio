@@ -26,8 +26,6 @@ The audio expansion(s) used is set in the project properties, which you can acce
 
 ![](images/EditProject.png#center)
 
-Enabling any kind of expansion audio will automatically disable PAL support since no audio expansion were ever available in PAL territories. 
-
 Note that while using multiple audio expansion(s) is supported in FamiStudio, no NES game has ever shipped with multiple expansions. This probably would not have been possible for multiple reasons (cost, competing companies, hardware conflicts, etc.). So be aware that you are bending the rules of reality when using multiple expansions.
 
 ## Expansion instruments

@@ -211,7 +211,7 @@ namespace FamiStudio
 
         // Mixer section
         public const float DefaultGlobalVolumeDb = -2.0f;
-        public const int DefaultBassCutoffHz = 16;
+        public const int DefaultBassCutoffHz = 24;
         public static float GlobalVolumeDb = DefaultGlobalVolumeDb; // in dB
         public static int BassCutoffHz = DefaultBassCutoffHz; // in Hz
         public static ExpansionMixer[] ExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count];

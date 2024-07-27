@@ -2290,6 +2290,10 @@ famistudio_update_fds_channel_sound:
 @nocut:
     clc
     adc famistudio_env_value+FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .if FAMISTUDIO_DUAL_SUPPORT
+        clc
+        adc famistudio_pal_adjust
+    .endif
     tax
 
     ldy #0
@@ -2922,13 +2926,13 @@ famistudio_update_epsm_fm_channel_sound:
 ;        rts
     @update_instrument_check:
     lda famistudio_chn_epsm_fm_instrument,y
-	cmp #$ff
-	beq @no_instrument_update
-	jsr update_fm_instrument
-	ldy @chan_idx
-	lda #$ff
-	sta famistudio_chn_epsm_fm_instrument,y
-	@no_instrument_update:
+    cmp #$ff
+    beq @no_instrument_update
+    jsr update_fm_instrument
+    ldy @chan_idx
+    lda #$ff
+    sta famistudio_chn_epsm_fm_instrument,y
+    @no_instrument_update:
 
     ldx @reg_offset
     lda famistudio_epsm_fm_stereo_reg_table,y
@@ -3021,7 +3025,7 @@ famistudio_update_epsm_fm_channel_sound:
     beq @op_2_4 ; 4
     cmp #7 ; 5
     bcc @op_2_3_4 ; 6
-	           ; 7
+               ; 7
     @op_1_2_3_4:
         lda famistudio_epsm_vol_table_op1,y
         sta FAMISTUDIO_EPSM_REG_SEL0,x
@@ -3057,7 +3061,7 @@ famistudio_update_epsm_fm_channel_sound:
         lda famistudio_epsm_vol_table_op4,y ; 4
         sta FAMISTUDIO_EPSM_REG_SEL0,x ; 5
         lda famistudio_chn_epsm_vol_op4,y ; 4
-	clc ; 2
+    clc ; 2
         adc @vol_offset ; 3
         bpl @save_op4 ; 2/3
         lda #127 ; 2
@@ -3110,13 +3114,13 @@ famistudio_update_epsm_fm_channel_sound:
     ldy #30-5 ; we skip updating the 4 operators
     ldx @reg_offset
     @loop_extra_patch:
-        txa	; 2
+        txa    ; 2
         ora famistudio_epsm_register_order,y ; 4
         sta select ; 4
         lda (@ex_patch),y ; 5
         sta write ; 4
-        dey	; 2
-        nop	; 2 DELAY FOR MESEN-X
+        dey    ; 2
+        nop    ; 2 DELAY FOR MESEN-X
         bpl @loop_extra_patch ; 3  ; =26
 
     ldx @chan_idx2
@@ -3129,32 +3133,32 @@ famistudio_update_epsm_fm_channel_sound:
     ;3+2+1
     ldy #27
     ldx @reg_offset
-    txa	; 2
+    txa    ; 2
     ora famistudio_epsm_register_order,y ; 4
     sta select ; 4
     lda (@ex_patch),y ; 5
     sta write ; 4
-    nop	; 2 DELAY FOR MESEN-X
+    nop    ; 2 DELAY FOR MESEN-X
     @alg_4:
     ;3+1
     ldy #28
     ldx @reg_offset
-    txa	; 2
+    txa    ; 2
     ora famistudio_epsm_register_order,y ; 4
     sta select ; 4
     lda (@ex_patch),y ; 5
     sta write ; 4
-    nop	; 2 DELAY FOR MESEN-X
+    nop    ; 2 DELAY FOR MESEN-X
     @alg_5_6:
     ;1
     ldy #26
     ldx @reg_offset
-    txa	; 2
+    txa    ; 2
     ora famistudio_epsm_register_order,y ; 4
     sta select ; 4
     lda (@ex_patch),y ; 5
     sta write ; 4
-    nop	; 2 DELAY FOR MESEN-X
+    nop    ; 2 DELAY FOR MESEN-X
 .endmacro
 
 ;======================================================================================================================
@@ -3215,7 +3219,7 @@ update_fm_instrument:
     @reg_set_1:
         famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
         nop
-	
+    
     @last_reg:
         ldy #30 ; last reg patch ptr
         lda #$22 ; famistudio_epsm_register_order,x
@@ -3412,6 +3416,10 @@ famistudio_update_n163_channel_sound:
     clc
     ldx famistudio_n163_env_table,y
     adc famistudio_env_value+FAMISTUDIO_ENV_NOTE_OFF,x
+    .if FAMISTUDIO_DUAL_SUPPORT
+        clc
+        adc famistudio_pal_adjust
+    .endif
     tax
 
     ; Apply pitch envelope, fine pitch & slides
@@ -3537,6 +3545,10 @@ famistudio_update_s5b_channel_sound:
     clc
     ldx famistudio_s5b_env_table,y
     adc famistudio_env_value+FAMISTUDIO_ENV_NOTE_OFF,x
+    .if FAMISTUDIO_DUAL_SUPPORT
+        clc
+        adc famistudio_pal_adjust
+    .endif
     tax
 
     ; Apply pitch envelope, fine pitch & slides
@@ -5067,7 +5079,7 @@ famistudio_set_epsm_instrument:
         tax
 
         ; Read the first envelope pointer for the volume, we'll use this to get the volume later
-	sty @reg_offset
+    sty @reg_offset
     lda (@ptr),y
     sta @env_ptr
     iny
@@ -5087,7 +5099,7 @@ famistudio_set_epsm_instrument:
     iny
     lda (@ptr),y
     sta @ex_patch+1
-	ldy #1
+    ldy #1
     lda (@ex_patch),y
     and #$c0
     sta famistudio_chn_epsm_rhythm_stereo,x
@@ -5715,9 +5727,9 @@ famistudio_advance_channel:
 .if FAMISTUDIO_EXP_EPSM
 @opcode_epsm_release_note:
     lda #$80
-	.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT+FAMISTUDIO_EXP_EPSM_RHYTHM_CNT > 0
     sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CHAN_FM_START,x ; Set release flag for EPSM
-	.endif
+    .endif
 .endif
 
 @opcode_release_note:
@@ -6752,26 +6764,10 @@ famistudio_s5b_note_table_lsb:
 .endif
 famistudio_note_table_lsb:
     .if FAMISTUDIO_CFG_PAL_SUPPORT
-        .byte $00
-        .byte $68, $b6, $0e, $6f, $d9, $4b, $c6, $48, $d1, $60, $f6, $92 ; Octave 0
-        .byte $34, $db, $86, $37, $ec, $a5, $62, $23, $e8, $b0, $7b, $49 ; Octave 1
-        .byte $19, $ed, $c3, $9b, $75, $52, $31, $11, $f3, $d7, $bd, $a4 ; Octave 2
-        .byte $8c, $76, $61, $4d, $3a, $29, $18, $08, $f9, $eb, $de, $d1 ; Octave 3
-        .byte $c6, $ba, $b0, $a6, $9d, $94, $8b, $84, $7c, $75, $6e, $68 ; Octave 4
-        .byte $62, $5d, $57, $52, $4e, $49, $45, $41, $3e, $3a, $37, $34 ; Octave 5
-        .byte $31, $2e, $2b, $29, $26, $24, $22, $20, $1e, $1d, $1b, $19 ; Octave 6
-        .byte $18, $16, $15, $14, $13, $12, $11, $10, $0f, $0e, $0d, $0c ; Octave 7
+        .include "NoteTables/famistudio_note_table_pal_lsb.bin"
     .endif
     .if FAMISTUDIO_CFG_NTSC_SUPPORT
-        .byte $00
-        .byte $5b, $9c, $e6, $3b, $9a, $01, $72, $ea, $6a, $f1, $7f, $13 ; Octave 0
-        .byte $ad, $4d, $f3, $9d, $4c, $00, $b8, $74, $34, $f8, $bf, $89 ; Octave 1
-        .byte $56, $26, $f9, $ce, $a6, $80, $5c, $3a, $1a, $fb, $df, $c4 ; Octave 2
-        .byte $ab, $93, $7c, $67, $52, $3f, $2d, $1c, $0c, $fd, $ef, $e1 ; Octave 3
-        .byte $d5, $c9, $bd, $b3, $a9, $9f, $96, $8e, $86, $7e, $77, $70 ; Octave 4
-        .byte $6a, $64, $5e, $59, $54, $4f, $4b, $46, $42, $3f, $3b, $38 ; Octave 5
-        .byte $34, $31, $2f, $2c, $29, $27, $25, $23, $21, $1f, $1d, $1b ; Octave 6
-        .byte $1a, $18, $17, $15, $14, $13, $12, $11, $10, $0f, $0e, $0d ; Octave 7
+        .include "NoteTables/famistudio_note_table_lsb.bin"
     .endif
 
 .if FAMISTUDIO_EXP_S5B
@@ -6780,343 +6776,183 @@ famistudio_s5b_note_table_msb:
 .endif
 famistudio_note_table_msb:
     .if FAMISTUDIO_CFG_PAL_SUPPORT
-        .byte $00
-        .byte $0c, $0b, $0b, $0a, $09, $09, $08, $08, $07, $07, $06, $06 ; Octave 0
-        .byte $06, $05, $05, $05, $04, $04, $04, $04, $03, $03, $03, $03 ; Octave 1
-        .byte $03, $02, $02, $02, $02, $02, $02, $02, $01, $01, $01, $01 ; Octave 2
-        .byte $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $00, $00 ; Octave 3
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 4
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
+        .include "NoteTables/famistudio_note_table_pal_msb.bin"
     .endif
     .if FAMISTUDIO_CFG_NTSC_SUPPORT
-        .byte $00
-        .byte $0d, $0c, $0b, $0b, $0a, $0a, $09, $08, $08, $07, $07, $07 ; Octave 0
-        .byte $06, $06, $05, $05, $05, $05, $04, $04, $04, $03, $03, $03 ; Octave 1
-        .byte $03, $03, $02, $02, $02, $02, $02, $02, $02, $01, $01, $01 ; Octave 2
-        .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $00 ; Octave 3
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 4
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
-        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
+        .include "NoteTables/famistudio_note_table_msb.bin"
     .endif
 
 .if FAMISTUDIO_EXP_VRC6
 famistudio_exp_note_table_lsb:
 famistudio_saw_note_table_lsb:
-    .byte $00
-    .byte $44, $69, $9a, $d6, $1e, $70, $cb, $30, $9e, $13, $91, $16 ; Octave 0
-    .byte $a2, $34, $cc, $6b, $0e, $b7, $65, $18, $ce, $89, $48, $0a ; Octave 1
-    .byte $d0, $99, $66, $35, $07, $db, $b2, $8b, $67, $44, $23, $05 ; Octave 2
-    .byte $e8, $cc, $b2, $9a, $83, $6d, $59, $45, $33, $22, $11, $02 ; Octave 3
-    .byte $f3, $e6, $d9, $cc, $c1, $b6, $ac, $a2, $99, $90, $88, $80 ; Octave 4
-    .byte $79, $72, $6c, $66, $60, $5b, $55, $51, $4c, $48, $44, $40 ; Octave 5
-    .byte $3c, $39, $35, $32, $2f, $2d, $2a, $28, $25, $23, $21, $1f ; Octave 6
-    .byte $1e, $1c, $1a, $19, $17, $16, $15, $13, $12, $11, $10, $0f ; Octave 7
+    .if FAMISTUDIO_CFG_PAL_SUPPORT
+        .include "NoteTables/famistudio_saw_note_table_pal_lsb.bin"
+    .endif
+    .if FAMISTUDIO_CFG_NTSC_SUPPORT
+        .include "NoteTables/famistudio_saw_note_table_lsb.bin"
+    .endif
 famistudio_exp_note_table_msb:
-famistudio_saw_note_table_msb:    
-    .byte $00
-    .byte $0f, $0e, $0d, $0c, $0c, $0b, $0a, $0a, $09, $09, $08, $08 ; Octave 0
-    .byte $07, $07, $06, $06, $06, $05, $05, $05, $04, $04, $04, $04 ; Octave 1
-    .byte $03, $03, $03, $03, $03, $02, $02, $02, $02, $02, $02, $02 ; Octave 2
-    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01 ; Octave 3
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 4
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
+famistudio_saw_note_table_msb: 
+    .if FAMISTUDIO_CFG_PAL_SUPPORT  
+        .include "NoteTables/famistudio_saw_note_table_pal_msb.bin"
+    .endif
+    .if FAMISTUDIO_CFG_NTSC_SUPPORT    
+        .include "NoteTables/famistudio_saw_note_table_msb.bin"
+    .endif
 .endif
 
 .if FAMISTUDIO_EXP_VRC7
 famistudio_exp_note_table_lsb:
 famistudio_vrc7_note_table_lsb:
-    .byte $00
-    .byte $ac, $b7, $c2, $cd, $d9, $e6, $f4, $02, $12, $22, $33, $46 ; Octave 0
-    .byte $58, $6e, $84, $9a, $b2, $cc, $e8, $04, $24, $44, $66, $8c ; Octave 1
-    .byte $b0, $dc, $08, $34, $64, $98, $d0, $08, $48, $88, $cc, $18 ; Octave 2
-    .byte $60, $b8, $10, $68, $c8, $30, $a0, $10, $90, $10, $98, $30 ; Octave 3
-    .byte $c0, $70, $20, $d0, $90, $60, $40, $20, $20, $20, $30, $60 ; Octave 4
-    .byte $80, $e0, $40, $a0, $20, $c0, $80, $40, $40, $40, $60, $c0 ; Octave 5
-    .byte $00, $c0, $80, $40, $40, $80, $00, $80, $80, $80, $c0, $80 ; Octave 6
-    .byte $00, $80, $00, $80, $80, $00, $00, $00, $00, $00, $80, $00 ; Octave 7
+    .include "NoteTables/famistudio_vrc7_note_table_lsb.bin"
 famistudio_exp_note_table_msb:
 famistudio_vrc7_note_table_msb:
-    .byte $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $01 ; Octave 0
-    .byte $01, $01, $01, $01, $01, $01, $01, $02, $02, $02, $02, $02 ; Octave 1
-    .byte $02, $02, $03, $03, $03, $03, $03, $04, $04, $04, $04, $05 ; Octave 2
-    .byte $05, $05, $06, $06, $06, $07, $07, $08, $08, $09, $09, $0a ; Octave 3
-    .byte $0a, $0b, $0c, $0c, $0d, $0e, $0f, $10, $11, $12, $13, $14 ; Octave 4
-    .byte $15, $16, $18, $19, $1b, $1c, $1e, $20, $22, $24, $26, $28 ; Octave 5
-    .byte $2b, $2d, $30, $33, $36, $39, $3d, $40, $44, $48, $4c, $51 ; Octave 6
-    .byte $56, $5b, $61, $66, $6c, $73, $7a, $81, $89, $91, $99, $a3 ; Octave 7    
+      .include "NoteTables/famistudio_vrc7_note_table_msb.bin"
 .endif
 
 .if FAMISTUDIO_EXP_EPSM
-	.if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
+    .if FAMISTUDIO_EXP_EPSM_FM_CHN_CNT > 0
 famistudio_epsm_note_table_lsb:
-    .byte $00
-    .byte $9a, $a3, $ad, $b7, $c2, $cd, $da, $e7, $f4, $03, $12, $23 ; Octave 0
-    .byte $34, $46, $5a, $6e, $84, $9a, $b4, $ce, $e8, $06, $24, $46 ; Octave 1
-    .byte $68, $8c, $b4, $dc, $08, $34, $68, $9c, $d0, $0c, $48, $8c ; Octave 2
-    .byte $d0, $18, $68, $b8, $10, $68, $d0, $38, $a0, $18, $90, $18 ; Octave 3
-    .byte $a0, $30, $d0, $70, $20, $d0, $a0, $70, $40, $30, $20, $30 ; Octave 4
-    .byte $40, $60, $a0, $e0, $40, $a0, $40, $e0, $80, $60, $40, $60 ; Octave 5
-    .byte $80, $c0, $40, $c0, $80, $40, $80, $c0, $00, $c0, $80, $c0 ; Octave 6
-    .byte $00, $80, $80, $80, $00, $80, $00, $80, $00, $80, $00, $80 ; Octave 7
+      .include "NoteTables/famistudio_epsm_note_table_lsb.bin"
 famistudio_epsm_note_table_msb:
-    .byte $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01 ; Octave 0
-    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02, $02 ; Octave 1
-    .byte $02, $02, $02, $02, $03, $03, $03, $03, $03, $04, $04, $04 ; Octave 2
-    .byte $04, $05, $05, $05, $06, $06, $06, $07, $07, $08, $08, $09 ; Octave 3
-    .byte $09, $0a, $0a, $0b, $0c, $0c, $0d, $0e, $0f, $10, $11, $12 ; Octave 4
-    .byte $13, $14, $15, $16, $18, $19, $1b, $1c, $1e, $20, $22, $24 ; Octave 5
-    .byte $26, $28, $2b, $2d, $30, $33, $36, $39, $3d, $40, $44, $48 ; Octave 6
-    .byte $4d, $51, $56, $5b, $61, $66, $6d, $73, $7a, $81, $89, $91 ; Octave 7  
-	.endif
+       .include "NoteTables/famistudio_epsm_note_table_msb.bin"
+    .endif
 famistudio_exp_note_table_lsb:
 famistudio_epsm_s_note_table_lsb:
-    .byte $00
-    .byte $dd, $2f, $9a, $1c, $b3, $5f, $1d, $ee, $d0, $c1, $c2, $d2 ; Octave 0
-    .byte $ee, $18, $4d, $8e, $da, $2f, $8f, $f7, $68, $e1, $61, $e9 ; Octave 1
-    .byte $77, $0c, $a7, $47, $ed, $98, $47, $fc, $b4, $70, $31, $f4 ; Octave 2
-    .byte $bc, $86, $53, $24, $f6, $cc, $a4, $7e, $5a, $38, $18, $fa ; Octave 3
-    .byte $de, $c3, $aa, $92, $7b, $66, $52, $3f, $2d, $1c, $0c, $fd ; Octave 4
-    .byte $ef, $e1, $d5, $c9, $be, $b3, $a9, $9f, $96, $8e, $86, $7f ; Octave 5
-    .byte $77, $71, $6a, $64, $5f, $59, $54, $50, $4b, $47, $43, $3f ; Octave 6
-    .byte $3c, $38, $35, $32, $2f, $2d, $2a, $28, $26, $24, $22, $20 ; Octave 7
+    .include "NoteTables/famistudio_epsm_s_note_table_lsb.bin"
 famistudio_exp_note_table_msb:
 famistudio_epsm_s_note_table_msb:
-    .byte $00
-    .byte $1d, $1c, $1a, $19, $17, $16, $15, $13, $12, $11, $10, $0f ; Octave 0
-    .byte $0e, $0e, $0d, $0c, $0b, $0b, $0a, $09, $09, $08, $08, $07 ; Octave 1
-    .byte $07, $07, $06, $06, $05, $05, $05, $04, $04, $04, $04, $03 ; Octave 2
-    .byte $03, $03, $03, $03, $02, $02, $02, $02, $02, $02, $02, $01 ; Octave 3
-    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $00 ; Octave 4
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
+    .include "NoteTables/famistudio_epsm_s_note_table_msb.bin"
 .endif
 
 .if FAMISTUDIO_EXP_FDS
 famistudio_exp_note_table_lsb:
 famistudio_fds_note_table_lsb:
-    .byte $00
-    .byte $13, $14, $16, $17, $18, $1a, $1b, $1d, $1e, $20, $22, $24 ; Octave 0
-    .byte $26, $29, $2b, $2e, $30, $33, $36, $39, $3d, $40, $44, $48 ; Octave 1
-    .byte $4d, $51, $56, $5b, $61, $66, $6c, $73, $7a, $81, $89, $91 ; Octave 2
-    .byte $99, $a2, $ac, $b6, $c1, $cd, $d9, $e6, $f3, $02, $11, $21 ; Octave 3
-    .byte $33, $45, $58, $6d, $82, $99, $b2, $cb, $e7, $04, $22, $43 ; Octave 4
-    .byte $65, $8a, $b0, $d9, $04, $32, $63, $97, $cd, $07, $44, $85 ; Octave 5
-    .byte $ca, $13, $60, $b2, $09, $65, $c6, $2d, $9b, $0e, $89, $0b ; Octave 6
-    .byte $94, $26, $c1, $64, $12, $ca, $8c, $5b, $35, $1d, $12, $16 ; Octave 7
+    .if FAMISTUDIO_CFG_PAL_SUPPORT
+        .include "NoteTables/famistudio_fds_note_table_pal_lsb.bin"
+    .endif
+    .if FAMISTUDIO_CFG_NTSC_SUPPORT
+        .include "NoteTables/famistudio_fds_note_table_lsb.bin"
+    .endif
 famistudio_exp_note_table_msb:
 famistudio_fds_note_table_msb:
-    .byte $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 0
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 1
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 2
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01 ; Octave 3
-    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02, $02 ; Octave 4
-    .byte $02, $02, $02, $02, $03, $03, $03, $03, $03, $04, $04, $04 ; Octave 5
-    .byte $04, $05, $05, $05, $06, $06, $06, $07, $07, $08, $08, $09 ; Octave 6
-    .byte $09, $0a, $0a, $0b, $0c, $0c, $0d, $0e, $0f, $10, $11, $12 ; Octave 7
+    .if FAMISTUDIO_CFG_PAL_SUPPORT
+        .include "NoteTables/famistudio_fds_note_table_pal_msb.bin"
+    .endif
+    .if FAMISTUDIO_CFG_NTSC_SUPPORT
+        .include "NoteTables/famistudio_fds_note_table_msb.bin"
+    .endif
 .endif
 
 .if FAMISTUDIO_EXP_N163
-.if FAMISTUDIO_EXP_N163_CHN_CNT = 1
-    famistudio_exp_note_table_lsb:
-    famistudio_n163_note_table_lsb:
-        .byte $00
-        .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 0
-        .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$00,$0f ; Octave 1
-        .byte $1f,$30,$42,$55,$6a,$7f,$96,$ae,$c8,$e3,$00,$1e ; Octave 2
-        .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 3
-        .byte $7d,$c1,$0a,$57,$a8,$fe,$59,$ba,$20,$8d,$00,$7a ; Octave 4
-        .byte $fb,$83,$14,$ae,$50,$fd,$b3,$74,$41,$1a,$00,$f4 ; Octave 5
-        .byte $f6,$07,$29,$5c,$a1,$fa,$67,$e9,$83,$35,$01,$e8 ; Octave 6
-        .byte $ec,$0f,$52,$b8,$43,$f4,$ce,$d3,$06,$6a,$02,$d1 ; Octave 7
-    famistudio_exp_note_table_msb:
-    famistudio_n163_note_table_msb:
-        .byte $00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; Octave 0
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01 ; Octave 1
-        .byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$02,$02 ; Octave 2
-        .byte $02,$02,$02,$02,$02,$02,$03,$03,$03,$03,$04,$04 ; Octave 3
-        .byte $04,$04,$05,$05,$05,$05,$06,$06,$07,$07,$08,$08 ; Octave 4
-        .byte $08,$09,$0a,$0a,$0b,$0b,$0c,$0d,$0e,$0f,$10,$10 ; Octave 5
-        .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 6
-        .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 7
-.endif
-.if FAMISTUDIO_EXP_N163_CHN_CNT = 2
-    famistudio_exp_note_table_lsb:
-    famistudio_n163_note_table_lsb:
-        .byte $00
-        .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$00,$0f ; Octave 0
-        .byte $1f,$30,$42,$55,$6a,$7f,$96,$ae,$c8,$e3,$00,$1e ; Octave 1
-        .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 2
-        .byte $7d,$c1,$0a,$57,$a8,$fe,$59,$ba,$20,$8d,$00,$7a ; Octave 3
-        .byte $fb,$83,$14,$ae,$50,$fd,$b3,$74,$41,$1a,$00,$f4 ; Octave 4
-        .byte $f6,$07,$29,$5c,$a1,$fa,$67,$e9,$83,$35,$01,$e8 ; Octave 5
-        .byte $ec,$0f,$52,$b8,$43,$f4,$ce,$d3,$06,$6a,$02,$d1 ; Octave 6
-        .byte $d9,$1f,$a5,$71,$86,$e8,$9c,$a7,$0d,$d5,$05,$a2 ; Octave 7
-    famistudio_exp_note_table_msb:
-    famistudio_n163_note_table_msb:
-        .byte $00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01 ; Octave 0
-        .byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$02,$02 ; Octave 1
-        .byte $02,$02,$02,$02,$02,$02,$03,$03,$03,$03,$04,$04 ; Octave 2
-        .byte $04,$04,$05,$05,$05,$05,$06,$06,$07,$07,$08,$08 ; Octave 3
-        .byte $08,$09,$0a,$0a,$0b,$0b,$0c,$0d,$0e,$0f,$10,$10 ; Octave 4
-        .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 5
-        .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 6
-        .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 7
-.endif
-.if FAMISTUDIO_EXP_N163_CHN_CNT = 3
-    famistudio_exp_note_table_lsb:
-    famistudio_n163_note_table_lsb:
-        .byte $00
-        .byte $d7,$e4,$f1,$00,$0f,$1f,$30,$42,$56,$6a,$80,$96 ; Octave 0
-        .byte $af,$c8,$e3,$00,$1f,$3f,$61,$85,$ac,$d5,$00,$2d ; Octave 1
-        .byte $5e,$91,$c7,$01,$3e,$7e,$c3,$0b,$58,$aa,$00,$5b ; Octave 2
-        .byte $bc,$22,$8f,$02,$7c,$fd,$86,$17,$b1,$54,$00,$b7 ; Octave 3
-        .byte $78,$45,$1f,$05,$f9,$fb,$0d,$2f,$62,$a8,$01,$6e ; Octave 4
-        .byte $f1,$8b,$3e,$0a,$f2,$f7,$1a,$5e,$c5,$50,$02,$dc ; Octave 5
-        .byte $e3,$17,$7c,$15,$e4,$ee,$35,$bd,$8a,$a0,$04,$b9 ; Octave 6
-        .byte $c6,$2e,$f8,$2a,$c9,$dc,$6a,$7a,$14,$40,$08,$73 ; Octave 7
-    famistudio_exp_note_table_msb:
-    famistudio_n163_note_table_msb:
-        .byte $00
-        .byte $00,$00,$00,$01,$01,$01,$01,$01,$01,$01,$01,$01 ; Octave 0
-        .byte $01,$01,$01,$02,$02,$02,$02,$02,$02,$02,$03,$03 ; Octave 1
-        .byte $03,$03,$03,$04,$04,$04,$04,$05,$05,$05,$06,$06 ; Octave 2
-        .byte $06,$07,$07,$08,$08,$08,$09,$0a,$0a,$0b,$0c,$0c ; Octave 3
-        .byte $0d,$0e,$0f,$10,$10,$11,$13,$14,$15,$16,$18,$19 ; Octave 4
-        .byte $1a,$1c,$1e,$20,$21,$23,$26,$28,$2a,$2d,$30,$32 ; Octave 5
-        .byte $35,$39,$3c,$40,$43,$47,$4c,$50,$55,$5a,$60,$65 ; Octave 6
-        .byte $6b,$72,$78,$80,$87,$8f,$98,$a1,$ab,$b5,$c0,$cb ; Octave 7
-.endif
-.if FAMISTUDIO_EXP_N163_CHN_CNT = 4
-    famistudio_exp_note_table_lsb:
-    famistudio_n163_note_table_lsb:
-        .byte $00
-        .byte $1f,$30,$42,$55,$6a,$7f,$96,$ae,$c8,$e3,$00,$1e ; Octave 0
-        .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 1
-        .byte $7d,$c1,$0a,$57,$a8,$fe,$59,$ba,$20,$8d,$00,$7a ; Octave 2
-        .byte $fb,$83,$14,$ae,$50,$fd,$b3,$74,$41,$1a,$00,$f4 ; Octave 3
-        .byte $f6,$07,$29,$5c,$a1,$fa,$67,$e9,$83,$35,$01,$e8 ; Octave 4
-        .byte $ec,$0f,$52,$b8,$43,$f4,$ce,$d3,$06,$6a,$02,$d1 ; Octave 5
-        .byte $d9,$1f,$a5,$71,$86,$e8,$9c,$a7,$0d,$d5,$05,$a2 ; Octave 6
-        .byte $b2,$3e,$4b,$e3,$0c,$d0,$38,$4e,$1b,$ab,$ff,$ff ; Octave 7
-    famistudio_exp_note_table_msb:
-    famistudio_n163_note_table_msb:
-        .byte $00
-        .byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$02,$02 ; Octave 0
-        .byte $02,$02,$02,$02,$02,$02,$03,$03,$03,$03,$04,$04 ; Octave 1
-        .byte $04,$04,$05,$05,$05,$05,$06,$06,$07,$07,$08,$08 ; Octave 2
-        .byte $08,$09,$0a,$0a,$0b,$0b,$0c,$0d,$0e,$0f,$10,$10 ; Octave 3
-        .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 4
-        .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 5
-        .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 6
-        .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$ff,$ff ; Octave 7
-.endif
-.if FAMISTUDIO_EXP_N163_CHN_CNT = 5
-    famistudio_exp_note_table_lsb:
-    famistudio_n163_note_table_lsb:
-        .byte $00
-        .byte $67,$7c,$93,$ab,$c4,$df,$fc,$1a,$3a,$5c,$80,$a6 ; Octave 0
-        .byte $ce,$f9,$26,$56,$89,$bf,$f8,$34,$74,$b8,$00,$4c ; Octave 1
-        .byte $9c,$f2,$4c,$ac,$12,$7e,$f0,$69,$e9,$70,$00,$98 ; Octave 2
-        .byte $39,$e4,$99,$59,$24,$fc,$e0,$d2,$d2,$e1,$00,$31 ; Octave 3
-        .byte $73,$c9,$33,$b3,$49,$f8,$c0,$a4,$a4,$c2,$01,$62 ; Octave 4
-        .byte $e7,$93,$67,$67,$93,$f1,$81,$48,$48,$85,$03,$c5 ; Octave 5
-        .byte $cf,$26,$cf,$ce,$27,$e2,$03,$90,$91,$0b,$06,$8a ; Octave 6
-        .byte $9f,$4d,$9e,$9c,$4f,$c4,$06,$ff,$ff,$ff,$ff,$ff ; Octave 7
-    famistudio_exp_note_table_msb:
-    famistudio_n163_note_table_msb:
-        .byte $00
-        .byte $01,$01,$01,$01,$01,$01,$01,$02,$02,$02,$02,$02 ; Octave 0
-        .byte $02,$02,$03,$03,$03,$03,$03,$04,$04,$04,$05,$05 ; Octave 1
-        .byte $05,$05,$06,$06,$07,$07,$07,$08,$08,$09,$0a,$0a ; Octave 2
-        .byte $0b,$0b,$0c,$0d,$0e,$0e,$0f,$10,$11,$12,$14,$15 ; Octave 3
-        .byte $16,$17,$19,$1a,$1c,$1d,$1f,$21,$23,$25,$28,$2a ; Octave 4
-        .byte $2c,$2f,$32,$35,$38,$3b,$3f,$43,$47,$4b,$50,$54 ; Octave 5
-        .byte $59,$5f,$64,$6a,$71,$77,$7f,$86,$8e,$97,$a0,$a9 ; Octave 6
-        .byte $b3,$be,$c9,$d5,$e2,$ef,$fe,$ff,$ff,$ff,$ff,$ff ; Octave 7
-.endif
-.if FAMISTUDIO_EXP_N163_CHN_CNT = 6
-    famistudio_exp_note_table_lsb:
-    famistudio_n163_note_table_lsb:
-        .byte $00
-        .byte $af,$c8,$e3,$00,$1f,$3f,$61,$85,$ac,$d5,$00,$2d ; Octave 0
-        .byte $5e,$91,$c7,$01,$3e,$7e,$c3,$0b,$58,$aa,$00,$5b ; Octave 1
-        .byte $bc,$22,$8f,$02,$7c,$fd,$86,$17,$b1,$54,$00,$b7 ; Octave 2
-        .byte $78,$45,$1f,$05,$f9,$fb,$0d,$2f,$62,$a8,$01,$6e ; Octave 3
-        .byte $f1,$8b,$3e,$0a,$f2,$f7,$1a,$5e,$c5,$50,$02,$dc ; Octave 4
-        .byte $e3,$17,$7c,$15,$e4,$ee,$35,$bd,$8a,$a0,$04,$b9 ; Octave 5
-        .byte $c6,$2e,$f8,$2a,$c9,$dc,$6a,$7a,$14,$40,$08,$73 ; Octave 6
-        .byte $8c,$5d,$f1,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
-    famistudio_exp_note_table_msb:
-    famistudio_n163_note_table_msb:
-        .byte $00
-        .byte $01,$01,$01,$02,$02,$02,$02,$02,$02,$02,$03,$03 ; Octave 0
-        .byte $03,$03,$03,$04,$04,$04,$04,$05,$05,$05,$06,$06 ; Octave 1
-        .byte $06,$07,$07,$08,$08,$08,$09,$0a,$0a,$0b,$0c,$0c ; Octave 2
-        .byte $0d,$0e,$0f,$10,$10,$11,$13,$14,$15,$16,$18,$19 ; Octave 3
-        .byte $1a,$1c,$1e,$20,$21,$23,$26,$28,$2a,$2d,$30,$32 ; Octave 4
-        .byte $35,$39,$3c,$40,$43,$47,$4c,$50,$55,$5a,$60,$65 ; Octave 5
-        .byte $6b,$72,$78,$80,$87,$8f,$98,$a1,$ab,$b5,$c0,$cb ; Octave 6
-        .byte $d7,$e4,$f1,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
-.endif
-.if FAMISTUDIO_EXP_N163_CHN_CNT = 7
-    famistudio_exp_note_table_lsb:
-    famistudio_n163_note_table_lsb:
-        .byte $00
-        .byte $f6,$14,$34,$56,$79,$9f,$c7,$f1,$1e,$4d,$80,$b5 ; Octave 0
-        .byte $ed,$29,$69,$ac,$f3,$3e,$8e,$e3,$3c,$9b,$00,$6a ; Octave 1
-        .byte $db,$53,$d2,$58,$e6,$7d,$1d,$c6,$79,$37,$00,$d5 ; Octave 2
-        .byte $b7,$a6,$a4,$b0,$cd,$fa,$3a,$8c,$f3,$6e,$01,$ab ; Octave 3
-        .byte $6f,$4d,$48,$61,$9a,$f5,$74,$19,$e6,$dd,$02,$56 ; Octave 4
-        .byte $de,$9b,$91,$c3,$35,$eb,$e8,$32,$cc,$bb,$04,$ad ; Octave 5
-        .byte $bc,$36,$22,$86,$6b,$d6,$d1,$64,$98,$76,$09,$5b ; Octave 6
-        .byte $79,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
-    famistudio_exp_note_table_msb:
-    famistudio_n163_note_table_msb:
-        .byte $00
-        .byte $01,$02,$02,$02,$02,$02,$02,$02,$03,$03,$03,$03 ; Octave 0
-        .byte $03,$04,$04,$04,$04,$05,$05,$05,$06,$06,$07,$07 ; Octave 1
-        .byte $07,$08,$08,$09,$09,$0a,$0b,$0b,$0c,$0d,$0e,$0e ; Octave 2
-        .byte $0f,$10,$11,$12,$13,$14,$16,$17,$18,$1a,$1c,$1d ; Octave 3
-        .byte $1f,$21,$23,$25,$27,$29,$2c,$2f,$31,$34,$38,$3b ; Octave 4
-        .byte $3e,$42,$46,$4a,$4f,$53,$58,$5e,$63,$69,$70,$76 ; Octave 5
-        .byte $7d,$85,$8d,$95,$9e,$a7,$b1,$bc,$c7,$d3,$e0,$ed ; Octave 6
-        .byte $fb,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
-.endif
-.if FAMISTUDIO_EXP_N163_CHN_CNT = 8
-    famistudio_exp_note_table_lsb:
-    famistudio_n163_note_table_lsb:
-        .byte $00
-        .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 0
-        .byte $7d,$c1,$0a,$57,$a8,$fe,$59,$ba,$20,$8d,$00,$7a ; Octave 1
-        .byte $fb,$83,$14,$ae,$50,$fd,$b3,$74,$41,$1a,$00,$f4 ; Octave 2
-        .byte $f6,$07,$29,$5c,$a1,$fa,$67,$e9,$83,$35,$01,$e8 ; Octave 3
-        .byte $ec,$0f,$52,$b8,$43,$f4,$ce,$d3,$06,$6a,$02,$d1 ; Octave 4
-        .byte $d9,$1f,$a5,$71,$86,$e8,$9c,$a7,$0d,$d5,$05,$a2 ; Octave 5
-        .byte $b2,$3e,$4b,$e3,$0c,$d0,$38,$4e,$1b,$ab,$ff,$ff ; Octave 6
-        .byte $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
-    famistudio_exp_note_table_msb:
-    famistudio_n163_note_table_msb:
-        .byte $00
-        .byte $02,$02,$02,$02,$02,$02,$03,$03,$03,$03,$04,$04 ; Octave 0
-        .byte $04,$04,$05,$05,$05,$05,$06,$06,$07,$07,$08,$08 ; Octave 1
-        .byte $08,$09,$0a,$0a,$0b,$0b,$0c,$0d,$0e,$0f,$10,$10 ; Octave 2
-        .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 3
-        .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 4
-        .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 5
-        .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$ff,$ff ; Octave 6
-        .byte $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
-.endif
+famistudio_exp_note_table_lsb:
+famistudio_n163_note_table_lsb:
+    .if FAMISTUDIO_CFG_PAL_SUPPORT
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 1
+            .include "NoteTables/famistudio_n163_note_table_pal_1ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 2
+            .include "NoteTables/famistudio_n163_note_table_pal_2ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 3
+            .include "NoteTables/famistudio_n163_note_table_pal_3ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 4
+            .include "NoteTables/famistudio_n163_note_table_pal_4ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 5
+            .include "NoteTables/famistudio_n163_note_table_pal_5ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 6
+            .include "NoteTables/famistudio_n163_note_table_pal_6ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 7
+            .include "NoteTables/famistudio_n163_note_table_pal_7ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 8
+            .include "NoteTables/famistudio_n163_note_table_pal_8ch_lsb.bin"
+        .endif
+    .endif
+    .if FAMISTUDIO_CFG_NTSC_SUPPORT
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 1
+            .include "NoteTables/famistudio_n163_note_table_1ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 2
+            .include "NoteTables/famistudio_n163_note_table_2ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 3
+            .include "NoteTables/famistudio_n163_note_table_3ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 4
+            .include "NoteTables/famistudio_n163_note_table_4ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 5
+            .include "NoteTables/famistudio_n163_note_table_5ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 6
+            .include "NoteTables/famistudio_n163_note_table_6ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 7
+            .include "NoteTables/famistudio_n163_note_table_7ch_lsb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 8
+            .include "NoteTables/famistudio_n163_note_table_8ch_lsb.bin"
+        .endif
+    .endif
+famistudio_exp_note_table_msb:
+famistudio_n163_note_table_msb:
+    .if FAMISTUDIO_CFG_PAL_SUPPORT
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 1
+            .include "NoteTables/famistudio_n163_note_table_pal_1ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 2
+            .include "NoteTables/famistudio_n163_note_table_pal_2ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 3
+            .include "NoteTables/famistudio_n163_note_table_pal_3ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 4
+            .include "NoteTables/famistudio_n163_note_table_pal_4ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 5
+            .include "NoteTables/famistudio_n163_note_table_pal_5ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 6
+            .include "NoteTables/famistudio_n163_note_table_pal_6ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 7
+            .include "NoteTables/famistudio_n163_note_table_pal_7ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 8
+            .include "NoteTables/famistudio_n163_note_table_pal_8ch_msb.bin"
+        .endif
+    .endif
+    .if FAMISTUDIO_CFG_NTSC_SUPPORT
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 1
+            .include "NoteTables/famistudio_n163_note_table_1ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 2
+            .include "NoteTables/famistudio_n163_note_table_2ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 3
+            .include "NoteTables/famistudio_n163_note_table_3ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 4
+            .include "NoteTables/famistudio_n163_note_table_4ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 5
+            .include "NoteTables/famistudio_n163_note_table_5ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 6
+            .include "NoteTables/famistudio_n163_note_table_6ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 7
+            .include "NoteTables/famistudio_n163_note_table_7ch_msb.bin"
+        .endif
+        .if FAMISTUDIO_EXP_N163_CHN_CNT = 8
+            .include "NoteTables/famistudio_n163_note_table_8ch_msb.bin"
+        .endif
+    .endif
 .endif
 
 ; For a given channel, returns the index of the volume envelope.

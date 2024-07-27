@@ -1230,7 +1230,7 @@ namespace FamiStudio
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizeNtsc, out var _);
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizePal, out var _);
 
-                                if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
+                                if (machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)
                                     stepSizeNtsc = stepSizePal;
@@ -1468,7 +1468,7 @@ namespace FamiStudio
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTablePal, true, true, out _, out int stepSizePal, out _);
 
-                                if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
+                                if (machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)
                                     stepSizeNtsc = stepSizePal;
@@ -2208,11 +2208,13 @@ namespace FamiStudio
                     if (project.SoundEngineUsesExtendedInstruments)
                         Log.LogMessage(LogSeverity.Info, $"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
 
+                    // Non-standard tuning
                     if (project.Tuning != 440)
                     {
-                        var noteTableFilename = Path.ChangeExtension(filename, ".notetable.txt"); ;
-                        Log.LogMessage(LogSeverity.Info, $"Project uses non-standard tuning, the note tables where dumped in '{noteTableFilename}'. You will need to manually patch in the sound engine code to hear the correct tuning.");
-                        NesApu.DumpNoteTableSetToFile(project.Tuning, noteTableFilename);
+                        Log.LogMessage(LogSeverity.Info, "Project uses non-standard tuning, the note tables will be dumped.");
+                        Log.LogMessage(LogSeverity.Info, "You will need to use these in the sound engine to hear the correct tuning:");
+
+                        NesApu.DumpNoteTableToFile(project.Tuning, NesApu.GetActiveNoteTableNames(project));
                     }
                 }
             }
@@ -2384,21 +2386,21 @@ namespace FamiStudio
 
                     var noteTable = (ushort[])null;
 
-                    if (pair[0].StartsWith("famistudio_s5b_note_table"))
+                    if (pair[0].StartsWith(NesApu.NoteTableNames.S5B))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.S5BSquare1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_n163_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.N163Prefix))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.N163Wave1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_vrc7_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.Vrc7))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Vrc7Fm1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_fds_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.Fds))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.FdsWave, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_saw_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.Saw))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Vrc6Saw, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_epsm_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.Epsm))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.EPSMFm1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_epsm_s_note_table"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.EpsmS))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.EPSMSquare1, pal, numN163Channels, tuning);
-                    else if (pair[0].StartsWith("famistudio_note_table") || pair[0].StartsWith("_FT2NoteTable"))
+                    else if (pair[0].StartsWith(NesApu.NoteTableNames.NTSC) || pair[0].StartsWith("_FT2NoteTable"))
                         noteTable = NesApu.GetNoteTableForChannelType(ChannelType.Square1, pal, numN163Channels, tuning);
 
                     if (noteTable == null)
@@ -2423,8 +2425,8 @@ namespace FamiStudio
 
         public static bool PatchNoteTable(byte[] data, string tblFile, int tuning, int machine, int numN163Channels)
         {
-            var pal = machine == MachineType.PAL;
-            if (!PatchNoteTableInternal(data, tblFile, 0, tuning, pal, numN163Channels))
+            var ntsc = machine == MachineType.NTSC;
+            if (!PatchNoteTableInternal(data, tblFile, 0, tuning, !ntsc, numN163Channels))
             {
                 return false;
             }
@@ -2432,7 +2434,7 @@ namespace FamiStudio
             // For dual, we need to patch the 2 note tables that are back to back.
             if (machine == MachineType.Dual)
             {
-                if (!PatchNoteTableInternal(data, tblFile, 97, tuning, true, numN163Channels))
+                if (!PatchNoteTableInternal(data, tblFile, 97, tuning, false, numN163Channels))
                 {
                     return false;
                 }

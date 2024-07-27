@@ -545,9 +545,9 @@ namespace FamiStudio
                     return new ChannelStateDpcm(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Vrc6Square1:
                 case ChannelType.Vrc6Square2:
-                    return new ChannelStateVrc6Square(this, apuIdx, channelType, tuning);
+                    return new ChannelStateVrc6Square(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Vrc6Saw:
-                    return new ChannelStateVrc6Saw(this, apuIdx, channelType, tuning);
+                    return new ChannelStateVrc6Saw(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:
                 case ChannelType.Vrc7Fm3:
@@ -556,10 +556,10 @@ namespace FamiStudio
                 case ChannelType.Vrc7Fm6:
                     return new ChannelStateVrc7(this, apuIdx, channelType, tuning);
                 case ChannelType.FdsWave:
-                    return new ChannelStateFds(this, apuIdx, channelType, tuning);
+                    return new ChannelStateFds(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Mmc5Square1:
                 case ChannelType.Mmc5Square2:
-                    return new ChannelStateMmc5Square(this, apuIdx, channelType, tuning);
+                    return new ChannelStateMmc5Square(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.N163Wave1:
                 case ChannelType.N163Wave2:
                 case ChannelType.N163Wave3:

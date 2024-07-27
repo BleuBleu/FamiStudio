@@ -140,8 +140,6 @@ namespace FamiStudio
                 if (songIds.Length == 0)
                     return false;
 
-                Debug.Assert(!originalProject.UsesAnyExpansionAudio || machine == MachineType.NTSC);
-
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
                 project.SoundEngineUsesExtendedInstruments = true;
