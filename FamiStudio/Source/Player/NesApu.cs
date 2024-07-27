@@ -377,8 +377,8 @@ namespace FamiStudio
             {
                 NoteTableNames.NTSC   => tableSet.NoteTableNTSC,
                 NoteTableNames.PAL    => tableSet.NoteTablePAL,
-                NoteTableNames.S5B    => tableSet.NoteTableNTSC, // Not sure if S5B is needed here, adding it in case
-                NoteTableNames.S5BPAL => tableSet.NoteTablePAL,
+                NoteTableNames.S5B    => tableSet.NoteTableNTSC, // Not sure if S5B is needed here
+                NoteTableNames.S5BPAL => tableSet.NoteTablePAL,  // No harm in having it in case
                 NoteTableNames.Saw    => tableSet.NoteTableVrc6Saw,
                 NoteTableNames.SawPAL => tableSet.NoteTableVrc6SawPAL,
                 NoteTableNames.Vrc7   => tableSet.NoteTableVrc7,
