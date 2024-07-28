@@ -66,7 +66,7 @@ struct Nes_Square : Nes_Envelope
 	int sweep_delay;
 	int min_period;
 	
-	typedef Blip_Synth<blip_good_quality,15> Synth;
+	typedef Blip_Synth<blip_good_quality,30> Synth; // Should in theory be 30 since it's shared
 	const Synth* synth; // shared between squares
 	
 	Nes_Square() : min_period(8) {}

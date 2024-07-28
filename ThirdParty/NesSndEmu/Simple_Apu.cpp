@@ -421,8 +421,8 @@ const int    sample_shift     = blip_sample_bits - 16;
 const double sample_scale_inv = (1 << sample_shift) * 65535.0;
 const double sample_scale     = 1.0 / sample_scale_inv;
 
-// Using the 3 * tri (15) + 2 * noise (15) + dmc (127) approximation = maximum value is 202.
-const float tnd_scale = 202.0f;
+// Using approximation of 2.75 * tri (15) + 1.85 * noise (15) + dmc (127) = maximum value is 196.
+const float tnd_scale = 196.0f;
 
 // Max volume squares (15 + 15) = 30
 const float sq_scale = 30.0f;
@@ -449,7 +449,7 @@ inline float nonlinearize(float sample_float)
 
 inline float mix_squares(float sample_float)
 {
-    return 95.88f / (8128.0f / (sample_float * sq_scale) + 100.0f);
+    return 95.52f / (8128.0f / (sample_float * sq_scale) + 100.0f);
 }
 
 long Simple_Apu::read_samples( sample_t* out, long count )
