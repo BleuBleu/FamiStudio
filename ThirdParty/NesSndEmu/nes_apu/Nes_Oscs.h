@@ -94,10 +94,8 @@ struct Nes_Triangle : Nes_Osc
 	void reset() {
 		linear_counter = 0;
 		// According to NESDev, the triangle actually initialises on 
-		// level 15 after a reset, which is phase 1 here. This means 
-		// TND starts on 45, not 0. Songs with no triangle would be 
-		// affected if we start on 0 (louder DPCM and Noise than hardware).
-		// TODO: Workaround the initial pop caused by this.
+		// level 15 after a reset, which is phase 1 here. Songs with no triangle 
+		// would be affected if we start on 0 (louder DPCM and Noise than hardware).
 		phase = 1;
 		Nes_Osc::reset();
 	}
