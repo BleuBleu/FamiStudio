@@ -607,6 +607,8 @@ namespace FamiStudio
         {
             Localization.Localize(this);
             SetTickEnabled(true);
+            supportsLongPress = true;
+            supportsDoubleClick = true;
         }
 
         private void UpdateRenderCoords()
@@ -4479,7 +4481,7 @@ namespace FamiStudio
             captureMouseY = y;
             captureScrollX = scrollX;
             captureScrollY = scrollY;
-            Capture = true;
+            CapturePointer();
         }
 
         private void StartCaptureOperation(int x, int y, CaptureOperation op, bool allowSnap = false, int noteIdx = -1, int offsetX = 0, int offsetY = 0)
@@ -4796,11 +4798,11 @@ namespace FamiStudio
 
                 draggedSample = null;
                 captureOperation = CaptureOperation.None;
-                Capture = false;
                 panning = false;
                 if (!Platform.IsMobile)
                     highlightNoteAbsIndex = -1;
 
+                ReleasePointer();
                 MarkDirty();
             }
         }
@@ -4817,12 +4819,13 @@ namespace FamiStudio
                 }
 
                 MarkDirty();
+                ReleasePointer();
                 App.StopInstrument();
 
                 captureOperation = CaptureOperation.None;
-                Capture = false;
                 panning = false;
                 canFling = false;
+
                 if (!Platform.IsMobile)
                     highlightNoteAbsIndex = -1;
 
@@ -6904,7 +6907,7 @@ namespace FamiStudio
                 }
 
                 if (menu.Count > 0)
-                    App.ShowContextMenu(left + x, top + y, menu.ToArray());
+                    App.ShowContextMenuAsync(menu.ToArray());
 
                 return true;
             }
@@ -6925,7 +6928,7 @@ namespace FamiStudio
 
                 if (location.IsInSong(Song))
                 {
-                    App.ShowContextMenu(left + x, top + y, new[]
+                    App.ShowContextMenuAsync(new[]
                     {
                         new ContextMenuOption("MenuSelectPattern", SelectPatternContext, () => { SelectPattern(location.PatternIndex); }),
                         new ContextMenuOption("MenuSelectAll", SelectAllContext, () => { SelectAll(); }),
@@ -7001,7 +7004,7 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption(RelativeEffectScalingContext, RelativeValueScalingContextTooltip, () => { SetRelativeEffectScaling(true); },  () =>  relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.After));
 
                 if (menu.Count > 0)
-                    App.ShowContextMenu(left + x, top + y, menu.ToArray());
+                    App.ShowContextMenuAsync(menu.ToArray());
 
                 return true;
             }
@@ -7120,7 +7123,7 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption(RelativeValueScalingContext, RelativeValueScalingContextTooltip, () => { SetRelativeEffectScaling(true); }, () => relativeEffectScaling ? ContextMenuCheckState.Radio : ContextMenuCheckState.None));
 
                 if (menu.Count > 0)
-                    App.ShowContextMenu(left + x, top + y, menu.ToArray());
+                    App.ShowContextMenuAsync(menu.ToArray());
 
                 return true;
             }
@@ -7169,7 +7172,7 @@ namespace FamiStudio
             }
 
             if (menu.Count > 0)
-                App.ShowContextMenu(left + x, top + y, menu.ToArray());
+                App.ShowContextMenuAsync(menu.ToArray());
 
             return true;
         }
@@ -7190,7 +7193,7 @@ namespace FamiStudio
                     if (Platform.IsMobile)
                         highlightDPCMSample = noteValue;
 
-                    App.ShowContextMenu(left + x, top + y, new[]
+                    App.ShowContextMenuAsync(new[]
                     {
                         new ContextMenuOption("MenuDelete", RemoveDPCMSampleContext, () => { ClearDPCMSampleMapping(noteValue); }),
                         new ContextMenuOption("MenuProperties", DPCMSamplePropertiesContext, () => { EditDPCMSampleMappingProperties(new Point(x, y), mapping); }),
@@ -7967,10 +7970,9 @@ namespace FamiStudio
                 var pitchStrings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
 
                 var dlg = new PropertyDialog(ParentWindow, AssignDPCMSampleTitle, 300);
-                dlg.Properties.AddLabel(null, SelectSampleToAssignLabel.Colon); // 0
-                dlg.Properties.AddDropDownList(Platform.IsMobile ? SelectSampleToAssignLabel : null, sampleNames.ToArray(), sampleNames[0]); // 1
-                dlg.Properties.AddDropDownList(PitchLabel.Colon, pitchStrings, pitchStrings[pitchStrings.Length - 1]); // 2
-                dlg.Properties.AddCheckBox(LoopLabel.Colon, false); // 3
+                dlg.Properties.AddDropDownList(SelectSampleToAssignLabel.Colon, sampleNames.ToArray(), sampleNames[0], null, PropertyFlags.ForceFullWidth); // 0
+                dlg.Properties.AddDropDownList(PitchLabel.Colon, pitchStrings, pitchStrings[pitchStrings.Length - 1]); // 1
+                dlg.Properties.AddCheckBox(LoopLabel.Colon, false); // 2
                 dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 dlg.Properties.Build();
 
@@ -7979,10 +7981,10 @@ namespace FamiStudio
                     if (r == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id, -1, TransactionFlags.StopAudio);
-                        var sampleName = dlg.Properties.GetPropertyValue<string>(1);
+                        var sampleName = dlg.Properties.GetPropertyValue<string>(0);
                         var mapping = editInstrument.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
-                        mapping.Pitch = dlg.Properties.GetSelectedIndex(2);
-                        mapping.Loop = dlg.Properties.GetPropertyValue<bool>(3);
+                        mapping.Pitch = dlg.Properties.GetSelectedIndex(1);
+                        mapping.Loop = dlg.Properties.GetPropertyValue<bool>(2);
                         App.UndoRedoManager.EndTransaction();
                         DPCMSampleMapped?.Invoke(noteValue);
                     }
@@ -9447,7 +9449,7 @@ namespace FamiStudio
                     options[i + 2] = new ContextMenuOption(text, tooltip, () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0 ? ContextMenuSeparator.Before : ContextMenuSeparator.None);
                 }
 
-                App.ShowContextMenu(left + e.X, top + e.Y, options);
+                App.ShowContextMenuAsync(options);
                 return true;
             }
 
@@ -9843,9 +9845,9 @@ namespace FamiStudio
                 UpdateRenderCoords();
                 ClampScroll();
                 MarkDirty();
+                ReleasePointer();
 
                 captureOperation = CaptureOperation.None;
-                Capture = false;
                 panning = false;
             }
         }

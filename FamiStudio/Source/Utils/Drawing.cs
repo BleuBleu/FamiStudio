@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 // This is basically the handful of simple structs we still used from System.Drawing
 // and is done in preparation for an eventual migration to more modern .NET versions.
@@ -176,9 +178,14 @@ namespace FamiStudio
             this.y = y;
         }
 
-        public static Point operator +(Point pt, Size sz)
+        public static Point operator+(Point pt, Size sz)
         {
             return new Point(pt.x + sz.Width, pt.y + sz.Height);
+        }
+
+        public static Point operator-(Point p1, Point p2)
+        {
+            return new Point(p1.x - p2.x, p1.y - p2.y);
         }
 
         public override string ToString()
@@ -219,6 +226,36 @@ namespace FamiStudio
             width  = w;
             height = h;
         }
+
+        public static bool operator ==(Size s1, Size s2)
+        {
+            return s1.width == s2.width && s1.height == s2.height;
+        }
+
+        public static bool operator !=(Size s1, Size s2)
+        {
+            return !(s1 == s2);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Size s)
+            {
+                return width == s.width && height == s.height;
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Utils.HashCombine(width, height);
+        }
+
+        public override string ToString()
+        {
+            return $"{width}x{height}";
+        }
     }
 
     public struct Rectangle
@@ -239,6 +276,11 @@ namespace FamiStudio
         public int Top => y;
         public int Right => x + width;
         public int Bottom => y + height;
+        public int Area => width * height;
+
+        public Point Min => new Point(x, y);    
+        public Point Max => new Point(x + width, y + height);
+
         public bool IsEmpty => height == 0 && width == 0 && x == 0 && y == 0;
 
         public Rectangle(int x, int y, int width, int height)
@@ -280,6 +322,11 @@ namespace FamiStudio
         {
             return p.X >= x && p.X < x + width &&
                    p.Y >= y && p.Y < y + height;
+        }
+
+        public bool Contains(Rectangle r)
+        {
+            return Contains(r.Min) && Contains(r.Max);
         }
 
         public void Offset(int x, int y)
@@ -335,6 +382,46 @@ namespace FamiStudio
             }
 
             return Empty;
+        }
+
+        // returns a - b (Not tested).
+        public static Rectangle[] Difference(Rectangle a, Rectangle b) 
+        {
+            if (a.Area == 0)
+            {
+                return null;
+            }
+            
+            if (a.Equals(b))
+            {
+                return null;
+            }
+
+            if (Intersection(a, b).Area == 0)
+            {
+                return new Rectangle[] { a };
+            }
+
+            var rt = new Rectangle(a.Left, a.Top, a.Width, Math.Max(b.Top, 0));
+            var rl = new Rectangle(a.Left, b.Top, Math.Max(b.Left - a.Left, 0), b.Height);
+            var rr = new Rectangle(b.Right, b.Top, Math.Max(a.Right - b.Right, 0), b.Height);
+            var rb = new Rectangle(a.Left, b.Bottom, a.Width, Math.Max(a.Height - b.Bottom, 0));
+
+            var count =
+                (rt.Area > 0 ? 1 : 0) +
+                (rl.Area > 0 ? 1 : 0) +
+                (rr.Area > 0 ? 1 : 0) +
+                (rb.Area > 0 ? 1 : 0);
+
+            var i = 0;
+            var result = new Rectangle[count];
+
+            if (rt.Area > 0) result[i++] = rt;
+            if (rl.Area > 0) result[i++] = rl;
+            if (rr.Area > 0) result[i++] = rr;
+            if (rb.Area > 0) result[i++] = rb;
+
+            return result;
         }
     }
 

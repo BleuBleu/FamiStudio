@@ -17,7 +17,6 @@ namespace FamiStudio
 
         // Title
         LocalizedString DialogTitle;
-        LocalizedString DialogVerb;
 
         // Sections
         LocalizedString[] SectionNames = new LocalizedString[(int)ProjectSection.Max];
@@ -90,8 +89,7 @@ namespace FamiStudio
 
             project = proj;
 
-            dialog = new MultiPropertyDialog(win, DialogTitle, 550);
-            dialog.SetVerb(DialogVerb, true);
+            dialog = new MultiPropertyDialog(win, DialogTitle, 550, true);
 
             for (int i = 0; i < (int)ProjectSection.Max; i++)
             {

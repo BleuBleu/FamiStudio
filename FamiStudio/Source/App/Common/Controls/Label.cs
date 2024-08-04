@@ -8,30 +8,31 @@ namespace FamiStudio
     {
         protected int labelOffsetX;
         protected string text;
+        protected string multilineSplitText;
         protected bool multiline;
-        protected bool bold;
         protected bool centered;
         protected bool ellipsis;
+        private Font font;
         protected Color color = Theme.LightGreyColor1;
         protected Color disabledColor = Theme.MediumGreyColor1;
 
         public Label(string txt, bool multi = false)
         {
-            text = txt;
-            height = DpiScaling.ScaleForWindow(24);
+            text = txt ?? "";
+            height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
             multiline = multi;
         }
 
         public bool Multiline
         {
             get { return multiline; }
-            set { SetAndMarkDirty(ref multiline, value); }
+            set { if (SetAndMarkDirty(ref multiline, value)) AdjustHeightForMultiline(); }
         }
 
-        public bool Bold
+        public Font Font
         {
-            get { return bold; }
-            set { SetAndMarkDirty(ref bold, value); }
+            get { return font; }
+            set { font = value; MarkDirty(); }
         }
 
         public bool Centered
@@ -58,87 +59,52 @@ namespace FamiStudio
             set { disabledColor = value; MarkDirty(); }
         }
 
-        private Font GetFont()
-        {
-            return bold ? Fonts.FontMediumBold : Fonts.FontMedium;
-        }
-
         public void AutosizeWidth()
         {
             Debug.Assert(!multiline);
-            width = GetFont().MeasureString(text, false);
+            width = font.MeasureString(text, false);
         }
 
-        public void AdjustHeightForMultiline()
+        public void AutoSizeHeight()
         {
-            if (multiline)
+            if (!multiline)
             {
-                var actualWidth = width - labelOffsetX;
-                var input = text;
-                var output = "";
+                height = font.LineHeight;
+            }
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            AdjustHeightForMultiline();
+        }
+
+        private void AdjustHeightForMultiline()
+        {
+            if (multiline && fonts != null)
+            {
                 var numLines = 0;
-                var font = GetFont();
-
-                while (true)
-                {
-                    var numCharsWeCanFit = font.GetNumCharactersForSize(input, actualWidth);
-                    var minimunCharsPerLine = Math.Max((int)(numCharsWeCanFit * 0.62), numCharsWeCanFit - 20);
-                    var n = numCharsWeCanFit;
-                    var done = n == input.Length;
-                    
-                    if (!done)
-                    {
-                        while (!char.IsWhiteSpace(input[n]) && input[n] != '\u201C' && char.GetUnicodeCategory(input[n]) != UnicodeCategory.OpenPunctuation)
-                        {
-                            n--;
-                            // No whitespace or punctuation found, let's chop in the middle of a word.
-                            if (n <= minimunCharsPerLine)
-                            {
-                                n = numCharsWeCanFit;
-                                if (char.IsPunctuation(input[n]))
-                                    n--;
-                                break;
-                            }
-                        }
-                    }
-
-                    output += input.Substring(0, n);
-                    output += "\n";
-                    numLines++;
-
-                    if (!done)
-                    {
-                        while (char.IsWhiteSpace(input[n]))
-                            n++;
-                    }
-
-                    input = input.Substring(n);
-
-                    if (done)
-                    {
-                        break;
-                    }
-                }
-
-                text = output;
-
-                Resize(width, font.LineHeight * numLines);
+                multilineSplitText = font.SplitLongString(text, width - labelOffsetX, Localization.IsChinese, out numLines);
+                Resize(width, font.LineHeight * numLines, false);
             }
         }
 
         public string Text
         {
             get { return text; }
-            set { text = value; MarkDirty(); }
+            set { if (SetAndMarkDirty(ref text, value)) AdjustHeightForMultiline(); }
         }
 
         public int MeasureWidth()
         {
-            return GetFont().MeasureString(text, false);
+            return font.MeasureString(text, false);
         }
 
         protected override void OnAddedToContainer()
         {
+            if (font == null)
+            {
+                font = fonts.FontMedium;
+            }
             AdjustHeightForMultiline();
         }
 
@@ -146,11 +112,10 @@ namespace FamiStudio
         {
             var c = g.GetCommandList();
             var brush = enabled ? color : disabledColor;
-            var font = GetFont();
 
             if (multiline)
             {
-                var lines = text.Split('\n');
+                var lines = multilineSplitText.Split('\n');
 
                 for (int i = 0; i < lines.Length; i++)
                 {

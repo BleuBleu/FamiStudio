@@ -27,6 +27,15 @@
         <item name="android:background">#2a3033</item>
     </style>
   
+    <style name="TextInputDialogStyle" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:fontFamily">@font/quicksand</item>
+        <item name="colorAccent">@color/LightGreyColor2</item>
+        <item name="android:textColorPrimary">@color/LightGreyColor2</item>
+        <item name="android:background">@color/DarkGreyColor1</item>
+        <item name="android:colorPrimary">@color/DarkGreyColor1</item>
+        <item name="android:colorAccent">@color/DarkGreyColor1</item>
+    </style>
+
     <style name="TextBase">
         <item name="android:fontFamily">@font/quicksand</item>
         <item name="android:textColor">@color/light_grey</item>

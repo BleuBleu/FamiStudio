@@ -229,6 +229,8 @@ namespace FamiStudio
         {
             Localization.Localize(this);
             SetTickEnabled(true);
+            supportsLongPress = true;
+            supportsDoubleClick = true;
         }
 
         private Song Song
@@ -1233,7 +1235,7 @@ namespace FamiStudio
             captureMouseY = y;
             captureScrollX = scrollX;
             captureScrollY = scrollY;
-            Capture = true;
+            CapturePointer();
         }
 
         private void StartCaptureOperation(int x, int y, CaptureOperation op)
@@ -1732,7 +1734,7 @@ namespace FamiStudio
             {
                 var channelIdx = GetChannelIndexForCoord(y);
                
-                App.ShowContextMenu(left + x, top + y, new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuMute", ToggleMuteLabel, () => { App.ToggleChannelActive(channelIdx); }),
                     new ContextMenuOption("MenuSolo", ToggleSoloLabel, () => { App.ToggleChannelSolo(channelIdx); }),
@@ -1760,7 +1762,7 @@ namespace FamiStudio
                 {
                     var isLoopPoint = Song.LoopPoint == patternIdx;
 
-                    App.ShowContextMenu(left + x, top + y, new[]
+                    App.ShowContextMenuAsync(new[]
                     {
                         new ContextMenuOption(isLoopPoint ? "MenuClearLoopPoint" :  "MenuLoopPoint", isLoopPoint ?  ClearLoopPointLabel : SetLoopPointLabel, () => { SetLoopPoint(patternIdx); } ),
                         new ContextMenuOption("MenuCustomPatternSettings", CustomPatternSettingsLabel, () => { EditPatternCustomSettings(new Point(x, y), patternIdx); } )
@@ -1841,7 +1843,7 @@ namespace FamiStudio
                 }
 
                 if (menu.Count > 0)
-                    App.ShowContextMenu(left + x, top + y, menu.ToArray());
+                    App.ShowContextMenuAsync(menu.ToArray());
                 
                 return true;
             }
@@ -2432,9 +2434,9 @@ namespace FamiStudio
 
                 }
 
-                Capture = false;
                 panning = false;
                 captureOperation = CaptureOperation.None;
+                ReleasePointer();
                 MarkDirty();
             }
         }
@@ -2480,11 +2482,11 @@ namespace FamiStudio
                 if (App.UndoRedoManager.HasTransactionInProgress)
                     App.UndoRedoManager.AbortTransaction();
 
-                Capture = false;
                 panning = false;
                 canFling = false;
                 captureOperation = CaptureOperation.None;
 
+                ReleasePointer();
                 MarkDirty();
             }
             else
@@ -3030,7 +3032,7 @@ namespace FamiStudio
             bool multipleChannelsSelected = selection && IsSelectionValid() && (selectionMax.ChannelIndex != selectionMin.ChannelIndex);
             bool multiplePatternsSelected = selection && IsSelectionValid() && ((selectionMax.ChannelIndex != selectionMin.ChannelIndex) || (selectionMin.PatternIndex != selectionMax.PatternIndex));
 
-            var dlg = new PropertyDialog(ParentWindow, PatternPropertiesTitle, new Point(left + pt.X, top + pt.Y), 240);
+            var dlg = new PropertyDialog(ParentWindow, PatternPropertiesTitle, new Point(left + pt.X, top + pt.Y), 240, false, false, false);
             dlg.Properties.AddColoredTextBox(multiplePatternsSelected ? MultiplePatternsSelectedLabel : pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternsSelected);
             dlg.Properties.AddColorPicker(pattern.Color);

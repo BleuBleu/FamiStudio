@@ -21,7 +21,7 @@ namespace FamiStudio
                 foreach (var msg in messages)
                     dialog.Properties.AppendText(0, msg);
 
-                dialog.ShowDialog();
+                dialog.ShowDialogAsync();
             }
         }
 

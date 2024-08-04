@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 
 namespace FamiStudio
@@ -16,25 +17,46 @@ namespace FamiStudio
         public ColorPicker(Color color)
         {
             selectedColor = color;
+            supportsDoubleClick = true;
         }
 
-        public void SetNiceSize(int width)
+        public void SetDesiredWidth(int width, int maxHeight = -1)
         {
             var numColorsX = Theme.CustomColors.GetLength(0);
             var numColorsY = Theme.CustomColors.GetLength(1);
 
-            Resize(width, numColorsY * width / numColorsX);
+            var layoutAspectRatio = width / (float)maxHeight;
+            var colorAspectRatio  = numColorsX / (float)numColorsY;
+
+            var w = width;
+            var h = numColorsY * width / numColorsX;
+
+            if (maxHeight > 0 && h > maxHeight)
+            {
+                var ratio = maxHeight / (float)h;
+                w = (int)Math.Round(w * ratio);
+                h = (int)Math.Round(h * ratio);
+            }
+
+            Resize(w, h);
         }
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            ChangeColor(e.X, e.Y);
+            if (e.Left)
+            {
+                ChangeColor(e.X, e.Y);
+                e.MarkHandled();
+            }
         }
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
             if (e.Left)
+            {
                 ChangeColor(e.X, e.Y);
+                e.MarkHandled();
+            }
         }
 
         protected override void OnMouseDoubleClick(PointerEventArgs e)
@@ -43,6 +65,7 @@ namespace FamiStudio
             {
                 ChangeColor(e.X, e.Y);
                 DoubleClicked?.Invoke(this);
+                e.MarkHandled();
             }
         }
 

@@ -25,13 +25,13 @@ namespace FamiStudio
         public Color LineColor { get => lineColor; set => lineColor = value; }
         public int VirtualSize { get => virtualSize; set => SetAndMarkDirty(ref virtualSize, value); }
         public int ScrollBarThickness => scrollbarThickness;
-        public override bool SupportsDoubleClick => false;
 
         public delegate void ScrolledDelegate(ScrollBar sender, int pos);
         public event ScrolledDelegate Scrolled;
 
         public ScrollBar()
         {
+            supportsDoubleClick = false;
             UpdateThickness();
         }
 
@@ -58,7 +58,7 @@ namespace FamiStudio
                 captureScroll = scrollValue;
                 UpdateScroll(coord);
                 scrolling = true;
-                Capture = true;
+                CapturePointer();
             }
         }
 
@@ -67,7 +67,7 @@ namespace FamiStudio
             if (scrolling)
             {
                 scrolling = false;
-                Capture = false;
+                ReleasePointer();
                 UpdateScroll(horizontal ? e.X : e.Y);
                 MarkDirty();
             }

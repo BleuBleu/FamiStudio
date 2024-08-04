@@ -1,23 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Collections.Generic;
-using Android.Widget;
 using Android.App;
 using Android.Content;
-using Android.Graphics.Drawables;
-using Android.OS;
-using Android.Opengl;
-using Android.Runtime;
-using Android.Util;
-using Android.Views;
 using Android.Content.PM;
-using AndroidX.Core.Graphics;
-using AndroidX.Core.View;
+using Android.Opengl;
+using Android.OS;
+using Android.Runtime;
+using Android.Views;
+using Android.Views.InputMethods;
+using Android.Widget;
 using AndroidX.AppCompat.App;
 using AndroidX.Core.Content;
+using AndroidX.Core.Graphics;
+using AndroidX.Core.View;
 using Javax.Microedition.Khronos.Opengles;
-using Google.Android.Material.BottomSheet;
 
 namespace FamiStudio
 {
@@ -33,19 +31,21 @@ namespace FamiStudio
         private Fonts fonts;
         private bool dirty = true;
 
-        // For context menus.
-        BottomSheetDialog contextMenuDialog;
-
         // For property or multi-property dialogs.
         private bool appWasAlreadyRunning;
         private bool glThreadIsRunning;
         private static bool activityRunning;
         private long lastFrameTime = -1;
         private object renderLock = new object();
-        private BaseDialogActivityInfo activeDialog;
-        private BaseDialogActivityInfo pendingFinishDialog;
+        private BaseFileActivity currentFileActivity;
+        private BaseFileActivity pendingFinishFileActivity;
+        private int captureCookie;
         private Control captureControl;
         private ModifierKeys modifiers = new ModifierKeys();
+        private Rectangle cachedViewRect;
+
+        private Point doubleTapLocation;
+        private Control doubleTapControl;
 
         private string delayedMessage = null;
         private string delayedMessageTitle = null;
@@ -53,8 +53,9 @@ namespace FamiStudio
 
         public static bool ActivityRunning => activityRunning;
         public static FamiStudioWindow Instance { get; private set; }
-        public BaseDialogActivityInfo ActiveDialog => activeDialog;
-        public bool IsAsyncDialogInProgress => activeDialog != null;
+        public BaseFileActivity CurrentFileActivity => currentFileActivity;
+        public bool IsAsyncFileActivityInProgress => currentFileActivity != null;
+        public bool IsAsyncDialogInProgress => IsAsyncFileActivityInProgress || (container != null && container.IsDialogActive);
 
         public FamiStudio FamiStudio => famistudio;
         public Toolbar ToolBar => container.ToolBar;
@@ -67,20 +68,31 @@ namespace FamiStudio
         public Graphics Graphics => graphics;
         public Fonts Fonts => fonts;
 
-        public int Width  => glSurfaceView.Width;
-        public int Height => glSurfaceView.Height;
-        public Size Size => new Size(glSurfaceView.Width, glSurfaceView.Height);
-        public Point LastMousePosition => new Point(0, 0); // MATTT!
-        public Point LastContextMenuPosition => new Point(0, 0); // MATTT!
-        public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
+        public int Width  => cachedViewRect.Width;
+        public int Height => cachedViewRect.Height;
+        public Size Size => cachedViewRect.Size;
+        public Rectangle Bounds => cachedViewRect;
+        public Point LastMousePosition => Point.Empty;
+        public Point LastContextMenuPosition => Point.Empty;
+        public bool IsLandscape => cachedViewRect.Width > cachedViewRect.Height;
         public bool MobilePianoVisible { get => container.MobilePianoVisible; set => container.MobilePianoVisible = value; }
         public string Text { get; set; }
 
         private GestureDetectorCompat detector;
         private ScaleGestureDetector  scaleDetector;
 
+        public delegate void AppSuspendedDelegate();
+        public event AppSuspendedDelegate AppSuspended;
+
+        private LocalizedString EnterTextLabel;
+        private LocalizedString YesButton;
+        private LocalizedString NoButton;
+        private LocalizedString CancelButton;
+        private LocalizedString OKButton;
+
         public FamiStudioWindow()
         {
+            Localization.Localize(this);
         }
 
         public FamiStudioWindow(FamiStudio f)
@@ -88,34 +100,25 @@ namespace FamiStudio
             Debug.Assert(false);
         }
 
-        public Rectangle Bounds
-        {
-            get
-            {
-                var rect = new Android.Graphics.Rect();
-                glSurfaceView.GetDrawingRect(rect);
-                return new Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());
-            }
-        }
 
         public void SetActiveControl(Control ctrl, bool animate = true)
         {
-            container.SetActiveControl(ctrl, animate);
+            container.SwitchToControl(ctrl, animate);
         }
 
-        private void EnableFullscreenMode(Window win)
+        private void SetFullscreenMode()
         {
             // Fullscreen mode.
-            win.AddFlags(WindowManagerFlags.Fullscreen);
+            Window.AddFlags(WindowManagerFlags.Fullscreen);
 
-            int uiOptions = (int)win.DecorView.SystemUiVisibility;
+            int uiOptions = (int)Window.DecorView.SystemUiVisibility;
 
             uiOptions |= (int)SystemUiFlags.LowProfile;
             uiOptions |= (int)SystemUiFlags.Fullscreen;
-            uiOptions |= (int)SystemUiFlags.HideNavigation;
             uiOptions |= (int)SystemUiFlags.ImmersiveSticky;
+            uiOptions |= (int)SystemUiFlags.HideNavigation;
 
-            win.DecorView.SystemUiVisibility = (StatusBarVisibility)uiOptions;
+            Window.DecorView.SystemUiVisibility = (StatusBarVisibility)uiOptions;
         }
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -123,7 +126,7 @@ namespace FamiStudio
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
 
-            EnableFullscreenMode(Window);
+            SetFullscreenMode();
             ForceScreenOn(false);
 
             Init.InitializeBaseSystems();
@@ -190,65 +193,44 @@ namespace FamiStudio
         public override void OnWindowFocusChanged(bool hasFocus)
         {
             base.OnWindowFocusChanged(hasFocus);
-            EnableFullscreenMode(Window);
+            SetFullscreenMode();
         }
 
         public void StartLoadFileActivityAsync(string mimeType, Action<string> callback)
         {
-            Debug.Assert(activeDialog == null && pendingFinishDialog == null);
-            activeDialog = new LoadDialogActivityInfo(callback);
+            Debug.Assert(currentFileActivity == null && pendingFinishFileActivity == null);
+            currentFileActivity = new LoadActivity(callback);
 
             Intent intent = new Intent(Intent.ActionOpenDocument);
             intent.AddCategory(Intent.CategoryOpenable);
             intent.SetType(mimeType);
-            StartActivityForResult(intent, activeDialog.RequestCode);
+            StartActivityForResult(intent, currentFileActivity.RequestCode);
         }
 
         public void StartSaveFileActivityAsync(string mimeType, string filename, Action<string> callback)
         {
-            Debug.Assert(activeDialog == null && pendingFinishDialog == null);
-            activeDialog = new SaveDialogActivityInfo(callback);
+            Debug.Assert(currentFileActivity == null && pendingFinishFileActivity == null);
+            currentFileActivity = new SaveActivity(callback);
 
             Intent intent = new Intent(Intent.ActionCreateDocument);
             intent.AddCategory(Intent.CategoryOpenable);
             intent.SetType(mimeType);
             intent.PutExtra(Intent.ExtraTitle, filename);
-            StartActivityForResult(intent, activeDialog.RequestCode);
+            StartActivityForResult(intent, currentFileActivity.RequestCode);
             ForceScreenOn(true);
-        }
-
-        public void StartPropertyDialogActivity(Action<DialogResult> callback, PropertyDialog dlg)
-        {
-            Debug.Assert(activeDialog == null);
-            activeDialog = new PropertyDialogActivityInfo(dlg, callback);
-            StartActivityForResult(new Intent(this, typeof(PropertyDialogActivity)), activeDialog.RequestCode);
-        }
-
-        public void StartMultiPropertyDialogActivity(Action<DialogResult> callback, MultiPropertyDialog dlg)
-        {
-            Debug.Assert(activeDialog == null && pendingFinishDialog == null);
-            activeDialog = new MultiPropertyDialogActivityInfo(dlg, callback);
-            StartActivityForResult(new Intent(this, typeof(MultiPropertyDialogActivity)), activeDialog.RequestCode);
-        }
-
-        public void StartTutorialDialogActivity(Action<DialogResult> callback, TutorialDialog dlg)
-        {
-            Debug.Assert(activeDialog == null);
-            activeDialog = new TutorialDialogActivityInfo(dlg, callback);
-            StartActivityForResult(new Intent(this, typeof(TutorialDialogActivity)), activeDialog.RequestCode);
         }
 
         public void StartFileSharingActivity(string filename, Action callback)
         {
-            Debug.Assert(activeDialog == null && pendingFinishDialog == null);
-            activeDialog = new ShareActivityInfo(callback);
+            Debug.Assert(currentFileActivity == null && pendingFinishFileActivity == null);
+            currentFileActivity = new ShareActivity(callback);
 
             var uri = FileProvider.GetUriForFile(this, "org.famistudio.fileprovider", new Java.IO.File(filename), filename); 
 
             Intent shareIntent = new Intent(Intent.ActionSend);
             shareIntent.SetType("*/*");
             shareIntent.PutExtra(Intent.ExtraStream, uri);
-            StartActivityForResult(Intent.CreateChooser(shareIntent, "Share File"), activeDialog.RequestCode);
+            StartActivityForResult(Intent.CreateChooser(shareIntent, "Share File"), currentFileActivity.RequestCode);
         }
 
         public void QueueDelayedMessageBox(string msg, string title)
@@ -318,7 +300,7 @@ namespace FamiStudio
             dlg.Properties.BeginAdvancedProperties();
             dlg.Properties.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
             dlg.Properties.AddCheckBox("CheckBox1", true, "Checkbox tooltip!");
-            dlg.Properties.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX", "Tooltip for slider");
+            dlg.Properties.AddSlider("Slider", 50, 0, 100, (v) => $"Allo {0} XXX", "Tooltip for slider");
 
             dlg.ShowDialogAsync((r) =>
             {
@@ -334,14 +316,14 @@ namespace FamiStudio
         {
             // This happens if the activity was destroyed while inside a dialog. The main activity will 
             // have been re-created and we wont remember what we were doing. Simply ignore. 
-            if (activeDialog == null)
+            if (currentFileActivity == null)
                 return;
 
-            var dialog = activeDialog;
+            var dialog = currentFileActivity;
 
-            if (!activeDialog.IsDialogDone(resultCode))
-                pendingFinishDialog = activeDialog;
-            activeDialog = null;
+            if (!currentFileActivity.IsDialogDone(resultCode))
+                pendingFinishFileActivity = currentFileActivity;
+            currentFileActivity = null;
 
             dialog.OnResult(this, resultCode, data);
 
@@ -350,10 +332,10 @@ namespace FamiStudio
 
         public void FinishSaveFileActivityAsync(bool commit, Action callback)
         {
-            Debug.Assert(pendingFinishDialog != null);
-            var saveInfo = pendingFinishDialog as SaveDialogActivityInfo;
+            Debug.Assert(pendingFinishFileActivity != null);
+            var saveInfo = pendingFinishFileActivity as SaveActivity;
             Debug.Assert(saveInfo != null);
-            pendingFinishDialog = null;
+            pendingFinishFileActivity = null;
             saveInfo.Finish(commit, callback);
             ForceScreenOn(false);
         }
@@ -382,7 +364,7 @@ namespace FamiStudio
             if (lastFrameTime < 0)
                 lastFrameTime = frameTimeNanos;
 
-            if (glThreadIsRunning && container != null && !IsAsyncDialogInProgress)
+            if (glThreadIsRunning && container != null && !IsAsyncFileActivityInProgress)
             {
                 var deltaTime = (float)Math.Min(0.25f, (float)((frameTimeNanos - lastFrameTime) / 1000000000.0));
 
@@ -390,7 +372,11 @@ namespace FamiStudio
 
                 lock (renderLock)
                 {
-                    famistudio.Tick(deltaTime);
+                    CacheViewRect();
+
+                    if (!IsAsyncDialogInProgress)
+                        famistudio.Tick(deltaTime);
+
                     container.TickWithChildren(deltaTime);
                 }
 
@@ -398,7 +384,7 @@ namespace FamiStudio
                 ConditionalProcessDeferDelete();
 
                 if (dirty)
-                { 
+                {
                     glSurfaceView.RequestRender();
                     dirty = false;
                 }
@@ -413,8 +399,6 @@ namespace FamiStudio
         {
             lock (renderLock)
             {
-                Platform.AcquireGLContext();
-
                 var rect = new Rectangle(Point.Empty, Size);
                 var clearColor = global::FamiStudio.Theme.DarkGreyColor2;
 
@@ -429,7 +413,7 @@ namespace FamiStudio
         {
             lock (renderLock)
             {
-                Platform.AcquireGLContext();
+                CacheViewRect();
 
                 if (container != null)
                 { 
@@ -445,7 +429,7 @@ namespace FamiStudio
             {
                 Console.WriteLine("OnSurfaceCreated");
 
-                Platform.AcquireGLContext();
+                CacheViewRect();
 
                 graphics = new Graphics();
                 graphics.SetLineBias(2);
@@ -456,7 +440,7 @@ namespace FamiStudio
                     Console.WriteLine("OnSurfaceCreated : Creating container.");
 
                     container = new FamiStudioContainer(this);
-                    container.Resize(glSurfaceView.Width, glSurfaceView.Height);
+                    container.Resize(cachedViewRect.Width, cachedViewRect.Height);
 
                     // Simply update the form if the app already exists.
                     if (appWasAlreadyRunning)
@@ -511,17 +495,23 @@ namespace FamiStudio
 
         public void InitDialog(Dialog dlg)
         {
-            Debug.Assert(false);
+            container.InitDialog(dlg);
         }
 
         public void PushDialog(Dialog dlg)
         {
-            Debug.Assert(false);
+            ReleasePointer();
+            container.PushDialog(dlg);
         }
 
-        public void PopDialog(Dialog dlg)
+        public void PopDialog(Dialog dlg, int numLevels = 1)
         {
-            Debug.Assert(false);
+            container.PopDialog(dlg, numLevels);
+        }
+
+        public void ShowToast(string text, bool longDuration = false, Action click = null)
+        {
+            container.ShowToast(text, longDuration, click);
         }
 
         public void Quit()
@@ -537,25 +527,36 @@ namespace FamiStudio
             return null;
         }
 
-        public void CaptureMouse(Control ctrl)
+        public int CapturePointer(Control ctrl)
         {
-            //Debug.Assert(captureControl == null); // MATTT
-            if (captureControl != null)
-                Debug.WriteLine(""); // MATTT
             captureControl = ctrl;
+            return ++captureCookie;
         }
 
-        public void ReleaseMouse()
+        public void ReleasePointer()
         {
             captureControl = null;
+        }
+        
+        public bool CheckCaptureCookie(int cookie)
+        {
+            return captureCookie == cookie;
         }
 
         public void RefreshLayout()
         {
             lock (renderLock)
-            { 
-                container.Resize(glSurfaceView.Width, glSurfaceView.Height);
+            {
+                CacheViewRect();
+                container.Resize(cachedViewRect.Size);
             }
+        }
+
+        private void CacheViewRect()
+        {
+            var rect = new Android.Graphics.Rect();
+            glSurfaceView.GetDrawingRect(rect);
+            cachedViewRect = new Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());
         }
 
         public void MarkDirty()
@@ -599,6 +600,7 @@ namespace FamiStudio
             {
                 // This will stop all audio and prevent issues.
                 famistudio.Suspend();
+                AppSuspended?.Invoke();
             }
 
             base.OnDestroy();
@@ -612,14 +614,20 @@ namespace FamiStudio
             activityRunning = false;
 
             lock (renderLock)
-            { 
+            {
                 // If we are begin stopped, but not because we are opening a dialog,
                 // this likely mean the user is switching app. Let's suspend.
                 // The property dialogs will handle this themselves.
-                if (activeDialog == null || activeDialog.ShouldSuspend)
+                if (currentFileActivity == null)
+                {
                     famistudio.Suspend();
+                }
                 else
+                {
                     famistudio.SaveWorkInProgress();
+                }
+
+                AppSuspended?.Invoke();
             }
 
             PauseGLThread();
@@ -641,133 +649,14 @@ namespace FamiStudio
             base.OnResume();
         }
 
-        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
+        public void ShowContextMenuAsync(ContextMenuOption[] options)
         {
-            if (options == null || options.Length == 0)
-                return;
-            
-            Debug.Assert(contextMenuDialog == null);
-
-            var bgColor = DroidUtils.ToAndroidColor(global::FamiStudio.Theme.DarkGreyColor4);
-
-            var linearLayout = new LinearLayout(this);
-            linearLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
-            linearLayout.Orientation = Orientation.Vertical;
-            linearLayout.SetBackgroundColor(bgColor);
-
-            var prevWantedSeparator = false;
-
-            var imagePad  = DroidUtils.DpToPixels(2);
-            var imageSize = DroidUtils.DpToPixels(32);
-
-            for (int i = 0; i < options.Length; i++)
-            {
-                var opt = options[i];
-
-                if (i > 0 && (opt.Separator.HasFlag(ContextMenuSeparator.MobileBefore) || prevWantedSeparator))
-                {
-                    var lineView = new View(this);
-                    lineView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-                    lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1));
-                    linearLayout.AddView(lineView);
-                    prevWantedSeparator = false;
-                }
-
-                var imageName = opt.Image;
-
-                if (string.IsNullOrEmpty(imageName))
-                {
-                    var checkState = opt.CheckState();
-                    switch (checkState)
-                    {
-                        case ContextMenuCheckState.Checked:   imageName = "MenuCheckOn";  break;
-                        case ContextMenuCheckState.Unchecked: imageName = "MenuCheckOff"; break;
-                        case ContextMenuCheckState.Radio:     imageName = "MenuRadio";    break;
-                    }
-                }
-
-                if (string.IsNullOrEmpty(imageName))
-                    imageName = "MenuBlank";
-
-                var resName1 = $"FamiStudio.Resources.Mobile.Mobile{imageName}.tga";
-                var resName2 = $"FamiStudio.Resources.Atlas.{imageName}@4x.tga";
-                var resName = Utils.ResourceExists(resName1) ? resName1 : resName2;
-
-                var bmp = new BitmapDrawable(Resources, DroidUtils.LoadTgaBitmapFromResource(resName));
-                bmp.SetBounds(0, 0, imageSize, imageSize);
-                bmp.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
-
-                var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
-                textView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
-                textView.CompoundDrawablePadding = imagePad;
-                textView.SetPadding(imagePad, imagePad, imagePad, imagePad);
-                textView.Gravity = GravityFlags.CenterVertical;
-                textView.Text = opt.Text;
-                textView.Tag = new ContextMenuTag(opt);
-                textView.Click += ContextMenuDialog_Click;
-                textView.SetCompoundDrawables(bmp, null, null, null);
-
-                linearLayout.AddView(textView);
-
-                prevWantedSeparator = opt.Separator.HasFlag(ContextMenuSeparator.MobileAfter);
-            }
-
-            DisplayMetrics metrics = new DisplayMetrics();
-            Window.WindowManager.DefaultDisplay.GetMetrics(metrics);
-
-            contextMenuDialog = new BottomSheetDialog(this);
-            EnableFullscreenMode(contextMenuDialog.Window);
-            contextMenuDialog.Window.AddFlags(WindowManagerFlags.NotFocusable); // Prevents nav bar from appearing.
-            contextMenuDialog.SetContentView(linearLayout);
-            contextMenuDialog.Behavior.MaxWidth = Math.Min(metrics.HeightPixels, metrics.WidthPixels);
-            contextMenuDialog.Behavior.State = BottomSheetBehavior.StateExpanded;
-            contextMenuDialog.DismissEvent += ContextMenuDialog_DismissEvent;
-
-            // In portrait mode, add a bit of padding to cover the navigation bar.
-            if (metrics.HeightPixels != glSurfaceView.Height)
-            {
-                // Needs to match the dialog.
-                GradientDrawable invisible = new GradientDrawable();
-                GradientDrawable navBar = new GradientDrawable();
-                navBar.SetColor(bgColor);
-
-                LayerDrawable windowBackground = new LayerDrawable(new Drawable[] { invisible, navBar });
-                windowBackground.SetLayerInsetTop(1, metrics.HeightPixels);
-                windowBackground.SetLayerWidth(1, contextMenuDialog.Behavior.MaxWidth);
-                windowBackground.SetLayerGravity(1, GravityFlags.Center);
-                contextMenuDialog.Window.SetBackgroundDrawable(windowBackground);
-            }
-
-            contextMenuDialog.Show();
-
-            Platform.VibrateClick();
+            container.ShowContextMenuAsync(options);
         }
 
         public void HideContextMenu()
         {
-            // Only used on desktop.
-            Debug.Assert(false);
-        }
-
-        private void ContextMenuDialog_DismissEvent(object sender, EventArgs e)
-        {
-            contextMenuDialog = null;
-            MarkDirty();
-        }
-
-        private void ContextMenuDialog_Click(object sender, EventArgs e)
-        {
-            // HACK : We have a weird NULL crash here. No clue how to repro this.
-            var tag = (sender as TextView)?.Tag as ContextMenuTag;
-
-            lock (renderLock)
-            {
-                tag?.opt?.Callback();
-                contextMenuDialog?.Dismiss();
-                MarkDirty();
-            }
-
-            Platform.VibrateTick();
+            container.HideContextMenu();
         }
 
         public void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
@@ -781,17 +670,58 @@ namespace FamiStudio
             if (buttons == MessageBoxButtons.YesNo ||
                 buttons == MessageBoxButtons.YesNoCancel)
             {
-                alert.SetButton("Yes", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Yes); } });
-                alert.SetButton2("No", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.No);  } });
+                alert.SetButton(YesButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Yes); } });
+                alert.SetButton2(NoButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.No);  } });
                 if (buttons == MessageBoxButtons.YesNoCancel)
-                    alert.SetButton3("Cancel", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Cancel); } });
+                    alert.SetButton3(CancelButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Cancel); } });
             }
             else
             {
-                alert.SetButton("OK", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.OK); } });
+                alert.SetButton(OKButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.OK); } });
             }
 
             alert.Show();
+        }
+
+        public class KeyboardFocusEditText : EditText
+        {
+            public KeyboardFocusEditText(Context context) : base(context)
+            {
+            }
+
+            public override void OnWindowFocusChanged(bool hasWindowFocus)
+            {
+                if (hasWindowFocus)
+                {
+                    RequestFocus();
+                    SelectAll();
+                    Post(() =>
+                    {
+                        InputMethodManager inputMethodManager = (InputMethodManager)Application.Context.GetSystemService(Context.InputMethodService);
+                        inputMethodManager.ShowSoftInput(this, 0);
+                    });
+                }
+            }
+        }
+
+        public void EditTextAsync(string prompt, string text, Action<string> callback)
+        {
+            var content = new KeyboardFocusEditText(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
+            content.Text = text;
+            content.Gravity = Android.Views.GravityFlags.Center;
+            content.ImeOptions = ImeAction.Go;
+            content.SetTextColor(Application.Context.GetColorStateList(Resource.Color.light_grey));
+            content.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
+            content.SetSingleLine(true);
+            content.RequestFocus();
+            var builder = new Android.App.AlertDialog.Builder(new ContextThemeWrapper(this, Resource.Style.TextInputDialogStyle));
+            var dialog = builder.Create();
+            dialog.SetTitle(string.IsNullOrEmpty(prompt) ? EnterTextLabel : prompt);
+            dialog.SetView(content);
+            var action = () => { lock (renderLock) { dialog.Dismiss(); callback?.Invoke(content.Text); } };
+            content.EditorAction += (s, e) => { if (e.ActionId == ImeAction.Go) action();  };
+            dialog.SetButton((int)DialogButtonType.Positive, "OK", (c, ev) => action());
+            dialog.Show();
         }
 
         private Control GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
@@ -817,25 +747,25 @@ namespace FamiStudio
 
         public override bool OnTouchEvent(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
+                Debug.WriteLine($"OnTouchEvent {e.Action.ToString()} ({e.GetX()}, {e.GetY()})");
+
                 if (e.Action == MotionEventActions.Up)
                 {
-                    //Debug.WriteLine($"Up {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                     lock (renderLock)
                     {
                         var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
                         if (ctrl != null)
                         {
                             if (captureControl == ctrl)
-                                ReleaseMouse();
+                                ReleasePointer();
                             ctrl.SendPointerUp(new PointerEventArgs(x, y));
                         }
                     }
                 }
                 else if (e.Action == MotionEventActions.Move && !scaleDetector.IsInProgress)
                 {
-                    //Debug.WriteLine($"Move {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                     lock (renderLock)
                     {
                         var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
@@ -856,9 +786,9 @@ namespace FamiStudio
 
         public bool OnDown(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
-                //Debug.WriteLine($"OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                Debug.WriteLine($"OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
@@ -870,7 +800,7 @@ namespace FamiStudio
 
         public bool OnFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
                 //Debug.WriteLine($"OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({velocityX}, {velocityY})");
                 lock (renderLock)
@@ -884,7 +814,7 @@ namespace FamiStudio
 
         public void OnLongPress(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
                 //Debug.WriteLine($"OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
@@ -902,7 +832,7 @@ namespace FamiStudio
 
         public void OnShowPress(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
                 //Debug.WriteLine($"{e.PointerCount} OnShowPress ({e.GetX()}, {e.GetY()})");
             }
@@ -910,12 +840,12 @@ namespace FamiStudio
 
         public bool OnSingleTapUp(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
                 //DialogTest();
                 //StartSaveFileActivity("audio/mpeg", "Toto.mp3");
 
-                //Debug.WriteLine($"{e.PointerCount} OnSingleTapUp ({e.GetX()}, {e.GetY()})");
+                Debug.WriteLine($"OnSingleTapUp ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
@@ -927,7 +857,7 @@ namespace FamiStudio
 
         public bool OnScale(ScaleGestureDetector detector)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
                 //Debug.WriteLine($"OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
                 lock (renderLock)
@@ -945,7 +875,7 @@ namespace FamiStudio
 
         public bool OnScaleBegin(ScaleGestureDetector detector)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
                 //Debug.WriteLine($"OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
@@ -963,7 +893,7 @@ namespace FamiStudio
 
         public void OnScaleEnd(ScaleGestureDetector detector)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
                 //Debug.WriteLine($"OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
@@ -976,22 +906,13 @@ namespace FamiStudio
 
         public bool OnDoubleTap(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
-                //Debug.WriteLine($"OnDoubleTap ({e.GetX()}, {e.GetY()})");
+                Debug.WriteLine($"OnDoubleTap ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                 {
-                    // "OnDoubleTap" returns the coordinate of the first tap, so it you tap
-                    // at 2 different locations very quickly, the second tap will still be at
-                    // the first location. This is fine for controls that supports double-tap
-                    // but not for the ones that dont support it. "OnDoubleTapEvent + Down"
-                    // returns the correct new location, so we will use that for controls
-                    // that dont want to deal with double-clicks.
-                    var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
-                    if (ctrl != null && ctrl.SupportsDoubleClick)
-                    {
-                        ctrl?.SendTouchDoubleClick(new PointerEventArgs(x, y));
-                    }
+                    doubleTapLocation = new Point((int)e.GetX(), (int)e.GetY());
+                    doubleTapControl = GetCapturedControlAtCoord(doubleTapLocation.X, doubleTapLocation.Y, out var x, out var y); 
                 }
                 return true;
             }
@@ -1003,20 +924,35 @@ namespace FamiStudio
 
         public bool OnDoubleTapEvent(MotionEvent e)
         {
-            if (!IsAsyncDialogInProgress)
+            if (!IsAsyncFileActivityInProgress)
             {
                 lock (renderLock)
                 { 
-                    //Debug.WriteLine($"OnDoubleTapEvent ({e.GetX()}, {e.GetY()})");
+                    Debug.WriteLine($"OnDoubleTapEvent ({e.GetX()}, {e.GetY()}) (Action={e.Action})");
                     if (e.Action == MotionEventActions.Down)
                     {
-                        // See comment in "OnDoubleTap".
+                        // "OnDoubleTap" returns the coordinate of the first tap, so it you tap
+                        // at 2 different locations very quickly, the second tap will still be at
+                        // the first location. This is fine for controls that supports double-tap
+                        // but not for the ones that dont support it. "OnDoubleTapEvent + Down"
+                        // returns the correct new location, so we will use that for controls
+                        // that dont want to deal with double-clicks. 
+                        //
+                        // Also, we enforce that we double tap on the same control as the first tap.
+                        // Tapping fast between to buttons triggers double taps which feels super weird.
                         var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
-                        if (ctrl != null && !ctrl.SupportsDoubleClick)
-                        {
-                            ctrl?.SendTouchClick(new PointerEventArgs(x, y));
-                        }
 
+                        if (ctrl != null)
+                        {
+                            if (!ctrl.SupportsDoubleClick || (ctrl != doubleTapControl && doubleTapControl != null))
+                            {
+                                ctrl.SendTouchClick(new PointerEventArgs(x, y));
+                            }
+                            else
+                            {
+                                ctrl.SendTouchDoubleClick(new PointerEventArgs(x, y));
+                            }
+                        }
                     }
                 }
 
@@ -1030,7 +966,7 @@ namespace FamiStudio
 
         public bool OnSingleTapConfirmed(MotionEvent e)
         {
-            //Debug.WriteLine($"OnSingleTapConfirmed ({e.GetX()}, {e.GetY()})");
+            Debug.WriteLine($"OnSingleTapConfirmed ({e.GetX()}, {e.GetY()})");
             return false;
         }
 
@@ -1044,20 +980,19 @@ namespace FamiStudio
         };
     }
 
-    public abstract class BaseDialogActivityInfo
+    public abstract class BaseFileActivity
     {
         protected int requestCode;
-        public int  RequestCode => requestCode;
-        public virtual bool ShouldSuspend => true;
+        public int RequestCode => requestCode;
         public virtual bool IsDialogDone(Result result) => true;
         public abstract void OnResult(FamiStudioWindow main, Result code, Intent data);
     };
 
-    public class LoadDialogActivityInfo : BaseDialogActivityInfo
+    public class LoadActivity : BaseFileActivity
     {
         protected Action<string> callback;
 
-        public LoadDialogActivityInfo(Action<string> cb)
+        public LoadActivity(Action<string> cb)
         {
             requestCode = 1000;
             callback = cb;
@@ -1111,13 +1046,13 @@ namespace FamiStudio
         }
     }
 
-    public class SaveDialogActivityInfo : BaseDialogActivityInfo
+    public class SaveActivity : BaseFileActivity
     {
         protected Action<string> callback;
         protected string lastSaveTempFile;
         protected Android.Net.Uri lastSaveFileUri;
 
-        public SaveDialogActivityInfo(Action<string> cb)
+        public SaveActivity(Action<string> cb)
         {
             requestCode = 1001;
             callback = cb;
@@ -1178,71 +1113,11 @@ namespace FamiStudio
         }
     }
 
-    public class TutorialDialogActivityInfo : BaseDialogActivityInfo
-    {
-        protected TutorialDialog dialog;
-        protected Action<DialogResult> callback;
-        public TutorialDialog Dialog => dialog;
-        public override bool ShouldSuspend => false;
-
-        public TutorialDialogActivityInfo(TutorialDialog dlg, Action<DialogResult> cb)
-        {
-            requestCode = 2000;
-            dialog = dlg;
-            callback = cb;
-        }
-
-        public override void OnResult(FamiStudioWindow main, Result code, Intent data)
-        {
-            callback(code == Result.Ok ? DialogResult.OK : DialogResult.Cancel);
-        }
-    }
-
-    public class PropertyDialogActivityInfo : BaseDialogActivityInfo
-    {
-        protected PropertyDialog dialog;
-        protected Action<DialogResult> callback;
-        public PropertyDialog Dialog => dialog;
-        public override bool ShouldSuspend => false;
-
-        public PropertyDialogActivityInfo(PropertyDialog dlg, Action<DialogResult> cb)
-        {
-            requestCode = 2001;
-            dialog = dlg;
-            callback = cb;
-        }
-
-        public override void OnResult(FamiStudioWindow main, Result code, Intent data)
-        {
-            callback(code == Result.Ok ? DialogResult.OK : DialogResult.Cancel);
-        }
-    }
-
-    public class MultiPropertyDialogActivityInfo : BaseDialogActivityInfo
-    {
-        protected MultiPropertyDialog dialog;
-        protected Action<DialogResult> callback;
-        public MultiPropertyDialog Dialog => dialog;
-        public override bool ShouldSuspend => false;
-
-        public MultiPropertyDialogActivityInfo(MultiPropertyDialog dlg, Action<DialogResult> cb)
-        {
-            requestCode = 2002;
-            dialog = dlg;
-            callback = cb;
-        }
-
-        public override void OnResult(FamiStudioWindow main, Result code, Intent data)
-        {
-            callback(code == Result.Ok ? DialogResult.OK : DialogResult.Cancel);
-        }
-    }
-
-    public class ShareActivityInfo : BaseDialogActivityInfo
+    public class ShareActivity : BaseFileActivity
     {
         protected Action callback;
 
-        public ShareActivityInfo(Action cb)
+        public ShareActivity(Action cb)
         {
             requestCode = 2002;
             callback = cb;

@@ -14,20 +14,12 @@ namespace FamiStudio
         LocalizedString DeleteNotesLabel;
         LocalizedString DeleteNotesTooltip;
         LocalizedString EffectsToDeleteLabel;
-        LocalizedString MobileSelectAllLabel;
-        LocalizedString SelectAllLabel;
-        LocalizedString MobileSelectNoneLabel;
-        LocalizedString SelectNoneLabel;
 
         #endregion
 
         public unsafe DeleteSpecialDialog(FamiStudioWindow win, Channel channel, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
             Localization.Localize(this);
-
-            dialog = new PropertyDialog(win, DeleteSpecialTitle, 260);
-            dialog.Properties.AddLabelCheckBox(DeleteNotesLabel, notes, 0, DeleteNotesTooltip); // 0
-            dialog.Properties.AddLabel(null, EffectsToDeleteLabel.Colon); // 1
 
             var effectList  = new List<string>();
             var checkedList = new List<bool>();
@@ -43,23 +35,10 @@ namespace FamiStudio
             }
 
 
-            dialog.Properties.AddCheckBoxList(Platform.IsMobile ? EffectsToDeleteLabel : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete."); // 2
-            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectAllLabel  : null, SelectAllLabel); // 3
-            dialog.Properties.AddButton(Platform.IsMobile ? MobileSelectNoneLabel : null, SelectNoneLabel); // 4
-            dialog.Properties.SetPropertyVisible(1, Platform.IsDesktop);
+            dialog = new PropertyDialog(win, DeleteSpecialTitle, 260);
+            dialog.Properties.AddLabelCheckBox(DeleteNotesLabel, notes, 0, DeleteNotesTooltip); // 0
+            dialog.Properties.AddCheckBoxList(EffectsToDeleteLabel.Colon, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete.", 7, PropertyFlags.ForceFullWidth); // 1
             dialog.Properties.Build();
-            dialog.Properties.PropertyClicked += Properties_PropertyClicked;
-        }
-
-        private void Properties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
-        {
-            if (click == ClickType.Button && (propIdx == 3 || propIdx == 4))
-            {
-                var keys = new bool[checkToEffect.Count];
-                for (int i = 0; i < keys.Length; i++)
-                    keys[i] = propIdx == 3;
-                props.UpdateCheckBoxList(2, keys);
-            }
         }
 
         public void ShowDialogAsync(Action<DialogResult> callback)
@@ -73,7 +52,7 @@ namespace FamiStudio
             get
             {
                 int mask = 0;
-                var checks = dialog.Properties.GetPropertyValue<bool[]>(2);
+                var checks = dialog.Properties.GetPropertyValue<bool[]>(1);
 
                 for (int i = 0; i < checkToEffect.Count; i++)
                 {

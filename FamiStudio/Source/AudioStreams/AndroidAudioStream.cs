@@ -145,7 +145,7 @@ namespace FamiStudio
                         return;
                     }
 
-                    Debug.WriteLine("Starvation!");
+                    //Debug.WriteLine("Starvation!");
                     System.Threading.Thread.Sleep(4);
                 }
             }

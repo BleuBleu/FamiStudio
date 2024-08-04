@@ -15,6 +15,7 @@ namespace FamiStudio
 
         private TextureAtlasRef bmpArrow;
         private string[] items;
+        private string prompt;
         private int selectedIndex = 0;
         private bool hover;
         private bool listOpened;
@@ -32,29 +33,32 @@ namespace FamiStudio
 
         private int margin         = DpiScaling.ScaleForWindow(4);
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
-        private int rowHeight      = DpiScaling.ScaleForWindow(24);
+        private int rowHeight      = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
+
+        private LocalizedString SelectValueLabel;
 
         public DropDown(string[] list, int index, bool trans = false)
         {
+            Localization.Localize(this);
             items = list;
             selectedIndex = index;
             height = rowHeight;
             transparent = trans;
+            supportsDoubleClick = false;
             UpdateScrollParams();
         }
 
         public string Text => selectedIndex >= 0 && selectedIndex < items.Length ? items[selectedIndex] : null;
+        public string Prompt { get => prompt; set => prompt = value; }
 
         public int SelectedIndex
         {
             get { return selectedIndex; }
             set 
             {
-                if (value != selectedIndex)
+                if (SetAndMarkDirty(ref selectedIndex, value))
                 {
-                    selectedIndex = value; 
                     SelectedIndexChanged?.Invoke(this, value); 
-                    MarkDirty();
                 }
             }
         }
@@ -86,7 +90,7 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (listOpened && e.Y > rowHeight)
+            if (listOpened && e.Y > rowHeight && !e.IsTouchEvent)
             {
                 if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
                 {
@@ -102,7 +106,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        Capture = true;
+                        CapturePointer();
                         draggingScrollbars = true;
                         captureScrollBarPos = scrollBarPos;
                         captureMouseY = e.Y;
@@ -113,47 +117,45 @@ namespace FamiStudio
 
         protected override void OnPointerUp(PointerEventArgs e)
         {
-            if (listJustOpened && isGridChild)
+            if (!e.IsTouchEvent)
             {
-                listJustOpened = false;
-                return;
-            }
-
-            if (draggingScrollbars)
-            {
-                draggingScrollbars = false;
-                Capture = false;
-                MarkDirty();
-            }
-            else if (enabled && e.Left)
-            {
-                if (listOpened && e.Y > rowHeight)
+                if (listJustOpened && isGridChild)
                 {
-                    if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
-                    {
-                        var y = e.Y - rowHeight;
-
-                        if (y < scrollBarPos)
-                        {
-                            SetAndMarkDirty(ref listScroll, Math.Max(0, listScroll - largeStepSize));
-                        }
-                        else if (y > (scrollBarPos + scrollBarSize))
-                        {
-                            SetAndMarkDirty(ref listScroll, Math.Min(maxListScroll, listScroll + largeStepSize));
-                        }
-                        return;
-                    }
-
-                    SelectedIndex = listScroll + (e.Y - rowHeight) / rowHeight;
+                    listJustOpened = false;
+                    return;
                 }
 
-                SetListOpened(!listOpened);
-            }
-        }
+                if (draggingScrollbars)
+                {
+                    draggingScrollbars = false;
+                    ReleasePointer();
+                    MarkDirty();
+                }
+                else if (enabled && e.Left)
+                {
+                    if (listOpened && e.Y > rowHeight)
+                    {
+                        if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
+                        {
+                            var y = e.Y - rowHeight;
 
-        protected override void OnMouseDoubleClick(PointerEventArgs e)
-        {
-            OnPointerDown(e);
+                            if (y < scrollBarPos)
+                            {
+                                SetAndMarkDirty(ref listScroll, Math.Max(0, listScroll - largeStepSize));
+                            }
+                            else if (y > (scrollBarPos + scrollBarSize))
+                            {
+                                SetAndMarkDirty(ref listScroll, Math.Min(maxListScroll, listScroll + largeStepSize));
+                            }
+                            return;
+                        }
+
+                        SelectedIndex = listScroll + (e.Y - rowHeight) / rowHeight;
+                    }
+
+                    SetListOpened(!listOpened);
+                }
+            }
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -165,6 +167,26 @@ namespace FamiStudio
                 e.Handled = true;
             }
         }
+
+#if FAMISTUDIO_ANDROID 
+        private void ShowMobileListDialog()
+        {
+            var dlg = new DropDownOptionsDialog(window, string.IsNullOrEmpty(prompt) ? SelectValueLabel : prompt, items, selectedIndex);
+
+            dlg.ShowDialogAsync((r) =>
+            {
+                if (r == DialogResult.OK)
+                {
+                    SelectedIndex = dlg.SelectedIndex;
+                }
+            });
+        }
+
+        protected override void OnTouchClick(PointerEventArgs e)
+        {
+            ShowMobileListDialog();
+        }
+#endif
 
         public void SetListOpened(bool open)
         {
@@ -208,18 +230,21 @@ namespace FamiStudio
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            if (draggingScrollbars)
+            if (!e.IsTouchEvent)
             {
-                GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
-                var newScrollBarPos = captureScrollBarPos + (e.Y - captureMouseY);
-                var ratio = newScrollBarPos / (float)(numItemsInList * rowHeight - scrollBarSize);
-                var newListScroll = Utils.Clamp((int)Math.Round(ratio * maxListScroll), 0, maxListScroll);
-                SetAndMarkDirty(ref listScroll, newListScroll);
-            }
-            else
-            {
-                SetAndMarkDirty(ref hover, e.Y < rowHeight && !listOpened);
-                UpdateListHover(e);
+                if (draggingScrollbars)
+                {
+                    GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
+                    var newScrollBarPos = captureScrollBarPos + (e.Y - captureMouseY);
+                    var ratio = newScrollBarPos / (float)(numItemsInList * rowHeight - scrollBarSize);
+                    var newListScroll = Utils.Clamp((int)Math.Round(ratio * maxListScroll), 0, maxListScroll);
+                    SetAndMarkDirty(ref listScroll, newListScroll);
+                }
+                else
+                {
+                    SetAndMarkDirty(ref hover, e.Y < rowHeight && !listOpened);
+                    UpdateListHover(e);
+                }
             }
         }
 

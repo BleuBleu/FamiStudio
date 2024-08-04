@@ -7,7 +7,6 @@ namespace FamiStudio
 {
     public class ParamList : ParamControl
     {
-        // MATTT : What was that again?
         private float bmpScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
 
         private TextureAtlasRef bmpLeft;
@@ -20,11 +19,11 @@ namespace FamiStudio
         private int captureButton;
         private double captureTime;
 
-        public override bool SupportsDoubleClick => false;
-
         public ParamList(ParamInfo p) : base(p)
         {
             height = DpiScaling.ScaleForWindow(16);
+            supportsDoubleClick = false;
+            supportsLongPress = true;
         }
 
         protected override void OnAddedToContainer()
@@ -61,7 +60,7 @@ namespace FamiStudio
                     captureButton = buttonIndex;
                     ChangeValue(buttonIndex);
                     SetTickEnabled(true);
-                    Capture = true;
+                    CapturePointer();
                     e.MarkHandled();
                 }
             }

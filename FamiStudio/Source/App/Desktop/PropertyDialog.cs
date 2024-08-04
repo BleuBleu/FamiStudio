@@ -38,7 +38,7 @@ namespace FamiStudio
             buttonNo.Visible  = canCancel;
         }
 
-        public PropertyDialog(FamiStudioWindow win, string title, Point pt, int w, bool leftAlign = false, bool top = false) : base(win, title)
+        public PropertyDialog(FamiStudioWindow win, string title, Point pt, int w, bool leftAlign = false, bool top = false, bool mobileFullscreen = true) : base(win, title)
         {
             Localization.Localize(this);
 

@@ -1,6 +1,4 @@
 using System;
-using System.Globalization;
-using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -9,40 +7,29 @@ namespace FamiStudio
         public delegate void ValueChangedDelegate(Control sender, double val);
         public event ValueChangedDelegate ValueChanged;
 
+        private int touchSlop = DpiScaling.ScaleForWindow(5);
+
         private double min;
         private double max;
         private double val;
-        private double increment;
-        private string format;
-        private bool label = true;
+        private int captureX;
+        private Func<double, string> format;
+        private bool changing;
         private bool dragging;
-        private bool hover;
-        private int dragOffsetX;
-        private TextureAtlasRef bmpThumb;
 
-        private int thumbSize;
-        private int labelMargin;
-        private int labelSize;
-
-        public Slider(double value, double minValue, double maxValue, double inc, bool showLabel, string fmt = "{0}")
+        public Slider(double value, double minValue, double maxValue, Func<double, string> fmt = null)
         {
             min = minValue;
             max = maxValue;
             val = value;
-            increment = inc;
-            label = showLabel;
-            format = fmt;
-            height = DpiScaling.ScaleForWindow(24);
-            labelSize   = label ? DpiScaling.ScaleForWindow(50) : 0;
-            labelMargin = label ? DpiScaling.ScaleForWindow(4) : 0;
+            format = fmt == null ? (o) => o.ToString() : fmt;
+            height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 14 : 24);
+            supportsLongPress = true;
         }
 
-        protected override void OnAddedToContainer()
-        {
-            var g = ParentWindow.Graphics;
-            bmpThumb = g.GetTextureAtlasRef("SliderThumb");
-            thumbSize = bmpThumb.ElementSize.Width;
-        }
+        public double Min { get => min; set => SetAndMarkDirty(ref min, value); }
+        public double Max { get => max; set => SetAndMarkDirty(ref max, value); }
+        public Func<double, string> Format { get => format; set { format = value; MarkDirty(); } }
 
         public double Value
         {
@@ -50,33 +37,23 @@ namespace FamiStudio
             set { if (SetAndMarkDirty(ref val, Utils.Clamp(value, min, max))) ValueChanged?.Invoke(this, val); }
         }
 
-        private Rectangle GetThumbRectangle()
-        {
-            var x = (int)Math.Round((val - min) / (max - min) * (width - thumbSize - labelSize - labelMargin));
-            var y = (height - thumbSize) / 2;
-
-            return new Rectangle(x, y, thumbSize, thumbSize);
-        }
-
         protected override void OnPointerDown(PointerEventArgs e)
         {
             if (enabled)
             {
-                var thumbRect = GetThumbRectangle();
-                if (thumbRect.Contains(e.X, e.Y))
+                if (e.IsTouchEvent)
                 {
-                    Capture = true;
-                    dragging = true;
-                    dragOffsetX = e.X - thumbRect.X;
+                    changing = false;
                 }
-                else if (e.X > thumbRect.Right)
+                else
                 {
-                    Value += increment;
+                    changing = true;
+                    CapturePointer();
+                    e.MarkHandled();
                 }
-                else if (e.X < thumbRect.Left)
-                {
-                    Value -= increment;
-                }
+
+                dragging = true;
+                captureX = e.X;
             }
         }
 
@@ -85,42 +62,49 @@ namespace FamiStudio
             if (dragging)
             {
                 dragging = false;
-                Capture = false;
+                changing = false;
+                ReleasePointer();
+                e.MarkHandled();
             }
         }
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            if (dragging)
+            // Add a bit of slop on mobile to prevent sliders to mess up vertical scrolling
+            if (dragging && !changing && e.IsTouchEvent && Math.Abs(e.X - captureX) > touchSlop)
             {
-                var x = e.X - dragOffsetX;
-                var ratio = x / (float)(width - thumbSize - labelSize - labelMargin);
-                Value = Utils.Lerp(min, max, ratio);
+                changing = true;
+                CapturePointer();
             }
-            else if (enabled)
+
+            if (changing)
             {
-                SetAndMarkDirty(ref hover, GetThumbRectangle().Contains(e.X, e.Y));
+                Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
+                e.MarkHandled();
             }
         }
 
-        protected override void OnPointerLeave(EventArgs e)
+        protected override void OnTouchClick(PointerEventArgs e)
         {
-            SetAndMarkDirty(ref hover, false);
+            Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
+            e.MarkHandled();
         }
 
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
-            var thumbRect = GetThumbRectangle();
 
-            c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, Theme.DarkGreyColor1, DpiScaling.ScaleForWindow(3));
-            c.DrawTextureAtlas(bmpThumb, thumbRect.Left, thumbRect.Top, 1, hover || dragging ? Theme.LightGreyColor2 : enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1);
+            var foreColor = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
-            if (label)
+            c.FillRectangle(0, 0, width, height, Theme.DarkGreyColor1);
+            
+            if (enabled)
             {
-                var str = string.Format(CultureInfo.InvariantCulture, format, val);
-                c.DrawText(str, Fonts.FontMedium, width - labelSize, 0, enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1, TextFlags.MiddleRight, labelSize, height);
+                c.FillRectangle(0, 0, (int)Math.Round((val - min) / (double)(max - min) * width), height, Theme.DarkGreyColor6);
             }
+
+            c.DrawRectangle(0, 0, width, height, foreColor);
+            c.DrawText(format(val), fonts.FontMedium, 0, 0, foreColor, TextFlags.MiddleCenter, width, height);
         }
     }
 }

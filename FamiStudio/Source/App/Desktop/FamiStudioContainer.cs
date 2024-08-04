@@ -65,6 +65,8 @@ namespace FamiStudio
             foreach (var dlg in dialogs)
                 dlg.CenterToWindow();
 
+            HideContextMenu();
+
             toast.Reposition();
         }
 
@@ -76,6 +78,12 @@ namespace FamiStudio
             if (FamiStudio.StaticInstance.SelectedSong == null)
             {
                 return false;
+            }
+
+            // Context menu is always on top of everything.
+            if (c == contextMenu)
+            {
+                return true;
             }
 
             // Only top dialog can be interacted with.

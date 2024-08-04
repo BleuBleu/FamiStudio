@@ -37,6 +37,7 @@ namespace FamiStudio
         public string Text { set => glfwSetWindowTitle(window, value); }
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => container.IsDialogActive;
+        public bool IsContextMenuActive => container.IsContextMenuActive;
         public bool MobilePianoVisible { get => false; set => value = false; }
         public Point LastMousePosition => new Point(lastCursorX, lastCursorY);
         public Point LastContextMenuPosition => ScreenToWindow(contextMenuPoint);
@@ -45,6 +46,7 @@ namespace FamiStudio
         private Control activeControl = null;
         private Control captureControl = null;
         private Control hoverControl = null;
+        private int captureCookie;
         private int captureButton = -1;
         private int lastButtonPress = -1;
         private Point contextMenuPoint = Point.Empty;
@@ -304,7 +306,7 @@ namespace FamiStudio
             dirty = true;
         }
 
-        public void CaptureMouse(Control ctrl)
+        public int CapturePointer(Control ctrl)
         {
             if (lastButtonPress >= 0)
             {
@@ -313,14 +315,21 @@ namespace FamiStudio
                 captureButton = lastButtonPress;
                 captureControl = ctrl;
             }
+
+            return ++captureCookie;
         }
 
-        public void ReleaseMouse()
+        public void ReleasePointer()
         {
             if (captureControl != null)
             {
                 captureControl = null;
             }
+        }
+
+        public bool CheckCaptureCookie(int cookie)
+        {
+            return captureCookie == cookie;
         }
 
         public Point ScreenToWindow(Point p)
@@ -480,10 +489,23 @@ namespace FamiStudio
                     else
                     {
                         var ex = new PointerEventArgs(MakeButtonFlags(button), cx, cy);
+                        
                         ctrl.GrabDialogFocus();
+                        var dlgBefore = TopDialog;
                         ctrl.SendPointerDown(ex);
+                        var dlgAfter = TopDialog;
+
                         if (ex.IsRightClickDelayed)
+                        {
                             DelayRightClick(ctrl, ex);
+                        }
+                        else if (dlgAfter != dlgBefore)
+                        {
+                            // If a mouse down happens to pop a dialog, send a mouse up immediate. Clears
+                            // the "press" status on button. The real fix would be to have a focus system 
+                            // that works on more than just dialogs. LostFocus would then clear the status.
+                            ctrl.SendPointerUp(ex);
+                        }
                     }
                 }
             }
@@ -505,7 +527,7 @@ namespace FamiStudio
                 }
 
                 if (button == captureButton)
-                    ReleaseMouse();
+                    ReleasePointer();
 
                 if (ctrl != null)
                 {
@@ -586,6 +608,15 @@ namespace FamiStudio
                     hoverControl.SendPointerLeave(EventArgs.Empty);
                     hoverControl = null;
                 }
+            }
+        }
+
+        private void ClearHoverControl()
+        {
+            if (hoverControl != null)
+            {
+                hoverControl.SendPointerLeave(EventArgs.Empty);
+                hoverControl = null;
             }
         }
 
@@ -842,16 +873,18 @@ namespace FamiStudio
             }
         }
 
-        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
+        public void ShowContextMenuAsync(ContextMenuOption[] options)
         {
-            contextMenuPoint = WindowToScreen(new Point(x, y));
-            container.ShowContextMenu(x, y, options);
+            contextMenuPoint = WindowToScreen(new Point(lastCursorX, lastCursorY));
+            container.ShowContextMenu(lastCursorX, lastCursorY, options);
             RefreshCursor(container.ContextMenu);
+            ClearHoverControl();
         }
 
         public void HideContextMenu()
         {
             container.HideContextMenu();
+            ClearHoverControl();
         }
 
         public void InitDialog(Dialog dialog)
@@ -861,12 +894,14 @@ namespace FamiStudio
 
         public void PushDialog(Dialog dialog)
 		{
+            ClearHoverControl();
             container.PushDialog(dialog);
         }
 
         public void PopDialog(Dialog dialog)
         {
-			container.PopDialog(dialog);
+            ClearHoverControl();
+            container.PopDialog(dialog);
         }
 
         public Dialog TopDialog => container.TopDialog;

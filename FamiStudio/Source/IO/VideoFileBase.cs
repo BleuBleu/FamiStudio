@@ -292,7 +292,6 @@ namespace FamiStudio
 
             // HACK : The scaling is not longer tied to the graphics, so we need to temporarely override it.
             DpiScaling.ForceUnitScaling = true;
-            Platform.AcquireGLContext();
 
             // Create graphics resources.
             videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, !downsampled, settings.PreviewMode || downsampled);
@@ -534,7 +533,7 @@ namespace FamiStudio
                     if (downsampleGraphics != null)
                     {
                         downsampleGraphics.BeginDrawFrame(new Rectangle(0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY), true, Theme.BlackColor);
-                        downsampleGraphics.DefaultCommandList.DrawTexture(videoGraphics.GetTexture(), 0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY, 1.0f);
+                        downsampleGraphics.DefaultCommandList.DrawTexture(videoGraphics.GetTexture(), 0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY);
                         downsampleGraphics.EndDrawFrame(false);
                     }
 

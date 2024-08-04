@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -14,6 +14,8 @@ namespace FamiStudio
 
         private static bool Initialized = false;
 
+        public static string LanguageCode = "ENG";
+        public static bool IsChinese => LanguageCode == "ZHO";
         public static string[] LanguageCodes = new[]
 {
             "ENG",
@@ -21,6 +23,15 @@ namespace FamiStudio
             "POR",
             "ZHO",
             "DEU",
+        };
+
+        public static string[] LanguageNames = new[]
+        {
+            "English",
+            "Español",
+            "Português",
+            "中文 (简体)",
+            "Deutsch"
         };
 
         static Localization()
@@ -50,6 +61,7 @@ namespace FamiStudio
                 strings.LoadFromResource($"FamiStudio.Localization.FamiStudio.{code}.ini");
             }
 
+            LanguageCode = code;
             Initialized = true;
         }
 
@@ -126,8 +138,16 @@ namespace FamiStudio
             string str = null;
 
             if (Platform.IsMobile)
-            {
-                str = LocalizeString(section, key + "_Mobile", false);
+            {                
+                // We can override whole sections, or individual strings.
+                if (strings.HasSection(section + "_Mobile"))
+                {
+                    str = LocalizeString(section + "_Mobile", key, false);
+                }
+                else 
+                {
+                    str = LocalizeString(section, key + "_Mobile", false);
+                }
             }
 
             if (str == null)
@@ -158,21 +178,5 @@ namespace FamiStudio
         public string Period => Value + ".";
         public override string ToString() { return Value; }
         public string Format(params object[] args) => string.Format(ToString(), args);
-    }
-
-    public class LanguageType
-    {
-        // Must match with Localization.Codes
-        public static LocalizedString[] LocalizedNames = new LocalizedString[5];
-
-        public static string GetLocalizedNameForCode(string code)
-        {
-            return LocalizedNames[Localization.GetIndexForLanguageCode(code)];
-        }
-
-        static LanguageType()
-        {
-            Localization.LocalizeStatic(typeof(LanguageType));
-        }
     }
 }

@@ -18,25 +18,26 @@ namespace FamiStudio
         protected bool visible = true;
         protected bool enabled = true;
         protected bool canFocus = true;
+        protected bool supportsDoubleClick = false;
+        protected bool supportsLongPress = false; 
         protected string tooltip;
         protected object userData;
         private bool tickEnabled;
 
         public delegate void ControlDelegate(Control sender);
+        public delegate void PointerEventDelegate(Control sender, PointerEventArgs e);
 
-        // TODO : Rename the "MouseDown" functions to something like "FireMouseDown"
-        // or "RaiseMouseDown" and rename those to simply "MouseDown".
-        public delegate void MouseEventDelegate(Control sender, PointerEventArgs e);
-        public event MouseEventDelegate PointerDown;
-        public event MouseEventDelegate PointerUp;
-        public event MouseEventDelegate PointerMove;
-        public event MouseEventDelegate TouchClick;
-        public event MouseEventDelegate TouchFling;
-        public event MouseEventDelegate ContainerPointerDownNotify;
-        public event MouseEventDelegate ContainerPointerUpNotify;
-        public event MouseEventDelegate ContainerPointerMoveNotify;
-        public event MouseEventDelegate ContainerTouchClickNotify;
-        public event MouseEventDelegate ContainerTouchFlingNotify;
+        public event PointerEventDelegate PointerDown;
+        public event PointerEventDelegate PointerUp;
+        public event PointerEventDelegate PointerMove;
+        public event PointerEventDelegate TouchClick;
+        public event PointerEventDelegate TouchDoubleClick;
+        public event PointerEventDelegate TouchFling;
+        public event PointerEventDelegate ContainerPointerDownNotify;
+        public event PointerEventDelegate ContainerPointerUpNotify;
+        public event PointerEventDelegate ContainerPointerMoveNotify;
+        public event PointerEventDelegate ContainerTouchClickNotify;
+        public event PointerEventDelegate ContainerTouchFlingNotify;
 
         protected Control()
         {
@@ -73,9 +74,6 @@ namespace FamiStudio
         protected virtual void OnKeyDown(KeyEventArgs e) { }
         protected virtual void OnKeyUp(KeyEventArgs e) { }
         protected virtual void OnChar(CharEventArgs e) { }
-        //protected virtual void OnTouchDown(PointerEventArgs e) { }
-        //protected virtual void OnTouchUp(PointerEventArgs e) { }
-        //protected virtual void OnTouchMove(PointerEventArgs e) { }
         protected virtual void OnTouchClick(PointerEventArgs e) { }
         protected virtual void OnTouchDoubleClick(PointerEventArgs e) { }
         protected virtual void OnTouchLongPress(PointerEventArgs e) { }
@@ -107,15 +105,15 @@ namespace FamiStudio
         public void SendAcquiredDialogFocus() { OnAcquiredDialogFocus(); }
         public void SendAddedToContainer() { OnAddedToContainer(); }
         public void SendTouchClick(PointerEventArgs e) { OnTouchClick(e); TouchClick?.Invoke(this, e); SendContainerTouchClickNotify(e); }
+        public void SendTouchDoubleClick(PointerEventArgs e) { OnTouchDoubleClick(e); TouchDoubleClick?.Invoke(this, e); }
         public void SendTouchScaleBegin(PointerEventArgs e) { OnTouchScaleBegin(e); }
         public void SendTouchScale(PointerEventArgs e) { OnTouchScale(e); }
         public void SendTouchScaleEnd(PointerEventArgs e) { OnTouchScaleEnd(e); }
         public void SendTouchFling(PointerEventArgs e) { OnTouchFling(e); TouchFling?.Invoke(this, e); SendContainerTouchFlingNotify(e); }
 
-        // MATTT : What about this one?
         public void SendMouseDoubleClick(PointerEventArgs e)
         {
-            if (SupportsDoubleClick)
+            if (supportsDoubleClick)
             {
                 OnMouseDoubleClick(e);
             }
@@ -126,49 +124,20 @@ namespace FamiStudio
             }
         }
 
-        /*
-        public void SendTouchMove(PointerEventArgs e) 
-        {
-            if (SendTouchInputAsMouse)
-                SendMouseMove(e); 
-            else
-                OnTouchMove(e);
-        }
-
-        public void SendTouchDown(PointerEventArgs e) 
-        {
-            if (SendTouchInputAsMouse)
-                SendMouseDown(e);
-            else
-                OnTouchDown(e); 
-        }
-
-        public void SendTouchUp(PointerEventArgs e) 
-        {
-            if (SendTouchInputAsMouse)
-                SendMouseUp(e);
-            else
-                OnTouchUp(e); 
-        }
-        */
-
-        // MATTT : What about this one?
-        public void SendTouchDoubleClick(PointerEventArgs e)
-        {
-            //if (SupportsDoubleClick)
-                OnTouchDoubleClick(e);
-            //else
-            //    OnTouchClick(e);
-        }
-
         public void SendTouchLongPress(PointerEventArgs e)
         {
-            if (SupportsLongPress)
+            if (supportsLongPress)
             {
                 OnTouchLongPress(e);
             }
             else
             {
+                // Pretend the left button is being released, followed by a click or the right.
+                // There will eventually be another left release later, but controls will ignore
+                // it hopefully. This is done to abort capture operations prior to showing a context
+                // menu, for example.
+                SendPointerUp(e);
+
                 var e2 = e.CloneWithNewButton(PointerEventArgs.ButtonRight); // Pretend right-click.
                 SendPointerDown(e2);
                 SendPointerUp(e2);
@@ -255,8 +224,8 @@ namespace FamiStudio
         public Rectangle Rectangle => new Rectangle(left, top, width, height);
         public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
         public Rectangle WindowRectangle => new Rectangle(WindowPosition, Size);
-        public Size ParentWindowSize => ParentWindow.Size;
-        public bool IsLandscape => ParentWindow.IsLandscape;
+        public Size ParentWindowSize => window.Size;
+        public bool IsLandscape => window.IsLandscape;
         public int Left => left;
         public int Top => top;
         public int Right => left + width;
@@ -264,8 +233,10 @@ namespace FamiStudio
         public int Width => width;
         public int Height => height;
         public Size Size => new Size(width, height);
-        public bool Capture { set { if (value) ParentWindow.CaptureMouse(this); else ParentWindow.ReleaseMouse(); } }
         public bool HasDialogFocus => ParentDialog?.FocusedControl == this;
+        public bool CheckPointerCaptureCookie(int cookie) { return window.CheckCaptureCookie(cookie); }
+        public int  CapturePointer() { return window.CapturePointer(this); }
+        public void ReleasePointer() { window.ReleasePointer(); }   
         public void GrabDialogFocus()  { if (ParentDialog != null) ParentDialog.FocusedControl = this; }
         public void ClearDialogFocus() { if (ParentDialog != null) ParentDialog.FocusedControl = null; }
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
@@ -274,16 +245,16 @@ namespace FamiStudio
         public bool IsContainedByMainWindow => ParentTopContainer != null;
         public string ToolTip { get => tooltip; set { SetAndMarkDirty(ref tooltip, value); } }
         public object UserData { get => userData; set => userData = value; }
-        public virtual bool SupportsLongPress => true;
-        public virtual bool SupportsDoubleClick => true;
+        public bool SupportsDoubleClick { get => supportsDoubleClick; set => supportsDoubleClick = value; }
+        public bool SupportsLongPress { get => supportsLongPress; set => supportsLongPress = value; }
         public bool TickEnabled => tickEnabled;
         public void MarkDirty() { window?.MarkDirty(); }
 
         public bool HasParent => container != null;
-        public Point CursorPosition => ParentWindow.GetCursorPosition();
-        public ModifierKeys ModifierKeys => ParentWindow.GetModifierKeys();
-        public FamiStudio App => ParentWindow?.FamiStudio;
-        public IntPtr Cursor { get => cursor; set { cursor = value; ParentWindow.RefreshCursor(); } }
+        public Point CursorPosition => window.GetCursorPosition();
+        public ModifierKeys ModifierKeys => window.GetModifierKeys();
+        public FamiStudio App => window?.FamiStudio;
+        public IntPtr Cursor { get => cursor; set { cursor = value; window.RefreshCursor(); } }
         public FamiStudioWindow ParentWindow => window;
         public Container ParentContainer => container;
         public Graphics Graphics => graphics;
@@ -363,12 +334,12 @@ namespace FamiStudio
 
         public Point ScreenToControl(Point p) 
         {
-            return WindowToControl(ParentWindow.ScreenToWindow(p));
+            return WindowToControl(window.ScreenToWindow(p));
         }
 
         public Point ControlToScreen(Point p) 
         {
-            return ControlToWindow(ParentWindow.WindowToScreen(p)); 
+            return ControlToWindow(window.WindowToScreen(p)); 
         }
 
         public void SetParentContainer(Container c)
@@ -385,43 +356,65 @@ namespace FamiStudio
 
         public void Move(int x, int y, bool fireResizeEvent = true)
         {
-            left = x;
-            top = y;
+            var changed = false;
+            changed |= SetAndMarkDirty(ref left, x);
+            changed |= SetAndMarkDirty(ref top, y);
 
-            if (fireResizeEvent)
+            if (changed && fireResizeEvent)
+            {
                 OnResize(EventArgs.Empty);
+            }
         }
 
         public void Move(int x, int y, int w, int h, bool fireResizeEvent = true)
         {
-            left = x;
-            top = y;
-            width = Math.Max(1, w);
-            height = Math.Max(1, h);
+            var changed = false;
+            changed |= SetAndMarkDirty(ref left, x);
+            changed |= SetAndMarkDirty(ref top, y);
+            changed |= SetAndMarkDirty(ref width, Math.Max(1, w));
+            changed |= SetAndMarkDirty(ref height, Math.Max(1, h));
 
-            if (fireResizeEvent)
+            if (changed && fireResizeEvent)
                 OnResize(EventArgs.Empty);
         }
 
         public void Resize(int w, int h, bool fireResizeEvent = true)
         {
-            width  = Math.Max(1, w);
-            height = Math.Max(1, h);
+            var changed = false;
+            changed |= SetAndMarkDirty(ref width, Math.Max(1, w));
+            changed |= SetAndMarkDirty(ref height, Math.Max(1, h));
 
-            if (fireResizeEvent)
+            if (changed && fireResizeEvent)
                 OnResize(EventArgs.Empty);
+        }
+
+        public void Resize(Size s, bool fireResizeEvent = true)
+        {
+            Resize(s.Width, s.Height, fireResizeEvent);
         }
 
         public void CenterToWindow()
         {
-            Move((ParentWindow.Width  - width) / 2,
-                 (ParentWindow.Height - height) / 2,
+            Move((window.Width  - width) / 2,
+                 (window.Height - height) / 2,
                  width, height);
         }
 
         protected bool SetAndMarkDirty<T>(ref T target, T current) where T : IEquatable<T>
         {
             if (((target == null) != (current == null)) || (target != null && !target.Equals(current)))
+            {
+                target = current;
+                MarkDirty();
+                return true;
+            }
+
+            return false;
+        }
+
+        protected bool SetAndMarkDirtyEnum<T>(ref T target, T current) where T : Enum
+        {
+            if (!target.Equals(current))
             {
                 target = current;
                 MarkDirty();
@@ -816,7 +809,6 @@ namespace FamiStudio
         public string DisplayName    { get; private set; }
         public string ConfigName     { get; private set; }
         public bool   AllowModifiers { get; private set; } = true;
-        public readonly bool AllowTwoShortcuts = true; // Always allow... { get; private set; }
 
         //public int[] ScanCodes = new int[2];
         public Keys[] KeyValues         { get; private set; } = new Keys[2];
@@ -990,7 +982,6 @@ namespace FamiStudio
 
         public string ToConfigString(int idx)
         {
-            Debug.Assert(idx == 0 || AllowTwoShortcuts);
             return Modifiers[idx].ToConfigString() + KeyValues[idx].ToString();
         }
 
@@ -1010,9 +1001,7 @@ namespace FamiStudio
 
         public override string ToString()
         {
-            var str = DisplayName + " " + ToDisplayString(0);
-            if (AllowTwoShortcuts)
-                str += " " + ToDisplayString(1);
+            var str = DisplayName + " " + ToDisplayString(0) + " " + ToDisplayString(1);
             return str.Trim();
         }
     }

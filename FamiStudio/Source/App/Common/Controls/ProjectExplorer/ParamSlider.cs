@@ -7,7 +7,6 @@ namespace FamiStudio
 {
     public class ParamSlider : ParamControl
     {
-        // MATTT : What was that again?
         private float bmpScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
 
         private TextureAtlasRef bmpMinus;
@@ -27,6 +26,7 @@ namespace FamiStudio
         {
             exp = 1.0f / (p.Logarithmic ? 4 : 1);
             height = DpiScaling.ScaleForWindow(16);
+            supportsLongPress = true;
         }
 
         protected override void OnAddedToContainer()
@@ -34,8 +34,7 @@ namespace FamiStudio
             bmpMinus = ParentWindow.Graphics.GetTextureAtlasRef("ButtonMinus");
             bmpPlus  = ParentWindow.Graphics.GetTextureAtlasRef("ButtonPlus");
             buttonSize = DpiScaling.ScaleCustom(bmpMinus.ElementSize.Width, bmpScale);
-            height = buttonSize;
-            // MATTT : Make the rectangle part a bit smaller on mobile.
+            height = buttonSize - (Platform.IsMobile ? DpiScaling.ScaleForWindow(2) : 0);
         }
 
         // -1 = left, 1 = right, 0 = outside
@@ -67,7 +66,7 @@ namespace FamiStudio
                     capture = true;
                     captureButton = buttonIndex;
                     captureMouseX = e.X;
-                    Capture = true;
+                    CapturePointer();
 
                     if (captureButton != 0)
                     {
@@ -118,7 +117,7 @@ namespace FamiStudio
 
         public override void ShowParamContextMenu()
         {
-            App.ShowContextMenu(new[]
+            App.ShowContextMenuAsync(new[]
             {
                 new ContextMenuOption("Type",      EnterValueContext,        () => { EnterParamValue(); }),
                 new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })

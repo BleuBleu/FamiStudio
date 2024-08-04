@@ -9,34 +9,23 @@ namespace FamiStudio
         protected LocalizedString PitchLabel;
         protected LocalizedString VolumeLabel;
         protected LocalizedString DutyLabel;
+        protected LocalizedString WaveOverlap;
+        protected LocalizedString WaveWrongPlaying;
 
         // These are really UI specific things... Should be somewhere else.
-        // MATTT Change this for strings with name of icon directly.
-        protected int IconSquare = 0;
-        protected int IconTriangle = 1;
-        protected int IconNoise = 2;
-        protected int IconDPCM = 3;
-        protected int IconSaw = 4;
-        protected int IconFM = 5;
-        protected int IconWaveTable = 6;
-        protected int IconRhythm = 7;
+        protected static readonly string IconSquare    = "ChannelSquare";
+        protected static readonly string IconTriangle  = "ChannelTriangle";
+        protected static readonly string IconNoise     = "ChannelNoise";
+        protected static readonly string IconDPCM      = "ChannelDPCM";
+        protected static readonly string IconSaw       = "ChannelSaw";
+        protected static readonly string IconFM        = "ChannelFM";
+        protected static readonly string IconWaveTable = "ChannelWaveTable";
+        protected static readonly string IconRhythm    = "ChannelRythm";
 
         protected int expansion;
 
-        public static readonly string[] Icons =
-        {
-            "ChannelSquare",
-            "ChannelTriangle",
-            "ChannelNoise",
-            "ChannelDPCM",
-            "ChannelSaw",
-            "ChannelFM",
-            "ChannelWaveTable",
-            "ChannelRythm"
-        };
-
         public string[] InterpreterLabels { get; internal set; }
-        public int[] InterpreterIcons { get; internal set; }
+        public string[] InterpreterIcons { get; internal set; }
         public RegisterViewerRow[] RegisterRows { get; internal set; }
         public RegisterViewerRow[][] InterpeterRows { get; internal set; }
         public int Expansion => expansion;
@@ -135,7 +124,7 @@ namespace FamiStudio
             for (int j = 0; j < 5; j++){
                 InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.Square1+j];
             };
-            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconTriangle, IconNoise, IconDPCM };
+            InterpreterIcons = new string[]{ IconSquare, IconSquare, IconTriangle, IconNoise, IconDPCM };
             Localization.Localize(this);
             i = new ApuRegisterInterpreter(r);
             RegisterRows = new[]
@@ -190,7 +179,7 @@ namespace FamiStudio
             for (int j = 0; j < 3; j++){
                 InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.Vrc6Square1+j];
             };
-            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconSaw };
+            InterpreterIcons = new string[]{ IconSquare, IconSquare, IconSaw };
             Localization.Localize(this);
             i = new Vrc6RegisterInterpreter(r);
             RegisterRows = new[]
@@ -228,7 +217,7 @@ namespace FamiStudio
         public Vrc7RegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.Vrc7)
         {
             InterpreterLabels = new string[6];
-            InterpreterIcons = new int[6];
+            InterpreterIcons = new string[6];
             Localization.Localize(this);
             i = new Vrc7RegisterIntepreter(r);
             RegisterRows = new[]
@@ -264,7 +253,7 @@ namespace FamiStudio
         public FdsRegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.Fds)
         {
             InterpreterLabels = new string[] { ChannelType.LocalizedNames[ChannelType.FdsWave] };
-            InterpreterIcons = new int[] { IconWaveTable };
+            InterpreterIcons = new string[] { IconWaveTable };
             Localization.Localize(this);
             i = new FdsRegisterIntepreter(r);
             RegisterRows = new[]
@@ -334,7 +323,7 @@ namespace FamiStudio
                 ChannelType.LocalizedNames[ChannelType.Mmc5Square1],
                 ChannelType.LocalizedNames[ChannelType.Mmc5Square2]
             };
-            InterpreterIcons = new int[] { IconSquare, IconSquare };
+            InterpreterIcons = new string[] { IconSquare, IconSquare };
             Localization.Localize(this);
             i = new Mmc5RegisterIntepreter(r);
             RegisterRows = new[]
@@ -370,7 +359,7 @@ namespace FamiStudio
         public N163RegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.N163)
         {
             InterpreterLabels = new string[8];
-            InterpreterIcons = new int[8];
+            InterpreterIcons = new string[8];
             Localization.Localize(this);
             i = new N163RegisterIntepreter(r);
             RegisterRows = new[]
@@ -491,15 +480,14 @@ namespace FamiStudio
                 // Blink all conflicting colors if there is a conflict.
                 var colorIndex = video || instCount == 0 ? 0 : (int)(Platform.TimeSeconds() * 15) % instCount;
                 var color = instColors[colorIndex];
-                
-                // MATTT : Localize these.
+
                 if (instCount > 1)
                 {
-                    c.DrawText("Wave overlap detected!", res.FontSmall, 0, 0, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                    c.DrawText(WaveOverlap, res.FontSmall, 0, 0, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
                 }
                 else if (wrongInstrument)
                 {
-                    c.DrawText("Potentially wrong wave playing!", res.FontSmall, 0, 0, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                    c.DrawText(WaveWrongPlaying, res.FontSmall, 0, 0, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
                 }
 
                 c.FillRectangle((x * 2 + 0) * sx, h - lo, (x * 2 + 1) * sx, h, color);
@@ -561,7 +549,7 @@ namespace FamiStudio
                 ChannelType.LocalizedNames[ChannelType.S5BSquare3],
                 null, null
             };
-            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconSquare, IconNoise, IconSaw }; //TODO: ACTUAL ENVELOPE ICON
+            InterpreterIcons = new string[]{ IconSquare, IconSquare, IconSquare, IconNoise, IconSaw }; //TODO: ACTUAL ENVELOPE ICON
             Localization.Localize(this); 
             InterpreterLabels[3] = NoiseLabel.ToString();
             InterpreterLabels[4] = EnvelopeLabel.ToString();
@@ -616,7 +604,7 @@ namespace FamiStudio
         public EpsmRegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.EPSM)
         {
             InterpreterLabels = new string[17];
-            InterpreterIcons = new int[17];
+            InterpreterIcons = new string[17];
             Localization.Localize(this);
             i = new EpsmRegisterIntepreter(r);
             RegisterRows = new[]

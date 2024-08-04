@@ -16,11 +16,11 @@ namespace FamiStudio
         public event ControlDelegate ValueChangeEnd;
 
         public virtual void ShowParamContextMenu() { }
-        public override bool SupportsDoubleClick => false;
-
+        
         protected ParamControl(ParamInfo p)
         {
             param = p;
+            supportsDoubleClick = false;
             Localization.Localize(this);
         }
 

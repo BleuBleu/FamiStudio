@@ -51,7 +51,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    Capture = true;
+                    CapturePointer();
                     draggingScrollbars = true;
                     captureScrollBarPos = scrollBarPos;
                     captureMouseY = e.Y;
@@ -67,7 +67,7 @@ namespace FamiStudio
             if (draggingScrollbars)
             {
                 draggingScrollbars = false;
-                Capture = false;
+                ReleasePointer();
                 MarkDirty();
             }
         }

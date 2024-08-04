@@ -19,7 +19,8 @@ namespace FamiStudio
             public string text;
         };
 
-        protected string text;
+        protected string text = "";
+        protected string prompt;
         protected int scrollX;
         protected int maxScrollX;
         protected int selectionStart = -1;
@@ -35,6 +36,7 @@ namespace FamiStudio
         protected bool mouseSelecting;
         protected bool caretBlink = true;
         protected bool numeric;
+        protected bool allowMobileEdit = true;
         protected float caretBlinkTime;
 
         protected int undoRedoIndex = 0;
@@ -51,17 +53,21 @@ namespace FamiStudio
         protected int innerMargin      = DpiScaling.ScaleForWindow(4);
         protected int scrollAmount     = DpiScaling.ScaleForWindow(20);
 
-        public Color ForeColor      { get => foreColor;     set { foreColor     = value; MarkDirty(); } }
-        public Color DisabledColor  { get => disabledColor; set { disabledColor = value; MarkDirty(); } }
-        public Color BackColor      { get => backColor;     set { backColor     = value; MarkDirty(); } }
-        public Color SelectionColor { get => selColor;      set { selColor      = value; MarkDirty(); } }
+        public Color ForeColor      { get => foreColor;     set { SetAndMarkDirty(ref foreColor, value);     } }
+        public Color DisabledColor  { get => disabledColor; set { SetAndMarkDirty(ref disabledColor, value); } }
+        public Color BackColor      { get => backColor;     set { SetAndMarkDirty(ref backColor, value);     } }
+        public Color SelectionColor { get => selColor;      set { SetAndMarkDirty(ref selColor, value);      } }
+
+        public string Prompt { get => prompt; set => prompt = value; }
 
         public TextBox(string txt, int maxLen = 0)
         {
-            height = DpiScaling.ScaleForWindow(24);
+            Debug.Assert(txt != null);
+            height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 :  24);
             text = txt;
             maxLength = maxLen;
-            SetTickEnabled(true); // TODO : Only enable when we have focus. 
+            SetTickEnabled(Platform.IsDesktop); // TODO : Only enable when we have focus. 
+            supportsDoubleClick = true;
         }
 
         public TextBox(int value, int minVal, int maxVal, int increment)
@@ -72,7 +78,7 @@ namespace FamiStudio
             numberMin = minVal;
             numberMax = maxVal;
             numberInc = increment;
-            SetTickEnabled(true); // TODO : Only enable when we have focus. 
+            SetTickEnabled(Platform.IsDesktop); // TODO : Only enable when we have focus. 
         }
 
         public string Text
@@ -80,6 +86,7 @@ namespace FamiStudio
             get { return text; }
             set 
             {
+                Debug.Assert(value != null);
                 text = FilterString(maxLength > 0 ? value.Substring(0, maxLength) : value);
                 scrollX = 0;
                 caretIndex = 0;
@@ -126,7 +133,7 @@ namespace FamiStudio
         {
             Cursor = enabled && e.X > outerMarginLeft && e.X < (width - outerMarginRight) ? Cursors.IBeam : Cursors.Default;
 
-            if (mouseSelecting)
+            if (mouseSelecting && !e.IsTouchEvent)
             {
                 var c = PixelToChar(e.X - outerMarginLeft);
                 var selMin = Math.Min(mouseSelectionChar, c);
@@ -141,7 +148,7 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (e.Left && enabled)
+            if (e.Left && enabled && !e.IsTouchEvent)
             {
                 var c = PixelToChar(e.X - outerMarginLeft);
                 SetAndMarkDirty(ref caretIndex, c);
@@ -149,19 +156,19 @@ namespace FamiStudio
                 SetAndMarkDirty(ref selectionLength, 0);
                 ClearSelection();
                 ResetCaretBlink();
+                CapturePointer();
 
                 mouseSelectionChar = c;
                 mouseSelecting = true;
-                Capture = true;
             }
         }
 
         protected override void OnPointerUp(PointerEventArgs e)
         {
-            if (e.Left && enabled)
+            if (e.Left && enabled && !e.IsTouchEvent)
             {
                 mouseSelecting = false;
-                Capture = false;
+                ReleasePointer();
             }
         }
 
@@ -373,6 +380,14 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnTouchClick(PointerEventArgs e)
+        {
+            if (allowMobileEdit && enabled)
+            {
+                Platform.EditTextAsync(prompt, text, (s) => SetAndMarkDirty(ref text, s));
+            }
+        }
+
         protected void InsertText(string str)
         {
             str = FilterString(str);
@@ -521,11 +536,25 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnAddedToContainer()
+        protected void UpdateTextAreaSize()
         {
             textAreaWidth = width - (outerMarginLeft + outerMarginRight);
             textAreaWidthNoMargin = textAreaWidth - innerMargin * 2;
             UpdateScrollParams();
+            MarkDirty();
+        }
+
+        protected override void OnAddedToContainer()
+        {
+            UpdateTextAreaSize();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            if (window != null)
+            {
+                UpdateTextAreaSize();
+            }
         }
 
         protected override void OnRender(Graphics g)

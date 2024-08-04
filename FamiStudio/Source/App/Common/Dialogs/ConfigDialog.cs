@@ -50,7 +50,6 @@ namespace FamiStudio
 
         // Title
         LocalizedString Title;
-        LocalizedString Verb;
 
         // General tooltips
         LocalizedString LanguageTooltip;
@@ -190,8 +189,7 @@ namespace FamiStudio
         {
             Localization.Localize(this);
 
-            dialog = new MultiPropertyDialog(win, Title, 570);
-            dialog.SetVerb(Verb, true);
+            dialog = new MultiPropertyDialog(win, Title, 570, true);
 
             // Keep a copy of keyboart shortcuts
             shortcuts = Shortcut.CloneList(Settings.AllShortcuts);
@@ -228,7 +226,7 @@ namespace FamiStudio
 
         private string[] BuildLanguageList()
         {
-            var languages = Localization.ToStringArray(LanguageType.LocalizedNames);
+            var languages = Localization.LanguageNames;
             var list = new string[languages.Length + 1];
 
             list[0] = SystemOption;
@@ -282,7 +280,7 @@ namespace FamiStudio
                     page.AddDropDownList(TimeFormatLabel.Colon, Localization.ToStringArray(TimeFormatStrings), TimeFormatStrings[timeFormatIndex], TimeFormatTooltip); // 1
                     page.AddDropDownList(FollowModeLabel.Colon, Localization.ToStringArray(FollowModeStrings), FollowModeStrings[followModeIndex], FollowModeTooltip);  // 2
                     page.AddDropDownList(FollowViewsLabel.Colon, Localization.ToStringArray(FollowSyncStrings), FollowSyncStrings[followSyncIndex], FollowingViewsTooltip); // 3
-                    page.AddSlider(FollowRangeLabel.Colon, Settings.FollowPercent, 0.05, 0.95, 0.01f, 2, "{0:P0}", FollowRangeTooltip); // 4
+                    page.AddSlider(FollowRangeLabel.Colon, Settings.FollowPercent, 0.05, 0.95, (v) => $"{v:P0}", FollowRangeTooltip); // 4
                     page.AddDropDownList(ScrollBarsLabel.Colon, Localization.ToStringArray(ScrollBarsStrings), ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 5
                     page.AddDropDownList(IdealSeqHeightLabel.Colon, IdealSequencerHeightStrings, IdealSequencerHeightStrings[GetSequencerSizeIndex(Settings.IdealSequencerSize)], IdealSequencerHeightTooltip); // 6
                     page.AddDropDownList(DpcmColorModeLabel.Colon, Localization.ToStringArray(DpcmColorModeStrings), DpcmColorModeStrings[Settings.DpcmColorMode], DpcmColorModeTooltip); // 7
@@ -304,8 +302,8 @@ namespace FamiStudio
                     page.AddCheckBox(TrackpadControlsLabel.Colon, Settings.TrackPadControls, TrackpadControlsTooltip); // 0
                     page.AddCheckBox(ReverseTrackpadXLabel.Colon, Settings.ReverseTrackPadX); // 1
                     page.AddCheckBox(ReverseTrackpadYLabel.Colon, Settings.ReverseTrackPadY); // 2
-                    page.AddSlider(TrackpadSensitivityLabel.Colon, Settings.TrackPadMoveSensitity, 1.0, 20.0, 1.0f, 1, "{0:0.0}"); // 3
-                    page.AddSlider(TrackpadZoomSensitivityLabel.Colon, Settings.TrackPadZoomSensitity, 1.0, 20.0, 1.0, 1, "{0:0.0}"); // 4
+                    page.AddSlider(TrackpadSensitivityLabel.Colon, Settings.TrackPadMoveSensitity, 1.0, 20.0, (v) => $"{v:0.0}"); // 3
+                    page.AddSlider(TrackpadZoomSensitivityLabel.Colon, Settings.TrackPadZoomSensitity, 1.0, 20.0, (v) => $"{v:0.0}"); // 4
                     page.AddCheckBox(AltLeftEmulatesMiddle.Colon, Settings.AltLeftForMiddle, AltLeftForMiddleTooltip); // 5
                     page.AddCheckBox(AltRightZoomsInOut.Colon, Settings.AltZoomAllowed, AltZoomAllowedTooltip); // 6
                     page.SetPropertyEnabled(1, Settings.TrackPadControls);
@@ -327,7 +325,7 @@ namespace FamiStudio
                     page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 6
                     page.AddCheckBox(MuteDragSoundsLabel.Colon, Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 7
                     page.AddCheckBox(AccurateSeekLabel.Colon, Settings.AccurateSeek, AccurateSeekTooltip); // 8
-                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 9
+                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, (v) => $"{v/100.0:P0}", MetronomeVolumeTooltip); // 9
                     break;
                 }
                 case ConfigSection.Mixer:
@@ -357,19 +355,18 @@ namespace FamiStudio
                     break;
                 }
                 case ConfigSection.FFmpeg:
-                    page.AddLabel(null, FFmpegRequiredLabel, true); // 0
-                    page.AddFileTextBox(null, Settings.FFmpegExecutablePath, 0, FFmpegPathTooltip); // 1
-                    page.AddLinkLabel(null, FFmpegDownloadLabel, "https://famistudio.org/doc/ffmpeg/"); // 3
+                {
+                    page.AddFileTextBox(FFmpegRequiredLabel, Settings.FFmpegExecutablePath, 0, FFmpegPathTooltip, PropertyFlags.MultiLineLabel); // 0
+                    page.AddLinkLabel(null, FFmpegDownloadLabel, "https://famistudio.org/doc/ffmpeg/"); // 1
                     page.PropertyClicked += FFmpegPage_PropertyClicked;
                     break;
+                }
                 case ConfigSection.Keys:
                 {
-                    page.AddLabel(null, DoubleClickLabel, true); // 0
-                    page.AddGrid("Keys", new[] { new ColumnDesc(ActionColumn, 0.4f), new ColumnDesc(KeyColumn, 0.3f), new ColumnDesc(KeyAltColumn, 0.3f) }, GetKeyboardShortcutStrings(), 14); // 1
-                    page.AddButton(null, ResetDefaultLabel);
+                    page.AddGrid(DoubleClickLabel, new[] { new ColumnDesc(ActionColumn, 0.4f), new ColumnDesc(KeyColumn, 0.3f), new ColumnDesc(KeyAltColumn, 0.3f) }, GetKeyboardShortcutStrings(), 14, null, GridOptions.None, PropertyFlags.MultiLineLabel); // 0
+                    page.AddButton(null, ResetDefaultLabel); // 1
                     page.PropertyClicked += KeyboardPage_PropertyClicked;
-                    page.PropertyCellEnabled += KeyboardPage_PropertyCellEnabled;
-                    page.SetColumnEnabled(1, 0, false);
+                    page.SetColumnEnabled(0, 0, false);
                     break;
                 }
                 case ConfigSection.Mobile:
@@ -410,7 +407,7 @@ namespace FamiStudio
         {
             if (click == ClickType.Button)
             {
-                if (propIdx == 1)
+                if (propIdx == 0)
                 {
                     var ffmpegExeFilter = Platform.IsWindows ? "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe" : "FFmpeg Executable (ffmpeg)|*.*";
                     var dummy = "";
@@ -421,7 +418,7 @@ namespace FamiStudio
                         props.SetPropertyValue(propIdx, filename);
                     }
                 }
-                else if (propIdx == 2)
+                else if (propIdx == 1)
                 {
                     Platform.OpenUrl("https://famistudio.org/doc/ffmpeg/");
                 }
@@ -430,7 +427,7 @@ namespace FamiStudio
 
         private void KeyboardPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (propIdx == 1 && colIdx >= 1)
+            if (propIdx == 0 && colIdx >= 1)
             {
                 if (click == ClickType.Double)
                 {
@@ -447,19 +444,14 @@ namespace FamiStudio
                 else if (click == ClickType.Right)
                 {
                     shortcuts[rowIdx].Clear(colIdx - 1);
-                    pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
+                    pages[(int)ConfigSection.Keys].UpdateGrid(0, GetKeyboardShortcutStrings());
                 }
             }
-            else if (propIdx == 2 && click == ClickType.Button)
+            else if (propIdx == 1 && click == ClickType.Button)
             {
                 shortcuts = Shortcut.CloneList(Settings.DefaultShortcuts);
-                pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
+                pages[(int)ConfigSection.Keys].UpdateGrid(0, GetKeyboardShortcutStrings());
             }
-        }
-
-        private bool KeyboardPage_PropertyCellEnabled(PropertyPage props, int propIdx, int rowIdx, int colIdx)
-        {
-            return colIdx != 2 || shortcuts[rowIdx].AllowTwoShortcuts;
         }
 
         private void Dlg_KeyboardKeyDown(Dialog dlg, KeyEventArgs e)
@@ -482,7 +474,7 @@ namespace FamiStudio
                     e = new KeyEventArgs(e.Key, new ModifierKeys(0), false, 0);
 
                 AssignKeyboardKey(keysRowIndex, keysColIndex - 1, e);
-                pages[(int)ConfigSection.Keys].UpdateGrid(1, GetKeyboardShortcutStrings());
+                pages[(int)ConfigSection.Keys].UpdateGrid(0, GetKeyboardShortcutStrings());
                 dlg.Close(DialogResult.OK);
             }
 

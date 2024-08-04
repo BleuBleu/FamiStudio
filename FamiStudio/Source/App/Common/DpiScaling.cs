@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 
 namespace FamiStudio
 {
@@ -9,13 +10,17 @@ namespace FamiStudio
 
         private static float windowScaling = 1;
         private static float fontScaling   = 1;
-        private static bool forceUnitScale = false;
+
+        // HACK : This is thread-local since the video export (which uses this feature) runs on a
+        // different thread on mobile and could interfere with the scaling of the main UI.
+        private static ThreadLocal<bool> forceUnitScale = new ThreadLocal<bool>();
 
         public static bool IsInitialized => initialized;
 
-        public static float Window { get { Debug.Assert(initialized); return forceUnitScale ? 1.0f : windowScaling; } }
-        public static float Font   { get { Debug.Assert(initialized); return forceUnitScale ? 1.0f : fontScaling; } }
-        public static bool ForceUnitScaling { get => forceUnitScale; set => forceUnitScale = value; }
+        public static float Window { get { Debug.Assert(initialized); return forceUnitScale.Value ? 1.0f : windowScaling; } }
+        public static float Font   { get { Debug.Assert(initialized); return forceUnitScale.Value ? 1.0f : fontScaling; } }
+        
+        public static bool ForceUnitScaling { get => forceUnitScale.Value; set => forceUnitScale.Value = value; }
 
         public static int ScaleCustom(float val, float scale)
         {
@@ -111,9 +116,8 @@ namespace FamiStudio
                         windowScaling = 1.0f;
                 }
 
-                fontScaling    = (float)Math.Round(windowScaling * 3);
-                windowScaling  = (float)Math.Round(windowScaling * 6);
-                forceUnitScale = false;
+                fontScaling   = (float)Math.Round(windowScaling * 3);
+                windowScaling = (float)Math.Round(windowScaling * 6);
             }
             else
             {

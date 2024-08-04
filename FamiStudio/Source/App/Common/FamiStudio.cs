@@ -35,7 +35,7 @@ namespace FamiStudio
         private int selectedChannelIndex;
         private long forceDisplayChannelMask = 0;
         private int lastMidiNote = -1;
-        private int tutorialCounter = Platform.IsDesktop ? 3 : 1;
+        private int tutorialCounter = 3;
         private int baseRecordingOctave = 3;
         private int lastTickCurrentFrame = -1;
         private int previewDPCMSampleId = -1;
@@ -685,17 +685,12 @@ namespace FamiStudio
             return true;
         }
 
-        public void ShowContextMenu(ContextMenuOption[] options)
+        public void ShowContextMenuAsync(ContextMenuOption[] options)
         {
-            if (options != null && options.Length > 0) 
-                ShowContextMenu(window.LastMousePosition.X, window.LastMousePosition.Y, options);
-        }
-
-        // MATTT : Get rid of this version with explicity coordinates.
-        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
-        {
-            Debug.Assert(options.Length > 0);
-            window.ShowContextMenu(x, y, options);
+            if (options != null && options.Length > 0)
+            {
+                window.ShowContextMenuAsync(options);
+            }
         }
 
         public void HideContextMenu()
@@ -1058,7 +1053,7 @@ namespace FamiStudio
             var txt = extension == ".txt";
             var vgm = extension == ".vgm" || extension == ".vgz";
             var nsf = extension == ".nsf" || extension == ".nsfe";
-            var mid = extension == ".mid" && Platform.IsDesktop;
+            var mid = extension == ".mid";
 
             var requiresDialog = allowComplexFormats && (nsf || mid || vgm);
 
@@ -1276,7 +1271,7 @@ namespace FamiStudio
 
         private void RefreshProjectExplorerButtons()
         {
-            ProjectExplorer.RecreateAllControls(); // MATTT : Make private.
+            ProjectExplorer.RefreshButtons();
         }
 
         private void InvalidatePatternCache()
@@ -2342,7 +2337,7 @@ namespace FamiStudio
             {
                 if (--tutorialCounter == 0)
                 {
-                    if (Settings.ShowTutorial)
+                    if (Settings.ShowTutorial) 
                     {
                         var dlg = new TutorialDialog(window);
                         dlg.ShowDialogAsync((r) =>

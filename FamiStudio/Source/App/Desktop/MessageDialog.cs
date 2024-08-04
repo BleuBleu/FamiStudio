@@ -80,9 +80,8 @@ namespace FamiStudio
 
             if (label.Width > maxTextSize)
             {
-                label.Resize(maxTextSize, 1);
                 label.Multiline = true;
-                label.AdjustHeightForMultiline();
+                label.Resize(maxTextSize, 1);
             }
 
             Resize(Math.Max(minDialogWidth, margin * 3 + image.Width  + label.Width), margin * 3 + label.Height + buttonSize + titleBarSizeY);

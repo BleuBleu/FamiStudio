@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -14,8 +15,8 @@ namespace FamiStudio
         private int inc = 1;
         private TextureAtlasRef[] bmp;
         private float captureDuration;
-        private int   captureButton = -1;
-        private int   hoverButton = -1;
+        private int captureButton = -1;
+        private int hoverButton = -1;
 
         protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
@@ -28,9 +29,11 @@ namespace FamiStudio
             Debug.Assert(val % increment == 0);
             Debug.Assert(min % increment == 0);
             Debug.Assert(max % increment == 0);
-            height = DpiScaling.ScaleForWindow(24);
+            height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
+            allowMobileEdit = false;
+            supportsDoubleClick = true;
+            supportsLongPress = true;
             SetTextBoxValue();
-            SetTickEnabled(true); // TODO : Only enable when we are pressing a button.
         }
 
         public int Value
@@ -62,10 +65,15 @@ namespace FamiStudio
             set { max = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
         }
 
+        protected void UpdateOuterMargins()
+        {
+            outerMarginLeft  = GetButtonRect(0).Width + textBoxMargin;
+            outerMarginRight = outerMarginLeft;
+        }
+
         protected override void OnAddedToContainer()
         {
-            outerMarginLeft = GetButtonRect(0).Width + textBoxMargin;
-            outerMarginRight = outerMarginLeft;
+            UpdateOuterMargins();
 
             var g = ParentWindow.Graphics;
             bmp = new[]
@@ -76,6 +84,12 @@ namespace FamiStudio
 
             // "outerMargin" needs to be set before calling this.
             base.OnAddedToContainer();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            UpdateOuterMargins();
+            base.OnResize(e);
         }
 
         private Rectangle GetButtonRect(int idx)
@@ -117,6 +131,10 @@ namespace FamiStudio
                     Value += (captureButton == 0 ? -inc : inc) * (lastDuration >= 1.5f && (Value % (10 * inc)) == 0 ? 10 * inc : 1 * inc);
                 }
             }
+            else
+            {
+                SetTickEnabled(false);
+            }
 
             base.Tick(delta);
         }
@@ -130,7 +148,8 @@ namespace FamiStudio
                 captureButton = idx;
                 captureDuration = 0;
                 Value += captureButton == 0 ? -inc : inc;
-                Capture = true;
+                CapturePointer();
+                SetTickEnabled(true);
             }
             else
             {
@@ -181,7 +200,8 @@ namespace FamiStudio
             if (captureButton >= 0)
             {
                 captureButton = -1;
-                Capture = false;
+                ReleasePointer();
+                SetTickEnabled(false);
             }
             else
             {
@@ -191,7 +211,11 @@ namespace FamiStudio
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
+            if (!e.IsTouchEvent)
+            {
+                SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
+            }
+
             base.OnPointerMove(e);
         }
 
@@ -213,16 +237,23 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            base.OnRender(g);
-
             var c = g.GetCommandList();
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
-            var rects = new []
+            var rects = new[]
             {
                 GetButtonRect(0),
                 GetButtonRect(1)
             };
+
+            if (Platform.IsMobile)
+            {
+                c.DrawText(val.ToString(CultureInfo.InvariantCulture), fonts.FontMedium, rects[0].Right, 0, color, TextFlags.MiddleCenter, rects[1].Left - rects[0].Right, height);
+            }
+            else
+            {
+                base.OnRender(g);
+            }
 
             for (int i = 0; i < 2; i++)
             {

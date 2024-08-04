@@ -8,6 +8,9 @@ namespace FamiStudio
         private string text;
         private bool check;
         private bool hover;
+        private bool rightAlign;
+        private float imageScale = Platform.IsDesktop ? 1.0f : DpiScaling.ScaleForWindowFloat(1.0f / 6.0f);
+        private int scaledCheckboxSize;
         private int margin = DpiScaling.ScaleForWindow(4);
         private TextureAtlasRef bmpCheckOn;
         private TextureAtlasRef bmpCheckOff;
@@ -17,6 +20,15 @@ namespace FamiStudio
             text = txt;
             check = chk;
             height = DpiScaling.ScaleForWindow(24);
+            supportsDoubleClick = false;
+        }
+
+        public string Text => text;
+
+        public bool RightAlign
+        {
+            get { return rightAlign; }
+            set { SetAndMarkDirty(ref rightAlign, value); }
         }
 
         public bool Checked
@@ -29,25 +41,28 @@ namespace FamiStudio
         {
             bmpCheckOn  = window.Graphics.GetTextureAtlasRef("CheckBoxYes");
             bmpCheckOff = window.Graphics.GetTextureAtlasRef("CheckBoxNo");
+            scaledCheckboxSize = DpiScaling.ScaleCustom(bmpCheckOn.ElementSize.Height, imageScale);
         }
 
         public bool IsPointInCheckBox(int x, int y)
         {
-            var bmpSize = bmpCheckOn.ElementSize;
-            var baseY = (height - bmpSize.Height) / 2;
+            var baseX = rightAlign ? (width - scaledCheckboxSize) : 0;
+            var baseY = (height - scaledCheckboxSize) / 2;
 
-            return x >= 0 && y >= baseY && x < bmpSize.Width && y < baseY + bmpSize.Height;
+            return x >= baseX && y >= baseY && x < baseX + scaledCheckboxSize && y < baseY + scaledCheckboxSize;
         }
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (enabled && IsPointInCheckBox(e.X, e.Y))
+            if (enabled && IsPointInCheckBox(e.X, e.Y) && !e.IsTouchEvent)
                 Checked = !Checked;
         }
 
-        protected override void OnMouseDoubleClick(PointerEventArgs e)
+        protected override void OnTouchClick(PointerEventArgs e)
         {
-            OnPointerDown(e);
+            // Allow click on label on mobile.
+            if (enabled)
+                Checked = !Checked;
         }
 
         protected override void OnPointerMove(PointerEventArgs e)
@@ -63,15 +78,15 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
-            var bmpSize = bmpCheckOn.ElementSize;
-            var baseY = (height - bmpSize.Height) / 2;
+            var baseX = rightAlign ? (width - scaledCheckboxSize) : 0;
+            var baseY = (height - scaledCheckboxSize) / 2;
             var color = enabled ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
 
-            c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, hover && enabled ? Theme.DarkGreyColor3 : Theme.DarkGreyColor1, color);
-            c.DrawTextureAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, color);
+            c.FillAndDrawRectangle(baseX, baseY, baseX + scaledCheckboxSize - 1, baseY + scaledCheckboxSize - 1, hover && enabled ? Theme.DarkGreyColor3 : Theme.DarkGreyColor1, color);
+            c.DrawTextureAtlas(check ? bmpCheckOn : bmpCheckOff, baseX, baseY, imageScale, color);
 
             if (!string.IsNullOrEmpty(text))
-                c.DrawText(text, Fonts.FontMedium, bmpSize.Width + margin, 0, color, TextFlags.MiddleLeft, 0, height);
+                c.DrawText(text, Fonts.FontMedium, scaledCheckboxSize + margin, 0, color, TextFlags.MiddleLeft, 0, height);
         }
     }
 }

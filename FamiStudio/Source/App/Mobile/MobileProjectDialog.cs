@@ -17,13 +17,12 @@ namespace FamiStudio
         private List<string> userProjects = new List<string>();
         private string storageFilename;
 
+        #region Localization
+
         private LocalizedString UserProjectsSaveTooltip;
         private LocalizedString UserProjectsLoadTooltip;
         private LocalizedString DemoProjectsLoadTooltip;
         private LocalizedString OpenFromStorageTooltip;
-
-        private LocalizedString SaveVerb;
-        private LocalizedString OpenVerb;
 
         private LocalizedString UserProjectsLabel;
         private LocalizedString NewProjectNameLabel;
@@ -45,6 +44,8 @@ namespace FamiStudio
         private LocalizedString SaveToNewProjectRadio;
         private LocalizedString NewProjectPrefix;
 
+        #endregion
+
         public MobileProjectDialog(FamiStudio fami, string title, bool save, bool allowStorage = true)
         {
             Localization.Localize(this);
@@ -53,7 +54,6 @@ namespace FamiStudio
             saveMode = save;
 
             dialog = new PropertyDialog(famistudio.Window, title, 100);
-            dialog.SetVerb(save ? SaveVerb : OpenVerb);
 
             if (save)
                 dialog.ValidateProperties += Dialog_ValidateProperties;
@@ -203,7 +203,7 @@ namespace FamiStudio
                 // HACK : We dont support nested activities right now, so return
                 // this special code to signal that we should open from storage.
                 storageFilename = "///STORAGE///";
-                dialog.Close(DialogResult.OK);
+                dialog.Close(DialogResult.OK); 
             }
         }
 

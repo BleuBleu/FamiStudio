@@ -4,14 +4,14 @@ using System.Drawing;
 
 namespace FamiStudio
 {
-    public class GradientPanel : Container
+    public class PanelContainer : Container
     {
         private Color colorTop;
         private Color colorBottom;
 
         private float blinkTimer;
 
-        public GradientPanel(Color color)
+        public PanelContainer(Color color)
         {
             Color = color;
             clipRegion = false;

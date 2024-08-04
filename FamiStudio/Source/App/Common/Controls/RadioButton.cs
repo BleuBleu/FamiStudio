@@ -5,6 +5,9 @@ namespace FamiStudio
 {
     public class RadioButton : Label
     {
+        public delegate void RadioChangedDelegate(Control sender, int index);
+        public event RadioChangedDelegate RadioChanged;
+
         private bool check;
         private bool hover;
         private TextureAtlasRef bmpRadioOff;
@@ -47,15 +50,44 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            //if (GetRadioRectangle().Contains(e.X, e.Y))
+            if (!e.IsTouchEvent)
             {
+                ToggleChecked();
+            }
+        }
+
+        protected override void OnTouchClick(PointerEventArgs e)
+        {
+            ToggleChecked();
+        }
+
+        private void ToggleChecked()
+        {
+            if (!Checked)
+            {
+                var index = 0;
+                var count = 0;
+
                 Checked = true;
 
                 foreach (var ctrl in container.Controls)
                 {
-                    if (ctrl != this && ctrl is RadioButton radio)
-                        radio.Checked = false;
+                    if (ctrl is RadioButton radio)
+                    {
+                        if (ctrl == this)
+                        {
+                            index = count;
+                        }
+                        else
+                        {
+                            radio.Checked = false;
+                        }
+
+                        count++;
+                    }
                 }
+
+                RadioChanged?.Invoke(this, index);
             }
         }
 

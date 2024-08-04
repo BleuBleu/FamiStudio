@@ -166,6 +166,11 @@ namespace FamiStudio
             return true;
         }
 
+        public Control GetControl(int index)
+        {
+            return controls[index]; 
+        }
+
         public virtual Control GetControlAt(int winX, int winY, out int ctrlX, out int ctrlY)
         {
             // First look for containers. Last containers are considered to have higher Z-order.
@@ -240,7 +245,7 @@ namespace FamiStudio
             }
         }
 
-        public virtual void TickChildren(float delta)
+        public virtual void GatherChildrenToTick(float delta, ref List<Control> controlsToTick)
         {
             if (numControlsTickEnabled > 0)
             {
@@ -249,9 +254,9 @@ namespace FamiStudio
                     if (ctrl.Visible)
                     {
                         if (ctrl.TickEnabled)
-                            ctrl.Tick(delta);
+                            controlsToTick.Add(ctrl);
                         if (ctrl is Container cont)
-                            cont.TickChildren(delta);
+                            cont.GatherChildrenToTick(delta, ref controlsToTick);
                     }
                 }
             }
@@ -259,8 +264,18 @@ namespace FamiStudio
 
         public void TickWithChildren(float delta)
         {
-            Tick(delta);
-            TickChildren(delta);
+            // Build a temporary list and tick them afterwards. This allow
+            // adding/removing controls during tick, otherwise the iterator
+            // will give us a "collection was modified" error.
+            var controlsToTick = new List<Control>();
+
+            if (TickEnabled)
+                controlsToTick.Add(this);
+
+            GatherChildrenToTick(delta, ref controlsToTick);
+
+            foreach (var ctrl in controlsToTick)
+                ctrl.Tick(delta);
         }
 
         protected void RenderChildControlsAndContainers(Graphics g)

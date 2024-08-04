@@ -368,8 +368,8 @@ namespace FamiStudio
             lastX = x;
             lastY = y;
             captureOperation = op;
-            Capture = true;
             canFling = false;
+            CapturePointer();
         }
 
         private void UpdateCaptureOperation(int x, int y, float scale = 1.0f)
@@ -402,8 +402,8 @@ namespace FamiStudio
                     break;
             }
 
-            Capture = false;
             captureOperation = CaptureOperation.None;
+            ReleasePointer();
             MarkDirty();
         }
 

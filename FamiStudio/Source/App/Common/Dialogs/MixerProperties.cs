@@ -60,22 +60,18 @@ namespace FamiStudio
             {
                 globalOverrideIndex = props.AddLabelCheckBox(GlobalOverrideLabel, project.OverrideBassCutoffHz);
             }
-            else if (Platform.IsDesktop)
-            {
-                props.AddLabel(null, GlobalLabel);
-            }
 
-            globalGridIndex = props.AddGrid(Platform.IsMobile ? GlobalLabel : string.Empty,
+            globalGridIndex = props.AddGrid(GlobalLabel,
                 new[]
                 {
-                    new ColumnDesc("", 0.4f),
-                    new ColumnDesc("", 0.6f, ColumnType.Slider)
+                    new ColumnDesc("", Platform.IsMobile ? 0.25f : 0.4f),
+                    new ColumnDesc("", Platform.IsMobile ? 0.75f : 0.6f, ColumnType.Slider)
                 },
                 projectSettings ? 
                     new object[,] { { BassFilterLabel.ToString(), project.OverrideBassCutoffHz ? project.BassCutoffHz : Settings.BassCutoffHz } } :
                     new object[,] { { VolumeLabel.ToString(), (int)(Settings.GlobalVolumeDb * 10) }, { BassFilterLabel.ToString(), Settings.BassCutoffHz } 
                 },
-                projectSettings ? 1 : 2, GlobalGridTooltip, GridOptions.NoHeader);
+                projectSettings ? 1 : 2, GlobalGridTooltip, GridOptions.NoHeader | GridOptions.MobileTwoColumnLayout);
 
             props.SetPropertyEnabled(globalGridIndex, !projectSettings || project.OverrideBassCutoffHz);
 
@@ -102,28 +98,27 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (Platform.IsDesktop)
-                        props.AddLabel(null, ExpansionType.LocalizedChipNames[i]);
                     chipOverrideIndices[i] = -1;
                 }
 
-                chipGridIndices[i] = props.AddGrid(Platform.IsMobile ? ExpansionType.LocalizedChipNames[i] : string.Empty,
+                chipGridIndices[i] = props.AddGrid(ExpansionType.LocalizedChipNames[i],
                     new[]
                     {
-                        new ColumnDesc("", 0.4f),
-                        new ColumnDesc("", 0.6f, ColumnType.Slider)
+                        new ColumnDesc("", Platform.IsMobile ? 0.25f : 0.4f),
+                        new ColumnDesc("", Platform.IsMobile ? 0.75f : 0.6f, ColumnType.Slider)
                     },
                     new object[,] {
                         { VolumeLabel.ToString(), (int)(mixerSetting.VolumeDb * 10) },
                         { TrebleLabel.ToString(), (int)(mixerSetting.TrebleDb * 10) },
                         { TrebleFreqLabel.ToString(), (int)(mixerSetting.TrebleRolloffHz / 100) },
                     },
-                    3, ExpansionGridTooltip, GridOptions.NoHeader);
+                    3, ExpansionGridTooltip, GridOptions.NoHeader | GridOptions.MobileTwoColumnLayout);
 
                 props.OverrideCellSlider(chipGridIndices[i], 0, 1, -100, 100, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
                 props.OverrideCellSlider(chipGridIndices[i], 1, 1, -1000, 50, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
                 props.OverrideCellSlider(chipGridIndices[i], 2, 1, 1, 441, (o) => FormattableString.Invariant($"{(int)o * 100} Hz"));
                 props.SetPropertyEnabled(chipGridIndices[i], project == null || overridden);
+                props.SetPropertyEnabled(chipGridIndices[i], 1, 1, i != ExpansionType.Fds); // No cutoff on special FDS filter.
             }
 
             if (projectSettings)
@@ -134,7 +129,6 @@ namespace FamiStudio
 
             props.PropertyChanged += Props_PropertyChanged;
             props.PropertyClicked += Props_PropertyClicked;
-            props.PropertyCellEnabled += (p, i, r, c) => i != chipGridIndices[ExpansionType.Fds] || r != 1; // No cutoff on special FDS filter.
 
             if (projectSettings)
             {

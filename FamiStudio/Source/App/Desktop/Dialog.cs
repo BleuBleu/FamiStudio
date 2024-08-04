@@ -16,6 +16,7 @@ namespace FamiStudio
         private float tooltipTimer;
         private string title = "";
         private Control focusedControl;
+        private Action<DialogResult> callback;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForWindow(2);
         private int tooltipSideMargin = DpiScaling.ScaleForWindow(4);
@@ -87,18 +88,19 @@ namespace FamiStudio
             return result;
         }
 
-        public void ShowDialogAsync(Action<DialogResult> cb)
+        public void ShowDialogAsync(Action<DialogResult> cb = null)
         {
-            // Dialogs are not async on desktop.
-            cb(ShowDialog());
+            callback = cb;
+            ShowDialogInternal();
         }
 
         public void Close(DialogResult res)
         {
             FocusedControl = null;
-            window.PopDialog(this);
             result = res;
+            window.PopDialog(this);
             visible = false;
+            callback?.Invoke(result);
         }
 
         protected virtual void OnShowDialog()
@@ -115,16 +117,15 @@ namespace FamiStudio
                 MarkDirty();
         }
 
-        public override void TickChildren(float delta)
+        public override void GatherChildrenToTick(float delta, ref List<Control> controlsToTick)
         {
-            // Dont tick non-top dialogs.
             if (IsTopDialog())
-                base.TickChildren(delta);
+                base.GatherChildrenToTick(delta, ref controlsToTick);
         }
 
         private bool IsTopDialog()
         {
-            return window != null && window.TopDialog == this;
+            return window != null && window.TopDialog == this && !window.IsContextMenuActive;
         }
 
         private bool ShouldDisplayTooltip()
@@ -262,7 +263,7 @@ namespace FamiStudio
 
             if (ShouldDisplayTooltip())
             {
-                var o = g.Overlay2CommandList;
+                var o = g.TopMostOverlayCommandList;
                 var pt = ScreenToControl(CursorPosition);
                 var formPt = pt + new Size(left, top);
                 var ctrl = GetControlAt(left + pt.X, top + pt.Y, out _, out _);
@@ -271,7 +272,7 @@ namespace FamiStudio
                 {
                     var splits = SplitLongTooltip(ctrl.ToolTip);
                     var sizeX = 0;
-                    var sizeY = fonts.FontMedium.LineHeight * splits.Count + tooltipTopMargin * 2;
+                    var sizeY = fonts.FontMedium.LineHeight * splits.Count + tooltipTopMargin * 2 - 1;
 
                     for (int i = 0; i < splits.Count; i++)
                         sizeX = Math.Max(sizeX, fonts.FontMedium.MeasureString(splits[i], false));

@@ -24,7 +24,6 @@ namespace FamiStudio
             FamiTone2Music,
             FamiTone2Sfx,
             Share,
-            MobileVideoPreview,
             Max
         };
 
@@ -44,8 +43,7 @@ namespace FamiStudio
             "ExportFamiStudioEngine",
             "ExportFamiTone2",
             "ExportFamiTone2",
-            "ExportShare",
-            "ExportVideo",
+            "ExportShare"
         };
 
         //private static readonly int[] ExportScrolling = new[] { 0, 500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -55,10 +53,6 @@ namespace FamiStudio
         private uint lastProjectCrc;
         private string lastExportFilename;
         private FamiStudio app;
-#if FAMISTUDIO_ANDROID
-        private AndroidPreviewEncoder mobileVideoPreviewEncoder;
-        private Task mobileVideoPreviewTask;
-#endif
 
         private bool canExportToRom         = true;
         private bool canExportToFamiTracker = true;
@@ -73,7 +67,6 @@ namespace FamiStudio
 
         // Title
         LocalizedString Title;
-        LocalizedString Verb;
 
         // Export formats (for result message)
         LocalizedString FormatAudioMessage;
@@ -141,7 +134,6 @@ namespace FamiStudio
         LocalizedString PianoRollPerspectiveTooltip;
         LocalizedString VideoOverlayRegistersTooltip;
         LocalizedString MobileExportVideoMessage;
-        LocalizedString MobileVideoPreviewTooltip;
 
         // Video labels
         LocalizedString VideoModeLabel;
@@ -162,7 +154,6 @@ namespace FamiStudio
         LocalizedString OscColorLabel;
         LocalizedString ExportingVideoLabel;
         LocalizedString VideoOverlayRegistersLabel;
-        LocalizedString MobileVideoPreviewLabel;
         LocalizedString PreviewLabel;
 
         // Video grid
@@ -267,8 +258,7 @@ namespace FamiStudio
         {
             Localization.Localize(this);
 
-            dialog = new MultiPropertyDialog(win, Title, 640, 200);
-            dialog.SetVerb(Verb);
+            dialog = new MultiPropertyDialog(win, Title, 640, false, 200);
             app = win.FamiStudio;
             project = app.Project;
 
@@ -281,7 +271,6 @@ namespace FamiStudio
             }
 
             // Hide a few formats we don't care about on mobile.
-            dialog.SetPageVisible((int)ExportFormat.Midi, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.Text, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiTracker, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, Platform.IsDesktop);
@@ -289,54 +278,10 @@ namespace FamiStudio
             dialog.SetPageVisible((int)ExportFormat.FamiTone2Music, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx, Platform.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.Share, Platform.IsMobile);
-            dialog.SetPageVisible((int)ExportFormat.MobileVideoPreview, false);
-            dialog.SetPageBackPage((int)ExportFormat.MobileVideoPreview, (int)ExportFormat.Video);
-            dialog.AddPageCustomVerb((int)ExportFormat.Video, PreviewLabel);
-            dialog.PageChanging += Dialog_PageChanging;
-            dialog.CustomVerbActivated += Dialog_CustomVerbActivated;
-            dialog.AppSuspended += Dialog_AppSuspended;
+            dialog.SetPageCustomAction((int)ExportFormat.Video, PreviewLabel);
+            dialog.PageCustomActionActivated += Dialog_PageCustomActionActivated;
 
-            if (Platform.IsDesktop)
-                UpdateMidiInstrumentMapping();
-        }
-
-        private void Dialog_AppSuspended()
-        {
-            // Abort video preview of app is suspended.
-            if (dialog.SelectedIndex == (int)ExportFormat.MobileVideoPreview)
-            {
-                dialog.SwitchToPage((int)ExportFormat.Video);
-            }
-        }
-
-        private void Dialog_PageChanging(int oldPage, int newPage)
-        {
-        #if FAMISTUDIO_ANDROID
-            if (oldPage == (int)ExportFormat.MobileVideoPreview && mobileVideoPreviewTask != null)
-            {
-                mobileVideoPreviewEncoder.Abort();
-                mobileVideoPreviewEncoder = null;
-                mobileVideoPreviewTask.Wait();
-                mobileVideoPreviewTask.Dispose();
-                mobileVideoPreviewTask = null;
-                Log.ClearLogOutput();
-            }
-        #endif
-        }
-
-        private void Dialog_CustomVerbActivated()
-        {
-        #if FAMISTUDIO_ANDROID
-            Debug.Assert(mobileVideoPreviewEncoder == null && mobileVideoPreviewTask == null);
-            dialog.SwitchToPage((int)ExportFormat.MobileVideoPreview);
-            mobileVideoPreviewEncoder = new AndroidPreviewEncoder(dialog.GetPropertyPage((int)ExportFormat.MobileVideoPreview), 0);
-            Exporting?.Invoke(); // Needed to stop the song.
-            Log.SetLogOutput(mobileVideoPreviewEncoder);
-            mobileVideoPreviewTask = Task.Factory.StartNew(() =>
-            {
-                LaunchVideoEncoding(null, true, mobileVideoPreviewEncoder);
-            }, TaskCreationOptions.LongRunning);
-        #endif
+            UpdateMidiInstrumentMapping();
         }
 
         private string[] GetSongNames()
@@ -535,7 +480,7 @@ namespace FamiStudio
                     page.AddCheckBox(ExportSlideAsPitchWheelLabel.Colon, true, MidiPitchTooltip); // 2
                     page.AddNumericUpDown(PitchWheelRangeLabel.Colon, 24, 1, 24, 1, MidiPitchRangeTooltip); // 3
                     page.AddDropDownList(InstrumentModeLabel.Colon, Localization.ToStringArray(MidiExportInstrumentMode.LocalizedNames), MidiExportInstrumentMode.LocalizedNames[0], MidiInstrumentTooltip); // 4
-                    page.AddGrid(InstrumentsLabels, new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14, MidiInstGridTooltip); // 5
+                    page.AddGrid(InstrumentsLabels, new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, GetMidiInstrumentData(MidiExportInstrumentMode.Instrument, out _), 14, MidiInstGridTooltip, GridOptions.MobileTwoColumnLayout); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:
@@ -590,9 +535,9 @@ namespace FamiStudio
                     int VGMWarnID;
                     const int unsupportedExpansionMask = ExpansionType.Vrc6Mask | ExpansionType.Mmc5Mask | ExpansionType.N163Mask;
                     if (Platform.IsMobile)
-                        VGMWarnID = page.AddLabel(VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & unsupportedExpansionMask)), null, true); // 0
+                        VGMWarnID = page.AddLabel(null, VGMUnsupportedExpLabel.Format(ExpansionType.GetStringForMask(project.ExpansionAudioMask & unsupportedExpansionMask)), true); // 0
                     int VGMSongSelect = page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SongListTooltip); // 0/1
-                    page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(0), 0, false, TrackTitleEnglishTooltip); // 1/2
+                    page.AddTextBox(TrackTitleEnglishLabel.Colon, page.GetPropertyValue<string>(VGMSongSelect), 0, false, TrackTitleEnglishTooltip); // 1/2
                     page.AddTextBox(GameNameEnglishLabel.Colon, project.Name, 0, false, GameNameEnglishTooltip); // 2/3
                     page.AddTextBox(SystemEnglishLabel.Colon,
                     (project.PalMode ? "PAL NES" : "NTSC NES/Famicom") +
@@ -615,34 +560,51 @@ namespace FamiStudio
                 case ExportFormat.Share:
                     page.AddRadioButtonList(SharingModeLabel.Colon, new string[] { CopyToStorageOption, ShareOption }, 0, ShareTooltip);
                     break;
-                case ExportFormat.MobileVideoPreview:
-                    if (Platform.IsMobile)
-                        page.AddImageBox(MobileVideoPreviewLabel, MobileVideoPreviewTooltip); // 0
-                    break;
             }
 
             page.Build();
         }
 
+        private void LaunchVideoPreview()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.Video);
+            var halfFrameRate = props.GetSelectedIndex(3) == 1;
+            var resolutionIdx = props.GetSelectedIndex(2);
+            var previewResX = VideoResolution.ResolutionX[resolutionIdx];
+            var previewResY = VideoResolution.ResolutionY[resolutionIdx];
+            var previewDialog = new VideoPreviewDialog(dialog.ParentWindow, previewResX, previewResY, (project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC) * (halfFrameRate ? 0.5f : 1.0f));
+
+            Exporting?.Invoke(); // Needed to stop the song.
+
+            previewDialog.ShowDialogAsync();
+            Log.SetLogOutput(previewDialog);
+
+            if (Platform.IsMobile)
+            {
+                new Thread(() => LaunchVideoEncoding(null, true, previewDialog)).Start();
+            }
+            else
+            {
+                LaunchVideoEncoding(null, true, previewDialog);
+            }
+
+            Log.ClearLogOutput();
+        }
+
+        private void Dialog_PageCustomActionActivated(int page)
+        {
+            if (page == (int)ExportFormat.Video)
+            {
+                LaunchVideoPreview();
+            }
+        }
+
         private void VideoPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-        #if !FAMISTUDIO_ANDROID
             if (propIdx == 19)
             {
-                var resolutionIdx = props.GetSelectedIndex(2);
-                var halfFrameRate = props.GetSelectedIndex(3) == 1;
-                var previewResX = VideoResolution.ResolutionX[resolutionIdx];
-                var previewResY = VideoResolution.ResolutionY[resolutionIdx];
-                var previewDialog = new VideoPreviewDialog(dialog.ParentWindow, previewResX, previewResY, (project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC) * (halfFrameRate ? 0.5f : 1.0f));
-
-                Exporting?.Invoke(); // Needed to stop the song.
-
-                previewDialog.ShowDialogNonModal();
-                Log.SetLogOutput(previewDialog);
-                LaunchVideoEncoding(null, true, previewDialog);
-                Log.ClearLogOutput();
+                LaunchVideoPreview();
             }
-        #endif
         }
 
         private void VideoPage_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -1109,12 +1071,11 @@ namespace FamiStudio
                 UpdateMidiInstrumentMapping();
         }
 
-        private void UpdateMidiInstrumentMapping()
+        private object[,] GetMidiInstrumentData(int mode, out string[] colNames)
         {
-            var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
-            var mode  = props.GetSelectedIndex(4);
-            var data  = (object[,])null;
-            var cols = new[] { "", "MIDI Instrument" };
+            var data = (object[,])null;
+            
+            colNames = new[] { "", "MIDI Instrument" };
 
             if (mode == MidiExportInstrumentMode.Instrument)
             {
@@ -1126,7 +1087,7 @@ namespace FamiStudio
                     data[i, 1] = MidiFileReader.MidiInstrumentNames[0];
                 }
 
-                cols[0] = "FamiStudio Instrument";
+                colNames[0] = "FamiStudio Instrument";
             }
             else
             {
@@ -1139,8 +1100,17 @@ namespace FamiStudio
                     data[i, 1] = MidiFileReader.MidiInstrumentNames[0];
                 }
 
-                cols[0] = "NES Channel";
+                colNames[0] = "NES Channel";
             }
+
+            return data;
+        }
+
+        private void UpdateMidiInstrumentMapping()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
+            var mode  = props.GetSelectedIndex(4);
+            var data  = GetMidiInstrumentData(mode, out var cols);
 
             props.UpdateGrid(5, data, cols);
         }
