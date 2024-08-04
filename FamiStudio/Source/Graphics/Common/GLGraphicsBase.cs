@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
+
 using static FamiStudio.Font;
 
 namespace FamiStudio
@@ -26,6 +30,7 @@ namespace FamiStudio
         protected byte maxDepthValue = 0x80; // -128
         protected int maxTextureSize;
         protected int drawFrameCounter;
+        protected int ownerThreadId;
 
         protected struct ClipRegion
         {
@@ -77,14 +82,17 @@ namespace FamiStudio
 
         protected const string AtlasPrefix = "FamiStudio.Resources.Atlas.";
 
-        public CommandList BackgroundCommandList => GetCommandList(GraphicsLayer.Background);
-        public CommandList DefaultCommandList    => GetCommandList(GraphicsLayer.Default);
-        public CommandList ForegroundCommandList => GetCommandList(GraphicsLayer.Foreground);
-        public CommandList OverlayCommandList    => GetCommandList(GraphicsLayer.Overlay1);
-        public CommandList Overlay2CommandList   => GetCommandList(GraphicsLayer.Overlay2);
+        public CommandList BackgroundCommandList     => GetCommandList(GraphicsLayer.Background);
+        public CommandList DefaultCommandList        => GetCommandList(GraphicsLayer.Default);
+        public CommandList ForegroundCommandList     => GetCommandList(GraphicsLayer.Foreground);
+        public CommandList OverlayCommandList        => GetCommandList(GraphicsLayer.Overlay); // No depth test
+        public CommandList TopMostCommandList        => GetCommandList(GraphicsLayer.TopMost);
+        public CommandList TopMostOverlayCommandList => GetCommandList(GraphicsLayer.TopMostOverlay); // No depth test
 
         protected GraphicsBase(bool offscreen)
         {
+            ownerThreadId = Thread.CurrentThread.ManagedThreadId;
+
             // Quad index buffer.
             if (quadIdxArray == null)
             {
@@ -147,7 +155,7 @@ namespace FamiStudio
             {
                 if (layerCommandLists[i] != null)
                 { 
-                    DrawCommandList(layerCommandLists[i], i < (int)GraphicsLayer.Overlay1 && useDepth);
+                    DrawCommandList(layerCommandLists[i], i != (int)GraphicsLayer.Overlay && i != (int)GraphicsLayer.TopMostOverlay && useDepth);
                 }
             }
 
@@ -573,6 +581,11 @@ namespace FamiStudio
         {
             freeIndexArrays.Add(a);
         }
+
+        public bool OwnedByCurrentThread()
+        {
+            return ownerThreadId == Thread.CurrentThread.ManagedThreadId;
+        }
     };
 
     public enum TextureFormat
@@ -588,8 +601,9 @@ namespace FamiStudio
         Background,
         Default,
         Foreground,
-        Overlay1, // No depth depth in overlays.
-        Overlay2,
+        Overlay, // No depth test
+        TopMost,  
+        TopMostOverlay, // No depth test
         Count
     };
 
@@ -1036,7 +1050,7 @@ namespace FamiStudio
 
             if (glyphInfos.TryGetValue(c, out CharInfo glyphInfo))
             {
-                if (!glyphInfo.rasterized && Platform.ThreadOwnsGLContext)
+                if (!glyphInfo.rasterized && graphics.OwnedByCurrentThread())
                     RasterizeAndCacheCharacter(c, glyphInfo);
 
                 return glyphInfo;
@@ -1058,7 +1072,7 @@ namespace FamiStudio
                 glyphInfo.xoffset = x0;
                 glyphInfo.yoffset = baseValue + y0 + globalOffsetY;
 
-                if (Platform.ThreadOwnsGLContext)
+                if (graphics.OwnedByCurrentThread())
                     RasterizeAndCacheCharacter(c, glyphInfo);
 
                 glyphInfos.Add(c, glyphInfo);
@@ -1156,6 +1170,94 @@ namespace FamiStudio
             }
 
             return text.Length;
+        }
+
+        public string SplitLongString(string text, int maxWidth, bool chinese, out int numLines)
+        {
+            var input = text;
+            var output = "";
+            
+            numLines = 0;
+
+            while (true)
+            {
+                var numCharsWeCanFit = GetNumCharactersForSize(input, maxWidth);
+                var n = numCharsWeCanFit;
+                var done = n == input.Length;
+                var newLineIndex = input.IndexOf('\n');
+                var newLine = false;
+
+                if (newLineIndex >= 0 && newLineIndex < numCharsWeCanFit)
+                {
+                    n = newLineIndex;
+                    done = n == input.Length;
+                    newLine = true;
+                }
+                else
+                {
+                    if (!done)
+                    {
+                        // This bizarre code was added by the chinese translators. Not touching it.
+                        if (chinese)
+                        {
+                            var minimumCharsPerLine = Math.Max((int)(numCharsWeCanFit * 0.62), numCharsWeCanFit - 20);
+                            while (!char.IsWhiteSpace(input[n]) && input[n] != '“' && char.GetUnicodeCategory(input[n]) != UnicodeCategory.OpenPunctuation)
+                            {
+                                n--;
+                                // No whitespace or punctuation found, let's chop in the middle of a word.
+                                if (n <= minimumCharsPerLine)
+                                {
+                                    n = numCharsWeCanFit;
+                                    if (char.IsPunctuation(input[n]))
+                                        n--;
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            while (n >= 0 && !char.IsWhiteSpace(input[n]))
+                            {
+                                n--;
+                            }
+
+                            // No whitespace found, let's chop in the middle of a word.
+                            if (n < 0)
+                            {
+                                n = numCharsWeCanFit;
+                            }
+                        }
+                    }
+                }
+
+                output += input.Substring(0, n);
+                output += "\n";
+                numLines++;
+
+                if (!done)
+                {
+                    // After an intentional new line (one that had a \n right in the string), preserve
+                    // any white space since it may be used for indentation.
+                    if (newLine)
+                    {
+                        n++;
+                    }
+                    else
+                    {
+                        while (char.IsWhiteSpace(input[n]))
+                            n++;
+                    }
+                }
+
+                input = input.Substring(n);
+
+                if (done)
+                {
+                    break;
+                }
+            }
+
+            return output;
         }
 
         public static bool IsMonospaceChar(char c)

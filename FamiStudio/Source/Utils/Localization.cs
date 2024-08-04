@@ -15,6 +15,7 @@ namespace FamiStudio
         private static bool Initialized = false;
 
         public static string LanguageCode = "ENG";
+        public static bool IsChinese => LanguageCode == "ZHO";
         public static string[] LanguageCodes = new[]
 {
             "ENG",
@@ -137,8 +138,16 @@ namespace FamiStudio
             string str = null;
 
             if (Platform.IsMobile)
-            {
-                str = LocalizeString(section, key + "_Mobile", false);
+            {                
+                // We can override whole sections, or individual strings.
+                if (strings.HasSection(section + "_Mobile"))
+                {
+                    str = LocalizeString(section + "_Mobile", key, false);
+                }
+                else 
+                {
+                    str = LocalizeString(section, key + "_Mobile", false);
+                }
             }
 
             if (str == null)

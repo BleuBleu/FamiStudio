@@ -31,6 +31,8 @@ namespace FamiStudio
             Debug.Assert(max % increment == 0);
             height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
             allowMobileEdit = false;
+            supportsDoubleClick = true;
+            supportsLongPress = true;
             SetTextBoxValue();
         }
 

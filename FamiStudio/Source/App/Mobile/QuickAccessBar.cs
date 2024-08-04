@@ -32,16 +32,9 @@ namespace FamiStudio
         private Button buttonWaveformEffect;
         private List<Button> allButtons = new List<Button>();
 
-        private Container listContainer;
-
-        enum CaptureOperation
-        {
-            None,
-            MobilePan
-        }
+        private TouchScrollContainer listContainer;
 
         Font buttonFont;
-        Color scrollBarColor = Color.FromArgb(64, Color.Black);
         
         // These are only use for popup menu.
         private Button    popupButton;
@@ -50,14 +43,6 @@ namespace FamiStudio
         private float     popupRatio = 0.0f;
         private bool      popupOpening;
         private bool      popupClosing;
-        
-        // Popup-list scrolling.
-        private int maxScrollY = 0;
-
-        // Pointer tracking.
-        private Point lastPos; // Relative to this entire control.
-        private float flingVelY;
-        private CaptureOperation captureOperation = CaptureOperation.None;
 
         // Scaled layout variables.
         private int buttonSize;
@@ -150,12 +135,15 @@ namespace FamiStudio
 
             buttonSequencer = CreateBarButton("Sequencer", "Sequencer");
             buttonSequencer.Click += ButtonSequencer_Click;
+            buttonSequencer.DimmedEvent += ButtonSequencer_DimmedEvent;
 
             buttonPianoRoll = CreateBarButton("PianoRoll", "PianoRoll");
             buttonPianoRoll.Click += ButtonPianoRoll_Click;
+            buttonPianoRoll.DimmedEvent += ButtonPianoRoll_DimmedEvent;
 
             buttonProject = CreateBarButton("ProjectExplorer", "ProjectExplorer");
             buttonProject.Click += ButtonProject_Click;
+            buttonProject.DimmedEvent += ButtonProject_DimmedEvent;
 
             buttonChannel = CreateBarButton(ChannelType.Icons[0], "Channel");
             buttonChannel.Click += ButtonChannel_Click;
@@ -203,14 +191,26 @@ namespace FamiStudio
             buttonWaveformEffect.TextEvent += ButtonWaveformEffect_TextEvent;
             buttonWaveformEffect.ImageEvent += ButtonWaveformEffect_ImageEvent;
 
-            listContainer = new Container();
+            listContainer = new TouchScrollContainer();
             listContainer.Visible = false;
+            listContainer.Border = true;
             listContainer.SetupClipRegion(true, false);
-            listContainer.ContainerPointerDownNotify += ListContainer_ContainerPointerDownNotify;
-            listContainer.ContainerPointerUpNotify += ListContainer_ContainerPointerUpNotify;
-            listContainer.ContainerPointerMoveNotify += ListContainer_ContainerPointerMoveNotify;
-            listContainer.ContainerTouchFlingNotify += ListContainer_ContainerTouchFlingNotify;
             AddControl(listContainer);
+        }
+
+        private bool ButtonSequencer_DimmedEvent(Control sender, ref int dimming)
+        {
+            return App.ActiveControl != App.Sequencer;
+        }
+
+        private bool ButtonPianoRoll_DimmedEvent(Control sender, ref int dimming)
+        {
+            return App.ActiveControl != App.PianoRoll;
+        }
+
+        private bool ButtonProject_DimmedEvent(Control sender, ref int dimming)
+        {
+            return App.ActiveControl != App.ProjectExplorer;
         }
 
         private void ButtonSequencer_Click(Control sender)
@@ -245,34 +245,49 @@ namespace FamiStudio
             for (int i = 0; i < channelTypes.Length; i++)
             {
                 var btn = CreateListButton(ChannelType.Icons[channelTypes[i]], i, ChannelType.GetLocalizedNameWithExpansion(channelTypes[i]));
-                btn.Click += Channel_Click;
+                btn.TouchClick += Channel_TouchClick;
+                btn.TouchDoubleClick += Channel_TouchDoubleClick;
                 btn.RightClick += Channel_RightClick;
                 btn.DimmedEvent += Channel_DimmedEvent;
                 btn.Font = i == App.SelectedChannelIndex ? fonts.FontMediumBold : fonts.FontMedium;
+                btn.SetSupportsDoubleClick(true);
                 channelButtons[i] = btn;
 
-                // MATTT : Add solo/mute button too!
                 var ghost = CreateListButton("GhostSmall", i);
                 ghost.DimmedEvent += ChannelGhost_DimmedEvent;
                 ghost.Click += ChannelGhost_Click;
                 ghostButtons[i] = ghost;
             }
 
-            // MATTT : We didnt use to pass the selected index? why?
             StartExpandingList(buttonChannel, channelButtons, ghostButtons, App.SelectedChannelIndex);
         }
 
-        private void Channel_Click(Control sender)
+        private void Channel_TouchDoubleClick(Control sender, PointerEventArgs e)
         {
-            App.SelectedChannelIndex = (int)sender.UserData;
-            StartClosingList();
+            if ((sender as Button).ImageRect.Contains(e.Position))
+            {
+                App.ToggleChannelSolo((int)sender.UserData, true);
+            }
+        }
+
+        private void Channel_TouchClick(Control sender, PointerEventArgs e)
+        {
+            if ((sender as Button).ImageRect.Contains(e.Position))
+            {
+                App.ToggleChannelActive((int)sender.UserData);
+            }
+            else
+            {
+                App.SelectedChannelIndex = (int)sender.UserData;
+                StartClosingList();
+            }
         }
 
         private void Channel_RightClick(Control sender)
         {
             var idx = (int)sender.UserData;
 
-            App.ShowContextMenu(new[]
+            App.ShowContextMenuAsync(new[]
             {
                 new ContextMenuOption("MenuMute", ToggleMuteContext, () => { App.ToggleChannelActive(idx); MarkDirty(); }),
                 new ContextMenuOption("MenuSolo", ToggleSoloContext, () => { App.ToggleChannelSolo(idx); MarkDirty(); }),
@@ -309,13 +324,14 @@ namespace FamiStudio
 
         private void ButtonInstrument_Click(Control sender)
         {
-          if (CheckNeedsClosing(buttonInstrument))
-              return;
+            if (CheckNeedsClosing(buttonInstrument))
+                return;
 
-          var editingChannel = App.IsEditingChannel;
-          var project = App.Project;
-          var channel = App.SelectedChannel;
-          var instButtons = new List<Button>();
+            var editingChannel = App.IsEditingChannel;
+            var project = App.Project;
+            var channel = App.SelectedChannel;
+            var instButtons = new List<Button>();
+            var selIdx = -1;
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {
@@ -323,8 +339,13 @@ namespace FamiStudio
 
                 if (!editingChannel || channel.SupportsInstrument(inst))
                 {
+                    if (App.SelectedInstrument == inst)
+                    {
+                        selIdx = instButtons.Count;
+                    }
+
                     var btn = CreateListButton(ExpansionType.Icons[inst.Expansion], inst, inst.Name);
-                    btn.ForegroundColor = inst.Color; // MATTT : panel color, not button!
+                    btn.ForegroundColor = inst.Color;
                     btn.Font = inst == App.SelectedInstrument ? fonts.FontMediumBold : fonts.FontMedium;
                     btn.Click += Instrument_Click;
                     btn.RightClick += Instrument_RightClick;
@@ -335,15 +356,14 @@ namespace FamiStudio
             if (instButtons.Count == 0)
               return;
 
-            // MATTT : We dont set the selected instrument?
-            StartExpandingList(buttonInstrument, instButtons.ToArray());
+            StartExpandingList(buttonInstrument, instButtons.ToArray(), null, selIdx, true);
         }
 
         private void ButtonInstrument_RightClick(Control sender)
         {
             if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsInstrument(App.SelectedInstrument))
             {
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(App.SelectedInstrument); MarkDirty(); })
                 });
@@ -363,7 +383,7 @@ namespace FamiStudio
 
             if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsInstrument(inst))
             {
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionInstContext, () => { App.ReplacePianoRollSelectionInstrument(inst); MarkDirty(); })
                 });
@@ -378,7 +398,6 @@ namespace FamiStudio
 
         private string ButtonInstrument_ImageEvent(Control sender, ref Color tint)
         {
-            // MATTT : Tint also tints the text...
             var inst = App.SelectedInstrument;
             if (inst != null) tint = inst.Color;
             var exp = inst != null ? inst.Expansion : ExpansionType.None;
@@ -395,7 +414,7 @@ namespace FamiStudio
             if (inst == null)
                 return;
 
-            var popupSelectedIdx = -1;
+            var selIdx = -1;
             var buttons = new Button[inst.NumVisibleEnvelopes];
 
             for (int i = 0, j = 0; i < EnvelopeType.Count; i++)
@@ -410,13 +429,15 @@ namespace FamiStudio
                     buttons[j] = btn;
 
                     if (i == App.EditEnvelopeType)
-                        popupSelectedIdx = j;
+                    {
+                        selIdx = j;
+                    }
 
                     j++;
                 }
             }
 
-            StartExpandingList(buttonEnvelope, buttons, null, popupSelectedIdx);
+            StartExpandingList(buttonEnvelope, buttons, null, selIdx);
         }
 
         private void Envelope_Click(Control sender)
@@ -466,20 +487,23 @@ namespace FamiStudio
                 btn.Font = selected ? fonts.FontMediumBold : fonts.FontMedium;
                 btn.Click += Arpeggio_Click;
                 btn.RightClick += Arpeggio_RightClick;
-                // btn.Color = arp.Color; // MATTT : Color/tint!
+                btn.ForegroundColor = arp.Color;
                 buttons[i + 1] = btn;
+                
                 if (selected)
+                {
                     selIdx = i + 1;
+                }
             }
 
-            StartExpandingList(buttonArpeggio, buttons, null, selIdx);
+            StartExpandingList(buttonArpeggio, buttons, null, selIdx, true);
         }
 
         private void ButtonArpeggio_RightClick(Control sender)
         {
             if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsArpeggios)
             {
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(App.SelectedArpeggio); MarkDirty(); })
                 });
@@ -492,7 +516,7 @@ namespace FamiStudio
 
             if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsArpeggios)
             {
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuReplaceSelection", ReplaceSelectionArpContext, () => { App.ReplacePianoRollSelectionArpeggio(arp); MarkDirty(); })
                 });
@@ -720,11 +744,14 @@ namespace FamiStudio
 
         protected override void OnResize(EventArgs e)
         {
-            UpdateButtonLayout();
+            listContainer.RemoveAllControls();
+            listContainer.Visible = false;
+            popupButton = null;
+            popupOpening = false;
+            popupClosing = false;
+            popupRatio = 0.0f;
 
-            // MATTT
-            //if (popupButtonIdx >= 0)
-            //    StartExpandingList(popupButtonIdx, listItems);
+            UpdateButtonLayout();
 
             base.OnResize(e);
         }
@@ -735,15 +762,20 @@ namespace FamiStudio
             return IsExpanded || base.HitTest(winX, winY);
         }
 
-        private void TickFling(float delta)
+        public override bool CanInteractWithContainer(Container c)
         {
-            if (flingVelY != 0.0f)
+            return c != listContainer || popupRatio > 0.75f;
+        }
+
+        protected override void OnTouchClick(PointerEventArgs e)
+        {
+            if (IsExpanded && !ClientRectangle.Contains(e.Position))
             {
-                var deltaPixel = (int)Math.Round(flingVelY * delta);
-                if (deltaPixel != 0 && DoScroll(-deltaPixel))
-                    flingVelY *= (float)Math.Exp(delta * -4.5f);
-                else
-                    flingVelY = 0.0f;
+                StartClosingList();
+            }
+            else
+            {
+                base.OnTouchClick(e);
             }
         }
 
@@ -783,8 +815,6 @@ namespace FamiStudio
 
         public override void Tick(float delta)
         {
-            TickFling(delta);
-
             if (popupButton != null)
             {
                 var needResize = false;
@@ -806,7 +836,7 @@ namespace FamiStudio
                     if (popupRatio == 0.0f)
                     {
                         listContainer.RemoveAllControls();
-                        listContainer.Visible = true;
+                        listContainer.Visible = false;
                         popupButton = null;
                         popupClosing = false;
 
@@ -814,7 +844,7 @@ namespace FamiStudio
                         {
                             var btn = popupButtonNext;
                             popupButtonNext = null;
-                            //btn.Click.Invoke(btn); // MATTT : How to replicate this?
+                            btn.TriggerClick();
                         }
                     }
                     needResize = true;
@@ -833,7 +863,7 @@ namespace FamiStudio
                         listContainer.Move(popupRect.Left, popupRect.Top - sy, popupRect.Width, sy);
                     }
 
-                    MarkDirty(); // MATTT : A resize should mark dirty...
+                    MarkDirty();
                 }
             }
             else
@@ -871,9 +901,7 @@ namespace FamiStudio
             }
         }
 
-        // MATTT : Missing border
-        // MATTT : Missing gradient panels.
-        private void StartExpandingList(Button button, Button[] buttons, Button[] iconButtons = null, int scrollItemIdx = -1)
+        private void StartExpandingList(Button button, Button[] buttons, Button[] iconButtons = null, int scrollItemIdx = -1, bool addPanel = false)
         {
             var landscape = IsLandscape;
 
@@ -881,7 +909,7 @@ namespace FamiStudio
             var maxHeight = landscape ? Height : listItemSize * 8;
 
             var maxButtonSize = 0;
-            var maxExtraSize  = 0; // MATTT : This is useless if all icons are same size.
+            var maxExtraSize  = 0;
 
             Debug.Assert(listContainer.Controls.Count == 0);
 
@@ -889,14 +917,30 @@ namespace FamiStudio
             for (int i = 0; i < buttons.Length; i++)
             {
                 var btn = buttons[i];
-                listContainer.AddControl(btn);
-                btn.AutosizeWidth();
-                btn.Move(0, i * listItemSize, btn.Width, listItemSize);
+
+                if (addPanel)
+                {
+                    var panel = new PanelContainer(btn.ForegroundColor);
+                    btn.ForegroundColor = Theme.BlackColor;
+                    listContainer.AddControl(panel);
+                    panel.AddControl(btn);
+                    panel.SetupClipRegion(false);
+                    btn.AutosizeWidth();
+                    btn.Resize(btn.Width, listItemSize);
+                    panel.Move(0, i * listItemSize);
+                }
+                else
+                {
+                    listContainer.AddControl(btn);
+                    btn.AutosizeWidth();
+                    btn.Move(0, i * listItemSize, btn.Width, listItemSize);
+                }
 
                 maxButtonSize = Math.Max(maxButtonSize, btn.Width);
 
                 if (iconButtons != null)
                 {
+                    Debug.Assert(!addPanel);
                     var icon = iconButtons[i];
                     listContainer.AddControl(icon);
                     icon.Resize(listExtraIconSize, listItemSize);
@@ -919,6 +963,10 @@ namespace FamiStudio
             for (int i = 0; i < buttons.Length; i++)
             {
                 buttons[i].Resize(maxButtonSize, buttons[i].Height);
+                if (addPanel)
+                {
+                    buttons[i].ParentContainer.Resize(maxButtonSize, buttons[i].Height);
+                }
                 if (iconButtons != null)
                 {
                     iconButtons[i].Move(maxButtonSize, buttons[i].Top, maxExtraSize, iconButtons[i].Height);
@@ -953,24 +1001,17 @@ namespace FamiStudio
             }
 
             listContainer.Move(popupRect.Left, popupRect.Top, popupRect.Width, popupRect.Height);
+            listContainer.ScollIndicatorColor = Color.FromArgb(128, addPanel ? Theme.BlackColor : Theme.LightGreyColor1);
             listContainer.Visible = true;
-
-            maxScrollY = buttons.Length * listItemSize - popupRect.Height;
+            listContainer.VirtualSizeY = buttons.Length * listItemSize;
+            listContainer.ScrollY = (int)((scrollItemIdx + 0.5f) * listItemSize - popupRect.Height * 0.5f);
+            listContainer.ClampScroll();
+            listContainer.CancelFling();
 
             popupButton = button;
             popupRatio = 0.0f;
             popupOpening = true;
             popupClosing = false;
-            flingVelY = 0.0f;
-
-            // MATTT
-            //// Try to center selected item.
-            //if (scrollItemIdx < 0)
-            //    scrollItemIdx = popupSelectedIdx;
-
-            // MATTT : Review this.
-            listContainer.ScrollY = (int)((scrollItemIdx + 0.5f) * listItemSize - popupRect.Height * 0.5f);
-            ClampScroll();
         }
 
         private void StartClosingList()
@@ -979,7 +1020,13 @@ namespace FamiStudio
             {
                 popupOpening = false;
                 popupClosing = popupRatio > 0.0f ? true : false;
-                flingVelY = 0.0f;
+                if (!popupClosing)
+                {
+                    listContainer.RemoveAllControls();
+                    listContainer.Visible = false;
+                    popupButton = null;
+                }
+                listContainer.CancelFling();
             }
         }
 
@@ -1005,9 +1052,10 @@ namespace FamiStudio
 
         private bool CheckNeedsClosing(Button button)
         {
+            StartClosingList();
+
             if (popupButton != null)
             {
-                StartClosingList();
                 if (popupButton != button)
                 {
                     Debug.Assert(popupRatio > 0.0f);
@@ -1022,24 +1070,6 @@ namespace FamiStudio
         private void OnDPCMPlayLongPress()
         {
             App.PreviewDPCMSample(App.EditSample, true);
-        }
-
-        private Rectangle GetScrollBarRect()
-        {
-            //var visibleSizeY = popupRect.Height;
-            //var virtualSizeY = listItems.Length * listItemSize;
-
-            //if (visibleSizeY < virtualSizeY)
-            //{
-            //    var sizeY = (int)Math.Round(visibleSizeY * (visibleSizeY / (float)virtualSizeY));
-            //    var posY  = (int)Math.Round(visibleSizeY * (scrollY      / (float)virtualSizeY));
-
-            //    return new Rectangle(popupRect.Width - scrollBarSizeX, posY, scrollBarSizeX, sizeY);
-            //}
-            //else
-            {
-                return Rectangle.Empty;
-            }
         }
 
         protected override void OnRender(Graphics g)
@@ -1058,21 +1088,17 @@ namespace FamiStudio
             {
                 var shadowColor = Color.FromArgb((int)Utils.Clamp(popupRatio * 0.6f * 255.0f, 0, 255), Color.Black);
 
-                // MATTT : Why do we darken the quick access bar? Its still usable.
-                // MATTT : This fights with the context menu shadow, need to change render order.
                 if (IsLandscape)
                 {
                     o.FillRectangle(screenRect.Left, screenRect.Top, listRect.Left, screenRect.Bottom, shadowColor);
                     o.FillRectangle(listRect.Left, screenRect.Top, 0, listRect.Top, shadowColor);
                     o.FillRectangle(listRect.Left, listRect.Bottom, 0, screenRect.Bottom, shadowColor);
-                    o.FillRectangle(0, 0, width, height, shadowColor);
                 }
                 else
                 {
                     o.FillRectangle(screenRect.Left, screenRect.Top, screenRect.Right, listRect.Top, shadowColor);
                     o.FillRectangle(screenRect.Left, listRect.Top, listRect.Left, 0, shadowColor);
                     o.FillRectangle(listRect.Right, listRect.Top, screenRect.Right, 0, shadowColor);
-                    o.FillRectangle(0, 0, screenRect.Right, screenRect.Bottom, shadowColor);
                 }
             }
 
@@ -1095,74 +1121,6 @@ namespace FamiStudio
                 c.DrawLine(0, 0, Width, 0, Theme.BlackColor);
 
             base.OnRender(g);
-        }
-
-        private void StartCaptureOperation(Control control, Point p, CaptureOperation op)
-        {
-            lastPos = WindowToControl(control.ControlToWindow(p));
-            captureOperation = op;
-            control.Capture = true;
-        }
-
-        private bool ClampScroll()
-        {
-            var scrolled = true;
-            // TODO : Move this logic in the container itself.
-            if (listContainer.ScrollY < 0) { listContainer.ScrollY = 0; scrolled = false; }
-            if (listContainer.ScrollY > maxScrollY) { listContainer.ScrollY = maxScrollY; scrolled = false; }
-            return scrolled;
-        }
-
-        private bool DoScroll(int deltaY)
-        {
-            listContainer.ScrollY += deltaY;
-            listContainer.MarkDirty();
-            return ClampScroll();
-        }
-
-        private void UpdateCaptureOperation(Point p)
-        {
-            if (captureOperation == CaptureOperation.MobilePan)
-            {
-                DoScroll(lastPos.Y - p.Y);
-            }
-        }
-
-        private void EndCaptureOperation(Point p)
-        {
-            captureOperation = CaptureOperation.None;
-            Capture = false;
-            MarkDirty();
-        }
-
-        private void ListContainer_ContainerTouchFlingNotify(Control sender, PointerEventArgs e)
-        {
-            EndCaptureOperation(e.Position);
-            flingVelY = e.FlingVelocityY;
-        }
-
-        private void ListContainer_ContainerPointerDownNotify(Control sender, PointerEventArgs e)
-        {
-            flingVelY = 0;
-
-            if (popupRatio == 1.0f)
-            {
-                var listPos = listContainer.WindowToControl(sender.ControlToWindow(e.Position));
-                if (listContainer.ClientRectangle.Contains(listPos))
-                    StartCaptureOperation(sender, e.Position, CaptureOperation.MobilePan);
-            }
-        }
-
-        private void ListContainer_ContainerPointerUpNotify(Control sender, PointerEventArgs e)
-        {
-            EndCaptureOperation(e.Position);
-        }
-
-        private void ListContainer_ContainerPointerMoveNotify(Control sender, PointerEventArgs e)
-        {
-            var quickAccessPos = WindowToControl(sender.ControlToWindow(e.Position));
-            UpdateCaptureOperation(quickAccessPos);
-            lastPos = quickAccessPos;
         }
     }
 }

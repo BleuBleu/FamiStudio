@@ -109,15 +109,8 @@ namespace FamiStudio
             grid.ButtonPressed += Grid_ButtonPressed;
             grid.CellDoubleClicked += Grid_CellDoubleClicked;
             grid.CellClicked += Grid_CellClicked;
-            grid.CellEnabled += Grid_CellEnabled;
 
             return grid;
-        }
-
-        private bool Grid_CellEnabled(Control sender, int rowIndex, int colIndex)
-        {
-            var propIdx = GetPropertyIndexForControl(sender);
-            return PropertyCellEnabled == null || PropertyCellEnabled.Invoke(this, propIdx, rowIndex, colIndex);
         }
 
         private void Grid_CellClicked(Control sender, bool left, int rowIndex, int colIndex)
@@ -178,8 +171,15 @@ namespace FamiStudio
             grid.UpdateData(rowIdx, colIdx, value);
         }
 
+        public void SetPropertyEnabled(int idx, int rowIdx, int colIdx, bool enabled)
+        {
+            var grid = properties[idx].control as Grid;
+            grid.SetCellEnabled(rowIdx, colIdx, enabled);
+        }
+
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
         {
+            // This doesnt seem to be used?
             var grid = properties[idx].control as Grid;
             Debug.Assert(values.Length == grid.ItemCount);
 
@@ -192,6 +192,7 @@ namespace FamiStudio
 
         public void UpdateCheckBoxList(int idx, bool[] selected)
         {
+            // This doesnt seem to be used?
             var grid = properties[idx].control as Grid;
             Debug.Assert(selected.Length == grid.ItemCount);
 

@@ -57,7 +57,7 @@ namespace FamiStudio
 
         private void CheckBox_CheckedChanged(Control sender, bool check)
         {
-            CheckedChanged?.Invoke(this, (int)this.UserData, check);
+            CheckedChanged?.Invoke(this, (int)sender.UserData, check);
         }
     }
 }

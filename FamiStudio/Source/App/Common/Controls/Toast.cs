@@ -1,12 +1,13 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace FamiStudio
 {
     public class Toast : Container
     {
-        private const int   DefaultPad = 8;
+        private const int   DefaultPad = Platform.IsDesktop ? 8 : 3;
         private const int   DefaultPositionFromBottom = 32;
         private const float DefaultFadeTime = 0.25f;
 
@@ -17,13 +18,13 @@ namespace FamiStudio
         private float duration;
         private float timer;
         private int alpha;
+        private Font font;
         private Action action;
 
         public bool IsClickable => alpha > 0 && action != null;
 
         public Toast()
         {
-            SetTickEnabled(true);
         }
 
         public void Initialize(string text, bool longDuration, Action click = null)
@@ -37,16 +38,27 @@ namespace FamiStudio
 
             Reposition();
             MarkDirty();
+            SetTickEnabled(true);
         }
 
         public void Reposition()
         {
             if (lines != null)
             {
-                var font = ParentWindow.Fonts.FontMedium;
                 var sizeX = lines.Max(l => font.MeasureString(l, false)) + pad * 2;
+
+                // Failsafe for very low resolution devices.
+                if (Platform.IsMobile && sizeX > ParentWindowSize.Width)
+                {
+                    var text = string.Join('\n', lines);
+                    var numLines = 0;
+                    text = font.SplitLongString(text, ParentWindowSize.Width * 9 / 10, Localization.IsChinese, out numLines);
+                    lines = text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    sizeX = lines.Max(l => font.MeasureString(l, false)) + pad * 2;
+                }
+
                 var sizeY = font.LineHeight * lines.Length + pad * 2;
-                var posX = (ParentWindowSize.Width - sizeX) / 2;
+                var posX = (ParentWindowSize.Width  - sizeX) / 2;
                 var posY = (ParentWindowSize.Height - sizeY - posFromBottom);
 
                 Move(posX, posY, sizeX, sizeY);
@@ -55,6 +67,7 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
+            font = Platform.IsDesktop ? fonts.FontMedium : fonts.FontSmall;
             pad = DpiScaling.ScaleForWindow(DefaultPad);
             posFromBottom = DpiScaling.ScaleForWindow(DefaultPositionFromBottom);
         }
@@ -79,20 +92,25 @@ namespace FamiStudio
 
                 if (timer == 0.0f)
                 {
-                    lines = null;
-                    action = null;
-                    duration = 0.0f;
-                    Visible = false;
+                    Dismiss();
                 }
 
                 SetAndMarkDirty(ref alpha, CalculateAlpha());
             }
         }
 
+        public void Dismiss()
+        {
+            lines = null;
+            action = null;
+            duration = 0.0f;
+            Visible = false;
+            SetTickEnabled(false);
+        }
+
         protected override void OnRender(Graphics g)
         {
             var c = g.DefaultCommandList;
-            var font = Fonts.FontMedium;
 
             c.FillAndDrawRectangle(0, 0, width - 1, height - 1, Color.FromArgb(alpha, Theme.DarkGreyColor1), Color.FromArgb(alpha, Theme.BlackColor));
 

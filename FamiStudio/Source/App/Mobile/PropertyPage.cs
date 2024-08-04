@@ -62,8 +62,21 @@ namespace FamiStudio
         {
             var grid = new Grid(container, columnDescs, data, options);
             grid.ToolTip = tooltip;
-            // MATTT : Hook up events.
+            grid.ValueChanged += Grid_ValueChanged;
+            grid.ButtonPressed += Grid_ButtonPressed;
             return grid;
+        }
+
+        private void Grid_ButtonPressed(Control sender, int rowIndex, int colIndex)
+        {
+            var propIdx = GetPropertyIndexForControl(sender);
+            PropertyClicked?.Invoke(this, ClickType.Button, propIdx, rowIndex, colIndex);
+        }
+
+        private void Grid_ValueChanged(Control sender, int rowIndex, int colIndex, object value)
+        {
+            var propIdx = GetPropertyIndexForControl(sender);
+            PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
         }
 
         public int AddGrid(string label, ColumnDesc[] columnDescs, object[,] data, int rows = 7, string tooltip = null, GridOptions options = GridOptions.None, PropertyFlags flags = PropertyFlags.ForceFullWidth)
@@ -71,7 +84,6 @@ namespace FamiStudio
             // We need initial data on mobile.
             Debug.Assert(data != null);
 
-            // MATTT : Grid gets built mostly in constructor, but the layout happens in Build(), what do we do?
             var prop = new Property();
             prop.type = PropertyType.Grid;
             prop.label = label != null ? CreateLabel(label, tooltip) : null;
@@ -83,51 +95,50 @@ namespace FamiStudio
 
         public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
         {
-            //var list = properties[idx].control as Grid;
+            var grid = properties[idx].control as Grid;
+            var rebuild = data.Length != grid.Data.Length;
 
-            //list.UpdateData(data);
+            grid.UpdateData(data);
 
-            //if (columnNames != null)
-            //    list.RenameColumns(columnNames);
+            if (columnNames != null)
+            {
+                grid.RenameColumns(columnNames);
+            }
+
+            if (rebuild)
+            {
+                Build();
+            }
         }
 
         public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)
         {
-            //var grid = properties[idx].control as Grid;
-            //grid.UpdateData(rowIdx, colIdx, value);
+            var grid = properties[idx].control as Grid;
+            grid.UpdateData(rowIdx, colIdx, value);
         }
 
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
         {
-            // MATTT
-            //var grid = properties[idx].control as Grid;
-            //Debug.Assert(values.Length == grid.ItemCount);
-
-            //for (int i = 0; i < values.Length; i++)
-            //{
-            //    grid.UpdateData(i, 0, selected != null ? selected[i] : true);
-            //    grid.UpdateData(i, 1, values[i]);
-            //}
+            // This doesnt seem to be used?
+            Debug.Assert(false);
         }
 
         public void UpdateCheckBoxList(int idx, bool[] selected)
         {
-            // MATTT
-            //var grid = properties[idx].control as Grid;
-            //Debug.Assert(selected.Length == grid.ItemCount);
-
-            //for (int i = 0; i < selected.Length; i++)
-            //    grid.UpdateData(i, 0, selected[i]);
+            // This doesnt seem to be used?
+            Debug.Assert(false);
         }
 
         public T GetPropertyValue<T>(int idx, int rowIdx, int colIdx)
         {
-            //var prop = properties[idx];
-            //Debug.Assert(prop.type == PropertyType.Grid);
-            //var grid = prop.control as Grid;
-            //return (T)grid.GetData(rowIdx, colIdx);
-
-            return default(T); // MATTT
+            var grid = properties[idx].control as Grid;
+            return (T)grid.GetData(rowIdx, colIdx);
+        }
+        
+        public void SetPropertyEnabled(int idx, int rowIdx, int colIdx, bool enabled)
+        {
+            var grid = properties[idx].control as Grid;
+            grid.SetCellEnabled(rowIdx, colIdx, enabled);
         }
 
         public void SetPropertyValue(int idx, int rowIdx, int colIdx, object value)
@@ -171,8 +182,14 @@ namespace FamiStudio
         {
             var checkList = new CheckBoxList(values, selected);
             checkList.ToolTip = tooltip;
-            // MATTT : Hook events.
+            checkList.CheckedChanged += CheckList_CheckedChanged;
             return checkList;
+        }
+
+        private void CheckList_CheckedChanged(Control sender, int index, bool value)
+        {
+            var propIdx = GetPropertyIndexForControl(sender);
+            PropertyChanged?.Invoke(this, propIdx, index, 0, value);
         }
 
         public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7, PropertyFlags flags = PropertyFlags.ForceFullWidth)
@@ -211,9 +228,14 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public void Build()
+        public void Build(int newLayoutWidth = -1)
         {
             container.RemoveAllControls();
+
+            if (newLayoutWidth > 0)
+            {
+                layoutWidth = newLayoutWidth;
+            }
 
             var margin = DpiScaling.ScaleForWindow(4);
             var x = margin;
@@ -255,7 +277,7 @@ namespace FamiStudio
                 if (prop.label != null)
                 {
                     var localLayoutWidth = actualLayoutWidth;
-                    var checkBox = prop.control is CheckBox;
+                    var checkBox = prop.control is CheckBox c && string.IsNullOrEmpty(c.Text);
                     var topY = y;
 
                     container.AddControl(prop.label);
@@ -263,8 +285,7 @@ namespace FamiStudio
 
                     if (checkBox)
                     {
-                        // MATTT : Hardcoded 96. 
-                        localLayoutWidth -= 96;
+                        localLayoutWidth -= prop.control.Height;
                     }
 
                     prop.label.Move(x, y, localLayoutWidth, 1);
@@ -274,29 +295,34 @@ namespace FamiStudio
 
                     if (!string.IsNullOrEmpty(tooltip))
                     {
-                        if (prop.tooltipLabel == null)
-                        {
-                            prop.tooltipLabel = new Label(tooltip);
-                            prop.tooltipLabel.Font = container.Fonts.FontVerySmall;
-                            prop.tooltipLabel.Multiline = true;
-                            prop.tooltipLabel.Enabled = prop.control.Enabled;
-                            prop.tooltipLabel.Move(x, y, localLayoutWidth, 1);
-                            container.AddControl(prop.tooltipLabel);
-                            y = prop.tooltipLabel.Bottom + margin;
-                        }
+                        prop.tooltipLabel = new Label(tooltip);
+                        prop.tooltipLabel.Font = container.Fonts.FontVerySmall;
+                        prop.tooltipLabel.Multiline = true;
+                        prop.tooltipLabel.Enabled = prop.control.Enabled;
+                        prop.tooltipLabel.Move(x, y, localLayoutWidth, 1);
+                        container.AddControl(prop.tooltipLabel);
+                        y = prop.tooltipLabel.Bottom + margin;
                     }
 
                     if (!checkBox)
                     {
-                        prop.control.Move(x, y, localLayoutWidth, prop.control.Height);
+
+                        if (prop.control is ColorPicker colorPicker)
+                        {
+                            var res = Platform.GetScreenResolution();
+                            colorPicker.SetDesiredWidth(localLayoutWidth, Math.Min(res.Width, res.Height) / 2);
+                            colorPicker.Move(x, y);
+                        }
+                        else
+                        {
+                            prop.control.Move(x, y, localLayoutWidth, prop.control.Height);
+                        }
                         y = prop.control.Bottom + margin;
                     }
                     else
                     {
-                        // MATTT : Hardcoded 64. 
-                        // MATTT : Allow checkboxes without text to be centered to get a larger touch area.
-                        // MATTT : Make checkboxes scale on mobile. 64 is too small.
-                        prop.control.Move(x + actualLayoutWidth - 64, topY, 64, y - topY);
+                        var checkBoxSize = prop.control.Height;
+                        prop.control.Move(x + actualLayoutWidth - checkBoxSize, topY, checkBoxSize, y - topY);
                     }
                 }
                 else

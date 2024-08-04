@@ -23,22 +23,14 @@ namespace FamiStudio
         private Button buttonYes;
         private Button buttonNo;
 
-        public delegate void PageChangingDelegate(int oldPage, int newPage);
-        public delegate void CustomVerbActivatedDelegate();
-        public delegate void AppSuspendedDelegate();
-        public event PageChangingDelegate PageChanging;
-        public event CustomVerbActivatedDelegate CustomVerbActivated;
-        public event AppSuspendedDelegate AppSuspended;
+        public delegate void PageCustomActionActivatedDelegate(int page);
+        public event PageCustomActionActivatedDelegate PageCustomActionActivated;
 
-        public MultiPropertyDialog(FamiStudioWindow win, string title, int width, int tabsWidth = 150) : base(win, title)
+        public MultiPropertyDialog(FamiStudioWindow win, string title, int width, bool acceptOnTabsPage = false, int tabsWidth = 150) : base(win, title)
         {
             tabsSizeX = DpiScaling.ScaleForWindow(tabsWidth);
             Move(0, 0, DpiScaling.ScaleForWindow(width), DpiScaling.ScaleForWindow(width));
             Init();
-        }
-
-        public void SetVerb(string text, bool showOnTabPage = false)
-        {
         }
 
         private void Init()
@@ -142,7 +134,7 @@ namespace FamiStudio
         {
         }
 
-        public void AddPageCustomVerb(int idx, string verb)
+        public void SetPageCustomAction(int idx, string verb)
         {
         }
 

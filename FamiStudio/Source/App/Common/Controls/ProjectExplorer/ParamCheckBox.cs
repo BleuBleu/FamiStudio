@@ -44,11 +44,6 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDoubleClick(PointerEventArgs e)
-        {
-            OnPointerDown(e);
-        }
-
         protected override void OnPointerMove(PointerEventArgs e)
         {
             SetAndMarkDirty(ref hover, true);
@@ -66,7 +61,7 @@ namespace FamiStudio
 
         public override void ShowParamContextMenu()
         {
-            App.ShowContextMenu(new[]
+            App.ShowContextMenuAsync(new[]
             {
                 new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
             });

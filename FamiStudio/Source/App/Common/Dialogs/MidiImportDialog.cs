@@ -43,8 +43,6 @@ namespace FamiStudio
         // Channel 10 keys dialog
         LocalizedString MIDISourceTitle;
         LocalizedString Channel10KeysLabel;
-        LocalizedString SelectAllLabel;
-        LocalizedString SelectNoneLabel;
 
         #endregion
 
@@ -152,15 +150,11 @@ namespace FamiStudio
             {
                 var src = channelSources[rowIdx];
 
-                // MATTT : We should enable/disable that cell if its not channel 10.
                 if (src.type == MidiSourceType.Channel && src.index == 9)
                 {
                     var dlg = new PropertyDialog(dialog.ParentWindow, MIDISourceTitle, 300, true, true);
-                    dlg.Properties.AddCheckBoxList(Channel10KeysLabel.Colon, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // -
-                    dlg.Properties.AddButton(null, SelectAllLabel); // 1
-                    dlg.Properties.AddButton(null, SelectNoneLabel); // 2
+                    dlg.Properties.AddCheckBoxList(Channel10KeysLabel.Colon, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 0
                     dlg.Properties.Build();
-                    dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
 
                     dlg.ShowDialogAsync((r) =>
                     {
@@ -183,22 +177,6 @@ namespace FamiStudio
                 {
                     Platform.Beep();
                 }
-            }
-        }
-
-        private void MappingProperties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
-        {
-            if (click == ClickType.Button && (propIdx == 1 || propIdx == 2))
-            {
-                var keys = new bool[MidiFileReader.MidiDrumKeyNames.Length];
-
-                if (propIdx == 1)
-                {
-                    for (int i = 0; i < keys.Length; i++)
-                        keys[i] = true;
-                }
-
-                props.UpdateCheckBoxList(0, keys);
             }
         }
 
@@ -281,6 +259,11 @@ namespace FamiStudio
         {
             var expansionMask = GetExpansionMask(dialog.Properties.GetPropertyValue<bool[]>(4));
             dialog.Properties.UpdateGrid(5, GetChannelListData(expansionMask));
+
+            for (var i = 0; i < channelSources.Length; i++)
+            {
+                dialog.Properties.SetPropertyEnabled(5, i, 2, channelSources[i].type == MidiSourceType.Channel && channelSources[i].index == 9);
+            }
         }
 
         public void ShowDialogAsync(FamiStudioWindow parent, Action<Project> action)

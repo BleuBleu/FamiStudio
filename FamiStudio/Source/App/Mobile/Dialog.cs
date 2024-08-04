@@ -15,7 +15,7 @@ namespace FamiStudio
         protected Action<DialogResult> callback;
         protected DialogResult result = DialogResult.None;
 
-        protected bool fullscreen = true;
+        private bool fullscreen = true;
 
         public DialogResult Result => result;
         public bool Fullscreen => fullscreen;
@@ -26,9 +26,10 @@ namespace FamiStudio
             set { }
         }
 
-        public Dialog(FamiStudioWindow win, string t = "")
+        public Dialog(FamiStudioWindow win, string t = "", bool fs = true)
         {
             visible = false;
+            fullscreen = fs;
             win.InitDialog(this);
         }
 
@@ -36,6 +37,7 @@ namespace FamiStudio
         {
             result = res;
             callback?.Invoke(result);
+            OnCloseDialog(result);
 
             // Pop dialog after the callback, otherwise sometimes the callback takes some time
             // and this counts in the transition time, making the fade look abrupt.
@@ -51,18 +53,16 @@ namespace FamiStudio
         {
         }
 
+        protected virtual void OnCloseDialog(DialogResult res)
+        {
+        }
+
         public void ShowDialogAsync(Action<DialogResult> cb = null)
         {
             callback = cb;
             result = DialogResult.None;
             OnShowDialog();
             window.PushDialog(this);
-        }
-
-        // MATTT : Recenter non-fullscreen dialogs on resize.
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
         }
 
         protected override void OnTouchClick(PointerEventArgs e)
@@ -81,6 +81,10 @@ namespace FamiStudio
         {
             // We eat all the inputs so we can close when clicking outside.
             return true;
+        }
+
+        public virtual void OnWindowResize(EventArgs e)
+        {
         }
 
         protected override void OnRender(Graphics g)

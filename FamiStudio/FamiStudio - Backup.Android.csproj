@@ -241,7 +241,7 @@
     <Compile Include="Source\App\Common\Controls\Control.cs" />
     <Compile Include="Source\App\Common\Controls\DropDown.cs" />
     <Compile Include="Source\App\Common\Controls\FileTextBox.cs" />
-    <Compile Include="Source\App\Common\Controls\GifImageBox.cs" />
+    <Compile Include="Source\App\Common\Controls\HorizontalLine.cs" />
     <Compile Include="Source\App\Common\Controls\ImageBox.cs" />
     <Compile Include="Source\App\Common\Controls\Label.cs" />
     <Compile Include="Source\App\Common\Controls\LinkLabel.cs" />
@@ -254,7 +254,6 @@
     <Compile Include="Source\App\Common\Controls\ScrollContainer.cs" />
     <Compile Include="Source\App\Common\Controls\Slider.cs" />
     <Compile Include="Source\App\Common\Controls\TextBox.cs" />
-    <Compile Include="Source\App\Common\Controls\Toast.cs" />
     <Compile Include="Source\App\Common\Controls\TouchScrollContainer.cs" />
     <Compile Include="Source\App\Common\Controls\PianoRoll\PianoRoll.cs" />
     <Compile Include="Source\App\Common\Controls\ProjectExplorer\ParamCheckBox.cs" />
@@ -284,6 +283,7 @@
     <Compile Include="Source\App\Common\Dialogs\MixerProperties.cs" />
     <Compile Include="Source\App\Droid\DroidUtils.cs" />
     <Compile Include="Source\App\Droid\FamiStudioWindow.cs" />
+    <Compile Include="Source\App\Droid\TutorialDialog.cs" />
     <Compile Include="Source\App\Mobile\CheckBoxList.cs" />
     <Compile Include="Source\App\Mobile\ContextMenuDialog.cs" />
     <Compile Include="Source\App\Mobile\Dialog.cs" />
@@ -300,8 +300,6 @@
     <Compile Include="Source\App\Mobile\QuickAccessBar.cs" />
     <Compile Include="Source\App\Mobile\RadioButtonList.cs" />
     <Compile Include="Source\App\Mobile\TopbarDialog.cs" />
-    <Compile Include="Source\App\Mobile\TutorialDialog.cs" />
-    <Compile Include="Source\App\Mobile\VideoPreviewDialog.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\AlphaNumericSort.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />

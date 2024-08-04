@@ -118,6 +118,7 @@ namespace FamiStudio
                 props.OverrideCellSlider(chipGridIndices[i], 1, 1, -1000, 50, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
                 props.OverrideCellSlider(chipGridIndices[i], 2, 1, 1, 441, (o) => FormattableString.Invariant($"{(int)o * 100} Hz"));
                 props.SetPropertyEnabled(chipGridIndices[i], project == null || overridden);
+                props.SetPropertyEnabled(chipGridIndices[i], 1, 1, i != ExpansionType.Fds); // No cutoff on special FDS filter.
             }
 
             if (projectSettings)
@@ -128,9 +129,6 @@ namespace FamiStudio
 
             props.PropertyChanged += Props_PropertyChanged;
             props.PropertyClicked += Props_PropertyClicked;
-
-            // MATTT : This doesnt work on mobile. We need to remove this event, not needed. Store a bitarray in grid or something.
-            props.PropertyCellEnabled += (p, i, r, c) => i != chipGridIndices[ExpansionType.Fds] || r != 1; // No cutoff on special FDS filter.
 
             if (projectSettings)
             {

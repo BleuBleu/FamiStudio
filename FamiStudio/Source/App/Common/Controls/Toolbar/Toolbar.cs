@@ -109,7 +109,6 @@ namespace FamiStudio
         public bool  IsExpanded  => Platform.IsMobile && expandRatio > 0.0f;
 
         public override bool WantsFullScreenViewport => Platform.IsMobile;
-        public override bool SupportsDoubleClick => false;
 
         private float iconScaleFloat = 1.0f;
 
@@ -172,6 +171,7 @@ namespace FamiStudio
             Settings.KeyboardShortcutsChanged += Settings_KeyboardShortcutsChanged;
             SetTickEnabled(Platform.IsMobile);
             clipRegion = Platform.IsDesktop;
+            supportsDoubleClick = false;
         }
 
         private Button CreateToolbarButton(string image, string userData)
@@ -272,7 +272,7 @@ namespace FamiStudio
 
             buttonMetronome = CreateToolbarButton("Metronome", "Metronome");
             buttonMetronome.Click += ButtonMetronome_Click;
-            buttonMetronome.EnabledEvent += ButtonMetronome_EnabledEvent;
+            buttonMetronome.DimmedEvent += ButtonMetronome_DimmedEvent;
 
             buttonMachine = CreateToolbarButton("NTSC", "Machine");
             buttonMachine.Click += ButtonMachine_Click;
@@ -281,7 +281,7 @@ namespace FamiStudio
 
             buttonFollow = CreateToolbarButton("Follow", "Follow");
             buttonFollow.Click += ButtonFollow_Click;
-            buttonFollow.EnabledEvent += ButtonFollow_EnabledEvent;
+            buttonFollow.DimmedEvent += ButtonFollow_DimmedEvent;
 
             buttonHelp = CreateToolbarButton("Help", "Help");
             buttonHelp.Click += ButtonHelp_Click;
@@ -325,7 +325,7 @@ namespace FamiStudio
         
         private void ButtonDelete_RightClick(Control sender)
         {
-            App.ShowContextMenu(new[]
+            App.ShowContextMenuAsync(new[]
             {
                 new ContextMenuOption("MenuStar", DeleteSpecialLabel, () => { App.DeleteSpecial(); }),
             });
@@ -371,6 +371,7 @@ namespace FamiStudio
         private void ButtonOpen_Click(Control sender)
         {
             App.OpenProject();
+            StartClosing();
         }
 
         private void ButtonOpen_PointerUpEvent(Control sender, PointerEventArgs e)
@@ -385,20 +386,21 @@ namespace FamiStudio
                     options[i] = new ContextMenuOption("MenuFile", Settings.RecentFiles[i], () => App.OpenProject(Settings.RecentFiles[j]));
                 }
 
-                App.ShowContextMenu(options);
+                App.ShowContextMenuAsync(options);
             }
         }
 
         private void ButtonSave_Click(Control sender)
         {
             App.SaveProjectAsync();
+            StartClosing();
         }
 
         private void ButtonSave_PointerUpEvent(Control sender, PointerEventArgs e)
         {
             if (!e.Handled && e.Right)
             {
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuSave", SaveAsLabel, $"{SaveAsTooltip} {Settings.FileSaveAsShortcut.TooltipString}", () => { App.SaveProjectAsync(true); }),
                 });
@@ -415,7 +417,7 @@ namespace FamiStudio
         {
             if (Platform.IsDesktop && !e.Handled && e.Right)
             {
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuExport", RepeatExportLabel, $"{RepeatExportTooltip} {Settings.FileExportRepeatShortcut.TooltipString}", () => { App.RepeatLastExport(); }),
                 });
@@ -451,7 +453,7 @@ namespace FamiStudio
         {
             if (!e.Handled && e.Right)
             {
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuStar", PasteSpecialLabel, $"{PasteSpecialTooltip} {Settings.PasteSpecialShortcut.TooltipString}", () => { App.PasteSpecial(); }),
                 });
@@ -507,7 +509,7 @@ namespace FamiStudio
         {
             if (!e.Handled && e.Right)
             { 
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuPlay", PlayBeginSongLabel, $"{PlayBeginSongTooltip} {Settings.PlayFromStartShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
                     new ContextMenuOption("MenuPlay", PlayBeginPatternLabel, $"{PlayBeginPatternTooltip} {Settings.PlayFromPatternShortcut.TooltipString}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
@@ -594,9 +596,9 @@ namespace FamiStudio
             App.ToggleMetronome();
         }
 
-        private bool ButtonMetronome_EnabledEvent(Control sender)
+        private bool ButtonMetronome_DimmedEvent(Control sender, ref int dimming)
         {
-            return App.IsMetronomeEnabled;
+            return !App.IsMetronomeEnabled;
         }
 
         private void ButtonMachine_Click(Control sender)
@@ -633,9 +635,9 @@ namespace FamiStudio
             App.FollowModeEnabled = !App.FollowModeEnabled;
         }
 
-        private bool ButtonFollow_EnabledEvent(Control sender)
+        private bool ButtonFollow_DimmedEvent(Control sender, ref int dimming)
         {
-            return App.FollowModeEnabled;
+            return !App.FollowModeEnabled;
         }
 
         private void ButtonHelp_Click(Control sender)

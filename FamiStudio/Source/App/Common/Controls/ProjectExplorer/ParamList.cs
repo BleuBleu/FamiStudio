@@ -19,11 +19,11 @@ namespace FamiStudio
         private int captureButton;
         private double captureTime;
 
-        public override bool SupportsDoubleClick => false;
-
         public ParamList(ParamInfo p) : base(p)
         {
             height = DpiScaling.ScaleForWindow(16);
+            supportsDoubleClick = false;
+            supportsLongPress = true;
         }
 
         protected override void OnAddedToContainer()

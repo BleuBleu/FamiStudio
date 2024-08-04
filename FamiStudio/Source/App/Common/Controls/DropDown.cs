@@ -35,14 +35,16 @@ namespace FamiStudio
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
         private int rowHeight      = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
 
-        public override bool SupportsDoubleClick => false;
+        private LocalizedString SelectValueLabel;
 
         public DropDown(string[] list, int index, bool trans = false)
         {
+            Localization.Localize(this);
             items = list;
             selectedIndex = index;
             height = rowHeight;
             transparent = trans;
+            supportsDoubleClick = false;
             UpdateScrollParams();
         }
 
@@ -54,11 +56,9 @@ namespace FamiStudio
             get { return selectedIndex; }
             set 
             {
-                if (value != selectedIndex)
+                if (SetAndMarkDirty(ref selectedIndex, value))
                 {
-                    selectedIndex = value; 
                     SelectedIndexChanged?.Invoke(this, value); 
-                    MarkDirty();
                 }
             }
         }
@@ -168,67 +168,18 @@ namespace FamiStudio
             }
         }
 
-#if FAMISTUDIO_ANDROID // MATTT : We use a TouchScrollContainer here. Rename to ScrollContainer, have a mobile + desktop version. 
+#if FAMISTUDIO_ANDROID 
         private void ShowMobileListDialog()
         {
-            var buttonHeight = DpiScaling.ScaleForWindow((int)Utils.Lerp(20, 14, Utils.Saturate((items.Length - 4) / 20.0f)));
+            var dlg = new DropDownOptionsDialog(window, string.IsNullOrEmpty(prompt) ? SelectValueLabel : prompt, items, selectedIndex);
 
-            var dlg = new Dialog(window);
-            var scrollContainer = new TouchScrollContainer();
-
-            scrollContainer.VirtualSizeY = items.Length * buttonHeight;
-
-#if true
-            var maxHeight = Math.Min(window.Width, window.Height) * 4 / 5;
-            var listWidth = Math.Min(window.Width, window.Height) * 4 / 5;
-            var listHeight = Math.Min(listWidth, buttonHeight * (items.Length + 1));
-            dlg.Move((window.Width - listWidth) / 2, (window.Height - listHeight) / 2, listWidth, listHeight);
-
-            // MATTT : Localize.
-            // MATTT : Add a panel here too once we merge the stuff from the sequencer shelve.
-            var title = new Label(string.IsNullOrEmpty(prompt) ? "Select value" : prompt);
-            title.Font = fonts.FontMediumBold;
-            title.Centered = true;
-            title.Move(0, 0, listWidth, buttonHeight);
-            dlg.AddControl(title);
-#else
-            var windowRect = WindowRectangle;
-            if ((windowRect.Top + windowRect.Bottom) / 2 > window.Height / 2)
+            dlg.ShowDialogAsync((r) =>
             {
-                var listHeight = Math.Min(windowRect.Top * 4 / 5, items.Length * buttonHeight);
-                dlg.Move(windowRect.Left, windowRect.Top - listHeight, width, listHeight);
-            }
-            else
-            {
-                var listHeight = Math.Min((window.Height - windowRect.Bottom) * 4 / 5, items.Length * buttonHeight);
-                dlg.Move(windowRect.Left, windowRect.Bottom, width, listHeight);
-            }
-#endif
-            scrollContainer.Move(0, title.Bottom, dlg.Width, dlg.Height - title.Height);
-            dlg.AddControl(scrollContainer);
-
-            for (var i = 0; i < items.Length; i++)
-            {
-                var j = i; // Important, local copy for lambda below.
-                var button = new Button(selectedIndex == i ? "RadioButtonOn" : "RadioButtonOff", items[i]);
-                button.UserData = i;
-                button.ImageScale = DpiScaling.Window * 0.25f;
-                button.Transparent = true;
-                button.Click += (s) =>
+                if (r == DialogResult.OK)
                 {
-                    (scrollContainer.GetControl(selectedIndex) as Button).ImageName = "RadioButtonOff";
-                    SelectedIndex = j;
-                    (scrollContainer.GetControl(selectedIndex) as Button).ImageName = "RadioButtonOn";
-                    dlg.Close(DialogResult.OK);
-                };
-                button.Move(0, i * buttonHeight, listWidth, buttonHeight);
-                scrollContainer.AddControl(button);
-            }
-
-            scrollContainer.ScrollY = (int)Math.Round((selectedIndex + 0.5f) * buttonHeight - scrollContainer.Height * 0.5f);
-            scrollContainer.ClampScroll();
-
-            dlg.ShowDialogAsync();
+                    SelectedIndex = dlg.SelectedIndex;
+                }
+            });
         }
 
         protected override void OnTouchClick(PointerEventArgs e)

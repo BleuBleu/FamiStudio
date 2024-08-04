@@ -24,9 +24,6 @@ namespace FamiStudio
         private LocalizedString DemoProjectsLoadTooltip;
         private LocalizedString OpenFromStorageTooltip;
 
-        private LocalizedString SaveVerb;
-        private LocalizedString OpenVerb;
-
         private LocalizedString UserProjectsLabel;
         private LocalizedString NewProjectNameLabel;
         private LocalizedString NewProjectNameTooltip;
@@ -57,7 +54,6 @@ namespace FamiStudio
             saveMode = save;
 
             dialog = new PropertyDialog(famistudio.Window, title, 100);
-            dialog.SetVerb(save ? SaveVerb : OpenVerb);
 
             if (save)
                 dialog.ValidateProperties += Dialog_ValidateProperties;

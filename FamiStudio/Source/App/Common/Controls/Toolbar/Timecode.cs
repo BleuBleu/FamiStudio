@@ -9,8 +9,6 @@ namespace FamiStudio
         private int  lastWidth;
         private Font font;
 
-        public override bool SupportsDoubleClick => false;
-
         #region Localization
 
         private LocalizedString FormatMinSecMs;
@@ -20,6 +18,7 @@ namespace FamiStudio
 
         public Timecode()
         {
+            supportsDoubleClick = false;
             Localization.Localize(this);
         }
 
@@ -75,7 +74,7 @@ namespace FamiStudio
         {
             if (e.Right && !ProjectUsesFamitrackerTempo())
             {
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption(FormatMinSecMs,     null, () => { Settings.TimeFormat = 1; MarkDirty(); }, () => Settings.TimeFormat == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
                     new ContextMenuOption(FormatPatternFrame, null, () => { Settings.TimeFormat = 0; MarkDirty(); }, () => Settings.TimeFormat == 0 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),

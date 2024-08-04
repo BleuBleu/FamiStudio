@@ -535,12 +535,9 @@ namespace FamiStudio
                     if (shortcutStr1 != null)
                         shortcut.FromConfigString(shortcutStr1, 0);
 
-                    if (shortcut.AllowTwoShortcuts)
-                    {
-                        var shortcutStr2 = ini.GetString("Keys", shortcut.ConfigName + "_Alt", null);
-                        if (shortcutStr2 != null)
-                            shortcut.FromConfigString(shortcutStr2, 1);
-                    }
+                    var shortcutStr2 = ini.GetString("Keys", shortcut.ConfigName + "_Alt", null);
+                    if (shortcutStr2 != null)
+                        shortcut.FromConfigString(shortcutStr2, 1);
                 }
             }
 
@@ -726,8 +723,7 @@ namespace FamiStudio
             foreach (var shortcut in AllShortcuts)
             {
                 ini.SetString("Keys", shortcut.ConfigName, shortcut.ToConfigString(0));
-                if (shortcut.AllowTwoShortcuts)
-                    ini.SetString("Keys", shortcut.ConfigName + "_Alt", shortcut.ToConfigString(1));
+                ini.SetString("Keys", shortcut.ConfigName + "_Alt", shortcut.ToConfigString(1));
             }
 
             // Mobile

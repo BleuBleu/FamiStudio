@@ -14,7 +14,7 @@ namespace FamiStudio
         private int pageIndex = 0;
         private Button buttonRight;
         private Button buttonLeft;
-        private ImageBox imageBox;
+        private GifImageBox imageBox;
         private Label label;
         private CheckBox checkBoxDontShow;
 
@@ -24,15 +24,6 @@ namespace FamiStudio
         private int labelSizeY = DpiScaling.ScaleForWindow(36);
         private int buttonSize = DpiScaling.ScaleForWindow(36);
         private int checkSizeY = DpiScaling.ScaleForWindow(16);
-
-        private float gifTimer = 0.0f;
-        private IntPtr gif;
-        private Texture gifBmp;
-        private int gifSizeX;
-        private int gifSizeY;
-        private byte[] gifData;
-        private byte[] gifBuffer;
-        private GCHandle gifHandle;
 
         public TutorialDialog(FamiStudioWindow win) : base(win, "")
         {
@@ -65,9 +56,8 @@ namespace FamiStudio
             label = new Label("This is a nice label", true);
             label.Move(margin, margin + titleBarSizeY, width - margin, labelSizeY);
 
-            imageBox = new ImageBox((Texture)null);
+            imageBox = new GifImageBox();
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
-            imageBox.StretchImageToFill = DpiScaling.Window > 1;
 
             checkBoxDontShow = new CheckBox(false, DoNotShowAgainLabel);
             checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY + titleBarSizeY, width - buttonSize * 3, checkSizeY);
@@ -82,74 +72,12 @@ namespace FamiStudio
             CenterToWindow();
         }
 
-        private void OpenGif(string filename)
-        {
-            if (gif != IntPtr.Zero)
-            {
-                CloseGif();
-            }
-
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Tutorials.{filename}"))
-            {
-                gifData = new byte[stream.Length];
-                stream.Read(gifData, 0, (int)stream.Length);
-                stream.Close();
-            }
-
-            gifHandle = GCHandle.Alloc(gifData, GCHandleType.Pinned);
-            gif = Gif.Open(gifHandle.AddrOfPinnedObject(), 1);
-            gifSizeX = Gif.GetWidth(gif);
-            gifSizeY = Gif.GetHeight(gif);
-            gifBuffer = new byte[gifSizeX * gifSizeY * 3];
-            gifBmp = ParentWindow.Graphics.CreateEmptyTexture(gifSizeX, gifSizeY, TextureFormat.Rgb, DpiScaling.Window > 1.0f);
-            imageBox.Image = gifBmp;
-        }
-
-        private void CloseGif()
-        {
-            if (gif != IntPtr.Zero)
-            {
-                gifData = null;
-                gifBuffer = null;
-                Gif.Close(gif);
-                gif = IntPtr.Zero;
-                gifHandle.Free();
-                gifBmp.Dispose();
-                gifBmp = null;
-            }
-        }
-
-        private unsafe void UpdateGif()
-        {
-            var decodeStart = Platform.TimeSeconds();
-
-            Gif.AdvanceFrame(gif);
-            fixed (byte* p = &gifBuffer[0])
-                Gif.RenderFrame(gif, new IntPtr(p), gifSizeX * 3, 3);
-            ParentWindow.Graphics.UpdateTexture(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
-
-            var decodeTime = (int)((Platform.TimeSeconds() - decodeStart) * 1000);
-
-            gifTimer = (Gif.GetFrameDelay(gif) - decodeTime) / 1000.0f;
-            MarkDirty();
-        }
-
-        public override void Tick(float delta)
-        {
-            gifTimer -= delta;
-            if (gifTimer <= 0)
-                UpdateGif();
-        }
-
         private void SetPage(int idx)
         {
             pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Length - 1);
             label.Text = TutorialMessages[pageIndex];
             buttonLeft.Visible = pageIndex != 0;
-
-            OpenGif($"Tutorial{pageIndex}.gif");
-            UpdateGif();
-
+            imageBox.LoadGifFromResource($"FamiStudio.Resources.Tutorials.Tutorial{pageIndex}.gif");
             buttonRight.ImageName = pageIndex == TutorialMessages.Length - 1 ? "Yes" : "ArrowRight";
         }
 

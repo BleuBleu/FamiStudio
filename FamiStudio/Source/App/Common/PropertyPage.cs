@@ -31,8 +31,6 @@ namespace FamiStudio
         public event PropertyWantsCloseDelegate PropertyWantsClose;
         public delegate void PropertyClickedDelegate(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx);
         public event PropertyClickedDelegate PropertyClicked;
-        public delegate bool PropertyCellEnabledDelegate(PropertyPage props, int propIdx, int rowIdx, int colIdx);
-        public event PropertyCellEnabledDelegate PropertyCellEnabled;
         public delegate void LayoutChangedDelegate(PropertyPage props);
         public event LayoutChangedDelegate LayoutChanged;
 
@@ -53,6 +51,7 @@ namespace FamiStudio
 
         #endregion
 
+        public int LayoutWidth   => layoutWidth;
         public int LayoutHeight  => layoutHeight;
         public int PropertyCount => properties.Count;
 
@@ -150,7 +149,7 @@ namespace FamiStudio
         private ColorPicker CreateColorPicker(Color color)
         {
             var colorPicker = new ColorPicker(color);
-            colorPicker.SetNiceSize(layoutWidth);
+            colorPicker.SetDesiredWidth(layoutWidth);
             colorPicker.ColorChanged += ColorPicker_ColorChanged;
             colorPicker.DoubleClicked += ColorPicker_ColorDoubleClicked;
             return colorPicker;
@@ -211,6 +210,7 @@ namespace FamiStudio
             var cb = new CheckBox(value, text);
             cb.CheckedChanged += Cb_CheckedChanged;
             cb.ToolTip = tooltip;
+            cb.RightAlign = Platform.IsMobile && string.IsNullOrEmpty(text);
             return cb;
         }
 

@@ -50,7 +50,6 @@ namespace FamiStudio
 
         // Title
         LocalizedString Title;
-        LocalizedString Verb;
 
         // General tooltips
         LocalizedString LanguageTooltip;
@@ -190,8 +189,7 @@ namespace FamiStudio
         {
             Localization.Localize(this);
 
-            dialog = new MultiPropertyDialog(win, Title, 570);
-            dialog.SetVerb(Verb, true);
+            dialog = new MultiPropertyDialog(win, Title, 570, true);
 
             // Keep a copy of keyboart shortcuts
             shortcuts = Shortcut.CloneList(Settings.AllShortcuts);
@@ -368,7 +366,6 @@ namespace FamiStudio
                     page.AddGrid(DoubleClickLabel, new[] { new ColumnDesc(ActionColumn, 0.4f), new ColumnDesc(KeyColumn, 0.3f), new ColumnDesc(KeyAltColumn, 0.3f) }, GetKeyboardShortcutStrings(), 14, null, GridOptions.None, PropertyFlags.MultiLineLabel); // 0
                     page.AddButton(null, ResetDefaultLabel); // 1
                     page.PropertyClicked += KeyboardPage_PropertyClicked;
-                    page.PropertyCellEnabled += KeyboardPage_PropertyCellEnabled;
                     page.SetColumnEnabled(0, 0, false);
                     break;
                 }
@@ -455,11 +452,6 @@ namespace FamiStudio
                 shortcuts = Shortcut.CloneList(Settings.DefaultShortcuts);
                 pages[(int)ConfigSection.Keys].UpdateGrid(0, GetKeyboardShortcutStrings());
             }
-        }
-
-        private bool KeyboardPage_PropertyCellEnabled(PropertyPage props, int propIdx, int rowIdx, int colIdx)
-        {
-            return colIdx != 2 || shortcuts[rowIdx].AllowTwoShortcuts;
         }
 
         private void Dlg_KeyboardKeyDown(Dialog dlg, KeyEventArgs e)

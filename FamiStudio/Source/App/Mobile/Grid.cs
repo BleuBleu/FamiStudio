@@ -6,12 +6,22 @@ namespace FamiStudio
 {
     public class Grid : Container
     {
+        public delegate void ValueChangedDelegate(Control sender, int rowIndex, int colIndex, object value);
+        public delegate void ButtonPressedDelegate(Control sender, int rowIndex, int colIndex);
+
+        public event ValueChangedDelegate ValueChanged;
+        public event ButtonPressedDelegate ButtonPressed;
+
+        private int margin = DpiScaling.ScaleForWindow(4);
+
         private ColumnDesc[] columns;
         private Control[,] gridControls;
         private CellSliderData[,] cellSliderData;
         private bool[,] gridDisabled;
         private object[,] data;
         private GridOptions options;
+
+        public object[,] Data => data;
 
         private class CellSliderData
         {
@@ -28,6 +38,14 @@ namespace FamiStudio
             data = d;
             gridControls = new Control[data.GetLength(0), data.GetLength(1)];
             gridDisabled = new bool[data.GetLength(0), data.GetLength(1)];
+        }
+
+        private void ConditionalRecreateAllControls()
+        {
+            if (HasParent)
+            {
+                RecreateAllControls();
+            }
         }
 
         private void RecreateAllControls()
@@ -48,7 +66,7 @@ namespace FamiStudio
             else
             {
                 // Special case, if the 2 first columns are checkbox + label, we combine then in something nicer.
-                // MATTT : Should those be GridOptions.xxx flags?
+                // TODO : Should those be GridOptions.xxx flags?
                 if (columns[0].Type == ColumnType.CheckBox && columns[1].Type == ColumnType.Label)
                 {
                     numRows = data.GetLength(0) * (data.GetLength(1) - 1);
@@ -62,6 +80,20 @@ namespace FamiStudio
                 {
                     numRows = data.GetLength(0) * data.GetLength(1);
                 }
+            }
+
+            var maxColumnNameWidth = 0;
+
+            for (int c = 0; c < data.GetLength(1); c++)
+            {
+                maxColumnNameWidth = Math.Max(maxColumnNameWidth, fonts.FontMedium.MeasureString(columns[c].Name, false));
+            }
+
+            var columnNameEllispsis = false;
+            if (maxColumnNameWidth > (width * 2 / 5))
+            {
+                maxColumnNameWidth = (width * 2 / 5);
+                columnNameEllispsis = true;
             }
 
             var rowMargin = DpiScaling.ScaleForWindow(2);
@@ -79,7 +111,7 @@ namespace FamiStudio
                     if (c == 0 && mergeCheckboxAndLabel)
                     {
                         var checkBox = new CheckBox((bool)data[r, c], (string)data[r, c + 1]);
-                        checkBox.Move(0, y, 1000, rowHeight);
+                        checkBox.Move(0, y, width, rowHeight); 
                         checkBox.Enabled = !gridDisabled[r, 0];
                         AddControl(checkBox);
 
@@ -97,9 +129,10 @@ namespace FamiStudio
                     if (!noLabel)
                     {
                         var colLabel = new Label(columns[c].Name);
-                        colLabel.Move(0, y, 300, rowHeight); // MATTT : Hardcoded 300, need to measure!
+                        colLabel.Move(0, y, maxColumnNameWidth, rowHeight);
+                        colLabel.Ellipsis = columnNameEllispsis;
                         AddControl(colLabel);
-                        x = colLabel.Right;
+                        x = colLabel.Right + margin;
                     }
                     else if (twoColumnLayout && c == 1)
                     {
@@ -111,13 +144,13 @@ namespace FamiStudio
                         case ColumnType.CheckBox:
                         {
                             var checkBox = new CheckBox((bool)data[r, c]);
+                            checkBox.CheckedChanged += CheckBox_CheckedChanged;
                             ctrl = checkBox;
                             break;
                         }
                         case ColumnType.Label:
                         {
                             var text = new Label((string)data[r, c]);
-                            //text.Font = firstColumnIsLabel && c == 0 ? fonts.FontMediumBold : fonts.FontMedium;
                             text.Ellipsis = twoColumnLayout;
                             ctrl = text;
                             break;
@@ -135,27 +168,31 @@ namespace FamiStudio
                                 fmt = cellSliderData[r, c].Formatter;
                             }
 
-                            var seek = new GridSlider((int)data[r, c], min, max, fmt);
-                            localRowHeight = seek.Height;
-                            ctrl = seek;
+                            var slider = new GridSlider((int)data[r, c], min, max, fmt);
+                            slider.ValueChanged += Slider_ValueChanged;
+                            localRowHeight = slider.Height;
+                            ctrl = slider;
                             break;
                         }
                         case ColumnType.NumericUpDown:
                         {
                             var upDown = new NumericUpDown((int)data[r, c], col.MinValue, col.MaxValue, 1);
+                            upDown.ValueChanged += UpDown_ValueChanged;
                             ctrl = upDown;
                             break;
                         }
                         case ColumnType.DropDown:
                         {
                             var dropDown = new DropDown(col.DropDownValues, Array.IndexOf(col.DropDownValues, (string)data[r, c]));
+                            dropDown.SelectedIndexChanged += DropDown_SelectedIndexChanged;
                             ctrl = dropDown;
                             break;
                         }
                         case ColumnType.Button:
                         {
-                            var button = new Button(null, "...");
+                            var button = new Button(null, (string)data[r, c]);
                             button.Border = true;
+                            button.Click += Button_Click;
                             ctrl = button;
                             break;
                         }
@@ -174,7 +211,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        ctrl.Resize(700, localRowHeight); // MATTT
+                        ctrl.Resize(width - x, localRowHeight);
                     }
 
                     AddControl(ctrl);
@@ -190,6 +227,73 @@ namespace FamiStudio
             }
 
             Resize(width, y, false);
+            MarkDirty();
+        }
+
+        private bool GetGridCoordForControl(Control ctrl, out int row, out int col)
+        {
+            for (int r = 0; r < gridControls.GetLength(0); r++)
+            {
+                for (int c = 0; c < gridControls.GetLength(1); c++)
+                {
+                    if (ctrl == gridControls[r, c])
+                    {
+                        row = r;
+                        col = c;
+                        return true;
+                    }
+                }
+            }
+
+            row = -1;
+            col = -1;
+            return false;
+        }
+
+        private void DropDown_SelectedIndexChanged(Control sender, int index)
+        {
+            if (GetGridCoordForControl(sender, out int row, out int col))
+            {
+                var text = columns[col].DropDownValues[index];
+                data[row, col] = text;
+                ValueChanged?.Invoke(this, row, col, text);
+            }
+        }
+
+        private void UpDown_ValueChanged(Control sender, int val)
+        {
+            if (GetGridCoordForControl(sender, out int row, out int col))
+            {
+                data[row, col] = val;
+                ValueChanged?.Invoke(this, row, col, val);
+            }
+        }
+
+        private void Slider_ValueChanged(Control sender, double val)
+        {
+            if (GetGridCoordForControl(sender, out int row, out int col))
+            {
+                var rounded = (int)Math.Round(val);
+                data[row, col] = rounded;
+                ValueChanged?.Invoke(this, row, col, rounded);
+            }
+        }
+
+        private void CheckBox_CheckedChanged(Control sender, bool check)
+        {
+            if (GetGridCoordForControl(sender, out int row, out int col))
+            {
+                data[row, col] = check;
+                ValueChanged?.Invoke(this, row, col, (object)check);
+            }
+        }
+
+        private void Button_Click(Control sender)
+        {
+            if (GetGridCoordForControl(sender, out int row, out int col))
+            {
+                ButtonPressed?.Invoke(this, row, col);
+            }
         }
 
         public void SetData(int row, int col, object d)
@@ -222,8 +326,7 @@ namespace FamiStudio
                 }
                 case ColumnType.DropDown:
                 {
-                    Debug.Assert(false);
-                    //(ctrl as DropDown).Value = (string)d; // MATTT
+                    (ctrl as DropDown).SelectedIndex = Array.IndexOf(columns[col].DropDownValues, (string)d);
                     break;
                 }
             }
@@ -275,15 +378,72 @@ namespace FamiStudio
 
         protected override void OnResize(EventArgs e)
         {
-            if (HasParent)
-            {
-                RecreateAllControls();
-            }
+            ConditionalRecreateAllControls();
         }
 
         protected override void OnAddedToContainer()
         {
             RecreateAllControls();
+        }
+
+        public void UpdateData(object[,] newData)
+        {
+            var sizeChanged =
+                data.GetLength(0) != newData.GetLength(0) ||
+                data.GetLength(1) != newData.GetLength(1);
+
+            data = newData;
+
+            if (sizeChanged)
+            {
+                var newGridDisabled = new bool[data.GetLength(0), data.GetLength(1)];
+
+                for (var i = 0; i < data.GetLength(0); i++)
+                {
+                    for (var j = 0; j < data.GetLength(1); j++)
+                    {
+                        if (i < gridDisabled.GetLength(0) && j < gridDisabled.GetLength(1))
+                        {
+                            newGridDisabled[i, j] = gridDisabled[i, j];
+                        }
+                    }
+                }
+
+                gridDisabled = newGridDisabled;
+            }
+
+            Debug.Assert(data.GetLength(1) == columns.Length);
+            ConditionalRecreateAllControls();
+        }
+
+        public void UpdateData(int row, int col, object val)
+        {
+            Debug.Assert(val == null || val.GetType() != typeof(LocalizedString));
+            data[row, col] = val;
+            ConditionalRecreateAllControls();
+        }
+
+        public object GetData(int row, int col)
+        {
+            return data[row, col];
+        }
+
+        public void RenameColumns(string[] columnNames)
+        {
+            Debug.Assert(columnNames.Length == columns.Length);
+            for (int i = 0; i < columnNames.Length; i++)
+                columns[i].Name = columnNames[i];
+            ConditionalRecreateAllControls();
+        }
+
+        public void SetCellEnabled(int row, int col, bool enabled)
+        {
+            gridDisabled[row, col] = !enabled;
+            
+            if (gridControls[row, col] != null)
+            {
+                gridControls[row, col].Enabled = enabled;
+            }
         }
 
         public void SetColumnEnabled(int colIdx, bool enabled)

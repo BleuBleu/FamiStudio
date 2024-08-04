@@ -335,10 +335,10 @@ namespace FamiStudio
             GL.PopDebugGroup();
         }
 
-        public void UpdateTexture(Texture bmp, int x, int y, int width, int height, byte[] data)
+        public void UpdateTexture(Texture bmp, int x, int y, int width, int height, byte[] data, TextureFormat format)
         {
             GL.BindTexture(GL.Texture2D, bmp.Id);
-            GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Bgr, GL.UnsignedByte, data);
+            GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GetGLTextureFormat(format), GL.UnsignedByte, data);
         }
 
         public void UpdateTexture(Texture bmp, int x, int y, int width, int height, int[] data)
@@ -360,6 +360,18 @@ namespace FamiStudio
         {
             switch (format)
             {
+                case TextureFormat.Rgb: return GL.Bgr;
+                case TextureFormat.Rgba: return GL.Bgra;
+                default:
+                    Debug.Assert(false);
+                    return GL.Bgra;
+            }
+        }
+
+        private int GetGLInternalTextureFormat(TextureFormat format)
+        {
+            switch (format)
+            {
                 case TextureFormat.R: return GL.R8;
                 case TextureFormat.Rgb: return GL.Rgb8;
                 case TextureFormat.Rgba: return GL.Rgba8;
@@ -378,7 +390,7 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, filter ? GL.Linear : GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToEdge);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToEdge);
-            GL.TexImage2D(GL.Texture2D, 0, GetGLTextureFormat(format), width, height, 0, GL.Rgba, GL.UnsignedByte, new int[width * height]);
+            GL.TexImage2D(GL.Texture2D, 0, GetGLInternalTextureFormat(format), width, height, 0, GL.Rgba, GL.UnsignedByte, new int[width * height]);
 
             return id;
         }

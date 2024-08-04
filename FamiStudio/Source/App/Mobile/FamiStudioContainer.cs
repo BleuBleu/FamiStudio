@@ -17,8 +17,8 @@ namespace FamiStudio
         private Rectangle transitionOverlayRect;
         private Color     transitionOverlayColor;
 
-        private Rectangle transitionShadowRect;
-        private float     transitionShadowIntensity;
+        private Control transitionShadowControl;
+        private float   transitionShadowIntensity;
 
         private Toolbar         toolbar;
         private Sequencer       sequencer;
@@ -26,6 +26,7 @@ namespace FamiStudio
         private ProjectExplorer projectExplorer;
         private QuickAccessBar  quickAccessBar;
         private MobilePiano     mobilePiano;
+        private Toast           toast;
 
         public Toolbar         ToolBar         => toolbar;
         public Sequencer       Sequencer       => sequencer;
@@ -58,6 +59,7 @@ namespace FamiStudio
             projectExplorer = new ProjectExplorer();
             quickAccessBar = new QuickAccessBar();
             mobilePiano = new MobilePiano();
+            toast = new Toast();
             activeControl = sequencer;
 
             pianoRoll.Visible = false;
@@ -178,6 +180,25 @@ namespace FamiStudio
             FlushPendingTransitions(true);
             FlushPendingTransitions(false);
             UpdateLayout(false);
+
+            // Resize any other dialogs, etc.
+            foreach (var ctrl in controls)
+            {
+                if (ctrl is Dialog d)
+                {
+                    if (ctrl is ContextMenuDialog)
+                    {
+                        d.Close(DialogResult.Cancel);
+                    }
+                    else
+                    {
+                        d.OnWindowResize(e);
+                    }
+                }
+            }
+
+            toast.Dismiss();
+            FlushPendingTransitions(false);
         }
 
         public void UpdateLayout(bool activeControlOnly = false)
@@ -222,6 +243,8 @@ namespace FamiStudio
 
             var anyFullscreenDialogVisible = AnyFullScreenDialogVisible;
 
+            quickAccessBar.Visible = !anyFullscreenDialogVisible;
+            toolbar.Visible = !anyFullscreenDialogVisible;
             sequencer.Visible = activeControl == sequencer && !anyFullscreenDialogVisible;
             pianoRoll.Visible = activeControl == pianoRoll && !anyFullscreenDialogVisible;
             projectExplorer.Visible = activeControl == projectExplorer && !anyFullscreenDialogVisible;
@@ -255,7 +278,7 @@ namespace FamiStudio
             }
 
             // HACK: If you expand the toolbar, you can actually click on the quick access bar.
-            if (toolbar.IsExpanded && c != toolbar)
+            if (toolbar.Visible && toolbar.IsExpanded && c != toolbar)
             {
                 return false;
             }
@@ -269,9 +292,9 @@ namespace FamiStudio
             transitionOverlayColor = color;
         }
 
-        public void SetTransitionShadowRect(Rectangle rect, float intensity)
+        public void SetTransitionShadowControl(Control ctrl, float intensity)
         {
-            transitionShadowRect = rect;
+            transitionShadowControl = ctrl;
             transitionShadowIntensity = intensity;
         }
 
@@ -288,7 +311,7 @@ namespace FamiStudio
             if (transitionShadowIntensity != 0.0f)
             {
                 var screenRect = new Rectangle(Point.Empty, ParentWindow.Size);
-                var shadowRect = transitionShadowRect;
+                var shadowRect = transitionShadowControl.WindowRectangle;
                 var shadowColor = Color.FromArgb((int)Utils.Clamp(transitionShadowIntensity * 0.6f * 255.0f, 0, 255), Color.Black);
 
                 var o = g.OverlayCommandList;
@@ -299,7 +322,7 @@ namespace FamiStudio
             }
         }
 
-        public void ShowContextMenu(ContextMenuOption[] options)
+        public void ShowContextMenuAsync(ContextMenuOption[] options)
         {
             if (options == null || options.Length == 0)
                 return;
@@ -334,6 +357,12 @@ namespace FamiStudio
                 return scroll != null && scroll.FindControlOfType<ContextMenu>() != null;
             }
             return false;
+        }
+
+        public void ShowToast(string text, bool longDuration = false, Action click = null)
+        {
+            AddControl(toast);
+            toast.Initialize(text, longDuration, click);
         }
 
         private void TickTransitions(float delta)
@@ -388,16 +417,23 @@ namespace FamiStudio
             }
         }
 
+        private void TickToast(float delta)
+        {
+            if (!toast.Visible)
+                RemoveControl(toast);
+        }
+
         public override void Tick(float delta)
         {
             TickTransitions(delta);
+            TickToast(delta);
         }
 
         protected override void OnRender(Graphics g)
         {
+            base.OnRender(g);
             RenderTransitionOverlay(g);
             RenderTransitionShadowRect(g);
-            base.OnRender(g);
         }
     }
 
@@ -520,18 +556,19 @@ namespace FamiStudio
 
             timer = Math.Max(0, timer - delta * 6);
 
-            if (timer == 0.0f && popping)
-            {
-                dialog.Visible = false;
-                container.RemoveControl(dialog);
-            }
-
             if (contextMenu)
             {
                 dialog.Move((container.Width - dialog.Width) / 2, container.Height - (int)(dialog.Height * (popping ? timer : 1.0f - timer)));
             }
 
-            container.SetTransitionShadowRect(dialog.WindowRectangle, popping ? timer : 1.0f - timer);
+            if (timer == 0.0f && popping)
+            {
+                container.RemoveControl(dialog);
+                dialog.Visible = false;
+                dialog = null;
+            }
+
+            container.SetTransitionShadowControl(dialog, popping ? timer : 1.0f - timer);
 
             return timer <= 0.0f;
         }

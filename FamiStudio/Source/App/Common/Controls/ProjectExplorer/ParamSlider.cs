@@ -26,6 +26,7 @@ namespace FamiStudio
         {
             exp = 1.0f / (p.Logarithmic ? 4 : 1);
             height = DpiScaling.ScaleForWindow(16);
+            supportsLongPress = true;
         }
 
         protected override void OnAddedToContainer()
@@ -117,7 +118,7 @@ namespace FamiStudio
 
         public override void ShowParamContextMenu()
         {
-            App.ShowContextMenu(new[]
+            App.ShowContextMenuAsync(new[]
             {
                 new ContextMenuOption("Type",      EnterValueContext,        () => { EnterParamValue(); }),
                 new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })

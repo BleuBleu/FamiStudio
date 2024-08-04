@@ -12,10 +12,14 @@ namespace FamiStudio
         public delegate void ValueChangedDelegate(Control sender, double val);
         public event ValueChangedDelegate ValueChanged;
 
+        private int touchSlop = DpiScaling.ScaleForWindow(4);
+
         private int min;
         private int max;
         private int val;
+        private int captureX;
         private Func<object, string> format;
+        private bool changing;
         private bool dragging;
 
         public GridSlider(int value, int minValue, int maxValue, Func<object, string> fmt = null)
@@ -25,6 +29,7 @@ namespace FamiStudio
             val = value;
             format = fmt == null ? (o) => o.ToString() : fmt;
             height = DpiScaling.ScaleForWindow(14);
+            supportsLongPress = true;
         }
 
         public int Min { get => min; set => SetAndMarkDirty(ref min, value); }
@@ -41,9 +46,19 @@ namespace FamiStudio
         {
             if (enabled)
             {
-                Capture = true;
+                if (e.IsTouchEvent)
+                {
+                    changing = false;
+                }
+                else
+                {
+                    Capture = true;
+                    changing = true;
+                    e.MarkHandled();
+                }
+
                 dragging = true;
-                e.MarkHandled();
+                captureX = e.X;
             }
         }
 
@@ -52,6 +67,7 @@ namespace FamiStudio
             if (dragging)
             {
                 dragging = false;
+                changing = false;
                 Capture = false;
                 e.MarkHandled();
             }
@@ -59,11 +75,24 @@ namespace FamiStudio
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            if (dragging)
+            // Add a bit of slop on mobile to prevent sliders to mess up vertical scrolling
+            if (dragging && !changing && e.IsTouchEvent && Math.Abs(e.X - captureX) > touchSlop)
+            {
+                changing = true;
+                Capture = true;
+            }
+
+            if (changing)
             {
                 Value = (int)Math.Round(Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width))));
                 e.MarkHandled();
             }
+        }
+
+        protected override void OnTouchClick(PointerEventArgs e)
+        {
+            Value = (int)Math.Round(Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width))));
+            e.MarkHandled();
         }
 
         protected override void OnRender(Graphics g)

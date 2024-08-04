@@ -22,9 +22,6 @@ namespace FamiStudio
         public event DimmedDelegate DimmedEvent;
         public event StringDelegate TextEvent;
 
-        public override bool SupportsDoubleClick => false;
-        public override bool SupportsLongPress => false;
-
         private string text;
         private string imageName;
         private float imageScale = 1.0f;
@@ -43,6 +40,7 @@ namespace FamiStudio
         private byte dimming = 64;
         private byte margin = 4;
         private Font font;
+        private Size scaledImageSize;
         private TextureAtlasRef bmp;
 
         private Color fgColor = Theme.LightGreyColor1;
@@ -60,6 +58,8 @@ namespace FamiStudio
 
         public Button(string img, string txt = null) 
         {
+            supportsLongPress = false;
+            supportsDoubleClick = false;
             ImageName = img;
             text = txt;
         }
@@ -142,17 +142,46 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref margin, (byte)value); }
         }
 
+        public override string ToString()
+        {
+            return string.IsNullOrWhiteSpace(text) ? imageName : text;
+        }
+
+        public Rectangle ImageRect
+        {
+            get
+            {
+                // Only bothered to support this one use case.
+                if (!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(imageName))
+                {
+                    return new Rectangle(0, 0, GetScaledMargin() * 2 + scaledImageSize.Width, height);
+                }
+                else
+                {
+                    return Rectangle.Empty; 
+                }
+            }
+        }
+
+        public void SetSupportsDoubleClick(bool on)
+        {
+            supportsDoubleClick = on;
+        }
+
         public void AutosizeWidth()
         {
-            // Only bothered to support this one use case.
             if (!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(imageName))
             {
                 Debug.Assert(!bottomText);
-                width = GetScaledMargin() * 3 + DpiScaling.ScaleCustom(bmp.ElementSize.Width, imageScale) + GetFontInternal().MeasureString(text, false);
+                width = GetScaledMargin() * 3 + scaledImageSize.Width + GetFontInternal().MeasureString(text, false);
             }
             else if (!string.IsNullOrEmpty(imageName))
             {
-                width = DpiScaling.ScaleCustom(bmp.ElementSize.Width, imageScale);
+                width = scaledImageSize.Width;
+            }
+            else if (!string.IsNullOrEmpty(text))
+            {
+                width = GetFontInternal().MeasureString(text, false);
             }
         }
 
@@ -169,6 +198,11 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             UpdateAtlasBitmap();
+        }
+
+        public void TriggerClick()
+        {
+            Click?.Invoke(this);
         }
 
         private void TriggerClickEvent(PointerEventArgs e, bool left)
@@ -194,7 +228,7 @@ namespace FamiStudio
         {
             var canRightClick = RightClick != null;
 
-            if (enabled && (e.Left || (e.Right && canRightClick)))
+            if (Enabled && (e.Left || (e.Right && canRightClick)))
             {
                 if (!e.IsTouchEvent && !clickOnMouseUp)
                     TriggerClickEvent(e, e.Left);
@@ -208,7 +242,7 @@ namespace FamiStudio
         {
             var canRightClick = RightClick != null;
 
-            if (enabled && (!e.IsTouchEvent && e.Left || (e.Right && canRightClick)))
+            if (Enabled && (!e.IsTouchEvent && e.Left || (e.Right && canRightClick)))
             {
                 if (clickOnMouseUp || e.IsTouchEvent)
                     TriggerClickEvent(e, e.Left);
@@ -219,15 +253,10 @@ namespace FamiStudio
 
         protected override void OnTouchClick(PointerEventArgs e)
         {
-            if (enabled)
+            if (Enabled)
             {
                 TriggerClickEvent(e, true);
             }
-        }
-
-        protected override void OnMouseDoubleClick(PointerEventArgs e)
-        {
-            OnPointerDown(e);
         }
 
         protected override void OnPointerEnter(EventArgs e)
@@ -247,22 +276,21 @@ namespace FamiStudio
             {
                 bmp = ParentWindow.Graphics.GetTextureAtlasRef(imageName);
                 Debug.Assert(bmp != null);
+                scaledImageSize = new Size(
+                    DpiScaling.ScaleCustom(bmp.ElementSize.Width,  imageScale),
+                    DpiScaling.ScaleCustom(bmp.ElementSize.Height, imageScale));
             }
         }
 
         public void AutoSizeToImage()
         {
             Debug.Assert(bmp != null);
-            Resize(
-                DpiScaling.ScaleCustom(bmp.ElementSize.Width,  imageScale),
-                DpiScaling.ScaleCustom(bmp.ElementSize.Height, imageScale));
+            Resize(scaledImageSize);
         }
 
-        // MATTT : Precompute more stuff (like scaled image size, etc.) to keep this as simple as possible at run-time.
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
-            var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
 
             var localFont = GetFontInternal();
             var localEnabled = Enabled;
@@ -299,6 +327,7 @@ namespace FamiStudio
                 localFgColor = localFgColor.Scaled(128);
             }
 
+            // MATTT : On mobile, would be nice to have transparent buttons changed their opacities a bit.
             if (localEnabled && !transparent && (border || press || hover))
             {
                 var localBgColor = bgColor;
@@ -325,20 +354,11 @@ namespace FamiStudio
 
             c.PushTranslation(0, press ? 1 : 0);
 
-            var scaledImageWidth  = 0;
-            var scaledImageHeight = 0;
-
-            if (bmp != null)
-            {
-                scaledImageWidth  = DpiScaling.ScaleCustom(bmpSize.Width,  imageScale);
-                scaledImageHeight = DpiScaling.ScaleCustom(bmpSize.Height, imageScale);
-            }
-
             if (!hasText && bmp != null)
             {
                 c.DrawTextureAtlas(bmp, 
-                    (width  - scaledImageWidth)  / 2, 
-                    (height - scaledImageHeight) / 2, imageScale, localFgColor);
+                    (width  - scaledImageSize.Width)  / 2, 
+                    (height - scaledImageSize.Height) / 2, imageScale, localFgColor);
             }
             else if (hasText && bmp == null)
             {
@@ -350,13 +370,13 @@ namespace FamiStudio
 
                 if (bottomText)
                 {
-                    c.DrawTextureAtlas(bmp, (width - scaledImageWidth) / 2, localMargin, imageScale, localFgColor);
-                    c.DrawText(localText, localFont, 0, scaledImageHeight + localMargin, localFgColor, TextFlags.TopCenter | (ellipsis ? TextFlags.Ellipsis : TextFlags.Clip), width, height - scaledImageHeight - localMargin);
+                    c.DrawTextureAtlas(bmp, (width - scaledImageSize.Width) / 2, localMargin, imageScale, localFgColor);
+                    c.DrawText(localText, localFont, 0, scaledImageSize.Height + localMargin, localFgColor, TextFlags.TopCenter | (ellipsis ? TextFlags.Ellipsis : TextFlags.Clip), width, height - scaledImageSize.Height - localMargin);
                 }
                 else
                 {
-                    c.DrawTextureAtlas(bmp, localMargin, (height - scaledImageHeight) / 2, imageScale, localFgColor);
-                    c.DrawText(localText, localFont, scaledImageWidth + localMargin * 2, 0, localFgColor, TextFlags.MiddleLeft | (ellipsis ? TextFlags.Ellipsis : TextFlags.Clip), width - scaledImageWidth - localMargin * 2, height);
+                    c.DrawTextureAtlas(bmp, localMargin, (height - scaledImageSize.Height) / 2, imageScale, localFgColor);
+                    c.DrawText(localText, localFont, scaledImageSize.Width + localMargin * 2, 0, localFgColor, TextFlags.MiddleLeft | (ellipsis ? TextFlags.Ellipsis : TextFlags.Clip), width - scaledImageSize.Width - localMargin * 2, height);
                 }
             }
 

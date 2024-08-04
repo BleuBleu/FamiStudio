@@ -67,6 +67,7 @@ namespace FamiStudio
             text = txt;
             maxLength = maxLen;
             SetTickEnabled(Platform.IsDesktop); // TODO : Only enable when we have focus. 
+            supportsDoubleClick = true;
         }
 
         public TextBox(int value, int minVal, int maxVal, int increment)
@@ -381,7 +382,7 @@ namespace FamiStudio
 
         protected override void OnTouchClick(PointerEventArgs e)
         {
-            if (allowMobileEdit)
+            if (allowMobileEdit && enabled)
             {
                 Platform.EditTextAsync(prompt, text, (s) => SetAndMarkDirty(ref text, s));
             }

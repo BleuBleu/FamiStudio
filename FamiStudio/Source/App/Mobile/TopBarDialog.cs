@@ -1,21 +1,28 @@
 using System;
 using System.Runtime.InteropServices;
-using static Android.Icu.Text.CaseMap;
 
 namespace FamiStudio
 {
     public class TopBarDialog : Dialog
     {
-        // MATTT : We should have function to simply add buttons as we wish.
         protected Container topBarContainer;
         protected Button buttonCancel;
         protected Button buttonAccept;
+        protected Button buttonCustom;
         protected Label titleLabel;
+
+        protected Rectangle clientRect;
         protected Rectangle dialogRect;
 
-        public TopBarDialog(FamiStudioWindow win, string t = "") : base(win, t)
+        protected int topBarHeight = DpiScaling.ScaleForWindow(24);
+        protected int topBarMargin = DpiScaling.ScaleForWindow(2);
+
+        public delegate void CustomActionActivatedDelegate();
+        public event CustomActionActivatedDelegate CustomActionActivated;
+
+        public TopBarDialog(FamiStudioWindow win, string t = "", bool fs = true) : base(win, t, fs)
         {
-            InitTopBar(t);
+            Init(t);
         }
 
         public bool AcceptButtonVisible
@@ -42,34 +49,77 @@ namespace FamiStudio
             set => buttonCancel.ImageName = value;
         }
 
-        private void InitTopBar(string title)
+        private void Init(string title)
         {
-            var topBarHeight = DpiScaling.ScaleForWindow(24);
-            var margin = DpiScaling.ScaleForWindow(2);
-            var buttonSize = topBarHeight - margin * 2;
-
-            topBarContainer = new GradientPanel(Theme.DarkGreyColor2);
-            topBarContainer.Move(0, 0, ParentWindow.Width, DpiScaling.ScaleForWindow(24));
+            topBarContainer = new PanelContainer(Theme.DarkGreyColor2);
             AddControl(topBarContainer);
 
             buttonCancel = new Button("No");
             buttonCancel.Transparent = true;
             buttonCancel.Click += ButtonCancel_Click;
-            buttonCancel.Move(margin, margin, buttonSize, buttonSize);
             topBarContainer.AddControl(buttonCancel);
 
             buttonAccept = new Button("Yes");
             buttonAccept.Transparent = true;
             buttonAccept.Click += ButtonAccept_Click;
-            buttonAccept.Move(topBarContainer.Width - margin - buttonSize, margin, buttonSize, buttonSize);
             topBarContainer.AddControl(buttonAccept);
 
             titleLabel = new Label(title);
-            titleLabel.Move(buttonCancel.Right + margin, 0, buttonAccept.Left - buttonCancel.Right - margin * 2, topBarHeight);
             titleLabel.Font = fonts.FontMediumBold;
             topBarContainer.AddControl(titleLabel);
 
-            dialogRect = new Rectangle(0, topBarContainer.Height, ParentWindow.Width, ParentWindow.Height - topBarContainer.Height);
+            UpdateLayoutRects();
+            Resize(dialogRect.Width, dialogRect.Height, false);
+            PositionTopBarControls();
+        }
+
+        private void UpdateLayoutRects()
+        {
+            var dialogWidth  = ParentWindow.Width;
+            var dialogHeight = ParentWindow.Height;
+
+            if (!Fullscreen)
+            {
+                var maxHeight = Math.Min(window.Width, window.Height) * 9 / 10;
+
+                dialogWidth  = Math.Min(window.Width, window.Height) * 9 / 10;
+                dialogHeight = dialogWidth - topBarHeight;
+
+            }
+
+            clientRect = new Rectangle(0, topBarHeight, dialogWidth, dialogHeight - topBarHeight);
+            dialogRect = new Rectangle(0, 0, dialogWidth, dialogHeight);
+        }
+
+        public void SetCustomAction(string label)
+        {
+            Debug.Assert(buttonCustom == null);
+            buttonCustom = new Button(null, label);
+            buttonCustom.Transparent = true;
+            buttonCustom.Click += CustomButton_Click;
+            topBarContainer.AddControl(buttonCustom);
+            buttonCustom.AutosizeWidth();
+            PositionTopBarControls();
+        }
+
+        private void CustomButton_Click(Control sender)
+        {
+            CustomActionActivated?.Invoke();
+        }
+
+        private void PositionTopBarControls()
+        {
+            var buttonSize = topBarHeight - topBarMargin * 2;
+
+            topBarContainer.Resize(dialogRect.Width, topBarHeight);
+            buttonCancel.Move(topBarMargin, topBarMargin, buttonSize, buttonSize);
+            buttonAccept.Move(topBarContainer.Width - topBarMargin - buttonSize, topBarMargin, buttonSize, buttonSize);
+            titleLabel.Move(buttonCancel.Right + topBarMargin, 0, buttonAccept.Left - buttonCancel.Right - topBarMargin * 2, topBarHeight);
+
+            if (buttonCustom != null)
+            {
+                buttonCustom.Move(buttonAccept.Left - topBarMargin - buttonCustom.Width, topBarMargin, buttonCustom.Width, topBarHeight - topBarMargin * 2);
+            }
         }
 
         protected virtual void ButtonAccept_Click(Control sender)
@@ -77,9 +127,45 @@ namespace FamiStudio
             Close(DialogResult.OK);
         }
 
-        protected void ButtonCancel_Click(Control sender)
+        protected virtual void ButtonCancel_Click(Control sender)
         {
             Close(DialogResult.Cancel);
+        }
+
+        public override void OnWindowResize(EventArgs e)
+        {
+            UpdateLayoutRects();
+            PositionTopBarControls();
+            CenterDialog(false);
+        }
+
+        protected void CenterDialog(bool force = true)
+        {
+            if (Fullscreen)
+            {
+                Move(0, 0, ParentWindow.Width, ParentWindow.Height);
+            }
+            else
+            {
+                var px = (window.Width  - width)  / 2;
+                var py = (window.Height - height) / 2;
+                var rx = (px - left) / (float)ParentWindowSize.Width;
+                var ry = (py - top)  / (float)ParentWindowSize.Height;
+                
+                var wr = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);  
+                var dr = new Rectangle(px, py, width, height);
+                
+                // Dont recenter if small difference and still fits. Happens when popping the keyboard.
+                if (force || rx > 0.1f | ry > 0.1f || !wr.Contains(dr))
+                {
+                    Move((window.Width - width) / 2, (window.Height - height) / 2, width, height);
+                }
+            }
+        }
+
+        protected override void OnShowDialog()
+        {
+            CenterDialog();
         }
     }
 }

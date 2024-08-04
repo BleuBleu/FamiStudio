@@ -229,6 +229,8 @@ namespace FamiStudio
         {
             Localization.Localize(this);
             SetTickEnabled(true);
+            supportsLongPress = true;
+            supportsDoubleClick = true;
         }
 
         private Song Song
@@ -1732,7 +1734,7 @@ namespace FamiStudio
             {
                 var channelIdx = GetChannelIndexForCoord(y);
                
-                App.ShowContextMenu(left + x, top + y, new[]
+                App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuMute", ToggleMuteLabel, () => { App.ToggleChannelActive(channelIdx); }),
                     new ContextMenuOption("MenuSolo", ToggleSoloLabel, () => { App.ToggleChannelSolo(channelIdx); }),
@@ -1760,7 +1762,7 @@ namespace FamiStudio
                 {
                     var isLoopPoint = Song.LoopPoint == patternIdx;
 
-                    App.ShowContextMenu(left + x, top + y, new[]
+                    App.ShowContextMenuAsync(new[]
                     {
                         new ContextMenuOption(isLoopPoint ? "MenuClearLoopPoint" :  "MenuLoopPoint", isLoopPoint ?  ClearLoopPointLabel : SetLoopPointLabel, () => { SetLoopPoint(patternIdx); } ),
                         new ContextMenuOption("MenuCustomPatternSettings", CustomPatternSettingsLabel, () => { EditPatternCustomSettings(new Point(x, y), patternIdx); } )
@@ -1841,7 +1843,7 @@ namespace FamiStudio
                 }
 
                 if (menu.Count > 0)
-                    App.ShowContextMenu(left + x, top + y, menu.ToArray());
+                    App.ShowContextMenuAsync(menu.ToArray());
                 
                 return true;
             }

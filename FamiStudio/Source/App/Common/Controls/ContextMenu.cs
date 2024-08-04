@@ -195,8 +195,7 @@ namespace FamiStudio
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
-            // On mobile, the context menu is embedded in a dialog, so its always on top anyways.
-            var c = Platform.IsDesktop ? g.Overlay2CommandList : g.DefaultCommandList;
+            var c = g.TopMostCommandList;
             var prevWantedSeparator = false;
 
             c.FillAndDrawRectangle(0, 0, Width - 1, Height - 1, Theme.DarkGreyColor2, Platform.IsMobile ? Theme.BlackColor : Theme.LightGreyColor1);

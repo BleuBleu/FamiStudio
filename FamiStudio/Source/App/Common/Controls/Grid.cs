@@ -11,14 +11,12 @@ namespace FamiStudio
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
-        public delegate bool CellEnabledDelegate(Control sender, int rowIndex, int colIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
         public event HeaderCellClickedDelegate HeaderCellClicked;
-        public event CellEnabledDelegate CellEnabled;
 
         private class CellSliderData
         {
@@ -51,6 +49,7 @@ namespace FamiStudio
         private Color[] rowColors;
         private Color foreColor = Theme.LightGreyColor1;
         private CellSliderData[,] cellSliderData;
+        private bool[,] cellDisabled;
 
         private bool draggingScrollbars;
         private bool draggingSlider;
@@ -123,6 +122,8 @@ namespace FamiStudio
             }
 
             columnEnabledMask = 0xff;
+            
+            supportsDoubleClick = true;
         }
 
         public void SetColumnEnabled(int col, bool enabled)
@@ -135,6 +136,11 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        public void SetCellEnabled(int row, int col, bool enabled)
+        {
+            cellDisabled[row, col] = !enabled;
+        }
+
         public bool IsColumnEnabled(int col)
         {
             return (columnEnabledMask & (1 << col)) != 0;
@@ -142,7 +148,7 @@ namespace FamiStudio
 
         public bool IsCellEnabled(int row, int col)
         {
-            return CellEnabled == null || CellEnabled.Invoke(this, row, col);
+            return cellDisabled == null || !cellDisabled[row, col];
         }
 
         public bool IsCellOrColumnEnabled(int row, int col)
@@ -223,8 +229,34 @@ namespace FamiStudio
                 Debug.Assert(o == null || o.GetType() != typeof(LocalizedString));
 #endif
 
+            var sizeChanged = data == null ||
+                data.GetLength(0) != newData.GetLength(0) ||
+                data.GetLength(1) != newData.GetLength(1);
+
             data = newData;
+
             Debug.Assert(data.GetLength(1) == columns.Length);
+
+            if (sizeChanged)
+            {
+                var newCellDisabled = new bool[data.GetLength(0), data.GetLength(1)];
+
+                if (cellDisabled != null)
+                {
+                    for (var i = 0; i < data.GetLength(0); i++)
+                    {
+                        for (var j = 0; j < data.GetLength(1); j++)
+                        {
+                            if (i < cellDisabled.GetLength(0) && j < cellDisabled.GetLength(1))
+                            {
+                                newCellDisabled[i, j] = cellDisabled[i, j];
+                            }
+                        }
+                    }
+                }
+
+                cellDisabled = newCellDisabled;
+            }
 
             if (window != null)
                 UpdateLayout();
@@ -508,7 +540,7 @@ namespace FamiStudio
             }
             else if (e.Right && hasAnyCheckBoxes)
             {
-                App.ShowContextMenu(new[]
+                App.ShowContextMenuAsync(new[]
 {
                     new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
                     new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))

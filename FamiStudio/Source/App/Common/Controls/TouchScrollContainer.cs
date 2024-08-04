@@ -1,30 +1,73 @@
+using Android.Widget;
+using Java.Sql;
 using System;
 
 namespace FamiStudio
 {
-    // MATTT : Add option for a little scroll bar indicator + use that in quick access bar.
     public class TouchScrollContainer : Container
     {
         private bool panning;
         private bool canFling;
+        private bool border;
         private int lastDialogY;
         private int virtualSizeY;
         private float flingVelY;
+        private GraphicsLayer layer = GraphicsLayer.Default;
+        private ScrollIndicatorVisibility scrollIndicator = ScrollIndicatorVisibility.ShowAlways;
 
-        public int VirtualSizeY 
+        private int   scrollIndicatorSizeX = DpiScaling.ScaleForWindow(2);
+        private Color scollIndicatorColor  = Color.FromArgb(64, Theme.LightGreyColor2);
+
+        public enum ScrollIndicatorVisibility
         {
-            get { return virtualSizeY; }
-            set { if (SetAndMarkDirty(ref virtualSizeY, value)) ClampScroll(); }
+            Hide,
+            ShowWhenScrolling,
+            ShowAlways
         }
 
         public TouchScrollContainer()
         {
         }
 
+        public int VirtualSizeY
+        {
+            get { return virtualSizeY; }
+            set { if (SetAndMarkDirty(ref virtualSizeY, Math.Max(0, value))) ClampScroll(); }
+        }
+
+        public ScrollIndicatorVisibility ScrollIndicator
+        {
+            get { return scrollIndicator; }
+            set { SetAndMarkDirtyEnum(ref scrollIndicator, value); }
+        }
+        public bool Border 
+        {
+            get { return border; }
+            set { SetAndMarkDirty(ref border, value); }
+        }
+
+        public GraphicsLayer Layer
+        {
+            get { return layer; }
+            set { SetAndMarkDirtyEnum(ref layer, value); }
+        }
+
+        public Color ScollIndicatorColor
+        {
+            get { return scollIndicatorColor; }
+            set { SetAndMarkDirty(ref scollIndicatorColor, value); }
+        }
+
         private bool DoScroll(int deltaY)
         {
             ScrollY += deltaY;
             return ClampScroll();
+        }
+
+        public void CancelFling()
+        {
+            SetAndMarkDirty(ref panning, false);
+            SetAndMarkDirty(ref flingVelY, 0.0f);
         }
 
         public bool ClampScroll()
@@ -42,7 +85,7 @@ namespace FamiStudio
         {
             flingVelY = 0.0f;
 
-            if (!e.Handled)
+            if (!e.Handled && e.Left)
             {
                 panning = true;
                 canFling = false;
@@ -53,8 +96,11 @@ namespace FamiStudio
 
         public override void OnContainerPointerUpNotify(Control control, PointerEventArgs e)
         {
-            panning = false;
-            canFling = true;
+            if (e.Left)
+            {
+                panning = false;
+                canFling = true;
+            }
         }
 
         public override void OnContainerPointerMoveNotify(Control control, PointerEventArgs e)
@@ -63,12 +109,20 @@ namespace FamiStudio
 
             if (panning)
             {
+                //// This can happen if a control captures after the initial pointer-down. 
+                //// The slider is an example of this, since it has a bit of slop.
+                //if (!HasPointerCapture)
+                //{
+                //    panning = false;
+                //    return;
+                //}
+
                 DoScroll(lastDialogY - dialogY);
             }
 
             lastDialogY = dialogY;
         }
-
+        
         public override void OnContainerTouchFlingNotify(Control control, PointerEventArgs e)
         {
             if (canFling)
@@ -119,8 +173,29 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            g.DefaultCommandList.FillRectangle(ClientRectangle, Theme.DarkGreyColor4);
+            var c = g.GetCommandList(layer);
+
+            c.FillRectangle(ClientRectangle, Theme.DarkGreyColor4);
+
             base.OnRender(g);
+
+            if ((scrollIndicator == ScrollIndicatorVisibility.ShowAlways) ||
+                (scrollIndicator == ScrollIndicatorVisibility.ShowWhenScrolling && (flingVelY != 0.0 || panning)))
+            {
+                if (virtualSizeY > height)
+                {
+                    var sy = (int)Math.Round(height * (height           / (float)virtualSizeY));
+                    var py = (int)Math.Round(height * (containerScrollY / (float)virtualSizeY));
+                    var rect = new Rectangle(width - scrollIndicatorSizeX, py, width, sy);
+
+                    c.FillRectangle(rect, scollIndicatorColor);
+                }
+            }
+
+            if (border)
+            {
+                c.DrawRectangle(ClientRectangle, Color.Black);
+            }
         }
     }
 }

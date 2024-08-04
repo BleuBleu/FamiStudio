@@ -9,45 +9,42 @@ namespace FamiStudio
         {
             public Button button;
             public PropertyDialog dialog;
+            public Size windowSize;
             public bool visible = true;
         }
 
+        private bool canAcceptOnTabsPage;
         private int selectedIndex = -1;
         private List<PropertyPageTab> tabs = new List<PropertyPageTab>();
         private TouchScrollContainer scrollContainer;
 
-        public delegate void PageChangingDelegate(int oldPage, int newPage);
-        public delegate void CustomVerbActivatedDelegate();
-        public delegate void AppSuspendedDelegate();
-        public event PageChangingDelegate PageChanging;
-        public event CustomVerbActivatedDelegate CustomVerbActivated;
-        public event AppSuspendedDelegate AppSuspended;
-
-        public MultiPropertyDialog(FamiStudioWindow win, string title, int width, int tabsWidth = 150) : base(win, title)
+        public delegate void PageCustomActionActivatedDelegate(int page);
+        public event PageCustomActionActivatedDelegate PageCustomActionActivated;
+ 
+        public MultiPropertyDialog(FamiStudioWindow win, string title, int width, bool acceptOnTabsPage = false, int tabsWidth = 150) : base(win, title)
         {
+            canAcceptOnTabsPage = acceptOnTabsPage;
             Init();
-        }
-
-        public void SetVerb(string text, bool showOnTabPage = false)
-        {
         }
 
         private void Init()
         {
             Move(0, 0, ParentWindow.Width, ParentWindow.Height);
 
+            AcceptButtonVisible = canAcceptOnTabsPage;
+
             scrollContainer = new TouchScrollContainer();
-            scrollContainer.Move(dialogRect.Left, dialogRect.Top, dialogRect.Width, dialogRect.Height);
+            scrollContainer.Move(clientRect.Left, clientRect.Top, clientRect.Width, clientRect.Height);
             AddControl(scrollContainer);
         }
 
         public PropertyPage AddPropertyPage(string text, string image, int scroll = -1)
         {
-            // MATTT : Add a "back arrow" mode to the PropertyDialog.
             var tab = new PropertyPageTab();
             tab.dialog = new PropertyDialog(window, text, 0);
             tab.dialog.CancelButtonImage = "Back";
             tab.dialog.DialogClosing += Dialog_Closing;
+            tab.windowSize = ParentWindowSize;
             tab.button = AddButton(text, image);
             tabs.Add(tab);
 
@@ -63,6 +60,10 @@ namespace FamiStudio
                     result == DialogResult.Yes)
                 {
                     numDialogToPop = 2;
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    selectedIndex = -1;
                 }
             }
         }
@@ -81,12 +82,15 @@ namespace FamiStudio
         {
         }
 
-        public void AddPageCustomVerb(int idx, string verb)
+        public void SetPageCustomAction(int idx, string label)
         {
+            tabs[idx].dialog.SetCustomAction(label);
+            tabs[idx].dialog.CustomActionActivated += () => PageCustomActionActivated?.Invoke(idx);
         }
 
         public void SwitchToPage(int idx)
         {
+            GoToTab(idx);
         }
 
         protected override void OnShowDialog()
@@ -104,8 +108,7 @@ namespace FamiStudio
                 }
             }
 
-            // MATTT : Test scrolling!
-            scrollContainer.VirtualSizeY = tabs.Count * numVisibleButtons;
+            scrollContainer.VirtualSizeY = scrollContainer.GetControlsRect().Bottom;
         }
 
         public int SelectedIndex => selectedIndex;
@@ -120,6 +123,25 @@ namespace FamiStudio
             btn.Border = true;
             btn.Click += Btn_Click;
             return btn;
+        }
+
+        public override void OnWindowResize(EventArgs e)
+        {
+            base.OnWindowResize(e);
+
+            scrollContainer.Resize(width, height);
+            
+            if (selectedIndex >= 0)
+            {
+                tabs[selectedIndex].windowSize = ParentWindowSize;
+            }
+
+            foreach (var tab in tabs) 
+            {
+                tab.button.Resize(width, tab.button.Height);
+            }
+
+            CenterDialog();
         }
 
         private void Btn_Click(Control sender)
@@ -137,8 +159,20 @@ namespace FamiStudio
         private void GoToTab(int idx)
         {
             selectedIndex = idx;
-            window.InitDialog(tabs[selectedIndex].dialog);
-            tabs[selectedIndex].dialog.ShowDialogAsync(callback);
+
+            var tab = tabs[selectedIndex];
+            var dlg = tab.dialog;
+            window.InitDialog(dlg);
+
+            // If we rotated the screen while on another page, need to 
+            // refresh the layout at the last minute.
+            if (ParentWindowSize != tab.windowSize)
+            {
+                dlg.OnWindowResize(EventArgs.Empty);
+                tab.windowSize = ParentWindowSize;
+            }
+
+            dlg.ShowDialogAsync(callback);
         }
     }
 }

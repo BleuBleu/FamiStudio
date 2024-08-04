@@ -18,7 +18,6 @@ namespace FamiStudio
 
         // Title
         LocalizedString Title;
-        LocalizedString Verb;
 
         // Song tooltips
         LocalizedString MergePatternsTooltip;
@@ -65,7 +64,6 @@ namespace FamiStudio
 
             app = win.FamiStudio;
             dialog = new MultiPropertyDialog(win, Title, 550);
-            dialog.SetVerb(Verb);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {

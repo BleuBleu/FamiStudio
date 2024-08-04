@@ -4,14 +4,14 @@ namespace FamiStudio
 {
     public class ImageBox : Control
     {
-        private string atlasImageName;
-        private Texture bmp;
-        private TextureAtlasRef bmpAtlas;
-        private Color tint = Color.White;
-        private float imageScale = 1.0f;
-        private bool stretch;
-        private bool flip;
-        private bool whiteHighlight;
+        protected string atlasImageName;
+        protected Texture bmp;
+        protected TextureAtlasRef bmpAtlas;
+        protected Color tint = Color.White;
+        protected float imageScale = 1.0f;
+        protected bool stretch;
+        protected bool flip;
+        protected bool whiteHighlight;
 
         public ImageBox(string image)
         {

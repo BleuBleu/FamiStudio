@@ -305,7 +305,7 @@ namespace FamiStudio
             dirty = true;
         }
 
-        public void CaptureMouse(Control ctrl)
+        public void CapturePointer(Control ctrl)
         {
             if (lastButtonPress >= 0)
             {
@@ -316,12 +316,17 @@ namespace FamiStudio
             }
         }
 
-        public void ReleaseMouse()
+        public void ReleasePointer()
         {
             if (captureControl != null)
             {
                 captureControl = null;
             }
+        }
+
+        public bool ControlHasCapture(Control ctrl)
+        {
+            return captureControl == ctrl;
         }
 
         public Point ScreenToWindow(Point p)
@@ -519,7 +524,7 @@ namespace FamiStudio
                 }
 
                 if (button == captureButton)
-                    ReleaseMouse();
+                    ReleasePointer();
 
                 if (ctrl != null)
                 {
@@ -865,10 +870,10 @@ namespace FamiStudio
             }
         }
 
-        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
+        public void ShowContextMenuAsync(ContextMenuOption[] options)
         {
-            contextMenuPoint = WindowToScreen(new Point(x, y));
-            container.ShowContextMenu(x, y, options);
+            contextMenuPoint = WindowToScreen(new Point(lastCursorX, lastCursorY));
+            container.ShowContextMenu(lastCursorX, lastCursorY, options);
             RefreshCursor(container.ContextMenu);
             ClearHoverControl();
         }
