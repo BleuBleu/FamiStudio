@@ -65,7 +65,7 @@ namespace FamiStudio
             foreach (var dlg in dialogs)
                 dlg.CenterToWindow();
 
-            // MATTT : Close ctx menu on desktop too.
+            HideContextMenu();
 
             toast.Reposition();
         }

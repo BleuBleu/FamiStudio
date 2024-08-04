@@ -34,8 +34,7 @@ namespace FamiStudio
             bmpMinus = ParentWindow.Graphics.GetTextureAtlasRef("ButtonMinus");
             bmpPlus  = ParentWindow.Graphics.GetTextureAtlasRef("ButtonPlus");
             buttonSize = DpiScaling.ScaleCustom(bmpMinus.ElementSize.Width, bmpScale);
-            height = buttonSize;
-            // MATTT : Make the rectangle part a bit smaller on mobile.
+            height = buttonSize - (Platform.IsMobile ? DpiScaling.ScaleForWindow(2) : 0);
         }
 
         // -1 = left, 1 = right, 0 = outside

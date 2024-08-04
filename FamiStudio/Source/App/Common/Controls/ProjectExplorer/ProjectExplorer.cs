@@ -1484,7 +1484,7 @@ namespace FamiStudio
             }
         }
 
-        public void RecreateAllControls()
+        private void RecreateAllControls()
         {
             UpdateRenderCoords();
 
@@ -1523,6 +1523,11 @@ namespace FamiStudio
             ClampScroll();
             SyncScrollBarToContainer();
             ValidateIntegrity();
+        }
+
+        public void RefreshButtons()
+        {
+            RecreateAllControls();
         }
 
         private void UpdateSelectedItem(Type type, object obj)

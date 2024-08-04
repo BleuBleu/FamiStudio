@@ -1271,7 +1271,7 @@ namespace FamiStudio
 
         private void RefreshProjectExplorerButtons()
         {
-            ProjectExplorer.RecreateAllControls(); // MATTT : Make private.
+            ProjectExplorer.RefreshButtons();
         }
 
         private void InvalidatePatternCache()

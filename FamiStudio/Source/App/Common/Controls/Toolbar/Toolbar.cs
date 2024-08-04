@@ -88,14 +88,10 @@ namespace FamiStudio
             }
         };
 
-        // Most of those are for desktop.
-        // MATTT : Can we initialize those immediately like we do for controls now?
-        const int DefaultButtonSize     = Platform.IsMobile ? 120 : 36;
-        const int DefaultWantedIconSize = Platform.IsMobile ?  96 : 32;
-        const int DefaultIconSize       = Platform.IsMobile ?  64 : 32;
         const float ShowExtraButtonsThreshold = 0.8f;
 
-        int buttonSize;
+        private int buttonSize;
+        private float iconScaleFloat = 1.0f;
 
         // Mobile-only stuff
         private float expandRatio = 0.0f;
@@ -109,8 +105,6 @@ namespace FamiStudio
         public bool  IsExpanded  => Platform.IsMobile && expandRatio > 0.0f;
 
         public override bool WantsFullScreenViewport => Platform.IsMobile;
-
-        private float iconScaleFloat = 1.0f;
 
         #region Localization
 
@@ -199,12 +193,12 @@ namespace FamiStudio
                 var screenSize = Platform.GetScreenResolution();
                 var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
-                buttonSize     = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
+                buttonSize = DpiScaling.ScaleCustom(120, scale);
                 iconScaleFloat = 1.5f * scale;
             }
             else
             {
-                buttonSize       = DpiScaling.ScaleForWindow(DefaultButtonSize);
+                buttonSize = DpiScaling.ScaleForWindow(36);
             }
 
             buttonNew = CreateToolbarButton("File", "New");

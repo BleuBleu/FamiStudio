@@ -71,9 +71,9 @@ namespace FamiStudio
         public int Width  => cachedViewRect.Width;
         public int Height => cachedViewRect.Height;
         public Size Size => cachedViewRect.Size;
-        public Rectangle Bounds => cachedViewRect; 
-        public Point LastMousePosition => new Point(0, 0); // MATTT!
-        public Point LastContextMenuPosition => new Point(0, 0); // MATTT!
+        public Rectangle Bounds => cachedViewRect;
+        public Point LastMousePosition => Point.Empty;
+        public Point LastContextMenuPosition => Point.Empty;
         public bool IsLandscape => cachedViewRect.Width > cachedViewRect.Height;
         public bool MobilePianoVisible { get => container.MobilePianoVisible; set => container.MobilePianoVisible = value; }
         public string Text { get; set; }
@@ -84,8 +84,15 @@ namespace FamiStudio
         public delegate void AppSuspendedDelegate();
         public event AppSuspendedDelegate AppSuspended;
 
+        private LocalizedString EnterTextLabel;
+        private LocalizedString YesButton;
+        private LocalizedString NoButton;
+        private LocalizedString CancelButton;
+        private LocalizedString OKButton;
+
         public FamiStudioWindow()
         {
+            Localization.Localize(this);
         }
 
         public FamiStudioWindow(FamiStudio f)
@@ -660,18 +667,17 @@ namespace FamiStudio
             alert.SetTitle(title);
             alert.SetMessage(text);
 
-            // MATTT Localize these.
             if (buttons == MessageBoxButtons.YesNo ||
                 buttons == MessageBoxButtons.YesNoCancel)
             {
-                alert.SetButton("Yes", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Yes); } });
-                alert.SetButton2("No", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.No);  } });
+                alert.SetButton(YesButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Yes); } });
+                alert.SetButton2(NoButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.No);  } });
                 if (buttons == MessageBoxButtons.YesNoCancel)
-                    alert.SetButton3("Cancel", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Cancel); } });
+                    alert.SetButton3(CancelButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Cancel); } });
             }
             else
             {
-                alert.SetButton("OK", (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.OK); } });
+                alert.SetButton(OKButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.OK); } });
             }
 
             alert.Show();
@@ -710,7 +716,7 @@ namespace FamiStudio
             content.RequestFocus();
             var builder = new Android.App.AlertDialog.Builder(new ContextThemeWrapper(this, Resource.Style.TextInputDialogStyle));
             var dialog = builder.Create();
-            dialog.SetTitle(string.IsNullOrEmpty(prompt) ? "Enter Text" : prompt); // MATTT : Localize.
+            dialog.SetTitle(string.IsNullOrEmpty(prompt) ? EnterTextLabel : prompt);
             dialog.SetView(content);
             var action = () => { lock (renderLock) { dialog.Dismiss(); callback?.Invoke(content.Text); } };
             content.EditorAction += (s, e) => { if (e.ActionId == ImeAction.Go) action();  };

@@ -22,7 +22,7 @@ namespace FamiStudio
         {
             public int MinValue;
             public int MaxValue;
-            public Func<object, string> Formatter;
+            public Func<double, string> Formatter;
         }
 
         private int scroll;
@@ -165,7 +165,7 @@ namespace FamiStudio
             foreColor = Color.Black;
         }
 
-        public void OverrideCellSlider(int row, int col, int min, int max, Func<object, string> fmt)
+        public void OverrideCellSlider(int row, int col, int min, int max, Func<double, string> fmt)
         {
             if (cellSliderData == null)
                 cellSliderData = new CellSliderData[data.GetLength(0), data.GetLength(1)];
@@ -173,7 +173,7 @@ namespace FamiStudio
             cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, Formatter = fmt };
         }
 
-        private void GetCellSliderData(int row, int col, out int min, out int max, out Func<object, string> fmt)
+        private void GetCellSliderData(int row, int col, out int min, out int max, out Func<double, string> fmt)
         {
             if (cellSliderData != null && cellSliderData[row, col] != null)
             {
@@ -737,7 +737,7 @@ namespace FamiStudio
                                 {
                                     GetCellSliderData(k, j, out var sliderMin, out var sliderMax, out var fmt);
                                     c.FillRectangle(0, 0, (int)Math.Round(((int)val - sliderMin) / (double)(sliderMax - sliderMin) * colWidth), rowHeight, Theme.DarkGreyColor6);
-                                    c.DrawText(fmt(val), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText(fmt((int)val), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {

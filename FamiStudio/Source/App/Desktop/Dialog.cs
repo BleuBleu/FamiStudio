@@ -78,7 +78,6 @@ namespace FamiStudio
             ShowDialogInternal();
         }
 
-        // MATTT : Remove!
         public DialogResult ShowDialog()
         {
             ShowDialogInternal();

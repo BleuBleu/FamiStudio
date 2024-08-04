@@ -70,7 +70,8 @@ Today:
 	- Improve number picker + sliders for touch input (slop)
 	- Merge LogDialog if possible.
 	- Make sure we can do "select all" and "select none" on mobile checkbox lists
-	- Migrate everything to the "GridSlider", no need for 2 types.
+	x Migrate everything to the "GridSlider", no need for 2 types.
+	- Scale radio buttons too.
 - Sequencer:
 		1) Comment out all rendering/input code
 		2) Create basic UI with panels/labels/buttons/scroll bar
