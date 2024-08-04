@@ -25,6 +25,7 @@ namespace FamiStudio
 
         public Toast()
         {
+            clipRegion = false;
         }
 
         public void Initialize(string text, bool longDuration, Action click = null)
@@ -110,12 +111,12 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            var c = g.DefaultCommandList;
+            var o = g.TopMostOverlayCommandList;
 
-            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, Color.FromArgb(alpha, Theme.DarkGreyColor1), Color.FromArgb(alpha, Theme.BlackColor));
+            o.FillAndDrawRectangle(0, 0, width - 1, height - 1, Color.FromArgb(alpha, Theme.DarkGreyColor1), Color.FromArgb(alpha, Theme.BlackColor));
 
             for (int i = 0; i < lines.Length; i++)
-                c.DrawText(lines[i], font, 0, pad + i * font.LineHeight, Color.FromArgb(alpha, Theme.LightGreyColor1), TextFlags.MiddleCenter, width, font.LineHeight);
+                o.DrawText(lines[i], font, 0, pad + i * font.LineHeight, Color.FromArgb(alpha, Theme.LightGreyColor1), TextFlags.MiddleCenter, width, font.LineHeight);
         }
     }
 }
