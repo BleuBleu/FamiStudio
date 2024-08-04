@@ -650,7 +650,7 @@ namespace FamiStudio
                 if (scrollY != 0.0f)
                     ctrl.SendMouseWheel(new PointerEventArgs(buttons, cx, cy, false, 0, scrollY));
                 if (scrollX != 0.0f)
-                    ctrl.SendMouseHorizontalWheel(new PointerEventArgs(buttons, cx, cy, scrollX));
+                    ctrl.SendMouseHorizontalWheel(new PointerEventArgs(buttons, cx, cy, false, scrollX));
             }
         }
         
