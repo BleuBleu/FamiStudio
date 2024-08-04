@@ -60,7 +60,7 @@ namespace FamiStudio
                     captureButton = buttonIndex;
                     ChangeValue(buttonIndex);
                     SetTickEnabled(true);
-                    Capture = true;
+                    CapturePointer();
                     e.MarkHandled();
                 }
             }

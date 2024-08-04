@@ -67,7 +67,7 @@ namespace FamiStudio
                     capture = true;
                     captureButton = buttonIndex;
                     captureMouseX = e.X;
-                    Capture = true;
+                    CapturePointer();
 
                     if (captureButton != 0)
                     {

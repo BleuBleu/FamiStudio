@@ -4481,7 +4481,7 @@ namespace FamiStudio
             captureMouseY = y;
             captureScrollX = scrollX;
             captureScrollY = scrollY;
-            Capture = true;
+            CapturePointer();
         }
 
         private void StartCaptureOperation(int x, int y, CaptureOperation op, bool allowSnap = false, int noteIdx = -1, int offsetX = 0, int offsetY = 0)
@@ -4798,11 +4798,11 @@ namespace FamiStudio
 
                 draggedSample = null;
                 captureOperation = CaptureOperation.None;
-                Capture = false;
                 panning = false;
                 if (!Platform.IsMobile)
                     highlightNoteAbsIndex = -1;
 
+                ReleasePointer();
                 MarkDirty();
             }
         }
@@ -4819,12 +4819,13 @@ namespace FamiStudio
                 }
 
                 MarkDirty();
+                ReleasePointer();
                 App.StopInstrument();
 
                 captureOperation = CaptureOperation.None;
-                Capture = false;
                 panning = false;
                 canFling = false;
+
                 if (!Platform.IsMobile)
                     highlightNoteAbsIndex = -1;
 
@@ -9844,9 +9845,9 @@ namespace FamiStudio
                 UpdateRenderCoords();
                 ClampScroll();
                 MarkDirty();
+                ReleasePointer();
 
                 captureOperation = CaptureOperation.None;
-                Capture = false;
                 panning = false;
             }
         }

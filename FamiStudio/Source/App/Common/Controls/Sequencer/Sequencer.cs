@@ -1235,7 +1235,7 @@ namespace FamiStudio
             captureMouseY = y;
             captureScrollX = scrollX;
             captureScrollY = scrollY;
-            Capture = true;
+            CapturePointer();
         }
 
         private void StartCaptureOperation(int x, int y, CaptureOperation op)
@@ -2434,9 +2434,9 @@ namespace FamiStudio
 
                 }
 
-                Capture = false;
                 panning = false;
                 captureOperation = CaptureOperation.None;
+                ReleasePointer();
                 MarkDirty();
             }
         }
@@ -2482,11 +2482,11 @@ namespace FamiStudio
                 if (App.UndoRedoManager.HasTransactionInProgress)
                     App.UndoRedoManager.AbortTransaction();
 
-                Capture = false;
                 panning = false;
                 canFling = false;
                 captureOperation = CaptureOperation.None;
 
+                ReleasePointer();
                 MarkDirty();
             }
             else

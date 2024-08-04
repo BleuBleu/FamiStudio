@@ -27,7 +27,7 @@ namespace FamiStudio
         {
             public int MinValue;
             public int MaxValue;
-            public Func<object, string> Formatter;
+            public Func<double, string> Formatter;
         }
 
         public Grid(Container parent, ColumnDesc[] cols, object[,] d, GridOptions opts = GridOptions.None)
@@ -168,7 +168,7 @@ namespace FamiStudio
                                 fmt = cellSliderData[r, c].Formatter;
                             }
 
-                            var slider = new GridSlider((int)data[r, c], min, max, fmt);
+                            var slider = new Slider((int)data[r, c], min, max, fmt);
                             slider.ValueChanged += Slider_ValueChanged;
                             localRowHeight = slider.Height;
                             ctrl = slider;
@@ -316,7 +316,7 @@ namespace FamiStudio
                 }
                 case ColumnType.Slider:
                 {
-                    (ctrl as GridSlider).Value = (int)d;
+                    (ctrl as Slider).Value = (int)d;
                     break;
                 }
                 case ColumnType.NumericUpDown:
@@ -359,14 +359,14 @@ namespace FamiStudio
             }
         }
 
-        public void OverrideCellSlider(int row, int col, int min, int max, Func<object, string> fmt)
+        public void OverrideCellSlider(int row, int col, int min, int max, Func<double, string> fmt)
         {
             if (cellSliderData == null)
                 cellSliderData = new CellSliderData[data.GetLength(0), data.GetLength(1)];
 
             cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, Formatter = fmt };
 
-            var slider = gridControls[row, col] as GridSlider;
+            var slider = gridControls[row, col] as Slider;
 
             if (slider != null)
             {

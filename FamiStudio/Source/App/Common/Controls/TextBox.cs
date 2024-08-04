@@ -156,10 +156,10 @@ namespace FamiStudio
                 SetAndMarkDirty(ref selectionLength, 0);
                 ClearSelection();
                 ResetCaretBlink();
+                CapturePointer();
 
                 mouseSelectionChar = c;
                 mouseSelecting = true;
-                Capture = true;
             }
         }
 
@@ -168,7 +168,7 @@ namespace FamiStudio
             if (e.Left && enabled && !e.IsTouchEvent)
             {
                 mouseSelecting = false;
-                Capture = false;
+                ReleasePointer();
             }
         }
 

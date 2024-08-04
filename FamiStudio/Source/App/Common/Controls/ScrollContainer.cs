@@ -61,7 +61,7 @@ namespace FamiStudio
                     captureScrollY = containerScrollY;
                     UpdateScroll(e.Y);
                     scrolling = true;
-                    Capture = true;
+                    CapturePointer();
                 }
             }
         }
@@ -71,7 +71,7 @@ namespace FamiStudio
             if (scrolling)
             {
                 scrolling = false;
-                Capture = false;
+                ReleasePointer();
                 UpdateScroll(e.Y);
                 MarkDirty();
             }

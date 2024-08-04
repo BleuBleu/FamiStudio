@@ -11,6 +11,7 @@ namespace FamiStudio
         private bool border;
         private int lastDialogY;
         private int virtualSizeY;
+        private int captureCookie;
         private float flingVelY;
         private GraphicsLayer layer = GraphicsLayer.Default;
         private ScrollIndicatorVisibility scrollIndicator = ScrollIndicatorVisibility.ShowAlways;
@@ -90,13 +91,13 @@ namespace FamiStudio
                 panning = true;
                 canFling = false;
                 lastDialogY = WindowToControl(control.ControlToWindow(e.Position)).Y;
-                control.Capture = true;
+                captureCookie = control.CapturePointer();
             }
         }
 
         public override void OnContainerPointerUpNotify(Control control, PointerEventArgs e)
         {
-            if (e.Left)
+            if (e.Left && panning)
             {
                 panning = false;
                 canFling = true;
@@ -109,13 +110,14 @@ namespace FamiStudio
 
             if (panning)
             {
-                //// This can happen if a control captures after the initial pointer-down. 
-                //// The slider is an example of this, since it has a bit of slop.
-                //if (!HasPointerCapture)
-                //{
-                //    panning = false;
-                //    return;
-                //}
+                // This can happen if a control captures after the initial pointer-down. 
+                // The slider is an example of this, since it has a bit of slop.
+                if (!CheckPointerCaptureCookie(captureCookie))
+                {
+                    panning = false;
+                    flingVelY = 0.0f;
+                    return;
+                }
 
                 DoScroll(lastDialogY - dialogY);
             }

@@ -58,7 +58,7 @@ namespace FamiStudio
                 captureScroll = scrollValue;
                 UpdateScroll(coord);
                 scrolling = true;
-                Capture = true;
+                CapturePointer();
             }
         }
 
@@ -67,7 +67,7 @@ namespace FamiStudio
             if (scrolling)
             {
                 scrolling = false;
-                Capture = false;
+                ReleasePointer();
                 UpdateScroll(horizontal ? e.X : e.Y);
                 MarkDirty();
             }

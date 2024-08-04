@@ -46,6 +46,7 @@ namespace FamiStudio
         private Control activeControl = null;
         private Control captureControl = null;
         private Control hoverControl = null;
+        private int captureCookie;
         private int captureButton = -1;
         private int lastButtonPress = -1;
         private Point contextMenuPoint = Point.Empty;
@@ -305,7 +306,7 @@ namespace FamiStudio
             dirty = true;
         }
 
-        public void CapturePointer(Control ctrl)
+        public int CapturePointer(Control ctrl)
         {
             if (lastButtonPress >= 0)
             {
@@ -314,6 +315,8 @@ namespace FamiStudio
                 captureButton = lastButtonPress;
                 captureControl = ctrl;
             }
+
+            return ++captureCookie;
         }
 
         public void ReleasePointer()
@@ -324,9 +327,9 @@ namespace FamiStudio
             }
         }
 
-        public bool ControlHasCapture(Control ctrl)
+        public bool CheckCaptureCookie(int cookie)
         {
-            return captureControl == ctrl;
+            return captureCookie == cookie;
         }
 
         public Point ScreenToWindow(Point p)

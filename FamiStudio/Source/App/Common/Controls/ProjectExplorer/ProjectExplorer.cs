@@ -1517,9 +1517,9 @@ namespace FamiStudio
             
             flingVelY = 0.0f;
             virtualSizeY = mainContainer.GetControlsRect().Bottom;
-            Capture = false;
             if (scrollBar != null)
                 scrollBar.VirtualSize = virtualSizeY;
+            ReleasePointer();
             ClampScroll();
             SyncScrollBarToContainer();
             ValidateIntegrity();
@@ -2250,7 +2250,7 @@ namespace FamiStudio
             captureMousePos = ctrlPos;
             captureButtonRelPos = p;
             captureScrollY = mainContainer.ScrollY;
-            control.Capture = true;
+            control.CapturePointer();
             canFling = false;
             captureOperation = op;
             captureThresholdMet = !op.NeedsThreshold;
@@ -2298,7 +2298,7 @@ namespace FamiStudio
             draggedSong = null;
             envelopeDragTexture = null;
             captureOperation = null;
-            Capture = false;
+            ReleasePointer();
             MarkDirty();
         }
 
@@ -2315,8 +2315,8 @@ namespace FamiStudio
             draggedSong = null;
             envelopeDragTexture = null;
             captureOperation = null;
-            Capture = false;
             canFling = false;
+            ReleasePointer();
         }
 
         protected override void OnMouseWheel(PointerEventArgs e)
@@ -3746,11 +3746,11 @@ namespace FamiStudio
             if (buffer.IsReading)
             {
                 captureOperation = null;
-                Capture = false;
                 flingVelY = 0.0f;
                 mainContainer.ScrollY = scrollY;
                 highlightedObject = null;
 
+                ReleasePointer();
                 ClampScroll();
                 RecreateAllControls();
                 BlinkButton(null);

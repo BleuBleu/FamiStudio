@@ -409,7 +409,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            Capture = true;
+                            CapturePointer();
                             draggingScrollbars = true;
                             captureScrollBarPos = scrollBarPos;
                             captureMouseY = e.Y;
@@ -446,7 +446,7 @@ namespace FamiStudio
                                 }
                                 case ColumnType.Slider:
                                 {
-                                    Capture = true;
+                                    CapturePointer();
                                     draggingSlider = true;
                                     sliderCol = col;
                                     sliderRow = row;
@@ -535,7 +535,7 @@ namespace FamiStudio
             {
                 draggingSlider = false;
                 draggingScrollbars = false;
-                Capture = false;
+                ReleasePointer();
                 MarkDirty();
             }
             else if (e.Right && hasAnyCheckBoxes)

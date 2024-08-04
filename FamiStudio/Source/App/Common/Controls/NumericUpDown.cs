@@ -148,7 +148,7 @@ namespace FamiStudio
                 captureButton = idx;
                 captureDuration = 0;
                 Value += captureButton == 0 ? -inc : inc;
-                Capture = true;
+                CapturePointer();
                 SetTickEnabled(true);
             }
             else
@@ -200,7 +200,7 @@ namespace FamiStudio
             if (captureButton >= 0)
             {
                 captureButton = -1;
-                Capture = false;
+                ReleasePointer();
                 SetTickEnabled(false);
             }
             else

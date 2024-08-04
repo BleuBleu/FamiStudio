@@ -470,9 +470,9 @@ namespace FamiStudio
             return -1;
         }
 
-        private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
+        private Slider CreateSlider(double value, double min, double max, Func<double, string> fmt = null, string tooltip = null)
         {
-            var slider = new Slider(value, min, max, increment, showLabel, format);
+            var slider = new Slider(value, min, max, fmt);
             slider.ValueChanged += Slider_ValueChanged;
             slider.ToolTip = tooltip;
             return slider;
@@ -484,14 +484,14 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, value);
         }
 
-        public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, string format = "{0}", string tooltip = null)
+        public int AddSlider(string label, double value, double min, double max, Func<double, string> fmt = null, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Slider,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateSlider(value, min, max, increment, numDecimals, format != null, format, tooltip),
+                    control = CreateSlider(value, min, max, fmt, tooltip),
                 });
             return properties.Count - 1;
         }
@@ -685,11 +685,11 @@ namespace FamiStudio
         public float Width = 0.0f;
         public ColumnType Type = ColumnType.Label;
         public string[] DropDownValues;
-        public Func<object, string> Formatter = DefaultFormat;
+        public Func<double, string> Formatter = DefaultFormat;
         public int MinValue;
         public int MaxValue;
 
-        private static string DefaultFormat(object o) => o.ToString();
+        private static string DefaultFormat(double v) => v.ToString();
 
         public ColumnDesc(string name, float width, ColumnType type = ColumnType.Label)
         {
@@ -717,7 +717,7 @@ namespace FamiStudio
             MaxValue = max;
         }
 
-        public ColumnDesc(string name, float width, int min, int max, Func<object, string> fmt)
+        public ColumnDesc(string name, float width, int min, int max, Func<double, string> fmt)
         {
             Name = name;
             Type = ColumnType.Slider;

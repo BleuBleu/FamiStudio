@@ -233,10 +233,9 @@ namespace FamiStudio
         public int Width => width;
         public int Height => height;
         public Size Size => new Size(width, height);
-        public bool Capture { set { if (value) window.CapturePointer(this); else window.ReleasePointer(); } } // MATTT : Remove!
         public bool HasDialogFocus => ParentDialog?.FocusedControl == this;
-        public bool HasPointerCapture => window.ControlHasCapture(this);
-        public void CapturePointer() { window.CapturePointer(this); }
+        public bool CheckPointerCaptureCookie(int cookie) { return window.CheckCaptureCookie(cookie); }
+        public int  CapturePointer() { return window.CapturePointer(this); }
         public void ReleasePointer() { window.ReleasePointer(); }   
         public void GrabDialogFocus()  { if (ParentDialog != null) ParentDialog.FocusedControl = this; }
         public void ClearDialogFocus() { if (ParentDialog != null) ParentDialog.FocusedControl = null; }

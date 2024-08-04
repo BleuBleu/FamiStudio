@@ -39,6 +39,7 @@ namespace FamiStudio
         private object renderLock = new object();
         private BaseFileActivity currentFileActivity;
         private BaseFileActivity pendingFinishFileActivity;
+        private int captureCookie;
         private Control captureControl;
         private ModifierKeys modifiers = new ModifierKeys();
         private Rectangle cachedViewRect;
@@ -292,7 +293,7 @@ namespace FamiStudio
             dlg.Properties.BeginAdvancedProperties();
             dlg.Properties.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
             dlg.Properties.AddCheckBox("CheckBox1", true, "Checkbox tooltip!");
-            dlg.Properties.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX", "Tooltip for slider");
+            dlg.Properties.AddSlider("Slider", 50, 0, 100, (v) => $"Allo {0} XXX", "Tooltip for slider");
 
             dlg.ShowDialogAsync((r) =>
             {
@@ -519,9 +520,10 @@ namespace FamiStudio
             return null;
         }
 
-        public void CapturePointer(Control ctrl)
+        public int CapturePointer(Control ctrl)
         {
             captureControl = ctrl;
+            return ++captureCookie;
         }
 
         public void ReleasePointer()
@@ -529,9 +531,9 @@ namespace FamiStudio
             captureControl = null;
         }
         
-        public bool ControlHasCapture(Control ctrl)
+        public bool CheckCaptureCookie(int cookie)
         {
-            return captureControl == ctrl;
+            return captureCookie == cookie;
         }
 
         public void RefreshLayout()
