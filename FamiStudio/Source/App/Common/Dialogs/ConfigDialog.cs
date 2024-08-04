@@ -615,7 +615,7 @@ namespace FamiStudio
                     Settings.MidiDevice = pageMIDI.GetPropertyValue<string>(0);
 
                     // FFmpeg
-                    Settings.FFmpegExecutablePath = pageFFmpeg.GetPropertyValue<string>(1);
+                    Settings.FFmpegExecutablePath = pageFFmpeg.GetPropertyValue<string>(0);
 
                     // Keys
                     for (int i = 0; i < shortcuts.Count; i++)
