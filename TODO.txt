@@ -67,9 +67,8 @@ Today:
 		- Toast tick
 		- We ficed a double-tick issue in 4.2.1 i think, make sure that's included.
 - Android convert to our widgets, no more android native widgets.
-	- Improve number picker + sliders for touch input (slop)
-	- Merge LogDialog if possible.
-	- Make sure we can do "select all" and "select none" on mobile checkbox lists
+	x Improve number picker + sliders for touch input (slop)
+	x Make sure we can do "select all" and "select none" on mobile checkbox lists
 	x Migrate everything to the "GridSlider", no need for 2 types.
 	- Scale radio buttons too.
 - Sequencer:
