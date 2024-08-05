@@ -51,12 +51,8 @@ Today:
 =============
 - Test detuning with sound, dual NSF, slide notes, etc.
 - Test potential threading issues with N163 auto-assignment.
-- BUG : PC If not using OS dialogs, the drop down overflows. Need to add clipping or ellipsis.
-- BUG : PC Import instrument dialog, text overflow if too big.
-- BUG : Right click to play source sample pops up the context menu
 - UI code cleanup:
 	- Project explorer rewrite
-		- PC Test double click behavior on mobile.
 		- PC Test scroll bars a lot more. 
 		- PC Middle mouse panning (when i get a mouse...)
 		- PC Property buttons get "stuck" when the dialog pops.
@@ -66,11 +62,6 @@ Today:
 		- Dialog ticks
 		- Toast tick
 		- We ficed a double-tick issue in 4.2.1 i think, make sure that's included.
-- Android convert to our widgets, no more android native widgets.
-	x Improve number picker + sliders for touch input (slop)
-	x Make sure we can do "select all" and "select none" on mobile checkbox lists
-	x Migrate everything to the "GridSlider", no need for 2 types.
-	- Scale radio buttons too.
 - Sequencer:
 		1) Comment out all rendering/input code
 		2) Create basic UI with panels/labels/buttons/scroll bar

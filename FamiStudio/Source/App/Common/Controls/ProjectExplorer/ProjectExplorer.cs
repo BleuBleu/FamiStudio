@@ -965,6 +965,7 @@ namespace FamiStudio
             play.ToolTip = $"<MouseLeft> {PreviewProcessedSampleTooltip}\n<MouseRight> {PlaySourceSampleTooltip}";
             play.Click += (s) => App.PreviewDPCMSample(sample, false);
             play.RightClick += (s) => App.PreviewDPCMSample(sample, true);
+            play.ClickOnMouseUp = true;
 
             CreateLabel(panel, sample.Name, true, icon.Right + marginX, 0, play.Left - icon.Right - marginX * 2, true);
         }
@@ -973,7 +974,7 @@ namespace FamiStudio
         {
             var allowDrag = Platform.IsDesktop || (highlightedObject == sample && sender is ImageBox);
 
-            if (!e.Handled && e.Left && allowDrag)
+            if (!e.Handled && e.Left && allowDrag && !(sender is Button))
             {
                 draggedSample = sample;
                 StartCaptureOperation(sender, e.Position, DragSample);
@@ -2562,7 +2563,7 @@ namespace FamiStudio
                                     }
                                 }
 
-                                var dlg = new PropertyDialog(ParentWindow, ImportInstrumentsTitle, 300);
+                                var dlg = new PropertyDialog(ParentWindow, ImportInstrumentsTitle, 350);
                                 dlg.Properties.AddCheckBoxList(ImportInstrumentsLabel.Colon, instrumentNames.ToArray(), null, null, 15); // 0
                                 dlg.Properties.Build();
 

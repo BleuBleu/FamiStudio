@@ -34,11 +34,10 @@ namespace FamiStudio
 
         private Grid CreateCheckListBox(string[] values, bool[] selected, string tooltip = null, int numRows = 7)
         {
-            var columns = new[]
-            {
-                new ColumnDesc("A", 0.0f, ColumnType.CheckBox),
-                new ColumnDesc("B", 1.0f, ColumnType.Label)
-            };
+            var columns = new ColumnDesc[2];
+            columns[0] = new ColumnDesc("A", 0.0f, ColumnType.CheckBox);
+            columns[1] = new ColumnDesc("B", 1.0f, ColumnType.Label);
+            columns[1].Ellipsis = true;
 
             var grid = new Grid(columns, numRows, false);
             var data = new object[values.Length, 2];

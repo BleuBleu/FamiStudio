@@ -69,7 +69,7 @@ namespace FamiStudio
         {
             mode = m;
             SplitExtensionList(extensionList, out extensions, out var descriptions);
-            Resize(DpiScaling.ScaleForWindow(700), DpiScaling.ScaleForWindow(500));
+            Resize(DpiScaling.ScaleForWindow(800), DpiScaling.ScaleForWindow(500));
             CreateControls(descriptions);
 
             if (Directory.Exists(defaultPath))
@@ -129,7 +129,7 @@ namespace FamiStudio
             y += gridFiles.Height + margin;
 
             textFile = new TextBox("");
-            textFile.Move(margin, y, widthNoMargin / 2, textFile.Height);
+            textFile.Move(margin, y, widthNoMargin / 3, textFile.Height);
 
             if (mode != Mode.Save)
             {

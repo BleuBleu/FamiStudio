@@ -747,7 +747,7 @@ namespace FamiStudio
                             }
                             case ColumnType.Label:
                             {
-                                c.DrawText((string)val, font, margin, 0, localForeColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
+                                c.DrawText((string)val, font, margin, 0, localForeColor, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth - margin * 2, rowHeight);
                                 break;
                             }
                             case ColumnType.Radio:
