@@ -474,7 +474,7 @@ namespace FamiStudio
             expand.Click += (s) => ToggleExpandFolder(folder);
 
             var icon = CreateImageBox(panel, expand.Right + spacingX, folder.Expanded ? "FolderOpen" : "Folder");
-            icon.PointerDown += (s, e) => Folder_PointerDown(s, e, folder); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => Folder_PointerDown(s, e, folder);
             icon.WhiteHighlight = highlightedObject == folder;
 
             var propsButton = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties", false);
@@ -715,7 +715,7 @@ namespace FamiStudio
             panel.ContainerTouchClickNotify += (s, e) => Song_TouchClick(s, e, song);
 
             var icon = CreateImageBox(panel, marginX + expandSizeX, "Music", true);
-            icon.PointerDown += (s, e) => Song_PointerDown(s, e, song); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => Song_PointerDown(s, e, song); 
             icon.WhiteHighlight = highlightedObject == song;
 
             var props = CreateImageButton(panel, panel.Width - marginX - iconSizeX, "Properties");
@@ -779,7 +779,7 @@ namespace FamiStudio
             expand.Click += (s) => ToggleExpandInstrument(instrument);
 
             var icon = CreateImageBox(panel, expand.Right + spacingX, ExpansionType.Icons[instrument.Expansion], true);
-            icon.PointerDown += (s, e) => Instrument_PointerDown(s, e, instrument); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => Instrument_PointerDown(s, e, instrument); 
             icon.WhiteHighlight = highlightedObject == instrument;
 
             var x = panel.Width - marginX - iconSizeX; 
@@ -946,7 +946,7 @@ namespace FamiStudio
             expand.Click += (s) => ToggleExpandDPCMSample(sample);
 
             var icon = CreateImageBox(panel, expand.Right, "ChannelDPCM", true);
-            icon.PointerDown += (s, e) => DpcmSample_PointerDown(s, e, sample); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => DpcmSample_PointerDown(s, e, sample); 
             icon.WhiteHighlight = highlightedObject == sample;
 
             var props = CreateImageButton(panel, panel.Width - marginX - iconSizeX, "Properties");
@@ -1041,7 +1041,7 @@ namespace FamiStudio
             panel.ContainerTouchClickNotify += (s, e) => Arpeggio_TouchClick(s, e, arp);
 
             var icon = CreateImageBox(panel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
-            icon.PointerDown += (s, e) => Arpeggio_PointerDown(s, e, arp); // MATTT : Test on desktop, shouldnt have any impact.
+            icon.PointerDown += (s, e) => Arpeggio_PointerDown(s, e, arp); 
             icon.WhiteHighlight = highlightedObject == arp;
 
             var props = CreateImageButton(panel, panel.Width - iconSizeX - marginX, "Properties");

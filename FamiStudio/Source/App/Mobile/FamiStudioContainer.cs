@@ -498,7 +498,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        // MATTT : Hide the other visible dialogs underneath too.
+                        // TODO : Hide the other visible dialogs underneath too.
                         dlg.Visible = true;
                     }
                 }
