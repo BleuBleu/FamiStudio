@@ -10,12 +10,15 @@ namespace FamiStudio
 
         private bool check;
         private bool hover;
+        private float imageScale = Platform.IsDesktop ? 1.0f : DpiScaling.ScaleForWindowFloat(0.25f);
+        private int scaledRadioSize;
         private TextureAtlasRef bmpRadioOff;
         private TextureAtlasRef bmpRadioOn;
 
         public RadioButton(string txt, bool chk, bool multi = false) : base(txt, multi)
         {
             check = chk;
+            height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
         }
 
         public bool Checked
@@ -29,18 +32,14 @@ namespace FamiStudio
             var g = ParentWindow.Graphics;
             bmpRadioOff = g.GetTextureAtlasRef("RadioButtonOff");
             bmpRadioOn  = g.GetTextureAtlasRef("RadioButtonOn");
-            labelOffsetX = bmpRadioOff.ElementSize.Width + DpiScaling.ScaleForWindow(8);
+            scaledRadioSize = DpiScaling.ScaleCustom(bmpRadioOn.ElementSize.Height, imageScale);
+            labelOffsetX = scaledRadioSize + DpiScaling.ScaleForWindow(4);
             base.OnAddedToContainer();
-        }
-
-        private Rectangle GetRadioRectangle()
-        {
-            return new Rectangle(0, (height - bmpRadioOff.ElementSize.Height) / 2, bmpRadioOff.ElementSize.Width, bmpRadioOff.ElementSize.Height);
         }
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            SetAndMarkDirty(ref hover, true /*GetRadioRectangle().Contains(e.X, e.Y)*/);
+            SetAndMarkDirty(ref hover, Platform.IsDesktop);
         }
 
         protected override void OnPointerLeave(EventArgs e)
@@ -98,7 +97,9 @@ namespace FamiStudio
             base.OnRender(g);
 
             var c = g.GetCommandList();
-            c.DrawTextureAtlasCentered(check ? bmpRadioOn : bmpRadioOff, 0, 0, bmpRadioOn.ElementSize.Width, height, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
+            var baseY = (height - scaledRadioSize) / 2;
+
+            c.DrawTextureAtlas(check ? bmpRadioOn : bmpRadioOff, 0, baseY, imageScale, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
         }
     }
 }

@@ -36,7 +36,6 @@ namespace FamiStudio
         public void Close(DialogResult res)
         {
             result = res;
-            callback?.Invoke(result);
             OnCloseDialog(result);
 
             // Pop dialog after the callback, otherwise sometimes the callback takes some time
@@ -47,6 +46,7 @@ namespace FamiStudio
                 DialogClosing?.Invoke(this, result, ref numDialogsToPop);
             }
             window.PopDialog(this, numDialogsToPop);
+            callback?.Invoke(result);
         }
 
         protected virtual void OnShowDialog()

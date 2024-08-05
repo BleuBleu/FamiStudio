@@ -63,7 +63,7 @@ namespace FamiStudio
         public TextBox(string txt, int maxLen = 0)
         {
             Debug.Assert(txt != null);
-            height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 :  24);
+            height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
             text = txt;
             maxLength = maxLen;
             SetTickEnabled(Platform.IsDesktop); // TODO : Only enable when we have focus. 
