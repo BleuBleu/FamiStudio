@@ -10,6 +10,7 @@ using Android.App;
 using Android.Content;
 using Android.Media;
 using Android.OS;
+using Android.Views.InputMethods;
 using Android.Widget;
 using Xamarin.Essentials;
 
@@ -23,11 +24,6 @@ namespace FamiStudio
         public static bool IsCommandLine => false;
         public static bool CanExportToVideo => true;
 
-        private static Toast    lastToast;
-        private static DateTime lastToastTime = DateTime.MinValue;
-        private static string   lastToastText;
-        private static int      glThreadId;
-        
         private static byte[] internalClipboardData;
 
         private const int ToastShortDuration = 2000;
@@ -76,7 +72,6 @@ namespace FamiStudio
         public const string DllExtension = ".so";
 
         public const  bool IsPortableMode = false;
-        public static bool ThreadOwnsGLContext => glThreadId == Thread.CurrentThread.ManagedThreadId;
 
         public static int GetOutputAudioSampleSampleRate()
         {
@@ -217,31 +212,12 @@ namespace FamiStudio
 
         public static void ShowToast(FamiStudioWindow win, string message, bool longDuration = false, Action click = null)
         {
-            MainThread.InvokeOnMainThreadAsync(() =>
-            {
-                message  = message.Replace('\n', ' ').Trim();
+            win.ShowToast(message, longDuration, click);
+        }
 
-                var duration = longDuration ? ToastLongDuration : ToastShortDuration;
-                var now = DateTime.Now;
-
-                if (lastToast != null)
-                {
-                    if (lastToastText != message || (now - lastToastTime).TotalMilliseconds > duration)
-                    {
-                        lastToast.Cancel();
-                        lastToast = null;
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
-
-                lastToast = Toast.MakeText(Application.Context, message, duration == ToastLongDuration ? ToastLength.Long : ToastLength.Short);
-                lastToast.Show();
-                lastToastText = message;
-                lastToastTime = now;
-            });
+        public static void EditTextAsync(string prompt, string text, Action<string> callback)
+        {
+            FamiStudioWindow.Instance.EditTextAsync(prompt, text, callback);
         }
 
         public static double TimeSeconds()
@@ -279,11 +255,6 @@ namespace FamiStudio
 
         public static void ClearClipboardString()
         {
-        }
-
-        public static void AcquireGLContext()
-        {
-            glThreadId = Thread.CurrentThread.ManagedThreadId;
         }
 
         private static void HackForThaiCalendar()

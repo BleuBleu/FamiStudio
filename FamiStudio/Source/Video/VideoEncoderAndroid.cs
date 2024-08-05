@@ -25,7 +25,7 @@ namespace FamiStudio
         protected EGLSurface prevEglSurfaceRead;
         protected EGLSurface prevEglSurfaceDraw;
 
-        protected bool ElgInitialize(int surfaceResX = 0, int surfaceResY = 0)
+        public bool ElgInitialize(int surfaceResX = 0, int surfaceResY = 0)
         {
             prevEglContext = EGL14.EglGetCurrentContext();
             prevEglDisplay = EGL14.EglGetCurrentDisplay();
@@ -113,85 +113,15 @@ namespace FamiStudio
             EGL14.EglMakeCurrent(prevEglDisplay, prevEglSurfaceDraw, prevEglSurfaceRead, prevEglContext);
         }
 
-        protected void CheckEglError()
-        {
-            Debug.Assert(EGL14.EglGetError() == EGL14.EglSuccess);
-        }
-    }
-
-    public class AndroidPreviewEncoder : VideoEncoderAndroidEglBase, IVideoEncoder, ILogOutput
-    {
-        private PropertyPage page;
-        private int propIdx;
-        private int previewResX;
-        private int previewResY;
-        private bool abort;
-        private float targetFrameTime;
-        private double lastFrameTime = -1;
-
-        public bool AbortOperation => abort;
-
-        public AndroidPreviewEncoder(PropertyPage p, int idx)
-        {
-            page = p;
-            propIdx = idx;
-        }
-
-        public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
-        {
-            if (!ElgInitialize(resX, resY))
-                return false;
-
-            previewResX = resX;
-            previewResY = resY;
-            targetFrameTime = rateDenom / (float)rateNumer;
-            lastFrameTime = Platform.TimeSeconds();
-
-            var black = new byte[previewResX * previewResY * 4];
-            for (int i = 3; i < black.Length; i += 4)
-                black[i] = 0xff;
-
-            MainThread.InvokeOnMainThreadAsync(() => page.UpdateImageBox(propIdx, previewResX, previewResY, black));
-
-            return true;
-        }
-
-        public bool AddFrame(OffscreenGraphics graphics)
+        public void SwapBuffers()
         {
             EGL14.EglSwapBuffers(eglDisplay, eglSurface);
             CheckEglError();
-
-            var buffer = new byte[previewResX * previewResY * 4];
-            graphics.GetBitmap(buffer); 
-            
-            MainThread.InvokeOnMainThreadAsync(() => page.UpdateImageBox(propIdx, previewResX, previewResY, buffer));
-
-            // Throttle to mimic target FPS.
-            var currentFrameTime = Platform.TimeSeconds();
-            var delta = currentFrameTime - lastFrameTime;
-            if (delta < targetFrameTime)
-                System.Threading.Thread.Sleep((int)((targetFrameTime - delta) * 1000));
-
-            lastFrameTime = currentFrameTime;
-
-            return !abort;
         }
 
-        public void EndEncoding(bool abort)
+        protected void CheckEglError()
         {
-        }
-
-        public void Abort()
-        {
-            abort = true;
-        }
-
-        public void LogMessage(string msg)
-        {
-        }
-
-        public void ReportProgress(float progress)
-        {
+            Debug.Assert(EGL14.EglGetError() == EGL14.EglSuccess);
         }
     }
 
@@ -337,8 +267,7 @@ namespace FamiStudio
             EGLExt.EglPresentationTimeANDROID(eglDisplay, eglSurface, presentationTime);
             CheckEglError();
 
-            EGL14.EglSwapBuffers(eglDisplay, eglSurface);
-            CheckEglError();
+            SwapBuffers();
 
             DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
             

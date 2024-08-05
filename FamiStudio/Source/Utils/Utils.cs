@@ -111,6 +111,13 @@ namespace FamiStudio
             return result;
         }
 
+        // Used for color, basically 8-bit fixed point. 255 = 1.0, 128 = 0.5, etc.
+        public static int ColorMultiply(int  x, int y)
+        {
+            Debug.Assert(x >= 0 && y >= 0);
+            return Math.Min((x * y) / 255, 255);
+        }
+
         public static byte[] IntToBytes24Bit(int x)
         {
             return new byte[] { (byte)(x & 0xff), (byte)(x >> 8 & 0xff), (byte)(x >> 16 & 0xff) };
@@ -129,17 +136,12 @@ namespace FamiStudio
 
         public static int Log2Int(int x)
         {
-            // MATTT : Look at BitOperators.Log2();
+            // I dont remember why we return min. But BitOperations.Log2(0) returns 0
+            // and I dont want to break anything.
             if (x == 0)
                 return int.MinValue;
 
-            int bits = 0;
-            while (x > 0)
-            {
-                bits++;
-                x >>= 1;
-            }
-            return bits - 1;
+            return BitOperations.Log2((uint)x);
         }
 
         public static int ParseIntWithTrailingGarbage(string s)
@@ -232,16 +234,7 @@ namespace FamiStudio
 
         public static int NextPowerOfTwo(int v)
         {
-            // MATTT : Look at BitOperators.RoundUpToPowerOf2();
-            v--;
-            v |= v >> 1;
-            v |= v >> 2;
-            v |= v >> 4;
-            v |= v >> 8;
-            v |= v >> 16;
-            v++;
-
-            return v;
+            return (int)BitOperations.RoundUpToPowerOf2((uint)v);
         }
 
         public static int PrevPowerOfTwo(int v)

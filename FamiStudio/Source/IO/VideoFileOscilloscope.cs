@@ -55,7 +55,7 @@ namespace FamiStudio
                     c.PushClipRegion(0, 0, channelResX, channelResY);
                     
                     // Gradient
-                    c.FillRectangleGradient(0, 0, channelResX, channelResY, Color.Black, Color.Transparent, true, channelResY / 2);
+                    c.FillRectangleGradient(0, 0, channelResX, channelResY, Color.Black, Color.Invisible, true, channelResY / 2);
 
                     // Oscilloscope
                     var oscilloscope = UpdateOscilloscope(s, f);
@@ -69,7 +69,7 @@ namespace FamiStudio
                     var channelIconPosY = s.icon.Size.Height / 2;
 
                     c.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.icon.Size.Width - 1, channelIconPosY + s.icon.Size.Height - 1, Theme.DarkGreyColor2, Theme.LightGreyColor1);
-                    c.DrawTexture(s.icon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
+                    c.DrawTexture(s.icon, channelIconPosX, channelIconPosY, Theme.LightGreyColor1);
                     c.DrawText(s.channelText, font, channelIconPosX + s.icon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, Theme.LightGreyColor1);
 
                     c.PopClipRegion();

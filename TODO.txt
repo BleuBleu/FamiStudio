@@ -1,3 +1,6 @@
+Today:
+	- Desktop done, mobile todo.
+
 4.3.0
 =====
 - VRC6 square popping how2/kawashin
@@ -19,9 +22,25 @@
 - YARN : Small hitch beginning of VRC6 songs? Not sure
 - YARN : Change ini ROM code persune suggestion.
 - Review the copy/paste name matching. Maybe add a rename option.
+- Video looping issue Brette
+	https://discord.com/channels/747649221879922840/747649222354010173/1253697004177985627
 - N163 auto-position.
 	- GUI BRANCH : When changing "Auto Wav Pos", must stop player. => REDO IN GUI BRANCH!
 	- GUI BRANCH : Add button test validate the assignment in instrument settings.
+- Raw FDS modulation table envelope. 
+- Merge change from github issue where it prints the required defines as comments in the file.
+	- Do same for note tables, no need for external file!
+- Ability to select a folder, instruments gets added to that. (problem : how would we unselect a folder?)
+- Could we import DMC initial values from NSF?
+- Set multiple colums/rows by default for videos with TONS of channels. 
+- BUG : When moving releases in a selection, it applies multiple times.
+	https://discord.com/channels/@me/819772561940152321/1261610994673778730
+- Crash quitting when in dpcm editor. (audioStream is null)
+	FamiStudio.dll!FamiStudio.AudioPlayer.RawPcmSamplePlayPosition.get() Line 247	C#
+ 	FamiStudio.dll!FamiStudio.FamiStudio.PreviewDPCMWavPosition.get() Line 117	C#
+ 	FamiStudio.dll!FamiStudio.PianoRoll.RenderWaveform(FamiStudio.PianoRoll.RenderInfo r) Line 3725	C#
+- S5B + VRC7 interfecence?? even when s5b is muted, it still affects vrc7
+	https://discord.com/channels/@me/819772561940152321/1263722786128400414
 
 4.3.0
 =====
@@ -31,6 +50,34 @@
 4.3.0 Testing
 =============
 - Test detuning with sound, dual NSF, slide notes, etc.
+- Test potential threading issues with N163 auto-assignment.
+- UI code cleanup:
+	- Project explorer rewrite
+		- PC Test scroll bars a lot more. 
+		- PC Middle mouse panning (when i get a mouse...)
+		- PC Property buttons get "stuck" when the dialog pops.
+			- Same happens if you right click open menu, open a recent file, open button gets stucks
+		- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
+	- To test : 
+		- Dialog ticks
+		- Toast tick
+		- We ficed a double-tick issue in 4.2.1 i think, make sure that's included.
+- Sequencer:
+		1) Comment out all rendering/input code
+		2) Create basic UI with panels/labels/buttons/scroll bar
+		3) Create a Timeline control + PatternArea control.
+		4) Try to make everything work again on desktop.
+		5) Redo mobile input to minimize code duplication.
+		6) Add nice to have stuff (force display on mobile, make icons/force display/mute actually work on mobile)
+- Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
+- Review things with tick enabled. I see weird things ticking. Add debug to print them all!
+- Add light/dark/grey themes.
+	- Ableton live as reference for a "light" theme.
+	- Dark will be even darker than now.
+	- Grey is what we have now.
+- Unify mobile/desktop file operations. Remove all if {} there.
+- PE doesnt stop scrolling if you tap. 
+-
 
 Linux notes 
 =========== 
@@ -72,6 +119,10 @@ MacOS notes
 	cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
 - If NAT network doesnt work (problem is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
+
+To take screenshot on android:
+=============================
+"C:\Program Files (x86)\Android\android-sdk\platform-tools\adb" exec-out screencap -p > d:\temp\screen.png
 
 Convert PNG to TGA
 ==================
@@ -128,7 +179,6 @@ Discord
 
 Backlog: 
 =========
-- N163 auto positioning 
 - NSF/FS comparison bugs:
 	- N163 : Sound OK, but gets out of phase at the first slide note and remains like that. This is normal, this is due to slide notes not being able to be approximated correctly with fine pitch. 
 	- VRC7 : Very slight pitch issue due to pitch shift (3) used on VRC7 and how we look for best matching note.
@@ -138,7 +188,7 @@ Backlog:
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
 	- Dont compress vibrato envelopes.
 	- New opcode "override envelope and reset", call only when speed changes.
-	- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
+- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - Paste FX values from text. Kain wanted to change DAC slowly, had values to paste. 
 - Simple parameters for instruments (duty, volume)
@@ -185,7 +235,6 @@ Backlog:
 - Overclocking (2x, 3x, 4x would be a good start).
 - Hardware sweep (how to not conflict with smooth vibrato?)
 - Scales
-- Raw FDS modulation table envelope. 
 - Sound output selection?
 - Give better names to auto saves
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???

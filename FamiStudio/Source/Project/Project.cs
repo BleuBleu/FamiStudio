@@ -259,6 +259,11 @@ namespace FamiStudio
             return instruments.Contains(inst);
         }
 
+        public bool SampleExists(DPCMSample sample)
+        {
+            return samples.Contains(sample);
+        }
+
         public bool ArpeggioExists(Arpeggio arp)
         {
             return arpeggios.Contains(arp);
@@ -1949,6 +1954,7 @@ namespace FamiStudio
             }
         };
 
+        // MATTT : This will run on the player threads, dangerous. Probably need to a locking mecanism.
         public unsafe bool AutoAssignN163WavePositions(out Dictionary<int, int> wavePositions)
         {
             if (!UsesN163Expansion)
@@ -1983,6 +1989,8 @@ namespace FamiStudio
                 for (var i = 0; i < instruments.Count; i++)
                 {
                     var inst = instruments[i];
+
+                    // MATTT : Lazy allocate those. People sometimes have HUGE projects and only use a handful of instruments.
                     if (inst.IsN163)
                     {
                         instrumentMasks.Add(inst, new N163Mask(numLongs));
@@ -2088,7 +2096,7 @@ namespace FamiStudio
             // TODO : Sort instrument by descending wav size + how much they are used maybe?
             wavePositions = new Dictionary<int, int>(numN163AutoPos);
 
-            var maxPosByte = N163WaveRAMSize * 2;
+            var maxPos = N163WaveRAMSize * 2;
             var overlapDetected = false;
 
             foreach (var kv in instrumentOverlaps)
@@ -2114,9 +2122,9 @@ namespace FamiStudio
                         pos1 = pos2 + inst2.N163WaveSize;
 
                         // Was not able to allocate.
-                        if (pos1 + inst1.N163WaveSize > maxPosByte)
+                        if (pos1 + inst1.N163WaveSize > maxPos)
                         {
-                            Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size of overlap with other instruments. Setting to 0.");
+                            Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size or minimize overlap with other instruments. Setting to 0.");
                             pos1 = 0;
                             overlapDetected = true;
                             break;
