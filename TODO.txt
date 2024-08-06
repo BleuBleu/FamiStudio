@@ -77,7 +77,6 @@ Today:
 	- Grey is what we have now.
 - Unify mobile/desktop file operations. Remove all if {} there.
 - PE doesnt stop scrolling if you tap. 
--
 
 Linux notes 
 =========== 
