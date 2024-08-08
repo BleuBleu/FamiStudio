@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
@@ -63,7 +64,7 @@ namespace FamiStudio
 
         public Graphics(bool offscreen = false) : base(offscreen) 
         {
-            GL.StaticInitialize();
+            GL.StaticInitialize(glfwGetProcAddress);
 
 #if DEBUG && !FAMISTUDIO_MACOS
             debugCallback = new GL.DebugCallback(GLDebugMessageCallback);
@@ -311,6 +312,90 @@ namespace FamiStudio
             }
         }
 
+
+        public void DrawBlur(int textureId, int x, int y, int width, int height, int blurStartY, float blurScale = 2.0f)
+        {
+            var kernel = GetBlurKernel(width, height, blurScale);
+
+            MakeQuad(x, y, width, height);
+
+            GL.PushDebugGroup("Blur");
+            GL.DepthFunc(GL.Always);
+            GL.UseProgram(blurProgram);
+            GL.BindVertexArray(blurVao);
+            GL.Uniform(blurScaleBiasUniform, viewportScaleBias, 4);
+            GL.Uniform(blurTextureUniform, 0);
+            GL.Uniform(blurKernelUniform, kernel, 4, kernel.Length / 4);
+            GL.Uniform(blurCocBiasScaleUniform, -(height - blurStartY) / (float)height, height / (float)blurStartY);
+            GL.ActiveTexture(GL.Texture0 + 0);
+            GL.BindTexture(GL.Texture2D, textureId);
+
+            BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, 8);
+            BindAndUpdateVertexBuffer(1, texCoordBuffer, texArray, 8);
+            GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
+            GL.DrawElements(GL.Triangles, 6, GL.UnsignedShort, IntPtr.Zero);
+            GL.DepthFunc(GL.Equal);
+            GL.PopDebugGroup();
+        }
+
+        protected unsafe override bool DrawDepthPrepass()
+        {
+            if (clipRegions.Count == 0)
+            {
+                GL.DepthFunc(GL.Always);
+                GL.ColorMask(true, true, true, true);
+                return false;
+            }
+
+            GL.PushDebugGroup("Depth Pre-pass");
+            GL.DepthMask(1);
+            GL.DepthFunc(GL.Always);
+            GL.ColorMask(false, false, false, false);
+
+            var vtxIdx = 0;
+            var depIdx = 0;
+
+            for (int i = 0; i < clipRegions.Count; i++)
+            {
+                var clip = clipRegions[i];
+
+                var x0 = clip.rect.Left;
+                var y0 = clip.rect.Top;
+                var x1 = clip.rect.Right;
+                var y1 = clip.rect.Bottom;
+
+                vtxArray[vtxIdx++] = x0;
+                vtxArray[vtxIdx++] = y0;
+                vtxArray[vtxIdx++] = x1;
+                vtxArray[vtxIdx++] = y0;
+                vtxArray[vtxIdx++] = x1;
+                vtxArray[vtxIdx++] = y1;
+                vtxArray[vtxIdx++] = x0;
+                vtxArray[vtxIdx++] = y1;
+
+                depArray[depIdx++] = clip.depthValue;
+                depArray[depIdx++] = clip.depthValue;
+                depArray[depIdx++] = clip.depthValue;
+                depArray[depIdx++] = clip.depthValue;
+            }
+
+            GL.UseProgram(depthProgram);
+            GL.BindVertexArray(depthVao);
+            GL.Uniform(depthScaleBiasUniform, viewportScaleBias, 4);
+
+            BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxIdx);
+            BindAndUpdateByteBuffer(1, depthBuffer, depArray, depIdx, true);
+            GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
+            GL.DrawElements(GL.Triangles, vtxIdx / 8 * 6, GL.UnsignedShort, IntPtr.Zero);
+
+            GL.DepthMask(0);
+            GL.DepthFunc(GL.Equal);
+            GL.ColorMask(true, true, true, true);
+            GL.PopDebugGroup();
+
+            return true;
+        }
+
         protected override void ClearAlpha()
         {
             // Normally we would simply use seperate alpha blending to keep the alpha
@@ -537,89 +622,6 @@ namespace FamiStudio
         {
             GL.BindBuffer(GL.ElementArrayBuffer, buffer);
             GL.BufferData(GL.ElementArrayBuffer, array, arraySize, GL.DynamicDraw);
-        }
-
-        public void DrawBlur(int textureId, int x, int y, int width, int height, int blurStartY, float blurScale = 2.0f)
-        {
-            var kernel = GetBlurKernel(width, height, blurScale);
-
-            MakeQuad(x, y, width, height);
-
-            GL.PushDebugGroup("Blur");
-            GL.DepthFunc(GL.Always);
-            GL.UseProgram(blurProgram);
-            GL.BindVertexArray(blurVao);
-            GL.Uniform(blurScaleBiasUniform, viewportScaleBias, 4);
-            GL.Uniform(blurTextureUniform, 0);
-            GL.Uniform(blurKernelUniform, kernel, 4, kernel.Length / 4);
-            GL.Uniform(blurCocBiasScaleUniform, -(height - blurStartY) / (float)height, height / (float)blurStartY);
-            GL.ActiveTexture(GL.Texture0 + 0);
-            GL.BindTexture(GL.Texture2D, textureId);
-
-            BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, 8);
-            BindAndUpdateVertexBuffer(1, texCoordBuffer, texArray, 8);
-            GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
-            GL.DrawElements(GL.Triangles, 6, GL.UnsignedShort, IntPtr.Zero);
-            GL.DepthFunc(GL.Equal);
-            GL.PopDebugGroup();
-        }
-
-        protected unsafe override bool DrawDepthPrepass()
-        {
-            if (clipRegions.Count == 0)
-            {
-                GL.DepthFunc(GL.Always);
-                GL.ColorMask(true, true, true, true);
-                return false;
-            }
-
-            GL.PushDebugGroup("Depth Pre-pass");
-            GL.DepthMask(1);
-            GL.DepthFunc(GL.Always);
-            GL.ColorMask(false, false, false, false);
-
-            var vtxIdx = 0;
-            var depIdx = 0;
-
-            for (int i = 0; i < clipRegions.Count; i++)
-            {
-                var clip = clipRegions[i];
-
-                var x0 = clip.rect.Left;
-                var y0 = clip.rect.Top;
-                var x1 = clip.rect.Right;
-                var y1 = clip.rect.Bottom;
-
-                vtxArray[vtxIdx++] = x0;
-                vtxArray[vtxIdx++] = y0;
-                vtxArray[vtxIdx++] = x1;
-                vtxArray[vtxIdx++] = y0;
-                vtxArray[vtxIdx++] = x1;
-                vtxArray[vtxIdx++] = y1;
-                vtxArray[vtxIdx++] = x0;
-                vtxArray[vtxIdx++] = y1;
-
-                depArray[depIdx++] = clip.depthValue;
-                depArray[depIdx++] = clip.depthValue;
-                depArray[depIdx++] = clip.depthValue;
-                depArray[depIdx++] = clip.depthValue;
-            }
-
-            GL.UseProgram(depthProgram);
-            GL.BindVertexArray(depthVao);
-            GL.Uniform(depthScaleBiasUniform, viewportScaleBias, 4);
-
-            BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, vtxIdx);
-            BindAndUpdateByteBuffer(1, depthBuffer, depArray, depIdx, true);
-            GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
-            GL.DrawElements(GL.Triangles, vtxIdx / 8 * 6, GL.UnsignedShort, IntPtr.Zero);
-
-            GL.DepthMask(0);
-            GL.DepthFunc(GL.Equal);
-            GL.ColorMask(true, true, true, true);
-            GL.PopDebugGroup();
-
-            return true;
         }
 
         protected override void DrawCommandList(CommandList list, bool depthTest)
@@ -961,249 +963,325 @@ namespace FamiStudio
         public const int MinorVersion              = 0x821C;
         public const int TextureMaxAnisotropy      = 0x84FE;
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate void DebugCallback(int source, int type, int id, int severity, int length, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userParam);
-
-        public delegate void ClearDelegate(uint mask);
-        public delegate void ClearDepthDelegate(float depth);
-        public delegate void ClearColorDelegate(float red, float green, float blue, float alpha);
-        public delegate void ViewportDelegate(int left, int top, int width, int height);
-        public delegate void EnableDelegate(int cap);
-        public delegate void DisableDelegate(int cap);
-        public delegate void BlendFuncDelegate(int src, int dst);
-        public delegate void PolygonModeDelegate(int face, int mode);
-        public delegate void ScissorDelegate(int x, int y, int width, int height);
-        public delegate void EnableClientStateDelegate(int cap);
-        public delegate void DisableClientStateDelegate(int cap);
-        public delegate void TexParameterDelegate(int target, int name, int val);
-        public delegate void BindTextureDelegate(int target, int id);
-        public delegate void ActiveTextureDelegate(int texture);
-        public delegate void TexImage2DDelegate(int target, int level, int internalformat, int width, int height, int border, int format, int type, IntPtr data);
-        public delegate void TexSubImage2DDelegate(int target, int level, int xoffset, int yoffset, int width, int height, int format, int type, IntPtr pixels);
-        public delegate void GenTexturesDelegate(int n, IntPtr textures);
-        public delegate void DeleteTexturesDelegate(int n, IntPtr textures);
-        public delegate void ColorPointerDelegate(int size, int type, int stride, IntPtr pointer);
-        public delegate void VertexPointerDelegate(int size, int type, int stride, IntPtr pointer);
-        public delegate void TexCoordPointerDelegate(int size, int type, int stride, IntPtr pointer);
-        public delegate void DrawArraysDelegate(int mode, int first, int count);
-        public delegate void DrawElementsDelegate(int mode, int count, int type, IntPtr indices);
-        public delegate void LineWidthDelegate(float width);
-        public delegate void GenFramebuffersDelegate(int n, IntPtr indices);
-        public delegate void BindFramebufferDelegate(int target, int framebuffer);
-        public delegate void DrawBufferDelegate(int buf);
-        public delegate void FramebufferTexture2DDelegate(int target,int attachment, int textarget, int texture, int level);
-        public delegate void ReadPixelsDelegate(int x, int y, int width, int height, int format, int type, IntPtr data);
-        public delegate void DeleteFramebuffersDelegate(int n, IntPtr framebuffers);
-        public delegate void GetFloatDelegate(int par3am, IntPtr floats);
-        public delegate void DebugMessageCallbackDelegate([MarshalAs(UnmanagedType.FunctionPtr)] DebugCallback callback, IntPtr userParam);
-        public delegate int  CreateShaderDelegate(int shaderType);
-        public delegate void ShaderSourceDelegate(int shader, int count, IntPtr strings, IntPtr length);
-        public delegate void CompileShaderDelegate(int shader);
-        public delegate void GetShaderIntDelegate(int shader, int param, IntPtr ints);
-        public delegate void GetShaderInfoLogDelegate(int shader, int maxLength, ref int length, IntPtr infoLog);
-        public delegate int  CreateProgramDelegate();
-        public delegate void DeleteProgramDelegate(int id);
-        public delegate void AttachShaderDelegate(int program, int shader);
-        public delegate void LinkProgramDelegate(int program);
-        public delegate void GetProgramIntDelegate(int program, int param, IntPtr ints);
-        public delegate void GetProgramInfoLogDelegate(int shader, int maxLength, ref int length, IntPtr infoLog);
-        public delegate void UseProgramDelegate(int program);
-        public delegate int  GetUniformLocationDelegate(int program, [MarshalAs(UnmanagedType.LPStr)] string name);
-        public delegate void VertexAttribPointerDelegate(int index, int size, int type, byte normalized, int stride, IntPtr pointer);
-        public delegate void VertexAttribIPointerDelegate(int index, int size, int type, int stride, IntPtr pointer);
-        public delegate void GenBuffersDelegate(int n, IntPtr buffers);
-        public delegate void DeleteBuffersDelegate(int n, IntPtr buffers);
-        public delegate void BindBufferDelegate(int target, int buffer);
-        public delegate void BufferDataDelegate(int target, IntPtr size, IntPtr data, int usage);
-        public delegate void BufferSubDataDelegate(int target, IntPtr offset, IntPtr size, IntPtr data);
-        public delegate void GenVertexArraysDelegate(int n, IntPtr arrays);
-        public delegate void DeleteVertexArraysDelegate(int n, IntPtr arrays);
-        public delegate void BindVertexArrayDelegate(int vao);
-        public delegate void EnableVertexAttribArrayDelegate(int index);
-        public delegate void FlushDelegate();
-        public delegate void Uniform1iDelegate(int location, int x);
-        public delegate void Uniform1fDelegate(int location, float x);
-        public delegate void Uniform2fDelegate(int location, float x, float y);
-        public delegate void Uniform3fDelegate(int location, float x, float y, float z);
-        public delegate void Uniform4fDelegate(int location, float x, float y, float z, float w);
-        public delegate void Uniform1fvDelegate(int location, int count, IntPtr values);
-        public delegate void Uniform2fvDelegate(int location, int count, IntPtr values);
-        public delegate void Uniform3fvDelegate(int location, int count, IntPtr values);
-        public delegate void Uniform4fvDelegate(int location, int count, IntPtr values);
-        public delegate void HintDelegate(int target, int mode);
-        public delegate void DepthFuncDelegate(int func);
-        public delegate void DepthMaskDelegate(int func);
-        public delegate void ColorMaskDelegate(byte red, byte green, byte blue, byte alpha);
-        public delegate void PushDebugGroupDelegate(int source, int id, int length, [MarshalAs(UnmanagedType.LPStr)] string message);
-        public delegate void PopDebugGroupDelegate();
-        public delegate void PixelStoreDelegate(int name, int value);
-        public delegate void GetIntegerDelegate(int name, ref int data);
-        public delegate int  GetErrorDelegate();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate int  CheckFramebufferStatusDelegate(int target);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate int  CreateProgramDelegate();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate int  CreateShaderDelegate(int shaderType);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate int  GetErrorDelegate();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate int  GetUniformLocationDelegate(int program, [MarshalAs(UnmanagedType.LPStr)] string name);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ActiveTextureDelegate(int texture);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void AttachShaderDelegate(int program, int shader);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate void BindAttribLocationDelegate(int program, int index, [MarshalAs(UnmanagedType.LPStr)] string name);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void BindBufferDelegate(int target, int buffer);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void BindFramebufferDelegate(int target, int framebuffer);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void BindTextureDelegate(int target, int id);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void BindVertexArrayDelegate(int vao);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void BlendFuncDelegate(int src, int dst);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void BufferDataDelegate(int target, IntPtr size, IntPtr data, int usage);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void BufferSubDataDelegate(int target, IntPtr offset, IntPtr size, IntPtr data);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ClearColorDelegate(float red, float green, float blue, float alpha);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ClearDelegate(uint mask);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ClearDepthDelegate(float depth);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ColorMaskDelegate(byte red, byte green, byte blue, byte alpha);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ColorPointerDelegate(int size, int type, int stride, IntPtr pointer);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void CompileShaderDelegate(int shader);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DebugMessageCallbackDelegate([MarshalAs(UnmanagedType.FunctionPtr)] DebugCallback callback, IntPtr userParam);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DeleteBuffersDelegate(int n, IntPtr buffers);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DeleteFramebuffersDelegate(int n, IntPtr framebuffers);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DeleteProgramDelegate(int id);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DeleteTexturesDelegate(int n, IntPtr textures);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DeleteVertexArraysDelegate(int n, IntPtr arrays);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DepthFuncDelegate(int func);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DepthMaskDelegate(int func);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DisableClientStateDelegate(int cap);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DisableDelegate(int cap);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DrawArraysDelegate(int mode, int first, int count);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DrawBufferDelegate(int buf);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void DrawElementsDelegate(int mode, int count, int type, IntPtr indices);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void EnableClientStateDelegate(int cap);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void EnableDelegate(int cap);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void EnableVertexAttribArrayDelegate(int index);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void FlushDelegate();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void FramebufferTexture2DDelegate(int target,int attachment, int textarget, int texture, int level);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GenBuffersDelegate(int n, IntPtr buffers);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GenFramebuffersDelegate(int n, IntPtr indices);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GenTexturesDelegate(int n, IntPtr textures);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GenVertexArraysDelegate(int n, IntPtr arrays);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GetFloatDelegate(int par3am, IntPtr floats);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GetIntegerDelegate(int name, ref int data);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GetProgramInfoLogDelegate(int shader, int maxLength, ref int length, IntPtr infoLog);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GetProgramIntDelegate(int program, int param, IntPtr ints);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GetShaderInfoLogDelegate(int shader, int maxLength, ref int length, IntPtr infoLog);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void GetShaderIntDelegate(int shader, int param, IntPtr ints);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void HintDelegate(int target, int mode);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void LineWidthDelegate(float width);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void LinkProgramDelegate(int program);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void PixelStoreDelegate(int name, int value);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void PolygonModeDelegate(int face, int mode);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void PopDebugGroupDelegate();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void PushDebugGroupDelegate(int source, int id, int length, [MarshalAs(UnmanagedType.LPStr)] string message);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ReadPixelsDelegate(int x, int y, int width, int height, int format, int type, IntPtr data);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ScissorDelegate(int x, int y, int width, int height);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ShaderSourceDelegate(int shader, int count, IntPtr strings, IntPtr length);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void TexCoordPointerDelegate(int size, int type, int stride, IntPtr pointer);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void TexImage2DDelegate(int target, int level, int internalformat, int width, int height, int border, int format, int type, IntPtr data);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void TexParameterDelegate(int target, int name, int val);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void TexSubImage2DDelegate(int target, int level, int xoffset, int yoffset, int width, int height, int format, int type, IntPtr pixels);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void Uniform1fDelegate(int location, float x);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void Uniform1fvDelegate(int location, int count, IntPtr values);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void Uniform1iDelegate(int location, int x);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void Uniform2fDelegate(int location, float x, float y);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void Uniform2fvDelegate(int location, int count, IntPtr values);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void Uniform3fDelegate(int location, float x, float y, float z);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void Uniform3fvDelegate(int location, int count, IntPtr values);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void Uniform4fDelegate(int location, float x, float y, float z, float w);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void Uniform4fvDelegate(int location, int count, IntPtr values);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void UseProgramDelegate(int program);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void VertexAttribIPointerDelegate(int index, int size, int type, int stride, IntPtr pointer);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void VertexAttribPointerDelegate(int index, int size, int type, byte normalized, int stride, IntPtr pointer);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void VertexPointerDelegate(int size, int type, int stride, IntPtr pointer);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ViewportDelegate(int left, int top, int width, int height);
 
-        public static ClearDelegate                   Clear;
-        public static ClearDepthDelegate              ClearDepth;
-        public static ClearColorDelegate              ClearColor;
-        public static ViewportDelegate                Viewport;
-        public static EnableDelegate                  Enable;
-        public static DisableDelegate                 Disable;
-        public static BlendFuncDelegate               BlendFunc;
-        public static PolygonModeDelegate             PolygonMode;
-        public static ScissorDelegate                 Scissor;
-        public static EnableClientStateDelegate       EnableClientState;
-        public static DisableClientStateDelegate      DisableClientState;
-        public static TexParameterDelegate            TexParameter;
-        public static BindTextureDelegate             BindTexture;
         public static ActiveTextureDelegate           ActiveTexture;
-        public static TexImage2DDelegate              TexImage2DRaw;
-        public static TexSubImage2DDelegate           TexSubImage2DRaw;
-        public static GenTexturesDelegate             GenTextures;
-        public static DeleteTexturesDelegate          DeleteTextures;
-        public static ColorPointerDelegate            ColorPointerRaw;
-        public static VertexPointerDelegate           VertexPointerRaw;
-        public static TexCoordPointerDelegate         TexCoordPointerRaw;
-        public static DrawArraysDelegate              DrawArrays;
-        public static DrawElementsDelegate            DrawElementsRaw;
-        public static LineWidthDelegate               LineWidth;
-        public static GenFramebuffersDelegate         GenFramebuffers;
-        public static BindFramebufferDelegate         BindFramebuffer;
-        public static DrawBufferDelegate              DrawBuffer;
-        public static FramebufferTexture2DDelegate    FramebufferTexture2D;
-        public static ReadPixelsDelegate              ReadPixels;
-        public static DeleteFramebuffersDelegate      DeleteFramebuffers;
-        public static GetFloatDelegate                GetFloatRaw;
-        public static DebugMessageCallbackDelegate    DebugMessageCallback;
-        public static CreateShaderDelegate            CreateShader;
-        public static ShaderSourceDelegate            ShaderSourceRaw;
-        public static CompileShaderDelegate           CompileShader;
-        public static GetShaderIntDelegate            GetShaderIntRaw;
-        public static GetShaderInfoLogDelegate        GetShaderInfoLogRaw;
-        public static CreateProgramDelegate           CreateProgram;
-        public static DeleteProgramDelegate           DeleteProgram;
         public static AttachShaderDelegate            AttachShader;
-        public static LinkProgramDelegate             LinkProgram;
-        public static GetProgramIntDelegate           GetProgramIntRaw;
-        public static GetProgramInfoLogDelegate       GetProgramInfoLogRaw;
-        public static UseProgramDelegate              UseProgram;
-        public static GetUniformLocationDelegate      GetUniformLocation;
-        public static VertexAttribPointerDelegate     VertexAttribPointerRaw;
-        public static VertexAttribIPointerDelegate    VertexAttribIPointerRaw;
-        public static GenBuffersDelegate              GenBuffersRaw;
-        public static DeleteBuffersDelegate           DeleteBuffersRaw;
-        public static GenVertexArraysDelegate         GenVertexArraysRaw;
-        public static DeleteVertexArraysDelegate      DeleteVertexArraysRaw;
+        public static BindAttribLocationDelegate      BindAttribLocation;
         public static BindBufferDelegate              BindBuffer;
+        public static BindFramebufferDelegate         BindFramebuffer;
+        public static BindTextureDelegate             BindTexture;
+        public static BindVertexArrayDelegate         BindVertexArray;
+        public static BlendFuncDelegate               BlendFunc;
         public static BufferDataDelegate              BufferDataRaw;
         public static BufferSubDataDelegate           BufferSubDataRaw;
-        public static BindVertexArrayDelegate         BindVertexArray;
-        public static EnableVertexAttribArrayDelegate EnableVertexAttribArray;
-        public static FlushDelegate                   Flush;
-        public static Uniform1iDelegate               Uniform1iRaw;
-        public static Uniform1fDelegate               Uniform1fRaw;
-        public static Uniform2fDelegate               Uniform2fRaw;
-        public static Uniform3fDelegate               Uniform3fRaw;
-        public static Uniform4fDelegate               Uniform4fRaw;
-        public static Uniform1fvDelegate              Uniform1fvRaw;
-        public static Uniform2fvDelegate              Uniform2fvRaw;
-        public static Uniform3fvDelegate              Uniform3fvRaw;
-        public static Uniform4fvDelegate              Uniform4fvRaw;
-        public static HintDelegate                    Hint;
+        public static CheckFramebufferStatusDelegate  CheckFramebufferStatus;
+        public static ClearColorDelegate              ClearColor;
+        public static ClearDelegate                   Clear;
+        public static ClearDepthDelegate              ClearDepth;
+        public static ColorMaskDelegate               ColorMaskRaw;
+        public static ColorPointerDelegate            ColorPointerRaw;
+        public static CompileShaderDelegate           CompileShader;
+        public static CreateProgramDelegate           CreateProgram;
+        public static CreateShaderDelegate            CreateShader;
+        public static DebugMessageCallbackDelegate    DebugMessageCallback;
+        public static DeleteBuffersDelegate           DeleteBuffersRaw;
+        public static DeleteFramebuffersDelegate      DeleteFramebuffers;
+        public static DeleteProgramDelegate           DeleteProgram;
+        public static DeleteTexturesDelegate          DeleteTextures;
+        public static DeleteVertexArraysDelegate      DeleteVertexArraysRaw;
         public static DepthFuncDelegate               DepthFunc;
         public static DepthMaskDelegate               DepthMask;
-        public static ColorMaskDelegate               ColorMaskRaw;
-        public static PushDebugGroupDelegate          PushDebugGroupRaw;
-        public static PopDebugGroupDelegate           PopDebugGroupRaw;
-        public static PixelStoreDelegate              PixelStore;
-        public static GetIntegerDelegate              GetInteger;
+        public static DisableClientStateDelegate      DisableClientState;
+        public static DisableDelegate                 Disable;
+        public static DrawArraysDelegate              DrawArrays;
+        public static DrawBufferDelegate              DrawBuffer;
+        public static DrawElementsDelegate            DrawElementsRaw;
+        public static EnableClientStateDelegate       EnableClientState;
+        public static EnableDelegate                  Enable;
+        public static EnableVertexAttribArrayDelegate EnableVertexAttribArray;
+        public static FlushDelegate                   Flush;
+        public static FramebufferTexture2DDelegate    FramebufferTexture2D;
+        public static GenBuffersDelegate              GenBuffersRaw;
+        public static GenFramebuffersDelegate         GenFramebuffers;
+        public static GenTexturesDelegate             GenTextures;
+        public static GenVertexArraysDelegate         GenVertexArraysRaw;
         public static GetErrorDelegate                GetError;
-        public static CheckFramebufferStatusDelegate  CheckFramebufferStatus;
-        public static BindAttribLocationDelegate      BindAttribLocation;
+        public static GetFloatDelegate                GetFloatRaw;
+        public static GetIntegerDelegate              GetInteger;
+        public static GetProgramInfoLogDelegate       GetProgramInfoLogRaw;
+        public static GetProgramIntDelegate           GetProgramIntRaw;
+        public static GetShaderInfoLogDelegate        GetShaderInfoLogRaw;
+        public static GetShaderIntDelegate            GetShaderIntRaw;
+        public static GetUniformLocationDelegate      GetUniformLocation;
+        public static HintDelegate                    Hint;
+        public static LineWidthDelegate               LineWidth;
+        public static LinkProgramDelegate             LinkProgram;
+        public static PixelStoreDelegate              PixelStore;
+        public static PolygonModeDelegate             PolygonMode;
+        public static PopDebugGroupDelegate           PopDebugGroupRaw;
+        public static PushDebugGroupDelegate          PushDebugGroupRaw;
+        public static ReadPixelsDelegate              ReadPixels;
+        public static ScissorDelegate                 Scissor;
+        public static ShaderSourceDelegate            ShaderSourceRaw;
+        public static TexCoordPointerDelegate         TexCoordPointerRaw;
+        public static TexImage2DDelegate              TexImage2DRaw;
+        public static TexParameterDelegate            TexParameter;
+        public static TexSubImage2DDelegate           TexSubImage2DRaw;
+        public static Uniform1fDelegate               Uniform1fRaw;
+        public static Uniform1fvDelegate              Uniform1fvRaw;
+        public static Uniform1iDelegate               Uniform1iRaw;
+        public static Uniform2fDelegate               Uniform2fRaw;
+        public static Uniform2fvDelegate              Uniform2fvRaw;
+        public static Uniform3fDelegate               Uniform3fRaw;
+        public static Uniform3fvDelegate              Uniform3fvRaw;
+        public static Uniform4fDelegate               Uniform4fRaw;
+        public static Uniform4fvDelegate              Uniform4fvRaw;
+        public static UseProgramDelegate              UseProgram;
+        public static VertexAttribIPointerDelegate    VertexAttribIPointerRaw;
+        public static VertexAttribPointerDelegate     VertexAttribPointerRaw;
+        public static VertexPointerDelegate           VertexPointerRaw;
+        public static ViewportDelegate                Viewport;
 
-        public static void StaticInitialize()
+        public static void StaticInitialize(Func<string, IntPtr> GetProcAddress)
         {
             if (initialized)
                 return;
 
-            Clear                   = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(glfwGetProcAddress("glClear"));
-            ClearColor              = Marshal.GetDelegateForFunctionPointer<ClearColorDelegate>(glfwGetProcAddress("glClearColor"));
-            ClearDepth              = Marshal.GetDelegateForFunctionPointer<ClearDepthDelegate>(glfwGetProcAddress("glClearDepth"));
-            Viewport                = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(glfwGetProcAddress("glViewport"));
-            Enable                  = Marshal.GetDelegateForFunctionPointer<EnableDelegate>(glfwGetProcAddress("glEnable"));
-            Disable                 = Marshal.GetDelegateForFunctionPointer<DisableDelegate>(glfwGetProcAddress("glDisable"));
-            BlendFunc               = Marshal.GetDelegateForFunctionPointer<BlendFuncDelegate>(glfwGetProcAddress("glBlendFunc"));
-            PolygonMode             = Marshal.GetDelegateForFunctionPointer<PolygonModeDelegate>(glfwGetProcAddress("glPolygonMode"));
-            Scissor                 = Marshal.GetDelegateForFunctionPointer<ScissorDelegate>(glfwGetProcAddress("glScissor"));
-            EnableClientState       = Marshal.GetDelegateForFunctionPointer<EnableClientStateDelegate>(glfwGetProcAddress("glEnableClientState"));
-            DisableClientState      = Marshal.GetDelegateForFunctionPointer<DisableClientStateDelegate>(glfwGetProcAddress("glDisableClientState"));
-            TexParameter            = Marshal.GetDelegateForFunctionPointer<TexParameterDelegate>(glfwGetProcAddress("glTexParameteri"));
-            BindTexture             = Marshal.GetDelegateForFunctionPointer<BindTextureDelegate>(glfwGetProcAddress("glBindTexture"));
-            ActiveTexture           = Marshal.GetDelegateForFunctionPointer<ActiveTextureDelegate>(glfwGetProcAddress("glActiveTexture"));
-            TexImage2DRaw           = Marshal.GetDelegateForFunctionPointer<TexImage2DDelegate>(glfwGetProcAddress("glTexImage2D"));
-            TexSubImage2DRaw        = Marshal.GetDelegateForFunctionPointer<TexSubImage2DDelegate>(glfwGetProcAddress("glTexSubImage2D"));
-            GenTextures             = Marshal.GetDelegateForFunctionPointer<GenTexturesDelegate>(glfwGetProcAddress("glGenTextures"));
-            DeleteTextures          = Marshal.GetDelegateForFunctionPointer<DeleteTexturesDelegate>(glfwGetProcAddress("glDeleteTextures"));
-            ColorPointerRaw         = Marshal.GetDelegateForFunctionPointer<ColorPointerDelegate>(glfwGetProcAddress("glColorPointer"));
-            VertexPointerRaw        = Marshal.GetDelegateForFunctionPointer<VertexPointerDelegate>(glfwGetProcAddress("glVertexPointer"));
-            TexCoordPointerRaw      = Marshal.GetDelegateForFunctionPointer<TexCoordPointerDelegate>(glfwGetProcAddress("glTexCoordPointer"));
-            DrawArrays              = Marshal.GetDelegateForFunctionPointer<DrawArraysDelegate>(glfwGetProcAddress("glDrawArrays"));
-            DrawElementsRaw         = Marshal.GetDelegateForFunctionPointer<DrawElementsDelegate>(glfwGetProcAddress("glDrawElements"));
-            LineWidth               = Marshal.GetDelegateForFunctionPointer<LineWidthDelegate>(glfwGetProcAddress("glLineWidth"));
-            DrawBuffer              = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(glfwGetProcAddress("glDrawBuffer"));
-            ReadPixels              = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(glfwGetProcAddress("glReadPixels"));
-            GetFloatRaw             = Marshal.GetDelegateForFunctionPointer<GetFloatDelegate>(glfwGetProcAddress("glGetFloatv"));
-            CreateShader            = Marshal.GetDelegateForFunctionPointer<CreateShaderDelegate>(glfwGetProcAddress("glCreateShader"));
-            ShaderSourceRaw         = Marshal.GetDelegateForFunctionPointer<ShaderSourceDelegate>(glfwGetProcAddress("glShaderSource"));
-            CompileShader           = Marshal.GetDelegateForFunctionPointer<CompileShaderDelegate>(glfwGetProcAddress("glCompileShader"));
-            GetShaderIntRaw         = Marshal.GetDelegateForFunctionPointer<GetShaderIntDelegate>(glfwGetProcAddress("glGetShaderiv"));
-            GetShaderInfoLogRaw     = Marshal.GetDelegateForFunctionPointer<GetShaderInfoLogDelegate>(glfwGetProcAddress("glGetShaderInfoLog"));
-            CreateProgram           = Marshal.GetDelegateForFunctionPointer<CreateProgramDelegate>(glfwGetProcAddress("glCreateProgram"));
-            DeleteProgram           = Marshal.GetDelegateForFunctionPointer<DeleteProgramDelegate>(glfwGetProcAddress("glDeleteProgram"));
-            AttachShader            = Marshal.GetDelegateForFunctionPointer<AttachShaderDelegate>(glfwGetProcAddress("glAttachShader"));
-            LinkProgram             = Marshal.GetDelegateForFunctionPointer<LinkProgramDelegate>(glfwGetProcAddress("glLinkProgram"));
-            GetProgramIntRaw        = Marshal.GetDelegateForFunctionPointer<GetProgramIntDelegate>(glfwGetProcAddress("glGetProgramiv"));
-            GetProgramInfoLogRaw    = Marshal.GetDelegateForFunctionPointer<GetProgramInfoLogDelegate>(glfwGetProcAddress("glGetProgramInfoLog"));
-            UseProgram              = Marshal.GetDelegateForFunctionPointer<UseProgramDelegate>(glfwGetProcAddress("glUseProgram"));
-            GetUniformLocation      = Marshal.GetDelegateForFunctionPointer<GetUniformLocationDelegate>(glfwGetProcAddress("glGetUniformLocation"));
-            VertexAttribPointerRaw  = Marshal.GetDelegateForFunctionPointer<VertexAttribPointerDelegate>(glfwGetProcAddress("glVertexAttribPointer"));
-            VertexAttribIPointerRaw = Marshal.GetDelegateForFunctionPointer<VertexAttribIPointerDelegate>(glfwGetProcAddress("glVertexAttribIPointer"));
-            GenBuffersRaw           = Marshal.GetDelegateForFunctionPointer<GenBuffersDelegate>(glfwGetProcAddress("glGenBuffers"));
-            DeleteBuffersRaw        = Marshal.GetDelegateForFunctionPointer<DeleteBuffersDelegate>(glfwGetProcAddress("glDeleteBuffers"));
-            BindBuffer              = Marshal.GetDelegateForFunctionPointer<BindBufferDelegate>(glfwGetProcAddress("glBindBuffer"));
-            BufferDataRaw           = Marshal.GetDelegateForFunctionPointer<BufferDataDelegate>(glfwGetProcAddress("glBufferData"));
-            BufferSubDataRaw        = Marshal.GetDelegateForFunctionPointer<BufferSubDataDelegate>(glfwGetProcAddress("glBufferSubData"));
-            GenVertexArraysRaw      = Marshal.GetDelegateForFunctionPointer<GenVertexArraysDelegate>(glfwGetProcAddress("glGenVertexArrays"));
-            DeleteVertexArraysRaw   = Marshal.GetDelegateForFunctionPointer<DeleteVertexArraysDelegate>(glfwGetProcAddress("glDeleteVertexArrays"));
-            BindVertexArray         = Marshal.GetDelegateForFunctionPointer<BindVertexArrayDelegate>(glfwGetProcAddress("glBindVertexArray"));
-            EnableVertexAttribArray = Marshal.GetDelegateForFunctionPointer<EnableVertexAttribArrayDelegate>(glfwGetProcAddress("glEnableVertexAttribArray"));
-            Flush                   = Marshal.GetDelegateForFunctionPointer<FlushDelegate>(glfwGetProcAddress("glFlush"));
-            Uniform1iRaw            = Marshal.GetDelegateForFunctionPointer<Uniform1iDelegate>(glfwGetProcAddress("glUniform1i"));
-            Uniform1fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform1fDelegate>(glfwGetProcAddress("glUniform1f"));
-            Uniform2fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform2fDelegate>(glfwGetProcAddress("glUniform2f"));
-            Uniform3fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform3fDelegate>(glfwGetProcAddress("glUniform3f"));
-            Uniform4fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform4fDelegate>(glfwGetProcAddress("glUniform4f"));
-            Uniform1fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform1fvDelegate>(glfwGetProcAddress("glUniform1fv"));
-            Uniform2fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform2fvDelegate>(glfwGetProcAddress("glUniform2fv"));
-            Uniform3fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform3fvDelegate>(glfwGetProcAddress("glUniform3fv"));
-            Uniform4fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform4fvDelegate>(glfwGetProcAddress("glUniform4fv"));
-            Hint                    = Marshal.GetDelegateForFunctionPointer<HintDelegate>(glfwGetProcAddress("glHint"));
-            DepthFunc               = Marshal.GetDelegateForFunctionPointer<DepthFuncDelegate>(glfwGetProcAddress("glDepthFunc"));
-            DepthMask               = Marshal.GetDelegateForFunctionPointer<DepthMaskDelegate>(glfwGetProcAddress("glDepthMask"));
-            ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(glfwGetProcAddress("glColorMask"));
-            PixelStore              = Marshal.GetDelegateForFunctionPointer<PixelStoreDelegate>(glfwGetProcAddress("glPixelStorei"));
-            GetInteger              = Marshal.GetDelegateForFunctionPointer<GetIntegerDelegate>(glfwGetProcAddress("glGetIntegerv"));
-            GetError                = Marshal.GetDelegateForFunctionPointer<GetErrorDelegate>(glfwGetProcAddress("glGetError"));
-            CheckFramebufferStatus  = Marshal.GetDelegateForFunctionPointer<CheckFramebufferStatusDelegate>(glfwGetProcAddress("glCheckFramebufferStatus"));
-            GenFramebuffers         = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(glfwGetProcAddress("glGenFramebuffers"));
-            BindFramebuffer         = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(glfwGetProcAddress("glBindFramebuffer"));
-            FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(glfwGetProcAddress("glFramebufferTexture2D"));
-            DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(glfwGetProcAddress("glDeleteFramebuffers"));
-            BindAttribLocation      = Marshal.GetDelegateForFunctionPointer<BindAttribLocationDelegate>(glfwGetProcAddress("glBindAttribLocation"));
+            ActiveTexture           = Marshal.GetDelegateForFunctionPointer<ActiveTextureDelegate>(GetProcAddress("glActiveTexture"));
+            AttachShader            = Marshal.GetDelegateForFunctionPointer<AttachShaderDelegate>(GetProcAddress("glAttachShader"));
+            BindAttribLocation      = Marshal.GetDelegateForFunctionPointer<BindAttribLocationDelegate>(GetProcAddress("glBindAttribLocation"));
+            BindBuffer              = Marshal.GetDelegateForFunctionPointer<BindBufferDelegate>(GetProcAddress("glBindBuffer"));
+            BindFramebuffer         = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(GetProcAddress("glBindFramebuffer"));
+            BindTexture             = Marshal.GetDelegateForFunctionPointer<BindTextureDelegate>(GetProcAddress("glBindTexture"));
+            BindVertexArray         = Marshal.GetDelegateForFunctionPointer<BindVertexArrayDelegate>(GetProcAddress("glBindVertexArray"));
+            BlendFunc               = Marshal.GetDelegateForFunctionPointer<BlendFuncDelegate>(GetProcAddress("glBlendFunc"));
+            BufferDataRaw           = Marshal.GetDelegateForFunctionPointer<BufferDataDelegate>(GetProcAddress("glBufferData"));
+            BufferSubDataRaw        = Marshal.GetDelegateForFunctionPointer<BufferSubDataDelegate>(GetProcAddress("glBufferSubData"));
+            CheckFramebufferStatus  = Marshal.GetDelegateForFunctionPointer<CheckFramebufferStatusDelegate>(GetProcAddress("glCheckFramebufferStatus"));
+            Clear                   = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(GetProcAddress("glClear"));
+            ClearColor              = Marshal.GetDelegateForFunctionPointer<ClearColorDelegate>(GetProcAddress("glClearColor"));
+            ClearDepth              = Marshal.GetDelegateForFunctionPointer<ClearDepthDelegate>(GetProcAddress("glClearDepth"));
+            ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(GetProcAddress("glColorMask"));
+            ColorPointerRaw         = Marshal.GetDelegateForFunctionPointer<ColorPointerDelegate>(GetProcAddress("glColorPointer"));
+            CompileShader           = Marshal.GetDelegateForFunctionPointer<CompileShaderDelegate>(GetProcAddress("glCompileShader"));
+            CreateProgram           = Marshal.GetDelegateForFunctionPointer<CreateProgramDelegate>(GetProcAddress("glCreateProgram"));
+            CreateShader            = Marshal.GetDelegateForFunctionPointer<CreateShaderDelegate>(GetProcAddress("glCreateShader"));
+            DeleteBuffersRaw        = Marshal.GetDelegateForFunctionPointer<DeleteBuffersDelegate>(GetProcAddress("glDeleteBuffers"));
+            DeleteFramebuffers      = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(GetProcAddress("glDeleteFramebuffers"));
+            DeleteProgram           = Marshal.GetDelegateForFunctionPointer<DeleteProgramDelegate>(GetProcAddress("glDeleteProgram"));
+            DeleteTextures          = Marshal.GetDelegateForFunctionPointer<DeleteTexturesDelegate>(GetProcAddress("glDeleteTextures"));
+            DeleteVertexArraysRaw   = Marshal.GetDelegateForFunctionPointer<DeleteVertexArraysDelegate>(GetProcAddress("glDeleteVertexArrays"));
+            DepthFunc               = Marshal.GetDelegateForFunctionPointer<DepthFuncDelegate>(GetProcAddress("glDepthFunc"));
+            DepthMask               = Marshal.GetDelegateForFunctionPointer<DepthMaskDelegate>(GetProcAddress("glDepthMask"));
+            Disable                 = Marshal.GetDelegateForFunctionPointer<DisableDelegate>(GetProcAddress("glDisable"));
+            DisableClientState      = Marshal.GetDelegateForFunctionPointer<DisableClientStateDelegate>(GetProcAddress("glDisableClientState"));
+            DrawArrays              = Marshal.GetDelegateForFunctionPointer<DrawArraysDelegate>(GetProcAddress("glDrawArrays"));
+            DrawBuffer              = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(GetProcAddress("glDrawBuffer"));
+            DrawElementsRaw         = Marshal.GetDelegateForFunctionPointer<DrawElementsDelegate>(GetProcAddress("glDrawElements"));
+            Enable                  = Marshal.GetDelegateForFunctionPointer<EnableDelegate>(GetProcAddress("glEnable"));
+            EnableClientState       = Marshal.GetDelegateForFunctionPointer<EnableClientStateDelegate>(GetProcAddress("glEnableClientState"));
+            EnableVertexAttribArray = Marshal.GetDelegateForFunctionPointer<EnableVertexAttribArrayDelegate>(GetProcAddress("glEnableVertexAttribArray"));
+            Flush                   = Marshal.GetDelegateForFunctionPointer<FlushDelegate>(GetProcAddress("glFlush"));
+            FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(GetProcAddress("glFramebufferTexture2D"));
+            GenBuffersRaw           = Marshal.GetDelegateForFunctionPointer<GenBuffersDelegate>(GetProcAddress("glGenBuffers"));
+            GenFramebuffers         = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(GetProcAddress("glGenFramebuffers"));
+            GenTextures             = Marshal.GetDelegateForFunctionPointer<GenTexturesDelegate>(GetProcAddress("glGenTextures"));
+            GenVertexArraysRaw      = Marshal.GetDelegateForFunctionPointer<GenVertexArraysDelegate>(GetProcAddress("glGenVertexArrays"));
+            GetError                = Marshal.GetDelegateForFunctionPointer<GetErrorDelegate>(GetProcAddress("glGetError"));
+            GetFloatRaw             = Marshal.GetDelegateForFunctionPointer<GetFloatDelegate>(GetProcAddress("glGetFloatv"));
+            GetInteger              = Marshal.GetDelegateForFunctionPointer<GetIntegerDelegate>(GetProcAddress("glGetIntegerv"));
+            GetProgramInfoLogRaw    = Marshal.GetDelegateForFunctionPointer<GetProgramInfoLogDelegate>(GetProcAddress("glGetProgramInfoLog"));
+            GetProgramIntRaw        = Marshal.GetDelegateForFunctionPointer<GetProgramIntDelegate>(GetProcAddress("glGetProgramiv"));
+            GetShaderInfoLogRaw     = Marshal.GetDelegateForFunctionPointer<GetShaderInfoLogDelegate>(GetProcAddress("glGetShaderInfoLog"));
+            GetShaderIntRaw         = Marshal.GetDelegateForFunctionPointer<GetShaderIntDelegate>(GetProcAddress("glGetShaderiv"));
+            GetUniformLocation      = Marshal.GetDelegateForFunctionPointer<GetUniformLocationDelegate>(GetProcAddress("glGetUniformLocation"));
+            Hint                    = Marshal.GetDelegateForFunctionPointer<HintDelegate>(GetProcAddress("glHint"));
+            LineWidth               = Marshal.GetDelegateForFunctionPointer<LineWidthDelegate>(GetProcAddress("glLineWidth"));
+            LinkProgram             = Marshal.GetDelegateForFunctionPointer<LinkProgramDelegate>(GetProcAddress("glLinkProgram"));
+            PixelStore              = Marshal.GetDelegateForFunctionPointer<PixelStoreDelegate>(GetProcAddress("glPixelStorei"));
+            PolygonMode             = Marshal.GetDelegateForFunctionPointer<PolygonModeDelegate>(GetProcAddress("glPolygonMode"));
+            ReadPixels              = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(GetProcAddress("glReadPixels"));
+            Scissor                 = Marshal.GetDelegateForFunctionPointer<ScissorDelegate>(GetProcAddress("glScissor"));
+            ShaderSourceRaw         = Marshal.GetDelegateForFunctionPointer<ShaderSourceDelegate>(GetProcAddress("glShaderSource"));
+            TexCoordPointerRaw      = Marshal.GetDelegateForFunctionPointer<TexCoordPointerDelegate>(GetProcAddress("glTexCoordPointer"));
+            TexImage2DRaw           = Marshal.GetDelegateForFunctionPointer<TexImage2DDelegate>(GetProcAddress("glTexImage2D"));
+            TexParameter            = Marshal.GetDelegateForFunctionPointer<TexParameterDelegate>(GetProcAddress("glTexParameteri"));
+            TexSubImage2DRaw        = Marshal.GetDelegateForFunctionPointer<TexSubImage2DDelegate>(GetProcAddress("glTexSubImage2D"));
+            Uniform1fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform1fDelegate>(GetProcAddress("glUniform1f"));
+            Uniform1fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform1fvDelegate>(GetProcAddress("glUniform1fv"));
+            Uniform1iRaw            = Marshal.GetDelegateForFunctionPointer<Uniform1iDelegate>(GetProcAddress("glUniform1i"));
+            Uniform2fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform2fDelegate>(GetProcAddress("glUniform2f"));
+            Uniform2fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform2fvDelegate>(GetProcAddress("glUniform2fv"));
+            Uniform3fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform3fDelegate>(GetProcAddress("glUniform3f"));
+            Uniform3fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform3fvDelegate>(GetProcAddress("glUniform3fv"));
+            Uniform4fRaw            = Marshal.GetDelegateForFunctionPointer<Uniform4fDelegate>(GetProcAddress("glUniform4f"));
+            Uniform4fvRaw           = Marshal.GetDelegateForFunctionPointer<Uniform4fvDelegate>(GetProcAddress("glUniform4fv"));
+            UseProgram              = Marshal.GetDelegateForFunctionPointer<UseProgramDelegate>(GetProcAddress("glUseProgram"));
+            VertexAttribIPointerRaw = Marshal.GetDelegateForFunctionPointer<VertexAttribIPointerDelegate>(GetProcAddress("glVertexAttribIPointer"));
+            VertexAttribPointerRaw  = Marshal.GetDelegateForFunctionPointer<VertexAttribPointerDelegate>(GetProcAddress("glVertexAttribPointer"));
+            VertexPointerRaw        = Marshal.GetDelegateForFunctionPointer<VertexPointerDelegate>(GetProcAddress("glVertexPointer"));
+            Viewport                = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(GetProcAddress("glViewport"));
 
 #if DEBUG && !FAMISTUDIO_MACOS
-            PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(glfwGetProcAddress("glPushDebugGroupKHR"));
-            PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(glfwGetProcAddress("glPopDebugGroupKHR"));
-            DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(glfwGetProcAddress("glDebugMessageCallback"));
+            PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(GetProcAddress("glPushDebugGroupKHR"));
+            PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(GetProcAddress("glPopDebugGroupKHR"));
+            DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(GetProcAddress("glDebugMessageCallback"));
 
             renderdoc = Array.FindIndex(Environment.GetCommandLineArgs(), c => c.ToLower() == "-renderdoc") >= 0;
 #endif
