@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
-using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
@@ -64,7 +62,7 @@ namespace FamiStudio
 
         public Graphics(bool offscreen = false) : base(offscreen) 
         {
-            GL.StaticInitialize(glfwGetProcAddress);
+            Debug.Assert(GL.Initialized);
 
 #if DEBUG && !FAMISTUDIO_MACOS
             debugCallback = new GL.DebugCallback(GLDebugMessageCallback);
@@ -883,9 +881,13 @@ namespace FamiStudio
     public static class GL
     {
         private static bool initialized;
+        private static bool glES2;
     #if DEBUG && !FAMISTUDIO_MACOS
         private static bool renderdoc;
-    #endif
+#endif
+
+        public static bool Initialized => initialized;
+        public static bool IsOpenGLES2 => glES2;
 
         public const int DepthBufferBit            = 0x0100;
         public const int ColorBufferBit            = 0x4000;
@@ -1198,7 +1200,7 @@ namespace FamiStudio
         public static VertexPointerDelegate           VertexPointerRaw;
         public static ViewportDelegate                Viewport;
 
-        public static void StaticInitialize(Func<string, IntPtr> GetProcAddress)
+        public static void StaticInitialize(Func<string, IntPtr> GetProcAddress, bool es2)
         {
             if (initialized)
                 return;
@@ -1216,7 +1218,7 @@ namespace FamiStudio
             CheckFramebufferStatus  = Marshal.GetDelegateForFunctionPointer<CheckFramebufferStatusDelegate>(GetProcAddress("glCheckFramebufferStatus"));
             Clear                   = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(GetProcAddress("glClear"));
             ClearColor              = Marshal.GetDelegateForFunctionPointer<ClearColorDelegate>(GetProcAddress("glClearColor"));
-            ClearDepth              = Marshal.GetDelegateForFunctionPointer<ClearDepthDelegate>(GetProcAddress("glClearDepth"));
+            ClearDepth              = Marshal.GetDelegateForFunctionPointer<ClearDepthDelegate>(GetProcAddress(glES2 ? "glClearDepthf" : "glClearDepth"));
             ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(GetProcAddress("glColorMask"));
             ColorPointerRaw         = Marshal.GetDelegateForFunctionPointer<ColorPointerDelegate>(GetProcAddress("glColorPointer"));
             CompileShader           = Marshal.GetDelegateForFunctionPointer<CompileShaderDelegate>(GetProcAddress("glCompileShader"));
@@ -1232,7 +1234,6 @@ namespace FamiStudio
             Disable                 = Marshal.GetDelegateForFunctionPointer<DisableDelegate>(GetProcAddress("glDisable"));
             DisableClientState      = Marshal.GetDelegateForFunctionPointer<DisableClientStateDelegate>(GetProcAddress("glDisableClientState"));
             DrawArrays              = Marshal.GetDelegateForFunctionPointer<DrawArraysDelegate>(GetProcAddress("glDrawArrays"));
-            DrawBuffer              = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(GetProcAddress("glDrawBuffer"));
             DrawElementsRaw         = Marshal.GetDelegateForFunctionPointer<DrawElementsDelegate>(GetProcAddress("glDrawElements"));
             Enable                  = Marshal.GetDelegateForFunctionPointer<EnableDelegate>(GetProcAddress("glEnable"));
             EnableClientState       = Marshal.GetDelegateForFunctionPointer<EnableClientStateDelegate>(GetProcAddress("glEnableClientState"));
@@ -1255,7 +1256,6 @@ namespace FamiStudio
             LineWidth               = Marshal.GetDelegateForFunctionPointer<LineWidthDelegate>(GetProcAddress("glLineWidth"));
             LinkProgram             = Marshal.GetDelegateForFunctionPointer<LinkProgramDelegate>(GetProcAddress("glLinkProgram"));
             PixelStore              = Marshal.GetDelegateForFunctionPointer<PixelStoreDelegate>(GetProcAddress("glPixelStorei"));
-            PolygonMode             = Marshal.GetDelegateForFunctionPointer<PolygonModeDelegate>(GetProcAddress("glPolygonMode"));
             ReadPixels              = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(GetProcAddress("glReadPixels"));
             Scissor                 = Marshal.GetDelegateForFunctionPointer<ScissorDelegate>(GetProcAddress("glScissor"));
             ShaderSourceRaw         = Marshal.GetDelegateForFunctionPointer<ShaderSourceDelegate>(GetProcAddress("glShaderSource"));
@@ -1278,14 +1278,25 @@ namespace FamiStudio
             VertexPointerRaw        = Marshal.GetDelegateForFunctionPointer<VertexPointerDelegate>(GetProcAddress("glVertexPointer"));
             Viewport                = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(GetProcAddress("glViewport"));
 
-#if DEBUG && !FAMISTUDIO_MACOS
-            PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(GetProcAddress("glPushDebugGroupKHR"));
-            PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(GetProcAddress("glPopDebugGroupKHR"));
-            DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(GetProcAddress("glDebugMessageCallback"));
+            if (glES2)
+            {
+                // TODO : Add any ES2-specific stuff here.
+            }
+            else
+            {
+                DrawBuffer  = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(GetProcAddress("glDrawBuffer"));
+                PolygonMode = Marshal.GetDelegateForFunctionPointer<PolygonModeDelegate>(GetProcAddress("glPolygonMode"));
 
-            renderdoc = Array.FindIndex(Environment.GetCommandLineArgs(), c => c.ToLower() == "-renderdoc") >= 0;
-#endif
+            #if DEBUG && !FAMISTUDIO_MACOS
+                PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(GetProcAddress("glPushDebugGroupKHR"));
+                PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(GetProcAddress("glPopDebugGroupKHR"));
+                DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(GetProcAddress("glDebugMessageCallback"));
 
+                renderdoc = Array.FindIndex(Environment.GetCommandLineArgs(), c => c.ToLower() == "-renderdoc") >= 0;
+            #endif
+            }
+
+            glES2 = es2;
             initialized = true;
         }
 

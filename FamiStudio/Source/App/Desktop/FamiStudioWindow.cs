@@ -142,7 +142,7 @@ namespace FamiStudio
         {
             glfwGetWindowContentScale(window, out var scaling, out _);
 
-            GL.StaticInitialize(glfwGetProcAddress);
+            GL.StaticInitialize(glfwGetProcAddress, false);
             Cursors.Initialize(scaling);
             DpiScaling.Initialize(scaling);
         }

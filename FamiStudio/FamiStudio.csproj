@@ -68,7 +68,7 @@
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Square.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
     <Compile Include="Source\Graphics\Common\GLGraphicsBase.cs" />
-    <Compile Include="Source\Graphics\Desktop\GLGraphics.cs" />
+    <Compile Include="Source\Graphics\Common\GLGraphics.cs" />
     <Compile Include="Source\IO\AudioExportUtils.cs" />
     <Compile Include="Source\IO\BambootrackerInstrumentFile.cs" />
     <Compile Include="Source\IO\OPNIInstrumentFile.cs" />
