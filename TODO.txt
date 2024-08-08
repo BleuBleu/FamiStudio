@@ -41,6 +41,8 @@ Today:
  	FamiStudio.dll!FamiStudio.PianoRoll.RenderWaveform(FamiStudio.PianoRoll.RenderInfo r) Line 3725	C#
 - S5B + VRC7 interfecence?? even when s5b is muted, it still affects vrc7
 	https://discord.com/channels/@me/819772561940152321/1263722786128400414
+- BPM resize bug from StudsX. Add something that tries to place the conflicting notes like a frame later or something.
+	https://discord.com/channels/@me/795637198908817438/1270617294288195616
 
 4.3.0
 =====
@@ -49,6 +51,8 @@ Today:
 
 4.3.0 Testing
 =============
+- BUG : Mixer settings are initiallly enabled when entering the menu
+- Move ADSR settings higher for VRC7/EPSM.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - Test potential threading issues with N163 auto-assignment.
 - UI code cleanup:
