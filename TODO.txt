@@ -47,7 +47,7 @@ Today:
 	https://discord.com/channels/@me/795637198908817438/1270617294288195616
 - Change path for Linux config, as recommended on github.
 	https://github.com/BleuBleu/FamiStudio/issues/341
-	
+
 4.3.0
 =====
 - Support for custom tuning (ex: where A is not 440Hz).
@@ -134,6 +134,14 @@ To take screenshot on android:
 Convert PNG to TGA
 ==================
 "c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png
+
+To set beyond compare + sublime as default git editor
+=====================================================
+git config --global diff.tool bc
+git config --global difftool.bc.path "C:/Program Files (x86)/Beyond Compare 3/BComp.exe"
+git config --global merge.tool bc
+git config --global mergetool.bc.path "C:/Program Files (x86)/Beyond Compare 3/BComp.exe"
+git config --global core.editor "'C:/Program Files/sublime text/subl.exe' -w"
 
 Discord Invite Link (new as of April 2024)
 ==========================================
