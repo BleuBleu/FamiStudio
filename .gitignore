@@ -10,6 +10,7 @@
 *.dbg
 *.map
 
+FamiStudio/bin/
 obj/
 .vs/
 Debug/
