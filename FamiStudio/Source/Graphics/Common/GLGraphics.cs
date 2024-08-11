@@ -56,6 +56,10 @@ namespace FamiStudio
         private int depthBuffer;
         private int quadIdxBuffer;
 
+#if DEBUG
+        private GL.DebugCallback debugCallback;
+#endif
+
         public Graphics(bool offscreen = false) : base(offscreen) 
         {
             Debug.Assert(GL.Initialized);
@@ -63,7 +67,8 @@ namespace FamiStudio
 #if DEBUG
             if (GL.DebugMessageCallback != null)
             {
-                GL.DebugMessageCallback(GLDebugMessageCallback, IntPtr.Zero);
+                debugCallback = new GL.DebugCallback(GLDebugMessageCallback);
+                GL.DebugMessageCallback(debugCallback, IntPtr.Zero);
             }
 #endif
 
