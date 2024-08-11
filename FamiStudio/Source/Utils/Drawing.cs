@@ -423,6 +423,11 @@ namespace FamiStudio
 
             return result;
         }
+
+        public override string ToString()
+        {
+            return $"{Min.ToString()}x{Max.ToString()}";
+        }
     }
 
 

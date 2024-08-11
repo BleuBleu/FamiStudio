@@ -62,7 +62,7 @@ namespace FamiStudio
         {
             if (Platform.IsWindows || Platform.IsLinux)
                 return new[] { 100, 125, 150, 175, 200, 225, 250 };
-            else if (Platform.IsAndroid)
+            else if (Platform.IsMobile)
                 return new[] { 66, 100, 133 };
             else if (Platform.IsMacOS)
                 return new int[0]; // Intentional, we dont allow to manually set the scaling on MacOS.
@@ -100,20 +100,27 @@ namespace FamiStudio
         {
             if (Platform.IsMobile)
             {
-                var density = Platform.GetPixelDensity();
-
                 if (Settings.DpiScaling != 0)
                 {
                     windowScaling = Settings.DpiScaling / 100.0f;
                 }
-                else
+                else if (Platform.IsAndroid)
                 {
+                    var density = Platform.GetPixelDensity();
+
                     if (density < 360)
                         windowScaling = 0.666f;
                     else if (density >= 480)
                         windowScaling = 1.333f;
                     else
                         windowScaling = 1.0f;
+                }
+                else 
+                {
+                    // MATTT : Add more mobile scaling values + quantize.
+                    var res = Platform.GetScreenResolution();
+
+                    windowScaling = Math.Min(1.0f, Math.Min(res.Width, res.Height) / 1080.0f);
                 }
 
                 fontScaling   = (float)Math.Round(windowScaling * 3);

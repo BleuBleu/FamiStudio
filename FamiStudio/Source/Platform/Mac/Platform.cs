@@ -18,6 +18,7 @@ namespace FamiStudio
         public static string UserProjectsDirectory => null;
         public static float DoubleClickTime => MacUtils.DoubleClickInterval;
 
+        public const bool   DllStaticLib = false;
         public const string DllPrefix = "";
         public const string DllExtension = ".dylib";
 

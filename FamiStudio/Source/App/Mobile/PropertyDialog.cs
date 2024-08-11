@@ -1,6 +1,4 @@
-﻿using Android.Media.Audiofx;
-using Android.Widget;
-using System;
+﻿using System;
 
 namespace FamiStudio
 {

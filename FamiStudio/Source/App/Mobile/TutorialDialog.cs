@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Reflection.Emit;
-using static Java.Util.Jar.Attributes;
 
 namespace FamiStudio
 {

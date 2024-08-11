@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using static Android.Icu.Text.CaseMap;
 
 namespace FamiStudio
 {

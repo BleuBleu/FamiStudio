@@ -67,7 +67,8 @@ namespace FamiStudio
         public static string UserProjectsDirectory => Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
         public static string SettingsDirectory     => System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
         public static string ApplicationVersion    => Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        
+
+        public const bool   DllStaticLib = false;
         public const string DllPrefix = "lib";
         public const string DllExtension = ".so";
 

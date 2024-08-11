@@ -8,7 +8,7 @@ using System.Security;
 
 namespace FamiStudio
 {
-     public class Graphics : GraphicsBase
+    public class Graphics : GraphicsBase
     {
         private int polyProgram;
         private int polyScaleBiasUniform;
@@ -56,17 +56,15 @@ namespace FamiStudio
         private int depthBuffer;
         private int quadIdxBuffer;
 
-#if DEBUG
-        private GL.DebugCallback debugCallback;
-#endif
-
         public Graphics(bool offscreen = false) : base(offscreen) 
         {
             Debug.Assert(GL.Initialized);
 
-#if DEBUG && !FAMISTUDIO_MACOS
-            debugCallback = new GL.DebugCallback(GLDebugMessageCallback);
-            GL.DebugMessageCallback(debugCallback, IntPtr.Zero);
+#if DEBUG
+            if (GL.DebugMessageCallback != null)
+            {
+                GL.DebugMessageCallback(GLDebugMessageCallback, IntPtr.Zero);
+            }
 #endif
 
             polyVao       = GL.GenVertexArray();
@@ -151,50 +149,59 @@ namespace FamiStudio
                 attributes = null;
             }
 
-            var versionMajor = 0;
-            var versionMinor = 0;
-
-            GL.GetInteger(GL.MajorVersion, ref versionMajor);
-            GL.GetInteger(GL.MinorVersion, ref versionMinor);
+            var glslVersion = "300 es";
+            var noPerspective = "";
+            var precision = type == GL.VertexShader ? "precision highp float;" : "precision mediump float;";
             
-            // Linux can report 4.1, even though we asked for a 3.3 core context.
-            if (versionMajor > 3)
+            if (!GL.IsOpenGLES3)
             {
-                versionMajor = 3;
-                versionMinor = 3;
-            }
+                var versionMajor = 0;
+                var versionMinor = 0;
 
-            string glslVersion;
-            
-            switch (versionMinor)
-            {
-                case 0:
-                    glslVersion = $"130";
-                    break;
-                case 1:
-                    glslVersion = $"140";
-                    break;
-                case 2:
-                    glslVersion = $"150";
-                    break;
-                default:
-                    glslVersion = $"{versionMajor}{versionMinor}0 core";
-                    break;
+                GL.GetInteger(GL.MajorVersion, ref versionMajor);
+                GL.GetInteger(GL.MinorVersion, ref versionMinor);
+
+                // Linux can report 4.1, even though we asked for a 3.3 core context.
+                if (versionMajor > 3)
+                {
+                    versionMajor = 3;
+                    versionMinor = 3;
+                }
+
+                switch (versionMinor)
+                {
+                    case 0:
+                        glslVersion = $"130";
+                        break;
+                    case 1:
+                        glslVersion = $"140";
+                        break;
+                    case 2:
+                        glslVersion = $"150";
+                        break;
+                    default:
+                        glslVersion = $"{versionMajor}{versionMinor}0 core";
+                        break;
+                }
+
+                precision = "";
+                noPerspective = "noperspective ";
             }
 
             var shader = GL.CreateShader(type);
             var source = new []
             {
                 $"#version {glslVersion}\n",
+                $"{precision}\n",
                 type == GL.FragmentShader ? "layout(location = 0) out vec4 outColor;\n" : "\n",
                 "#define ATTRIB_IN in\n",
-                "#define INTERP_IN noperspective in\n",
-                "#define INTERP_OUT noperspective out\n",
+                $"#define INTERP_IN {noPerspective}in\n",
+                $"#define INTERP_OUT {noPerspective}out\n",
                 "#define INTERP_PERSPECTIVE_IN in\n",
                 "#define INTERP_PERSPECTIVE_OUT out\n",
                 "#define TEX texture\n",
                 "#define TEXPROJ textureProj\n",
-                "#define FAMISTUDIO_ANDROID 0\n",
+                $"#define FAMISTUDIO_MOBILE {(GL.IsOpenGLES3 ? 1 : 0)}\n",
                 "#define FRAG_COLOR outColor\n",
                 "#line 1\n",
                 code
@@ -292,9 +299,13 @@ namespace FamiStudio
 
         protected override void Initialize(bool clear, Color clearColor)
         {
+            if (!GL.IsOpenGLES3)
+            {
+                GL.PolygonMode(GL.FrontAndBack, GL.Fill);
+            }
+
             GL.Viewport(screenRectFlip.Left, screenRectFlip.Top, screenRectFlip.Width, screenRectFlip.Height);
             GL.Disable(GL.CullFace);
-            GL.PolygonMode(GL.FrontAndBack, GL.Fill);
             GL.BlendFunc(GL.SrcAlpha, GL.OneMinusSrcAlpha);
             GL.Enable(GL.Blend);
             GL.Enable(GL.DepthTest);
@@ -420,8 +431,11 @@ namespace FamiStudio
 
         public void UpdateTexture(Texture bmp, int x, int y, int width, int height, byte[] data, TextureFormat format)
         {
+            var glFormat = GetGLTextureFormat(format, out var bpp);
+            Debug.Assert(data.Length == width * height * bpp);
+
             GL.BindTexture(GL.Texture2D, bmp.Id);
-            GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GetGLTextureFormat(format), GL.UnsignedByte, data);
+            GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, glFormat, GL.UnsignedByte, data);
         }
 
         public void UpdateTexture(Texture bmp, int x, int y, int width, int height, int[] data)
@@ -439,14 +453,16 @@ namespace FamiStudio
             GL.PixelStore(GL.UnpackAlignment, 4);
         }
 
-        private int GetGLTextureFormat(TextureFormat format)
+        private int GetGLTextureFormat(TextureFormat format, out int bpp)
         {
             switch (format)
             {
-                case TextureFormat.Rgb: return GL.Bgr;
-                case TextureFormat.Rgba: return GL.Bgra;
+                case TextureFormat.R: bpp = 1; return GL.Red;
+                case TextureFormat.Rgb: bpp = 3; return GL.IsOpenGLES3 ? GL.Rgb: GL.Bgr;
+                case TextureFormat.Rgba: bpp = 4; return GL.IsOpenGLES3 ? GL.Rgba : GL.Bgra;
                 default:
                     Debug.Assert(false);
+                    bpp = 4;
                     return GL.Bgra;
             }
         }
@@ -473,7 +489,7 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, filter ? GL.Linear : GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToEdge);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToEdge);
-            GL.TexImage2D(GL.Texture2D, 0, GetGLInternalTextureFormat(format), width, height, 0, GL.Rgba, GL.UnsignedByte, new int[width * height]);
+            GL.TexImage2D(GL.Texture2D, 0, GetGLInternalTextureFormat(format), width, height, 0, GetGLTextureFormat(format, out var bpp), GL.UnsignedByte, new byte[width * height * bpp]);
 
             return id;
         }
@@ -503,20 +519,38 @@ namespace FamiStudio
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            if (DpiScaling.Window == 1.5f && assembly.GetManifestResourceInfo($"{name}@15x.tga") != null)
+            needsScaling = false;
+
+            if (Platform.IsMobile)
             {
-                needsScaling = false;
-                return $"{name}@15x.tga";
-            }
-            else if (DpiScaling.Window > 1.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
-            {
-                needsScaling = DpiScaling.Window != 2.0f;
-                return $"{name}@2x.tga";
+                if (DpiScaling.Window >= 4.0f && assembly.GetManifestResourceInfo($"{name}@4x.tga") != null)
+                {
+                    return $"{name}@4x.tga";
+                }
+                else if (DpiScaling.Window >= 2.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
+                {
+                    return $"{name}@2x.tga";
+                }
+                else
+                {
+                    return $"{name}.tga";
+                }
             }
             else
             {
-                needsScaling = false;
-                return $"{name}.tga";
+                if (DpiScaling.Window == 1.5f && assembly.GetManifestResourceInfo($"{name}@15x.tga") != null)
+                {
+                    return $"{name}@15x.tga";
+                }
+                else if (DpiScaling.Window > 1.0f && assembly.GetManifestResourceInfo($"{name}@2x.tga") != null)
+                {
+                    needsScaling = DpiScaling.Window != 2.0f;
+                    return $"{name}@2x.tga";
+                }
+                else
+                {
+                    return $"{name}.tga";
+                }
             }
         }
 
@@ -630,7 +664,7 @@ namespace FamiStudio
             if (list.HasAnything)
             {
                 GL.PushDebugGroup("Draw Command List");
-                GL.DepthFunc(depthTest ? GL.Equal : GL.Always); 
+                GL.DepthFunc(depthTest ? GL.Equal : GL.Always);
 
                 if (list.HasAnyPolygons)
                 {
@@ -645,7 +679,11 @@ namespace FamiStudio
                     { 
                         BindAndUpdateVertexBuffer(0, vertexBuffer, draw.vtxArray, draw.vtxArraySize);
                         BindAndUpdateColorBuffer(1, colorBuffer, draw.colArray, draw.colArraySize);
-                        //BindAndUpdateByteBuffer(2, dashBuffer, draw.dshArray, draw.dshArraySize, false, false); // We dont use thick dashed line on desktop.
+                        if (Platform.IsMobile)
+                        {
+                            // We dont use thick dashed line on desktop.
+                            BindAndUpdateByteBuffer(2, dashBuffer, draw.dshArray, draw.dshArraySize, false, false);
+                        }
                         BindAndUpdateByteBuffer(3, depthBuffer, draw.depArray, draw.depArraySize, true);
                         BindAndUpdateIndexBuffer(indexBuffer,  draw.idxArray, draw.idxArraySize);
 
@@ -881,13 +919,13 @@ namespace FamiStudio
     public static class GL
     {
         private static bool initialized;
-        private static bool glES2;
+        private static bool glES3;
     #if DEBUG && !FAMISTUDIO_MACOS
         private static bool renderdoc;
 #endif
 
         public static bool Initialized => initialized;
-        public static bool IsOpenGLES2 => glES2;
+        public static bool IsOpenGLES3 => glES3;
 
         public const int DepthBufferBit            = 0x0100;
         public const int ColorBufferBit            = 0x4000;
@@ -1200,7 +1238,7 @@ namespace FamiStudio
         public static VertexPointerDelegate           VertexPointerRaw;
         public static ViewportDelegate                Viewport;
 
-        public static void StaticInitialize(Func<string, IntPtr> GetProcAddress, bool es2)
+        public static void StaticInitialize(Func<string, IntPtr> GetProcAddress, bool es3)
         {
             if (initialized)
                 return;
@@ -1218,7 +1256,7 @@ namespace FamiStudio
             CheckFramebufferStatus  = Marshal.GetDelegateForFunctionPointer<CheckFramebufferStatusDelegate>(GetProcAddress("glCheckFramebufferStatus"));
             Clear                   = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(GetProcAddress("glClear"));
             ClearColor              = Marshal.GetDelegateForFunctionPointer<ClearColorDelegate>(GetProcAddress("glClearColor"));
-            ClearDepth              = Marshal.GetDelegateForFunctionPointer<ClearDepthDelegate>(GetProcAddress(glES2 ? "glClearDepthf" : "glClearDepth"));
+            ClearDepth              = Marshal.GetDelegateForFunctionPointer<ClearDepthDelegate>(GetProcAddress(es3 ? "glClearDepthf" : "glClearDepth"));
             ColorMaskRaw            = Marshal.GetDelegateForFunctionPointer<ColorMaskDelegate>(GetProcAddress("glColorMask"));
             ColorPointerRaw         = Marshal.GetDelegateForFunctionPointer<ColorPointerDelegate>(GetProcAddress("glColorPointer"));
             CompileShader           = Marshal.GetDelegateForFunctionPointer<CompileShaderDelegate>(GetProcAddress("glCompileShader"));
@@ -1278,25 +1316,23 @@ namespace FamiStudio
             VertexPointerRaw        = Marshal.GetDelegateForFunctionPointer<VertexPointerDelegate>(GetProcAddress("glVertexPointer"));
             Viewport                = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(GetProcAddress("glViewport"));
 
-            if (glES2)
-            {
-                // TODO : Add any ES2-specific stuff here.
-            }
-            else
+            if (!es3)
             {
                 DrawBuffer  = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(GetProcAddress("glDrawBuffer"));
                 PolygonMode = Marshal.GetDelegateForFunctionPointer<PolygonModeDelegate>(GetProcAddress("glPolygonMode"));
-
-            #if DEBUG && !FAMISTUDIO_MACOS
-                PushDebugGroupRaw       = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(GetProcAddress("glPushDebugGroupKHR"));
-                PopDebugGroupRaw        = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(GetProcAddress("glPopDebugGroupKHR"));
-                DebugMessageCallback    = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(GetProcAddress("glDebugMessageCallback"));
-
-                renderdoc = Array.FindIndex(Environment.GetCommandLineArgs(), c => c.ToLower() == "-renderdoc") >= 0;
-            #endif
+            }
+#if DEBUG
+            if (!Platform.IsMacOS)
+            {
+                PushDebugGroupRaw    = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(GetProcAddress("glPushDebugGroupKHR"));
+                PopDebugGroupRaw     = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(GetProcAddress("glPopDebugGroupKHR"));
+                DebugMessageCallback = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(GetProcAddress("glDebugMessageCallback"));
             }
 
-            glES2 = es2;
+            renderdoc = Array.FindIndex(Environment.GetCommandLineArgs(), c => c.ToLower() == "-renderdoc") >= 0;
+#endif
+
+            glES3 = es3;
             initialized = true;
         }
 

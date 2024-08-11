@@ -139,7 +139,7 @@ namespace FamiStudio
             code += "#define INTERP_PERSPECTIVE_OUT varying\n";
             code += "#define TEX texture2D\n";
             code += "#define TEXPROJ texture2DProj\n";
-            code += "#define FAMISTUDIO_ANDROID 1\n";
+            code += "#define FAMISTUDIO_MOBILE 1\n";
             code += "#define FRAG_COLOR gl_FragColor\n";
 
             using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(resourceName))

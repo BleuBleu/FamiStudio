@@ -20,6 +20,7 @@ namespace FamiStudio
         public static string UserProjectsDirectory => null;
         public static float DoubleClickTime => 0.5f; // 0.5 sec is the default on both Windows and Mac. So let's use that.
 
+        public const bool   DllStaticLib = false;
         public const string DllPrefix = "lib";
         public const string DllExtension = ".so";
 

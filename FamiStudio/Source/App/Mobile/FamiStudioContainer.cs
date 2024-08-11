@@ -435,6 +435,13 @@ namespace FamiStudio
             RenderTransitionOverlay(g);
             RenderTransitionShadowRect(g);
         }
+
+        public override void Render(Graphics g)
+        {
+            g.Transform.PushTranslation(left, top);
+            base.Render(g);
+            g.Transform.PopTransform();
+        }
     }
 
     abstract class ControlTransition

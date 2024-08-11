@@ -861,36 +861,8 @@
     <EmbeddedResource Include="Localization\FamiStudio.zho.ini" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Breaking Through.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Castlevania 2.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Dedrecil.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\DuckTales.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Evil Clockwork.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Gimmick.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Gradius 2.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Gyruss.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Journey To Silius.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Lagrange Point.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Layla The Iris Missions.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Lupin The Third.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Mega Man 2.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Mega Man 10.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Megami Tensei II.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Mina the Hollower.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Nice.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Ochame Kinou.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Pressure Burst.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Roar of the Jungle Dragon.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\SCAT.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Seashell Searching.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\SFX.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Shatterhand.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Shovel Knight.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Silver Surfer.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Sonic 1.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Sonic 3.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Tetris (Tutorial Song).fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Tower of Heaven.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\*.fms">
+      <Link>DemoSongs/%(FileName)%(Extension)</Link>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

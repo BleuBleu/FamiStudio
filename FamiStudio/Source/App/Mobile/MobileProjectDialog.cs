@@ -1,5 +1,4 @@
-﻿using Android.App;
-using System;
+﻿using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
@@ -91,9 +90,8 @@ namespace FamiStudio
                 {
                     if (file.ToLowerInvariant().EndsWith(".fms"))
                     {
-                        // Filename will be in the for 'FamiStudio.Ducktales.fms'.
-                        var trimmedFilename = Path.GetFileNameWithoutExtension(file.Substring(file.IndexOf('.') + 1));
-                        demoProjects.Add(trimmedFilename);
+                        // Filename will be in the for 'FamiStudio.DemoSongs.Ducktales.fms'.
+                        demoProjects.Add(file.Split('.')[2]);
                     }
                 }
             }
@@ -252,7 +250,7 @@ namespace FamiStudio
                             // Save to temporary file.
                             var tempFilename = Path.Combine(Path.GetTempPath(), "Temp.fms");
                             
-                            using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.{demoProjects[demoProjectIdx]}.fms"))
+                            using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.DemoSongs.{demoProjects[demoProjectIdx]}.fms"))
                             {
                                 var buffer = new byte[(int)s.Length];
                                 s.Read(buffer, 0, (int)s.Length);

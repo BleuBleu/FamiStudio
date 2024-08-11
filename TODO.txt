@@ -3,6 +3,8 @@ Today:
 
 4.3.0
 =====
+- Get korean translation and realign it
+	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - VRC6 square popping how2/kawashin
 	- https://discord.com/channels/@me/819772561940152321/1231885934656753704
 	- https://discord.com/channels/352252932953079811/601877396857159680/1243843923298750545
@@ -43,7 +45,9 @@ Today:
 	https://discord.com/channels/@me/819772561940152321/1263722786128400414
 - BPM resize bug from StudsX. Add something that tries to place the conflicting notes like a frame later or something.
 	https://discord.com/channels/@me/795637198908817438/1270617294288195616
-
+- Change path for Linux config, as recommended on github.
+	https://github.com/BleuBleu/FamiStudio/issues/341
+	
 4.3.0
 =====
 - Support for custom tuning (ex: where A is not 440Hz).

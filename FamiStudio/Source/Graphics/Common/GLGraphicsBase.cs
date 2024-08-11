@@ -438,7 +438,7 @@ namespace FamiStudio
         public int CacheGlyph(byte[] data, int w, int h, out float u0, out float v0, out float u1, out float v1)
         {
             Debug.Assert(data.Length == (w * h));
-            
+
             foreach (var cache in glyphCaches)
             {
                 if (cache.Allocate(data, w, h, out u0, out v0, out u1, out v1))
@@ -609,7 +609,7 @@ namespace FamiStudio
 
     public class GlyphCache : IDisposable
     {
-        private const string StbDll = Platform.DllPrefix + "Stb" + Platform.DllExtension;
+        private const string StbDll = Platform.DllStaticLib ? "__Internal" : Platform.DllPrefix + "Stb" + Platform.DllExtension;
 
         [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
         extern static IntPtr StbInitPackRect(int width, int height, int numNodes);
@@ -680,7 +680,7 @@ namespace FamiStudio
 
     public class FontCollection : IDisposable
     {
-        private const string StbDll = Platform.DllPrefix + "Stb" + Platform.DllExtension;
+        private const string StbDll = Platform.DllStaticLib ? "__Internal" : Platform.DllPrefix + "Stb" + Platform.DllExtension;
 
         [DllImport(StbDll, CallingConvention = CallingConvention.StdCall)]
         extern static int StbGetNumberOfFonts(IntPtr data);
