@@ -11,7 +11,7 @@ namespace FamiStudio
 {
     public static class NesApu
     {
-        private const string NesSndEmuDll = Platform.DllPrefix + "NesSndEmu" + Platform.DllExtension;
+        private const string NesSndEmuDll = Platform.DllStaticLib ? "__Internal" : Platform.DllPrefix + "NesSndEmu" + Platform.DllExtension;
 
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuInit")]
         public extern static int Init(int apuIdx, int sampleRate, int bassFreq, int pal, int seperateTnd, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);

@@ -10,7 +10,7 @@ namespace FamiStudio
 {
     class Mp3File
     {
-        private const string ShineMp3Dll = Platform.DllPrefix + "ShineMp3" + Platform.DllExtension;
+        private const string ShineMp3Dll = Platform.DllStaticLib ? "__Internal" : Platform.DllPrefix + "ShineMp3" + Platform.DllExtension;
 
         [DllImport(ShineMp3Dll, CallingConvention = CallingConvention.StdCall, EntryPoint = "ShineMp3Encode")]
         extern static int ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples, IntPtr wavData, int mp3_bitrate, int mp3_data_size, IntPtr mp3_data);

@@ -10,7 +10,7 @@ namespace FamiStudio
 {
     public static class NotSoFatso
     {
-        private const string NotSoFatsoDll = Platform.DllPrefix + "NotSoFatso" + Platform.DllExtension;
+        private const string NotSoFatsoDll = Platform.DllStaticLib ? "__Internal" : Platform.DllPrefix + "NotSoFatso" + Platform.DllExtension;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void WriteRegisterDelegate(int addr, int data);
