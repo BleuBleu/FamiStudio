@@ -188,6 +188,16 @@ namespace FamiStudio
             return new Point(p1.x - p2.x, p1.y - p2.y);
         }
 
+        public Point Abs()
+        {
+            return new Point(Math.Abs(x), Math.Abs(y));
+        }
+
+        public int Max()
+        {
+            return Math.Max(x, y);  
+        }
+
         public override string ToString()
         {
             return $"({x},{y})";

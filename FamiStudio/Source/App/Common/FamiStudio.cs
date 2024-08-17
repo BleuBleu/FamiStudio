@@ -111,8 +111,8 @@ namespace FamiStudio
         public bool IsEditingDPCMSample        => PianoRoll.IsEditingDPCMSample;
         public bool IsEditingDPCMSampleMapping => PianoRoll.IsEditingDPCMSampleMapping;
 
-        private string WipProject  => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "WIP.fms");
-        private string WipSettings => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "WIP.ini");
+        private string WipProject  => Path.Combine(Platform.SettingsDirectory, "WIP.fms");
+        private string WipSettings => Path.Combine(Platform.SettingsDirectory, "WIP.ini");
 
         public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
         public int  PreviewDPCMSampleId    => previewDPCMSampleId;
@@ -1323,7 +1323,7 @@ namespace FamiStudio
 
         private void CheckForNewRelease()
         {
-        #if !FAMISTUDIO_ANDROID
+        #if FAMISTUDIO_WINDOWS || FAMISTUDIO_MACOS || FAMISTUDIO_LINUX
             try
             {
                 using (var client = new HttpClient())
@@ -1376,7 +1376,6 @@ namespace FamiStudio
             catch
             {
             }
-
             newReleaseCheckDone = true;
         #endif
         }

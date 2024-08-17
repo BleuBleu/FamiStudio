@@ -59,7 +59,11 @@ namespace FamiStudio
 
             // User files.
             var userProjectsDir = Platform.UserProjectsDirectory;
-            Directory.CreateDirectory(userProjectsDir);
+            
+            if (Platform.IsAndroid)
+            {
+                Directory.CreateDirectory(userProjectsDir);
+            }
 
             userProjects.AddRange(Directory.GetFiles(userProjectsDir, "*.fms"));
             for (int i = 0; i < userProjects.Count; i++)

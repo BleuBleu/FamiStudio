@@ -859,7 +859,7 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                //Debug.WriteLine($"OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
+                Debug.WriteLine($"OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
@@ -877,7 +877,7 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                //Debug.WriteLine($"OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
+                Debug.WriteLine($"OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
@@ -895,7 +895,7 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                //Debug.WriteLine($"OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
+                Debug.WriteLine($"OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);

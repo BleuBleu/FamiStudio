@@ -77,6 +77,8 @@ namespace FamiStudio
                     IncrementControlTickEnabled(1);
                 if (ctrl is Container cont)
                     IncrementControlTickEnabled(cont.numControlsTickEnabled);
+
+                MarkDirty();
             }
         }
 
@@ -91,6 +93,8 @@ namespace FamiStudio
 
                 ctrl.SetParentContainer(null);
                 controls.Remove(ctrl);
+
+                MarkDirty();
             }
         }
 
@@ -101,6 +105,8 @@ namespace FamiStudio
                 controls[i].SetParentContainer(null);
                 controls.RemoveAt(i);
             }
+
+            MarkDirty();
         }
 
         public T FindControlOfType<T>() where T : Control

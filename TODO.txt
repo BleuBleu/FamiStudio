@@ -47,6 +47,8 @@ Today:
 	https://discord.com/channels/@me/795637198908817438/1270617294288195616
 - Change path for Linux config, as recommended on github.
 	https://github.com/BleuBleu/FamiStudio/issues/341
+- Import arpeggios.
+- Upgrade everything to .NET 8.0.
 
 4.3.0
 =====

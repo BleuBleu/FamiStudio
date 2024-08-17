@@ -1,5 +1,3 @@
-using Android.Widget;
-using Java.Sql;
 using System;
 
 namespace FamiStudio

@@ -1489,7 +1489,7 @@ namespace FamiStudio
         {
             UpdateRenderCoords();
 
-            if (ParentWindow == null || App.Project == null)
+            if (ParentWindow == null || App == null || App.Project == null)
                 return;
 
             ValidateIntegrity();
