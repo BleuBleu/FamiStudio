@@ -24,37 +24,37 @@
     <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
+    <DefineConstants>DEBUG;FAMISTUDIO_ANDROID;FAMISTUDIO_MOBILE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <AndroidKeyStore>False</AndroidKeyStore>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
+    <DefineConstants>FAMISTUDIO_ANDROID;FAMISTUDIO_MOBILE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <AndroidKeyStore>False</AndroidKeyStore>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
+    <DefineConstants>DEBUG;FAMISTUDIO_ANDROID;FAMISTUDIO_MOBILE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
+    <DefineConstants>FAMISTUDIO_ANDROID;FAMISTUDIO_MOBILE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
+    <DefineConstants>DEBUG;FAMISTUDIO_ANDROID;FAMISTUDIO_MOBILE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
+    <DefineConstants>FAMISTUDIO_ANDROID;FAMISTUDIO_MOBILE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <PlatformTarget>x86</PlatformTarget>

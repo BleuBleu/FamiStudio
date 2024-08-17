@@ -170,7 +170,7 @@ namespace FamiStudio
             else
                 NewProject(true);
 
-#if !FAMISTUDIO_ANDROID && !DEBUG
+#if !FAMISTUDIO_MOBILE && !DEBUG
             if (Settings.CheckUpdates)
                 Task.Factory.StartNew(CheckForNewRelease);
             else if (Platform.IsDesktop)
@@ -1323,7 +1323,7 @@ namespace FamiStudio
 
         private void CheckForNewRelease()
         {
-        #if FAMISTUDIO_WINDOWS || FAMISTUDIO_MACOS || FAMISTUDIO_LINUX
+        #if !FAMISTUDIO_MOBILE
             try
             {
                 using (var client = new HttpClient())

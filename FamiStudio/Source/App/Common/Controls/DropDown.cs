@@ -168,7 +168,7 @@ namespace FamiStudio
             }
         }
 
-#if FAMISTUDIO_ANDROID 
+#if FAMISTUDIO_MOBILE 
         private void ShowMobileListDialog()
         {
             var dlg = new DropDownOptionsDialog(window, string.IsNullOrEmpty(prompt) ? SelectValueLabel : prompt, items, selectedIndex);
