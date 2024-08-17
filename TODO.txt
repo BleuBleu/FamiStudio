@@ -55,6 +55,7 @@ Today:
 
 4.3.0 Testing
 =============
+- BUG : Cant drag instrucment that is outside a folder inside a collapsed folder.
 - BUG : Mixer settings are initiallly enabled when entering the menu
 - Move ADSR settings higher for VRC7/EPSM.
 - Test detuning with sound, dual NSF, slide notes, etc.
