@@ -238,10 +238,9 @@ namespace FamiStudio
 
             // Fragment shaders are optional, but MacOS misbehave when there is
             // none bound. I don't trust exotic GL implementations, so we force
-            // a fragment shader on all platforms but Windows.
-        #if FAMISTUDIO_WINDOWS
-            if (useFragment)
-        #endif
+            // a fragment shader on all platforms now. We used to allow it on Windows
+            // but now i'm wondering if thats the issue with old Intel HD.
+            //if (useFragment)
             { 
                 var frag = CompileShader(resourceName + ".frag", GL.FragmentShader, out _);
                 GL.AttachShader(program, frag);
