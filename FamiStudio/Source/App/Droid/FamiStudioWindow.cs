@@ -207,14 +207,14 @@ namespace FamiStudio
             StartActivityForResult(intent, currentFileActivity.RequestCode);
         }
 
-        public void StartSaveFileActivityAsync(string[] extensions, string filename, Action<string> callback)
+        public void StartSaveFileActivityAsync(string filename, Action<string> callback)
         {
             Debug.Assert(currentFileActivity == null && pendingFinishFileActivity == null);
             currentFileActivity = new SaveActivity(callback);
 
             Intent intent = new Intent(Intent.ActionCreateDocument);
             intent.AddCategory(Intent.CategoryOpenable);
-            intent.SetType("*/*"); // MATTT
+            intent.SetType("*/*"); // MATTT : Get extension from filename + have a mime type map!
             intent.PutExtra(Intent.ExtraTitle, filename);
             StartActivityForResult(intent, currentFileActivity.RequestCode);
             ForceScreenOn(true);

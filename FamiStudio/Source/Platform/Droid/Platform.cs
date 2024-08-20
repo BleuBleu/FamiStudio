@@ -115,9 +115,9 @@ namespace FamiStudio
             FamiStudioWindow.Instance.StartLoadFileActivityAsync(extensions, callback);
         }
 
-        public static void StartMobileSaveFileOperationAsync(string[] extensions, string filename, Action<string> callback)
+        public static void StartMobileSaveFileOperationAsync(string filename, Action<string> callback)
         {
-            FamiStudioWindow.Instance.StartSaveFileActivityAsync(extensions, filename, callback);
+            FamiStudioWindow.Instance.StartSaveFileActivityAsync(filename, callback);
         }
 
         public static void FinishMobileSaveFileOperationAsync(bool commit, Action callback)

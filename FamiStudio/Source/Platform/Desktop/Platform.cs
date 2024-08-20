@@ -227,7 +227,7 @@ namespace FamiStudio
         {
         }
 
-        public static void StartMobileSaveFileOperationAsync(string[] extensions, string filename, Action<string> callback)
+        public static void StartMobileSaveFileOperationAsync(string filename, Action<string> callback)
         {
         }
 

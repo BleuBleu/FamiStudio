@@ -749,7 +749,7 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 var songName = props.GetPropertyValue<string>(0);
-                Platform.StartMobileSaveFileOperationAsync(AudioFormatType.MimeTypes[format], $"{songName}", (f) =>
+                Platform.StartMobileSaveFileOperationAsync($"{songName}.{AudioFormatType.Extensions[format]}", (f) =>
                 {
                     new Thread(() =>
                     {
@@ -872,7 +872,7 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 var songName = props.GetPropertyValue<string>(0);
-                Platform.StartMobileSaveFileOperationAsync("video/mp4", $"{songName}", (f) =>
+                Platform.StartMobileSaveFileOperationAsync($"{songName}.mp4", (f) =>
                 {
                     new Thread(() =>
                     {
@@ -928,7 +928,7 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                Platform.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.{extension}", (f) =>
+                Platform.StartMobileSaveFileOperationAsync($"{project.Name}.{extension}", (f) =>
                 {
                     ExportNsfAction(f);
                     Platform.FinishMobileSaveFileOperationAsync(true, () => { ShowExportResultToast(FormatNsfMessage); });
@@ -978,7 +978,7 @@ namespace FamiStudio
 
                 if (Platform.IsMobile)
                 {
-                    Platform.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nes", (f) =>
+                    Platform.StartMobileSaveFileOperationAsync($"{project.Name}.nes", (f) =>
                     {
                         ExportRomAction(f);
                         Platform.FinishMobileSaveFileOperationAsync(true, () => { ShowExportResultToast(FormatRomMessage); });
@@ -1012,7 +1012,7 @@ namespace FamiStudio
 
                 if (Platform.IsMobile)
                 {
-                    Platform.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.fds", (f) =>
+                    Platform.StartMobileSaveFileOperationAsync($"{project.Name}.fds", (f) =>
                     {
                         ExportFdsAction(f);
                         Platform.FinishMobileSaveFileOperationAsync(true, () => { ShowExportResultToast(FormatFdsMessage); });
@@ -1048,7 +1048,7 @@ namespace FamiStudio
             }
             else
             {
-                Platform.StartMobileSaveFileOperationAsync("*/*", filename, (f) =>
+                Platform.StartMobileSaveFileOperationAsync(filename, (f) =>
                 {
                     app.SaveProjectCopy(f);
                     Platform.FinishMobileSaveFileOperationAsync(true, () => { Platform.ShowToast(dialog.ParentWindow, "Sharing Successful!"); });
@@ -1170,7 +1170,7 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 trackTitle = props.GetPropertyValue<string>(2);
-                Platform.StartMobileSaveFileOperationAsync("*/*", $"{trackTitle}.vgm", (f) =>
+                Platform.StartMobileSaveFileOperationAsync($"{trackTitle}.vgm", (f) =>
                 {
                     VgmFile.Save(project.GetSong(props.GetPropertyValue<string>(1)), (f), trackTitle,
                         props.GetPropertyValue<string>(3),
