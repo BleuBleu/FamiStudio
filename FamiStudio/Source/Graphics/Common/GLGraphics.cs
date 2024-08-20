@@ -326,7 +326,6 @@ namespace FamiStudio
             }
         }
 
-
         public void DrawBlur(int textureId, int x, int y, int width, int height, int blurStartY, float blurScale = 2.0f)
         {
             var kernel = GetBlurKernel(width, height, blurScale);
@@ -610,7 +609,7 @@ namespace FamiStudio
             atlasSizeX = Utils.NextPowerOfTwo(atlasSizeX);
             atlasSizeY = Utils.NextPowerOfTwo(atlasSizeY);
 
-            var textureId = CreateTexture(atlasSizeX, atlasSizeY, TextureFormat.Rgba, false);
+            var textureId = CreateTexture(atlasSizeX, atlasSizeY, TextureFormat.Rgba, Platform.IsMobile);
             GL.BindTexture(GL.Texture2D, textureId);
 
             Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");

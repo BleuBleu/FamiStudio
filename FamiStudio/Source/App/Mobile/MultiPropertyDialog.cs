@@ -29,7 +29,7 @@ namespace FamiStudio
 
         private void Init()
         {
-            Move(0, 0, ParentWindow.Width, ParentWindow.Height);
+            Move(0, 0, ParentContainer.Width, ParentContainer.Height);
 
             AcceptButtonVisible = canAcceptOnTabsPage;
 

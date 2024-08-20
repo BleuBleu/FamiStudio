@@ -310,8 +310,8 @@ namespace FamiStudio
         {
             if (transitionShadowIntensity != 0.0f)
             {
-                var screenRect = new Rectangle(Point.Empty, ParentWindow.Size);
-                var shadowRect = transitionShadowControl.WindowRectangle;
+                var screenRect = ClientRectangle;
+                var shadowRect = transitionShadowControl.TopContainerRectangle;
                 var shadowColor = Color.FromArgb((int)Utils.Clamp(transitionShadowIntensity * 0.6f * 255.0f, 0, 255), Color.Black);
 
                 var o = g.OverlayCommandList;
@@ -522,11 +522,11 @@ namespace FamiStudio
 
             if (dialog)
             {
-                container.SetTransitionOverlay(container.WindowRectangle, color);
+                container.SetTransitionOverlay(container.ClientRectangle, color);
             }
             else
             {
-                container.SetTransitionOverlay(container.ActiveControl.WindowRectangle, color);
+                container.SetTransitionOverlay(container.ActiveControl.TopContainerRectangle, color);
             }
 
             return timer <= 0.0f;

@@ -76,8 +76,8 @@ namespace FamiStudio
 
         private void UpdateLayoutRects()
         {
-            var dialogWidth  = ParentWindow.Width;
-            var dialogHeight = ParentWindow.Height;
+            var dialogWidth  = ParentContainer.Width;
+            var dialogHeight = ParentContainer.Height;
 
             if (!Fullscreen)
             {

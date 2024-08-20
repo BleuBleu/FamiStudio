@@ -10,7 +10,7 @@ namespace FamiStudio
 {
     class VorbisFile
     {
-        private const string VorbisDll = Platform.DllStaticLib ? "__Internal" : Platform.DllPrefix + "Vorbis" + Platform.DllExtension;
+        private const string VorbisDll = Platform.DllPrefix + "Vorbis" + Platform.DllExtension;
 
         [DllImport(VorbisDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "VorbisOggEncode")]
         extern static int VorbisOggEncode(int wav_rate, int wav_channels, int wav_num_samples, IntPtr wav_data, int ogg_bitrate, int ogg_data_size, IntPtr ogg_data);

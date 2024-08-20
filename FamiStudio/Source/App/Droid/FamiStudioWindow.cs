@@ -196,25 +196,25 @@ namespace FamiStudio
             SetFullscreenMode();
         }
 
-        public void StartLoadFileActivityAsync(string mimeType, Action<string> callback)
+        public void StartLoadFileActivityAsync(string[] extensions, Action<string> callback)
         {
             Debug.Assert(currentFileActivity == null && pendingFinishFileActivity == null);
             currentFileActivity = new LoadActivity(callback);
 
             Intent intent = new Intent(Intent.ActionOpenDocument);
             intent.AddCategory(Intent.CategoryOpenable);
-            intent.SetType(mimeType);
+            intent.SetType("*/*"); // MATTT
             StartActivityForResult(intent, currentFileActivity.RequestCode);
         }
 
-        public void StartSaveFileActivityAsync(string mimeType, string filename, Action<string> callback)
+        public void StartSaveFileActivityAsync(string[] extensions, string filename, Action<string> callback)
         {
             Debug.Assert(currentFileActivity == null && pendingFinishFileActivity == null);
             currentFileActivity = new SaveActivity(callback);
 
             Intent intent = new Intent(Intent.ActionCreateDocument);
             intent.AddCategory(Intent.CategoryOpenable);
-            intent.SetType(mimeType);
+            intent.SetType("*/*"); // MATTT
             intent.PutExtra(Intent.ExtraTitle, filename);
             StartActivityForResult(intent, currentFileActivity.RequestCode);
             ForceScreenOn(true);

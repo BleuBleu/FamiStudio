@@ -110,14 +110,14 @@ namespace FamiStudio
             FamiStudioWindow.Instance.QueueDelayedMessageBox(text, title);
         }
 
-        public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
+        public static void StartMobileLoadFileOperationAsync(string[] extensions, Action<string> callback)
         {
-            FamiStudioWindow.Instance.StartLoadFileActivityAsync(mimeType, callback);
+            FamiStudioWindow.Instance.StartLoadFileActivityAsync(extensions, callback);
         }
 
-        public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
+        public static void StartMobileSaveFileOperationAsync(string[] extensions, string filename, Action<string> callback)
         {
-            FamiStudioWindow.Instance.StartSaveFileActivityAsync(mimeType, filename, callback);
+            FamiStudioWindow.Instance.StartSaveFileActivityAsync(extensions, filename, callback);
         }
 
         public static void FinishMobileSaveFileOperationAsync(bool commit, Action callback)

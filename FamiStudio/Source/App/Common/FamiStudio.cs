@@ -1026,7 +1026,7 @@ namespace FamiStudio
                         // HACK : We don't support nested activities right now, so return
                         // this special code to signal that we should open from storage.
                         if (f == "///STORAGE///")
-                            Platform.StartMobileLoadFileOperationAsync("*/*", (fs) => { UnloadAndOpenAction(fs); });
+                            Platform.StartMobileLoadFileOperationAsync(new[] { "fms", "txt", "nsf", "nsfe", "ftm", "mid", "vgm", "vgz" } , (fs) => { UnloadAndOpenAction(fs); });
                         else
                             UnloadAndOpenAction(f);
                     });

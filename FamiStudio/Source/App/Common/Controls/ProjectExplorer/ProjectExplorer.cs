@@ -2345,8 +2345,6 @@ namespace FamiStudio
             var ctrlPos = WindowToControl(winPos);
             var ctrl = GetControlAt(winPos.X, winPos.Y, out _, out _);
 
-            Debug.WriteLine($"MOVE NOTIFY {e.X} {e.Y}");
-
             if (ctrl != null)
             {
                 var tooltip = ctrl.ToolTip;
@@ -2783,7 +2781,7 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                Platform.StartMobileLoadFileOperationAsync("*/*", (f) => LoadDPCMSampleAction(new[] { f }));
+                Platform.StartMobileLoadFileOperationAsync(new [] { "dmc", "wav", "fms" }, (f) => LoadDPCMSampleAction(new[] { f }));
             }
             else
             {
@@ -3224,7 +3222,7 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                Platform.StartMobileLoadFileOperationAsync("*/*", (f) => LoadWavFileAction(f));
+                Platform.StartMobileLoadFileOperationAsync(new[] { "wav" } , (f) => LoadWavFileAction(f));
             }
             else
             {

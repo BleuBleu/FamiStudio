@@ -224,6 +224,7 @@ namespace FamiStudio
         public Rectangle Rectangle => new Rectangle(left, top, width, height);
         public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
         public Rectangle WindowRectangle => new Rectangle(WindowPosition, Size);
+        public Rectangle TopContainerRectangle => new Rectangle(TopContainerPosition, Size);
         public Size ParentWindowSize => window.Size;
         public bool IsLandscape => window.IsLandscape;
         public int Left => left;
@@ -260,6 +261,7 @@ namespace FamiStudio
         public Graphics Graphics => graphics;
         public Fonts Fonts => fonts;
         public Point WindowPosition => ControlToWindow(Point.Empty);
+        public Point TopContainerPosition => ParentTopContainer.WindowToControl(WindowPosition);
 
         public Dialog ParentDialog
         {

@@ -49,11 +49,22 @@ Today:
 	https://github.com/BleuBleu/FamiStudio/issues/341
 - Import arpeggios.
 - Upgrade everything to .NET 8.0.
+x Can we allow importing samples from other FMS on mobile now??? YES
+- "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
+- Merge new flatpak ffmpeg PR. 
+	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
 
 4.3.0
 =====
 - Support for custom tuning (ex: where A is not 440Hz).
 - N163 auto position assignment
+- New in-app font (Noto Sans) : More readable at low resolution and supports international characters
+- Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
+- Making more features available on mobile:
+	- MIDI import
+	- MIDI export
+	- Ability to import DPCM samples from other FMS projects
+	- *** Other???
 
 4.3.0 Testing
 =============

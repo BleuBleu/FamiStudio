@@ -223,11 +223,11 @@ namespace FamiStudio
             glfwSetClipboardString(IntPtr.Zero, "");
         }
 
-        public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
+        public static void StartMobileLoadFileOperationAsync(string[] extensions, Action<string> callback)
         {
         }
 
-        public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
+        public static void StartMobileSaveFileOperationAsync(string[] extensions, string filename, Action<string> callback)
         {
         }
 
