@@ -558,7 +558,14 @@ namespace FamiStudio
                     page.PropertyChanged += VGM_PropertyChanged;
                     break;
                 case ExportFormat.Share:
-                    page.AddRadioButtonList(SharingModeLabel.Colon, new string[] { CopyToStorageOption, ShareOption }, 0, ShareTooltip);
+                    if (Platform.IsAndroid)
+                    {
+                        page.AddRadioButtonList(SharingModeLabel.Colon, new string[] { CopyToStorageOption, ShareOption }, 0, ShareTooltip);
+                    }
+                    else
+                    {
+                        page.AddLabel(null, ShareTooltip, true);
+                    }
                     break;
             }
 
@@ -1033,9 +1040,8 @@ namespace FamiStudio
         private void ExportShare()
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.Share);
-            var share = props.GetSelectedIndex(0) == 1;
-
-            var filename = !string.IsNullOrEmpty(app.Project.Filename) ? Path.GetFileName(app.Project.Filename) : $"{project.Name}.fms";
+            var share = Platform.IsAndroid && props.GetSelectedIndex(0) == 1;
+            var filename = !string.IsNullOrEmpty(app.Project.Filename) ? Path.GetFileName(app.Project.Filename) : (project.Name != null && project.Name.Trim().Length > 0 ? $"{project.Name}.fms" : "Export.fms");
 
             if (share)
             {
