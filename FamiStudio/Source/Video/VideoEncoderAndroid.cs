@@ -10,7 +10,7 @@ using Java.Nio;
 
 namespace FamiStudio
 {
-    public class VideoEncoderAndroidEglBase
+    public class VideoEncoderAndroidBase : IVideoEncoder
     {
         protected const int EGL_RECORDABLE_ANDROID = 0x3142;
 
@@ -25,7 +25,29 @@ namespace FamiStudio
         protected EGLSurface prevEglSurfaceRead;
         protected EGLSurface prevEglSurfaceDraw;
 
-        public bool ElgInitialize(int surfaceResX = 0, int surfaceResY = 0)
+        private int surfaceResX;
+        private int surfaceResY;
+
+        public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
+        {
+            surfaceResX = resX;
+            surfaceResY = resY;
+            ElgInitialize();
+            return true;
+        }
+
+        public bool AddFrame(OffscreenGraphics graphics)
+        {
+            EglSwapBuffers();
+            return true;
+        }
+
+        public void EndEncoding(bool abort)
+        {
+            ElgShutdown();
+        }
+
+        private bool ElgInitialize()
         {
             prevEglContext = EGL14.EglGetCurrentContext();
             prevEglDisplay = EGL14.EglGetCurrentDisplay();
@@ -91,7 +113,7 @@ namespace FamiStudio
             return true;
         }
 
-        protected void ElgShutdown()
+        private void ElgShutdown()
         {
             if (eglDisplay != EGL14.EglNoDisplay)
             {
@@ -113,7 +135,7 @@ namespace FamiStudio
             EGL14.EglMakeCurrent(prevEglDisplay, prevEglSurfaceDraw, prevEglSurfaceRead, prevEglContext);
         }
 
-        public void SwapBuffers()
+        private void EglSwapBuffers()
         {
             EGL14.EglSwapBuffers(eglDisplay, eglSurface);
             CheckEglError();
@@ -126,7 +148,7 @@ namespace FamiStudio
     }
 
     // Based off https://bigflake.com/mediacodec/. Thanks!!!
-    public class VideoEncoderAndroid : VideoEncoderAndroidEglBase, IVideoEncoder
+    public class VideoEncoderAndroid : VideoEncoderAndroidBase
     {
         const long SecondsToMicroSeconds = 1000000;
         const long SecondsToNanoSeconds  = 1000000000;
@@ -203,8 +225,11 @@ namespace FamiStudio
             audioTrackIndex = -1;
             muxerStarted = false;
 
-            if (!ElgInitialize())
+            if (!base.BeginEncoding(resX, resY, rateNumer, rateDenom, videoBitRate, audioBitRate, stereo, audioFile, outputFile))
+            {
                 return false;
+
+            }
 
             audioData = File.ReadAllBytes(audioFile);
 
@@ -267,7 +292,10 @@ namespace FamiStudio
             EGLExt.EglPresentationTimeANDROID(eglDisplay, eglSurface, presentationTime);
             CheckEglError();
 
-            SwapBuffers();
+            if (!base.AddFrame(graphics))
+            {
+                return false;
+            }
 
             DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
             
@@ -306,7 +334,7 @@ namespace FamiStudio
                 audioEncoder = null;
             }
 
-            ElgShutdown();
+            base.EndEncoding(abort);
 
             if (muxer != null)
             {

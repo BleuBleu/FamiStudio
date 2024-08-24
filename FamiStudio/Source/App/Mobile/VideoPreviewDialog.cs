@@ -14,7 +14,7 @@ namespace FamiStudio
         private Label label;
         private ImageBox image;
 
-        private VideoEncoderAndroidEglBase encoder;
+        private IVideoEncoder encoder;
         private Texture texture; // Owned by GL context of main app (not offscreen video encoder).
 
         private int previewResX;
@@ -89,9 +89,9 @@ namespace FamiStudio
         // Called from the encoding thread, do not interact with the app directly.
         public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
         {
-            encoder = new VideoEncoderAndroidEglBase();
+            encoder = Platform.CreateVideoEncoder(true);
 
-            if (!encoder.ElgInitialize(resX, resY))
+            if (!encoder.BeginEncoding(resX, resY, rateNumer, rateDenom, videoBitRate, audioBitRate, stereo, audioFile, outputFile))
             {
                 return false;
             }
@@ -110,7 +110,7 @@ namespace FamiStudio
         // Called from the encoding thread, do not interact with the app directly.
         public bool AddFrame(OffscreenGraphics graphics)
         {
-            encoder.SwapBuffers();
+            encoder.AddFrame(graphics);
 
             var buffer = new byte[previewResX * previewResY * 4];
             graphics.GetBitmap(buffer);
@@ -138,6 +138,7 @@ namespace FamiStudio
         // Called from the encoding thread, do not interact with the app directly.
         public void EndEncoding(bool abort)
         {
+            encoder.EndEncoding(abort);
         }
 
         protected override void OnShowDialog()

@@ -53,7 +53,7 @@ namespace FamiStudio
             return true;
         }
 
-        public static IVideoEncoder CreateVideoEncoder()
+        public static IVideoEncoder CreateVideoEncoder(bool preview = false)
         {
             if (VideoEncoderFFmpeg.DetectFFmpeg())
             {
