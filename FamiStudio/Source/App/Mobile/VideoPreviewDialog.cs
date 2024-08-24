@@ -1,6 +1,4 @@
-﻿using Android.Hardware.Camera2.Params;
-using Android.Opengl;
-using System;
+﻿using System;
 
 namespace FamiStudio
 {

@@ -1,4 +1,4 @@
-﻿using Xamarin.Essentials;
+﻿using System;
 
 namespace FamiStudio
 {
@@ -32,27 +32,28 @@ namespace FamiStudio
         bool shown = false;
         bool abort = false;
         bool hasMessages = false;
+        private float lastProgress;
         private PropertyDialog dialog;
         private FamiStudioWindow parentForm;
 
         public unsafe LogProgressDialog(FamiStudioWindow parentForm, string title, string text)
         {
             this.parentForm = parentForm;
-
-            MainThread.InvokeOnMainThreadAsync(() =>
+            
+            Platform.InvokeOnMainThread(() =>
             {
                 // HACK : We only use this for video export on mobile.
                 dialog = new PropertyDialog(parentForm, title, 100, false);
                 //dialog.Properties.AddProgressBar("Export progress", 0.0f, text); // 0 MATTT
                 dialog.Properties.AddProgressBar("Export progress"); 
-                dialog.Properties.AddLabel("Current Step", ""); // 1
+                dialog.Properties.AddLabel("Current Step", " "); // 1
                 dialog.Properties.Build();
             });
         }
 
         public void LogMessage(string msg)
         {
-            MainThread.InvokeOnMainThreadAsync(() =>
+            Platform.InvokeOnMainThread(() =>
             {
                 dialog.Properties.SetPropertyValue(1, msg);
             });
@@ -60,16 +61,22 @@ namespace FamiStudio
 
         public void ReportProgress(float progress)
         {
-            MainThread.InvokeOnMainThreadAsync(() =>
+            // Avoid bombarding the main thread with tiny updates, slows down everything.
+            if (Math.Abs(lastProgress - progress) > 0.1f)
             {
-                if (!shown)
+                Platform.InvokeOnMainThread(() =>
                 {
-                    shown = true;
-                    dialog.ShowDialogAsync((r) => { abort = r != DialogResult.None; });
-                }
+                    if (!shown)
+                    {
+                        shown = true;
+                        dialog.ShowDialogAsync((r) => { abort = r != DialogResult.None; });
+                    }
 
-                dialog.Properties.SetPropertyValue(0, progress);
-            });
+                    dialog.Properties.SetPropertyValue(0, progress);
+                });
+
+                lastProgress = progress;
+            }
         }
 
         public void StayModalUntilClosed()
@@ -78,7 +85,7 @@ namespace FamiStudio
 
         public void Close()
         {
-            MainThread.InvokeOnMainThreadAsync(() =>
+            Platform.InvokeOnMainThread(() =>
             {
                 dialog.Close(DialogResult.OK);
             });

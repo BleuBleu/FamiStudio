@@ -872,6 +872,15 @@ namespace FamiStudio
             GL.BindFramebuffer(GL.DrawFramebuffer, 0);
         }
 
+        public void CopyToTexture(int target)
+        {
+            GL.BindFramebuffer(GL.ReadFramebuffer, fbo);
+            GL.ReadBuffer(GL.ColorAttachment0);
+            GL.CopyTexSubImage2D(target, 0, 0, 0, 0, 0, resX, resY);
+            GL.BindFramebuffer(GL.ReadFramebuffer, 0);
+            GL.Flush();
+        }
+
         public Texture GetTexture()
         {
             return new Texture(this, texture, resX, resY, false);
@@ -1073,7 +1082,9 @@ namespace FamiStudio
         [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate void DrawArraysDelegate(int mode, int first, int count);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-        public delegate void DrawBufferDelegate(int buf);
+        public delegate void DrawBuffersDelegate(int n, ref int buf);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void ReadBufferDelegate(int buf);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate void DrawElementsDelegate(int mode, int count, int type, IntPtr indices);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
@@ -1162,6 +1173,8 @@ namespace FamiStudio
         public delegate void VertexPointerDelegate(int size, int type, int stride, IntPtr pointer);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate void ViewportDelegate(int left, int top, int width, int height);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void CopyTexSubImage2DDelegate(int target, int level, int xoffset, int yoffset, int x, int y, int width, int height);
 
         public static ActiveTextureDelegate           ActiveTexture;
         public static AttachShaderDelegate            AttachShader;
@@ -1193,7 +1206,8 @@ namespace FamiStudio
         public static DisableClientStateDelegate      DisableClientState;
         public static DisableDelegate                 Disable;
         public static DrawArraysDelegate              DrawArrays;
-        public static DrawBufferDelegate              DrawBuffer;
+        public static DrawBuffersDelegate             DrawBuffers;
+        public static ReadBufferDelegate              ReadBuffer;
         public static DrawElementsDelegate            DrawElementsRaw;
         public static EnableClientStateDelegate       EnableClientState;
         public static EnableDelegate                  Enable;
@@ -1240,6 +1254,7 @@ namespace FamiStudio
         public static VertexAttribPointerDelegate     VertexAttribPointerRaw;
         public static VertexPointerDelegate           VertexPointerRaw;
         public static ViewportDelegate                Viewport;
+        public static CopyTexSubImage2DDelegate       CopyTexSubImage2D;
 
         public static void StaticInitialize(Func<string, IntPtr> GetProcAddress, bool es3)
         {
@@ -1318,10 +1333,12 @@ namespace FamiStudio
             VertexAttribPointerRaw  = Marshal.GetDelegateForFunctionPointer<VertexAttribPointerDelegate>(GetProcAddress("glVertexAttribPointer"));
             VertexPointerRaw        = Marshal.GetDelegateForFunctionPointer<VertexPointerDelegate>(GetProcAddress("glVertexPointer"));
             Viewport                = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(GetProcAddress("glViewport"));
+            DrawBuffers             = Marshal.GetDelegateForFunctionPointer<DrawBuffersDelegate>(GetProcAddress("glDrawBuffers"));
+            ReadBuffer              = Marshal.GetDelegateForFunctionPointer<ReadBufferDelegate>(GetProcAddress("glReadBuffer"));
+            CopyTexSubImage2D       = Marshal.GetDelegateForFunctionPointer<CopyTexSubImage2DDelegate>(GetProcAddress("glCopyTexSubImage2D"));
 
             if (!es3)
             {
-                DrawBuffer  = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(GetProcAddress("glDrawBuffer"));
                 PolygonMode = Marshal.GetDelegateForFunctionPointer<PolygonModeDelegate>(GetProcAddress("glPolygonMode"));
             }
 #if DEBUG
@@ -1610,6 +1627,11 @@ namespace FamiStudio
         {
             fixed (byte* p = &data[0])
                 TexSubImage2DRaw(target, level, xoffset, yoffset, width, height, format, type, new IntPtr(p));
+        }
+
+        public static void DrawBuffer(int b)
+        {
+            DrawBuffers(1, ref b);
         }
 
         public static void PushDebugGroup(string name)

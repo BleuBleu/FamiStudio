@@ -564,6 +564,8 @@ namespace FamiStudio
                     return GetCheckBoxListValue(idx);
                 case PropertyType.Button:
                     return (prop.control as Button).Text;
+                case PropertyType.ProgressBar:
+                    return (prop.control as ProgressBar).Progress;
             }
 
             return null;
@@ -595,6 +597,9 @@ namespace FamiStudio
 
             switch (prop.type)
             {
+                case PropertyType.Label:
+                    (prop.control as Label).Text = (string)value;
+                    break;
                 case PropertyType.CheckBox:
                     (prop.control as CheckBox).Checked = (bool)value;
                     break;

@@ -354,17 +354,24 @@ namespace FamiStudio
             y = MathF.Sin(angle) * distance;
         }
 
+        // TODO : This needs to be in Platform.
         public static string GetTemporaryDiretory()
         {
-            var tempFolder = Path.Combine(Path.GetTempPath(), "FamiStudio");
-
-            try
+            var tempFolder = Path.GetTempPath();
+            
+            if (Platform.IsDesktop)
             {
-                Directory.Delete(tempFolder, true);
-            }
-            catch { }
+                tempFolder = Path.Combine(tempFolder, "FamiStudio");
 
-            Directory.CreateDirectory(tempFolder);
+                try
+                {
+                    Directory.Delete(tempFolder, true);
+                }
+                catch { }
+
+                Directory.CreateDirectory(tempFolder);
+            }
+
             return tempFolder;
         }
 
