@@ -10,54 +10,54 @@ namespace FamiStudio
 {
     public class Graphics : GraphicsBase
     {
-        private int polyProgram;
-        private int polyScaleBiasUniform;
-        private int polyDashScaleUniform;
-        private int polyVao;
+        protected int polyProgram;
+        protected int polyScaleBiasUniform;
+        protected int polyDashScaleUniform;
+        protected int polyVao;
 
-        private int lineProgram;
-        private int lineScaleBiasUniform;
-        private int lineDashScaleUniform;
-        private int lineVao;
+        protected int lineProgram;
+        protected int lineScaleBiasUniform;
+        protected int lineDashScaleUniform;
+        protected int lineVao;
 
-        private int lineSmoothProgram;
-        private int lineSmoothScaleBiasUniform;
-        private int lineSmoothWindowSizeUniform;
-        private int lineSmoothVao;
+        protected int lineSmoothProgram;
+        protected int lineSmoothScaleBiasUniform;
+        protected int lineSmoothWindowSizeUniform;
+        protected int lineSmoothVao;
 
-        private int bmpProgram;
-        private int bmpScaleBiasUniform;
-        private int bmpTextureUniform;
-        private int bmpVao;
+        protected int bmpProgram;
+        protected int bmpScaleBiasUniform;
+        protected int bmpTextureUniform;
+        protected int bmpVao;
 
-        private int blurProgram;
-        private int blurScaleBiasUniform;
-        private int blurKernelUniform;
-        private int blurCocBiasScaleUniform;
-        private int blurTextureUniform;
-        private int blurVao;
+        protected int blurProgram;
+        protected int blurScaleBiasUniform;
+        protected int blurKernelUniform;
+        protected int blurCocBiasScaleUniform;
+        protected int blurTextureUniform;
+        protected int blurVao;
 
-        private int textProgram;
-        private int textScaleBiasUniform;
-        private int textTextureUniform;
-        private int textVao;
+        protected int textProgram;
+        protected int textScaleBiasUniform;
+        protected int textTextureUniform;
+        protected int textVao;
 
-        private int depthProgram;
-        private int depthScaleBiasUniform;
-        private int depthVao;
+        protected int depthProgram;
+        protected int depthScaleBiasUniform;
+        protected int depthVao;
 
-        private int vertexBuffer;
-        private int colorBuffer;
-        private int centerBuffer;
-        private int dashBuffer;
-        private int texCoordBuffer;
-        private int lineDistBuffer;
-        private int indexBuffer;
-        private int depthBuffer;
-        private int quadIdxBuffer;
+        protected int vertexBuffer;
+        protected int colorBuffer;
+        protected int centerBuffer;
+        protected int dashBuffer;
+        protected int texCoordBuffer;
+        protected int lineDistBuffer;
+        protected int indexBuffer;
+        protected int depthBuffer;
+        protected int quadIdxBuffer;
 
 #if DEBUG
-        private GL.DebugCallback debugCallback;
+        protected GL.DebugCallback debugCallback;
 #endif
 
         public Graphics(bool offscreen = false) : base(offscreen) 
@@ -629,7 +629,7 @@ namespace FamiStudio
             return new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects);
         }
 
-        private void BindAndUpdateVertexBuffer(int attrib, int buffer, float[] array, int arraySize, int numComponents = 2)
+        protected void BindAndUpdateVertexBuffer(int attrib, int buffer, float[] array, int arraySize, int numComponents = 2)
         {
             GL.BindBuffer(GL.ArrayBuffer, buffer);
             GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
@@ -637,7 +637,7 @@ namespace FamiStudio
             GL.VertexAttribPointer(attrib, numComponents, GL.Float, false, 0);
         }
 
-        private void BindAndUpdateColorBuffer(int attrib, int buffer, int[] array, int arraySize)
+        protected void BindAndUpdateColorBuffer(int attrib, int buffer, int[] array, int arraySize)
         {
             GL.BindBuffer(GL.ArrayBuffer, buffer);
             GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
@@ -645,7 +645,7 @@ namespace FamiStudio
             GL.VertexAttribPointer(attrib, 4, GL.UnsignedByte, true, 0);
         }
 
-        private void BindAndUpdateByteBuffer(int attrib, int buffer, byte[] array, int arraySize, bool signed = false, bool normalized = true)
+        protected void BindAndUpdateByteBuffer(int attrib, int buffer, byte[] array, int arraySize, bool signed = false, bool normalized = true)
         {
             GL.BindBuffer(GL.ArrayBuffer, buffer);
             GL.BufferData(GL.ArrayBuffer, array, arraySize, GL.DynamicDraw);
@@ -653,7 +653,7 @@ namespace FamiStudio
             GL.VertexAttribPointer(attrib, 1, signed ? GL.Byte : GL.UnsignedByte, normalized, 0);
         }
 
-        private void BindAndUpdateIndexBuffer(int buffer, short[] array, int arraySize)
+        protected void BindAndUpdateIndexBuffer(int buffer, short[] array, int arraySize)
         {
             GL.BindBuffer(GL.ElementArrayBuffer, buffer);
             GL.BufferData(GL.ElementArrayBuffer, array, arraySize, GL.DynamicDraw);
@@ -872,12 +872,25 @@ namespace FamiStudio
             GL.BindFramebuffer(GL.DrawFramebuffer, 0);
         }
 
-        public void CopyToTexture(int target)
+        public void RenderToBackBufferFlipped(int target)
         {
-            GL.BindFramebuffer(GL.ReadFramebuffer, fbo);
-            GL.ReadBuffer(GL.ColorAttachment0);
-            GL.CopyTexSubImage2D(target, 0, 0, 0, 0, 0, resX, resY);
-            GL.BindFramebuffer(GL.ReadFramebuffer, 0);
+            // Use the bitmap shader to flip vertically.
+            GL.UseProgram(bmpProgram);
+            GL.Viewport(screenRectFlip.Left, screenRectFlip.Top, screenRectFlip.Width, screenRectFlip.Height);
+            GL.BindVertexArray(bmpVao);
+            GL.Uniform(bmpScaleBiasUniform, new float[] { 2.0f / screenRect.Width, 2.0f / screenRect.Height, -1.0f, -1.0f }, 4); // Flip
+            GL.Uniform(bmpTextureUniform, 0);
+            GL.ActiveTexture(GL.Texture0 + 0);
+
+            MakeQuad(0, 0, resX, resY, true, true, true);
+            BindAndUpdateVertexBuffer(0, vertexBuffer, vtxArray, 8);
+            BindAndUpdateColorBuffer(1, colorBuffer, colArray, 4);
+            BindAndUpdateVertexBuffer(2, texCoordBuffer, texArray, 12, 3);
+            BindAndUpdateByteBuffer(3, depthBuffer, depArray, 4);
+
+            GL.BindTexture(GL.Texture2D, texture);
+            GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
+            GL.DrawElements(GL.Triangles, 6, GL.UnsignedShort, IntPtr.Zero);
             GL.Flush();
         }
 
@@ -896,24 +909,31 @@ namespace FamiStudio
                 GL.ReadPixels(0, 0, resX, resY, GL.Rgba, GL.UnsignedByte, new IntPtr(tmpPtr));
                 GL.BindFramebuffer(GL.ReadFramebuffer, 0);
 
-                // Flip image vertically to match D3D. 
-                for (int y = 0; y < resY; y++)
+                if (Platform.IsDesktop)
                 {
-                    int y0 = y;
-                    int y1 = resY - y - 1;
-
-                    y0 *= resX * 4;
-                    y1 *= resX * 4;
-
-                    // ABGR -> RGBA
-                    byte* p = tmpPtr + y0;
-                    for (int x = 0; x < resX * 4; x += 4)
+                    // Flip image vertically to match D3D. 
+                    for (int y = 0; y < resY; y++)
                     {
-                        data[y1 + x + 1] = *p++;
-                        data[y1 + x + 2] = *p++;
-                        data[y1 + x + 3] = *p++;
-                        data[y1 + x + 0] = *p++;
+                        int y0 = y;
+                        int y1 = resY - y - 1;
+
+                        y0 *= resX * 4;
+                        y1 *= resX * 4;
+
+                        // ABGR -> RGBA
+                        byte* p = tmpPtr + y0;
+                        for (int x = 0; x < resX * 4; x += 4)
+                        {
+                            data[y1 + x + 1] = *p++;
+                            data[y1 + x + 2] = *p++;
+                            data[y1 + x + 3] = *p++;
+                            data[y1 + x + 0] = *p++;
+                        }
                     }
+                }
+                else
+                {
+                    Marshal.Copy((nint)tmpPtr, data, 0, resX * resY * 4);
                 }
             }
         }
@@ -932,7 +952,7 @@ namespace FamiStudio
     {
         private static bool initialized;
         private static bool glES3;
-    #if DEBUG && !FAMISTUDIO_MACOS
+#if DEBUG && !FAMISTUDIO_MACOS
         private static bool renderdoc;
 #endif
 

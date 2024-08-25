@@ -194,7 +194,7 @@ namespace FamiStudio
             vtxArray[5] = screenRect.Height * 3;
         }
 
-        protected void MakeQuad(int x, int y, int width, int height)
+        protected void MakeQuad(int x, int y, int width, int height, bool proj = false, bool color = false, bool depth = false)
         {
             var vtxIdx = 0;
             var texIdx = 0;
@@ -215,12 +215,34 @@ namespace FamiStudio
 
             texArray[texIdx++] = 0.0f;
             texArray[texIdx++] = 1.0f;
+            if (proj) texArray[texIdx++] = 1.0f;
             texArray[texIdx++] = 1.0f;
             texArray[texIdx++] = 1.0f;
+            if (proj) texArray[texIdx++] = 1.0f;
             texArray[texIdx++] = 1.0f;
             texArray[texIdx++] = 0.0f;
+            if (proj) texArray[texIdx++] = 1.0f;
             texArray[texIdx++] = 0.0f;
             texArray[texIdx++] = 0.0f;
+            if (proj) texArray[texIdx++] = 1.0f;
+
+            if (color)
+            {
+                var colIdx = 0;
+                colArray[colIdx++] = -1;
+                colArray[colIdx++] = -1;
+                colArray[colIdx++] = -1;
+                colArray[colIdx++] = -1;
+            }
+
+            if (depth)
+            {
+                var depIdx = 0;
+                depArray[depIdx++] = 0;
+                depArray[depIdx++] = 0;
+                depArray[depIdx++] = 0;
+                depArray[depIdx++] = 0;
+            }
         }
 
         protected float[] GetBlurKernel(int width, int height, float scale, int numRings = 5)
