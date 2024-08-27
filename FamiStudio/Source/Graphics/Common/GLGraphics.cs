@@ -891,7 +891,7 @@ namespace FamiStudio
             GL.BindTexture(GL.Texture2D, texture);
             GL.BindBuffer(GL.ElementArrayBuffer, quadIdxBuffer);
             GL.DrawElements(GL.Triangles, 6, GL.UnsignedShort, IntPtr.Zero);
-            GL.Flush();
+            GL.Finish(); // Absolutely needed before sending to HW encoder.
         }
 
         public Texture GetTexture()
@@ -1116,6 +1116,8 @@ namespace FamiStudio
         [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate void FlushDelegate();
         [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public delegate void FinishDelegate();
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate void FramebufferTexture2DDelegate(int target,int attachment, int textarget, int texture, int level);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate void GenBuffersDelegate(int n, IntPtr buffers);
@@ -1233,6 +1235,7 @@ namespace FamiStudio
         public static EnableDelegate                  Enable;
         public static EnableVertexAttribArrayDelegate EnableVertexAttribArray;
         public static FlushDelegate                   Flush;
+        public static FinishDelegate                  Finish;
         public static FramebufferTexture2DDelegate    FramebufferTexture2D;
         public static GenBuffersDelegate              GenBuffersRaw;
         public static GenFramebuffersDelegate         GenFramebuffers;
@@ -1315,6 +1318,7 @@ namespace FamiStudio
             EnableClientState       = Marshal.GetDelegateForFunctionPointer<EnableClientStateDelegate>(GetProcAddress("glEnableClientState"));
             EnableVertexAttribArray = Marshal.GetDelegateForFunctionPointer<EnableVertexAttribArrayDelegate>(GetProcAddress("glEnableVertexAttribArray"));
             Flush                   = Marshal.GetDelegateForFunctionPointer<FlushDelegate>(GetProcAddress("glFlush"));
+            Finish                  = Marshal.GetDelegateForFunctionPointer<FinishDelegate>(GetProcAddress("glFinish"));
             FramebufferTexture2D    = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(GetProcAddress("glFramebufferTexture2D"));
             GenBuffersRaw           = Marshal.GetDelegateForFunctionPointer<GenBuffersDelegate>(GetProcAddress("glGenBuffers"));
             GenFramebuffers         = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(GetProcAddress("glGenFramebuffers"));
