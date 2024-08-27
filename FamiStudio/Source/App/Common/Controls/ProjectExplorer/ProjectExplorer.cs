@@ -587,6 +587,8 @@ namespace FamiStudio
 
         private void MainContainer_ContainerPointerDownNotify(Control sender, PointerEventArgs e)
         {
+            flingVelY = 0.0f;
+
             if (Platform.IsMobile && !e.Handled && e.Left)
             {
                 StartCaptureOperation(sender, e.Position, MobilePan);
