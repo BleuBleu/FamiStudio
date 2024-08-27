@@ -112,7 +112,7 @@ namespace FamiStudio
                     {
                         var checkBox = new CheckBox((bool)data[r, c], (string)data[r, c + 1]);
                         checkBox.Move(0, y, width, rowHeight); 
-                        checkBox.Enabled = !gridDisabled[r, 0];
+                        checkBox.Enabled = !gridDisabled[r, 0] && enabled;
                         AddControl(checkBox);
 
                         gridControls[r, 0] = checkBox;
@@ -221,7 +221,7 @@ namespace FamiStudio
                         y += localRowHeight + rowMargin;
                     }
 
-                    ctrl.Enabled = !gridDisabled[r, c];
+                    ctrl.Enabled = !gridDisabled[r, c] && enabled;
                     gridControls[r, c] = ctrl;
                 }
             }
@@ -350,9 +350,15 @@ namespace FamiStudio
                             var ctrl = gridControls[r, c];
                             if (ctrl != null)
                             {
-                                ctrl.Enabled = value;
+                                if (value)
+                                {
+                                    ctrl.Enabled = !gridDisabled[r, c];
+                                }
+                                else
+                                {
+                                    ctrl.Enabled = false;
+                                }
                             }
-                            gridDisabled[r, c] = !value;
                         }
                     }
                 }

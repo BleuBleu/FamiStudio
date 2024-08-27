@@ -1873,7 +1873,7 @@ namespace FamiStudio
                 if (inside)
                 {
                     var songBefore = GetDragInsertLocation(p, out var draggedInFolder, out _) as Song;
-                    if (songBefore != draggedSong)
+                    if (songBefore != draggedSong || songBefore.Folder != draggedInFolder)
                     {
                         var oldFolder = draggedSong.Folder;
                         App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
@@ -1898,7 +1898,7 @@ namespace FamiStudio
                 if (inside)
                 {
                     var instrumentBefore = GetDragInsertLocation(p, out var draggedInFolder, out _) as Instrument;
-                    if (instrumentBefore != draggedInstrument)
+                    if (instrumentBefore != draggedInstrument || instrumentBefore.Folder != draggedInFolder)
                     {
                         var oldFolder = draggedInstrument.Folder;
                         App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
@@ -1927,7 +1927,7 @@ namespace FamiStudio
                 if (inside && draggedArpeggio != null)
                 {
                     var arpBefore = GetDragInsertLocation(p, out var draggedInFolder, out _) as Arpeggio;
-                    if (arpBefore != draggedArpeggio)
+                    if (arpBefore != draggedArpeggio || draggedArpeggio.Folder != draggedInFolder)
                     {
                         var oldFolder = draggedArpeggio.Folder;
                         App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
@@ -1956,7 +1956,7 @@ namespace FamiStudio
                 if (inside)
                 {
                     var sampleBefore = GetDragInsertLocation(p, out var draggedInFolder, out _) as DPCMSample;
-                    if (sampleBefore != draggedSample)
+                    if (sampleBefore != draggedSample || draggedSample.Folder != draggedInFolder)
                     {
                         var oldFolder = draggedSample.Folder;
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Project);

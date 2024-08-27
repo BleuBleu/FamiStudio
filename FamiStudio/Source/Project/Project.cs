@@ -794,6 +794,9 @@ namespace FamiStudio
 
         public void MoveInstrument(Instrument inst, Instrument instBefore)
         {
+            if (inst == instBefore)
+                return;
+
             Debug.Assert(instruments.Contains(inst));
             instruments.Remove(inst);
 
@@ -837,6 +840,9 @@ namespace FamiStudio
 
         public void MoveArpeggio(Arpeggio arp, Arpeggio arpBefore)
         {
+            if (arp == arpBefore)
+                return;
+
             Debug.Assert(arpeggios.Contains(arp));
             arpeggios.Remove(arp);
 
@@ -880,6 +886,9 @@ namespace FamiStudio
 
         public void MoveSample(DPCMSample sample, DPCMSample sampleBefore)
         {
+            if (sample == sampleBefore)
+                return;
+
             Debug.Assert(samples.Contains(sample));
             samples.Remove(sample);
 
@@ -922,6 +931,9 @@ namespace FamiStudio
 
         public void MoveSong(Song song, Song songBefore)
         {
+            if (song == songBefore)
+                return;
+
             Debug.Assert(songs.Contains(song));
             songs.Remove(song);
 

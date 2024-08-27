@@ -327,7 +327,6 @@ namespace FamiStudio
             if (CheckNeedsClosing(buttonInstrument))
                 return;
 
-            var editingChannel = App.IsEditingChannel;
             var project = App.Project;
             var channel = App.SelectedChannel;
             var instButtons = new List<Button>();
@@ -337,20 +336,19 @@ namespace FamiStudio
             {
                 var inst = project.Instruments[i];
 
-                if (!editingChannel || channel.SupportsInstrument(inst))
+                if (App.SelectedInstrument == inst)
                 {
-                    if (App.SelectedInstrument == inst)
-                    {
-                        selIdx = instButtons.Count;
-                    }
-
-                    var btn = CreateListButton(ExpansionType.Icons[inst.Expansion], inst, inst.Name);
-                    btn.ForegroundColor = inst.Color;
-                    btn.Font = inst == App.SelectedInstrument ? fonts.FontMediumBold : fonts.FontMedium;
-                    btn.Click += Instrument_Click;
-                    btn.RightClick += Instrument_RightClick;
-                    instButtons.Add(btn);
+                    selIdx = instButtons.Count;
                 }
+
+                var btn = CreateListButton(ExpansionType.Icons[inst.Expansion], inst, inst.Name);
+                btn.ForegroundColor = inst.Color;
+                btn.Font = inst == App.SelectedInstrument ? fonts.FontMediumBold : fonts.FontMedium;
+                btn.Dimmed = !channel.SupportsInstrument(inst);
+                btn.Dimming = 92;
+                btn.Click += Instrument_Click;
+                btn.RightClick += Instrument_RightClick;
+                instButtons.Add(btn);
             }
 
             if (instButtons.Count == 0)
