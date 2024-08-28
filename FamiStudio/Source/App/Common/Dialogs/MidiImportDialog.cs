@@ -127,12 +127,12 @@ namespace FamiStudio
                 if (str.StartsWith(SourceTrackPrefix))
                 {
                     src.type  = MidiSourceType.Track;
-                    src.index = Utils.ParseIntAmongAllSortsOfGarbage(str) - 1;
+                    src.index = Utils.ParseIntWithLeadingAndTrailingGarbage(str) - 1;
                 }
                 else if (str.StartsWith(SourceChannelPrefix))
                 {
                     src.type  = MidiSourceType.Channel;
-                    src.index = Utils.ParseIntAmongAllSortsOfGarbage(str) - 1;
+                    src.index = Utils.ParseIntWithLeadingAndTrailingGarbage(str) - 1;
                 }
                 else
                 {

@@ -167,9 +167,10 @@ namespace FamiStudio
             return idx == 0 ? 0 : int.Parse(s.Substring(start, idx - start)) * sign;
         }
 
-        public static int ParseIntAmongAllSortsOfGarbage(string s)
+        public static int ParseIntWithLeadingAndTrailingGarbage(string s)
         {
-            return ParseIntWithTrailingGarbage(new String(s.Where(char.IsDigit).ToArray()));
+            s = new String(s.SkipWhile((c) => !char.IsDigit(c)).ToArray());
+            return ParseIntWithTrailingGarbage(s);
         }
 
         public static int RoundDownAndClamp(int x, int factor, int min)
