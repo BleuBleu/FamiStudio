@@ -5,13 +5,6 @@ Today:
 =====
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
-- VRC6 square popping how2/kawashin
-	- https://discord.com/channels/@me/819772561940152321/1231885934656753704
-	- https://discord.com/channels/352252932953079811/601877396857159680/1243843923298750545
-	- Experiments saved in `OneDrive\NES\Nes_Vrc6_ProperPopTests.cpp`
-	- Also locally modified mesen to do same.
-	- Works good, but pops more often than real HW, why???
-	- *** RETEST PHASE RESETS WITH THESE CHANGES!
 - Separate export VS. DPCM : 
   https://discord.com/channels/747649221879922840/798008185977176074/1239648701669179452
 - Disable NMI during FDS file loading
@@ -19,10 +12,6 @@ Today:
 - Look at michel_iwaniec changes
 - FDS test for Persune
 - Upgrade to latest GLFW, there is some good stuff in there : menu for for macos, etc.
-- Check out Yxx stuff from Alex.
-	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
-- YARN : Small hitch beginning of VRC6 songs? Not sure
-- YARN : Change ini ROM code persune suggestion.
 - Review the copy/paste name matching. Maybe add a rename option.
 - Video looping issue Brette
 	https://discord.com/channels/747649221879922840/747649222354010173/1253697004177985627
@@ -32,8 +21,6 @@ Today:
 - Raw FDS modulation table envelope. 
 - Merge change from github issue where it prints the required defines as comments in the file.
 	- Do same for note tables, no need for external file!
-- Ability to select a folder, instruments gets added to that. (problem : how would we unselect a folder?)
-- Could we import DMC initial values from NSF?
 - Set multiple colums/rows by default for videos with TONS of channels. 
 - BPM resize bug from StudsX. Add something that tries to place the conflicting notes like a frame later or something.
 	https://discord.com/channels/@me/795637198908817438/1270617294288195616
@@ -196,6 +183,18 @@ Discord
 
 Backlog: 
 =========
+- VRC6 square popping how2/kawashin
+	- https://discord.com/channels/@me/819772561940152321/1231885934656753704
+	- https://discord.com/channels/352252932953079811/601877396857159680/1243843923298750545
+	- Experiments saved in `OneDrive\NES\Nes_Vrc6_ProperPopTests.cpp`
+	- Also locally modified mesen to do same.
+	- Works good, but pops more often than real HW, why???
+	- *** RETEST PHASE RESETS WITH THESE CHANGES!
+- Check out Yxx stuff from Alex.
+	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
+- YARN : Small hitch beginning of VRC6 songs? Not sure
+- YARN : Change ini ROM code persune suggestion.
+- Could we import DMC initial values from NSF?
 - NSF/FS comparison bugs:
 	- N163 : Sound OK, but gets out of phase at the first slide note and remains like that. This is normal, this is due to slide notes not being able to be approximated correctly with fine pitch. 
 	- VRC7 : Very slight pitch issue due to pitch shift (3) used on VRC7 and how we look for best matching note.
