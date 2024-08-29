@@ -356,9 +356,9 @@ namespace FamiStudio
             graphics = window?.Graphics;
         }
 
-        public void Move(int x, int y, bool fireResizeEvent = true)
+        public void Move(int x, int y, bool fireResizeEvent = true, bool force = false)
         {
-            var changed = false;
+            var changed = force;
             changed |= SetAndMarkDirty(ref left, x);
             changed |= SetAndMarkDirty(ref top, y);
 
@@ -368,9 +368,9 @@ namespace FamiStudio
             }
         }
 
-        public void Move(int x, int y, int w, int h, bool fireResizeEvent = true)
+        public void Move(int x, int y, int w, int h, bool fireResizeEvent = true, bool force = false)
         {
-            var changed = false;
+            var changed = force;
             changed |= SetAndMarkDirty(ref left, x);
             changed |= SetAndMarkDirty(ref top, y);
             changed |= SetAndMarkDirty(ref width, Math.Max(1, w));
@@ -380,9 +380,9 @@ namespace FamiStudio
                 OnResize(EventArgs.Empty);
         }
 
-        public void Resize(int w, int h, bool fireResizeEvent = true)
+        public void Resize(int w, int h, bool fireResizeEvent = true, bool force = false)
         {
-            var changed = false;
+            var changed = force;
             changed |= SetAndMarkDirty(ref width, Math.Max(1, w));
             changed |= SetAndMarkDirty(ref height, Math.Max(1, h));
 

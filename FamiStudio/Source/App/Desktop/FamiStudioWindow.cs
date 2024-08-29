@@ -834,7 +834,7 @@ namespace FamiStudio
         public void RefreshLayout()
         {
             var size = GetWindowSizeInternal();
-            container.Resize(size.Width, size.Height);
+            container.Resize(size.Width, size.Height, true, true);
             MarkDirty();
         }
 

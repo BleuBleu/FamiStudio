@@ -35,8 +35,6 @@ Today:
 - Ability to select a folder, instruments gets added to that. (problem : how would we unselect a folder?)
 - Could we import DMC initial values from NSF?
 - Set multiple colums/rows by default for videos with TONS of channels. 
-- S5B + VRC7 interfecence?? even when s5b is muted, it still affects vrc7
-	https://discord.com/channels/@me/819772561940152321/1263722786128400414
 - BPM resize bug from StudsX. Add something that tries to place the conflicting notes like a frame later or something.
 	https://discord.com/channels/@me/795637198908817438/1270617294288195616
 - Change path for Linux config, as recommended on github.
@@ -61,6 +59,7 @@ Today:
 
 4.3.0 Testing
 =============
+- BUG : Cant drag instrument to replace now.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - Test potential threading issues with N163 auto-assignment.
 - UI code cleanup:

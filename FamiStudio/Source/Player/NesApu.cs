@@ -179,7 +179,7 @@ namespace FamiStudio
         public const int N163_REG_VOLUME    = 0x7f;
         
         public const int S5B_ADDR           = 0xc000;
-        public const int S5B_DATA           = 0xe000;
+        public const int S5B_DATA           = 0xe001; // E001 to prevent conflict with VRC7.
                                             
         public const int S5B_REG_LO_A          = 0x00;
         public const int S5B_REG_HI_A          = 0x01;
@@ -882,11 +882,6 @@ namespace FamiStudio
                                 WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
                                 break;
                             case APU_EXPANSION_VRC7:
-                                // HACK : There is a conflict between the VRC7 silence register and S5B data register, a write to
-                                // the silence register (E000) will be interpreted as a S5B data write. To prevent this, we
-                                // select a dummy register for S5B so that the write is discarded.
-                                if ((expansions & APU_EXPANSION_MASK_SUNSOFT) != 0)
-                                    WriteRegister(apuIdx, S5B_ADDR, S5B_REG_IO_A);
                                 WriteRegister(apuIdx, VRC7_SILENCE, 0x00); // Enable VRC7 audio.
                                 break;
                             case APU_EXPANSION_NAMCO:
