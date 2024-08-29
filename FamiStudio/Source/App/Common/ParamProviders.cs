@@ -277,6 +277,14 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.Vrc7Patch; }, GetValueString = () => { return Instrument.GetVrc7PatchName(instrument.Vrc7Patch); }, SetValue = (v) => { instrument.Vrc7Patch = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
                         { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument, CustomUserData2 = 1, TabName = "Carrier" });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, AttackLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[5] & 0xf0) >> 4)
+                        { GetValue = () => { return (instrument.Vrc7PatchRegs[5] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[5] = (byte)((instrument.Vrc7PatchRegs[5] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, DecayLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[5] & 0x0f) >> 0)
+                        { GetValue = () => { return (instrument.Vrc7PatchRegs[5] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[5] = (byte)((instrument.Vrc7PatchRegs[5] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, SustainLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0xf0) >> 4)
+                        { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ReleaseLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0x0f) >> 0)
+                        { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, TremoloLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, VibratoLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x40) >> 6)
@@ -291,18 +299,18 @@ namespace FamiStudio
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[3] & 0xc0) >> 6; }, SetValue = (v) => { instrument.Vrc7PatchRegs[3] = (byte)((instrument.Vrc7PatchRegs[3] & (~0xc0)) | ((v << 6) & 0xc0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, FreqMultiplierLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, AttackLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[5] & 0xf0) >> 4)
-                        { GetValue = () => { return (instrument.Vrc7PatchRegs[5] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[5] = (byte)((instrument.Vrc7PatchRegs[5] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, DecayLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[5] & 0x0f) >> 0)
-                        { GetValue = () => { return (instrument.Vrc7PatchRegs[5] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[5] = (byte)((instrument.Vrc7PatchRegs[5] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, SustainLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0xf0) >> 4)
-                        { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, ReleaseLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0x0f) >> 0)
-                        { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo() { TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo() { TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
                         { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument, CustomUserData2 = 0, TabName = "Modulator" });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, AttackLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[4] & 0xf0) >> 4)
+                        { GetValue = () => { return (instrument.Vrc7PatchRegs[4] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[4] = (byte)((instrument.Vrc7PatchRegs[4] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, DecayLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[4] & 0x0f) >> 0)
+                        { GetValue = () => { return (instrument.Vrc7PatchRegs[4] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[4] = (byte)((instrument.Vrc7PatchRegs[4] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, SustainLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[6] & 0xf0) >> 4)
+                        { GetValue = () => { return (instrument.Vrc7PatchRegs[6] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[6] = (byte)((instrument.Vrc7PatchRegs[6] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, ReleaseLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[6] & 0x0f) >> 0)
+                        { GetValue = () => { return (instrument.Vrc7PatchRegs[6] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[6] = (byte)((instrument.Vrc7PatchRegs[6] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, TremoloLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, VibratoLabel, 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x40) >> 6)
@@ -317,14 +325,6 @@ namespace FamiStudio
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[2] & 0xc0) >> 6; }, SetValue = (v) => { instrument.Vrc7PatchRegs[2] = (byte)((instrument.Vrc7PatchRegs[2] & (~0xc0)) | ((v << 6) & 0xc0)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, FreqMultiplierLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, AttackLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[4] & 0xf0) >> 4)
-                        { GetValue = () => { return (instrument.Vrc7PatchRegs[4] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[4] = (byte)((instrument.Vrc7PatchRegs[4] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, DecayLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[4] & 0x0f) >> 0)
-                        { GetValue = () => { return (instrument.Vrc7PatchRegs[4] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[4] = (byte)((instrument.Vrc7PatchRegs[4] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, SustainLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[6] & 0xf0) >> 4)
-                        { GetValue = () => { return (instrument.Vrc7PatchRegs[6] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[6] = (byte)((instrument.Vrc7PatchRegs[6] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, ReleaseLabel, 0, 15, (Vrc7InstrumentPatch.Infos[1].data[6] & 0x0f) >> 0)
-                        { GetValue = () => { return (instrument.Vrc7PatchRegs[6] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[6] = (byte)((instrument.Vrc7PatchRegs[6] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, LevelLabel, 0, 63, (Vrc7InstrumentPatch.Infos[1].data[2] & 0x3f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[2] & 0x3f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[2] = (byte)((instrument.Vrc7PatchRegs[2] & (~0x3f)) | ((v << 0) & 0x3f)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, FeedbackLabel, 0, 7, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x07) >> 0)
@@ -368,18 +368,8 @@ namespace FamiStudio
 
                         paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
                             { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument, CustomUserData2 = i, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, DetuneLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[2 + 6 * i] & 0x70) >> 4)
-                            { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x70) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x70)) | ((v << 4) & 0x70)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, FrequencyRatioLabel, 0, 15, (EpsmInstrumentPatch.Infos[1].data[(2 + i2)] & 0x0f) >> 0)
-                            { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x0f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, VolumeLabel, 0, 127, (EpsmInstrumentPatch.Infos[1].data[(3 + i2)] & 0x7f) >> 0)
-                            { GetValue = () => { return (instrument.EpsmPatchRegs[(3 + i2)] & 0x7f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(3 + i2)] = (byte)((instrument.EpsmPatchRegs[(3 + i2)] & (~0x7f)) | ((v << 0) & 0x7f)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, KeyScaleLabel, 0, 3, (EpsmInstrumentPatch.Infos[1].data[(4 + i2)] & 0xc0) >> 6)
-                            { GetValue = () => { return (instrument.EpsmPatchRegs[(4 + i2)] & 0xc0) >> 6; }, SetValue = (v) => { instrument.EpsmPatchRegs[(4 + i2)] = (byte)((instrument.EpsmPatchRegs[(4 + i2)] & (~0xc0)) | ((v << 6) & 0xc0)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         paramInfos.Add(new InstrumentParamInfo(instrument, AttackRateLabel, 0, 31, (EpsmInstrumentPatch.Infos[1].data[(4 + i2)] & 0x1f) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(4 + i2)] & 0x1f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(4 + i2)] = (byte)((instrument.EpsmPatchRegs[(4 + i2)] & (~0x1f)) | ((v << 0) & 0x1f)); instrument.EpsmPatch = 0; }, TabName = tabName });
-                        paramInfos.Add(new InstrumentParamInfo(instrument, AmplitudeModulationLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[(5 + i2)] & 0x80) >> 7)
-                            { GetValue = () => { return (instrument.EpsmPatchRegs[(5 + i2)] & 0x80) >> 7; }, SetValue = (v) => { instrument.EpsmPatchRegs[(5 + i2)] = (byte)((instrument.EpsmPatchRegs[(5 + i2)] & (~0x80)) | ((v << 7) & 0x80)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         paramInfos.Add(new InstrumentParamInfo(instrument, DecayRateLabel, 0, 31, (EpsmInstrumentPatch.Infos[1].data[(5 + i2)] & 0x1f) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(5 + i2)] & 0x1f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(5 + i2)] = (byte)((instrument.EpsmPatchRegs[(5 + i2)] & (~0x1f)) | ((v << 0) & 0x1f)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         paramInfos.Add(new InstrumentParamInfo(instrument, SustainRateLabel, 0, 31, (EpsmInstrumentPatch.Infos[1].data[(6 + i2)] & 0x1f) >> 0)
@@ -388,6 +378,16 @@ namespace FamiStudio
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(7 + i2)] & 0xf0) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[(7 + i2)] = (byte)((instrument.EpsmPatchRegs[(7 + i2)] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         paramInfos.Add(new InstrumentParamInfo(instrument, ReleaseRateLabel, 0, 15, (EpsmInstrumentPatch.Infos[1].data[(7 + i2)] & 0x0f) >> 0)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(7 + i2)] & 0x0f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(7 + i2)] = (byte)((instrument.EpsmPatchRegs[(7 + i2)] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.EpsmPatch = 0; }, TabName = tabName });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, DetuneLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[2 + 6 * i] & 0x70) >> 4)
+                            { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x70) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x70)) | ((v << 4) & 0x70)); instrument.EpsmPatch = 0; }, TabName = tabName });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, FrequencyRatioLabel, 0, 15, (EpsmInstrumentPatch.Infos[1].data[(2 + i2)] & 0x0f) >> 0)
+                            { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x0f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.EpsmPatch = 0; }, TabName = tabName });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, VolumeLabel, 0, 127, (EpsmInstrumentPatch.Infos[1].data[(3 + i2)] & 0x7f) >> 0)
+                            { GetValue = () => { return (instrument.EpsmPatchRegs[(3 + i2)] & 0x7f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(3 + i2)] = (byte)((instrument.EpsmPatchRegs[(3 + i2)] & (~0x7f)) | ((v << 0) & 0x7f)); instrument.EpsmPatch = 0; }, TabName = tabName });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, KeyScaleLabel, 0, 3, (EpsmInstrumentPatch.Infos[1].data[(4 + i2)] & 0xc0) >> 6)
+                            { GetValue = () => { return (instrument.EpsmPatchRegs[(4 + i2)] & 0xc0) >> 6; }, SetValue = (v) => { instrument.EpsmPatchRegs[(4 + i2)] = (byte)((instrument.EpsmPatchRegs[(4 + i2)] & (~0xc0)) | ((v << 6) & 0xc0)); instrument.EpsmPatch = 0; }, TabName = tabName });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, AmplitudeModulationLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[(5 + i2)] & 0x80) >> 7)
+                            { GetValue = () => { return (instrument.EpsmPatchRegs[(5 + i2)] & 0x80) >> 7; }, SetValue = (v) => { instrument.EpsmPatchRegs[(5 + i2)] = (byte)((instrument.EpsmPatchRegs[(5 + i2)] & (~0x80)) | ((v << 7) & 0x80)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvEnLabel, 0, 1, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x08) >> 3)
                             { GetValue = () => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x08) >> 3; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x08)) | ((v << 3) & 0x08)); instrument.EpsmPatch = 0; }, TabName = tabName });
                         paramInfos.Add(new InstrumentParamInfo(instrument, SsgEnvLabel, 0, 7, (EpsmInstrumentPatch.Infos[1].data[(8 + i2)] & 0x07) >> 0, null, true)
