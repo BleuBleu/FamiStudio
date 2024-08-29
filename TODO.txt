@@ -48,8 +48,6 @@ Today:
 - Change path for Linux config, as recommended on github.
 	https://github.com/BleuBleu/FamiStudio/issues/341
 - Import arpeggios.
-- Upgrade everything to .NET 8.0.
-x Can we allow importing samples from other FMS on mobile now??? YES
 - "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
@@ -65,10 +63,10 @@ x Can we allow importing samples from other FMS on mobile now??? YES
 	- MIDI export
 	- Ability to import DPCM samples from other FMS projects
 	- *** Other???
+- Upgrade to .NET 8.0
 
 4.3.0 Testing
 =============
-- Move ADSR settings higher for VRC7/EPSM.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - Test potential threading issues with N163 auto-assignment.
 - UI code cleanup:
@@ -96,7 +94,6 @@ x Can we allow importing samples from other FMS on mobile now??? YES
 	- Dark will be even darker than now.
 	- Grey is what we have now.
 - Unify mobile/desktop file operations. Remove all if {} there.
-- PE doesnt stop scrolling if you tap. 
 
 Linux notes 
 =========== 
