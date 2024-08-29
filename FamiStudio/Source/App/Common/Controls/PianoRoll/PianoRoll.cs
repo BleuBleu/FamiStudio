@@ -9142,12 +9142,14 @@ namespace FamiStudio
             { 
                 var min = selection ? selectionMin : captureNoteAbsoluteIdx;
                 var max = selection ? selectionMax : captureNoteAbsoluteIdx;
+                var processedNotes = new HashSet<Note>();
 
                 TransformNotes(min, max, false, final, false, (note, idx) =>
                 {
-                    if (note != null && note != highlightedNote && note.IsMusical && note.HasRelease)
+                    if (note != null && note != highlightedNote && note.IsMusical && note.HasRelease && !processedNotes.Contains(note))
                         note.Release = Utils.Clamp(note.Release + delta, 1, note.Duration - 1);
 
+                    processedNotes.Add(note);
                     return note;
                 });
             }

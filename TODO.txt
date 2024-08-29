@@ -35,12 +35,6 @@ Today:
 - Ability to select a folder, instruments gets added to that. (problem : how would we unselect a folder?)
 - Could we import DMC initial values from NSF?
 - Set multiple colums/rows by default for videos with TONS of channels. 
-- BUG : When moving releases in a selection, it applies multiple times.
-	https://discord.com/channels/@me/819772561940152321/1261610994673778730
-- Crash quitting when in dpcm editor. (audioStream is null)
-	FamiStudio.dll!FamiStudio.AudioPlayer.RawPcmSamplePlayPosition.get() Line 247	C#
- 	FamiStudio.dll!FamiStudio.FamiStudio.PreviewDPCMWavPosition.get() Line 117	C#
- 	FamiStudio.dll!FamiStudio.PianoRoll.RenderWaveform(FamiStudio.PianoRoll.RenderInfo r) Line 3725	C#
 - S5B + VRC7 interfecence?? even when s5b is muted, it still affects vrc7
 	https://discord.com/channels/@me/819772561940152321/1263722786128400414
 - BPM resize bug from StudsX. Add something that tries to place the conflicting notes like a frame later or something.
