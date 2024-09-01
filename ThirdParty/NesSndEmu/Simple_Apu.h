@@ -124,9 +124,12 @@ private:
 	int separate_tnd_mode;
 	int fds_filter_accum;
 	int fds_filter_alpha;
+	int tnd_skip; // Initial skipped samples to avoid intitial triangle pop. Channels will not be affected, as it takes place before output.
 	bool separate_tnd_channel_enabled[3];
 	long tnd_accum[3];
+	long sq_accum;
 	long prev_nonlinear_tnd;
+	long prev_sq_mix;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;
 	Nes_Vrc7 vrc7;
@@ -139,6 +142,7 @@ private:
 	Blip_Buffer buf;
 	Blip_Buffer buf_tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.
 	Blip_Buffer buf_fds;
+	Blip_Buffer buf_exp;
 	Blip_Buffer buf_epsm_left;
 	Blip_Buffer buf_epsm_right;
 	blip_time_t time;
