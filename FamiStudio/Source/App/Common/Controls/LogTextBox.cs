@@ -95,7 +95,7 @@ namespace FamiStudio
                 wrappedLines.Clear();
                 foreach (var line in lines)
                 {
-                    wrappedLines.AddRange(fonts.FontMedium.SplitLongString(line, width - margin - scrollBarWidth, Localization.IsChinese, out _).Split(['\n'], StringSplitOptions.RemoveEmptyEntries));
+                    wrappedLines.AddRange(fonts.FontMedium.SplitLongString(line, width - margin - scrollBarWidth, Localization.IsChinese, out _).Split('\n', StringSplitOptions.RemoveEmptyEntries));
                 }
             }
         }
