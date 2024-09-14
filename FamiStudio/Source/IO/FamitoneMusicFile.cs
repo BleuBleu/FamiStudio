@@ -28,6 +28,7 @@ namespace FamiStudio
         private Dictionary<Arpeggio, string> arpeggioEnvelopeNames = new Dictionary<Arpeggio, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
         private Dictionary<DPCMSampleMapping, int> sampleMappingIndices = new Dictionary<DPCMSampleMapping, int>();
+        private Dictionary<DPCMSample, int> sampleOffsetsPreCleanup = new Dictionary<DPCMSample, int>();
         private string noArpeggioEnvelopeName;
 
         private int kernel = FamiToneKernel.FamiStudio;
@@ -129,6 +130,17 @@ namespace FamiStudio
                     env.Release = -1;
                     env.Values[0] = 15;
                 }
+            }
+        }
+
+        private void GatherDPCMSampleOffsets()
+        {
+            // Since we will be deleting instruments that are unused for this song, that will mess up
+            // the offset of the samples in the big binary sample data. We store the real offsets before
+            // the cleanup and well reuse those when building the DPCM sample table.
+            foreach (var sample in project.Samples)
+            {
+                sampleOffsetsPreCleanup.Add(sample, project.GetSampleBankOffset(sample));
             }
         }
 
@@ -822,9 +834,8 @@ namespace FamiStudio
                 for (int i = 0; i < sortedUniqueMappings.Length; i++)
                 {
                     var mapping = sortedUniqueMappings[i];
+                    var offset = sampleOffsetsPreCleanup[mapping.Sample];
 
-                    var offset = project.GetSampleBankOffset(mapping.Sample);
-                    Debug.Assert(offset >= 0);
                     var sampleOffset = Math.Max(0, offset) >> 6;
                     var sampleSize = mapping.Sample.ProcessedData.Length >> 4;
                     var sampleInitialDmcValue = mapping.OverrideDmcInitialValue ? mapping.DmcInitialValueDiv2 * 2 : mapping.Sample.DmcInitialValueDiv2 * 2;
@@ -2038,6 +2049,7 @@ namespace FamiStudio
                 project.ConvertToFamiTrackerTempo(false);
             }
 
+            GatherDPCMSampleOffsets();
             project.DeleteAllSongsBut(songIds);
             RemoveUnsupportedFeatures();
             project.Cleanup();
@@ -2099,7 +2111,7 @@ namespace FamiStudio
         public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, string filename, string dmcFilename, string includeFilename, int machine)
         {
             this.machine = machine;
-            
+
             SetupProject(originalProject, songIds);
             SetupFormat(format);
             
