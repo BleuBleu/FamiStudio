@@ -21,7 +21,7 @@ namespace FamiStudio
             regRows = rows;
             expansion = exp; // -1 for interpreter rows.
 
-            if (registerColors== null)
+            if (registerColors == null)
             {
                 registerColors = new Color[11];
 
@@ -114,6 +114,7 @@ namespace FamiStudio
             }
 
             c.DrawLine(labelSizeX, 0, labelSizeX, height, Theme.BlackColor);
+            c.DrawLine(0, height, width, height, Theme.BlackColor);
         }
     }
 }
