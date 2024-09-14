@@ -298,8 +298,6 @@ namespace FamiStudio
             // the app from restoring once minimized, and may also break our ability to debug 
             // correctly.
             nsApplication = SendIntPtr(clsNSApplication, selSharedApplication); 
-            
-            CreateMenu();
         }
         
         [StructLayout(LayoutKind.Sequential, Pack = 2)]
