@@ -7,6 +7,7 @@ namespace FamiStudio
     public class LogTextBox : Control
     {
         private List<string> lines = new List<string>();
+        private List<string> wrappedLines = new List<string>();
         private int numLines;
         private int scroll = 0;
         private bool draggingScrollbars;
@@ -33,16 +34,17 @@ namespace FamiStudio
         {
             lines.Add(line);
             MarkDirty();
+            ConditionalUpdateWrappedLines();
             UpdateScrollParams();
             scroll = maxScroll;
         }
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (e.Left && 
-                GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && 
-                e.X > width - scrollBarWidth)
+            if (e.Left && e.X > width - scrollBarWidth)
             {
+                GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
+
                 var y = e.Y - lineHeight;
 
                 if (y < scrollBarPos)
@@ -66,6 +68,12 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnResize(EventArgs e)
+        {
+            ConditionalUpdateWrappedLines();
+            base.OnResize(e);
+        }
+
         protected override void OnPointerUp(PointerEventArgs e)
         {
             if (draggingScrollbars)
@@ -80,9 +88,21 @@ namespace FamiStudio
             }
         }
 
+        private void ConditionalUpdateWrappedLines()
+        {
+            if (fonts != null)
+            {
+                wrappedLines.Clear();
+                foreach (var line in lines)
+                {
+                    wrappedLines.AddRange(fonts.FontMedium.SplitLongString(line, width - margin - scrollBarWidth, Localization.IsChinese, out _).Split(['\n'], StringSplitOptions.RemoveEmptyEntries));
+                }
+            }
+        }
+
         private void UpdateScrollParams()
         {
-            maxScroll = Math.Max(0, lines.Count - numLines);
+            maxScroll = Math.Max(0, wrappedLines.Count - numLines);
         }
 
         protected override void OnPointerMove(PointerEventArgs e)
@@ -99,22 +119,15 @@ namespace FamiStudio
 
         private bool GetScrollBarParams(out int pos, out int size)
         {
-            if (lines.Count > numLines)
-            {
-                var scrollAreaSize = height;
-                var minScrollBarSizeY = scrollAreaSize / 4;
-                var scrollY = scroll * lineHeight;
-                var maxScrollY = maxScroll * lineHeight;
+            var scrollAreaSize = height;
+            var minScrollBarSizeY = scrollAreaSize / 4;
+            var scrollY = scroll * lineHeight;
+            var maxScrollY = maxScroll * lineHeight;
 
-                size = Math.Max(minScrollBarSizeY, (int)Math.Round(scrollAreaSize * Math.Min(1.0f, scrollAreaSize / (float)(maxScrollY + scrollAreaSize))));
-                pos  = (int)Math.Round((scrollAreaSize - size) * (scrollY / (float)maxScrollY));
+            size = Math.Max(minScrollBarSizeY, (int)Math.Round(scrollAreaSize * Math.Min(1.0f, scrollAreaSize / (float)(maxScrollY + scrollAreaSize))));
+            pos  = (int)Math.Round((scrollAreaSize - size) * (scrollY / (float)maxScrollY));
 
-                return true;
-            }
-
-            pos  = 0;
-            size = 0;
-            return false;
+            return true;
         }
 
         protected override void OnMouseWheel(PointerEventArgs e)
@@ -133,21 +146,18 @@ namespace FamiStudio
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
             var c = g.GetCommandList();
-            var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
-            var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
+            ;
 
             c.FillAndDrawRectangle(0, 0, width - 1, height, Theme.DarkGreyColor1, Theme.LightGreyColor1);
 
-            for (int i = 0, j = scroll; i < numLines && j < lines.Count; j++, i++)
+            for (int i = 0, j = scroll; i < numLines && j < wrappedLines.Count; j++, i++)
             {
-                c.DrawText(lines[j], Fonts.FontMedium, margin, i * lineHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, lineHeight);
+                c.DrawText(wrappedLines[j], Fonts.FontMedium, margin, i * lineHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - scrollBarWidth, lineHeight);
             }
 
-            if (hasScrollBar)
-            {
-                c.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, height, Theme.DarkGreyColor4, Theme.LightGreyColor1);
-                c.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize, Theme.MediumGreyColor1, Theme.LightGreyColor1);
-            }
+            GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
+            c.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, height, Theme.DarkGreyColor4, Theme.LightGreyColor1);
+            c.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize, Theme.MediumGreyColor1, Theme.LightGreyColor1);
         }
     }
 }
