@@ -1,6 +1,3 @@
-Today:
-	- Desktop done, mobile todo.
-
 4.3.0
 =====
 - Get korean translation and realign it
