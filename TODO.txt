@@ -3,14 +3,16 @@ Today:
 
 4.3.0
 =====
+- Change path for Linux config, as recommended on github.
+	https://github.com/BleuBleu/FamiStudio/issues/341
+- Update GLFW linux to 3.4 too.
+
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Look at michel_iwaniec changes
 - Review the copy/paste name matching. Maybe add a rename option.
 - Raw FDS modulation table envelope. 
 - Set multiple colums/rows by default for videos with TONS of channels. 
-- Change path for Linux config, as recommended on github.
-	https://github.com/BleuBleu/FamiStudio/issues/341
 - Import arpeggios.
 - "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
 - Merge new flatpak ffmpeg PR. 
@@ -33,7 +35,7 @@ Today:
 
 4.3.0 Testing
 =============
-- Missing small line bottom register view.
+- Test pinch to zoom on MacOS, we changed the mouse wheel code there.
 - Make sure we consider messagebox/alerts as async dialogs.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - UI code cleanup:
@@ -52,7 +54,6 @@ Today:
 	- Ableton live as reference for a "light" theme.
 	- Dark will be even darker than now.
 	- Grey is what we have now.
-- Unify mobile/desktop file operations. Remove all if {} there.
 
 Linux notes 
 =========== 
@@ -162,6 +163,7 @@ Discord
 
 Backlog: 
 =========
+- Unify mobile/desktop file operations. Remove all if {} there.
 - Disable NMI during FDS file loading
 	https://discord.com/channels/747649221879922840/798008185977176074/1235154978486878298
 - FDS test for Persune
