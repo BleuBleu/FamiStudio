@@ -3,10 +3,6 @@ Today:
 
 4.3.0
 =====
-- Change path for Linux config, as recommended on github.
-	https://github.com/BleuBleu/FamiStudio/issues/341
-- Update GLFW linux to 3.4 too.
-
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Look at michel_iwaniec changes
