@@ -57,7 +57,7 @@ namespace GLFWDotNet
 	public static partial class GLFW
 	{
 		public const int GLFW_VERSION_MAJOR = 3;
-		public const int GLFW_VERSION_MINOR = 3;
+		public const int GLFW_VERSION_MINOR = 4;
 		public const int GLFW_VERSION_REVISION = 0;
 		public const int GLFW_TRUE = 1;
 		public const int GLFW_FALSE = 0;
