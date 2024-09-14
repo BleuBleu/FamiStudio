@@ -1848,6 +1848,7 @@ namespace FamiStudio
         private void EndDragObjectOrFolder(Point p)
         {
             var inside = ClientRectangle.Contains(p);
+            var screenPos = ControlToScreen(p);
             p.Y -= mainContainer.Top;
 
             if (captureOperation == DragFolder)
@@ -1921,7 +1922,7 @@ namespace FamiStudio
                 }
                 else if (Platform.IsDesktop && !inside)
                 {
-                    InstrumentDroppedOutside(draggedInstrument, ControlToScreen(p));
+                    InstrumentDroppedOutside(draggedInstrument, screenPos);
                 }
             }
             else if (captureOperation == DragArpeggio)
@@ -1950,7 +1951,7 @@ namespace FamiStudio
                 }
                 else if (Platform.IsDesktop && !inside)
                 {
-                    ArpeggioDroppedOutside(draggedArpeggio, ControlToScreen(p));
+                    ArpeggioDroppedOutside(draggedArpeggio, screenPos);
                 }
             }
             else if (captureOperation == DragSample)
@@ -1986,7 +1987,7 @@ namespace FamiStudio
                         instrument.UnmapDPCMSample(mappingNote);
                         instrument.MapDPCMSample(mappingNote, draggedSample);
                         App.UndoRedoManager.EndTransaction();
-                        DPCMSampleMapped?.Invoke(draggedSample, ControlToScreen(p));
+                        DPCMSampleMapped?.Invoke(draggedSample, screenPos);
                     }
                 }
             }
@@ -2192,6 +2193,7 @@ namespace FamiStudio
             }
         }
 
+        /*
         protected override void OnPointerMove(PointerEventArgs e)
         {
             if (e.IsTouchEvent)
@@ -2202,25 +2204,23 @@ namespace FamiStudio
 
             base.OnPointerMove(e);
 
-            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
-
             Debug.WriteLine($"MOVE {e.X} {e.Y}");
 
             UpdateCursor();
-            //UpdateCaptureOperation(e.X, e.Y); // MATTT : Was this active?
-
-            // MATTT : This should be event on the "mainContainer".
-            if (middle)
-                DoScroll(e.Y - mouseLastPos.Y);
+            UpdateCaptureOperation(e.Position);
 
             mouseLastPos = e.Position;
+
+            Debug.WriteLine($"PMY = {e.Position.Y}");
         }
+        */
 
         protected override void OnPointerLeave(EventArgs e)
         {
             App.SequencerShowExpansionIcons = false;
         }
 
+        /*
         protected override void OnPointerUp(PointerEventArgs e)
         {
             if (e.IsTouchEvent)
@@ -2229,26 +2229,9 @@ namespace FamiStudio
                 return;
             }
 
-            bool middle = e.Middle;
-            bool doMouseUp = false;
-
-            //if (!middle)
-            //{
-            //    doMouseUp = captureOperation == CaptureOperation.None;
-            //    EndCaptureOperation(e.X, e.Y);
-            //}
-
             UpdateCursor();
-
-            // MATTT
-            //if (doMouseUp)
-            //{
-            //    if (HandleMouseUpButtons(e)) goto Handled;
-            //    return;
-            //Handled:
-            //    MarkDirty();
-            //}
         }
+        */
 
         private void StartCaptureOperation(Control control, Point p, CaptureOperation op)
         {
@@ -2327,18 +2310,22 @@ namespace FamiStudio
             ReleasePointer();
         }
 
-        protected override void OnMouseWheel(PointerEventArgs e)
+        //protected override void OnMouseWheel(PointerEventArgs e)
+        //{
+        //    if (!e.Handled)
+        //    {
+        //        DoScroll(e.ScrollY > 0 ? panelSizeY * 3 : -panelSizeY * 3);
+        //        e.MarkHandled();
+        //    }
+        //}
+
+        public override void OnContainerMouseWheelNotify(Control control, PointerEventArgs e)
         {
             if (!e.Handled)
             {
                 DoScroll(e.ScrollY > 0 ? panelSizeY * 3 : -panelSizeY * 3);
                 e.MarkHandled();
             }
-        }
-
-        public override void OnContainerMouseWheelNotify(Control control, PointerEventArgs e)
-        {
-            OnMouseWheel(e);
         }
 
         public override void OnContainerPointerMoveNotify(Control control, PointerEventArgs e)
@@ -2359,23 +2346,17 @@ namespace FamiStudio
             UpdateCursor();
             UpdateCaptureOperation(ctrlPos);
 
+            // HACK : Do the middle scroll here instead of in the main container to avoid changing the scroll BEFORE
+            // we recalculate the position (ControlToWindow/WindowToControl above.
+            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
+
+            if (middle && control.IsInContainer(mainContainer))
+            {
+                DoScroll(ctrlPos.Y - mouseLastPos.Y);
+            }
+
             mouseLastPos = ctrlPos;
         }
-
-        public override void OnContainerPointerDownNotify(Control control, PointerEventArgs e)
-        {
-            //ConditionalRecreateAllControls();
-        }
-
-        //public override void OnContainerPointerUpNotify(Control control, PointerEventArgs e)
-        //{
-        //    if (!e.Middle)
-        //    {
-        //        var ctrlPos = WindowToControl(control.ControlToWindow(e.Position));
-        //        EndCaptureOperation(ctrlPos);
-        //    }
-        //    //ConditionalRecreateAllControls();
-        //}
 
         private void ResizeMainContainer()
         {
@@ -3114,19 +3095,6 @@ namespace FamiStudio
             });
         }
 
-        private bool HandleMouseDownPan(PointerEventArgs e)
-        {
-            bool middle = e.Middle || (e.Left && ModifierKeys.IsAltDown && Settings.AltLeftForMiddle);
-
-            if (middle)
-            {
-                mouseLastPos = e.Position;
-                return true;
-            }
-
-            return false;
-        }
-
         private void DuplicateSong(Song s)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
@@ -3414,17 +3382,17 @@ namespace FamiStudio
             });
         }
 
-        protected void OnTouchMove(PointerEventArgs e)
-        {
-            UpdateCursor();
-            UpdateCaptureOperation(e.Position);
-            mouseLastPos = e.Position;
-        }
+        //protected void OnTouchMove(PointerEventArgs e)
+        //{
+        //    UpdateCursor();
+        //    UpdateCaptureOperation(e.Position);
+        //    mouseLastPos = e.Position;
+        //}
 
-        protected void OnTouchUp(PointerEventArgs e)
-        {
-            EndCaptureOperation(e.Position);
-        }
+        //protected void OnTouchUp(PointerEventArgs e)
+        //{
+        //    EndCaptureOperation(e.Position);
+        //}
 
         private void TickFling(float delta)
         {

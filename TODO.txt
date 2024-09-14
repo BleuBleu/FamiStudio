@@ -30,6 +30,8 @@ Today:
 - "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
+- Add + buttons for each folder?
+	https://discord.com/channels/@me/819772561940152321/1282536913525542933
 
 4.3.0
 =====
@@ -46,13 +48,13 @@ Today:
 
 4.3.0 Testing
 =============
-- BUG : Cant drag instrument to replace now.
+- Missing small line bottom register view.
+- Make sure we consider messagebox/alerts as async dialogs.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - Test potential threading issues with N163 auto-assignment.
 - UI code cleanup:
 	- Project explorer rewrite
 		- PC Test scroll bars a lot more. 
-		- PC Middle mouse panning (when i get a mouse...)
 		- PC Property buttons get "stuck" when the dialog pops.
 			- Same happens if you right click open menu, open a recent file, open button gets stucks
 		- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.

@@ -356,6 +356,21 @@ namespace FamiStudio
             graphics = window?.Graphics;
         }
 
+        public bool IsInContainer(Container cont)
+        {
+            var c = container;
+            while (c != null)
+            {
+                if (c == cont)
+                {
+                    return true;
+                }
+
+                c = c.ParentContainer;
+            }
+            return false;
+        }
+
         public void Move(int x, int y, bool fireResizeEvent = true, bool force = false)
         {
             var changed = force;
