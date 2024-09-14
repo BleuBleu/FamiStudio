@@ -5,25 +5,13 @@ Today:
 =====
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
-- Separate export VS. DPCM : 
-  https://discord.com/channels/747649221879922840/798008185977176074/1239648701669179452
-- Disable NMI during FDS file loading
-	https://discord.com/channels/747649221879922840/798008185977176074/1235154978486878298
 - Look at michel_iwaniec changes
-- FDS test for Persune
 - Upgrade to latest GLFW, there is some good stuff in there : menu for for macos, etc.
 - Review the copy/paste name matching. Maybe add a rename option.
-- Video looping issue Brette
-	https://discord.com/channels/747649221879922840/747649222354010173/1253697004177985627
-- N163 auto-position.
-	- GUI BRANCH : When changing "Auto Wav Pos", must stop player. => REDO IN GUI BRANCH!
-	- GUI BRANCH : Add button test validate the assignment in instrument settings.
 - Raw FDS modulation table envelope. 
 - Merge change from github issue where it prints the required defines as comments in the file.
 	- Do same for note tables, no need for external file!
 - Set multiple colums/rows by default for videos with TONS of channels. 
-- BPM resize bug from StudsX. Add something that tries to place the conflicting notes like a frame later or something.
-	https://discord.com/channels/@me/795637198908817438/1270617294288195616
 - Change path for Linux config, as recommended on github.
 	https://github.com/BleuBleu/FamiStudio/issues/341
 - Import arpeggios.
@@ -51,17 +39,10 @@ Today:
 - Missing small line bottom register view.
 - Make sure we consider messagebox/alerts as async dialogs.
 - Test detuning with sound, dual NSF, slide notes, etc.
-- Test potential threading issues with N163 auto-assignment.
 - UI code cleanup:
 	- Project explorer rewrite
 		- PC Test scroll bars a lot more. 
-		- PC Property buttons get "stuck" when the dialog pops.
-			- Same happens if you right click open menu, open a recent file, open button gets stucks
 		- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
-	- To test : 
-		- Dialog ticks
-		- Toast tick
-		- We ficed a double-tick issue in 4.2.1 i think, make sure that's included.
 - Sequencer:
 		1) Comment out all rendering/input code
 		2) Create basic UI with panels/labels/buttons/scroll bar
@@ -70,7 +51,6 @@ Today:
 		5) Redo mobile input to minimize code duplication.
 		6) Add nice to have stuff (force display on mobile, make icons/force display/mute actually work on mobile)
 - Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
-- Review things with tick enabled. I see weird things ticking. Add debug to print them all!
 - Add light/dark/grey themes.
 	- Ableton live as reference for a "light" theme.
 	- Dark will be even darker than now.
@@ -185,6 +165,9 @@ Discord
 
 Backlog: 
 =========
+- Disable NMI during FDS file loading
+	https://discord.com/channels/747649221879922840/798008185977176074/1235154978486878298
+- FDS test for Persune
 - VRC6 square popping how2/kawashin
 	- https://discord.com/channels/@me/819772561940152321/1231885934656753704
 	- https://discord.com/channels/352252932953079811/601877396857159680/1243843923298750545
