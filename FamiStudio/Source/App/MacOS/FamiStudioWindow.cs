@@ -72,7 +72,7 @@ namespace FamiStudio
 
                         var origModifiers = modifiers.Value;
                         modifiers.Set(origModifiers | GLFW_MOD_CONTROL);
-                        ctrl.MouseWheel(new MouseEventArgs(0, pt.X, pt.Y, 0, magnificationAccum));
+                        ctrl.SendMouseWheel(new PointerEventArgs(0, pt.X, pt.Y, false, magnificationAccum));
                         modifiers.Set(origModifiers);
 
                         magnificationAccum = 0;

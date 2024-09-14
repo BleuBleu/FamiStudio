@@ -1365,13 +1365,10 @@ namespace FamiStudio
             {
                 PolygonMode = Marshal.GetDelegateForFunctionPointer<PolygonModeDelegate>(GetProcAddress("glPolygonMode"));
             }
-#if DEBUG
-            if (!Platform.IsMacOS)
-            {
-                PushDebugGroupRaw    = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(GetProcAddress("glPushDebugGroupKHR"));
-                PopDebugGroupRaw     = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(GetProcAddress("glPopDebugGroupKHR"));
-                DebugMessageCallback = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(GetProcAddress("glDebugMessageCallback"));
-            }
+#if DEBUG && !FAMISTUDIO_MACOS
+            PushDebugGroupRaw    = Marshal.GetDelegateForFunctionPointer<PushDebugGroupDelegate>(GetProcAddress("glPushDebugGroupKHR"));
+            PopDebugGroupRaw     = Marshal.GetDelegateForFunctionPointer<PopDebugGroupDelegate>(GetProcAddress("glPopDebugGroupKHR"));
+            DebugMessageCallback = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(GetProcAddress("glDebugMessageCallback"));
 
             renderdoc = Array.FindIndex(Environment.GetCommandLineArgs(), c => c.ToLower() == "-renderdoc") >= 0;
 #endif
