@@ -1966,7 +1966,6 @@ namespace FamiStudio
             }
         };
 
-        // MATTT : This will run on the player threads, dangerous. Probably need to a locking mecanism.
         public unsafe bool AutoAssignN163WavePositions(out Dictionary<int, int> wavePositions)
         {
             if (!UsesN163Expansion)
@@ -1998,17 +1997,6 @@ namespace FamiStudio
 
                 // Buld a huge bitmask that tells us which frame each instrument is used.
                 // This is a bit overkill, but is very simple.
-                for (var i = 0; i < instruments.Count; i++)
-                {
-                    var inst = instruments[i];
-
-                    // MATTT : Lazy allocate those. People sometimes have HUGE projects and only use a handful of instruments.
-                    if (inst.IsN163)
-                    {
-                        instrumentMasks.Add(inst, new N163Mask(numLongs));
-                    }
-                }
-
                 for (var i = 0; i < expansionNumN163Channels; i++)
                 {
                     var channel = song.GetChannelByType(ChannelType.N163Wave1 + i);
@@ -2020,8 +2008,12 @@ namespace FamiStudio
 
                         if (note.Instrument != null)
                         {
-                            var mask = instrumentMasks[note.Instrument];
-                            
+                            if (!instrumentMasks.TryGetValue(note.Instrument, out var mask))
+                            {
+                                mask = new N163Mask(numLongs);
+                                instrumentMasks.Add(note.Instrument, mask);
+                            }
+
                             // Start + end of this note, in frame.
                             var idx1 = it.Location.ToAbsoluteNoteIndex(song);
                             var idx2 = Math.Min(idx1 + Math.Min(note.Duration, it.DistanceToNextNote), numFrames - 1);
