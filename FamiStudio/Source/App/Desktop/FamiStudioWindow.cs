@@ -860,7 +860,21 @@ namespace FamiStudio
             if (captureControl != null && captureControl != ctrl)
                 return;
 
-            glfwSetCursor(window, ctrl != null ? ctrl.Cursor : Cursors.Default);
+            // Look up the chain, look for any control that might have requested a non-default cursor.
+            var cursor = Cursors.Default;
+
+            do
+            {
+                if (ctrl == null)
+                {
+                    break;
+                }
+                cursor = ctrl.Cursor;
+                ctrl = ctrl.ParentContainer;
+            }
+            while (cursor == Cursors.Default);
+
+            glfwSetCursor(window, cursor);
         }
 
         public void SetActiveControl(Control ctrl, bool animate = true)
