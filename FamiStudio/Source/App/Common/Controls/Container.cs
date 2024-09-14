@@ -276,12 +276,17 @@ namespace FamiStudio
             var controlsToTick = new List<Control>();
 
             if (TickEnabled)
+            {
                 controlsToTick.Add(this);
+            }
 
             GatherChildrenToTick(delta, ref controlsToTick);
 
             foreach (var ctrl in controlsToTick)
+            {
+                //Debug.WriteLine($"Ticking {ctrl}");
                 ctrl.Tick(delta);
+            }
         }
 
         protected void RenderChildControlsAndContainers(Graphics g)
