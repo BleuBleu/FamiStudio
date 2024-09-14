@@ -18,8 +18,12 @@ namespace FamiStudio
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
         private int lineHeight     = DpiScaling.ScaleForWindow(16);
 
+        private LocalizedString CopyLogTextContext;
+
         public LogTextBox(int lineCount) 
         {
+            Localization.Localize(this);
+
             numLines = lineCount;
             height = lineCount* lineHeight;
             UpdateScrollParams();
@@ -69,6 +73,10 @@ namespace FamiStudio
                 draggingScrollbars = false;
                 ReleasePointer();
                 MarkDirty();
+            }
+            else if (e.Right)
+            {
+                App.ShowContextMenuAsync([new ContextMenuOption("MenuCopy", CopyLogTextContext, () => Platform.SetClipboardString(string.Join(Environment.NewLine, lines)))]);
             }
         }
 

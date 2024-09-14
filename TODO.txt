@@ -3,10 +3,13 @@ Today:
 
 4.3.0
 =====
+- Print flags needed in assembly as suggested by https://github.com/BleuBleu/FamiStudio/issues/328
+	- Dump note table in there too!
+- Ability to copy log for content
+
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Look at michel_iwaniec changes
-- Upgrade to latest GLFW, there is some good stuff in there : menu for for macos, etc.
 - Review the copy/paste name matching. Maybe add a rename option.
 - Raw FDS modulation table envelope. 
 - Merge change from github issue where it prints the required defines as comments in the file.
