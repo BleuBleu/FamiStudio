@@ -2,6 +2,7 @@
 =====
 - MID import error :
 	https://discord.com/channels/@me/1286493072418672754/1286493156602282035
+- Is register overlay broken on android?
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Look at michel_iwaniec changes
@@ -153,6 +154,8 @@ Discord
 
 Backlog: 
 =========
+- FDS mod depth envelopes?
+	https://discord.com/channels/747649221879922840/747649222354010173/1289675252850360351
 - Unify mobile/desktop file operations. Remove all if {} there.
 - Disable NMI during FDS file loading
 	https://discord.com/channels/747649221879922840/798008185977176074/1235154978486878298
