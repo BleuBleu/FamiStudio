@@ -1,5 +1,7 @@
 4.3.0
 =====
+- MID import error :
+	https://discord.com/channels/@me/1286493072418672754/1286493156602282035
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Look at michel_iwaniec changes
