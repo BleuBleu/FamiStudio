@@ -77,9 +77,9 @@ namespace FamiStudio
         public int ExpansionMask   => GetSelectedExpansionMask();
         public int NumN163Channels => ExpansionPage.GetPropertyValue<int>(1);
 
-        public bool DPCMBankswitching => SoundEnginePage.GetPropertyValue<bool>(0);
-        public bool DPCMExtendedRange => SoundEnginePage.GetPropertyValue<bool>(1);
-        public bool InstrumentExtendedRange => SoundEnginePage.GetPropertyValue<bool>(2);
+        public bool DPCMBankswitching => SoundEnginePage.GetPropertyValue<bool>(1);
+        public bool DPCMExtendedRange => SoundEnginePage.GetPropertyValue<bool>(2);
+        public bool InstrumentExtendedRange => SoundEnginePage.GetPropertyValue<bool>(3);
 
         public unsafe ProjectPropertiesDialog(FamiStudioWindow win, Project proj)
         {
@@ -141,11 +141,11 @@ namespace FamiStudio
                 }
                 case ProjectSection.SoundEngine:
                 {
-                    page.AddLabel(null, SoundEngineSettingsLabel, true);
-                    page.AddLabelCheckBox(DPCMBankSwitchingLabel, project.SoundEngineUsesDpcmBankSwitching, 0, DPCMBankSwitchingTooltip); // 0
-                    page.AddLabelCheckBox(DPCMExtendedRangeLabel, project.SoundEngineUsesDpcmBankSwitching || project.SoundEngineUsesExtendedDpcm, 0, DPCMExtendedRangeTooltip); // 1
-                    page.AddLabelCheckBox(ExtendedInstrumentLabel, project.SoundEngineUsesExtendedInstruments, 0, ExtendedInstrumentTooltip); // 2
-                    page.SetPropertyEnabled(1, !project.SoundEngineUsesDpcmBankSwitching);
+                    page.AddLabel(null, SoundEngineSettingsLabel, true); // 0
+                    page.AddLabelCheckBox(DPCMBankSwitchingLabel, project.SoundEngineUsesDpcmBankSwitching, 0, DPCMBankSwitchingTooltip); // 1
+                    page.AddLabelCheckBox(DPCMExtendedRangeLabel, project.SoundEngineUsesDpcmBankSwitching || project.SoundEngineUsesExtendedDpcm, 0, DPCMExtendedRangeTooltip); // 2
+                    page.AddLabelCheckBox(ExtendedInstrumentLabel, project.SoundEngineUsesExtendedInstruments, 0, ExtendedInstrumentTooltip); // 3
+                    page.SetPropertyEnabled(2, !project.SoundEngineUsesDpcmBankSwitching);
                     page.PropertyChanged += SoundEngine_PropertyChanged;
                     break;
                 }

@@ -4025,6 +4025,8 @@ namespace FamiStudio
                 LoadDPCMSample();
             else if (subButtonType == SubButtonType.Sort)
                 SortSamples();
+            else if (subButtonType == SubButtonType.Add)
+                AskAddSampleFolder(x, y);
 
             return true;
         }
@@ -5078,6 +5080,10 @@ namespace FamiStudio
                     project.Name = dlg.Title;
                     project.Author = dlg.Author;
                     project.Copyright = dlg.Copyright;
+
+                    project.SoundEngineUsesDpcmBankSwitching = dlg.DPCMBankswitching;
+                    project.SoundEngineUsesExtendedDpcm = dlg.DPCMExtendedRange;
+                    project.SoundEngineUsesExtendedInstruments = dlg.InstrumentExtendedRange;
 
                     if (changedExpansion || changedNumChannels)
                     {

@@ -35,13 +35,13 @@ namespace FamiStudio
         private static void InitializeDesktop(float scaling)
         {
             Default      = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-            SizeWE       = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
-            SizeNS       = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
-            DragCursor   = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
-            CopyCursor   = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+            SizeWE       = glfwCreateStandardCursor(GLFW_RESIZE_EW_CURSOR);
+            SizeNS       = glfwCreateStandardCursor(GLFW_RESIZE_NS_CURSOR);
+            DragCursor   = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
+            CopyCursor   = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
             IBeam        = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
-            PointingHand = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
-            Move         = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+            PointingHand = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
+            Move         = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
 
             var size = Platform.GetCursorSize(scaling);
             Eyedrop = CreateCursorFromResource(size, 6, 25, "CursorEyedrop");

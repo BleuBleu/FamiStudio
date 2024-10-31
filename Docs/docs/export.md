@@ -347,3 +347,6 @@ The same goes for sound effect export. In this mode, one song is one sound effec
 
 Only the desktop version of FamiStudio supports exporting to this format.
 
+## Share (Mobile Only)
+
+FamiStudio stores your projects in its own internal folder, inaccessible from the rest of your phone. To copy a `.fms` file onto your device storage, or to send it to someone through another app on your phone (Email, Discord or various messaging or social media apps, etc.), you can use the **Share** export feature. 

@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (4.1.0)
+; FAMISTUDIO SOUND ENGINE (4.2.0)
 ; Copyright (c) 2019-2023 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
@@ -1081,6 +1081,7 @@ FAMISTUDIO_APU_FRAME_CNT  = $4017
 FAMISTUDIO_VRC6_PL1_VOL   = $41a0
 FAMISTUDIO_VRC6_PL1_LO    = $41a1
 FAMISTUDIO_VRC6_PL1_HI    = $41a2
+FAMISTUDIO_VRC6_FREQ_CTRL = $41a0 ; Dummy
 FAMISTUDIO_VRC6_PL2_VOL   = $41a3
 FAMISTUDIO_VRC6_PL2_LO    = $41a4
 FAMISTUDIO_VRC6_PL2_HI    = $41a5
@@ -1091,6 +1092,7 @@ FAMISTUDIO_VRC6_SAW_HI    = $41a8
 FAMISTUDIO_VRC6_PL1_VOL   = $9000
 FAMISTUDIO_VRC6_PL1_LO    = $9001
 FAMISTUDIO_VRC6_PL1_HI    = $9002
+FAMISTUDIO_VRC6_FREQ_CTRL = $9003
 FAMISTUDIO_VRC6_PL2_VOL   = $a000
 FAMISTUDIO_VRC6_PL2_LO    = $a001
 FAMISTUDIO_VRC6_PL2_HI    = $a002
@@ -1349,6 +1351,12 @@ famistudio_init:
     lda #$08 ; No sweep
     sta FAMISTUDIO_APU_PL1_SWEEP
     sta FAMISTUDIO_APU_PL2_SWEEP
+
+    .if FAMISTUDIO_EXP_VRC6
+.init_vrc6:
+    lda #0
+    sta FAMISTUDIO_VRC6_FREQ_CTRL ; NESDEV wiki says to write zero at startup.
+    .endif
 
     .if FAMISTUDIO_EXP_VRC7
 .init_vrc7:
@@ -4742,7 +4750,11 @@ famistudio_load_basic_envelopes:
     tax
     .if FAMISTUDIO_USE_VIBRATO 
     ror a ; Bring back our bit-7 from above.
-    bmi .done ; Instrument pitch is overriden by vibrato, dont touch!
+    bpl .no_vibrato ; In bit 7 is set, instrument pitch is overriden by vibrato, dont touch pitch envelope!
+    iny
+    iny
+    bne .done
+    .no_vibrato:
     .endif    
     iny
     lda [.instrument_ptr],y
@@ -4750,6 +4762,7 @@ famistudio_load_basic_envelopes:
     iny
     lda [.instrument_ptr],y
     sta famistudio_pitch_env_addr_hi,x
+.done:
     .if !FAMISTUDIO_EXP_NONE
     ; For expansion, preserve X (envelope index) and Y (pointer in instrument data)
     ; as they may want to load more after.
@@ -4757,8 +4770,6 @@ famistudio_load_basic_envelopes:
     inx
     iny
     .endif
-
-.done:
     rts
     
 ;======================================================================================================================
@@ -5498,6 +5509,11 @@ famistudio_advance_channel:
     asl a
     asl a
     sta famistudio_chn_volume_track,x
+    ; Clear any volume slide.
+    .if FAMISTUDIO_USE_VOLUME_SLIDES
+        lda #0
+        sta famistudio_chn_volume_slide_step,x
+    .endif    
     bcc .read_byte
     .endif
 

@@ -735,6 +735,14 @@ namespace FamiStudio
             }
         }
 
+        public bool HasFolder
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(folderName);
+            }
+        }
+
         public void ReplaceSampleInAllMappings(DPCMSample oldSample, DPCMSample newSample)
         {
             foreach (var kv in samplesMapping)

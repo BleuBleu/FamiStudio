@@ -120,6 +120,12 @@ namespace FamiStudio
             return x[0] | (x[1] << 8) | (x[2] << 16);
         }
 
+        public static int Bytes24BitToInt(ReadOnlySpan<byte> x)
+        {
+            Debug.Assert(x.Length == 3);
+            return x[0] | (x[1] << 8) | (x[2] << 16);
+        }
+
         public static int Log2Int(int x)
         {
             if (x == 0)

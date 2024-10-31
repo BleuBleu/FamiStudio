@@ -353,6 +353,10 @@ namespace FamiStudio
 
             if (ptrLoop == 0xff || foundRelease)
             {
+                // Non-looping relative pitch envelopes need to end with a zero so they stop doing anything.
+                if (newPitchEnvelope && env.Relative && data[ptr - 1] != 192)
+                    data[ptr++] = 192;
+
                 ptrLoop = (byte)(ptr - 1);
             }
             else

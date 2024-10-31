@@ -1,10 +1,37 @@
+4.2.2
+=====
+- MIDI Crash
+- #bug-report stuff (cant type "-")
+- Crash if project name is " " + NSF export.
+- Upgrade Android min SDK to make google happy.
+- Russian translation.
+- JTS song is too big now? 
+	https://discord.com/channels/@me/1256890811921207330/1260320240986755083
+
 4.3.0
 =====
+- VRC6 square popping how2/kawashin
+	- https://discord.com/channels/@me/819772561940152321/1231885934656753704
+	- https://discord.com/channels/352252932953079811/601877396857159680/1243843923298750545
+	- Experiments saved in `OneDrive\NES\Nes_Vrc6_ProperPopTests.cpp`
+	- Also locally modified mesen to do same.
+	- Works good, but pops more often than real HW, why???
+	- *** RETEST PHASE RESETS WITH THESE CHANGES!
+- Separate export VS. DPCM : 
+  https://discord.com/channels/747649221879922840/798008185977176074/1239648701669179452
+- Disable NMI during FDS file loading
+	https://discord.com/channels/747649221879922840/798008185977176074/1235154978486878298
 - Look at michel_iwaniec changes
 - FDS test for Persune
 - Upgrade to latest GLFW, there is some good stuff in there : menu for for macos, etc.
 - Check out Yxx stuff from Alex.
 	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
+- YARN : Small hitch beginning of VRC6 songs? Not sure
+- YARN : Change ini ROM code persune suggestion.
+- Review the copy/paste name matching. Maybe add a rename option.
+- Remove ..\..\Tools\ca65 path in sound engine build scripts (have a normal + dev version)
+- N163 wave pos inconsistency. we sometimes force to multiple of 2/4. it needs to be 2 everywhere.
+- Make ROM export fail if go over limit. Not a warning.
 
 Linux notes 
 =========== 
@@ -50,6 +77,10 @@ MacOS notes
 Convert PNG to TGA
 ==================
 "c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png
+
+Discord Invite Link (new as of April 2024)
+==========================================
+https://discord.gg/QRCMe595Pv
 
 Android Notes
 =============

@@ -220,6 +220,7 @@ namespace FamiStudio
 
         // Pattern properties dialog
         LocalizedString PatternPropertiesTitle;
+        LocalizedString MultiplePatternsSelectedLabel;
         LocalizedString ErrorRenamingPattern;
 
         #endregion
@@ -2979,7 +2980,7 @@ namespace FamiStudio
             bool multiplePatternsSelected = selection && IsSelectionValid() && ((selectionMax.ChannelIndex != selectionMin.ChannelIndex) || (selectionMin.PatternIndex != selectionMax.PatternIndex));
 
             var dlg = new PropertyDialog(ParentWindow, PatternPropertiesTitle, new Point(left + pt.X, top + pt.Y), 240);
-            dlg.Properties.AddColoredTextBox(multiplePatternsSelected ? "" : pattern.Name, pattern.Color);
+            dlg.Properties.AddColoredTextBox(multiplePatternsSelected ? MultiplePatternsSelectedLabel : pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternsSelected);
             dlg.Properties.AddColorPicker(pattern.Color);
             dlg.Properties.Build();
