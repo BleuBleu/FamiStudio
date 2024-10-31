@@ -1689,7 +1689,7 @@ namespace FamiStudio
                     {
                         if (vgmFile.Length < (vgmDataOffset + 3))
                             break;
-                        samples = samples + BitConverter.ToInt16(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
+                        samples = samples + BitConverter.ToUInt16(vgmFile.Skip(vgmDataOffset + 1).Take(2).ToArray());
                         vgmDataOffset = vgmDataOffset + 3;
                     }
                     else if (vgmCommand >= 0x80)
