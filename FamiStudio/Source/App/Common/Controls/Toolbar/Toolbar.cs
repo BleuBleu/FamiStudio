@@ -602,7 +602,7 @@ namespace FamiStudio
 
         private bool ButtonMachine_EnabledEvent(Control sender)
         {
-            return App.Project != null && !App.Project.UsesAnyExpansionAudio;
+            return App.Project != null;
         }
 
         private string ButtonMachine_ImageEvent(Control sender, ref Color tint)

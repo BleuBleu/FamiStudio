@@ -1241,7 +1241,7 @@ namespace FamiStudio
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizeNtsc, out var _);
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizePal, out var _);
 
-                                if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
+                                if (machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)
                                     stepSizeNtsc = stepSizePal;
@@ -1479,7 +1479,7 @@ namespace FamiStudio
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTablePal, true, true, out _, out int stepSizePal, out _);
 
-                                if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
+                                if (machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)
                                     stepSizeNtsc = stepSizePal;
