@@ -9,6 +9,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.VisualBasic;
+using Microsoft.Win32.SafeHandles;
+using SharpDX.XAudio2;
 
 namespace FamiStudio
 {
@@ -383,12 +385,8 @@ namespace FamiStudio
         {
             var noteTablesText = GetNoteTablesText(tuning, expansion, machine, numN163Channels);
 
-            // TEMP
-            Console.WriteLine("Retrieved Note Tables Text:");
-            noteTablesText.ForEach(line => Console.WriteLine(line));
-
-            List<string>names = new();
-            var byteList = new List<byte>();
+            List<string> names = new();
+            List<byte> byteList = new();
 
             foreach (var line in noteTablesText)
             {
@@ -396,27 +394,23 @@ namespace FamiStudio
                 {
                     var name = line.Replace(":", "").Trim();
 
-                if (name.Contains("n163"))
-                    name += $"_{numN163Channels}ch";
+                    if (name.Contains("n163"))
+                        name += $"_{numN163Channels}ch";
 
-                if (!name.Contains("vrc7") && !name.Contains("epsm"))
-                {
-                    if (machine == MachineType.PAL)
-                        name += $"_pal";
-                }
-
+                    if (!name.Contains("vrc7") && !name.Contains("epsm") && machine == MachineType.PAL)
+                        name += "_pal";
+                    
                     names.Add(name);
-                    Console.WriteLine($"Found name: {name}");  // Debug: Print the found name
                     continue;
                 }
 
-                var cleanedLine = line.Split(';')[0].Replace("$", "").Replace(",", "").Replace(".byte","").Trim();
+                var trimLine = line.Split(';')[0].Replace("$", "").Replace(",", "").Replace(".byte", "").Trim();
 
-                for (int i = 0; i < cleanedLine.Length; i += 2)
+                for (int i = 0; i < trimLine.Length; i += 2)
                 {
-                    if (i + 1 < cleanedLine.Length)
+                    if (i + 1 < trimLine.Length)
                     {
-                        var byteString = cleanedLine.Substring(i, 2);
+                        var byteString = trimLine.Substring(i, 2);
 
                         if (byte.TryParse(byteString, System.Globalization.NumberStyles.HexNumber, null, out byte byteValue))
                             byteList.Add(byteValue);
@@ -427,25 +421,51 @@ namespace FamiStudio
             return (byteList, names);
         }
 
-        static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.AllMask, int machine = MachineType.PAL, int numN163Channels = 8)
+        static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8)
         {
             var (byteList, names) = GetNoteTableBinaryData(tuning, expansionMask, machine, numN163Channels);
 
-            for (var i = 0; i < names.Count; i++) {
+            string dir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "SoundEngine", "NoteTables");
+
+            for (var i = 0; i < names.Count; i++)
+            {
                 var start = i * 97;
-                var outputFileName = $"{names[i]}.bin";
+                var outputFileName = Path.Combine(dir, $"{names[i]}.bin");
 
-                using (FileStream fs = new FileStream(outputFileName, FileMode.Create))
-                using (BinaryWriter writer = new BinaryWriter(fs))
-                {
-                    foreach (byte b in byteList.GetRange(start, 97))
-                    {
-                        writer.Write(b);
-                    }
-                }
+                using FileStream fs = new FileStream(outputFileName, FileMode.Create);
+                using BinaryWriter writer = new BinaryWriter(fs);
 
-                Console.WriteLine($"Binary file {outputFileName} has been created.");
+                var bytesToWrite = byteList.GetRange(start, 97);
+                writer.Write(bytesToWrite.ToArray());
             }
+        }
+
+        public static void DumpNoteTableBinSet(int tuning = 440)
+        {
+            DumpNoteTableBin(tuning, ExpansionType.NoneMask, MachineType.NTSC);
+            DumpNoteTableBin(tuning, ExpansionType.NoneMask, MachineType.PAL);
+            DumpNoteTableBin(tuning, ExpansionType.Vrc6Mask, MachineType.NTSC);
+            DumpNoteTableBin(tuning, ExpansionType.Vrc6Mask, MachineType.PAL);
+            DumpNoteTableBin(tuning, ExpansionType.Vrc7Mask, MachineType.NTSC);
+            DumpNoteTableBin(tuning, ExpansionType.FdsMask, MachineType.NTSC);
+            DumpNoteTableBin(tuning, ExpansionType.FdsMask, MachineType.PAL);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 1);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 2);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 3);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 4);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 5);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 6);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 7);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 8);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 1);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 2);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 3);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 4);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 5);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 6);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 7);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 8);
+            DumpNoteTableBin(tuning, ExpansionType.EPSMMask, MachineType.NTSC);
         }
 
         public static void DumpNoteTableSetToFile(int tuning, string filename)
@@ -475,7 +495,7 @@ namespace FamiStudio
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 6));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 7));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 8));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.EPSM, MachineType.NTSC));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.EPSMMask, MachineType.NTSC));
 
             using (var stream = new StreamWriter(filename))
             {
@@ -505,8 +525,6 @@ namespace FamiStudio
 
             return lines;
         }
-
-        static bool called;
 
         private static NoteTableSet GetOrCreateNoteTableSet(int tuning)
         {
@@ -551,14 +569,6 @@ namespace FamiStudio
                 #if FALSE // For debugging
                     DumpNoteTableSetToFile(tuning, $"NoteTables{tuning}.txt");
                 #endif
-
-                /*if (!called) {
-                    called = true;
-                    for (var i = 0; i < 2; i++) {
-                        for (var j = 0; j < 8; j++)
-                        DumpNoteTableBin(440, ExpansionType.AllMask, i, j + 1);
-                    }
-                }*/
 
                 NoteTables.Add(tuning, noteTableSet);
                 return noteTableSet;
