@@ -2293,6 +2293,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        // MATTT : This is never called? Suspicious. Look in 4.2.x
         private void AbortCaptureOperation()
         {
             if (App.UndoRedoManager.HasTransactionInProgress)
