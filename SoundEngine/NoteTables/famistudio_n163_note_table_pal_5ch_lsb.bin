@@ -1,9 +1,0 @@
-	.byte $00
-	.byte $82, $99, $b2, $cb, $e7, $04, $22, $43, $65, $8a, $b1, $da ; Octave 0
-	.byte $05, $33, $64, $97, $ce, $08, $45, $86, $cb, $14, $62, $b4 ; Octave 1
-	.byte $0a, $66, $c8, $2f, $9c, $10, $8b, $0d, $97, $29, $c4, $68 ; Octave 2
-	.byte $15, $cd, $90, $5f, $39, $21, $17, $1b, $2f, $53, $88, $d0 ; Octave 3
-	.byte $2b, $9b, $21, $be, $73, $43, $2e, $36, $5e, $a6, $11, $a0 ; Octave 4
-	.byte $57, $37, $42, $7c, $e7, $86, $5d, $6d, $bc, $4c, $22, $41 ; Octave 5
-	.byte $ae, $6e, $85, $f9, $cf, $0d, $ba, $db, $78, $99, $44, $82 ; Octave 6
-	.byte $5c, $dc, $0a, $f2, $9f, $ff, $ff, $ff, $ff, $ff, $ff, $ff ; Octave 7

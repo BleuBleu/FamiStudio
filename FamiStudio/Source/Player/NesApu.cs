@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -339,7 +341,7 @@ namespace FamiStudio
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6Saw, "famistudio_saw_note_table", "VRC6 Saw PAL"));
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6SawPAL, "famistudio_saw_note_table", "VRC6 Saw PAL"));
                 }
             }
             if ((expansionMask & ExpansionType.Vrc7Mask) != 0)
@@ -354,7 +356,7 @@ namespace FamiStudio
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableFds, "famistudio_fds_note_table", "FDS PAL"));
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableFdsPAL, "famistudio_fds_note_table", "FDS PAL"));
                 }
             }
             if ((expansionMask & ExpansionType.N163Mask) != 0)
@@ -365,40 +367,86 @@ namespace FamiStudio
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163[numN163Channels - 1], "famistudio_n163_note_table", $"N163 ({numN163Channels} channel) PAL"));
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163PAL[numN163Channels - 1], "famistudio_n163_note_table", $"N163 ({numN163Channels} channel) PAL"));
                 }
             }
             if ((expansionMask & ExpansionType.EPSMMask) != 0)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSMFm, "famistudio_epsm_note_table_lsb", "EPSM FM"));
+                lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSMFm, "famistudio_epsm_note_table", "EPSM FM"));
                 lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSM, "famistudio_epsm_s_note_table", "EPSM Square"));
             }
 
             return lines;
         }
 
-        public static (List<byte> byteList, List<string> names) GetNoteTableBinaryData(int tuning = 440, int expansionMask = ExpansionType.None, int machine = MachineType.NTSC, int numN163Channels = 8)
+        public static (List<byte> byteList, List<string> names) GetNoteTableBinaryData(int tuning = 440, int expansion = ExpansionType.None, int machine = MachineType.PAL, int numN163Channels = 8)
         {
-            List<string> names = GetNoteTablesText(tuning, expansionMask, machine, numN163Channels)
-                .Where(line => line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Contains("famistudio_"))
-                .Select(line => line.Replace("$", "").Replace(",", "").Replace(".byte", ""))
-                .ToList();
+            var noteTablesText = GetNoteTablesText(tuning, expansion, machine, numN163Channels);
 
+            // TEMP
+            Console.WriteLine("Retrieved Note Tables Text:");
+            noteTablesText.ForEach(line => Console.WriteLine(line));
+
+            List<string>names = new();
             var byteList = new List<byte>();
-            foreach (var line in names)
+
+            foreach (var line in noteTablesText)
             {
-                string[] byteStrings = line.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var byteString in byteStrings)
+                if (line.Contains("famistudio_"))
                 {
-                    if (byte.TryParse(byteString, out byte byteValue))
+                    var name = line.Replace(":", "").Trim();
+
+                if (name.Contains("n163"))
+                    name += $"_{numN163Channels}ch";
+
+                if (!name.Contains("vrc7") && !name.Contains("epsm"))
+                {
+                    if (machine == MachineType.PAL)
+                        name += $"_pal";
+                }
+
+                    names.Add(name);
+                    Console.WriteLine($"Found name: {name}");  // Debug: Print the found name
+                    continue;
+                }
+
+                var cleanedLine = line.Split(';')[0].Replace("$", "").Replace(",", "").Replace(".byte","").Trim();
+
+                for (int i = 0; i < cleanedLine.Length; i += 2)
+                {
+                    if (i + 1 < cleanedLine.Length)
                     {
-                        byteList.Add(byteValue);
+                        var byteString = cleanedLine.Substring(i, 2);
+
+                        if (byte.TryParse(byteString, System.Globalization.NumberStyles.HexNumber, null, out byte byteValue))
+                            byteList.Add(byteValue);
                     }
                 }
             }
+
             return (byteList, names);
         }
 
+        static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.AllMask, int machine = MachineType.PAL, int numN163Channels = 8)
+        {
+            var (byteList, names) = GetNoteTableBinaryData(tuning, expansionMask, machine, numN163Channels);
+
+            for (var i = 0; i < names.Count; i++) {
+                var start = i * 97;
+                var outputFileName = $"{names[i]}.bin";
+
+                using (FileStream fs = new FileStream(outputFileName, FileMode.Create))
+                using (BinaryWriter writer = new BinaryWriter(fs))
+                {
+                    foreach (byte b in byteList.GetRange(start, 97))
+                    {
+                        writer.Write(b);
+                    }
+                }
+
+                Console.WriteLine($"Binary file {outputFileName} has been created.");
+            }
+        }
 
         public static void DumpNoteTableSetToFile(int tuning, string filename)
         {
@@ -458,6 +506,8 @@ namespace FamiStudio
             return lines;
         }
 
+        static bool called;
+
         private static NoteTableSet GetOrCreateNoteTableSet(int tuning)
         {
             // MATTT : Use TLS to avoid blocking?
@@ -499,8 +549,16 @@ namespace FamiStudio
                 }
 
                 #if FALSE // For debugging
-                    DumpNoteTableSetToFile(noteTableSet, $"NoteTables{tuning}.txt");
+                    DumpNoteTableSetToFile(tuning, $"NoteTables{tuning}.txt");
                 #endif
+
+                /*if (!called) {
+                    called = true;
+                    for (var i = 0; i < 2; i++) {
+                        for (var j = 0; j < 8; j++)
+                        DumpNoteTableBin(440, ExpansionType.AllMask, i, j + 1);
+                    }
+                }*/
 
                 NoteTables.Add(tuning, noteTableSet);
                 return noteTableSet;
