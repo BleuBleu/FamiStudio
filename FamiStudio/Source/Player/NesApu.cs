@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.VisualBasic;
 
 namespace FamiStudio
 {
@@ -375,6 +376,29 @@ namespace FamiStudio
 
             return lines;
         }
+
+        public static (List<byte> byteList, List<string> names) GetNoteTableBinaryData(int tuning = 440, int expansionMask = ExpansionType.None, int machine = MachineType.NTSC, int numN163Channels = 8)
+        {
+            List<string> names = GetNoteTablesText(tuning, expansionMask, machine, numN163Channels)
+                .Where(line => line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Contains("famistudio_"))
+                .Select(line => line.Replace("$", "").Replace(",", "").Replace(".byte", ""))
+                .ToList();
+
+            var byteList = new List<byte>();
+            foreach (var line in names)
+            {
+                string[] byteStrings = line.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var byteString in byteStrings)
+                {
+                    if (byte.TryParse(byteString, out byte byteValue))
+                    {
+                        byteList.Add(byteValue);
+                    }
+                }
+            }
+            return (byteList, names);
+        }
+
 
         public static void DumpNoteTableSetToFile(int tuning, string filename)
         {
