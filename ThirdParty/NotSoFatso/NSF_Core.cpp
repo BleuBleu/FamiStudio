@@ -87,7 +87,6 @@ BYTE FASTCALL CNSFCore::ReadMemory_pAPU(WORD a)
 	}
 
 	if(!(nExternalSound & EXTSOUND_FDS))		return 0x40;
-	if(bPALMode)								return 0x40; //no expansion sound on PAL
 
 	if((a >= 0x4040) && (a <= 0x407F))
 		return mWave_FDS.nWaveTable[a & 0x3F] | 0x40;
@@ -364,7 +363,6 @@ void FASTCALL CNSFCore::WriteMemory_pAPU(WORD a,BYTE v)
 	}
 
 	if(!(nExternalSound & EXTSOUND_FDS))		return;
-	if(bPALMode)								return;	//no expansion sound on PAL
 
 	//////////////////////////////////////////////////////////////////////////
 	//   FDS Sound registers
@@ -543,7 +541,7 @@ void FASTCALL CNSFCore::WriteMemory_VRC6(WORD a,BYTE v)
 
 void FASTCALL CNSFCore::WriteMemory_MMC5(WORD a,BYTE v)
 {
-	if((a <= 0x5015) && !bPALMode)
+	if((a <= 0x5015))
 	{
 		EmulateAPU(1);
 		switch(a)
@@ -1129,7 +1127,7 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 		mWave_Squares.DoTicks(tick);
 		mixL = mWave_TND.DoTicks(tick);
 
-		if(nExternalSound && !bPALMode)
+		if(nExternalSound)
 		{
 			if(nExternalSound & EXTSOUND_VRC6)
 			{
@@ -1212,7 +1210,7 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 				mixL = 0;
 				mWave_Squares.Mix_Mono(mixL,nDownsample);
 				mWave_TND.Mix_Mono(mixL,nDownsample);
-				if(nExternalSound && !bPALMode)
+				if(nExternalSound)
 				{
 					if(nExternalSound & EXTSOUND_VRC6)
 					{
@@ -1283,7 +1281,7 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 
 				mWave_Squares.Mix_Stereo(mixL,mixR,nDownsample);
 				mWave_TND.Mix_Stereo(mixL,mixR,nDownsample);
-				if(nExternalSound && !bPALMode)
+				if(nExternalSound)
 				{
 					if(nExternalSound & EXTSOUND_VRC6)
 					{
@@ -1426,7 +1424,7 @@ CNSFCore::CNSFCore()
 	bDMCPopReducer = 0;
 
 	for(i = 0; i < 8; i++)
-		mWave_N106.fFrequencyLookupTable[i] = (((i + 1) * 45 * 0x40000) / (float)NES_FREQUENCY) * (float)NTSC_FREQUENCY;
+		mWave_N106.fFrequencyLookupTable[i] = (((i + 1) * 45 * 0x40000) / (float)NES_FREQUENCY) * (bPALMode ? (float)PAL_FREQUENCY : (float)NTSC_FREQUENCY);
 
 	
 	mWave_Squares.nInvertFreqCutoff = 0xFFFF;
@@ -1672,43 +1670,42 @@ int CNSFCore::LoadNSF(const CNSFFile* fl)
 		ReadMemory[0x06] = &CNSFCore::ReadMemory_ROM;
 		ReadMemory[0x07] = &CNSFCore::ReadMemory_ROM;
 	}
-	if(!bPALMode)	//no expansion sound available on a PAL system
+
+	if(nExternalSound & EXTSOUND_VRC7)
 	{
-		if(nExternalSound & EXTSOUND_VRC7)
-		{
-			WriteMemory[9] = &CNSFCore::WriteMemory_VRC7;
-			VRC7_Init();
-		}
-		if(nExternalSound & EXTSOUND_VRC6)
-		{
-			WriteMemory[0x09] = &CNSFCore::WriteMemory_VRC6;	//if both VRC6+VRC7... it MUST go to WriteMemory_VRC6 
-			WriteMemory[0x0A] = &CNSFCore::WriteMemory_VRC6;	// or register writes will be lost (WriteMemory_VRC6 calls
-			WriteMemory[0x0B] = &CNSFCore::WriteMemory_VRC6;	// WriteMemory_VRC7 if needed)
-		}
-		if(nExternalSound & EXTSOUND_N106)
-		{
-			WriteMemory[0x04] = &CNSFCore::WriteMemory_N106;
-			ReadMemory[0x04] = &CNSFCore::ReadMemory_N106;
-			WriteMemory[0x0F] = &CNSFCore::WriteMemory_N106;
-		}
-		if(nExternalSound & EXTSOUND_FME07)
-		{
-			WriteMemory[0x0C] = &CNSFCore::WriteMemory_FME07;
-			WriteMemory[0x0E] = &CNSFCore::WriteMemory_FME07;
-		}
-		//if (nExternalSound & EXTSOUND_EPSM)
-		//{
-		//	WriteMemory[0x07] = &CNSFCore::WriteMemory_EPSM;
-		//	WriteMemory[0x08] = &CNSFCore::WriteMemory_EPSM;
-		//	WriteMemory[0x09] = &CNSFCore::WriteMemory_EPSM;
-		//	WriteMemory[0x0a] = &CNSFCore::WriteMemory_EPSM;
-		//	WriteMemory[0x0b] = &CNSFCore::WriteMemory_EPSM;
-		//	WriteMemory[0x0c] = &CNSFCore::WriteMemory_EPSM;
-		//	WriteMemory[0x0d] = &CNSFCore::WriteMemory_EPSM;
-		//	WriteMemory[0x0E] = &CNSFCore::WriteMemory_EPSM;
-		//	WriteMemory[0x0f] = &CNSFCore::WriteMemory_EPSM;
-		//}
+		WriteMemory[9] = &CNSFCore::WriteMemory_VRC7;
+		VRC7_Init();
 	}
+	if(nExternalSound & EXTSOUND_VRC6)
+	{
+		WriteMemory[0x09] = &CNSFCore::WriteMemory_VRC6;	//if both VRC6+VRC7... it MUST go to WriteMemory_VRC6 
+		WriteMemory[0x0A] = &CNSFCore::WriteMemory_VRC6;	// or register writes will be lost (WriteMemory_VRC6 calls
+		WriteMemory[0x0B] = &CNSFCore::WriteMemory_VRC6;	// WriteMemory_VRC7 if needed)
+	}
+	if(nExternalSound & EXTSOUND_N106)
+	{
+		WriteMemory[0x04] = &CNSFCore::WriteMemory_N106;
+		ReadMemory[0x04] = &CNSFCore::ReadMemory_N106;
+		WriteMemory[0x0F] = &CNSFCore::WriteMemory_N106;
+	}
+	if(nExternalSound & EXTSOUND_FME07)
+	{
+		WriteMemory[0x0C] = &CNSFCore::WriteMemory_FME07;
+		WriteMemory[0x0E] = &CNSFCore::WriteMemory_FME07;
+	}
+	//if (nExternalSound & EXTSOUND_EPSM)
+	//{
+	//	WriteMemory[0x07] = &CNSFCore::WriteMemory_EPSM;
+	//	WriteMemory[0x08] = &CNSFCore::WriteMemory_EPSM;
+	//	WriteMemory[0x09] = &CNSFCore::WriteMemory_EPSM;
+	//	WriteMemory[0x0a] = &CNSFCore::WriteMemory_EPSM;
+	//	WriteMemory[0x0b] = &CNSFCore::WriteMemory_EPSM;
+	//	WriteMemory[0x0c] = &CNSFCore::WriteMemory_EPSM;
+	//	WriteMemory[0x0d] = &CNSFCore::WriteMemory_EPSM;
+	//	WriteMemory[0x0E] = &CNSFCore::WriteMemory_EPSM;
+	//	WriteMemory[0x0f] = &CNSFCore::WriteMemory_EPSM;
+	//}
+	
 	if(nExternalSound & EXTSOUND_MMC5)			//MMC5 still has a multiplication reg that needs to be available on PAL tunes
 		WriteMemory[0x05] = &CNSFCore::WriteMemory_MMC5;
 
@@ -2057,35 +2054,33 @@ void CNSFCore::RecalculateInvertFreqs(int cutoff)
 		//  this is harder since it's a random wavelength and thus no real frequency
 		//  use same freq as Squares
 		mWave_TND.nInvertFreqCutoff_Noise = mWave_Squares.nInvertFreqCutoff;
+		
+		//VRC6 Pulses = same frequency as squares
+		mWave_VRC6Pulse[0].nInvertFreqCutoff = mWave_VRC6Pulse[1].nInvertFreqCutoff = 
+			mWave_Squares.nInvertFreqCutoff;
 
-		if(!bPALMode)	//no expansion available in PAL mode... don't bother doing the math
+		//VRC6 Saw = same formula, but 14 steps instead of 16
+		mWave_VRC6Saw.nInvertFreqCutoff = (WORD)(base / (14 * nInvertCutoffHz)) - 1;
+
+		//MMC5 Squares = same as normal squares
+		mWave_MMC5Square[0].nInvertFreqCutoff = mWave_MMC5Square[1].nInvertFreqCutoff = 
+			mWave_Squares.nInvertFreqCutoff;
+
+		//N106 Frequencies are a nightmare
+		int i, j;
+		for(i = 0; i < 8; i++)
 		{
-			//VRC6 Pulses = same frequency as squares
-			mWave_VRC6Pulse[0].nInvertFreqCutoff = mWave_VRC6Pulse[1].nInvertFreqCutoff = 
-				mWave_Squares.nInvertFreqCutoff;
-
-			//VRC6 Saw = same formula, but 14 steps instead of 16
-			mWave_VRC6Saw.nInvertFreqCutoff = (WORD)(base / (14 * nInvertCutoffHz)) - 1;
-
-			//MMC5 Squares = same as normal squares
-			mWave_MMC5Square[0].nInvertFreqCutoff = mWave_MMC5Square[1].nInvertFreqCutoff = 
-				mWave_Squares.nInvertFreqCutoff;
-
-			//N106 Frequencies are a nightmare
-			int i, j;
-			for(i = 0; i < 8; i++)
-			{
-				for(j = 0; j < 8; j++)
-					mWave_N106.nInvertFreqCutoff[i][j] =
-						((0x40000 * 4 * 45) / NES_FREQUENCY) * (i + 1) * (8 - j) * nInvertCutoffHz;
-			}
-
-			//FME-07 uses the normal formula, but is 32 steps instead of 16 (approx. same as tri)
-			mWave_FME07[0].nInvertFreqCutoff = mWave_FME07[1].nInvertFreqCutoff = 
-				mWave_FME07[2].nInvertFreqCutoff = mWave_TND.nInvertFreqCutoff_Tri;
-			mWave_EPSM[0].nInvertFreqCutoff = mWave_EPSM[1].nInvertFreqCutoff =
-				mWave_EPSM[2].nInvertFreqCutoff = mWave_TND.nInvertFreqCutoff_Tri;
+			for(j = 0; j < 8; j++)
+				mWave_N106.nInvertFreqCutoff[i][j] =
+					((0x40000 * 4 * 45) / NES_FREQUENCY) * (i + 1) * (8 - j) * nInvertCutoffHz;
 		}
+
+		//FME-07 uses the normal formula, but is 32 steps instead of 16 (approx. same as tri)
+		mWave_FME07[0].nInvertFreqCutoff = mWave_FME07[1].nInvertFreqCutoff = 
+			mWave_FME07[2].nInvertFreqCutoff = mWave_TND.nInvertFreqCutoff_Tri;
+		mWave_EPSM[0].nInvertFreqCutoff = mWave_EPSM[1].nInvertFreqCutoff =
+			mWave_EPSM[2].nInvertFreqCutoff = mWave_TND.nInvertFreqCutoff_Tri;
+		
 	}
 	else
 	{
@@ -3066,7 +3061,7 @@ int CNSFCore::GetSamples(BYTE* buffer,int buffersize)
 			break;
 	}
 
-	if((nExternalSound & EXTSOUND_VRC7) && !bPALMode)
+	if((nExternalSound & EXTSOUND_VRC7))
 		VRC7_Mix();
 
 	nCPUCycle = nAPUCycle = 0;

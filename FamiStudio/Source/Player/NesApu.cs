@@ -275,16 +275,47 @@ namespace FamiStudio
         public const int EpsmCycleDataSkipShort = 10;
         public const int EpsmCycleKeyOnSkip = 36;
 
+        // Note Table Names
+        public static class NoteTableNames
+        {
+            public const string NTSC          = "famistudio_note_table";
+            public const string PAL           = "famistudio_note_table_pal";
+            public const string S5B           = "famistudio_s5b_note_table";
+            public const string S5BPAL        = "famistudio_s5b_note_table_pal";
+            public const string Saw           = "famistudio_saw_note_table";
+            public const string SawPAL        = "famistudio_saw_note_table_pal";
+            public const string Vrc7          = "famistudio_vrc7_note_table";
+            public const string Fds           = "famistudio_fds_note_table";
+            public const string FdsPAL        = "famistudio_fds_note_table_pal";
+            public const string Epsm          = "famistudio_epsm_note_table";
+            public const string EpsmS         = "famistudio_epsm_s_note_table";
+            public const string N163Prefix    = "famistudio_n163_note_table";
+            public const string N163PALPrefix = "famistudio_n163_note_table_pal";
+        }
+
         private class NoteTableSet
         {
-            public readonly ushort[]   NoteTableNTSC    = new ushort[97];
-            public readonly ushort[]   NoteTablePAL     = new ushort[97];
-            public readonly ushort[]   NoteTableVrc6Saw = new ushort[97];
-            public readonly ushort[]   NoteTableVrc7    = new ushort[97];
-            public readonly ushort[]   NoteTableFds     = new ushort[97];
-            public readonly ushort[]   NoteTableEPSM    = new ushort[97];
-            public readonly ushort[]   NoteTableEPSMFm  = new ushort[97];
-            public readonly ushort[][] NoteTableN163    = new ushort[8][]
+            public readonly ushort[]   NoteTableNTSC       = new ushort[97];
+            public readonly ushort[]   NoteTablePAL        = new ushort[97];
+            public readonly ushort[]   NoteTableVrc6Saw    = new ushort[97];
+            public readonly ushort[]   NoteTableVrc6SawPAL = new ushort[97];
+            public readonly ushort[]   NoteTableVrc7       = new ushort[97];
+            public readonly ushort[]   NoteTableFds        = new ushort[97];
+            public readonly ushort[]   NoteTableFdsPAL     = new ushort[97];
+            public readonly ushort[]   NoteTableEPSM       = new ushort[97];
+            public readonly ushort[]   NoteTableEPSMFm     = new ushort[97];
+            public readonly ushort[][] NoteTableN163       = new ushort[8][]
+            {
+                new ushort[97], 
+                new ushort[97],
+                new ushort[97],
+                new ushort[97],
+                new ushort[97],
+                new ushort[97],
+                new ushort[97],
+                new ushort[97]
+            };  
+            public readonly ushort[][] NoteTableN163PAL    = new ushort[8][]
             {
                 new ushort[97], 
                 new ushort[97],
@@ -370,6 +401,20 @@ namespace FamiStudio
             }
         }
 
+        public static void DumpNoteTableToFile(int tuning, string[] tables, string ext = ".bin")
+        {
+            DumpNoteTableToFile(GetOrCreateNoteTableSet(tuning), tables, ext);
+        }
+
+        private static void CreateNoteTable(StreamWriter stream, ushort[] noteTable, bool msb)
+        {
+            var shift = msb ? 8 : 0;
+
+            stream.WriteLine($"\t.byte $00");
+            for (int j = 0; j < 8; j++)
+                stream.WriteLine($"\t.byte {String.Join(", ", noteTable.Select(i => $"${(byte)(i >> shift):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+        }
+
         private static List<string> GetNoteTableText(ushort[] noteTable, string name, string comment = null)
         {
             var lines = new List<string>();
@@ -378,14 +423,10 @@ namespace FamiStudio
                 lines.Add($"; {comment}");
 
             lines.Add($"{name}_lsb:");
-            lines.Add($"\t.byte $00");
-            for (int j = 0; j < 8; j++)
-                lines.Add($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 0):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+            CreateNoteTable(stream, noteTable, false);
 
             lines.Add($"{name}_msb:");
-            lines.Add($"\t.byte $00");
-            for (int j = 0; j < 8; j++)
-                lines.Add($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 8):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+            CreateNoteTable(stream, noteTable, true);
 
             return lines;
         }
@@ -412,16 +453,21 @@ namespace FamiStudio
                 {
                     var octave = (i - 1) / 12;
                     var freq = freqC1 * Math.Pow(2.0, (i - 1) / 12.0);
-                    noteTableSet.NoteTableNTSC[i]    = (ushort)(clockNtsc / freq - 0.5);
-                    noteTableSet.NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
-                    noteTableSet.NoteTableEPSM[i]    = (ushort)Math.Round(clockEPSM / freq);
-                    noteTableSet.NoteTableEPSMFm[i]  = octave == 0 ? (ushort)((144 * (double)freq * 1048576 / 8000000)/4) : (ushort)((noteTableSet.NoteTableEPSMFm[(i - 1) % 12 + 1]) << octave);
-                    noteTableSet.NoteTableVrc6Saw[i] = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
-                    noteTableSet.NoteTableFds[i]     = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
-                    noteTableSet.NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(noteTableSet.NoteTableVrc7[(i - 1) % 12 + 1] << octave);
+                    noteTableSet.NoteTableNTSC[i]       = (ushort)(clockNtsc / freq - 0.5);
+                    noteTableSet.NoteTablePAL[i]        = (ushort)(clockPal  / freq - 0.5);
+                    noteTableSet.NoteTableEPSM[i]       = (ushort)Math.Round(clockEPSM / freq);
+                    noteTableSet.NoteTableEPSMFm[i]     = octave == 0 ? (ushort)((144 * (double)freq * 1048576 / 8000000)/4) : (ushort)((noteTableSet.NoteTableEPSMFm[(i - 1) % 12 + 1]) << octave);
+                    noteTableSet.NoteTableVrc6Saw[i]    = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
+                    noteTableSet.NoteTableVrc6SawPAL[i] = (ushort)((clockPal * 16.0) / (freq * 14.0) - 0.5);
+                    noteTableSet.NoteTableFds[i]        = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
+                    noteTableSet.NoteTableFdsPAL[i]     = (ushort)((freq * 65536.0) / (clockPal / 1.0) + 0.5);
+                    noteTableSet.NoteTableVrc7[i]       = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(noteTableSet.NoteTableVrc7[(i - 1) % 12 + 1] << octave);
 
                     for (int j = 0; j < 8; j++)
-                        noteTableSet.NoteTableN163[j][i] = (ushort)Math.Min(0xffff, ((freq * (j + 1) * 983040.0) / clockNtsc) / 4);
+                    {
+                        noteTableSet.NoteTableN163[j][i]    = (ushort)Math.Min(0xffff, ((freq * (j + 1) * 983040.0) / clockNtsc) / 4);
+                        noteTableSet.NoteTableN163PAL[j][i] = (ushort)Math.Min(0xffff, ((freq * (j + 1) * 983040.0) / clockPal) / 4);
+                    }
                 }
 
                 #if FALSE // For debugging
@@ -770,9 +816,9 @@ namespace FamiStudio
             switch (channelType)
             {
                 case ChannelType.Vrc6Saw:
-                    return noteTableSet.NoteTableVrc6Saw;
+                    return pal ? noteTableSet.NoteTableVrc6SawPAL : noteTableSet.NoteTableVrc6Saw;
                 case ChannelType.FdsWave:
-                    return noteTableSet.NoteTableFds;
+                    return pal ? noteTableSet.NoteTableFdsPAL : noteTableSet.NoteTableFds;
                 case ChannelType.N163Wave1:
                 case ChannelType.N163Wave2:
                 case ChannelType.N163Wave3:
@@ -781,7 +827,7 @@ namespace FamiStudio
                 case ChannelType.N163Wave6:
                 case ChannelType.N163Wave7:
                 case ChannelType.N163Wave8:
-                    return noteTableSet.NoteTableN163[numN163Channels - 1];
+                    return pal ? noteTableSet.NoteTableN163PAL[numN163Channels - 1] : noteTableSet.NoteTableN163[numN163Channels - 1];
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:
                 case ChannelType.Vrc7Fm3:
