@@ -379,18 +379,16 @@ namespace FamiStudio
             return lines;
         }
 
-        private static (List<byte> byteList, List<string> names) GetNoteTableBinaryData(int tuning = 440, int expansion = ExpansionType.None, int machine = MachineType.PAL, int numN163Channels = 8)
+        private static (List<byte> byteList, List<string> names) GetNoteTableBinaryData(List<string> tables, int machine, int numN163Channels = 8)
         {
-            var noteTablesText = GetNoteTablesText(tuning, expansion, machine, numN163Channels);
+            List<string> names = [];
+            List<byte> byteList = [];
 
-            List<string> names = new();
-            List<byte> byteList = new();
-
-            foreach (var line in noteTablesText)
+            foreach (var line in tables)
             {
                 if (line.Contains("famistudio_"))
                 {
-                    var name = line.Replace(":", "").Trim();
+                    var name = line.Split(":")[0].Trim();
 
                     if (name.Contains("n163"))
                         name += $"_{numN163Channels}ch";
@@ -410,7 +408,7 @@ namespace FamiStudio
                     {
                         var byteString = trimLine.Substring(i, 2);
 
-                        if (byte.TryParse(byteString, System.Globalization.NumberStyles.HexNumber, null, out byte byteValue))
+                        if (byte.TryParse(byteString, NumberStyles.HexNumber, null, out byte byteValue))
                             byteList.Add(byteValue);
                     }
                 }
@@ -421,17 +419,19 @@ namespace FamiStudio
 
         public static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8)
         {
-            var (byteList, names) = GetNoteTableBinaryData(tuning, expansionMask, machine, numN163Channels);
+            var noteTablesText = GetNoteTablesText(tuning, expansionMask, machine, numN163Channels);
+            var (byteList, names) = GetNoteTableBinaryData(noteTablesText, machine, numN163Channels);
 
             for (var i = 0; i < names.Count; i++)
             {
                 var start = i * 97;
                 var outputFileName = $"{names[i]}.bin";
 
-                using FileStream fs = new FileStream(outputFileName, FileMode.Create);
-                using BinaryWriter writer = new BinaryWriter(fs);
+                using FileStream fs = new(outputFileName, FileMode.Create);
+                using BinaryWriter writer = new(fs);
 
                 var bytesToWrite = byteList.GetRange(start, 97);
+
                 writer.Write(bytesToWrite.ToArray());
             }
         }
