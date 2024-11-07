@@ -9,8 +9,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.VisualBasic;
-using Microsoft.Win32.SafeHandles;
-using SharpDX.XAudio2;
 
 namespace FamiStudio
 {
@@ -381,7 +379,7 @@ namespace FamiStudio
             return lines;
         }
 
-        public static (List<byte> byteList, List<string> names) GetNoteTableBinaryData(int tuning = 440, int expansion = ExpansionType.None, int machine = MachineType.PAL, int numN163Channels = 8)
+        private static (List<byte> byteList, List<string> names) GetNoteTableBinaryData(int tuning = 440, int expansion = ExpansionType.None, int machine = MachineType.PAL, int numN163Channels = 8)
         {
             var noteTablesText = GetNoteTablesText(tuning, expansion, machine, numN163Channels);
 
@@ -421,16 +419,14 @@ namespace FamiStudio
             return (byteList, names);
         }
 
-        static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8)
+        public static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8)
         {
             var (byteList, names) = GetNoteTableBinaryData(tuning, expansionMask, machine, numN163Channels);
-
-            string dir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "SoundEngine", "NoteTables");
 
             for (var i = 0; i < names.Count; i++)
             {
                 var start = i * 97;
-                var outputFileName = Path.Combine(dir, $"{names[i]}.bin");
+                var outputFileName = $"{names[i]}.bin";
 
                 using FileStream fs = new FileStream(outputFileName, FileMode.Create);
                 using BinaryWriter writer = new BinaryWriter(fs);
@@ -567,7 +563,7 @@ namespace FamiStudio
                 }
 
                 #if FALSE // For debugging
-                    DumpNoteTableSetToFile(tuning, $"NoteTables{tuning}.txt");
+                    DumpNoteTableSetToFile(noteTableSet, $"NoteTables{tuning}.txt");
                 #endif
 
                 NoteTables.Add(tuning, noteTableSet);

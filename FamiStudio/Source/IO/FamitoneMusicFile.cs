@@ -2164,7 +2164,7 @@ namespace FamiStudio
             if (project.SoundEngineUsesExtendedInstruments)
                 flags.Add($"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
             if (project.Tuning != 440)
-                flags.Add("Project uses non-standard tuning, the note tables where dumped in the assembly code. You will need to manually patch in the sound engine code to hear the correct tuning.");
+                flags.Add("Project uses non-standard tuning, the note tables were dumped in the assembly code. You will need to manually patch in the sound engine code to hear the correct tuning.");
 
             return flags;
         }
@@ -2245,12 +2245,10 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, flagMessage);
                     }
 
-                    //if (project.Tuning != 440)
-                    //{
-                    //    var noteTableFilename = Path.ChangeExtension(filename, ".notetable.txt"); ;
-                    //    Log.LogMessage(LogSeverity.Info, $"Project uses non-standard tuning, the note tables where dumped in '{noteTableFilename}'. You will need to manually patch in the sound engine code to hear the correct tuning.");
-                    //    NesApu.DumpNoteTableSetToFile(project.Tuning, noteTableFilename);
-                    //}
+                    if (project.Tuning != 440)
+                    {
+                        NesApu.DumpNoteTableBin(project.Tuning, project.ExpansionAudioMask, machine, project.ExpansionNumN163Channels);
+                    }
                 }
             }
 
