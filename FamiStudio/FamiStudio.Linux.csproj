@@ -632,6 +632,7 @@
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Sounds\Metronome.wav" />
+    <EmbeddedResource Include="Resources\Sounds\LinuxBeep.wav" />
   </ItemGroup>    
   <ItemGroup>    
     <EmbeddedResource Include="Resources\Tutorials\Tutorial0.gif" />

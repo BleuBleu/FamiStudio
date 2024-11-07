@@ -734,12 +734,12 @@ namespace FamiStudio
                         if (oscilloscope.Visible)
                         {
                             x += margin;
-                            oscilloscope.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
+                            timecode.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
                             x += timecodeOscSizeX + margin;
                         }
 
                         x += margin;
-                        timecode.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
+                        oscilloscope.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
                         x += timecodeOscSizeX + margin;
                     }
                 }

@@ -2411,7 +2411,7 @@ namespace FamiStudio
             using (var noteTableStream = typeof(FamitoneMusicFile).Assembly.GetManifestResourceStream(tblFile))
             using (StreamReader reader = new StreamReader(noteTableStream))
             {
-                var noteTableLines = reader.ReadToEnd().Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+                var noteTableLines = reader.ReadToEnd().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in noteTableLines)
                 {
                     var pair = line.Split('=', StringSplitOptions.RemoveEmptyEntries);
@@ -2458,7 +2458,7 @@ namespace FamiStudio
 
         public static bool PatchNoteTable(byte[] data, string tblFile, int tuning, int machine, int numN163Channels)
         {
-            var pal = machine == MachineType.PAL;
+            var pal = machine == MachineType.PAL || machine == MachineType.Dual;
             if (!PatchNoteTableInternal(data, tblFile, 0, tuning, pal, numN163Channels))
             {
                 return false;
@@ -2467,7 +2467,7 @@ namespace FamiStudio
             // For dual, we need to patch the 2 note tables that are back to back.
             if (machine == MachineType.Dual)
             {
-                if (!PatchNoteTableInternal(data, tblFile, 97, tuning, true, numN163Channels))
+                if (!PatchNoteTableInternal(data, tblFile, 97, tuning, false, numN163Channels))
                 {
                     return false;
                 }
