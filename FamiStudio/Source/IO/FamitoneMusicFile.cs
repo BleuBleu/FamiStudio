@@ -2247,7 +2247,7 @@ namespace FamiStudio
 
                     if (project.Tuning != 440)
                     {
-                        NesApu.DumpNoteTableBin(project.Tuning, project.ExpansionAudioMask, machine, project.ExpansionNumN163Channels);
+                        NesApu.DumpNoteTableBin(project.Tuning, project.ExpansionAudioMask, machine, project.ExpansionNumN163Channels, Path.GetDirectoryName(filename));
                     }
                 }
             }

@@ -379,60 +379,61 @@ namespace FamiStudio
             return lines;
         }
 
-        private static (List<byte> byteList, List<string> names) GetNoteTableBinaryData(List<string> tables, int machine, int numN163Channels = 8)
+        private static Dictionary<string, byte[]> GetNoteTableBinaryData(List<string> tables, int machine, int numN163Channels = 8)
         {
-            List<string> names = [];
-            List<byte> byteList = [];
+            var binData = new Dictionary<string, byte[]>();
+            var name = string.Empty;
+            var byteList = new List<byte>();
 
             foreach (var line in tables)
             {
                 if (line.Contains("famistudio_"))
                 {
-                    var name = line.Split(":")[0].Trim();
+                    name = line.Split(":")[0].Trim();
 
                     if (name.Contains("n163"))
                         name += $"_{numN163Channels}ch";
 
                     if (!name.Contains("vrc7") && !name.Contains("epsm") && machine == MachineType.PAL)
                         name += "_pal";
-                    
-                    names.Add(name);
+
                     continue;
                 }
 
-                var trimLine = line.Split(';')[0].Replace("$", "").Replace(",", "").Replace(".byte", "").Trim();
+                var trimLine = line.Split(';')[0].Replace(",", "").Replace(".byte", "").Trim();
 
-                for (int i = 0; i < trimLine.Length; i += 2)
+                if (string.IsNullOrWhiteSpace(trimLine))
+                    continue;
+
+                var bytes = trimLine.Split("$", StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => byte.Parse(s.Trim(), NumberStyles.HexNumber))
+                    .ToArray();
+
+                byteList.AddRange(bytes);
+
+                if (byteList.Count == 97)
                 {
-                    if (i + 1 < trimLine.Length)
-                    {
-                        var byteString = trimLine.Substring(i, 2);
-
-                        if (byte.TryParse(byteString, NumberStyles.HexNumber, null, out byte byteValue))
-                            byteList.Add(byteValue);
-                    }
+                    binData[name] = byteList.ToArray();
+                    byteList.Clear();
                 }
             }
 
-            return (byteList, names);
+            return binData;
         }
 
-        public static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8)
+        public static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8, string path = ".")
         {
             var noteTablesText = GetNoteTablesText(tuning, expansionMask, machine, numN163Channels);
-            var (byteList, names) = GetNoteTableBinaryData(noteTablesText, machine, numN163Channels);
+            var binData = GetNoteTableBinaryData(noteTablesText, machine, numN163Channels);
 
-            for (var i = 0; i < names.Count; i++)
+            foreach (var kv in binData)
             {
-                var start = i * 97;
-                var outputFileName = $"{names[i]}.bin";
+                var outputFileName = Path.Combine(path, $"{kv.Key}.bin");
 
                 using FileStream fs = new(outputFileName, FileMode.Create);
                 using BinaryWriter writer = new(fs);
 
-                var bytesToWrite = byteList.GetRange(start, 97);
-
-                writer.Write(bytesToWrite.ToArray());
+                writer.Write(kv.Value);
             }
         }
 
